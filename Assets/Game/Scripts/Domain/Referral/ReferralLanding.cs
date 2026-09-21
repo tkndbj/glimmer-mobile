@@ -44,6 +44,29 @@ namespace GlimmerGrove.Referral
         }
 
         /// <summary>
+        /// Whether a payout rolled for <paramref name="owner"/> may be banked now that
+        /// <paramref name="signedInAs"/> is the account on this device.
+        ///
+        /// <para>
+        /// <b>The one failure on this page with no undo.</b> <see cref="Decide"/> answers
+        /// <em>whether</em> a chest's drops are this device's to bank; this answers
+        /// <em>whose wallet</em> they would land in. An account switch between the tap and the
+        /// ceremony is rare and entirely possible — a claim is a network call and a switch is
+        /// local and instant (invariant 17a) — and hearts paid into a stranger's wallet cannot
+        /// be taken back out. Refusing costs nothing: the server has already paid the account
+        /// that asked, its in-flight note is still standing, and it banks on its own next tap
+        /// (<see cref="Verdict.Bank"/> via the note).
+        /// </para>
+        /// <para>
+        /// Null and empty are the same account — nobody — because that is how
+        /// <c>CloudState.UserId</c> reads before a sign-in and how the ledger coalesces it.
+        /// </para>
+        /// </summary>
+        public static bool PaysInto(string owner, string signedInAs)
+            => string.Equals(owner ?? string.Empty, signedInAs ?? string.Empty,
+                             System.StringComparison.Ordinal);
+
+        /// <summary>
         /// The subject a chest is noted under, shared with the grant id the server writes:
         /// <c>rung:{friend}:{n}</c> for the referrer's n-th chest for their {friend}-th
         /// finished invitee, <c>invitee:{n}</c> for the invitee's n-th chest. Contract.

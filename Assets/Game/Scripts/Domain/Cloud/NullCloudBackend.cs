@@ -189,5 +189,11 @@ namespace GlimmerGrove.Cloud
             Referral.ReferralClaimKind kind, int goal, int index, CancellationToken cancellation = default)
             => Task.FromResult((CloudResult.Failed(CloudFailure.Offline, "no cloud backend configured"),
                                 new Referral.ReferralReply()));
+
+        /// <summary>
+        /// Nothing to watch. Null rather than a handle that does nothing, because the caller
+        /// draws a real distinction from it: with no watch it falls back to asking on a timer.
+        /// </summary>
+        public System.IDisposable WatchReferral(System.Action onChanged) => null;
     }
 }

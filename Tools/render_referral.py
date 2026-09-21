@@ -50,6 +50,15 @@ HEADING_H = 62.0
 WIDTH = 1000.0
 ROW_H, ROW_GAP = 196.0, 12.0
 
+#: `ReferralScreen.CellH` - one `GridView` cell. The card is `ROW_H` and is centred in it, so
+#: half the gap sits above every card and half below, which is what removed the special case
+#: for the last row. A card therefore sits `ROW_GAP / 2` lower than it did when this board laid
+#: itself out, and the whole board is `ROW_GAP` taller.
+CELL_H = ROW_H + ROW_GAP
+
+#: `ReferralScreen.OfferGap` and `BoardFoot`.
+OFFER_GAP, BOARD_FOOT = 14.0, 20.0
+
 #: `ReferralScreen.KeyW`, `KeyH`, `MarkH`, `MarkType`, `MarkLeast` and `MarkRoom` - the streak
 #: board's numbers, because this is the streak board's row: the COLLECT key and the pill that
 #: stands in the same place share one width, and the pill's line is fitted on write from its
@@ -220,7 +229,7 @@ def offer_row(sheet, y):
     K.paste(sheet, K.skin("btn_blue", 272, 104), bx, cy)
     K.shrunk(sheet, txt("ui.referral.enter"), bx, cy - 104 * 0.0231, 236, 60, 30, 16)
 
-    return y + OFFER_H + 14
+    return y + OFFER_H + OFFER_GAP
 
 
 def welcome_row(sheet, y, state, cleared, total, opened=0):
@@ -239,7 +248,7 @@ def welcome_row(sheet, y, state, cleared, total, opened=0):
         txt("ui.referral.welcome_title").upper(), sub, state,
         txt("ui.referral.settling").upper() if cleared >= total and state == "ahead"
         else txt("ui.referral.progress", cleared, total))
-    return y + OFFER_H + 14
+    return y + OFFER_H + OFFER_GAP
 
 
 def heading(sheet, y):
@@ -258,7 +267,13 @@ def aura(sheet, cx, cy, size):
     sheet.alpha_composite(lit, (int(cx - fan.width / 2), int(cy - fan.height / 2)))
 
 
-def row(sheet, cx, cy, h, plate, tier, count, title, sub, state, mark, flat=False):
+def pool_art(h):
+    """`ReferralScreen.Furnish`'s pool: `Art.Glow(128, 1.35)` at the bright end of the breath
+    `Shine` runs between (.42 and .80), sized `Width + 150` by `RowH + 130`."""
+    return K.glow(420, 1.35, K.SUN, .80).resize((int(WIDTH + 150), int(h + 130)), Image.LANCZOS)
+
+
+def row(sheet, cx, cy, h, plate, tier, count, title, sub, state, mark, flat=False, halo=True):
     """`ReferralScreen.Furnish` + `Paint`.
 
     `state` is 'paid', 'lit', 'waiting' or 'ahead'. One answer at the right end at a time:
@@ -269,6 +284,14 @@ def row(sheet, cx, cy, h, plate, tier, count, title, sub, state, mark, flat=Fals
     than to each piece as it lands. It is a *parameter* rather than a spelling of `state`,
     because the recursion has to keep drawing the same state: written as a fifth state the row
     came back with a progress pill where its seal should have been.
+
+    `halo` draws the pool of light under a lit row. **The board turns it off and paints the
+    pool itself, first**, because the pool is 150 units wider than the card and 130 taller and
+    the screen draws it *under every plate on the board* - `RowWidgets.Sink` puts the lit cell
+    at the bottom of the sibling order for exactly that. Painted here, row by row, it lands on
+    top of the card above instead, which is a mirror quietly answering a question about a
+    screen the game does not draw (invariant 44d). The welcome row keeps it: its pool really
+    is drawn straight under its own plate and over the hero above it.
     """
     lit = state == "lit"
     paid = state == "paid"
@@ -281,14 +304,13 @@ def row(sheet, cx, cy, h, plate, tier, count, title, sub, state, mark, flat=Fals
     if paid and not flat:
         cell = Image.new("RGBA", (int(WIDTH + 200), int(h + 60)), (0, 0, 0, 0))
         row(cell, cell.width / 2, cell.height / 2, h, plate, tier, count, title, sub, state, mark,
-            flat=True)
+            flat=True, halo=halo)
         cell.putalpha(cell.getchannel("A").point(lambda v: int(v * .62)))
         sheet.alpha_composite(cell, (int(cx - cell.width / 2), int(cy - cell.height / 2)))
         return
 
-    if lit:
-        pool = K.glow(420, 1.35, K.SUN, .80).resize((int(WIDTH + 150), int(h + 130)), Image.LANCZOS)
-        K.paste(sheet, pool, cx, cy)
+    if lit and halo:
+        K.paste(sheet, pool_art(h), cx, cy)
 
     K.paste(sheet, K.skin(plate, WIDTH, h), cx, cy)
 
@@ -338,24 +360,41 @@ def row(sheet, cx, cy, h, plate, tier, count, title, sub, state, mark, flat=Fals
 
 
 def board(sheet, top, finished, paid):
-    """`ReferralScreen.BuildBoard` - one row a friend, every friend the cap allows.
+    """`ReferralScreen.BuildBoard` - a `GridView` of one row a friend, every friend the cap allows.
+
+    **The arithmetic mirrored here is `GridView`'s, not this screen's**, and that is the whole
+    point of keeping the mirror honest about it: a cell is `CELL_H` and the card is centred in
+    it, `GridView.Resize` never lets the content be shorter than its window, and
+    `GridView.ScrollTo` centres on the *cell* rather than on the card. Draw this against the
+    board's own numbers and every row is six units out - a mirror telling a comfortable lie
+    (invariant 44d).
 
     `paid` maps a friend number to how many of its chests are paid. The lit row is the first
     finished friend with a chest still unpaid (`ReferralLedger.FirstClaimableFriend`).
     """
     count = PER.get("count", 1)
     rows = max(1, MAX_BOUND)  # `ReferralScreen.RowCount` - the whole board, always.
-    tall = rows * (ROW_H + ROW_GAP) - ROW_GAP
-    bottom = K.NAV_HEIGHT + 20
+    bottom = K.NAV_HEIGHT + BOARD_FOOT
     band = H - top - bottom
+    tall = max(rows * CELL_H, band)  # `GridView.Resize`
 
     lit = next((f for f in range(1, min(finished, MAX_BOUND) + 1) if paid.get(f, 0) < count), 0)
 
     offset = 0.0
-    if tall > band and lit:
-        offset = max(0.0, min((lit - 1) * (ROW_H + ROW_GAP) - (band - ROW_H) * .5, tall - band))
+    if lit:
+        # `GridView.ScrollTo(lit - 1)`: the cell's top, less half the room the window has
+        # beyond one cell, clamped to the content.
+        want = (lit - 1) * CELL_H - max(0.0, band - CELL_H) * .5
+        offset = max(0.0, min(want, tall - band))
 
-    strip = Image.new("RGBA", (W, int(max(tall, band))), (0, 0, 0, 0))
+    strip = Image.new("RGBA", (W, int(tall)), (0, 0, 0, 0))
+
+    # The lit row's pool first, under every plate on the board — `RowWidgets.Sink` sinks the lit
+    # cell to the bottom of the sibling order precisely so its halo passes under its
+    # neighbours', and a pool painted row by row lands on top of the card above instead.
+    if lit:
+        K.paste(strip, pool_art(ROW_H), W / 2, (lit - 1) * CELL_H + CELL_H / 2)
+
     for i in range(rows):
         friend = i + 1
         opened = paid.get(friend, 0)
@@ -366,13 +405,13 @@ def board(sheet, top, finished, paid):
             sub = txt("ui.referral.opened", opened, count)
         else:
             sub = txt("ui.referral.pays", count, txt("chest.%s.name" % PER_TIER))
-        row(strip, W / 2, i * (ROW_H + ROW_GAP) + ROW_H / 2, ROW_H, "Hud/plate_navy", PER_TIER, count,
+        row(strip, W / 2, i * CELL_H + CELL_H / 2, ROW_H, "Hud/plate_navy", PER_TIER, count,
             txt("ui.referral.friend_n", friend).upper(), sub, state,
-            txt("ui.referral.progress", min(finished, friend), friend))
+            txt("ui.referral.progress", min(finished, friend), friend), halo=False)
 
     window = strip.crop((0, int(offset), W, int(offset + band)))
     sheet.alpha_composite(window, (0, int(top)))
-    return tall > band
+    return rows * CELL_H > band
 
 
 # ------------------------------------------------------------------- the states

@@ -429,15 +429,58 @@ is where they are written down, not what they mean.
    away a round-trip after drawing it, replayed the entrance on fifty rows and lost the scroll. The
    comparison must **ignore the fetch stamp** (`ReferralState.Matches`) or it can never answer "the
    same", and it must still fire on the *first known* answer, which is a change in what the page may
-   trust rather than in what it says. The other half is the screen's: **a redraw that is not a first
-   draw makes no noise and keeps its place** — `ModalView.Rebuilding`'s rule, owed by a `View` too.
+   trust rather than in what it says (`SaysSomethingNew`, both clauses, both mutation-proved).
+44ma. **A long list is a `GridView`, and the second screen to hand-roll one is the tell.** The invite
+   board built all fifty rows as subtrees and destroyed them whenever the band above changed shape —
+   the exact fault `GridView` was written for, whose own comment already said *"which is exactly the
+   flicker players reported"*. Cells that fit the glass, `Refresh` for a redraw, the entrance spent
+   once on `Show`. **Before writing a scrolling list, or a quiet-redraw flag, look for the one that
+   exists.** It grew `ScrollTo` and `Relayout` in the doing: a caller that moves the content itself
+   leaves the realised window a frame behind, which is a frame of the wrong rows.
+44mb. **Only the part that can change shape is rebuilt.** The offer band is the one thing on that page
+   with three shapes, so it lives in a band of its own and a change costs that band plus a slide of
+   what is under it — the board is never touched, keeps its cells and keeps the player's place. A
+   full restage is left for the one case that is genuinely a different page: a content push.
+44mc. **A recycled cell makes invariant 48l sharper: anything a state leaves alone is the *previous
+   row's* answer showing through.** Every field is written on every bind, including the reward's
+   sprite and any looping tween — which is keyed on the row it was started for, so a cell rebound to
+   the same lit row does not restart its breath and one rebound to a dark row stops it. And a halo
+   wider than its card needs a sibling order: the lit cell sinks, or its light draws over its
+   neighbours. **The mirror had that backwards for as long as it existed** (44d).
 44n. **A background read must not refuse the player's own tap, and must not overwrite it either.** One
    busy flag across a referral read, redeem and claim told a player typing a code that it was
    *unavailable* — about a call never made. Reads and writes get separate gates; the ordering between
    them is a **generation stamp** taken before a call and tested after it, so a slow read cannot land
    the pre-redeem answer on top of the redeem. The stamp carries the **account** too: bumped on an
    identity change, so an answer issued as one player can never be adopted, cached or banked as
-   another (invariant 17, one layer down).
+   another (invariant 17, one layer down) — and a payout records the wallet it was rolled for, so a
+   ceremony that outlives a switch pays nobody rather than the wrong body (`ReferralLanding.PaysInto`).
+   **Each of those is a named pure function, because a rule with no undo that lives as four operators
+   inside a property is a rule no test can reach.**
+44o. **A poll is a policy, so it is attached, not written** (44j's rule about readouts, said about
+   cadence). A referral count is the one reading in this game no local event can announce — it is a
+   fact about other people's play — so the page that shows it has to ask, or it cannot move. That is
+   `ReferralWatch.Attach(this)`: one place holding the listener's lifetime, the cadence, the offline
+   test, the call-already-out test and the freshness window, dying with its host. Written into a
+   screen's `Update` it is five things the second screen forgets.
+44p. **A listener is pointed at a document the client is allowed to read, and for this feature that
+   is not the one with the answer in it.** `referrals/{uid}` names the referrer, and a code owner's
+   names every invitee, so it is refused to every client on purpose — a listener there would hand a
+   caller the list of people who typed their code. So the server bumps a **counter** at
+   `players/{uid}/private/referral`, which is already owner-read and server-write-only (**no rules
+   release**), the device watches *that*, and the answer still comes from `getReferral`. A feed that
+   carries no state can leak nothing, go stale about nothing, and copies no server rule onto the
+   client to disagree with later. **Pick the document by what it may expose, not by what it holds.**
+44q. **A listener's lifetime is three facts and one function, and every path ends at the same
+   one.** Somebody is watching, the app is in the foreground, an account is signed in —
+   `ReferralFeedWatch.Settle` attaches or detaches to match, so holding, releasing, pausing,
+   resuming and switching account each move one fact and ask one question. **It is a class of its
+   own so the lifetime can be tested without a server**: inline it would have needed a Firestore, a
+   signed-in account and a save file to run once, which is to say "the listener is torn down" would
+   have stayed an assertion. Two things it must do that a first cut will not: **re-point on an
+   account switch** (a stream left open reports a stranger's referrals), and **not remember a
+   refused attach as success**. And the callback **may arrive on any thread** — the SDK ships as a
+   DLL and does not say — so it sets a flag and the main thread turns that into the ask.
 
 ### Tasks and the chest ladder
 

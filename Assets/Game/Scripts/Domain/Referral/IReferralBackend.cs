@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -112,5 +113,31 @@ namespace GlimmerGrove.Referral
         /// </summary>
         Task<(CloudResult result, ReferralReply reply)> ClaimReferralAsync(
             ReferralClaimKind kind, int goal, int index, CancellationToken cancellation = default);
+
+        /// <summary>
+        /// Watches for "this account's referral state moved", and calls
+        /// <paramref name="onChanged"/> when it does. Answers null when this backend cannot
+        /// watch — no Firestore, signed out — which the caller must cope with rather than
+        /// require.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>It carries no state, and that is the design rather than a shortcut.</b> The
+        /// document being watched holds a counter and nothing else, because the document that
+        /// holds the real answer — <c>referrals/{uid}</c> — is deliberately unreadable by any
+        /// client: it names the referrer, and a code owner's names every invitee, which is more
+        /// than this feature ever promised anybody (see <c>firestore.rules</c>). So a listener
+        /// learns only *that* something moved and the reply still comes from
+        /// <see cref="ReadReferralAsync"/>, which is already the one authority on what the
+        /// state is. No server rule is copied onto the client to disagree with later.
+        /// </para>
+        /// <para>
+        /// <b><paramref name="onChanged"/> may arrive on any thread.</b> An implementation is
+        /// not required to marshal, and the caller must not assume: see
+        /// <see cref="ReferralLedger.Pump"/>, which is why the callback's whole job is to set a
+        /// flag. Disposing stops the watch, and disposing twice is safe.
+        /// </para>
+        /// </remarks>
+        IDisposable WatchReferral(Action onChanged);
     }
 }

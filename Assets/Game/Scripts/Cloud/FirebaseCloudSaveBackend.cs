@@ -1578,6 +1578,79 @@ namespace GlimmerGrove.Cloud
             }
         }
 
+        /// <summary>
+        /// Watches <c>players/{uid}/private/referral</c> — a counter the server bumps whenever
+        /// this account's referral state moves, and nothing else.
+        ///
+        /// <para>
+        /// <b>Why that document and not the real one.</b> <c>referrals/{uid}</c> is refused to
+        /// every client by <c>firestore.rules</c>, on purpose: it names the referrer, and a code
+        /// owner's document names every invitee. A listener there would hand a caller the list
+        /// of people who typed their code. The private counter is already owner-read and
+        /// server-write-only, so this costs **no rules release** and can leak nothing — the
+        /// answer still comes from <c>getReferral</c>.
+        /// </para>
+        /// <para>
+        /// <b>The callback does as little as is possible.</b> The Firestore SDK's threading for
+        /// snapshot listeners is not something this project can read off a DLL, so nothing here
+        /// assumes it: the handler sets a flag and returns, and the main thread picks it up
+        /// (<c>ReferralLedger.Pump</c>). That also means a detach racing a delivery cannot be
+        /// running game code at the time.
+        /// </para>
+        /// <para>
+        /// The first delivery is the document as it stands, not a change — Firestore always
+        /// opens a listener with a snapshot. It is left to fire: it costs one deduplicated
+        /// <c>Poke</c>, and suppressing it would need state that the resume path would then
+        /// have to work around.
+        /// </para>
+        /// </summary>
+        public IDisposable WatchReferral(Action onChanged)
+        {
+            if (onChanged == null || _db == null) return null;
+
+            string uid = _auth?.CurrentUser?.UserId;
+            if (string.IsNullOrEmpty(uid)) return null;
+
+            try
+            {
+                var doc = PlayerDoc(uid).Collection("private").Document("referral");
+                return new ReferralWatchHandle(doc.Listen(_ => onChanged()));
+            }
+            catch (Exception e)
+            {
+                // A watch is an optimisation over the poll that stands behind it, so failing to
+                // attach one is worth a line in the log and nothing else.
+                Debug.LogWarning($"[Cloud] could not watch the referral feed: {e.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Stops a snapshot listener, exactly once.
+        ///
+        /// <para>
+        /// <c>ListenerRegistration</c> is itself <c>IDisposable</c> and this is not merely a
+        /// wrapper for the sake of one: the <c>null</c> exchange is what makes a second
+        /// <c>Dispose</c> — from a screen tearing down and a pause arriving in the same frame —
+        /// a no-op rather than a second <c>Stop</c> against native state.
+        /// </para>
+        /// </summary>
+        sealed class ReferralWatchHandle : IDisposable
+        {
+            ListenerRegistration _registration;
+
+            public ReferralWatchHandle(ListenerRegistration registration) { _registration = registration; }
+
+            public void Dispose()
+            {
+                var registration = System.Threading.Interlocked.Exchange(ref _registration, null);
+                if (registration == null) return;
+
+                try { registration.Stop(); }
+                catch (Exception e) { Debug.LogWarning($"[Cloud] referral watch would not stop: {e.Message}"); }
+            }
+        }
+
         public async Task<(CloudResult result, Referral.ReferralReply reply)> RedeemReferralAsync(
             string code, CancellationToken cancellation = default)
         {

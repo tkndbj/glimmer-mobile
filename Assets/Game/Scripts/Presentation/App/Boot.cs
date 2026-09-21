@@ -322,9 +322,21 @@ namespace GlimmerGrove
 
             void OnApplicationPause(bool paused)
             {
-                if (paused) Persist();
+                if (paused)
+                {
+                    Persist();
+
+                    // The referral listener goes down with the app. A Firestore stream held
+                    // open across a backgrounding is a radio kept warm for a page nobody is
+                    // looking at, and on iOS it is a connection that will be torn down under us
+                    // anyway. Nothing is lost: `Resumed` asks once on the way back, which is
+                    // what covers the gap no callback could have reported.
+                    Referral.ReferralLedger.Paused();
+                }
                 else
                 {
+                    Referral.ReferralLedger.Resumed();
+
                     // Returning: pick up another device's work, and drop any backoff the
                     // last failure left. A player who reopens the game has quite often
                     // just done something about the connection.

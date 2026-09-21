@@ -60,7 +60,45 @@ export const REFERRAL_PATHS = {
 
   /** The code, keyed on itself so a duplicate is unrepresentable. */
   code: (code: string) => `referralCodes/${code}`,
+
+  /**
+   * The one thing about an account's referrals its own device may watch.
+   *
+   * **`referrals/{uid}` is deliberately unreadable by any client** (see `firestore.rules`):
+   * it names the referrer, and the code owner's document names every invitee, so a caller
+   * who could read it learns who typed their code — more than this feature ever promised
+   * anybody. That is exactly why a listener cannot be pointed at it.
+   *
+   * So the device watches this instead, under `players/{uid}/private/`, which is already
+   * owner-read and server-write-only and therefore costs **no rules release**. It carries a
+   * counter and nothing else: no code, no counts, no uids. A client that reads it learns
+   * only *that* something moved, and answers by calling `getReferral` — which is already the
+   * one authority on what the state is. Nothing here can leak, nothing here can go stale,
+   * and no server rule is copied onto the client to disagree with later.
+   */
+  feed: (uid: string) => `players/${uid}/private/referral`,
 };
+
+/**
+ * Says "your referral state moved" to whichever of this account's devices is listening.
+ *
+ * <p>Called inside the same transaction as the write it is announcing, so the two cannot
+ * come apart: a bump nobody earned is impossible, and a change nobody was told about is
+ * impossible. `increment` on a `merge` set creates the document on the first bump, so no
+ * account needs seeding and an account that never refers anybody never gets one.</p>
+ *
+ * <p>The rev is never read by anybody. What a listener reacts to is the document
+ * *changing*, and a counter is simply the cheapest field that always differs — a
+ * `serverTimestamp` would do the same job and is harder to eyeball in the console.</p>
+ */
+export function touchReferralFeed(transaction: Transaction, db: Firestore, uid: string): void {
+  if (!uid) return;
+
+  transaction.set(db.doc(REFERRAL_PATHS.feed(uid)), {
+    rev: FieldValue.increment(1),
+    at: FieldValue.serverTimestamp(),
+  }, { merge: true });
+}
 
 // ------------------------------------------------------------------------- the code
 /** Mirrors `ReferralCode.Alphabet`. Contract: no 0/O, no 1/I/L. */
@@ -351,6 +389,7 @@ export async function getReferral(
                                    : FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
       }, { merge: true });
+      touchReferralFeed(transaction, db, uid);
       logger.info("referral code minted", { uid });
     }
 
@@ -362,6 +401,11 @@ export async function getReferral(
       }, { merge: true });
       transaction.set(db.doc(REFERRAL_PATHS.invitee(doc.referrer, uid)),
                       { finishedAt: FieldValue.serverTimestamp() }, { merge: true });
+
+      // Both sides. The referrer is the one sitting on the invite page watching a row go
+      // lit, and their document is the one that just moved.
+      touchReferralFeed(transaction, db, uid);
+      touchReferralFeed(transaction, db, doc.referrer);
       logger.info("referral milestone settled", { uid, referrer: doc.referrer, finished: referrerDoc.finished + 1 });
     }
 
@@ -410,6 +454,9 @@ export async function redeemReferral(
     transaction.set(db.doc(REFERRAL_PATHS.invitee(owner, uid)), {
       boundAt: FieldValue.serverTimestamp(),
     }, { merge: true });
+
+    touchReferralFeed(transaction, db, uid);
+    touchReferralFeed(transaction, db, owner);
 
     logger.info("referral bound", { uid, referrer: owner, bound: ownerDoc.bound + 1 });
     return { outcome: "bound", state: stateOf({ ...doc, referrer: owner }, done) };
@@ -504,6 +551,12 @@ export async function claimReferral(
     transaction.set(walletRef, { ...wallet, updatedAt: FieldValue.serverTimestamp() });
     transaction.set(ref, { paid: FieldValue.arrayUnion(subject), updatedAt: FieldValue.serverTimestamp() },
                     { merge: true });
+
+    // The other devices on this account: a chest taken on one phone is a sealed row on the
+    // rest. Not the *asking* device, which has the reply in its hand — but it costs one
+    // needless `getReferral` there and a second announcement would cost a second write, so
+    // one touch for all of them is the cheaper half of an easy trade.
+    touchReferralFeed(transaction, db, uid);
 
     logger.info("referral chest paid", { uid, kind, goal, index, tier: tier.id });
 

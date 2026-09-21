@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using GlimmerGrove.Analytics;
 using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Cloud;
@@ -36,22 +35,24 @@ namespace GlimmerGrove
     /// says so between the taps.
     /// </para>
     /// <para>
-    /// <b>The board is every row the cap allows, always</b> (the owner's instruction,
-    /// 2026-09-20; see <see cref="RowCount"/>). So the row count is a property of the content
-    /// table rather than of the player, and it moves only when <c>progression.json</c> is
-    /// retuned. The offer row has three shapes and is the one thing on the page that can
-    /// change shape under the player.
+    /// <b>The board is a <see cref="GridView"/>, and that is the whole of why this page stopped
+    /// reloading.</b> It drew every row the cap allows — fifty, the owner's instruction of
+    /// 2026-09-20 — as fifty built subtrees, and threw the lot away whenever the offer band
+    /// changed shape, which replayed the staggered entrance on all of them and lost the scroll.
+    /// That is the exact fault <c>GridView</c> was written for and already describes in its own
+    /// words. Here the board keeps only the rows that fit on the glass, a redraw is
+    /// <see cref="GridView.Refresh"/> (the same cells rebound, no entrance, no jump), and the
+    /// entrance is spent once on <see cref="GridView.Show"/>.
     /// </para>
     /// <para>
-    /// <b>A change redraws in place; only a change of shape restages, and a restage is
-    /// silent</b> (<c>CRAFT.md</c>: Show animates, Refresh does not — and invariant 47g's
-    /// "bind writes everything and never animates"). Replaying the entrance on a page the
-    /// player is already looking at reads as the page reloading, which is what it looked like:
-    /// the ledger used to raise a change on every server read whether or not the answer said
-    /// anything new, so every visit redrew the board a round-trip after it had drawn.
-    /// <see cref="ReferralLedger.Adopt"/> owns that half; this screen owns the other, which is
-    /// that even a real restage keeps the scroll position and skips the ceremony
-    /// (<see cref="_restaging"/>), exactly as <c>ModalView.Rebuilding</c> does for a panel.
+    /// <b>The offer band is the one thing that changes shape, so it is the only thing rebuilt.</b>
+    /// It has three shapes — type a code, the welcome chests, or nothing — and it sits in a
+    /// band of its own between the hero and the heading. When it changes,
+    /// <see cref="RebuildOffer"/> redraws that band and <see cref="LayoutBelowOffer"/> slides
+    /// the heading and the board's viewport; the board itself is not touched, keeps its cells
+    /// and keeps the player's place. Nothing else on this page can change shape, so nothing
+    /// else can force a restage — and <see cref="Restage"/> is left for the one case that
+    /// genuinely is a different page, a content push that retunes the cap or the tiers.
     /// </para>
     /// </summary>
     public sealed class ReferralScreen : View
@@ -76,9 +77,15 @@ namespace GlimmerGrove
         /// extra forty units buy is the thing the page is actually about: the chest grows with
         /// the row, from 88 drawn to <see cref="RewardTall"/>.
         /// </para>
+        /// <para>
+        /// <see cref="RowGap"/> is not a margin any more: a <see cref="GridView"/> cell is
+        /// <c>RowH + RowGap</c> tall and the card is centred in it, which puts half the gap
+        /// above and half below every card and needs no special case for the last one.
+        /// </para>
         /// </summary>
         const float RowH = 196f;
         const float RowGap = 12f;
+        const float CellH = RowH + RowGap;
 
         /// <summary>
         /// The <b>COLLECT</b> key at the right end of a row, the pill that stands in the same
@@ -108,6 +115,9 @@ namespace GlimmerGrove
         /// </summary>
         const float OfferH = RowH;
 
+        /// <summary>The gap under the offer band, and the room the board leaves the nav bar.</summary>
+        const float OfferGap = 14f, BoardFoot = 20f;
+
         /// <summary>The well a reward stands in, and its drawn height. See <see cref="ChestPack"/>.</summary>
         const float SeatSize = 160f, SeatX = 118f, RewardTall = 124f;
 
@@ -127,92 +137,160 @@ namespace GlimmerGrove
         string _chapterName;
 
         Text _codeText, _tally;
-        Btn _codeTap, _shareBtn;
 
-        /// <summary>Which offer row the page was built with, so a repaint can notice it must rebuild.</summary>
+        /// <summary>Which offer row the page is drawn with. See <see cref="OfferShape"/>.</summary>
         enum Offer { None, Code, Welcome }
         Offer _offer;
-        int _rowCount;
 
-        RowTile _welcome;
-        readonly List<RowTile> _rows = new List<RowTile>();
+        /// <summary>The band the offer row lives in, rebuilt on its own, and what it costs in height.</summary>
+        RectTransform _offerBand;
+        float _offerTop, _offerHeight;
 
-        RectTransform _board;
-        ScrollRect _scroll;
-        float _boardH, _bandH;
+        RectTransform _heading, _viewport;
+        GridView _grid;
 
-        /// <summary>Where the player had the board when a restage took it away. See <see cref="RestoreScroll"/>.</summary>
-        float _keptScroll;
-        bool _hasKeptScroll;
+        /// <summary>The welcome chests, when the offer band is drawing them. Null otherwise.</summary>
+        RowWidgets _welcome;
 
         /// <summary>
         /// True from the tap on a row until the ceremony it opened is standing in front of the
-        /// player; a restage underneath would destroy the tiles the ceremony was launched from.
+        /// player.
         ///
         /// <para>
         /// <b>It has to outlast the claim call, and it did not.</b> It was cleared before
         /// <c>Flow.Modal</c> was called, and <see cref="ChestOverlay"/> runs its claim inside
         /// its own <c>Build</c> — so <c>payout.Land()</c> adopted the new state, raised
         /// <see cref="OnChanged"/>, and found the guard already down, on the frame the chest
-        /// was opening. It is cleared after the panel is up and the page is repainted.
+        /// was opening. It is cleared after the panel is up and the page has caught up.
         /// </para>
         /// </summary>
         bool _collecting;
 
         /// <summary>
-        /// True while <see cref="Restage"/> is drawing the page again for a shape it did not
-        /// have before.
+        /// True while <see cref="Restage"/> is drawing the whole page again.
         ///
         /// <para>
-        /// Two jobs, and the second is the one that matters in production. It tells
-        /// <see cref="Build"/> to bind without the entrance — the page is already in front of
-        /// the player, and popping fifty cards in again is the "it reloaded" everybody reports.
-        /// And it is the re-entrancy guard: <c>Build</c> asks the server, an answer can arrive
-        /// synchronously on a completed task, and <see cref="OnChanged"/> would then restage a
-        /// page that is halfway through being restaged.
+        /// It suppresses the entrance — the page is already in front of the player — and it is
+        /// the re-entrancy guard: <c>Build</c> asks the server, an answer can arrive on an
+        /// already-completed task, and <see cref="OnChanged"/> would otherwise restage a page
+        /// that is halfway through being restaged. Same distinction <c>ModalView.Rebuilding</c>
+        /// draws for a panel.
         /// </para>
         /// </summary>
         bool _restaging;
 
-        /// <summary>
-        /// Seconds between the polls that keep a friend's progress live while the page stands.
-        ///
-        /// <para>
-        /// <b>This page is the one screen in the game whose subject is somebody else's play.</b>
-        /// Nothing about a friend clearing a chapter reaches this device on its own — the
-        /// ledger's own refresh is driven by <em>this</em> account's sync (<c>OnSettled</c>),
-        /// which says nothing about an invitee's — so without a poll a referrer sitting on the
-        /// page watches a board that cannot move, and a friend who finished is only ever
-        /// discovered by leaving and coming back.
-        /// </para>
-        /// <para>
-        /// The cost is bounded by somebody choosing to sit here: one <c>getReferral</c> per
-        /// thirty seconds per open page, and the call is a transaction over two documents.
-        /// Nought when the page is shut, which is almost always. It is skipped while a chest is
-        /// being taken and while a read is already out, and a reply that says nothing new now
-        /// raises nothing at all (<see cref="ReferralLedger.Adopt"/>), so a quiet poll costs the
-        /// page no redraw.
-        /// </para>
-        /// </summary>
-        const float PollSeconds = 30f;
-        float _poll;
-
         /// <summary>The reels, so the first tap on a lit row finds its lid already loaded (7b).</summary>
         AssetHold _reels;
 
-        /// <summary>The pieces of one row a repaint writes to.</summary>
-        sealed class RowTile
+        // ----------------------------------------------------------------- rows
+        /// <summary>
+        /// The furniture one reward row is made of, whether it is a friend's row in the board
+        /// or the welcome chests on the offer band.
+        ///
+        /// <para>
+        /// <b>Every field here is written by <see cref="Paint"/> on every bind</b>, and that is
+        /// a requirement rather than a tidiness: a <see cref="GridView"/> cell is recycled, so
+        /// the row a player scrolls onto is a row that was drawing somebody else a moment ago.
+        /// Anything a state leaves alone is the previous row's answer showing through — which
+        /// is invariant 48l's fault ("a repaint is a drawing of a state, so anything a one-off
+        /// path switches off it has to switch back on") with recycling added on top.
+        /// </para>
+        /// </summary>
+        sealed class RowWidgets
         {
-            public int Goal;
-            public ReferralClaimKind Kind;
-            public ReferralPayment Payment;
+            /// <summary>The card. What is punched on a tap and what dims when the row is spent.</summary>
             public RectTransform Root;
+
+            /// <summary>
+            /// The node whose sibling order carries this row's halo, or null when nothing needs
+            /// reordering.
+            ///
+            /// <para>
+            /// <see cref="Pool"/> is 150 units wider than the card and 130 taller, so it spills
+            /// over whatever is drawn beside it. In the board that is the neighbouring cells,
+            /// and cells are recycled in no particular order — so the lit one is sunk to the
+            /// bottom of the sibling list and its halo passes under its neighbours' plates.
+            /// On the offer band there is nothing to sink: the welcome row's pool is built
+            /// before its plate and is already behind it.
+            /// </para>
+            /// </summary>
+            public RectTransform Sink;
+
             public Image Card, Icon, Pool, Rim;
             public RectTransform Seat, Collect, Mark, Seal;
             public Text Title, Sub, MarkText, Count;
             public Btn Tap;
             public CanvasGroup Group;
+
+            /// <summary>Which payment this is currently drawing. Read by the tap, so it can never go stale.</summary>
+            public ReferralClaimKind Kind;
+            public int Goal;
+
+            /// <summary>Whether the shine loop is running, and for which row it was started.</summary>
             public bool Lit;
+            public int LitGoal = -1;
+        }
+
+        /// <summary>
+        /// One friend's row in the board.
+        ///
+        /// <para>
+        /// Built once and bound many times. It holds no friend number of its own beyond
+        /// <see cref="RowWidgets.Goal"/>, which <see cref="Bind"/> rewrites — so the tap
+        /// handler asks the widgets what they are drawing rather than closing over a number
+        /// that recycling would make a lie.
+        /// </para>
+        /// </summary>
+        sealed class FriendCell : IGridCell
+        {
+            readonly ReferralScreen _screen;
+            readonly RowWidgets _w;
+
+            public RectTransform Root { get; }
+
+            public FriendCell(ReferralScreen screen, RectTransform parent)
+            {
+                _screen = screen;
+
+                Root = UIKit.Node("Friend", parent);
+                Root.sizeDelta = new Vector2(Width, CellH);
+
+                // The pool first, so it is behind the plate it haloes — a light drawn over an
+                // opaque plate is what invariant 48i was bought by, from the other direction.
+                var pool = UIKit.Img("Light", Root, Art.Glow(128, 1.35f), Pal.A(Pal.Sun, 0f),
+                                     new Vector2(Width + 150f, RowH + 130f), Centre, Vector2.zero);
+
+                // `Skins.PlateNavy`, which is what every reward row in this game is drawn on —
+                // the tasks page, the streak board and the season ladder. This board was the one
+                // left on `Skins.Card`, and the difference is not a shade: a card is a
+                // *container*, flat and unlit with nothing at its edge but a keyline, and at the
+                // .74 an unreached row was faded to it read as a hole with the wall showing
+                // through. The plate carries the lit top edge and the two-tone face that make a
+                // row read as a thing holding a prize. One name, re-cut once (invariant 44).
+                var card = UIKit.Img("Card", Root, Art.S("Ui/" + Skins.PlateNavy), Color.white,
+                                     new Vector2(Width, RowH), Centre, Vector2.zero);
+
+                _w = screen.Furnish((RectTransform)card.transform, Width, RowH);
+                _w.Card = card;
+                _w.Pool = pool;
+                _w.Sink = Root;
+            }
+
+            public void Bind(int index)
+            {
+                int friend = index + 1;
+                bool moved = _w.Goal != friend;
+
+                _w.Kind = ReferralClaimKind.Rung;
+                _w.Goal = friend;
+
+                if (_w.Title)
+                    _w.Title.text = Loc.Format("ui.referral.friend_n", friend).ToUpperInvariant();
+
+                _screen.Paint(_w, _screen._table.PerInvitee,
+                              lit: friend == ReferralLedger.FirstClaimableFriend,
+                              instant: moved);
+            }
         }
 
         // ---------------------------------------------------------------- build
@@ -220,7 +298,6 @@ namespace GlimmerGrove
         {
             _table = ReferralLedger.Table;
             _state = ReferralLedger.State;
-            _rows.Clear();
             _welcome = null;
 
             var chapter = GameContent.Index?.FindChapter(_table.Milestone);
@@ -229,40 +306,39 @@ namespace GlimmerGrove
             Scenery.Plain(Content);
             Fireflies.Spawn(Content, 22, new Color(1f, .93f, .70f), 6f, 22f);
 
-            _offer = OfferShape;
-            _rowCount = RowCount;
-
             float y = 22f;
             y = BuildHeader(y);
             y = BuildHero(y);
-            y = BuildOffer(y);
-            y = BuildHeading(y);
-            BuildBoard(y);
+
+            // Everything below here moves when the offer band changes shape, so the cursor
+            // stops at the band and `LayoutBelowOffer` takes over.
+            _offerTop = y;
+
+            _offerBand = UIKit.Node("OfferBand", Safe);
+            _offerBand.anchorMin = new Vector2(.5f, 1f);
+            _offerBand.anchorMax = new Vector2(.5f, 1f);
+            _offerBand.pivot = new Vector2(.5f, 1f);
+            _offerBand.sizeDelta = new Vector2(Width, 0f);
+
+            BuildOffer();
+            BuildHeading();
+            BuildBoard();
+            LayoutBelowOffer();
 
             NavBar.Build(Content, NavBar.Tab.Profile);
             HoldReels();
 
+            // The entrance belongs to a first draw. A restage is the same page in a new state.
+            _grid.Show(RowCount, animate: !_restaging);
+            OpenOnPending();
+
             Repaint();
 
-            // A restage is the same page in a new state: it keeps the place the player had
-            // scrolled to, where a first draw opens on the row that can be taken.
-            if (_restaging) RestoreScroll();
-            else FocusOnPending();
-
             // The cache paints first and the server replaces it. Nothing waits on this: a
-            // failed read leaves the cached page standing, which is what a cache is for.
-            Refresh();
-        }
-
-        /// <summary>
-        /// Asks the server for a fresh copy. Safe to call at any time and from any path: the
-        /// ledger skips a read while one is already out, and drops a reply that a write
-        /// overtook.
-        /// </summary>
-        void Refresh()
-        {
-            _poll = 0f;
-            Run(async token => { await ReferralLedger.RefreshAsync(token); });
+            // failed read leaves the cached page standing, which is what a cache is for. The
+            // watch asks once on attach and then keeps asking for as long as the page stands,
+            // which is the only way a friend finishing reaches a screen that is already open.
+            ReferralWatch.Attach(this);
         }
 
         void OnEnable()
@@ -293,25 +369,6 @@ namespace GlimmerGrove
             _reels = null;
         }
 
-        /// <summary>
-        /// Keeps a friend's progress live while somebody is looking at it. See
-        /// <see cref="PollSeconds"/> for why this page polls when no other one does.
-        /// </summary>
-        void Update()
-        {
-            if (_collecting || _restaging || Flow.HasModal) return;
-
-            _poll += Time.unscaledDeltaTime;
-            if (_poll < PollSeconds) return;
-
-            // The clock is reset whether or not the ask goes out, so a page held offline asks
-            // once every thirty seconds rather than on every frame after the first thirty.
-            _poll = 0f;
-            if (Net.Offline || ReferralLedger.IsBusy) return;
-
-            Refresh();
-        }
-
         void HoldReels() => Run(async token =>
         {
             _reels = _reels ?? AssetLibrary.Hold("chests");
@@ -328,89 +385,81 @@ namespace GlimmerGrove
         {
             if (this == null || Content == null || !Living) return;
 
-            // A chest is being taken: the ceremony is standing on tiles this would destroy, and
-            // it already shows the state that raised this. The repaint at the end of `Take`
-            // catches up.
+            // A chest is being taken: the ceremony is standing on this page and already shows
+            // the state that raised this. `Take` asks the same question when it lets go.
             if (_collecting || _restaging) return;
 
             Settle();
         }
 
         /// <summary>
-        /// Brings the page up to date with whatever the ledger now holds: in place if it is
-        /// still the same page, from scratch if it is not.
+        /// Brings the page up to date with whatever the ledger now holds, at the smallest scale
+        /// that can be right.
         ///
         /// <para>
-        /// <b>Every path that changes the state ends here</b> rather than choosing for itself —
-        /// the ledger's event, a content push, a save merge, and the end of a collect. That
-        /// last one is why this is a method and not two lines inside <see cref="OnChanged"/>:
-        /// a change that arrives while a chest is being taken is deliberately ignored
-        /// (<see cref="_collecting"/>), so the collect has to ask the same question when it
-        /// lets go, or a shape that changed under the ceremony is never drawn.
+        /// Three scales, and the page nearly always lands on the cheapest. A content push is a
+        /// different page and restages it. A change of offer shape rebuilds one band and slides
+        /// what is under it, leaving the board alone. Everything else — a friend finishing, a
+        /// chest paid, a code minted — is a repaint of the handful of rows on the glass.
+        /// </para>
+        /// <para>
+        /// <b>Every path that changes the state ends here</b> rather than choosing for itself,
+        /// which is why this is a method and not two lines inside <see cref="OnChanged"/>: a
+        /// change arriving while a chest is being taken is deliberately ignored, so the collect
+        /// has to ask the same question when it lets go or a shape that moved under the ceremony
+        /// is never drawn.
         /// </para>
         /// </summary>
         void Settle()
         {
             if (this == null || Content == null || _restaging) return;
 
-            if (OfferShape != _offer || ContentMoved) { Restage(); return; }
+            if (ContentMoved) { Restage(); return; }
+
+            if (OfferShape != _offer)
+            {
+                RebuildOffer();
+                LayoutBelowOffer();
+            }
+
             Repaint();
         }
 
         /// <summary>
-        /// Draws the page again because it is a different page — a different offer row, or a
-        /// retuned cap — keeping the player's place and making no noise about it.
+        /// Draws the whole page again, for the one case that really is a different page: the
+        /// content table has been replaced, so the cap, the tiers or the milestone chapter may
+        /// all have moved.
         ///
         /// <para>
-        /// <b>Every handle into what was emptied is dropped here rather than left to
-        /// <c>Build</c>.</b> Not all of them are written on every path: <see cref="_welcome"/>
-        /// is built only by the welcome shape and <see cref="_codeText"/> only when there is a
-        /// hero, so a field left alone is a field still pointing at a destroyed widget that the
-        /// next repaint writes to. <see cref="View.ClearContent"/> owns the other half — the
-        /// cached safe-area layer, which is the one four hand-written copies of this loop all
-        /// forgot.
+        /// It opens at the top rather than keeping the player's place, which is
+        /// <see cref="GridView.Show"/>'s own rule and right here for its own reason — a board
+        /// whose length has just changed is not a board somebody still has a place in.
         /// </para>
         /// </summary>
         void Restage()
         {
             if (Content == null || _restaging) return;
 
-            _keptScroll = _board ? _board.anchoredPosition.y : 0f;
-            _hasKeptScroll = _board != null;
-
             _restaging = true;
             try
             {
+                // `ClearContent` drops the base class's cached safe-area layer, which is the
+                // half four hand-written copies of this loop all forgot. What is left here is
+                // this screen's own handles, cleared rather than left for `Build` to overwrite
+                // because not every one of them is written on every path.
                 ClearContent();
 
                 _codeText = _tally = null;
-                _codeTap = _shareBtn = null;
+                _offerBand = _heading = _viewport = null;
+                _grid = null;
                 _welcome = null;
-                _board = null;
-                _scroll = null;
-                _rows.Clear();
 
                 Build();
             }
             finally
             {
                 _restaging = false;
-                _hasKeptScroll = false;
             }
-        }
-
-        /// <summary>
-        /// Puts the board back where the player had it. Clamped to the board it is being put
-        /// back into rather than to the one it came off: a restage can change the page's height
-        /// — the offer row is 196 units and appears and disappears — so the offset that was
-        /// legal a moment ago need not be.
-        /// </summary>
-        void RestoreScroll()
-        {
-            if (_board == null || !_hasKeptScroll) return;
-
-            float most = Mathf.Max(0f, _boardH - _bandH);
-            _board.anchoredPosition = new Vector2(0f, Mathf.Clamp(_keptScroll, 0f, most));
         }
 
         // ------------------------------------------------------------- reading
@@ -445,9 +494,9 @@ namespace GlimmerGrove
         /// a cap of three to the person reading it, whatever the tally line above it says.
         /// </para>
         /// <para>
-        /// <b>It costs no new maximum.</b> The board already built <see cref="ReferralTable.MaxBound"/>
-        /// rows for anybody with that many finished friends, and it already scrolls; what
-        /// changes is when it does, not how big it can get.
+        /// <b>And it costs nothing now.</b> When this was fifty built subtrees the count was a
+        /// real bill; on a <see cref="GridView"/> the page holds the rows that fit on the glass
+        /// whether the cap is fifty or five hundred.
         /// </para>
         /// </summary>
         int RowCount => Mathf.Max(1, _table.MaxBound);
@@ -456,7 +505,7 @@ namespace GlimmerGrove
         /// Whether the content this page was drawn from is still the content that is live.
         ///
         /// <para>
-        /// <b>The comparison it replaces could never be true.</b> <see cref="OnChanged"/> asked
+        /// <b>The comparison it replaces could never be true.</b> <c>OnChanged</c> asked
         /// <c>RowCount != _rowCount</c>, and both sides read <see cref="_table"/> — snapshotted
         /// at the top of <see cref="Build"/> — so the guard the comment described did not
         /// exist. A leftover from the shape this board had before 2026-09-20, when the count
@@ -582,15 +631,15 @@ namespace GlimmerGrove
                 UIKit.Titled("Code", well.transform, string.Empty, 46, Pal.Gold, TextAnchor.MiddleCenter,
                              new Vector2(CodeW - 40f, 60f), Centre, Vector2.zero, 3f, 4f), 18);
 
-            _codeTap = UIKit.Button("CopyTap", well.transform, Art.Pixel, new Vector2(CodeW, CodeH),
-                                    Centre, Vector2.zero, CopyCode);
-            _codeTap.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0f);
-            _codeTap.PressScale = .98f;
+            var codeTap = UIKit.Button("CopyTap", well.transform, Art.Pixel, new Vector2(CodeW, CodeH),
+                                       Centre, Vector2.zero, CopyCode);
+            codeTap.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0f);
+            codeTap.PressScale = .98f;
 
-            _shareBtn = UIKit.TextButton("Share", plate.transform, Skins.Affirm, Loc.Get("ui.referral.share"), 34,
+            var share = UIKit.TextButton("Share", plate.transform, Skins.Affirm, Loc.Get("ui.referral.share"), 34,
                                          new Vector2(ShareW, ShareH), Right, new Vector2(-176f, 26f),
                                          ShareCode, "ic_share");
-            UIKit.OneLine(_shareBtn, 18);
+            UIKit.OneLine(share, 18);
 
             _tally = UIKit.Shrinkable(
                 UIKit.Titled("Tally", plate.transform, string.Empty, 24, Pal.A(Pal.Cream, .84f),
@@ -633,15 +682,53 @@ namespace GlimmerGrove
 
         // ---------------------------------------------------------------- offer
         /// <summary>
+        /// Throws the offer band away and draws it for whatever shape the page is in now.
+        ///
+        /// <para>
+        /// <b>Only this band, and that is the point.</b> It is the one thing on this page that
+        /// can change shape while somebody is looking at it, so it is the only thing a change
+        /// of shape is allowed to cost. The heading and the board slide down or up by whatever
+        /// it now measures (<see cref="LayoutBelowOffer"/>) and the board keeps its cells, its
+        /// scroll and its place.
+        /// </para>
+        /// </summary>
+        void RebuildOffer()
+        {
+            if (_offerBand == null) return;
+
+            for (int i = _offerBand.childCount - 1; i >= 0; i--)
+            {
+                var child = _offerBand.GetChild(i).gameObject;
+                child.SetActive(false);
+                Destroy(child);
+            }
+
+            _welcome = null;
+            BuildOffer();
+        }
+
+        /// <summary>
         /// The row between the hero and the board: an invitation to type a friend's code, or
         /// the welcome chests a typed code earns — or nothing, for a player who can do neither.
         /// </summary>
-        float BuildOffer(float y)
+        void BuildOffer()
         {
-            if (_offer == Offer.None) return y;
+            _offer = OfferShape;
+            _offerHeight = _offer == Offer.None ? 0f : OfferH + OfferGap;
+            _offerBand.sizeDelta = new Vector2(Width, _offerHeight);
 
-            float cy = -(y + OfferH * .5f);
-            var plate = UIKit.Img("Offer", Safe, Art.S("Ui/" + Skins.PlateBlue), Color.white,
+            if (_offer == Offer.None) return;
+
+            float cy = -(OfferH * .5f);
+
+            // The welcome row's pool of light, under the plate rather than on it. Built first
+            // so it is the first sibling, for `Paint`'s reason.
+            Image pool = null;
+            if (_offer == Offer.Welcome)
+                pool = UIKit.Img("Light", _offerBand, Art.Glow(128, 1.35f), Pal.A(Pal.Sun, 0f),
+                                 new Vector2(Width + 150f, OfferH + 130f), Top, new Vector2(0f, cy));
+
+            var plate = UIKit.Img("Offer", _offerBand, Art.S("Ui/" + Skins.PlateBlue), Color.white,
                                   new Vector2(Width, OfferH), Top, new Vector2(0f, cy));
 
             if (_offer == Offer.Code)
@@ -689,30 +776,20 @@ namespace GlimmerGrove
                 var enter = UIKit.TextButton("Enter", plate.transform, Skins.Alternate, Loc.Get("ui.referral.enter"), 30,
                                              new Vector2(272f, 104f), Right, new Vector2(-150f, 0f), EnterCode);
                 UIKit.OneLine(enter, 16);
-                return y + OfferH + 14f;
+                return;
             }
 
-            // The welcome chests, as a row of the same shape as a friend's. Built on the plate
+            // The welcome chests, as a row of the same shape as a friend's. Built on the band
             // rather than in the board so it never scrolls away: it is the one thing on the
             // page an invitee came for.
-            var tile = new RowTile
-            {
-                Goal = 0,
-                Kind = ReferralClaimKind.Invitee,
-                Payment = _table.Invitee,
-                Root = (RectTransform)plate.transform,
-                Card = plate,
-            };
-            _welcome = tile;
-            tile.Group = UIKit.Group(tile.Root);
+            _welcome = Furnish((RectTransform)plate.transform, Width, OfferH);
+            _welcome.Card = plate;
+            _welcome.Pool = pool;
+            _welcome.Kind = ReferralClaimKind.Invitee;
+            _welcome.Goal = 0;
 
-            tile.Pool = UIKit.Img("Light", Safe, Art.Glow(128, 1.35f), Pal.A(Pal.Sun, 0f),
-                                  new Vector2(Width + 150f, OfferH + 130f), Top, new Vector2(0f, cy));
-            tile.Pool.transform.SetSiblingIndex(plate.transform.GetSiblingIndex());
-
-            Furnish(tile, Loc.Get("ui.referral.welcome_title").ToUpperInvariant());
-
-            return y + OfferH + 14f;
+            if (_welcome.Title)
+                _welcome.Title.text = Loc.Get("ui.referral.welcome_title").ToUpperInvariant();
         }
 
         void EnterCode()
@@ -720,193 +797,172 @@ namespace GlimmerGrove
             if (Flow.HasModal) return;
             Flow.Modal<ReferralCodeOverlay>(v => v.OnRedeemed = () =>
             {
-                if (this == null || Content == null) return;
+                if (this == null || Content == null || !Living) return;
                 Scenery.Toast(Content, Loc.Format("ui.referral.redeem_bound", _chapterName), Pal.Mint, 3.2f);
             });
         }
 
         // -------------------------------------------------------------- heading
-        float BuildHeading(float y)
+        void BuildHeading()
         {
-            float cy = -(y + HeadingH * .5f);
-
-            UIKit.Shrinkable(
+            _heading = (RectTransform)UIKit.Shrinkable(
                 UIKit.Titled("H", Safe, Loc.Format("ui.referral.heading", _chapterName).ToUpperInvariant(),
                              28, Pal.Gold, TextAnchor.MiddleLeft, new Vector2(Width - 16f, 38f), Top,
-                             new Vector2(0f, cy), 3f, 3f), 17);
-
-            return y + HeadingH;
+                             Vector2.zero, 3f, 3f), 17).transform;
         }
 
         // ---------------------------------------------------------------- board
-        void BuildBoard(float top)
+        void BuildBoard()
         {
-            float bottom = NavBar.Height + 20f;
+            _viewport = UIKit.Node("Board", Safe);
+            _viewport.anchorMin = new Vector2(0f, 0f);
+            _viewport.anchorMax = new Vector2(1f, 1f);
 
-            var band = UIKit.Node("Board", Safe);
-            UIKit.StretchTo(band, 0f, bottom, 0f, top);
-            band.gameObject.AddComponent<RectMask2D>();
-
-            _bandH = Mathf.Max(0f, Flow.Size.y - top - bottom);
-            _boardH = _rowCount * (RowH + RowGap) - RowGap;
-
-            var rows = UIKit.Node("Rows", band);
-            rows.anchorMin = new Vector2(0f, 1f);
-            rows.anchorMax = new Vector2(1f, 1f);
-            rows.pivot = new Vector2(.5f, 1f);
-            rows.sizeDelta = new Vector2(0f, _boardH);
-            rows.anchoredPosition = Vector2.zero;
-            _board = rows;
-
-            // Every lit row's pool of light, under every card. The streak's rule (48i).
-            var lights = UIKit.Node("Lights", rows);
-            UIKit.StretchTo(lights, 0f, 0f, 0f, 0f);
-
-            for (int i = 0; i < _rowCount; i++)
-                Row(rows, lights, i + 1, i * (RowH + RowGap), i);
-
-            var catcher = band.gameObject.AddComponent<Image>();
-            catcher.color = new Color(0f, 0f, 0f, 0f);
-            catcher.raycastTarget = true;
-
-            _scroll = band.gameObject.AddComponent<ScrollRect>();
-            _scroll.content = rows;
-            _scroll.viewport = band;
-            _scroll.horizontal = false;
-            _scroll.vertical = true;
-            _scroll.movementType = ScrollRect.MovementType.Elastic;
-            _scroll.elasticity = .14f;
-            _scroll.inertia = true;
-            _scroll.decelerationRate = .04f;
-            _scroll.scrollSensitivity = 55f;
+            // `padTop`/`padBottom` are nought: the gap between cards is half of `RowGap` at each
+            // end of a cell, which needs no special case for the first or the last.
+            _grid = GridView.Attach(_viewport, 1, Width, CellH,
+                                    parent => new FriendCell(this, parent),
+                                    padTop: 0f, padBottom: 0f);
         }
 
-        /// <summary>Opens the board on the row that can be taken, for the streak's reason.</summary>
-        void FocusOnPending()
+        /// <summary>
+        /// Puts the band, the heading and the board where the offer's current height says they
+        /// go. The only arithmetic on this page that runs more than once.
+        /// </summary>
+        void LayoutBelowOffer()
         {
-            if (_board == null || _boardH <= _bandH) return;
+            if (_offerBand == null) return;
 
+            _offerBand.anchoredPosition = new Vector2(0f, -_offerTop);
+
+            float y = _offerTop + _offerHeight;
+
+            if (_heading)
+            {
+                _heading.anchorMin = _heading.anchorMax = Top;
+                _heading.pivot = Centre;
+                _heading.anchoredPosition = new Vector2(0f, -(y + HeadingH * .5f));
+            }
+
+            y += HeadingH;
+
+            if (_viewport)
+            {
+                _viewport.offsetMin = new Vector2(0f, NavBar.Height + BoardFoot);
+                _viewport.offsetMax = new Vector2(0f, -y);
+
+                // The window just changed height under a list that has not changed at all, so
+                // the grid is told in the same frame rather than noticing on its next one — a
+                // frame late is a frame with a gap at the bottom of the board.
+                _grid?.Relayout();
+            }
+        }
+
+        /// <summary>
+        /// Opens the board on the row that can be taken, for the streak page's reason: a list
+        /// whose one actionable row is below the fold is a list that has hidden the only thing
+        /// on it worth a tap.
+        /// </summary>
+        void OpenOnPending()
+        {
             int friend = ReferralLedger.FirstClaimableFriend;
-            if (friend <= 0 || friend > _rowCount) return;
-
-            float rowTop = (friend - 1) * (RowH + RowGap);
-            float want = Mathf.Clamp(rowTop - (_bandH - RowH) * .5f, 0f, _boardH - _bandH);
-            _board.anchoredPosition = new Vector2(0f, want);
+            if (friend >= 1 && friend <= RowCount) _grid?.ScrollTo(friend - 1);
         }
 
-        void Row(RectTransform parent, RectTransform lights, int friend, float top, int index)
-        {
-            var tile = new RowTile { Goal = friend, Kind = ReferralClaimKind.Rung, Payment = _table.PerInvitee };
-            _rows.Add(tile);
-
-            float cy = -(top + RowH * .5f);
-
-            tile.Pool = UIKit.Img("Light_" + friend, lights, Art.Glow(128, 1.35f), Pal.A(Pal.Sun, 0f),
-                                  new Vector2(Width + 150f, RowH + 130f), Top, new Vector2(0f, cy));
-
-            // `Skins.PlateNavy`, which is what every reward row in this game is drawn on — the
-            // tasks page, the streak board and the season ladder. This board was the one left
-            // on `Skins.Card`, and the difference is not a shade: a card is a *container*, flat
-            // and unlit with nothing at its edge but a keyline, and at the .74 an unreached row
-            // is faded to it reads as a hole with the wall showing through. The plate carries
-            // the lit top edge and the two-tone face that make a row read as a thing holding a
-            // prize. One name, re-cut once (invariant 44).
-            var card = UIKit.Img("F" + friend, parent, Art.S("Ui/" + Skins.PlateNavy), Color.white,
-                                 new Vector2(Width, RowH), Top, new Vector2(0f, cy));
-            tile.Card = card;
-            tile.Root = (RectTransform)card.transform;
-            tile.Group = UIKit.Group(tile.Root);
-
-            Furnish(tile, Loc.Format("ui.referral.friend_n", friend).ToUpperInvariant());
-
-            // The entrance, and only on a first draw. A restage is the same page in a new
-            // state — `ModalView.MakePanel` draws the same distinction for a panel, and for the
-            // same reason: a player who is already looking at this board must not watch it
-            // arrive a second time.
-            if (_restaging) return;
-
-            tile.Root.localScale = Vector3.zero;
-            Tween.Pop(tile.Root, 0f, .46f, .20f + Mathf.Min(index, 8) * .04f);
-        }
-
+        // ------------------------------------------------------------ furnishing
         /// <summary>
         /// The furniture every reward row shares: the well and the chest at the left with the
         /// count on its corner, two lines in the middle, and the three answers at the right of
         /// which one shows.
+        ///
+        /// <para>
+        /// It builds and never paints. Everything that depends on what the row is drawing is
+        /// <see cref="Paint"/>'s, because this runs once per <em>cell</em> and that runs once
+        /// per bind.
+        /// </para>
         /// </summary>
-        void Furnish(RowTile tile, string title)
+        RowWidgets Furnish(RectTransform root, float width, float height)
         {
-            var seat = UIKit.Img("Seat", tile.Root, Art.S("Ui/" + Skins.Slot), Color.white,
+            var w = new RowWidgets { Root = root };
+            w.Group = UIKit.Group(root);
+
+            var seat = UIKit.Img("Seat", root, Art.S("Ui/" + Skins.Slot), Color.white,
                                  new Vector2(SeatSize, SeatSize), Left, new Vector2(SeatX, 0f));
-            tile.Seat = (RectTransform)seat.transform;
+            w.Seat = (RectTransform)seat.transform;
 
             // Sized and placed in *drawn* units through ChestPack (48j): the closed icon is
             // frame nought of the reel and carries the lid's headroom.
             float tall = RewardTall;
             var box = new Vector2(tall / ChestPack.Fill * ChestPack.Aspect, tall / ChestPack.Fill);
-            var chest = UIKit.Img("Chest", tile.Root, Art.S(tile.Payment.Tier.Icon), Color.white,
+            var chest = UIKit.Img("Chest", root, null, Color.white,
                                   box, Left, new Vector2(SeatX, tall * ChestPack.Lift));
             chest.preserveAspect = true;
-            tile.Icon = chest;
+            w.Icon = chest;
 
-            // The count, on the well's corner, drawn only when it is more than one: "x2" on a
-            // single chest is a number that says nothing.
-            if (tile.Payment.Count > 1)
-            {
-                var badge = UIKit.Img("Count", tile.Root, Art.Disc(64), Pal.Gold,
-                                      new Vector2(54f, 54f), Left,
-                                      new Vector2(SeatX + SeatSize * .5f - 14f, -SeatSize * .5f + 16f));
-                tile.Count = UIKit.Titled("N", badge.transform, "x" + tile.Payment.Count, 27,
-                                          new Color(.30f, .20f, .05f), TextAnchor.MiddleCenter, outline: 0f, shadow: 0f);
-            }
+            // The count, on the well's corner. Built always and shown by `Paint`, because a
+            // recycled cell cannot grow a widget it was not built with — and whether the count
+            // is worth drawing is a property of the payment, which a retune can move.
+            var badge = UIKit.Img("Count", root, Art.Disc(64), Pal.Gold,
+                                  new Vector2(54f, 54f), Left,
+                                  new Vector2(SeatX + SeatSize * .5f - 14f, -SeatSize * .5f + 16f));
+            w.Count = UIKit.Titled("N", badge.transform, string.Empty, 27,
+                                   new Color(.30f, .20f, .05f), TextAnchor.MiddleCenter, outline: 0f, shadow: 0f);
 
-            tile.Title = UIKit.Shrinkable(
-                UIKit.Titled("Title", tile.Root, title, 32, Pal.Cream, TextAnchor.MiddleLeft,
+            w.Title = UIKit.Shrinkable(
+                UIKit.Titled("Title", root, string.Empty, 32, Pal.Cream, TextAnchor.MiddleLeft,
                              new Vector2(TextW, 44f), Left, new Vector2(TextX + TextW * .5f, 32f), 3f, 3f), 18);
 
-            tile.Sub = UIKit.Shrinkable(
-                UIKit.Titled("Sub", tile.Root, string.Empty, 25, Pal.A(Pal.Cream, .84f), TextAnchor.MiddleLeft,
+            w.Sub = UIKit.Shrinkable(
+                UIKit.Titled("Sub", root, string.Empty, 25, Pal.A(Pal.Cream, .84f), TextAnchor.MiddleLeft,
                              new Vector2(TextW, 36f), Left, new Vector2(TextX + TextW * .5f, -28f), 3f, 3f), 15);
 
-            var collect = UIKit.Img("Collect", tile.Root, Art.S("Ui/" + Skins.Affirm), Color.white,
+            var collect = UIKit.Img("Collect", root, Art.S("Ui/" + Skins.Affirm), Color.white,
                                     new Vector2(KeyW, KeyH), Right, new Vector2(-130f, 0f));
             UIKit.Shrinkable(
                 UIKit.Titled("CollectText", collect.transform, Loc.Get("ui.referral.collect").ToUpperInvariant(),
                              34, Pal.Cream, TextAnchor.MiddleCenter, new Vector2(KeyW - 36f, 52f), Centre,
                              new Vector2(0f, KeyH * UIKit.PillFaceLift), 4f, 4f), 20);
-            tile.Collect = (RectTransform)collect.transform;
-            tile.Collect.gameObject.SetActive(false);
+            w.Collect = (RectTransform)collect.transform;
 
-            tile.MarkText = Scenery.Pill(tile.Root, string.Empty, MarkType, new Vector2(KeyW, MarkH),
-                                         Right, new Vector2(-130f, 0f),
-                                         new Color(.05f, .09f, .18f, .70f));
-            tile.Mark = (RectTransform)tile.MarkText.transform.parent;
-            tile.Mark.gameObject.SetActive(false);
+            w.MarkText = Scenery.Pill(root, string.Empty, MarkType, new Vector2(KeyW, MarkH),
+                                      Right, new Vector2(-130f, 0f),
+                                      new Color(.05f, .09f, .18f, .70f));
+            w.Mark = (RectTransform)w.MarkText.transform.parent;
 
-            var seal = UIKit.Img("Seal", tile.Root, Art.S("Ui/seal_gold"), Color.white,
+            var seal = UIKit.Img("Seal", root, Art.S("Ui/seal_gold"), Color.white,
                                  new Vector2(84f, 84f), Right, new Vector2(-146f, 0f));
             seal.preserveAspect = true;
             var tick = UIKit.Img("Tick", seal.transform, Art.S("Ui/ic_check"), Pal.Cream,
                                  new Vector2(44f, 44f), Centre, Vector2.zero);
             tick.preserveAspect = true;
-            tile.Seal = (RectTransform)seal.transform;
-            tile.Seal.gameObject.SetActive(false);
+            w.Seal = (RectTransform)seal.transform;
 
-            tile.Rim = UIKit.Img("Rim", tile.Root, Art.RoundOutline(30, 7f), Pal.A(Pal.Sun, 0f));
-            UIKit.StretchTo((RectTransform)tile.Rim.transform, 0f, 0f, 0f, 0f);
+            w.Rim = UIKit.Img("Rim", root, Art.RoundOutline(30, 7f), Pal.A(Pal.Sun, 0f));
+            UIKit.StretchTo((RectTransform)w.Rim.transform, 0f, 0f, 0f, 0f);
 
-            // The whole row is the button and COLLECT is a label on it (the streak's rule).
-            bool welcome = tile.Kind == ReferralClaimKind.Invitee;
-            tile.Tap = UIKit.Button("Tap", tile.Root, Art.Pixel, new Vector2(Width, welcome ? OfferH : RowH),
-                                    Centre, Vector2.zero, () => Take(tile));
-            tile.Tap.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0f);
-            tile.Tap.ClickSfx = null;
-            tile.Tap.PressScale = .98f;
-            tile.Tap.gameObject.SetActive(false);
+            // The whole row is the button and COLLECT is a label on it (the streak's rule). It
+            // reads the widgets rather than closing over a friend number, because a cell is
+            // recycled and a captured number would be a lie the moment it scrolled.
+            w.Tap = UIKit.Button("Tap", root, Art.Pixel, new Vector2(width, height),
+                                 Centre, Vector2.zero, () => Take(w));
+            w.Tap.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0f);
+            w.Tap.ClickSfx = null;
+            w.Tap.PressScale = .98f;
+
+            return w;
         }
 
         // -------------------------------------------------------------- painting
-        /// <summary>Writes the cached state onto the hero and every row. No entrance and no rebuild.</summary>
+        /// <summary>
+        /// Writes the cached state onto the hero, the welcome row and every row on the glass.
+        ///
+        /// <para>
+        /// <see cref="GridView.Refresh"/> rebinds the cells that are realised and nothing else,
+        /// so this is a handful of rows however long the board is. It used to be fifty, each
+        /// running a Best Fit pass through <see cref="UIKit.OneLineLabel"/>, on every event the
+        /// page listens to.
+        /// </para>
+        /// </summary>
         void Repaint()
         {
             if (this == null || Content == null) return;
@@ -925,25 +981,32 @@ namespace GlimmerGrove
                 _tally.text = Loc.Format("ui.referral.tally", _state.Bound, _table.MaxBound,
                                          _state.Finished, _chapterName);
 
-            if (_welcome != null) Paint(_welcome, ReferralLedger.InviteeClaimable);
+            if (_welcome != null)
+                Paint(_welcome, _table.Invitee, ReferralLedger.InviteeClaimable, instant: false);
 
-            int lit = ReferralLedger.FirstClaimableFriend;
-            foreach (var tile in _rows) Paint(tile, tile.Goal == lit);
+            _grid?.Refresh();
         }
 
         /// <summary>
         /// One row's state, derived from the same facts for a friend's row and the welcome
         /// row: reached or not, how many of its chests are paid, and whether it is the one
         /// row that shines.
+        ///
+        /// <para>
+        /// <paramref name="instant"/> says this row is drawing a different payment from the one
+        /// it was drawing a moment ago — a recycled cell. A light that faded out over three
+        /// tenths of a second would then be the *previous* friend's light going out on a row
+        /// that has already become somebody else.
+        /// </para>
         /// </summary>
-        void Paint(RowTile tile, bool lit)
+        void Paint(RowWidgets w, ReferralPayment payment, bool lit, bool instant)
         {
-            if (tile == null || !tile.Root) return;
+            if (w == null || !w.Root) return;
 
-            bool welcome = tile.Kind == ReferralClaimKind.Invitee;
-            int count = tile.Payment.Count;
-            int paid = _state.PaidCount(tile.Kind, tile.Goal, count);
-            bool reached = ReferralLedger.Reached(tile.Kind, tile.Goal);
+            bool welcome = w.Kind == ReferralClaimKind.Invitee;
+            int count = payment.Count;
+            int paid = _state.PaidCount(w.Kind, w.Goal, count);
+            bool reached = ReferralLedger.Reached(w.Kind, w.Goal);
             bool done = paid >= count;
             bool waiting = reached && !done;
             lit = lit && waiting;
@@ -951,17 +1014,32 @@ namespace GlimmerGrove
             var (cleared, total) = welcome ? ReferralLedger.MilestoneProgress : (0, 0);
             bool clearedHere = welcome && total > 0 && cleared >= total;
 
-            if (tile.Sub)
+            // The chest's picture is a property of the tier, and a tier is content: it is
+            // written on every bind rather than at build time so a recycled cell — or a retune
+            // — can never leave the previous tier's lid on this row (invariant 7b).
+            if (w.Icon) w.Icon.sprite = payment.Tier != null ? Art.S(payment.Tier.Icon) : null;
+
+            // "x2" on a single chest is a number that says nothing, so the badge is shown only
+            // when the payment really pays more than one.
+            if (w.Count)
             {
-                string pays = Loc.Format("ui.referral.pays", count, Loc.Get(tile.Payment.Tier.NameKey));
+                var badge = w.Count.transform.parent as RectTransform;
+                if (badge) badge.gameObject.SetActive(count > 1);
+                w.Count.text = "x" + count;
+            }
+
+            if (w.Sub)
+            {
+                string pays = Loc.Format("ui.referral.pays", count,
+                                         payment.Tier != null ? Loc.Get(payment.Tier.NameKey) : string.Empty);
                 if (welcome && !reached)
-                    tile.Sub.text = Loc.Format("ui.referral.welcome_hint", _chapterName);
+                    w.Sub.text = Loc.Format("ui.referral.welcome_hint", _chapterName);
                 else if (waiting && paid > 0)
-                    tile.Sub.text = Loc.Format("ui.referral.opened", paid, count);
+                    w.Sub.text = Loc.Format("ui.referral.opened", paid, count);
                 else if (done && welcome)
-                    tile.Sub.text = Loc.Format("ui.referral.welcome_done_hint", _chapterName);
+                    w.Sub.text = Loc.Format("ui.referral.welcome_done_hint", _chapterName);
                 else
-                    tile.Sub.text = pays;
+                    w.Sub.text = pays;
             }
 
             // **The tasks page's rule, not the streak board's, and the difference is what this
@@ -973,68 +1051,101 @@ namespace GlimmerGrove
             // is **spent**, and that reads correctly at any mix: a paid row steps back, and
             // everything still owed is a solid card. What says "not yet" is the count on the
             // right and the cool tint on the reward, both of which are drawn either way.
-            if (tile.Group) tile.Group.alpha = done ? .62f : 1f;
-            if (tile.Tap) tile.Tap.gameObject.SetActive(waiting);
-            if (tile.Collect) tile.Collect.gameObject.SetActive(waiting);
-            if (tile.Seal) tile.Seal.gameObject.SetActive(done);
-            if (tile.Mark) tile.Mark.gameObject.SetActive(!waiting && !done);
+            if (w.Group) w.Group.alpha = done ? .62f : 1f;
+            if (w.Tap) w.Tap.gameObject.SetActive(waiting);
+            if (w.Collect) w.Collect.gameObject.SetActive(waiting);
+            if (w.Seal) w.Seal.gameObject.SetActive(done);
+            if (w.Mark) w.Mark.gameObject.SetActive(!waiting && !done);
 
-            if (tile.MarkText && tile.Mark.gameObject.activeSelf)
+            if (w.MarkText && w.Mark && w.Mark.gameObject.activeSelf)
             {
                 // The chapter cleared here and not yet on the server is the one state with a
                 // sentence of its own: the next sync settles it, and saying "4/10" over a
                 // finished chapter would read as the game having lost a level.
                 if (welcome)
                 {
-                    tile.MarkText.text = clearedHere
+                    w.MarkText.text = clearedHere
                         ? Loc.Get("ui.referral.settling").ToUpperInvariant()
                         : Loc.Format("ui.referral.progress", cleared, total);
-                    tile.MarkText.color = clearedHere ? Pal.Aqua : Pal.Cream;
+                    w.MarkText.color = clearedHere ? Pal.Aqua : Pal.Cream;
                 }
                 else
                 {
-                    tile.MarkText.text = Loc.Format("ui.referral.progress",
-                                                    Mathf.Min(_state.Finished, tile.Goal), tile.Goal);
-                    tile.MarkText.color = Pal.Cream;
+                    w.MarkText.text = Loc.Format("ui.referral.progress",
+                                                 Mathf.Min(_state.Finished, w.Goal), w.Goal);
+                    w.MarkText.color = Pal.Cream;
                 }
 
                 // Fitted from `MarkType` on every write, because the pill says a word in one
                 // state and a pair of figures in another and neither is a fixed width.
-                UIKit.OneLineLabel(tile.MarkText, MarkRoom, MarkType, MarkLeast);
+                UIKit.OneLineLabel(w.MarkText, MarkRoom, MarkType, MarkLeast);
             }
 
-            if (tile.Title) tile.Title.color = lit ? Pal.Gold : done ? Pal.Mint : Pal.Cream;
+            if (w.Title) w.Title.color = lit ? Pal.Gold : done ? Pal.Mint : Pal.Cream;
+
             // Full colour only where there is something to take; the cool grey is the tasks
             // ladder's own tint for a chest that is not yours yet, and it is what carries the
             // "not reached" reading now the card itself no longer fades for it.
-            if (tile.Icon)
-                tile.Icon.color = done ? new Color(.90f, .94f, 1f, 1f)
-                                : reached ? Color.white
-                                : new Color(.78f, .82f, .90f, 1f);
+            if (w.Icon)
+                w.Icon.color = done ? new Color(.90f, .94f, 1f, 1f)
+                             : reached ? Color.white
+                             : new Color(.78f, .82f, .90f, 1f);
 
-            Shine(tile, lit);
+            Shine(w, lit, instant);
         }
 
-        static void Shine(RowTile tile, bool on)
+        /// <summary>
+        /// The pool of light under the one row that can be taken, and the rim on it.
+        ///
+        /// <para>
+        /// <b>The loop is keyed on the row it was started for</b>, which is what makes it
+        /// survive recycling: a cell that scrolls off a lit row and back onto a dark one must
+        /// stop shining, and a cell rebound to the same lit row must <em>not</em> restart — a
+        /// breath that jumps back to its beginning on every repaint is the flicker this page
+        /// was reported for, wearing different clothes.
+        /// </para>
+        /// <para>
+        /// The lit row sinks to the bottom of the board's sibling order, because its pool is
+        /// 130 units taller than the card and would otherwise be drawn over its neighbours.
+        /// Only ever one row is lit (<see cref="ReferralLedger.FirstClaimableFriend"/>), so
+        /// this costs one reorder and never fights itself.
+        /// </para>
+        /// </summary>
+        void Shine(RowWidgets w, bool on, bool instant)
         {
-            if (tile.Lit == on) return;
-            tile.Lit = on;
+            bool already = w.Lit && w.LitGoal == w.Goal;
+            if (on && already) return;
+            if (!on && !w.Lit) return;
 
-            if (tile.Pool) Tween.KillChannel(tile.Pool.transform, "holy");
-            if (tile.Rim) Tween.KillChannel(tile.Rim.transform, "holy");
+            w.Lit = on;
+            w.LitGoal = on ? w.Goal : -1;
+
+            if (w.Pool) Tween.KillChannel(w.Pool.transform, "holy");
+            if (w.Rim) Tween.KillChannel(w.Rim.transform, "holy");
 
             if (!on)
             {
-                if (tile.Pool) Tween.Tint(tile.Pool, Pal.A(Pal.Sun, 0f), .3f);
-                if (tile.Rim) Tween.Tint(tile.Rim, Pal.A(Pal.Sun, 0f), .3f);
+                var clear = Pal.A(Pal.Sun, 0f);
+                if (instant)
+                {
+                    if (w.Pool) w.Pool.color = clear;
+                    if (w.Rim) w.Rim.color = clear;
+                }
+                else
+                {
+                    if (w.Pool) Tween.Tint(w.Pool, clear, .3f);
+                    if (w.Rim) Tween.Tint(w.Rim, clear, .3f);
+                }
                 return;
             }
 
+            if (w.Sink) w.Sink.SetAsFirstSibling();
+
             Tween.Run(1.8f, Ease.InOutSine, t =>
             {
-                if (tile.Pool) tile.Pool.color = Pal.A(Pal.Sun, Mathf.Lerp(.42f, .80f, t));
-                if (tile.Rim) tile.Rim.color = Pal.A(Pal.Radiance, Mathf.Lerp(.55f, 1f, t));
-            }, tile.Pool, "holy").Loop(-1, true);
+                if (w.Pool) w.Pool.color = Pal.A(Pal.Sun, Mathf.Lerp(.42f, .80f, t));
+                if (w.Rim) w.Rim.color = Pal.A(Pal.Radiance, Mathf.Lerp(.55f, 1f, t));
+            }, w.Rim, "holy").Loop(-1, true);
         }
 
         // ------------------------------------------------------------ collecting
@@ -1050,10 +1161,16 @@ namespace GlimmerGrove
         /// nothing is opened. A row paying two chests is left lit after the first, with its
         /// line saying one of two is opened, and the second tap takes the second.
         /// </para>
+        /// <para>
+        /// <b>The row is read off the widgets, and read again when the reply lands.</b> A cell
+        /// is recycled, so by the time the server answers these widgets may be drawing a
+        /// different friend — which is why the spark is only thrown if they are still drawing
+        /// the one that was asked for.
+        /// </para>
         /// </summary>
-        void Take(RowTile tile)
+        void Take(RowWidgets w)
         {
-            if (_collecting || tile == null || Flow.HasModal) return;
+            if (_collecting || w == null || !w.Root || Flow.HasModal) return;
 
             if (Net.Offline)
             {
@@ -1061,15 +1178,15 @@ namespace GlimmerGrove
                 return;
             }
 
-            int index = ReferralLedger.NextIndex(tile.Kind, tile.Goal);
+            var kind = w.Kind;
+            int goal = w.Goal;
+
+            int index = ReferralLedger.NextIndex(kind, goal);
             if (index <= 0) { Repaint(); return; }
 
             _collecting = true;
             Audio.Sfx("collect", .6f);
-            Tween.Punch(tile.Root, .12f, .30f);
-
-            var kind = tile.Kind;
-            int goal = tile.Goal;
+            Tween.Punch(w.Root, .12f, .30f);
 
             Run(async token =>
             {
@@ -1081,21 +1198,20 @@ namespace GlimmerGrove
                     payout = null;
                 }
 
-                // The screen is gone. The guard goes with it rather than being left set on a
-                // dead object, and the payout is dropped: its drops bank when the ledger's own
-                // in-flight note is redeemed on the next tap (`ReferralLanding`), never here.
+                // The screen is gone. The payout is dropped: its drops bank when the ledger's
+                // own in-flight note is redeemed on the next tap (`ReferralLanding`).
                 if (!Living) { _collecting = false; return; }
 
                 // Held right through the ceremony being raised, because `ChestOverlay` runs its
                 // claim inside its own `Build` — so `payout.Land` adopts the state and raises
-                // `OnChanged` on this very frame. Cleared in the `finally`, after the page has
-                // caught up with whatever landed.
+                // `OnChanged` on this very frame.
                 try
                 {
                     if (payout != null && payout.Opens)
                     {
-                        if (tile.Icon && tile.Icon.transform)
-                            Burst.Sparks(tile.Icon.transform, Vector2.zero, Pal.Gold, 18, 320f, 26f, .6f);
+                        if (w.Root && w.Icon && w.Kind == kind && w.Goal == goal)
+                            Burst.Sparks(w.Icon.transform, Vector2.zero, Pal.Gold, 18, 320f, 26f, .6f);
+
                         Flow.Modal<ChestOverlay>(v => v.Claim = ChestClaim.ForReferral(payout.Tier, payout.Land));
                         return;
                     }
@@ -1109,7 +1225,7 @@ namespace GlimmerGrove
                         case ReferralClaimOutcome.NotYet:
                             // The server's count has not reached this row. It is the one refusal
                             // that says the page was ahead of the truth, so take the truth: the
-                            // claim adopted it, and the repaint below draws the row as it really is.
+                            // claim adopted it, and the settle below draws the row as it is.
                             Scenery.Toast(Content, Loc.Get("ui.referral.not_yet"), Pal.Gold, 3f);
                             break;
 
@@ -1120,7 +1236,7 @@ namespace GlimmerGrove
                         default:
                             // Nothing was adopted, so nothing about the page has changed — but
                             // the row must come back out of its pressed state and go on offering
-                            // the tap, which is what the repaint below does.
+                            // the tap, which is what the settle below does.
                             Scenery.Toast(Content, Loc.Get("ui.chest.needs_connection"), Pal.Rose, 3f);
                             break;
                     }

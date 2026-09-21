@@ -338,6 +338,132 @@ namespace GlimmerGrove.Tests
             Assert.IsTrue(state.Matches(state));
         }
 
+        // ------------------------------------------------- what the ledger does with an answer
+        //
+        // Four rules, each pulled out of the method that used to bury it so it can be asked
+        // directly. Three of them decide something with no undo — whether a page redraws itself
+        // under the player, whether one account's state is written over another's, and whose
+        // wallet a chest is paid into — and none of them was reachable while it was four
+        // operators inside a property.
+
+        [Test]
+        public void AnAnswerThatRepeatsWhatIsHeldSaysNothingNew()
+        {
+            var held = State(new[] { "rung:1:1" });
+            var again = State(new[] { "rung:1:1" }, 1700009999L);
+
+            Assert.IsFalse(ReferralLedger.SaysSomethingNew(held, again),
+                           "the common case: the page must not be told a change happened");
+        }
+
+        [Test]
+        public void AnAnswerThatMovesAnythingSaysSomethingNew()
+        {
+            var held = State(new[] { "rung:1:1" });
+            Assert.IsTrue(ReferralLedger.SaysSomethingNew(held, State(new[] { "rung:1:1" }, finished: 3)));
+            Assert.IsTrue(ReferralLedger.SaysSomethingNew(held, State(new[] { "rung:1:1", "rung:1:2" })));
+        }
+
+        [Test]
+        public void TheFirstAnswerAlwaysSaysSomethingNew()
+        {
+            // It says exactly what `Empty` says and is still a change, because it is the one
+            // that turns `IsKnown` on. Leave this clause out and a fresh account's offer row
+            // never moves off the device's own guess.
+            var first = new ReferralState(string.Empty, 0, 0, new string[0], false, false, false, 1700000000L);
+
+            Assert.IsTrue(ReferralState.Empty.Matches(first), "nothing about it differs");
+            Assert.IsTrue(ReferralLedger.SaysSomethingNew(ReferralState.Empty, first), "and it is still news");
+        }
+
+        [Test]
+        public void ANullAnswerIsNotNews()
+        {
+            Assert.IsFalse(ReferralLedger.SaysSomethingNew(State(new string[0]), null));
+            Assert.IsTrue(ReferralLedger.SaysSomethingNew(null, State(new string[0])));
+        }
+
+        [Test]
+        public void AReadIsWantedWhileNothingHasMoved()
+        {
+            Assert.IsTrue(ReferralLedger.StillWanted("uid-a", 7, ordered: true, "uid-a", 7));
+        }
+
+        [Test]
+        public void AReadOvertakenByAWriteIsDropped()
+        {
+            // The redeem landed while the read was out. The read is carrying the state from
+            // before the code was typed, and adopting it would put the offer row back.
+            Assert.IsFalse(ReferralLedger.StillWanted("uid-a", 7, ordered: true, "uid-a", 8));
+        }
+
+        [Test]
+        public void AWriteIsNeverDroppedByAReadThatLandedFirst()
+        {
+            // The other order, and the one that cost a redeem: redeem out, read out, read back
+            // (bumping the generation), redeem back. A write is the freshest word there is
+            // about this account — the server has just acted on it — so nothing that merely
+            // *asked* a question may discard it. Dropped here, the panel closes, the toast says
+            // welcome, and the page goes on offering to type a code.
+            Assert.IsTrue(ReferralLedger.StillWanted("uid-a", 7, ordered: false, "uid-a", 8));
+        }
+
+        [Test]
+        public void NeitherKindSurvivesAnAccountSwitch()
+        {
+            // The switch is local and instant (invariant 17a); the call was not. Adopting here
+            // caches one player's code and counts under the other's key.
+            foreach (bool ordered in new[] { true, false })
+            {
+                Assert.IsFalse(ReferralLedger.StillWanted("uid-a", 7, ordered, "uid-b", 7), "another account");
+                Assert.IsFalse(ReferralLedger.StillWanted("uid-a", 7, ordered, string.Empty, 7), "signed out");
+                Assert.IsFalse(ReferralLedger.StillWanted("uid-a", 7, ordered, null, 7), "signed out, as null");
+            }
+        }
+
+        [Test]
+        public void AnOpenClaimIsAlwaysWanted()
+        {
+            // `Claim.Open`, for the one caller that has already proved the answer is wanted:
+            // a payout that checked its own owner before it banked a thing.
+            Assert.IsTrue(ReferralLedger.StillWanted(null, 0, ordered: true, "uid-b", 99));
+            Assert.IsTrue(ReferralLedger.StillWanted(null, 0, ordered: false, "uid-b", 99));
+        }
+
+        [Test]
+        public void AChestIsPaidOnlyIntoTheWalletItWasRolledFor()
+        {
+            Assert.IsTrue(ReferralLanding.PaysInto("uid-a", "uid-a"));
+            Assert.IsFalse(ReferralLanding.PaysInto("uid-a", "uid-b"));
+
+            // Signed out reads as empty in one place and null in the other, and they are the
+            // same account — nobody.
+            Assert.IsTrue(ReferralLanding.PaysInto(string.Empty, null));
+            Assert.IsFalse(ReferralLanding.PaysInto("uid-a", null));
+            Assert.IsFalse(ReferralLanding.PaysInto(null, "uid-b"));
+        }
+
+        [Test]
+        public void TheInFlightCeilingIsEverySubjectTheTableCanMint()
+        {
+            var problems = new List<string>();
+            var table = Resolve(Shipped(), problems);
+
+            // 50 friends x 2 chests each, plus the invitee's own 2.
+            Assert.AreEqual(50 * 2 + 2, ReferralLedger.NotesCeiling(table));
+        }
+
+        [Test]
+        public void TheInFlightCeilingNeverFallsToNothing()
+        {
+            // A withdrawn or unreadable table must not bound the list at nought and evict a
+            // note that is still owed — the note is what makes a lost reply bank on the retry.
+            var withdrawn = Resolve(new ReferralDto { maxBound = 0 }, new List<string>());
+
+            Assert.GreaterOrEqual(ReferralLedger.NotesCeiling(withdrawn), 16);
+            Assert.GreaterOrEqual(ReferralLedger.NotesCeiling(null), 16);
+        }
+
         [Test]
         public void AFirstAnswerIsNeverMistakenForNothing()
         {

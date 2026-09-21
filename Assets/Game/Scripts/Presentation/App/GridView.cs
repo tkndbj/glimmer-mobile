@@ -198,6 +198,70 @@ namespace GlimmerGrove
             if (_live.TryGetValue(index, out var cell)) cell.Bind(index);
         }
 
+        /// <summary>
+        /// Takes account of the viewport having changed size, keeping the list and the place in
+        /// it exactly as they were.
+        ///
+        /// <para>
+        /// For an owner whose grid does not fill a fixed hole — the invite page's board sits
+        /// under a band that is 196 units tall in one state and nothing in another, so the
+        /// window grows and shrinks under a list that has not changed at all.
+        /// <see cref="Window"/> would notice by itself on its next <c>Update</c>, which is one
+        /// frame late: a frame with a gap at the bottom where the row that now fits has not
+        /// been realised yet. <see cref="Show"/> is the wrong tool for it, because this is the
+        /// same list and resetting the scroll would throw away the player's place.
+        /// </para>
+        /// </summary>
+        public void Relayout()
+        {
+            if (_content == null || _viewport == null) return;
+
+            Resize();
+
+            // The content may now be shorter than the offset it is sitting at — the band above
+            // it grew — and a ScrollRect only eases that back over the following frames.
+            float most = Mathf.Max(0f, _content.sizeDelta.y - _viewport.rect.height);
+            float at = _content.anchoredPosition.y;
+            if (at < 0f || at > most)
+                _content.anchoredPosition = new Vector2(0f, Mathf.Clamp(at, 0f, most));
+
+            Window(force: true);
+        }
+
+        /// <summary>
+        /// Opens the list on one item rather than at the top, centred in the window where the
+        /// list is long enough to allow it.
+        ///
+        /// <para>
+        /// <b>Here rather than in the owner, for the reason this type exists</b> — "an owner
+        /// that reaches in and moves the content is fighting the window arithmetic". A caller
+        /// that set <c>content.anchoredPosition</c> itself would leave the realised window
+        /// describing the rows at the top, and <see cref="Window"/> would not correct it until
+        /// its next <c>Update</c>: one frame of the wrong rows, then a jump. Forcing the window
+        /// in the same breath as the move is the whole difference, and it is one line that no
+        /// caller can forget.
+        /// </para>
+        /// <para>
+        /// Call it after <see cref="Show"/>, which deliberately opens at the top; this is the
+        /// exception a list has to <em>ask</em> for, and the only reason to is that the item is
+        /// the one the player came for.
+        /// </para>
+        /// </summary>
+        public void ScrollTo(int index, bool centre = true)
+        {
+            if (_content == null || index < 0 || index >= _count) return;
+
+            int row = index / _columns;
+            float want = _padTop + row * _cellH;
+            if (centre) want -= Mathf.Max(0f, _viewport.rect.height - _cellH) * .5f;
+
+            float most = Mathf.Max(0f, _content.sizeDelta.y - _viewport.rect.height);
+            _content.anchoredPosition = new Vector2(0f, Mathf.Clamp(want, 0f, most));
+            if (_scroll) _scroll.velocity = Vector2.zero;
+
+            Window(force: true);
+        }
+
         void Update() => Window(force: false);
 
         // ------------------------------------------------------------- windowing
