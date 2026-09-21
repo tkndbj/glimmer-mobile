@@ -338,12 +338,17 @@ namespace GlimmerGrove.Cloud
             {
                 if (entry == null || string.IsNullOrEmpty(entry.id)) continue;
 
+                // `pass` is the client's own copy of the season pass (47e): a gem-bought
+                // entitlement, joined by `or` and gating nothing. It was left off the wire once,
+                // so a reinstall or a second device drew the pass as not bought while the paid
+                // column beside it read as collected. Nested in a row, so no rules release.
                 list.Add(new Dictionary<string, object>
                 {
                     { "id", entry.id },
                     { "marks", (long)entry.marks },
                     { "collectedGoal", (long)entry.collectedGoal },
                     { "premiumGoal", (long)entry.premiumGoal },
+                    { "pass", entry.pass },
                 });
             }
 
@@ -642,6 +647,7 @@ namespace GlimmerGrove.Cloud
                     marks = (int)Long(entry, "marks", 0),
                     collectedGoal = (int)Long(entry, "collectedGoal", 0),
                     premiumGoal = (int)Long(entry, "premiumGoal", 0),
+                    pass = Bool(entry, "pass"),
                 });
             }
 

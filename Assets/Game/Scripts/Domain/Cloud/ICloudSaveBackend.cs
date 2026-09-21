@@ -188,6 +188,23 @@ namespace GlimmerGrove.Cloud
     /// Balances are never taken from a client. This is the shape the answer comes back
     /// in, and <see cref="CurrencyLedger.ApplyServerState"/> is what adopts it.
     /// </summary>
+    /// <summary>
+    /// One pending debit as it travels to the server: the ledger's currency beside the
+    /// ledger's record. Built at the moment of sending from <c>Wallet.Ledgers</c>, which is
+    /// the only place that knows which ledger an entry came out of.
+    /// </summary>
+    public readonly struct SpendSubmission
+    {
+        public readonly string Currency;
+        public readonly SpendEntryDto Spend;
+
+        public SpendSubmission(string currency, SpendEntryDto spend)
+        {
+            Currency = currency ?? string.Empty;
+            Spend = spend;
+        }
+    }
+
     public sealed class CloudWalletState
     {
         public string Currency;
@@ -235,6 +252,19 @@ namespace GlimmerGrove.Cloud
         /// </para>
         /// </summary>
         public List<string> RejectedGrantIds = new List<string>();
+
+        /// <summary>
+        /// Debit ids the server refused on this reply, for the ledger to drop.
+        ///
+        /// <para>
+        /// A refusal is permanent by construction — an unaffordable amount, an underpaid or
+        /// unsold pass — so a client that keeps the entry keeps resubmitting it for the life of
+        /// the account (invariant 13a) while showing the thing it bought as bought. Dropping it
+        /// hands the balance back and, through <see cref="Persistence.CurrencyLedger.SpendRejected"/>,
+        /// lets whatever the debit paid for take itself back too. The first cut only logged these.
+        /// </para>
+        /// </summary>
+        public List<string> RejectedSpendIds = new List<string>();
 
         /// <summary>
         /// Heart containers the server has <b>revoked</b> — receipts it granted and has since
@@ -558,9 +588,19 @@ namespace GlimmerGrove.Cloud
         /// <summary>
         /// Submits pending debits for confirmation. Safe to call with entries the server
         /// has already seen: that is what the idempotency key on each one is for.
+        ///
+        /// <para>
+        /// <b>Each debit names the currency it was taken from</b> (<see cref="SpendSubmission"/>).
+        /// A <see cref="SpendEntryDto"/> is a ledger's file record and carries none, because a
+        /// ledger holds one currency and the record never leaves it — but the wire carries every
+        /// ledger's debits in one call, and the server prices a season pass in gems and refuses
+        /// it in anything else. The first cut labelled every debit "credits" on the way out, so
+        /// every gem the game ever charged was debited from the server's credit balance and the
+        /// pass was refused as underpaid on every sync for the life of the account.
+        /// </para>
         /// </summary>
         Task<(CloudResult result, List<CloudWalletState> wallets)> SubmitSpendsAsync(
-            string userId, IReadOnlyList<SpendEntryDto> spends,
+            string userId, IReadOnlyList<SpendSubmission> spends,
             CancellationToken cancellation = default);
 
         /// <summary>

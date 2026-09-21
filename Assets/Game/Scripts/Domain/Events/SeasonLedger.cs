@@ -204,6 +204,43 @@ namespace GlimmerGrove.Events
             => !string.IsNullOrEmpty(seasonId)
             && _seasons.TryGetValue(seasonId, out var state) && state.Pass;
 
+        static SeasonLedger()
+        {
+            // A pass is bought optimistically (`TryBuyPass` sets the flag beside the debit),
+            // so the one thing that can take it back is the debit being refused. The ledger
+            // says so by id; this is the listener the id is for.
+            Persistence.CurrencyLedger.SpendRejected += OnSpendRejected;
+        }
+
+        /// <summary>
+        /// A pass debit the server refused takes the pass with it.
+        ///
+        /// <para>
+        /// The gems are already back (the ledger dropped the entry before announcing it); what
+        /// is left is the flag the purchase set beside them. Without this a refused pass — the
+        /// price retuned while the device was offline, or a debit that reached the server in the
+        /// wrong currency, which is how it happened on the owner's own account — stayed drawn
+        /// as owned for ever while every paid chest it offered was refused.
+        /// </para>
+        /// <para>
+        /// Only the pass flag moves. The paid-track floor stays, because a floor is a record of
+        /// chests already opened and 47c makes each rung payable once; a second purchase later
+        /// picks up where it left off rather than paying those rungs again.
+        /// </para>
+        /// </summary>
+        internal static void OnSpendRejected(string currency, string spendId)
+        {
+            string seasonId = Persistence.SpendEntry.SeasonOfPassId(spendId);
+            if (seasonId == null) return;
+            if (!_seasons.TryGetValue(seasonId, out var state) || !state.Pass) return;
+
+            state.Pass = false;
+            UnityEngine.Debug.LogWarning($"[Season] the pass for {seasonId} was refused by the " +
+                                         "server; it is no longer held and the gems are back");
+            SaveService.Save();
+            Raise();
+        }
+
         /// <summary>The largest goal already claimed on one track. 0 when none.</summary>
         public static int ClaimedGoal(string seasonId, SeasonTrack track)
         {

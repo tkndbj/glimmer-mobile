@@ -99,7 +99,7 @@ namespace GlimmerGrove.Tests
                 eventsSeeded = true,
                 events = new[]
                 {
-                    new EventStateDto { id = "first_watch", collectedGoal = 2 },
+                    new EventStateDto { id = "first_watch", marks = 7, collectedGoal = 2, premiumGoal = 3, pass = true },
                     new EventStateDto { id = "second_bloom", collectedGoal = 1 },
                 },
                 streak = new StreakStateDto
@@ -484,8 +484,16 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(2, restored.events.Length);
             Assert.AreEqual("first_watch", restored.events[0].id);
             Assert.AreEqual(2, restored.events[0].collectedGoal);
+
+            // The other three fields a row carries, and the pass above all: the client's copy of
+            // a gem-bought entitlement (47e). It was off the wire once, so a reinstall drew the
+            // pass as not bought over a paid column that read as collected.
+            Assert.AreEqual(7, restored.events[0].marks);
+            Assert.AreEqual(3, restored.events[0].premiumGoal);
+            Assert.IsTrue(restored.events[0].pass, "the season pass flag did not survive the wire");
             Assert.AreEqual("second_bloom", restored.events[1].id);
             Assert.AreEqual(1, restored.events[1].collectedGoal);
+            Assert.IsFalse(restored.events[1].pass);
 
             CollectionAssert.AreEqual(new[] { "coral", "puff" }, restored.companionsOwned);
 

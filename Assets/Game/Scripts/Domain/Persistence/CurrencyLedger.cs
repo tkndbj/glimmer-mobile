@@ -66,6 +66,16 @@ namespace GlimmerGrove.Persistence
         /// </summary>
         public static string SeasonPassId(string seasonId) => "pass:" + seasonId;
 
+        /// <summary>
+        /// The season a pass debit names, or null for any other id. The inverse of
+        /// <see cref="SeasonPassId"/>, so a refused pass debit can find the season it was for.
+        /// </summary>
+        public static string SeasonOfPassId(string id)
+            => !string.IsNullOrEmpty(id) && id.StartsWith("pass:", StringComparison.Ordinal)
+               && id.Length > 5
+                ? id.Substring(5)
+                : null;
+
         /// <summary>What a support reader sees against a pass debit.</summary>
         public const string SeasonPassReason = "season_pass";
 
@@ -287,6 +297,14 @@ namespace GlimmerGrove.Persistence
 
         public string Currency { get; }
 
+        /// <summary>
+        /// A pending debit the server refused has just been dropped from a ledger: the
+        /// currency and the debit's id. Raised after the entry and its money are gone, from
+        /// <see cref="ApplyServerState"/>. Static rather than per ledger because the thing
+        /// listening is whatever the debit bought, which knows its own id and not its ledger.
+        /// </summary>
+        public static event Action<string, string> SpendRejected;
+
         public long GrantedBaseline { get; private set; }
         public long SpentBaseline { get; private set; }
         public long EarnedHighWater { get; private set; }
@@ -459,7 +477,8 @@ namespace GlimmerGrove.Persistence
                                      ICollection<string> confirmedSpendIds, long confirmedThroughUnix,
                                      long earnedFloor = 0,
                                      ICollection<string> confirmedGrantIds = null,
-                                     ICollection<string> rejectedGrantIds = null)
+                                     ICollection<string> rejectedGrantIds = null,
+                                     ICollection<string> rejectedSpendIds = null)
         {
             // A claim the server refused is dropped, and the balance it was inflating goes
             // with it. Before the confirmed ids, so an id that somehow appears in both lists
@@ -468,6 +487,30 @@ namespace GlimmerGrove.Persistence
             {
                 for (int i = _pendingGrants.Count - 1; i >= 0; i--)
                     if (rejectedGrantIds.Contains(_pendingGrants[i].Id)) _pendingGrants.RemoveAt(i);
+            }
+
+            // A debit the server refused is dropped the same way, and the balance it took
+            // comes back. A refusal here is permanent — unaffordable on the server's figures,
+            // or a pass underpaid or unsold — so an entry kept would be resubmitted on every
+            // sync for the life of the account (invariant 13a) while the thing it paid for went
+            // on drawing as bought. Announced after it is gone, so a listener reading the
+            // balance sees the money already back; whatever the debit bought listens for its
+            // own id (a season pass takes itself back through this).
+            if (rejectedSpendIds != null && rejectedSpendIds.Count > 0)
+            {
+                var dropped = new List<string>();
+                for (int i = _pending.Count - 1; i >= 0; i--)
+                {
+                    if (!rejectedSpendIds.Contains(_pending[i].Id)) continue;
+                    dropped.Add(_pending[i].Id);
+                    _pending.RemoveAt(i);
+                }
+
+                foreach (string id in dropped)
+                {
+                    try { SpendRejected?.Invoke(Currency, id); }
+                    catch (Exception e) { UnityEngine.Debug.LogException(e); }
+                }
             }
 
             GrantedBaseline = grantedBaseline < 0 ? 0 : grantedBaseline;

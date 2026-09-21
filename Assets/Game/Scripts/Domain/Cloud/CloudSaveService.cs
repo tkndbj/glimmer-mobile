@@ -1243,10 +1243,13 @@ namespace GlimmerGrove.Cloud
                 }
             }
 
-            var pending = new List<SpendEntryDto>();
+            // Each debit is sent with its ledger's currency. The record itself carries none —
+            // a ledger holds one currency — and the server prices by it, so a gem debit sent
+            // under another name is either refused (a pass) or taken from the wrong balance.
+            var pending = new List<SpendSubmission>();
             foreach (var ledger in Wallet.Ledgers)
                 foreach (var entry in ledger.PendingSpends)
-                    pending.Add(entry.ToDto());
+                    pending.Add(new SpendSubmission(ledger.Currency, entry.ToDto()));
 
             if (pending.Count > 0)
             {
@@ -1347,7 +1350,8 @@ namespace GlimmerGrove.Cloud
                     state.ConfirmedThroughUnix,
                     state.EarnedFloor,
                     state.ConfirmedGrantIds,
-                    state.RejectedGrantIds);
+                    state.RejectedGrantIds,
+                    state.RejectedSpendIds);
 
                 // Refunded heart containers. Applied from whichever rows carry them — the
                 // list is an account fact repeated per currency row, and the ledger's own

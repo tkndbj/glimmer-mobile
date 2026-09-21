@@ -57,6 +57,38 @@ namespace GlimmerGrove.Iap
 
         readonly HashSet<string> _owned = new HashSet<string>(StringComparer.Ordinal);
 
+        /// <summary>
+        /// Transactions whose grant has landed and whose confirmation has been sent to the
+        /// store and not yet answered, or answered with a failure. The order stays in
+        /// <see cref="_orders"/> until the store says it is closed, so a confirm can be sent
+        /// again with the same object.
+        ///
+        /// <para>
+        /// <b>Why a confirm needs watching at all.</b> The grant is the server's and cannot
+        /// be lost; the confirm is the store's and can. A connection that drops in the second
+        /// between the two leaves the player paid and Google still holding the order open —
+        /// which refuses the next purchase of the same pack ("you already own this item") and
+        /// is refunded by Google after three days. The store re-delivers an open order on the
+        /// next fetch and the server answers "already granted", so nothing here is ever paid
+        /// twice; what this adds is hearing about the failure when it happens, retrying it
+        /// within the minute rather than at the next launch, and confirming a re-delivered
+        /// order directly rather than asking the server about it again.
+        /// </para>
+        /// </summary>
+        readonly HashSet<string> _confirming = new HashSet<string>(StringComparer.Ordinal);
+
+        /// <summary>Failed confirm attempts per transaction, for the backoff.</summary>
+        readonly Dictionary<string, int> _confirmFailures =
+            new Dictionary<string, int>(StringComparer.Ordinal);
+
+        /// <summary>
+        /// How long to wait before sending a failed confirm again, by how many times it has
+        /// failed. Short, then longer, then once more; past the last entry the next fetch
+        /// (a launch, a restore, a reconnect) is the retry, which is the path that has always
+        /// existed. Seconds.
+        /// </summary>
+        static readonly float[] ConfirmRetrySeconds = { 2f, 8f, 30f };
+
         TaskCompletionSource<bool> _fetch;
         bool _connected;
 
@@ -73,6 +105,7 @@ namespace GlimmerGrove.Iap
             _controller.OnPurchasePending += OnPurchasePendingOrder;
             _controller.OnPurchaseFailed += OnPurchaseFailedOrder;
             _controller.OnPurchaseDeferred += OnPurchaseDeferredOrder;
+            _controller.OnPurchaseConfirmed += OnPurchaseConfirmedOrder;
 
             _controller.OnPurchasesFetched += OnPurchasesFetched;
             _controller.OnPurchasesFetchFailed += OnPurchasesFetchFailed;
@@ -245,8 +278,83 @@ namespace GlimmerGrove.Iap
                 return;
             }
 
-            _orders.Remove(purchase.Key);
+            SendConfirm(purchase.Key, order);
+        }
+
+        /// <summary>
+        /// Asks the store to close an order whose grant has landed. The order is kept until
+        /// the store answers (<see cref="OnPurchaseConfirmedOrder"/>), and a second ask for
+        /// one already in flight is dropped rather than sent twice.
+        /// </summary>
+        void SendConfirm(string key, PendingOrder order)
+        {
+            if (!_confirming.Add(key)) return;
             _controller.ConfirmPurchase(order);
+        }
+
+        /// <summary>
+        /// The store's answer to a confirm: the order is closed, or it is not and says why.
+        ///
+        /// <para>
+        /// A failure keeps the order and retries on a short backoff
+        /// (<see cref="ConfirmRetrySeconds"/>). The reasons the SDK gives are all transient
+        /// from here — no connection, the store not yet reconnected — and the one that is not
+        /// (an order with no transaction id) never reaches this class, because
+        /// <see cref="Translate"/> refuses it before it is reported. Past the last retry the
+        /// order stays in <see cref="_orders"/> for the next fetch to bring back, exactly as a
+        /// confirm lost to a crash always has.
+        /// </para>
+        /// </summary>
+        void OnPurchaseConfirmedOrder(Order order)
+        {
+            string key = KeyOf(order);
+            if (string.IsNullOrEmpty(key)) return;
+
+            if (order is FailedOrder failed)
+            {
+                int failures = (_confirmFailures.TryGetValue(key, out int n) ? n : 0) + 1;
+                _confirmFailures[key] = failures;
+                _confirming.Remove(key);
+
+                bool again = failures <= ConfirmRetrySeconds.Length && _orders.ContainsKey(key);
+                Debug.LogWarning($"[IAP] the store did not close {key} " +
+                                 $"({failed.FailureReason}: {failed.Details}); attempt {failures}, " +
+                                 (again ? $"retrying in {ConfirmRetrySeconds[failures - 1]:0}s"
+                                        : "leaving it for the next fetch to re-deliver"));
+
+                if (again) RetryConfirmLater(key, ConfirmRetrySeconds[failures - 1]);
+                return;
+            }
+
+            _orders.Remove(key);
+            _confirming.Remove(key);
+            _confirmFailures.Remove(key);
+        }
+
+        async void RetryConfirmLater(string key, float seconds)
+        {
+            try
+            {
+                // Continues on the Unity main thread: the store's own callback started this
+                // there, and Unity's synchronization context brings the continuation back.
+                await Task.Delay(TimeSpan.FromSeconds(seconds));
+            }
+            catch (Exception e) { Debug.LogException(e); return; }
+
+            // Gone in the meantime: a fetch re-delivered it and it was confirmed that way,
+            // or the store closed it after all.
+            if (!_orders.TryGetValue(key, out var order)) return;
+            SendConfirm(key, order);
+        }
+
+        /// <summary>
+        /// The key an order is held under — the same one <see cref="StorePurchase.Key"/>
+        /// builds, from the same fields, so the store's answer finds the order it is about.
+        /// </summary>
+        string KeyOf(Order order)
+        {
+            var purchase = Translate(order, quiet: true);
+            return purchase?.Key ?? string.Empty;
         }
 
         public StoreResult Restore()
@@ -286,7 +394,22 @@ namespace GlimmerGrove.Iap
 
             // Anything unfinished, including transactions from a previous launch. This is
             // the recovery path, and it is the reason a purchase cannot be lost to a crash.
-            foreach (var pending in orders.PendingOrders) Report(pending);
+            //
+            // An order this process already had granted and failed to close is confirmed
+            // directly rather than reported again: the grant has landed, so asking the server
+            // about it would be a round trip to hear "already". The object is replaced first,
+            // because a re-delivered order is a new one and the old may no longer be closable.
+            foreach (var pending in orders.PendingOrders)
+            {
+                string key = KeyOf(pending);
+                if (key.Length > 0 && _confirmFailures.ContainsKey(key))
+                {
+                    _orders[key] = pending;
+                    SendConfirm(key, pending);
+                    continue;
+                }
+                Report(pending);
+            }
 
             Raise();
         }
@@ -345,15 +468,20 @@ namespace GlimmerGrove.Iap
             PurchasePending?.Invoke(purchase);
         }
 
-        StorePurchase Translate(PendingOrder order)
+        /// <summary>
+        /// The order in this project's words. <paramref name="quiet"/> is for reading a key
+        /// off an order the store is merely answering about (<see cref="KeyOf"/>): a malformed
+        /// one there is not a purchase being lost and is not worth a warning.
+        /// </summary>
+        StorePurchase Translate(Order order, bool quiet = false)
         {
-            var info = order.Info;
+            var info = order?.Info;
             if (info == null) return null;
 
             var ids = ProductIdsOf(order);
             if (ids.Count == 0)
             {
-                Debug.LogWarning("[IAP] a pending order named no product; it cannot be redeemed");
+                if (!quiet) Debug.LogWarning("[IAP] a pending order named no product; it cannot be redeemed");
                 return null;
             }
 
@@ -371,7 +499,7 @@ namespace GlimmerGrove.Iap
 
             if (string.IsNullOrEmpty(transactionId))
             {
-                Debug.LogWarning($"[IAP] a pending order for '{ids[0]}' carried no transaction id");
+                if (!quiet) Debug.LogWarning($"[IAP] a pending order for '{ids[0]}' carried no transaction id");
                 return null;
             }
 

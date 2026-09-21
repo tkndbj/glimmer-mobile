@@ -600,6 +600,15 @@ is where they are written down, not what they mean.
    badge and said *collect* over a page that refused every one of them — and `Featured` would have moored
    that box on a closed season for ever. `EventLedger.Opens` is the one predicate and both readings run it;
    `Reached` is deliberately left ungated, because how far up a column a player climbed is true either way.
+47o. **A debit travels with its ledger's currency, and a refused one is dropped.** The wire labelled
+   every debit *credits* ("one currency spends today"), so every gem the game ever charged was taken from
+   the server's credit balance and the pass — priced in gems, 47e — was refused as underpaid on every sync
+   for the life of the account while the page drew it as held and every paid chest was refused. Found on
+   the owner's own account on 2026-09-21. `SpendSubmission` carries the currency (a `SpendEntryDto` is a
+   file record and has none); a refusal comes back on the reply and the ledger drops the entry with its
+   money (13a) and says so by id, which is how `SeasonLedger` takes the pass back and leaves the paid floor.
+   **The pass flag is on the wire now** (`FirestoreSaveMapper`, both ways) and `SaveDelta` compares every
+   field a season row carries — one field compared made a paid claim, a mark and the pass invisible alone.
 
 ### The streak
 
@@ -1121,6 +1130,10 @@ guess — verify offline.
 - **Why a test says "needs the Editor":** `GLIMMER_WHY=1 python Tools/verify/tests.py`.
 - **One test, while tuning:** `python Tools/verify/tests.py SiegeRuleTests.EveryShippedBossRungIsAFight`
   (`Fixture.Method`, both substrings). The chapter sweep and the fight gate print their tables on a pass.
+- **The shop badge:** `python Tools/render_shop.py --measure` reads `Hud/burst` and holds the four
+  sprite facts in `ProductCardBadges` (reach, field, its centre) to the picture — the only gate that
+  can see a badge sprite swapped without its constants, which is how a star was measured as a round
+  seal for a fortnight. `ProductCardBadgeTests` holds the arithmetic over those constants.
 - **Renders (the gate that matters for anything judged by eye):** `render_home.py`, `render_shop.py`,
   `render_tasks.py`, `render_season.py`, `render_streak.py`, `render_keeper.py`, `render_endless.py`,
   `render_loadout.py`, `render_siege.py` (`--tablet`, `--warlord`, `--volley`, `--standing`, …), all sharing
@@ -1308,6 +1321,12 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   any of them is a deploy of an index first.** And the budget alert is not a code artefact: neither
   gcloud account on this machine holds a role on the billing account, so it is created in the
   console by the billing owner (Billing ▸ Budgets & alerts) and nothing in the repo can prove it exists.
+- **Unity IAP 5 answers a confirm through `OnPurchaseConfirmed`, and warns on every purchase if
+  nobody listens.** A confirm is the store's half of a purchase and the only half that can fail after
+  the grant has landed: Google holds the order open, refuses the same pack again and refunds it after
+  three days. The re-delivery on the next fetch always recovered it; since 2026-09-21 `UnityIapBackend`
+  also hears the failure, retries at 2, 8 and 30 seconds and confirms a re-delivered order directly.
+  The order stays in `_orders` until the store says it is closed — never removed on send.
 - **The live e2e suite signs in as a new anonymous account every run**, so anything derived from the account
   id varies — **including level ids**. Anything the published catalog decides has to be read off the
   published catalog. It is also sensitive to cold starts: re-run before believing a failure in the first
@@ -1611,22 +1630,25 @@ ids are retired by name in `Mechanic.Retired` (5f) and the nine save keys stay o
 and, since the grove went, nothing counts either (16ab). Deliberately not taken here.
 
 
-**Two fixtures are red at HEAD and neither is the Grovement's doing.** Found by the full offline
-suite on 2026-09-21 — the first run of it since Bonereach and the rank gate landed. Both the test
-and every input it reads are byte-identical to HEAD in each case, which is how they were told apart
-from the removal's own breakage.
+**Two fixtures were red at HEAD on 2026-09-21 and both are green, each for a reason worth
+keeping.** Found by the first full offline run since Bonereach and the rank gate landed.
 
-* **`SiegeArtTests.EveryBossIsClassifiedByBothAimingRules`** — asserts *exactly one* boss reaches
-  the line without aiming at a ward (the warbringer's rally). Bonereach's **hollowking** makes two:
-  `SiegeTuning.AimsAtAWard` already says so in as many words — *"a wane is the second spell here
-  aimed at no ward"* — so the **rule** was updated when the chapter shipped and the **fixture** was
-  not. **Do not simply bump the 1 to a 2.** The failure message is the warning: a second one means
-  "every clause that says 'the warbringer' now has two answers", so what is owed is an audit of
-  those clauses, not a number. This is the *first* thing the Bonereach sweep was going to find.
-* **`ProductCardBadgeTests.TheCaptionFitsInsideTheSealsFace`** — the caption's corner reaches 52.38
-  of a seal face 44.12 across, so a product card's badge text overflows its disc by ~19%. Pure
-  arithmetic over constants in `ProductCardBadges`, which is unmodified, so it is a shop-art
-  regression from some earlier drop that nothing has drawn since. `render_shop.py` is the eye.
+* **`SiegeArtTests.EveryBossIsClassifiedByBothAimingRules`** counted *one* boss reaching the line
+  without aiming at a ward, and Bonereach's hollowking made two. The audit the count was warning
+  about found one clause: `SiegeBoard.Clock` exempted the rally by name, so a wane was handed the
+  freshest ward by `Wanted`'s default arm — an index its landing never reads — while the rule
+  beside it said `Wanted` was never asked. `SiegeTuning.CarriesAWard` is the third predicate now
+  (carrying is exactly aiming or not reaching the line), the board asks it, and the fixture names
+  the two exceptions rather than counting them, so a third spell of that shape fails by name.
+* **`ProductCardBadgeTests.TheCaptionFitsInsideTheSealsFace`** measured the caption against a
+  field the badge no longer had: every sprite fact in `ProductCardBadges` (`SealDisc`, `Face`,
+  `FaceShift`, `FaceRise`) had been measured off the round `seal_gold` and the badge is the star
+  `Hud/burst`. The star's points reach 1.035 of the half width, so the badge overhung every
+  clearance by fourteen units and touched the row above, and the clearance gate passed on the old
+  disc. All four are re-measured off the star, the caption box is re-expressed against the true
+  field at the same size the owner approved, and `render_shop.py --measure` reads the sprite and
+  refuses drift. `TheBadgeIsMeasuredAsTheDiscItsInkReaches` replaced the test that assumed a disc
+  smaller than its texture.
 
 **Bonereach shipped on 2026-09-20 and none of it has been in the Editor, on a device, or through
 a sweep.** The seventh chapter (`s08_bonereach`, ordinal 7, manifest order 152) brings a map, two

@@ -2746,12 +2746,38 @@ namespace GlimmerGrove.Modes
             // (`SiegeBoard.Wanted`) rather than by taking whatever a smite would have taken.
             // **A wane is the second spell here aimed at no ward**, for the rally's reason
             // and by a different rule: it strikes every post that has been idle, so there is
-            // no one ward to pick and `SiegeBoard.Wanted` is never asked about it.
+            // no one ward to pick and `SiegeBoard.Wanted` is never asked about it
+            // (`CarriesAWard`, which is what keeps that sentence true).
             return craft != SiegeSpell.Rally
                 && craft != SiegeSpell.Wane
                 && craft != SiegeSpell.Devour
                 && craft != SiegeSpell.Raise;
         }
+
+        /// <summary>
+        /// Whether a cast of this spell carries a ward index at all — the third question beside
+        /// <see cref="AimsAtAWard"/> and <see cref="ReachesTheLine"/>, and the one the board asks.
+        ///
+        /// <para>
+        /// <b>Aiming and carrying are not the same thing, and two spells sit in the gap.</b> A
+        /// devour and a raise aim at nothing and still carry the freshest ward, because that is
+        /// where their smite lands (37dn). A roar and a wane carry none: a roar is thrown at the
+        /// whole hill and a wane strikes every idle post, and each is booked as one record per
+        /// post at the landing rather than at one ward chosen in advance. So the board never asks
+        /// <c>SiegeBoard.Wanted</c> about either, and never holds either back for having found
+        /// nothing to aim at — a wane on a line that is fully fed lands and does nothing, which is
+        /// its verb, not a retry.
+        /// </para>
+        /// <para>
+        /// It is written down because the board named the rally alone for six chapters, so the
+        /// seventh's wane was handed a ward by <c>Wanted</c>'s default arm — an index its landing
+        /// never read — while the rule beside it said the opposite. <c>SiegeArtTests</c> holds the
+        /// three predicates to one shape: carrying is exactly aiming or not reaching the line, and
+        /// the spells that reach without aiming are the two named there and no third.
+        /// </para>
+        /// </summary>
+        public static bool CarriesAWard(SiegeSpell craft)
+            => craft != SiegeSpell.Rally && craft != SiegeSpell.Wane;
 
         /// <summary>What a boss is called, for a message. Never shown to a player.</summary>
         public static string NameOf(SiegeKind kind)

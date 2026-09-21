@@ -15,7 +15,7 @@
  "levels": [
   {
    "id": "s08_firstreach",
-   "mapX": 0.62,
+   "mapX": 0.583,
    "mapY": 0.068,
    "afloat": false,
    "budgetFactor": -1.0,
@@ -47,7 +47,7 @@
   },
   {
    "id": "s08_bonespur",
-   "mapX": 0.25,
+   "mapX": 0.324,
    "mapY": 0.105,
    "afloat": false,
    "budgetFactor": -1.0,
@@ -79,7 +79,7 @@
   },
   {
    "id": "s08_ropebridge",
-   "mapX": 0.845,
+   "mapX": 0.781,
    "mapY": 0.238,
    "afloat": false,
    "budgetFactor": -1.0,
@@ -111,7 +111,7 @@
   },
   {
    "id": "s08_crystalrise",
-   "mapX": 0.28,
+   "mapX": 0.539,
    "mapY": 0.33,
    "afloat": false,
    "budgetFactor": -1.0,
@@ -143,8 +143,8 @@
   },
   {
    "id": "s08_harrowgate",
-   "mapX": 0.645,
-   "mapY": 0.351,
+   "mapX": 0.395,
+   "mapY": 0.372,
    "afloat": false,
    "budgetFactor": -1.0,
    "goldFactor": 0.42,
@@ -176,7 +176,7 @@
   {
    "id": "s08_thinair",
    "mapX": 0.47,
-   "mapY": 0.47,
+   "mapY": 0.462,
    "afloat": false,
    "budgetFactor": -1.0,
    "goldFactor": 0.42,
@@ -208,7 +208,7 @@
   {
    "id": "s08_shatterstep",
    "mapX": 0.84,
-   "mapY": 0.48,
+   "mapY": 0.474,
    "afloat": false,
    "budgetFactor": -1.0,
    "goldFactor": 0.42,
@@ -239,7 +239,7 @@
   },
   {
    "id": "s08_deadfall",
-   "mapX": 0.185,
+   "mapX": 0.204,
    "mapY": 0.632,
    "afloat": false,
    "budgetFactor": -1.0,
@@ -272,7 +272,7 @@
   },
   {
    "id": "s08_thelastspan",
-   "mapX": 0.55,
+   "mapX": 0.513,
    "mapY": 0.716,
    "afloat": false,
    "budgetFactor": -1.0,

@@ -214,11 +214,11 @@ NUDGE = {
         # both ends are the lip. Every entry here moves inward.
         1: (-118, 91),        # level 61, off the great skull and onto the rock beside it, then 40 px left
         2: (48, -29),         # level 62, 80 px right
-        3: (59, 154),         # the right lobe's own middle, not its rim, then 30 px left
-        4: (98, 130),         # level 64, 120 px right
-        5: (-113, 34),        # level 65, 90 px left
-        6: (55, 72),          # the foot of the bridge, which is what the plateau is for
-        7: (23, 0),
+        3: (19, 154),         # the right lobe's own middle, not its rim, then 30+40 px left
+        4: (258, 130),        # level 64, 120+120+40 px right
+        5: (-293, 134),       # level 65, 90+120+60 px left and 100 px up
+        6: (55, 32),          # the foot of the bridge, which is what the plateau is for, then 40 px down
+        7: (23, -30),         # level 67, 30 px down
         8: (-119, 5),         # level 68, 20 px right
         9: (-407, -125),      # off the crystal outcrop and onto the open top west of it, then 40 px left
         10: (68, -5),
@@ -256,7 +256,26 @@ NUDGE = {
 #: rung ten at 0.343 and left the marker the whole right-hand half of its plateau. It ships
 #: with **no** warning now, against `map5`'s and `map6`'s nine each. **An impossibility proof is
 #: only ever as good as the inputs it is run on.**
-ACCEPTED_OVERLAPS = {5, 6}
+#:
+#: **`map7` is back, and it is here as named rungs rather than as a whole map, which is the
+#: difference that matters.** `True` accepts anything this picture's chain ever does; a set
+#: accepts exactly the rungs somebody looked at and signed off, and every other collision on the
+#: same map is still refused loudly. These eight are the owner's own placement of this chapter's
+#: chain on 2026-09-21, moved a round at a time off a phone. Four pairs stand inside the crown
+#: rule: 61/62, 63/64, 64/65 and 65/66 - and **64 and 65 are inside the disc rule too**, 209
+#: units between centres against a 220 minimum, which is the two discs touching rather than one
+#: plate reaching over the other's record mark. Every one of them is where it was asked to be.
+ACCEPTED_OVERLAPS = {
+    5: True,
+    6: True,
+    7: {1, 2, 3, 4, 5, 6, 8, 9},
+}
+
+
+def _overlap_accepted(which: int, rung: int) -> bool:
+    """Whether this map has signed off *this* rung standing on a neighbour. See above."""
+    accepted = ACCEPTED_OVERLAPS.get(which)
+    return accepted is True or (accepted is not None and rung in accepted)
 
 
 #: Maps that stand their chain exactly where another map's chain stands, rather than searching
@@ -982,7 +1001,7 @@ def apply_nudges(which: int, places, marker, height: float):
 
     for i, seat in enumerate(moved):
         if not _separated(seat, moved[:i] + moved[i + 1:] + [moved_marker], height):
-            if which in ACCEPTED_OVERLAPS:
+            if _overlap_accepted(which, i + 1):
                 print(f"  map{which}: rung {i + 1} overlaps a neighbour - accepted, see "
                       f"ACCEPTED_OVERLAPS")
                 continue
@@ -1022,7 +1041,7 @@ def borrowed(which: int, source: int, score: np.ndarray):
 
     for i, seat in enumerate(places):
         if not _separated(seat, places[:i] + places[i + 1:] + [marker], height):
-            if which not in ACCEPTED_OVERLAPS:
+            if not _overlap_accepted(which, i + 1):
                 raise SystemExit(
                     f"  map{which}: rung {i + 1} of map{source}'s chain overlaps a neighbour - "
                     f"the chain does not transfer, seat this map on its own picture")

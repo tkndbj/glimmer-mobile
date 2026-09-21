@@ -607,7 +607,7 @@ namespace GlimmerGrove.Tests
                 => Task.FromResult((CloudResult.Success, new List<CloudWalletState>()));
 
             public Task<(CloudResult result, List<CloudWalletState> wallets)> SubmitSpendsAsync(
-                string userId, IReadOnlyList<SpendEntryDto> spends, CancellationToken c = default)
+                string userId, IReadOnlyList<SpendSubmission> spends, CancellationToken c = default)
                 => Task.FromResult((CloudResult.Success, new List<CloudWalletState>()));
 
             public Task<(CloudResult result, List<CloudWalletState> wallets)> SubmitAwardsAsync(

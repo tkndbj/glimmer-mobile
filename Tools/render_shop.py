@@ -89,8 +89,10 @@ BANNER_FILL = 0.90
 #: drawn here through `K.shrunk` and its settled size reported: a single line typed at a fixed
 #: size - which this drew for as long as it has existed - cannot answer the one question the
 #: badge is ever asked, which is whether the words still fit it (invariants 44d, 19n).
-SEAL_FACE, SEAL_SHIFT, SEAL_RISE = .538, -.009, .021
-SEAL_TEXT_W, SEAL_TEXT_H = 1.00, .64
+#: Measured off `Hud/burst` (`--measure` prints the figures and refuses if these drift): the
+#: field is the largest fully opaque circle inside the star and the reach is its points.
+SEAL_FACE, SEAL_SHIFT, SEAL_RISE = .81, -.004, .008
+SEAL_TEXT_W, SEAL_TEXT_H = .664, .425
 SEAL_TEXT, SEAL_FLOOR = 20, 10
 
 PLATE_X, PLATE_Y = 34.0, 40.0
@@ -110,7 +112,7 @@ FACEW, FACEH = CELLW - 110.0, 96.0
 # `Quaternion.Euler(0, 0, z)`, so the two agree as written. It was stored negated and
 # negated again at the call, which drew the right badge for the wrong reason — the trap
 # invariant 37aj names, where a mirror re-derives a sign in an axis that runs the other way.
-SEAL, SEAL_DISC, SEAL_TILT = 164.0, .86, -9.0
+SEAL, SEAL_DISC, SEAL_TILT = 164.0, 1.04, -9.0
 RIBBONW, RIBBONH, RIBBON_INSET, RIBBON_DROP = 268.0, 76.0, 96.0, 34.0
 RIBBON_TILT = 6.0
 CLEARANCE, MARGIN = 10.0, 6.0
@@ -875,6 +877,65 @@ def screen(shelf, offline=False):
     return sheet.convert("RGB")
 
 
+def measure_seal():
+    """Measures `Hud/burst` and holds the four badge constants to it.
+
+    `ProductCardBadges.SealDisc` / `.Face` / `.FaceShift` / `.FaceRise` are facts about the
+    sprite the badge is drawn with, and they were wrong for as long as the sprite was a star
+    measured as the round seal it replaced: the points overhung every clearance and reached
+    the row above, and the caption gate measured a field the badge no longer had. This is the
+    measurement, printed so a re-cut re-derives them, and refused when the constants above
+    (the mirror's copies) have drifted from the picture.
+
+    *Reach* is the farthest any ink lies from the sprite's centre, as a fraction of the half
+    width - the disc every clearance rule treats the badge as. *Face* is the largest fully
+    opaque circle inside the star, as a fraction of the sprite, and *shift*/*rise* are where
+    its centre sits against the sprite's own, in Unity's up-positive sense.
+    """
+    import numpy as np
+
+    im = K.load("Hud/burst")[0].convert("RGBA")
+    a = np.asarray(im)[:, :, 3] / 255.0
+    h, w = a.shape
+    yy, xx = np.mgrid[0:h, 0:w]
+
+    inked = a > .05
+    reach = 2.0 * float(np.sqrt((xx[inked] - w / 2.0) ** 2 + (yy[inked] - h / 2.0) ** 2).max()) / w
+
+    def radius(cx, cy):
+        r = 0
+        for rr in range(int(w * .2), w // 2):
+            if (a[((xx - cx) ** 2 + (yy - cy) ** 2) <= rr * rr] > .9).all():
+                r = rr
+            else:
+                break
+        return r
+
+    best = (0, w / 2, h / 2)
+    for cy in range(h // 2 - 10, h // 2 + 11):
+        for cx in range(w // 2 - 10, w // 2 + 11):
+            r = radius(cx, cy)
+            if r > best[0]:
+                best = (r, cx, cy)
+    r, cx, cy = best
+    face, shift, rise = 2.0 * r / w, (cx - w / 2.0) / w, (h / 2.0 - cy) / h
+
+    print(f"  Hud/burst {w}x{h}: reach {reach:.3f} of the half width, "
+          f"field {face:.3f} of the sprite, centre shift {shift:+.4f} rise {rise:+.4f}")
+
+    drift = []
+    if SEAL_DISC < reach or SEAL_DISC > reach + .02:
+        drift.append(f"SealDisc {SEAL_DISC} should be {reach:.3f} rounded up (the reach)")
+    if abs(SEAL_FACE - face) > .01:
+        drift.append(f"Face {SEAL_FACE} should be {face:.3f}")
+    if abs(SEAL_SHIFT - shift) > .003 or abs(SEAL_RISE - rise) > .003:
+        drift.append(f"FaceShift/FaceRise {SEAL_SHIFT}/{SEAL_RISE} should be {shift:+.4f}/{rise:+.4f}")
+
+    for line in drift:
+        print("  DRIFT: " + line + " - fix ProductCardBadges.cs and this file together")
+    return not drift
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--shelf", default="gems", choices=SHELVES)
@@ -883,8 +944,13 @@ def main():
                     help="the shelf after the one-time bundle has been bought")
     ap.add_argument("--offline", action="store_true",
                     help="the store never answered - what an unreachable shelf says")
+    ap.add_argument("--measure", action="store_true",
+                    help="measure Hud/burst and hold the badge constants to it; draws nothing")
     ap.add_argument("--out", type=Path, default=Path("shop.png"))
     args = ap.parse_args()
+
+    if args.measure:
+        sys.exit(0 if measure_seal() else 1)
 
     global SOLD
     SOLD = args.sold

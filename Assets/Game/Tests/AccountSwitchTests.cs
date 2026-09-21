@@ -843,7 +843,7 @@ namespace GlimmerGrove.Tests
                 string u, CancellationToken c = default) => NoWallet();
 
             public Task<(CloudResult result, List<CloudWalletState> wallets)> SubmitSpendsAsync(
-                string u, IReadOnlyList<SpendEntryDto> s, CancellationToken c = default) => NoWallet();
+                string u, IReadOnlyList<SpendSubmission> s, CancellationToken c = default) => NoWallet();
 
             public Task<(CloudResult result, List<CloudWalletState> wallets)> SubmitAwardsAsync(
                 string u, IReadOnlyList<GrantEntryDto> a, CancellationToken c = default) => NoWallet();

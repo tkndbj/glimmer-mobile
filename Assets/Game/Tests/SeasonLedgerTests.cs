@@ -81,6 +81,48 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
+        /// A pass is bought optimistically and the debit is what makes it real, so a debit the
+        /// server refuses takes the pass back — and nothing else. The paid floor is a record of
+        /// chests already opened (47c), so it stays; a later purchase resumes above it. This is
+        /// the client half of the day a pass debit reached the server in the wrong currency and
+        /// was refused on every sync while the page went on drawing the pass as held.
+        /// </summary>
+        [Test]
+        public void ARefusedPassDebitTakesThePassBackAndNothingElse()
+        {
+            SeasonLedger.LoadFrom(Held("watch_0000", 28, 25, 5));
+            Assert.IsTrue(SeasonLedger.OwnsPass("watch_0000"));
+
+            // A refusal of some other debit, and of a pass for a season this file does not hold,
+            // each leave it alone.
+            SeasonLedger.OnSpendRejected(Currency.Gems, "continue:s01_lastlight");
+            SeasonLedger.OnSpendRejected(Currency.Gems, SpendEntry.SeasonPassId("watch_0001"));
+            Assert.IsTrue(SeasonLedger.OwnsPass("watch_0000"));
+
+            SeasonLedger.OnSpendRejected(Currency.Gems, SpendEntry.SeasonPassId("watch_0000"));
+
+            Assert.IsFalse(SeasonLedger.OwnsPass("watch_0000"), "a refused pass is no longer held");
+            Assert.AreEqual(28, SeasonLedger.MarksIn("watch_0000"), "the marks are play, not the pass");
+            Assert.AreEqual(25, SeasonLedger.ClaimedGoal("watch_0000", SeasonTrack.Free));
+            Assert.AreEqual(5, SeasonLedger.ClaimedGoal("watch_0000", SeasonTrack.Pass),
+                            "the paid floor is a record of chests opened and stays");
+
+            // Refusing it again is a no-op rather than a second announcement.
+            SeasonLedger.OnSpendRejected(Currency.Gems, SpendEntry.SeasonPassId("watch_0000"));
+            Assert.IsFalse(SeasonLedger.OwnsPass("watch_0000"));
+        }
+
+        [Test]
+        public void APassDebitIdNamesItsSeasonAndNothingElseDoes()
+        {
+            Assert.AreEqual("watch_0000", SpendEntry.SeasonOfPassId(SpendEntry.SeasonPassId("watch_0000")));
+            Assert.IsNull(SpendEntry.SeasonOfPassId("continue:s01_lastlight"));
+            Assert.IsNull(SpendEntry.SeasonOfPassId("pass:"));
+            Assert.IsNull(SpendEntry.SeasonOfPassId(null));
+            Assert.IsNull(SpendEntry.SeasonOfPassId(string.Empty));
+        }
+
+        /// <summary>
         /// A v27 file has no mark count at all, and <c>JsonUtility</c> writes nought into a
         /// field an older file never had — which is exactly the right answer here, and is why
         /// v28 needed no migration. A stale free floor written under the old meaning is then

@@ -896,11 +896,16 @@ namespace GlimmerGrove.Modes
                 // the line has already walked the bar down to the notch.
                 bool opens = !boss.Opened && !boss.Opening;
 
-                // **A roar is thrown at the hill, so it carries no ward.** Every other spell
-                // carries one now (37dn): the aimed ones the ward their verb wants, and a devour
-                // or a raise the freshest ward, which is where its smite lands. The view still
-                // asks `AimsAtAWard` to decide what to draw crossing the hill.
-                int ward = craft == SiegeSpell.Rally ? -1 : Wanted(craft, boss, opens);
+                // **A roar is thrown at the hill and a wane at every idle post, so neither
+                // carries a ward** (`SiegeTuning.CarriesAWard`). Every other spell carries one
+                // (37dn): the aimed ones the ward their verb wants, and a devour or a raise the
+                // freshest ward, which is where its smite lands. The view still asks
+                // `AimsAtAWard` to decide what to draw crossing the hill. Asked of the rule rather
+                // than of the rally by name: this line named the rally alone, so a wane was
+                // handed the freshest ward by `Wanted`'s default arm — an index its landing never
+                // reads, and a retry it could never hit — while the rule beside it said `Wanted`
+                // was never asked about a wane at all.
+                int ward = SiegeTuning.CarriesAWard(craft) ? Wanted(craft, boss, opens) : -1;
 
                 // **A cast that found nothing to aim at does not spend its cadence.** The timer
                 // used to be re-armed above, before the target was known, so a blightcaller that
@@ -913,7 +918,7 @@ namespace GlimmerGrove.Modes
                 // Re-arming short instead means the spell lands on the frame there is something
                 // to take. It can only ever make a cast arrive *sooner than it would have* and
                 // never more often than the cadence, because a cast that lands re-arms in full.
-                if (ward < 0 && craft != SiegeSpell.Rally)
+                if (ward < 0 && SiegeTuning.CarriesAWard(craft))
                 {
                     boss.Spell = SiegeTuning.CastRetry;
                     continue;

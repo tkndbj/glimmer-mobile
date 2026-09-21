@@ -108,18 +108,28 @@ namespace GlimmerGrove.Layout
         public const float SealSize = 164f, SealTilt = -9f;
 
         /// <summary>
-        /// How much of that sprite is the disc itself, corner to corner of the texture being
-        /// empty. Measured off <c>seal_gold</c>: opaque from 12 to 156 of 169.
+        /// How far the badge's ink reaches from the sprite's centre, as a fraction of the sprite,
+        /// measured as the disc every clearance rule here treats it as.
+        ///
+        /// <para>
+        /// <b>Measured off <c>Hud/burst</c>, the sprite the badge is drawn with</b> — a star, whose
+        /// points reach 1.035 of the sprite's half-width on the diagonal (256 px, every pixel with
+        /// any alpha, `Tools/render_shop.py --measure` prints it). It read .86 for a long time,
+        /// measured off <c>seal_gold</c>, a round seal that was swapped out and never re-measured;
+        /// the star's points overhung every clearance by fourteen units and reached the row above,
+        /// and the gate that checks the clearance passed because it measured the old disc.
+        /// </para>
         /// </summary>
-        public const float SealDisc = .86f;
+        public const float SealDisc = 1.04f;
 
         /// <summary>
-        /// The flat field inside the rim, as a fraction of the sprite, and where its centre sits
-        /// relative to the sprite's own. Measured off the same texture — the disc is drawn a
-        /// little high and a little left, and a caption centred on the sprite instead of on the
-        /// field is a caption sitting low.
+        /// The flat field the caption may sit on — the largest circle inside the star that is
+        /// fully opaque — as a fraction of the sprite, and where its centre sits relative to the
+        /// sprite's own. Measured off the same texture: radius 104 of 128, centred one pixel left
+        /// and two up. The old triple described <c>seal_gold</c>'s far smaller field and put the
+        /// caption's corner a fifth outside a field the badge no longer had.
         /// </summary>
-        public const float Face = .538f, FaceShift = -.009f, FaceRise = .021f;
+        public const float Face = .81f, FaceShift = -.004f, FaceRise = .008f;
 
         /// <summary>
         /// How much of that field a two-line caption may use.
@@ -141,8 +151,15 @@ namespace GlimmerGrove.Layout
         /// settled on, and a figure equal to <see cref="TextFloor"/> is the tell that a string
         /// has outgrown the badge.
         /// </para>
+        /// <para>
+        /// <b>Re-expressed, not re-sized, when <see cref="Face"/> was re-measured for the star.</b>
+        /// The box the owner approved is 88 by 57 units (.538 by .344 of the sprite), and it
+        /// was written as 1.00 and .64 of a field that was really <c>seal_gold</c>'s. Against
+        /// the star's own field the same box is .664 and .425, so the three captions settle at
+        /// the same sizes they did and nothing on the card moved but the number describing it.
+        /// </para>
         /// </summary>
-        public const float FaceTextWidth = 1.00f, FaceTextHeight = .64f;
+        public const float FaceTextWidth = .664f, FaceTextHeight = .425f;
 
         /// <summary>
         /// The caption's size, and the floor best-fit may shrink a long one to.

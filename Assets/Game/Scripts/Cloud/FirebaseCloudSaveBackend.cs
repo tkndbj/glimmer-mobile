@@ -751,7 +751,7 @@ namespace GlimmerGrove.Cloud
         }
 
         public async Task<(CloudResult result, List<CloudWalletState> wallets)> SubmitSpendsAsync(
-            string userId, IReadOnlyList<SpendEntryDto> spends, CancellationToken cancellation = default)
+            string userId, IReadOnlyList<SpendSubmission> spends, CancellationToken cancellation = default)
         {
             if (!await EnsureReadyAsync())
                 return (CloudResult.Failed(CloudFailure.Offline, "Firebase unavailable"), Empty());
@@ -761,13 +761,21 @@ namespace GlimmerGrove.Cloud
             try
             {
                 var payload = new List<object>(spends.Count);
-                foreach (var spend in spends)
+                foreach (var submission in spends)
                 {
+                    var spend = submission.Spend;
                     if (spend == null || string.IsNullOrEmpty(spend.id)) continue;
+                    if (string.IsNullOrEmpty(submission.Currency)) continue;
+
+                    // The currency is the ledger's, never assumed. This line once read
+                    // `Currency.Credits` for every debit — "one currency spends today" — and by
+                    // the time gems were spent nothing here said so: every gem debit was taken
+                    // from the server's credit balance and the season pass, priced in gems,
+                    // was refused as underpaid on every sync for the life of the account.
                     payload.Add(new Dictionary<string, object>
                     {
                         { "id", spend.id },
-                        { "currency", Currency.Credits },   // one currency spends today
+                        { "currency", submission.Currency },
                         { "amount", spend.amount },
                         { "unix", spend.unix },
                         { "reason", spend.reason ?? string.Empty },
@@ -779,7 +787,13 @@ namespace GlimmerGrove.Cloud
                                             cancellation);
 
                 WarnAboutRejections(reply);
-                return (CloudResult.Success, ReadWalletStates(reply));
+
+                // Refusals ride back on every row, as an award's do: the ledger that holds the
+                // entry drops it and the balance it took (see CloudWalletState.RejectedSpendIds).
+                var states = ReadWalletStates(reply);
+                var refused = Rejected(reply);
+                foreach (var state in states) state.RejectedSpendIds.AddRange(refused);
+                return (CloudResult.Success, states);
             }
             catch (Exception e)
             {

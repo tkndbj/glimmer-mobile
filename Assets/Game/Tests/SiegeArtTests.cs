@@ -139,25 +139,45 @@ namespace GlimmerGrove.Tests
         [Test]
         public void EveryBossIsClassifiedByBothAimingRules()
         {
-            int reachesWithoutAiming = 0;
+            var reachWithoutAiming = new List<SiegeKind>();
 
             foreach (var kind in Bosses())
             {
                 bool aims = SiegeTuning.AimsAtAWard(kind);
                 bool reaches = SiegeTuning.ReachesTheLine(kind);
+                bool carries = SiegeTuning.CarriesAWard(SiegeTuning.SpellOf(kind));
 
                 Assert.That(!aims || reaches, Is.True,
                             $"{kind} is aimed at a ward but does not reach the line, which cannot " +
                             "be true of anything: the ward it is aimed at is on the line.");
 
-                if (!aims && reaches) reachesWithoutAiming++;
+                // The third predicate is the board's, and it is held to the other two: a cast
+                // carries a ward exactly when it is aimed at one, or when it never reaches the
+                // line and so takes the freshest for its smite (a devour, a raise). What reaches
+                // the line without aiming — a roar, a wane — is booked per post at the landing
+                // and carries nothing. A spell that breaks this is one `SiegeBoard.Wanted` will
+                // be asked about with no arm to answer, which is what the wane was for a chapter.
+                Assert.That(carries, Is.EqualTo(aims || !reaches),
+                            $"{kind} {(carries ? "carries" : "carries no")} ward, but " +
+                            $"{(aims ? "aims at one" : "aims at none")} and " +
+                            $"{(reaches ? "reaches the line" : "never reaches the line")}.");
+
+                if (!aims && reaches) reachWithoutAiming.Add(kind);
             }
 
-            Assert.That(reachesWithoutAiming, Is.EqualTo(1),
-                        "Exactly one boss reaches the line without aiming at a ward - the " +
-                        "warbringer, whose roar is booked as one record per post. A second one " +
-                        "means a new spell has been given a rally's shape, and every clause that " +
-                        "says 'the warbringer' now has two answers.");
+            // Named rather than counted. The count was 1 for six chapters and the seventh made
+            // it 2 — and a count that moved was a warning about every clause that said "the
+            // warbringer", which is what an audit of those clauses found (`SiegeBoard.Clock`
+            // handed the wane a ward it never read). A list names the exceptions so that a
+            // third spell of this shape fails by name, and its author reads this before
+            // touching the board.
+            Assert.That(reachWithoutAiming,
+                        Is.EquivalentTo(new[] { SiegeKind.Warbringer, SiegeKind.Hollowking }),
+                        "The bosses that reach the line without aiming at a ward are the " +
+                        "warbringer (a roar, one record per post) and the hollowking (a wane, one " +
+                        "record per idle post). A third means a new spell has been given that " +
+                        "shape: read `SiegeTuning.CarriesAWard` and every clause that names those " +
+                        "two before adding it here.");
         }
 
         /// <summary>

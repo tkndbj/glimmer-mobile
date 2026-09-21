@@ -73,6 +73,73 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(900, ledger.BalanceFrom(0), "and must not be charged a second time");
         }
 
+        /// <summary>
+        /// A debit the server refuses is dropped and its money comes back, and the ledger says
+        /// which one by id. Before this the refusal was only logged: the entry stayed, was
+        /// resubmitted on every sync for the life of the account (invariant 13a), and the thing
+        /// it paid for went on drawing as bought — which is how a season pass sent to the server
+        /// in the wrong currency stayed "owned" for a day while every paid chest was refused.
+        /// </summary>
+        [Test]
+        public void ARejectedSpendIsDroppedWithItsMoneyAndAnnouncedById()
+        {
+            var ledger = new CurrencyLedger(Currency.Gems);
+            ledger.GrantLocally(1000);
+            ledger.TrySpend(350, 0, SpendEntry.SeasonPassReason, SpendEntry.SeasonPassId("watch_0000"),
+                            out var pass);
+            ledger.TrySpend(20, 0, "continue", out var kept);
+
+            Assert.AreEqual(630, ledger.BalanceFrom(0));
+
+            var announced = new System.Collections.Generic.List<(string currency, string id)>();
+            void Note(string currency, string id) => announced.Add((currency, id));
+            CurrencyLedger.SpendRejected += Note;
+            try
+            {
+                ledger.ApplyServerState(grantedBaseline: 1000, spentBaseline: 0,
+                                        confirmedSpendIds: null, confirmedThroughUnix: 0,
+                                        rejectedSpendIds: new[] { pass.Id });
+            }
+            finally
+            {
+                CurrencyLedger.SpendRejected -= Note;
+            }
+
+            Assert.AreEqual(20, ledger.PendingSpend, "only the refused debit leaves the queue");
+            Assert.AreEqual(980, ledger.BalanceFrom(0), "and its money comes back");
+            Assert.AreEqual(1, announced.Count, "the refusal is announced exactly once");
+            Assert.AreEqual((Currency.Gems, pass.Id), announced[0]);
+
+            // Announced after the entry is gone, so a listener reading the balance in the
+            // callback sees the money already back — which is what SeasonLedger relies on.
+            long seenDuring = -1;
+            void Peek(string currency, string id) => seenDuring = ledger.BalanceFrom(0);
+            ledger.TrySpend(100, 0, "boost", out var again);
+            CurrencyLedger.SpendRejected += Peek;
+            try
+            {
+                ledger.ApplyServerState(1000, 0, null, 0, rejectedSpendIds: new[] { again.Id });
+            }
+            finally
+            {
+                CurrencyLedger.SpendRejected -= Peek;
+            }
+            Assert.AreEqual(980, seenDuring);
+
+            // An id the ledger does not hold is nothing to drop and nothing to announce.
+            CurrencyLedger.SpendRejected += Note;
+            try
+            {
+                ledger.ApplyServerState(1000, 0, null, 0, rejectedSpendIds: new[] { "spend:unknown" });
+            }
+            finally
+            {
+                CurrencyLedger.SpendRejected -= Note;
+            }
+            Assert.AreEqual(1, announced.Count);
+            Assert.AreEqual(20, ledger.PendingSpend);
+        }
+
         [Test]
         public void ASpendIdIsOnlyEverCountedOnce()
         {

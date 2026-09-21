@@ -387,6 +387,14 @@ namespace GlimmerGrove.Persistence
 
                 if (!Same(x.id, y.id)) return false;
                 if (x.collectedGoal != y.collectedGoal) return false;
+
+                // Every field the row carries on the wire, not only the free floor. Comparing
+                // one field made a paid-track claim, a mark and the pass flag invisible on their
+                // own: a sync that moved nothing else said "same" and pushed nothing, and the
+                // server's row lagged by however long that lasted.
+                if (x.premiumGoal != y.premiumGoal) return false;
+                if (x.marks != y.marks) return false;
+                if (x.pass != y.pass) return false;
             }
 
             return true;

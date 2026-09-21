@@ -116,12 +116,33 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// The seal is measured as the disc it is rather than as the square its texture is —
-        /// the difference is a sixth of a badge, and spending it would push the mark into the
-        /// picture underneath for no gain.
+        /// The seal is measured as the disc its ink reaches rather than as the square its
+        /// texture is, and the figure is a measurement of the sprite in use, not a shape.
+        ///
+        /// <para>
+        /// This used to assert the reach was <em>less</em> than the texture's half width, which
+        /// was true of the round seal it was written for and false of the star that replaced
+        /// it: a star's points reach the corners, so its ink lies further from the centre than
+        /// the texture's edge on the axis. Measured as a disc smaller than the texture, the
+        /// points overhung every clearance on the page and touched the row above, and this
+        /// gate passed. What can be held here without reading the picture is the shape of the
+        /// rule: the reach is <c>SealDisc</c> and nothing else, and <c>SealDisc</c> lies in the
+        /// only band a measured sprite can occupy — beyond the fully opaque field the caption
+        /// sits on, and no further than the texture's own diagonal. The measurement itself is
+        /// <c>Tools/render_shop.py --measure</c>, which reads <c>Hud/burst</c> and refuses when
+        /// the constants have drifted from it.
+        /// </para>
         /// </summary>
         [Test]
-        public void TheBadgeIsMeasuredAsADiscRatherThanAsItsTexture()
-            => Assert.Less(ProductCardBadges.SealReach, ProductCardBadges.SealSize * .5f);
+        public void TheBadgeIsMeasuredAsTheDiscItsInkReaches()
+        {
+            Assert.AreEqual(ProductCardBadges.SealSize * ProductCardBadges.SealDisc * .5f,
+                            ProductCardBadges.SealReach, .001f,
+                            "the reach is the measured disc and nothing else");
+            Assert.Greater(ProductCardBadges.SealDisc, ProductCardBadges.Face,
+                           "the ink reaches past the flat field the caption sits on");
+            Assert.LessOrEqual(ProductCardBadges.SealDisc, 1.4143f,
+                               "nothing reaches past the texture's own diagonal");
+        }
     }
 }
