@@ -27003,6 +27003,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Siege/Wards/spark_g_fire
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a392670e8855451999746d4b1a2a3d49
+    m_Address: Audio/Sfx/rankup
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a39580d3c349abf4184fc905c1606185
     m_Address: Art/Fx/Siege/shot_lance_b/f00
     m_ReadOnly: 0

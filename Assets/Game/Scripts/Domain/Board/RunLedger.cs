@@ -63,6 +63,30 @@ namespace GlimmerGrove
             public readonly int GoldenPercent;
 
             /// <summary>
+            /// How much of <see cref="Credits"/> came from somewhere other than the star ledger.
+            ///
+            /// <para>
+            /// <b>The credit half of <c>bonusXp</c>'s bargain, and the reason it has to be
+            /// carried rather than measured.</b> A mode pays XP by moving a derived total, so
+            /// <c>ProtoScreen.Solve</c> can read that total either side of the fold and never
+            /// learn what was banked. Money cannot work that way: the Infinite lane pays credits
+            /// as a <em>claim</em> (<c>EndlessCoins</c>, invariant 13's fourth clause), which
+            /// moves a granted balance rather than a derived one, and a balance has other
+            /// writers. So the mode says the figure and this carries it.
+            /// </para>
+            /// <para>
+            /// <see cref="Credits"/> is the whole of what the run paid, exactly as
+            /// <see cref="Xp"/> is; this says how much of it the golden multiplier never touched,
+            /// so a panel can print one chip and still be honest about the golden line beside it.
+            /// </para>
+            /// <para>
+            /// Nought on every board but that lane, which is what leaves every other mode's panel
+            /// exactly as it was.
+            /// </para>
+            /// </summary>
+            public readonly long LaneCredits;
+
+            /// <summary>
             /// How much of <see cref="Xp"/> a running boost paid, and at what percentage.
             ///
             /// <para>
@@ -100,7 +124,8 @@ namespace GlimmerGrove
             public readonly ChapterId ChapterOpened;
 
             public WinRecord(RunOutcome run, StreakNote streak, long xp, long credits, int golden,
-                             ChapterId chapterOpened, long boostXp = 0L, int boostPercent = 0)
+                             ChapterId chapterOpened, long boostXp = 0L, int boostPercent = 0,
+                             long laneCredits = 0L)
             {
                 Run = run;
                 Streak = streak;
@@ -110,6 +135,7 @@ namespace GlimmerGrove
                 ChapterOpened = chapterOpened;
                 BoostXp = boostXp;
                 BoostPercent = boostPercent;
+                LaneCredits = laneCredits;
             }
         }
 
@@ -176,7 +202,7 @@ namespace GlimmerGrove
         /// </summary>
         public static WinRecord Win(LevelDefinition level, int stars, int moves,
                                     float seconds, int hintsUsed, int route, int lit, int wanted,
-                                    long bonusXp = 0L)
+                                    long bonusXp = 0L, long bonusCredits = 0L)
         {
             var before = PlayerProgress.Record(level.Id);
             var tuning = level.Tuning;
@@ -218,6 +244,12 @@ namespace GlimmerGrove
             // fold exactly as `ChapterOpened` above is measured.
             long xp = reward.Xp + (bonusXp > 0L ? bonusXp : 0L);
 
+            // The same sum in the other currency, and the one asymmetry between them: XP arrives
+            // here as a *difference* the caller measured, credits as an *amount* the mode banked
+            // and reported. Both are nought on every board but the Infinite lane, so this adds
+            // nothing to what an ordinary glade pays and cannot change what one draws.
+            long lane = bonusCredits > 0L ? bonusCredits : 0L;
+
             // **The one place XP is multiplied.** Every source above is totalled first and boosted
             // once, so a boost cannot be applied twice to one run and a source added later is
             // boosted without being taught anything — which is the whole of what `XpBoost.Bank`
@@ -231,10 +263,10 @@ namespace GlimmerGrove
             int boostPercent = Progression.XpBoost.Percent;
             long boostXp = Progression.XpBoost.Bank(xp);
 
-            return new WinRecord(run, streak, xp + boostXp, reward.EarnedCredits,
+            return new WinRecord(run, streak, xp + boostXp, reward.EarnedCredits + lane,
                                  PlayerProgression.GoldenPercentFor(level.Id),
                                  opened?.Id ?? ChapterId.None,
-                                 boostXp, boostPercent);
+                                 boostXp, boostPercent, lane);
         }
 
         /// <summary>

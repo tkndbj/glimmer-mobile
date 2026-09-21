@@ -405,7 +405,13 @@ namespace GlimmerGrove
             // that way, because a wave count is the one reading the server cannot recompute
             // (`EndlessCoins`, invariants 13 and 19l). Banked from the same `WavesCleared` and in
             // the same place, so the two payments can never disagree about what a run was.
-            EndlessCoins.Bank(board.WavesCleared);
+            // **Reported as well as banked.** `Bank` answers what it paid, and a payment nobody
+            // is told about is the fault this line was written to close: the run's credits arrive
+            // as a claim against the wallet, while the victory panel's coin chip counts the star
+            // ledger's own delta — which on a replay of this lane is nought, so a real payment
+            // drew nothing at all. `Banked` is what carries it to the panel (invariant 44j's
+            // rule about readouts, said about a payout).
+            Banked(EndlessCoins.Bank(board.WavesCleared));
         }
 
         /// <summary>

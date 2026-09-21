@@ -325,11 +325,37 @@ namespace GlimmerGrove
         /// location, so it resolves to nothing and the button draws as a **white rectangle**
         /// rather than as a missing decoration (invariant 7b). `LeaderboardScreen.Skin` and
         /// `StreakScreen.Skin` write it the same way, for the same reason and after the same bug.
+        ///
+        /// <para>
+        /// <b>The mould and the tap are set together, because on this panel they are one
+        /// fact.</b> A key wearing <see cref="Skins.Shut"/> refuses the press outright at the
+        /// owner's instruction (2026-09-21): grey means it cannot be pressed, so a grey key that
+        /// still answers is a grey key that lied. <c>Btn.Interactable</c> swallows the pointer
+        /// and drains the pill, so the dead state is this kit's own rather than a second one
+        /// invented here.
+        /// </para>
         /// </summary>
-        void Skin(string skin)
+        void Skin(string skin, bool live = true)
         {
             if (_pill != null) _pill.sprite = Art.S("Ui/" + skin);
+            if (_act != null) _act.Interactable = live;
         }
+
+        /// <summary>
+        /// Whether a key carrying a price is shut: drawn, and refusing the finger.
+        ///
+        /// <b>A credit shortfall shuts the key and a gem one does not, which is <c>Act</c>'s own
+        /// split reaching the drawing.</b> A gem price has a shelf to open — the key does
+        /// something real the moment it is pressed, so it stays live and green — where credits
+        /// are earned by playing and there is nothing here to sell, so the only answer the key
+        /// has is a refusal. What the player needs is on the status line above it either way:
+        /// the shortfall, in figures.
+        ///
+        /// <b>Said once because three keys ask it</b> — the turret's price, the star's, and
+        /// another copy's.
+        /// </summary>
+        static bool Shut(long shortfall, string currency)
+            => shortfall > 0 && currency != Currency.Gems;
 
         /// <summary>
         /// The glyph beside a price.
@@ -441,9 +467,16 @@ namespace GlimmerGrove
             // EQUIPPED pays nothing, moves nothing and only closes the panel, so it wears the one
             // pill on this panel that is not an offer; EQUIP wears the orange, which keeps the
             // affirmative green for the thing that costs.
+
+            // **Shut on the one state that costs**, and set on every repaint in both directions:
+            // the copy price is the only thing this key ever asks money for, so EQUIP and
+            // EQUIPPED are always live (see `Skin` for why the tap moves with the mould).
+            bool copyShut = keys.Buys && Shut(copy.Shortfall, copy.Currency);
+
             if (_stand != null)
             {
                 _stand.gameObject.SetActive(keys.Lower);
+                _stand.Interactable = !copyShut;
 
                 // Cleared before the branch rather than in two of its three: this repaints on
                 // every purchase and every arrangement, so a glyph left from the last pass is a
@@ -465,6 +498,7 @@ namespace GlimmerGrove
 
                     if (_standPill != null)
                         _standPill.sprite = Art.S("Ui/" + (keys.Equipped ? Skins.Settled
+                                                         : copyShut ? Skins.Shut
                                                          : keys.Buys ? Skins.Affirm
                                                          : Skins.Buy));
 
@@ -511,6 +545,14 @@ namespace GlimmerGrove
                         _status.color = Held;
 
                         _label.text = Loc.Get("ui.loadout.upgrade");
+
+                        // **Live and green even when the star cannot be paid for, which is the
+                        // one key here that is not shut by a shortfall** (owner, 2026-09-21):
+                        // it charges nothing, it opens the panel where what a star costs and
+                        // what it buys are drawn side by side, and that panel is the only place
+                        // either figure appears. Shutting it would hide the price behind the
+                        // price. The key that takes the money is the one on the panel it opens,
+                        // and that one greys.
                         Skin(Skins.Affirm);
                         break;
                     }
@@ -548,7 +590,9 @@ namespace GlimmerGrove
                     _label.text = offer.Cost.ToString("N0");
                     _coin.enabled = true;
 
-                    Skin(Skins.Affirm);
+                    bool shut = Shut(offer.Shortfall, offer.Currency);
+
+                    Skin(shut ? Skins.Shut : Skins.Affirm, live: !shut);
                     Coin(gems);
                     break;
             }

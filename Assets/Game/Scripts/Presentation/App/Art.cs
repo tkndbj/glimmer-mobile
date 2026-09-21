@@ -645,6 +645,49 @@ namespace GlimmerGrove
         }
 
         /// <summary>
+        /// A four-corner wash: one colour per corner, interpolated across the whole face.
+        ///
+        /// <para>
+        /// <b>The second dimension is the whole reason this is not <see cref="Gradient"/>.</b>
+        /// That one is four pixels wide and varies only down the screen, which is right for a
+        /// backdrop that is one hue getting darker and cannot express the thing this is for: a
+        /// room lit warm in one corner and cool in the opposite one, with two more hues crossing
+        /// between them. A vertical ramp of the same colours reads as a stripe, and a stack of
+        /// tinted plates to fake it is four full-screen draws where this is one.
+        /// </para>
+        /// <para>
+        /// <b>It carries its own colour</b>, for the reason <see cref="Gradient"/> and
+        /// <see cref="Gem"/> do: <c>Image.color</c> multiplies, so a layer holding more than one
+        /// colour cannot be a white mask tinted at the call site — the darkest corner would
+        /// decide the result. The <c>Image</c> drawing this is left at white and faded by alpha.
+        /// </para>
+        /// <para>
+        /// 64 square rather than the screen's size. The texture is bilinear and clamped, so the
+        /// hardware does the interpolation when it is stretched to fill a canvas — a wash has no
+        /// detail to lose, and generating one at a phone's real resolution would be four
+        /// megabytes of texture to say what sixteen kilobytes says exactly as well.
+        /// </para>
+        /// </summary>
+        public static Sprite Corners(Color tl, Color tr, Color bl, Color br, int size = 64)
+        {
+            int n = Mathf.Max(2, size);
+            string key = $"corners{n}:{ColorUtility.ToHtmlStringRGBA(tl)}"
+                       + $":{ColorUtility.ToHtmlStringRGBA(tr)}"
+                       + $":{ColorUtility.ToHtmlStringRGBA(bl)}"
+                       + $":{ColorUtility.ToHtmlStringRGBA(br)}";
+
+            return MakeRGBA(key, n, n, (x, y) =>
+            {
+                // y runs up the texture and the names run down the screen, which is the
+                // confusion `UIKit`'s own mirror note records paying for twice.
+                float u = (x - .5f) / (n - 1);
+                float v = 1f - (y - .5f) / (n - 1);
+
+                return Color.Lerp(Color.Lerp(tl, tr, u), Color.Lerp(bl, br, u), v);
+            });
+        }
+
+        /// <summary>
         /// A band of neon that runs left to right through the spectrum, for sweeping inside a
         /// mask.
         ///

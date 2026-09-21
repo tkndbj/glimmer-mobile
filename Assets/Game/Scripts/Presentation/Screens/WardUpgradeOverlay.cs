@@ -158,6 +158,11 @@ namespace GlimmerGrove
 
                 _label.text = Loc.Get("ui.ok.done");
                 _coin.enabled = false;
+
+                // Live, and said here rather than left to the last repaint: this key closes the
+                // panel and costs nothing, so it is never the shut one — and a panel reopened
+                // over a turret that has since topped out would otherwise keep the dead pill.
+                _act.Interactable = true;
                 _pill.sprite = Art.S("Ui/" + Skins.Settled);
 
                 Place();
@@ -179,7 +184,17 @@ namespace GlimmerGrove
 
             _label.text = offer.Cost.ToString("N0");
             _coin.enabled = true;
-            _pill.sprite = Art.S("Ui/" + Skins.Affirm);
+
+            // **Shut when the credits are not there**, which is `WardPreviewOverlay.Shut`'s rule
+            // said on the panel that actually charges. A star is only ever a credit price, so
+            // there is no shelf to open and nothing this key could do but refuse — and at the
+            // owner's instruction (2026-09-21) a grey key does not take the tap either, so the
+            // shortfall on the status line is the whole of the answer now. `Refuse` stays as the
+            // guard behind it: a dead key is a drawing, and `Act` may not trust a drawing.
+            bool shut = offer.Shortfall > 0;
+
+            _act.Interactable = !shut;
+            _pill.sprite = Art.S("Ui/" + (shut ? Skins.Shut : Skins.Affirm));
 
             // **The coin is a reel, not a sprite** — credits have no still picture in this UI, only
             // the `Ui/Coin` flipbook, so an `Image` with the sprite cleared is a white rectangle

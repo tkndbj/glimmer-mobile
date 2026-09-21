@@ -735,6 +735,57 @@ def check_run_ceremony(files):
     return problems
 
 
+# --------------------------------------------- a lane that pays money has to say what it paid
+# A run's credits do not all come from the same place, and only one of the two arrives by
+# itself. An ordinary glade pays out of the star ledger, which is derived - `RunLedger.Win`
+# subtracts the record before from the record after and the victory panel draws the difference.
+# The Infinite lane pays a *claim* instead (`EndlessCoins`, invariant 13's fourth clause),
+# because a wave count is the one reading this server cannot recompute. A claim moves a granted
+# balance, and a granted balance has other writers - a chest, an advert, a purchase - so there
+# is no total whose movement means "this run" and nothing the panel can measure for itself.
+#
+# **So it has to be told, and the day it was not, a real payment drew nothing at all.** Fifteen
+# waves banked 450 credits into the wallet and the victory panel showed no coins: the chip is
+# built only when `CreditsGained > 0`, `CreditsGained` was the star ledger's own delta, and on
+# a replay of that lane the delta is nought. The money was there. The player was simply never
+# told, and reported it as having been paid nothing.
+#
+# **Nothing else here could see it.** The claim is correct, the wallet is correct, the server
+# honours it, every fixture passes and the render mirrors draw a panel that is accurate about
+# every number it was given. The instrument was somebody finishing a run and looking at their
+# balance afterwards - which is the same instrument the wallet rule above was bought with.
+#
+# Deliberately per-file and deliberately weak, exactly as the two rules above are: it asks that
+# a file which banks lane credits also reports them, not that any particular call is wrapped. A
+# scanner finds a wrong name and can never find a missing case (invariant 39l). The strong half
+# is that `ProtoScreen.Banked` is the only channel a mode has, so a mode that never calls it
+# pays nothing it could have been asked to report.
+BANKS_COINS = re.compile(r"\bEndlessCoins\s*\.\s*Bank\s*\(")
+REPORTS_COINS = re.compile(r"\bBanked\s*\(")
+
+
+def check_lane_credits(files):
+    problems = []
+
+    for path in files:
+        name = path.replace("\\", "/")
+        if name.endswith("/EndlessCoins.cs"):
+            continue
+
+        text = without_comments(io.open(path, encoding="utf-8", errors="replace").read())
+
+        hit = BANKS_COINS.search(text)
+        if not hit or REPORTS_COINS.search(text):
+            continue
+
+        line = text[:hit.start()].count("\n") + 1
+        problems.append("%s:%d  banks the lane's credits and never reports them through "
+                        "ProtoScreen.Banked - the run's panel would draw no coins at all"
+                        % (name, line))
+
+    return problems
+
+
 def main():
     wanted = [a.lower() for a in sys.argv[1:]]
     print("Unity: %s" % DATA)
@@ -775,7 +826,11 @@ def main():
         for line in endings:
             print("  rank    FAILED  " + line)
 
-        if problems or boards or dtos or wallets or wipes or endings:
+        lanes = check_lane_credits(every)
+        for line in lanes:
+            print("  payout  FAILED  " + line)
+
+        if problems or boards or dtos or wallets or wipes or endings or lanes:
             ok = False
 
     print("OK" if ok else "FAILED")

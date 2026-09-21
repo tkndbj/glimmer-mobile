@@ -313,8 +313,39 @@ namespace GlimmerGrove
         /// reads <c>PlayerProgression.EndlessXp</c> either side of this call and hands the
         /// difference to the ledger. That keeps this class mode-blind — it never learns what was
         /// banked, only that the derived total moved.
+        ///
+        /// <b>A mode may also pay credits from in here, and that one it has to say</b>, through
+        /// <see cref="Banked"/>. XP is derived, so a total read either side of this call is the
+        /// whole answer; credits from a lane are a granted <em>claim</em> (<c>EndlessCoins</c>)
+        /// landing in a balance that has other writers, so there is no total whose movement means
+        /// "this run". Saying it is the only version that cannot quietly pay a chest's coins into
+        /// a run's panel.
         /// </summary>
         protected virtual void Finished(int count) { }
+
+        /// <summary>
+        /// Reported from inside <see cref="Finished"/>: what this run paid in credits from
+        /// somewhere other than the star ledger.
+        ///
+        /// <para>
+        /// <b>It says, it does not pay.</b> The money is already banked by the time this is
+        /// called — this is how the run tells the panel about it, and a mode that banks without
+        /// reporting is a player who was paid and never told, which is exactly the fault this
+        /// exists to close.
+        /// </para>
+        /// <para>
+        /// Accumulates rather than assigns, so a mode with more than one such payment adds up
+        /// instead of the last one winning. Cleared immediately before <see cref="Finished"/>,
+        /// which is the only window it is ever read over.
+        /// </para>
+        /// </summary>
+        protected void Banked(long credits)
+        {
+            if (credits > 0L) _banked += credits;
+        }
+
+        /// <summary>What <see cref="Banked"/> was told during the current <see cref="Finished"/>.</summary>
+        long _banked;
 
         /// <summary>
         /// Called once however the run ended, after the latch and before anything is recorded.
@@ -384,9 +415,15 @@ namespace GlimmerGrove
             // where a mode banks anything it keeps, so the window is exactly that one call.
             long bonusBefore = PlayerProgression.EndlessXp;
 
+            // Cleared rather than trusted to be nought. `_finished` makes this call single for
+            // the life of a screen today, but a field read once and never reset is the shape that
+            // pays a second run for the first one's waves the day that stops being true.
+            _banked = 0L;
+
             Finished(moves);
 
             long bonusXp = PlayerProgression.EndlessXp - bonusBefore;
+            long bonusCredits = _banked;
 
             // No route, deliberately, and it is the weave's argument: the victory panel's route
             // bar compares a run against the board's own carved solution, and these boards have
@@ -396,7 +433,7 @@ namespace GlimmerGrove
                                      Time.unscaledTime - _startedAt, 0,
                                      route: 0,
                                      lit: run.Goals, wanted: run.Goals,
-                                     bonusXp: bonusXp);
+                                     bonusXp: bonusXp, bonusCredits: bonusCredits);
 
             // No fanfare here: the board already played one. ProtoView.Triumph sounds `win` and
             // then waits a beat before handing control back, so a copy at this point is the same
@@ -418,6 +455,10 @@ namespace GlimmerGrove
                 // Already inside `XpGained`; these say how much of it a running boost paid.
                 v.BoostXp = done.BoostXp;
                 v.BoostPercent = done.BoostPercent;
+
+                // And the same about `CreditsGained`: how much of it came from a lane rather than
+                // from the stars, which is the half no multiplier on this panel applies to.
+                v.LaneCredits = done.LaneCredits;
                 v.ChapterOpened = done.ChapterOpened;
             }));
         }

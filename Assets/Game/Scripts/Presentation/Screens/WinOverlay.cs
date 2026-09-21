@@ -62,9 +62,26 @@ namespace GlimmerGrove
 
         /// <summary>
         /// This glade's golden multiplier, as a percentage. 100 is the ordinary reward.
-        /// Already inside <see cref="CreditsGained"/> — see <c>GoldenTable</c>.
+        /// Applied to <see cref="CreditsGained"/> less <see cref="LaneCredits"/> — see
+        /// <c>GoldenTable</c>.
         /// </summary>
         public int GoldenPercent = 100;
+
+        /// <summary>
+        /// How much of <see cref="CreditsGained"/> a lane paid rather than the stars.
+        ///
+        /// <para>
+        /// <b>Already inside <see cref="CreditsGained"/></b>, exactly as <see cref="BoostXp"/> is
+        /// already inside <see cref="XpGained"/> — the chip counts the total. What this is for is
+        /// the golden line beside it: a multiplier is a fact about what a <em>glade</em> paid, so
+        /// a run that earned nothing from its stars and everything from its lane must not be told
+        /// it was paid extra. See <see cref="GoldenPercent"/>.
+        /// </para>
+        /// <para>
+        /// Nought on every board but the Infinite lane.
+        /// </para>
+        /// </summary>
+        public long LaneCredits;
 
         /// <summary>
         /// How much of <see cref="XpGained"/> a running XP boost paid, and at what percentage.
@@ -288,7 +305,12 @@ namespace GlimmerGrove
             // and it reads false. The rule falls out of the subtraction rather than needing a
             // clause anybody has to remember.
             bool paid = XpGained > 0 || CreditsGained > 0;
-            bool goldened = paid && GoldenPercent > 100;
+
+            // Asked of the star ledger's half alone. The multiplier is a property of the glade
+            // and is applied to what the record earned, so a run paid only by its lane has
+            // nothing for it to have multiplied — and a "GOLDEN 150%" line over a coin chip it
+            // did not touch is the panel lying about where the money came from.
+            bool goldened = CreditsGained - LaneCredits > 0L && GoldenPercent > 100;
 
             // Both halves asked, not just the percentage: a window can be open and still have
             // paid nothing, on a replay that beat no record. A line reading "+0 XP from your

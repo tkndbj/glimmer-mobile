@@ -150,7 +150,7 @@ namespace GlimmerGrove
         /// <summary>How far the whole composition drifts upward on the ascent.</summary>
         const float Climb = 76f;
 
-        const float VignetteAlpha = .78f, FanAlpha = .30f, Fan2Alpha = .20f;
+        const float VignetteAlpha = CeremonySky.VignetteAlpha, FanAlpha = .30f, Fan2Alpha = .20f;
         const float HaloAlpha = .52f, ShaftAlpha = .34f, ShaftGlowAlpha = .26f;
 
         /// <summary>How long one mote takes to reach the core, and how far apart they leave.</summary>
@@ -158,6 +158,29 @@ namespace GlimmerGrove
 
         /// <summary>How many falling streaks the shaft carries. See <see cref="BuildShaft"/>.</summary>
         const int Streaks = 14;
+
+        /// <summary>
+        /// The gap between the breath and the break, named because the fanfare is placed against
+        /// it. See <see cref="Play"/>.
+        /// </summary>
+        const float StrikeGap = .26f;
+
+        /// <summary>
+        /// How far into <c>rankup</c> its rise tops out, in seconds.
+        ///
+        /// <para>
+        /// <b>Measured off the shipped wav, not read off the file name.</b> The clip is called a
+        /// buildup and is not one in the shape that name suggests: its amplitude is loudest in
+        /// its first tenth and decays from there, and what actually rises is the <em>pitch</em>
+        /// - a dominant partial climbing 301 Hz to 5.5 kHz over this many seconds, after which
+        /// it falls away into a sparkle tail. Placed by the clip's length, its arrival would
+        /// have landed three quarters of a second after the badge; placed by its loudest
+        /// instant, the top of the sweep would have come in the middle of the climb. So the
+        /// screen's strike is aligned to <em>this</em> instant and the tail rings on through the
+        /// ascent, which is the whole of what one sound has to do here.
+        /// </para>
+        /// </summary>
+        const float FanfareRise = .55f;
 
         // ------------------------------------------------------------------ the parts
         Image _sky, _vignette, _fanA, _fanB, _halo, _core, _flash;
@@ -174,7 +197,7 @@ namespace GlimmerGrove
 
         Chroma _c;
         Color _metal;
-        bool _settled, _struck, _spent, _skipped;
+        bool _settled, _struck, _spent, _skipped, _rang;
         int _pipHeld;
 
         // ------------------------------------------------------------------- building
@@ -245,14 +268,11 @@ namespace GlimmerGrove
             // The bottom layer, covering the screen, so a tap anywhere that is not a control
             // lands here and skips. It is also what `Scrim` would normally be — there is no
             // panel here to dim behind, so the room is the scrim.
-            _sky = UIKit.Img("Sky", Content,
-                             Art.Gradient(Color.Lerp(_c.Deep, Color.black, .55f),
-                                          _c.Deep,
-                                          Color.Lerp(_c.Deep, _c.Partner, .22f)),
-                             new Color(1f, 1f, 1f, 0f));
-            UIKit.StretchTo((RectTransform)_sky.transform, 0, 0, 0, 0);
-            _sky.raycastTarget = true;
-            _sky.gameObject.AddComponent<Btn>().Setup(Skip, silent: true);
+            //
+            // Shared with the two turret ceremonies (`CeremonySky`), which is why it is not the
+            // rung's own deep hue any more: all three stood their subject on a near-black room
+            // and all three came back as *so dark*.
+            _sky = CeremonySky.Ground(Content, Skip, silent: true);
 
             _aurora = new Image[AuroraHome.Length];
 
@@ -265,12 +285,10 @@ namespace GlimmerGrove
                 Drift(i);
             }
 
-            // Tinted with the room rather than with ink, or the corners end up the one grey
-            // thing on a coloured screen.
-            _vignette = UIKit.Img("Vignette", Content, Art.Vignette(256),
-                                  Pal.A(Color.Lerp(_c.Deep, Color.black, .6f), 0f));
-            UIKit.StretchTo((RectTransform)_vignette.transform, 0, 0, 0, 0);
-            _vignette.raycastTarget = false;
+            // Last, so it holds the aurora and the fireflies in too. Tinted with the room
+            // rather than with ink, or the corners end up the one grey thing on a coloured
+            // screen — see `CeremonySky.VignetteInk`, which is where that now lives.
+            _vignette = CeremonySky.Veil(Content);
         }
 
         /// <summary>
@@ -438,9 +456,17 @@ namespace GlimmerGrove
         // ---------------------------------------------------------------- the captions
         void BuildCaptions()
         {
+            // **Cream with the dark outline every caption here carries, and not the rung's
+            // metal.** Over a near-black room the metal lifted toward white was the obvious
+            // choice; over this one it is gold on peach. Driving it dark instead was worse
+            // still — the outline is dark too, so at 44pt the letterforms filled in and the
+            // line became a smudge. The name below it is cream on this same ground and reads at
+            // every rung, which is the answer; and this line says RANK EARNED rather than
+            // naming the rank, so it is the one caption here with no colour to carry.
             _eyebrow = UIKit.Shrinkable(
                 UIKit.Titled("Eyebrow", Content, Loc.Get("ui.rankup.title"), 44,
-                             Pal.A(Pal.Lift(_metal, .35f), .95f), TextAnchor.MiddleCenter,
+                             Pal.A(Pal.Cream, .95f),
+                             TextAnchor.MiddleCenter,
                              new Vector2(900f, EyebrowH), new Vector2(.5f, .5f),
                              new Vector2(0f, EyebrowY), outline: 3f, shadow: 3f), 26);
             SetAlpha(_eyebrow, 0f);
@@ -510,8 +536,10 @@ namespace GlimmerGrove
             _railRt = UIKit.Box("Rail", Content, new Vector2(RailWidth, PipMax),
                                 new Vector2(.5f, .5f), new Vector2(0f, RailY));
 
+            // Dark rather than white-at-a-low-alpha: the rail crosses the brightest part of
+            // the room, where a cream trough is nothing at all. See `CeremonySky.Ink`.
             var trough = UIKit.Img("Trough", _railRt, Art.SoftCapsule((int)RailTrough, 96),
-                                   Pal.A(Pal.Cream, .16f),
+                                   Pal.A(CeremonySky.Ink, .30f),
                                    new Vector2(RailWidth, RailTrough), new Vector2(.5f, .5f),
                                    Vector2.zero);
             trough.raycastTarget = false;
@@ -548,7 +576,8 @@ namespace GlimmerGrove
                 // There can never be a gap in the run: a rung is only held on top of an unbroken
                 // run from the bottom (`RankLadder.Held`), so lighting them in order is drawing
                 // the only state the ledger can produce.
-                _pips[i] = UIKit.Img("Pip" + ordinal, _railRt, Art.Disc(64), Pal.A(Pal.Cream, .22f),
+                _pips[i] = UIKit.Img("Pip" + ordinal, _railRt, Art.Disc(64),
+                                     Pal.A(CeremonySky.Ink, .34f),
                                      Vector2.one * pip, new Vector2(.5f, .5f), new Vector2(x, 0f));
                 _pips[i].raycastTarget = false;
             }
@@ -605,10 +634,21 @@ namespace GlimmerGrove
         /// announcement.
         /// </para>
         /// <para>
-        /// <b>Three sounds, and they are the three moments.</b> A rise under the gathering, the
-        /// break, and the name landing. The companion reveal shipped ringing on all six of its
-        /// beats and played back as a pile-up rather than as a fanfare; the motes tick instead,
-        /// quietly and at a rising pitch, which is a rhythm rather than a chord.
+        /// <b>One sound, at the owner's instruction, and it is placed rather than triggered.</b>
+        /// This shipped with seven - a rise, a tick per mote, a tick on the breath, a bang and a
+        /// bell on the break, the badge landing and the name - and played back as a pile-up
+        /// rather than as a fanfare, which is the note <c>WardRevealOverlay</c> already carries
+        /// about the companion reveal ringing on all six of its beats. It is now <c>rankup</c>
+        /// and nothing else: every other beat here is silent, and the panel this hands on to is
+        /// closed quietly, so the ceremony's one sound is not followed by a dismissal whoosh.
+        /// </para>
+        /// <para>
+        /// <b>Placed by its rise, which is why it is scheduled ahead of the beat it belongs
+        /// to.</b> A sound fired <em>on</em> the strike would be a rising arpeggio climbing
+        /// after the thing it is meant to announce; fired at the top of the ceremony it would
+        /// arrive at whatever moment a rung's line count happened to put there, because the
+        /// gathering is as long as the rung has requirements. So the strike's own time is read
+        /// off the playhead and the clip is started <see cref="FanfareRise"/> before it.
         /// </para>
         /// </summary>
         void Play()
@@ -628,10 +668,6 @@ namespace GlimmerGrove
                 Tween.Scale(_shaftRt, new Vector3(1f, 1f, 1f), .62f, Ease.OutQuint);
                 Tween.Fade(_shaft, ShaftAlpha, .55f);
                 Tween.Fade(_shaftGlow, ShaftGlowAlpha, .70f);
-
-                // Pitched down, so what is heard under the gathering is a rise rather than the
-                // whoosh a button makes.
-                Audio.Sfx("whoosh", .42f, .68f);
             });
 
             // -- the rung below rises ----------------------------------------
@@ -649,12 +685,17 @@ namespace GlimmerGrove
                     _core.transform.localScale = Vector3.one * Mathf.Lerp(1.35f, .18f, t);
                     _core.color = Pal.A(Pal.Lift(_metal, .55f), Mathf.Lerp(.95f, 1f, t));
                 }, _core, "core");
-
-                Audio.Sfx("tick", .5f, 1.7f);
             });
 
             // -- the break ---------------------------------------------------
-            cue.Then(.26f, Strike);
+            // The one sound, started early enough that its rise tops out on the frame the badge
+            // lands. The strike's time is taken off the playhead rather than re-derived, because
+            // the gathering's length depends on how many lines the rung asks for - which is the
+            // very drift `Cue` exists to make unrepresentable.
+            float strikeAt = cue.Playhead + StrikeGap;
+            Tween.After(Mathf.Max(0f, strikeAt - FanfareRise), Fanfare, this);
+
+            cue.Then(StrikeGap, Strike);
 
             // -- the climb ---------------------------------------------------
             cue.Then(.40f, Ascend);
@@ -774,10 +815,6 @@ namespace GlimmerGrove
 
             Burst.Sparks(_stage, new Vector2(0f, BadgeY), Pal.Lift(_c.Nth(index), .3f),
                          5, 130f, 16f, .38f);
-
-            // A rhythm rather than a chord: the pitch climbs with the count, so the last line is
-            // audibly the last one whether the rung asks for two or eight.
-            Audio.Sfx("tick", .42f, Mathf.Lerp(1.05f, 1.75f, share));
         }
 
         /// <summary>
@@ -793,9 +830,6 @@ namespace GlimmerGrove
         void Strike()
         {
             _struck = true;
-
-            Audio.Sfx("boom", .55f, .9f);
-            Audio.Sfx("unlock", .62f);
 
             if (_flash)
             {
@@ -838,12 +872,7 @@ namespace GlimmerGrove
             // have to be undone and the ascent below starts from its resting place.
             _badgeRt.localScale = Vector3.one * 3f;
             Tween.Scale(_badgeRt, 1f, .17f, Ease.InCubic)
-                 .OnDone(() =>
-                 {
-                     if (!_badgeRt) return;
-                     Tween.Punch(_badgeRt, .19f, .38f);
-                     Audio.Sfx("land", .45f, .85f);
-                 });
+                 .OnDone(() => { if (_badgeRt) Tween.Punch(_badgeRt, .19f, .38f); });
 
             SetAlpha(_eyebrow, 0f);
             Tween.Fade(_eyebrow, .95f, .34f);
@@ -910,7 +939,6 @@ namespace GlimmerGrove
                 Tween.Scale(_pips[index].transform, PipHeldScale, .44f, Ease.OutBack);
                 Burst.Sparks(_railRt, _pips[index].rectTransform.anchoredPosition,
                              Pal.Lift(_metal, .3f), 9, 150f, 16f, .48f);
-                Audio.Sfx("star", .46f, 1.1f);
             });
         }
 
@@ -932,8 +960,6 @@ namespace GlimmerGrove
             _name.transform.localScale = Vector3.one * 2.2f;
             Tween.Scale(_name.transform, 1f, .26f, Ease.InCubic)
                  .OnDone(() => Tween.Punch(_name.transform, .16f, .34f));
-
-            Audio.Sfx("chime2", .6f);
         }
 
         /// <summary>The rule, the blurb and where this stands on the ladder.</summary>
@@ -969,6 +995,24 @@ namespace GlimmerGrove
         }
 
         // ------------------------------------------------------------------- the parts
+        /// <summary>
+        /// The ceremony's one sound, and the only one it makes.
+        ///
+        /// <para>
+        /// Latched, because <see cref="Skip"/> has to be able to ring it. Pending beats are
+        /// killed by owner, so a player who taps through before this has started would otherwise
+        /// take their rank in silence - and a skip means <em>get to it</em>, not <em>I do not
+        /// want this</em>.
+        /// </para>
+        /// </summary>
+        void Fanfare()
+        {
+            if (_rang) return;
+            _rang = true;
+
+            Audio.Sfx("rankup", .7f);
+        }
+
         /// <summary>A ring leaving the strike, in one of the room's three lights.</summary>
         void Shockwave(float delay, Color colour)
         {
@@ -1020,6 +1064,11 @@ namespace GlimmerGrove
 
             // Killed by owner, which reaches every beat `Cue` scheduled against this view.
             Tween.KillAll(this);
+
+            // Including the fanfare, if it had not started - so it is rung here instead. A rank
+            // taken in silence because somebody was in a hurry is the one thing a skip may not
+            // cost.
+            Fanfare();
 
             // And by channel for the two that are owned by their targets and are *not* heading
             // where the skip puts them: the breath ends on a bright core that the strike has to
@@ -1090,7 +1139,7 @@ namespace GlimmerGrove
                     Vector3.one * (i + 1 == _pipHeld ? PipHeldScale : 1f);
                 _pips[i].color = i + 1 == _pipHeld ? Pal.A(Pal.Lift(_metal, .35f), 1f)
                                : i + 1 < _pipHeld ? Pal.A(RankLook.Metal(i + 1), .92f)
-                                                  : Pal.A(Pal.Cream, .22f);
+                                                  : Pal.A(CeremonySky.Ink, .34f);
             }
 
             if (_actRt) _actRt.localScale = Vector3.one;

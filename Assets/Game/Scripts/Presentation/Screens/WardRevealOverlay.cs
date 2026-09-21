@@ -98,7 +98,7 @@ namespace GlimmerGrove
         const float FanSize = 1220f;
         const float PipSize = 26f, PipGap = 38f;
 
-        const float VignetteAlpha = .70f, FanAlpha = .32f, Fan2Alpha = .22f, GlowAlpha = .44f;
+        const float VignetteAlpha = CeremonySky.VignetteAlpha, FanAlpha = .32f, Fan2Alpha = .22f, GlowAlpha = .44f;
 
         /// <summary>
         /// Its own hold, never the board's — <see cref="WardFiringStage"/>'s
@@ -230,25 +230,23 @@ namespace GlimmerGrove
         {
             // The bottom layer, covering the screen, so a tap anywhere that is not a control
             // lands here and skips.
-            _sky = UIKit.Img("Sky", Content,
-                             Art.Gradient(Color.Lerp(_c.Deep, _c.Partner, .30f),
-                                          _c.Deep,
-                                          Color.Lerp(_c.Deep, Color.black, .40f)),
-                             new Color(1f, 1f, 1f, 0f));
-            UIKit.StretchTo((RectTransform)_sky.transform, 0, 0, 0, 0);
-            _sky.raycastTarget = true;
-            _sky.gameObject.AddComponent<Btn>().Setup(Skip);
+            //
+            // Shared with the rank ceremony and the upgrade one (`CeremonySky`), which is why it
+            // is not the seat's own deep hue any more: all three stood their subject on a
+            // near-black room and all three came back as *so dark*. **The seat's colour has not
+            // gone anywhere** — the fans, the waves, the glow and the rim below are still
+            // `SiegeView.TintOf(Colour)`, which is what this screen's remarks are about; what
+            // changed is the ground it is lit against, not the light.
+            _sky = CeremonySky.Ground(Content, Skip);
 
             BuildAurora();
 
             Fireflies.Spawn(Content, 14, Pal.A(_c.Partner, .6f), 4f, 13f);
 
-            // Tinted with the room rather than with ink, or the corners end up the one grey
-            // thing on a coloured screen.
-            _vignette = UIKit.Img("Vignette", Content, Art.Vignette(256),
-                                  Pal.A(Color.Lerp(_c.Deep, Color.black, .55f), 0f));
-            UIKit.StretchTo((RectTransform)_vignette.transform, 0, 0, 0, 0);
-            _vignette.raycastTarget = false;
+            // Last, so it holds the aurora and the fireflies in too. Tinted with the room
+            // rather than with ink, or the corners end up the one grey thing on a coloured
+            // screen — see `CeremonySky.VignetteInk`, which is where that now lives.
+            _vignette = CeremonySky.Veil(Content);
 
             _fan = UIKit.Img("Fan", Content, Art.Rays(512, 10 + _tier * 4), Pal.A(_tint, 0f),
                              Vector2.one * FanSize, new Vector2(.5f, .5f),

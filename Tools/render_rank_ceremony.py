@@ -87,7 +87,20 @@ RAIL_W, RAIL_TROUGH, PIP_MAX = 860.0, 12.0, 34.0
 PIP_HELD_SCALE = 1.4
 CLIMB = 76.0
 
-VIGNETTE_A, FAN_A, FAN2_A = .78, .30, .20
+#: `CeremonySky` - the four corners of the shared wash, the warm corner falling on it, and the
+#: vignette over it. Measured off the owner's reference by a robust bilinear fit with the badges
+#: standing on it masked out; `--sky` puts the fit beside the reference so it can be looked at.
+SKY_TL, SKY_TR = (0xF7, 0xB2, 0xA5), (0xAF, 0x3E, 0xD3)
+SKY_BL, SKY_BR = (0xDD, 0x3E, 0xAF), (0x04, 0x1F, 0x9E)
+WARM = (0xFF, 0xD7, 0x9C)
+WARM_SIZE, WARM_ALPHA, WARM_HOME = 1500.0, .46, (-470.0, 880.0)
+
+#: `CeremonySky.Ink` - what anything that used to be read against black is drawn in now. A
+#: bright ground inverts which way contrast runs, and white-at-a-low-alpha shows on neither the
+#: peach corner nor the magenta middle.
+INK = lambda: lerp(SKY_BR, (0, 0, 0), .58)
+
+VIGNETTE_A, FAN_A, FAN2_A = .26, .30, .20
 HALO_A, SHAFT_A, SHAFT_GLOW_A = .52, .34, .26
 
 #: `RankLook.Ghost` - the one alpha on this screen, worn by the rung below as it rises.
@@ -220,6 +233,34 @@ def fan(box, colour, count, alpha, rotation=0.0):
     return out
 
 
+def wash():
+    """`Art.Corners` through `CeremonySky.Wash` - the shared four-corner field.
+
+    Drawn at full canvas size here where the game generates 64 square and lets the hardware
+    stretch it. The result is the same picture and the difference is worth stating rather than
+    hiding: a mirror that reproduced the 64px texture would be answering a question about
+    filtering that nothing on this screen is asking.
+    """
+    im = Image.new("RGBA", (W, H))
+    d = ImageDraw.Draw(im)
+    for y in range(H):
+        v = y / float(H - 1)
+        left = lerp(SKY_TL, SKY_BL, v)
+        right = lerp(SKY_TR, SKY_BR, v)
+        # One horizontal ramp per row, drawn in bands - a per-pixel loop over 1080x1920 is
+        # twenty seconds of Python for a picture that has no detail in it.
+        step = 8
+        for x in range(0, W, step):
+            d.rectangle([x, y, x + step, y], fill=(*lerp(left, right, x / float(W - 1)), 255))
+    return im
+
+
+def warm_corner(sheet):
+    """`CeremonySky`'s warm corner - the one thing a bilinear field cannot say."""
+    glow = K.glow(int(WARM_SIZE), 1.9, WARM, WARM_ALPHA)
+    K.paste(sheet, glow, W / 2 + WARM_HOME[0], at(WARM_HOME[1]))
+
+
 def vignette(sheet, colour):
     vig = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(vig)
@@ -279,7 +320,7 @@ def rail(sheet, held, count, colour, climbed=True):
     """
     cy = at(RAIL_Y)
 
-    trough = K.round_rect(RAIL_W, RAIL_TROUGH, RAIL_TROUGH / 2, K.CREAM, .16)
+    trough = K.round_rect(RAIL_W, RAIL_TROUGH, RAIL_TROUGH / 2, INK(), .30)
     K.paste(sheet, trough, W / 2, cy)
 
     step = RAIL_W / (count - 1) if count > 1 else 0.0
@@ -303,7 +344,7 @@ def rail(sheet, held, count, colour, climbed=True):
             disc = K.round_rect(pip * PIP_HELD_SCALE, pip * PIP_HELD_SCALE,
                                 pip * PIP_HELD_SCALE / 2, lift(metal(ordinal), .35), 1.0)
         else:
-            disc = K.round_rect(pip, pip, pip / 2, K.CREAM, .22)
+            disc = K.round_rect(pip, pip, pip / 2, INK(), .34)
 
         K.paste(sheet, disc, x, cy)
 
@@ -313,7 +354,7 @@ def captions(sheet, rung, ordinal, count, report):
     colour = metal(ordinal)
 
     px = K.shrunk(sheet, txt("ui.rankup.title"), W / 2, at(EYEBROW_Y), 900, EYEBROW_H, 44, 26,
-                  fill=lift(colour, .35), outline=3)
+                  fill=K.CREAM, outline=3)
     report.append(("eyebrow", px, 26))
 
     name = LOC.get("rank.%s.name" % rung["id"], "")
@@ -352,7 +393,10 @@ def draw(ordinal, rungs, beat="settled", bare=False):
     colour = metal(ordinal)
     tint, partner, accent, deep = scheme(colour)
 
-    sheet = gradient(lerp(deep, partner, .22), deep, lerp(deep, (0, 0, 0), .55))
+    # The ground is shared with the two turret ceremonies and is no longer the rung's own deep
+    # hue; the light on top of it still is. See `CeremonySky`.
+    sheet = wash()
+    warm_corner(sheet)
 
     for home, size, alpha, nth in ((( -380, 660), 1180, .20, partner),
                                    ((  420, 140), 1000, .16, accent),
@@ -361,7 +405,7 @@ def draw(ordinal, rungs, beat="settled", bare=False):
         K.paste(sheet, blob, W / 2 + home[0], at(home[1]))
 
     shaft(sheet, colour)
-    vignette(sheet, lerp(deep, (0, 0, 0), .6))
+    vignette(sheet, lerp(SKY_BR, (0, 0, 0), .35))
 
     climbed = beat == "settled"
     face = None if bare else badge(rung["id"], BADGE_SIZE)
@@ -395,7 +439,7 @@ def draw(ordinal, rungs, beat="settled", bare=False):
         rail(sheet, 0, count, colour)
 
         K.shrunk(sheet, txt("ui.rankup.title"), W / 2, at(EYEBROW_Y), 900, EYEBROW_H, 44, 26,
-                 fill=lift(colour, .35), outline=3)
+                 fill=K.CREAM, outline=3)
         return sheet
 
     # The fans bloom on the strike and stay for the rest of it.
@@ -420,7 +464,7 @@ def draw(ordinal, rungs, beat="settled", bare=False):
     else:
         rail(sheet, 0, count, colour)
         K.shrunk(sheet, txt("ui.rankup.title"), W / 2, at(EYEBROW_Y), 900, EYEBROW_H, 44, 26,
-                 fill=lift(colour, .35), outline=3)
+                 fill=K.CREAM, outline=3)
 
     MEASURED.extend(report)
     return sheet
@@ -453,12 +497,35 @@ def main():
     ap.add_argument("--strike", action="store_true", help="the frame the badge lands")
     ap.add_argument("--long", action="store_true", help="a 24-rung ladder")
     ap.add_argument("--bare", action="store_true", help="a rung with no badge and no strings")
+    ap.add_argument("--sky", action="store_true",
+                    help="the shared room alone, beside the reference it was fitted to")
     ap.add_argument("--captions", action="store_true", help="measure every line, draw nothing")
     ap.add_argument("--contact", action="store_true", help="every state side by side")
     args = ap.parse_args()
 
     if not RUNGS:
         sys.exit("progression.json carries no `ranks` block, so there is no ladder to draw")
+
+    if args.sky:
+        room = wash()
+        warm_corner(room)
+        vignette(room, lerp(SKY_BR, (0, 0, 0), .35))
+
+        panels = [("the room", room)]
+        ref = K.REPO.parent.parent / "Pictures" / "Screenshots" / "Screenshot 2026-09-21 124604.png"
+        if ref.exists():
+            r = Image.open(ref).convert("RGBA")
+            r = r.resize((W, int(r.height * W / r.width)), Image.LANCZOS).crop((0, 0, W, H))
+            panels.insert(0, ("the reference", r))
+
+        scale = .42
+        tw, th = int(W * scale), int(H * scale)
+        sheet = Image.new("RGBA", (tw * len(panels), th + 54), (10, 14, 22, 255))
+        for i, (label, im) in enumerate(panels):
+            sheet.alpha_composite(im.convert("RGBA").resize((tw, th), Image.LANCZOS), (tw * i, 54))
+            K.text(sheet, label, tw * i + tw / 2, 28, 26)
+        save(sheet, "rank_ceremony_sky.png")
+        return 0
 
     if args.captions:
         blank = Image.new("RGBA", (W, H), (0, 0, 0, 0))

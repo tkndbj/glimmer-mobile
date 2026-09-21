@@ -419,6 +419,29 @@ is where they are written down, not what they mean.
    answers as live during the rebuild, so the page is redrawn into a node that is collected a moment later
    and goes **blank** — repaired only by leaving and coming back. Four screens wrote the loop by hand and all
    four had it; `compile.py` refuses a file that reaches into `Content`'s children.
+44m. **Three ceremonies are one room, and it is measured off a picture rather than picked.**
+   The rank ceremony, the turret reveal and the turret upgrade each stood their subject on a
+   vertical gradient of the subject's own hue at a tenth of its value under a near-black vignette
+   at seven tenths, and all three came back from the owner as **so dark** — three screens, one
+   fault, and three places to fix it. `CeremonySky` is the one room: a four-corner wash
+   (`Art.Corners`, generated, so it costs no art and no address), a warm corner the wash cannot
+   say because a bilinear field has no glow in it, and a vignette at a **quarter** tinted with
+   the wash's own deep rather than with black. The corners are a robust bilinear fit to the
+   owner's reference with the badges standing on it **masked out**, which is the only way to
+   measure a background through its own foreground. **What is not shared is the light on top**:
+   the fans, the halo, the rim and the aurora still wear the seat's colour or the rung's metal,
+   because that is the fact each of those screens exists to carry — the ground changed, never
+   the lighting.
+44n. **A bright ground inverts which way contrast runs, and that is the half of a re-light that
+   is not a colour.** Every one of these screens drew furniture as *white at a low alpha* — an
+   empty pip, a trough, a faint rule — because that is what shows on near-black; on the new room
+   it is nothing at all, and the rank ceremony's rail lost its trough and every unheld pip in one
+   change. `CeremonySky.Ink` is what they are drawn in now. **Text is the opposite lesson**:
+   driving a caption dark to match put dark type under the dark outline every caption here
+   carries and the letterforms filled in, so cream-plus-outline — which is what the screens
+   already did — is the answer on both grounds. Neither fault is visible to anything but a
+   render.
+
 44l. **A mirror that cannot reach a state cannot be asked about it, and that is the state the fault is
    in.** `render_streak.py` had no "played today" flag, so it drew the night above the streak as *tonight*
    in all six states and never once drew `TOMORROW NIGHT` — the longest line either pill on the page can
@@ -791,8 +814,20 @@ is where they are written down, not what they mean.
    a ladder twice as long redraws with no table to keep in step. **A rung this build cannot
    resolve draws as light and no name** rather than as a white rectangle over a raw loc key
    (7b), which is reachable the day a content push adds a rung ahead of the client reading it.
-   It cuts **no art and claims no address**, deliberately: every sprite is procedural or already
-   in the global preload set, which is the one class of fault this project has paid for most.
+   It cuts **no art**, deliberately: every sprite is procedural or already in the global preload
+   set, which is the one class of fault this project has paid for most. **It claims exactly one
+   address** — `Audio/Sfx/rankup`, the ceremony's single sound (52l).
+52l. **The ceremony makes one sound, and it is placed by measurement rather than fired by a
+   beat.** It shipped with seven and played back as a pile-up, which is the note the companion
+   reveal already carries; every beat is silent now but the one. The clip is placed by the
+   instant its *pitch* tops out rather than by its length or its loudest moment — a
+   `SUCCESS PICKUP Retro Buildup` is not a riser that peaks at the end, it is an arpeggio
+   climbing 301 Hz to 5.5 kHz over its first **0.55 s** and then decaying into a sparkle tail, so
+   the badge lands on the top of the sweep and the tail rings through the climb. The strike's
+   time is read off the `Cue` playhead rather than re-derived, because a rung's gathering is as
+   long as it has requirements. **A skip rings it rather than killing it**: pending beats die
+   with their owner, and a rank taken in silence because somebody was in a hurry is what a skip
+   may not cost.
 
 ### The tutorial
 
@@ -1001,6 +1036,11 @@ guess — verify offline.
   fifth of a turn from gold is green and the scheme was copied off a reveal built around a
   *primary*. **What it cannot answer** is whether the breath before the strike lands, whether the
   motes read as the things you did, or whether the rail lighting bottom-to-top reads as a climb.
+- **The ceremony room:** `python Tools/render_rank_ceremony.py --sky` draws `CeremonySky`
+  beside the reference it was fitted to. It is the only thing that can answer whether the fit is
+  the picture the owner asked for, and it is shared by three screens, so it answers for all
+  three — **which matters because the two turret ceremonies have no mirror of their own** and
+  are judged on a device or not at all.
 - **The tutorial:** `python Tools/verify/tests.py TutorialTests` plays the whole script against
   the real rules — the taught swap, the pour, the overcharge, the sweep — and proves it ends with
   the line intact; its board reaches **no content gate**, so this is the only thing that would
@@ -1462,11 +1502,21 @@ on a fresh clone).
 Three new files (`Presentation/App/RankCeremony.cs`, `Presentation/Screens/RankUpOverlay.cs`,
 `Tests/RankCeremonyTests.cs`) and one new tool (`Tools/render_rank_ceremony.py`), all written
 with the Editor closed — so their **`.meta` files do not exist yet** and Unity mints them on the
-next focus. **It touches no art and no address**, which is the one piece of standing discipline
-it does *not* owe: every sprite it draws is procedural (`Art`) or already in the global preload
-set, so `Sync All Assets` buys it nothing. It touches no content file but `loc/en.json` (two new
-keys, `ui.rankup.title` and `ui.rankup.onward`) and **nothing on the server** — no rules release,
-no function deploy, no re-seed, because a rank is derived and pays nothing (52e).
+next focus. It touches no content file but `loc/en.json` (two new keys, `ui.rankup.title` and
+`ui.rankup.onward`) and **nothing on the server** — no rules release, no function deploy, no
+re-seed, because a rank is derived and pays nothing (52e).
+
+**It draws no art and ships one clip.** Every sprite is procedural (`Art`) or already in the
+global preload set, so nothing it *draws* is at risk of being a white rectangle. What it does
+ship is `Audio/Sfx/rankup` — the ceremony's single sound, at the owner's instruction on
+2026-09-21, cut from the licensed GameBurp pack through `Tools/sfx.tsv` and `make_sfx.py` like
+every other clip in the game. **Its `.meta` was minted by the tool and its Addressables entry was
+written into `Glimmer Global.asset` by hand**, in GUID order, exactly as the Grovement's removal
+edited that file as text — so it should already be addressed. `Audit Addresses` is the check that
+matters here, and if it reports the entry missing or unresolved then `▸ Addressables ▸ Sync All
+Assets` **and save** is the repair. **An unaddressed clip is a silent ceremony rather than a
+white rectangle**, which is the worse failure of the two because it looks exactly like the change
+not having been made.
 
 Offline green: `compile.py` (all fifteen assemblies, and the new source rule proved by mutation),
 `RankCeremonyTests` 11/11 with its three rebase guards each proved by mutation, `loc.py` (0

@@ -551,6 +551,7 @@ namespace GlimmerGrove.AssetPipeline
             "boss", "roar", "felled",
             "gem", "settle", "shot", "zap", "stand", "wear", "arrive",
             "lift", "stow", "chain",
+            "rankup",
         };
 
         /// <summary>Everything the game needs before the menu appears.</summary>

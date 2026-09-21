@@ -106,7 +106,7 @@ namespace GlimmerGrove
 
         const float FanSize = 1180f;
 
-        const float VignetteAlpha = .72f, FanAlpha = .30f, Fan2Alpha = .20f, GlowAlpha = .40f;
+        const float VignetteAlpha = CeremonySky.VignetteAlpha, FanAlpha = .30f, Fan2Alpha = .20f, GlowAlpha = .40f;
 
         /// <summary>
         /// Its own hold, never the board's — <see cref="WardFiringStage"/>'s
@@ -208,23 +208,19 @@ namespace GlimmerGrove
         {
             // The bottom layer, covering the screen, so a tap anywhere that is not a control
             // lands here and skips to the end.
-            _sky = UIKit.Img("Sky", Content,
-                             Art.Gradient(Color.Lerp(_c.Deep, _c.Partner, .28f),
-                                          _c.Deep,
-                                          Color.Lerp(_c.Deep, Color.black, .42f)),
-                             new Color(1f, 1f, 1f, 0f));
-            UIKit.StretchTo((RectTransform)_sky.transform, 0, 0, 0, 0);
-            _sky.raycastTarget = true;
-            _sky.gameObject.AddComponent<Btn>().Setup(Skip);
+            //
+            // Shared with the rank ceremony and the turret reveal (`CeremonySky`), which is why
+            // it is not the seat's own deep hue any more: all three stood their subject on a
+            // near-black room and all three came back as *so dark*. The seat's colour is still
+            // on the fans, the light and the rim below — the ground changed, not the lighting.
+            _sky = CeremonySky.Ground(Content, Skip);
 
             BuildAurora();
 
             Fireflies.Spawn(Content, 12, Pal.A(_c.Partner, .55f), 4f, 12f);
 
-            _vignette = UIKit.Img("Vignette", Content, Art.Vignette(256),
-                                  Pal.A(Color.Lerp(_c.Deep, Color.black, .58f), 0f));
-            UIKit.StretchTo((RectTransform)_vignette.transform, 0, 0, 0, 0);
-            _vignette.raycastTarget = false;
+            // Last of the ground, so it holds the aurora and the fireflies in too.
+            _vignette = CeremonySky.Veil(Content);
 
             _fan = UIKit.Img("Fan", Content, Art.Rays(512, 20), Pal.A(_tint, 0f),
                              Vector2.one * FanSize, new Vector2(.5f, .5f),
