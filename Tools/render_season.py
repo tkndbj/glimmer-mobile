@@ -88,11 +88,12 @@ HINT_W = 470.0
 #: badge in the plate's top-left corner. Small because the plate is only 176 tall with a 128
 #: crest centred in it; the whole question this mirror answers is how much of that crest it
 #: covers, which no numeric gate can see. It answered it twice: at 88 set 50 in the two bursts
-#: read as one shape (hence rose rather than gold), and on the way back up 124 crowded the crest
-#: and 138 buried it. 110 is the largest that keeps a gap.
-BADGE = 110.0
-BADGE_INSET = 40.0
-BADGE_DROP = 24.0
+#: read as one shape (hence rose rather than gold), and on the way back up a bigger badge only
+#: keeps its gap from the crest if it moves up and left as it grows: 124 set 42 in crowded the
+#: crest, and the same 124 set 36 in does not.
+BADGE = 124.0
+BADGE_INSET = 36.0
+BADGE_DROP = 20.0
 BADGE_TILT = 9.0
 
 #: `ProductCardBadges.Face` / `FaceShift` / `FaceRise` / `TextSize` / `TextFloor` — the flat

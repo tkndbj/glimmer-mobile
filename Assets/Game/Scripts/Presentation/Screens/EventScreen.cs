@@ -75,18 +75,20 @@ namespace GlimmerGrove
         /// numeric gate could.
         /// </para>
         /// <para>
-        /// <b>110 is the largest that keeps a gap, and that was found by looking.</b> Grown at
-        /// the owner's instruction from 92; on the way up 124 crowds the crest and 138 buries
-        /// it, at which point the badge is the loudest thing on the plate it is a badge *on*.
-        /// The caption settles at 17 against a floor of 10 (<c>render_season.py</c> prints it),
-        /// where at 92 it sat at 13 — the room a longer translation has is the other thing that
-        /// bought.
+        /// <b>A badge that grows has to move as it grows, and that is the whole finding.</b>
+        /// Grown twice at the owner's instruction, 92 to 110 to 124. The crest is centred in
+        /// the plate and to the right, so clearance is bought going <em>up and left</em>, not
+        /// by size alone: 124 set 42 in crowds the crest and 138 buries it, while the same 124
+        /// set 36 in keeps its gap. The caption settles at 17 against a floor of 10
+        /// (<c>render_season.py</c> prints it) where at 92 it sat at 13, and that headroom for
+        /// a longer translation is the other thing the size bought.
         /// </para>
         /// <para>
         /// <b>The inset is bounded by the margin, not by the crest.</b> The plate is
         /// <see cref="Width"/> in a canvas that is never narrower than 1080, so there are 40
-        /// units of gutter either side and the badge may overhang about 35 of them. At 40 it
-        /// overhangs 15, which leaves the rest for a safe area that insets horizontally.
+        /// units of gutter either side. At 36 the badge overhangs 26 of them, so it needs a
+        /// safe area of 1052 against the 1080 the narrowest canvas here is — which portrait
+        /// always is, since the horizontal insets are nought and a tablet is wider still.
         /// </para>
         /// <para>
         /// <b>The tilt is positive where the shop's is negative</b>, for the reason
@@ -101,7 +103,7 @@ namespace GlimmerGrove
         /// and two gold bursts touching read as one shape somebody drew badly.
         /// </para>
         /// </summary>
-        const float PassBadge = 110f, PassBadgeInset = 40f, PassBadgeDrop = 24f,
+        const float PassBadge = 124f, PassBadgeInset = 36f, PassBadgeDrop = 20f,
                     PassBadgeTilt = 9f;
 
         /// <summary>

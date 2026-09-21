@@ -123,12 +123,35 @@ namespace GlimmerGrove.Store
         /// </summary>
         public readonly int CapacityWas;
 
-        public StoreGrant(StoreProduct product, long credits, long gems, int capacityWas = 0)
+        /// <summary>
+        /// The transaction this came out of — <see cref="StorePurchase.Key"/>, which is the
+        /// store and the store's own transaction id.
+        ///
+        /// <para>
+        /// <b>Carried so that the announcement has an identity, and it is the only reason it
+        /// exists.</b> Nothing downstream draws it. A grant with no id cannot be told apart
+        /// from a second grant of the same payment by anything that receives one, so "one
+        /// payment, one thank-you" was an emergent property of three separate layers each
+        /// being idempotent rather than a rule anything held — and the day any of them was
+        /// not, the player was congratulated twice for one charge with every gate green. See
+        /// <see cref="StoreService.Announce"/>, which is where the rule now lives.
+        /// </para>
+        /// <para>
+        /// Empty is legal and means "no transaction said so", which is only reachable from a
+        /// fixture building a grant by hand. Such a grant is announced unconditionally rather
+        /// than deduplicated against an empty key.
+        /// </para>
+        /// </summary>
+        public readonly string TransactionKey;
+
+        public StoreGrant(StoreProduct product, long credits, long gems, int capacityWas = 0,
+                          string transactionKey = null)
         {
             Product = product;
             Credits = credits;
             Gems = gems;
             CapacityWas = capacityWas < 0 ? 0 : capacityWas;
+            TransactionKey = transactionKey ?? string.Empty;
         }
 
         public bool IsValid => Product != null;
@@ -224,6 +247,50 @@ namespace GlimmerGrove.Store
         /// </summary>
         static readonly SyncScheduler _retry = new SyncScheduler();
 
+        /// <summary>
+        /// Transactions whose grant has already been announced, so one payment is celebrated
+        /// once however many times the redemption path runs for it.
+        ///
+        /// <para>
+        /// <b>This is the rule, and it lives here because this is the only place a grant has a
+        /// transaction attached to it.</b> Every layer under it is already idempotent — the
+        /// store re-delivers the same transaction id, the pending set is keyed on it, and the
+        /// server records it against a global receipt key and grants nothing the second time
+        /// (invariant 18a) — but not one of them announces anything, and nothing joined the
+        /// three claims together. A duplicate reaching the event is therefore a duplicate
+        /// receipt panel: <c>ReceiptQueue</c> is built to show two grants one after the other
+        /// and is right to, so it cannot tell a second payment from a second telling of the
+        /// first.
+        /// </para>
+        /// <para>
+        /// <b>Dropping the second is always correct, and that is a property of the server
+        /// rather than an assumption about the store.</b> A transaction can be honoured exactly
+        /// once — the receipt document is global, keyed on store and transaction id, and is
+        /// never deleted — so a second announcement of one key can never be a second payment.
+        /// Nothing is hidden by refusing it either: the money is granted by the server and held
+        /// by <c>CurrencyLedger</c> whether a panel is drawn or not, which is the same bargain
+        /// <c>ReceiptQueue</c> makes when it says the money is not in there.
+        /// </para>
+        /// <para>
+        /// <b>It is not the only rule of this shape, and the second one is not redundant.</b>
+        /// This says a transaction is <em>announced</em> once, which is a promise to every
+        /// subscriber. <c>ReceiptQueue</c> says a transaction is <em>thanked for</em> once,
+        /// which is a promise to the player — and the second does not follow from the first,
+        /// because nothing enforces that this event has one subscriber. Two of them, however
+        /// they arrived, is one announcement drawn twice, and no guard at this end can see it.
+        /// </para>
+        /// <para>
+        /// <b>Session-scoped, deliberately</b>, and bounded: see <see cref="TransactionMemory"/>,
+        /// which holds both halves of that and is shared with the queue rather than written
+        /// again.
+        /// </para>
+        /// <para>
+        /// <b>And it says so out loud.</b> A drop is a warning, not a silence: the guard is the
+        /// repair, and the thing it is repairing is still worth seeing in a device log.
+        /// </para>
+        /// </summary>
+        static readonly TransactionMemory _announced = new TransactionMemory();
+
         static bool _draining;
         static bool _connecting;
 
@@ -241,7 +308,10 @@ namespace GlimmerGrove.Store
         /// <summary>Raised when anything a shop screen draws has changed.</summary>
         public static event Action Changed;
 
-        /// <summary>Raised once per purchase, after the server has granted it.</summary>
+        /// <summary>
+        /// Raised once per purchase, after the server has granted it — and <em>once</em> is
+        /// enforced rather than hoped for. See <see cref="Announce"/>.
+        /// </summary>
         public static event Action<StoreGrant> Granted;
         /// <summary>Every verified premium entitlement, including a restore or receipt retry.</summary>
         public static event Action<StoreProduct> EventPassVerified;
@@ -843,13 +913,31 @@ namespace GlimmerGrove.Store
                                  product.IsContainer ? entitled : redemption.GrantedAnything);
 
             if (worthShowing)
-            {
-                var grant = new StoreGrant(product, credits, gems, capacityWas);
-                try { Granted?.Invoke(grant); }
-                catch (Exception e) { Debug.LogException(e); }
-            }
+                Announce(new StoreGrant(product, credits, gems, capacityWas, purchase.Key));
 
             return true;
+        }
+
+        /// <summary>
+        /// Raises <see cref="Granted"/> for a transaction that has not been announced yet, and
+        /// for one that has, does nothing but say so. See <see cref="_announced"/> for why.
+        /// </summary>
+        static void Announce(in StoreGrant grant)
+        {
+            // An empty key is always fresh and is never recorded — it is the absence of an
+            // identity rather than one every unidentified grant shares. See TransactionMemory.
+            if (!_announced.Fresh(grant.TransactionKey))
+            {
+                Debug.LogWarning($"[Store] {grant.TransactionKey} has already been celebrated; " +
+                                 "dropping the second announcement. The purchase itself is " +
+                                 "unaffected — the server grants a transaction once — but " +
+                                 "something upstream redeemed it twice and reported a grant " +
+                                 "both times.");
+                return;
+            }
+
+            try { Granted?.Invoke(grant); }
+            catch (Exception e) { Debug.LogException(e); }
         }
 
         // --------------------------------------------------------------- gem goods
@@ -959,6 +1047,7 @@ namespace GlimmerGrove.Store
         {
             UseBackend(new NullStoreBackend());
             _pending.Clear();
+            _announced.Clear();
             _draining = false;
             _connecting = false;
             _checkout = string.Empty;
