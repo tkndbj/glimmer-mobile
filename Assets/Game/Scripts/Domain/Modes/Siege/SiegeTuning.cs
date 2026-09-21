@@ -1848,6 +1848,87 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public const float RubblePiece = ColossusBury / RubbleTaps;
 
+        // ------------------------------------------------- the seventh chapter's two verbs
+        //
+        // **Two verbs is a chapter's price** (invariant 37br), and this is the fourth time the
+        // bill has come due. Twelve verbs served six chapters; a seventh had to bring two more
+        // or repeat a fight, which `SiegeRuleTests.NoBossVerbIsSentByAnyTwoChapters` refuses.
+        //
+        // **Neither reaches par**, which is the first question to ask of a thirteenth and a
+        // fourteenth: a harrow moves a rank between the line and the ground and a wane takes
+        // ward health, so neither adds a body to the hill nor heals one, and `Par` is untouched.
+
+        /// <summary>
+        /// The harrower (<see cref="SiegeKind.Harrower"/>): health, where on the hill it stands,
+        /// how fast it walks on, how often it casts, and what each cast takes off the ward it
+        /// robs.
+        ///
+        /// <b>A rung-five fight, set beside the gorgon's.</b> What a harrow costs is a beat of
+        /// attention rather than anything the line holds (<see cref="SiegeSpell.Harrow"/>), so
+        /// the health buys a duel long enough for the player to be asked the question three or
+        /// four times - which is what makes it a habit rather than an incident.
+        /// </summary>
+        public const int HarrowerHealth = 4800;
+
+        /// <summary>
+        /// Where a harrower stops on the hill. See <see cref="HarrowerHealth"/>.
+        ///
+        /// <b>Further down than any rung-five boss but the gravemaw</b>, and for the gravemaw's
+        /// reason turned over: what it does happens on the ground the player has to reach, so
+        /// the cogs it scatters have to fall somewhere a thumb goes rather than at the top of
+        /// the hill where nothing else is happening.
+        /// </summary>
+        public const float HarrowerHold = .58f;
+
+        /// <summary>Seconds a harrower takes to walk the whole hill. See <see cref="HarrowerHealth"/>.</summary>
+        public const float HarrowerMarch = 8f;
+
+        /// <summary>Seconds between a harrower's casts. See <see cref="HarrowerHealth"/>.</summary>
+        public const float HarrowerCastEvery = 5.5f;
+
+        /// <summary>What a harrower's cast takes off the ward it robs (37dn).</summary>
+        public const int HarrowerCast = 2;
+
+        /// <summary>
+        /// The hollowking (<see cref="SiegeKind.Hollowking"/>): health, ground, march, cadence
+        /// and what each cast takes off every ward it finds hollow.
+        ///
+        /// <b>The largest health in the mode, and it is the verb that pays for it rather than
+        /// the rung.</b> A wane takes nothing at all from a line that has been kept working
+        /// (<see cref="SiegeSpell.Wane"/>), so a fight short enough to be survived on one full
+        /// tube would never ask its question - and a finale whose verb can be answered for free
+        /// has to be long enough to ask it four or five times over.
+        /// </summary>
+        public const int HollowkingHealth = 7200;
+
+        /// <summary>Where a hollowking stops on the hill. See <see cref="HollowkingHealth"/>.</summary>
+        public const float HollowkingHold = .42f;
+
+        /// <summary>Seconds a hollowking takes to walk the whole hill. See <see cref="HollowkingHealth"/>.</summary>
+        public const float HollowkingMarch = 9f;
+
+        /// <summary>
+        /// Seconds between one wane and the next.
+        ///
+        /// <b>It is the window the verb is measured over as well as its cadence, and that is
+        /// deliberate</b>: a ward is hollow if it has fired nothing <em>since the last cast</em>,
+        /// so one number decides both how often the question is asked and how long the player
+        /// has to answer it. Two numbers here could disagree - a window shorter than the cadence
+        /// would let a line idle through the gap for nothing, and a longer one would bill the
+        /// same seconds twice.
+        /// </summary>
+        public const float HollowkingCastEvery = 6f;
+
+        /// <summary>
+        /// What a wane takes off each ward it finds hollow (37dn).
+        ///
+        /// <b>Under a warbringer's roar, because it can land on four posts too and this one
+        /// lands far more often.</b> A rally is thrown by a boss that rides a wave; a wane is the
+        /// whole of a finale's cadence, so the worst case - a line that never fires at all - has
+        /// to be a run the player loses rather than a run that ends before they can react.
+        /// </summary>
+        public const int HollowkingCast = 2;
+
         // ------------------------------------------------------------------ the fight
         /// <summary>
         /// How many phases a boss fight has, and every one of them is a promise.
@@ -2360,6 +2441,13 @@ namespace GlimmerGrove.Modes
              : kind == SiegeKind.Gorgon ? 3.4f
              : kind == SiegeKind.Sunlord ? 3.6f
 
+             // **The seventh chapter's pair.** A harrower takes a rung-five body beside the
+             // gorgon and the shackler; a hollowking sits a tenth under the colossus, which
+             // keeps the widest body in the mode where the fifth chapter put it and still
+             // reads as the largest thing a player has been sent at.
+             : kind == SiegeKind.Harrower ? 3.3f
+             : kind == SiegeKind.Hollowking ? 3.7f
+
              : kind == SiegeKind.Bulwark ? 1.85f
              : kind == SiegeKind.Bomber ? 1.30f
              : kind == SiegeKind.Brute ? 1.55f : 1.15f;
@@ -2569,7 +2657,8 @@ namespace GlimmerGrove.Modes
             || kind == SiegeKind.Gravemaw || kind == SiegeKind.Bonecaller
             || kind == SiegeKind.Shackler || kind == SiegeKind.Ironclad
             || kind == SiegeKind.Thunderer || kind == SiegeKind.Colossus
-            || kind == SiegeKind.Gorgon || kind == SiegeKind.Sunlord;
+            || kind == SiegeKind.Gorgon || kind == SiegeKind.Sunlord
+            || kind == SiegeKind.Harrower || kind == SiegeKind.Hollowking;
 
         /// <summary>
         /// What each of the four bosses does when its spell lands.
@@ -2603,6 +2692,8 @@ namespace GlimmerGrove.Modes
              : kind == SiegeKind.Colossus ? SiegeSpell.Bury
              : kind == SiegeKind.Gorgon ? SiegeSpell.Glare
              : kind == SiegeKind.Sunlord ? SiegeSpell.Doom
+             : kind == SiegeKind.Harrower ? SiegeSpell.Harrow
+             : kind == SiegeKind.Hollowking ? SiegeSpell.Wane
              : SiegeSpell.Smite;
 
         /// <summary>
@@ -2653,7 +2744,11 @@ namespace GlimmerGrove.Modes
             // to land on something and an ironclad's strike is the thing its aegis is drawn by,
             // so both aim — and both pick their ward by a rule of their own
             // (`SiegeBoard.Wanted`) rather than by taking whatever a smite would have taken.
+            // **A wane is the second spell here aimed at no ward**, for the rally's reason
+            // and by a different rule: it strikes every post that has been idle, so there is
+            // no one ward to pick and `SiegeBoard.Wanted` is never asked about it.
             return craft != SiegeSpell.Rally
+                && craft != SiegeSpell.Wane
                 && craft != SiegeSpell.Devour
                 && craft != SiegeSpell.Raise;
         }
@@ -2681,6 +2776,8 @@ namespace GlimmerGrove.Modes
              : kind == SiegeKind.Colossus ? ColossusHealth
              : kind == SiegeKind.Gorgon ? GorgonHealth
              : kind == SiegeKind.Sunlord ? SunlordHealth
+             : kind == SiegeKind.Harrower ? HarrowerHealth
+             : kind == SiegeKind.Hollowking ? HollowkingHealth
              : kind == SiegeKind.Blightcaller ? BlightHealth
              : kind == SiegeKind.Bulwark ? BulwarkHealth
              : kind == SiegeKind.Bomber ? BomberHealth
@@ -2698,6 +2795,8 @@ namespace GlimmerGrove.Modes
              : kind == SiegeKind.Colossus ? ColossusMarch
              : kind == SiegeKind.Gorgon ? GorgonMarch
              : kind == SiegeKind.Sunlord ? SunlordMarch
+             : kind == SiegeKind.Harrower ? HarrowerMarch
+             : kind == SiegeKind.Hollowking ? HollowkingMarch
              : kind == SiegeKind.Blightcaller ? BlightMarch
              : kind == SiegeKind.Bulwark ? BulwarkMarch
              : kind == SiegeKind.Bomber ? BomberMarch
@@ -2715,6 +2814,8 @@ namespace GlimmerGrove.Modes
              : kind == SiegeKind.Colossus ? ColossusCastEvery
              : kind == SiegeKind.Gorgon ? GorgonCastEvery
              : kind == SiegeKind.Sunlord ? SunlordCastEvery
+             : kind == SiegeKind.Harrower ? HarrowerCastEvery
+             : kind == SiegeKind.Hollowking ? HollowkingCastEvery
              : kind == SiegeKind.Blightcaller ? BlightCastEvery : BossCastEvery;
 
         /// <summary>
@@ -2733,6 +2834,8 @@ namespace GlimmerGrove.Modes
              : kind == SiegeKind.Colossus ? ColossusCast
              : kind == SiegeKind.Gorgon ? GorgonCast
              : kind == SiegeKind.Sunlord ? SunlordCast
+             : kind == SiegeKind.Harrower ? HarrowerCast
+             : kind == SiegeKind.Hollowking ? HollowkingCast
              : kind == SiegeKind.Boss ? BossCast
              : kind == SiegeKind.Blightcaller ? BlightCast
              : kind == SiegeKind.Gravemaw ? GravemawCast
@@ -2796,6 +2899,8 @@ namespace GlimmerGrove.Modes
              : kind == SiegeKind.Colossus ? ColossusHold
              : kind == SiegeKind.Gorgon ? GorgonHold
              : kind == SiegeKind.Sunlord ? SunlordHold
+             : kind == SiegeKind.Harrower ? HarrowerHold
+             : kind == SiegeKind.Hollowking ? HollowkingHold
              : kind == SiegeKind.Blightcaller ? BlightHold
              : 1f;
 

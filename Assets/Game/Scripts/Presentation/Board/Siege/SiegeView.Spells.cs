@@ -989,6 +989,8 @@ namespace GlimmerGrove
                 case SiegeKind.Colossus: return "mode.siege.colossus";
                 case SiegeKind.Gorgon: return "mode.siege.gorgon";
                 case SiegeKind.Sunlord: return "mode.siege.sunlord";
+                case SiegeKind.Harrower: return "mode.siege.harrower";
+                case SiegeKind.Hollowking: return "mode.siege.hollowking";
 
                 // **The warlord, and it is the only kind that may fall through here.** Invariant
                 // 44e's rule: a `default` that is a real answer hides the case nobody is looking

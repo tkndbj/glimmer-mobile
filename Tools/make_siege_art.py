@@ -851,6 +851,12 @@ THUNDERER, COLOSSUS = 376, 433
 #: everything else: a finale, and a man rather than a giant.
 GORGON, SUNLORD = 388, 410
 
+#: How tall the seventh chapter's two are cut: `SiegeTuning.TallOf` at 114 pixels a cell, as
+#: every row above. A harrower stands beside the other rung-five bosses at 3.3 cells; a
+#: hollowking is 3.7, a tenth under the colossus, which keeps the widest body in the mode
+#: where the fifth chapter put it and still reads as the largest thing sent at the player.
+HARROWER, HOLLOWKING = 376, 422
+
 #: The four bosses: a body reel, a cast reel, and how tall each is cut.
 #:
 #: <b>Not insects, and that is the whole of what this table is for.</b> They were four insects out
@@ -1026,6 +1032,48 @@ BOSS_SET = {
     # a triangle half as wide as the body, which is what carries it at the top of the hill.
     "sunlord": dict(pack=ANCIENTS, body=UNIT_WALK % "Pharaoh",
                     cast=None, tall=SUNLORD),
+
+    # ---------------------------------------------- the two the seventh chapter brings
+    #
+    # **Both come out of the head-on monster packs, and that is a return rather than a
+    # fallback.** The eighteen top-down unit bodies are spoken for - every one of them is
+    # standing in a cast or in front of one - and the ten in the neighbourhood pack that are
+    # not cut are its four balloon zombies, which are a joke. What is left on this machine is
+    # the twenty head-on bodies in `MONS_V1` to `MONS_V4`, and the reason that is the right
+    # answer here rather than a shortage is **which cast these two stand in front of**: the
+    # seventh chapter's ordinal wraps the cast table back onto the **insects**
+    # (`SiegeMode.MainCasts`), and the bosses already standing in front of the insects are
+    # `MONSTERS`' five round cartoon warlords. So this chapter's pair is drawn from the same
+    # family as the pair a player met on the first chapter's fifth and tenth rungs - which is
+    # the one place in this table where matching an existing family is the point rather than
+    # the fault.
+    #
+    # **Rendered side by side against the shipped five before either was chosen**, which is
+    # this table's standing rule and the one that has been broken twice (`MONS_V1`,
+    # `make_siege_art --survey`).
+    #
+    # **The skull, because the verb is a theft.** A harrower tears a rank off a machine and
+    # drops it on the ground; the one body in these four packs that is not a soft blob is
+    # `MONS_V3`'s fifth - a bare white skull in a blue hood with two gloved hands - and a
+    # skull over a map of bones is the silhouette this chapter is named for. It is also the
+    # only candidate whose head is a *hard* shape, which is what survives at a cell and a half
+    # against a hill of insects (invariant 37bx).
+    "harrow": dict(pack=MONS_V3, body=HORDE_V4 % 5 + WALK_ANIM,
+                   cast=None, tall=HARROWER),
+
+    # **Horns, because the verb is a judgement passed on the whole line at once.** A hollowking
+    # strikes every post that has gone quiet and spares every post that has been working, so
+    # what it has to read as is something *presiding* rather than something duelling - and
+    # `MONS_V4`'s second is the only body in these four packs with a pair of white horns
+    # projecting sideways off a scowl, which invariant 37bx says is the one property a
+    # silhouette can carry at this camera. Deep blue against a hill of insects is a value no
+    # raider in this chapter wears, which is the other half of this table's rule.
+    #
+    # **The crowned body was cut first and rejected on the contact sheet**, which is this
+    # table's own procedure (`MONS_V1`): `MONS_V4`'s fifth wears a helmet that reads as a
+    # bobble hat at a cell and a half, and a cheerful finale is worse than a generic one.
+    "hollow": dict(pack=MONS_V4, body=HORDE_V4 % 2 + WALK_ANIM,
+                   cast=None, tall=HOLLOWKING),
 }
 
 # **Every boss in this mode is cut here now, and for one drop three of them were not.** The
@@ -2363,6 +2411,250 @@ def decree_hit():
     return frames
 
 
+# ------------------------------------------------------------- the seventh chapter's spells
+#
+# **Drawn here for the sixth chapter's reason** (see the note over `gaze`): numpy and Pillow,
+# offline, reproducible under `--check`, and produced by a checkout with no licensed pack in it.
+#
+# **Five reels rather than six, and the missing one is the point.** A hollowking's wane is aimed
+# at no ward at all (`SiegeTuning.AimsAtAWard`), so nothing crosses the hill and there is no
+# flight to draw - exactly as a warbringer's roar has none. A flight reel cut for it would be
+# addressed, grouped, built into a bundle and impossible to load, which is the dead weight
+# `SiegeCastTests` exists to refuse.
+
+#: The harrower's: cold iron for the claw, with a gold spark at its point.
+#:
+#: **Iron first and gold second**, which is the way round the verb reads: what a harrow *is* is a
+#: claw, and the gold is the rank it has come for. Drawn gold-first it would be treasure flying
+#: at a turret, which is the opposite of what happens.
+REND_IRON, REND_EDGE, REND_SPARK = (122, 138, 154), (206, 220, 232), (255, 198, 74)
+
+#: The hollowking's: the pale steel of a light going out, over a near-black.
+#:
+#: **`Pal.Hollow` exactly** - the view tints nothing here (a boss's spell keeps its own paint,
+#: 37l), so the colour on this reel and the colour `SiegeView.Casting` hands the effects layer
+#: have to be one colour or the flash and the landing would be two different greys.
+WANE_PALE, WANE_DEEP, WANE_CORE = (143, 166, 184), (46, 60, 74), (226, 236, 244)
+
+
+def rend():
+    """A harrower's claw crossing the hill: a hook on a line, turning as it goes.
+
+    **A thrown object with a line behind it, and the line is the verb.** Every other flight in
+    this mode either bows (an orb, a boulder), runs straight (a gaze) or crackles (a bolt); this
+    one is the only thing here that is plainly *attached to the thing that threw it*, because
+    what it is going to do is come back carrying something. The hook turns across the reel so the
+    eye reads it as a grapnel rather than as a dart.
+
+    **It narrows and fades toward the tail** (invariant 37dw), which on this reel is not merely a
+    rule obeyed but the right picture anyway: the view crops a trail to however far the shot has
+    flown (`SiegeView.Emerged`), so the far end parks on the turret's shoulder for the whole
+    flight - and what should be lying there is a thin taut line, not a slab.
+    """
+    w, h = 128, 384
+    frames = []
+
+    for f in range(SPELL_FRAMES):
+        u = f / (SPELL_FRAMES - 1.0)
+        a, x, y = _canvas(w, h)
+
+        cx = (w - 1) * 0.5
+        head = (h - 1) * (1.0 - 0.82)          # `SiegeView.HeadAt`, measured from the bottom
+
+        along = np.clip((y - head) / (h - 1.0 - head), 0.0, 1.0)
+
+        # The line: thin the whole way and thinner still at the tail, because it is a cable.
+        wide = (w * 0.085) * (1.0 - along) ** 0.55 + w * 0.012
+        across = np.abs(x - cx) / np.maximum(1e-3, wide)
+        cable = np.clip(1.0 - across, 0.0, 1.0) ** 0.8 * (1.0 - along) ** 1.05
+
+        # A twist running down it, so a straight cable still reads as being under tension.
+        twist = 0.72 + 0.28 * np.sin(along * 44.0 - u * 16.0) ** 2
+        _paint(a, cable * twist, REND_IRON, 0.95)
+
+        # The hook: two tines swept back from a point, turning across the reel. Drawn as a pair
+        # of arcs rather than as a disc, which is what keeps it a *tool* at a cell and a half.
+        r = np.sqrt((x - cx) ** 2 + (y - head) ** 2)
+        ang = np.arctan2(y - head, x - cx)
+        turn = u * math.tau * 1.25
+
+        for k in (-1, 1):
+            off = np.abs(((ang - (turn + k * 0.85) + math.pi) % math.tau) - math.pi)
+            tine = np.clip(1.0 - off / 0.52, 0.0, 1.0) ** 1.4
+            band = np.clip(1.0 - np.abs(r - w * 0.27) / (w * 0.085), 0.0, 1.0) ** 1.1
+            _paint(a, tine * band, REND_IRON, 0.98)
+            _paint(a, tine * band * np.clip(1.0 - np.abs(r - w * 0.27) / (w * 0.035), 0.0, 1.0),
+                   REND_EDGE, 0.9)
+
+        # The point, and the spark on it - the one warm thing in the picture, which is the rank
+        # it is coming for.
+        point = np.clip(1.0 - r / (w * 0.135), 0.0, 1.0) ** 1.1
+        _paint(a, point, REND_EDGE, 1.0)
+        _paint(a, np.clip(1.0 - r / (w * 0.068), 0.0, 1.0) ** 1.0, REND_SPARK, 1.0)
+
+        # A halo floored well inside where the crop lands (invariant 37dv).
+        _paint(a, np.exp(-(r / (w * 0.40)) ** 2) * 0.45, REND_SPARK, 0.55)
+
+        frames.append(_frame(a))
+
+    return frames
+
+
+def rend_muzzle():
+    """The claw leaving the harrower's hand: three scores opening outward."""
+    w = h = 256
+    frames = []
+
+    for f in range(SPELL_BURST_FRAMES):
+        u = f / (SPELL_BURST_FRAMES - 1.0)
+        a, x, y = _canvas(w, h)
+
+        cx = cy = (w - 1) * 0.5
+        dx, dy = x - cx, y - cy
+        r = np.sqrt(dx ** 2 + dy ** 2)
+        ang = np.arctan2(dy, dx)
+
+        # **Three parallel scores rather than a ring**, which is what tells a claw apart from
+        # every other flash in this mode: a ring is something opening and a score is something
+        # being dragged across.
+        for k in range(3):
+            off = np.abs(((ang - (-0.7 + k * 0.30) + math.pi) % math.tau) - math.pi)
+            line = np.clip(1.0 - off / 0.075, 0.0, 1.0)
+            reach = w * 0.44 * min(1.0, u * 2.0)
+            run = np.clip(1.0 - r / np.maximum(1e-3, reach), 0.0, 1.0) ** 0.6
+            _paint(a, line * run, REND_EDGE, 0.95 * (1.0 - u * 0.4))
+
+        _paint(a, np.clip(1.0 - r / (w * (0.07 + 0.09 * (1.0 - u))), 0.0, 1.0) ** 1.2,
+               REND_SPARK, 1.0 - u * 0.5)
+        _paint(a, np.exp(-(r / (w * 0.26)) ** 2) * (0.55 - u * 0.3), REND_IRON, 0.7)
+
+        frames.append(_frame(a))
+
+    return frames
+
+
+def rend_hit():
+    """The claw closing on a post: the hook shutting and a gold chip coming loose.
+
+    **It closes and then something falls out of it**, which is the whole verb in two beats and is
+    the opposite of a burst. Every other landing in this mode opens outward; a theft has to read
+    as taking, so the ring shuts and a bright chip drops away from the middle.
+    """
+    w = h = 320
+    frames = []
+
+    for f in range(SPELL_BURST_FRAMES):
+        u = f / (SPELL_BURST_FRAMES - 1.0)
+        a, x, y = _canvas(w, h)
+
+        cx = cy = (w - 1) * 0.5
+        dx, dy = x - cx, y - cy
+        r = np.sqrt(dx ** 2 + dy ** 2)
+        ang = np.arctan2(dy, dx)
+
+        # Four tines closing in, quicker than a seal's because a claw snaps.
+        at = w * (0.42 - 0.24 * min(1.0, u * 2.4))
+        for k in range(4):
+            off = np.abs(((ang - k * math.tau / 4.0 - 0.4 + math.pi) % math.tau) - math.pi)
+            tine = np.clip(1.0 - off / 0.30, 0.0, 1.0) ** 1.3
+            band = np.clip(1.0 - np.abs(r - at) / (w * 0.055), 0.0, 1.0) ** 1.1
+            _paint(a, tine * band, REND_IRON, 0.95)
+            _paint(a, tine * band * np.clip(1.0 - np.abs(r - at) / (w * 0.022), 0.0, 1.0),
+                   REND_EDGE, 0.9)
+
+        # The chip: a small bright thing leaving the middle downward, which is where the cog it
+        # became is already lying (`SiegeBoard.Scatter`).
+        fall = cy + w * 0.30 * u * u
+        chip = np.clip(1.0 - np.sqrt((x - cx) ** 2 + (y - fall) ** 2) / (w * 0.045), 0.0, 1.0)
+        _paint(a, chip, REND_SPARK, 1.0 - u * 0.35)
+
+        _paint(a, np.clip(1.0 - r / (w * (0.12 - 0.08 * u)), 0.0, 1.0) ** 1.1,
+               REND_EDGE, 0.9 - u * 0.6)
+
+        frames.append(_frame(a))
+
+    return frames
+
+
+def wane_muzzle():
+    """A hollowking passing judgement: a dark ring spreading off it and thinning away.
+
+    **It goes outward and gets weaker**, which is the one flash in this mode that does - every
+    other muzzle here closes on a point or drives a column up. What a wane is, is a thing
+    reaching the whole line at once and finding most of it already answered, so the picture is a
+    wave that is spent by the time it has crossed the frame.
+    """
+    w = h = 256
+    frames = []
+
+    for f in range(SPELL_BURST_FRAMES):
+        u = f / (SPELL_BURST_FRAMES - 1.0)
+        a, x, y = _canvas(w, h)
+
+        cx = cy = (w - 1) * 0.5
+        r = np.sqrt((x - cx) ** 2 + (y - cy) ** 2)
+
+        for i in range(3):
+            k = np.clip(u * 1.4 - i * 0.18, 0.0, 1.0)
+            at = w * (0.06 + 0.40 * k)
+            ring = np.clip(1.0 - np.abs(r - at) / (w * 0.045), 0.0, 1.0) ** 1.2
+            _paint(a, ring, WANE_PALE, (1.0 - k) * 0.9)
+
+        # A dark heart under them, so the rings read as coming off something rather than as a
+        # light source: the deep is painted first and the pale over it.
+        _paint(a, np.exp(-(r / (w * 0.18)) ** 2) * (0.85 - u * 0.5), WANE_DEEP, 0.9)
+        _paint(a, np.clip(1.0 - r / (w * (0.10 - 0.06 * u)), 0.0, 1.0) ** 1.2,
+               WANE_CORE, 0.95 - u * 0.6)
+
+        frames.append(_frame(a))
+
+    return frames
+
+
+def wane_hit():
+    """The light going out of a post: a pall falling in and motes leaving upward.
+
+    **The only landing in this mode drawn as an absence.** It has no shockwave, no spokes and no
+    ring stamping down - what it has is a soft field collapsing inward and two or three specks
+    drifting off the top, which is what a light being taken looks like as against a thing being
+    hit. That difference is the verb (`SiegeSpell.Wane`) and it is the reason this reel may be
+    quieter than every other one here.
+    """
+    w = h = 320
+    frames = []
+
+    rng = np.random.RandomState(7734)
+    motes = rng.uniform(-0.22, 0.22, 5), rng.uniform(0.45, 1.0, 5)
+
+    for f in range(SPELL_BURST_FRAMES):
+        u = f / (SPELL_BURST_FRAMES - 1.0)
+        a, x, y = _canvas(w, h)
+
+        cx = cy = (w - 1) * 0.5
+        r = np.sqrt((x - cx) ** 2 + (y - cy) ** 2)
+
+        # The pall: wide and soft at the start, tight and gone at the end.
+        spread = w * (0.44 - 0.30 * u)
+        _paint(a, np.exp(-(r / np.maximum(1e-3, spread)) ** 2) * (0.30 + 0.45 * u),
+               WANE_DEEP, 0.9)
+
+        # A rim on it, which is what stops a soft field reading as a smudge.
+        rim = np.clip(1.0 - np.abs(r - spread * 0.82) / (w * 0.035), 0.0, 1.0) ** 1.2
+        _paint(a, rim, WANE_PALE, (1.0 - u) * 0.85)
+
+        # And the motes leaving, which is the only thing in the frame going anywhere.
+        for k in range(len(motes[0])):
+            mx = cx + w * motes[0][k]
+            my = cy - w * 0.34 * motes[1][k] * u
+            speck = np.clip(1.0 - np.sqrt((x - mx) ** 2 + (y - my) ** 2) / (w * 0.020),
+                            0.0, 1.0)
+            _paint(a, speck, WANE_CORE, (1.0 - u) * 0.95)
+
+        frames.append(_frame(a))
+
+    return frames
+
+
 #: Frames the anvil's front is drawn over.
 #:
 #: **Twenty-four, matched to the still wave's, and the rate is derived rather than written down.**
@@ -3220,7 +3512,8 @@ PACK_SHADE = {
     MONS_V1: (SHADE_UMBER, SHADOW_INK),
     MONS_V4: (SHADE_UMBER, SHADOW_INK),
 
-    # Read by `--survey` alone, so that the height it prints is a *body* rather than a body
+    # `V3` is cut from as of the seventh chapter (`BOSS_SET`'s harrower); the other three are
+    # read by `--survey` alone, so that the height it prints is a *body* rather than a body
     # plus the ellipse under it - which is the number that decides whether a pack can cast a
     # chapter here, and the one the first pass of that survey got flatteringly wrong.
     MONS_V2: (SHADE_UMBER, SHADOW_INK),
@@ -3681,6 +3974,9 @@ def build():
     field = zipped(FIELD, SOURCE)
     horde1, horde4 = zipped(MONS_V1, CARTOON), zipped(MONS_V4, CARTOON)
 
+    # And the one the seventh chapter's harrower comes from. Absent, the same bargain.
+    horde3 = zipped(MONS_V3, CARTOON)
+
     # The three top-down unit packs the bosses are cut from. Absent is a checkout without them
     # rather than a mistake, exactly as every root above.
     myth, boss2, boneunits = zipped(MYTH, UNITS), zipped(BOSSPACK2, UNITS), zipped(BONEUNITS, UNITS)
@@ -3697,7 +3993,7 @@ def build():
     if monsters is None or wizard is None:
         return None
 
-    if field is None or horde1 is None or horde4 is None:
+    if field is None or horde1 is None or horde4 is None or horde3 is None:
         return None
 
     if myth is None or boss2 is None or boneunits is None:
@@ -3711,7 +4007,7 @@ def build():
 
     #: Which zip a `BROOD_SET` row names. A table of bodies has to say which pack each is in, and
     #: one dict is how it says it without a branch per row.
-    packs = {KIT: kit, MONSTERS: monsters, MONS_V1: horde1, MONS_V4: horde4,
+    packs = {KIT: kit, MONSTERS: monsters, MONS_V1: horde1, MONS_V3: horde3, MONS_V4: horde4,
              MYTH: myth, BOSSPACK2: boss2, BONEUNITS: boneunits,
              ANCIENTS: ancients, BOSSPACK3: boss3, WIZUNITS: wizunits}
 
@@ -3933,9 +4229,13 @@ def build():
     # comes out of `SiegeShotBake` and a licensed particle pack; these come out of numpy, for the
     # reason written over `gaze` - a drop whose art needs somebody sitting in front of the Editor
     # is a drop that ships red.
+    # **And the seventh chapter's, for the same reason and one reel short of six**: a wane is
+    # aimed at no ward, so there is no flight to draw (`SiegeMode.Bosses`).
     for key, reel in (("gaze", gaze), ("gaze_muzzle", gaze_muzzle), ("gaze_hit", gaze_hit),
                       ("decree", decree), ("decree_muzzle", decree_muzzle),
-                      ("decree_hit", decree_hit)):
+                      ("decree_hit", decree_hit),
+                      ("rend", rend), ("rend_muzzle", rend_muzzle), ("rend_hit", rend_hit),
+                      ("wane_muzzle", wane_muzzle), ("wane_hit", wane_hit)):
         for i, frame in enumerate(reel()):
             made["Fx/Siege/%s/f%02d.png" % (key, i)] = frame
 

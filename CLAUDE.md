@@ -1220,13 +1220,15 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   server-side from the save it already reads, because a badge a stranger sees is adjudicated
   (52h, 19a).
 - **One live mode, three hidden.** **Thornwatch**: `s01_thornwatch`, `s03_broodmarch`, `s04_barrowfell`,
-  `s05_ashenhold`, `s06_thundercrag`, `s07_dustcrown` (ten rungs each) on the ordinary ladder, and
-  `s02_endlesswatch` on an **Infinite** track beside it. The map draws no *mode* switcher and does draw the
-  **track** switcher; the ordinary ladder draws a map and the Infinite lane draws a **hub**, opening at
-  **keeper level 10**. Six casts and twelve boss verbs, one cast per chapter by ordinal: insects, the blob
-  brood, skeletons, the **rabble** — the only cast **baked from vector** — the **wild**, and the **court**,
-  both cut from the top-down unit packs. The Infinite lane draws a **medley** of the six chapter casts, so
-  it costs no art of its own.
+  `s05_ashenhold`, `s06_thundercrag`, `s07_dustcrown`, `s08_bonereach` (ten rungs each) on the ordinary
+  ladder, and `s02_endlesswatch` on an **Infinite** track beside it. The map draws no *mode* switcher and
+  does draw the **track** switcher; the ordinary ladder draws a map and the Infinite lane draws a **hub**,
+  opening at **keeper level 10**. Six casts and **fourteen** boss verbs, one cast per chapter by ordinal:
+  insects, the blob brood, skeletons, the **rabble** — the only cast **baked from vector** — the **wild**,
+  and the **court**, both cut from the top-down unit packs. **The cast table wraps at six**, so the
+  seventh chapter draws the insects again (7c's bargain, MODES.md 37em) and its two bosses are cut from
+  the same head-on family the first chapter's five already are. The Infinite lane draws a **medley** of
+  the six chapter casts, so it costs no art of its own.
 - **Fire** — the three ember turrets (`ember`, `pyre` and the legendary `pyroclast`) set what they hit
   alight, and since **2026-09-18** that is a thing you can see: a looping flame stands on the raider for
   the seconds the model authors, in the colour of the *seat* that lit it, and the burn pays twice a
@@ -1300,15 +1302,19 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
 | `s05_ashenhold` | siege | 10 | 49–81 matches | the fourth chapter and the first that cost the mode **code**: the **rabble** cast, armour from rung 1, a **shackler** on 5 and an **ironclad** on 10; **two tenths of surge**; deals the **furnace** |
 | `s06_thundercrag` | siege | 10 | 65–110 matches | the fifth chapter: the **wild** cast of stone golems, a yeti, a minotaur and a mud clod; a **thunderer** on 5 (drains banked charges) and a **colossus** on 10 (buries a turret for four seconds, sooner if the player digs); **three tenths of surge**; deals all five charms, the **hourglass** new |
 | `s07_dustcrown` | siege | 10 | 61–101 matches | the sixth chapter: the **court** cast of three robed wizards, a hooded archer, a falcon-headed war-god and a bone knight; **four tenths of surge**, which is **+40% raider health against the first chapter**; a **gorgon** on 5 (her glare wastes what is poured into a ward) and a **sunlord** on 10 (he seals a ward — fill it or lose it, and never the last one standing); deals all six charms, the **anvil** new |
+| `s08_bonereach` | siege | 10 | 69–100 matches | the seventh chapter, and the cheapest one this mode has ever shipped: **five tenths of surge**, which is **+50% raider health against the first chapter**, and *nothing else new but the two fights* — no charm (the roster clamps at six) and no cast (the table wraps to the insects). A **harrower** on 5 (it tears a rank off a ward and drops it on the hill as a cog you can pick back up) and a **hollowking** on 10 (it strikes every post that has fired nothing since its last cast and spares every post that has been working). Draws `map7`, the dead lands |
 | `s02_endlesswatch` | siege *(infinite)* | 1 | 3★ at wave 30 | waves that never stop, graded on how far it got, drawing a **medley** of every cast; **both star waves are guesses until somebody plays it**; opens at keeper level 10; **a heart to enter and none to lose** (43e) |
 
 **No level authors a difficulty number except the first glade in the game, and no chapter authors a clock.**
 Par is derived; star lines are multiples of it. **Par is never monotonic within a chapter** — par is length,
 not difficulty. Every siege authors `budgetFactor: -1`. Chapter art is generated and **shared by ordinal**
-(7c): six maps and forty skies serve every chapter of every mode — `map5` is the lava crag and `map6` the
-wasteland mesas, cut for ordinals 5 and 6, and the two sources here that are **tiled** (two boards joined
-end to end). The skies wrap at forty where the maps no longer do, so a sixth chapter draws the second
-block again.
+(7c): **seven maps** and forty skies serve every chapter of every mode — `map5` is the lava crag, `map6`
+the wasteland mesas and `map7` the dead lands, cut for ordinals 5, 6 and 7, and the three sources here
+that are **tiled** (two boards joined end to end). The skies wrap at forty where the maps no longer do, so
+a sixth chapter draws the second block again and a seventh the third. **`map7` is the one map whose
+end-of-chapter marker cannot be placed legally**, and that is arithmetic rather than a preference — see
+`make_map_seats.ACCEPTED_OVERLAPS`, which carries the proof; it ships with **one** warning against
+`map5`'s and `map6`'s nine each.
 
 ### The numbers
 
@@ -1377,6 +1383,47 @@ on a fresh clone).
 
 ## Owed
 
+**Bonereach shipped on 2026-09-20 and none of it has been in the Editor, on a device, or through
+a sweep.** The seventh chapter (`s08_bonereach`, ordinal 7, manifest order 152) brings a map, two
+boss verbs, two boss bodies and five drawn spell reels, and every pixel of it was written with the
+Editor closed — so **every one is unaddressed until `▸ Addressables ▸ Sync All Assets` and save**,
+which is a white rectangle on two boss bodies, two cast reels, five spell reels and four map
+strips (invariant 7b). Then the standing discipline in full (`Audit Addresses` → `Validate
+Content` → `Validate Art` → EditMode). The `.meta` files for the four new source files and the new
+generator do not exist yet either; Unity mints them on the next focus.
+
+**Three things are owed beyond the Editor's three, and the first is the one that matters.**
+
+1. **The sweep has never been run, so two floors in its own gate are nought.**
+   `SiegeRuleTests.TheSeventhChapterIsFoughtOnABoughtLine` is written and its relative rules are
+   live — no rung walled at any rhythm, harder on the starter than Dustcrown, one rung of the
+   shelf recovering a fifth of what the starter loses and paying a grade, `cleaver` beating
+   `siphon` on a chapter built out of plate — but `BareFloor` and `BoughtFloor` are **UNSET** and
+   say so in the source. **Run it once and set them off what it prints.** The same run sets
+   `siege.STAR_FACTORS[7]`, which ships at **(0.42, 0.56)** as the next step on the shape the six
+   chapters before it make and is a guess until the sweep is read (37cb).
+   It draws a **fourth line nothing else in this file draws** — four *different* one-star turrets
+   (`siphon`, `ember`, `rime`, `cleaver`), printed and deliberately not gated, because it is the
+   line a real player owns and a floor on it would be tuning against four separate purchases.
+2. **`EveryShippedBossRungIsAFight` has two new rungs in it** and `NoBossVerbIsSentByAnyTwoChapters`
+   two new verbs; `bonereach` is in `ShippedChapters` in the change that shipped it, which is
+   Dustcrown's lesson paid forward (MODES.md 37di).
+3. **An eye on two drawings and one hill.** `Torn` (a badge coming off a post and falling toward
+   the cog it became) and `Hollowed` (a post guttering, drawn on the struck posts only) have no
+   render mirror — `render_siege.py --level s08_harrowgate,s08_hollowcrown --warlord cast` draws
+   the bosses and their casts and nothing about the aftermath. And the two questions no gate can
+   answer: does a harrow read as *go and get it back* rather than as a sunder, and does a wane's
+   **silence** on a fed line read as the player having answered it rather than as the boss missing.
+
+**What it does not touch**: no `firestore.rules`, no function deploy, no schema version, no charm
+and no cast. **The re-seed is done** (2026-09-20) — a new chapter's ten level ids reach the
+server's reward map through `seed-config.mjs` alone, so without it every glade in Bonereach would
+earn nothing server-side (the `hiding-a-chapter-costs-a-seed` note, read the other way up).
+`config/progression` now carries **71 levels** and was **read back**: all ten `s08_*` ids map to
+`s08_bonereach`. A later retune of this chapter's star lines needs no second seed — they live in
+the chapter body, which is client content, and the server is published only the level-to-chapter
+map.
+
 **The board was re-cut on 2026-09-20 and nobody has looked at any of it.** Three changes went in
 together, all with the Editor closed. (1) **A dealt gem no longer lands already matched** (37el), at
 `RefillSettlesPercent` **60** — chains fell from 39% of matches to about a quarter, and what is left
@@ -1409,8 +1456,25 @@ Thornwatch 61 and Broodmarch 47, on **ember** (keeper 6, the best line today's c
 Broodmarch 74, Barrowfell 52, Ashenhold 48, Thundercrag 32, Dustcrown 42. Five rungs are held at no
 rhythm at all on ember — `s04_barrowheart`, `s06_frostline`, `s06_glacierwall`, `s06_cragheart`,
 `s07_saltpan` — **accepted by the owner** on the grounds that the model stands four identical turrets
-and never spends a utility. Re-pointing each gate at the line its chapter now expects, and re-deriving
-the per-chapter star factors, is the job; it is hours and it is not a blocker.
+and never spends a utility.
+
+**And it is not only the floors, which is the part worth knowing before anybody starts.** The star
+ladder moved with the board: a run spends more matches now, and gold is `par x 0.75` on a par that did
+not move, so **three stars has almost gone out of reach on the early chapters**. Three-starred runs of
+90, at the shipped dial: Thornwatch **1** on the starter and **3** on siphon; Broodmarch 12 on siphon
+and 38 on ember; Barrowfell 22, Ashenhold 19, Thundercrag 6 and Dustcrown 4, all on ember. The gate
+that catches this is per rung — *three stars was out of reach at every rhythm* — so it fires on most
+of Thornwatch, and no floor edit silences it honestly. The job is therefore three things together:
+re-point each gate at the line its chapter now expects, re-set the floors from the table above, and
+**re-derive each chapter's `goldFactor`/`silverFactor`** from a fresh sweep. Doing the first two alone
+would turn the suite green over a star ladder nobody can climb, which is the one outcome worse than a
+red gate.
+
+**It was left undone on 2026-09-20 for a reason that will have passed**: another agent was mid-drop on
+a seventh chapter (`s08_bonereach`) inside `SiegeRuleTests.Chapters.cs`, which is where five of the six
+gates and every rung table live, and their in-flight file did not compile — so the work could neither
+be written safely nor verified. Check `git status` on that file first; the measurements above do not
+expire.
 
 **And `mortar` and `breaker` are unreachable.** They are gated at keeper 16 and 26 against content
 that pays for about keeper 13, so the best line anybody can actually buy is `ember`. Three reachable

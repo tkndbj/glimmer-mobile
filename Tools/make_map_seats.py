@@ -210,7 +210,19 @@ NUDGE = {
 #: chain's overlaps along with its seats — and goes on inheriting them once its own `NUDGE`
 #: entries have moved eight of the ten, because those moves are tens of units against a rule
 #: measured in hundreds. It is the same decision, not a second one.
-ACCEPTED_OVERLAPS = {5, 6}
+#: `map7` is here for **one** overlap rather than ten, and it is the only entry whose reason is
+#: arithmetic rather than a preference - so it is a proof rather than a sign-off. The marker's
+#: height is not ours (`nudged`): it is the top rung plus `TEASER_GAP`, capped at the ceiling,
+#: which on this painting puts it 125 units above rung ten and 394 above rung nine. Both are
+#: under the 529 of drop the crown rule wants, so the marker must clear **both** by 384 units
+#: across the map - and rungs nine and ten are on opposite sides, 529 apart. A point 384 from
+#: each of two points 529 apart needs 1152 units of map and this one is 1080 wide, so no
+#: `teaserX` exists; `_clear_of` says the same thing by falling back to `TEASER_X`. Moving the
+#: rungs does not help either: nine can only come down to where the marker clears it
+#: (y <= 0.744) by crossing to the left of the map, where it lands on rung ten. What ships is
+#: therefore the marker standing on rung nine's record mark, which `ChapterMapValidator` warns
+#: about exactly as it does for the two maps above.
+ACCEPTED_OVERLAPS = {5, 6, 7}
 
 
 #: Maps that stand their chain exactly where another map's chain stands, rather than searching
@@ -294,6 +306,16 @@ GROUND = {
     # (212, 153, 66) and the browns around it - are 41 or more from either and stay out, which
     # is what stops a node hanging on the side of a mesa.
     6: [(253, 221, 138), (246, 203, 109)],
+
+    # `map7` is the dead lands, and what is listed is the **lit top faces of its plateaus** -
+    # `map5`'s and `map6`'s answer for the third time, and for a third reason. This painting
+    # draws no road at all: its chain is a stack of floating slabs with rope bridges between
+    # them, so the only thing a node can stand on is the rock itself. The two tops are the
+    # broad table (70, 97, 114) and the pale slabs laid on it (86, 121, 143); they are 29
+    # apart in blue, so at this map's tolerance they are two colours and both are wanted. The
+    # **cliff faces** below them are (45, 51, 58) - 46 clear of the nearer top - and stay out,
+    # which is what keeps a node off the side of a plateau where the drop begins.
+    7: [(70, 97, 114), (86, 121, 143)],
 }
 
 # `map5` is the one painting here whose **road cannot be used**, and that is a fact about the
@@ -323,6 +345,7 @@ STREAM = {
     4: [],
     5: [],
     6: [],
+    7: [],
 }
 
 #: What each painting draws **instead of land**: sea, sky, lake, chasm, void.
@@ -355,6 +378,14 @@ VOID = {
     # close it at `VOID_TOLERANCE`. None of them is within reach of sand or stone, which is the
     # one thing this list has to be true of (`map4`'s lava is the counter-example).
     6: [(12, 24, 42), (58, 130, 166), (87, 195, 241), (122, 212, 244)],
+
+    # `map7`'s void is a flat night sky with a maroon nebula and olive mist drawn through it,
+    # and one stop closes the lot: (12, 23, 41) at `VOID_TOLERANCE` reaches the nebula's
+    # (56, 37, 50) and the shadowed navy (25, 34, 51) without coming within 58 of either
+    # ground colour. It also takes in the **cliff faces** (45, 51, 58), which is wanted rather
+    # than tolerated on this painting: a plateau's side is where the drop starts, so the broad
+    # "is there land all round" test should refuse a seat that hangs over one.
+    7: [(12, 23, 41)],
 }
 
 # `map4`'s own shadow deliberately does not appear above, and that is the correction worth

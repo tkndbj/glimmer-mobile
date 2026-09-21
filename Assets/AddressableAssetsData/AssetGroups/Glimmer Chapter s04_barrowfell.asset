@@ -25,18 +25,8 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 2eed109265b95814993a95ef0b009801
-    m_Address: Art/Bg/sky_27
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 43ac942b167656949a8fa857bdc76556
     m_Address: Art/Map/map3_strip0
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 46b60bab93703284f8c8d82cd7a3cdff
-    m_Address: Art/Bg/sky_29
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -45,48 +35,8 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 549d359015a2acd4291a9efa43c67661
-    m_Address: Art/Bg/sky_23
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 588913881143705448c398193080fd9c
     m_Address: Art/Map/map3_strip3
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 58a1c0af46d84dc46963e2863cdfb491
-    m_Address: Art/Bg/sky_24
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 80f95f04c18b90b4e89c9bff27d3a7b0
-    m_Address: Art/Bg/sky_28
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 8950fb90c64bd9b4b85ef73897f68a31
-    m_Address: Art/Bg/sky_20
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 8d61b7c8debb83a44be2a2c55776148b
-    m_Address: Art/Bg/sky_25
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: abedbef94208dde4ebf50d256033cf47
-    m_Address: Art/Bg/sky_21
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: b8b85eeb4ee704b478e4fc8b7f691097
-    m_Address: Art/Bg/sky_22
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d85dfbac7b4ebdc43870a4163873ebef
-    m_Address: Art/Bg/sky_26
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

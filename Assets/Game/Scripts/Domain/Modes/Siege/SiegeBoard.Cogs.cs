@@ -68,6 +68,53 @@ namespace GlimmerGrove.Modes
         }
 
         /// <summary>
+        /// Tears a rank off a ward and drops it on the hill as an ordinary cog, where the
+        /// harrower is standing. Answers whether it really took one.
+        ///
+        /// <para>
+        /// <b>The rank and the cog are one call, so the two halves can never come apart.</b>
+        /// A rank taken with nothing dropped is an overlord's sunder under a second name
+        /// (invariant 37z), and a cog dropped with no rank taken is a gift - which is the whole
+        /// difference between this verb and that one (<see cref="SiegeSpell.Harrow"/>).
+        /// </para>
+        /// <para>
+        /// <b>It is an ordinary <see cref="SiegeCog"/> and deliberately not a kind of its own.</b>
+        /// Everything that already draws, ages, tramples and spends one therefore works on this
+        /// without being taught - including <see cref="Take"/>'s re-asked ladder, which is the
+        /// clause that matters here: a ward the harrower just robbed is by construction one rung
+        /// short, so the cog it dropped is always takeable.
+        /// </para>
+        /// <para>
+        /// <b>It draws from no stream at all</b>, which is the one way it differs from
+        /// <see cref="Cog"/>: a drop on a kill is a roll and this is a certainty, so there is
+        /// nothing to reproduce and nothing to advance (invariant 41).
+        /// </para>
+        /// <para>
+        /// <b>Refused when the hill is full</b>, for <see cref="Cog"/>'s reason - the cap is what
+        /// stops a duel ending under a carpet of cogs nobody can reach - and the rank stays on
+        /// the ward when it is. The caller still smites (37dn), so a refusal here is never a
+        /// boss that did nothing.
+        /// </para>
+        /// </summary>
+        bool Scatter(SiegeRaider caster, int at)
+        {
+            if (caster == null || at < 0 || at >= _wards.Length) return false;
+            if (_cogs.Count >= SiegeTuning.MostCogs) return false;
+
+            var ward = _wards[at];
+            if (!ward.Alive || !ward.Sunder()) return false;
+
+            var cog = new SiegeCog(_minted++, caster.Lane, SiegeTuning.RowOf(caster.March),
+                                   at, ward.Colour);
+
+            _cogs.Add(cog);
+            _report.Cogs.Add(cog);
+
+            Attention.CogDropped();
+            return true;
+        }
+
+        /// <summary>
         /// Counts every cog on the hill down, and takes away the ones that ran out.
         ///
         /// <b>Trampled rather than kept</b>, because the deadline is what makes reaching for one a

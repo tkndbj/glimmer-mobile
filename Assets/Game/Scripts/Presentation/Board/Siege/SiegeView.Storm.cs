@@ -715,6 +715,44 @@ namespace GlimmerGrove
                     break;
                 }
 
+                // ---------------------------------------------------------- the harrower
+                // **A claw thrown flat and reeled back, which is the verb drawn twice.** Every
+                // other flight here is one-way: something leaves the boss and arrives. A harrow
+                // takes a rank *off* the post and puts it on the ground, so the drawing has to
+                // go out and come back - the claw crosses the hill, and a thin line snaps back
+                // along the same path a beat later carrying what it tore loose. Nothing bows,
+                // because a grapnel thrown at a fixed thing does not.
+                case SiegeKind.Harrower:
+                {
+                    Hurl(from, to, kind, flight, 0f, 1f, 0f);
+
+                    // The line it goes out on, and the same line pulled taut behind it.
+                    Arc(from, to, fire, Cell * .035f, .22f, 0, .06f, flight * .18f);
+                    Arc(to, from, fire, Cell * .045f, .18f, 0, .10f, flight * 1.02f);
+
+                    if (mob.Body != null) Tween.Punch(mob.Body.transform, .11f, .24f);
+                    break;
+                }
+
+                // ---------------------------------------------------------- the hollowking
+                // **Nothing crosses the hill, because it is not aimed at anything**
+                // (`SiegeTuning.AimsAtAWard`). What leaves the boss is a pall that spreads
+                // *along the ward line* rather than down the hill - which is the warbringer's
+                // shape with the warbringer's reason inverted: a roar reaches every post and a
+                // wane reaches only the ones that have gone quiet, and which those are is drawn
+                // at the posts themselves (`Hollowed`) rather than here.
+                case SiegeKind.Hollowking:
+                {
+                    Roar(from, kind);
+
+                    var left = new Vector2(-Span.x * .5f, _lineY + Cell * .8f);
+                    var right = new Vector2(Span.x * .5f, _lineY + Cell * .8f);
+
+                    Arc(left, right, fire, Cell * .045f, .34f, 2, .30f, .08f);
+                    if (mob.Body != null) Tween.Punch(mob.Body.transform, .16f, .3f);
+                    break;
+                }
+
                 // ---------------------------------------------------------- the overlord
                 // **Double rockets, and they are the reason it is drawn last.** The finale's spell
                 // takes a rank as well as health, so it is the one that has to look like more than
@@ -939,6 +977,20 @@ namespace GlimmerGrove
                 // for `Unleash`'s reason one method up.
                 case SiegeKind.Sunlord:
                     Condemned(ward, fire);
+                    break;
+
+                // **A harrower leaves the rank falling**, which is the half of its verb the
+                // player has to see: the cog it scattered is drawn on the hill by the ordinary
+                // cog path, and what this owes the *post* is the moment the badge came off.
+                case SiegeKind.Harrower:
+                    Torn(ward, fire);
+                    break;
+
+                // **A hollowking leaves the post guttering**, and only the posts that were
+                // struck get one - which is the verb: a fed line sees nothing at all, and that
+                // silence is the drawing saying the player answered it (`SiegeSpell.Wane`).
+                case SiegeKind.Hollowking:
+                    Hollowed(ward, fire);
                     break;
 
                 case SiegeKind.Ironclad:

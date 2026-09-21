@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
 using GlimmerGrove.Modes;
 using NUnit.Framework;
@@ -795,6 +795,7 @@ namespace GlimmerGrove.Tests
             yield return ("ashenhold", Ashenhold);
             yield return ("thundercrag", Thundercrag);
             yield return ("dustcrown", Dustcrown);
+            yield return ("bonereach", Bonereach);
         }
     }
 }

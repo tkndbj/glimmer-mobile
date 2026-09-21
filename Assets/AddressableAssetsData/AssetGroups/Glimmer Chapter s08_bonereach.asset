@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Glimmer Chapter s08_bonereach
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Glimmer Chapter s08_bonereach
+  m_GUID: d24adb72112492943b94108c7e236887
+  m_SerializeEntries:
+  - m_GUID: 816852794470e4945bd8bee44c05a009
+    m_Address: Art/Map/map7_strip3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b350c98789ab5a148bd4b39a450b526e
+    m_Address: Art/Map/map7_strip2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dd89199e97602ed4685a30b829395c3b
+    m_Address: Art/Map/map7_strip0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ec069fac6f3ac6a4ba77957137c23c7d
+    m_Address: Art/Map/map7_strip1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 6c4c5f6eb57af6542b195d29840b42f2, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: b7a6ca2f199c71d44973d2261a62a79e, type: 2}
+    - {fileID: 11400000, guid: bebc455add290574d80b5e57a182f25a, type: 2}
+    m_SchemaDisplayOrder:
+    - Glimmer Chapter s08_bonereach_BundledAssetGroupSchema
+    - Glimmer Chapter s08_bonereach_ContentUpdateGroupSchema
+  m_IncludeInBuild: 1
+  m_IncludeInBuildMigrated: 1

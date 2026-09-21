@@ -127,5 +127,30 @@ namespace GlimmerGrove.Modes
         /// so a seal on the colour the hill is <em>not</em> wearing is the expensive one.
         /// </summary>
         Doom,
+
+        /// <summary>
+        /// Takes a rank off a ward and drops it on the hill as a cog, where the player can pick
+        /// it up again. The harrower's, and aimed at the best-ranked ward standing.
+        ///
+        /// <b>Deliberately not a sunder with a softer number.</b> An overlord's sunder is a rank
+        /// that is <em>gone</em>; a harrow is a rank that is <em>lying over there</em>, which is
+        /// the same distinction a seal draws against a devour (invariant 37ec): one is a loss and
+        /// the other is a decision. What it costs is a beat of the player's attention on the hill
+        /// rather than anything the line holds - so a player who never looks down pays it in full
+        /// and one who reaches for it pays nothing but the tap.
+        /// </summary>
+        Harrow,
+
+        /// <summary>
+        /// Strikes every ward that has fired nothing since this boss's last cast, and leaves the
+        /// ones that did alone. The hollowking's, and aimed at no ward at all.
+        ///
+        /// <b>The one spell in this mode whose cost the player sets in advance.</b> A glare and a
+        /// drain are answered after they land; a wane is answered <em>before</em> - by having kept
+        /// all four tubes doing something - so it is the only verb here that asks the player to
+        /// spread rather than to focus, which is the instruction eleven verbs have never given.
+        /// It is booked like a rally, one record per post, because it aims at no ward.
+        /// </summary>
+        Wane,
     }
 }

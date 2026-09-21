@@ -184,9 +184,17 @@ namespace GlimmerGrove
         /// <b>Neon is two things, not a bright colour.</b> One is the bleed — the same light
         /// spilled round the letters and pooled behind the word, so the core reads as the thing
         /// lighting the rest rather than as a caption in a loud ink. The other is that a real
-        /// tube is never one hue along its length, which is what the ramp is: magenta into
-        /// violet into cyan, the synthwave three, graded across the word by
-        /// <see cref="TextGradient"/>.
+        /// tube is never one hue along its length, which is what the rules are: magenta out one
+        /// side and cyan out the other, the synthwave pair, with the violet between them
+        /// pooled behind the word.
+        /// </para>
+        /// <para>
+        /// <b>The hues are in the sheath and never in the core.</b> The word itself is white:
+        /// a lit tube is white-hot in the middle and coloured at its edge, and a ramp *inside*
+        /// the letters put the neon at the same brightness as its own bleed, which reads as a
+        /// smudge rather than as a light. The middle stop went with it: the rules take the two
+        /// ends and the halo is <see cref="NeonHalo"/>, so nothing was left grading between
+        /// them.
         /// </para>
         /// <para>
         /// <b>The halo is the middle of the ramp rather than a fourth colour.</b> A bleed in a
@@ -202,7 +210,6 @@ namespace GlimmerGrove
         /// </para>
         /// </summary>
         static readonly Color NeonWarm = Pal.Hex("#FF3DF0");
-        static readonly Color NeonTube = Pal.Hex("#C86CFF");
         static readonly Color NeonCool = Pal.Hex("#4DF0FF");
         static readonly Color NeonHalo = Pal.Hex("#C81CE0");
 
@@ -230,8 +237,11 @@ namespace GlimmerGrove
             // central rule suspended; the heading over it says so before a card is read.
             bool neon = tier == WardTier.Count;
 
-            // White under the ramp, because `TextGradient` multiplies: a tinted graphic would
-            // darken every stop by its own colour, which is 44g's fault said about text.
+            // <b>White, and on the neon band that is the reading rather than an undercoat.</b>
+            // The word was a magenta-to-cyan ramp outlined in violet — neon on neon, so the
+            // letters and their bleed were the same brightness and the caption read as a
+            // coloured smudge at a glance. A tube is a white-hot core in a coloured sheath, so
+            // the core is white and every hue moved outward: the bleed, the halo and the rules.
             var name = UIKit.Label("Name", row, Loc.Get(WardTier.NameKey(tier)), TierSize,
                                    neon ? Color.white : Pal.A(Pal.Cream, .92f),
                                    TextAnchor.MiddleCenter,
@@ -251,16 +261,14 @@ namespace GlimmerGrove
 
             if (neon)
             {
-                // The ramp, added before the bleed so the bleed keeps its own colour (see
-                // `TextGradient`), and graded across the word rather than across its box.
-                name.gameObject.AddComponent<TextGradient>()
-                    .Paint(NeonWarm, NeonTube, NeonCool);
-
-                // The bleed: Unity's `Outline` draws the glyphs again at the four corners, which
-                // at this distance is a halo round every stem rather than a border on it.
+                // The sheath: Unity's `Outline` draws the glyphs again at the four corners,
+                // which at this distance is a band round every stem rather than a hairline on
+                // it. <b>Opaque where it used to be .70</b> — it is the colour now, not a
+                // tint over a colour that was already there, and a translucent border on white
+                // letters is a grey one.
                 var bleed = name.gameObject.AddComponent<Outline>();
-                bleed.effectColor = Pal.A(NeonHalo, .70f);
-                bleed.effectDistance = new Vector2(4f, 4f);
+                bleed.effectColor = NeonHalo;
+                bleed.effectDistance = new Vector2(3f, 3f);
                 bleed.useGraphicAlpha = true;
 
                 // And the pool behind the word, drawn under it because it is added first.

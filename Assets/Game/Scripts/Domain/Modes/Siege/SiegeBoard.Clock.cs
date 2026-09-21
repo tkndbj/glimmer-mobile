@@ -171,6 +171,43 @@ namespace GlimmerGrove.Modes
                     continue;
                 }
 
+                // **A wane is aimed at no ward either, and it is settled here for the rally's
+                // reason** - `spell.Ward` is -1, so it must not fall through to the indexed path
+                // below. What separates the two is who pays: a roar takes the same from all four
+                // whatever the player did, and a wane takes nothing at all from a post that has
+                // landed a bolt since the last cast (`SiegeBoard._worked`). That is the verb, and
+                // it is the whole of invariant 5d's test - there is an arrangement it rejects.
+                //
+                // **The window is closed here, after it is read**, so the seconds between one
+                // cast and the next are billed exactly once and the cadence and the window can
+                // never be two numbers (`SiegeTuning.HollowkingCastEvery`).
+                if (spell.Craft == SiegeSpell.Wane)
+                {
+                    int bite = SiegeTuning.CastOf(caster.Kind);
+
+                    for (int w = 0; w < _wards.Length; w++)
+                    {
+                        var post = _wards[w];
+                        if (!post.Alive) continue;
+
+                        bool worked = _worked[w];
+                        _worked[w] = false;
+
+                        // **Nothing is reported for a post that was working**, which is what a
+                        // player has to be able to see: the fed posts are silent and the hollow
+                        // ones flash, so the rule is read off the board rather than off a
+                        // caption.
+                        if (worked) continue;
+
+                        bool down = Bear(post, bite);
+
+                        _report.Spells.Add(
+                            new SiegeSpellLanded(spell.Raider, w, SiegeSpell.Wane, bite, down));
+                    }
+
+                    continue;
+                }
+
                 // **Two spells that are aimed at the hill rather than at the line** do their work
                 // on the hill first, and then smite the freshest ward like any other (37dn): the
                 // verb is what tells the bosses apart, the health is what makes each a threat.
@@ -193,6 +230,15 @@ namespace GlimmerGrove.Modes
                 if (spell.Craft == SiegeSpell.Bury) ward.Bury();
                 if (spell.Craft == SiegeSpell.Glare) ward.Glare();
 
+                // **A harrow takes the rank and puts it on the ground in the same breath**, and
+                // the two halves are one call so neither can happen without the other: a rank
+                // taken with no cog dropped is an overlord's sunder wearing a different name,
+                // and a cog dropped with no rank taken is a gift. `Scatter` answers false when
+                // the hill is already carrying `SiegeTuning.MostCogs`, in which case the rank
+                // stays where it is - the boss still smites below (37dn), so a cast that finds
+                // nothing to take is never a cast that does nothing.
+                bool harrowed = spell.Craft == SiegeSpell.Harrow && Scatter(caster, spell.Ward);
+
                 // **A seal is refused where it cannot honestly be answered**, and there are two
                 // such places: a ward already sealed (a second clock the player could never
                 // finish - the boulder's rule, `SiegeWard.Condemn`) and the last ward standing
@@ -208,7 +254,8 @@ namespace GlimmerGrove.Modes
                 // is on the boss instead.
                 int taken = spell.Craft == SiegeSpell.Drain ? ward.Drain() : 0;
 
-                bool sundered = spell.Craft == SiegeSpell.Sunder && spell.Opens && ward.Sunder();
+                bool sundered = (spell.Craft == SiegeSpell.Sunder && spell.Opens && ward.Sunder())
+                             || harrowed;
 
                 var craft = spell.Craft == SiegeSpell.Devour || spell.Craft == SiegeSpell.Raise
                           ? SiegeSpell.Smite : spell.Craft;
@@ -704,6 +751,12 @@ namespace GlimmerGrove.Modes
 
                 _report.Bolts.Add(new SiegeBolt(w, target.Id, damage, weak, killed));
 
+                // **The one place a wane's reading is written** (`SiegeBoard._worked`). Beside
+                // the booking rather than beside the fuel, because what the verb asks is whether
+                // a bolt left the barrel - a stone-struck ward spends the fuel above and never
+                // reaches here, which is the answer a glare should give.
+                _worked[w] = true;
+
                 // **After the bolt has landed at full strength, never instead of it.** See
                 // `SiegeBoard.Line.cs` for why nothing in an ability may reduce the primary hit.
                 Ability(ward, w, target, damage);
@@ -1067,6 +1120,18 @@ namespace GlimmerGrove.Modes
                         if (ward.Doomed) continue;
                         if (OnTheLine <= 1) { rank = ward.Health; break; }
                         rank = (long)(64 - Pressing(ward.Colour)) * 64L + ward.Health;
+                        break;
+
+                    // **A harrow wants the best-ranked ward**, which is the sunder's reading
+                    // with the sunder's own reason: the rank is the verb, so the post with none
+                    // is the last one it wants. What differs is what happens next - the rank is
+                    // dropped rather than destroyed (`SiegeSpell.Harrow`) - and that is why an
+                    // unranked line is not refused here: it falls through to the freshest and
+                    // takes its `CastOf` like any other spell, for the colossus's reason
+                    // (`SiegeTuning.CastRetry` over a line with nothing to take is a boss
+                    // standing still).
+                    case SiegeSpell.Harrow:
+                        rank = (long)ward.Rank * 64L + ward.Health;
                         break;
 
                     default:

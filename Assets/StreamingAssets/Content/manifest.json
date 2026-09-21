@@ -272,6 +272,26 @@
       ]
     },
     {
+      "id": "s08_bonereach",
+      "version": 1,
+      "order": 152,
+      "disabled": false,
+      "minAppVersion": 0,
+      "mode": "siege",
+      "levels": [
+        "s08_firstreach",
+        "s08_bonespur",
+        "s08_ropebridge",
+        "s08_crystalrise",
+        "s08_harrowgate",
+        "s08_thinair",
+        "s08_shatterstep",
+        "s08_deadfall",
+        "s08_thelastspan",
+        "s08_hollowcrown"
+      ]
+    },
+    {
       "id": "s02_endlesswatch",
       "version": 1,
       "order": 150,

@@ -94,6 +94,19 @@ namespace GlimmerGrove.Modes
         /// </summary>
 
         readonly SiegeWard[] _wards;
+
+        /// <summary>
+        /// Whether each ward has landed a bolt since the last wane was cast
+        /// (<see cref="SiegeSpell.Wane"/>).
+        ///
+        /// <b>Bolts rather than <c>SiegeWard.Shots</c>, and the difference is one boss.</b> A
+        /// stone-struck ward takes a shot, spends the fuel and lands nothing
+        /// (<see cref="SiegeSpell.Glare"/>) and still counts a shot - so a reading taken off
+        /// that counter would call a ward the gorgon had frozen "working". What a wane asks is
+        /// whether anything left the barrel, which is exactly what a booked <c>SiegeBolt</c>
+        /// means and nothing else on this board does.
+        /// </summary>
+        bool[] _worked;
         readonly List<SiegeRaider> _raiders = new List<SiegeRaider>(24);
         readonly SiegeReport _report = new SiegeReport();
         readonly List<SiegeCharge> _flying = new List<SiegeCharge>(16);
@@ -213,6 +226,11 @@ namespace GlimmerGrove.Modes
                 // line is resolved once and a ledger can move under a run when a sync lands.
                 _wards[i] = new SiegeWard(colour, Line.BuildAt(colour));
             }
+
+            // **What a wane measures**, one flag per post (`SiegeSpell.Wane`). Sized with the
+            // line rather than at `MaxWards`, so a three-ward level has three flags and nothing
+            // downstream has to remember which slots are real.
+            _worked = new bool[_wards.Length];
 
             _rest = SiegeTuning.FirstWaveAfter;
         }

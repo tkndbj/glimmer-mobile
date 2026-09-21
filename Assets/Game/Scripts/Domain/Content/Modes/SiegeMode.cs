@@ -492,6 +492,28 @@ namespace GlimmerGrove.Content
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("decree_muzzle")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("decree_hit")));
                     break;
+
+                // **The seventh chapter's two, and only one of them throws.** A harrower's claw
+                // crosses the hill at the ward it robs, so it has a flight, a flash and a
+                // landing of its own (`make_siege_art.rend`).
+                case SiegeKind.Harrower:
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("harrow")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("harrow_cast")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("rend")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("rend_muzzle")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("rend_hit")));
+                    break;
+
+                // **Two of its three reels, for the warbringer's reason**: a wane is aimed at no
+                // ward at all (`SiegeTuning.AimsAtAWard`), so nothing crosses the hill and no
+                // flight reel is ever asked for - which is what keeps a missing address from
+                // being loaded as a white rectangle (invariant 7b).
+                case SiegeKind.Hollowking:
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("hollow")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("hollow_cast")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("wane_muzzle")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("wane_hit")));
+                    break;
             }
         }
 

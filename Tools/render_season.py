@@ -84,9 +84,72 @@ NAVBAR_H = 190.0
 TEXT_X = 200.0
 HINT_W = 470.0
 
+#: `EventScreen.PassBadge` / `PassBadgeInset` / `PassBadgeDrop` / `PassBadgeTilt` — the value
+#: badge in the plate's top-left corner. Small because the plate is only 176 tall with a 128
+#: crest centred in it; the whole question this mirror answers is how much of that crest it
+#: covers, which no numeric gate can see. It answered it twice: at 88 set 50 in the two bursts
+#: read as one shape (hence rose rather than gold), and on the way back up 124 crowded the crest
+#: and 138 buried it. 110 is the largest that keeps a gap.
+BADGE = 110.0
+BADGE_INSET = 40.0
+BADGE_DROP = 24.0
+BADGE_TILT = 9.0
+
+#: `ProductCardBadges.Face` / `FaceShift` / `FaceRise` / `TextSize` / `TextFloor` — the flat
+#: field inside the burst, measured off the texture, and what a caption may use of it.
+FACE = .538
+FACE_SHIFT = -.009
+FACE_RISE = .021
+BADGE_TYPE = 20
+BADGE_FLOOR = 10
+
 #: The hint's box is two lines tall on purpose — `UIKit.Shrinkable` wraps and then truncates, so
 #: a one-line box shrinks a long sentence instead of widening it.
 HINT_H = 64.0
+
+
+def pass_percent():
+    """`SeasonValue.PassPercent` — what the paid column pays against what the pass costs.
+
+    Integer arithmetic in thousandths, exactly as the C# does it, because a badge that reads
+    258 in the game and 257 here is a mirror telling a comfortable lie (invariant 44d). The
+    paid column alone: the free one is paid whether or not anybody owns a pass.
+    """
+    gems_pack = min((p for p in STORE if p.get("shelf") == "gems" and p.get("gems", 0) > 0),
+                    key=lambda p: p["referenceUsdCents"], default=None)
+    coin_pack = min((p for p in STORE if p.get("shelf") == "coins" and p.get("credits", 0) > 0),
+                    key=lambda p: p["referenceUsdCents"], default=None)
+    if not gems_pack or not coin_pack or not SEASON.get("passGems"):
+        return 0
+
+    per_gem = max(1, (coin_pack["credits"] * gems_pack["referenceUsdCents"])
+                  // (gems_pack["gems"] * coin_pack["referenceUsdCents"]))
+
+    tiers = {t["id"]: t for t in TASKS.get("tiers", [])}
+    credits = gems = 0
+    for rung in SEASON["milestones"]:
+        tier = tiers.get(rung.get("premiumTier"))
+        if not tier:
+            return 0
+        chest = tier.get("chest") or {}
+        weight = max(1, sum(max(1, o.get("weight", 1)) for o in chest.get("options") or []))
+        c = g = 0
+        for band in chest.get("guaranteed") or []:
+            span = band["min"] + band["max"]
+            if band["kind"] == "credits":
+                c += span * weight
+            elif band["kind"] == "gems":
+                g += span * weight
+        for opt in chest.get("options") or []:
+            span, w = opt["min"] + opt["max"], max(1, opt.get("weight", 1))
+            if opt["kind"] == "credits":
+                c += span * w
+            elif opt["kind"] == "gems":
+                g += span * w
+        credits += c * 1000 // (2 * weight)
+        gems += g * 1000 // (2 * weight)
+
+    return credits // per_gem + gems
 
 
 def strings():
@@ -95,6 +158,7 @@ def strings():
 
 STR = strings()
 TASKS = json.loads(TABLE.read_text(encoding="utf-8"))["tasks"]
+STORE = json.loads(TABLE.read_text(encoding="utf-8"))["store"]["products"]
 #: The season the page draws, and which cycle of it.
 #:
 #: **The shipped season repeats** (`SeasonCycle`), so the manifest holds a *stem* and a window
@@ -305,6 +369,25 @@ def pass_banner(sheet, y, owned):
         K.paste(plate, K.fit(Image.open(K.UI / "ic_gem.png").convert("RGBA"), (glyph, glyph)),
                 left + run - glyph / 2, plate.height / 2 - 6)
     K.paste(sheet, plate, W / 2 + WIDTH / 2 - 166, cy)
+
+    # `EventScreen`'s value badge, drawn last for the same reason it is built last: it overlaps
+    # the crest's outer points and must sit over them. Hidden once the pass is held, because a
+    # value badge is a sales mark and there is then nothing to sell.
+    worth = pass_percent()
+    pct = worth * 100 // (SEASON.get("passGems", 1) * 1000) if worth else 0
+    if pct > 0 and not owned:
+        edge = W / 2 - WIDTH / 2
+        bx, by = edge + BADGE_INSET, cy - PASS_H / 2 + BADGE_DROP
+        burst = K.tint(K.fit(Image.open(K.UI / "Hud" / "burst.png").convert("RGBA"),
+                             (int(BADGE), int(BADGE))), K.ROSE)
+        # PIL turns anticlockwise and Unity's z-rotation does too, so the sign carries over.
+        K.paste(sheet, burst.rotate(BADGE_TILT, resample=Image.BICUBIC, expand=False), bx, by)
+        px = K.shrunk(sheet, txt("ui.mark.pass_value", pct),
+                      bx + BADGE * FACE_SHIFT, by - BADGE * FACE_RISE,
+                      BADGE * FACE, BADGE * FACE * .64,
+                      BADGE_TYPE, BADGE_FLOOR, outline=0)
+        print("  pass value badge: %d%%, settled at %dpx against a floor of %d"
+              % (pct, px, BADGE_FLOOR))
 
     return y + PASS_H + 14
 

@@ -843,6 +843,37 @@ marked *(art)* are one-line pointers — the working detail is in `CRAFT.md`.
    *delivers* rather than what it *does*, and moves par, both star lines and every utility's charge
    with it.
 
+37em. **A seventh chapter cost two boss verbs and nothing else, and the "nothing else" is the
+   entry worth keeping.** 37br's bill came due for the fourth time on 2026-09-20: twelve verbs
+   served six chapters, so Bonereach brought a **harrower** and a **hollowking** or repeated a
+   fight. **But it brought no charm** - `SiegeCharms.Upto` clamps at the roster's own length, so
+   the seventh chapter deals exactly what the sixth does, by the owner's call and by 37cg's
+   arithmetic: six free payoffs is what this hill can carry, and a seventh would be priced
+   against a mode already at the ceiling. **And it brought no cast** - `SiegeMode.MainCasts`
+   wraps at six, so it draws the insects, which is invariant 7c's bargain collecting rather than
+   a shortage. What is left as the chapter's identity is its **map**, its **surge** and its **two
+   fights**, and 37ef already said that is the right list.
+37en. **The two verbs left were the two that hand something *back*, and that is what separates
+   them from the twelve.** A **harrow** takes a rank off a ward and drops it on the hill as an
+   ordinary `SiegeCog` bound to that ward - so it is an overlord's sunder read the way a
+   sunlord's seal reads a gravemaw's devour: one is a loss and the other is a decision, and the
+   decision is the bomber's (40i, *when*). It reuses the cog entirely, which is why it cost the
+   board one method (`SiegeBoard.Scatter`) and the view one drawing: everything that already
+   draws, ages, tramples and spends a cog works on it untaught, including `Take`'s re-asked
+   ladder - a ward the harrower just robbed is by construction one rung short, so its cog is
+   always takeable. A **wane** strikes every ward that has landed no bolt since the boss's last
+   cast and leaves the rest alone, so it is **the only verb in this mode answered *before* it
+   lands**: the instruction is *keep all four working*, which is the opposite of what every
+   other fight here teaches, and a line fed evenly pays nothing at all. That is 5d passed by
+   arithmetic rather than by argument - there is an arrangement it rejects and an arrangement it
+   does not - and it is what stops it being a rally with a filter, since a roar takes the same
+   from all four whatever the player did. **Neither reaches par**, which is the first question to
+   ask of any new verb. Two things they cost that a reader will trip over: the wane is the second
+   spell aimed at **no ward** (`AimsAtAWard`, the rally's clause), so it is settled in `Arrive`
+   before the indexed path and has no flight reel at all; and what it reads is **booked bolts**
+   rather than `SiegeWard.Shots`, because a stone-struck ward takes a shot, spends the fuel and
+   lands nothing (37ec) and would otherwise count as working.
+
 **Adding a boss rung, or a boss.** A rung: author `boss: "<kind>:<colour>"` on rung five or ten, no
 other number; copy the rung into the chapter's table in `SiegeRuleTests.Chapters.cs` (`rungs.py` holds
 it to the body); **add the chapter to `SiegeRuleTests.ShippedChapters` if it is not there** — that one

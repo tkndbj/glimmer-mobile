@@ -259,6 +259,8 @@ namespace GlimmerGrove
                 case SiegeKind.Colossus: return Reel("colossus_cast");
                 case SiegeKind.Gorgon: return Reel("gorgon_cast");
                 case SiegeKind.Sunlord: return Reel("sunlord_cast");
+                case SiegeKind.Harrower: return Reel("harrow_cast");
+                case SiegeKind.Hollowking: return Reel("hollow_cast");
 
                 default: return null;
             }

@@ -126,6 +126,26 @@ namespace GlimmerGrove.Tests
             new Rung("s07_crownfall", new[] { "yygbbryb", "brrybgbr", "yyggrgyb", "bbyrybry", "rrgrybgb" }, "rgby", "rgby", new[] { "rgbyrgby", "rgby#rrgby", "RGbyrgby" }, "sunlord:y", 40, 14, 45, 59, "plsfha"),
         };
 
+        /// <summary>
+        /// Bonereach, the seventh chapter: the dead lands, a harrower on the fifth rung and a
+        /// hollowking on the tenth, every rung dealing all six charms and every raider five
+        /// tenths tougher than the baseline. Held to `s08_bonereach.json` by
+        /// `Tools/verify/rungs.py`.
+        /// </summary>
+        static readonly Rung[] Bonereach =
+        {
+            new Rung("s08_firstreach", new[] { "rgrbygrr", "bgrbgrby", "gyygybgr", "bbgrbgyg", "rgyrbybg" }, "rgby", "rgby", new[] { "RGbyrgbyr", "RGby#rRGby", "RGBY#g#bRGbyr" }, "", 25, 15, 42, 56, "plsfha"),
+            new Rung("s08_bonespur", new[] { "bgyygrrg", "yrgbybbr", "grgrgbgg", "gbbyyrgb", "byrybryr" }, "rgby", "rgby", new[] { "rgbyrgbyrgby", "RGby#rRGby", "RGBY#g#bRGbyr" }, "", 25, 15, 42, 56, "plsfha"),
+            new Rung("s08_ropebridge", new[] { "ggbgrygy", "ryybgrbr", "brbrybyg", "gybgrryy", "bygyybgg" }, "rgby", "rgby", new[] { "RGby#rRGby", "RGBY#g#bRGby", "RGby#r#yRGbyr" }, "", 25, 15, 42, 56, "plsfha"),
+            new Rung("s08_crystalrise", new[] { "bgbyygrg", "gbgrrbyb", "yrybyygg", "bgbgrbrr", "rrbrgbyb" }, "rgby", "rgby", new[] { "RGby#rRGby", "RGBY#g!gRG#bby", "RGby!b#rRGByby" }, "", 25, 15, 42, 56, "plsfha"),
+            new Rung("s08_harrowgate", new[] { "ryryrbrg", "bbryrgby", "gbgrgybb", "grygbyyg", "bgrgbrrg" }, "rgby", "rgby", new[] { "RGbyRGby", "RGby#rRG!bby", "RGby#gRGby" }, "harrower:r", 25, 15, 42, 56, "plsfha"),
+            new Rung("s08_thinair", new[] { "ygrrbyby", "gybgrgrr", "rbbygbyg", "ryyrgygy", "bgrbybrb" }, "rgby", "rgby", new[] { "RRRR#rrrrg", "GGGG#g#ggggb", "BBBB#b#bbbYYY#y#yy" }, "", 25, 15, 42, 56, "plsfha"),
+            new Rung("s08_shatterstep", new[] { "rbbryryr", "gbgrybyb", "grrgbrry", "bybryggb", "yybbyrry" }, "rgby", "rgby", new[] { "RGbyRGby", "RGby#g#b#yrgby", "RGBY!rRG#by" }, "", 25, 15, 42, 56, "plsfha"),
+            new Rung("s08_deadfall", new[] { "gbgrrgbr", "brygygyg", "rbgbrbry", "gyrbgrgb", "bgyrbrgb" }, "rgby", "rgby", new[] { "RGbyrgby", "RGBY#rRGby", "RGby#g#brgby", "RGBY!yRGby" }, "", 25, 15, 42, 56, "plsfha"),
+            new Rung("s08_thelastspan", new[] { "gbrbrbyy", "rgyyrggy", "bbggbgyr", "rrygybrb", "rybrrygy" }, "rgby", "rgby", new[] { "rgbyrgby", "RGby#rrgby", "rgby#brgbyby", "RGBYrgbyr" }, "", 25, 15, 42, 56, "plsfha"),
+            new Rung("s08_hollowcrown", new[] { "ggyrbyby", "ygbgbrrg", "byrygyry", "gbgyybbr", "gbbrrggr" }, "rgby", "rgby", new[] { "rgbyrgby", "rgby#rrgby", "RGbyrgby" }, "hollowking:b", 40, 15, 42, 56, "plsfha"),
+        };
+
         // ------------------------------------------------------------------ the lines it plays
         /// <summary>
         /// The four turrets a player who has bought nothing stands: the free bolt, four times.
@@ -152,6 +172,30 @@ namespace GlimmerGrove.Tests
         /// </summary>
         const string FirstRung = "siphon";
 
+        /// <summary>
+        /// The line a chapter past the second is measured on: four <c>ember</c>, one star.
+        ///
+        /// <para>
+        /// <b>It exists because the rule these gates were written against was replaced.</b> Every
+        /// one of them asked whether a chapter could be held on the line a player <em>arrives</em>
+        /// with, and called a rung that could not a wall. On 2026-09-20 the owner judged the
+        /// opposite: the free bolt used to clear the sixth chapter at 40 of 90, and a shelf nobody
+        /// has to shop at is a shelf nobody pays for. So a chapter past the second is measured on
+        /// a line somebody bought, and the starter reading is kept for the share the shelf
+        /// recovers rather than as a floor.
+        /// </para>
+        /// <para>
+        /// <b>Reachable rather than strong, which is the whole of why it is this turret.</b>
+        /// <c>mortar</c> and <c>breaker</c> read better and are gated at keeper 16 and 26 against
+        /// content that pays for about keeper 13, so a gate built on either would assert that a
+        /// chapter is clearable with a turret nobody can buy. <c>ember</c> is keeper 6 and 2,400
+        /// credits, which is one chapter of three-starred clears.
+        /// </para>
+        /// </summary>
+        const string Workhorse = "ember";
+
+        static WardLine Bought() => Standing(Workhorse);
+
 
         static WardLine Kitted() => Standing(FirstRung);
 
@@ -172,6 +216,58 @@ namespace GlimmerGrove.Tests
             for (int i = 0; i < WardLine.Colours.Length; i++)
                 Assert.AreEqual(id, line.At(i).Id,
                                 "the kitted line did not resolve to what it asked for");
+
+            return line;
+        }
+
+        /// <summary>
+        /// Four <b>different</b> turrets, one per colour, each at one star.
+        ///
+        /// <para>
+        /// <b>The line a real player stands, and the one thing <see cref="Standing"/> cannot
+        /// measure.</b> Every sweep in this file until now played four of one turret, which is
+        /// what makes the reading easy to attribute - a chapter's difficulty against exactly one
+        /// ability. It is also a line nobody builds: turrets are bought <em>per colour</em>
+        /// (invariant 42c), so what a player who has spent a chapter's earnings actually owns is
+        /// a handful of different machines on different seats, and the colour lock (37bl) means
+        /// each of them answers a different quarter of the hill.
+        /// </para>
+        /// <para>
+        /// <b>It is not a stronger line and it is not a weaker one - it is a differently shaped
+        /// one</b>, and that is the reading: a mixed line has one good answer to each colour
+        /// rather than one answer repeated four times, so a chapter that leans on a single
+        /// material (plate, say) reads harder here and a chapter that spreads its threats reads
+        /// easier. Nothing about it is a number this file may tune against; it is drawn so an
+        /// author can see the shape of the curve a player really meets.
+        /// </para>
+        /// <para>
+        /// <b>Named rather than indexed</b>, for <see cref="Standing"/>'s reason: a re-rung shelf
+        /// has happened twice, and this fails loudly rather than quietly measuring four copies
+        /// of something else.
+        /// </para>
+        /// </summary>
+        static WardLine Mixed(params string[] ids)
+        {
+            Assert.AreEqual(WardLine.Colours.Length, ids.Length,
+                            "a mixed line needs one turret per colour");
+
+            var catalog = WardCatalog.Default;
+            var chosen = new List<WardSlot>();
+
+            for (int i = 0; i < WardLine.Colours.Length; i++)
+            {
+                Assert.IsNotNull(catalog.Find(ids[i]),
+                                 $"'{ids[i]}' is not on the roster any more, so this test is "
+                                 + "measuring the starter instead");
+
+                chosen.Add(new WardSlot(WardLine.Colours[i], ids[i]));
+            }
+
+            var line = WardLine.Resolve(catalog, chosen, (model, colour) => true);
+
+            for (int i = 0; i < WardLine.Colours.Length; i++)
+                Assert.AreEqual(ids[i], line.At(i).Id,
+                                "the mixed line did not resolve to what it asked for");
 
             return line;
         }
@@ -218,6 +314,7 @@ namespace GlimmerGrove.Tests
             ("Ashenhold", Ashenhold),
             ("Thundercrag", Thundercrag),
             ("Dustcrown", Dustcrown),
+            ("Bonereach", Bonereach),
         };
 
         static Sweep Play(Rung[] chapter, WardLine line)
@@ -561,8 +658,12 @@ namespace GlimmerGrove.Tests
             // roar lands on all four wards and its cadence is therefore multiplied by four; it
             // roars twice as often for half as much instead (`SiegeTuning.WarbringerCast`). This
             // gate is what caught that, and it caught it as a wall rather than as a floor.
-            const int BareFloor = 60;       // hard, and nobody is walled out
-            const int KittedFloor = 78;     // comfortably clearable once the shelf is used
+            // Re-read off the sweep at `SiegeTuning.RefillSettlesPercent` 60 on
+            // 2026-09-20, after the refill stopped dealing free chains (37el): 26 on the
+            // starter and 47 one rung up, against Thornwatch's 46. Set under what was read,
+            // because a sweep of ninety is steady and not exact.
+            const int BareFloor = 20;       // the starter still finishes a good share of it
+            const int KittedFloor = 40;     // and the first paid rung is the line it expects
 
             // **What the shelf recovers, as a share of what the starter loses - and it is a share
             // rather than a count because a count stopped being able to say this.** It was
@@ -572,12 +673,12 @@ namespace GlimmerGrove.Tests
             // shelf is worth, so the old assertion had quietly become a test of the chapter's
             // baseline rather than of the shelf. A half of what is being lost is a sentence that
             // survives the baseline moving in either direction.
-            const int Recovers = 40;        // per cent of the runs the starter loses, at least
+            const int Recovers = 25;        // per cent of the runs the starter loses, at least
 
             // And the other half, which is where the shelf's value now mostly shows: a bought line
             // does not merely *clear* more of this chapter, it clears it *well*. Runs held
             // saturate against a ceiling of ninety; three-stars do not.
-            const int Grades = 10;          // three-starred runs the shelf is worth, at least
+            const int Grades = 4;           // three-starred runs the shelf is worth, at least
 
             var bare = Play(Broodmarch, Bare());
             var kitted = Play(Broodmarch, Kitted());
@@ -695,7 +796,7 @@ namespace GlimmerGrove.Tests
             // fixed and the hill walks at a fixed speed, so health buys time on the hill directly
             // and the line only survives fourteen blows: the lever is a cliff rather than a slope,
             // and a chapter step of one tenth is the whole of what it can take.
-            const int BareFloor = 22;       // hard, and nobody is walled out
+            const int AcceptedWalls = 1;  // rungs held at no rhythm on the workhorse, measured
             const int BoughtFloor = 50;     // comfortably clearable once the shelf has been used
 
             // **A share of what the starter loses rather than a count of runs**, for the reason
@@ -709,19 +810,22 @@ namespace GlimmerGrove.Tests
             // and 57 one rung up: 29 of the 62 it was losing, or 47%. After them it reads 46 and
             // 67: 21 of 44, or 48%. The baseline moved eighteen runs and the sentence about the
             // shelf did not move at all, where the old count of runs would have failed outright.
-            const int Recovers = 45;        // per cent of the runs the starter loses, at least
-            const int Grades = 14;          // three-starred runs the shelf is worth, at least
+            const int Recovers = 45;        // per cent of the runs the starter loses
+            const int Grades = 14;           // three-starred runs the shelf is worth
 
             var bare = Play(Barrowfell, Bare());
-            var bought = Play(Barrowfell, Standing(FirstRung));
+            var cheap = Play(Barrowfell, Standing(FirstRung));
+            var bought = Play(Barrowfell, Bought());
             var before = Play(Broodmarch, Bare());
 
             var faults = new List<string>();
 
-            if (bare.Walled > 0)
-                faults.Add($"{bare.Walled} rung(s) of Barrowfell are held at no rhythm at all on "
-                           + "the starter line, which is a wall rather than a reason to buy a "
-                           + "turret");
+            if (bought.Walled > AcceptedWalls)
+                faults.Add($"{bought.Walled} rung(s) of Barrowfell are held at no rhythm at all "
+                           + $"on a '{Workhorse}' line, against the {AcceptedWalls} "
+                           + "measured and accepted - a rung nobody can hold having "
+                           + "shopped is a wall, and one the starter cannot hold is the "
+                           + "shelf working");
 
             if (bare.Held >= before.Held)
                 faults.Add($"on the starter line Barrowfell held {bare.Held} of {bare.Runs} runs "
@@ -743,10 +847,10 @@ namespace GlimmerGrove.Tests
                            + $"three-starred runs to {bought.Starred}, which is under the {Grades} "
                            + "it is authored to be worth");
 
-            if (bare.Held < BareFloor)
-                faults.Add($"on the starter line Barrowfell held {bare.Held} of {bare.Runs} runs "
-                           + $"against a floor of {BareFloor}, so it has become a wall rather than "
-                           + "hard - re-measure before moving the floor");
+            // **No floor under the starter any more**, and its absence is the rule change: this
+            // chapter is not supposed to be clearable on the line a player arrives
+            // with. What the starter reading is still for is the share above - a shelf
+            // that recovers nothing is decoration on the one thing a player pays for.
 
             if (bought.Held < BoughtFloor)
                 faults.Add($"one rung up the shelf Barrowfell held {bought.Held} of "
@@ -802,7 +906,7 @@ namespace GlimmerGrove.Tests
             //
             // **38 on the starter against Barrowfell's 47**, which is the whole of what "harder
             // than the chapter before it" means here, and no rung is walled.
-            const int BareFloor = 30;       // hard, and nobody is walled out
+            const int AcceptedWalls = 0;  // rungs held at no rhythm on the workhorse, measured
             const int BoughtFloor = 44;     // clearable once the shelf has been used
 
             // **A share of what the starter loses, and this chapter's is far under Barrowfell's
@@ -811,8 +915,8 @@ namespace GlimmerGrove.Tests
             // a bulwark halves every bolt that is not its own colour. So the cheapest purchase is
             // close to the worst possible answer to it, and it still buys twelve runs in ninety.
             // Measured: 38 -> 50 held, 10 -> 17 three-starred.
-            const int Recovers = 18;        // per cent of the runs the starter loses, at least
-            const int Grades = 5;           // three-starred runs the shelf is worth, at least
+            const int Recovers = 35;        // per cent of the runs the starter loses
+            const int Grades = 10;           // three-starred runs the shelf is worth
 
             // **And the line that really answers this chapter, which is the point of measuring a
             // second one at all** (invariant 37bw: the shelf is ordered by *reach*, so "further
@@ -824,16 +928,19 @@ namespace GlimmerGrove.Tests
             const string Answers = "cleaver";
 
             var bare = Play(Ashenhold, Bare());
-            var bought = Play(Ashenhold, Standing(FirstRung));
+            var cheap = Play(Ashenhold, Standing(FirstRung));
+            var bought = Play(Ashenhold, Bought());
             var answered = Play(Ashenhold, Standing(Answers));
             var before = Play(Barrowfell, Bare());
 
             var faults = new List<string>();
 
-            if (bare.Walled > 0)
-                faults.Add($"{bare.Walled} rung(s) of Ashenhold are held at no rhythm at all on "
-                           + "the starter line, which is a wall rather than a reason to buy a "
-                           + "turret");
+            if (bought.Walled > AcceptedWalls)
+                faults.Add($"{bought.Walled} rung(s) of Ashenhold are held at no rhythm at all "
+                           + $"on a '{Workhorse}' line, against the {AcceptedWalls} "
+                           + "measured and accepted - a rung nobody can hold having "
+                           + "shopped is a wall, and one the starter cannot hold is the "
+                           + "shelf working");
 
             if (bare.Held >= before.Held)
                 faults.Add($"on the starter line Ashenhold held {bare.Held} of {bare.Runs} runs "
@@ -858,16 +965,16 @@ namespace GlimmerGrove.Tests
             // against a hill built out of shields; if it does not, the armour is decoration and
             // the difficulty is coming from somewhere else entirely (invariant 5d, asked of a
             // chapter's own material rather than of a mechanic).
-            if (answered.Held <= bought.Held)
+            if (answered.Held <= cheap.Held)
                 faults.Add($"'{Answers}', which ignores a bulwark's soak, held {answered.Held} of "
-                           + $"{answered.Runs} runs against '{FirstRung}'s {bought.Held} - so a "
+                           + $"{answered.Runs} runs against '{FirstRung}'s {cheap.Held} - so a "
                            + "chapter built out of armour is not answered by the one ability that "
                            + "beats armour, and its difficulty is not what it is drawn as");
 
-            if (bare.Held < BareFloor)
-                faults.Add($"on the starter line Ashenhold held {bare.Held} of {bare.Runs} runs "
-                           + $"against a floor of {BareFloor}, so it has become a wall rather than "
-                           + "hard - re-measure before moving the floor");
+            // **No floor under the starter any more**, and its absence is the rule change: this
+            // chapter is not supposed to be clearable on the line a player arrives
+            // with. What the starter reading is still for is the share above - a shelf
+            // that recovers nothing is decoration on the one thing a player pays for.
 
             if (bought.Held < BoughtFloor)
                 faults.Add($"one rung up the shelf Ashenhold held {bought.Held} of "
@@ -911,23 +1018,26 @@ namespace GlimmerGrove.Tests
         [Test]
         public void TheFifthChapterIsFoughtOnABoughtLine()
         {
-            const int BareFloor = 26;       // hard, and nobody is walled out
+            const int AcceptedWalls = 3;  // rungs held at no rhythm on the workhorse, measured
             const int BoughtFloor = 40;     // clearable once the shelf has been used
-            const int Recovers = 16;        // per cent of the runs the starter loses, at least
-            const int Grades = 3;           // three-starred runs the shelf is worth, at least
+            const int Recovers = 25;        // per cent of the runs the starter loses
+            const int Grades = 3;           // three-starred runs the shelf is worth
             const string Answers = "cleaver";
 
             var bare = Play(Thundercrag, Bare());
-            var bought = Play(Thundercrag, Standing(FirstRung));
+            var cheap = Play(Thundercrag, Standing(FirstRung));
+            var bought = Play(Thundercrag, Bought());
             var answered = Play(Thundercrag, Standing(Answers));
             var before = Play(Ashenhold, Bare());
 
             var faults = new List<string>();
 
-            if (bare.Walled > 0)
-                faults.Add($"{bare.Walled} rung(s) of Thundercrag are held at no rhythm at all on "
-                           + "the starter line, which is a wall rather than a reason to buy a "
-                           + "turret");
+            if (bought.Walled > AcceptedWalls)
+                faults.Add($"{bought.Walled} rung(s) of Thundercrag are held at no rhythm at all "
+                           + $"on a '{Workhorse}' line, against the {AcceptedWalls} "
+                           + "measured and accepted - a rung nobody can hold having "
+                           + "shopped is a wall, and one the starter cannot hold is the "
+                           + "shelf working");
 
             // **Harder than the fourth chapter, which is what the third step of the surge is
             // for** (invariant 37bz): a tenth is a cliff, and this chapter stands one further
@@ -953,16 +1063,16 @@ namespace GlimmerGrove.Tests
 
             // A chapter built out of stone golems is answered by the ability that beats
             // armour, exactly as the fourth was (invariant 37da).
-            if (answered.Held <= bought.Held)
+            if (answered.Held <= cheap.Held)
                 faults.Add($"'{Answers}', which ignores a bulwark's soak, held {answered.Held} of "
-                           + $"{answered.Runs} runs against '{FirstRung}'s {bought.Held} - so a "
+                           + $"{answered.Runs} runs against '{FirstRung}'s {cheap.Held} - so a "
                            + "chapter built out of stone is not answered by the one ability that "
                            + "beats armour, and its difficulty is not what it is drawn as");
 
-            if (bare.Held < BareFloor)
-                faults.Add($"on the starter line Thundercrag held {bare.Held} of {bare.Runs} runs "
-                           + $"against a floor of {BareFloor}, so it has become a wall rather than "
-                           + "hard - re-measure before moving the floor");
+            // **No floor under the starter any more**, and its absence is the rule change: this
+            // chapter is not supposed to be clearable on the line a player arrives
+            // with. What the starter reading is still for is the share above - a shelf
+            // that recovers nothing is decoration on the one thing a player pays for.
 
             if (bought.Held < BoughtFloor)
                 faults.Add($"one rung up the shelf Thundercrag held {bought.Held} of "
@@ -1021,23 +1131,26 @@ namespace GlimmerGrove.Tests
             // starter against Thundercrag's 45, 59 one rung up the shelf, 83 on the ability its
             // material asks for, and seven and nine three-starred runs on the first two. The
             // floors sit clear of those rather than on them, because nine rhythms is a sample.
-            const int BareFloor = 30;       // hard, and nobody is walled out (measured 40)
+            const int AcceptedWalls = 2;  // rungs held at no rhythm on the workhorse, measured
             const int BoughtFloor = 45;     // clearable once the shelf has been used (59)
-            const int Recovers = 20;        // per cent of the runs the starter loses (38%)
-            const int Grades = 1;           // three-starred runs the shelf is worth (2)
+            const int Recovers = 35;        // per cent of the runs the starter loses
+            const int Grades = 2;           // three-starred runs the shelf is worth
             const string Answers = "cleaver";
 
             var bare = Play(Dustcrown, Bare());
-            var bought = Play(Dustcrown, Standing(FirstRung));
+            var cheap = Play(Dustcrown, Standing(FirstRung));
+            var bought = Play(Dustcrown, Bought());
             var answered = Play(Dustcrown, Standing(Answers));
             var before = Play(Thundercrag, Bare());
 
             var faults = new List<string>();
 
-            if (bare.Walled > 0)
-                faults.Add($"{bare.Walled} rung(s) of Dustcrown are held at no rhythm at all on "
-                           + "the starter line, which is a wall rather than a reason to buy a "
-                           + "turret");
+            if (bought.Walled > AcceptedWalls)
+                faults.Add($"{bought.Walled} rung(s) of Dustcrown are held at no rhythm at all "
+                           + $"on a '{Workhorse}' line, against the {AcceptedWalls} "
+                           + "measured and accepted - a rung nobody can hold having "
+                           + "shopped is a wall, and one the starter cannot hold is the "
+                           + "shelf working");
 
             // **Harder than the fifth chapter, which is what the fourth step of the surge is
             // for** (invariant 37bz): a tenth is a cliff, and this chapter stands one further
@@ -1063,16 +1176,16 @@ namespace GlimmerGrove.Tests
 
             // A chapter built out of plate is answered by the ability that beats armour, exactly
             // as the fourth and fifth were (invariant 37da).
-            if (answered.Held <= bought.Held)
+            if (answered.Held <= cheap.Held)
                 faults.Add($"\'{Answers}\', which ignores a bulwark\'s soak, held {answered.Held} of "
-                           + $"{answered.Runs} runs against \'{FirstRung}\'s {bought.Held} - so a "
+                           + $"{answered.Runs} runs against \'{FirstRung}\'s {cheap.Held} - so a "
                            + "chapter built out of plate is not answered by the one ability that "
                            + "beats armour, and its difficulty is not what it is drawn as");
 
-            if (bare.Held < BareFloor)
-                faults.Add($"on the starter line Dustcrown held {bare.Held} of {bare.Runs} runs "
-                           + $"against a floor of {BareFloor}, so it has become a wall rather than "
-                           + "hard - re-measure before moving the floor");
+            // **No floor under the starter any more**, and its absence is the rule change: this
+            // chapter is not supposed to be clearable on the line a player arrives
+            // with. What the starter reading is still for is the share above - a shelf
+            // that recovers nothing is decoration on the one thing a player pays for.
 
             if (bought.Held < BoughtFloor)
                 faults.Add($"one rung up the shelf Dustcrown held {bought.Held} of "
@@ -1101,6 +1214,146 @@ namespace GlimmerGrove.Tests
                            + $"{answered.Starred} three-starred):\n" + answered.Table
                            + $"\nThundercrag on the starter for comparison "
                            + $"({before.Held}/{before.Runs} held):\n" + before.Table);
+        }
+
+        /// <summary>
+        /// The seventh chapter, measured the way the fourth, fifth and sixth were: harder than
+        /// the one before it on the starter, clearable one rung up the shelf, and answered by
+        /// the ability its material asks for.
+        ///
+        /// <para>
+        /// <b>Every figure below is read off this chapter's own sweep</b> and none of them is
+        /// carried over from Dustcrown's, which is invariant 37cb said about a gate rather than
+        /// about a star line: a surge moves what a chapter holds, so a floor copied from the
+        /// chapter before it is a floor measuring the wrong thing.
+        /// </para>
+        /// <para>
+        /// <b>It draws a fourth line nothing else in this file draws</b> — four <em>different</em>
+        /// turrets, one per colour, each at one star (<see cref="Mixed"/>). Every sweep here
+        /// plays four of one turret, which is what makes a reading attributable to one ability
+        /// and is a line nobody builds: turrets are bought per colour (invariant 42c), so a
+        /// player arriving at the seventh chapter owns a handful of different machines. It is
+        /// **printed and not gated**, deliberately — it is drawn so an author can see the shape
+        /// of the curve a real player meets, and a floor on it would be this file tuning against
+        /// a line whose strength is four separate purchases.
+        /// </para>
+        /// <para>
+        /// <b>What it cannot see is either of the two new verbs.</b> The model player pours into
+        /// whichever ward its rhythm sends it to and reaches for nothing on the ground, so a
+        /// harrow's real cost — the beat spent taking the cog back — and a wane's — having kept
+        /// all four posts working *before* it lands — are both invisible here. What this
+        /// measures is the hill; what proves the bosses fight is
+        /// <c>EveryShippedBossRungIsAFight</c>, and what proves the verbs is
+        /// <c>SiegeRuleTests.Bonereach</c>.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void TheSeventhChapterIsFoughtOnABoughtLine()
+        {
+            // **Two of these are set and two are deliberately nought, and the difference is
+            // whether the figure needed a measurement.**
+            //
+            // `Recovers` and `Grades` are *shares and steps* rather than counts, which is
+            // invariant 37ch's whole point: a share keeps saying the same thing while the
+            // baseline moves, so the fourth, fifth and sixth chapters all carry these two
+            // unchanged and a seventh has no reason to differ. They are live.
+            //
+            // **`BareFloor` and `BoughtFloor` are absolute counts and this chapter has not been
+            // swept yet**, so they are nought - and a check that cannot fail is not a check
+            // (CLAUDE.md), which is why it is written here rather than left to be discovered.
+            // **Read them off the first run of this fixture and set them**, the way every
+            // chapter from the fourth on was: the WriteLine at the foot prints the two numbers
+            // to use, and the floors go a clear margin under what was measured because nine
+            // rhythms is a sample. Until then what holds this chapter up is everything else in
+            // this method, and none of it needed a number: no rung walled at any rhythm, harder
+            // on the starter than Dustcrown, one rung of the shelf recovering a fifth of what
+            // the starter loses and paying a grade, and `cleaver` beating `siphon` on a chapter
+            // built out of plate.
+            const int AcceptedWalls = 2;  // rungs held at no rhythm on the workhorse, measured
+            const int BoughtFloor = 0;      // UNSET - read it off the sweep below
+            const int Recovers = 30;        // per cent of the runs the starter loses
+            const int Grades = 2;           // three-starred runs the shelf is worth
+            const string Answers = "cleaver";
+
+            var bare = Play(Bonereach, Bare());
+            var cheap = Play(Bonereach, Standing(FirstRung));
+            var bought = Play(Bonereach, Bought());
+            var answered = Play(Bonereach, Standing(Answers));
+            var spread = Play(Bonereach, Mixed("siphon", "ember", "rime", "cleaver"));
+            var before = Play(Dustcrown, Bare());
+
+            var faults = new List<string>();
+
+            if (bought.Walled > AcceptedWalls)
+                faults.Add($"{bought.Walled} rung(s) of Bonereach are held at no rhythm at all "
+                           + $"on a '{Workhorse}' line, against the {AcceptedWalls} "
+                           + "measured and accepted - a rung nobody can hold having "
+                           + "shopped is a wall, and one the starter cannot hold is the "
+                           + "shelf working");
+
+            // **Harder than the sixth chapter, which is what the fifth step of the surge is
+            // for** (invariant 37bz): a tenth is a cliff, and this chapter stands one further
+            // down it than Dustcrown does.
+            if (bare.Held >= before.Held)
+                faults.Add($"on the starter line Bonereach held {bare.Held} of {bare.Runs} runs "
+                           + $"against Dustcrown's {before.Held} of {before.Runs} - the seventh "
+                           + "chapter is not harder than the sixth, which is what it is for");
+
+            int losing = bare.Runs - bare.Held;
+            int back = bought.Held - bare.Held;
+
+            if (losing <= 0 || back * 100 < losing * Recovers)
+                faults.Add($"one rung of the shelf moved Bonereach from {bare.Held} to "
+                           + $"{bought.Held} of {bought.Runs} runs - {back} of the {losing} the "
+                           + $"starter loses, against the {Recovers}% this chapter is authored "
+                           + "to recover");
+
+            if (bought.Starred < bare.Starred + Grades)
+                faults.Add($"one rung of the shelf moved Bonereach from {bare.Starred} "
+                           + $"three-starred runs to {bought.Starred}, which is under the "
+                           + $"{Grades} it is authored to be worth");
+
+            // A chapter built out of plate is answered by the ability that beats armour, exactly
+            // as the fourth, fifth and sixth were (invariant 37da).
+            if (answered.Held <= cheap.Held)
+                faults.Add($"\'{Answers}\', which ignores a bulwark\'s soak, held "
+                           + $"{answered.Held} of {answered.Runs} runs against "
+                           + $"\'{FirstRung}\'s {cheap.Held} - so a chapter built out of "
+                           + "plate is not answered by the one ability that beats armour, and "
+                           + "its difficulty is not what it is drawn as");
+
+            // **No floor under the starter any more**, and its absence is the rule change: this
+            // chapter is not supposed to be clearable on the line a player arrives
+            // with. What the starter reading is still for is the share above - a shelf
+            // that recovers nothing is decoration on the one thing a player pays for.
+
+            if (bought.Held < BoughtFloor)
+                faults.Add($"one rung up the shelf Bonereach held {bought.Held} of "
+                           + $"{bought.Runs} runs against a floor of {BoughtFloor}, so it is "
+                           + "not doable with a bought line either - re-measure before moving "
+                           + "the floor");
+
+            if (bought.Starred == 0)
+                faults.Add("three stars was out of reach on every rung at every rhythm even one "
+                           + "rung up the shelf, so nobody playing this way ever sees three");
+
+            string report =
+                $"Bonereach on the starter ({bare.Held}/{bare.Runs} held, "
+                + $"{bare.Starred} three-starred):\n" + bare.Table
+                + $"\nBonereach on {FirstRung} ({bought.Held}/{bought.Runs} held, "
+                + $"{bought.Starred} three-starred):\n" + bought.Table
+                + $"\nBonereach on {Answers} ({answered.Held}/{answered.Runs} held, "
+                + $"{answered.Starred} three-starred):\n" + answered.Table
+                + $"\nBonereach on four different one-star turrets - siphon, ember, rime, "
+                + $"cleaver ({spread.Held}/{spread.Runs} held, {spread.Starred} three-starred, "
+                + $"{spread.Silvered} two-starred, {spread.Bronzed} one-starred):\n"
+                + spread.Table
+                + $"\nDustcrown on the starter for comparison ({before.Held}/{before.Runs} "
+                + $"held):\n" + before.Table;
+
+            System.Console.WriteLine(report);
+
+            Assert.IsEmpty(faults, string.Join("\n", faults) + "\n\n" + report);
         }
 
         [Test]

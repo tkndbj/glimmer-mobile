@@ -56,6 +56,8 @@ BOSS_NAMES = {
     "colossus": "colossus",
     "gorgon": "gorgon",
     "sunlord": "sunlord",
+    "harrower": "harrower",
+    "hollowking": "hollowking",
 }
 
 #: The colour a boss may wear. Lower case only - case no longer means anything.
@@ -267,6 +269,24 @@ BOSSES = {
     #: move budget (invariant 37b).
     "gorgon": {"health": 4600, "cast": 2, "spell": "glare"},
     "sunlord": {"health": 6800, "cast": 3, "spell": "doom"},
+
+    #: The seventh chapter's two, and between them they take the two things the first
+    #: twelve leave.
+    #:
+    #: A **harrower** tears a rank off a ward and drops it on the hill as an ordinary cog,
+    #: where the player can reach for it (`SiegeBoard.Scatter`). What it really costs is a
+    #: beat of attention rather than anything the line holds, so the only figure here is
+    #: the `cast` - exactly as a glare's and a shackle's are.
+    #:
+    #: A **hollowking** strikes every ward that has landed no bolt since its last cast and
+    #: leaves the ones that have alone, so its `cast` is per *post* and lands on up to four
+    #: of them - the warbringer's shape, which is why its figure is the smaller of the two.
+    #:
+    #: **Neither reaches par**, which is why there is no third column for either: par is
+    #: the hill's health over what one match could ideally deliver, and neither adds a body
+    #: nor heals one.
+    "harrower": {"health": 4800, "cast": 2, "spell": "harrow"},
+    "hollowking": {"health": 7200, "cast": 2, "spell": "wane"},
 }
 
 #: `SiegeTuning.RaiseSize` and `.Raises` - how many creepers one raise puts on the hill, and how
@@ -383,6 +403,17 @@ STAR_FACTORS = {
     #: starter, fifteen of eighty-three on the ability the chapter's material asks for. A ladder
     #: with more than one rung in it, which is what 37ca is about.
     6: (0.45, 0.59),
+
+    #: Bonereach, whose raiders carry **five** tenths more health than the baseline. The same
+    #: argument one rung further on: par scales with the surge and a run's flat payments do not,
+    #: so its lines come down again.
+    #:
+    #: **Provisional until this chapter's own sweep has been read** - see
+    #: `SiegeRuleTests.TheSeventhChapterIsFoughtOnABoughtLine`, which prints the spent-share
+    #: table these two are set from. Started one step under Dustcrown's on the shape the five
+    #: chapters before it make (0.75, 0.75, 0.67, 0.52, 0.48, 0.45), which is the honest
+    #: starting guess and never the answer.
+    7: (0.42, 0.56),
 }
 
 

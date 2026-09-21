@@ -202,6 +202,8 @@ namespace GlimmerGrove.Modes
             ("colossus", SiegeKind.Colossus),
             ("gorgon", SiegeKind.Gorgon),
             ("sunlord", SiegeKind.Sunlord),
+            ("harrower", SiegeKind.Harrower),
+            ("hollowking", SiegeKind.Hollowking),
         };
 
         /// <summary>The colour a boss may wear. Lower case only — case no longer means anything.</summary>

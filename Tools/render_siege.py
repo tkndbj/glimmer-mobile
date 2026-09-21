@@ -978,6 +978,13 @@ BOSSES = {
     # pair. Both rows written with the bosses, for the shackler's reason two comments up.
     "gorgon": dict(hold=0.52, tall=3.4, stem="gorgon", fx="gaze", fire=(217, 195, 154)),
     "sunlord": dict(hold=0.44, tall=3.6, stem="sunlord", fx="decree", fire=(255, 107, 87)),
+    # `Pal.Dormant` and `Pal.Hollow` - iron and a light going out, the seventh chapter's
+    # pair. A harrower shares the shackler's slate for the shackler's own stated reason
+    # (a claw and an arrow are both iron, three chapters apart, and the two reels look
+    # nothing alike); a hollowking has a colour of its own, because what a wane says is
+    # that a post has gone out and nothing else in this palette is that value.
+    "harrower": dict(hold=0.58, tall=3.3, stem="harrow", fx="rend", fire=(58, 80, 100)),
+    "hollowking": dict(hold=0.42, tall=3.7, stem="hollow", fx="wane", fire=(143, 166, 184)),
 }
 
 #: Which bosses are aimed at no ward, and therefore draw a pair of reels where they stand rather
@@ -987,7 +994,11 @@ BOSSES = {
 #: correct on the same day: naming one of the three grounded bosses and letting the other two
 #: fall through whichever branch they happened to land in is how two of them came to draw a flat
 #: ground wash standing upright in the air.
-GROUNDED = ("roar", "maw", "crypt")
+# **A wane joins them**, and it is the fourth: it is aimed at no ward at all
+# (`SiegeTuning.AimsAtAWard`), so the hollowking has no flight reel and draws its pair
+# where it stands. Written with the boss rather than a chapter late, which is the whole
+# of the lesson the shackler's row above records.
+GROUNDED = ("roar", "maw", "crypt", "wane")
 
 
 def warlord(sheet, draw_on, kind, colour, wards, span, cell, hill_top, hill_foot, line_y, at,
@@ -1500,6 +1511,8 @@ BOSS_KEY = {
     "colossus": "mode.siege.colossus",
     "gorgon": "mode.siege.gorgon",
     "sunlord": "mode.siege.sunlord",
+    "harrower": "mode.siege.harrower",
+    "hollowking": "mode.siege.hollowking",
 }
 
 _LOC = {}
@@ -2576,6 +2589,11 @@ CHAPTER_CASTS = {
     "s05_ashenhold": "rabble",
     "s06_thundercrag": "wild",
     "s07_dustcrown": "court",
+    # **The seventh chapter draws the first chapter's cast**, which is `SiegeMode.MainCasts`
+    # wrapping at six rather than an omission - invariant 7c's bargain, and the reason the
+    # harrower and the hollowking are cut from the family that already stands in front of the
+    # insects (`make_siege_art.BOSS_SET`).
+    "s08_bonereach": "",
     "s02_endlesswatch": "medley",
 }
 

@@ -59,7 +59,14 @@ job, `ChapterIndexEntry`), and this file writes bodies.
 #: middle with the floating outliers at the edges, so 60% keeps every stepping-stone road and
 #: throws away only the small islands nothing stands on - and three could not seat ten nodes on
 #: `map5` and cannot here either.
-STRIPS = {1: 6, 2: 4, 3: 5, 4: 6, 5: 4, 6: 4}
+#: `map7` is the third `|`-joined source - two 1536x2048 dead-lands boards, `01` at the foot and
+#: `02` above it, with a rope bridge leaving the top of one and arriving at the bottom of the
+#: other. Cut at **four** for `map5`'s and `map6`'s reasons rather than by coincidence: the stack
+#: is 1536x4096, a strip count is a zoom (three keeps 80% of the width, four 60%, six 40%), and
+#: three cannot seat ten nodes on a 3600-unit climb once the marker's 700 units of headroom are
+#: taken out. Its chain of floating plateaus snakes up the middle, so 60% keeps every slab the
+#: chain stands on and throws away only the outlying rocks nothing stands on.
+STRIPS = {1: 6, 2: 4, 3: 5, 4: 6, 5: 4, 6: 4, 7: 4}
 
 #: Skies per chapter. Every chapter shipped so far has exactly ten levels; a chapter with
 #: more wraps round inside its own block rather than borrowing the next ordinal's, so two
@@ -182,6 +189,18 @@ SEATS = {
         (0.581, 0.736, False),
         (0.511, 0.792, False),
     ),
+    7: (
+        (0.700, 0.056, False),
+        (0.280, 0.113, False),
+        (0.822, 0.203, False),
+        (0.300, 0.306, False),
+        (0.658, 0.341, False),
+        (0.419, 0.452, False),
+        (0.815, 0.478, False),
+        (0.299, 0.634, False),
+        (0.770, 0.772, False),
+        (0.280, 0.828, False),
+    ),
 }
 
 #: Where the end-of-chapter marker stands on each map, found the same way.
@@ -192,6 +211,7 @@ MARKERS = {
     4: (0.712, 0.903, False),
     5: (0.660, 0.854, False),
     6: (0.660, 0.854, False),
+    7: (0.660, 0.854, False),
 }
 
 

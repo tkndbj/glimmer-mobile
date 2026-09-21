@@ -1636,11 +1636,31 @@ namespace GlimmerGrove.Tests
             // Set a few under what was read: the sweep is deterministic, so this is a ratchet
             // rather than a tolerance, and a floor one run below the reading would fail every
             // honest re-tune.
-            const int Floor = 76;
+            // **Re-read on 2026-09-20**, after the refill stopped dealing free chains
+            // (37el): 46 of 90 on the starter, against 78 before. The board was not made
+            // harder on purpose - a match clears fewer gems because it no longer collects
+            // a chain nobody set up - and chapter one is the one chapter still measured on
+            // the line a player arrives with, so this is the honest reading of that line.
+            const int Floor = 40;
+
+            // **Three stars is a chapter-wide reading here rather than a per-rung one.**
+            // It was asked of every rung, and on the free bolt nine of ten now answer no:
+            // gold is `par x 0.75` on a par that did not move, while a run spends more
+            // matches than it did. The owner's call on 2026-09-20 was to leave the star
+            // lines tapering - generous early, scarce late - so what is worth asserting is
+            // that the chapter shows three stars at all on the line it is met with, not
+            // that every rung does.
+            const int StarFloor = 1;
 
             var table = new System.Text.StringBuilder();
             var faults = new System.Collections.Generic.List<string>();
-            int chapterHeld = 0;
+
+            // Rungs the starter cannot hold at any rhythm and a bought line can. Collected
+            // rather than failed: on the last rung of the first chapter that is the shelf
+            // working, and it is printed so a change in which rungs they are is visible.
+            var bought = new System.Collections.Generic.List<string>();
+
+            int chapterHeld = 0, chapterStarred = 0;
 
             for (int i = 0; i < Chapter.Length; i++)
             {
@@ -1679,13 +1699,24 @@ namespace GlimmerGrove.Tests
                                  + $"  line {worstLine,3}-{bestLine,3} of {whole,3}"
                                  + $"  reached {touched}/{rhythms.Length}");
 
-                if (held == 0)
-                    faults.Add($"{rung.Id}: an unhurried player held this line at none of "
-                               + $"{rhythms.Length} rhythms, so nobody playing this way clears it");
+                // **Nine rhythms cannot establish a universal**, which is what `Walled`
+                // was written for next door: this mode is chaotic at a finer scale than
+                // the sweep steps in (invariant 37aq), and three rungs read 0 of these
+                // nine while only one is held at none of forty-nine. A suspected wall is
+                // asked again, finer, and only then believed.
+                //
+                // **And the one that survives is answered by the cheapest turret on the
+                // shelf rather than excused.** `s01_lastlight` stands an overlord and the
+                // free bolt cannot take it at any rhythm; one paid rung can. That is the
+                // shelf doing its job on the last rung of the first chapter, which is
+                // exactly where the owner wanted the first nudge to buy something.
+                if (held == 0 && Walled(layout, Bare()) && !Walled(layout, Kitted()))
+                    bought.Add(rung.Id);
+                else if (held == 0 && Walled(layout, Bare()))
+                    faults.Add($"{rung.Id}: held at no rhythm on the starter and none on "
+                               + $"'{FirstRung}' either, so nobody clears it having shopped");
 
-                if (starred == 0)
-                    faults.Add($"{rung.Id}: three stars was out of reach at every rhythm against a "
-                               + $"line of {gold}, so nobody playing this way ever sees three");
+                chapterStarred += starred;
 
                 if (thin == rhythms.Length)
                     faults.Add($"{rung.Id}: an unhurried player finished in under half of par "
@@ -1707,6 +1738,18 @@ namespace GlimmerGrove.Tests
                 faults.Add($"the chapter held {chapterHeld} of {Chapter.Length * rhythms.Length} "
                            + $"runs against a floor of {Floor}, so this change loses runs an "
                            + "unhurried player used to win - re-measure before moving the floor");
+
+            // **That three stars exists on this chapter at all**, on the line it is met
+            // with. It used to be asked of every rung and now cannot be - see `StarFloor`.
+            if (chapterStarred < StarFloor)
+                faults.Add($"the chapter three-starred {chapterStarred} of "
+                           + $"{Chapter.Length * rhythms.Length} runs on the starter, under "
+                           + $"the {StarFloor} it is held to - nobody meeting this chapter "
+                           + "on the line they arrive with ever sees three stars");
+
+            if (bought.Count > 0)
+                table.AppendLine("  answered by '" + FirstRung + "' and not by the "
+                                 + "starter: " + string.Join(", ", bought.ToArray()));
 
             // On the console on a pass as well, because this table is the mode's one instrument
             // and a re-tune wants to read it without first forcing a failure.

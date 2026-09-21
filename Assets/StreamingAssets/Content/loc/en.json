@@ -1278,6 +1278,14 @@
       "text": "THE SUNLORD"
     },
     {
+      "key": "mode.siege.harrower",
+      "text": "THE HARROWER"
+    },
+    {
+      "key": "mode.siege.hollowking",
+      "text": "THE HOLLOW KING"
+    },
+    {
       "key": "mode.siege.unsealed",
       "text": "SEAL BROKEN"
     },
@@ -3312,6 +3320,10 @@
     {
       "key": "ui.mark.pass",
       "text": "Keeper's Pass"
+    },
+    {
+      "key": "ui.mark.pass_value",
+      "text": "{0}% VALUE"
     },
     {
       "key": "ui.mark.pass_required",
@@ -5856,6 +5868,90 @@
     {
       "key": "level.s07_thelongwalk.tagline",
       "text": "The longest climb in the mode"
+    },
+    {
+      "key": "chapter.s08_bonereach.name",
+      "text": "Bonereach"
+    },
+    {
+      "key": "level.s08_firstreach.name",
+      "text": "First Reach"
+    },
+    {
+      "key": "level.s08_firstreach.tagline",
+      "text": "The same hill, carrying half again"
+    },
+    {
+      "key": "level.s08_bonespur.name",
+      "text": "Bonespur"
+    },
+    {
+      "key": "level.s08_bonespur.tagline",
+      "text": "Nothing armoured, and it still walks"
+    },
+    {
+      "key": "level.s08_ropebridge.name",
+      "text": "Ropebridge"
+    },
+    {
+      "key": "level.s08_ropebridge.tagline",
+      "text": "Two shields a wave, and never the same two"
+    },
+    {
+      "key": "level.s08_crystalrise.name",
+      "text": "Crystalrise"
+    },
+    {
+      "key": "level.s08_crystalrise.tagline",
+      "text": "Hold the bomb for the plate behind it"
+    },
+    {
+      "key": "level.s08_harrowgate.name",
+      "text": "Harrowgate"
+    },
+    {
+      "key": "level.s08_harrowgate.tagline",
+      "text": "It takes a rank and leaves it on the ground"
+    },
+    {
+      "key": "level.s08_thinair.name",
+      "text": "Thin Air"
+    },
+    {
+      "key": "level.s08_thinair.tagline",
+      "text": "One colour at a time, with plate in it"
+    },
+    {
+      "key": "level.s08_shatterstep.name",
+      "text": "Shatterstep"
+    },
+    {
+      "key": "level.s08_shatterstep.tagline",
+      "text": "Three shields, and one bomb to answer them"
+    },
+    {
+      "key": "level.s08_deadfall.name",
+      "text": "Deadfall"
+    },
+    {
+      "key": "level.s08_deadfall.tagline",
+      "text": "Four waves, and the answer held to the last"
+    },
+    {
+      "key": "level.s08_thelastspan.name",
+      "text": "The Last Span"
+    },
+    {
+      "key": "level.s08_thelastspan.tagline",
+      "text": "Feed all four, evenly, for two minutes"
+    },
+    {
+      "key": "level.s08_hollowcrown.name",
+      "text": "Hollow Crown"
+    },
+    {
+      "key": "level.s08_hollowcrown.tagline",
+      "text": "It strikes whatever has gone quiet"
     },
     {
       "key": "rank.cinderling.name",

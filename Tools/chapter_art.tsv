@@ -57,6 +57,14 @@ s06_thundercrag	craftpix-161519-free-lava-fields-level-map-2d-backgrounds/_PNG/0
 # established, and the reason a 4:3 board pack is usable here at all.
 # Drawn by s07_dustcrown, and by whatever sixth chapter comes next.
 s07_dustcrown	craftpix-357622-wasteland-level-map-2d-backgrounds/_PNG/01/layers/l1_sky.png+craftpix-357622-wasteland-level-map-2d-backgrounds/_PNG/01/layers/l2_ground.png+craftpix-357622-wasteland-level-map-2d-backgrounds/_PNG/01/layers/l3_decorations.png|craftpix-357622-wasteland-level-map-2d-backgrounds/_PNG/02/layers/l1_sky.png+craftpix-357622-wasteland-level-map-2d-backgrounds/_PNG/02/layers/l2_ground.png+craftpix-357622-wasteland-level-map-2d-backgrounds/_PNG/02/layers/l3_decorations.png
+# map7 - four strips, and the third `|`-joined source: two 1536x2048 dead-lands boards,
+# `01` at the foot and `02` above it. A rope bridge leaves the top of one and arrives at the
+# bottom of the other, so the seam is a crossing rather than a join - the shape `map5`
+# established and `map6` reused. Note the layer files are hyphenated here (`l1-sky.png`)
+# where the lava and wasteland packs spell them with underscores; a path guessed rather than
+# read is a file that is simply not there.
+# Drawn by s08_bonereach, and by whatever seventh chapter comes next.
+s08_bonereach	craftpix-229916-dead-lands-level-map-2d-backgrounds/_PNG/01/layers/l1-sky.png+craftpix-229916-dead-lands-level-map-2d-backgrounds/_PNG/01/layers/l2-ground.png+craftpix-229916-dead-lands-level-map-2d-backgrounds/_PNG/01/layers/l3-decorations.png|craftpix-229916-dead-lands-level-map-2d-backgrounds/_PNG/02/layers/l1-sky.png+craftpix-229916-dead-lands-level-map-2d-backgrounds/_PNG/02/layers/l2-ground.png+craftpix-229916-dead-lands-level-map-2d-backgrounds/_PNG/02/layers/l3-decorations.png
 f01_lightfall	-
 f02_glasswater	-
 f03_whorlwater	-

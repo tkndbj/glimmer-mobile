@@ -3,6 +3,7 @@ using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Cloud;
 using GlimmerGrove.Daily;
 using GlimmerGrove.Events;
+using GlimmerGrove.Layout;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Progression;
 using UnityEngine;
@@ -60,6 +61,48 @@ namespace GlimmerGrove
         static readonly Vector2 Top = new Vector2(.5f, 1f);
         static readonly Vector2 Left = new Vector2(0f, .5f);
         static readonly Vector2 Centre = new Vector2(.5f, .5f);
+        static readonly Vector2 TopLeft = new Vector2(0f, 1f);
+
+        /// <summary>
+        /// The value badge in the pass plate's top-left corner: how big, how far in, and which
+        /// way it leans.
+        ///
+        /// <para>
+        /// <b>Smaller than the shop's seal and it has to be.</b> A storefront card is a tall
+        /// column with an empty corner; this plate is 176 tall with a 128 crest centred in it,
+        /// so there is no corner here that is actually empty. At 164, or at 88 set 50 in, the
+        /// two bursts overlap into one mushy double star — which the render showed and no
+        /// numeric gate could.
+        /// </para>
+        /// <para>
+        /// <b>110 is the largest that keeps a gap, and that was found by looking.</b> Grown at
+        /// the owner's instruction from 92; on the way up 124 crowds the crest and 138 buries
+        /// it, at which point the badge is the loudest thing on the plate it is a badge *on*.
+        /// The caption settles at 17 against a floor of 10 (<c>render_season.py</c> prints it),
+        /// where at 92 it sat at 13 — the room a longer translation has is the other thing that
+        /// bought.
+        /// </para>
+        /// <para>
+        /// <b>The inset is bounded by the margin, not by the crest.</b> The plate is
+        /// <see cref="Width"/> in a canvas that is never narrower than 1080, so there are 40
+        /// units of gutter either side and the badge may overhang about 35 of them. At 40 it
+        /// overhangs 15, which leaves the rest for a safe area that insets horizontally.
+        /// </para>
+        /// <para>
+        /// <b>The tilt is positive where the shop's is negative</b>, for the reason
+        /// <c>ProductCardBadges.SealTilt</c> gives: a badge leaning *right* is a negative
+        /// number, and a mark in the left corner should lean away from the plate rather than
+        /// into it.
+        /// </para>
+        /// <para>
+        /// <b>Rose rather than gold, which is the shop's own choice and for this reason.</b>
+        /// <c>ProductCard</c> seals in <see cref="Pal.Rose"/>; here it is load-bearing rather
+        /// than a house style, because the thing this badge stands beside is a *gold burst*
+        /// and two gold bursts touching read as one shape somebody drew badly.
+        /// </para>
+        /// </summary>
+        const float PassBadge = 110f, PassBadgeInset = 40f, PassBadgeDrop = 24f,
+                    PassBadgeTilt = 9f;
 
         /// <summary>
         /// The bar's orange and its full green, pre-divided for <see cref="Skins.Fill"/>'s
@@ -122,6 +165,7 @@ namespace GlimmerGrove
         /// </summary>
         int _markRungs = -1;
         Text _grown, _toNext, _clock, _passCaption, _passHint, _rungs;
+        Image _passValue;
         Btn _passBtn;
         float _track;
 
@@ -455,6 +499,46 @@ namespace GlimmerGrove
                                         new Vector2(-166f, 0f), BuyPass,
                                         Art.S("Ui/ic_gem"), iconTrails: true);
 
+            // <b>What the paid column is worth against what it costs</b>, in the shop's own
+            // grammar — the same burst the storefront seals a pack with, tilted the other way
+            // because this one sits in the left corner. It is the last thing built on the
+            // plate so it draws over the crest's outer points rather than under them.
+            //
+            // <b>The figure is derived, never authored</b> (<see cref="SeasonValue"/>): the
+            // pass price, the ladder and every tier's chest are content, so a badge carrying a
+            // typed number would be the one thing on this page a retune could make into a lie.
+            // Nought means there is nothing honest to claim and no badge is built at all.
+            int value = SeasonValue.PassPercent(_season);
+            if (value > 0)
+            {
+                _passValue = UIKit.Img("Value", plate.transform, Art.S("Ui/" + Skins.Badge),
+                                       Pal.Rose, new Vector2(PassBadge, PassBadge), TopLeft,
+                                       new Vector2(PassBadgeInset, -PassBadgeDrop));
+                _passValue.preserveAspect = true;
+                _passValue.raycastTarget = false;
+                _passValue.transform.localRotation = Quaternion.Euler(0f, 0f, PassBadgeTilt);
+
+                // Sized against the flat field inside the burst rather than against the sprite,
+                // which is `ProductCardBadges`' measurement and its reason: a caption centred
+                // on the sprite sits low, and one sized to the whole texture says its piece
+                // across the rim. Shrinkable because a translation of "VALUE" is not three
+                // letters everywhere, and the floor is the shop's — below it Best Fit stops
+                // shrinking and the label overflows unclipped and unreported (invariant 19n).
+                UIKit.Shrinkable(
+                    UIKit.Titled("VT", _passValue.transform,
+                                 Loc.Format("ui.mark.pass_value", value),
+                                 ProductCardBadges.TextSize, Pal.Cream, TextAnchor.MiddleCenter,
+                                 new Vector2(PassBadge * ProductCardBadges.Face
+                                             * ProductCardBadges.FaceTextWidth,
+                                             PassBadge * ProductCardBadges.Face
+                                             * ProductCardBadges.FaceTextHeight),
+                                 Centre,
+                                 new Vector2(PassBadge * ProductCardBadges.FaceShift,
+                                             PassBadge * ProductCardBadges.FaceRise),
+                                 0f, 0f, wrap: true),
+                    ProductCardBadges.TextFloor);
+            }
+
             Sheen.Attach((RectTransform)plate.transform, 4.6f);
 
             plate.transform.localScale = Vector3.zero;
@@ -778,6 +862,13 @@ namespace GlimmerGrove
 
             if (_passCaption)
                 _passCaption.color = owned ? Pal.Mint : Pal.Cream;
+
+            // A value badge is a sales mark, so it goes the moment there is nothing to sell —
+            // held, or the watch closed. Kept built rather than destroyed, because a cycle
+            // rolls over under a resident page (invariant 47j) and the next season's badge is
+            // the same widget with a different figure.
+            if (_passValue)
+                _passValue.gameObject.SetActive(!owned && live);
         }
 
         public override bool OnBack()

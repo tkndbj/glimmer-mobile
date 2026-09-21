@@ -595,6 +595,8 @@ namespace GlimmerGrove
                 case SiegeKind.Colossus: return Reel("colossus");
                 case SiegeKind.Gorgon: return Reel("gorgon");
                 case SiegeKind.Sunlord: return Reel("sunlord");
+                case SiegeKind.Harrower: return Reel("harrow");
+                case SiegeKind.Hollowking: return Reel("hollow");
             }
 
             // **A body per colour, which is what removing the tint bought.** It used to be
@@ -801,6 +803,14 @@ namespace GlimmerGrove
                 case SiegeKind.Gorgon: return Blast("gaze");
                 case SiegeKind.Sunlord: return Blast("decree");
 
+                // **One of the seventh chapter's two throws and the other does not**, which
+                // is the roar/devour/raise split arriving a chapter later: a harrower's claw
+                // crosses the hill at the ward it robs, and a wane is aimed at no ward at all
+                // (`SiegeTuning.AimsAtAWard`), so nothing leaves the hollowking and its flight
+                // reel is never scoped in (`SiegeMode.Bosses`).
+                case SiegeKind.Harrower: return Blast("rend");
+                case SiegeKind.Hollowking: return null;
+
                 default: return Blast("spell");
             }
         }
@@ -831,6 +841,8 @@ namespace GlimmerGrove
                 case SiegeKind.Colossus: return Blast("boulder_muzzle");
                 case SiegeKind.Gorgon: return Blast("gaze_muzzle");
                 case SiegeKind.Sunlord: return Blast("decree_muzzle");
+                case SiegeKind.Harrower: return Blast("rend_muzzle");
+                case SiegeKind.Hollowking: return Blast("wane_muzzle");
                 default: return Blast("spell_muzzle");
             }
         }
@@ -851,6 +863,8 @@ namespace GlimmerGrove
                 case SiegeKind.Colossus: return Blast("boulder_hit");
                 case SiegeKind.Gorgon: return Blast("gaze_hit");
                 case SiegeKind.Sunlord: return Blast("decree_hit");
+                case SiegeKind.Harrower: return Blast("rend_hit");
+                case SiegeKind.Hollowking: return Blast("wane_hit");
                 default: return Blast("spell_hit");
             }
         }
@@ -911,6 +925,17 @@ namespace GlimmerGrove
                 // switch.
                 case SiegeKind.Gorgon: return Pal.Rope;
                 case SiegeKind.Sunlord: return Pal.Ember;
+                // **Iron and an empty light, and neither is one of the board's four.**
+                // A harrow is a claw rather than magic, so it takes `Dormant`, the unpowered
+                // slate that is the only thing in this palette reading as *metal* - shared
+                // with the shackler's arrow for the shackler's own stated reason, three
+                // chapters apart and two completely different shapes (`SiegeArtTests`
+                // holds the *reels* apart, which is the half that matters). `Hollow` is a
+                // colour of its own and had to be: what a wane says is that a post has gone
+                // out, and the pale steel of a light dying is a value nothing else here
+                // wears - far duller than `Azure` and far darker than `Glass`.
+                case SiegeKind.Harrower: return Pal.Dormant;
+                case SiegeKind.Hollowking: return Pal.Hollow;
 
                 // **The two that land on the hill rather than on the line**, which is what lets
                 // them take the two colours left. A devour is `Verdant` and a raise is `Glass`,

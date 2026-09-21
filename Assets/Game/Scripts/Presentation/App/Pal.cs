@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace GlimmerGrove
 {
@@ -181,6 +181,22 @@ namespace GlimmerGrove
         /// </para>
         /// </summary>
         public static readonly Color Glass = Hex("#DCEBF5");
+
+        /// <summary>
+        /// A light that has gone out: the pale, cold steel a hollowking's wane leaves on a
+        /// post that had nothing to fire (<c>SiegeView.Hollowed</c>).
+        ///
+        /// <para>
+        /// <b>It had to be a colour of its own</b>, and the constraint that decided it is the
+        /// one every boss spell is held to (<c>SiegeView.Casting</c>): a spell arriving at a
+        /// ward may not be read as one of the four gem colours, or a player fairly concludes
+        /// it hurts that ward more. This is far duller than <see cref="Azure"/>, far darker
+        /// than <see cref="Glass"/> and far lighter than <see cref="Dormant"/> - which are
+        /// the three it could otherwise have been mistaken for, and they are the three
+        /// already spoken for on this board.
+        /// </para>
+        /// </summary>
+        public static readonly Color Hollow = Hex("#8FA6B8");
         static readonly Color[] Table =
         {
             Dormant,                            // 0

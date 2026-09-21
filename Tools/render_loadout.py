@@ -87,7 +87,7 @@ TIER_SIZE, TIER_PAD = 46, 34.0
 
 # `LoadoutScreen.NeonWarm` / `.NeonTube` / `.NeonCool` / `.NeonHalo` — the ramp graded across
 # the legendary band's caption, and the halo behind it.
-NEON_RAMP = ((255, 61, 240), (200, 108, 255), (77, 240, 255))
+NEON_RAMP = ((255, 61, 240), (77, 240, 255))
 NEON_HALO = (200, 28, 224)
 
 #: Filled in by `fit()`: the row, the column count, the cell and how far the card is from the
@@ -357,47 +357,22 @@ def tier_badge(sheet, tier, y, cw, columns):
                             radius=1, fill=ink)
 
     if neon:
-        # Unity's `Outline` draws the glyphs again at the four corners; in the neon's own hue
-        # that is a bleed round every stem rather than the dark border every other caption has.
+        # Unity's `Outline` draws the glyphs again at the four corners; opaque and in the
+        # neon's own hue that is the sheath round a white-hot core, which is what a tube is.
+        # The ramp that used to run *through* the letters is gone — it is in the rules and the
+        # halo now, and the word is white (`LoadoutScreen.TierBadge`).
         f = K.font(TIER_SIZE)
         w = d.textlength(name, font=f)
         x, ty = W / 2 - w / 2, mid - TIER_SIZE * 0.62
-        for dx in (-4, 4):
-            for dy in (-4, 4):
-                d.text((x + dx, ty + dy), name, font=f, fill=(*NEON_HALO, 179))
+        for dx in (-3, 3):
+            for dy in (-3, 3):
+                d.text((x + dx, ty + dy), name, font=f, fill=(*NEON_HALO, 255))
 
-        # `TextGradient` — the ramp runs across the *word's* own extent, so it is drawn here
-        # as the letters' alpha cut out of a ramp exactly that wide. Nothing in PIL is a mesh
-        # modifier, and a flat fill here would be a mirror telling the comfortable lie.
-        h = int(TIER_SIZE * 2)
-        mask = Image.new("L", (int(w) + 2, h), 0)
-        ImageDraw.Draw(mask).text((0, 0), name, font=f, fill=255)
-        sheet.alpha_composite(ramp(mask.size, NEON_RAMP, mask), (int(x), int(ty)))
+        d.text((x, ty), name, font=f, fill=(255, 255, 255, 255))
     else:
         K.text(sheet, name, W / 2, mid, TIER_SIZE, fill=K.CREAM, outline=2)
 
 
-def ramp(size, stops, mask):
-    """`TextGradient` — evenly spaced stops lerped left to right, cut out by `mask`."""
-    w, h = size
-    im = Image.new("RGBA", size, (0, 0, 0, 0))
-    px = im.load()
-    span = max(1, w - 1)
-
-    for x in range(w):
-        t = x / span * (len(stops) - 1)
-        i = min(int(t), len(stops) - 2)
-        k = t - i
-        a, b = stops[i], stops[i + 1]
-        col = tuple(int(a[c] + (b[c] - a[c]) * k) for c in range(3))
-        for y in range(h):
-            px[x, y] = (*col, 255)
-
-    im.putalpha(mask)
-    return im
-
-
-# --------------------------------------------------------------------------- the screen
 def draw(shelf, level, held, stars, colour, standing, scroll, copies=None):
     cw, columns = CELLW, COLUMNS
     span = columns * cw + (columns - 1) * CELL_GAP_X

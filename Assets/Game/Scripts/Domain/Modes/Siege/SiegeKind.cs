@@ -331,5 +331,64 @@ namespace GlimmerGrove.Modes
         /// <para><b>Appended</b>, for the reason every member of this enum is.</para>
         /// </summary>
         Sunlord,
+
+        /// <summary>
+        /// The harrower: it tears a rank off a ward and scatters it on the hill, where the
+        /// player can go and pick it up (<see cref="SiegeSpell.Harrow"/>).
+        ///
+        /// <para>
+        /// <b>The thirteenth thing a boss could take is a rank the player can get <em>back</em>,
+        /// and it is the overlord's verb read the way a sunlord reads a gravemaw.</b> A sunder is
+        /// a rank gone; nothing about it is a decision, because there is nothing to decide. A
+        /// harrow drops the same rank on the ground as an ordinary cog bound to the ward it came
+        /// off - so the question it asks is the one the bomber asks (invariant 40i, the one thing
+        /// that makes the player touch the hill): <em>when</em>. Reach for it now and give up the
+        /// beat you were going to match in, or leave it lying while the boss takes the next one.
+        /// </para>
+        /// <para>
+        /// <b>It can be wrong both ways</b> (invariant 26h), which is what separates it from
+        /// decoration: a tap spent on a cog while the colour the boss is about to want goes
+        /// unfed is a rank bought with a bolt, and a hill full of unclaimed cogs at the end of a
+        /// duel is a line fighting the finale two rungs under itself.
+        /// </para>
+        /// <para>
+        /// <b>Par does not move.</b> It adds no bodies and heals nothing, which is the first
+        /// question to ask of any new verb (<c>SiegeTuning.Par</c>, invariant 37a) - and it
+        /// takes ward health like every other spell (37dn), so it can end a run.
+        /// </para>
+        /// <para><b>Appended</b>, for the reason every member of this enum is.</para>
+        /// </summary>
+        Harrower,
+
+        /// <summary>
+        /// The hollowking: when it casts, every ward that has fired nothing since its last cast
+        /// is struck, and every ward that has been working is left alone
+        /// (<see cref="SiegeSpell.Wane"/>).
+        ///
+        /// <para>
+        /// <b>The fourteenth thing a boss could take is the player's <em>habit</em>, and it is
+        /// the only verb in this mode that is answered before it lands.</b> Eleven verbs take
+        /// something and ask what you do about it; a wane announces its rule and then bills you
+        /// for the last few seconds of play. The instruction it gives is one no boss has ever
+        /// given: <em>keep all four working</em>. Every other fight in this mode rewards pouring
+        /// into the colour that matters, and against a boss - which wears no colour and is
+        /// reached by every ward at full weight (37dn) - a ward stands idle only because its
+        /// tube is empty.
+        /// </para>
+        /// <para>
+        /// <b>It is not a rally with a filter.</b> A warbringer's roar takes the same from all
+        /// four whatever the player did, so nothing about it is a decision; a wane takes nothing
+        /// at all from a line that has been fed evenly, which is invariant 5d's test passed by
+        /// arithmetic rather than by argument - there is an arrangement it rejects and an
+        /// arrangement it does not.
+        /// </para>
+        /// <para>
+        /// <b>Par does not move</b>, for the harrower's reason, and it takes ward health from
+        /// every post it finds hollow - so it is a finale that can end a run on its own, which
+        /// is what the last rung of a chapter should be (invariant 37t).
+        /// </para>
+        /// <para><b>Appended</b>, for the reason every member of this enum is.</para>
+        /// </summary>
+        Hollowking,
     }
 }
