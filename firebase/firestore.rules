@@ -342,9 +342,16 @@ service cloud.firestore {
     // holds nine numbers per glade and names nobody, and it is public precisely because
     // the splash needs it before authentication has finished. Nothing here is needed
     // before a player is in the game.
+    //
+    // `get` and never `list`, for the reason `names` gives below and with more at stake:
+    // a card is read by uid (a profile, a board row tapped), and nothing in the client or
+    // the e2e suite ever queries the collection. A `list` grant here lets any anonymous
+    // sign-in run one query over every published card in the game and bill this project a
+    // read per card, as often as it likes — the only read in these rules whose cost would
+    // have grown with the size of the collection rather than with the number of players.
     match /groves/{uid} {
-      allow get, list: if signedIn();
-      allow write: if false;
+      allow get: if signedIn();
+      allow list, write: if false;
     }
 
     // The published boards: one document each, holding up to a hundred rows.
@@ -355,9 +362,14 @@ service cloud.firestore {
     // against a collection that grows for the life of the game, on a database billed per
     // read. One document is one read, the same for everybody, and cacheable. It is the
     // same trade `config/stats` already makes.
+    //
+    // `get` only, as `groves`: a board is opened by its id (`LeaderboardBoard.IsKnown`
+    // refuses any other), and a collection nobody lists is a collection nobody should be
+    // allowed to. The collection is two documents today, so this is least privilege rather
+    // than a bill — but a rule is the cheapest place to keep that true.
     match /leaderboards/{boardId} {
-      allow get, list: if signedIn();
-      allow write: if false;
+      allow get: if signedIn();
+      allow list, write: if false;
     }
 
     // --------------------------------------------------------- keeper names
@@ -471,9 +483,14 @@ service cloud.firestore {
     // The reward table and the product catalog. The client reads the reward table so
     // its predictions match the server's arithmetic; it may never write either, since
     // the product catalog is what decides how much a purchase is worth.
+    //
+    // `get` rather than `read`: every client read here names its document (`groveRanks`,
+    // and the two widened below), so `list` was a grant nothing used. A `get` is also what
+    // the two public documents below widen — `read` there is `get` and `list` on a single
+    // document path, which lists nothing.
     match /config/{document} {
-      allow read:  if signedIn();
-      allow write: if false;
+      allow get: if signedIn();
+      allow list, write: if false;
     }
 
     // The population's move counts, published by a scheduled job. Readable by anybody,

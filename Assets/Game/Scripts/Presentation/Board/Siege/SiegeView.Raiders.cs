@@ -22,6 +22,84 @@ namespace GlimmerGrove
             return Hatch(raider);
         }
 
+        /// <summary>
+        /// Mints a body for every raider that died inside the step just drawn and never had one.
+        ///
+        /// <para>
+        /// <b>The hill was going empty while cogs dropped on it, and this is the half of that
+        /// fault the view owns.</b> <see cref="Follow"/> is the only place a widget is minted and
+        /// it runs <em>after</em> <c>SiegeBoard.Advance</c>, which musters, walks and fires in one
+        /// call and then sweeps the dead out of its own list. A ward with nothing to shoot at
+        /// holds its cooldown at nought, so the whole line is loaded and waiting the moment a wave
+        /// steps out — and on a line strong enough to fell a raider in one bolt that is not a rare
+        /// interleaving, it is every raider of every wave. <c>Follow</c> then never saw one of
+        /// them alive and on the hill, so no widget existed, so <see cref="Bolt"/> returned
+        /// without drawing the shot, <see cref="Reap"/> found nothing to blow apart, and the only
+        /// thing that reached the screen was the cog, which carries its own coordinates.
+        /// </para>
+        /// <para>
+        /// <b>Minted here and left for <see cref="Reap"/> to take down in the same frame</b>,
+        /// rather than drawing a death directly: a death is a body coming apart and this mode has
+        /// exactly one drawing of that. So the body is stood where it fell, shown at once, and
+        /// dies at the end of the frame like any other — which also arms <c>_felling</c>, so a
+        /// run won on one of these kills waits for the burst exactly as it waits for every other.
+        /// </para>
+        /// <para>
+        /// <b>Nothing is minted twice.</b> A raider that was on the screen already has its widget
+        /// and is skipped; one the board has finished with cannot come back, because ids are
+        /// minted from a counter that only climbs (<c>SiegeBoard._minted</c>). Kills made outside
+        /// <c>Advance</c> never reach this list at all — see <see cref="SiegeReport.Felled"/>.
+        /// </para>
+        /// </summary>
+        void Unseen(IReadOnlyList<SiegeRaider> felled)
+        {
+            for (int i = 0; i < felled.Count; i++)
+            {
+                var raider = felled[i];
+
+                // A raider still in the wings was never drawn and must not start now: every door
+                // that can kill one asks `OnTheHill` first, so this is belt and braces rather
+                // than a case that is known to arrive.
+                if (raider == null || !raider.OnTheHill) continue;
+                if (MobOf(raider.Id) != null) continue;
+
+                Shown(Hatch(raider));
+            }
+        }
+
+        /// <summary>
+        /// Puts a body at its full size and full opacity at once, cancelling whatever is left of
+        /// its entrance.
+        ///
+        /// <para>
+        /// <b>The other half of the invisible hill, and it bites a raider that lived a handful of
+        /// frames rather than none.</b> <see cref="Hatch"/> opens at alpha nought and half size
+        /// and spends a quarter of a second arriving, which is right for a raider that is going to
+        /// walk down and wrong for one that is shot on the way in: what a player sees of a body
+        /// felled 80ms after it stepped out is a faint half-sized smudge, which is to say nothing
+        /// at all.
+        /// </para>
+        /// <para>
+        /// <b>Killing the channels rather than only writing the values</b>, because an entrance
+        /// still in flight would paint straight back over them on the next frame — the fade owns
+        /// the group and the pop owns the transform, so both are named. Everything that survives
+        /// its entrance is already here, so this is a no-op on the ordinary path.
+        /// </para>
+        /// </summary>
+        static void Shown(Mob mob)
+        {
+            if (mob == null || mob.Node == null) return;
+
+            Tween.KillChannel(mob.Node, "scale");
+            mob.Node.localScale = Vector3.one;
+
+            var group = UIKit.Group(mob.Node);
+            if (group == null) return;
+
+            Tween.KillChannel(group, "fade");
+            group.alpha = 1f;
+        }
+
         Mob Hatch(SiegeRaider raider)
         {
             var mob = new Mob { Id = raider.Id };
@@ -485,6 +563,11 @@ namespace GlimmerGrove
         void Die(Mob mob)
         {
             var at = mob.Node.anchoredPosition;
+
+            // **A death is watched, so the body has to be there to watch.** A raider felled
+            // during its own entrance would otherwise come apart at whatever fraction of alpha
+            // and size the arrival had reached — see <see cref="Shown"/>.
+            Shown(mob);
 
             if (mob.Boss) { Fall(mob, at); return; }
 

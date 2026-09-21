@@ -22,10 +22,13 @@ namespace GlimmerGrove
     /// <b>A listener is the answer and the timer is the net.</b> The server bumps a counter in
     /// <c>players/{uid}/private/referral</c> whenever this account's referral state moves, and
     /// <see cref="ReferralLedger.Watch"/> holds a Firestore listener on it, so a friend binding
-    /// or finishing reaches the page in the moment it happens rather than within half a minute.
+    /// or finishing reaches the page in the moment it happens rather than on a timer.
     /// The timer stays behind it at a much longer interval, for the three things a listener
     /// cannot cover: a deployment whose server half does not bump the feed yet, a backend that
     /// cannot watch at all, and the gap between a backgrounding and the listener coming back.
+    /// Both intervals are <see cref="ReferralLedger"/>'s, and they are deliberately long: an
+    /// ask is a transaction over the whole save on the server, so the timer is a bill per
+    /// minute on this page and the listener is what keeps it from being paid often.
     /// </para>
     /// <para>
     /// <b>Attached rather than written</b>, which is <c>WalletWatch</c>'s rule (invariant 44j)

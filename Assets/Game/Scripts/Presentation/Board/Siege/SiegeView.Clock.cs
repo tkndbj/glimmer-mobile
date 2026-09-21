@@ -93,6 +93,15 @@ namespace GlimmerGrove
 
             Follow();
 
+            // **And the bodies `Follow` could not have seen.** A raider mustered, walked on and
+            // shot inside one `Advance` is swept out of the board's own list before this method
+            // runs, so the step has to hand the corpse over or nothing on this hill can draw it —
+            // see `SiegeView.Unseen` and `SiegeReport.Felled`. Immediately after `Follow`, and
+            // that position is load-bearing: everything below draws against a widget, so the
+            // bolts, the volley, the burns and `Reap` all find a body where they used to find
+            // nothing and quietly return.
+            Unseen(report.Felled);
+
             // **What is on fire, which is a state rather than an event** - the flame a burning
             // raider wears is put up, kept and taken down off `SiegeRaider.Alight` every frame
             // (`SiegeView.Burn`). After `Follow`, because it is placed against a body that has

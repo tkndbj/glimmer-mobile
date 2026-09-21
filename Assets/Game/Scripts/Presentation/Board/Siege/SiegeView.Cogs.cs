@@ -170,6 +170,24 @@ namespace GlimmerGrove
         {
             var cogs = _board.Cogs;
 
+            // **Anything lying on the hill with no widget is drawn here, and that is a repair
+            // rather than tidiness.** A cog is minted by `SiegeBoard.Cog` at the one kill door and
+            // announced in the step's report — but a firepot, a utility and an overcharge all kill
+            // from a tap, *outside* `Advance`, and `Advance` clears the report before it does
+            // anything. So those cogs were booked into a report nothing ever read, and what they
+            // were on the board was a real, tappable prize that drew nothing at all. Reconciling
+            // against the board's own list is the same shape the loop below already uses to take
+            // a trampled one down, and it cannot double-mint: a cog announced in the report was
+            // added to `_gears` by `Dropped` a few lines earlier in the same frame.
+            for (int c = 0; c < cogs.Count; c++)
+            {
+                bool drawn = false;
+                for (int g = 0; g < _gears.Count; g++)
+                    if (_gears[g].Id == cogs[c].Id) { drawn = true; break; }
+
+                if (!drawn) Dropped(cogs[c]);
+            }
+
             for (int i = _gears.Count - 1; i >= 0; i--)
             {
                 var gear = _gears[i];

@@ -427,13 +427,26 @@ namespace GlimmerGrove.Referral
         /// mechanism, so it runs at the shorter figure.
         /// </para>
         /// <para>
+        /// <b>Both figures are a bill, and the bill is per minute on the page rather than per
+        /// player.</b> Every ask is a callable that opens a transaction and reads this account's
+        /// referral document <em>and its whole save</em> (<c>getReferral</c> judges the milestone
+        /// off the save the server holds, invariant 51a), so a poll is the most expensive thing a
+        /// standing screen in this game does per minute — for a number that moves when a stranger
+        /// finishes a chapter, which is rare. The listener already carries the common case in the
+        /// moment it happens, so the net behind it is slow (ten minutes) and the one without it,
+        /// which is the failure path rather than the normal one, is two minutes: a friend who
+        /// finished is seen within that on a backend that cannot watch, and a redeem or a claim
+        /// answers with the state directly, so nothing a player does on the page waits on either.
+        /// A returning app asks once regardless (<see cref="Resumed"/>).
+        /// </para>
+        /// <para>
         /// The clock that keeps either one is <c>ReferralWatch</c>'s, in Presentation, because
         /// deciding whether to ask reads <c>Net</c> and <c>Domain</c> may never reference
         /// <c>Presentation</c> (invariant 3). What lives here is the numbers, the listener and
         /// <see cref="Poke"/>; what lives there is the frame to count on.
         /// </para>
         /// </summary>
-        public const float PollSeconds = 30f, WatchedPollSeconds = 240f;
+        public const float PollSeconds = 120f, WatchedPollSeconds = 600f;
 
         /// <summary>
         /// How long an answer counts as fresh enough that asking again would be waste.

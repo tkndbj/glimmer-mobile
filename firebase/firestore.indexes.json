@@ -3,10 +3,18 @@
   "fieldOverrides": [
     {
       "collectionGroup": "spendLog",
-      "fieldPath": "appliedAt",
-      "indexes": [
-        { "order": "ASCENDING", "queryScope": "COLLECTION" }
-      ]
+      "fieldPath": "*",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "grantLog",
+      "fieldPath": "*",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "receipts",
+      "fieldPath": "*",
+      "indexes": []
     }
   ]
 }

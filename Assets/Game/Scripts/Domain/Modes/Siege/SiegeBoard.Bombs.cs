@@ -151,6 +151,12 @@ namespace GlimmerGrove.Modes
             _felled++;
             Attention.RaiderFelled(raider.Boss);
 
+            // **The corpse itself, so a raider that lived less than one step can still be
+            // drawn** — see <see cref="SiegeReport.Felled"/>. It is booked at the one door for
+            // the same reason the cog is: a kill that forgot to say so is a body the view never
+            // hears about, and there is no second list it could be recovered from.
+            _report.Felled.Add(raider);
+
             Drop(raider);
             Cog(raider);
 

@@ -297,6 +297,35 @@ namespace GlimmerGrove.Modes
         /// <summary>Cogs a kill left on the hill this step. See <c>SiegeBoard.Cog</c>.</summary>
         public readonly List<SiegeCog> Cogs = new List<SiegeCog>(2);
 
+        /// <summary>
+        /// Every raider that died inside this step, as the bodies themselves.
+        ///
+        /// <para>
+        /// <b>The one list here that carries a corpse rather than a fact about one, and it exists
+        /// because the view cannot go and look.</b> A raider is a <em>state</em> the view reads
+        /// off <c>SiegeBoard.Raiders</c> after the step — but <c>Advance</c> musters, walks and
+        /// fires in one call and then sweeps the dead out of that list, so a raider that steps
+        /// onto the hill and is shot in the same call was never in it at any moment the view could
+        /// look. A ward with nothing to shoot at holds its cooldown at nought
+        /// (<c>SiegeBoard.Shoot</c>), so a whole line is loaded and waiting the instant a wave
+        /// steps out: on a strong line that is not an edge case, it is <em>every</em> raider.
+        /// </para>
+        /// <para>
+        /// What that cost is not one missing body. Everything the view draws about a raider is
+        /// keyed on a widget it mints from that list, so a raider it never saw takes its bolt, its
+        /// muzzle flash, its impact and its death burst down with it — and the only thing left on
+        /// the screen is the cog, which carries its own coordinates. Reported from play as
+        /// <em>no raider came in, the hill was empty, but cogs were dropping</em>.
+        /// </para>
+        /// <para>
+        /// <b>A kill made outside <c>Advance</c> never reaches here</b>, and that is deliberate
+        /// rather than a gap: <c>Advance</c> clears the report before it does anything, so a
+        /// firepot's or a utility's kill is wiped before any frame reads it. Those doors already
+        /// have a widget on the screen to take down and call <c>SiegeView.Reap</c> themselves.
+        /// </para>
+        /// </summary>
+        public readonly List<SiegeRaider> Felled = new List<SiegeRaider>(8);
+
         /// <summary>Cogs that ran out of time this step, by id. See <c>SiegeBoard.Age</c>.</summary>
         public readonly List<int> Trampled = new List<int>(2);
 
@@ -392,6 +421,7 @@ namespace GlimmerGrove.Modes
             Arrived.Clear();
             Dropped.Clear();
             Cogs.Clear();
+            Felled.Clear();
             Trampled.Clear();
             Devoured.Clear();
             Brimmed.Clear();
@@ -407,7 +437,8 @@ namespace GlimmerGrove.Modes
 
         public bool Any => Bolts.Count > 0 || Burns.Count > 0 || Blows.Count > 0 || Casts.Count > 0
                         || Spells.Count > 0 || Arrived.Count > 0 || Dropped.Count > 0
-                        || Cogs.Count > 0 || Trampled.Count > 0 || Devoured.Count > 0
+                        || Cogs.Count > 0 || Felled.Count > 0 || Trampled.Count > 0
+                        || Devoured.Count > 0
                         || Brimmed.Count > 0 || Charmed.Count > 0 || Forged.Count > 0
                         || Stoned.Count > 0 || Redeemed.Count > 0
                         || Stilled > 0f || Heaved > 0f || Wave >= 0;

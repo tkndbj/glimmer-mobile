@@ -874,6 +874,40 @@ marked *(art)* are one-line pointers — the working detail is in `CRAFT.md`.
    rather than `SiegeWard.Shots`, because a stone-struck ward takes a shot, spends the fuel and
    lands nothing (37ec) and would otherwise count as working.
 
+37eo. **A raider is a *state*, and a state whose whole life fits inside one step cannot be read off
+   the board afterwards — so a kill has to be *reported*, body and all.** `SiegeBoard.Advance`
+   musters, walks and fires in one call and then sweeps the dead out of `_raiders`; `SiegeView`
+   mints a raider's widget from that list, once, afterwards. A raider mustered or stepped out and
+   felled inside the same call was therefore never in the list at any moment the view could look —
+   and because **every** drawing this mode makes about a raider is keyed on that widget, the bolt,
+   the muzzle flash, the impact, the damage figure and the death burst all went with the body.
+   `SiegeView.Bolt` and its five siblings each return early on a missing `Mob`, in silence. What
+   reached the screen was a cog, which is the one thing on that hill carrying its own coordinates.
+   Reported from play, on a line of five-star legendaries, as **"no raider came in, the hill was
+   visually empty, but cogs were dropping"** — and the turrets did not even appear to fire.
+   **It is the ordinary case rather than a rare interleaving**, which is the half worth keeping: a
+   fuelled ward with nothing to shoot at holds its cooldown at *nought* (`SiegeBoard.Shoot`), so
+   between waves the whole line is loaded and waiting, and the first raider of a wave is minted
+   with `Wait` 0 — so a line that one-shots is answered on the frame the wave steps out, every
+   wave. `SiegeReport.Felled` carries the corpses themselves and `SiegeView.Unseen` stands one
+   where it fell and lets `Reap` take it down in the same frame, so there is still exactly one
+   drawing of a death. A kill made **outside** `Advance` never reaches that list, because `Advance`
+   clears the report before it does anything — which is what stops a second body being minted for
+   one the tap handlers have already blown apart (`SiegeView.Settled`). **The second half is the
+   entrance**: `Hatch` opens at alpha nought and half size over a quarter of a second, so a raider
+   felled 80ms in was a faint half-sized smudge, which is also nothing — `Shown` cancels the
+   entrance and puts the body at full before it comes apart. **No gate and no mirror can see any of
+   this**: the rules were right throughout, every sweep and every chapter figure is unchanged, and
+   a render mirror draws *states* (44l) so it cannot reach a life this short. `SiegeUnseenTests` is
+   the only instrument — it measures what a once-a-step reader could ever have seen, and fails if
+   the run stops reproducing rather than passing about nothing.
+37ep. **The same fault cost the cogs, one door over.** `SiegeBoard.Cog` books a new cog into the
+   step's report, but a firepot, a utility and an overcharge all kill from a *tap*, outside
+   `Advance` — and `Advance` clears the report before it does anything, so those cogs were
+   announced into a frame that never read them. What lay on the hill was a real, tappable prize
+   drawing nothing at all. `SiegeView.Gears` reconciles against `SiegeBoard.Cogs` in both
+   directions now, exactly as it already did to take a trampled one down.
+
 **Adding a boss rung, or a boss.** A rung: author `boss: "<kind>:<colour>"` on rung five or ten, no
 other number; copy the rung into the chapter's table in `SiegeRuleTests.Chapters.cs` (`rungs.py` holds
 it to the body); **add the chapter to `SiegeRuleTests.ShippedChapters` if it is not there** — that one
