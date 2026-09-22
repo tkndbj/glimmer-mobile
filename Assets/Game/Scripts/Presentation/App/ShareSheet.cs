@@ -96,5 +96,25 @@ namespace GlimmerGrove
             if (string.IsNullOrEmpty(text)) return;
             GUIUtility.systemCopyBuffer = text;
         }
+
+        /// <summary>
+        /// What is on the clipboard, or empty. Every platform — <c>systemCopyBuffer</c> reads
+        /// the system pasteboard on both phones — and bounded, because a clipboard can hold a
+        /// document and nothing pasted into this game is longer than a share message.
+        /// </summary>
+        public static string Paste()
+        {
+            const int Most = 2048;
+
+            string text;
+            try { text = GUIUtility.systemCopyBuffer ?? string.Empty; }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning("[Share] the clipboard could not be read: " + e.Message);
+                return string.Empty;
+            }
+
+            return text.Length > Most ? text.Substring(0, Most) : text;
+        }
     }
 }

@@ -22,6 +22,30 @@ namespace GlimmerGrove.Referral
     }
 
     /// <summary>
+    /// Where one row of the referrer's board stands: nobody has taken that seat yet, a friend
+    /// has typed the code and is still playing the milestone, or a friend has finished it.
+    ///
+    /// <para>
+    /// The server keeps two counts and no list (invariant 51): <see cref="ReferralState.Bound"/>
+    /// friends typed the code and <see cref="ReferralState.Finished"/> of them cleared the
+    /// chapter. The payment is flat, so a row is a <em>seat</em> rather than a person — the
+    /// finished friends fill the seats from the top, the ones still playing sit under them,
+    /// and which real person is in which seat is a question nothing here needs answered.
+    /// </para>
+    /// </summary>
+    public enum ReferralFriendStatus
+    {
+        /// <summary>No friend has taken this seat.</summary>
+        Open,
+
+        /// <summary>A friend typed the code and has not yet finished the milestone.</summary>
+        Playing,
+
+        /// <summary>A friend finished the milestone; the row pays.</summary>
+        Finished,
+    }
+
+    /// <summary>
     /// What the server holds about one account's referrals, as last read.
     ///
     /// <para>
@@ -143,6 +167,26 @@ namespace GlimmerGrove.Referral
             for (int n = 1; n <= count; n++)
                 if (HasPaid(ReferralLanding.Subject(kind, goal, n))) paid++;
             return paid;
+        }
+
+        /// <summary>
+        /// Where the <paramref name="friend"/>-th seat of the referrer's board stands, counting
+        /// from one. See <see cref="ReferralFriendStatus"/>.
+        ///
+        /// <para>
+        /// <see cref="Finished"/> is read as no more than <see cref="Bound"/>, because a server
+        /// answer in which more friends finished than ever joined is one this device cannot
+        /// make sense of and should draw as the smaller claim rather than as a seat that is
+        /// finished and empty at once.
+        /// </para>
+        /// </summary>
+        public ReferralFriendStatus FriendStatus(int friend)
+        {
+            if (friend < 1) return ReferralFriendStatus.Open;
+            int finished = Finished < Bound ? Finished : Bound;
+            if (friend <= finished) return ReferralFriendStatus.Finished;
+            if (friend <= Bound) return ReferralFriendStatus.Playing;
+            return ReferralFriendStatus.Open;
         }
 
         // -------------------------------------------------------------- the cache

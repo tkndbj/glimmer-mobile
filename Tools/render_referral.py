@@ -276,8 +276,10 @@ def pool_art(h):
 def row(sheet, cx, cy, h, plate, tier, count, title, sub, state, mark, flat=False, halo=True):
     """`ReferralScreen.Furnish` + `Paint`.
 
-    `state` is 'paid', 'lit', 'waiting' or 'ahead'. One answer at the right end at a time:
-    a COLLECT key, a seal, or the pill saying how far along the count is.
+    `state` is 'paid', 'lit', 'waiting', 'playing' or 'ahead'. One answer at the right end at
+    a time: a COLLECT key, a seal, or the pill saying how far along the count is - and for a
+    seat a friend has taken and not yet finished, the pill says IN PROGRESS in amber, with the
+    title in amber beside it (`ReferralFriendStatus.Playing`).
 
     `flat` draws the row without its own `CanvasGroup` fade, so the caller can apply that fade
     to the finished picture the way a group does - to everything on the card at once, rather
@@ -295,6 +297,7 @@ def row(sheet, cx, cy, h, plate, tier, count, title, sub, state, mark, flat=Fals
     """
     lit = state == "lit"
     paid = state == "paid"
+    playing = state == "playing"
     waiting = state in ("lit", "waiting")
 
     # **A paid row is the only one that steps back**, at `Paint`'s .62 - the tasks page's rule.
@@ -333,7 +336,7 @@ def row(sheet, cx, cy, h, plate, tier, count, title, sub, state, mark, flat=Fals
         K.paste(sheet, K.round_rect(54, 54, 27, K.GOLD), bx, by)
         K.text(sheet, "x%d" % count, bx, by, 27, fill=(77, 51, 13), outline=0)
 
-    colour = K.GOLD if lit else (K.MINT if paid else K.CREAM)
+    colour = K.GOLD if lit else (K.MINT if paid else K.AMBER if playing else K.CREAM)
     K.text(sheet, title, left + TEXT_X, cy - 32, 32, fill=colour, anchor="l")
     K.text(sheet, sub, left + TEXT_X, cy + 28, 25, fill=(255, 243, 220), outline=2, anchor="l")
 
@@ -355,11 +358,12 @@ def row(sheet, cx, cy, h, plate, tier, count, title, sub, state, mark, flat=Fals
                              outline=(255, 255, 255, 33), width=3)
         K.paste(sheet, pill, bx, cy)
         K.one_line(sheet, mark.upper(), bx, cy, MARK_ROOM, MARK_TYPE, MARK_LEAST,
-                   K.AQUA if mark == txt("ui.referral.settling").upper() else K.CREAM,
+                   K.AMBER if playing
+                   else K.AQUA if mark == txt("ui.referral.settling").upper() else K.CREAM,
                    "a friend's pill")
 
 
-def board(sheet, top, finished, paid):
+def board(sheet, top, bound, finished, paid):
     """`ReferralScreen.BuildBoard` - a `GridView` of one row a friend, every friend the cap allows.
 
     **The arithmetic mirrored here is `GridView`'s, not this screen's**, and that is the whole
@@ -370,7 +374,8 @@ def board(sheet, top, finished, paid):
     (invariant 44d).
 
     `paid` maps a friend number to how many of its chests are paid. The lit row is the first
-    finished friend with a chest still unpaid (`ReferralLedger.FirstClaimableFriend`).
+    finished friend with a chest still unpaid (`ReferralLedger.FirstClaimableFriend`). A seat
+    between `finished` and `bound` is a friend who joined and is still playing, and says so.
     """
     count = PER.get("count", 1)
     rows = max(1, MAX_BOUND)  # `ReferralScreen.RowCount` - the whole board, always.
@@ -398,16 +403,21 @@ def board(sheet, top, finished, paid):
     for i in range(rows):
         friend = i + 1
         opened = paid.get(friend, 0)
-        reached = finished >= friend
+        reached = min(finished, bound) >= friend
+        playing = not reached and bound >= friend
         done = opened >= count
-        state = "paid" if done else "lit" if friend == lit else "waiting" if reached else "ahead"
+        state = ("paid" if done else "lit" if friend == lit else "waiting" if reached
+                 else "playing" if playing else "ahead")
         if reached and not done and opened:
             sub = txt("ui.referral.opened", opened, count)
+        elif playing:
+            sub = txt("ui.referral.in_progress_hint", CHAPTER_NAME)
         else:
             sub = txt("ui.referral.pays", count, txt("chest.%s.name" % PER_TIER))
+        mark = (txt("ui.referral.in_progress") if playing
+                else txt("ui.referral.progress", min(finished, friend), friend))
         row(strip, W / 2, i * CELL_H + CELL_H / 2, ROW_H, "Hud/plate_navy", PER_TIER, count,
-            txt("ui.referral.friend_n", friend).upper(), sub, state,
-            txt("ui.referral.progress", min(finished, friend), friend), halo=False)
+            txt("ui.referral.friend_n", friend).upper(), sub, state, mark, halo=False)
 
     window = strip.crop((0, int(offset), W, int(offset + band)))
     sheet.alpha_composite(window, (0, int(top)))
@@ -446,7 +456,7 @@ def shot(state):
     elif offer == "welcome":
         y = welcome_row(sheet, y, *welcome)
     y = heading(sheet, y)
-    board(sheet, y, finished, paid)
+    board(sheet, y, bound, finished, paid)
 
     K.navbar(sheet, "profile")
     return sheet.convert("RGB")

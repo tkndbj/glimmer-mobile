@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using GlimmerGrove.Ads;
 using GlimmerGrove.AssetPipeline;
+using GlimmerGrove.Challenges;
 using GlimmerGrove.Content;
 using GlimmerGrove.Daily;
 using GlimmerGrove.Events;
@@ -362,7 +363,7 @@ namespace GlimmerGrove
 
         Btn _taskCard;
         Beacon _taskBeacon;
-        Badge _taskBadge;
+        WaitingBadge _taskBadge;
         readonly System.Collections.Generic.List<HubChest> _taskChests = new System.Collections.Generic.List<HubChest>();
 
         /// <summary>
@@ -468,7 +469,7 @@ namespace GlimmerGrove
 
             // The starburst, top left, counting what is ready. Built last so it sits over
             // the card's own tap area.
-            _taskBadge = BurstBadge(card.transform);
+            _taskBadge = WaitingBadge.BurstTopLeft(card.transform);
 
             PaintTasks();
 
@@ -565,28 +566,6 @@ namespace GlimmerGrove
                 TierId = tier.Id, Img = img,
                 Halo = (RectTransform)halo.transform, Lit = false,
             };
-        }
-
-        /// <summary>
-        /// The kit's starburst with a count on it, built dark and painted like the disc badge.
-        /// A starburst rather than a disc here because the card is a pack, and a pack's corner
-        /// says "+N" the way a store's does.
-        /// </summary>
-        static Badge BurstBadge(Transform card)
-        {
-            var burst = UIKit.Img("Waiting", card, Art.S("Ui/" + Skins.Badge), Pal.Gold,
-                                  new Vector2(104f, 104f), new Vector2(0f, 1f), new Vector2(46f, -44f));
-
-            var count = UIKit.Shrinkable(
-                UIKit.Titled("N", burst.transform, "+0", 30, new Color(.17f, .11f, .02f),
-                             TextAnchor.MiddleCenter, new Vector2(80f, 50f),
-                             new Vector2(.5f, .5f), new Vector2(0f, 2f), 0f, 0f), 18);
-
-            UIKit.Halo(burst.transform, Pal.Gold, 190f, .40f);
-            burst.transform.localRotation = Quaternion.Euler(0f, 0f, 8f);
-            burst.gameObject.SetActive(false);
-
-            return new Badge { Root = (RectTransform)burst.transform, Count = count, Prefix = "+" };
         }
 
         /// <summary>
@@ -906,62 +885,6 @@ namespace GlimmerGrove
             return new Beacon { Seat = seat, Lit = lit, Ring = ring };
         }
 
-        /// <summary>
-        /// A count on the corner of a box, built once and painted. Pops the first time it is
-        /// shown and breathes after; a badge rebuilt on every event would pop every time.
-        /// </summary>
-        sealed class Badge
-        {
-            public RectTransform Root;
-            public Text Count;
-            public string Prefix = string.Empty;
-            bool _shown;
-
-            public void Paint(int n)
-            {
-                if (!Root) return;
-
-                if (n <= 0)
-                {
-                    Root.gameObject.SetActive(false);
-                    _shown = false;
-                    return;
-                }
-
-                if (Count) Count.text = Prefix + n;
-                if (_shown) return;
-
-                _shown = true;
-                Root.gameObject.SetActive(true);
-                Tween.KillChannel(Root, "breathe");
-                Root.localScale = Vector3.zero;
-                var root = Root;
-                Tween.Pop(root, 0f, .5f, .18f)
-                     .OnDone(() => { if (root) Tween.Breathe(root, .10f, 1.3f); });
-            }
-        }
-
-        static Badge CornerBadge(Transform card)
-        {
-            var badge = UIKit.Img("Waiting", card, Art.Disc(64), Pal.Gold,
-                                  new Vector2(66f, 66f), new Vector2(1f, 1f), new Vector2(-30f, -28f));
-
-            var rim = UIKit.Img("Rim", badge.transform, Art.Ring(64, 7f), new Color(.16f, .12f, .04f, .95f));
-            UIKit.StretchTo((RectTransform)rim.transform, 0, 0, 0, 0);
-
-            // Shrinkable, because this is not a one-digit field: a player who is away for a
-            // fortnight comes back to two figures.
-            var count = UIKit.Shrinkable(
-                UIKit.Titled("N", badge.transform, "0", 36, new Color(.17f, .11f, .02f),
-                             TextAnchor.MiddleCenter, new Vector2(50f, 50f),
-                             new Vector2(.5f, .5f), Vector2.zero, 0f, 0f), 22);
-
-            UIKit.Halo(badge.transform, Pal.Gold, 146f, .45f);
-            badge.gameObject.SetActive(false);
-
-            return new Badge { Root = (RectTransform)badge.transform, Count = count };
-        }
-
         /// <summary>A bar inside a strip. Returns the track, so a caller can pin things to it.</summary>
         RectTransform FeatureBar(Transform strip, float w, float fill01, Color tint)
         {
@@ -987,7 +910,7 @@ namespace GlimmerGrove
         Image _streakLamp, _streakGlow, _streakFlame, _streakStripIcon;
         Text _streakValue, _streakCaption, _streakLine;
         Beacon _streakBeacon;
-        Badge _streakBadge;
+        WaitingBadge _streakBadge;
         bool _streakRiskPulse;
 
         /// <summary>
@@ -1067,7 +990,7 @@ namespace GlimmerGrove
             // Built last so it sits over the card's own tap area, and drawn as a number rather
             // than a dot because "3" is a reason to go and a dot is only a hint that there
             // might be one. FeatureHeader keeps its title clear of that corner.
-            _streakBadge = CornerBadge(card);
+            _streakBadge = WaitingBadge.Disc(card);
 
             PaintStreak();
         }
@@ -1278,7 +1201,7 @@ namespace GlimmerGrove
             Milestones(FeatureBar(FeatureStrip(card, w), w, done, Pal.Bloom),
                        w, live, progress.Marks, goal);
 
-            CornerBadge(card).Paint(progress.Waiting);
+            WaitingBadge.Disc(card).Paint(progress.Waiting);
 
             Sheen.Attach(card, 4.6f);
         }
@@ -1536,7 +1459,8 @@ namespace GlimmerGrove
         {
             var card = UIKit.Button("Challenges", Content, Art.S("Ui/" + Skins.PlateBlue),
                                     new Vector2(ChallengeW, ChallengeH), new Vector2(.5f, 0f),
-                                    new Vector2(0f, ChallengeY), null);
+                                    new Vector2(0f, ChallengeY),
+                                    () => Flow.Go<DailyChallengesScreen>());
 
             // A press-scale that squashes a plate this wide reads as the screen flinching
             // rather than as a key going down — the same reason the loadout shelf and the
@@ -1544,9 +1468,10 @@ namespace GlimmerGrove
             // does not have to be found again the day the door opens.
             card.PressScale = .985f;
 
-            // Shut: no tap, no press, no click. The plate greys with it, which is the only
-            // part of the card the picture does not cover.
-            card.Interactable = false;
+            // **Open only while there is a slate to offer.** The door stays a door when the
+            // challenge file is missing or empty (a fresh clone with no content, a read that
+            // failed): a tap onto an empty room is a tap a player learns not to make.
+            card.Interactable = !ChallengeRules.Table.IsEmpty;
 
             // The window. `showMaskGraphic` is false, so the plate is not painted twice; the
             // near-nothing alpha is what writes the stencil (`Sheen` cuts its own the same way).
@@ -1587,11 +1512,6 @@ namespace GlimmerGrove
             // `UIKit.Corner` rather than the margin typed straight in: Box always pivots at
             // centre, so a corner-anchored tag given its margin directly hangs half of itself
             // off the plate (invariant 44d, and it has shipped twice).
-            var tagSize = new Vector2(310f, 62f);
-            Scenery.Pill(card.transform, Loc.Get("ui.home.coming_soon"), 28, tagSize,
-                         new Vector2(1f, 1f), UIKit.Corner(tagSize, new Vector2(1f, 1f), 22f, 20f),
-                         new Color(.05f, .09f, .16f, .88f));
-
             card.transform.localScale = Vector3.zero;
             Tween.Pop(card.transform, 0f, .7f, .70f).OnDone(() =>
             {

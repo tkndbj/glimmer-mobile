@@ -901,6 +901,42 @@ is where they are written down, not what they mean.
    form can never come second on the next launch either. Held by `PrivacyTests`, proved by
    mutation on both halves, and compiled against the real UMP DLLs by `privacy-ump`.
 
+### Daily challenges
+
+56. **A daily challenge is a proven puzzle genre fused with the ward line, and it shares the world
+   and nothing about being a run.** Four genres (`ChallengeGenre`: pairs, pipes, merge, sokoban),
+   each a Domain class behind `IChallengePuzzle`, played on one fixed line
+   of four starter turrets over a turn-based hill (`ChallengeHill`): **every move that costs a turn
+   feeds the turret of its colour and walks every raider one step; the solving move wins before
+   the hill walks; a line with no ward standing loses.** No `LevelId`, no record, no stars, hearts,
+   XP, credits, lessons or save field — `ChallengeScreen` reaches none of `RunScreen`,
+   `ProtoScreen` or the reward path, by the owner's instruction that tuning a challenge must never
+   move the core game. **It is its own file** (`challenges.json`, `ChallengeTable.Version`, read by
+   `ChallengeRules` alone) so a retune ships nothing of `progression.json`'s.
+56a. **A genre is code and a challenge names one** (20's rule): `ChallengePuzzles` is the one
+   registry, a `switch` whose default refuses, and an unknown genre is refused by name at read.
+   Every genre reads the same flat row; a row missing what its genre plays on is refused by the
+   genre's own `Fault`, once, at read — the Editor validator, `content.py` and the fixture all run
+   that same `TryBuild`.
+56b. **A challenge is countable, and the count is the fixture.** A challenge board reaches no gate
+   that can solve it, so `ChallengeTests` plays every shipped row with a bot against the real rules
+   and prints the margin (turns walked, wards standing); a row the bot cannot win is a row nobody
+   is promised. Pipes is refused unless the authored (unscrambled) layout joins every colour;
+   sokoban unless every pad has its gem and one is off it. **`content.py` is deliberately shallow
+   here** — a Python copy of four genres would be a second opinion about a board (5b).
+56c. **The colour lock is drawn as a lane.** A ward fires only at its colour and a raider walks its
+   colour's lane onto its colour's post, so which puzzle move to make next is readable off the hill.
+   Fuel banks on a ward with nothing to shoot, so a burst (a flood, a cleared line) is paid in full.
+56d. **Today's row is `day mod n` over the slate, stored nowhere** (45b), and the list draws the
+   whole slate with today's badged — narrowing it to one is a line in `DailyChallengesScreen`, left
+   for the day the four are judged.
+56e. **Three genres were built, played and withdrawn the same day** (2026-09-22, the owner's call
+   after playing all seven): Sudoku, Minefield (minesweeper) and Stack (tetris), with the input
+   kinds and the "woken raider" only they used. Their spellings are refused at read like any
+   unknown genre; their ids (`d02_sudoku`, `d03_mines`, `d07_tetris`) are **not spent**, because
+   nothing stores a challenge id (5f's test), and their loc keys may be re-minted. Bringing one back
+   is a puzzle, a view, a registry line and a row — the shape 56a describes.
+
 ### Art credits
 
 46. **An art credit belongs wherever its licence says, and for this game that is nowhere in the app.**
@@ -1074,6 +1110,11 @@ guess — verify offline.
   the picture the owner asked for, and it is shared by three screens, so it answers for all
   three — **which matters because the two turret ceremonies have no mirror of their own** and
   are judged on a device or not at all.
+- **The daily challenges:** `python Tools/render_challenges.py` (`--id`, `--contact`, `--phone`)
+  draws every shipped row's screen at rest off `challenges.json` with the real sprites — the only
+  thing that can see the bands: it found the mustered raiders standing under the readout row and
+  the Stack strip wearing the wrong string before either reached the Editor. `python
+  Tools/verify/tests.py ChallengeTests` is the winnability gate (56b) and prints the margins.
 - **The tutorial:** `python Tools/verify/tests.py TutorialTests` plays the whole script against
   the real rules — the taught swap, the pour, the overcharge, the sweep — and proves it ends with
   the line intact; its board reaches **no content gate**, so this is the only thing that would
@@ -1565,6 +1606,41 @@ half is `Assets/Game/Scripts/Cloud/`, Firebase Unity SDK
 on a fresh clone).
 
 ## Owed
+
+**The invite page grew three things on 2026-09-22 and none of them has been in the Editor.**
+The code field folds every keystroke (upper case, the hyphen after the fourth symbol, nothing
+else) and has a PASTE key that finds a code *inside* whatever was copied, because what a friend
+copies is the whole share sentence (`ReferralCode.Present` / `.Key` / `.Extract`, all pure and
+tested); a friend who typed the code and has not finished the chapter is drawn as **IN
+PROGRESS** in amber on the referrer's board (`ReferralFriendStatus`, `ReferralLedger.StatusOf`);
+and the Refer-a-Friend door on the profile and the shop wears the hub pack's starburst with the
+count of chests either side can open (`ReferralLedger.WaitingCount`, `WaitingBadge`) — **the
+badge is watched** (`ReferralWatch.Attach`, invariant 44o), so every profile or shop open now
+costs one `getReferral` call, which is the price of a badge that is true. `WaitingBadge.cs` is
+the hub's nested badge lifted out into `Presentation/App/` and is a new file, so its **`.meta`
+does not exist yet** and Unity mints it on the next focus. It touches no server, no schema and
+no seed: everything it draws was already on the wire. Offline green: `compile.py` (all fifteen),
+`ReferralTests` 45/45 (nine new), `loc.py` (0 missing, four new keys), `content.py` (0 errors),
+`render_referral.py` (the climb state now draws two in-progress rows — and it caught the first
+sentence running under the pill), `render_shop.py --waiting 3`. **What is owed is an eye and a
+phone**: the touch keyboard's text goes through the same validator as a desktop one and nothing
+offline exercises it, so type a lower-case code with a hyphen on a device and paste the share
+message from a chat app — the two things the field was rebuilt for.
+
+**Daily Challenges opened on 2026-09-22 with seven puzzle genres; the owner played all seven the
+same day and cut three (56e), so four ship: Pairs, Pipeworks, Merge and Push.**
+`Assets/Game/Scripts/Domain/Challenges/`, `Presentation/Challenges/`, `Tests/ChallengeTests.cs`,
+`Tools/render_challenges.py`, `Content/challenges.json` and 20 loc keys. **It cuts no art and
+claims no address**: everything it draws is the siege's own hold (`SiegeMode.ArtFor(null)`) or
+procedural, so nothing owes `Sync All Assets`. It touches no server, no save, no schema and no
+seed. The hub's Daily Challenges banner is live (the COMING SOON pill is gone, and
+`render_home.py` with it); the door shuts itself if `challenges.json` is missing or empty.
+Offline green: `compile.py` (all fifteen), `ChallengeTests` 25/25 (every row won by its bot —
+margins printed), `content.py` (0 errors), `loc.py` (0 missing), `artnames.py` (0/0),
+`sfxnames.py`, `render_challenges.py` at every row. **What is owed is the Editor's three, then
+play** — the four are a first cut of each genre, tuned only against the bots, and every wave
+table is the owner's to retune in the file (`hill`, `bolts`, `waves` are the three dials, per
+row). One thing no gate can answer: whether a turn-based hill reads as pressure or as a counter.
 
 **The rank ceremony shipped on 2026-09-21 and has never been in the Editor or on a device.**
 Three new files (`Presentation/App/RankCeremony.cs`, `Presentation/Screens/RankUpOverlay.cs`,

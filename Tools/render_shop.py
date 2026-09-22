@@ -647,13 +647,17 @@ def kit_card(sheet, x, top, item, gems):
     K.text(sheet, f"{gems:,}", plate_cx + 26, pbot - FACE_RISE, 34, fill=K.CREAM, outline=3)
 
 
-def invite_banner(sheet):
+def invite_banner(sheet, waiting=0):
     """`ShopScreen.BuildInvite` - the profile's card, on the storefront.
 
     The banner's ground is transparent, so the plate behind it is what the picture stands on;
     it is cut at `1 / (1 + swell)` so the *crest* of the breath is what fits the window, and
     drawn here at that crest, because the one phase worth a picture is the one that decides
     whether the mask cuts anything.
+
+    `waiting` is `ReferralLedger.WaitingCount`: the chests behind the door, on the hub pack's
+    starburst at the band's top-right corner (`WaitingBadge.BurstTopRight`). Nought draws no
+    badge, which is what the band says until a friend finishes.
     """
     cy = HEADER + TABROW + REFER_GAP + REFER_H / 2
     K.paste(sheet, K.skin("Hud/plate_blue", REFER_W, REFER_H), W / 2, cy)
@@ -661,6 +665,7 @@ def invite_banner(sheet):
     try:
         banner = Image.open(UI / "refer.png").convert("RGBA")
     except FileNotFoundError:
+        waiting_badge(sheet, cy, waiting)
         return
 
     win_w, win_h = REFER_W - 2 * BANNER_INSET, REFER_H - 2 * BANNER_INSET
@@ -683,13 +688,26 @@ def invite_banner(sheet):
     window.paste(255, (ins, ins, layer.width - ins, layer.height - ins))
     layer.putalpha(Image.composite(layer.getchannel("A"), Image.new("L", layer.size, 0), window))
     K.paste(sheet, layer, W / 2, cy)
+    waiting_badge(sheet, cy, waiting)
 
     print("  invite banner: tabs end at %d, banner %d..%d, then the band (%d quiet, %d saying)"
           % (HEADER + TABROW, HEADER + TABROW + REFER_GAP,
              HEADER + TABROW + REFER_GAP + REFER_H, QUIET_ROW, SUMMARY_LINE))
 
 
-def screen(shelf, offline=False):
+def waiting_badge(sheet, cy, waiting):
+    """`WaitingBadge.BurstTopRight` on the invite band: the hub pack's starburst, `+N`, leant
+    eight degrees, over the band's top-right corner and outside the mask's window."""
+    if waiting <= 0:
+        return
+    bx = W / 2 + REFER_W / 2 - 46
+    by = cy - REFER_H / 2 + 44
+    K.paste(sheet, K.glow(190, 1.7, K.GOLD, .40), bx, by)
+    K.paste(sheet, K.tint(K.skin("Hud/burst", 104, 104), K.GOLD).rotate(8, Image.BICUBIC, expand=True), bx, by)
+    K.text(sheet, "+%d" % waiting, bx, by - 2, 30, fill=(43, 28, 5), outline=0)
+
+
+def screen(shelf, offline=False, waiting=0):
     sheet = Image.new("RGBA", (W, H), (*K.GROUND, 255))
     # `ShopScreen.Build` calls `Scenery.Plain`, not `Scenery.Room`. This drew the forest
     # for as long as the mirror has existed, and it is not a cosmetic drift: a sentence
@@ -763,7 +781,7 @@ def screen(shelf, offline=False):
 
 
     # ---- the invite banner, directly under the tabs
-    invite_banner(sheet)
+    invite_banner(sheet, waiting)
 
     # ---- the grid
     rows = [] if offline else products(shelf)
@@ -944,6 +962,8 @@ def main():
                     help="the shelf after the one-time bundle has been bought")
     ap.add_argument("--offline", action="store_true",
                     help="the store never answered - what an unreachable shelf says")
+    ap.add_argument("--waiting", type=int, default=0,
+                    help="referral chests waiting behind the invite band; draws its badge")
     ap.add_argument("--measure", action="store_true",
                     help="measure Hud/burst and hold the badge constants to it; draws nothing")
     ap.add_argument("--out", type=Path, default=Path("shop.png"))
@@ -957,12 +977,12 @@ def main():
 
     if args.all:
         shelves = [s for s in SHELVES if s in LADDER or s == "supplies"]
-        sheets = [screen(s, args.offline) for s in shelves]
+        sheets = [screen(s, args.offline, args.waiting) for s in shelves]
         out = Image.new("RGB", (W * len(sheets), H))
         for i, one in enumerate(sheets):
             out.paste(one, (i * W, 0))
     else:
-        out = screen(args.shelf, args.offline)
+        out = screen(args.shelf, args.offline, args.waiting)
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     out.save(args.out)

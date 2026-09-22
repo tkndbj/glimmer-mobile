@@ -21,6 +21,12 @@ namespace GlimmerGrove.Content
         /// </summary>
         public const string Progression = Root + "/progression.json";
 
+        /// <summary>
+        /// The daily challenge slate. <b>Its own file</b>, read by <c>ChallengeRules</c> alone,
+        /// so a challenge can be tuned or withdrawn without <c>progression.json</c> moving.
+        /// </summary>
+        public const string Challenges = Root + "/challenges.json";
+
         public static string Chapter(ChapterId id) => $"{Root}/chapters/{id.Value}.json";
 
         public static string Localisation(string languageCode) => $"{Root}/loc/{languageCode}.json";

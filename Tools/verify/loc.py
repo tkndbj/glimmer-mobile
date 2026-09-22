@@ -58,6 +58,9 @@ DERIVED_PREFIXES = ("level.", "chapter.", "ui.companion.", "ui.avatar.", "ui.tip
                     # kinds and proves both halves of every one resolves.
                     "notify.",
                     "ui.piece.", "ui.land.", "ui.shelf.",
+                    # A daily challenge names itself and states its rule from its permanent id
+                    # (`ChallengeDefinition.NameKey` / `.BlurbKey`); content.py walks the slate.
+                    "challenge.",
                     # A product and a good are named from their permanent id for the reason
                     # a glade is (invariant 5a): anything holding the id can name the thing
                     # without reading the catalog, which is what lets a purchase say what

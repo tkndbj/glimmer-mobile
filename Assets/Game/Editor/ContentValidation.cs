@@ -94,6 +94,7 @@ namespace GlimmerGrove.EditorTools
             ValidateChapterMaps(load, result);
             ValidateLocalisation(load, result);
             ValidateProgression(load.Index, result, verbose);
+            ValidateChallenges(result, verbose);
             ValidateLegacyMigration(load.Index, result);
 
             return result;
@@ -1127,6 +1128,47 @@ namespace GlimmerGrove.EditorTools
         /// on it does not under-report, it reports everything as missing, which is how this was
         /// found. <see cref="ValidateLocalisation"/> parses its own copy for the same reason.
         /// </summary>
+        /// <summary>
+        /// The daily challenge slate: read through the same reader a device uses, with every
+        /// refusal an error, and each row's two derived strings held to the table.
+        ///
+        /// <b>Whether a board is winnable is the fixture's question</b> (<c>ChallengeTests</c>
+        /// plays every row); this is the file's shape and its strings, which is what a content
+        /// push can break without a build.
+        /// </summary>
+        static void ValidateChallenges(ContentValidationResult result, bool verbose)
+        {
+            var source = new BundledContentSource();
+            var fetch = source.FetchAsync(ContentPaths.Challenges, default).GetAwaiter().GetResult();
+
+            if (!fetch.Success)
+            {
+                result.Errors.Add($"missing {ContentPaths.Challenges}");
+                return;
+            }
+
+            var problems = new List<string>();
+            Challenges.ChallengeTable.TryRead(fetch.Text, out var table, problems);
+            foreach (var problem in problems) result.Errors.Add("challenges: " + problem);
+
+            var strings = LocalisationTable();
+
+            foreach (var row in table.All)
+            {
+                if (strings != null)
+                {
+                    Require(strings, row.NameKey, $"challenge '{row.Id}'", result);
+                    Require(strings, row.BlurbKey, $"challenge '{row.Id}'", result);
+                }
+
+                if (verbose)
+                    Debug.Log($"[Glimmer] challenge '{row.Id}' ({row.Genre}) {row.Width}x{row.Height}, " +
+                              $"hill {row.Hill}, {row.RaiderCount} raider(s) of {row.HillHealth} health");
+            }
+
+            if (table.IsEmpty) result.Warnings.Add("challenges.json offers no challenge; the hub's door is shut");
+        }
+
         static LocTable LocalisationTable()
         {
             var source = new BundledContentSource();

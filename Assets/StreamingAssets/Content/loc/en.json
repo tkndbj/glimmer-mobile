@@ -2,6 +2,38 @@
   "language": "en",
   "entries": [
     {
+      "key": "challenge.d01_pairs.blurb",
+      "text": "Turn two gems. A pair fires its turret."
+    },
+    {
+      "key": "challenge.d01_pairs.name",
+      "text": "Pairs"
+    },
+    {
+      "key": "challenge.d04_pipes.blurb",
+      "text": "Turn the pipes until each colour reaches its turret. A joined pipe fires every turn."
+    },
+    {
+      "key": "challenge.d04_pipes.name",
+      "text": "Pipeworks"
+    },
+    {
+      "key": "challenge.d05_merge.blurb",
+      "text": "Slide the board. Two of a kind become the next, and fire the colour they make."
+    },
+    {
+      "key": "challenge.d05_merge.name",
+      "text": "Merge"
+    },
+    {
+      "key": "challenge.d06_sokoban.blurb",
+      "text": "Push each gem onto its pad. A seated gem fires every step."
+    },
+    {
+      "key": "challenge.d06_sokoban.name",
+      "text": "Push"
+    },
+    {
       "key": "chapter.c01_shallows.name",
       "text": "The Shallows"
     },
@@ -1590,6 +1622,58 @@
       "text": "Gain {0} and {1} per wave cleared."
     },
     {
+      "key": "ui.challenges.done",
+      "text": "Done"
+    },
+    {
+      "key": "ui.challenges.empty",
+      "text": "No challenge is on today. Come back tomorrow."
+    },
+    {
+      "key": "ui.challenges.lost",
+      "text": "The line has fallen"
+    },
+    {
+      "key": "ui.challenges.next",
+      "text": "NEXT WAVE IN {0}"
+    },
+    {
+      "key": "ui.challenges.pads",
+      "text": "{0} / {1} seated"
+    },
+    {
+      "key": "ui.challenges.pairs",
+      "text": "{0} / {1} pairs"
+    },
+    {
+      "key": "ui.challenges.pipes",
+      "text": "{0} / {1} joined"
+    },
+    {
+      "key": "ui.challenges.rank",
+      "text": "Reach rank {0}"
+    },
+    {
+      "key": "ui.challenges.retry",
+      "text": "Try again"
+    },
+    {
+      "key": "ui.challenges.rule",
+      "text": "Every move you make, the raiders take a step. Finish the puzzle before your line falls."
+    },
+    {
+      "key": "ui.challenges.today",
+      "text": "TODAY"
+    },
+    {
+      "key": "ui.challenges.turns",
+      "text": "TURN {0}"
+    },
+    {
+      "key": "ui.challenges.won",
+      "text": "Puzzle solved!"
+    },
+    {
       "key": "ui.endless.xp",
       "text": "XP"
     },
@@ -2084,10 +2168,6 @@
     {
       "key": "ui.bonus.on_top",
       "text": "Paid on top of what this glade earned."
-    },
-    {
-      "key": "ui.challenges.soon",
-      "text": "New challenges are being prepared. Check back soon."
     },
     {
       "key": "ui.challenges.title",
@@ -2652,10 +2732,6 @@
     {
       "key": "ui.home.at_rank",
       "text": "unlocks at rank {0}"
-    },
-    {
-      "key": "ui.home.coming_soon",
-      "text": "COMING SOON"
     },
     {
       "key": "ui.home.event_waiting",
@@ -3504,6 +3580,22 @@
     {
       "key": "ui.referral.opened",
       "text": "{0} of {1} opened"
+    },
+    {
+      "key": "ui.referral.in_progress",
+      "text": "In progress"
+    },
+    {
+      "key": "ui.referral.in_progress_hint",
+      "text": "Joined, now playing {0}"
+    },
+    {
+      "key": "ui.referral.paste",
+      "text": "Paste"
+    },
+    {
+      "key": "ui.referral.paste_empty",
+      "text": "Nothing to paste. Copy your friend's code first."
     },
     {
       "key": "ui.referral.info_pay_title",

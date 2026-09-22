@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Cloud;
+using GlimmerGrove.Challenges;
 using GlimmerGrove.Content;
 using GlimmerGrove.Layout;
 using GlimmerGrove.Localization;
@@ -750,6 +751,12 @@ namespace GlimmerGrove
             var rules = ProgressionRules.LoadAsync(ContentBootstrap.LocalSource);
             while (!rules.IsCompleted) yield return null;
             if (rules.IsFaulted) Debug.LogException(rules.Exception);
+
+            // The daily challenge slate: its own file, its own reader, and a missing one costs
+            // only the hub's door (`HomeScreen.BuildChallenges`), never the boot.
+            var challenges = ChallengeRules.LoadAsync(ContentBootstrap.LocalSource);
+            while (!challenges.IsCompleted) yield return null;
+            if (challenges.IsFaulted) Debug.LogException(challenges.Exception);
 
             // Reminders, bound here rather than in Boot because both halves of what they need
             // have only just arrived: the Android channel is named with a player-facing string,

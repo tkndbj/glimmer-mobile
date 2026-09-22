@@ -1011,6 +1011,11 @@ namespace GlimmerGrove
             bool waiting = reached && !done;
             lit = lit && waiting;
 
+            // A friend who typed the code and is still playing the chapter. The seat is taken
+            // and pays nothing yet, and a board that drew it exactly like an empty seat told a
+            // referrer nothing had happened when the one thing they were waiting for had.
+            bool playing = !welcome && ReferralLedger.StatusOf(w.Goal) == ReferralFriendStatus.Playing;
+
             var (cleared, total) = welcome ? ReferralLedger.MilestoneProgress : (0, 0);
             bool clearedHere = welcome && total > 0 && cleared >= total;
 
@@ -1038,6 +1043,8 @@ namespace GlimmerGrove
                     w.Sub.text = Loc.Format("ui.referral.opened", paid, count);
                 else if (done && welcome)
                     w.Sub.text = Loc.Format("ui.referral.welcome_done_hint", _chapterName);
+                else if (playing)
+                    w.Sub.text = Loc.Format("ui.referral.in_progress_hint", _chapterName);
                 else
                     w.Sub.text = pays;
             }
@@ -1069,6 +1076,15 @@ namespace GlimmerGrove
                         : Loc.Format("ui.referral.progress", cleared, total);
                     w.MarkText.color = clearedHere ? Pal.Aqua : Pal.Cream;
                 }
+                else if (playing)
+                {
+                    // The one row whose answer is a word rather than a count, in the warm
+                    // accent so it reads as *something is happening* beside the cream of a seat
+                    // nobody has taken. Amber rather than gold, because gold on this board
+                    // means *take this* (the lit row) and this row cannot be taken yet.
+                    w.MarkText.text = Loc.Get("ui.referral.in_progress").ToUpperInvariant();
+                    w.MarkText.color = Pal.Amber;
+                }
                 else
                 {
                     w.MarkText.text = Loc.Format("ui.referral.progress",
@@ -1081,7 +1097,7 @@ namespace GlimmerGrove
                 UIKit.OneLineLabel(w.MarkText, MarkRoom, MarkType, MarkLeast);
             }
 
-            if (w.Title) w.Title.color = lit ? Pal.Gold : done ? Pal.Mint : Pal.Cream;
+            if (w.Title) w.Title.color = lit ? Pal.Gold : done ? Pal.Mint : playing ? Pal.Amber : Pal.Cream;
 
             // Full colour only where there is something to take; the cool grey is the tasks
             // ladder's own tint for a chest that is not yours yet, and it is what carries the

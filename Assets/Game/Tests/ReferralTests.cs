@@ -170,6 +170,70 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual("ABC", ReferralCode.Display("ABC"), "a string that is not a code is shown as it is");
         }
 
+        // ---------------------------------------------------------- the entry field
+        [Test]
+        public void TheFieldShowsWhatWasTypedTheWayAScreenPrintsIt()
+        {
+            Assert.AreEqual("K7PQ-2XM9", ReferralCode.Present("k7pq2xm9"), "lower case is shown upper");
+            Assert.AreEqual("K7PQ-2XM9", ReferralCode.Present("K7PQ-2XM9"), "a printed code is shown as it is");
+            Assert.AreEqual("K7PQ-2XM9", ReferralCode.Present("k7pq 2xm9"), "a space is not a symbol");
+            Assert.AreEqual("K7PQ", ReferralCode.Present("k7pq"), "no hyphen until there is a fifth symbol");
+            Assert.AreEqual("K7PQ", ReferralCode.Present("k7pq-"), "a typed hyphen alone is not shown");
+            Assert.AreEqual("K7PQ-2", ReferralCode.Present("k7pq2"), "the hyphen arrives with the fifth");
+            Assert.AreEqual("ABCD-EFGH", ReferralCode.Present("abcd-efgh-xyz"), "capped at a code's length");
+            Assert.AreEqual(string.Empty, ReferralCode.Present(null));
+            Assert.AreEqual(string.Empty, ReferralCode.Present("--- ..."));
+        }
+
+        [Test]
+        public void PresentingIsIdempotent()
+        {
+            foreach (var typed in new[] { "k7pq2xm9", "K7PQ-2XM9", "abc", "abcd-", "abcde", "", "ab cd-ef gh" })
+            {
+                string once = ReferralCode.Present(typed);
+                Assert.AreEqual(once, ReferralCode.Present(once), $"'{typed}': a field that rewrites itself must settle");
+            }
+        }
+
+        [Test]
+        public void WhatIsShownAlwaysFoldsToWhatTheServerIsAsked()
+        {
+            foreach (var typed in new[] { "k7pq2xm9", "K7PQ-2XM9", "k7pq 2xm9", "abcd-efgh-xyz", "k7pq" })
+                Assert.AreEqual(ReferralCode.Normalise(typed).Length > ReferralCode.Length
+                                    ? ReferralCode.Normalise(typed).Substring(0, ReferralCode.Length)
+                                    : ReferralCode.Normalise(typed),
+                                ReferralCode.Normalise(ReferralCode.Present(typed)),
+                                $"'{typed}': the field may not show one code and send another");
+        }
+
+        [Test]
+        public void AKeystrokeIsFoldedAsItLands()
+        {
+            Assert.AreEqual('K', ReferralCode.Key("", 0, 'k'), "a letter is shown upper");
+            Assert.AreEqual('7', ReferralCode.Key("K", 1, '7'));
+            Assert.AreEqual('\0', ReferralCode.Key("K7", 2, ' '), "a space is refused");
+            Assert.AreEqual('\0', ReferralCode.Key("K7", 2, '.'), "punctuation is refused");
+            Assert.AreEqual('\0', ReferralCode.Key("K7", 2, '-'), "a hyphen anywhere but the break is refused");
+            Assert.AreEqual('-', ReferralCode.Key("K7PQ", 4, '-'), "the printed hyphen is accepted where it is printed");
+            Assert.AreEqual('\0', ReferralCode.Key("K7PQ-", 5, '-'), "but not twice");
+            Assert.AreEqual('\0', ReferralCode.Key("K7PQ-2XM9", 9, 'a'), "a ninth symbol is refused: the field is full");
+            Assert.AreEqual('A', ReferralCode.Key("K7PQ-2XM", 8, 'a'), "the eighth is not");
+        }
+
+        [Test]
+        public void ACodeIsFoundInsideWhateverWasPasted()
+        {
+            Assert.AreEqual("K7PQ2XM9", ReferralCode.Extract("Play Gemfire with me! Enter my code K7PQ-2XM9 when you start and we both get chests. https://example.com"),
+                            "the share sentence carries the code in the middle");
+            Assert.AreEqual("K7PQ2XM9", ReferralCode.Extract("K7PQ-2XM9"));
+            Assert.AreEqual("K7PQ2XM9", ReferralCode.Extract("  k7pq2xm9\n"));
+            Assert.AreEqual("K7PQ2XM9", ReferralCode.Extract("K7PQ 2XM9"), "a bare code with a space in it is still one code");
+            Assert.AreEqual("K7PQ2XM9", ReferralCode.Extract("code: K7PQ-2XM9."), "punctuation round a word folds away");
+            Assert.AreEqual(string.Empty, ReferralCode.Extract("Play Gemfire with me!"), "eight letters of prose is not a code");
+            Assert.AreEqual(string.Empty, ReferralCode.Extract(string.Empty));
+            Assert.AreEqual(string.Empty, ReferralCode.Extract(null));
+        }
+
         // ----------------------------------------------------------- the landing
         [Test]
         public void APaidReplyIsBankedHere()
@@ -476,6 +540,73 @@ namespace GlimmerGrove.Tests
             Assert.IsTrue(ReferralState.Empty.Matches(first), "the answer itself says nothing new");
             Assert.IsFalse(ReferralState.Empty.IsKnown);
             Assert.IsTrue(first.IsKnown, "but it is the first one that is known, and that is the change");
+        }
+
+        // -------------------------------------------------------------- the board
+        [Test]
+        public void ASeatIsFinishedThenPlayingThenOpen()
+        {
+            var state = new ReferralState("ABCDEFGH", 5, 3, null, false, false, true, 1L);
+
+            Assert.AreEqual(ReferralFriendStatus.Finished, state.FriendStatus(1));
+            Assert.AreEqual(ReferralFriendStatus.Finished, state.FriendStatus(3));
+            Assert.AreEqual(ReferralFriendStatus.Playing, state.FriendStatus(4), "joined, not finished");
+            Assert.AreEqual(ReferralFriendStatus.Playing, state.FriendStatus(5));
+            Assert.AreEqual(ReferralFriendStatus.Open, state.FriendStatus(6), "nobody has taken this seat");
+            Assert.AreEqual(ReferralFriendStatus.Open, state.FriendStatus(0));
+            Assert.AreEqual(ReferralFriendStatus.Open, state.FriendStatus(-1));
+        }
+
+        [Test]
+        public void MoreFinishedThanJoinedIsReadAsTheSmallerClaim()
+        {
+            var odd = new ReferralState("ABCDEFGH", 2, 4, null, false, false, true, 1L);
+            Assert.AreEqual(ReferralFriendStatus.Finished, odd.FriendStatus(2));
+            Assert.AreEqual(ReferralFriendStatus.Open, odd.FriendStatus(3), "a seat cannot be finished and empty at once");
+        }
+
+        [Test]
+        public void TheBadgeCountsEveryChestThatCanBeOpened()
+        {
+            var table = Resolve(Shipped(), new List<string>());
+            Assert.AreEqual(2, table.PerInvitee.Count, "the fixture assumes two a friend");
+            Assert.AreEqual(2, table.Invitee.Count, "and two for the invitee");
+
+            Assert.AreEqual(0, ReferralLedger.Waiting(ReferralState.Empty, table), "nothing joined, nothing waiting");
+
+            var joined = new ReferralState("ABCDEFGH", 3, 0, null, false, false, true, 1L);
+            Assert.AreEqual(0, ReferralLedger.Waiting(joined, table), "a friend still playing pays nothing yet");
+
+            var finished = new ReferralState("ABCDEFGH", 3, 2, null, false, false, true, 1L);
+            Assert.AreEqual(4, ReferralLedger.Waiting(finished, table), "two friends finished, two chests each");
+
+            var partly = new ReferralState("ABCDEFGH", 3, 2, new[] { "rung:1:1", "rung:1:2", "rung:2:1" },
+                                           false, false, true, 1L);
+            Assert.AreEqual(1, ReferralLedger.Waiting(partly, table), "chests, not rows: one of the second friend's is left");
+
+            var invitee = new ReferralState("ABCDEFGH", 0, 0, null, true, true, false, 1L);
+            Assert.AreEqual(2, ReferralLedger.Waiting(invitee, table), "the welcome chests, once the milestone is reached");
+
+            var notYet = new ReferralState("ABCDEFGH", 0, 0, null, true, false, false, 1L);
+            Assert.AreEqual(0, ReferralLedger.Waiting(notYet, table), "referred but the chapter is not cleared");
+
+            var both = new ReferralState("ABCDEFGH", 1, 1, new[] { "invitee:1" }, true, true, false, 1L);
+            Assert.AreEqual(3, ReferralLedger.Waiting(both, table), "both sides added: one welcome chest left and two for the friend");
+        }
+
+        [Test]
+        public void TheBadgeIsBoundedByTheCapAndByTheTable()
+        {
+            var dto = Shipped();
+            dto.maxBound = 2;
+            var capped = Resolve(dto, new List<string>());
+
+            var beyond = new ReferralState("ABCDEFGH", 5, 5, null, false, false, true, 1L);
+            Assert.AreEqual(4, ReferralLedger.Waiting(beyond, capped), "seats past the cap pay nothing, whatever the count says");
+
+            Assert.AreEqual(0, ReferralLedger.Waiting(beyond, ReferralTable.None), "a withdrawn table has no chests in it");
+            Assert.AreEqual(0, ReferralLedger.Waiting(null, capped));
+            Assert.AreEqual(0, ReferralLedger.Waiting(beyond, null));
         }
 
         // ------------------------------------------------------------- plumbing

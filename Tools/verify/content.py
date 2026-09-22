@@ -2631,6 +2631,92 @@ def check_referral(manifest, progression, tasks, keys, warnings):
     }
 
 
+CHALLENGE_GENRES = ("pairs", "pipes", "merge", "sokoban")
+
+
+def check_challenges(keys, warnings):
+    """The daily challenge slate: every row names a genre this build plays, derives two
+    strings that resolve, and sends waves the reader would accept.
+
+    **Shallow on purpose.** Whether a board is *winnable* is a question only the rules can
+    answer, and the rules live in C# - `ChallengeTests` plays every shipped row end to end
+    with a bot and prints the margin. A Python copy of seven genres would be a second opinion
+    about a board (invariant 5b's lesson), so this checks the file's shape and leaves the
+    boards to the fixture. Mirrors `ChallengeTable.TryBuild`'s refusals, not its genres.
+    """
+    path = os.path.join(ROOT, "challenges.json")
+    if not os.path.exists(path):
+        errors.append("challenges.json is missing")
+        return
+
+    table = json.load(open(path, encoding="utf-8"))
+    line = table.get("line") or {}
+    for field in ("damage", "health", "strike"):
+        if not isinstance(line.get(field), int) or line.get(field) <= 0:
+            errors.append(f"challenges line.{field} must be a whole number above nought")
+
+    rows = table.get("challenges") or []
+    if not rows:
+        errors.append("challenges.json lists no challenge")
+
+    seen = set()
+    print(f"challenges: {len(rows)} row(s) on a line of {line.get('health')} health, "
+          f"{line.get('damage')} a bolt, {line.get('strike')} a blow")
+
+    for row in rows:
+        cid = row.get("id") or ""
+        where = f"challenge '{cid}'" if cid else "an unnamed challenge"
+        if not cid:
+            errors.append("a challenge has no id")
+            continue
+        if cid in seen:
+            errors.append(f"{where} is listed twice")
+            continue
+        seen.add(cid)
+
+        genre = row.get("genre")
+        if genre not in CHALLENGE_GENRES:
+            errors.append(f"{where} names genre '{genre}', which this build does not play")
+
+        for key in (f"challenge.{cid}.name", f"challenge.{cid}.blurb"):
+            if key not in keys:
+                errors.append(f"{where} needs string '{key}'")
+
+        if not isinstance(row.get("hill"), int) or row.get("hill") <= 0:
+            errors.append(f"{where} needs a hill of at least one step")
+
+        if row.get("width", 0) <= 0 or row.get("height", 0) <= 0:
+            errors.append(f"{where} needs a width and a height")
+
+        health, raiders, last = 0, 0, -1
+        for wave in row.get("waves") or []:
+            parts = str(wave).split()
+            if len(parts) < 2 or not parts[0].isdigit():
+                errors.append(f"{where} wave \"{wave}\" must read \"<turn> <colour><health> ...\"")
+                continue
+            turn = int(parts[0])
+            if turn <= last:
+                errors.append(f"{where} wave \"{wave}\" is out of order")
+            last = turn
+            for tok in parts[1:]:
+                if len(tok) < 2 or tok[0] not in "rgby" or not tok[1:].isdigit() or int(tok[1:]) <= 0:
+                    errors.append(f"{where} wave \"{wave}\": '{tok}' is not a colour letter and a health")
+                    continue
+                health += int(tok[1:])
+                raiders += 1
+        if not row.get("waves"):
+            errors.append(f"{where} sends no waves")
+
+        print(f"       {cid:<14} {genre:<8} {row.get('width')}x{row.get('height')}  hill {row.get('hill')}  "
+              f"{len(row.get('waves') or [])} wave(s), {raiders} raider(s), {health} health, "
+              f"{max(1, row.get('bolts') or 1)} bolt(s) a unit")
+
+    for name in CHALLENGE_GENRES:
+        if not any(r.get("genre") == name for r in rows):
+            warnings.append(f"no challenge ships the '{name}' genre")
+
+
+
 def notification_kinds():
     """The reminder ids this build knows, read out of `NotificationKinds.Id`.
 
@@ -3708,7 +3794,7 @@ def main():
     # The catalog and the reward table version independently: progression.json is
     # delivered on its own and changes at a different rate, so a catalog format bump
     # must not invalidate it for clients that have not updated. See ProgressionSchema.
-    EXPECTED = {"manifest.json": 2, "progression.json": 1}
+    EXPECTED = {"manifest.json": 2, "progression.json": 1, "challenges.json": 1}
     for f in sorted(os.listdir(os.path.join(ROOT, "chapters"))):
         if f.endswith(".json"):
             EXPECTED[os.path.join("chapters", f)] = 2
@@ -4598,6 +4684,9 @@ def main():
               "standing notice is the whole warning")
     elif not purchase_budget:
         print("       purchaseBudget is zero, so a guest who pays is never asked to protect it")
+
+    print()
+    check_challenges(keys, warnings)
 
     print()
     print(run_board_vectors())

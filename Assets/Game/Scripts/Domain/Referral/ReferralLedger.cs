@@ -214,13 +214,63 @@ namespace GlimmerGrove.Referral
 
         /// <summary>Whether the server has reached this payment: the goal-th friend finished, or the invitee's own milestone.</summary>
         public static bool Reached(ReferralClaimKind kind, int goal)
+            => Reached(State, Table, kind, goal);
+
+        static bool Reached(ReferralState state, ReferralTable table, ReferralClaimKind kind, int goal)
             => kind == ReferralClaimKind.Invitee
-                ? State.Referred && State.MilestoneReached
-                : goal >= 1 && goal <= Table.MaxBound && State.Finished >= goal;
+                ? state.Referred && state.MilestoneReached
+                : goal >= 1 && goal <= table.MaxBound
+                  && state.FriendStatus(goal) == ReferralFriendStatus.Finished;
+
+        /// <summary>
+        /// Where the <paramref name="friend"/>-th row of the board stands, capped by the table:
+        /// a seat past the cap is never anything but open, whatever the count says.
+        /// </summary>
+        public static ReferralFriendStatus StatusOf(int friend)
+            => friend >= 1 && friend <= Table.MaxBound ? State.FriendStatus(friend) : ReferralFriendStatus.Open;
 
         /// <summary>Whether a tap on this payment would open a chest.</summary>
         public static bool Claimable(ReferralClaimKind kind, int goal)
             => Reached(kind, goal) && NextIndex(kind, goal) > 0;
+
+        /// <summary>
+        /// How many chests this account could open right now, both sides added together: the
+        /// invitee's own welcome chests once the milestone is reached, and every unpaid chest of
+        /// every friend who finished. What the badge on the invite door counts.
+        ///
+        /// <para>
+        /// A count of <em>chests</em> rather than of rows, because that is what a tap opens and
+        /// what the hub's task badge counts — a row paying two chests with one taken is one
+        /// thing still to collect, and a badge reading the row would say nothing had changed
+        /// after the first ceremony.
+        /// </para>
+        /// </summary>
+        public static int WaitingCount => Waiting(State, Table);
+
+        /// <summary>The rule under <see cref="WaitingCount"/>, over any state and table, so a test can reach it.</summary>
+        internal static int Waiting(ReferralState state, ReferralTable table)
+        {
+            if (state == null || table == null || !table.Offers) return 0;
+
+            int waiting = 0;
+
+            var own = table.Invitee;
+            if (own.IsValid && Reached(state, table, ReferralClaimKind.Invitee, 0))
+                waiting += own.Count - state.PaidCount(ReferralClaimKind.Invitee, 0, own.Count);
+
+            var per = table.PerInvitee;
+            if (per.IsValid)
+            {
+                int finished = Math.Min(state.Finished, table.MaxBound);
+                for (int friend = 1; friend <= finished; friend++)
+                {
+                    if (!Reached(state, table, ReferralClaimKind.Rung, friend)) continue;
+                    waiting += per.Count - state.PaidCount(ReferralClaimKind.Rung, friend, per.Count);
+                }
+            }
+
+            return waiting < 0 ? 0 : waiting;
+        }
 
         /// <summary>The first friend row a tap would pay, counting from one, or nought.</summary>
         public static int FirstClaimableFriend

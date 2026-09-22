@@ -98,6 +98,9 @@ namespace GlimmerGrove
         Text _badgeName;
         Text _nameLabel;
 
+        /// <summary>The count on the invite door's corner. Null while the door is not drawn.</summary>
+        WaitingBadge _inviteBadge;
+
         protected override void Build()
         {
             Scenery.Plain(Content);
@@ -129,6 +132,13 @@ namespace GlimmerGrove
             // A repaint rather than `BuildBody`, which is what `IdentityChanged` gets: a rebuild
             // replays every card's entrance, and a wallet landing is not an arrival (16d).
             PlayerProgression.Changed += PaintRecord;
+
+            // The invite door's badge counts chests the server has agreed to pay, which is a
+            // fact about other people's play (invariant 51): nothing on this device raises an
+            // event when a friend finishes, so the ledger is watched for as long as this page
+            // stands (`ReferralWatch`, attached by `BuildInviteCard`) and this is what the
+            // watch's answers land on.
+            ReferralLedger.Changed += PaintInvite;
         }
 
         /// <summary>
@@ -178,6 +188,7 @@ namespace GlimmerGrove
             Ranks.RankLedger.Changed -= PaintBadge;
             CloudSaveService.IdentityChanged -= BuildBody;
             PlayerProgression.Changed -= PaintRecord;
+            ReferralLedger.Changed -= PaintInvite;
         }
 
         // -------------------------------------------------------------- scroller
@@ -521,6 +532,7 @@ namespace GlimmerGrove
         /// </summary>
         void BuildInviteCard()
         {
+            _inviteBadge = null;
             if (!ReferralLedger.IsAvailable) return;
 
             const float InviteH = 300f;
@@ -562,6 +574,24 @@ namespace GlimmerGrove
             // move against the two cards it is stacked between, where a picture breathing
             // behind a fixed window is the card's own light moving.
             if (art.enabled) Tween.Breathe(art.transform, BannerSwell, BannerPeriod);
+
+            // The count of chests waiting behind this door, on its top-right corner — the
+            // hub's task pack's starburst, so the two doors that lead to chests say "there is
+            // something here" in one voice. Built after the window so the mask cannot cut it.
+            _inviteBadge = WaitingBadge.BurstTopRight(card.transform);
+            PaintInvite();
+
+            // The count moves when a stranger finishes a chapter, which no event on this
+            // device announces; the watch asks on open and listens while the page stands
+            // (invariant 44o). Idempotent, so a rebuilt body holds one watch and not two.
+            ReferralWatch.Attach(this);
+        }
+
+        /// <summary>Writes the referral ledger's waiting count onto the invite door.</summary>
+        void PaintInvite()
+        {
+            if (!this || _inviteBadge == null) return;
+            _inviteBadge.Paint(ReferralLedger.WaitingCount);
         }
 
         // ------------------------------------------------------------ the record

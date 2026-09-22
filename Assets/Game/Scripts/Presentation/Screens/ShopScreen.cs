@@ -197,6 +197,9 @@ namespace GlimmerGrove
         GridView _grid;
         Text _summary;
 
+        /// <summary>The count on the invite band's corner. Null while the band is not drawn.</summary>
+        WaitingBadge _inviteBadge;
+
         /// <summary>
         /// The centred sentence an empty shelf carries. Built once and left blank, because a
         /// label created when a shelf empties is a label that arrives a frame after the cards
@@ -341,10 +344,16 @@ namespace GlimmerGrove
             // linked from has four exits, so an event is the only thing that catches all of
             // them. See CloudSaveService.IdentityChanged.
             CloudSaveService.IdentityChanged += Repaint;
+
+            // The invite band's badge counts chests the server has agreed to pay — other
+            // people's play (invariant 51), which no local event announces. `BuildInvite`
+            // attaches the watch that asks; this is where its answers land.
+            ReferralLedger.Changed += PaintInvite;
         }
 
         void OnDestroy()
         {
+            ReferralLedger.Changed -= PaintInvite;
             StoreService.Changed -= OnStoreChanged;
             StoreService.Granted -= OnGranted;
             StoreService.Failed -= OnFailed;
@@ -539,6 +548,7 @@ namespace GlimmerGrove
         /// </summary>
         void BuildInvite()
         {
+            _inviteBadge = null;
             if (!ReferralLedger.IsAvailable) return;
 
             var card = UIKit.Button("Invite", Safe, Art.S("Ui/" + Skins.PlateBlue),
@@ -579,8 +589,23 @@ namespace GlimmerGrove
 
             if (art.enabled) Tween.Breathe(art.transform, BannerSwell, BannerPeriod);
 
+            // The chests waiting behind the band, on its top-right corner: the profile door's
+            // badge and the hub pack's, so a door to chests looks the same wherever it stands.
+            // After the window, so the mask cannot cut it; before the pop, so it rides in with
+            // the card and does not pop twice.
+            _inviteBadge = WaitingBadge.BurstTopRight(card.transform);
+            PaintInvite();
+            ReferralWatch.Attach(this);
+
             card.transform.localScale = Vector3.zero;
             Tween.Pop(card.transform, 0f, .55f, .18f);
+        }
+
+        /// <summary>Writes the referral ledger's waiting count onto the invite band.</summary>
+        void PaintInvite()
+        {
+            if (!this || _inviteBadge == null) return;
+            _inviteBadge.Paint(ReferralLedger.WaitingCount);
         }
 
         /// <summary>The banner's window inset, its swell and how long the swell takes.</summary>
