@@ -908,10 +908,15 @@ is where they are written down, not what they mean.
 54a. **A custom graphic declares `RequireComponent(CanvasRenderer)` itself.** `Graphic` does not,
    its lazy add tests `ReferenceEquals(x, null)`, and a missing component in the Editor answers a
    fake null — so the first frame drew nothing with its skin, shader and mesh all probed green.
-54b. **The worn frame is a per-account device preference and every catalogued frame is held, and
-   both say so in `FrameLedger`.** Selling one is the fourth union-joined id set in the save plus a
-   recency-joined worn pair (12, 12a, 15), and the day a stranger's row wears one the id is a field
-   on the published card (19a). Until then only the player's own row is framed.
+54b. **The worn frame is in the save (v34, `frameWorn` + `frameWornSetUnix`), rides onto the
+   published card and every board row as `frame`, and is drawn on the player's profile, on
+   every public profile and on every board row.** It is the loadout's recency-joined shape with
+   one deliberate difference: **an empty value with a stamp is an instruction** — taking a frame
+   off is a thing a stranger sees, so it wins by date (`FrameLedger.Join`); the pair no build
+   ever wrote (empty at nought) is still no opinion (11c). The raw id is kept, never the
+   resolved frame, so an older build does not confiscate a frame a newer one chose. Rules
+   released and `publishGrove` + `publishGroveBoards` deployed 2026-09-22 (the row-shape rule,
+   `a-row-field-is-two-deploys`). What is still placeholder: every catalogued frame is held.
 
 ### Consent
 
@@ -1596,6 +1601,14 @@ half is `Assets/Game/Scripts/Cloud/`, Firebase Unity SDK
 on a fresh clone).
 
 ## Owed
+
+**The frame reached the wire on 2026-09-22 and none of the public half has been seen on a device.**
+Rules released, both card-writing functions deployed by name, smoke test 171/171 with the two new
+cases, 72 function tests, offline suite green. A keeper's frame now reaches their card on their next
+settled sync (the fingerprint carries it) and their public profile and board row from there. **Owed:
+one device pass** — wear the dragon, sync, open your own public profile from the board, and check the
+nameplate; then look at the board with two framed neighbours. Save schema v34 has never been loaded
+by a real device either: the first load is the checksum amnesty (16aa).
 
 **The name frames are built and offered again: `FramesScreen.Offered` is the one switch for the feature** — off, it hides the profile's CUSTOMIZE key *and* takes the frame off every board row (a worn frame draws nowhere, which is how "I wore it and the board shows nothing" reads while it is off). It was off for the build submitted to Apple on 2026-09-22 and on again the same day.
 Profile ▸ CUSTOMIZE ▸ `FramesScreen` ▸ WEAR puts the Ember Dragon round the name on the stage
