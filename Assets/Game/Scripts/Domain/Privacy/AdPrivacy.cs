@@ -114,6 +114,15 @@ namespace GlimmerGrove.Privacy
         /// two is moving one line, and the reason to do it would be evidence rather than taste.
         /// </para>
         /// <para>
+        /// <b>And the order is a rule Apple enforces, not only a preference.</b> A consent form
+        /// that appears <em>after</em> "Ask App Not to Track" reads to App Review as asking
+        /// permission to track twice (Guideline 5.1.1(iv)), so the second prompt is gated on
+        /// <see cref="AdPrivacySignals.ConsentSettled"/>: Apple is asked only on a launch where
+        /// the form has been shown and answered, or was never owed. A launch on which the CMP
+        /// failed reads Apple's current status and asks nothing. Pinned by
+        /// <c>PrivacyTests</c>, which is the only place the order is visible.
+        /// </para>
+        /// <para>
         /// Never throws. A CMP that cannot reach its servers, a cancelled boot, an SDK that
         /// misbehaves — all of them leave the restrictive default in place, which is a game
         /// that runs and shows unpersonalised ads rather than a splash screen that never ends.
@@ -143,11 +152,22 @@ namespace GlimmerGrove.Privacy
                 resolved = AdPrivacySignals.Restricted;
             }
 
+            // Apple's prompt is asked only once the consent question is closed, and read
+            // without asking otherwise. "Form first, then Apple" is the sequence above, but a
+            // sequence of awaits only orders what each await *covers*: a gateway that gave up
+            // on its own form and returned with it still on screen put Apple's dialog on top
+            // of it, and Apple rejected 1.0.2 for exactly that (5.1.1(iv), 2026-09-22). The
+            // gateway no longer does that, and this is the second half — whatever a gateway
+            // does, an open question means Apple waits for a launch on which the form came
+            // first. The cost is one launch's tracking answer on a bad network, and a device
+            // whose status is NotDetermined is one nothing here tracks (AllowsDeviceId).
             TrackingStatus tracking;
 
             try
             {
-                tracking = await _tracking.RequestAsync(cancellation);
+                tracking = resolved.ConsentSettled
+                    ? await _tracking.RequestAsync(cancellation)
+                    : _tracking.Status;
             }
             catch (Exception)
             {

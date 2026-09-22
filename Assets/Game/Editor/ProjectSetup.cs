@@ -216,6 +216,12 @@ namespace GlimmerGrove.EditorTools
             ("/Art/Ui/Rank/", 256),
 
             ("/Art/Ui/", 1024),
+
+            // A name frame is the one piece of UI art drawn at the whole width of a card and
+            // sold on how it looks, so it keeps the backdrop's cap rather than the UI folder's
+            // — written down rather than left to the default below, because "unlisted" is not
+            // a decision anybody can read. One is resident at a time (`AssetManifest.FrameRoot`).
+            ("/Art/Frames/", 2048),
         };
 
         internal static int CapFor(string path)

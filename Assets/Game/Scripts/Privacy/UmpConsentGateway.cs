@@ -36,6 +36,20 @@ namespace GlimmerGrove.Privacy
     /// be the copy that went stale. What crosses this boundary is only the coarse booleans a
     /// mediation SDK has to be told in an API call.
     /// </para>
+    /// <para>
+    /// <b>A network call is bounded and a person is not, and the two are never inside one
+    /// wait.</b> The first version wrapped "load the form and show it and wait for the answer"
+    /// in a single fifteen-second timeout — so a reviewer who read the form for sixteen
+    /// seconds, or whose form loaded slowly, found the gateway giving up underneath them:
+    /// <see cref="AdPrivacy.ResolveAsync"/> moved on to Apple's tracking prompt, which landed
+    /// on top of the consent form still on screen, and after "Ask App Not to Track" the form
+    /// was still there asking about personalised ads. Apple rejected 1.0.2 for exactly that
+    /// sequence (Guideline 5.1.1(iv), 2026-09-22). So now <see cref="LoadForm"/> is bounded,
+    /// because Google's servers can hang, and <see cref="Show"/> is not, because a form on
+    /// screen is somebody deciding and there is no honest answer to give in their place. A
+    /// form that arrives after the load timeout is dropped rather than shown late, for the
+    /// same reason: late is after Apple's prompt.
+    /// </para>
     /// </summary>
     public sealed class UmpConsentGateway : IConsentGateway
     {
@@ -45,7 +59,8 @@ namespace GlimmerGrove.Privacy
         /// A boot path may not wait indefinitely on a network call — the failure a player sees
         /// would be a splash screen that never ends, which is worse than any amount of lost ad
         /// revenue. Fifteen seconds is far beyond a healthy round trip and far short of a
-        /// player deciding the game is broken.
+        /// player deciding the game is broken. It bounds the two network calls here — the
+        /// consent-info refresh and the form load — and nothing else.
         /// </summary>
         const int TimeoutMilliseconds = 15_000;
 
@@ -93,12 +108,12 @@ namespace GlimmerGrove.Privacy
                 }
             }
 
+            // A refresh that fails leaves the question open — Read() would say Unknown, and
+            // Restricted says the same thing without pretending the SDK was consulted. Open is
+            // what AdPrivacy needs to hear: it means Apple's prompt waits for a launch on which
+            // the form can actually be shown first.
             if (!await Update(request, cancellation)) return AdPrivacySignals.Restricted;
 
-            // Loads and shows the form only where one is owed — outside the EEA and the UK
-            // this returns immediately having drawn nothing, which is why no geography check
-            // of ours appears anywhere in this file. A failure here is not fatal: the player
-            // simply has not consented, which is the state they were already in.
             // Logged raw, before Read() folds them together. The two states that matter here
             // are indistinguishable afterwards: NotRequired means UMP placed this player
             // outside the EEA, while Required-but-no-form means it placed them inside and had
@@ -121,15 +136,19 @@ namespace GlimmerGrove.Privacy
         {
             if (!CanRevisit) return Read();
 
-            var opened = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            // The options form is opened by the player from Settings, so unlike the boot-path
+            // form it is never in a race with Apple's prompt — the tracking answer was read
+            // long ago. It still waits for the person rather than a clock, because a form that
+            // is dismissed and then read back as "no change" has thrown their decision away.
+            var dismissed = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             ConsentForm.ShowPrivacyOptionsForm(error =>
             {
                 if (error != null) Debug.LogWarning($"[Privacy] the privacy options form failed: {error.Message}");
-                opened.TrySetResult(error == null);
+                dismissed.TrySetResult(error == null);
             });
 
-            await Wait(opened.Task, cancellation);
+            await Dismissal(dismissed.Task, cancellation);
 
             return Read();
         }
@@ -147,41 +166,130 @@ namespace GlimmerGrove.Privacy
                 updated.TrySetResult(error == null);
             });
 
-            return await Wait(updated.Task, cancellation);
-        }
-
-        static async Task ShowIfRequired(CancellationToken cancellation)
-        {
-            var shown = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-
-            ConsentForm.LoadAndShowConsentFormIfRequired(error =>
-            {
-                if (error != null) Debug.LogWarning($"[Privacy] the consent form failed: {error.Message}");
-                shown.TrySetResult(error == null);
-            });
-
-            await Wait(shown.Task, cancellation);
+            return await Bounded(updated.Task, "consent info", cancellation);
         }
 
         /// <summary>
-        /// Awaits an SDK callback, or gives up. Returns false on a timeout or a cancellation.
+        /// Shows the form only where one is owed. Outside the EEA and the UK UMP answers
+        /// <c>NotRequired</c> and this returns having drawn nothing, which is why no geography
+        /// check of ours appears anywhere in this file.
+        ///
+        /// <para>
+        /// Deliberately not <c>LoadAndShowConsentFormIfRequired</c>, which the SDK offers and
+        /// the first version used: its one callback fires when the form is <em>dismissed</em>,
+        /// so there is no moment at which a caller can tell "still fetching" from "on screen,
+        /// being read" — and those two want opposite treatment. Loading and showing as two
+        /// calls is what makes the load bounded and the show not.
+        /// </para>
+        /// </summary>
+        static async Task ShowIfRequired(CancellationToken cancellation)
+        {
+            if (ConsentInformation.ConsentStatus != GoogleMobileAds.Ump.Api.ConsentStatus.Required) return;
+
+            if (!ConsentInformation.IsConsentFormAvailable())
+            {
+                // The console problem named above: UMP has placed this player inside the EEA
+                // and has nothing published to show them. Nothing to wait for; the question
+                // stays open and Apple's prompt stays unasked, which is the right pairing —
+                // with no GDPR consent there is nothing lawful to do with a device id anyway.
+                Debug.LogWarning("[Privacy] UMP requires a consent form and has none to show; " +
+                                 "nothing is published for this app in the AdMob console. " +
+                                 "Running unpersonalised.");
+                return;
+            }
+
+            var form = await LoadForm(cancellation);
+            if (form == null) return;
+
+            await Show(form, cancellation);
+        }
+
+        /// <summary>
+        /// Fetches the form, bounded by <see cref="TimeoutMilliseconds"/>. Returns null on a
+        /// failure, a timeout or a cancellation — and a form that arrives after the timeout is
+        /// left in the completed task and never shown, because by then the caller has moved
+        /// on and "shown late" is the exact sequence Apple refused.
+        /// </summary>
+        static async Task<ConsentForm> LoadForm(CancellationToken cancellation)
+        {
+            var loaded = new TaskCompletionSource<ConsentForm>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            ConsentForm.Load((form, error) =>
+            {
+                if (error != null) Debug.LogWarning($"[Privacy] the consent form failed to load: {error.Message}");
+                loaded.TrySetResult(error == null ? form : null);
+            });
+
+            var timeout = Task.Delay(TimeoutMilliseconds, cancellation);
+            var finished = await Task.WhenAny(loaded.Task, timeout);
+
+            if (finished != loaded.Task)
+            {
+                Debug.LogWarning("[Privacy] the consent form did not load in time; running " +
+                                 "unpersonalised. A form arriving later is dropped, not shown.");
+                return null;
+            }
+
+            return await loaded.Task;
+        }
+
+        /// <summary>
+        /// Puts a loaded form on screen and waits for the person to answer it. No timeout,
+        /// deliberately: the only thing that can end this is their tap, or the process being
+        /// cancelled out from under it. Nothing else in the game waits on this — mediation and
+        /// measurement start when it returns, which is the order they are required to start
+        /// in, and the splash never did wait.
+        /// </summary>
+        static async Task Show(ConsentForm form, CancellationToken cancellation)
+        {
+            var dismissed = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            form.Show(error =>
+            {
+                // A show that fails (no window to present into, a form already consumed) calls
+                // back at once with the error, so this cannot hang on a form nobody can see.
+                if (error != null) Debug.LogWarning($"[Privacy] the consent form failed to show: {error.Message}");
+                dismissed.TrySetResult(error == null);
+            });
+
+            await Dismissal(dismissed.Task, cancellation);
+        }
+
+        /// <summary>
+        /// Awaits a network callback, or gives up. Returns false on a timeout or a cancellation.
         ///
         /// A callback that never fires is the failure mode worth defending against here: it is
         /// indistinguishable from a slow one, and the difference between the two is a game
-        /// that starts and a game that does not.
+        /// that starts and a game that does not. Only ever wrapped round a call whose other
+        /// end is a server — never round a form, see <see cref="Show"/>.
         /// </summary>
-        static async Task<bool> Wait(Task<bool> work, CancellationToken cancellation)
+        static async Task<bool> Bounded(Task<bool> work, string what, CancellationToken cancellation)
         {
             var timeout = Task.Delay(TimeoutMilliseconds, cancellation);
             var finished = await Task.WhenAny(work, timeout);
 
             if (finished != work)
             {
-                Debug.LogWarning("[Privacy] the consent SDK did not answer in time; running unpersonalised");
+                Debug.LogWarning($"[Privacy] the {what} call did not answer in time; running unpersonalised");
                 return false;
             }
 
             return await work;
+        }
+
+        /// <summary>
+        /// Awaits a form's dismissal with no clock on it, honouring only cancellation. The
+        /// registration completes the wait rather than throwing, because a cancelled boot is
+        /// not an error in the consent flow — it is the process going away.
+        /// </summary>
+        static async Task Dismissal(Task<bool> dismissed, CancellationToken cancellation)
+        {
+            var cancelled = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            using (cancellation.Register(() => cancelled.TrySetResult(false)))
+            {
+                await Task.WhenAny(dismissed, cancelled.Task);
+            }
         }
 
         /// <summary>
@@ -203,6 +311,12 @@ namespace GlimmerGrove.Privacy
         /// nothing that matters and buys not shipping a TCF parser in a game client. Where it
         /// errs it errs towards <em>less</em> personalisation than the player allowed, never
         /// more.
+        /// </para>
+        /// <para>
+        /// <b>An <see cref="ConsentStatus.Unknown"/> here means the question is still open</b>
+        /// — a form owed and not yet answered — and <see cref="AdPrivacy.ResolveAsync"/> reads
+        /// it as "do not ask Apple yet". <c>Required</c> after this method is exactly that
+        /// state: the form failed to load, failed to show, or was never published.
         /// </para>
         /// </summary>
         static AdPrivacySignals Read()

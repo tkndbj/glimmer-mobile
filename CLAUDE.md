@@ -882,6 +882,37 @@ is where they are written down, not what they mean.
    or the ward already owns (`SiegeBoard.Pour`/`.Kindle`/`.Sheltered`, `SiegeWard.Stoke`);
    `SiegeTutorial` writes to nothing.
 
+### Name frames
+
+54. **A name frame is one flattened painting rigged offline and deformed by the 2D Animation
+   package, and it is drawn on the canvas, never by a camera.** `Tools/make_frame_rig.py` derives
+   the mesh, three bones and feathered weights from a polygon description; `FrameRigImport` writes
+   them into the texture's import through the package's own data providers (so the Skinning Editor
+   opens the same rig); `NameFrame` reads `SpriteSkin`'s deformed vertices back into a
+   `MaskableGraphic`, because the only camera in the game culls everything and a `SpriteRenderer`
+   is never seen. **The rig lives under `Editor/FrameRigs/`, not beside the painting** — every
+   file under `Art/` is given an address.
+54a. **A custom graphic declares `RequireComponent(CanvasRenderer)` itself.** `Graphic` does not,
+   its lazy add tests `ReferenceEquals(x, null)`, and a missing component in the Editor answers a
+   fake null — so the first frame drew nothing with its skin, shader and mesh all probed green.
+54b. **The worn frame is a per-account device preference and every catalogued frame is held, and
+   both say so in `FrameLedger`.** Selling one is the fourth union-joined id set in the save plus a
+   recency-joined worn pair (12, 12a, 15), and the day a stranger's row wears one the id is a field
+   on the published card (19a). Until then only the player's own row is framed.
+
+### Consent
+
+55. **The consent form comes before Apple's tracking prompt on every path, and a network call
+   is bounded where a person is not.** Apple rejected 1.0.2 (5.1.1(iv), 2026-09-22) because
+   one fifteen-second timeout covered "load the form, show it, wait for the answer": a reviewer
+   who read for sixteen seconds had Apple's dialog land on top of the form, and after "Ask App
+   Not to Track" the form was still there asking about personalised ads. `UmpConsentGateway`
+   bounds the two server calls and waits for a form on screen without a clock; a form arriving
+   after its load timeout is dropped, never shown late. And `AdPrivacy` asks Apple only when
+   `ConsentSettled` — a launch on which the CMP failed reads the status and asks nothing, so the
+   form can never come second on the next launch either. Held by `PrivacyTests`, proved by
+   mutation on both halves, and compiled against the real UMP DLLs by `privacy-ump`.
+
 ### Art credits
 
 46. **An art credit belongs wherever its licence says, and for this game that is nowhere in the app.**
@@ -1055,6 +1086,12 @@ guess — verify offline.
   the picture the owner asked for, and it is shared by three screens, so it answers for all
   three — **which matters because the two turret ceremonies have no mirror of their own** and
   are judged on a device or not at all.
+- **The name frames:** `python Tools/make_frame_rig.py --check` proves the committed rigs are
+  what the tool writes and `--preview` (with `--degrees`) warps the painting by the nod either
+  way — **the only thing that can see a bone's weights reaching a part of the painting that
+  should stand still**, which shows as the gold bar bending. `FrameTests` holds the catalog's
+  hole and eye to the rig's, and the life in a frame (`FrameIdle`) to its bounds.
+  `render_boards.py --row --framed` draws the framed row at rest.
 - **The tutorial:** `python Tools/verify/tests.py TutorialTests` plays the whole script against
   the real rules — the taught swap, the pour, the overcharge, the sweep — and proves it ends with
   the line intact; its board reaches **no content gate**, so this is the only thing that would
@@ -1128,6 +1165,12 @@ guess — verify offline.
   not the bundled .NET — the first version ran on .NET 8, whose ICU agrees with Node, and passed with a
   mapping deleted. **A check that cannot fail is not a check.**
 - **Why a test says "needs the Editor":** `GLIMMER_WHY=1 python Tools/verify/tests.py`.
+- **An `async Task` test is awaited by the runner, since 2026-09-22.** Before that its returned
+  Task was discarded, so every assertion past the first `await` — including an await of a stub,
+  which completes synchronously — landed in a Task nobody read, and every async test in the
+  suite was a check that could not fail offline. Found because `PrivacyTests` stayed green with
+  its gate mutated to a constant. **A green offline run before that date proved nothing about an
+  async test.**
 - **One test, while tuning:** `python Tools/verify/tests.py SiegeRuleTests.EveryShippedBossRungIsAFight`
   (`Fixture.Method`, both substrings). The chapter sweep and the fight gate print their tables on a pass.
 - **The shop badge:** `python Tools/render_shop.py --measure` reads `Hud/burst` and holds the four
@@ -1533,6 +1576,20 @@ half is `Assets/Game/Scripts/Cloud/`, Firebase Unity SDK
 on a fresh clone).
 
 ## Owed
+
+**The name frames are built and withheld: `FramesScreen.Offered` is `false` for the build submitted to Apple on 2026-09-22, which hides the profile's CUSTOMIZE key and takes the frame off every board row; flipping that one constant brings the whole feature back.** The rest of this entry describes it as it stands behind the switch.
+Profile ▸ CUSTOMIZE ▸ `FramesScreen` ▸ WEAR puts the Ember Dragon round the name on the stage
+and on the player's own board row (54), where it covers the whole plate with the place, the
+badge and both lines inside its hole (the owner's call on 2026-09-22, after a first cut over the
+right two thirds). Seen in play mode through the bridge: the skin deforms,
+the head nods, the eyes flare and the sheen crosses; `com.unity.2d.animation` 15.1.0 is in the
+manifest, the painting is addressed (`Art/Frames/dragon`, Glimmer Global, 2048 cap), the shader
+is in the always-included list, `FrameTests` 15/15, every offline gate green. **What is owed is
+the owner's eye on a device**: whether nine degrees reads as a nod, whether the red dragon on
+the orange "mine" plate competes (the blue plate under a framed row is one line), whether the
+gold figure line is legible inside the hole, and whether the dragon overhanging the rows above
+and below by 77 units reads as a frame rather than as a collision. **Nothing is sold, saved or published**: the worn id is a
+per-account device preference (54b), a stranger's row wears nothing, and no server file moved.
 
 **The rank ceremony shipped on 2026-09-21 and has never been in the Editor or on a device.**
 Three new files (`Presentation/App/RankCeremony.cs`, `Presentation/Screens/RankUpOverlay.cs`,

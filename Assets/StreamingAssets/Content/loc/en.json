@@ -2534,6 +2534,26 @@
       "text": "The grove keeps watch through the turning of the year. Take your marks while it lasts."
     },
     {
+      "key": "ui.frames.title",
+      "text": "Frames"
+    },
+    {
+      "key": "ui.frames.none",
+      "text": "A frame wraps your name on every board. Pick one below."
+    },
+    {
+      "key": "ui.frames.wear",
+      "text": "WEAR"
+    },
+    {
+      "key": "ui.frames.take_off",
+      "text": "TAKE OFF"
+    },
+    {
+      "key": "ui.frames.dragon",
+      "text": "Ember Dragon"
+    },
+    {
       "key": "ui.forfeit.leave_body",
       "text": "This run has begun, so leaving it costs a heart — the same as running out of turns. The glade will be waiting exactly as you found it."
     },
@@ -3296,6 +3316,10 @@
     {
       "key": "ui.profile.rename",
       "text": "your name"
+    },
+    {
+      "key": "ui.profile.customize",
+      "text": "Customize"
     },
     {
       "key": "ui.profile.see_all",

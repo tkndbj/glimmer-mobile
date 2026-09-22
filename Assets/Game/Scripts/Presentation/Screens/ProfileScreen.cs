@@ -338,7 +338,11 @@ namespace GlimmerGrove
         // ------------------------------------------------------------ the keeper
         void BuildKeeperCard()
         {
-            var card = Section("Keeper", 440f, 0);
+            // 480 while the customise key is offered, 440 otherwise (`FramesScreen.Offered`):
+            // the key is a row of its own under the XP column, and forty units is what it costs
+            // with the same margin to the plate's foot that the badge name keeps on the other
+            // side. Without the key the card is exactly what it was before 2026-09-21.
+            var card = Section("Keeper", FramesScreen.Offered ? 480f : 440f, 0);
             var level = Profile.Level;
 
             // **The medallion, and what stands where it was is the rank.** It held the
@@ -475,6 +479,22 @@ namespace GlimmerGrove
                              25, Color.white, TextAnchor.MiddleLeft,
                              new Vector2(XpW, 32f), new Vector2(.5f, .5f), new Vector2(XpX, -111f), 0f, 2f);
             }
+
+            // **Customise: the frames a name wears** (`FramesScreen`). Under the XP column and
+            // as wide as it, so the right half of the card is one column of things about this
+            // keeper: the name, how far along, what is next, and how they look to strangers.
+            // -186 puts its foot at -226 against a plate whose edge is now -240, which is the
+            // badge name's own fourteen-unit margin on the left side.
+            // Withheld while `FramesScreen.Offered` is off, which is the one switch that
+            // hides the whole feature from a player: nothing else leads to the screen.
+            if (!FramesScreen.Offered) return;
+
+            var customise = UIKit.TextButton("Customize", card, Skins.Alternate,
+                                             Loc.Get("ui.profile.customize").ToUpperInvariant(), 28,
+                                             new Vector2(XpW, 80f), new Vector2(.5f, .5f),
+                                             new Vector2(XpX, -186f), () => Flow.Go<FramesScreen>());
+            UIKit.Shrinkable(customise.Label, 18);
+            UIKit.FitLabel(customise);
         }
 
         // ----------------------------------------------------------- inviting

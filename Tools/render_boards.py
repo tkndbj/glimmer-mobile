@@ -60,6 +60,18 @@ WORTH_X, WORTH_Y, WORTH_BOX, WORTH_PT = 515.0, -26.0, (430.0, 40.0), 28
 
 SHRINK_FLOOR_PLACE, SHRINK_FLOOR_NAME, SHRINK_FLOOR_WORTH = 20, 20, 18
 
+# The name frame on the player's own row (`LeaderboardScreen.FrameW/FrameH/FrameX`, `Row.Seat`).
+# The painting is drawn still here — a mirror draws a state, never a sequence (48l) — at the
+# bind pose, which is the frame at rest. The hole is `FrameCatalog`'s, as fractions, y up.
+FRAME_W, FRAME_H, FRAME_X, FRAME_Y = PLATE_W, PLATE_W / 3.0, PLATE_W / 2.0, 7.0
+FRAMED_PLACE_X, FRAMED_PLACE_BOX, FRAMED_PLACE_PT = 50.0, (84.0, 60.0), 34
+FRAMED_BADGE_X, FRAMED_BADGE = 150.0, 104.0
+FRAMED_TEXT_LEFT, FRAMED_TEXT_RIGHT = 214.0, 16.0
+FRAMED_NAME_PT, FRAMED_WORTH_PT = 30, 24
+FRAMED_NAME_H, FRAMED_WORTH_H = 40.0, 32.0
+FRAMES_ART = REPO / "Assets" / "Game" / "Art" / "Frames"
+FRAME_HOLES = {"dragon": (0.2578, 0.2818, 0.6584, 0.3923)}   # x, y (from the bottom), w, h
+
 
 def rungs():
     """The shipped ladder, humblest first — the same order `RankLadder` builds."""
@@ -97,6 +109,32 @@ def draw_row(sheet, top, entry, mine=False):
     # state, not a fault: every keeper below the first rung, and every card written before the
     # server learned to derive a rung.
     art = badge(entry["rung"]) if entry.get("rung") else None
+
+    frame = entry.get("frame") if mine else None
+    art_path = FRAMES_ART / (frame + ".png") if frame else None
+    if frame and art_path.exists() and frame in FRAME_HOLES:
+        # Framed: the painting across the whole plate, its hole centred on the row, and the
+        # place, the badge and the two lines inside the hole at the smaller sizes (`Row.Seat`).
+        painting = Image.open(art_path).convert("RGBA")
+        k.paste(sheet, k.fit(painting, (FRAME_W, FRAME_H)), left + FRAME_X, cy - FRAME_Y)
+
+        hx, hy, hw, hh = FRAME_HOLES[frame]
+        x0 = left + FRAME_X + (hx - .5) * FRAME_W
+        x1 = x0 + hw * FRAME_W
+        hole_cy = cy - FRAME_Y - ((hy + hh / 2) - .5) * FRAME_H   # y up in the frame, y down here
+        k.shrunk(sheet, str(entry["place"]), x0 + FRAMED_PLACE_X, hole_cy,
+                 FRAMED_PLACE_BOX[0], FRAMED_PLACE_BOX[1], FRAMED_PLACE_PT, SHRINK_FLOOR_PLACE, k.CREAM)
+        if art is not None:
+            k.paste(sheet, k.fit(art, (FRAMED_BADGE, FRAMED_BADGE)), x0 + FRAMED_BADGE_X, hole_cy)
+        text_left = x0 + FRAMED_TEXT_LEFT
+        text_w = x1 - FRAMED_TEXT_RIGHT - text_left
+        split = hole_cy - 4
+        k.shrunk_left(sheet, entry["name"], text_left, split - FRAMED_NAME_H, text_w, FRAMED_NAME_H,
+                      FRAMED_NAME_PT, SHRINK_FLOOR_NAME, (255, 247, 230))
+        k.shrunk_left(sheet, entry["figure"], text_left, split, text_w, FRAMED_WORTH_H,
+                      FRAMED_WORTH_PT, SHRINK_FLOOR_WORTH, k.GOLD)
+        return
+
     if art is not None:
         k.paste(sheet, k.fit(art, (BADGE, BADGE)), left + BADGE_X, cy)
 
@@ -120,12 +158,21 @@ def board(entries, title="BOARDS"):
     k.paste(sheet, k.skin("Hud/title", 470, 128), k.W / 2, 106 + 64)
     k.text(sheet, title, k.W / 2, 106 + 64, 38, k.CREAM)
 
+    # The player's own row is drawn last, as the screen raises it over its neighbours when it
+    # wears a frame (`Row.Seat`): the frame overhangs the plate and must not sit under the row
+    # below it.
     top = HEADER_H
+    later = []
     for entry in entries:
         if top + ROW_H > k.H - k.NAV_HEIGHT - BOTTOM_PAD:
             break
-        draw_row(sheet, top, entry, entry.get("mine", False))
+        if entry.get("mine", False):
+            later.append((top, entry))
+        else:
+            draw_row(sheet, top, entry, False)
         top += ROW_H
+    for row_top, entry in later:
+        draw_row(sheet, row_top, entry, True)
 
     k.navbar(sheet, "ranks")
     return sheet
@@ -136,7 +183,7 @@ NAMES = ["Fern Willow", "Thornbite", "Ash", "Marigold Quickstep", "Bram",
          "Silverleaf Wanderer", "Pip", "Hollyhock"]
 
 
-def entries(ladder, ranked="all"):
+def entries(ladder, ranked="all", frame=None):
     out = []
     for i, name in enumerate(NAMES):
         if ranked == "all":
@@ -152,11 +199,12 @@ def entries(ladder, ranked="all"):
             "rung": rung,
             "figure": "wave %d · keeper %d" % (120 - i * 9, 60 - i * 3),
             "mine": i == 3,
+            "frame": frame if i == 3 else None,
         })
     return out
 
 
-def one_row(ladder):
+def one_row(ladder, frame=None):
     """A single row at 1:1 against a ruler, which is what the badge question is about."""
     pad = 40
     sheet = Image.new("RGBA", (int(k.W), int(ROW_H * 3 + pad * 2)), k.GROUND)
@@ -165,13 +213,18 @@ def one_row(ladder):
         {"place": 1, "name": "Fern Willow", "rung": ladder[-1] if ladder else "",
          "figure": "wave 120 · keeper 60", "mine": False},
         {"place": 42, "name": "Marigold Quickstep", "rung": ladder[0] if ladder else "",
-         "figure": "wave 31 · keeper 14", "mine": True},
+         "figure": "wave 31 · keeper 14", "mine": True, "frame": frame},
         {"place": 100, "name": "Pip", "rung": "",
          "figure": "wave 4 · keeper 3", "mine": False},
     ]
 
+    # The player's own row last, for `board()`'s reason.
     for i, entry in enumerate(shown):
-        draw_row(sheet, pad + i * ROW_H, entry, entry["mine"])
+        if not entry["mine"]:
+            draw_row(sheet, pad + i * ROW_H, entry, False)
+    for i, entry in enumerate(shown):
+        if entry["mine"]:
+            draw_row(sheet, pad + i * ROW_H, entry, True)
 
     return sheet
 
@@ -202,17 +255,20 @@ def main():
     ap.add_argument("--empty", action="store_true", help="the six refusals")
     ap.add_argument("--row", action="store_true", help="three rows at 1:1")
     ap.add_argument("--contact", action="store_true", help="all of it on one sheet")
+    ap.add_argument("--framed", metavar="ID", nargs="?", const="dragon", default=None,
+                    help="the player's own row wears this name frame (default: dragon)")
     args = ap.parse_args()
 
     ladder = rungs()
     loc = strings()
-    out = REPO / "boards.png"
+    out = REPO / ("boards_framed.png" if args.framed else "boards.png")
+    frame = args.framed
 
     if args.contact:
-        full = board(entries(ladder, "all"))
-        mixed = board(entries(ladder, "mixed"))
-        bare = board(entries(ladder, "none"))
-        rows = one_row(ladder)
+        full = board(entries(ladder, "all", frame))
+        mixed = board(entries(ladder, "mixed", frame))
+        bare = board(entries(ladder, "none", frame))
+        rows = one_row(ladder, frame)
 
         scale = 0.42
         small = [im.resize((int(im.width * scale), int(im.height * scale)), Image.LANCZOS)
@@ -234,15 +290,15 @@ def main():
         return 0
 
     if args.row:
-        sheet = one_row(ladder)
+        sheet = one_row(ladder, frame)
     elif args.empty:
         sheet = empties(loc)
     elif args.unranked:
-        sheet = board(entries(ladder, "none"))
+        sheet = board(entries(ladder, "none", frame))
     elif args.mixed:
-        sheet = board(entries(ladder, "mixed"))
+        sheet = board(entries(ladder, "mixed", frame))
     else:
-        sheet = board(entries(ladder, "all"))
+        sheet = board(entries(ladder, "all", frame))
 
     sheet.save(out)
     print(f"wrote {out}  {sheet.size[0]}x{sheet.size[1]}  - look at it")

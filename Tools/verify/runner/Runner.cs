@@ -107,7 +107,7 @@ static class Runner
                 try
                 {
                     setUp?.Invoke(instance, null);
-                    test.Invoke(instance, null);
+                    Await(test.Invoke(instance, null));
                     passed++;
                     Console.WriteLine("    + " + test.Name);
                 }
@@ -162,6 +162,34 @@ static class Runner
 
     static bool Has(MemberInfo member, string attribute)
         => member.GetCustomAttributes(true).Any(a => a.GetType().Name == attribute);
+
+    /// <summary>
+    /// Finishes an <c>async Task</c> test before judging it.
+    ///
+    /// <para>
+    /// An async method never throws into its caller: every assertion after its first
+    /// <c>await</c> — and, because a completed task is awaited synchronously, every
+    /// assertion after an await of a stub — lands in the returned Task. Invoking and
+    /// discarding that Task made every <c>async Task</c> test in the suite a check that
+    /// could not fail here: <c>PrivacyTests</c> stayed green with its gate mutated to a
+    /// constant on 2026-09-22, and only its one synchronous test went red. The wait is
+    /// bounded so a test that never completes is a failure rather than a hung runner, and
+    /// <c>GetResult</c> rethrows the original exception rather than an
+    /// <c>AggregateException</c>, so <see cref="Root"/> and <c>NeedsEngine</c> read it as
+    /// they would a synchronous one.
+    /// </para>
+    /// </summary>
+    static void Await(object result)
+    {
+        if (!(result is System.Threading.Tasks.Task task)) return;
+
+        // WaitAny rather than Wait: Wait throws an AggregateException on a faulted task,
+        // and the point of the line after it is to throw the test's own exception instead.
+        if (System.Threading.Tasks.Task.WaitAny(new[] { task }, TimeSpan.FromSeconds(120)) < 0)
+            throw new TimeoutException("the test's Task did not complete within 120s");
+
+        task.GetAwaiter().GetResult();
+    }
 
     static string Root(Exception e)
     {

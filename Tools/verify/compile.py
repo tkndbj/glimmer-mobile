@@ -161,6 +161,17 @@ IOS_XCODE = os.path.join(
 # a machine that has never opened the Editor is a legitimate way to work on this project.
 NOTIFICATIONS_PKG = os.path.join(SCRIPT_ASMS, "Unity.Notifications.Unified.dll")
 
+# Google Mobile Ads ships precompiled — its DLLs sit inside the resolved package rather than
+# being built into Library/ScriptAssemblies — so unlike Unity IAP it *can* be put on a reference
+# list from here. The three the consent gateway compiles against; the Ump one is the probe.
+UMP_DLLS = sorted(glob.glob(os.path.join(
+    PACKAGE_CACHE, "com.google.ads.mobile@*", "GoogleMobileAds", "GoogleMobileAds.Ump.dll")))
+UMP_DLLS += sorted(glob.glob(os.path.join(
+    PACKAGE_CACHE, "com.google.ads.mobile@*", "GoogleMobileAds", "GoogleMobileAds.Common.dll")))
+UMP_DLLS += sorted(glob.glob(os.path.join(
+    PACKAGE_CACHE, "com.google.ads.mobile@*", "GoogleMobileAds", "GoogleMobileAds.Core.dll")))
+UMP_PKG = UMP_DLLS[0] if UMP_DLLS else os.path.join(PACKAGE_CACHE, "GoogleMobileAds.Ump.dll")
+
 # Order matters: each entry may reference the outputs of the ones above it.
 ASSEMBLIES = [
     ("domain", dict(
@@ -186,8 +197,22 @@ ASSEMBLIES = [
         # No GLIMMER_UMP here, for the reason the iap entry gives about GLIMMER_IAP: the
         # Google Mobile Ads package has no DLL on disk until the Editor resolves it, so
         # this proves the assembly is sound *without* the CMP - which is the property that
-        # keeps a fresh clone compiling. UmpConsentGateway is compiled by the Editor.
+        # keeps a fresh clone compiling. UmpConsentGateway is compiled by the pass below.
         refs=ENGINE_RUNTIME + PKG_RUNTIME + [NETSTANDARD] + SHIMS + compiled("GlimmerGrove.Domain"),
+    )),
+    ("privacy-ump", dict(
+        out="GlimmerGrove.Privacy.Ump",
+        src=sources("Assets/Game/Scripts/Privacy"),
+        # The same sources with the define on and Google's DLLs on the reference list, which
+        # is what the player build really does — notify-android's reason, paid here for the
+        # consent gateway. Without this pass every UMP call in it (`ConsentForm.Load`, `Show`,
+        # `IsConsentFormAvailable`) is invisible offline, and the 2026-09-22 rewrite of that
+        # file for Apple's 5.1.1 rejection would have been proved by nothing until a device
+        # build. Skipped, not failed, on a clone that has never resolved the package.
+        refs=ENGINE_RUNTIME + PKG_RUNTIME + [NETSTANDARD] + SHIMS + compiled("GlimmerGrove.Domain")
+             + UMP_DLLS,
+        defines=DEFINES + ["GLIMMER_UMP"],
+        needs=UMP_PKG,
     )),
     ("iap", dict(
         out="GlimmerGrove.Iap",

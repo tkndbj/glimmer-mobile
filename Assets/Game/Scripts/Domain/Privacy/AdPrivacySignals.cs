@@ -166,6 +166,24 @@ namespace GlimmerGrove.Privacy
         public bool AllowsDeviceId
             => Tracking == TrackingStatus.Authorized || Tracking == TrackingStatus.NotSupported;
 
+        /// <summary>
+        /// Whether the consent question is closed: either no form was owed, or the one that
+        /// was owed has been answered.
+        ///
+        /// <para>
+        /// This is the gate on Apple's tracking prompt (<see cref="AdPrivacy.ResolveAsync"/>).
+        /// Apple requires that a GDPR form shown <em>after</em> "Ask App Not to Track" not ask
+        /// about tracking again, and the cheapest way to honour that on every path is never to
+        /// let the form come second: the prompt is asked only once this is true, so a launch
+        /// on which the CMP could not be reached, or its form could not be shown, asks Apple
+        /// nothing and tries again next launch. <see cref="ConsentStatus.Unknown"/> under an
+        /// applicable GDPR is the open question; <see cref="Restricted"/> is deliberately in
+        /// that state, because it is what every failure path returns.
+        /// </para>
+        /// </summary>
+        public bool ConsentSettled
+            => !GdprApplies || Gdpr != ConsentStatus.Unknown;
+
         public bool Equals(AdPrivacySignals other)
             => GdprApplies == other.GdprApplies && Gdpr == other.Gdpr
             && DoNotSell == other.DoNotSell && ChildDirected == other.ChildDirected

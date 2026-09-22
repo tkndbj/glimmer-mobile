@@ -228,6 +228,120 @@ namespace GlimmerGrove.Tests
             Assert.IsFalse(AdPrivacy.IsResolved);
         }
 
+        // -------------------------------------------------------- Apple's prompt
+        /// <summary>
+        /// <b>Apple's tracking prompt comes after the consent form has been answered, never
+        /// while it is up.</b> Apple rejected 1.0.2 (5.1.1(iv), 2026-09-22) because the form
+        /// was still on screen when the tracking dialog landed on it, so after "Ask App Not to
+        /// Track" the player was asked about personalised ads. Recorded as a sequence: a
+        /// gateway that shows a form and does not return until it is dismissed, and a prompt
+        /// that must not have been asked before that.
+        /// </summary>
+        [Test]
+        public async Task ApplesPromptIsAskedOnlyAfterTheConsentFormIsDismissed()
+        {
+            var log = new List<string>();
+            var gateway = new FormGateway(log, Granted);
+            var prompt = new RecordingPrompt(log, TrackingStatus.NotDetermined, TrackingStatus.Denied);
+            AdPrivacy.Install(gateway);
+            AdPrivacy.Install(prompt);
+
+            var resolving = AdPrivacy.ResolveAsync();
+
+            Assert.AreEqual(0, prompt.Requests, "the form is on screen; Apple has not been asked");
+            gateway.Dismiss();
+            await resolving;
+
+            CollectionAssert.AreEqual(new[] { "form shown", "form dismissed", "apple asked" }, log);
+            Assert.AreEqual(TrackingStatus.Denied, AdPrivacy.Signals.Tracking);
+        }
+
+        /// <summary>
+        /// A consent question left open — the CMP unreachable, the form unloadable — does not
+        /// spend Apple's one question on this launch. If it did, the form would come *after*
+        /// the tracking dialog on the next launch, which is the order Apple refuses. The
+        /// status is still read, so a device that answered on an earlier launch carries it.
+        /// </summary>
+        [Test]
+        public async Task AnOpenConsentQuestionLeavesApplesPromptForALaterLaunch()
+        {
+            var log = new List<string>();
+            var prompt = new RecordingPrompt(log, TrackingStatus.Denied, TrackingStatus.Authorized);
+            AdPrivacy.Install(new FakeGateway(AdPrivacySignals.Restricted));
+            AdPrivacy.Install(prompt);
+
+            await AdPrivacy.ResolveAsync();
+
+            Assert.AreEqual(0, prompt.Requests, "an open question asks Apple nothing");
+            Assert.AreEqual(TrackingStatus.Denied, AdPrivacy.Signals.Tracking,
+                            "but the answer already on the device is carried");
+            Assert.IsTrue(AdPrivacy.IsResolved, "and the game still starts");
+        }
+
+        /// <summary>
+        /// The same rule on the path that really fails: a gateway that throws. It was already
+        /// pinned to leave the restrictive answer; it must also leave Apple unasked.
+        /// </summary>
+        [Test]
+        public async Task AGatewayThatThrowsLeavesAppleUnasked()
+        {
+            var prompt = new RecordingPrompt(new List<string>(), TrackingStatus.NotDetermined,
+                                             TrackingStatus.Authorized);
+            AdPrivacy.Install(new ThrowingGateway());
+            AdPrivacy.Install(prompt);
+
+            await AdPrivacy.ResolveAsync();
+
+            Assert.AreEqual(0, prompt.Requests);
+        }
+
+        /// <summary>
+        /// Where no form is owed the question is closed without one, and Apple is asked on the
+        /// first launch as before — a player outside the EEA must not lose the prompt to a
+        /// gate written for the EEA. Both spellings a CMP can answer with: "does not apply",
+        /// and "applies and answered".
+        /// </summary>
+        [Test]
+        public async Task ASettledConsentAnswerAsksAppleOnTheSameLaunch()
+        {
+            foreach (var settled in new[]
+                     {
+                         new AdPrivacySignals(false, ConsentStatus.Unknown, false, false, TrackingStatus.NotDetermined),
+                         new AdPrivacySignals(false, ConsentStatus.Granted, false, false, TrackingStatus.NotDetermined),
+                         Granted,
+                         Denied,
+                     })
+            {
+                AdPrivacy.Reset();
+                var prompt = new RecordingPrompt(new List<string>(), TrackingStatus.NotDetermined,
+                                                 TrackingStatus.Authorized);
+                AdPrivacy.Install(new FakeGateway(settled));
+                AdPrivacy.Install(prompt);
+
+                await AdPrivacy.ResolveAsync();
+
+                Assert.AreEqual(1, prompt.Requests, settled.ToString());
+                Assert.AreEqual(TrackingStatus.Authorized, AdPrivacy.Signals.Tracking);
+            }
+        }
+
+        /// <summary>
+        /// The predicate itself, so a change to it is a change to a named thing. Restricted is
+        /// deliberately open: it is what every failure path returns.
+        /// </summary>
+        [Test]
+        public void TheConsentQuestionIsOpenExactlyWhenTheGdprAppliesAndNobodyAnswered()
+        {
+            Assert.IsFalse(AdPrivacySignals.Restricted.ConsentSettled);
+            Assert.IsFalse(new AdPrivacySignals(true, ConsentStatus.Unknown, false, false,
+                                                TrackingStatus.NotDetermined).ConsentSettled);
+            Assert.IsTrue(new AdPrivacySignals(false, ConsentStatus.Unknown, false, false,
+                                               TrackingStatus.NotDetermined).ConsentSettled,
+                          "no form owed is a closed question");
+            Assert.IsTrue(Granted.ConsentSettled);
+            Assert.IsTrue(Denied.ConsentSettled, "a refusal is an answer");
+        }
+
         // ------------------------------------------------------------- fixtures
         // ------------------------------------------------- what a subscriber is handed
         /// <summary>
@@ -348,6 +462,68 @@ namespace GlimmerGrove.Tests
 
             public Task<AdPrivacySignals> RevisitAsync(CancellationToken cancellation = default)
                 => throw new System.InvalidOperationException("the CMP is unreachable");
+        }
+
+        /// <summary>
+        /// A gateway with a form on screen: <c>ResolveAsync</c> does not return until
+        /// <see cref="Dismiss"/>, which is the contract the real gateway now keeps.
+        /// </summary>
+        sealed class FormGateway : IConsentGateway
+        {
+            readonly List<string> _log;
+            readonly AdPrivacySignals _answer;
+            readonly TaskCompletionSource<bool> _dismissed =
+                new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            public FormGateway(List<string> log, AdPrivacySignals answer)
+            {
+                _log = log;
+                _answer = answer;
+            }
+
+            public async Task<AdPrivacySignals> ResolveAsync(CancellationToken cancellation = default)
+            {
+                _log.Add("form shown");
+                await _dismissed.Task;
+                _log.Add("form dismissed");
+                return _answer;
+            }
+
+            public void Dismiss() => _dismissed.TrySetResult(true);
+
+            public bool CanRevisit => true;
+
+            public Task<AdPrivacySignals> RevisitAsync(CancellationToken cancellation = default)
+                => Task.FromResult(_answer);
+        }
+
+        /// <summary>
+        /// Apple's prompt as a recorder: what the device already says, what it would answer if
+        /// asked, and how many times it was asked.
+        /// </summary>
+        sealed class RecordingPrompt : ITrackingPrompt
+        {
+            readonly List<string> _log;
+            readonly TrackingStatus _current;
+            readonly TrackingStatus _answer;
+
+            public RecordingPrompt(List<string> log, TrackingStatus current, TrackingStatus answer)
+            {
+                _log = log;
+                _current = current;
+                _answer = answer;
+            }
+
+            public int Requests;
+
+            public TrackingStatus Status => Requests > 0 ? _answer : _current;
+
+            public Task<TrackingStatus> RequestAsync(CancellationToken cancellation = default)
+            {
+                Requests++;
+                _log.Add("apple asked");
+                return Task.FromResult(_answer);
+            }
         }
 
         /// <summary>Records the order it was called in, which is the thing under test.</summary>
