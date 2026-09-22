@@ -217,7 +217,7 @@ def card_title(sheet, cy_top, key):
 
 
 # --------------------------------------------------------------------------- the page
-def profile(level=24, name="Fern Willow", wave=31, held=None, line=None, frame=None):
+def profile(level=24, name="Fern Willow", wave=31, held=None, line=None):
     """`PublicProfileScreen` — the whole scroller, drawn from the top."""
     held = held if held is not None else {c["id"] for c in ROSTER[:9]}
     line = line or [("r", "cleaver", 3), ("g", "beacon", 2), ("b", "rime", 5), ("y", "bolt", 1)]
@@ -229,7 +229,7 @@ def profile(level=24, name="Fern Willow", wave=31, held=None, line=None, frame=N
 
     # No grove card and no worth line: both are held with the Grovement. See
     # `PublicProfileScreen`.
-    cursor = keeper_card(sheet, cursor, level, name, frame)
+    cursor = keeper_card(sheet, cursor, level, name)
     cursor = watch_card(sheet, cursor, wave)
     cursor = companion_card(sheet, cursor, held)
     cursor = line_card(sheet, cursor, line)
@@ -238,33 +238,11 @@ def profile(level=24, name="Fern Willow", wave=31, held=None, line=None, frame=N
     return sheet
 
 
-# `PublicProfileScreen.FrameW/FramedHoleInset/FramedDrop`, and the frame's hole as
-# `FrameCatalog` carries it (fractions of the painting, y up).
-FRAME_W, FRAME_H = 940.0, 940.0 / 3.0
-FRAMED_HOLE_INSET, FRAMED_DROP = 20.0, 65.0
-FRAME_HOLES = {"dragon": (0.2947, 0.2790, 0.6515, 0.3812)}
-FRAMES_ART = Path(__file__).resolve().parents[1] / "Assets" / "Game" / "Art" / "Frames"
+def keeper_card(sheet, top, level, name):
+    cy = top + KEEPER_H / 2
+    K.paste(sheet, K.skin("Hud/plate_blue", int(CARD_W), int(KEEPER_H)), W / 2, cy)
 
-
-def keeper_card(sheet, top, level, name, frame=None):
-    framed = frame in FRAME_HOLES and (FRAMES_ART / (frame + ".png")).exists()
-    drop = FRAMED_DROP if framed else 0.0
-    height = KEEPER_H + 2 * drop
-    cy = top + height / 2
-    K.paste(sheet, K.skin("Hud/plate_blue", int(CARD_W), int(height)), W / 2, cy)
-
-    if framed:
-        # The nameplate: the painting at the plate's width, its hole's top twenty under the
-        # card's top edge, the name centred in the hole (`BuildKeeperCard`, framed).
-        hx, hy, hw, hh = FRAME_HOLES[frame]
-        hole_cy = top + FRAMED_HOLE_INSET + hh * FRAME_H / 2
-        frame_cy = hole_cy + ((hy + hh / 2) - .5) * FRAME_H
-        painting = Image.open(FRAMES_ART / (frame + ".png")).convert("RGBA")
-        K.paste(sheet, K.fit(painting, (FRAME_W, FRAME_H)), W / 2, frame_cy)
-        K.shrunk(sheet, name, W / 2 + (hx + hw / 2 - .5) * FRAME_W, hole_cy,
-                 hw * FRAME_W - 28, 60, 46, 24, fill=K.CREAM, outline=4)
-
-    mx, my = W / 2 - 306, cy + drop
+    mx, my = W / 2 - 306, cy
     K.paste(sheet, K.glow(320, 2.1, K.GOLD, .26), mx, my)
     K.paste(sheet, disc(KEEPER_DISC, (8, 51, 60), .95), mx, my)
     K.paste(sheet, ring(KEEPER_DISC, 13, K.GOLD, .92), mx, my)
@@ -277,18 +255,15 @@ def keeper_card(sheet, top, level, name, frame=None):
     K.text(sheet, str(level), mx + 80, my + 80, 44, fill=(77, 51, 13), outline=0)
 
     # Two rows, re-centred on the card rather than left at the top of it — `NameY` and
-    # `RibbonY`, which moved when the worth line and the star row went. Framed, the name is in
-    # the hole above and the ribbon alone stands beside the medallion.
-    if not framed:
-        left_text(sheet, name, W / 2 + 160 - 280, cy - 44, 560, 50, 28, fill=K.CREAM, outline=4)
-    ribbon_cy = cy + drop if framed else cy + 42
+    # `RibbonY`, which moved when the worth line and the star row went.
+    left_text(sheet, name, W / 2 + 160 - 280, cy - 44, 560, 50, 28, fill=K.CREAM, outline=4)
 
     rib = K.fit(K.load("ribbon_flat")[0], (380, 74))
-    K.paste(sheet, rib, W / 2 + 100, ribbon_cy)
-    K.shrunk(sheet, say(title_key(level)), W / 2 + 100, ribbon_cy, 340, 50, 32,
+    K.paste(sheet, rib, W / 2 + 100, cy + 42)
+    K.shrunk(sheet, say(title_key(level)), W / 2 + 100, cy + 42, 340, 50, 32,
              20, fill=(87, 56, 31), outline=0)
 
-    return top + height + GAP
+    return top + KEEPER_H + GAP
 
 
 def title_key(level):
@@ -594,8 +569,6 @@ def main():
                     help="a keeper who has never run the Infinite lane")
     ap.add_argument("--ranks", action="store_true", help="how the boards work (19r)")
     ap.add_argument("--contact", action="store_true", help="every live screen side by side")
-    ap.add_argument("--framed", metavar="ID", nargs="?", const="dragon", default=None,
-                    help="the keeper wears this name frame (default: dragon)")
     args = ap.parse_args()
 
     if args.contact:
@@ -610,8 +583,7 @@ def main():
         save(ranks_info(), "keeper_ranks_info.png")
         return
 
-    save(profile(wave=0 if args.unplayed else 31, frame=args.framed),
-         "keeper_profile_framed.png" if args.framed else "keeper_profile.png")
+    save(profile(wave=0 if args.unplayed else 31), "keeper_profile.png")
 
 
 if __name__ == "__main__":

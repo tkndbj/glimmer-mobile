@@ -155,10 +155,6 @@ namespace GlimmerGrove.Persistence
             if (!SameLoadout(remote.wardLoadout, merged.wardLoadout)) return true;
             if (remote.wardLoadoutSetUnix != merged.wardLoadoutSetUnix) return true;
 
-            // The frame they wear, and its stamp in its own right, for the name's reason.
-            if (!Same(remote.frameWorn, merged.frameWorn)) return true;
-            if (remote.frameWornSetUnix != merged.frameWornSetUnix) return true;
-
             // How deep an endless run got. A floor, so a device that has just beaten its best has
             // something the server does not.
             if (!SameEndless(remote.endlessBest, merged.endlessBest)) return true;

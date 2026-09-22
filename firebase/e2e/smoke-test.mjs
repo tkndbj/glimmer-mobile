@@ -291,17 +291,6 @@ const smuggled = await fetch(`${FS}/players/${uid}?updateMask.fieldPaths=smuggle
   method: "PATCH", headers: json, body: JSON.stringify({ fields: { smuggled: { stringValue: "x" } } }) });
 check(smuggled.status === 403, "a field the rules do not list is refused", `got ${smuggled.status}`);
 
-// The name frame the keeper wears (save v34): a string and its stamp, both client-written,
-// the string bounded to the id length the client caps (`FrameLedger.MaxIdLength`).
-const framed = await fetch(`${FS}/players/${uid}?updateMask.fieldPaths=frameWorn&updateMask.fieldPaths=frameWornSetUnix`, {
-  method: "PATCH", headers: json,
-  body: JSON.stringify({ fields: { frameWorn: { stringValue: "dragon" }, frameWornSetUnix: { integerValue: "1700000500" } } }) });
-check(framed.ok, "the worn frame and its stamp are accepted", framed.ok ? "" : (await framed.text()).slice(0, 200));
-const longFrame = await fetch(`${FS}/players/${uid}?updateMask.fieldPaths=frameWorn`, {
-  method: "PATCH", headers: json,
-  body: JSON.stringify({ fields: { frameWorn: { stringValue: "x".repeat(33) } } }) });
-check(longFrame.status === 403, "a frame id past the bound is refused", `got ${longFrame.status}`);
-
 // The grove's arrangement is the longest client-controlled list in the document, and the
 // only defence against a device making its own save expensive to read is the bound in the
 // rules. Checked rather than assumed, because a `size()` clause that was written but never

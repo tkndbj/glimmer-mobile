@@ -888,36 +888,6 @@ is where they are written down, not what they mean.
    or the ward already owns (`SiegeBoard.Pour`/`.Kindle`/`.Sheltered`, `SiegeWard.Stoke`);
    `SiegeTutorial` writes to nothing.
 
-### Name frames
-
-54. **A name frame is one flattened painting rigged offline and deformed by the 2D Animation
-   package, and it is drawn on the canvas, never by a camera.** `Tools/make_frame_rig.py` derives
-   the mesh, three bones and feathered weights from a polygon description; `FrameRigImport` writes
-   them into the texture's import through the package's own data providers (so the Skinning Editor
-   opens the same rig); `NameFrame` reads `SpriteSkin`'s deformed vertices back into a
-   `MaskableGraphic`, because the only camera in the game culls everything and a `SpriteRenderer`
-   is never seen. **The rig lives under `Editor/FrameRigs/`, not beside the painting** — every
-   file under `Art/` is given an address.
-54c. **A cell that overhangs its row is raised by the grid after the pass, never by itself** —
-   `IGridRaised`: a cell that called `SetAsLastSibling` inside `Bind` was undone by the next cell
-   the same pass created. **And the frame's reach is bought from the viewport, not the rows**: the
-   list's window is let out by `Overhang` at both ends and padded back by the same, so rows stand
-   where they did and a frame at the first or last row is drawn rather than clipped. **The card's
-   plate hides behind the frame** in the painting's own plate box (`FrameDefinition.Plate`, every
-   edge measured to be under paint), so nothing of it peeks past the dragon or the ornament.
-54a. **A custom graphic declares `RequireComponent(CanvasRenderer)` itself.** `Graphic` does not,
-   its lazy add tests `ReferenceEquals(x, null)`, and a missing component in the Editor answers a
-   fake null — so the first frame drew nothing with its skin, shader and mesh all probed green.
-54b. **The worn frame is in the save (v34, `frameWorn` + `frameWornSetUnix`), rides onto the
-   published card and every board row as `frame`, and is drawn on the player's profile, on
-   every public profile and on every board row.** It is the loadout's recency-joined shape with
-   one deliberate difference: **an empty value with a stamp is an instruction** — taking a frame
-   off is a thing a stranger sees, so it wins by date (`FrameLedger.Join`); the pair no build
-   ever wrote (empty at nought) is still no opinion (11c). The raw id is kept, never the
-   resolved frame, so an older build does not confiscate a frame a newer one chose. Rules
-   released and `publishGrove` + `publishGroveBoards` deployed 2026-09-22 (the row-shape rule,
-   `a-row-field-is-two-deploys`). What is still placeholder: every catalogued frame is held.
-
 ### Consent
 
 55. **The consent form comes before Apple's tracking prompt on every path, and a network call
@@ -1104,12 +1074,6 @@ guess — verify offline.
   the picture the owner asked for, and it is shared by three screens, so it answers for all
   three — **which matters because the two turret ceremonies have no mirror of their own** and
   are judged on a device or not at all.
-- **The name frames:** `python Tools/make_frame_rig.py --check` proves the committed rigs are
-  what the tool writes and `--preview` (with `--degrees`) warps the painting by the nod either
-  way — **the only thing that can see a bone's weights reaching a part of the painting that
-  should stand still**, which shows as the gold bar bending. `FrameTests` holds the catalog's
-  hole and eye to the rig's, and the life in a frame (`FrameIdle`) to its bounds.
-  `render_boards.py --row --framed` draws the framed row at rest.
 - **The tutorial:** `python Tools/verify/tests.py TutorialTests` plays the whole script against
   the real rules — the taught swap, the pour, the overcharge, the sweep — and proves it ends with
   the line intact; its board reaches **no content gate**, so this is the only thing that would
@@ -1601,28 +1565,6 @@ half is `Assets/Game/Scripts/Cloud/`, Firebase Unity SDK
 on a fresh clone).
 
 ## Owed
-
-**The frame reached the wire on 2026-09-22 and none of the public half has been seen on a device.**
-Rules released, both card-writing functions deployed by name, smoke test 171/171 with the two new
-cases, 72 function tests, offline suite green. A keeper's frame now reaches their card on their next
-settled sync (the fingerprint carries it) and their public profile and board row from there. **Owed:
-one device pass** — wear the dragon, sync, open your own public profile from the board, and check the
-nameplate; then look at the board with two framed neighbours. Save schema v34 has never been loaded
-by a real device either: the first load is the checksum amnesty (16aa).
-
-**The name frames are built and offered again: `FramesScreen.Offered` is the one switch for the feature** — off, it hides the profile's CUSTOMIZE key *and* takes the frame off every board row (a worn frame draws nowhere, which is how "I wore it and the board shows nothing" reads while it is off). It was off for the build submitted to Apple on 2026-09-22 and on again the same day.
-Profile ▸ CUSTOMIZE ▸ `FramesScreen` ▸ WEAR puts the Ember Dragon round the name on the stage
-and on the player's own board row (54), where it covers the whole plate with the place, the
-badge and both lines inside its hole (the owner's call on 2026-09-22, after a first cut over the
-right two thirds). Seen in play mode through the bridge: the skin deforms,
-the head nods, the eyes flare and the sheen crosses; `com.unity.2d.animation` 15.1.0 is in the
-manifest, the painting is addressed (`Art/Frames/dragon`, Glimmer Global, 2048 cap), the shader
-is in the always-included list, `FrameTests` 15/15, every offline gate green. **What is owed is
-the owner's eye on a device**: whether nine degrees reads as a nod, whether the red dragon on
-the orange "mine" plate competes (the blue plate under a framed row is one line), whether the
-gold figure line is legible inside the hole, and whether the dragon overhanging the rows above
-and below by 77 units reads as a frame rather than as a collision. **Nothing is sold, saved or published**: the worn id is a
-per-account device preference (54b), a stranger's row wears nothing, and no server file moved.
 
 **The rank ceremony shipped on 2026-09-21 and has never been in the Editor or on a device.**
 Three new files (`Presentation/App/RankCeremony.cs`, `Presentation/Screens/RankUpOverlay.cs`,

@@ -1189,15 +1189,6 @@ export interface GroveCardDoc {
   rung?: string;
 
   /**
-   * The name frame this keeper wears, as a permanent frame id copied off their save
-   * (`frameWorn`, save v34): the painting every board row and their public profile draws
-   * round their name. Omitted when none, for the rung's reason. The client is trusted with
-   * it because it pays nothing and buys nothing — it is a picture — and a client that cannot
-   * draw an id draws nothing for it.
-   */
-  frame?: string;
-
-  /**
    * The furthest wave this keeper has held out to on the Infinite lane — what the `endless`
    * board is ordered on. See `bestWave` for why it is bounded rather than recomputed.
    *
@@ -1383,12 +1374,6 @@ export function buildCard(
     lifetimeWaves: endlessWaves(save),
   });
 
-  // The frame they wear, off the save the way the hall seat was read: a short string or
-  // nothing, never an empty key.
-  const frame = typeof save.frameWorn === "string" && save.frameWorn.length <= 32
-    ? save.frameWorn
-    : "";
-
   return {
     name: boardName(confirmedName, uid, list),
     avatar: typeof wallet.avatarId === "string" ? wallet.avatarId.slice(0, 64) : "",
@@ -1401,7 +1386,6 @@ export function buildCard(
     ...hallSeat(save),
     ...(wave > 0 ? { wave } : {}),
     ...(rung.length > 0 ? { rung } : {}),
-    ...(frame.length > 0 ? { frame } : {}),
     ...(companions.length > 0 ? { companions } : {}),
     ...(line.length > 0 ? { line } : {}),
     builtUnix: nowUnix,
@@ -1483,9 +1467,6 @@ export interface RankedGrove {
    * nothing.
    */
   rung?: string;
-
-  /** The frame the row draws round the name (`GroveCardDoc.frame`), omitted when none. */
-  frame?: string;
 }
 
 /**
@@ -1687,7 +1668,6 @@ async function topOf(db: FirebaseFirestore.Firestore, boardId: string): Promise<
       stars: typeof data.stars === "number" ? Math.floor(data.stars) : 0,
       wave,
       ...(typeof data.rung === "string" && data.rung.length > 0 ? { rung: data.rung } : {}),
-      ...(typeof data.frame === "string" && data.frame.length > 0 ? { frame: data.frame } : {}),
     });
   }
 
@@ -1762,7 +1742,6 @@ export function rowOf(uid: string, card: GroveCardDoc): RankedGrove {
     // and an unranked keeper's row carries no key at all rather than an empty string in every
     // one of a hundred rows.
     ...(typeof card.rung === "string" && card.rung.length > 0 ? { rung: card.rung } : {}),
-    ...(typeof card.frame === "string" && card.frame.length > 0 ? { frame: card.frame } : {}),
   };
 }
 
@@ -1799,7 +1778,6 @@ export function readRows(raw: unknown): RankedGrove[] {
       stars: typeof row.stars === "number" ? Math.floor(row.stars) : 0,
       wave: typeof row.wave === "number" ? Math.floor(row.wave) : 0,
       ...(typeof row.rung === "string" && row.rung.length > 0 ? { rung: row.rung } : {}),
-      ...(typeof row.frame === "string" && row.frame.length > 0 ? { frame: row.frame } : {}),
     });
   }
   return rows;
@@ -1874,7 +1852,6 @@ function sameRow(a: RankedGrove, b: RankedGrove): boolean {
   // for, arriving one layer further down.
   return a.uid === b.uid && a.name === b.name && a.avatar === b.avatar && a.level === b.level
     && (a.rung ?? "") === (b.rung ?? "")
-    && (a.frame ?? "") === (b.frame ?? "")
       && a.score === b.score && a.stars === b.stars && a.wave === b.wave;
 }
 

@@ -1243,7 +1243,7 @@ namespace GlimmerGrove.Cloud
                             rank, ownerId, Text(entry, "name"), Text(entry, "avatar"),
                             (int)ReadLong(entry, "level"), ReadLong(entry, "score"),
                             (int)ReadLong(entry, "stars"), (int)ReadLong(entry, "wave"),
-                            Text(entry, "rung"), Text(entry, "frame")));
+                            Text(entry, "rung")));
 
                         if (rows.Count >= Social.LeaderboardBoard.MaxRows) break;
                     }
@@ -1405,11 +1405,7 @@ namespace GlimmerGrove.Cloud
                 // `rungOf` in functions/src/grove.ts. Absent on every card written before that
                 // deployment and on any keeper below the first rung, and both read as empty,
                 // which every drawing path already takes as "no badge".
-                Text(document, "rung"),
-
-                // The frame they wear, copied by the server off their save; absent reads as
-                // none, which draws nothing.
-                Text(document, "frame"));
+                Text(document, "rung"));
         }
 
         static IDictionary<string, object> ReadMap(IDictionary<string, object> reply, string key)

@@ -9,8 +9,7 @@
         "UnityEngine.UI",
         "GlimmerGrove.Privacy",
         "GlimmerGrove.Telemetry",
-        "GlimmerGrove.Notifications",
-        "Unity.2D.Animation.Runtime"
+        "GlimmerGrove.Notifications"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

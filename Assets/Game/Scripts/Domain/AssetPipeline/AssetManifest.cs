@@ -25,25 +25,11 @@ namespace GlimmerGrove.AssetPipeline
         public const string MapRoot = ArtRoot + "Map/";
         public const string UiRoot = ArtRoot + "Ui/";
         public const string CompanionRoot = ArtRoot + "Companions/";
-
-        /// <summary>
-        /// The name frames (<c>Frames.FrameCatalog</c>). One painting per frame, addressed by
-        /// its id; the player's own is held by whichever screen draws it, never global — a
-        /// frame is 2048 across, and a hundred-row board draws one of them at most.
-        /// </summary>
-        public const string FrameRoot = ArtRoot + "Frames/";
         public const string SfxRoot = "Audio/Sfx/";
         public const string MusicRoot = "Audio/Music/";
         public const string FontAddress = "Fonts/GameFont";
 
         public static string Companion(string key) => CompanionRoot + key;
-
-        /// <summary>A name frame's painting, from its permanent id.</summary>
-        public static string Frame(string id) => FrameRoot + id;
-
-        /// <summary>What a screen holds to draw one frame: its painting, and nothing else.</summary>
-        public static List<AssetRequest> FrameAssets(string id)
-            => new List<AssetRequest> { AssetRequest.Sprite(Frame(id)) };
 
         public static string Backdrop(string key) => BackdropRoot + key;
 

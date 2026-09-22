@@ -41,8 +41,6 @@ namespace GlimmerGrove.Persistence
 
             var line = Wards.WardLoadout.Join(mine.wardLoadout, mine.wardLoadoutSetUnix,
                                               other.wardLoadout, other.wardLoadoutSetUnix);
-            var frame = Frames.FrameLedger.Join(mine.frameWorn, mine.frameWornSetUnix,
-                                                other.frameWorn, other.frameWornSetUnix);
 
             var merged = new SaveFileDto
             {
@@ -133,11 +131,6 @@ namespace GlimmerGrove.Persistence
                 // one thing that carries a date of its own (invariant 11c).
                 wardLoadout = line.Rows,
                 wardLoadoutSetUnix = line.At,
-
-                // The frame they wear, by recency against its own stamp — and here an empty
-                // value with a date is a choice too (`FrameLedger.Join`).
-                frameWorn = frame.Value,
-                frameWornSetUnix = frame.At,
 
                 // How deep an endless run got, as a per-level max. A best only ever rises, so
                 // there is nothing here to decide (invariant 14a).

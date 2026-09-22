@@ -176,10 +176,6 @@ namespace GlimmerGrove.Tests
                 },
                 wardLoadoutSetUnix = 1_699_001_000,
 
-                // The frame they wear and when: a string and its stamp, the name's shape.
-                frameWorn = "dragon",
-                frameWornSetUnix = 1_699_002_000,
-
                 endlessBest = new[]
                 {
                     new EndlessBestDto { level = "s02_endless", wave = 23 },
@@ -348,7 +344,6 @@ namespace GlimmerGrove.Tests
                 ("tasks.counts",  "p.counts",        Tasks.TaskLedger.MaxGoals),
                 ("tasks.claimed", "p.claimed",       Tasks.TaskLedger.MaxClaimed),
                 ("tasks.lifetime","d.tasks.lifetime", Tasks.LifetimeTally.MaxGoals),
-                ("frameWorn",     "d.frameWorn",     Frames.FrameLedger.MaxIdLength),
             };
 
             foreach (var (field, expression, clientCap) in pairs)

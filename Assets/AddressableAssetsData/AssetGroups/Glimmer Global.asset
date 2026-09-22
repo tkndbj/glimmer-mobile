@@ -33269,11 +33269,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/muzzle_mortar_g
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: c939b53706862b54aaf872addeae967b
-    m_Address: Art/Frames/dragon
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c93ceb9199b7cf94791278a707f833a2
     m_Address: Art/Fx/Siege/shot_lance_g/f04
     m_ReadOnly: 0

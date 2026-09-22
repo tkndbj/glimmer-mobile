@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using GlimmerGrove.AssetPipeline;
-using GlimmerGrove.Frames;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
@@ -78,21 +77,6 @@ namespace GlimmerGrove
         BusyVeil _busy;
         AssetHold _turrets;
 
-        /// <summary>
-        /// The frame this keeper wears, held for the screen's life — a second scope beside the
-        /// turrets because it lands before the card is built rather than after: a framed card
-        /// is a different layout, so it is built once with the painting in hand.
-        /// </summary>
-        AssetHold _frameArt;
-
-        /// <summary>
-        /// The keeper card wearing a frame: the plate's own size on the board, the hole's top
-        /// this far under the card's top edge, and how far the medallion and the ribbon move
-        /// down — `ProfileScreen`'s figures, so the two profiles frame a name the same way.
-        /// </summary>
-        const float FrameW = 940f, FrameH = FrameW / 3f;
-        const float FramedHoleInset = 20f, FramedDrop = 65f, FrameOverhang = 88f;
-
         /// <summary>The turret cells, in colour order, painted when the scope lands.</summary>
         readonly List<Image> _bodies = new List<Image>(WardLine.Colours.Length);
 
@@ -133,7 +117,6 @@ namespace GlimmerGrove
         void OnDestroy()
         {
             _turrets?.Dispose();
-            _frameArt?.Dispose();
         }
 
         // ------------------------------------------------------------------ fetching
@@ -150,11 +133,6 @@ namespace GlimmerGrove
 
             _failed = !result.Ok || card == null || !card.IsValid;
             _card = card ?? GroveCard.Empty;
-
-            // The frame before the card is drawn, so a framed keeper's card is built framed
-            // rather than rebuilt when the painting lands.
-            if (_card.IsValid) await LoadFrameAsync(token);
-            if (!Living) return;
 
             BuildBody();
 
@@ -176,17 +154,6 @@ namespace GlimmerGrove
         /// <see cref="WardLine.Art"/> exists to make, narrowed to the one picture this screen
         /// draws per seat.
         /// </summary>
-        /// <summary>The one painting this keeper's frame needs, or nothing (7b).</summary>
-        async Task LoadFrameAsync(CancellationToken cancellation)
-        {
-            var frame = FramesScreen.Offered ? FrameCatalog.Find(_card.FrameId) : null;
-            _frameArt = _frameArt ?? AssetLibrary.Hold("public_profile_frame");
-            await _frameArt.LoadAsync(frame != null
-                                          ? AssetManifest.FrameAssets(frame.Id)
-                                          : new List<AssetRequest>(),
-                                      null, cancellation);
-        }
-
         async Task LoadLineAsync(CancellationToken cancellation)
         {
             var line = _card.Line(WardLedger.Catalog);
@@ -231,11 +198,8 @@ namespace GlimmerGrove
             _bodies.Clear();
 
             _viewport = UIKit.Node("Viewport", Safe);
-            // Let out under the header by a frame's reach and the stack started lower by the
-            // same (`ProfileScreen`'s arithmetic), so a framed keeper's horns are drawn above
-            // the card rather than cut at the window's edge.
             _viewport.offsetMin = new Vector2(0f, 24f);
-            _viewport.offsetMax = new Vector2(0f, -(HeaderHeight - FrameOverhang));
+            _viewport.offsetMax = new Vector2(0f, -HeaderHeight);
 
             var catcher = _viewport.gameObject.AddComponent<Image>();
             catcher.color = new Color(0, 0, 0, 0);       // invisible, but drags land on it
@@ -248,7 +212,7 @@ namespace GlimmerGrove
             _stack.pivot = new Vector2(.5f, 1f);
             _stack.anchoredPosition = Vector2.zero;
 
-            _cursor = -Gap - FrameOverhang;
+            _cursor = -Gap;
 
             if (_card.IsValid)
             {
@@ -320,32 +284,14 @@ namespace GlimmerGrove
             // is what actually fills it. `Disc + 2 * Margin` is the one measurement that cannot
             // drift from the thing it is measuring.
             const float Disc = 252f, Margin = 34f;
-
-            // **A worn frame reshapes the card**, exactly as it does the player's own: the
-            // nameplate takes the top, the medallion and the ribbon move down by `drop`, and
-            // the card grows by twice it. Framed only with the painting in hand (7b), which
-            // `Open` waits for before building.
-            var worn = FramesScreen.Offered ? FrameCatalog.Find(_card.FrameId) : null;
-            bool framed = worn != null && AssetLibrary.Peek<Sprite>(worn.Address) != null;
-            float drop = framed ? FramedDrop : 0f;
-            float Height = Disc + 2f * Margin + drop * 2f;
+            const float Height = Disc + 2f * Margin;
 
             var card = Section("Keeper", Height, 0);
-
-            if (framed)
-            {
-                var size = new Vector2(FrameW, FrameH);
-                var hole = NameFrame.HoleIn(worn, size);
-                float holeY = Height * .5f - FramedHoleInset - hole.height * .5f;
-                var frame = NameFrame.Build("Frame", card, size, new Vector2(.5f, .5f),
-                                            new Vector2(0f, holeY - hole.center.y));
-                frame.Show(worn);
-            }
 
             var medallion = UIKit.Img("Medallion", card, Art.Disc(256),
                                       Pal.A(Pal.Hex("#08333C"), .95f),
                                       new Vector2(Disc, Disc), new Vector2(.5f, .5f),
-                                      new Vector2(-306f, -drop));
+                                      new Vector2(-306f, 0f));
             UIKit.Halo(medallion.transform, Pal.Gold, 320f, .26f);
             var ring = UIKit.Img("Ring", medallion.transform, Art.Ring(256, 13f), Pal.A(Pal.Gold, .92f));
             UIKit.StretchTo((RectTransform)ring.transform, 0, 0, 0, 0);
@@ -383,28 +329,14 @@ namespace GlimmerGrove
             // third, beside a portrait that still fills the whole of it.
             const float NameY = 44f, RibbonY = -42f;
 
-            if (framed)
-            {
-                // The name centred in the hole; the ribbon alone beside the medallion, centred
-                // on the band the two of them share.
-                var hole = NameFrame.HoleIn(worn, new Vector2(FrameW, FrameH));
-                float holeY = Height * .5f - FramedHoleInset - hole.height * .5f;
-                UIKit.Shrinkable(
-                    UIKit.Titled("Name", card, _card.Name, 46, Pal.Cream, TextAnchor.MiddleCenter,
-                                 new Vector2(hole.width - 28f, 60f), new Vector2(.5f, .5f),
-                                 new Vector2(hole.center.x, holeY), 4f, 4f), 24);
-            }
-            else
-            {
-                UIKit.Shrinkable(
-                    UIKit.Titled("Name", card, _card.Name, 50, Pal.Cream, TextAnchor.MiddleLeft,
-                                 new Vector2(560f, 62f), new Vector2(.5f, .5f),
-                                 new Vector2(160f, NameY), 4f, 4f), 28);
-            }
+            UIKit.Shrinkable(
+                UIKit.Titled("Name", card, _card.Name, 50, Pal.Cream, TextAnchor.MiddleLeft,
+                             new Vector2(560f, 62f), new Vector2(.5f, .5f),
+                             new Vector2(160f, NameY), 4f, 4f), 28);
 
             var ribbon = UIKit.Img("Title", card, Art.S("Ui/ribbon_flat"), Color.white,
                                    new Vector2(380f, 74f), new Vector2(.5f, .5f),
-                                   new Vector2(100f, framed ? -drop : RibbonY));
+                                   new Vector2(100f, RibbonY));
             UIKit.Shrinkable(
                 UIKit.Titled("T", ribbon.transform, Loc.Get(KeeperTitle.KeyFor(_card.KeeperLevel)), 32,
                              new Color(.34f, .22f, .12f), TextAnchor.MiddleCenter,

@@ -779,27 +779,18 @@ console.log("\nthe card a public profile reads");
     wardLoadout: [{ colour: "r", ward: "siphon" }],
     wardsOwned: ["siphon:r"],
     homesteadPlaced: [{ slot: "4,4", piece: "bench" }],
-    frameWorn: "dragon",
-    frameWornSetUnix: 1_699_002_000,
   };
 
   const card = buildCard("uid-1", save, config, NO_RANKS, worth, 99, 1_700_000_000, "Fern Willow");
   check("a card carries the companions", Array.isArray(card.companions) && card.companions.length > 0);
   check("and the line", Array.isArray(card.line) && card.line.length === 1);
   equal("and the arrangement", Object.keys(card.placed).length, 1);
-  equal("and the frame the keeper wears", card.frame, "dragon");
-  equal("which the row carries too", rowOf("uid-1", card).frame, "dragon");
-  const long = buildCard("uid-1", { ...save, frameWorn: "x".repeat(33) }, config, NO_RANKS, worth,
-                         99, 1_700_000_000, "Fern Willow");
-  check("an id past the bound is dropped rather than truncated", !("frame" in long));
 
   // Absent rather than empty, which is what every card written before this deployment says and
   // is the same answer. Firestore refuses `undefined`, so these are spread rather than written.
   const bare = buildCard("uid-2", {}, config, NO_RANKS, worth, 1, 1_700_000_000, null);
   check("a keeper who has bought nothing carries no companions", !("companions" in bare));
   check("and one who has arranged no line carries none", !("line" in bare));
-  check("and one wearing no frame carries none", !("frame" in bare));
-  check("nor does their row", !("frame" in rowOf("uid-2", bare)));
 
   // The whole of what a grove takedown does. `publishableName`'s fall-through wearing different
   // clothes: read here rather than at the call site, so the report path and `publishGrove`

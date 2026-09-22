@@ -8,7 +8,6 @@ using GlimmerGrove.Social;
 using GlimmerGrove.Progression;
 using GlimmerGrove.Referral;
 using GlimmerGrove.Content;
-using GlimmerGrove.Frames;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -79,24 +78,6 @@ namespace GlimmerGrove
         const float Gap = 28f;
         const float HeaderHeight = 250f;
 
-        /// <summary>
-        /// The worn frame on the keeper card: the plate's own size on the board (three to one,
-        /// 940 across), the hole's top this far under the card's top edge, and how far the rest
-        /// of the card moves down to make room. 65 is the least that clears the frame's bottom
-        /// bar from the medallion's top by thirty, and the card grows by twice it so the
-        /// customise key keeps the same fourteen-unit margin at the foot.
-        /// </summary>
-        const float FrameW = 940f, FrameH = FrameW / 3f;
-        const float FramedHoleInset = 20f, FramedDrop = 65f;
-        const float FramedPencilW = 80f, FramedPencilInset = 14f;
-
-        /// <summary>
-        /// How far the frame's horns rise above the keeper card's top edge: the frame's half
-        /// height less the hole's seat (its top twenty under the card's edge, its own centre
-        /// nine and a half under the painting's). The viewport is let out by this much.
-        /// </summary>
-        const float FrameOverhang = 88f;
-
         RectTransform _viewport, _stack;
         float _cursor;                       // top of the next card, negative and falling
 
@@ -116,14 +97,6 @@ namespace GlimmerGrove
         Image _badge;
         Text _badgeName;
         Text _nameLabel;
-
-        /// <summary>
-        /// The worn frame's painting, held for the screen's life (7b). The keeper card is
-        /// rebuilt when it lands, because a framed card is a different layout rather than a
-        /// picture switched on: the nameplate takes the top of the card and everything else
-        /// moves down (<see cref="BuildKeeperCard"/>).
-        /// </summary>
-        AssetHold _frameArt;
 
         protected override void Build()
         {
@@ -156,30 +129,7 @@ namespace GlimmerGrove
             // A repaint rather than `BuildBody`, which is what `IdentityChanged` gets: a rebuild
             // replays every card's entrance, and a wallet landing is not an arrival (16d).
             PlayerProgression.Changed += PaintRecord;
-
-            // The frame the keeper wears is a choice made on another screen and lands as art
-            // a moment later, so both are events here rather than facts read once.
-            FrameLedger.Changed += OnFrameChanged;
-            HoldFrame();
         }
-
-        void OnFrameChanged()
-        {
-            if (!Living) return;
-            HoldFrame();
-        }
-
-        void HoldFrame() => Run(async token =>
-        {
-            var worn = FramesScreen.Offered ? FrameLedger.Worn : null;
-            _frameArt = _frameArt ?? AssetLibrary.Hold("profile-frame");
-            await _frameArt.LoadAsync(worn != null
-                                          ? AssetManifest.FrameAssets(worn.Id)
-                                          : new List<AssetRequest>(),
-                                      null, token);
-            if (!Living) return;
-            BuildBody();
-        });
 
         /// <summary>
         /// Draws the rank the player holds into the medallion: the badge and its name.
@@ -228,9 +178,6 @@ namespace GlimmerGrove
             Ranks.RankLedger.Changed -= PaintBadge;
             CloudSaveService.IdentityChanged -= BuildBody;
             PlayerProgression.Changed -= PaintRecord;
-            FrameLedger.Changed -= OnFrameChanged;
-            _frameArt?.Dispose();
-            _frameArt = null;
         }
 
         // -------------------------------------------------------------- scroller
@@ -272,14 +219,9 @@ namespace GlimmerGrove
                 Destroy(_viewport.gameObject);
             }
 
-            // Let out under the header by the frame's reach and the stack started lower by
-            // the same, so the keeper card stands where it always did and a worn frame's horns
-            // are drawn above it rather than cut at the window's edge (the boards' arithmetic,
-            // `LeaderboardScreen.Overhang`). The header is built after the body and draws over
-            // whatever reaches under it.
             _viewport = UIKit.Node("Viewport", Safe);
             _viewport.offsetMin = new Vector2(0f, NavBar.Height);
-            _viewport.offsetMax = new Vector2(0f, -(HeaderHeight - FrameOverhang));
+            _viewport.offsetMax = new Vector2(0f, -HeaderHeight);
 
             var catcher = _viewport.gameObject.AddComponent<Image>();
             catcher.color = new Color(0, 0, 0, 0);       // invisible, but drags land on it
@@ -292,7 +234,7 @@ namespace GlimmerGrove
             _stack.pivot = new Vector2(.5f, 1f);
             _stack.anchoredPosition = Vector2.zero;
 
-            _cursor = -Gap - FrameOverhang;
+            _cursor = -Gap;
             BuildKeeperCard();
             BuildAccountCard();
             BuildRecordCard();
@@ -396,35 +338,8 @@ namespace GlimmerGrove
         // ------------------------------------------------------------ the keeper
         void BuildKeeperCard()
         {
-            // 480 while the customise key is offered, 440 otherwise (`FramesScreen.Offered`):
-            // the key is a row of its own under the XP column, and forty units is what it costs
-            // with the same margin to the plate's foot that the badge name keeps on the other
-            // side. Without the key the card is exactly what it was before 2026-09-21.
-            // **A worn frame reshapes the card.** The nameplate — the frame with the name in
-            // its hole, exactly as the player's board row wears it — takes the top of the card,
-            // and the medallion, the XP column and the customise key move down by `drop`. The
-            // card grows by twice that, so the foot keeps its margin. Framed only once the
-            // painting is here (7b): until the hold lands the card is built bare and rebuilt.
-            var worn = FramesScreen.Offered ? FrameLedger.Worn : null;
-            bool framed = worn != null && AssetLibrary.Peek<Sprite>(worn.Address) != null;
-            float drop = framed ? FramedDrop : 0f;
-            float height = (FramesScreen.Offered ? 480f : 440f) + drop * 2f;
-
-            var card = Section("Keeper", height, 0);
+            var card = Section("Keeper", 440f, 0);
             var level = Profile.Level;
-
-            if (framed)
-            {
-                // The hole's top sits twenty units under the card's top edge, so the frame's
-                // top bar covers that edge and the horns rise above it — the board row's
-                // arithmetic, with the card standing in for the plate.
-                var size = new Vector2(FrameW, FrameH);
-                var hole = NameFrame.HoleIn(worn, size);
-                float holeY = height * .5f - FramedHoleInset - hole.height * .5f;
-                var frame = NameFrame.Build("Frame", card, size, new Vector2(.5f, .5f),
-                                            new Vector2(0f, holeY - hole.center.y));
-                frame.Show(worn);
-            }
 
             // **The medallion, and what stands where it was is the rank.** It held the
             // companion the player was wearing; the roster is gone from this game, and what
@@ -450,7 +365,7 @@ namespace GlimmerGrove
             // level keeps its seat by hanging off the badge's own box rather than off a disc
             // that is no longer there.
             var medallion = UIKit.Box("Medallion", card, new Vector2(268f, 268f),
-                                      new Vector2(.5f, .5f), new Vector2(-300f, 34f - drop));
+                                      new Vector2(.5f, .5f), new Vector2(-300f, 34f));
             UIKit.Halo(medallion, Pal.Gold, 340f, .26f);
 
             _badge = UIKit.Img("Badge", medallion, null, Color.white,
@@ -467,7 +382,7 @@ namespace GlimmerGrove
             // by eight units and still leaves 36 of margin above the card's.
             _badgeName = UIKit.Shrinkable(
                 UIKit.Titled("BadgeName", card, string.Empty, 28, Pal.Gold, TextAnchor.MiddleCenter,
-                             new Vector2(300f, 36f), new Vector2(.5f, .5f), new Vector2(-300f, -166f - drop),
+                             new Vector2(300f, 36f), new Vector2(.5f, .5f), new Vector2(-300f, -166f),
                              3f, 2f), 16);
 
             PaintBadge();
@@ -507,35 +422,13 @@ namespace GlimmerGrove
             // the plate sit level rather than the right one riding high.
             const float NameY = 80f;
 
-            if (framed)
-            {
-                // Inside the hole: the name centred in what is left of it once the pencil has
-                // its seat at the right end. The board row's seat, with a pencil for a badge.
-                var hole = NameFrame.HoleIn(worn, new Vector2(FrameW, FrameH));
-                float holeY = height * .5f - FramedHoleInset - hole.height * .5f;
-                float pencilX = hole.xMax - FramedPencilInset - FramedPencilW * .5f;
-                float nameLeft = hole.xMin + 14f;
-                float nameRight = pencilX - FramedPencilW * .5f - 12f;
+            _nameLabel = UIKit.Titled("Name", card, Profile.Name, 52, Pal.Cream, TextAnchor.MiddleLeft,
+                                      new Vector2(NameRight + 110f, 62f), new Vector2(.5f, .5f),
+                                      new Vector2((NameRight - 110f) * .5f, NameY), 4f, 4f);
 
-                _nameLabel = UIKit.Shrinkable(
-                    UIKit.Titled("Name", card, Profile.Name, 46, Pal.Cream, TextAnchor.MiddleCenter,
-                                 new Vector2(nameRight - nameLeft, 60f), new Vector2(.5f, .5f),
-                                 new Vector2((nameLeft + nameRight) * .5f, holeY), 4f, 4f), 20);
-
-                UIKit.IconButton("Rename", card, Skins.Aside, "ic_pencil", new Vector2(FramedPencilW, FramedPencilW),
-                                 new Vector2(.5f, .5f), new Vector2(pencilX, holeY),
-                                 () => Flow.Modal<RenameOverlay>(v => v.OnRenamed = Refresh), .48f);
-            }
-            else
-            {
-                _nameLabel = UIKit.Titled("Name", card, Profile.Name, 52, Pal.Cream, TextAnchor.MiddleLeft,
-                                          new Vector2(NameRight + 110f, 62f), new Vector2(.5f, .5f),
-                                          new Vector2((NameRight - 110f) * .5f, NameY), 4f, 4f);
-
-                UIKit.IconButton("Rename", card, Skins.Aside, "ic_pencil", new Vector2(PencilW, PencilW),
-                                 new Vector2(.5f, .5f), new Vector2(PencilX, NameY),
-                                 () => Flow.Modal<RenameOverlay>(v => v.OnRenamed = Refresh), .48f);
-            }
+            UIKit.IconButton("Rename", card, Skins.Aside, "ic_pencil", new Vector2(PencilW, PencilW),
+                             new Vector2(.5f, .5f), new Vector2(PencilX, NameY),
+                             () => Flow.Modal<RenameOverlay>(v => v.OnRenamed = Refresh), .48f);
 
             // experience toward the next keeper level
             //
@@ -550,7 +443,7 @@ namespace GlimmerGrove
             const float XpW = XpRight - XpLeft, XpX = (XpLeft + XpRight) * .5f;
 
             var track = UIKit.Img("XpTrack", card, Art.S("Ui/" + Skins.Trough), Color.white,
-                                  new Vector2(XpW, 40f), new Vector2(.5f, .5f), new Vector2(XpX, -17f - drop));
+                                  new Vector2(XpW, 40f), new Vector2(.5f, .5f), new Vector2(XpX, -17f));
             var fill = UIKit.Img("XpFill", track.transform, Art.S("Ui/" + Skins.Fill), Pal.Mint,
                                  new Vector2(0f, 30f), new Vector2(0f, .5f), new Vector2(5f, 0f));
             var fillRT = (RectTransform)fill.transform;
@@ -572,7 +465,7 @@ namespace GlimmerGrove
                              ? Loc.Get("ui.profile.xp_max")
                              : Loc.Format("ui.profile.xp", level.XpIntoLevel, level.XpForNextLevel),
                          27, Color.white, TextAnchor.MiddleLeft,
-                         new Vector2(XpW, 34f), new Vector2(.5f, .5f), new Vector2(XpX, -67f - drop), 0f, 2f);
+                         new Vector2(XpW, 34f), new Vector2(.5f, .5f), new Vector2(XpX, -67f), 0f, 2f);
 
             int nextTier = KeeperTitle.NextTierLevel(level.Level);
             if (nextTier > 0)
@@ -580,24 +473,8 @@ namespace GlimmerGrove
                 UIKit.Titled("NextTitle", card,
                              Loc.Format("ui.profile.next_title", Loc.Get(KeeperTitle.KeyFor(nextTier)), nextTier),
                              25, Color.white, TextAnchor.MiddleLeft,
-                             new Vector2(XpW, 32f), new Vector2(.5f, .5f), new Vector2(XpX, -111f - drop), 0f, 2f);
+                             new Vector2(XpW, 32f), new Vector2(.5f, .5f), new Vector2(XpX, -111f), 0f, 2f);
             }
-
-            // **Customise: the frames a name wears** (`FramesScreen`). Under the XP column and
-            // as wide as it, so the right half of the card is one column of things about this
-            // keeper: the name, how far along, what is next, and how they look to strangers.
-            // -186 puts its foot at -226 against a plate whose edge is now -240, which is the
-            // badge name's own fourteen-unit margin on the left side.
-            // Withheld while `FramesScreen.Offered` is off, which is the one switch that
-            // hides the whole feature from a player: nothing else leads to the screen.
-            if (!FramesScreen.Offered) return;
-
-            var customise = UIKit.TextButton("Customize", card, Skins.Alternate,
-                                             Loc.Get("ui.profile.customize").ToUpperInvariant(), 28,
-                                             new Vector2(XpW, 80f), new Vector2(.5f, .5f),
-                                             new Vector2(XpX, -186f - drop), () => Flow.Go<FramesScreen>());
-            UIKit.Shrinkable(customise.Label, 18);
-            UIKit.FitLabel(customise);
         }
 
         // ----------------------------------------------------------- inviting
