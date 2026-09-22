@@ -46,6 +46,7 @@ namespace GlimmerGrove.Tests
         public void Open()
         {
             SaveService.Unload();
+            GlimmerGrove.Progression.EndlessCoins.UseStore(new GlimmerGrove.Progression.EndlessCoins.MemoryStore());
 
             _archive = new MemoryArchive();
             SaveService.LoadWith(new MemoryStore(), _archive);
@@ -59,6 +60,7 @@ namespace GlimmerGrove.Tests
         {
             CloudSaveService.UseBackend(null);
             SaveService.Unload();
+            GlimmerGrove.Progression.EndlessCoins.UseStore(null);
         }
 
         /// <summary>
@@ -66,7 +68,7 @@ namespace GlimmerGrove.Tests
         /// than round-tripping it through JSON: serialisation is <c>SaveStoreTests</c>' subject,
         /// and borrowing it here would only put <c>JsonUtility</c> back in the way.
         /// </summary>
-        sealed class MemoryStore : ISaveStore
+        internal sealed class MemoryStore : ISaveStore
         {
             SaveFileDto _file;
 
@@ -103,7 +105,7 @@ namespace GlimmerGrove.Tests
         /// deliberate and safe — <c>SaveService.Snapshot</c> builds a fresh file every call, so
         /// nothing here is ever holding a reference the game is still writing through.
         /// </summary>
-        sealed class MemoryArchive : IAccountArchive
+        internal sealed class MemoryArchive : IAccountArchive
         {
             readonly Dictionary<string, SaveFileDto> _slots = new Dictionary<string, SaveFileDto>();
 
@@ -729,7 +731,7 @@ namespace GlimmerGrove.Tests
         /// ordering, so a fake that only counted calls would pass every test in this file while
         /// handing a grove away before saving it.
         /// </summary>
-        sealed class Backend : ICloudSaveBackend
+        internal sealed class Backend : ICloudSaveBackend
         {
             public string Session;
             public string SignsInAs;

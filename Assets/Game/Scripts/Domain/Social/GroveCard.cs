@@ -107,6 +107,16 @@ namespace GlimmerGrove.Social
         /// <summary>When the server last rebuilt this card, as a Unix timestamp.</summary>
         public readonly long PublishedUnix;
 
+        /// <summary>
+        /// The name frame this keeper wears, as a frame id — the painting drawn round their
+        /// name on every board row and on their public profile. Empty for none, and for every
+        /// card written before the server carried one. On the card for the rung's reason: it
+        /// is a change a visitor sees that moves nothing else, so the fingerprint has to
+        /// carry it or a newly worn frame never republishes. An id this build cannot draw
+        /// draws as nothing (7b), never as a rectangle.
+        /// </summary>
+        public readonly string FrameId;
+
         readonly List<Wards.WardSlot> _line;
         readonly int[] _rungs;
 
@@ -114,11 +124,13 @@ namespace GlimmerGrove.Social
                          int bestWave, long publishedUnix,
                          IReadOnlyList<Wards.WardSlot> line = null,
                          IReadOnlyList<int> rungs = null,
-                         string rungId = null)
+                         string rungId = null,
+                         string frameId = null)
         {
             OwnerId = ownerId ?? string.Empty;
             Name = name ?? string.Empty;
             RungId = rungId ?? string.Empty;
+            FrameId = frameId ?? string.Empty;
             KeeperLevel = keeperLevel < 1 ? 1 : keeperLevel;
             BestWave = bestWave < 0 ? 0
                      : bestWave > Progression.EndlessLedger.MaxWave ? Progression.EndlessLedger.MaxWave
@@ -218,7 +230,7 @@ namespace GlimmerGrove.Social
             // rung off the file instead, and the two answer identically for a settled save —
             // which is what stops a publish being asked for on every sync.
             return Build(ownerId, name, keeperLevel, EndlessLedger.Best, nowUnix,
-                         line, rungs, Ranks.RankLedger.Held?.Id);
+                         line, rungs, Ranks.RankLedger.Held?.Id, Frames.FrameLedger.WornId);
         }
 
         /// <summary>
@@ -283,15 +295,17 @@ namespace GlimmerGrove.Social
             var rung = Ranks.RankLedger.Ladder.Held(
                 new Ranks.SaveRankSource(save, Content.GameContent.Index, keeperLevel));
 
+            // The frame the *file* says, for the rung's reason: this card decides whether a
+            // publish is owed, and it has to be the reading the server will take.
             return Build(ownerId, name, keeperLevel, EndlessLedger.BestIn(save), nowUnix,
-                         line, rungs, rung?.Id);
+                         line, rungs, rung?.Id, save?.frameWorn);
         }
 
         /// <summary>The one builder both readings go through, so they cannot drift.</summary>
         static GroveCard Build(string ownerId, string name, int keeperLevel, int bestWave,
                                long nowUnix,
                                IReadOnlyList<Wards.WardSlot> line, IReadOnlyList<int> rungs,
-                               string rungId)
+                               string rungId, string frameId)
             => new GroveCard(ownerId,
                              GroveNames.Public(name),
                              keeperLevel,
@@ -299,7 +313,8 @@ namespace GlimmerGrove.Social
                              nowUnix,
                              line,
                              rungs,
-                             rungId);
+                             rungId,
+                             frameId);
 
         /// <summary>
         /// The seats a stored loadout names, and how far each has been taken.
@@ -374,6 +389,10 @@ namespace GlimmerGrove.Social
                 // wave and no name, and the keeper would wear the old badge on every board for
                 // ever. Same fault as the endless wave, arriving through a second field.
                 "r:" + RungId,
+
+                // The frame is on every board row and the public profile, so wearing one is a
+                // change a visitor sees and owes a publish — the rung's argument, a third time.
+                "f:" + FrameId,
             };
 
             foreach (var seat in _line)

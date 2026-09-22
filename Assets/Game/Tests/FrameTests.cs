@@ -52,6 +52,7 @@ namespace GlimmerGrove.Tests
 
                 var eye = Numbers(TestJson.Children(rig, "eye"));
                 var hole = Numbers(TestJson.Children(rig, "hole"));
+                var plate = Numbers(TestJson.Children(rig, "plate"));
 
                 Assert.That(frame.Eye.x, Is.EqualTo(eye[0] / w).Within(.001f), frame.Id + ": eye x");
                 Assert.That(frame.Eye.y, Is.EqualTo(eye[1] / h).Within(.001f), frame.Id + ": eye y");
@@ -59,6 +60,16 @@ namespace GlimmerGrove.Tests
                 Assert.That(frame.Hole.yMin, Is.EqualTo(hole[1] / h).Within(.001f), frame.Id + ": hole bottom");
                 Assert.That(frame.Hole.xMax, Is.EqualTo(hole[2] / w).Within(.001f), frame.Id + ": hole right");
                 Assert.That(frame.Hole.yMax, Is.EqualTo(hole[3] / h).Within(.001f), frame.Id + ": hole top");
+                Assert.That(frame.Plate.xMin, Is.EqualTo(plate[0] / w).Within(.001f), frame.Id + ": plate left");
+                Assert.That(frame.Plate.yMin, Is.EqualTo(plate[1] / h).Within(.001f), frame.Id + ": plate bottom");
+                Assert.That(frame.Plate.xMax, Is.EqualTo(plate[2] / w).Within(.001f), frame.Id + ": plate right");
+                Assert.That(frame.Plate.yMax, Is.EqualTo(plate[3] / h).Within(.001f), frame.Id + ": plate top");
+
+                // The plate box holds the hole, or a name would be laid out over the card's edge.
+                Assert.That(frame.Plate.xMin, Is.LessThanOrEqualTo(frame.Hole.xMin), frame.Id + ": plate holds the hole (left)");
+                Assert.That(frame.Plate.xMax, Is.GreaterThanOrEqualTo(frame.Hole.xMax), frame.Id + ": plate holds the hole (right)");
+                Assert.That(frame.Plate.yMin, Is.LessThanOrEqualTo(frame.Hole.yMin), frame.Id + ": plate holds the hole (bottom)");
+                Assert.That(frame.Plate.yMax, Is.GreaterThanOrEqualTo(frame.Hole.yMax), frame.Id + ": plate holds the hole (top)");
 
                 // The nodding bone is named for the runtime; a rig without it stands still, which
                 // is allowed, but a rig naming a different bone is a nod nobody sees.
@@ -116,6 +127,57 @@ namespace GlimmerGrove.Tests
             Assert.That(frame.Address, Is.EqualTo(AssetManifest.FrameRoot + "dragon"));
             Assert.That(FrameCatalog.Find("no_such_frame"), Is.Null);
             Assert.That(FrameCatalog.Find(null), Is.Null);
+        }
+
+        // ------------------------------------------------------------------ the wire
+        [Test]
+        public void TheWornFrameIsJoinedByRecencyAndTakingItOffIsAChoice()
+        {
+            // The later stamp wins from either side, whatever it says.
+            Assert.That(FrameLedger.Join("dragon", 100L, "", 500L), Is.EqualTo(("", 500L)),
+                        "taken off later beats worn earlier");
+            Assert.That(FrameLedger.Join("", 500L, "dragon", 100L), Is.EqualTo(("", 500L)));
+            Assert.That(FrameLedger.Join("dragon", 900L, "", 500L), Is.EqualTo(("dragon", 900L)));
+            Assert.That(FrameLedger.Join("", 0L, "dragon", 100L), Is.EqualTo(("dragon", 100L)),
+                        "no opinion loses to any dated choice");
+
+            // A pair no build wrote is no opinion, and two of them join to nothing.
+            Assert.That(FrameLedger.Join("", 0L, "", 0L), Is.EqualTo(("", 0L)));
+            Assert.That(FrameLedger.Join(null, -5L, null, 0L), Is.EqualTo(("", 0L)));
+
+            // A tie is settled the same way whichever device runs it.
+            Assert.That(FrameLedger.Join("a", 7L, "b", 7L), Is.EqualTo(FrameLedger.Join("b", 7L, "a", 7L)));
+
+            // Idempotent, so a sync that lands what the device already holds changes nothing.
+            Assert.That(FrameLedger.Join("dragon", 42L, "dragon", 42L), Is.EqualTo(("dragon", 42L)));
+        }
+
+        [Test]
+        public void TheSaveMergeCarriesTheFrameByItsOwnStamp()
+        {
+            var older = new Persistence.SaveFileDto { frameWorn = "dragon", frameWornSetUnix = 100L };
+            var newer = new Persistence.SaveFileDto { frameWorn = "", frameWornSetUnix = 500L };
+
+            var merged = Persistence.SaveMerge.Join(older, newer);
+            Assert.That(merged.frameWorn, Is.EqualTo(""), "the frame taken off later stays off");
+            Assert.That(merged.frameWornSetUnix, Is.EqualTo(500L), "the stamp travels with the value it dates");
+
+            var again = Persistence.SaveMerge.Join(newer, older);
+            Assert.That(again.frameWorn, Is.EqualTo(merged.frameWorn), "either order, one answer");
+        }
+
+        [Test]
+        public void TheCardCarriesTheFrameAndTheFingerprintSeesIt()
+        {
+            var save = new Persistence.SaveFileDto { frameWorn = "dragon", frameWornSetUnix = 100L };
+            var bare = new Persistence.SaveFileDto();
+            var worn = Social.GroveCard.OfSave(save, "uid", 5, 1000L);
+            var plain = Social.GroveCard.OfSave(bare, "uid", 5, 1000L);
+
+            Assert.That(worn.FrameId, Is.EqualTo("dragon"));
+            Assert.That(plain.FrameId, Is.EqualTo(""));
+            Assert.That(worn.Fingerprint(), Is.Not.EqualTo(plain.Fingerprint()),
+                        "wearing a frame owes a publish");
         }
 
         // ------------------------------------------------------------------ the life

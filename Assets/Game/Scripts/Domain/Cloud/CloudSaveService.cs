@@ -58,6 +58,32 @@ namespace GlimmerGrove.Cloud
         public static event Action<SyncReceipt> Settled;
 
         /// <summary>
+        /// Raised by a sync whose merge brought this device something it did not have — a
+        /// glade cleared on another phone, a purchase made there, a name chosen there — and by
+        /// nothing else. The delta says what moved, read the way <see cref="SaveDelta"/> reads a
+        /// push: the level ids whose record changed, and whether anything outside the ledger did.
+        ///
+        /// <para>
+        /// <see cref="Synced"/> cannot carry this, because it is raised by every sync — including
+        /// the overwhelmingly common one, on every foreground, that brings back exactly what the
+        /// device already holds — and every ledger raises <c>Changed</c> on every adopt for the
+        /// same reason. A screen drawn from the save and redrawn on either of those redraws
+        /// itself for nothing every time the app comes back (invariant 44m). What a screen wants
+        /// to know is whether the save under it is now different from the one it was drawn from,
+        /// and only the sync that joined the two can say. Raised <em>after</em> the merge is
+        /// adopted and <em>before</em> the push, so a device that learned something and then
+        /// lost the network still repaints what it learned.
+        /// </para>
+        /// <para>
+        /// Found on the owner's own two phones on 2026-09-22: a glade cleared on one drew as
+        /// unplayed on the other for the life of the map, because the map was built from the
+        /// local file a second before the pull landed and nothing repainted it. Killing and
+        /// relaunching the app "fixed" it, which is the tell for this whole class of fault.
+        /// </para>
+        /// </summary>
+        public static event Action<SaveDelta> Learned;
+
+        /// <summary>
         /// Raised when <em>which</em> account this device is, or <em>how</em> it is signed in,
         /// has changed — a silent anonymous sign-in, a provider linked, an account switched, a
         /// mismatch opening or closing.
@@ -803,10 +829,20 @@ namespace GlimmerGrove.Cloud
                 remote = snapshot.Save;
                 merged = SaveMerge.Join(local, remote);
 
+                // What the other device knew and this one did not — measured against the local
+                // file before it is replaced. The delta below is the same reading taken the other
+                // way round, about the server; this one is about the device, and it is the only
+                // moment either can be taken.
+                var learned = SaveDelta.Between(local, merged);
+
                 // Adopt before pushing: if the push fails, the device still keeps
                 // everything the server knew, and the next sync retries from there.
                 SaveService.Adopt(merged);
                 PlayerProgression.Invalidate();
+
+                // And say so, before the push for the same reason — what was learned is on the
+                // device now whatever the network does next.
+                if (!learned.IsEmpty) Raise(Learned, learned);
             }
 
             var delta = SaveDelta.Between(remote, merged);

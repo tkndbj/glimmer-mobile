@@ -595,8 +595,11 @@ namespace GlimmerGrove
                 case SiegeKind.Colossus: return Reel("colossus");
                 case SiegeKind.Gorgon: return Reel("gorgon");
                 case SiegeKind.Sunlord: return Reel("sunlord");
-                case SiegeKind.Harrower: return Reel("harrow");
-                case SiegeKind.Hollowking: return Reel("hollow");
+                // **The seventh chapter's two wear the first chapter's bodies** (2026-09-22, the
+                // owner's call): their own cut was drawn side-on and read wrong from the siege
+                // camera. The verbs, flights and colours are still their own.
+                case SiegeKind.Harrower: return Reel("boss");
+                case SiegeKind.Hollowking: return Reel("over");
             }
 
             // **A body per colour, which is what removing the tint bought.** It used to be

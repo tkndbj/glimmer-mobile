@@ -575,8 +575,17 @@ namespace GlimmerGrove.Persistence
         ///      yet. What a device drops is its own local copy, on its next write, which is what
         ///      removing a feature means.
         ///      </para>
+        ///
+        /// v34 — <c>frameWorn</c> and <c>frameWornSetUnix</c>: the name frame the keeper wears
+        ///      (<c>Frames.FrameLedger</c>), a permanent frame id joined by recency against
+        ///      its own stamp. Two new top-level keys, so <b>this one costs a rules release,
+        ///      deployed before the client</b> (12a): <c>hasOnly</c> is an allow-list over the
+        ///      whole document and a client writing an unlisted key loses every save write.
+        ///      The version moves because <see cref="SaveChecksum"/> hashes the serialised
+        ///      object and a v33 file can never match a v34 hash. No migration: absent reads
+        ///      as no frame, which is what every account had.
         /// </summary>
-        public const int Version = 33;
+        public const int Version = 34;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -836,6 +845,19 @@ namespace GlimmerGrove.Persistence
         /// reason (invariant 11c).
         /// </summary>
         public long wardLoadoutSetUnix;
+
+        /// <summary>
+        /// The name frame the keeper wears — a permanent frame id (<c>Frames.FrameCatalog</c>),
+        /// or empty for none. An instruction rather than an achievement, joined by recency
+        /// against <see cref="frameWornSetUnix"/>; and unlike the loadout, <b>an empty value
+        /// with a stamp is a real instruction</b> (the frame was taken off) and wins by date,
+        /// because a stranger can see the difference. Kept as the raw id, so a build that
+        /// cannot draw it does not confiscate it. v34.
+        /// </summary>
+        public string frameWorn;
+
+        /// <summary>When the frame was last chosen or taken off, or nought for never (11c).</summary>
+        public long frameWornSetUnix;
 
         /// <summary>
         /// The furthest wave an endless run has ever reached, per level.

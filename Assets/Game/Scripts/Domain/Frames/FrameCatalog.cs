@@ -30,8 +30,16 @@ namespace GlimmerGrove.Frames
         public readonly string Id;
         public readonly string NameKey;
 
-        /// <summary>The box a name is laid out inside, as fractions of the painting, y up.</summary>
+        /// <summary>The clear box a name is laid out inside, as fractions of the painting, y up.</summary>
         public readonly Rect Hole;
+
+        /// <summary>
+        /// The box a card's plate may fill behind the frame, as fractions of the painting, y up:
+        /// every edge of it is under paint, so the frame is the card's edge and none of the
+        /// plate shows outside it. Larger than <see cref="Hole"/> — it runs under the bars,
+        /// the dragon and the ornament.
+        /// </summary>
+        public readonly Rect Plate;
 
         /// <summary>Where the eye glow sits, as fractions of the painting, y up.</summary>
         public readonly Vector2 Eye;
@@ -39,11 +47,12 @@ namespace GlimmerGrove.Frames
         /// <summary>The glow's radius, as a fraction of the painting's <em>height</em>.</summary>
         public readonly float EyeGlowRadius;
 
-        public FrameDefinition(string id, string nameKey, Rect hole, Vector2 eye, float eyeGlowRadius)
+        public FrameDefinition(string id, string nameKey, Rect hole, Rect plate, Vector2 eye, float eyeGlowRadius)
         {
             Id = id;
             NameKey = nameKey;
             Hole = hole;
+            Plate = plate;
             Eye = eye;
             EyeGlowRadius = eyeGlowRadius;
         }
@@ -72,7 +81,8 @@ namespace GlimmerGrove.Frames
             // Measured off the painting by Tools/make_frame_rig.py: the hole is the clear
             // rectangle between the two gold bars, the eye is the dragon's.
             new FrameDefinition("dragon", "ui.frames.dragon",
-                                new Rect(.2578f, .2818f, .6584f, .3923f),
+                                new Rect(.2947f, .2790f, .6515f, .3812f),
+                                new Rect(.1381f, .1989f, .8218f, .5387f),
                                 new Vector2(.1671f, .7486f), .05f),
         };
 

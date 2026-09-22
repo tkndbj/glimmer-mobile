@@ -79,9 +79,12 @@ def signed_distance(poly, w, h):
 # region is a polygon (also painting pixels), feathered by FEATHER. Vertices outside every region
 # belong to the root, which never moves. Bones are listed parent-first.
 #
-# `eye` is where the eye glow sits and `hole` the box a name is laid out inside, both in painting
-# pixels; `FrameCatalog` carries the same two as fractions of the painting, and `FrameTests` holds
-# the two copies together.
+# `eye` is where the eye glow sits, `hole` the clear box a name is laid out inside and `plate`
+# the box a card's plate may fill behind the frame — its four edges entirely under paint, so the
+# frame reads as the card's edge with nothing peeking out (measured by walking the alpha along
+# each edge; a plate one pixel too tall shows a line of colour above the gold). All in painting
+# pixels; `FrameCatalog` carries the same three as fractions, and `FrameTests` holds the copies
+# together.
 #
 # dragon: the head nods about the neck. The polygon takes the horns and the mane (they are the
 # head), stops short of the wing root at the top right (the wing belongs to the body) and fades
@@ -101,7 +104,8 @@ DESCRIPTIONS = {
             ],
         },
         "eye": (363, 182),
-        "hole": (560, 236, 1990, 520),
+        "hole": (640, 246, 2055, 522),
+        "plate": (300, 190, 2085, 580),
     },
 }
 
@@ -196,6 +200,8 @@ def build(spec, png):
     ex, ey = up(spec["eye"])
     hx0, hy0 = up((spec["hole"][0], spec["hole"][3]))
     hx1, hy1 = up((spec["hole"][2], spec["hole"][1]))
+    px0, py0 = up((spec["plate"][0], spec["plate"][3]))
+    px1, py1 = up((spec["plate"][2], spec["plate"][1]))
     out = {
         "source": os.path.basename(png),
         "width": w, "height": h,
@@ -208,6 +214,7 @@ def build(spec, png):
         "boneWeight": slots_weight,
         "eye": [round(ex, 1), round(ey, 1)],
         "hole": [round(hx0, 1), round(hy0, 1), round(hx1, 1), round(hy1, 1)],
+        "plate": [round(px0, 1), round(py0, 1), round(px1, 1), round(py1, 1)],
     }
     return out, fields
 

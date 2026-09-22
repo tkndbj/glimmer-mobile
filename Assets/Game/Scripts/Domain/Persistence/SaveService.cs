@@ -64,6 +64,7 @@ namespace GlimmerGrove.Persistence
             Utilities.UtilityLedger.LoadFrom(dto);
             Wards.WardLedger.LoadFrom(dto);
             Wards.WardLoadout.LoadFrom(dto);
+            Frames.FrameLedger.LoadFrom(dto);
             Wards.WardStarLedger.LoadFrom(dto.wardStars);
             Progression.EndlessLedger.LoadFrom(dto);
             Daily.DailyChests.LoadFrom(dto);
@@ -177,6 +178,7 @@ namespace GlimmerGrove.Persistence
             Utilities.UtilityLedger.WriteInto(dto);
             Wards.WardLedger.WriteInto(dto);
             Wards.WardLoadout.WriteInto(dto);
+            Frames.FrameLedger.WriteInto(dto);
             dto.wardStars = Wards.WardStarLedger.ToRows();
             Progression.EndlessLedger.WriteInto(dto);
             Daily.DailyChests.WriteInto(dto);
@@ -215,6 +217,7 @@ namespace GlimmerGrove.Persistence
             Utilities.UtilityLedger.LoadFrom(dto);
             Wards.WardLedger.LoadFrom(dto);
             Wards.WardLoadout.LoadFrom(dto);
+            Frames.FrameLedger.LoadFrom(dto);
             Wards.WardStarLedger.LoadFrom(dto.wardStars);
             Progression.EndlessLedger.LoadFrom(dto);
             Daily.DailyChests.LoadFrom(dto);

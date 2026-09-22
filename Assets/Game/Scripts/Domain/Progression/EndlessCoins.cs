@@ -167,9 +167,55 @@ namespace GlimmerGrove.Progression
         /// player's ceiling out of the outgoing player's evening. Nothing is lost - the switch is
         /// followed by a sync, and the server's figure arrives with it.
         /// </summary>
-        public static void Forget() => PlayerPrefs.DeleteKey(Slot());
+        public static void Forget() => _store.Delete(Slot());
 
         // ------------------------------------------------------------------ the store
+        /// <summary>
+        /// Where the tally is kept: <see cref="PlayerPrefs"/> in the game, memory in the suite.
+        ///
+        /// <para>
+        /// <b>A seam, for the reason <see cref="ISaveStore"/> is one.</b> <see cref="Forget"/>
+        /// sits on the save's load path (<c>SaveService.LoadWith</c> and <c>Adopt</c>), so from
+        /// the day it arrived (2026-09-20) every fixture that loads a save reached a native call
+        /// and the offline runner marked all of them "needs the Editor" rather than failed —
+        /// twenty-three account-switch cases, the deletion, the heart rescue, the store arrivals
+        /// and receipts, the utility purchases. Nothing was red, and nothing had run. Found on
+        /// 2026-09-22 by a new fixture that inherited the same fate. A green run that has not
+        /// run the account gate is not a check on the account gate (invariant: a check that
+        /// cannot fail is not a check).
+        /// </para>
+        /// </summary>
+        public interface ITallyStore
+        {
+            string Read(string key);
+            void Write(string key, string value);
+            void Delete(string key);
+        }
+
+        /// <summary>The game's store. Nothing here flushes — see <c>DevicePrefs</c> for why a hint need not.</summary>
+        sealed class PrefsStore : ITallyStore
+        {
+            public string Read(string key) => PlayerPrefs.GetString(key, string.Empty);
+            public void Write(string key, string value) => PlayerPrefs.SetString(key, value);
+            public void Delete(string key) => PlayerPrefs.DeleteKey(key);
+        }
+
+        /// <summary>The suite's store. Public so a fixture in another assembly can stand one up.</summary>
+        public sealed class MemoryStore : ITallyStore
+        {
+            readonly System.Collections.Generic.Dictionary<string, string> _keys =
+                new System.Collections.Generic.Dictionary<string, string>();
+
+            public string Read(string key) => _keys.TryGetValue(key, out var v) ? v : string.Empty;
+            public void Write(string key, string value) => _keys[key] = value;
+            public void Delete(string key) => _keys.Remove(key);
+        }
+
+        static ITallyStore _store = new PrefsStore();
+
+        /// <summary>Installs a store, or the game's own for <c>null</c>. For fixtures.</summary>
+        internal static void UseStore(ITallyStore store) => _store = store ?? new PrefsStore();
+
         /// <summary>
         /// One key per account, because the tally is about an account rather than about a phone.
         /// </summary>
@@ -191,7 +237,7 @@ namespace GlimmerGrove.Progression
             day = 0;
             paid = 0;
 
-            string raw = PlayerPrefs.GetString(Slot(), string.Empty);
+            string raw = _store.Read(Slot());
             if (string.IsNullOrEmpty(raw)) return;
 
             int split = raw.IndexOf(':');
@@ -204,6 +250,6 @@ namespace GlimmerGrove.Progression
         }
 
         static void Write(int day, int paid)
-            => PlayerPrefs.SetString(Slot(), day + ":" + paid);
+            => _store.Write(Slot(), day + ":" + paid);
     }
 }

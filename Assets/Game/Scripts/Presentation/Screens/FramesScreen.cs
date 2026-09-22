@@ -26,13 +26,13 @@ namespace GlimmerGrove
     public sealed class FramesScreen : View
     {
         /// <summary>
-        /// Whether the profile offers the way in. <b>Off for the build submitted to Apple on
-        /// 2026-09-22</b>, at the owner's instruction: the frames are a first look and not yet
-        /// a feature, so the key is withheld rather than the screen deleted. Flipping this is
-        /// the whole of bringing it back — the profile reads it for the key and for the height
-        /// of the card the key sits on, and nothing else in the game reaches this screen.
+        /// Whether the profile offers the way in. Switched off for the build submitted to Apple
+        /// on 2026-09-22 and on again the same day, at the owner's instruction. <b>Off, it hides
+        /// the profile's key and takes the frame off every board row</b> — a worn frame draws
+        /// nowhere — so this is the one switch for the whole feature; nothing else in the game
+        /// reaches this screen.
         /// </summary>
-        public const bool Offered = false;
+        public const bool Offered = true;
 
         public override string Track => "mus_menu";
 

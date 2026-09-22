@@ -297,10 +297,16 @@ namespace GlimmerGrove
         /// Where a frame's hole lands inside a box of this size — the rectangle a name is laid
         /// out in, centred on the box, in the box's own units.
         /// </summary>
-        public static Rect HoleIn(FrameDefinition frame, Vector2 size)
+        public static Rect HoleIn(FrameDefinition frame, Vector2 size) => RectIn(frame.Hole, size);
+
+        /// <summary>Where a frame's plate box lands inside a box of this size (<see cref="FrameDefinition.Plate"/>).</summary>
+        public static Rect PlateIn(FrameDefinition frame, Vector2 size) => RectIn(frame.Plate, size);
+
+        /// <summary>A painting-fraction rectangle inside a box of this size, centred on the box.</summary>
+        public static Rect RectIn(Rect fraction, Vector2 size)
         {
-            var h = frame.Hole;
-            return new Rect((h.x - .5f) * size.x, (h.y - .5f) * size.y, h.width * size.x, h.height * size.y);
+            return new Rect((fraction.x - .5f) * size.x, (fraction.y - .5f) * size.y,
+                            fraction.width * size.x, fraction.height * size.y);
         }
     }
 }

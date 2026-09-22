@@ -56,6 +56,14 @@ namespace GlimmerGrove.Persistence
         ///
         /// <paramref name="remote"/> being null means the document does not exist and
         /// the whole thing has to be written.
+        ///
+        /// <para>
+        /// The same reading is taken the other way round by <c>CloudSaveService</c> — the merged
+        /// save against the <em>local</em> file it is about to replace — to say what the device
+        /// learned from the server (<c>CloudSaveService.Learned</c>). Both answers come out of one
+        /// comparison on purpose: a field this method ignores is a field neither side can notice
+        /// moving, so adding one here adds it to both.
+        /// </para>
         /// </summary>
         public static SaveDelta Between(SaveFileDto remote, SaveFileDto merged)
         {
@@ -146,6 +154,10 @@ namespace GlimmerGrove.Persistence
             if (!SameSet(remote.wardsOwned, merged.wardsOwned)) return true;
             if (!SameLoadout(remote.wardLoadout, merged.wardLoadout)) return true;
             if (remote.wardLoadoutSetUnix != merged.wardLoadoutSetUnix) return true;
+
+            // The frame they wear, and its stamp in its own right, for the name's reason.
+            if (!Same(remote.frameWorn, merged.frameWorn)) return true;
+            if (remote.frameWornSetUnix != merged.frameWornSetUnix) return true;
 
             // How deep an endless run got. A floor, so a device that has just beaten its best has
             // something the server does not.

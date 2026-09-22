@@ -40,6 +40,7 @@ namespace GlimmerGrove.Tests
         public void Open()
         {
             SaveService.Unload();
+            GlimmerGrove.Progression.EndlessCoins.UseStore(new GlimmerGrove.Progression.EndlessCoins.MemoryStore());
 
             _archive = new MemoryArchive();
             SaveService.LoadWith(new MemoryStore(), _archive);
@@ -53,6 +54,7 @@ namespace GlimmerGrove.Tests
         {
             CloudSaveService.UseBackend(null);
             SaveService.Unload();
+            GlimmerGrove.Progression.EndlessCoins.UseStore(null);
         }
 
         // ======================================================== what the rule decides

@@ -31,6 +31,7 @@ namespace GlimmerGrove.Tests
         public void Open()
         {
             SaveService.Unload();
+            GlimmerGrove.Progression.EndlessCoins.UseStore(new GlimmerGrove.Progression.EndlessCoins.MemoryStore());
             SaveService.LoadWith(new MemoryStore());
             ProgressionRules.Reset();
         }
@@ -39,6 +40,7 @@ namespace GlimmerGrove.Tests
         public void Restore()
         {
             SaveService.Unload();
+            GlimmerGrove.Progression.EndlessCoins.UseStore(null);
             ProgressionRules.Reset();
         }
 

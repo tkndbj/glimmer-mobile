@@ -202,11 +202,15 @@ namespace GlimmerGrove
         /// this key are the same sentence — and a player who read one and then met another
         /// saying something different would have been told two things about one rule.
         /// </param>
-        public static void Build(RectTransform safe, RectTransform ground, MonoBehaviour owner,
-                                 GameMode mode, GameTrack lane, LevelDefinition level,
-                                 float headerFoot, bool unlocked, string wall, Action open)
+        /// <returns>
+        /// The column — everything drawn from the save — so the screen can take it down and
+        /// draw it again when a sync moves the save under it. See <see cref="Column"/>.
+        /// </returns>
+        public static RectTransform Build(RectTransform safe, RectTransform ground, MonoBehaviour owner,
+                                          GameMode mode, GameTrack lane, LevelDefinition level,
+                                          float headerFoot, bool unlocked, string wall, Action open)
         {
-            if (safe == null || ground == null) return;
+            if (safe == null || ground == null) return null;
 
             // **Behind everything the header already put down.** `BuildHeader` runs first (it is
             // index knowledge and must not wait on a file), so its fade and the safe layer are
@@ -223,6 +227,28 @@ namespace GlimmerGrove
             Scenery.Plain(art, lane == GameTrack.Infinite ? Scenery.WallRanked
                                                           : Scenery.WallPlain);
 
+            return Column(safe, owner, lane, level, headerFoot, unlocked, wall, open);
+        }
+
+        /// <summary>
+        /// The half of the hub that is a drawing of the save: the medal, the lines and the key.
+        ///
+        /// <para>
+        /// Split from the ground so it can be drawn <em>again</em>. The medal reads the best
+        /// wave once and the key captures whether the lane is open once, and both are facts a
+        /// sync can move while the screen is standing — a run held on the other phone, a
+        /// keeper wall cleared there. The ground is not a drawing of anything the save says, so
+        /// it is built once and stays; this is rebuilt whole rather than patched, because the
+        /// key's closure over <c>unlocked</c> cannot be patched (invariant 48l: a repaint is a
+        /// drawing of a state, and the cheapest way to draw the whole state is to draw it).
+        /// </para>
+        /// </summary>
+        public static RectTransform Column(RectTransform safe, MonoBehaviour owner, GameTrack lane,
+                                           LevelDefinition level, float headerFoot, bool unlocked,
+                                           string wall, Action open)
+        {
+            if (safe == null) return null;
+
             float band = Band(headerFoot);
             float top = headerFoot + EndlessHubLayout.HeadClear + EndlessHubLayout.TopIn(band);
 
@@ -231,6 +257,8 @@ namespace GlimmerGrove
             Medal(host, owner, level, top);
             Lines(host, lane, top);
             Battle(host, unlocked, wall, open, top);
+
+            return host;
         }
 
         /// <summary>

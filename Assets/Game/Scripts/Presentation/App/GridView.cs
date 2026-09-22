@@ -32,6 +32,19 @@ namespace GlimmerGrove
     }
 
     /// <summary>
+    /// A cell that may need to draw over its neighbours — a frame overhanging its row, a halo
+    /// wider than its card (44mc). The grid reads it after every pass that realises or rebinds
+    /// cells and moves a raised cell to the end of its siblings <em>then</em>, because a cell
+    /// that raised itself inside <see cref="IGridCell.Bind"/> was undone by the next cell the
+    /// same pass created: sibling order is where a cell was appended, and a row built after
+    /// the raised one lands on top of it. Found on a device, 2026-09-22.
+    /// </summary>
+    public interface IGridRaised
+    {
+        bool Raised { get; }
+    }
+
+    /// <summary>
     /// A scrolling grid that keeps only the rows you can see.
     ///
     /// <para>
@@ -190,12 +203,22 @@ namespace GlimmerGrove
         public void Refresh()
         {
             foreach (var pair in _live) pair.Value.Bind(pair.Key);
+            Settle();
         }
 
         /// <summary>Redraws one row, for an owner that knows exactly what changed.</summary>
         public void Refresh(int index)
         {
             if (_live.TryGetValue(index, out var cell)) cell.Bind(index);
+            Settle();
+        }
+
+        /// <summary>Raised cells to the end of their siblings, after a pass (<see cref="IGridRaised"/>).</summary>
+        void Settle()
+        {
+            foreach (var pair in _live)
+                if (pair.Value is IGridRaised raised && raised.Raised)
+                    pair.Value.Root.SetAsLastSibling();
         }
 
         /// <summary>
@@ -312,6 +335,8 @@ namespace GlimmerGrove
 
                     Realise(index, row, column);
                 }
+
+            Settle();
         }
 
         readonly List<int> _retiring = new List<int>();

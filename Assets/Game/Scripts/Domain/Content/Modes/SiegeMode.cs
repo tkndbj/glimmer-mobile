@@ -497,8 +497,8 @@ namespace GlimmerGrove.Content
                 // crosses the hill at the ward it robs, so it has a flight, a flash and a
                 // landing of its own (`make_siege_art.rend`).
                 case SiegeKind.Harrower:
-                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("harrow")));
-                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("harrow_cast")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("boss")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("boss_cast")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("rend")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("rend_muzzle")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("rend_hit")));
@@ -509,8 +509,8 @@ namespace GlimmerGrove.Content
                 // flight reel is ever asked for - which is what keeps a missing address from
                 // being loaded as a white rectangle (invariant 7b).
                 case SiegeKind.Hollowking:
-                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("hollow")));
-                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("hollow_cast")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("over")));
+                    into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("over_cast")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("wane_muzzle")));
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeFx("wane_hit")));
                     break;

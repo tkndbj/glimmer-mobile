@@ -35,6 +35,13 @@ namespace GlimmerGrove.Social
         public readonly string RungId;
 
         /// <summary>
+        /// The name frame this keeper wears, as a frame id — the painting the row draws round
+        /// them. Empty for none and for every row written before the server carried one; an
+        /// id this build cannot draw draws as nothing (7b). Wire spelling <c>frame</c>.
+        /// </summary>
+        public readonly string FrameId;
+
+        /// <summary>
         /// The furthest wave this keeper has held out to on the Infinite lane, or nought.
         ///
         /// <para>
@@ -49,9 +56,10 @@ namespace GlimmerGrove.Social
 
         public LeaderboardEntry(int rank, string ownerId, string name, string avatarId,
                                 int keeperLevel, long score, int stars, int wave = 0,
-                                string rungId = null)
+                                string rungId = null, string frameId = null)
         {
             RungId = rungId ?? string.Empty;
+            FrameId = frameId ?? string.Empty;
             Rank = rank < 1 ? 1 : rank;
             OwnerId = ownerId ?? string.Empty;
             Name = name ?? string.Empty;

@@ -189,6 +189,12 @@ Grove, and the bundle id can never move.
 11c. **A value merged by recency must carry its own date, and its default must never be stored.** The
    file's own stamp is set to *now* by the snapshot, so the local side wins every comparison; and a stored
    default makes "no opinion" indistinguishable from a choice.
+11d. **A screen drawn from the save repaints on `CloudSaveService.Learned`, and a run asks for a sync.**
+   The first sync of a launch lands a second *after* the map is drawn, so a glade cleared on the other
+   phone stood as unplayed until the app was killed (the owner's two phones, 2026-09-22). `Learned` is
+   raised only when the merge changed the local file — `Synced` and every ledger's `Changed` fire on every
+   foreground (44m) — and the other half is `PlayerProgress.RecordChanged` on the trigger list, because
+   the background sync starts as the process is frozen and on Android may never finish.
 12. **Adding a field to `SaveFileDto` interacts with the checksum.** Bump `SaveSchema.Version`, or every
    save on every device fails at once.
 12a. **A field is not on the wire until it is in four places**: `SaveFileDto`, `SaveDelta`, the Firestore
@@ -892,6 +898,13 @@ is where they are written down, not what they mean.
    `MaskableGraphic`, because the only camera in the game culls everything and a `SpriteRenderer`
    is never seen. **The rig lives under `Editor/FrameRigs/`, not beside the painting** — every
    file under `Art/` is given an address.
+54c. **A cell that overhangs its row is raised by the grid after the pass, never by itself** —
+   `IGridRaised`: a cell that called `SetAsLastSibling` inside `Bind` was undone by the next cell
+   the same pass created. **And the frame's reach is bought from the viewport, not the rows**: the
+   list's window is let out by `Overhang` at both ends and padded back by the same, so rows stand
+   where they did and a frame at the first or last row is drawn rather than clipped. **The card's
+   plate hides behind the frame** in the painting's own plate box (`FrameDefinition.Plate`, every
+   edge measured to be under paint), so nothing of it peeks past the dragon or the ornament.
 54a. **A custom graphic declares `RequireComponent(CanvasRenderer)` itself.** `Graphic` does not,
    its lazy add tests `ReferenceEquals(x, null)`, and a missing component in the Editor answers a
    fake null — so the first frame drew nothing with its skin, shader and mesh all probed green.
@@ -1275,6 +1288,13 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
 - **A probe that writes off a whole class of failure as "expected here" cannot see a real one inside that
   class — and it will report success.** 94 null sprites correctly written off as "the scope is not loaded"
   hid five real ones a player met as a white rectangle.
+- **A native call on the save's load path turns every fixture that loads a save into "needs the Editor",
+  and the offline runner reports that as neither red nor green.** `EndlessCoins.Forget` (PlayerPrefs) went
+  into `SaveService.LoadWith` on 2026-09-20 and seven fixtures — the account switch, the deletion, the
+  heart rescue, both store fixtures, the utilities — stopped running offline with nothing saying so. Found
+  2026-09-22. Anything device-local a ledger keeps goes behind a store seam (`EndlessCoins.ITallyStore`),
+  and a fixture that loads a save installs `EndlessCoins.MemoryStore` in its `SetUp`. **Read the
+  "need the Editor" count of a run as well as the red one, and ask why it moved.**
 - **A vector file that only the Editor can read is not a guard on the rule it pins** (29e).
 - **A `[UnityTest]` that counts frames while the code under test counts milliseconds passes only at a frame
   rate nobody promises** — under `-batchmode -nographics` frames are unthrottled. Yield frames but bound the
@@ -1577,7 +1597,7 @@ on a fresh clone).
 
 ## Owed
 
-**The name frames are built and withheld: `FramesScreen.Offered` is `false` for the build submitted to Apple on 2026-09-22, which hides the profile's CUSTOMIZE key and takes the frame off every board row; flipping that one constant brings the whole feature back.** The rest of this entry describes it as it stands behind the switch.
+**The name frames are built and offered again: `FramesScreen.Offered` is the one switch for the feature** — off, it hides the profile's CUSTOMIZE key *and* takes the frame off every board row (a worn frame draws nowhere, which is how "I wore it and the board shows nothing" reads while it is off). It was off for the build submitted to Apple on 2026-09-22 and on again the same day.
 Profile ▸ CUSTOMIZE ▸ `FramesScreen` ▸ WEAR puts the Ember Dragon round the name on the stage
 and on the player's own board row (54), where it covers the whole plate with the place, the
 badge and both lines inside its hole (the owner's call on 2026-09-22, after a first cut over the

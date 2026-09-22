@@ -31,6 +31,7 @@ namespace GlimmerGrove.Tests
         public void Reset()
         {
             CompanionLedger.ResetForTests();
+            PlayerProgress.LoadFrom(new SaveFileDto());
             CloudSaveService.ForgetSyncRequestForTests();
             SyncTriggers.Attach();
         }
@@ -39,7 +40,37 @@ namespace GlimmerGrove.Tests
         public void Restore()
         {
             CompanionLedger.ResetForTests();
+            PlayerProgress.LoadFrom(new SaveFileDto());
             CloudSaveService.ForgetSyncRequestForTests();
+        }
+
+        /// <summary>
+        /// The one that was missing on 2026-09-22. A glade cleared on one phone rode the
+        /// background sync, which on Android is a push started as the process is frozen, and
+        /// the other phone drew the glade as unplayed. A run is the player's act and it asks
+        /// for a sync while the phone is still awake.
+        /// </summary>
+        [Test]
+        public void AFinishedRunAsksForASync()
+        {
+            Assert.IsFalse(CloudSaveService.IsSyncPending);
+
+            PlayerProgress.RecordRun(LevelId.Parse("c01_first_light"), 1, 12);
+
+            Assert.IsTrue(CloudSaveService.IsSyncPending);
+        }
+
+        /// <summary>
+        /// A lost run is recorded too — the attempt count climbs — and it goes up for the
+        /// same reason: the next device should agree about how many times this glade was
+        /// tried, and a defeat is the last thing a player does before putting the phone down.
+        /// </summary>
+        [Test]
+        public void ALostRunAsksForASyncToo()
+        {
+            PlayerProgress.RecordRun(LevelId.Parse("c01_first_light"), 0, 40);
+
+            Assert.IsTrue(CloudSaveService.IsSyncPending);
         }
 
         [Test]
@@ -84,12 +115,18 @@ namespace GlimmerGrove.Tests
                 {
                     new EndlessBestDto { level = "s02_endlesswatch", wave = 40, waves = 200 },
                 },
+                levels = new[]
+                {
+                    new LevelRecordDto { levelId = "c01_first_light", stars = 3, bestMoves = 11, clears = 1 },
+                },
             };
 
             // The doors a merge comes through. Each raises Changed, and none may raise a
-            // request — or every sync would schedule the next.
+            // request — or every sync would schedule the next. The star ledger is the one
+            // with teeth now that a run asks: it raises `Reloaded` here, never `RecordChanged`.
             CompanionLedger.LoadFrom(save);
             EndlessLedger.LoadFrom(save);
+            PlayerProgress.LoadFrom(save);
 
             Assert.IsFalse(CloudSaveService.IsSyncPending);
         }

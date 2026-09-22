@@ -140,6 +140,11 @@ namespace GlimmerGrove.Cloud
                 { "wardLoadout", Loadout(dto.wardLoadout) },
                 { "wardLoadoutSetUnix", dto.wardLoadoutSetUnix },
 
+                // The frame they wear and when they chose it: the pair travels together or the
+                // recency join compares a choice against another choice's date.
+                { "frameWorn", dto.frameWorn ?? string.Empty },
+                { "frameWornSetUnix", dto.frameWornSetUnix },
+
                 // How deep an endless run has ever got. A floor, adjudicated by nobody, because
                 // it pays nothing: credits and XP derive from the star ledger alone (invariant 9).
                 { "endlessBest", Endless(dto.endlessBest) },
@@ -577,6 +582,8 @@ namespace GlimmerGrove.Cloud
             dto.wardsOwned = StrList(doc, "wardsOwned");
             dto.wardLoadout = ReadLoadout(doc);
             dto.wardLoadoutSetUnix = Long(doc, "wardLoadoutSetUnix", 0L);
+            dto.frameWorn = Str(doc, "frameWorn");
+            dto.frameWornSetUnix = Long(doc, "frameWornSetUnix", 0L);
             dto.endlessBest = ReadEndless(doc);
             dto.wardStars = ReadStars(doc);
 

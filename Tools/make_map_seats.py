@@ -215,8 +215,8 @@ NUDGE = {
         1: (-118, 91),        # level 61, off the great skull and onto the rock beside it, then 40 px left
         2: (48, -29),         # level 62, 80 px right
         3: (19, 154),         # the right lobe's own middle, not its rim, then 30+40 px left
-        4: (258, 130),        # level 64, 120+120+40 px right
-        5: (-293, 134),       # level 65, 90+120+60 px left and 100 px up
+        4: (318, 130),        # level 64, 120+120+40+60 px right
+        5: (-323, 134),       # level 65, 90+120+60+30 px left and 100 px up
         6: (55, 32),          # the foot of the bridge, which is what the plateau is for, then 40 px down
         7: (23, -30),         # level 67, 30 px down
         8: (-119, 5),         # level 68, 20 px right

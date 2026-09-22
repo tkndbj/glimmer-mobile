@@ -71,6 +71,7 @@ service cloud.firestore {
                  'heartContainersOwned', 'heartContainersRevoked',
                  'utilityStock',
                  'wardsOwned', 'wardLoadout', 'wardLoadoutSetUnix',
+                 'frameWorn', 'frameWornSetUnix',
                  'endlessBest',
                  'wardStars',
                  'tasks',
@@ -228,6 +229,11 @@ service cloud.firestore {
                && (!('wardsOwned' in d) || (d.wardsOwned is list && d.wardsOwned.size() <= 160))
                && (!('wardLoadout' in d) || (d.wardLoadout is list && d.wardLoadout.size() <= 8))
                && (!('wardLoadoutSetUnix' in d) || d.wardLoadoutSetUnix is int)
+               // The name frame the keeper wears (v34): a permanent id the client is trusted
+               // with because it pays nothing and buys nothing — it is drawn, on the card the
+               // server builds from this document. Bounded to the id length the client caps.
+               && (!('frameWorn' in d) || (d.frameWorn is string && d.frameWorn.size() <= 32))
+               && (!('frameWornSetUnix' in d) || d.frameWornSetUnix is int)
 
                // How deep an endless run has ever got, per level. It pays nothing - credits and
                // XP derive from the star ledger alone (invariant 9) - so a forged wave moves a

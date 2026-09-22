@@ -983,8 +983,8 @@ BOSSES = {
     # (a claw and an arrow are both iron, three chapters apart, and the two reels look
     # nothing alike); a hollowking has a colour of its own, because what a wane says is
     # that a post has gone out and nothing else in this palette is that value.
-    "harrower": dict(hold=0.58, tall=3.3, stem="harrow", fx="rend", fire=(58, 80, 100)),
-    "hollowking": dict(hold=0.42, tall=3.7, stem="hollow", fx="wane", fire=(143, 166, 184)),
+    "harrower": dict(hold=0.58, tall=3.3, stem="boss", fx="rend", fire=(58, 80, 100)),
+    "hollowking": dict(hold=0.42, tall=3.7, stem="over", fx="wane", fire=(143, 166, 184)),
 }
 
 #: Which bosses are aimed at no ward, and therefore draw a pair of reels where they stand rather

@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using GlimmerGrove.AssetPipeline;
+using GlimmerGrove.Cloud;
 using GlimmerGrove.Content;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
@@ -56,6 +57,15 @@ namespace GlimmerGrove
 
         ScrollRect _scroll;
         RectTransform _viewport, _map;
+
+        /// <summary>
+        /// The pieces of this screen that are a drawing of the save, held so
+        /// <see cref="OnLearned"/> can take each down and draw it again: the teaser capping the
+        /// chain, the header's star count, and the Infinite hub's column. The glade nodes are
+        /// <see cref="_nodes"/>.
+        /// </summary>
+        RectTransform _teaser, _hub;
+        Text _starCount;
 
         /// <summary>The loadout bar along the foot, or null for a mode that has no line.</summary>
         LoadoutBar _kit;
@@ -316,11 +326,100 @@ namespace GlimmerGrove
             // the screen the promotion is visible on, so it repaints rather than waiting for
             // the player to leave the chapter and come back.
             PlayerProgress.RanksChanged += RepaintRanks;
+
+            // And the other device's play lands the same way — a sync after the splash, on a
+            // schedule of its own — onto a map that was drawn from the local file a second
+            // earlier. See OnLearned.
+            CloudSaveService.Learned += OnLearned;
         }
 
         void OnDestroy()
         {
             PlayerProgress.RanksChanged -= RepaintRanks;
+            CloudSaveService.Learned -= OnLearned;
+        }
+
+        /// <summary>
+        /// A sync brought this device something it did not have, and this screen is a drawing
+        /// of the save, so it is drawn again.
+        ///
+        /// <para>
+        /// <b>Why this exists.</b> The map is built from the local file the moment the chapter
+        /// body is in hand, and the first sync of a launch is fire-and-forget from the splash —
+        /// so on a second phone the pull lands a second <em>after</em> the map is drawn, and
+        /// a glade cleared on the first phone stood as unplayed until the player left the
+        /// chapter and came back. Found on the owner's own two phones on 2026-09-22.
+        /// </para>
+        /// <para>
+        /// <b>Everything that reads the save is redrawn, and every piece is redrawn whole.</b>
+        /// A node's skin, its number, its halo, its pointer and its standing are all readings
+        /// of one record, and the tap on it captures <c>unlocked</c> in a closure that no
+        /// repaint can reach — so a node is taken down and built again in its old place in the
+        /// sibling order (a halo is wider than its disc, so order is what decides whose light
+        /// draws over whose, 44mc). Nothing arrives: no pop, no stagger, because a merge landing
+        /// is not the map opening and a chain of discs springing in a second time reads as a
+        /// fault. The teaser is a reading of the gate, the star count is a reading of the
+        /// ledger, the chevrons dim on the gate, and the hub's column reads the best wave and
+        /// the wall, so all four go the same way.
+        /// </para>
+        /// <para>
+        /// <b>Not on <c>PlayerProgress.Reloaded</c>, and that is the whole point.</b> That fires
+        /// on every adopt, which is every sync, which is every foreground — invariant 44m. Only
+        /// <see cref="CloudSaveService.Learned"/> can say the save under this screen is now
+        /// different from the one it was drawn from. And not before the chapter is drawn: a
+        /// merge landing mid-load is read by the build that follows, for free.
+        /// </para>
+        /// </summary>
+        void OnLearned(SaveDelta learned)
+        {
+            if (!Living || !_drawn || _body == null) return;
+
+            if (!Lane.Laddered)
+            {
+                RedrawHub();
+                return;
+            }
+
+            var levels = _layout.Levels;
+            for (int i = 0; i < levels.Count; i++)
+            {
+                if (!_nodes.TryGetValue(levels[i].Id, out var old) || !old) continue;
+
+                int at = old.GetSiblingIndex();
+                Retire(old);
+                BuildNode(levels[i], i, arriving: false).SetSiblingIndex(at);
+            }
+
+            if (_teaser)
+            {
+                int at = _teaser.GetSiblingIndex();
+                Retire(_teaser);
+                BuildChapterEnd(arriving: false);
+                if (_teaser) _teaser.SetSiblingIndex(at);
+            }
+
+            if (_starCount)
+                _starCount.text = $"{PlayerProgress.TotalStars(_entry)} / {PlayerProgress.MaxStars(_entry)}";
+
+            if (_banner)
+            {
+                Retire(_banner.transform.Find("PrevChapter"));
+                Retire(_banner.transform.Find("NextChapter"));
+                BuildChapterArrows();
+            }
+        }
+
+        /// <summary>
+        /// Takes a piece off the screen and then destroys it, in that order: <c>Destroy</c>
+        /// lands at the end of the frame, so a piece replaced in place would otherwise be
+        /// drawn over its own replacement for the rest of this one. The house rule everywhere
+        /// a region is rebuilt, and <see cref="RepaintRanks"/>' own.
+        /// </summary>
+        static void Retire(Transform piece)
+        {
+            if (!piece) return;
+            piece.gameObject.SetActive(false);
+            Destroy(piece.gameObject);
         }
 
         /// <summary>
@@ -433,15 +532,32 @@ namespace GlimmerGrove
             var id = level.Id;
             bool unlocked = LevelUnlock.IsUnlocked(_index, id);
 
-            // Asked once and handed over as words. The hub draws; it does not decide, and it
-            // does not compose a sentence a map has already composed somewhere else.
-            string wall = unlocked
-                ? null
-                : GateLine(LevelUnlock.GateFor(_index, _index.ChapterOf(id)));
-
-            EndlessHub.Build(Safe, Content, this, Mode, Lane, level, _headerFoot, unlocked, wall,
-                             () => Open(id, unlocked));
+            _hub = EndlessHub.Build(Safe, Content, this, Mode, Lane, level, _headerFoot, unlocked,
+                                    HubWall(id, unlocked), () => Open(id, unlocked));
         }
+
+        /// <summary>
+        /// The hub's column again, over the save as it is now. See <see cref="OnLearned"/>.
+        /// </summary>
+        void RedrawHub()
+        {
+            var level = _body != null && _body.Levels.Count > 0 ? _body.Levels[0] : null;
+            if (level == null) return;
+
+            var id = level.Id;
+            bool unlocked = LevelUnlock.IsUnlocked(_index, id);
+
+            Retire(_hub);
+            _hub = EndlessHub.Column(Safe, this, Lane, level, _headerFoot, unlocked,
+                                     HubWall(id, unlocked), () => Open(id, unlocked));
+        }
+
+        /// <summary>
+        /// Asked once and handed over as words. The hub draws; it does not decide, and it does
+        /// not compose a sentence a map has already composed somewhere else.
+        /// </summary>
+        string HubWall(LevelId id, bool unlocked)
+            => unlocked ? null : GateLine(LevelUnlock.GateFor(_index, _index.ChapterOf(id)));
 
         // ------------------------------------------------------------- scroller
         void BuildScroller()
@@ -569,7 +685,15 @@ namespace GlimmerGrove
             for (int i = 0; i < levels.Count; i++) BuildNode(levels[i], i);
         }
 
-        void BuildNode(LevelDefinition level, int indexInChapter)
+        /// <summary>
+        /// One glade's disc, name and standing, in its seat on the painting.
+        /// </summary>
+        /// <param name="arriving">
+        /// Whether this node is part of the map opening — popped in on the chain's stagger — or
+        /// a redraw of one already standing, which lands at full size at once. See
+        /// <see cref="OnLearned"/>.
+        /// </param>
+        RectTransform BuildNode(LevelDefinition level, int indexInChapter, bool arriving = true)
         {
             int stars = PlayerProgress.Stars(level.Id);
             bool unlocked = LevelUnlock.IsUnlocked(_index, level.Id);
@@ -606,16 +730,23 @@ namespace GlimmerGrove
             Plate(node, unlocked ? Loc.Get(level.NameKey) : Loc.Get("ui.levels.locked"),
                   unlocked ? Pal.Cream : new Color(1f, 1f, 1f, .62f), PlateY);
 
-            float delay = PopDelay(indexInChapter, _layout.Levels.Count);
+            float delay = arriving ? PopDelay(indexInChapter, _layout.Levels.Count) : 0f;
 
             if (stars > 0) RankMark(node, level.Id, delay);
 
-            node.localScale = Vector3.zero;
-            Tween.Pop(node, 0f, .6f, .18f + delay).OnDone(() => { if (btn) btn.Rehome(); });
-            // Silent. A node arriving is motion, not news - and a chapter is ten to twenty
-            // of them, so any sound here is a rising run played every single time the map
-            // opens, which is the screen a player passes through most. The nodes pop, the
-            // tap that opened the map spoke, and entering a glade has its own sound.
+            if (arriving)
+            {
+                node.localScale = Vector3.zero;
+                Tween.Pop(node, 0f, .6f, .18f + delay).OnDone(() => { if (btn) btn.Rehome(); });
+                // Silent. A node arriving is motion, not news - and a chapter is ten to twenty
+                // of them, so any sound here is a rising run played every single time the map
+                // opens, which is the screen a player passes through most. The nodes pop, the
+                // tap that opened the map spoke, and entering a glade has its own sound.
+            }
+            else
+            {
+                btn.Rehome();
+            }
 
             if (unlocked && stars == 0)
             {
@@ -626,17 +757,20 @@ namespace GlimmerGrove
                 arrow.preserveAspect = true;
                 Tween.Bob((RectTransform)arrow.transform, 16f, 1.1f);
             }
+
+            return node;
         }
 
         /// <summary>
         /// Caps the chain: either a signpost onward to the next chapter, or the
         /// sealed teaser when this is the newest content there is.
         /// </summary>
-        void BuildChapterEnd()
+        void BuildChapterEnd(bool arriving = true)
         {
             var next = LevelUnlock.ChapterAfter(_index, _entry.Id);
             bool afloat = _body.Definition != null && _body.Definition.TeaserAfloat;
             var node = MakeNode(_layout.TeaserPosition, afloat);
+            _teaser = node;
 
             bool onward = next != null;
             bool reachable = onward && LevelUnlock.IsChapterUnlocked(_index, next.Id);
@@ -675,6 +809,8 @@ namespace GlimmerGrove
                                    : Loc.Get("ui.levels.more_soon"),
                       new Color(1f, 1f, 1f, .62f), PlateY);
             }
+
+            if (!arriving) return;
 
             int count = _layout.Levels.Count;
 
@@ -1207,10 +1343,10 @@ namespace GlimmerGrove
             // reason: a lane with one level is also what a mode's first chapter looks like
             // while its second is being authored.
             if (Lane.Laddered)
-                Scenery.Pill(Safe,
-                             $"{PlayerProgress.TotalStars(_entry)} / {PlayerProgress.MaxStars(_entry)}",
-                             36, new Vector2(StarsWidth, StarsHeight), new Vector2(1f, 1f),
-                             new Vector2(StarsX, StarsY), null, "ic_star");
+                _starCount = Scenery.Pill(Safe,
+                                          $"{PlayerProgress.TotalStars(_entry)} / {PlayerProgress.MaxStars(_entry)}",
+                                          36, new Vector2(StarsWidth, StarsHeight), new Vector2(1f, 1f),
+                                          new Vector2(StarsX, StarsY), null, "ic_star");
 
             BuildChapterArrows();
 

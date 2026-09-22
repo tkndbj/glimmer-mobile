@@ -80,7 +80,13 @@ namespace GlimmerGrove
         /// many of them are visible at once.
         /// </para>
         /// </summary>
-        const float RowHeight = 176f;
+        const float RowHeight = 200f;
+
+        // **200 rather than 176 since 2026-09-22**, at the owner's instruction: the forty
+        // units between plates are air for a frame's reach. It does not stop two framed
+        // neighbours overlapping — a frame stands 313 tall and only a pitch of that much would
+        // — but it is what the owner asked for, and the lower row draws over the upper one's
+        // flames (`IGridRaised`) when two do meet.
 
         /// <summary>The plate inside a row, and the badge on it. See <see cref="RowHeight"/>.</summary>
         const float PlateWidth = 940f, PlateHeight = 160f, BadgeSize = 132f;
@@ -94,7 +100,20 @@ namespace GlimmerGrove
         // 640 wide over the plate to the right of the badge first, and the owner asked for the
         // whole card (2026-09-22). Mirrored by render_boards.py.
         const float FrameW = PlateWidth, FrameH = FrameW / 3f, FrameX = PlateWidth * .5f;
-        const float FrameY = 7f;
+        const float FrameY = 10f;
+
+        /// <summary>
+        /// How far the frame reaches beyond a row's own half-height, and so beyond the list's
+        /// window at its first and last row: 313 tall on a 176 row is 69 above and 62 below
+        /// once the hole is centred, and the horns are what reach furthest. The viewport is
+        /// let out by this much at both ends and the grid padded by the same, so every row
+        /// stands exactly where it did and the overhang is drawn instead of clipped at the
+        /// window's edge — which is how the first row's dragon lost its horns on a device.
+        /// </summary>
+        const float Overhang = 76f;
+
+        /// <summary>A row is 960 to the plate's 940; the plate's left edge is this far in.</summary>
+        const float RowW = 960f, PlateInset = (RowW - PlateWidth) * .5f;
 
         /// <summary>
         /// Breathing room between the last row and the nav bar. The boards are a tab now, so
@@ -174,14 +193,30 @@ namespace GlimmerGrove
             HoldFrame();
         }
 
+        /// <summary>
+        /// Every frame a row on this board wears, plus the player's own, held for the screen's
+        /// life. A hundred rows can name at most as many frames as the catalog holds, so the
+        /// scope is bounded by content rather than by the board; asked again when the board or
+        /// the player's choice changes, with replace semantics, so a frame no row wears any
+        /// more is let go.
+        /// </summary>
         void HoldFrame() => Run(async token =>
         {
-            var worn = FrameLedger.Worn;
+            var wanted = new System.Collections.Generic.List<AssetRequest>();
+            var seen = new System.Collections.Generic.HashSet<string>(System.StringComparer.Ordinal);
+
+            void Want(string id)
+            {
+                var frame = FramesScreen.Offered ? FrameCatalog.Find(id) : null;
+                if (frame == null || !seen.Add(frame.Id)) return;
+                wanted.AddRange(AssetManifest.FrameAssets(frame.Id));
+            }
+
+            Want(FrameLedger.WornId);
+            foreach (var entry in _board.Entries) Want(entry.FrameId);
+
             _frameArt = _frameArt ?? AssetLibrary.Hold("board-frame");
-            await _frameArt.LoadAsync(worn != null
-                                          ? AssetManifest.FrameAssets(worn.Id)
-                                          : new System.Collections.Generic.List<AssetRequest>(),
-                                      null, token);
+            await _frameArt.LoadAsync(wanted, null, token);
             if (!Living) return;
             _grid?.Refresh();
         });
@@ -257,11 +292,14 @@ namespace GlimmerGrove
         void BuildList()
         {
             _viewport = UIKit.Node("Viewport", Safe);
-            _viewport.offsetMin = new Vector2(0f, NavBar.Height + BottomPad);
-            _viewport.offsetMax = new Vector2(0f, -HeaderHeight);
-
-            _grid = GridView.Attach(_viewport, 1, 960f, RowHeight,
-                                    parent => new Row(this, parent));
+            // Let out by the frame's reach at both ends and padded back by the same, so the
+            // rows sit where they always did and an overhanging frame is drawn rather than
+            // clipped (`Overhang`). The header and the bar are built after the list and draw
+            // over what reaches under them.
+            _viewport.offsetMin = new Vector2(0f, NavBar.Height + BottomPad - Overhang);
+            _viewport.offsetMax = new Vector2(0f, -(HeaderHeight - Overhang));
+            _grid = GridView.Attach(_viewport, 1, RowW, RowHeight, parent => new Row(this, parent),
+                                    padTop: 12f + Overhang, padBottom: 40f + Overhang);
 
             _empty = UIKit.Shrinkable(
                 UIKit.Titled("Empty", Safe, string.Empty, 28, new Color(1f, .96f, .88f, .72f),
@@ -289,6 +327,7 @@ namespace GlimmerGrove
             // A new list, so it animates. A repaint of the same list does not — the rule
             // GridView exists to keep, and the reason the shop stopped flickering.
             _grid?.Show(_board.Entries.Count);
+            HoldFrame();
             PaintEmpty();
         });
 
@@ -366,7 +405,7 @@ namespace GlimmerGrove
         /// hundred and is exactly the kind of thing a later drop lengthens.
         /// </para>
         /// </summary>
-        sealed class Row : IGridCell
+        sealed class Row : IGridCell, IGridRaised
         {
             readonly LeaderboardScreen _screen;
             readonly Image _plate, _badge;
@@ -375,6 +414,15 @@ namespace GlimmerGrove
             readonly NameFrame _frame;
 
             LeaderboardEntry _entry;
+            bool _framed;
+
+            /// <summary>A framed row draws over its neighbours; the grid settles the order.</summary>
+            public bool Raised => _framed;
+
+            // Everything on the row is a child of the row itself and placed from the plate's
+            // left edge (`PlateInset` in), not a child of the plate — so the plate can shrink
+            // into the frame's hole without carrying the place, the badge and the lines with it.
+            static readonly Vector2 Inset = new Vector2(PlateInset, 0f);
 
             // **Where the name and the figure stand: bare, and inside a frame.** Bare is where
             // every row has always put them. Framed, the frame takes the whole of the plate to
@@ -396,14 +444,18 @@ namespace GlimmerGrove
             static readonly Vector2 PlaceBare = new Vector2(PlaceX, 0f);
             static readonly Vector2 BadgeBare = new Vector2(BadgeX, 0f);
 
-            // Inside the hole (619 by 123 at the plate's width): the place, the badge and the
-            // two lines in a row, each sized to the hole's height rather than the plate's.
+            // Inside the hole (612 by 119 at the plate's width): the place, then the name over
+            // the figure, and **the badge at the right end** — the owner's instruction
+            // (2026-09-22): a framed row is read left to right as place, name, badge. Each is
+            // sized to the hole's height rather than the plate's, and the figure is the one
+            // thing that grew — the wave count is the number the board is ordered on, and at
+            // 24 on the orange it was the smallest type on the screen.
             const float FramedPlaceX = 50f, FramedPlaceW = 84f, FramedPlaceH = 60f;
             const int FramedPlaceSize = 34;
-            const float FramedBadgeX = 150f, FramedBadgeSize = 104f;
-            const float FramedTextLeft = 214f, FramedTextRight = 16f;
-            const int FramedNameSize = 30, FramedWorthSize = 24;
-            const float FramedNameH = 40f, FramedWorthH = 32f;
+            const float FramedBadgeSize = 104f, FramedBadgeInset = 14f;
+            const float FramedTextLeft = 106f, FramedTextGap = 12f;
+            const int FramedNameSize = 32, FramedWorthSize = 30;
+            const float FramedNameH = 42f, FramedWorthH = 38f;
 
             public RectTransform Root { get; }
 
@@ -412,7 +464,7 @@ namespace GlimmerGrove
                 _screen = screen;
 
                 Root = UIKit.Node("Row", parent);
-                Root.sizeDelta = new Vector2(960f, RowHeight);
+                Root.sizeDelta = new Vector2(RowW, RowHeight);
 
                 // **The hub's own plate, which is the Battle key's mould sliced both ways.** A
                 // row was a translucent near-black box with a 12%-white outline traced round it,
@@ -426,38 +478,39 @@ namespace GlimmerGrove
                                        new Vector2(.5f, .5f), Vector2.zero, Open);
                 _plate = _button.GetComponent<Image>();
 
+                // The frame, built once and shown on the player's own row only. Under the
+                // place, the badge and the two lines in sibling order, so they print over its
+                // hole rather than under its bars; over the plate, which shrinks into the hole
+                // when the frame is up (`Seat`).
+                _frame = NameFrame.Build("Frame", Root, new Vector2(FrameW, FrameH),
+                                         new Vector2(0f, .5f), new Vector2(PlateInset + FrameX, FrameY));
+
                 _place = UIKit.Shrinkable(
-                    UIKit.Titled("Place", _plate.transform, string.Empty, 40,
+                    UIKit.Titled("Place", Root, string.Empty, PlaceSize,
                                  Pal.Cream, TextAnchor.MiddleCenter,
-                                 new Vector2(120f, 66f), new Vector2(0f, .5f), new Vector2(78f, 0f),
+                                 new Vector2(PlaceW, PlaceH), new Vector2(0f, .5f), PlaceBare + Inset,
                                  3f, 2f), 20);
 
                 // The badge. `preserveAspect`, because the seven are not one shape: a crowned
                 // one is wider than it is tall and a plain hexagon is not, and a set stretched
                 // to a square box is a ladder whose rungs are different animals. It never draws
                 // a raycast, so the whole plate stays one target.
-                _badge = UIKit.Img("Badge", _plate.transform, null, Color.white,
+                _badge = UIKit.Img("Badge", Root, null, Color.white,
                                    new Vector2(BadgeSize, BadgeSize), new Vector2(0f, .5f),
-                                   new Vector2(214f, 0f));
+                                   BadgeBare + Inset);
                 _badge.preserveAspect = true;
                 _badge.raycastTarget = false;
 
-                // The frame, built once and shown on the player's own row only. It stands
-                // *under* the name and the figure in sibling order, so both print over its
-                // hole rather than under its bars.
-                _frame = NameFrame.Build("Frame", _plate.transform, new Vector2(FrameW, FrameH),
-                                         new Vector2(0f, .5f), new Vector2(FrameX, FrameY));
-
                 _name = UIKit.Shrinkable(
-                    UIKit.Titled("Name", _plate.transform, string.Empty, NameSize,
+                    UIKit.Titled("Name", Root, string.Empty, NameSize,
                                  new Color(1f, .97f, .90f), TextAnchor.MiddleLeft,
-                                 new Vector2(BareW, NameH), new Vector2(0f, .5f), NameBare,
+                                 new Vector2(BareW, NameH), new Vector2(0f, .5f), NameBare + Inset,
                                  3f, 2f), 20);
 
                 _worth = UIKit.Shrinkable(
-                    UIKit.Titled("Worth", _plate.transform, string.Empty, WorthSize, Pal.Gold,
+                    UIKit.Titled("Worth", Root, string.Empty, WorthSize, Pal.Gold,
                                  TextAnchor.MiddleLeft, new Vector2(BareW, WorthH),
-                                 new Vector2(0f, .5f), WorthBare, 3f, 0f), 18);
+                                 new Vector2(0f, .5f), WorthBare + Inset, 3f, 0f), 18);
             }
 
             /// <summary>
@@ -468,40 +521,53 @@ namespace GlimmerGrove
             /// </summary>
             void Seat(FrameDefinition frame)
             {
-                bool framed = frame != null && _frame.Drawn;
+                _framed = frame != null && _frame.Drawn;
+                var plateRt = (RectTransform)_plate.transform;
                 var placeRt = (RectTransform)_place.transform;
                 var badgeRt = (RectTransform)_badge.transform;
                 var nameRt = (RectTransform)_name.transform;
                 var worthRt = (RectTransform)_worth.transform;
 
-                if (!framed)
+                if (!_framed)
                 {
-                    Place(placeRt, PlaceBare, PlaceW, PlaceH);
-                    Place(badgeRt, BadgeBare, BadgeSize, BadgeSize);
-                    Place(nameRt, NameBare, BareW, NameH);
-                    Place(worthRt, WorthBare, BareW, WorthH);
+                    Place(plateRt, Vector2.zero, PlateWidth, PlateHeight);
+                    Place(placeRt, PlaceBare + Inset, PlaceW, PlaceH);
+                    Place(badgeRt, BadgeBare + Inset, BadgeSize, BadgeSize);
+                    Place(nameRt, NameBare + Inset, BareW, NameH);
+                    Place(worthRt, WorthBare + Inset, BareW, WorthH);
                     Size(_place, PlaceSize);
                     Size(_name, NameSize);
                     Size(_worth, WorthSize);
                     return;
                 }
 
-                // The hole in the plate's own coordinates: the frame is anchored at its centre.
+                // The hole, from the plate's left edge: the frame is anchored at its own centre.
                 var hole = NameFrame.HoleIn(frame, new Vector2(FrameW, FrameH));
-                float x0 = FrameX + hole.xMin;
+                float x0 = PlateInset + FrameX + hole.xMin;
+                float x1 = PlateInset + FrameX + hole.xMax;
                 float cy = FrameY + hole.center.y;
+                float badgeX = x1 - FramedBadgeInset - FramedBadgeSize * .5f;
                 float left = x0 + FramedTextLeft;
-                float width = FrameX + hole.xMax - FramedTextRight - left;
-                float split = cy + 4f;                          // the name above, the figure below
+                float width = badgeX - FramedBadgeSize * .5f - FramedTextGap - left;
+                float split = cy + 2f;                          // the name above, the figure below
+
+                // The plate hides behind the frame: the frame is the card's edge now, and the
+                // plate fills the painting's own plate box — every edge of which is under
+                // paint (`FrameDefinition.Plate`) — because a plate the frame's full size showed
+                // its rounded corners outside the dragon and the ornament, which read as the
+                // frame stopping short of the card. Anchored at the row's centre, so its seat
+                // is the box's centre read from the row's middle.
+                var plate = NameFrame.PlateIn(frame, new Vector2(FrameW, FrameH));
+                Place(plateRt, new Vector2(PlateInset + FrameX + plate.center.x - RowW * .5f, FrameY + plate.center.y),
+                      plate.width, plate.height);
 
                 Place(placeRt, new Vector2(x0 + FramedPlaceX, cy), FramedPlaceW, FramedPlaceH);
-                Place(badgeRt, new Vector2(x0 + FramedBadgeX, cy), FramedBadgeSize, FramedBadgeSize);
+                Place(badgeRt, new Vector2(badgeX, cy), FramedBadgeSize, FramedBadgeSize);
                 Place(nameRt, new Vector2(left + width * .5f, split + FramedNameH * .5f), width, FramedNameH);
                 Place(worthRt, new Vector2(left + width * .5f, split - FramedWorthH * .5f), width, FramedWorthH);
                 Size(_place, FramedPlaceSize);
                 Size(_name, FramedNameSize);
                 Size(_worth, FramedWorthSize);
-                Root.SetAsLastSibling();
             }
 
             static void Place(RectTransform rt, Vector2 pos, float w, float h)
@@ -529,10 +595,13 @@ namespace GlimmerGrove
                 // a board is *ordered* on is the one it has to print, or the list reads as
                 // shuffled: a wave board drawn with grove worth on it would descend by a number
                 // nobody can see and ascend by one they can.
+                //
+                // **The keeper level is not printed**, at the owner's instruction (2026-09-22):
+                // a board is about the lane, and a second number beside the one it is ordered
+                // on is a number to misread it by. The entry still carries it for the profile.
                 _worth.text = LeaderboardBoard.IsEndless(_screen._boardId)
-                    ? Loc.Format("ui.board.row_wave", _entry.Wave, _entry.KeeperLevel)
-                    : Loc.Format("ui.board.row_worth", Compact.Number(_entry.Score),
-                                 _entry.KeeperLevel);
+                    ? Loc.Format("ui.board.row_wave", _entry.Wave)
+                    : Loc.Format("ui.board.row_worth", Compact.Number(_entry.Score));
 
                 // **The badge is the server's answer, and an absent one draws nothing.** Below
                 // the first rung is an ordinary state and so is a card published before this
@@ -550,12 +619,17 @@ namespace GlimmerGrove
 
                 _plate.sprite = Art.S("Ui/" + (mine ? Skins.PlateOrange : Skins.PlateBlue));
 
-                // The frame the player wears, on their row and no other. `Show` asks for the
-                // painting and draws nothing until the screen's hold has landed it, and the
-                // seat is written either way (44l): a stranger's row rebound onto this cell
-                // must take the frame off *and* put the lines back where they stand bare.
-                // And on no row at all while the feature is withheld (`FramesScreen.Offered`).
-                var frame = mine && FramesScreen.Offered ? FrameLedger.Worn : null;
+                // The frame this keeper wears, off the row the server wrote — every row, not
+                // only the player's. The player's own row reads the device's choice when the
+                // card has not been republished yet, so wearing a frame shows on the board
+                // before the next sync lands. `Show` asks for the painting and draws nothing
+                // until the screen's hold has landed it, and the seat is written either way
+                // (44l): a bare row rebound onto this cell must take the frame off *and* put
+                // the lines back. And on no row at all while the feature is withheld
+                // (`FramesScreen.Offered`).
+                string wear = _entry.FrameId;
+                if (mine && string.IsNullOrEmpty(wear)) wear = FrameLedger.WornId;
+                var frame = FramesScreen.Offered ? FrameCatalog.Find(wear) : null;
                 _frame.Show(frame);
                 Seat(frame);
             }

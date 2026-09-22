@@ -2063,11 +2063,11 @@
     },
     {
       "key": "ui.board.row_wave",
-      "text": "Wave {0} · keeper {1}"
+      "text": "Wave {0}"
     },
     {
       "key": "ui.board.row_worth",
-      "text": "{0} worth · keeper {1}"
+      "text": "{0} worth"
     },
     {
       "key": "ui.board.title",

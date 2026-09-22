@@ -49,6 +49,7 @@ namespace GlimmerGrove.Tests
         public void Open()
         {
             SaveService.Unload();
+            GlimmerGrove.Progression.EndlessCoins.UseStore(new GlimmerGrove.Progression.EndlessCoins.MemoryStore());
             SaveService.LoadWith(new MemoryStore());
             CloudState.SignIn(Uid);
 
@@ -69,6 +70,7 @@ namespace GlimmerGrove.Tests
             StoreService.Reset();
             CloudSaveService.UseBackend(null);
             SaveService.Unload();
+            GlimmerGrove.Progression.EndlessCoins.UseStore(null);
         }
 
         /// <summary>

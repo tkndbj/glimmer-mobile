@@ -79,6 +79,8 @@ namespace GlimmerGrove.Tests
                         continue;
                     }
 
+                    if (WearsBorrowedBody(kind, first, want.Address)) continue;
+
                     Assert.Fail(
                         $"{kind} and {first} are both drawn with '{want.Address}'. A boss is a " +
                         "way of fighting and two of them separated by a hue are one boss " +
@@ -86,6 +88,22 @@ namespace GlimmerGrove.Tests
                         "that one in SiegeMode.Bosses.");
                 }
             }
+        }
+
+        /// <summary>
+        /// <b>The seventh chapter's two bosses wear the first chapter's bodies</b>, at the
+        /// owner's instruction on 2026-09-22 — their own cut was drawn side-on. Only the body
+        /// and its cast reel are shared, and only between these two pairs by name; each spell is
+        /// still its own drawing, which is what the rule above is about.
+        /// </summary>
+        static bool WearsBorrowedBody(SiegeKind kind, SiegeKind first, string address)
+        {
+            bool Pair(SiegeKind a, SiegeKind b, string stem) =>
+                ((kind == a && first == b) || (kind == b && first == a))
+                && (address == AssetManifest.SiegeArt(stem) || address == AssetManifest.SiegeArt(stem + "_cast"));
+
+            return Pair(SiegeKind.Harrower, SiegeKind.Boss, "boss")
+                || Pair(SiegeKind.Hollowking, SiegeKind.Overlord, "over");
         }
 
         /// <summary>
