@@ -22,6 +22,13 @@ namespace GlimmerGrove
     /// three figures off the row. The rows are the authored order, cheapest first.
     /// </para>
     /// <para>
+    /// <b>An upgrade is priced as the difference and says so</b> (56h): under a running deal a
+    /// bigger row's key reads <em>Upgrade: N gems</em> with the note that the current deal's days
+    /// carry over, because a price with no explanation reads as a discount somebody will look
+    /// for again tomorrow. The price is <see cref="ChallengeLedger.PriceOf"/>'s and is derived,
+    /// never typed here.
+    /// </para>
+    /// <para>
     /// <b>The refusals are said, not swallowed.</b> A deal already running says so; a smaller
     /// one under a larger says a better deal is running; and the one refusal worth sending
     /// somewhere — too few gems — names the figure, because a player short of gems is a player
@@ -73,13 +80,13 @@ namespace GlimmerGrove
             bool under = governing != null && governing.Plays >= tier.Plays && !held;
 
             UIKit.Titled("Name", t, Loc.Get(tier.NameKey), 34, held ? Pal.Gold : Pal.Cream, TextAnchor.MiddleLeft,
-                         new Vector2(420f, 48f), new Vector2(0f, .5f), new Vector2(34f + 210f, 32f), 3f, 3f);
+                         new Vector2(420f, 48f), new Vector2(0f, .5f), new Vector2(34f + 210f, 40f), 3f, 3f);
 
             string days = tier.Days == 1 ? Loc.Get("ui.challenges.days_one") : Loc.Format("ui.challenges.days", tier.Days);
             UIKit.Shrinkable(
                 UIKit.Titled("Line", t, Loc.Format("ui.challenges.deal_line", tier.Plays, days), 22,
-                             new Color(1f, .96f, .88f, .85f), TextAnchor.UpperLeft, new Vector2(480f, 66f),
-                             new Vector2(0f, .5f), new Vector2(34f + 240f, -20f), 2f, 0f, wrap: true),
+                             new Color(1f, .96f, .88f, .85f), TextAnchor.UpperLeft, new Vector2(480f, 56f),
+                             new Vector2(0f, .5f), new Vector2(34f + 240f, -8f), 2f, 0f, wrap: true),
                 15);
 
             var keySize = new Vector2(250f, 88f);
@@ -87,8 +94,7 @@ namespace GlimmerGrove
 
             if (held)
             {
-                int left = ChallengeLedger.DaysLeft(tier);
-                string line = left == 1 ? Loc.Get("ui.challenges.days_left_one") : Loc.Format("ui.challenges.days_left", left);
+                string line = DailyChallengesScreen.TimeLeft(tier);
                 var tag = UIKit.Img("Held", t, Art.Round(24), Pal.A(Pal.Gold, .95f), keySize, new Vector2(1f, .5f), keyPos);
                 tag.raycastTarget = false;
                 UIKit.Shrinkable(
@@ -97,11 +103,23 @@ namespace GlimmerGrove
                 return;
             }
 
-            var key = UIKit.TextButton("Buy", t, under ? Skins.Shut : Skins.Gem,
-                                       Loc.Format("ui.challenges.buy", tier.Gems), 26, keySize, new Vector2(1f, .5f), keyPos,
-                                       () => Buy(tier));
+            // The price is derived: the full figure, or the difference under a running smaller
+            // deal — in which case the key says it is an upgrade and the row says what carries.
+            var upgrades = ChallengeLedger.Upgrades(tier);
+            int price = under ? tier.Gems : ChallengeLedger.PriceOf(tier);
+            string caption = upgrades != null ? Loc.Format("ui.challenges.upgrade", price)
+                                              : Loc.Format("ui.challenges.buy", price);
+
+            var key = UIKit.TextButton("Buy", t, under ? Skins.Shut : Skins.Gem, caption, 26, keySize,
+                                       new Vector2(1f, .5f), keyPos, () => Buy(tier));
             var label = key.GetComponentInChildren<Text>();
             if (label) UIKit.Shrinkable(label, 16);
+
+            if (upgrades != null)
+                UIKit.Shrinkable(
+                    UIKit.Titled("Note", t, Loc.Get("ui.challenges.upgrade_note"), 18, Pal.A(Pal.Gold, .95f),
+                                 TextAnchor.UpperLeft, new Vector2(480f, 36f), new Vector2(0f, .5f),
+                                 new Vector2(34f + 240f, -52f), 2f, 0f, wrap: true), 13);
         }
 
         void Buy(ChallengeTier tier)
@@ -127,7 +145,7 @@ namespace GlimmerGrove
                     return;
 
                 default:
-                    Scenery.Toast(Content, Loc.Format("ui.challenges.deal_too_poor", tier.Gems), Pal.Rose, 2.8f);
+                    Scenery.Toast(Content, Loc.Format("ui.challenges.deal_too_poor", ChallengeLedger.PriceOf(tier)), Pal.Rose, 2.8f);
                     return;
             }
         }

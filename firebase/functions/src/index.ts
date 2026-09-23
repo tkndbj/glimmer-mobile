@@ -86,7 +86,7 @@ import {
 import type { EndlessClaim } from "./endless";
 import {
   MAX_CHALLENGE_DAYS_AHEAD, MAX_CHALLENGE_DAYS_BEHIND, MAX_TIER_DAYS_AHEAD, MAX_TIER_DAYS_BEHIND,
-  challengeGrant, challengeXp, findTier as findChallengeTier, holdTier, isChallengeGrantId,
+  challengeGrant, challengeXp, dealPrice, holdTier, isChallengeGrantId,
   parseChallengeClaim, parseChallengeTierSpendId, usableChallengesConfig,
 } from "./challenges";
 import type { ChallengeClaim } from "./challenges";
@@ -365,39 +365,42 @@ export const submitSpends = onCall(callOptions, async (request): Promise<{
       }
 
       // A challenge deal is the second debit this server turns into a permission, and it is
-      // the pass's shape exactly (`chaltier:{tier}:{fromDay}`, `SpendEntry.ChallengeTierId`):
-      // refused unless the block sells the deal, the currency is gems and the amount is at
-      // least the published price; refused when the day it names is outside the window,
-      // because a window will not become true again tomorrow (13a). The entitlement lands on
-      // this same wallet document in this same transaction, so the purchase and the permission
-      // cannot come apart — and it is what every coin claim past the free allowance is bounded
-      // by (`challengeGrant`). See `challenges.ts`.
+      // the pass's shape exactly (`chaltier:{tier}:{fromDay}:{boughtDay}`,
+      // `SpendEntry.ChallengeTierId`): refused unless the block sells the deal, the currency is
+      // gems and the amount is at least what `dealPrice` says is owed — the full price for a
+      // fresh window, the difference for an upgrade of a deal this wallet already holds; refused
+      // when the purchase day is outside the window, because a window will not become true
+      // again tomorrow (13a). The entitlement lands on this same wallet document in this same
+      // transaction, so the purchase and the permission cannot come apart — and it is what
+      // every coin claim past the free allowance is bounded by (`challengeGrant`).
       const deal = parseChallengeTierSpendId(spend.id);
 
       if (deal) {
         const block = usableChallengesConfig((config as { challenges?: unknown }).challenges);
-        const tier = block ? findChallengeTier(block, deal.tierId) : null;
+        const owed = block ? dealPrice(block, state.challengeTiers ?? {}, deal.tierId, deal.fromDay, deal.boughtDay) : null;
 
-        if (!block || !tier) {
-          logger.warn("refused a challenge deal debit for a deal config/progression does not sell", {
-            uid, spendId: spend.id, tier: deal.tierId,
+        if (!block || !owed) {
+          logger.warn("refused a challenge deal debit this server cannot price: the deal is not sold, " +
+                      "or the upgrade names a window this wallet does not hold", {
+            uid, spendId: spend.id, tier: deal.tierId, fromDay: deal.fromDay, boughtDay: deal.boughtDay,
           });
           rejected.push(spend.id);
           continue;
         }
 
         const dealToday = todayKey(Date.now());
-        if (deal.fromDay > dealToday + MAX_TIER_DAYS_AHEAD || deal.fromDay < dealToday - MAX_TIER_DAYS_BEHIND) {
-          logger.warn("refused a challenge deal dated outside the window", {
-            uid, spendId: spend.id, fromDay: deal.fromDay, today: dealToday,
+        if (deal.boughtDay > dealToday + MAX_TIER_DAYS_AHEAD || deal.boughtDay < dealToday - MAX_TIER_DAYS_BEHIND) {
+          logger.warn("refused a challenge deal bought outside the window", {
+            uid, spendId: spend.id, boughtDay: deal.boughtDay, today: dealToday,
           });
           rejected.push(spend.id);
           continue;
         }
 
-        if (spend.currency !== "gems" || spend.amount < tier.gems) {
+        if (spend.currency !== "gems" || spend.amount < owed.price) {
           logger.warn("refused an underpaid challenge deal debit", {
-            uid, spendId: spend.id, currency: spend.currency, paid: spend.amount, price: tier.gems,
+            uid, spendId: spend.id, currency: spend.currency, paid: spend.amount, price: owed.price,
+            upgrades: owed.upgrades,
           });
           rejected.push(spend.id);
           continue;

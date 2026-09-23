@@ -59,7 +59,7 @@ namespace GlimmerGrove.Challenges
         /// <summary>This very deal is running. Nothing is charged.</summary>
         Held,
 
-        /// <summary>A larger deal is running; buying a smaller one under it would be gems for nothing.</summary>
+        /// <summary>A deal at least as large is running; buying this one under it would be gems for nothing.</summary>
         Lower,
 
         /// <summary>The file sells no such deal.</summary>
@@ -77,10 +77,10 @@ namespace GlimmerGrove.Challenges
     /// 11b). Today's rows are period counters — the later day wins outright, and within a shared
     /// day each genre's attempts and wins take the larger value, which is the task ledger's rule
     /// one level over. The lifetime clears are a monotonic tally per genre joined by <c>max</c>,
-    /// the storable-count exception for the fifth time. A deal is one date per tier id, the day
-    /// it was last bought, joined by <c>max</c>; the window it covers is derived from that date
-    /// and the tier's authored length, so there is one number and nothing to disagree about
-    /// (48c's shape).
+    /// the storable-count exception for the fifth time. A deal is one instant per tier id, when
+    /// its window began, joined by <c>max</c>; the window it covers is derived from that instant
+    /// and the tier's authored length — exactly that many days of the clock — so there is one
+    /// number and nothing to disagree about (48c's shape).
     /// </para>
     /// <para>
     /// <b>What a forged file buys, field by field.</b> Today's rows buy plays, which pay nothing
@@ -120,7 +120,7 @@ namespace GlimmerGrove.Challenges
         static int _day;
         static readonly Dictionary<string, DayRow> _today = new Dictionary<string, DayRow>(StringComparer.Ordinal);
         static readonly Dictionary<string, int> _clears = new Dictionary<string, int>(StringComparer.Ordinal);
-        static readonly Dictionary<string, int> _tiers = new Dictionary<string, int>(StringComparer.Ordinal);
+        static readonly Dictionary<string, long> _tiers = new Dictionary<string, long>(StringComparer.Ordinal);
 
         /// <summary>Raised when anything a page draws off this ledger moved, including the day turning.</summary>
         public static event Action Changed;
@@ -171,28 +171,51 @@ namespace GlimmerGrove.Challenges
         }
 
         /// <summary>
-        /// The deal running today with the most plays, or null. Two can overlap — a larger one
-        /// bought under a smaller — and the larger governs while it runs, the smaller resuming
-        /// after, because a date per tier is what the file holds.
+        /// The deal running now with the most plays, or null. Two can overlap — a larger one
+        /// bought as an upgrade shares the smaller's start — and the larger governs while it
+        /// runs, because an instant per tier is what the file holds.
         /// </summary>
         public static ChallengeTier HeldTier
         {
             get
             {
                 Sync();
-                return ChallengeAllowance.Governing(Table.Tiers, _tiers, _day);
+                return ChallengeAllowance.Governing(Table.Tiers, _tiers, GameClock.NowUnix());
             }
         }
 
-        /// <summary>Whether a deal is running today, whichever one governs.</summary>
+        /// <summary>Whether a deal is running now, whichever one governs.</summary>
         public static bool Holds(ChallengeTier tier)
-            => tier != null && _tiers.TryGetValue(tier.Id, out int from) && tier.Covers(from, Day);
+            => tier != null && _tiers.TryGetValue(tier.Id, out long from) && tier.Covers(from, GameClock.NowUnix());
 
-        /// <summary>Days a running deal has left, today included. Nought when it is not running.</summary>
+        /// <summary>Seconds a running deal has left. Nought when it is not running.</summary>
+        public static long SecondsLeft(ChallengeTier tier)
+        {
+            if (!Holds(tier)) return 0L;
+            long left = tier.EndsAt(_tiers[tier.Id]) - GameClock.NowUnix();
+            return left > 0L ? left : 0L;
+        }
+
+        /// <summary>Whole days a running deal has left, rounded up, so the last day reads as one. Nought when not running.</summary>
         public static int DaysLeft(ChallengeTier tier)
         {
-            if (!Holds(tier)) return 0;
-            return _tiers[tier.Id] + tier.Days - _day;
+            long left = SecondsLeft(tier);
+            if (left <= 0L) return 0;
+            return (int)((left + Daily.DailyRules.SecondsPerDay - 1) / Daily.DailyRules.SecondsPerDay);
+        }
+
+        /// <summary>
+        /// What buying a deal would cost now: the full price, or the difference under a running
+        /// smaller deal (an upgrade). Nought when it would be refused.
+        /// </summary>
+        public static int PriceOf(ChallengeTier tier)
+            => ChallengeAllowance.Price(Table.Tiers, _tiers, GameClock.NowUnix(), tier, out _);
+
+        /// <summary>The running deal a purchase of <paramref name="tier"/> would upgrade, or null.</summary>
+        public static ChallengeTier Upgrades(ChallengeTier tier)
+        {
+            ChallengeAllowance.Price(Table.Tiers, _tiers, GameClock.NowUnix(), tier, out var running);
+            return running;
         }
 
         public static int AttemptsToday(ChallengeGenre genre)
@@ -384,20 +407,21 @@ namespace GlimmerGrove.Challenges
 
         // ------------------------------------------------------------- buying
         /// <summary>
-        /// Buys a deal with gems, running from today.
+        /// Buys a deal with gems: a fresh window from this instant, or an upgrade of the deal
+        /// running now for the difference, sharing its window (<see cref="ChallengeAllowance.Price"/>).
         ///
         /// <para>
-        /// <b>The debit goes first and the date is written only if it succeeded</b>, which is
+        /// <b>The debit goes first and the instant is written only if it succeeded</b>, which is
         /// <see cref="Events.SeasonLedger.TryBuyPass"/>'s ordering and its argument: a process
         /// killed between the two leaves a player who paid and did not receive, which the spend
         /// log can see and support can put right, where the other order leaves a deal nobody
         /// paid for.
         /// </para>
         /// <para>
-        /// <b>Refused under a deal at least as large</b>, because the larger governs and the
-        /// gems would buy nothing today; a larger one over a smaller is an upgrade and allowed,
-        /// with the smaller resuming after. The id carries today, so two devices buying offline
-        /// on one day write one entry (48e).
+        /// <b>The id carries the window's start day and the purchase day</b>
+        /// (<see cref="SpendEntry.ChallengeTierId"/>): the first is what the server records and
+        /// prices an upgrade against, the second is what it windows the purchase on, and two
+        /// devices buying offline on one day still write one entry (48e).
         /// </para>
         /// </summary>
         public static TierBuy TryBuyTier(ChallengeTier tier)
@@ -405,19 +429,24 @@ namespace GlimmerGrove.Challenges
             if (tier == null || Table.FindTier(tier.Id) == null) return TierBuy.NotSold;
             Sync();
 
-            var held = HeldTier;
-            if (held != null && held.Plays >= tier.Plays) return held.Id == tier.Id ? TierBuy.Held : TierBuy.Lower;
+            long now = GameClock.NowUnix();
+            var running = HeldTier;
+            if (running != null && running.Plays >= tier.Plays) return running.Id == tier.Id ? TierBuy.Held : TierBuy.Lower;
 
-            if (!PlayerProgression.TrySpend(Currency.Gems, tier.Gems, SpendEntry.ChallengeTierReason,
-                                            SpendEntry.ChallengeTierId(tier.Id, _day)))
+            int price = ChallengeAllowance.Price(Table.Tiers, _tiers, now, tier, out var upgraded);
+            long fromUnix = upgraded != null ? _tiers[upgraded.Id] : now;
+
+            if (!PlayerProgression.TrySpend(Currency.Gems, price, SpendEntry.ChallengeTierReason,
+                                            SpendEntry.ChallengeTierId(tier.Id, ChallengeCalendar.DayOf(fromUnix), _day)))
                 return TierBuy.TooPoor;
 
-            if (!_tiers.TryGetValue(tier.Id, out int from) || from < _day) _tiers[tier.Id] = _day;
+            if (!_tiers.TryGetValue(tier.Id, out long from) || from < fromUnix) _tiers[tier.Id] = fromUnix;
 
             SaveService.Save();
             Raise();
 
-            Telemetry.Track("challenge_tier_bought", "tier", tier.Id, "gems", tier.Gems, "days", tier.Days);
+            Telemetry.Track("challenge_tier_bought", "tier", tier.Id, "gems", price, "days", tier.Days,
+                            "upgraded", upgraded == null ? string.Empty : upgraded.Id);
 
             return TierBuy.Bought;
         }
@@ -426,17 +455,17 @@ namespace GlimmerGrove.Challenges
         /// A deal debit the server refused takes the deal with it.
         ///
         /// The gems are already back (the ledger dropped the entry before announcing it); what
-        /// is left is the date the purchase wrote beside them. Only the exact purchase moves —
-        /// a later date under the same id is a later purchase and stands.
+        /// is left is the instant the purchase wrote beside them. Only the exact purchase moves —
+        /// a window starting on a later day under the same id is a later purchase and stands.
         /// </summary>
         internal static void OnSpendRejected(string currency, string spendId)
         {
-            if (!SpendEntry.TryParseChallengeTierId(spendId, out string tierId, out int fromDay)) return;
-            if (!_tiers.TryGetValue(tierId, out int held) || held != fromDay) return;
+            if (!SpendEntry.TryParseChallengeTierId(spendId, out string tierId, out int fromDay, out _)) return;
+            if (!_tiers.TryGetValue(tierId, out long held) || ChallengeCalendar.DayOf(held) != fromDay) return;
 
             _tiers.Remove(tierId);
-            UnityEngine.Debug.LogWarning($"[Challenges] the '{tierId}' deal bought on day {fromDay} was refused " +
-                                         "by the server; it is no longer held and the gems are back");
+            UnityEngine.Debug.LogWarning($"[Challenges] the '{tierId}' deal whose window began on day {fromDay} was " +
+                                         "refused by the server; it is no longer held and the gems are back");
             SaveService.Save();
             Raise();
         }
@@ -469,6 +498,7 @@ namespace GlimmerGrove.Challenges
             _day = block == null || block.day < 0 ? 0 : block.day;
             ReadToday(_today, block?.today);
             ReadClears(_clears, block?.clears);
+            _tiers.Clear();
             ReadTiers(_tiers, block?.tiers);
             Raise();
         }
@@ -489,7 +519,7 @@ namespace GlimmerGrove.Challenges
         {
             var today = new Dictionary<string, DayRow>(StringComparer.Ordinal);
             var clears = new Dictionary<string, int>(StringComparer.Ordinal);
-            var tiers = new Dictionary<string, int>(StringComparer.Ordinal);
+            var tiers = new Dictionary<string, long>(StringComparer.Ordinal);
 
             int myDay = mine == null || mine.day < 0 ? 0 : mine.day;
             int otherDay = other == null || other.day < 0 ? 0 : other.day;
@@ -564,7 +594,7 @@ namespace GlimmerGrove.Challenges
             }
         }
 
-        static void ReadTiers(Dictionary<string, int> into, ChallengeTierStateDto[] rows)
+        static void ReadTiers(Dictionary<string, long> into, ChallengeTierStateDto[] rows)
         {
             if (rows == null) return;
 
@@ -572,8 +602,8 @@ namespace GlimmerGrove.Challenges
             for (int i = 0; i < walk; i++)
             {
                 var row = rows[i];
-                if (row == null || !ChallengeTable.IsValidTierId(row.id) || row.fromDay <= 0) continue;
-                if (!into.TryGetValue(row.id, out int held) || row.fromDay > held) into[row.id] = row.fromDay;
+                if (row == null || !ChallengeTable.IsValidTierId(row.id) || row.fromUnix <= 0L) continue;
+                if (!into.TryGetValue(row.id, out long held) || row.fromUnix > held) into[row.id] = row.fromUnix;
             }
         }
 
@@ -581,7 +611,7 @@ namespace GlimmerGrove.Challenges
         static bool IsGenreName(string name) => ChallengeTable.IsValidTierId(name);
 
         static ChallengeStateDto Write(int day, Dictionary<string, DayRow> today,
-                                       Dictionary<string, int> clears, Dictionary<string, int> tiers)
+                                       Dictionary<string, int> clears, Dictionary<string, long> tiers)
         {
             var todayRows = new List<ChallengeDayDto>(today.Count);
             foreach (var pair in today)
@@ -598,7 +628,7 @@ namespace GlimmerGrove.Challenges
 
             var tierRows = new List<ChallengeTierStateDto>(tiers.Count);
             foreach (var pair in tiers)
-                if (pair.Value > 0) tierRows.Add(new ChallengeTierStateDto { id = pair.Key, fromDay = pair.Value });
+                if (pair.Value > 0L) tierRows.Add(new ChallengeTierStateDto { id = pair.Key, fromUnix = pair.Value });
             tierRows.Sort((a, b) => string.CompareOrdinal(a.id, b.id));
             if (tierRows.Count > MaxTierRows) tierRows.RemoveRange(MaxTierRows, tierRows.Count - MaxTierRows);
 

@@ -206,7 +206,7 @@ namespace GlimmerGrove.Tests
                         new ChallengeCountDto { genre = "merge", count = 7 },
                         new ChallengeCountDto { genre = "pairs", count = 12 },
                     },
-                    tiers = new[] { new ChallengeTierStateDto { id = "bronze", fromDay = 20_311 } },
+                    tiers = new[] { new ChallengeTierStateDto { id = "bronze", fromUnix = 1_755_000_000L } },
                 },
             };
         }
@@ -249,7 +249,7 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(12, restored.challenges.clears[1].count);
             Assert.AreEqual(1, restored.challenges.tiers.Length);
             Assert.AreEqual("bronze", restored.challenges.tiers[0].id);
-            Assert.AreEqual(20_311, restored.challenges.tiers[0].fromDay);
+            Assert.AreEqual(1_755_000_000L, restored.challenges.tiers[0].fromUnix);
 
             var empty = Populated();
             empty.challenges = new ChallengeStateDto { day = 20_315 };

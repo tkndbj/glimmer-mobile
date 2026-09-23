@@ -43,7 +43,7 @@ const {
 } = await import(pathToFileURL(compiled).href);
 
 const challengesModule = join(REPO, "firebase", "functions", "lib", "challenges.js");
-const { DEFAULT_CHALLENGES, HARD_MAX_CLEARS, allowanceOn, challengeClears, challengeXp } =
+const { DEFAULT_CHALLENGES, HARD_MAX_CLEARS, allowanceOn, challengeClears, challengeXp, dealPrice } =
   await import(pathToFileURL(challengesModule).href);
 
 const ranksModule = join(REPO, "firebase", "functions", "lib", "ranks.js");
@@ -351,9 +351,27 @@ console.log("\nthe daily challenges");
     equal(`${c.name} — xp`, challengeXp(save, { challenges: { ...c.config, coins: 1 } }), c.xp);
   }
 
+  // The server reads days where the client reads instants (56h); the vector carries both.
+  const dayOf = (unix) => (unix > 0 ? Math.floor(unix / 86400) : 0);
+  const heldDays = (held) => Object.fromEntries(Object.entries(held).map(([k, v]) => [k, dayOf(v)]));
+
   for (const c of vectors.challengeAllowanceCases ?? []) {
-    equal(`${c.name} — allowance`,
-          allowanceOn(vectors.challengeTiers, c.held, c.day, vectors.challengeFreePlays), c.allowance);
+    equal(`${c.name} — server allowance`,
+          allowanceOn(vectors.challengeTiers, heldDays(c.held), c.serverDay, vectors.challengeFreePlays),
+          c.serverAllowance);
+  }
+
+  // The upgrade price: what the client would charge is what this server accepts, for every
+  // case the client would let through. A refused case (price nought) is never submitted.
+  const dealConfig = { genres: [], freePlays: vectors.challengeFreePlays, tiers: vectors.challengeTiers,
+                       coins: 1, xp: 1, maxClears: 1 };
+  for (const c of vectors.challengeUpgradeCases ?? []) {
+    if (c.price <= 0) continue;
+    const held = heldDays(c.held);
+    const fromDay = c.upgrades ? held[c.upgrades] : dayOf(c.now);
+    const owed = dealPrice(dealConfig, held, c.target, fromDay, dayOf(c.now));
+    equal(`${c.name} — price`, owed && owed.price, c.price);
+    equal(`${c.name} — upgrades`, owed && owed.upgrades, c.upgrades);
   }
 
   const played = { challenges: { clears: [{ genre: "pairs", count: 10 }] } };

@@ -102,38 +102,45 @@ namespace GlimmerGrove.Persistence
         public const string StreakShieldReason = "streak_shield";
 
         /// <summary>
-        /// A challenge deal's debit: <c>chaltier:{tierId}:{fromDay}</c>.
+        /// A challenge deal's debit: <c>chaltier:{tierId}:{fromDay}:{boughtDay}</c>.
         ///
         /// <para>
         /// Derived for <em>both</em> of the pass's reasons. The server has to recognise it:
-        /// <c>submitSpends</c> prices it against the published deal and writes the day onto the
-        /// wallet document in the same transaction that takes the gems, and that server-held
-        /// date is what every coin claim past the free allowance is bounded by. And two devices
+        /// <c>submitSpends</c> prices it against the published deal — the full price for a fresh
+        /// window, the difference for an upgrade of a deal it already recorded — and writes the
+        /// window's start onto the wallet document in the same transaction that takes the gems,
+        /// which is what every coin claim past the free allowance is bounded by. And two devices
         /// buying the same deal offline on one day write byte-identical entries, the union keeps
         /// one, and the player is charged once (48e).
         /// </para>
         /// <para>
-        /// The day is in the id because the day <em>is</em> the entitlement: one window, one
-        /// debit. A second purchase of the same deal on a later day is a different string and a
-        /// different window. Parsed back by <c>parseChallengeTierSpendId</c> on the server; the
-        /// format is a wire contract.
+        /// <b>Two days, because an upgrade inherits a window it did not open.</b> <c>fromDay</c>
+        /// is the day the window began — the purchase day for a fresh deal, the running deal's
+        /// start for an upgrade — and is what the server records; <c>boughtDay</c> is the day the
+        /// gems left, which the server windows the purchase on. Parsed back by
+        /// <c>parseChallengeTierSpendId</c>; the format is a wire contract.
         /// </para>
         /// </summary>
-        public static string ChallengeTierId(string tierId, int fromDay) => "chaltier:" + tierId + ":" + fromDay;
+        public static string ChallengeTierId(string tierId, int fromDay, int boughtDay)
+            => "chaltier:" + tierId + ":" + fromDay + ":" + boughtDay;
 
-        /// <summary>The deal and the day a tier debit names, or false for any other id.</summary>
-        public static bool TryParseChallengeTierId(string id, out string tierId, out int fromDay)
+        /// <summary>The deal and the two days a tier debit names, or false for any other id.</summary>
+        public static bool TryParseChallengeTierId(string id, out string tierId, out int fromDay, out int boughtDay)
         {
             tierId = null;
             fromDay = 0;
+            boughtDay = 0;
             if (string.IsNullOrEmpty(id) || !id.StartsWith("chaltier:", StringComparison.Ordinal)) return false;
 
             var parts = id.Split(':');
-            if (parts.Length != 3 || parts[1].Length == 0) return false;
-            if (!int.TryParse(parts[2], out int day) || day <= 0 || day.ToString() != parts[2]) return false;
+            if (parts.Length != 4 || parts[1].Length == 0) return false;
+            if (!int.TryParse(parts[2], out int from) || from <= 0 || from.ToString() != parts[2]) return false;
+            if (!int.TryParse(parts[3], out int bought) || bought <= 0 || bought.ToString() != parts[3]) return false;
+            if (bought < from) return false;
 
             tierId = parts[1];
-            fromDay = day;
+            fromDay = from;
+            boughtDay = bought;
             return true;
         }
 

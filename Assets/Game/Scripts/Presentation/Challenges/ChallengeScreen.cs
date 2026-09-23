@@ -51,11 +51,27 @@ namespace GlimmerGrove
         /// <summary>The readout row under the ribbon, and the air above the hill.</summary>
         const float ReadoutH = 56f, ReadoutGap = 12f;
 
-        /// <summary>The hill's share of the room, bounded so a tall phone does not make a walk of it.</summary>
-        const float HillShare = .27f, HillLeast = 330f, HillMost = 520f;
+        /// <summary>
+        /// The hill's bounds, in units of the siege's cell (see <see cref="Unit"/>). <b>The
+        /// board is asked first and the hill takes the rest</b>: a board is laid out at the
+        /// widest cell the safe width allows, so a wide, short board leaves the hill most of
+        /// the screen, and the hill is bounded so a tall phone does not make a walk of it and
+        /// a short one cannot squeeze it to a strip — below the floor it is the <em>board</em>
+        /// that shrinks its cells. The owner's reading of the first cut (2026-09-23) was
+        /// "the hills are too small": at a fixed share of the room the hill was 3.3 cells
+        /// against a 4x4 board given 6.6, and the four posts stood two cells tall over it.
+        /// </summary>
+        const float HillLeastUnits = 3.6f, HillMostUnits = 5.4f;
 
-        /// <summary>The line band, in units of the siege's cell (see <see cref="Unit"/>).</summary>
-        const float LineBandUnits = 2.3f;
+        /// <summary>
+        /// The line band, in units of the siege's cell. Sized to the <em>post</em>
+        /// (<see cref="ChallengeHillView.PostScale"/>), which is drawn smaller than a siege
+        /// turret because it stands under a hill rather than a match-three board.
+        /// </summary>
+        const float LineBandUnits = 1.7f;
+
+        /// <summary>The puzzle host's inset from the safe edge, either side.</summary>
+        const float PuzzleInset = 24f;
 
         const float BottomPad = 36f, BandGap = 14f;
 
@@ -144,7 +160,15 @@ namespace GlimmerGrove
 
             float unit = Unit;
             float lineBand = unit * LineBandUnits;
-            float hill = Mathf.Clamp(room * HillShare, HillLeast, HillMost);
+
+            // The board first: made, and asked what it wants at the width it will be given.
+            _puzzleHost = UIKit.Node("PuzzleHost", Safe);
+            _puzzleHost.anchorMin = new Vector2(0f, 0f);
+            _puzzleHost.anchorMax = new Vector2(1f, 1f);
+            _puzzle = Make(_run.Puzzle.Genre);
+
+            float want = _puzzle.BandWanted(_run.Puzzle.Width, _run.Puzzle.Height, Safe.rect.width - PuzzleInset * 2f);
+            float hill = Mathf.Clamp(room - lineBand - BandGap - want, unit * HillLeastUnits, unit * HillMostUnits);
 
             _hillHost = UIKit.Node("HillHost", Safe);
             _hillHost.anchorMin = new Vector2(0f, 1f);
@@ -152,19 +176,16 @@ namespace GlimmerGrove
             _hillHost.pivot = new Vector2(.5f, 1f);
             _hillHost.offsetMin = new Vector2(0f, -(top + hill + lineBand));
             _hillHost.offsetMax = new Vector2(0f, -top);
+            _hillHost.SetSiblingIndex(_puzzleHost.GetSiblingIndex());
 
-            _puzzleHost = UIKit.Node("PuzzleHost", Safe);
-            _puzzleHost.anchorMin = new Vector2(0f, 0f);
-            _puzzleHost.anchorMax = new Vector2(1f, 1f);
-            _puzzleHost.offsetMin = new Vector2(24f, BottomPad);
-            _puzzleHost.offsetMax = new Vector2(-24f, -(top + hill + lineBand + BandGap));
+            _puzzleHost.offsetMin = new Vector2(PuzzleInset, BottomPad);
+            _puzzleHost.offsetMax = new Vector2(-PuzzleInset, -(top + hill + lineBand + BandGap));
 
             Canvas.ForceUpdateCanvases();
 
             _hill = _hillHost.gameObject.AddComponent<ChallengeHillView>();
             _hill.Build(_hillHost, _run.Hill, unit, lineBand);
 
-            _puzzle = Make(_run.Puzzle.Genre);
             _puzzle.Attach(_run, _puzzleHost, Play);
 
             var group = UIKit.Group(_puzzleHost);

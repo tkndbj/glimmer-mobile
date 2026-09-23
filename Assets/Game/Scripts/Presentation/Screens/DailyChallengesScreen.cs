@@ -162,17 +162,30 @@ namespace GlimmerGrove
 
             var held = ChallengeLedger.HeldTier;
             if (held != null)
-            {
-                int days = ChallengeLedger.DaysLeft(held);
-                string left = days == 1 ? Loc.Get("ui.challenges.days_left_one") : Loc.Format("ui.challenges.days_left", days);
-                _dealLine.text = Loc.Format("ui.challenges.held_deal", Loc.Get(held.NameKey), held.Plays, left);
-            }
+                _dealLine.text = Loc.Format("ui.challenges.held_deal", Loc.Get(held.NameKey), held.Plays, TimeLeft(held));
             else
             {
                 _dealLine.text = Loc.Format("ui.challenges.free_deal", ChallengeRules.Table.FreePlays);
             }
 
             if (_dealKey) _dealKey.gameObject.SetActive(ChallengeRules.Table.Tiers.Count > 0);
+        }
+
+        /// <summary>
+        /// What is left of a running deal, in the unit that fits: whole days rounded up while a
+        /// day or more remains, hours on the last day. A window is exactly its days of the clock
+        /// (56h), so "1 day left" means up to a day, never a calendar day that ends at midnight.
+        /// </summary>
+        public static string TimeLeft(ChallengeTier tier)
+        {
+            long seconds = ChallengeLedger.SecondsLeft(tier);
+            if (seconds > Daily.DailyRules.SecondsPerDay)
+                return Loc.Format("ui.challenges.days_left", ChallengeLedger.DaysLeft(tier));
+
+            long hours = (seconds + 3599L) / 3600L;
+            return hours <= 0L ? Loc.Get("ui.challenges.days_left_one")
+                 : hours >= 24L ? Loc.Get("ui.challenges.days_left_one")
+                 : Loc.Format("ui.challenges.hours_left", hours);
         }
 
         void Open(ChallengeGenre genre)

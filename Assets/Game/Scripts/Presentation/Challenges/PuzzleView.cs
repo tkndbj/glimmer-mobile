@@ -20,14 +20,22 @@ namespace GlimmerGrove
     /// view at all.
     /// </para>
     /// <para>
-    /// <b>Laid out to the band, capped per cell</b>: a 4x4 board and a 6x10 well get the same
-    /// band, so the cell is whichever of width, height and <see cref="MaxCell"/> binds first,
-    /// and the grid is centred in what is left above the strip.
+    /// <b>Laid out to the band, capped per cell</b>: a 6x3 grid and a 10x6 room get whatever
+    /// band the screen gives them, so the cell is whichever of width, height and
+    /// <see cref="MaxCell"/> binds first, and the grid is centred in what is left above the
+    /// strip. <b>The width is meant to bind</b>: <see cref="BandWanted"/> tells the screen how
+    /// tall the board is at the cell the width allows, and the screen gives the hill the rest
+    /// — which is what makes a wide, short board a bigger hill rather than a taller plate.
+    /// The plate's rim is counted in on both axes, so a board at its widest still stands
+    /// <see cref="Margin"/> inside its host rather than overhanging it.
     /// </para>
     /// </summary>
     public abstract class PuzzleView : MonoBehaviour
     {
         protected const float Margin = 18f;
+
+        /// <summary>The plate's overhang past the grid, in cells (each side is half of it).</summary>
+        protected const float PlateRim = .34f;
 
         protected ChallengeRun Run { get; private set; }
         protected RectTransform Host { get; private set; }
@@ -43,8 +51,31 @@ namespace GlimmerGrove
 
         protected virtual float MaxCell => 200f;
 
+        /// <summary>
+        /// Furniture a board hangs past its plate, above and below together, in cells — the
+        /// pipes' sources and sinks. Counted into the band the board asks for, so it is not
+        /// drawn into the rampart above or the foot of the screen below.
+        /// </summary>
+        protected virtual float EdgeRows => 0f;
+
         protected int Columns => Run.Puzzle.Width;
         protected int Rows => Run.Puzzle.Height;
+
+        /// <summary>The cell a board of <c>columns</c> gets across <c>hostWidth</c>, plate and cap counted in.</summary>
+        float CellAcross(int columns, float hostWidth)
+            => Mathf.Floor(Mathf.Min((hostWidth - Margin) / (columns + PlateRim), MaxCell));
+
+        /// <summary>
+        /// How tall a band this board wants when laid out across <c>hostWidth</c>: its rows at
+        /// the cell the width allows, the plate's rim, the margin and the key strip. The screen
+        /// asks this before it sizes the hill, so the hill can take everything the board does
+        /// not need.
+        /// </summary>
+        public float BandWanted(int columns, int rows, float hostWidth)
+        {
+            float cell = CellAcross(columns, hostWidth);
+            return (rows + PlateRim + EdgeRows) * cell + Margin + StripHeight;
+        }
 
         public void Attach(ChallengeRun run, RectTransform host, Action<ChallengeInput> send)
         {
@@ -52,10 +83,9 @@ namespace GlimmerGrove
             Host = host;
             _send = send;
 
-            float w = host.rect.width - Margin * 2f;
-            float h = host.rect.height - StripHeight - Margin * 2f;
+            float h = host.rect.height - StripHeight - Margin;
 
-            Cell = Mathf.Floor(Mathf.Min(w / Columns, h / Rows, MaxCell));
+            Cell = Mathf.Floor(Mathf.Min(CellAcross(Columns, host.rect.width), h / (Rows + PlateRim + EdgeRows)));
             if (Cell < 8f) Cell = 8f;
 
             var span = new Vector2(Columns * Cell, Rows * Cell);
@@ -64,7 +94,7 @@ namespace GlimmerGrove
             var plate = ChallengeArt.Plate();
             Plate = UIKit.Img("Plate", host, plate != null ? plate : Art.Round(34),
                               plate != null ? Color.white : Pal.Board,
-                              span + Vector2.one * Cell * .34f + Vector2.one * Margin, new Vector2(.5f, .5f), centre);
+                              span + Vector2.one * Cell * PlateRim + Vector2.one * Margin, new Vector2(.5f, .5f), centre);
             Plate.type = Image.Type.Sliced;
             Plate.raycastTarget = false;
 

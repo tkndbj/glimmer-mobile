@@ -46,6 +46,16 @@ namespace GlimmerGrove
         /// <summary>How tall a creeper is, in units. The siege's own figure for its kind.</summary>
         const float RaiderTall = 1.0f;
 
+        /// <summary>
+        /// A post is drawn at this fraction of a siege turret. The siege sizes a turret to the
+        /// match-three cell it fires from; here the line stands under a hill, and four posts
+        /// at full size took two cells of a screen the hill needs (the owner's "make turrets
+        /// smaller", 2026-09-23). Everything on a post — chassis, socket, glow, health, bank
+        /// — is sized off <see cref="_post"/>, and everything on the hill off the unit, so
+        /// the raiders did not shrink with them.
+        /// </summary>
+        public const float PostScale = .72f;
+
         const float FlightFor = .22f, StepFor = .30f, Stagger = .10f;
 
         /// <summary>How far below the band's top edge a raider stands when it musters, in units.</summary>
@@ -56,7 +66,7 @@ namespace GlimmerGrove
         readonly List<Mob> _mob = new List<Mob>(16);
         Post[] _posts;
 
-        float _unit, _wide, _hillTop, _hillFoot, _lineY;
+        float _unit, _post, _wide, _hillTop, _hillFoot, _lineY;
 
         /// <summary>The line's top edge, in the host's space: where the puzzle band may begin.</summary>
         public float Foot { get; private set; }
@@ -70,6 +80,7 @@ namespace GlimmerGrove
         {
             _hill = hill;
             _unit = unit;
+            _post = unit * PostScale;
             _root = host;
             _wide = host.rect.width;
 
@@ -151,32 +162,32 @@ namespace GlimmerGrove
 
                 post.Node = UIKit.Node("Ward", _wall);
                 post.Node.anchorMin = post.Node.anchorMax = new Vector2(.5f, .5f);
-                post.Node.sizeDelta = new Vector2(_unit * 1.8f, _unit * 2.3f);
+                post.Node.sizeDelta = new Vector2(_post * 1.8f, _post * 2.3f);
                 post.Node.anchoredPosition = new Vector2(PostX(i), _lineY);
 
                 var socket = UIKit.Img("Base", post.Node, ChallengeArt.Socket(), Color.white,
-                                       new Vector2(_unit * 1.7f, _unit * .8f));
+                                       new Vector2(_post * 1.7f, _post * .8f));
                 socket.raycastTarget = false;
-                socket.rectTransform.anchoredPosition = new Vector2(0f, -_unit * .88f);
+                socket.rectTransform.anchoredPosition = new Vector2(0f, -_post * .88f);
                 socket.enabled = socket.sprite != null;
 
                 var glow = UIKit.Img("Glow", post.Node, Art.Glow(128, 2.1f),
                                      Pal.A(ChallengeArt.Tint(ward.Colour), .22f),
-                                     new Vector2(_unit * 3.1f, _unit * 3.1f));
+                                     new Vector2(_post * 3.1f, _post * 3.1f));
                 glow.raycastTarget = false;
 
                 post.Body = UIKit.Img("Post", post.Node, ChallengeArt.Ward(ward.Colour), Color.white,
-                                      new Vector2(_unit * SiegeView.BodyWide, _unit * SiegeView.BodyTall));
+                                      new Vector2(_post * SiegeView.BodyWide, _post * SiegeView.BodyTall));
                 post.Body.raycastTarget = false;
                 post.Body.preserveAspect = true;
-                post.Body.rectTransform.anchoredPosition = new Vector2(0f, _unit * .06f);
+                post.Body.rectTransform.anchoredPosition = new Vector2(0f, _post * .06f);
                 post.Body.enabled = post.Body.sprite != null;
 
                 // Health: a trough and a fill above the chassis, the siege's own furniture.
                 var bar = UIKit.Node("Health", post.Node);
                 bar.anchorMin = bar.anchorMax = new Vector2(.5f, .5f);
-                bar.sizeDelta = new Vector2(_unit * 1.06f, _unit * .17f);
-                bar.anchoredPosition = new Vector2(0f, _unit * 1.26f);
+                bar.sizeDelta = new Vector2(_post * 1.06f, _post * .17f);
+                bar.anchoredPosition = new Vector2(0f, _post * 1.26f);
 
                 var kerb = UIKit.Img("Trough", bar, Art.Round(10), new Color(0f, 0f, 0f, .66f), bar.sizeDelta);
                 kerb.raycastTarget = false;
@@ -190,15 +201,15 @@ namespace GlimmerGrove
                 post.Fill.rectTransform.anchoredPosition = new Vector2(2f, 0f);
 
                 // The bank: bolts fed and waiting for a target, as a count on a disc.
-                var pipAt = new Vector2(_unit * .62f, _unit * .30f);
+                var pipAt = new Vector2(_post * .62f, _post * .30f);
                 post.Bank = UIKit.Img("Bank", post.Node, Art.Disc(64), Pal.A(ChallengeArt.Tint(ward.Colour), 1f),
-                                      new Vector2(_unit * .40f, _unit * .40f));
+                                      new Vector2(_post * .40f, _post * .40f));
                 post.Bank.raycastTarget = false;
                 post.Bank.rectTransform.anchoredPosition = pipAt;
 
-                post.Held = UIKit.Titled("Held", post.Node, string.Empty, Mathf.RoundToInt(_unit * .26f),
+                post.Held = UIKit.Titled("Held", post.Node, string.Empty, Mathf.RoundToInt(_post * .26f),
                                          Pal.Cream, TextAnchor.MiddleCenter,
-                                         new Vector2(_unit * .5f, _unit * .4f), default, default, 1.5f, 0f);
+                                         new Vector2(_post * .5f, _post * .4f), default, default, 1.5f, 0f);
                 post.Held.rectTransform.anchoredPosition = pipAt;
 
                 _posts[i] = post;
@@ -251,7 +262,7 @@ namespace GlimmerGrove
 
             float frac = ward.MaxHealth > 0 ? ward.Health / (float)ward.MaxHealth : 0f;
             var size = post.Fill.rectTransform.sizeDelta;
-            post.Fill.rectTransform.sizeDelta = new Vector2((_unit * 1.06f - 4f) * frac, size.y);
+            post.Fill.rectTransform.sizeDelta = new Vector2((_post * 1.06f - 4f) * frac, size.y);
             post.Fill.color = frac > .34f ? Pal.Cream : Pal.Rose;
 
             bool show = ward.Alive && ward.Banked > 0;
@@ -446,7 +457,7 @@ namespace GlimmerGrove
 
             int colour = _hill.Wards[e.Ward].Colour;
             var tint = ChallengeArt.Tint(colour);
-            var from = new Vector2(PostX(e.Ward), _lineY + _unit * 1.0f);
+            var from = new Vector2(PostX(e.Ward), _lineY + _post * 1.0f);
             var to = mob.Node.anchoredPosition;
             var dir = to - from;
             float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90f;
@@ -466,11 +477,11 @@ namespace GlimmerGrove
                     {
                         if (!body) return;
                         float k = t < .3f ? t / .3f : 1f - (t - .3f) / .7f;
-                        body.rectTransform.anchoredPosition = new Vector2(0f, _unit * .06f - _unit * .13f * k);
+                        body.rectTransform.anchoredPosition = new Vector2(0f, _post * .06f - _post * .13f * k);
                     }, body, "kick");
                 }
 
-                Puff(ChallengeArt.Muzzle(colour), from, angle, _unit * 2.7f, .32f, SiegeView.MuzzleAt);
+                Puff(ChallengeArt.Muzzle(colour), from, angle, _post * 2.7f, .32f, SiegeView.MuzzleAt);
 
                 var shot = Reel(ChallengeArt.Shot(colour), from, angle, _unit * 1.2f, SiegeView.HeadAt);
                 if (shot == null)

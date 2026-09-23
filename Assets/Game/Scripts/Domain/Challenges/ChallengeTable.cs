@@ -228,6 +228,36 @@ namespace GlimmerGrove.Challenges
         /// <summary>The largest deal, or null when the file sells none. What a gate prints the ceiling from.</summary>
         public ChallengeTier LargestTier => _tiers.Length == 0 ? null : _tiers[_tiers.Length - 1];
 
+        /// <summary>
+        /// Deal ids that were sold and withdrawn, refused by name at read (invariant 5f). A tier
+        /// id is a spend id and a wallet field, so a withdrawn one keeps meaning the deal it was
+        /// for ever; none has been withdrawn yet, and the list exists so the first one has
+        /// somewhere to go. Mirrored by <c>content.py</c> and the seeder.
+        /// </summary>
+        public static readonly string[] RetiredTierIds = { };
+
+        public static bool IsRetiredTierId(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return false;
+            for (int i = 0; i < RetiredTierIds.Length; i++)
+                if (RetiredTierIds[i] == id) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// The most credits the largest deal could pay in a day on this file: its plays, times
+        /// the genres shipped, times the rate. Printed by the gates and held under
+        /// <see cref="ChallengeLimits.MaxDailyCoins"/>.
+        /// </summary>
+        public long LargestDailyCoins
+        {
+            get
+            {
+                int plays = LargestTier != null ? LargestTier.Plays : FreePlays;
+                return (long)plays * _genres.Length * Rewards.Coins;
+            }
+        }
+
         // ------------------------------------------------------------------ reading
         public static bool TryRead(string json, out ChallengeTable table, List<string> problems)
         {
@@ -314,6 +344,20 @@ namespace GlimmerGrove.Challenges
             }
 
             table = new ChallengeTable(line, freePlays, tiers, rewards, rows.ToArray());
+
+            // The economy gate (56k): the largest deal's daily maximum, across every genre the
+            // file ships, is held under a ceiling — a fifth genre or a raised rate is otherwise a
+            // silent multiplication of what the mode pays. Named as a problem so the build gate
+            // fails; the slate is still usable, because the bound is about money already
+            // adjudicated per claim and not about a board.
+            if (table.LargestDailyCoins > ChallengeLimits.MaxDailyCoins)
+            {
+                problems.Add($"the largest deal could pay {table.LargestDailyCoins:N0} credits a day across " +
+                             $"{table.Genres.Count} genre(s), above the {ChallengeLimits.MaxDailyCoins:N0} " +
+                             "ceiling (ChallengeLimits.MaxDailyCoins); lower the rate, the plays or the ceiling");
+                ok = false;
+            }
+
             return ok;
         }
 
@@ -364,6 +408,8 @@ namespace GlimmerGrove.Challenges
 
                 if (row == null || !IsValidTierId(row.id))
                     problems.Add($"{where} needs an id of 1-32 lower-case letters, digits or underscores");
+                else if (IsRetiredTierId(row.id))
+                    problems.Add($"{where} names a retired deal id, which may never be re-minted (invariant 5f)");
                 else if (!seen.Add(row.id))
                     problems.Add($"{where} is listed twice");
 
@@ -420,7 +466,9 @@ namespace GlimmerGrove.Challenges
 
             if (!ChallengeGenres.TryParse(row.genre, out var genre))
             {
-                problems.Add($"{where} names genre '{row.genre}', which this build does not play");
+                problems.Add(ChallengeGenres.IsRetired(row.genre)
+                             ? $"{where} names genre '{row.genre}', which was withdrawn and may never come back under that spelling (invariant 5f)"
+                             : $"{where} names genre '{row.genre}', which this build does not play");
                 return null;
             }
 

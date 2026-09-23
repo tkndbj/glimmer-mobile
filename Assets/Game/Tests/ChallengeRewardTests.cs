@@ -129,12 +129,52 @@ namespace GlimmerGrove.Tests
                 var map = TestJson.Object(raw);
                 string name = TestJson.Str(map, "name", "(unnamed)");
 
-                var held = new Dictionary<string, int>();
+                var held = new Dictionary<string, long>();
                 foreach (var pair in TestJson.Child(map, "held"))
-                    held[pair.Key] = (int)System.Convert.ToInt64(pair.Value);
+                    held[pair.Key] = System.Convert.ToInt64(pair.Value);
 
-                int allowance = ChallengeAllowance.On(tiers, held, TestJson.Int(map, "day"), free);
+                int allowance = ChallengeAllowance.On(tiers, held, TestJson.Long(map, "now"), free);
                 Assert.AreEqual(TestJson.Int(map, "allowance"), allowance, name);
+            }
+        }
+
+        /// <summary>
+        /// The upgrade price: the full figure with nothing running, the difference under a
+        /// running smaller deal, nought when refused. Mirrored by <c>dealPrice</c> on the server
+        /// and pinned by <c>challengeUpgradeCases</c>; a drift is a purchase the page priced at
+        /// one figure and the server refused at another, which is gems taken and given back.
+        /// </summary>
+        [Test]
+        public void EveryUpgradeCasePricesWhatTheServerPrices()
+        {
+            var file = File();
+            var tiers = new List<ChallengeTier>();
+            foreach (object raw in TestJson.Children(file, "challengeTiers"))
+            {
+                var t = TestJson.Object(raw);
+                tiers.Add(new ChallengeTier(TestJson.Str(t, "id", string.Empty), TestJson.Int(t, "gems"),
+                                            TestJson.Int(t, "plays"), TestJson.Int(t, "days")));
+            }
+
+            var cases = TestJson.Children(file, "challengeUpgradeCases");
+            Assert.Greater(cases.Count, 0);
+
+            foreach (object raw in cases)
+            {
+                var map = TestJson.Object(raw);
+                string name = TestJson.Str(map, "name", "(unnamed)");
+
+                var held = new Dictionary<string, long>();
+                foreach (var pair in TestJson.Child(map, "held"))
+                    held[pair.Key] = System.Convert.ToInt64(pair.Value);
+
+                var target = tiers.Find(t => t.Id == TestJson.Str(map, "target", string.Empty));
+                Assert.IsNotNull(target, name + " names a tier the vector table does not hold");
+
+                int price = ChallengeAllowance.Price(tiers, held, TestJson.Long(map, "now"), target, out var upgraded);
+                Assert.AreEqual(TestJson.Int(map, "price"), price, name + " — price");
+                Assert.AreEqual(TestJson.Str(map, "upgrades", string.Empty), upgraded == null ? string.Empty : upgraded.Id,
+                                name + " — upgrades");
             }
         }
     }

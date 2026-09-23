@@ -363,7 +363,7 @@ namespace GlimmerGrove.Persistence
             for (int i = 0; i < na; i++)
             {
                 if (tiersA[i] == null || tiersB[i] == null) return tiersA[i] == tiersB[i];
-                if (!Same(tiersA[i].id, tiersB[i].id) || tiersA[i].fromDay != tiersB[i].fromDay) return false;
+                if (!Same(tiersA[i].id, tiersB[i].id) || tiersA[i].fromUnix != tiersB[i].fromUnix) return false;
             }
 
             return true;

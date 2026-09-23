@@ -948,11 +948,11 @@ namespace GlimmerGrove.Cloud
             if (block?.tiers != null)
                 foreach (var row in block.tiers)
                 {
-                    if (row == null || string.IsNullOrEmpty(row.id) || row.fromDay <= 0) continue;
+                    if (row == null || string.IsNullOrEmpty(row.id) || row.fromUnix <= 0L) continue;
                     tiers.Add(new Dictionary<string, object>
                     {
                         { "id", row.id },
-                        { "fromDay", (long)row.fromDay },
+                        { "fromUnix", row.fromUnix },
                     });
                 }
 
@@ -1005,9 +1005,9 @@ namespace GlimmerGrove.Cloud
                 {
                     if (!(item is IDictionary<string, object> row)) continue;
                     string id = Str(row, "id");
-                    long fromDay = Long(row, "fromDay", 0L);
-                    if (string.IsNullOrEmpty(id) || fromDay <= 0L) continue;
-                    tiers.Add(new ChallengeTierStateDto { id = id, fromDay = Cap(fromDay) });
+                    long fromUnix = Long(row, "fromUnix", 0L);
+                    if (string.IsNullOrEmpty(id) || fromUnix <= 0L) continue;
+                    tiers.Add(new ChallengeTierStateDto { id = id, fromUnix = fromUnix });
                 }
 
             long day = Long(map, "day", 0L);

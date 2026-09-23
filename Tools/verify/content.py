@@ -2670,7 +2670,10 @@ def check_challenges(keys, warnings):
     # sentence the shelf's prices are measured against.
     MAX_FREE, MAX_PLAYS, MAX_GEMS, MAX_DAYS, MAX_TIERS = 100, 1000, 100000, 365, 16
     MAX_COINS, MAX_XP, HARD_MAX_CLEARS = 200, 1000, 1000000
+    MAX_DAILY_COINS = 10000            # ChallengeLimits.MaxDailyCoins
     DEFAULTS = {"freePlays": 2, "coins": 40, "xp": 20, "maxClears": 25000}
+    RETIRED_GENRES = ("sudoku", "mines", "tetris")   # ChallengeGenres.Retired
+    RETIRED_TIERS = ()                                # ChallengeTable.RetiredTierIds
 
     def key_ok(name):
         return isinstance(name, str) and 1 <= len(name) <= 32 and all(
@@ -2709,6 +2712,8 @@ def check_challenges(keys, warnings):
         where = f"deal '{tid}'" if tid else "an unnamed deal"
         if not key_ok(tid):
             errors.append(f"{where} needs an id of 1-32 lower-case letters, digits or underscores")
+        elif tid in RETIRED_TIERS:
+            errors.append(f"{where} names a retired deal id, which may never be re-minted (invariant 5f)")
         elif tid in tier_ids:
             errors.append(f"{where} is listed twice")
         tier_ids.add(tid)
@@ -2734,6 +2739,11 @@ def check_challenges(keys, warnings):
                 errors.append(f"genre '{genre}' needs string '{key}'")
 
     n = len(genres_shipped)
+    top_tier = max(tiers, key=lambda t: t.get("plays", 0)) if tiers else None
+    top_plays = top_tier.get("plays", 0) if top_tier else free
+    if top_plays * n * coins > MAX_DAILY_COINS:
+        errors.append(f"the largest deal could pay {top_plays * n * coins:,} credits a day across {n} genre(s), "
+                      f"above the {MAX_DAILY_COINS:,} ceiling (ChallengeLimits.MaxDailyCoins)")
     print(f"       allowance: {free} free play(s) of each of {n} genre(s) a day; "
           f"a clear pays {coins} credits and {xp} XP, up to {max_clears:,} lifetime clears "
           f"({max_clears * xp:,} XP)")
@@ -2747,9 +2757,14 @@ def check_challenges(keys, warnings):
     per_genre = {}
     for r in rows:
         per_genre[r.get("genre")] = per_genre.get(r.get("genre"), 0) + 1
+    import math
     for genre in genres_shipped:
         c = per_genre.get(genre, 0)
-        print(f"       {genre:<8} {c} level(s): slot nought visits every level once per {c}-day cycle")
+        # A per-day ranking (56f): every level is seen in about n ln n days on average, and a
+        # level is added without re-dealing the others.
+        expect = int(round(c * (math.log(c) + 0.5772) + 0.5)) if c > 1 else 1
+        print(f"       {genre:<8} {c} level(s): ranked afresh each day, never yesterday's opener; "
+              f"every level seen in about {expect} day(s)")
         top = max([free] + [t.get("plays", 0) for t in tiers])
         if c < top:
             warnings.append(f"genre '{genre}' has {c} level(s) against a largest allowance of {top} plays a day; "
@@ -2767,7 +2782,9 @@ def check_challenges(keys, warnings):
         seen.add(cid)
 
         genre = row.get("genre")
-        if genre not in CHALLENGE_GENRES:
+        if genre in RETIRED_GENRES:
+            errors.append(f"{where} names genre '{genre}', which was withdrawn and may never come back under that spelling (invariant 5f)")
+        elif genre not in CHALLENGE_GENRES:
             errors.append(f"{where} names genre '{genre}', which this build does not play")
 
         for key in (f"challenge.{cid}.name", f"challenge.{cid}.blurb"):

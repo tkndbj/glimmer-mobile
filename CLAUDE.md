@@ -930,12 +930,14 @@ is where they are written down, not what they mean.
 56d. **Today's row is `day mod n` over the slate, stored nowhere** (45b), and the list draws the
    whole slate with today's badged — narrowing it to one is a line in `DailyChallengesScreen`, left
    for the day the four are judged.
-56f. **A card is a genre and a level is the calendar's answer.** Each genre's rows are walked
-   in cycles of `n` days: one seeded shuffle per cycle, day `d` starting at position `d` of it and
-   the day's slots walking the ring from there (`ChallengeCalendar`). So every player on one day
-   deals the same sequence, slot nought visits every level once per cycle, two neighbouring days
-   never open on the same level, and nothing is stored. Adding a level is a row; the cycles re-deal
-   and that is accepted (45b). A genre with fewer rows than the largest allowance repeats a level
+56f. **A card is a genre and a level is the calendar's answer.** Each day every row of a genre is
+   ranked by a hash of the genre, the row's id and the day, the day's sequence is the rows in rank
+   order, and yesterday's opener is moved to the end of the ring (`ChallengeCalendar`). So every
+   player on one day deals the same sequence, no two days open on the same level, and **adding a
+   level re-deals nothing** — a new row takes its own rank, the others keep theirs. What it gives
+   up is exact coverage: a level is seen in about `n ln n` days rather than exactly `n`, chosen
+   over a shuffled cycle on 2026-09-23 because a cycle re-dealt the whole slate on every content
+   drop. Nothing is stored. A genre with fewer rows than the largest allowance repeats a level
    within a day, and `content.py` warns.
 56g. **A play is spent when it is dealt, never when it ends** (`ChallengeLedger.Begin`), or leaving
    a losing board would be a free retry for ever. A win advances to the next slot; a loss retries
@@ -943,12 +945,20 @@ is where they are written down, not what they mean.
    (`ChallengePlay`). The block is its own top-level save key (`challenges`, v34), by the owner's
    instruction that a challenge shares nothing with the core game — which cost the whole of 12a,
    **and the rules release goes out before the client.**
-56h. **A deal is the season pass's shape** (47e): bought with gems under a derived id
-   (`chaltier:{tier}:{fromDay}`) the server prices against the published row and turns into an
-   entitlement on the **wallet** document in the same transaction. One date per tier joined by
-   `max`, the window derived from the row's `days` (48c); a larger deal under a running one is an
-   upgrade, a smaller or equal one is refused, and a refused debit takes the deal back
-   (`OnSpendRejected`). The client's copy draws the page and gates nothing that pays.
+56h. **A deal is the season pass's shape** (47e): bought with gems under a derived id the server
+   prices against the published row and turns into an entitlement on the **wallet** document in the
+   same transaction. **A window is exactly its `days` of the clock from the instant it was bought**
+   — the save holds one instant per tier joined by `max` (48c) — and the server, holding only the
+   day off the spend id, covers day keys `from .. from + days` *inclusive*, one key wider than the
+   instant window could reach and never narrower, so a play on the last partial day is paid.
+   **An upgrade is the difference and inherits the window**: under a running deal a bigger one
+   costs `target - running` gems and ends when the running one would have, derived from the deal
+   the wallet already holds and never stored (`ChallengeAllowance.Price` / `dealPrice`,
+   `challengeUpgradeCases`). The id `chaltier:{tier}:{fromDay}:{boughtDay}` names the window it
+   inherits and the day the gems left; a fresh purchase is accepted at full price whatever runs,
+   because the device is the one refusing a pointless buy. A smaller or equal deal under a running
+   one is refused; a refused debit takes the deal back (`OnSpendRejected`). The client's copy draws
+   the page and gates nothing that pays.
 56i. **A cleared level pays credits as a claim and XP by derivation** — 9f's sentence, said of a
    puzzle. The claim `chal:{day}:{genre}:{win}:{currency}` is re-priced from the published rate and
    **bounded by the win's ordinal against the allowance the wallet's deals give that day**, so a
@@ -969,7 +979,12 @@ is where they are written down, not what they mean.
    (`challenge.genre.{spelling}.*`, `challenge.tier.{id}.name`), and a written nought in a reward
    field withdraws the payment on both sides rather than inheriting — a rate beside no ceiling is
    refused by `content.py` and the seeder, because the two halves must read a published block
-   byte for byte.
+   byte for byte. **A withdrawn spelling or deal id is refused by name at read** (`ChallengeGenres.Retired`,
+   `ChallengeTable.RetiredTierIds`, mirrored by both gates) and goes in the spent table. **And the
+   largest deal's daily maximum is gated** under `ChallengeLimits.MaxDailyCoins` (10,000, the
+   Infinite lane's ceiling) by the reader, `content.py` and the seeder — the allowance bounds a
+   genre, this bounds the file, so a fifth genre or a raised rate cannot quietly out-earn the
+   rest of the game.
 56e. **Three genres were built, played and withdrawn the same day** (2026-09-22, the owner's call
    after playing all seven): Sudoku, Minefield (minesweeper) and Stack (tetris), with the input
    kinds and the "woken raider" only they used. Their spellings are refused at read like any
@@ -1060,6 +1075,10 @@ being kept, because that chapter never left the working tree.
   models two dwelling rungs wear under new ids — minting a new id rather than promoting the decor one is
   what keeps the stock honest.
 - **The ad placement `run_continue`**; **the map sprite `boat`**.
+- **The challenge genre spellings `sudoku` `mines` `tetris`** (`ChallengeGenres.Retired`, refused
+  by name at read and by both content gates): a spelling keys a lifetime row in the save. No
+  challenge **deal id** has been retired yet; `ChallengeTable.RetiredTierIds` is where the first
+  one goes, because a tier id is a spend id and a wallet field.
 - **Withdrawn siege reels** (art addresses, so nobody re-mints one): the baked casts `kayMon` / `kayBrute` /
   `kayBulwark` and `ironMon` / `ironBrute` / `ironBulwark` with their twelve `_swing` reels each, and the
   boss walk reels `caller_walk` / `snare_walk` / `clad_walk`. The boss reels `caller`, `snare` and `clad`
@@ -1150,6 +1169,9 @@ guess — verify offline.
   the picture the owner asked for, and it is shared by three screens, so it answers for all
   three — **which matters because the two turret ceremonies have no mirror of their own** and
   are judged on a device or not at all.
+- **A Push route:** `python Tools/push_route.py --seats` derives the step-shortest route through
+  every shipped sokoban row and the move on which each colour first seats — the route constant in
+  `ChallengeTests` and the row's wave timing are both read off it, never typed. A minute or two a row.
 - **The daily challenges:** `python Tools/render_challenges.py` (`--id`, `--contact`, `--phone`)
   draws every shipped row's screen at rest off `challenges.json` with the real sprites — the only
   thing that can see the bands: it found the mustered raiders standing under the readout row and
@@ -1652,12 +1674,26 @@ on a fresh clone).
 
 ## Owed
 
+**The challenge screen was re-cut on 2026-09-23 at the owner's instruction ("the hills are too
+small"), and none of it has been in the Editor.** The board is asked first and the hill takes the
+rest (`PuzzleView.BandWanted`, `ChallengeScreen.HillLeastUnits`/`HillMostUnits`): every board was
+re-authored wide and short — Pairs 4x4 → **6x3** (nine pairs, a fifth wave), Pipeworks 4x5 →
+**6x4**, Merge 4x4 → **6x3**, Push 7x8 → **10x6** with a new route and its waves retimed off the
+seat order — so the hill went from 3.3 siege cells to **5.2–5.4** on a 16:9 phone, and the four
+posts draw at `ChallengeHillView.PostScale` (.72) of a siege turret with the raiders unchanged.
+The pipes view declares the gem and ring it hangs past its plate (`EdgeRows`), or they were drawn
+into the rampart. No id moved, no loc key, no server, no schema. Offline green: `compile.py`,
+`ChallengeTests` 26/26 (every row won at full line health — margins printed), `content.py`,
+`loc.py`, `make_challenge_vectors.py --check`, `render_challenges.py` on both canvases. **What no
+gate can answer**: whether a 98-unit Push cell swipes comfortably, and whether the taller hill
+reads as a walk worth watching rather than as empty stone.
+
 **The daily challenges' foundation landed on 2026-09-22 (56f–56k) and none of it has been in the
 Editor, on a device or on the server.** Save schema **v34** (a new top-level key, `challenges`),
 `ChallengeLedger`, `ChallengeCalendar`'s rotation, the deals (`ChallengeTierOverlay`), the coin
 claim and the XP tally, the hub badge, `challenges.json` **v2** with the three blocks (2 free plays;
-bronze 120 gems / silver 200 / gold 500 for 7 days of 5 / 10 / 25 plays a genre; 40 credits and
-20 XP a clear). Five new C# files have **no `.meta` yet** (`ChallengeRewards.cs`,
+bronze 120 gems / silver 200 / gold 500 for **30 days** of 5 / 10 / 25 plays a genre, upgradable
+for the difference; 40 credits and 20 XP a clear). Five new C# files have **no `.meta` yet** (`ChallengeRewards.cs`,
 `ChallengeLedger.cs`, `ChallengeTierOverlay.cs`, `ChallengeLedgerTests.cs`,
 `ChallengeRewardTests.cs`); Unity mints them on the next focus. Offline green: `compile.py` (all
 sixteen), `ChallengeLedgerTests` 19/19, `ChallengeRewardTests` 4/4, `CloudWireTests`,
@@ -1676,9 +1712,8 @@ addressed off the genre spelling (`ChallengeArt.GenreMark`), listed by hand in
 `AssetManifest.UiSprites` and held to the enum by `ChallengeLedgerTests.EveryGenresMarkIsPreloadedAndOnDisk`.
 **They are on disk and unaddressed**: `artnames.py` reads four errors until `▸ Addressables ▸
 Sync All Assets` and save (invariant 7a working, as `ic_boost_up` was) — until then every card
-draws a white square where the picture goes (7b). **Two
-decisions are the owner's**: a deal is a *window* of seven days rather than a permanent unlock
-or a single day (the season pass's shape; `days` is content), and the rates are a first guess
+draws a white square where the picture goes (7b). **One
+decision is the owner's**: the rates are a first guess
 against the printed economy — a full free day is 320 credits, a gold day at four genres 4,000.
 **What no gate can answer**: whether "Today: Pairs" reads as a level name when the only level is
 named after its genre, whether a spent card reads as *tomorrow* rather than as broken, and

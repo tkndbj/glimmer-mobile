@@ -5476,9 +5476,12 @@
     "carries the same one — and when those two disagree nothing crashes and nothing is",
     "refused: `buildCard` simply *drops* whatever the lower level gated (invariant 19a).",
     "",
-    "`challengeAllowanceCases` is the deal rule: which held deal governs a day and how many",
-    "plays it allows. The client draws plays off it and the server bounds coin claims by it;",
-    "a disagreement is a claim refused for a play the page offered (45d).",
+    "`challengeAllowanceCases` is the deal rule: which held deal governs an instant and how",
+    "many plays it allows (`allowance`, the client's reading off `held` instants and `now`),",
+    "beside the server's reading off the days (`serverDay`, `serverAllowance`), which is one",
+    "day more generous at the end of a window on purpose. `challengeUpgradeCases` is the",
+    "upgrade price: the difference under a running smaller deal, sharing its window. A",
+    "disagreement is a claim refused for a play the page offered (45d), or gems taken back.",
     "",
     "`challengeDefaults` is what both sides use when no `challenges` block has been published.",
     "They agree on purpose rather than failing closed, for the endless block's reason.",
@@ -6771,74 +6774,171 @@
     {
       "name": "nothing held is the free figure",
       "held": {},
-      "day": 100,
-      "allowance": 2
+      "now": 8683200,
+      "allowance": 2,
+      "serverDay": 100,
+      "serverAllowance": 2
     },
     {
-      "name": "a deal bought today covers today",
+      "name": "a deal bought this instant covers it",
       "held": {
-        "small": 100
+        "small": 8683200
       },
-      "day": 100,
-      "allowance": 4
+      "now": 8683200,
+      "allowance": 4,
+      "serverDay": 100,
+      "serverAllowance": 4
     },
     {
-      "name": "the last day of a three-day deal is the second day after purchase",
+      "name": "a three-day deal still runs a second before three days are up",
       "held": {
-        "small": 100
+        "small": 8683200
       },
-      "day": 102,
-      "allowance": 4
+      "now": 8942399,
+      "allowance": 4,
+      "serverDay": 103,
+      "serverAllowance": 4
     },
     {
-      "name": "the day after that is free again",
+      "name": "and is free again exactly three days after purchase",
       "held": {
-        "small": 100
+        "small": 8683200
       },
-      "day": 103,
-      "allowance": 2
+      "now": 8942400,
+      "allowance": 2,
+      "serverDay": 103,
+      "serverAllowance": 4
     },
     {
       "name": "a deal bought tomorrow does not cover today",
       "held": {
-        "small": 101
+        "small": 8769600
       },
-      "day": 100,
-      "allowance": 2
+      "now": 8683200,
+      "allowance": 2,
+      "serverDay": 100,
+      "serverAllowance": 2
     },
     {
       "name": "the larger of two overlapping deals governs",
       "held": {
-        "small": 100,
-        "large": 101
+        "small": 8683200,
+        "large": 8769600
       },
-      "day": 102,
-      "allowance": 9
+      "now": 8856000,
+      "allowance": 9,
+      "serverDay": 102,
+      "serverAllowance": 9
     },
     {
-      "name": "the smaller resumes after the larger ends",
+      "name": "an upgrade sharing the window ends with it",
       "held": {
-        "small": 104,
-        "large": 100
+        "small": 8683200,
+        "large": 8683200
       },
-      "day": 105,
-      "allowance": 4
+      "now": 8942399,
+      "allowance": 9,
+      "serverDay": 103,
+      "serverAllowance": 9
     },
     {
       "name": "a deal this table does not sell is ignored",
       "held": {
-        "huge": 100
+        "huge": 8683200
       },
-      "day": 100,
-      "allowance": 2
+      "now": 8683200,
+      "allowance": 2,
+      "serverDay": 100,
+      "serverAllowance": 2
     },
     {
-      "name": "a nought date is not a purchase",
+      "name": "a nought instant is not a purchase",
       "held": {
         "small": 0
       },
-      "day": 100,
-      "allowance": 2
+      "now": 8683200,
+      "allowance": 2,
+      "serverDay": 100,
+      "serverAllowance": 2
+    },
+    {
+      "name": "on the last partial day the server is one day more generous than the client",
+      "held": {
+        "small": 8683200
+      },
+      "now": 8946000,
+      "allowance": 2,
+      "serverDay": 103,
+      "serverAllowance": 4
+    }
+  ],
+  "challengeUpgradeCases": [
+    {
+      "name": "with nothing running a deal costs its full price",
+      "held": {},
+      "now": 8683200,
+      "target": "small",
+      "price": 10,
+      "upgrades": ""
+    },
+    {
+      "name": "the larger one too",
+      "held": {},
+      "now": 8683200,
+      "target": "large",
+      "price": 30,
+      "upgrades": ""
+    },
+    {
+      "name": "under a running smaller deal the larger costs the difference",
+      "held": {
+        "small": 8683200
+      },
+      "now": 8769600,
+      "target": "large",
+      "price": 20,
+      "upgrades": "small"
+    },
+    {
+      "name": "the running deal itself is not for sale",
+      "held": {
+        "small": 8683200
+      },
+      "now": 8769600,
+      "target": "small",
+      "price": 0,
+      "upgrades": ""
+    },
+    {
+      "name": "a smaller deal under a running larger one is refused",
+      "held": {
+        "large": 8683200
+      },
+      "now": 8769600,
+      "target": "small",
+      "price": 0,
+      "upgrades": ""
+    },
+    {
+      "name": "after the window a purchase is a fresh full-price one",
+      "held": {
+        "small": 8683200
+      },
+      "now": 8942400,
+      "target": "large",
+      "price": 30,
+      "upgrades": ""
+    },
+    {
+      "name": "an expired deal held beside a running one does not discount",
+      "held": {
+        "small": 7819200,
+        "large": 8683200
+      },
+      "now": 8683200,
+      "target": "large",
+      "price": 0,
+      "upgrades": ""
     }
   ]
 }

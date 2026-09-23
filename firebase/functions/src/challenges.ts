@@ -210,8 +210,35 @@ export function readChallengeTiers(raw: unknown): ChallengeTiersHeld {
 }
 
 /**
- * Plays of each genre a day on `day`: the covering deal with the most plays, else the free
- * figure. Mirrors `ChallengeAllowance.On` and is pinned by `challengeAllowanceCases`.
+ * The running deal with the most plays on `day`, or null.
+ *
+ * **A window is a day here and an instant on the client, on purpose** (56h). The save holds
+ * the instant a window began and the device covers exactly `days` of the clock from it; this
+ * side holds only the day off the spend id, so it covers day keys `from .. from + days`
+ * **inclusive** — one key wider than the instant window could ever reach, never narrower —
+ * so a play dealt on the window's last partial day is paid rather than refused. Pinned by
+ * `challengeAllowanceCases`, which carries both readings.
+ */
+export function governingOn(
+  tiers: ChallengeTierConfig[],
+  held: ChallengeTiersHeld,
+  day: number
+): ChallengeTierConfig | null {
+  let best: ChallengeTierConfig | null = null;
+
+  for (const tier of tiers) {
+    const from = held[tier.id];
+    if (typeof from !== "number" || from <= 0) continue;
+    if (!(day >= from && day <= from + tier.days)) continue;
+    if (best === null || tier.plays > best.plays) best = tier;
+  }
+
+  return best;
+}
+
+/**
+ * Plays of each genre a day on `day`: the governing deal's figure, else the free figure.
+ * Mirrors `ChallengeAllowance.On` and is pinned by `challengeAllowanceCases`.
  */
 export function allowanceOn(
   tiers: ChallengeTierConfig[],
@@ -219,16 +246,44 @@ export function allowanceOn(
   day: number,
   freePlays: number
 ): number {
-  let best: ChallengeTierConfig | null = null;
+  const best = governingOn(tiers, held, day);
+  return best ? best.plays : freePlays;
+}
 
-  for (const tier of tiers) {
-    const from = held[tier.id];
-    if (typeof from !== "number" || from <= 0) continue;
-    if (!(day >= from && day < from + tier.days)) continue;
-    if (best === null || tier.plays > best.plays) best = tier;
+/**
+ * What a deal debit is owed, or null when it is refused.
+ *
+ * Two shapes, told apart by the id (`SpendEntry.ChallengeTierId`). A **fresh** purchase names
+ * its own day twice and costs the full price — accepted whatever else is running, because the
+ * full price is the most any purchase could cost and the device is the one refusing a pointless
+ * buy for the player's sake. An **upgrade** names an earlier window it inherits, and is owed the
+ * difference over the largest smaller deal this wallet holds *with that very start* and still
+ * running on the purchase day; anything else is refused, because an upgrade over a window this
+ * server never sold is a discount on nothing. Mirrors `ChallengeAllowance.Price`; pinned by
+ * `challengeUpgradeCases`.
+ */
+export function dealPrice(
+  config: ChallengesConfig,
+  held: ChallengeTiersHeld,
+  tierId: string,
+  fromDay: number,
+  boughtDay: number
+): { price: number; upgrades: string } | null {
+  const tier = findTier(config, tierId);
+  if (!tier || fromDay <= 0 || boughtDay < fromDay) return null;
+
+  if (fromDay === boughtDay) return { price: tier.gems, upgrades: "" };
+
+  let running: ChallengeTierConfig | null = null;
+  for (const other of config.tiers) {
+    if (held[other.id] !== fromDay) continue;
+    if (other.plays >= tier.plays) continue;
+    if (!(boughtDay <= fromDay + other.days)) continue;
+    if (running === null || other.plays > running.plays) running = other;
   }
 
-  return best ? best.plays : freePlays;
+  if (!running) return null;
+  return { price: Math.max(0, tier.gems - running.gems), upgrades: running.id };
 }
 
 /**
@@ -242,10 +297,13 @@ export function holdTier(held: ChallengeTiersHeld, tierId: string, fromDay: numb
   return next;
 }
 
-/** `chaltier:{tierId}:{fromDay}` — minted by `SpendEntry.ChallengeTierId`. */
+/** `chaltier:{tierId}:{fromDay}:{boughtDay}` — minted by `SpendEntry.ChallengeTierId`. */
 export interface ChallengeTierSpend {
   tierId: string;
+  /** The day the window began: the purchase day for a fresh deal, the running deal's start for an upgrade. */
   fromDay: number;
+  /** The day the gems left, which the purchase is windowed on. */
+  boughtDay: number;
 }
 
 export function isChallengeTierSpendId(id: string): boolean {
@@ -255,28 +313,31 @@ export function isChallengeTierSpendId(id: string): boolean {
 /**
  * Reads a deal debit back, or null.
  *
- * Strict on the day, for `parseEndlessClaim`'s reason: two spellings of one day would be two
- * windows for one purchase. Exactly three parts, a key-shaped tier and a plain positive integer.
+ * Strict on both days, for `parseEndlessClaim`'s reason: two spellings of one day would be two
+ * windows for one purchase. Exactly four parts, a key-shaped tier and two plain positive
+ * integers with the window never beginning after its purchase.
  */
 export function parseChallengeTierSpendId(id: string): ChallengeTierSpend | null {
   if (!isChallengeTierSpendId(id) || id.length > 64) return null;
 
   const parts = id.split(":");
-  if (parts.length !== 3) return null;
+  if (parts.length !== 4) return null;
 
   const tierId = parts[1];
   if (!KEY.test(tierId)) return null;
 
   const fromDay = strictInt(parts[2]);
-  if (fromDay === null || fromDay <= 0) return null;
+  const boughtDay = strictInt(parts[3]);
+  if (fromDay === null || boughtDay === null || fromDay <= 0 || boughtDay < fromDay) return null;
 
-  return { tierId, fromDay };
+  return { tierId, fromDay, boughtDay };
 }
 
 /**
- * How many days either side of today a deal may be dated. A purchase is written the moment it
- * is made, so anything further off is a wrong clock or a backlog somebody assembled; refused
- * rather than left pending (13a read the other way), and the client takes the deal back.
+ * How many days either side of today a deal's *purchase* day may be dated. A purchase is
+ * written the moment it is made, so anything further off is a wrong clock or a backlog somebody
+ * assembled; refused rather than left pending (13a read the other way), and the client takes
+ * the deal back. The window's start day is not windowed — an upgrade names a start weeks old.
  */
 export const MAX_TIER_DAYS_AHEAD = 2;
 export const MAX_TIER_DAYS_BEHIND = 2;

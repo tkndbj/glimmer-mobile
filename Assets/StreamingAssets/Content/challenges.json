@@ -9,9 +9,9 @@
     "freePlays": 2
   },
   "tiers": [
-    { "id": "bronze", "gems": 120, "plays": 5,  "days": 7 },
-    { "id": "silver", "gems": 200, "plays": 10, "days": 7 },
-    { "id": "gold",   "gems": 500, "plays": 25, "days": 7 }
+    { "id": "bronze", "gems": 120, "plays": 5,  "days": 30 },
+    { "id": "silver", "gems": 200, "plays": 10, "days": 30 },
+    { "id": "gold",   "gems": 500, "plays": 25, "days": 30 }
   ],
   "rewards": {
     "coins": 40,
@@ -23,13 +23,12 @@
       "id": "d01_pairs",
       "genre": "pairs",
       "seed": 1101,
-      "width": 4,
-      "height": 4,
+      "width": 6,
+      "height": 3,
       "rows": [
-        "rgbr",
-        "ygyb",
-        "brgy",
-        "gybr"
+        "rgbyrb",
+        "ygbrgb",
+        "brygyb"
       ],
       "hill": 6,
       "bolts": 2,
@@ -37,24 +36,24 @@
         "0 r2 g2",
         "4 b2 y2",
         "8 r2 b2",
-        "12 g2 y2"
+        "12 g2 y2",
+        "16 r2 b2"
       ]
     },
     {
       "id": "d04_pipes",
       "genre": "pipes",
       "seed": 1104,
-      "width": 4,
-      "height": 5,
+      "width": 6,
+      "height": 4,
       "rows": [
-        "NS/1 NS NS/1 NS/3",
-        "NES/2 NW/1 NES/3 NW/2",
-        "NES/1 SW/2 NES/2 SW/3",
-        "NS/1 NS NS NS/1",
-        "NS NS/1 NS/1 NS"
+        "NS/1 ES/1 NS/2 NS/1 SW/2 NS/3",
+        "NE/2 SW/1 NS/3 NE/1 SW/3 NS/1",
+        "EW/1 NS/2 NS/1 NE/2 NS/2 NS/2",
+        "NW/3 NS/1 NS/2 EW/1 NS/3 NS/1"
       ],
-      "sources": "rgby",
-      "sinks": "gryb",
+      "sources": "r.gb.y",
+      "sinks": ".rg.by",
       "hill": 9,
       "bolts": 1,
       "waves": [
@@ -68,13 +67,12 @@
       "id": "d05_merge",
       "genre": "merge",
       "seed": 1105,
-      "width": 4,
-      "height": 4,
+      "width": 6,
+      "height": 3,
       "rows": [
-        "....",
-        ".1..",
-        "..1.",
-        "...."
+        "......",
+        ".1..1.",
+        "......"
       ],
       "target": 6,
       "hill": 8,
@@ -92,34 +90,30 @@
       "id": "d06_sokoban",
       "genre": "sokoban",
       "seed": 1106,
-      "width": 7,
-      "height": 8,
+      "width": 10,
+      "height": 6,
       "rows": [
-        "#######",
-        "#..R..#",
-        "#.....#",
-        "#@..B.#",
-        "#.....#",
-        "#..G..#",
-        "#Y....#",
-        "#######"
+        "##########",
+        "#R...#...#",
+        "#@.......#",
+        "#....#..B#",
+        "#..Y...G.#",
+        "##########"
       ],
       "gems": [
-        ".......",
-        ".......",
-        "..r.b..",
-        ".......",
-        "..g.y..",
-        ".......",
-        ".......",
-        "......."
+        "..........",
+        "..........",
+        "...r..b...",
+        "..g.......",
+        ".....y....",
+        ".........."
       ],
       "hill": 16,
       "bolts": 1,
       "waves": [
-        "0 b2",
-        "8 y2",
-        "14 r2",
+        "0 r2",
+        "8 b2",
+        "14 y2",
         "20 g2"
       ]
     }

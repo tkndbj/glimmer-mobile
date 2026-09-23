@@ -85,9 +85,9 @@ namespace GlimmerGrove.Tests
                 allowance = new ChallengeAllowanceDto { freePlays = freePlays },
                 tiers = new[]
                 {
-                    new ChallengeTierDto { id = "bronze", gems = 120, plays = 5, days = 7 },
-                    new ChallengeTierDto { id = "silver", gems = 200, plays = 10, days = 7 },
-                    new ChallengeTierDto { id = "gold", gems = 500, plays = 25, days = 7 },
+                    new ChallengeTierDto { id = "bronze", gems = 120, plays = 5, days = 30 },
+                    new ChallengeTierDto { id = "silver", gems = 200, plays = 10, days = 30 },
+                    new ChallengeTierDto { id = "gold", gems = 500, plays = 25, days = 30 },
                 },
                 rewards = new ChallengeRewardDto { coins = coins, xp = xp, maxClears = 25000 },
                 challenges = rows.ToArray(),
@@ -216,7 +216,7 @@ namespace GlimmerGrove.Tests
 
         // ------------------------------------------------------------------ the rotation
         [Test]
-        public void EveryPlayerDealsTheSameLevelAndSlotNoughtWalksEveryLevelOncePerCycle()
+        public void EveryPlayerDealsTheSameLevelAndNoDayOpensOnYesterdays()
         {
             var table = ChallengeRules.Table;
 
@@ -224,25 +224,33 @@ namespace GlimmerGrove.Tests
             var b = ChallengeCalendar.Slot(table, ChallengeGenre.Pairs, Day, 0);
             Assert.AreSame(a, b, "one day, one genre, one level, on every device");
 
-            // Over a cycle of n days the first level visits every row exactly once.
             int n = table.RowsOf(ChallengeGenre.Pairs).Count;
-            for (int cycle = 0; cycle < 4; cycle++)
-            {
-                var seen = new HashSet<string>();
-                for (int d = 0; d < n; d++)
-                    seen.Add(ChallengeCalendar.Slot(table, ChallengeGenre.Pairs, cycle * n + d, 0).Id);
-                Assert.AreEqual(n, seen.Count, $"cycle {cycle} repeated a first level");
-            }
 
-            // Within a day the sequence is the ring from the day's start, so k wins see k
-            // distinct levels while k < n.
+            // Within a day the sequence is a ring of every row, so k wins see k distinct levels
+            // while k < n, and the ring wraps after.
             var day = ChallengeCalendar.Sequence(table, ChallengeGenre.Pairs, Day);
+            Assert.AreEqual(n, day.Count);
             Assert.AreEqual(n, new HashSet<string>(day.ConvertAll(r => r.Id)).Count);
             Assert.AreSame(day[0], ChallengeCalendar.Slot(table, ChallengeGenre.Pairs, Day, n), "the ring wraps");
 
-            // Two consecutive days do not open on the same level.
-            Assert.AreNotSame(ChallengeCalendar.Slot(table, ChallengeGenre.Pairs, Day, 0),
-                              ChallengeCalendar.Slot(table, ChallengeGenre.Pairs, Day + 1, 0));
+            // Consecutive days almost never open on the same level: about one day in n², which
+            // at three rows is one in nine, against one in three with no exclusion at all. Pinned
+            // as a rate rather than as a guarantee, because that is what a memoryless rule is.
+            int repeats = 0;
+            for (int d = Day - 900; d < Day + 900; d++)
+                if (ReferenceEquals(ChallengeCalendar.Slot(table, ChallengeGenre.Pairs, d, 0),
+                                    ChallengeCalendar.Slot(table, ChallengeGenre.Pairs, d + 1, 0))) repeats++;
+            Assert.Less(repeats, 1800 / 5, $"{repeats} repeats in 1800 days is worse than the rule promises");
+
+            // Every row opens some day: coverage is probabilistic rather than exact, and over a
+            // year of days three rows are certain.
+            var seen = new HashSet<string>();
+            for (int d = 0; d < 365; d++) seen.Add(ChallengeCalendar.Slot(table, ChallengeGenre.Pairs, Day + d, 0).Id);
+            Assert.AreEqual(n, seen.Count, "a row never opened in a year");
+
+            // Two genres rank apart, and the order really is per day.
+            Assert.AreNotEqual(ChallengeCalendar.Sequence(table, ChallengeGenre.Pairs, Day).ConvertAll(r => r.Id),
+                               ChallengeCalendar.Sequence(table, ChallengeGenre.Pairs, Day + 5).ConvertAll(r => r.Id));
 
             // A genre with one row deals it every time, and a negative day is still a day.
             Assert.AreEqual("m0", ChallengeCalendar.Slot(table, ChallengeGenre.Merge, Day, 7).Id);
@@ -250,18 +258,34 @@ namespace GlimmerGrove.Tests
             Assert.IsNull(ChallengeCalendar.Slot(table, ChallengeGenre.Sokoban, Day, 0), "a genre with no rows deals nothing");
         }
 
+        /// <summary>
+        /// The reason the ring is a per-day ranking rather than a shuffled cycle (56f): adding a
+        /// level must not re-deal the levels already there. A new row takes its own rank on each
+        /// day; every other row keeps its place relative to the others.
+        /// </summary>
         [Test]
-        public void TheShuffleIsSeededByTheGenreAndTheCycle()
+        public void AddingALevelDoesNotReDealTheOthers()
         {
-            var one = ChallengeCalendar.Order(ChallengeGenre.Pairs, 30, 10);
-            var same = ChallengeCalendar.Order(ChallengeGenre.Pairs, 35, 10);
-            var next = ChallengeCalendar.Order(ChallengeGenre.Pairs, 40, 10);
-            var other = ChallengeCalendar.Order(ChallengeGenre.Merge, 30, 10);
+            var before = Table(4, 1);
+            var after = Table(5, 1);   // p0..p3 unchanged, p4 appended
 
-            CollectionAssert.AreEqual(one, same, "days 30 and 35 are the same cycle of ten");
-            CollectionAssert.AreNotEqual(one, next, "day 40 opens a new cycle");
-            CollectionAssert.AreNotEqual(one, other, "two genres with ten rows shuffle apart");
-            CollectionAssert.AreEquivalent(new[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }, one);
+            int reopened = 0;
+            for (int d = Day; d < Day + 365; d++)
+            {
+                string was = ChallengeCalendar.Slot(before, ChallengeGenre.Pairs, d, 0).Id;
+                string now = ChallengeCalendar.Slot(after, ChallengeGenre.Pairs, d, 0).Id;
+                if (now == "p4") { reopened++; continue; }
+
+                // The one knock-on a stateless rule has: the day after one the new row's rank
+                // wins, yesterday's exclusion moves off the old opener. Any other change is a
+                // re-deal, which is what this fixture exists to refuse.
+                bool knockOn = ChallengeCalendar.Ranked(after.RowsOf(ChallengeGenre.Pairs), ChallengeGenre.Pairs, d - 1)[0].Id == "p4";
+                if (was != now && !knockOn)
+                    Assert.Fail($"day {d} opened on {was} and now opens on {now}: adding p4 re-dealt the old rows");
+            }
+
+            Assert.Greater(reopened, 365 / 10, "the new row opens far fewer days than its share");
+            Assert.Less(reopened, 365 / 3, "the new row opens far more days than its share");
         }
 
         // ------------------------------------------------------------------ the allowance
@@ -321,62 +345,106 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(5, ChallengeLedger.PlaysLeft(ChallengeGenre.Pairs), "a fresh day under a running deal");
             Assert.AreEqual(0, ChallengeLedger.WinsToday(ChallengeGenre.Pairs));
             Assert.AreEqual(5, ChallengeLedger.LifetimeClears, "the tally is for ever");
-            Assert.AreEqual(6, ChallengeLedger.DaysLeft(ChallengeRules.Table.FindTier("bronze")));
+            Assert.AreEqual(29, ChallengeLedger.DaysLeft(ChallengeRules.Table.FindTier("bronze")));
         }
 
         // ------------------------------------------------------------------ the deals
         [Test]
-        public void ADealRaisesTheAllowanceForItsWindowAndABiggerOneIsAnUpgrade()
+        public void ADealRunsForExactlyItsDaysOfTheClock()
         {
             var bronze = ChallengeRules.Table.FindTier("bronze");
-            var silver = ChallengeRules.Table.FindTier("silver");
 
             Assert.AreEqual(TierBuy.TooPoor, ChallengeLedger.TryBuyTier(bronze));
-            Fund(320);
-
-            Assert.AreEqual(TierBuy.Bought, ChallengeLedger.TryBuyTier(bronze));
-            Assert.AreEqual(5, ChallengeLedger.Allowance);
-            Assert.AreEqual(200, PlayerProgression.Gems);
-            Assert.AreEqual(TierBuy.Held, ChallengeLedger.TryBuyTier(bronze));
-            Assert.AreEqual(200, PlayerProgression.Gems, "a running deal is not sold twice");
-
-            Assert.AreEqual(TierBuy.Bought, ChallengeLedger.TryBuyTier(silver), "a bigger deal is an upgrade");
-            Assert.AreEqual(10, ChallengeLedger.Allowance);
-            Assert.AreSame(silver, ChallengeLedger.HeldTier);
-            Assert.AreEqual(TierBuy.Lower, ChallengeLedger.TryBuyTier(bronze), "a smaller one under it buys nothing");
-            Assert.AreEqual(0, PlayerProgression.Gems);
-
-            // The window: seven days from purchase, that day included, then the free figure.
-            _clock.Now += 6L * DailyRules.SecondsPerDay;
-            Assert.AreEqual(10, ChallengeLedger.Allowance);
-            Assert.AreEqual(1, ChallengeLedger.DaysLeft(silver));
-            _clock.Now += DailyRules.SecondsPerDay;
-            Assert.AreEqual(2, ChallengeLedger.Allowance, "the eighth day is free again");
-            Assert.IsNull(ChallengeLedger.HeldTier);
-
-            // And it can be bought again for a fresh window.
             Fund(120);
             Assert.AreEqual(TierBuy.Bought, ChallengeLedger.TryBuyTier(bronze));
-            Assert.AreEqual(7, ChallengeLedger.DaysLeft(bronze));
+            Assert.AreEqual(5, ChallengeLedger.Allowance);
+            Assert.AreEqual(0, PlayerProgression.Gems);
+            Assert.AreEqual(TierBuy.Held, ChallengeLedger.TryBuyTier(bronze));
+            Assert.AreEqual(30, ChallengeLedger.DaysLeft(bronze));
+            Assert.AreEqual(30L * DailyRules.SecondsPerDay, ChallengeLedger.SecondsLeft(bronze));
+
+            // Thirty days of the clock from the instant of purchase, bought at noon: still
+            // running at noon less a second on the thirtieth day, gone at noon exactly.
+            _clock.Now = Noon + 30L * DailyRules.SecondsPerDay - 1L;
+            Assert.AreEqual(5, ChallengeLedger.Allowance);
+            Assert.AreEqual(1, ChallengeLedger.DaysLeft(bronze), "the last second is still the last day");
+            Assert.AreEqual(1L, ChallengeLedger.SecondsLeft(bronze));
+
+            _clock.Now += 1L;
+            Assert.AreEqual(2, ChallengeLedger.Allowance, "exactly thirty days after purchase it is free again");
+            Assert.IsNull(ChallengeLedger.HeldTier);
+            Assert.AreEqual(0, ChallengeLedger.DaysLeft(bronze));
+
+            // And it can be bought again for a fresh window from that instant.
+            Fund(120);
+            Assert.AreEqual(TierBuy.Bought, ChallengeLedger.TryBuyTier(bronze));
+            Assert.AreEqual(30, ChallengeLedger.DaysLeft(bronze));
         }
 
         [Test]
-        public void TheDealDebitIsDerivedFromTheTierAndTheDay()
+        public void ABiggerDealUnderARunningOneCostsTheDifferenceAndSharesItsWindow()
         {
-            Fund(120);
+            var bronze = ChallengeRules.Table.FindTier("bronze");
+            var silver = ChallengeRules.Table.FindTier("silver");
+            var gold = ChallengeRules.Table.FindTier("gold");
+
+            Fund(500);
+            Assert.AreEqual(120, ChallengeLedger.PriceOf(bronze), "with nothing running the price is the full one");
+            Assert.AreEqual(TierBuy.Bought, ChallengeLedger.TryBuyTier(bronze));
+            Assert.AreEqual(380, PlayerProgression.Gems);
+
+            // Ten days in, silver costs the difference and inherits bronze's window.
+            _clock.Now += 10L * DailyRules.SecondsPerDay;
+            Assert.AreEqual(80, ChallengeLedger.PriceOf(silver));
+            Assert.AreSame(bronze, ChallengeLedger.Upgrades(silver));
+            Assert.AreEqual(0, ChallengeLedger.PriceOf(bronze), "the running deal itself is not for sale");
+            Assert.AreEqual(TierBuy.Bought, ChallengeLedger.TryBuyTier(silver));
+            Assert.AreEqual(300, PlayerProgression.Gems);
+            Assert.AreEqual(10, ChallengeLedger.Allowance);
+            Assert.AreSame(silver, ChallengeLedger.HeldTier);
+            Assert.AreEqual(20, ChallengeLedger.DaysLeft(silver), "the upgrade ends when bronze would have");
+            Assert.AreEqual(TierBuy.Lower, ChallengeLedger.TryBuyTier(bronze), "a smaller one under it buys nothing");
+
+            // And gold on top of silver costs what is left of gold's price: the three together
+            // never cost more than gold bought outright.
+            Assert.AreEqual(300, ChallengeLedger.PriceOf(gold));
+            Assert.AreSame(silver, ChallengeLedger.Upgrades(gold));
+            Assert.AreEqual(TierBuy.Bought, ChallengeLedger.TryBuyTier(gold));
+            Assert.AreEqual(0, PlayerProgression.Gems);
+            Assert.AreEqual(25, ChallengeLedger.Allowance);
+            Assert.AreEqual(20, ChallengeLedger.DaysLeft(gold));
+
+            // All three end together.
+            _clock.Now = Noon + 30L * DailyRules.SecondsPerDay;
+            Assert.AreEqual(2, ChallengeLedger.Allowance);
+            Assert.IsNull(ChallengeLedger.HeldTier);
+            Assert.AreEqual(500, ChallengeLedger.PriceOf(gold), "after the window a purchase is a fresh full-price one");
+        }
+
+        [Test]
+        public void TheDealDebitIsDerivedFromTheTierTheWindowsStartAndThePurchaseDay()
+        {
+            Fund(200);
             ChallengeLedger.TryBuyTier(ChallengeRules.Table.FindTier("bronze"));
+            _clock.Now += 3L * DailyRules.SecondsPerDay;
+            ChallengeLedger.TryBuyTier(ChallengeRules.Table.FindTier("silver"));
 
             var spends = Wallet.Ledger(Currency.Gems).PendingSpends;
-            Assert.AreEqual(1, spends.Count);
-            Assert.AreEqual(SpendEntry.ChallengeTierId("bronze", Day), spends[0].Id);
+            Assert.AreEqual(2, spends.Count);
+            Assert.AreEqual(SpendEntry.ChallengeTierId("bronze", Day, Day), spends[0].Id);
             Assert.AreEqual(120, spends[0].Amount);
+            Assert.AreEqual(SpendEntry.ChallengeTierId("silver", Day, Day + 3), spends[1].Id, "an upgrade names the window it inherits and the day it was bought");
+            Assert.AreEqual(80, spends[1].Amount);
 
-            Assert.IsTrue(SpendEntry.TryParseChallengeTierId("chaltier:bronze:20500", out string tier, out int from));
-            Assert.AreEqual("bronze", tier);
+            Assert.IsTrue(SpendEntry.TryParseChallengeTierId("chaltier:silver:20500:20503", out string tier, out int from, out int bought));
+            Assert.AreEqual("silver", tier);
             Assert.AreEqual(20500, from);
-            Assert.IsFalse(SpendEntry.TryParseChallengeTierId("pass:watch_0001", out _, out _));
-            Assert.IsFalse(SpendEntry.TryParseChallengeTierId("chaltier:bronze:0", out _, out _));
-            Assert.IsFalse(SpendEntry.TryParseChallengeTierId("chaltier:bronze:+5", out _, out _));
+            Assert.AreEqual(20503, bought);
+            Assert.IsFalse(SpendEntry.TryParseChallengeTierId("pass:watch_0001", out _, out _, out _));
+            Assert.IsFalse(SpendEntry.TryParseChallengeTierId("chaltier:bronze:20500", out _, out _, out _), "the old three-part shape is not one");
+            Assert.IsFalse(SpendEntry.TryParseChallengeTierId("chaltier:bronze:0:20500", out _, out _, out _));
+            Assert.IsFalse(SpendEntry.TryParseChallengeTierId("chaltier:bronze:20503:20500", out _, out _, out _), "a window cannot begin after its purchase");
+            Assert.IsFalse(SpendEntry.TryParseChallengeTierId("chaltier:bronze:+5:20500", out _, out _, out _));
         }
 
         [Test]
@@ -386,10 +454,10 @@ namespace GlimmerGrove.Tests
             ChallengeLedger.TryBuyTier(ChallengeRules.Table.FindTier("bronze"));
             Assert.AreEqual(5, ChallengeLedger.Allowance);
 
-            ChallengeLedger.OnSpendRejected(Currency.Gems, SpendEntry.ChallengeTierId("bronze", Day - 1));
+            ChallengeLedger.OnSpendRejected(Currency.Gems, SpendEntry.ChallengeTierId("bronze", Day - 1, Day - 1));
             Assert.AreEqual(5, ChallengeLedger.Allowance, "a different purchase's refusal moves nothing");
 
-            ChallengeLedger.OnSpendRejected(Currency.Gems, SpendEntry.ChallengeTierId("bronze", Day));
+            ChallengeLedger.OnSpendRejected(Currency.Gems, SpendEntry.ChallengeTierId("bronze", Day, Day));
             Assert.AreEqual(2, ChallengeLedger.Allowance, "the refused purchase is gone");
             Assert.IsNull(ChallengeLedger.HeldTier);
         }
@@ -489,7 +557,7 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(1, dto.challenges.today[0].wins);
             Assert.AreEqual(1, dto.challenges.clears.Length);
             Assert.AreEqual("bronze", dto.challenges.tiers[0].id);
-            Assert.AreEqual(Day, dto.challenges.tiers[0].fromDay);
+            Assert.AreEqual(Noon, dto.challenges.tiers[0].fromUnix);
 
             ChallengeLedger.ResetForTests();
             ChallengeLedger.LoadFrom(dto);
@@ -507,7 +575,7 @@ namespace GlimmerGrove.Tests
                 day = Day,
                 today = new[] { new ChallengeDayDto { genre = "pairs", attempts = 2, wins = 1 } },
                 clears = new[] { new ChallengeCountDto { genre = "pairs", count = 4 } },
-                tiers = new[] { new ChallengeTierStateDto { id = "bronze", fromDay = Day - 3 } },
+                tiers = new[] { new ChallengeTierStateDto { id = "bronze", fromUnix = Noon - 3L * DailyRules.SecondsPerDay } },
             };
             var other = new ChallengeStateDto
             {
@@ -518,7 +586,7 @@ namespace GlimmerGrove.Tests
                     new ChallengeDayDto { genre = "merge", attempts = 1, wins = 0 },
                 },
                 clears = new[] { new ChallengeCountDto { genre = "pairs", count = 9 }, new ChallengeCountDto { genre = "merge", count = 1 } },
-                tiers = new[] { new ChallengeTierStateDto { id = "bronze", fromDay = Day } },
+                tiers = new[] { new ChallengeTierStateDto { id = "bronze", fromUnix = Noon } },
             };
 
             var joined = ChallengeLedger.Join(mine, other);
@@ -529,7 +597,7 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(1, joined.today[1].wins);
             Assert.AreEqual(9, joined.clears[1].count);
             Assert.AreEqual(1, joined.clears[0].count);
-            Assert.AreEqual(Day, joined.tiers[0].fromDay);
+            Assert.AreEqual(Noon, joined.tiers[0].fromUnix);
 
             // Idempotent and order-independent.
             var again = ChallengeLedger.Join(other, mine);
@@ -576,10 +644,10 @@ namespace GlimmerGrove.Tests
             var d = new SaveFileDto { challenges = new ChallengeStateDto { clears = new[] { new ChallengeCountDto { genre = "pairs", count = 2 } } } };
             Assert.IsTrue(Changed(c, d));
 
-            var e = new SaveFileDto { challenges = new ChallengeStateDto { tiers = new[] { new ChallengeTierStateDto { id = "bronze", fromDay = 1 } } } };
-            var f = new SaveFileDto { challenges = new ChallengeStateDto { tiers = new[] { new ChallengeTierStateDto { id = "bronze", fromDay = 2 } } } };
+            var e = new SaveFileDto { challenges = new ChallengeStateDto { tiers = new[] { new ChallengeTierStateDto { id = "bronze", fromUnix = 1 } } } };
+            var f = new SaveFileDto { challenges = new ChallengeStateDto { tiers = new[] { new ChallengeTierStateDto { id = "bronze", fromUnix = 2 } } } };
             Assert.IsTrue(Changed(e, f));
-            Assert.IsFalse(Changed(e, new SaveFileDto { challenges = new ChallengeStateDto { tiers = new[] { new ChallengeTierStateDto { id = "bronze", fromDay = 1 } } } }));
+            Assert.IsFalse(Changed(e, new SaveFileDto { challenges = new ChallengeStateDto { tiers = new[] { new ChallengeTierStateDto { id = "bronze", fromUnix = 1 } } } }));
         }
     }
 }

@@ -137,6 +137,29 @@ namespace GlimmerGrove.Tests
             return table.Find("t_pairs");
         }
 
+        // ------------------------------------------------------------------ the spent names
+        /// <summary>
+        /// A withdrawn genre spelling and a withdrawn deal id are refused by name (invariant 5f),
+        /// with a message that says why rather than "unknown", so a re-mint is caught at read.
+        /// </summary>
+        [Test]
+        public void ARetiredGenreSpellingIsRefusedAsRetired()
+        {
+            foreach (var spelling in ChallengeGenres.Retired)
+            {
+                Assert.IsFalse(ChallengeGenres.TryParse(spelling, out _), $"'{spelling}' still parses");
+                Assert.IsTrue(ChallengeGenres.IsRetired(spelling));
+
+                var problems = new List<string>();
+                ChallengeTable.TryBuild(Table(Row("t", spelling, 2, 2, new[] { "rg", "gr" }, new[] { "0 r1" })), out var table, problems);
+                Assert.AreEqual(0, table.Count);
+                Assert.IsTrue(problems.Exists(p => p.Contains("withdrawn")), string.Join("; ", problems));
+            }
+
+            Assert.IsFalse(ChallengeGenres.IsRetired("pairs"));
+            Assert.IsFalse(ChallengeTable.IsRetiredTierId("bronze"));
+        }
+
         // ------------------------------------------------------------------ the registry
         [Test]
         public void EveryGenreIsRegistered()
@@ -457,6 +480,7 @@ namespace GlimmerGrove.Tests
             var pairs = (PairsPuzzle)run.Puzzle;
 
             var known = new Dictionary<int, List<int>>();
+            int cells = pairs.Width * pairs.Height;
             int cursor = 0;
             int guard = 0;
 
@@ -471,7 +495,7 @@ namespace GlimmerGrove.Tests
 
                 if (a < 0)
                 {
-                    while (cursor < 16 && (pairs.FaceAt(cursor) != PairsPuzzle.Face.Hidden || Seen(known, cursor))) cursor++;
+                    while (cursor < cells && (pairs.FaceAt(cursor) != PairsPuzzle.Face.Hidden || Seen(known, cursor))) cursor++;
                     a = cursor;
                     Learn(known, a, pairs.ColourAt(a));
 
@@ -483,7 +507,7 @@ namespace GlimmerGrove.Tests
                     else
                     {
                         int next = cursor + 1;
-                        while (next < 16 && (pairs.FaceAt(next) != PairsPuzzle.Face.Hidden || Seen(known, next))) next++;
+                        while (next < cells && (pairs.FaceAt(next) != PairsPuzzle.Face.Hidden || Seen(known, next))) next++;
                         b = next;
                         Learn(known, b, pairs.ColourAt(b));
                     }
@@ -567,7 +591,7 @@ namespace GlimmerGrove.Tests
             var run = new ChallengeRun(table.Find("d06_sokoban"), table.Line);
 
             // Found by breadth-first search over the authored board; the shortest route.
-            const string route = "URURRDRDLDDRDLLLULURURUDD";
+            const string route = "DRRURULLDRRRRURDLDRDLLLULURRRURDD";
 
             foreach (char step in route)
             {

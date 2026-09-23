@@ -590,7 +590,7 @@ namespace GlimmerGrove.Persistence
         ///      <b>Three merge rules, each the one its shape allows</b> (11b): the day's rows
         ///      are period counters (later day wins, larger count within a day — the task
         ///      ledger's rule), the tally is a per-genre <c>max</c> (the storable-count
-        ///      exception for the fifth time), and a deal is one date per tier id joined by
+        ///      exception for the fifth time), and a deal is one instant per tier id joined by
         ///      <c>max</c> with its window derived from the tier's authored length (48c).
         ///      </para>
         ///      <para>
@@ -940,7 +940,7 @@ namespace GlimmerGrove.Persistence
         /// <summary>One row per genre ever cleared, sorted by genre spelling. Never written at zero.</summary>
         public ChallengeCountDto[] clears;
 
-        /// <summary>One row per deal ever bought: the day it was last bought, sorted by id.</summary>
+        /// <summary>One row per deal ever bought: the instant its window last began, sorted by id.</summary>
         public ChallengeTierStateDto[] tiers;
     }
 
@@ -961,12 +961,16 @@ namespace GlimmerGrove.Persistence
         public int count;
     }
 
-    /// <summary>The day a deal was last bought. Its window is derived from the tier's authored length.</summary>
+    /// <summary>
+    /// The instant a deal's window last began. Its end is derived from the tier's authored
+    /// length — exactly that many days of the clock — and an upgrade shares the start of the
+    /// deal it replaced, so the rows of one window agree about when it ends.
+    /// </summary>
     [Serializable]
     public sealed class ChallengeTierStateDto
     {
         public string id;
-        public int fromDay;
+        public long fromUnix;
     }
 
     /// <summary>

@@ -767,6 +767,9 @@ function readChallenges() {
   const DEFAULTS = { freePlays: 2, coins: 40, xp: 20, maxClears: 25000 };
   const MAX_FREE_PLAYS = 100, MAX_TIER_PLAYS = 1000, MAX_TIER_GEMS = 100000, MAX_TIER_DAYS = 365;
   const MAX_TIERS = 16, MAX_COINS = 200, MAX_XP = 1000, HARD_MAX_CLEARS = 1000000;
+  const MAX_DAILY_COINS = 10000;                       // ChallengeLimits.MaxDailyCoins
+  const RETIRED_GENRES = ["sudoku", "mines", "tetris"]; // ChallengeGenres.Retired
+  const RETIRED_TIERS = [];                             // ChallengeTable.RetiredTierIds
   const KEY = /^[a-z0-9_]{1,32}$/;
   const VERSION = 2;
 
@@ -794,6 +797,9 @@ function readChallenges() {
   for (const row of file.challenges ?? []) {
     const genre = typeof row?.genre === "string" ? row.genre : "";
     if (!KEY.test(genre)) throw new Error(`challenge '${row?.id}' names genre '${genre}', which is not key-shaped`);
+    if (RETIRED_GENRES.includes(genre)) {
+      throw new Error(`challenge '${row?.id}' names genre '${genre}', which was withdrawn and may never come back (5f)`);
+    }
     if (!genres.includes(genre)) genres.push(genre);
   }
   genres.sort();
@@ -823,6 +829,7 @@ function readChallenges() {
   for (const row of rows) {
     const id = typeof row?.id === "string" ? row.id : "";
     if (!KEY.test(id)) throw new Error(`a challenge deal has an id that is not key-shaped: '${id}'`);
+    if (RETIRED_TIERS.includes(id)) throw new Error(`challenge deal '${id}' is a retired id and may never be re-minted (5f)`);
     if (tiers.some((t) => t.id === id)) throw new Error(`challenge deal '${id}' is listed twice`);
     const gems = whole(row.gems, `deal '${id}' gems`, MAX_TIER_GEMS);
     const plays = whole(row.plays, `deal '${id}' plays`, MAX_TIER_PLAYS);
@@ -835,8 +842,17 @@ function readChallenges() {
     tiers.push({ id, gems, plays, days });
   }
 
+  // The economy gate (56k): the largest deal's daily maximum across every genre is held under
+  // a ceiling, so a genre or a rate added to the file cannot quietly out-earn the rest of the game.
+  const topPlays = tiers.length ? Math.max(...tiers.map((t) => t.plays)) : freePlays;
+  const topDay = topPlays * genres.length * coins;
+  if (topDay > MAX_DAILY_COINS) {
+    throw new Error(`the largest challenge deal could pay ${topDay} credits a day across ${genres.length} genre(s), ` +
+                    `above the ${MAX_DAILY_COINS} ceiling (ChallengeLimits.MaxDailyCoins)`);
+  }
+
   console.log(`  challenges: ${genres.length} genre(s), ${freePlays} free play(s) a day, ${tiers.length} deal(s), ` +
-              `${coins} credits and ${xp} XP a clear up to ${maxClears} clears`);
+              `${coins} credits and ${xp} XP a clear up to ${maxClears} clears; the largest deal pays at most ${topDay} a day`);
 
   return { genres, freePlays, tiers, coins, xp, maxClears };
 }

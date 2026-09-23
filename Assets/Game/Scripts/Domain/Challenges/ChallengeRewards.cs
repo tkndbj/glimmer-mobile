@@ -81,6 +81,18 @@ namespace GlimmerGrove.Challenges
         /// <summary>The most XP a content file may pay for one clear. A guard against a typo.</summary>
         public const int MaxXpPerClear = 1000;
 
+        /// <summary>
+        /// The most credits the largest deal may pay one account in a day, across every genre.
+        ///
+        /// <b>The one bound here that is about the economy rather than about a typo</b>, and it
+        /// is a gate rather than a runtime cap: the allowance already bounds each genre, so what
+        /// this guards is the file — a fifth genre, or a raised rate, quietly making a Gold day
+        /// worth more than the whole rest of the game pays. Set to the Infinite lane's daily
+        /// ceiling, so no single feature out-earns the one already judged the largest. Checked
+        /// by the reader, by <c>content.py</c> and by the seeder; no runtime code reads it.
+        /// </summary>
+        public const int MaxDailyCoins = 10000;
+
         /// <summary>The most lifetime clears a content file may pay for. See <see cref="HardMaxClears"/>.</summary>
         public const int MaxMaxClears = HardMaxClears;
 
@@ -122,32 +134,63 @@ namespace GlimmerGrove.Challenges
     public static class ChallengeAllowance
     {
         /// <summary>
-        /// The deal with the most plays whose window covers <paramref name="day"/>, or null.
-        /// Two windows can overlap — a larger bought under a smaller — and the larger governs
-        /// while it runs, the smaller resuming after, because a date per tier is what is held.
+        /// The deal with the most plays whose window covers <paramref name="nowUnix"/>, or null.
+        /// Two windows can overlap — a larger bought under a smaller shares its start — and the
+        /// larger governs while it runs, because an instant per tier is what is held.
         /// </summary>
         public static ChallengeTier Governing(IReadOnlyList<ChallengeTier> tiers,
-                                              IReadOnlyDictionary<string, int> heldFromDay, int day)
+                                              IReadOnlyDictionary<string, long> heldFromUnix, long nowUnix)
         {
             ChallengeTier best = null;
-            if (tiers == null || heldFromDay == null) return null;
+            if (tiers == null || heldFromUnix == null) return null;
 
             for (int i = 0; i < tiers.Count; i++)
             {
                 var tier = tiers[i];
-                if (tier == null || !heldFromDay.TryGetValue(tier.Id, out int from) || !tier.Covers(from, day)) continue;
+                if (tier == null || !heldFromUnix.TryGetValue(tier.Id, out long from) || !tier.Covers(from, nowUnix)) continue;
                 if (best == null || tier.Plays > best.Plays) best = tier;
             }
 
             return best;
         }
 
-        /// <summary>Plays of each genre allowed on a day: the governing deal's figure, else the free one.</summary>
-        public static int On(IReadOnlyList<ChallengeTier> tiers, IReadOnlyDictionary<string, int> heldFromDay,
-                             int day, int freePlays)
+        /// <summary>Plays of each genre allowed now: the governing deal's figure, else the free one.</summary>
+        public static int On(IReadOnlyList<ChallengeTier> tiers, IReadOnlyDictionary<string, long> heldFromUnix,
+                             long nowUnix, int freePlays)
         {
-            var held = Governing(tiers, heldFromDay, day);
+            var held = Governing(tiers, heldFromUnix, nowUnix);
             return held != null ? held.Plays : freePlays;
+        }
+
+        /// <summary>
+        /// What buying <paramref name="target"/> costs now, and which running deal it upgrades.
+        ///
+        /// <para>
+        /// <b>An upgrade is priced as the difference and inherits the running window</b>
+        /// (invariant 56h): under a running deal a bigger one costs <c>target - running</c> gems
+        /// and ends when the running one would have, so the player pays for exactly the plays
+        /// they gain over exactly the days they have left. Nothing is stored for it — the price
+        /// is derived from the deal already held, here and on the server (<c>dealPrice</c>),
+        /// and pinned by <c>challengeUpgradeCases</c>.
+        /// </para>
+        /// <para>
+        /// Answers nought when the purchase is refused: the target runs already, or a deal at
+        /// least as large does. With nothing running the price is the full one.
+        /// </para>
+        /// </summary>
+        public static int Price(IReadOnlyList<ChallengeTier> tiers, IReadOnlyDictionary<string, long> heldFromUnix,
+                                long nowUnix, ChallengeTier target, out ChallengeTier upgraded)
+        {
+            upgraded = null;
+            if (target == null) return 0;
+
+            var running = Governing(tiers, heldFromUnix, nowUnix);
+            if (running == null) return target.Gems;
+            if (running.Plays >= target.Plays) return 0;
+
+            upgraded = running;
+            int price = target.Gems - running.Gems;
+            return price > 0 ? price : 0;
         }
     }
 
@@ -168,9 +211,15 @@ namespace GlimmerGrove.Challenges
         /// <summary>A deal's name derives from its id and cannot be overridden (invariant 5a).</summary>
         public string NameKey => "challenge.tier." + Id + ".name";
 
-        /// <summary>Whether a deal bought on <paramref name="fromDay"/> still runs on <paramref name="day"/>.</summary>
-        public bool Covers(int fromDay, int day)
-            => fromDay > 0 && day >= fromDay && day < fromDay + Days;
+        /// <summary>The window's length in seconds: exactly <see cref="Days"/> days of the clock.</summary>
+        public long Seconds => (long)Days * Daily.DailyRules.SecondsPerDay;
+
+        /// <summary>Whether a deal bought at <paramref name="fromUnix"/> still runs at <paramref name="nowUnix"/>.</summary>
+        public bool Covers(long fromUnix, long nowUnix)
+            => fromUnix > 0L && nowUnix >= fromUnix && nowUnix < fromUnix + Seconds;
+
+        /// <summary>The instant a deal bought at <paramref name="fromUnix"/> ends.</summary>
+        public long EndsAt(long fromUnix) => fromUnix + Seconds;
     }
 
     /// <summary>

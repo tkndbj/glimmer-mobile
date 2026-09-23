@@ -10,14 +10,17 @@
     python Tools/render_challenges.py --list --held gold --spent pairs,merge
 
 **Why this exists.** `ChallengeTests` plays every row with a bot and proves it is winnable; it
-says nothing about whether the screen *reads*. Seven boards share one band arithmetic
-(`ChallengeScreen.BuildBands`, `PuzzleView.Attach`), and the questions no fixture can answer
-are the ones this picture is for: does a 6x10 well and a 4x4 grid both get a cell a finger can
-use, does the hill leave room for the raiders to be seen walking, do the four posts line up
-under the four lanes, and does a strip of keys under a board push the board into the line.
+says nothing about whether the screen *reads*. Four boards share one band arithmetic
+(`ChallengeScreen.BuildBands`, `PuzzleView.Attach`, `PuzzleView.BandWanted`), and the
+questions no fixture can answer are the ones this picture is for: does a 10x6 room and a 6x3
+grid both get a cell a finger can use, does the hill the board leaves give the raiders a walk
+worth watching, do the four posts line up under the four lanes, and does a strip of keys under
+a board push the board into the line. **The board is asked first and the hill takes the
+rest** (2026-09-23): a board is laid out at the widest cell the width allows, so the hill's
+height is what a wide, short board leaves it, bounded in siege cells either way.
 
 **It is a mirror, and mirrors drift.** Every constant is named after the field it copies
-(`ChallengeScreen.HillShare`, `PuzzleView.Margin`, `ChallengeHillView.RaiderTall`), the board
+(`ChallengeScreen.HillLeastUnits`, `PuzzleView.Margin`, `ChallengeHillView.PostScale`), the board
 is read out of `challenges.json` through the same shape the game reads, and when a device
 disagrees with this picture the picture is the one that is wrong (invariant 44d). The
 genre-specific furniture is drawn as the views draw it — sockets and gems, pipes as arms from
@@ -55,17 +58,19 @@ RIBBON_TILT, RIBBON_ROOM, TITLE_FLOOR = -1.6, 0.74, 24
 #: `ChallengeScreen.ReadoutH` / `.ReadoutGap`.
 READOUT_H, READOUT_GAP = 56.0, 12.0
 
-#: `ChallengeScreen.HillShare` / `.HillLeast` / `.HillMost`, `.LineBandUnits`, `.BottomPad`, `.BandGap`.
-HILL_SHARE, HILL_LEAST, HILL_MOST = 0.27, 330.0, 520.0
-LINE_BAND_UNITS, BOTTOM_PAD, BAND_GAP = 2.3, 36.0, 14.0
+#: `ChallengeScreen.HillLeastUnits` / `.HillMostUnits`, `.LineBandUnits`, `.BottomPad`, `.BandGap`, `.PuzzleInset`.
+HILL_LEAST_UNITS, HILL_MOST_UNITS = 3.6, 5.4
+LINE_BAND_UNITS, BOTTOM_PAD, BAND_GAP, PUZZLE_INSET = 1.7, 36.0, 14.0, 24.0
 
-#: `PuzzleView.Margin`, and each view's `MaxCell` / `StripHeight`.
-MARGIN = 18.0
-MAX_CELL = {"pairs": 200, "pipes": 190, "merge": 200, "sokoban": 150}
+#: `PuzzleView.Margin` / `.PlateRim`, and each view's `MaxCell` / `StripHeight`.
+MARGIN, PLATE_RIM = 18.0, 0.34
+MAX_CELL = {"pairs": 200, "pipes": 140, "merge": 200, "sokoban": 150}
 STRIP = {}
+#: Each view's `EdgeRows`: what a board hangs past its plate, above and below together, in cells.
+EDGE_ROWS = {"pipes": 0.7}
 
-#: `ChallengeHillView.RaiderTall` and `.HillTopInset`.
-RAIDER_TALL, HILL_TOP_INSET = 1.0, 0.95
+#: `ChallengeHillView.RaiderTall`, `.PostScale` and `.HillTopInset`.
+RAIDER_TALL, POST_SCALE, HILL_TOP_INSET = 1.0, 0.72, 0.95
 
 #: `Pal.Slot`, `Pal.Dormant`, the pairs back, the mine slab, the sokoban wall.
 SLOT = (255, 255, 255)
@@ -175,16 +180,18 @@ def hill(sheet, row, top, height, unit, line_band, txt):
     # The rampart under the posts.
     K.paste(sheet, K.nine(*S_load("rampart"), W, line_band * 1.02), W / 2, top + hill_foot + line_band * .5)
 
+    # A post and everything on it is sized off `ChallengeHillView.PostScale` of the unit.
+    post = unit * POST_SCALE
     for i in range(posts):
         cx, cy = post_x(i), top + line_y
-        K.paste(sheet, K.fit(S.sprite("socket"), (unit * 1.7, unit * .8)), cx, cy + unit * .88)
-        K.paste(sheet, K.glow(int(unit * 3.1), 2.1, TINTS[i], .22), cx, cy)
-        body = K.fit(S.sprite("Wards/bolt_%s" % LETTERS[i]), (unit * 1.72, unit * 2.15))
-        K.paste(sheet, body, cx, cy - unit * .06)
+        K.paste(sheet, K.fit(S.sprite("socket"), (post * 1.7, post * .8)), cx, cy + post * .88)
+        K.paste(sheet, K.glow(int(post * 3.1), 2.1, TINTS[i], .22), cx, cy)
+        body = K.fit(S.sprite("Wards/bolt_%s" % LETTERS[i]), (post * 1.72, post * 2.15))
+        K.paste(sheet, body, cx, cy - post * .06)
 
-        bar_w, bar_h = unit * 1.06, unit * .17
-        K.paste(sheet, K.round_rect(bar_w, bar_h, 10, (0, 0, 0), .66), cx, cy - unit * 1.26)
-        K.paste(sheet, K.round_rect(bar_w - 4, bar_h - 4, 10, K.CREAM), cx, cy - unit * 1.26)
+        bar_w, bar_h = post * 1.06, post * .17
+        K.paste(sheet, K.round_rect(bar_w, bar_h, 10, (0, 0, 0), .66), cx, cy - post * 1.26)
+        K.paste(sheet, K.round_rect(bar_w - 4, bar_h - 4, 10, K.CREAM), cx, cy - post * 1.26)
 
     # The raiders standing at the top of the hill before the first move.
     length = row["hill"]
@@ -212,19 +219,29 @@ def S_load(name):
 
 
 # ------------------------------------------------------------------ the puzzle band
+def cell_across(genre, cols, host_w):
+    """`PuzzleView.CellAcross`: the cell a board gets across its host, plate and cap counted in."""
+    return int(min((host_w - MARGIN) / (cols + PLATE_RIM), MAX_CELL[genre]))
+
+
+def band_wanted(genre, cols, rws, host_w):
+    """`PuzzleView.BandWanted`: how tall a band the board asks for at the cell the width allows."""
+    return (rws + PLATE_RIM + EDGE_ROWS.get(genre, 0)) * cell_across(genre, cols, host_w) + MARGIN + STRIP.get(genre, 0)
+
+
 def puzzle(sheet, row, top, bottom, txt):
     """`PuzzleView.Attach` and the genre's `Build`, at rest."""
     g = row["genre"]
     cols, rws = row["width"], row["height"]
-    host_w, host_h = W - 48.0, bottom - top
+    host_w, host_h = W - PUZZLE_INSET * 2, bottom - top
     strip = STRIP.get(g, 0)
 
-    cell = int(min((host_w - MARGIN * 2) / cols, (host_h - strip - MARGIN * 2) / rws, MAX_CELL[g]))
+    cell = int(min(cell_across(g, cols, host_w), (host_h - strip - MARGIN) / (rws + PLATE_RIM + EDGE_ROWS.get(g, 0))))
     span_w, span_h = cols * cell, rws * cell
     cx = W / 2
     cy = top + (host_h - strip) / 2                  # the field is centred above the strip
 
-    plate = K.nine(*S_load("plate"), span_w + cell * .34 + MARGIN, span_h + cell * .34 + MARGIN)
+    plate = K.nine(*S_load("plate"), span_w + cell * PLATE_RIM + MARGIN, span_h + cell * PLATE_RIM + MARGIN)
     K.paste(sheet, plate, cx, cy)
 
     def centre(i):
@@ -443,13 +460,17 @@ def render(row, txt, canvas=(1080, 1920)):
     unit = W / 8.0
     line_band = unit * LINE_BAND_UNITS
     room = H - top - BOTTOM_PAD
-    hill_h = max(HILL_LEAST, min(HILL_MOST, room * HILL_SHARE))
+
+    # `ChallengeScreen.BuildBands`: the board is asked first, the hill takes the rest, bounded.
+    want = band_wanted(row["genre"], row["width"], row["height"], W - PUZZLE_INSET * 2)
+    hill_h = max(unit * HILL_LEAST_UNITS, min(unit * HILL_MOST_UNITS, room - line_band - BAND_GAP - want))
 
     hill(sheet, row, top, hill_h + line_band, unit, line_band, txt)
     cell = puzzle(sheet, row, top + hill_h + line_band + BAND_GAP, H - BOTTOM_PAD, txt)
 
-    print("  %-12s %-8s cell %3d  hill %.0f  line %.0f  puzzle band %.0f  on %dx%d"
-          % (row["id"], row["genre"], cell, hill_h, line_band, H - BOTTOM_PAD - (top + hill_h + line_band + BAND_GAP), W, H))
+    band = H - BOTTOM_PAD - (top + hill_h + line_band + BAND_GAP)
+    print("  %-12s %-8s %dx%d cell %3d  hill %.0f (%.1f cells)  line %.0f  puzzle band %.0f of which the board wants %.0f  on %dx%d"
+          % (row["id"], row["genre"], row["width"], row["height"], cell, hill_h, hill_h / unit, line_band, band, want, W, H))
     return sheet
 
 

@@ -48,6 +48,22 @@ namespace GlimmerGrove.Challenges
         /// </summary>
         static readonly string[] Names = { "pairs", "pipes", "merge", "sokoban" };
 
+        /// <summary>
+        /// Spellings that were shipped and withdrawn, refused by name at read (invariant 5f) and
+        /// listed in CLAUDE.md's spent table. A spelling is a wire name — a lifetime row in the
+        /// save keeps counting under it after the genre is gone — so one may never come back
+        /// meaning something else. <c>content.py</c> and the seeder hold the same list.
+        /// </summary>
+        public static readonly string[] Retired = { "sudoku", "mines", "tetris" };
+
+        public static bool IsRetired(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return false;
+            for (int i = 0; i < Retired.Length; i++)
+                if (Retired[i] == name) return true;
+            return false;
+        }
+
         public static string NameOf(ChallengeGenre genre)
         {
             int i = (int)genre;

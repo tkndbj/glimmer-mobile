@@ -25,7 +25,7 @@ if (!existsSync(compiled)) {
 
 const {
   DEFAULT_CHALLENGES, HARD_MAX_CLEARS, allowanceOn, challengeClears, challengeGrant, challengeXp,
-  findTier, holdTier, isChallengeGrantId, isChallengeTierSpendId, parseChallengeClaim,
+  dealPrice, findTier, holdTier, isChallengeGrantId, isChallengeTierSpendId, parseChallengeClaim,
   parseChallengeTierSpendId, readChallengeTiers, usableChallengesConfig,
 } = await import(pathToFileURL(compiled).href);
 
@@ -71,13 +71,17 @@ console.log("\nthe claim id");
 
 console.log("\nthe deal debit id");
 {
-  check(isChallengeTierSpendId("chaltier:bronze:20500"), "a deal debit is recognised");
+  check(isChallengeTierSpendId("chaltier:bronze:20500:20500"), "a deal debit is recognised");
   check(!isChallengeTierSpendId("pass:watch_0001"), "a pass is not");
-  equal("a well-formed debit parses", parseChallengeTierSpendId("chaltier:bronze:20500"),
-        { tierId: "bronze", fromDay: 20500 });
-  equal("a day of nought is refused", parseChallengeTierSpendId("chaltier:bronze:0"), null);
-  equal("a tier with a dash is refused", parseChallengeTierSpendId("chaltier:bron-ze:20500"), null);
-  equal("a fourth part is refused", parseChallengeTierSpendId("chaltier:bronze:20500:x"), null);
+  equal("a fresh debit parses", parseChallengeTierSpendId("chaltier:bronze:20500:20500"),
+        { tierId: "bronze", fromDay: 20500, boughtDay: 20500 });
+  equal("an upgrade debit parses", parseChallengeTierSpendId("chaltier:silver:20500:20503"),
+        { tierId: "silver", fromDay: 20500, boughtDay: 20503 });
+  equal("the old three-part shape is refused", parseChallengeTierSpendId("chaltier:bronze:20500"), null);
+  equal("a day of nought is refused", parseChallengeTierSpendId("chaltier:bronze:0:20500"), null);
+  equal("a window beginning after its purchase is refused", parseChallengeTierSpendId("chaltier:bronze:20503:20500"), null);
+  equal("a tier with a dash is refused", parseChallengeTierSpendId("chaltier:bron-ze:20500:20500"), null);
+  equal("a fifth part is refused", parseChallengeTierSpendId("chaltier:bronze:20500:20500:x"), null);
 }
 
 // ------------------------------------------------------------------ the config
@@ -122,10 +126,29 @@ console.log("\nthe allowance");
 {
   equal("nothing held is the free figure", allowanceOn(CONFIG.tiers, {}, DAY, 2), 2);
   equal("a deal bought today covers today", allowanceOn(CONFIG.tiers, { bronze: DAY }, DAY, 2), 5);
-  equal("the seventh day is the last", allowanceOn(CONFIG.tiers, { bronze: DAY }, DAY + 6, 2), 5);
-  equal("the eighth day is free again", allowanceOn(CONFIG.tiers, { bronze: DAY }, DAY + 7, 2), 2);
+  equal("the seventh day after a seven-day purchase is still covered, because the client's window is an instant inside it",
+        allowanceOn(CONFIG.tiers, { bronze: DAY }, DAY + 7, 2), 5);
+  equal("the eighth is free again", allowanceOn(CONFIG.tiers, { bronze: DAY }, DAY + 8, 2), 2);
   equal("the larger of two overlapping deals governs", allowanceOn(CONFIG.tiers, { bronze: DAY, gold: DAY + 1 }, DAY + 2, 2), 25);
   equal("a deal bought tomorrow does not cover today", allowanceOn(CONFIG.tiers, { bronze: DAY + 1 }, DAY, 2), 2);
+}
+
+// ------------------------------------------------------------------ the deal's price
+console.log("\nthe deal's price");
+{
+  equal("a fresh deal costs its full price", dealPrice(CONFIG, {}, "bronze", DAY, DAY), { price: 120, upgrades: "" });
+  equal("a fresh deal is full price whatever runs", dealPrice(CONFIG, { gold: DAY }, "bronze", DAY + 1, DAY + 1), { price: 120, upgrades: "" });
+  equal("an upgrade over a held smaller deal costs the difference",
+        dealPrice(CONFIG, { bronze: DAY }, "silver", DAY, DAY + 3), { price: 80, upgrades: "bronze" });
+  equal("an upgrade over silver to gold costs what is left",
+        dealPrice(CONFIG, { bronze: DAY, silver: DAY }, "gold", DAY, DAY + 5), { price: 300, upgrades: "silver" });
+  equal("an upgrade naming a window this wallet does not hold is refused",
+        dealPrice(CONFIG, { bronze: DAY }, "silver", DAY - 1, DAY + 3), null);
+  equal("an upgrade over a window that has ended is refused",
+        dealPrice(CONFIG, { bronze: DAY }, "silver", DAY, DAY + 8), null);
+  equal("an upgrade to a smaller deal is refused", dealPrice(CONFIG, { silver: DAY }, "bronze", DAY, DAY + 3), null);
+  equal("a deal the block does not sell is refused", dealPrice(CONFIG, {}, "platinum", DAY, DAY), null);
+  equal("a purchase before its window is refused", dealPrice(CONFIG, {}, "bronze", DAY + 1, DAY), null);
 }
 
 // ------------------------------------------------------------------ the pricing
@@ -138,7 +161,7 @@ console.log("\nthe claim's price");
   equal("a third play under bronze pays", challengeGrant(CONFIG, claim(3), { bronze: DAY }), { amount: 40, allowance: 5, known: true });
   equal("a sixth play under bronze pays nothing", challengeGrant(CONFIG, claim(6), { bronze: DAY }), { amount: 0, allowance: 5, known: true });
   equal("a sixth play under silver pays", challengeGrant(CONFIG, claim(6), { silver: DAY - 3 }), { amount: 40, allowance: 10, known: true });
-  equal("a deal that ran out does not cover the day", challengeGrant(CONFIG, claim(3), { bronze: DAY - 7 }), { amount: 0, allowance: 2, known: true });
+  equal("a deal that ran out does not cover the day", challengeGrant(CONFIG, claim(3), { bronze: DAY - 8 }), { amount: 0, allowance: 2, known: true });
   equal("a genre the file does not ship is not known", challengeGrant(CONFIG, claim(1, "sudoku"), {}), { amount: 0, allowance: 2, known: false });
   equal("a rate of nought pays nothing", challengeGrant({ ...CONFIG, coins: 0 }, claim(1), {}), { amount: 0, allowance: 2, known: true });
 }

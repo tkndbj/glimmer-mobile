@@ -13,7 +13,14 @@ namespace GlimmerGrove
     /// </summary>
     public sealed class PipesView : PuzzleView
     {
-        protected override float MaxCell => 190f;
+        /// <summary>
+        /// Capped lower than a tapped gem, because the board asks for its sources and sinks as
+        /// well as its rows and a six-wide board at the pairs' cell would take the hill down
+        /// with it. <see cref="EdgeRows"/> is what the gem above and the ring below reach past
+        /// the plate: each sits .72 of a cell off its edge row's centre, half a cell across.
+        /// </summary>
+        protected override float MaxCell => 140f;
+        protected override float EdgeRows => .7f;
 
         PipesPuzzle _pipes;
         RectTransform[] _tile;

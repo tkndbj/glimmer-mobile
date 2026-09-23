@@ -1754,6 +1754,18 @@
       "text": "+{0} coins   +{1} XP (+{2} boost)"
     },
     {
+      "key": "ui.challenges.hours_left",
+      "text": "{0}h left"
+    },
+    {
+      "key": "ui.challenges.upgrade",
+      "text": "Upgrade: {0} gems"
+    },
+    {
+      "key": "ui.challenges.upgrade_note",
+      "text": "Pay the difference. Your current deal's days carry over."
+    },
+    {
       "key": "ui.challenges.done",
       "text": "Done"
     },
