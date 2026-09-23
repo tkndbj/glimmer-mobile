@@ -1,9 +1,22 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "line": {
     "damage": 1,
     "health": 3,
     "strike": 1
+  },
+  "allowance": {
+    "freePlays": 2
+  },
+  "tiers": [
+    { "id": "bronze", "gems": 120, "plays": 5,  "days": 7 },
+    { "id": "silver", "gems": 200, "plays": 10, "days": 7 },
+    { "id": "gold",   "gems": 500, "plays": 25, "days": 7 }
+  ],
+  "rewards": {
+    "coins": 40,
+    "xp": 20,
+    "maxClears": 25000
   },
   "challenges": [
     {

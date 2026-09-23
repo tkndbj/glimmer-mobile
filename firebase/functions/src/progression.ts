@@ -23,6 +23,7 @@ import type { RankRungConfig } from "./ranks";
 
 import type { ReferralConfig } from "./referral";
 import { Rolls, subjectSeed } from "./random";
+import type { ChallengesConfig } from "./challenges";
 
 export interface RewardRule {
   xpFirstClear: number;
@@ -116,6 +117,17 @@ export interface ProgressionConfig {
    * (invariant 19a), in silence.
    */
   xpBoost?: XpBoostConfig;
+
+  /**
+   * The daily challenges: the genre spellings, the free allowance, the deal rows and the two
+   * reward rates, published by the seeder out of `challenges.json` (`challenges.ts`).
+   *
+   * Absent falls back to the built-in *rates* for `endless`'s reason - the XP a tally is worth
+   * has to agree with the client under a stale deploy - and to **no deals and no genres**, which
+   * leaves every coin claim unconfirmed rather than paid or refused (13a): a server that has not
+   * been told what the file sells cannot price a play. Re-seed after any change to the file.
+   */
+  challenges?: ChallengesConfig;
 }
 
 /**

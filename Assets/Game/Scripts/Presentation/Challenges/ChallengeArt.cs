@@ -28,6 +28,19 @@ namespace GlimmerGrove
 
         public static Color Tint(int colour) => SiegeView.TintOf(colour);
 
+        /// <summary>
+        /// The picture a genre's card wears: <c>Ui/challenge_{spelling}</c>, derived from the
+        /// spelling (7c's shape) and cut by <c>Tools/make_challenge_art.py</c> from the owner's
+        /// artwork. In the global set (<c>AssetManifest.UiSprites</c>), because the list page
+        /// is one tap from the hub. Null for a spelling this build has no picture for, which the
+        /// card draws as nothing rather than as a white rectangle (7b).
+        /// </summary>
+        public static Sprite GenreMark(ChallengeGenre genre)
+            => AssetLibrary.Sprite(AssetManifest.Ui(GenreMarkKey(genre)));
+
+        /// <summary>The address under <c>Ui/</c>, for the preload test to hold to the manifest.</summary>
+        public static string GenreMarkKey(ChallengeGenre genre) => "challenge_" + ChallengeGenres.NameOf(genre);
+
         static Sprite Piece(string key) => AssetLibrary.Sprite(AssetManifest.SiegeArt(key));
         static Sprite[] Reel(string key) => AssetLibrary.Frames(AssetManifest.SiegeArt(key));
         static Sprite[] Blast(string key) => AssetLibrary.Frames(AssetManifest.SiegeFx(key));

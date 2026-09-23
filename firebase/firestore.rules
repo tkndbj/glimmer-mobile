@@ -74,6 +74,7 @@ service cloud.firestore {
                  'endlessBest',
                  'wardStars',
                  'tasks',
+                 'challenges',
                  'checksum'
                ])
                && d.schemaVersion is int
@@ -266,7 +267,28 @@ service cloud.firestore {
                && (!('groveHallFacing' in d) || (d.groveHallFacing is int
                                                  && d.groveHallFacing >= 0
                                                  && d.groveHallFacing <= 3))
-               && (!('groveHallSetUnix' in d) || d.groveHallSetUnix is int);
+               && (!('groveHallSetUnix' in d) || d.groveHallSetUnix is int)
+
+               // The daily challenges (save v34): today's plays per genre, a lifetime tally of
+               // levels cleared per genre, and the day each deal was last bought. Client-owned
+               // and forgeable, and accounted for the way the endless tally is: the plays pay
+               // nothing by themselves; the tally pays XP inside a bounded range and no currency
+               // (`challengeXp`, invariant 13's fourth clause); and a deal row here buys only a
+               // page — every coin claim past the free allowance is priced by `claimAwards`
+               // against the deal recorded on the *wallet* document when the gems were taken,
+               // which no client can write. So this is shape only. The three bounds match
+               // `ChallengeLedger.MaxTodayRows` / `MaxClearRows` / `MaxTierRows` and have to:
+               // `hasOnly` is an allow-list over the whole document, so a save these rules
+               // refuse loses *every* write rather than the extra rows (12a). Held to the client
+               // offline by `CloudWireTests`. **A new top-level key, so this ruleset deploys
+               // before the client that writes it.**
+               && (!('challenges' in d) || (d.challenges is map
+                                            && (!('today' in d.challenges) || (d.challenges.today is list
+                                                                               && d.challenges.today.size() <= 32))
+                                            && (!('clears' in d.challenges) || (d.challenges.clears is list
+                                                                                && d.challenges.clears.size() <= 64))
+                                            && (!('tiers' in d.challenges) || (d.challenges.tiers is list
+                                                                               && d.challenges.tiers.size() <= 16))));
       }
 
       // The revision only ever moves forward, which gives the sync optimistic

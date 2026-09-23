@@ -101,6 +101,45 @@ namespace GlimmerGrove.Persistence
         /// <summary>What a support reader sees against a shield debit.</summary>
         public const string StreakShieldReason = "streak_shield";
 
+        /// <summary>
+        /// A challenge deal's debit: <c>chaltier:{tierId}:{fromDay}</c>.
+        ///
+        /// <para>
+        /// Derived for <em>both</em> of the pass's reasons. The server has to recognise it:
+        /// <c>submitSpends</c> prices it against the published deal and writes the day onto the
+        /// wallet document in the same transaction that takes the gems, and that server-held
+        /// date is what every coin claim past the free allowance is bounded by. And two devices
+        /// buying the same deal offline on one day write byte-identical entries, the union keeps
+        /// one, and the player is charged once (48e).
+        /// </para>
+        /// <para>
+        /// The day is in the id because the day <em>is</em> the entitlement: one window, one
+        /// debit. A second purchase of the same deal on a later day is a different string and a
+        /// different window. Parsed back by <c>parseChallengeTierSpendId</c> on the server; the
+        /// format is a wire contract.
+        /// </para>
+        /// </summary>
+        public static string ChallengeTierId(string tierId, int fromDay) => "chaltier:" + tierId + ":" + fromDay;
+
+        /// <summary>The deal and the day a tier debit names, or false for any other id.</summary>
+        public static bool TryParseChallengeTierId(string id, out string tierId, out int fromDay)
+        {
+            tierId = null;
+            fromDay = 0;
+            if (string.IsNullOrEmpty(id) || !id.StartsWith("chaltier:", StringComparison.Ordinal)) return false;
+
+            var parts = id.Split(':');
+            if (parts.Length != 3 || parts[1].Length == 0) return false;
+            if (!int.TryParse(parts[2], out int day) || day <= 0 || day.ToString() != parts[2]) return false;
+
+            tierId = parts[1];
+            fromDay = day;
+            return true;
+        }
+
+        /// <summary>What a support reader sees against a deal debit.</summary>
+        public const string ChallengeTierReason = "challenge_tier";
+
         public SpendEntryDto ToDto()
             => new SpendEntryDto { id = Id, amount = Amount, unix = Unix, reason = Reason };
 
@@ -247,6 +286,28 @@ namespace GlimmerGrove.Persistence
 
         /// <summary>What every Infinite-lane grant records as its cause.</summary>
         public const string EndlessWavesReason = "endless_waves";
+
+        /// <summary>
+        /// One cleared daily challenge, in credits: <c>chal:{dayKey}:{genre}:{win}:{currency}</c>.
+        ///
+        /// <para>
+        /// Derived from what earned it, for <see cref="DailyChestId"/>'s reason: the <c>win</c>
+        /// is the ordinal of the win within the day for that genre — the first win of the day is
+        /// <c>1</c> — so two devices that both clear the day's first level mint one string and
+        /// are paid once, and a replay of a level already won is not a second payment.
+        /// </para>
+        /// <para>
+        /// The server re-prices it from the published rate and <em>bounds the ordinal</em> by the
+        /// allowance it sold this account for that day (<c>challenges.ts</c>): a claim naming a
+        /// third win under a free allowance of two is worth nothing unless a deal the server
+        /// recorded covers the day. The format is a wire contract.
+        /// </para>
+        /// </summary>
+        public static string ChallengeClearId(int dayKey, string genre, int win, string currency)
+            => $"chal:{dayKey}:{genre}:{win}:{currency}";
+
+        /// <summary>What every challenge grant records as its cause.</summary>
+        public const string ChallengeClearReason = "challenge_clear";
 
         public GrantEntryDto ToDto()
             => new GrantEntryDto { id = Id, amount = Amount, unix = Unix, reason = Reason };

@@ -24,10 +24,10 @@ namespace GlimmerGrove.Referral
     /// </summary>
     internal sealed class ReferralFeedWatch
     {
-        readonly Func<Action, IDisposable> _open;
+        readonly Func<Action<long>, IDisposable> _open;
         readonly Func<string> _account;
         readonly Func<bool> _available;
-        readonly Action _moved;
+        readonly Action<long> _moved;
 
         int _watchers;
         bool _paused;
@@ -35,12 +35,12 @@ namespace GlimmerGrove.Referral
         IDisposable _live;
         string _liveFor;
 
-        /// <param name="open">Opens a listener, calling back when the feed moves. May answer null.</param>
+        /// <param name="open">Opens a listener, calling back with the feed's counter whenever it is delivered. May answer null.</param>
         /// <param name="account">Who is signed in, or empty.</param>
         /// <param name="available">Whether the feature and the backend exist at all.</param>
-        /// <param name="moved">Raised — possibly off the main thread — when the feed moves.</param>
-        public ReferralFeedWatch(Func<Action, IDisposable> open, Func<string> account,
-                                 Func<bool> available, Action moved)
+        /// <param name="moved">Raised — possibly off the main thread — with the counter the feed now reads.</param>
+        public ReferralFeedWatch(Func<Action<long>, IDisposable> open, Func<string> account,
+                                 Func<bool> available, Action<long> moved)
         {
             _open = open;
             _account = account;

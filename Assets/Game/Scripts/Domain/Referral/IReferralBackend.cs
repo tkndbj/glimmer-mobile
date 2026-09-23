@@ -132,12 +132,22 @@ namespace GlimmerGrove.Referral
         /// state is. No server rule is copied onto the client to disagree with later.
         /// </para>
         /// <para>
+        /// <b>What it does hand over is the counter's value</b> — the document's <c>rev</c>,
+        /// <c>0</c> for a document that does not exist yet (an account nothing has ever
+        /// happened to), and <see cref="ReferralState.UnknownFeed"/> when the document could
+        /// not be read. That number says nothing about the account; what it lets the ledger do
+        /// is compare it with the value its cached answer was read under and skip the call when
+        /// they agree (<see cref="ReferralLedger.NeedsAsk"/>), which is what turns a screen
+        /// opening from a callable into a listener delivery.
+        /// </para>
+        /// <para>
         /// <b><paramref name="onChanged"/> may arrive on any thread.</b> An implementation is
         /// not required to marshal, and the caller must not assume: see
-        /// <see cref="ReferralLedger.Pump"/>, which is why the callback's whole job is to set a
-        /// flag. Disposing stops the watch, and disposing twice is safe.
+        /// <see cref="ReferralLedger.Pump"/>, which is why the callback's whole job is to
+        /// record the value and set a flag. Disposing stops the watch, and disposing twice is
+        /// safe.
         /// </para>
         /// </remarks>
-        IDisposable WatchReferral(Action onChanged);
+        IDisposable WatchReferral(Action<long> onChanged);
     }
 }

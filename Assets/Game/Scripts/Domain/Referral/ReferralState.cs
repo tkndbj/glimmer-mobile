@@ -19,6 +19,7 @@ namespace GlimmerGrove.Referral
         public bool milestoneReached;
         public bool canRedeem;
         public long fetchedUnix;
+        public long feedRev;
     }
 
     /// <summary>
@@ -66,7 +67,15 @@ namespace GlimmerGrove.Referral
     /// </summary>
     public sealed class ReferralState
     {
-        public const int Schema = 2;
+        /// <summary>Bumped from 2 on 2026-09-22, when <see cref="FeedRev"/> joined the cache.</summary>
+        public const int Schema = 3;
+
+        /// <summary>
+        /// The <see cref="FeedRev"/> of a state that was read without a listener saying where
+        /// the feed stood. Never equal to anything the feed can say, so a state stamped with it
+        /// is always asked about again the first time a listener does speak.
+        /// </summary>
+        public const long UnknownFeed = -1L;
 
         public static readonly ReferralState Empty = new ReferralState(
             string.Empty, 0, 0, Array.Empty<string>(), false, false, false, 0L);
@@ -74,7 +83,8 @@ namespace GlimmerGrove.Referral
         readonly string[] _paid;
 
         public ReferralState(string code, int bound, int finished, string[] paid,
-                             bool referred, bool milestoneReached, bool canRedeem, long fetchedUnix)
+                             bool referred, bool milestoneReached, bool canRedeem, long fetchedUnix,
+                             long feedRev = UnknownFeed)
         {
             Code = code ?? string.Empty;
             Bound = bound < 0 ? 0 : bound;
@@ -84,6 +94,7 @@ namespace GlimmerGrove.Referral
             MilestoneReached = milestoneReached;
             CanRedeem = canRedeem;
             FetchedUnix = fetchedUnix < 0 ? 0 : fetchedUnix;
+            FeedRev = feedRev < 0 ? UnknownFeed : feedRev;
         }
 
         /// <summary>This account's own code, folded. Empty until the server has minted one.</summary>
@@ -113,6 +124,35 @@ namespace GlimmerGrove.Referral
         /// <summary>Whether the server has ever answered for this account on this device.</summary>
         public bool IsKnown => FetchedUnix > 0;
 
+        /// <summary>
+        /// Where the account's feed counter stood when this answer was asked for, as the
+        /// listener last reported it — or <see cref="UnknownFeed"/> when no listener had
+        /// spoken by then.
+        ///
+        /// <para>
+        /// <b>This is what makes a screen open cost nothing.</b> The server bumps
+        /// <c>players/{uid}/private/referral</c> inside every transaction that moves this
+        /// account's referral state, and the device listens to that document. A listener's
+        /// first delivery is the document as it stands, and it says nothing about whether
+        /// anything moved — unless the device remembers which value its cached answer was
+        /// read under. With the stamp, a delivery that matches it is proof the cached answer
+        /// is still the server's answer, and no call is made. Taken at the moment the ask
+        /// went out rather than when the reply landed, so a bump in between can only make
+        /// the device ask once more, never miss one.
+        /// </para>
+        /// <para>
+        /// A fact about the cache rather than about the account, which is why
+        /// <see cref="Matches"/> ignores it: two answers that say the same thing about the
+        /// account are the same answer whatever the feed said at the time.
+        /// </para>
+        /// </summary>
+        public long FeedRev { get; }
+
+        /// <summary>The same answer, stamped with the feed it was read under.</summary>
+        public ReferralState WithFeed(long feedRev)
+            => new ReferralState(Code, Bound, Finished, _paid, Referred, MilestoneReached, CanRedeem,
+                                 FetchedUnix, feedRev);
+
         public bool HasPaid(string subject)
         {
             for (int i = 0; i < _paid.Length; i++)
@@ -124,12 +164,14 @@ namespace GlimmerGrove.Referral
         /// Whether this says the same thing about the account as <paramref name="other"/>.
         ///
         /// <para>
-        /// <b><see cref="FetchedUnix"/> is deliberately not compared.</b> It moves on every
-        /// read, so a comparison including it would answer "different" every single time and
-        /// be worth nothing — which is the whole reason this method exists. A server read that
-        /// brings back what the device already had must be able to say so, or every visit to
-        /// the invite page raises a change nobody made and the page redraws itself underneath
-        /// the player.
+        /// <b><see cref="FetchedUnix"/> is deliberately not compared, and neither is
+        /// <see cref="FeedRev"/>.</b> The first moves on every read, so a comparison including
+        /// it would answer "different" every single time and be worth nothing — which is the
+        /// whole reason this method exists. A server read that brings back what the device
+        /// already had must be able to say so, or every visit to the invite page raises a
+        /// change nobody made and the page redraws itself underneath the player. The second is
+        /// a fact about when the cache was read, not about the account, and a page draws none
+        /// of it.
         /// </para>
         /// <para>
         /// <b>The paid list is compared as a set, both ways.</b> The server answers an array
@@ -202,6 +244,7 @@ namespace GlimmerGrove.Referral
                 milestoneReached = MilestoneReached,
                 canRedeem = CanRedeem,
                 fetchedUnix = FetchedUnix,
+                feedRev = FeedRev,
             };
 
         /// <summary>
@@ -213,7 +256,8 @@ namespace GlimmerGrove.Referral
             if (dto == null || dto.schema != Schema) return Empty;
 
             return new ReferralState(dto.code, dto.bound, dto.finished, dto.paid,
-                                     dto.referred, dto.milestoneReached, dto.canRedeem, dto.fetchedUnix);
+                                     dto.referred, dto.milestoneReached, dto.canRedeem, dto.fetchedUnix,
+                                     dto.feedRev);
         }
     }
 }

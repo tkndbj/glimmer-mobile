@@ -42,6 +42,10 @@ const {
   xpBoostXp, DEFAULT_XP_BOOST, HARD_MAX_BOOST_XP,
 } = await import(pathToFileURL(compiled).href);
 
+const challengesModule = join(REPO, "firebase", "functions", "lib", "challenges.js");
+const { DEFAULT_CHALLENGES, HARD_MAX_CLEARS, allowanceOn, challengeClears, challengeXp } =
+  await import(pathToFileURL(challengesModule).href);
+
 const ranksModule = join(REPO, "firebase", "functions", "lib", "ranks.js");
 const { rungOf } = await import(pathToFileURL(ranksModule).href);
 
@@ -327,6 +331,37 @@ console.log("\nendless xp");
         endlessXp({ endlessBest: 37 }, { endless: vectors.endlessConfig }), 0);
   equal("a null row is skipped",
         endlessWaves({ endlessBest: [null, { level: "a", waves: 5 }] }), 5);
+}
+
+// ------------------------------------------------------------------ the daily challenges
+//
+// The third rule that pays XP with no star behind it, and the deal rule beside it. Both sides
+// run the same cases: `challengeCases` for the tally and its XP, `challengeAllowanceCases` for
+// which held deal governs a day. A drift in the first is silent (19a); a drift in the second is
+// a claim refused for a play the page offered (45d).
+console.log("\nthe daily challenges");
+{
+  equal("the built-in figures are the client's",
+        JSON.stringify(DEFAULT_CHALLENGES), JSON.stringify(vectors.challengeDefaults));
+  equal("the structural ceiling is the one the client ships", HARD_MAX_CLEARS, 1000000);
+
+  for (const c of vectors.challengeCases ?? []) {
+    const save = { challenges: { clears: c.rows } };
+    equal(`${c.name} — clears`, challengeClears(save), c.clears);
+    equal(`${c.name} — xp`, challengeXp(save, { challenges: { ...c.config, coins: 1 } }), c.xp);
+  }
+
+  for (const c of vectors.challengeAllowanceCases ?? []) {
+    equal(`${c.name} — allowance`,
+          allowanceOn(vectors.challengeTiers, c.held, c.day, vectors.challengeFreePlays), c.allowance);
+  }
+
+  const played = { challenges: { clears: [{ genre: "pairs", count: 10 }] } };
+  equal("an unseeded config still pays the built-in rate",
+        challengeXp(played, {}), 10 * DEFAULT_CHALLENGES.xp);
+  equal("a null block falls back", challengeXp(played, { challenges: null }), 10 * DEFAULT_CHALLENGES.xp);
+  equal("an unreadable rate pays nothing rather than NaN",
+        challengeXp(played, { challenges: { xp: "lots", maxClears: 100 } }), 0);
 }
 
 // ------------------------------------------------------------------ the XP boost

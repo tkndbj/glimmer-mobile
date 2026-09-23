@@ -319,6 +319,10 @@ namespace GlimmerGrove.Referral
             _stateFor = null;
             _askedRevision = -1;
 
+            // The counter belongs to the account just left; the re-pointed listener delivers
+            // the new account's, and until it does nothing may be compared against it.
+            Interlocked.Exchange(ref _feedRev, ReferralState.UnknownFeed);
+
             // Anything in flight belongs to the account that has just been left. Bumping here
             // is what makes `Reply` drop it; without it a read, a redeem or a claim issued as
             // one player could land as another — and `Adopt` would cache the first player's
@@ -541,6 +545,14 @@ namespace GlimmerGrove.Referral
 
         static int _signalled;
 
+        /// <summary>
+        /// The counter the listener last delivered, or <see cref="ReferralState.UnknownFeed"/>
+        /// before it has delivered anything for this account. Written on the listener's thread,
+        /// read on the main one; a <c>long</c> is not atomic on every runtime this ships to, so
+        /// both sides go through <c>Interlocked</c>.
+        /// </summary>
+        static long _feedRev = ReferralState.UnknownFeed;
+
         /// <summary>Whether a live listener is attached, so a caller can slow its own timer.</summary>
         public static bool IsWatching => Feed.IsWatching;
 
@@ -550,6 +562,36 @@ namespace GlimmerGrove.Referral
         /// it off.
         /// </summary>
         public static IDisposable Watch() => Feed.Hold();
+
+        /// <summary>
+        /// Whether a delivery of <paramref name="feedRev"/> means the cached
+        /// <paramref name="state"/> may be stale, and so whether a call should go out.
+        ///
+        /// <para>
+        /// <b>This is the rule that makes a profile or shop open free.</b> Before it, every
+        /// screen carrying a referral reading asked the server on open — a callable running a
+        /// transaction over the whole save, the most expensive thing a standing screen does —
+        /// and the listener's first delivery asked again, deduplicated only by a five-second
+        /// window. Now a delivery is compared with the counter the cached answer was read
+        /// under: equal means the server has not moved this account's referral state since,
+        /// and the cache <em>is</em> the server's answer. It costs one listener read per open
+        /// and no invocation, at any player count.
+        /// </para>
+        /// <para>
+        /// Three things force an ask, and every one fails toward asking: nothing has ever been
+        /// read for this account; the listener could not read the document; or the stamp and
+        /// the delivery differ — which an answer read with no listener speaking always does,
+        /// because its stamp is <see cref="ReferralState.UnknownFeed"/>. A stamp taken at the
+        /// moment a read went out can only be older than the reply, so a bump landing between
+        /// the two makes the next delivery differ and the device asks once more — never fewer
+        /// times than the server moved.
+        /// </para>
+        /// </summary>
+        internal static bool NeedsAsk(ReferralState state, long feedRev)
+            => state == null
+               || !state.IsKnown
+               || feedRev == ReferralState.UnknownFeed
+               || state.FeedRev != feedRev;
 
         /// <summary>
         /// The app is going away. The listener goes with it.
@@ -584,18 +626,25 @@ namespace GlimmerGrove.Referral
         /// </summary>
         public static void Resumed()
         {
-            Feed.Resume();
-            Poke();
+            // A re-attached listener delivers the document as it stands, and `Pump` compares
+            // that with the stamp on the cached answer — so with a listener the gap is covered
+            // by the delivery, and only a device that could not re-attach asks blind.
+            if (!Feed.Resume()) Poke();
         }
 
         /// <summary>Re-points the listener after an account switch, or drops it on a sign-out.</summary>
         static void SettleListener() => Feed.Settle();
 
         /// <summary>
-        /// The feed moved. <b>This may be on any thread</b>, so it does exactly one thing that
-        /// is safe on any thread and leaves the rest to <see cref="Pump"/>.
+        /// The feed was delivered. <b>This may be on any thread</b>, so it does exactly two
+        /// things that are safe on any thread — records the counter and raises a flag — and
+        /// leaves the rest to <see cref="Pump"/>.
         /// </summary>
-        static void OnFeedMoved() => Interlocked.Exchange(ref _signalled, 1);
+        static void OnFeedMoved(long feedRev)
+        {
+            Interlocked.Exchange(ref _feedRev, feedRev);
+            Interlocked.Exchange(ref _signalled, 1);
+        }
 
         /// <summary>
         /// Called once a frame from the main thread by whatever is watching. Turns a flag the
@@ -614,8 +663,25 @@ namespace GlimmerGrove.Referral
         public static void Pump()
         {
             if (Interlocked.Exchange(ref _signalled, 0) == 0) return;
+            if (!NeedsAsk(State, Interlocked.Read(ref _feedRev))) return;
             Poke();
         }
+
+        /// <summary>
+        /// Called by whatever has just started watching. With a listener attached, its first
+        /// delivery decides whether to ask (<see cref="NeedsAsk"/>); without one there is
+        /// nothing to compare against, so the ask goes out as it always did.
+        /// </summary>
+        public static void Opened()
+        {
+            if (!IsWatching) Poke();
+        }
+
+        /// <summary>
+        /// The counter to stamp a reply with: what the listener has said so far, read before
+        /// the call goes out. See <see cref="ReferralState.FeedRev"/> for why before.
+        /// </summary>
+        static long FeedAtAsk => Interlocked.Read(ref _feedRev);
 
         // ------------------------------------------------------------- reading
         public static async Task<CloudResult> RefreshAsync(CancellationToken cancellation = default)
@@ -627,14 +693,16 @@ namespace GlimmerGrove.Referral
             try
             {
                 // Taken before the call, not after: anything that lands while this is out is
-                // newer than what comes back, and may be a different account's entirely.
+                // newer than what comes back, and may be a different account's entirely. The
+                // feed stamp is taken before for the opposite reason — see ReferralState.FeedRev.
                 var claim = Claim.Take();
+                long feed = FeedAtAsk;
 
                 var authorised = await CloudSaveService.AuthoriseForCallAsync(cancellation);
                 if (!authorised.Ok) return authorised;
 
                 var (result, reply) = await Backend.ReadReferralAsync(cancellation);
-                if (result.Ok && reply != null) Adopt(reply.State, claim);
+                if (result.Ok && reply != null) Adopt(reply.State?.WithFeed(feed), claim);
                 return result;
             }
             finally
@@ -663,6 +731,7 @@ namespace GlimmerGrove.Referral
             try
             {
                 var claim = Claim.Write();
+                long feed = FeedAtAsk;
 
                 var authorised = await CloudSaveService.AuthoriseForCallAsync(cancellation);
                 if (!authorised.Ok) return ReferralRedeemOutcome.Unavailable;
@@ -672,8 +741,11 @@ namespace GlimmerGrove.Referral
 
                 // The bind itself stands whatever happened here — it is the server's, and
                 // it is keyed on the account that asked. What must not happen is *this*
-                // account's state being written over whoever is signed in now.
-                Adopt(reply.State, claim);
+                // account's state being written over whoever is signed in now. A write bumps
+                // the feed, so the stamp taken before it is older than the counter the
+                // listener delivers next and the device reads once more — which is right: the
+                // server may have settled more than this reply carries.
+                Adopt(reply.State?.WithFeed(feed), claim);
 
                 Telemetry.Track("referral_redeemed", "outcome", reply.Redeem.ToString());
                 return reply.Redeem;
@@ -709,6 +781,7 @@ namespace GlimmerGrove.Referral
             try
             {
                 var claim = Claim.Write();
+                long feed = FeedAtAsk;
 
                 var authorised = await CloudSaveService.AuthoriseForCallAsync(cancellation);
                 if (!authorised.Ok)
@@ -722,6 +795,10 @@ namespace GlimmerGrove.Referral
                 var (result, reply) = await Backend.ClaimReferralAsync(kind, goal, index, cancellation);
                 if (!result.Ok || reply == null)
                     return new ReferralPayout(kind, goal, index, tier, null, ReferralLanding.Verdict.Nothing, result);
+
+                // Stamped here so the payout's `Land` adopts the same stamped answer this
+                // method would have; the redeem's note about a write applies.
+                reply.State = reply.State?.WithFeed(feed);
 
                 // Somebody else is signed in now. The server has paid the account that asked
                 // and the note is still standing on it, so the right thing is to do nothing
@@ -926,6 +1003,7 @@ namespace GlimmerGrove.Referral
             _askedRevision = -1;
             _lastAsk = double.NegativeInfinity;
             Interlocked.Exchange(ref _signalled, 0);
+            Interlocked.Exchange(ref _feedRev, ReferralState.UnknownFeed);
             Interlocked.Exchange(ref _reading, 0);
             Interlocked.Exchange(ref _writing, 0);
             Interlocked.Exchange(ref _generation, 0);

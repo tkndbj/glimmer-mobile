@@ -27,7 +27,8 @@ namespace GlimmerGrove.Tests
     public sealed class ChallengeTests
     {
         // ------------------------------------------------------------------ the file
-        static ChallengeTable Shipped()
+        /// <summary>The shipped file through the shipped reader. Shared with <c>ChallengeLedgerTests</c>.</summary>
+        internal static ChallengeTable Shipped()
         {
             string path = Path.Combine(TestJson.RepoRoot(), "Assets", "StreamingAssets", "Content", "challenges.json");
             var map = TestJson.Object(TestJson.Parse(File.ReadAllText(path)));
@@ -43,6 +44,36 @@ namespace GlimmerGrove.Tests
             dto.line.damage = TestJson.Int(line, "damage");
             dto.line.health = TestJson.Int(line, "health");
             dto.line.strike = TestJson.Int(line, "strike");
+
+            // The v2 blocks, read the long way for the same reason the rows are: through the
+            // shipped reader rather than `JsonUtility`, so the fixture runs offline (29e).
+            dto.allowance = new ChallengeAllowanceDto();
+            if (map.ContainsKey("allowance"))
+                dto.allowance.freePlays = TestJson.Int(TestJson.Child(map, "allowance"), "freePlays");
+
+            dto.rewards = new ChallengeRewardDto();
+            if (map.ContainsKey("rewards"))
+            {
+                var rewards = TestJson.Child(map, "rewards");
+                dto.rewards.coins = TestJson.Int(rewards, "coins");
+                dto.rewards.xp = TestJson.Int(rewards, "xp");
+                dto.rewards.maxClears = TestJson.Int(rewards, "maxClears");
+            }
+
+            var tiers = new List<ChallengeTierDto>();
+            if (map.ContainsKey("tiers"))
+                foreach (var item in TestJson.Children(map, "tiers"))
+                {
+                    var tier = TestJson.Object(item);
+                    tiers.Add(new ChallengeTierDto
+                    {
+                        id = TestJson.Str(tier, "id", string.Empty),
+                        gems = TestJson.Int(tier, "gems"),
+                        plays = TestJson.Int(tier, "plays"),
+                        days = TestJson.Int(tier, "days"),
+                    });
+                }
+            dto.tiers = tiers.ToArray();
 
             var rows = new List<ChallengeDto>();
             foreach (var item in TestJson.Children(map, "challenges"))

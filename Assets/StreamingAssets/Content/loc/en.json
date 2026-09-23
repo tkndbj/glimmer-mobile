@@ -1622,6 +1622,138 @@
       "text": "Gain {0} and {1} per wave cleared."
     },
     {
+      "key": "challenge.genre.pairs.name",
+      "text": "Pairs"
+    },
+    {
+      "key": "challenge.genre.pairs.blurb",
+      "text": "Turn two gems. A pair fires its turret."
+    },
+    {
+      "key": "challenge.genre.pipes.name",
+      "text": "Pipeworks"
+    },
+    {
+      "key": "challenge.genre.pipes.blurb",
+      "text": "Turn the pipes. A colour joined to its turret fires every turn."
+    },
+    {
+      "key": "challenge.genre.merge.name",
+      "text": "Merge"
+    },
+    {
+      "key": "challenge.genre.merge.blurb",
+      "text": "Slide to merge. Each rank you make fires its colour."
+    },
+    {
+      "key": "challenge.genre.sokoban.name",
+      "text": "Push"
+    },
+    {
+      "key": "challenge.genre.sokoban.blurb",
+      "text": "Push each gem onto its pad. A seated gem arms its turret."
+    },
+    {
+      "key": "challenge.tier.bronze.name",
+      "text": "Bronze"
+    },
+    {
+      "key": "challenge.tier.silver.name",
+      "text": "Silver"
+    },
+    {
+      "key": "challenge.tier.gold.name",
+      "text": "Gold"
+    },
+    {
+      "key": "ui.challenges.plays_left",
+      "text": "{0} / {1} plays left"
+    },
+    {
+      "key": "ui.challenges.spent",
+      "text": "Back tomorrow"
+    },
+    {
+      "key": "ui.challenges.no_plays",
+      "text": "No plays left today. New levels tomorrow."
+    },
+    {
+      "key": "ui.challenges.today_level",
+      "text": "Today: {0}"
+    },
+    {
+      "key": "ui.challenges.free_deal",
+      "text": "Free: {0} plays of each puzzle a day"
+    },
+    {
+      "key": "ui.challenges.held_deal",
+      "text": "{0} deal: {1} plays of each puzzle a day, {2}"
+    },
+    {
+      "key": "ui.challenges.days_left",
+      "text": "{0} days left"
+    },
+    {
+      "key": "ui.challenges.days_left_one",
+      "text": "last day"
+    },
+    {
+      "key": "ui.challenges.days",
+      "text": "{0} days"
+    },
+    {
+      "key": "ui.challenges.days_one",
+      "text": "1 day"
+    },
+    {
+      "key": "ui.challenges.deals",
+      "text": "Deals"
+    },
+    {
+      "key": "ui.challenges.deals_title",
+      "text": "Challenge Deals"
+    },
+    {
+      "key": "ui.challenges.deal_line",
+      "text": "{0} plays of each puzzle a day, for {1}"
+    },
+    {
+      "key": "ui.challenges.buy",
+      "text": "{0} gems"
+    },
+    {
+      "key": "ui.challenges.deal_held",
+      "text": "ACTIVE"
+    },
+    {
+      "key": "ui.challenges.deal_running",
+      "text": "This deal is already running."
+    },
+    {
+      "key": "ui.challenges.deal_lower",
+      "text": "A bigger deal is already running."
+    },
+    {
+      "key": "ui.challenges.deal_too_poor",
+      "text": "You need {0} gems for this deal."
+    },
+    {
+      "key": "ui.challenges.deal_bought",
+      "text": "{0} deal active!"
+    },
+    {
+      "key": "ui.challenges.next_level",
+      "text": "Next level"
+    },
+    {
+      "key": "ui.challenges.reward",
+      "text": "+{0} coins   +{1} XP"
+    },
+    {
+      "key": "ui.challenges.reward_boost",
+      "text": "+{0} coins   +{1} XP (+{2} boost)"
+    },
+    {
       "key": "ui.challenges.done",
       "text": "Done"
     },

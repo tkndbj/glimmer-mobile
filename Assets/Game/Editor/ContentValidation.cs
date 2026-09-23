@@ -1166,6 +1166,30 @@ namespace GlimmerGrove.EditorTools
                               $"hill {row.Hill}, {row.RaiderCount} raider(s) of {row.HillHealth} health");
             }
 
+            // A genre's card and a deal's row each name themselves from a permanent id
+            // (invariant 56i), so the strings are held to the table here as a row's are.
+            if (strings != null)
+            {
+                foreach (var genre in table.Genres)
+                {
+                    string spelling = Challenges.ChallengeGenres.NameOf(genre);
+                    Require(strings, "challenge.genre." + spelling + ".name", $"genre '{spelling}'", result);
+                    Require(strings, "challenge.genre." + spelling + ".blurb", $"genre '{spelling}'", result);
+                }
+
+                foreach (var tier in table.Tiers)
+                    Require(strings, tier.NameKey, $"deal '{tier.Id}'", result);
+            }
+
+            int genres = table.Genres.Count;
+            Debug.Log($"[Glimmer] challenges: {table.FreePlays} free play(s) of each of {genres} genre(s) a day; " +
+                      $"a clear pays {table.Rewards.Coins} credits and {table.Rewards.Xp} XP up to " +
+                      $"{table.Rewards.MaxClears:N0} clears ({table.Rewards.MaxXp:N0} XP); " +
+                      $"{table.Tiers.Count} deal(s)");
+            foreach (var tier in table.Tiers)
+                Debug.Log($"[Glimmer]   deal '{tier.Id}': {tier.Gems} gems for {tier.Days} day(s) of {tier.Plays} plays a genre, " +
+                          $"at most {tier.Plays * genres * table.Rewards.Coins:N0} credits a day");
+
             if (table.IsEmpty) result.Warnings.Add("challenges.json offers no challenge; the hub's door is shut");
         }
 

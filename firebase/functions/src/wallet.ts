@@ -16,6 +16,7 @@ import { readFloor, StreakFloor } from "./streak";
 import { readWheelPosition } from "./wheel";
 import { readTaskPaid, TaskPaid } from "./tasks";
 import { EndlessDay, readEndlessDay } from "./endless";
+import { ChallengeTiersHeld, readChallengeTiers } from "./challenges";
 
 export interface CurrencyState {
   granted: number;
@@ -115,6 +116,16 @@ export type WalletDoc = Record<CurrencyId, CurrencyState> & {
    * for the wheel's reason: every writer writes this document whole.
    */
   tasks?: TaskPaid;
+
+  /**
+   * Which challenge deals this account bought, tier id → the day it was last bought
+   * (`challenges.ts`). Server-owned for the streak floor's reason, and it is the **whole**
+   * bound on a paid play: a coin claim past the free allowance is priced against the deal
+   * recorded here when the gems were taken, never against the save's own copy. Written by
+   * `submitSpends` in the transaction that takes the gems; carried through `readWallet`
+   * because every writer writes this document whole.
+   */
+  challengeTiers?: ChallengeTiersHeld;
 };
 
 /** What the client's `CloudWalletState` expects back. */
@@ -253,6 +264,13 @@ export function readWallet(
   // per sync. Assigned only when there is one, for the `undefined` reason above.
   const endless = readEndlessDay(raw?.endless);
   if (endless) wallet.endless = endless;
+
+  // The challenge deals, carried through for exactly the reason every field above it is:
+  // every writer of this document writes it *whole*, so a field this function does not copy is
+  // a field the next spend or claim silently deletes - and deleting this one refuses every paid
+  // play the account bought. Assigned only when there is one, for the `undefined` reason above.
+  const tiers = readChallengeTiers((raw as { challengeTiers?: unknown } | undefined)?.challengeTiers);
+  if (Object.keys(tiers).length > 0) wallet.challengeTiers = tiers;
 
   // Whether this server has ever recorded currency for the account, which is what "brand new"
   // has always meant here. It used to be read off `snapshot.exists`, and that stopped being

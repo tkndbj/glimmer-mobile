@@ -85,6 +85,12 @@ import {
 } from "./endless";
 import type { EndlessClaim } from "./endless";
 import {
+  MAX_CHALLENGE_DAYS_AHEAD, MAX_CHALLENGE_DAYS_BEHIND, MAX_TIER_DAYS_AHEAD, MAX_TIER_DAYS_BEHIND,
+  challengeGrant, challengeXp, findTier as findChallengeTier, holdTier, isChallengeGrantId,
+  parseChallengeClaim, parseChallengeTierSpendId, usableChallengesConfig,
+} from "./challenges";
+import type { ChallengeClaim } from "./challenges";
+import {
   deriveEarned,
   loadProgressionConfig,
   readWallet,
@@ -358,6 +364,48 @@ export const submitSpends = onCall(callOptions, async (request): Promise<{
         }, { merge: true });
       }
 
+      // A challenge deal is the second debit this server turns into a permission, and it is
+      // the pass's shape exactly (`chaltier:{tier}:{fromDay}`, `SpendEntry.ChallengeTierId`):
+      // refused unless the block sells the deal, the currency is gems and the amount is at
+      // least the published price; refused when the day it names is outside the window,
+      // because a window will not become true again tomorrow (13a). The entitlement lands on
+      // this same wallet document in this same transaction, so the purchase and the permission
+      // cannot come apart — and it is what every coin claim past the free allowance is bounded
+      // by (`challengeGrant`). See `challenges.ts`.
+      const deal = parseChallengeTierSpendId(spend.id);
+
+      if (deal) {
+        const block = usableChallengesConfig((config as { challenges?: unknown }).challenges);
+        const tier = block ? findChallengeTier(block, deal.tierId) : null;
+
+        if (!block || !tier) {
+          logger.warn("refused a challenge deal debit for a deal config/progression does not sell", {
+            uid, spendId: spend.id, tier: deal.tierId,
+          });
+          rejected.push(spend.id);
+          continue;
+        }
+
+        const dealToday = todayKey(Date.now());
+        if (deal.fromDay > dealToday + MAX_TIER_DAYS_AHEAD || deal.fromDay < dealToday - MAX_TIER_DAYS_BEHIND) {
+          logger.warn("refused a challenge deal dated outside the window", {
+            uid, spendId: spend.id, fromDay: deal.fromDay, today: dealToday,
+          });
+          rejected.push(spend.id);
+          continue;
+        }
+
+        if (spend.currency !== "gems" || spend.amount < tier.gems) {
+          logger.warn("refused an underpaid challenge deal debit", {
+            uid, spendId: spend.id, currency: spend.currency, paid: spend.amount, price: tier.gems,
+          });
+          rejected.push(spend.id);
+          continue;
+        }
+
+        state.challengeTiers = holdTier(state.challengeTiers ?? {}, deal.tierId, deal.fromDay);
+      }
+
       transaction.set(db.doc(PATHS.spend(uid, spend.id)), {
         currency: spend.currency,
         amount: spend.amount,
@@ -418,6 +466,7 @@ type CleanAward =
   | (CleanCommon & { kind: "streak"; claim: StreakClaim })
   | (CleanCommon & { kind: "task"; claim: TaskClaim })
   | (CleanCommon & { kind: "mark"; claim: MarkClaim })
+  | (CleanCommon & { kind: "challenge"; claim: ChallengeClaim })
   | (CleanCommon & { kind: "endless"; claim: EndlessClaim });
 
 export const claimAwards = onCall(callOptions, async (request): Promise<{
@@ -520,6 +569,27 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
       return [{ ...common, kind: "mark", claim: mark, currency: mark.currency as CurrencyId }];
     }
 
+    // A cleared daily challenge, in credits: re-priced from the published rate and bounded by
+    // the deal this wallet recorded for that day (`challenges.ts`). Windowed like an endless
+    // claim and refused outside it, for the same reason.
+    if (isChallengeGrantId(id)) {
+      const claim = parseChallengeClaim(id);
+      if (!claim) { rejected.push(id); return []; }
+
+      if (!CURRENCIES.includes(claim.currency as CurrencyId)) { rejected.push(id); return []; }
+
+      if (claim.dayKey > today + MAX_CHALLENGE_DAYS_AHEAD ||
+          claim.dayKey < today - MAX_CHALLENGE_DAYS_BEHIND) {
+        logger.warn("refused a challenge claim dated outside the window", {
+          uid, id, claimedDay: claim.dayKey, today,
+        });
+        rejected.push(id);
+        return [];
+      }
+
+      return [{ ...common, kind: "challenge", claim, currency: claim.currency as CurrencyId }];
+    }
+
     // The Infinite lane, in credits. **The one claim here this server cannot re-price**, so
     // it is taken at the client's figure and cut down to what the day's ceiling leaves - see
     // `endless.ts` for why that bound is the whole of the security. Windowed like a streak
@@ -606,6 +676,7 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
     const daily = usableDailyConfig((config as { daily?: unknown }).daily);
     const ladder = usableStreakConfig((config as { streak?: unknown }).streak);
     const tasks = usableTaskConfig((config as { tasks?: unknown }).tasks);
+    const challenges = usableChallengesConfig((config as { challenges?: unknown }).challenges);
 
     // Which task ids this server has paid per period. Threaded through the loop like the
     // streak floor, because a batch pays several and each one narrows the allowance.
@@ -635,6 +706,7 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
       const table = award.kind === "mark" ? tasks
                   : award.kind === "streak" ? ladder
                   : award.kind === "task" ? tasks
+                  : award.kind === "challenge" ? challenges
                   : daily;
 
       if (!table) {
@@ -754,6 +826,49 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
         amount = taskCurrencyValue(tier.chest, uid, award.claim.period, award.claim.key,
                                    award.claim.taskId, award.currency);
         detail = { period: award.claim.period, task: award.claim.taskId, tier: tier.id };
+      } else if (award.kind === "challenge") {
+        // Re-priced from the published rate and bounded by the deal this wallet recorded for
+        // the claim's day — never by the save's own copy and never by the client's figure.
+        if (award.currency !== "credits") {
+          logger.warn("refused a challenge claim in a currency the mode does not pay",
+                      { uid, id: award.id, currency: award.currency });
+          rejected.push(award.id);
+          continue;
+        }
+
+        const priced = challengeGrant(challenges!, award.claim, state.challengeTiers ?? {});
+
+        if (priced.amount <= 0) {
+          // A genre the file does not ship, or a rate of nought: nothing to pay, ever.
+          if (!priced.known || challenges!.coins <= 0) {
+            logger.warn("refused a challenge claim the published block does not pay", {
+              uid, id: award.id, genre: award.claim.genre, known: priced.known,
+            });
+            rejected.push(award.id);
+            continue;
+          }
+
+          // A win past the day's allowance. A sync sends awards before debits, so the deal that
+          // covers it may be one call behind — left unconfirmed while the claim's day is still
+          // inside the window, refused once it has closed (by then the debit has landed, or the
+          // client has taken the deal back). See `challengeGrant`.
+          if (award.claim.dayKey >= today - MAX_CHALLENGE_DAYS_BEHIND) {
+            logger.info("a challenge claim is past the day's allowance; leaving it unconfirmed " +
+                        "in case its deal is still in flight", {
+              uid, id: award.id, win: award.claim.win, allowance: priced.allowance,
+            });
+            continue;
+          }
+
+          logger.warn("refused a challenge claim past the day's allowance", {
+            uid, id: award.id, win: award.claim.win, allowance: priced.allowance,
+          });
+          rejected.push(award.id);
+          continue;
+        }
+
+        amount = priced.amount;
+        detail = { genre: award.claim.genre, win: award.claim.win, allowance: priced.allowance };
       } else if (award.kind === "endless") {
         // **Taken from the client and bounded, which is the one place in this function that
         // happens.** Every other branch above re-prices the claim from a published table; a
@@ -1476,7 +1591,10 @@ export const publishGrove = onCall(callOptions, async (request): Promise<{
   // The three sources of XP, in the order they depend on each other. The star ledger and the
   // Infinite lane are what an account can *prove*; the boost is a percentage of those two, so it
   // is clamped against their sum rather than against a ceiling of its own (`xpBoostXp`).
-  const provableXp = derivedXp(save.levels, config) + endlessXp(save, config);
+  // Three derived sources, summed before the boost is clamped against them: the star ledger,
+  // the Infinite lane and the daily challenges. The client sums the same three
+  // (`PlayerProgression.EnsureFresh`); the shared vectors hold each pair.
+  const provableXp = derivedXp(save.levels, config) + endlessXp(save, config) + challengeXp(save, config);
   const level = keeperLevel(provableXp + xpBoostXp(save, config, provableXp), curve);
 
   // The ceiling on the bought half: everything this account has ever legitimately had to

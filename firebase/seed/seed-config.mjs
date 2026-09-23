@@ -242,6 +242,7 @@ function buildProgressionConfig() {
       golden: readGolden(progression),
       endless: readEndless(progression),
       xpBoost: readXpBoost(progression),
+      challenges: readChallenges(),
       // Read before the calendar and before the streak, because both name chest tiers and
       // the seeder is the one place that can prove a named tier actually exists — a
       // season's ladder lives in the manifest, the streak's in progression.json, the tiers
@@ -747,6 +748,97 @@ function readEndless(progression) {
   }
 
   return { xpPerWave, maxWaves, creditsPerWave, dailyCreditCap };
+}
+
+/**
+ * The daily challenges' block, read out of `challenges.json` rather than `progression.json`
+ * because the two files are kept apart on purpose (invariant 56): a challenge retune ships
+ * nothing of the reward table's. What is published is only what a claim is priced against —
+ * the genre spellings, the free allowance, the deal rows and the two reward rates. The boards
+ * never leave the device.
+ *
+ * Mirrors `ChallengeTable.TryBuild`'s refusals about the blocks and `ChallengeRewardRule`'s
+ * about the rates. A file the client would refuse is refused here too, so the two halves can
+ * never be seeded apart; a file with no `challenges.json` at all publishes the built-in rates
+ * with no deals and no genres, which leaves every coin claim unconfirmed rather than paid.
+ */
+function readChallenges() {
+  // `ChallengeLimits`, mirrored.
+  const DEFAULTS = { freePlays: 2, coins: 40, xp: 20, maxClears: 25000 };
+  const MAX_FREE_PLAYS = 100, MAX_TIER_PLAYS = 1000, MAX_TIER_GEMS = 100000, MAX_TIER_DAYS = 365;
+  const MAX_TIERS = 16, MAX_COINS = 200, MAX_XP = 1000, HARD_MAX_CLEARS = 1000000;
+  const KEY = /^[a-z0-9_]{1,32}$/;
+  const VERSION = 2;
+
+  const path = join(CONTENT, "challenges.json");
+  if (!existsSync(path)) {
+    console.log("  note: challenges.json is missing, so no deal is sold and no challenge claim is paid");
+    return { genres: [], freePlays: DEFAULTS.freePlays, tiers: [], coins: DEFAULTS.coins,
+             xp: DEFAULTS.xp, maxClears: DEFAULTS.maxClears };
+  }
+
+  const file = readJson(path);
+  if (file.schemaVersion !== VERSION) {
+    throw new Error(`challenges.json is schema v${file.schemaVersion}; this seeder reads v${VERSION}`);
+  }
+
+  const whole = (raw, name, max) => {
+    if (raw === undefined || raw === null) return 0;
+    const value = Math.floor(Number(raw));
+    if (!Number.isFinite(value) || value < 0) throw new Error(`challenges ${name} is ${raw}, which is not a whole number`);
+    if (value > max) throw new Error(`challenges ${name} is ${value}, above the supported maximum ${max}`);
+    return value;
+  };
+
+  const genres = [];
+  for (const row of file.challenges ?? []) {
+    const genre = typeof row?.genre === "string" ? row.genre : "";
+    if (!KEY.test(genre)) throw new Error(`challenge '${row?.id}' names genre '${genre}', which is not key-shaped`);
+    if (!genres.includes(genre)) genres.push(genre);
+  }
+  genres.sort();
+
+  const freePlays = file.allowance?.freePlays > 0
+    ? whole(file.allowance.freePlays, "allowance.freePlays", MAX_FREE_PLAYS)
+    : DEFAULTS.freePlays;
+
+  // The rewards: an unwritten block inherits, a written one is read as authored — a nought
+  // rate withdraws the payment, and a rate beside no ceiling is refused rather than repaired,
+  // for the endless block's reason (a rate with no bound is the one shape never published).
+  const rewards = file.rewards ?? {};
+  const authored = (rewards.coins ?? 0) > 0 || (rewards.xp ?? 0) > 0 || (rewards.maxClears ?? 0) > 0;
+  const coins = authored ? whole(rewards.coins, "rewards.coins", MAX_COINS) : DEFAULTS.coins;
+  const xp = authored ? whole(rewards.xp, "rewards.xp", MAX_XP) : DEFAULTS.xp;
+  const maxClears = authored ? whole(rewards.maxClears, "rewards.maxClears", HARD_MAX_CLEARS) : DEFAULTS.maxClears;
+  if (xp > 0 && maxClears <= 0) {
+    throw new Error("challenges rewards.xp is set with no maxClears; a rate with no ceiling pays " +
+                    "nothing on both sides, which is a typo rather than a decision. Set a ceiling, " +
+                    "or set xp to 0 to withdraw the payment");
+  }
+
+  const tiers = [];
+  const rows = file.tiers ?? [];
+  if (rows.length > MAX_TIERS) throw new Error(`challenges lists ${rows.length} deals; at most ${MAX_TIERS} are supported`);
+  let lastPlays = freePlays, lastGems = 0;
+  for (const row of rows) {
+    const id = typeof row?.id === "string" ? row.id : "";
+    if (!KEY.test(id)) throw new Error(`a challenge deal has an id that is not key-shaped: '${id}'`);
+    if (tiers.some((t) => t.id === id)) throw new Error(`challenge deal '${id}' is listed twice`);
+    const gems = whole(row.gems, `deal '${id}' gems`, MAX_TIER_GEMS);
+    const plays = whole(row.plays, `deal '${id}' plays`, MAX_TIER_PLAYS);
+    const days = whole(row.days, `deal '${id}' days`, MAX_TIER_DAYS);
+    if (gems <= 0 || plays <= 0 || days <= 0) throw new Error(`challenge deal '${id}' needs gems, plays and days above nought`);
+    if (plays <= lastPlays) throw new Error(`challenge deal '${id}' gives ${plays} plays, which does not beat the ${lastPlays} before it`);
+    if (gems <= lastGems) throw new Error(`challenge deal '${id}' costs ${gems} gems, which does not exceed the ${lastGems} before it`);
+    lastPlays = plays;
+    lastGems = gems;
+    tiers.push({ id, gems, plays, days });
+  }
+
+  console.log(`  challenges: ${genres.length} genre(s), ${freePlays} free play(s) a day, ${tiers.length} deal(s), ` +
+              `${coins} credits and ${xp} XP a clear up to ${maxClears} clears`);
+
+  return { genres, freePlays, tiers, coins, xp, maxClears };
 }
 
 function readGolden(progression) {

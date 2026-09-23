@@ -14,10 +14,17 @@ namespace GlimmerGrove
     /// <para>
     /// <b>A screen of its own, sharing the world and nothing about being a run</b> (MODES.md
     /// 20b, read the other way): a challenge is not a level. It has no <c>LevelId</c>, no
-    /// record, no stars, no hearts, no continue, no XP, no credits and no lesson, so it goes
-    /// through none of <c>RunScreen</c>, <c>ProtoScreen</c> or the reward path — by the owner's
-    /// instruction that tuning a challenge must never move the core game. What it shares is
-    /// the art (<see cref="ChallengeArt"/>), the kit and the flow.
+    /// record, no stars, no hearts, no continue and no lesson, so it goes through none of
+    /// <c>RunScreen</c>, <c>ProtoScreen</c> or the reward path — by the owner's instruction that
+    /// tuning a challenge must never move the core game. What it shares is the art
+    /// (<see cref="ChallengeArt"/>), the kit and the flow.
+    /// </para>
+    /// <para>
+    /// <b>Opened by genre, dealt by the ledger.</b> The list says which genre; which level that
+    /// is today, and whether a play is left, is <see cref="ChallengeLedger.Begin"/>'s answer —
+    /// so a screen that is somehow reached with no play left goes straight back to the list,
+    /// and a screen that is reached is one that has spent the play (invariant 56h: spent at the
+    /// deal, never at the ending).
     /// </para>
     /// <para>
     /// <b>One door for every input.</b> A view hands its input to <see cref="Play"/>, which
@@ -25,14 +32,15 @@ namespace GlimmerGrove
     /// latched until both have landed. A refused input shakes and costs nothing.
     /// </para>
     /// <para>
-    /// <b>It stores nothing.</b> Leaving forfeits the run silently — there is nothing to lose
-    /// but the run, and the way back in is one tap — so this is not a fourth confirmation.
+    /// <b>Leaving forfeits the run silently</b> — the play is already spent, the way a run that
+    /// is quit is already paid for, and the way back in is one tap — so this is not a fourth
+    /// confirmation.
     /// </para>
     /// </summary>
     public sealed class ChallengeScreen : View
     {
-        /// <summary>Set by the list before <c>Build</c>. The challenge to play.</summary>
-        public string Id;
+        /// <summary>Set by the list before <c>Build</c>. The genre to deal.</summary>
+        public ChallengeGenre Genre;
 
         public override string Track => "mus_menu";
 
@@ -52,6 +60,7 @@ namespace GlimmerGrove
         const float BottomPad = 36f, BandGap = 14f;
 
         AssetHold _hold;
+        ChallengePlay _play;
         ChallengeRun _run;
         ChallengeHillView _hill;
         PuzzleView _puzzle;
@@ -68,15 +77,15 @@ namespace GlimmerGrove
 
         IEnumerator Raise()
         {
-            var def = ChallengeRules.Table.Find(Id);
-            if (def == null)
+            _play = ChallengeLedger.Begin(Genre);
+            if (_play == null)
             {
-                Debug.LogError($"[Challenges] no challenge '{Id}'; back to the list");
+                Debug.LogWarning($"[Challenges] no play of '{ChallengeGenres.NameOf(Genre)}' left today; back to the list");
                 Flow.Go<DailyChallengesScreen>();
                 yield break;
             }
 
-            _run = new ChallengeRun(def, ChallengeRules.Table.Line);
+            _run = new ChallengeRun(_play.Definition, ChallengeRules.Table.Line);
 
             var task = Warm();
             while (!task.IsCompleted) yield return null;
@@ -86,7 +95,7 @@ namespace GlimmerGrove
             Scenery.Plain(Content);
             Fireflies.Spawn(Content, 10, Pal.A(Pal.Gold, .9f), 4f, 14f);
 
-            BuildChrome(def);
+            BuildChrome(_play.Definition);
 
             yield return null;
             Canvas.ForceUpdateCanvases();
@@ -241,15 +250,24 @@ namespace GlimmerGrove
         }
 
         // ------------------------------------------------------------------ the endings
+        /// <summary>
+        /// The run is over. <b>The ledger is told before anything is drawn</b>, so a process
+        /// killed during the curtain has still paid — a win is a claim in the save and a tally
+        /// moved, both persisted by the ledger's own save, and the curtain merely reports them.
+        /// </summary>
         void End(bool won)
         {
             if (_ended) return;
             _ended = true;
 
-            StartCoroutine(Curtain(won));
+            var reward = ChallengeReward.None;
+            if (won) reward = ChallengeLedger.Win(_play);
+            else ChallengeLedger.Lose(_play, _run.Turns);
+
+            StartCoroutine(Curtain(won, reward));
         }
 
-        IEnumerator Curtain(bool won)
+        IEnumerator Curtain(bool won, ChallengeReward reward)
         {
             yield return new WaitForSecondsRealtime(.4f);
             if (!this) yield break;
@@ -269,34 +287,73 @@ namespace GlimmerGrove
             var scrim = UIKit.Scrim(Content, .62f);
             var safe = SafeArea.Node("Ending", Content);
 
-            UIKit.Halo(safe, won ? Pal.Gold : Pal.Rose, 760f, .30f, new Vector2(0f, 220f));
+            UIKit.Halo(safe, won ? Pal.Gold : Pal.Rose, 760f, .30f, new Vector2(0f, 250f));
 
             var line = UIKit.Titled("Line", safe, Loc.Get(won ? "ui.challenges.won" : "ui.challenges.lost"), 60,
                                     Pal.Cream, TextAnchor.MiddleCenter, new Vector2(880f, 200f),
-                                    new Vector2(.5f, .5f), new Vector2(0f, 220f), 3f, 5f, wrap: true);
+                                    new Vector2(.5f, .5f), new Vector2(0f, 250f), 3f, 5f, wrap: true);
             UIKit.Shrinkable(line, 32);
             line.transform.localScale = Vector3.zero;
             Tween.Pop(line.transform, 0f, .5f);
 
-            var turns = UIKit.Titled("Turns", safe, Loc.Format("ui.challenges.turns", _run.Turns), 30,
-                                     Pal.A(Pal.Cream, .85f), TextAnchor.MiddleCenter, new Vector2(600f, 60f),
-                                     new Vector2(.5f, .5f), new Vector2(0f, 90f), 2f, 2f);
+            UIKit.Titled("Turns", safe, Loc.Format("ui.challenges.turns", _run.Turns), 30,
+                         Pal.A(Pal.Cream, .85f), TextAnchor.MiddleCenter, new Vector2(600f, 60f),
+                         new Vector2(.5f, .5f), new Vector2(0f, 130f), 2f, 2f);
 
-            var retry = UIKit.TextButton("Retry", safe, Skins.Affirm, Loc.Get("ui.challenges.retry").ToUpperInvariant(),
-                                         32, new Vector2(460f, 118f), new Vector2(.5f, .5f), new Vector2(0f, -50f),
-                                         () => Flow.Go<ChallengeScreen>(v => v.Id = Id));
-            var done = UIKit.TextButton("Done", safe, Skins.Alternate, Loc.Get("ui.challenges.done").ToUpperInvariant(),
-                                        32, new Vector2(460f, 118f), new Vector2(.5f, .5f), new Vector2(0f, -190f), Leave);
-
-            foreach (var key in new[] { retry, done })
+            // What the win paid, said as a picture and a sentence rather than as a bullet point
+            // (45h): coins and XP, with the boost's share beside the XP when one is running.
+            if (won && reward.Any)
             {
-                var rt = (RectTransform)key.transform;
-                var group = UIKit.Group(rt);
-                group.alpha = 0f;
-                Tween.Fade(group, 1f, .3f).Delay(.22f);
+                string paid = reward.BonusXp > 0
+                            ? Loc.Format("ui.challenges.reward_boost", reward.Coins, reward.Xp, reward.BonusXp)
+                            : Loc.Format("ui.challenges.reward", reward.Coins, reward.Xp);
+                var pill = Scenery.Pill(safe, paid, 30, new Vector2(620f, 74f), new Vector2(.5f, .5f),
+                                        new Vector2(0f, 50f), Pal.A(Pal.Gold, .22f));
+                UIKit.Shrinkable(pill, 20);
+                pill.transform.parent.localScale = Vector3.zero;
+                Tween.Pop(pill.transform.parent, .12f, .5f);
             }
 
+            // The keys say what the day still allows. A play left offers the next level on a
+            // win and another go on a loss — both are the same deal, one more play — and none
+            // left says so in words rather than swallowing the tap (invariant 16o's rule).
+            int left = ChallengeLedger.PlaysLeft(Genre);
+            bool again = left > 0 && ChallengeLedger.CanPlay(Genre);
+
+            if (again)
+            {
+                string key = won ? "ui.challenges.next_level" : "ui.challenges.retry";
+                var go = UIKit.TextButton("Again", safe, Skins.Affirm, Loc.Get(key).ToUpperInvariant(),
+                                          32, new Vector2(460f, 118f), new Vector2(.5f, .5f), new Vector2(0f, -70f),
+                                          () => Flow.Go<ChallengeScreen>(v => v.Genre = Genre));
+                Enter(go);
+
+                var count = UIKit.Titled("Left", safe, Loc.Format("ui.challenges.plays_left", left, ChallengeLedger.Allowance),
+                                         24, Pal.A(Pal.Cream, .78f), TextAnchor.MiddleCenter, new Vector2(600f, 44f),
+                                         new Vector2(.5f, .5f), new Vector2(0f, -150f), 2f, 0f);
+                UIKit.Shrinkable(count, 16);
+            }
+            else
+            {
+                var spent = UIKit.Titled("Spent", safe, Loc.Get("ui.challenges.no_plays"), 28,
+                                         Pal.A(Pal.Cream, .85f), TextAnchor.MiddleCenter, new Vector2(720f, 60f),
+                                         new Vector2(.5f, .5f), new Vector2(0f, -70f), 2f, 2f, wrap: true);
+                UIKit.Shrinkable(spent, 18);
+            }
+
+            var done = UIKit.TextButton("Done", safe, Skins.Alternate, Loc.Get("ui.challenges.done").ToUpperInvariant(),
+                                        32, new Vector2(460f, 118f), new Vector2(.5f, .5f), new Vector2(0f, -220f), Leave);
+            Enter(done);
+
             if (scrim != null) scrim.raycastTarget = true;
+        }
+
+        static void Enter(Btn key)
+        {
+            var rt = (RectTransform)key.transform;
+            var group = UIKit.Group(rt);
+            group.alpha = 0f;
+            Tween.Fade(group, 1f, .3f).Delay(.22f);
         }
 
         void Leave() => Flow.Go<DailyChallengesScreen>();

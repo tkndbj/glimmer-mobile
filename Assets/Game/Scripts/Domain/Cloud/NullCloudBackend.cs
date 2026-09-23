@@ -194,6 +194,6 @@ namespace GlimmerGrove.Cloud
         /// Nothing to watch. Null rather than a handle that does nothing, because the caller
         /// draws a real distinction from it: with no watch it falls back to asking on a timer.
         /// </summary>
-        public System.IDisposable WatchReferral(System.Action onChanged) => null;
+        public System.IDisposable WatchReferral(System.Action<long> onChanged) => null;
     }
 }

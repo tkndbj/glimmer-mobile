@@ -5466,5 +5466,1379 @@
       "ladder": [],
       "held": ""
     }
+  ],
+  "_challengeComment": [
+    "What the daily challenges pay and allow, derived twice and pinned here.",
+    "",
+    "`challengeCases` is the third rule in this game that turns a save into XP without a star",
+    "behind it (invariant 9d's shape, see ChallengeRewardRule). It runs in C# so the game can",
+    "draw a keeper level offline, and in functions/src/challenges.ts so a published card",
+    "carries the same one — and when those two disagree nothing crashes and nothing is",
+    "refused: `buildCard` simply *drops* whatever the lower level gated (invariant 19a).",
+    "",
+    "`challengeAllowanceCases` is the deal rule: which held deal governs a day and how many",
+    "plays it allows. The client draws plays off it and the server bounds coin claims by it;",
+    "a disagreement is a claim refused for a play the page offered (45d).",
+    "",
+    "`challengeDefaults` is what both sides use when no `challenges` block has been published.",
+    "They agree on purpose rather than failing closed, for the endless block's reason.",
+    "",
+    "Written by Tools/make_challenge_vectors.py — a third implementation, so a passing case",
+    "has been agreed by three copies that never read each other. Do not hand-edit."
+  ],
+  "challengeDefaults": {
+    "freePlays": 2,
+    "coins": 40,
+    "xp": 20,
+    "maxClears": 25000
+  },
+  "challengeConfig": {
+    "xp": 7,
+    "maxClears": 100
+  },
+  "challengeTiers": [
+    {
+      "id": "small",
+      "gems": 10,
+      "plays": 4,
+      "days": 3
+    },
+    {
+      "id": "large",
+      "gems": 30,
+      "plays": 9,
+      "days": 5
+    }
+  ],
+  "challengeFreePlays": 2,
+  "challengeCases": [
+    {
+      "name": "a save with no challenge rows at all",
+      "rows": [],
+      "config": {
+        "xp": 7,
+        "maxClears": 100
+      },
+      "clears": 0,
+      "xp": 0
+    },
+    {
+      "name": "a row naming no genre is not a clear",
+      "rows": [
+        {
+          "genre": "",
+          "count": 9
+        }
+      ],
+      "config": {
+        "xp": 7,
+        "maxClears": 100
+      },
+      "clears": 0,
+      "xp": 0
+    },
+    {
+      "name": "a genre spelling no build could have written is refused",
+      "rows": [
+        {
+          "genre": "Pairs!",
+          "count": 9
+        }
+      ],
+      "config": {
+        "xp": 7,
+        "maxClears": 100
+      },
+      "clears": 0,
+      "xp": 0
+    },
+    {
+      "name": "a row at nought is not a clear",
+      "rows": [
+        {
+          "genre": "pairs",
+          "count": 0
+        }
+      ],
+      "config": {
+        "xp": 7,
+        "maxClears": 100
+      },
+      "clears": 0,
+      "xp": 0
+    },
+    {
+      "name": "one genre's tally is what is paid",
+      "rows": [
+        {
+          "genre": "pairs",
+          "count": 12
+        }
+      ],
+      "config": {
+        "xp": 7,
+        "maxClears": 100
+      },
+      "clears": 12,
+      "xp": 84
+    },
+    {
+      "name": "every genre is summed, a withdrawn one included",
+      "rows": [
+        {
+          "genre": "pairs",
+          "count": 12
+        },
+        {
+          "genre": "merge",
+          "count": 3
+        },
+        {
+          "genre": "sudoku",
+          "count": 5
+        }
+      ],
+      "config": {
+        "xp": 7,
+        "maxClears": 100
+      },
+      "clears": 20,
+      "xp": 140
+    },
+    {
+      "name": "the ceiling is on the count, not the product",
+      "rows": [
+        {
+          "genre": "pairs",
+          "count": 70
+        },
+        {
+          "genre": "merge",
+          "count": 70
+        }
+      ],
+      "config": {
+        "xp": 7,
+        "maxClears": 100
+      },
+      "clears": 140,
+      "xp": 700
+    },
+    {
+      "name": "a rate of nought withdraws the payment",
+      "rows": [
+        {
+          "genre": "pairs",
+          "count": 50
+        }
+      ],
+      "config": {
+        "xp": 0,
+        "maxClears": 100
+      },
+      "clears": 50,
+      "xp": 0
+    },
+    {
+      "name": "a ceiling of nought pays nothing",
+      "rows": [
+        {
+          "genre": "pairs",
+          "count": 50
+        }
+      ],
+      "config": {
+        "xp": 7,
+        "maxClears": 0
+      },
+      "clears": 50,
+      "xp": 0
+    },
+    {
+      "name": "no more rows are read than the rules allow",
+      "rows": [
+        {
+          "genre": "g00",
+          "count": 1
+        },
+        {
+          "genre": "g01",
+          "count": 1
+        },
+        {
+          "genre": "g02",
+          "count": 1
+        },
+        {
+          "genre": "g03",
+          "count": 1
+        },
+        {
+          "genre": "g04",
+          "count": 1
+        },
+        {
+          "genre": "g05",
+          "count": 1
+        },
+        {
+          "genre": "g06",
+          "count": 1
+        },
+        {
+          "genre": "g07",
+          "count": 1
+        },
+        {
+          "genre": "g08",
+          "count": 1
+        },
+        {
+          "genre": "g09",
+          "count": 1
+        },
+        {
+          "genre": "g10",
+          "count": 1
+        },
+        {
+          "genre": "g11",
+          "count": 1
+        },
+        {
+          "genre": "g12",
+          "count": 1
+        },
+        {
+          "genre": "g13",
+          "count": 1
+        },
+        {
+          "genre": "g14",
+          "count": 1
+        },
+        {
+          "genre": "g15",
+          "count": 1
+        },
+        {
+          "genre": "g16",
+          "count": 1
+        },
+        {
+          "genre": "g17",
+          "count": 1
+        },
+        {
+          "genre": "g18",
+          "count": 1
+        },
+        {
+          "genre": "g19",
+          "count": 1
+        },
+        {
+          "genre": "g20",
+          "count": 1
+        },
+        {
+          "genre": "g21",
+          "count": 1
+        },
+        {
+          "genre": "g22",
+          "count": 1
+        },
+        {
+          "genre": "g23",
+          "count": 1
+        },
+        {
+          "genre": "g24",
+          "count": 1
+        },
+        {
+          "genre": "g25",
+          "count": 1
+        },
+        {
+          "genre": "g26",
+          "count": 1
+        },
+        {
+          "genre": "g27",
+          "count": 1
+        },
+        {
+          "genre": "g28",
+          "count": 1
+        },
+        {
+          "genre": "g29",
+          "count": 1
+        },
+        {
+          "genre": "g30",
+          "count": 1
+        },
+        {
+          "genre": "g31",
+          "count": 1
+        },
+        {
+          "genre": "g32",
+          "count": 1
+        },
+        {
+          "genre": "g33",
+          "count": 1
+        },
+        {
+          "genre": "g34",
+          "count": 1
+        },
+        {
+          "genre": "g35",
+          "count": 1
+        },
+        {
+          "genre": "g36",
+          "count": 1
+        },
+        {
+          "genre": "g37",
+          "count": 1
+        },
+        {
+          "genre": "g38",
+          "count": 1
+        },
+        {
+          "genre": "g39",
+          "count": 1
+        },
+        {
+          "genre": "g40",
+          "count": 1
+        },
+        {
+          "genre": "g41",
+          "count": 1
+        },
+        {
+          "genre": "g42",
+          "count": 1
+        },
+        {
+          "genre": "g43",
+          "count": 1
+        },
+        {
+          "genre": "g44",
+          "count": 1
+        },
+        {
+          "genre": "g45",
+          "count": 1
+        },
+        {
+          "genre": "g46",
+          "count": 1
+        },
+        {
+          "genre": "g47",
+          "count": 1
+        },
+        {
+          "genre": "g48",
+          "count": 1
+        },
+        {
+          "genre": "g49",
+          "count": 1
+        },
+        {
+          "genre": "g50",
+          "count": 1
+        },
+        {
+          "genre": "g51",
+          "count": 1
+        },
+        {
+          "genre": "g52",
+          "count": 1
+        },
+        {
+          "genre": "g53",
+          "count": 1
+        },
+        {
+          "genre": "g54",
+          "count": 1
+        },
+        {
+          "genre": "g55",
+          "count": 1
+        },
+        {
+          "genre": "g56",
+          "count": 1
+        },
+        {
+          "genre": "g57",
+          "count": 1
+        },
+        {
+          "genre": "g58",
+          "count": 1
+        },
+        {
+          "genre": "g59",
+          "count": 1
+        },
+        {
+          "genre": "g60",
+          "count": 1
+        },
+        {
+          "genre": "g61",
+          "count": 1
+        },
+        {
+          "genre": "g62",
+          "count": 1
+        },
+        {
+          "genre": "g63",
+          "count": 1
+        },
+        {
+          "genre": "g64",
+          "count": 1
+        },
+        {
+          "genre": "g65",
+          "count": 1
+        },
+        {
+          "genre": "g66",
+          "count": 1
+        },
+        {
+          "genre": "g67",
+          "count": 1
+        },
+        {
+          "genre": "g68",
+          "count": 1
+        },
+        {
+          "genre": "g69",
+          "count": 1
+        },
+        {
+          "genre": "g70",
+          "count": 1
+        },
+        {
+          "genre": "g71",
+          "count": 1
+        },
+        {
+          "genre": "g72",
+          "count": 1
+        },
+        {
+          "genre": "g73",
+          "count": 1
+        },
+        {
+          "genre": "g74",
+          "count": 1
+        },
+        {
+          "genre": "g75",
+          "count": 1
+        },
+        {
+          "genre": "g76",
+          "count": 1
+        },
+        {
+          "genre": "g77",
+          "count": 1
+        },
+        {
+          "genre": "g78",
+          "count": 1
+        },
+        {
+          "genre": "g79",
+          "count": 1
+        },
+        {
+          "genre": "g80",
+          "count": 1
+        },
+        {
+          "genre": "g81",
+          "count": 1
+        },
+        {
+          "genre": "g82",
+          "count": 1
+        },
+        {
+          "genre": "g83",
+          "count": 1
+        },
+        {
+          "genre": "g84",
+          "count": 1
+        },
+        {
+          "genre": "g85",
+          "count": 1
+        },
+        {
+          "genre": "g86",
+          "count": 1
+        },
+        {
+          "genre": "g87",
+          "count": 1
+        },
+        {
+          "genre": "g88",
+          "count": 1
+        },
+        {
+          "genre": "g89",
+          "count": 1
+        },
+        {
+          "genre": "g90",
+          "count": 1
+        },
+        {
+          "genre": "g91",
+          "count": 1
+        },
+        {
+          "genre": "g92",
+          "count": 1
+        },
+        {
+          "genre": "g93",
+          "count": 1
+        },
+        {
+          "genre": "g94",
+          "count": 1
+        },
+        {
+          "genre": "g95",
+          "count": 1
+        },
+        {
+          "genre": "g96",
+          "count": 1
+        },
+        {
+          "genre": "g97",
+          "count": 1
+        },
+        {
+          "genre": "g98",
+          "count": 1
+        },
+        {
+          "genre": "g99",
+          "count": 1
+        },
+        {
+          "genre": "g100",
+          "count": 1
+        },
+        {
+          "genre": "g101",
+          "count": 1
+        },
+        {
+          "genre": "g102",
+          "count": 1
+        },
+        {
+          "genre": "g103",
+          "count": 1
+        },
+        {
+          "genre": "g104",
+          "count": 1
+        },
+        {
+          "genre": "g105",
+          "count": 1
+        },
+        {
+          "genre": "g106",
+          "count": 1
+        },
+        {
+          "genre": "g107",
+          "count": 1
+        },
+        {
+          "genre": "g108",
+          "count": 1
+        },
+        {
+          "genre": "g109",
+          "count": 1
+        },
+        {
+          "genre": "g110",
+          "count": 1
+        },
+        {
+          "genre": "g111",
+          "count": 1
+        },
+        {
+          "genre": "g112",
+          "count": 1
+        },
+        {
+          "genre": "g113",
+          "count": 1
+        },
+        {
+          "genre": "g114",
+          "count": 1
+        },
+        {
+          "genre": "g115",
+          "count": 1
+        },
+        {
+          "genre": "g116",
+          "count": 1
+        },
+        {
+          "genre": "g117",
+          "count": 1
+        },
+        {
+          "genre": "g118",
+          "count": 1
+        },
+        {
+          "genre": "g119",
+          "count": 1
+        },
+        {
+          "genre": "g120",
+          "count": 1
+        },
+        {
+          "genre": "g121",
+          "count": 1
+        },
+        {
+          "genre": "g122",
+          "count": 1
+        },
+        {
+          "genre": "g123",
+          "count": 1
+        },
+        {
+          "genre": "g124",
+          "count": 1
+        },
+        {
+          "genre": "g125",
+          "count": 1
+        },
+        {
+          "genre": "g126",
+          "count": 1
+        },
+        {
+          "genre": "g127",
+          "count": 1
+        },
+        {
+          "genre": "g128",
+          "count": 1
+        },
+        {
+          "genre": "g129",
+          "count": 1
+        },
+        {
+          "genre": "g130",
+          "count": 1
+        },
+        {
+          "genre": "g131",
+          "count": 1
+        },
+        {
+          "genre": "g132",
+          "count": 1
+        },
+        {
+          "genre": "g133",
+          "count": 1
+        },
+        {
+          "genre": "g134",
+          "count": 1
+        },
+        {
+          "genre": "g135",
+          "count": 1
+        },
+        {
+          "genre": "g136",
+          "count": 1
+        },
+        {
+          "genre": "g137",
+          "count": 1
+        },
+        {
+          "genre": "g138",
+          "count": 1
+        },
+        {
+          "genre": "g139",
+          "count": 1
+        },
+        {
+          "genre": "g140",
+          "count": 1
+        },
+        {
+          "genre": "g141",
+          "count": 1
+        },
+        {
+          "genre": "g142",
+          "count": 1
+        },
+        {
+          "genre": "g143",
+          "count": 1
+        },
+        {
+          "genre": "g144",
+          "count": 1
+        },
+        {
+          "genre": "g145",
+          "count": 1
+        },
+        {
+          "genre": "g146",
+          "count": 1
+        },
+        {
+          "genre": "g147",
+          "count": 1
+        },
+        {
+          "genre": "g148",
+          "count": 1
+        },
+        {
+          "genre": "g149",
+          "count": 1
+        },
+        {
+          "genre": "g150",
+          "count": 1
+        },
+        {
+          "genre": "g151",
+          "count": 1
+        },
+        {
+          "genre": "g152",
+          "count": 1
+        },
+        {
+          "genre": "g153",
+          "count": 1
+        },
+        {
+          "genre": "g154",
+          "count": 1
+        },
+        {
+          "genre": "g155",
+          "count": 1
+        },
+        {
+          "genre": "g156",
+          "count": 1
+        },
+        {
+          "genre": "g157",
+          "count": 1
+        },
+        {
+          "genre": "g158",
+          "count": 1
+        },
+        {
+          "genre": "g159",
+          "count": 1
+        },
+        {
+          "genre": "g160",
+          "count": 1
+        },
+        {
+          "genre": "g161",
+          "count": 1
+        },
+        {
+          "genre": "g162",
+          "count": 1
+        },
+        {
+          "genre": "g163",
+          "count": 1
+        },
+        {
+          "genre": "g164",
+          "count": 1
+        },
+        {
+          "genre": "g165",
+          "count": 1
+        },
+        {
+          "genre": "g166",
+          "count": 1
+        },
+        {
+          "genre": "g167",
+          "count": 1
+        },
+        {
+          "genre": "g168",
+          "count": 1
+        },
+        {
+          "genre": "g169",
+          "count": 1
+        },
+        {
+          "genre": "g170",
+          "count": 1
+        },
+        {
+          "genre": "g171",
+          "count": 1
+        },
+        {
+          "genre": "g172",
+          "count": 1
+        },
+        {
+          "genre": "g173",
+          "count": 1
+        },
+        {
+          "genre": "g174",
+          "count": 1
+        },
+        {
+          "genre": "g175",
+          "count": 1
+        },
+        {
+          "genre": "g176",
+          "count": 1
+        },
+        {
+          "genre": "g177",
+          "count": 1
+        },
+        {
+          "genre": "g178",
+          "count": 1
+        },
+        {
+          "genre": "g179",
+          "count": 1
+        },
+        {
+          "genre": "g180",
+          "count": 1
+        },
+        {
+          "genre": "g181",
+          "count": 1
+        },
+        {
+          "genre": "g182",
+          "count": 1
+        },
+        {
+          "genre": "g183",
+          "count": 1
+        },
+        {
+          "genre": "g184",
+          "count": 1
+        },
+        {
+          "genre": "g185",
+          "count": 1
+        },
+        {
+          "genre": "g186",
+          "count": 1
+        },
+        {
+          "genre": "g187",
+          "count": 1
+        },
+        {
+          "genre": "g188",
+          "count": 1
+        },
+        {
+          "genre": "g189",
+          "count": 1
+        },
+        {
+          "genre": "g190",
+          "count": 1
+        },
+        {
+          "genre": "g191",
+          "count": 1
+        },
+        {
+          "genre": "g192",
+          "count": 1
+        },
+        {
+          "genre": "g193",
+          "count": 1
+        },
+        {
+          "genre": "g194",
+          "count": 1
+        },
+        {
+          "genre": "g195",
+          "count": 1
+        },
+        {
+          "genre": "g196",
+          "count": 1
+        },
+        {
+          "genre": "g197",
+          "count": 1
+        },
+        {
+          "genre": "g198",
+          "count": 1
+        },
+        {
+          "genre": "g199",
+          "count": 1
+        }
+      ],
+      "config": {
+        "xp": 1,
+        "maxClears": 1000000
+      },
+      "clears": 64,
+      "xp": 64
+    },
+    {
+      "name": "a refused row still spends one of the sixty-four, because the cap bounds the walk",
+      "rows": [
+        {
+          "genre": "",
+          "count": 1
+        },
+        {
+          "genre": "g00",
+          "count": 1
+        },
+        {
+          "genre": "g01",
+          "count": 1
+        },
+        {
+          "genre": "g02",
+          "count": 1
+        },
+        {
+          "genre": "g03",
+          "count": 1
+        },
+        {
+          "genre": "g04",
+          "count": 1
+        },
+        {
+          "genre": "g05",
+          "count": 1
+        },
+        {
+          "genre": "g06",
+          "count": 1
+        },
+        {
+          "genre": "g07",
+          "count": 1
+        },
+        {
+          "genre": "g08",
+          "count": 1
+        },
+        {
+          "genre": "g09",
+          "count": 1
+        },
+        {
+          "genre": "g10",
+          "count": 1
+        },
+        {
+          "genre": "g11",
+          "count": 1
+        },
+        {
+          "genre": "g12",
+          "count": 1
+        },
+        {
+          "genre": "g13",
+          "count": 1
+        },
+        {
+          "genre": "g14",
+          "count": 1
+        },
+        {
+          "genre": "g15",
+          "count": 1
+        },
+        {
+          "genre": "g16",
+          "count": 1
+        },
+        {
+          "genre": "g17",
+          "count": 1
+        },
+        {
+          "genre": "g18",
+          "count": 1
+        },
+        {
+          "genre": "g19",
+          "count": 1
+        },
+        {
+          "genre": "g20",
+          "count": 1
+        },
+        {
+          "genre": "g21",
+          "count": 1
+        },
+        {
+          "genre": "g22",
+          "count": 1
+        },
+        {
+          "genre": "g23",
+          "count": 1
+        },
+        {
+          "genre": "g24",
+          "count": 1
+        },
+        {
+          "genre": "g25",
+          "count": 1
+        },
+        {
+          "genre": "g26",
+          "count": 1
+        },
+        {
+          "genre": "g27",
+          "count": 1
+        },
+        {
+          "genre": "g28",
+          "count": 1
+        },
+        {
+          "genre": "g29",
+          "count": 1
+        },
+        {
+          "genre": "g30",
+          "count": 1
+        },
+        {
+          "genre": "g31",
+          "count": 1
+        },
+        {
+          "genre": "g32",
+          "count": 1
+        },
+        {
+          "genre": "g33",
+          "count": 1
+        },
+        {
+          "genre": "g34",
+          "count": 1
+        },
+        {
+          "genre": "g35",
+          "count": 1
+        },
+        {
+          "genre": "g36",
+          "count": 1
+        },
+        {
+          "genre": "g37",
+          "count": 1
+        },
+        {
+          "genre": "g38",
+          "count": 1
+        },
+        {
+          "genre": "g39",
+          "count": 1
+        },
+        {
+          "genre": "g40",
+          "count": 1
+        },
+        {
+          "genre": "g41",
+          "count": 1
+        },
+        {
+          "genre": "g42",
+          "count": 1
+        },
+        {
+          "genre": "g43",
+          "count": 1
+        },
+        {
+          "genre": "g44",
+          "count": 1
+        },
+        {
+          "genre": "g45",
+          "count": 1
+        },
+        {
+          "genre": "g46",
+          "count": 1
+        },
+        {
+          "genre": "g47",
+          "count": 1
+        },
+        {
+          "genre": "g48",
+          "count": 1
+        },
+        {
+          "genre": "g49",
+          "count": 1
+        },
+        {
+          "genre": "g50",
+          "count": 1
+        },
+        {
+          "genre": "g51",
+          "count": 1
+        },
+        {
+          "genre": "g52",
+          "count": 1
+        },
+        {
+          "genre": "g53",
+          "count": 1
+        },
+        {
+          "genre": "g54",
+          "count": 1
+        },
+        {
+          "genre": "g55",
+          "count": 1
+        },
+        {
+          "genre": "g56",
+          "count": 1
+        },
+        {
+          "genre": "g57",
+          "count": 1
+        },
+        {
+          "genre": "g58",
+          "count": 1
+        },
+        {
+          "genre": "g59",
+          "count": 1
+        },
+        {
+          "genre": "g60",
+          "count": 1
+        },
+        {
+          "genre": "g61",
+          "count": 1
+        },
+        {
+          "genre": "g62",
+          "count": 1
+        },
+        {
+          "genre": "g63",
+          "count": 1
+        }
+      ],
+      "config": {
+        "xp": 1,
+        "maxClears": 1000000
+      },
+      "clears": 63,
+      "xp": 63
+    },
+    {
+      "name": "a row above the structural ceiling is clamped to it",
+      "rows": [
+        {
+          "genre": "pairs",
+          "count": 5000000
+        }
+      ],
+      "config": {
+        "xp": 1,
+        "maxClears": 4000000
+      },
+      "clears": 1000000,
+      "xp": 1000000
+    },
+    {
+      "name": "the largest total the built-in figures allow does not overflow",
+      "rows": [
+        {
+          "genre": "pairs",
+          "count": 1000000
+        }
+      ],
+      "config": {
+        "xp": 20,
+        "maxClears": 25000
+      },
+      "clears": 1000000,
+      "xp": 500000
+    }
+  ],
+  "challengeAllowanceCases": [
+    {
+      "name": "nothing held is the free figure",
+      "held": {},
+      "day": 100,
+      "allowance": 2
+    },
+    {
+      "name": "a deal bought today covers today",
+      "held": {
+        "small": 100
+      },
+      "day": 100,
+      "allowance": 4
+    },
+    {
+      "name": "the last day of a three-day deal is the second day after purchase",
+      "held": {
+        "small": 100
+      },
+      "day": 102,
+      "allowance": 4
+    },
+    {
+      "name": "the day after that is free again",
+      "held": {
+        "small": 100
+      },
+      "day": 103,
+      "allowance": 2
+    },
+    {
+      "name": "a deal bought tomorrow does not cover today",
+      "held": {
+        "small": 101
+      },
+      "day": 100,
+      "allowance": 2
+    },
+    {
+      "name": "the larger of two overlapping deals governs",
+      "held": {
+        "small": 100,
+        "large": 101
+      },
+      "day": 102,
+      "allowance": 9
+    },
+    {
+      "name": "the smaller resumes after the larger ends",
+      "held": {
+        "small": 104,
+        "large": 100
+      },
+      "day": 105,
+      "allowance": 4
+    },
+    {
+      "name": "a deal this table does not sell is ignored",
+      "held": {
+        "huge": 100
+      },
+      "day": 100,
+      "allowance": 2
+    },
+    {
+      "name": "a nought date is not a purchase",
+      "held": {
+        "small": 0
+      },
+      "day": 100,
+      "allowance": 2
+    }
   ]
 }

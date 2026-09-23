@@ -930,6 +930,46 @@ is where they are written down, not what they mean.
 56d. **Today's row is `day mod n` over the slate, stored nowhere** (45b), and the list draws the
    whole slate with today's badged — narrowing it to one is a line in `DailyChallengesScreen`, left
    for the day the four are judged.
+56f. **A card is a genre and a level is the calendar's answer.** Each genre's rows are walked
+   in cycles of `n` days: one seeded shuffle per cycle, day `d` starting at position `d` of it and
+   the day's slots walking the ring from there (`ChallengeCalendar`). So every player on one day
+   deals the same sequence, slot nought visits every level once per cycle, two neighbouring days
+   never open on the same level, and nothing is stored. Adding a level is a row; the cycles re-deal
+   and that is accepted (45b). A genre with fewer rows than the largest allowance repeats a level
+   within a day, and `content.py` warns.
+56g. **A play is spent when it is dealt, never when it ends** (`ChallengeLedger.Begin`), or leaving
+   a losing board would be a free retry for ever. A win advances to the next slot; a loss retries
+   the same one; a play dealt before midnight and won after is paid against the day it was dealt
+   (`ChallengePlay`). The block is its own top-level save key (`challenges`, v34), by the owner's
+   instruction that a challenge shares nothing with the core game — which cost the whole of 12a,
+   **and the rules release goes out before the client.**
+56h. **A deal is the season pass's shape** (47e): bought with gems under a derived id
+   (`chaltier:{tier}:{fromDay}`) the server prices against the published row and turns into an
+   entitlement on the **wallet** document in the same transaction. One date per tier joined by
+   `max`, the window derived from the row's `days` (48c); a larger deal under a running one is an
+   upgrade, a smaller or equal one is refused, and a refused debit takes the deal back
+   (`OnSpendRejected`). The client's copy draws the page and gates nothing that pays.
+56i. **A cleared level pays credits as a claim and XP by derivation** — 9f's sentence, said of a
+   puzzle. The claim `chal:{day}:{genre}:{win}:{currency}` is re-priced from the published rate and
+   **bounded by the win's ordinal against the allowance the wallet's deals give that day**, so a
+   forged deal in the save buys exactly the free figure; a claim past the allowance is left
+   *unconfirmed* while its day is inside the window, because a sync sends awards before debits and
+   the deal may be one call behind (45d), and refused once it closes. XP is a rate over a lifetime
+   tally per genre (9d's shape, `ChallengeRewardRule`), a separate addend in `PlayerProgression`,
+   mirrored by `challengeXp` and held by `challengeCases`; the allowance rule is mirrored by
+   `allowanceOn` and held by `challengeAllowanceCases`. **The XP boost's provable base is the sum
+   of all three sources on both sides.**
+56j. **What the server is told is what a claim is priced against, and nothing else**: the seeder
+   publishes the genre spellings, the free allowance, the deal rows and the two rates as the
+   `challenges` block of `config/progression`, read out of `challenges.json`. A board never leaves
+   the device. Absent falls back to the built-in rates (the endless block's reason) and to no deals
+   and no genres, which leaves every coin claim unconfirmed. **Re-seed after any change to the
+   file.**
+56k. **A genre's card and a deal's row name themselves from their permanent ids**
+   (`challenge.genre.{spelling}.*`, `challenge.tier.{id}.name`), and a written nought in a reward
+   field withdraws the payment on both sides rather than inheriting — a rate beside no ceiling is
+   refused by `content.py` and the seeder, because the two halves must read a published block
+   byte for byte.
 56e. **Three genres were built, played and withdrawn the same day** (2026-09-22, the owner's call
    after playing all seven): Sudoku, Minefield (minesweeper) and Stack (tetris), with the input
    kinds and the "woken raider" only they used. Their spellings are refused at read like any
@@ -1113,8 +1153,13 @@ guess — verify offline.
 - **The daily challenges:** `python Tools/render_challenges.py` (`--id`, `--contact`, `--phone`)
   draws every shipped row's screen at rest off `challenges.json` with the real sprites — the only
   thing that can see the bands: it found the mustered raiders standing under the readout row and
-  the Stack strip wearing the wrong string before either reached the Editor. `python
-  Tools/verify/tests.py ChallengeTests` is the winnability gate (56b) and prints the margins.
+  the Stack strip wearing the wrong string before either reached the Editor. `--list` (with
+  `--held gold --spent pairs,merge`) draws the list page — the deal band, the cards, the pills and
+  the badges — and measures every caption against its box. `python Tools/verify/tests.py
+  ChallengeTests` is the winnability gate (56b) and prints the margins; `ChallengeLedgerTests` is
+  the foundation (rotation, allowance, deals, payout, merge); `ChallengeRewardTests` and
+  `firebase/functions/test/challenges.mjs` are the two halves of the shared rules, pinned by
+  `python Tools/make_challenge_vectors.py --check`. `content.py` prints the whole economy per deal.
 - **The tutorial:** `python Tools/verify/tests.py TutorialTests` plays the whole script against
   the real rules — the taught swap, the pour, the overcharge, the sweep — and proves it ends with
   the line intact; its board reaches **no content gate**, so this is the only thing that would
@@ -1607,6 +1652,38 @@ on a fresh clone).
 
 ## Owed
 
+**The daily challenges' foundation landed on 2026-09-22 (56f–56k) and none of it has been in the
+Editor, on a device or on the server.** Save schema **v34** (a new top-level key, `challenges`),
+`ChallengeLedger`, `ChallengeCalendar`'s rotation, the deals (`ChallengeTierOverlay`), the coin
+claim and the XP tally, the hub badge, `challenges.json` **v2** with the three blocks (2 free plays;
+bronze 120 gems / silver 200 / gold 500 for 7 days of 5 / 10 / 25 plays a genre; 40 credits and
+20 XP a clear). Five new C# files have **no `.meta` yet** (`ChallengeRewards.cs`,
+`ChallengeLedger.cs`, `ChallengeTierOverlay.cs`, `ChallengeLedgerTests.cs`,
+`ChallengeRewardTests.cs`); Unity mints them on the next focus. Offline green: `compile.py` (all
+sixteen), `ChallengeLedgerTests` 19/19, `ChallengeRewardTests` 4/4, `CloudWireTests`,
+`ChallengeTests`, `content.py` (0 errors), `loc.py` (0 missing, 33 new keys), the 58 + 837 + 34
+function tests, `seed-config.mjs --check`, `make_challenge_vectors.py --check`,
+`render_challenges.py --list` in both states. **The server half is deployed (2026-09-23)**: `firestore.rules` released first (the new
+`challenges` key in `hasOnly`, checked to be the only change in the diff), then `submitSpends`,
+`claimAwards`, `publishGrove` and `publishGroveBoards` by name in one batch, with the artifact
+downloaded and its `lib/` proved byte-identical to the local build; then the re-seed, with all
+four config documents snapshotted and diffed — exactly one field added, `challenges`
+(4 genres, 2 free plays, 3 deals, 40 / 20 / 25,000), nothing else moved in any of them;
+then `smoke-test.mjs` **169/169 live**. What is left is the Editor's three and a device. **The four genre cards wear the owner's pictures** (2026-09-23): cut by
+`Tools/make_challenge_art.py` from `Downloads/{pairs,pipe,merge,push}.png` into
+`Art/Ui/challenge_{spelling}.png` at 384 (`--check` proves the cut, `--contact` is the sheet),
+addressed off the genre spelling (`ChallengeArt.GenreMark`), listed by hand in
+`AssetManifest.UiSprites` and held to the enum by `ChallengeLedgerTests.EveryGenresMarkIsPreloadedAndOnDisk`.
+**They are on disk and unaddressed**: `artnames.py` reads four errors until `▸ Addressables ▸
+Sync All Assets` and save (invariant 7a working, as `ic_boost_up` was) — until then every card
+draws a white square where the picture goes (7b). **Two
+decisions are the owner's**: a deal is a *window* of seven days rather than a permanent unlock
+or a single day (the season pass's shape; `days` is content), and the rates are a first guess
+against the printed economy — a full free day is 320 credits, a gold day at four genres 4,000.
+**What no gate can answer**: whether "Today: Pairs" reads as a level name when the only level is
+named after its genre, whether a spent card reads as *tomorrow* rather than as broken, and
+whether the deal sheet reads as a deal.
+
 **The invite page grew three things on 2026-09-22 and none of them has been in the Editor.**
 The code field folds every keystroke (upper case, the hyphen after the fourth symbol, nothing
 else) and has a PASTE key that finds a code *inside* whatever was copied, because what a friend
@@ -1615,12 +1692,22 @@ tested); a friend who typed the code and has not finished the chapter is drawn a
 PROGRESS** in amber on the referrer's board (`ReferralFriendStatus`, `ReferralLedger.StatusOf`);
 and the Refer-a-Friend door on the profile and the shop wears the hub pack's starburst with the
 count of chests either side can open (`ReferralLedger.WaitingCount`, `WaitingBadge`) — **the
-badge is watched** (`ReferralWatch.Attach`, invariant 44o), so every profile or shop open now
-costs one `getReferral` call, which is the price of a badge that is true. `WaitingBadge.cs` is
-the hub's nested badge lifted out into `Presentation/App/` and is a new file, so its **`.meta`
-does not exist yet** and Unity mints it on the next focus. It touches no server, no schema and
-no seed: everything it draws was already on the wire. Offline green: `compile.py` (all fifteen),
-`ReferralTests` 45/45 (nine new), `loc.py` (0 missing, four new keys), `content.py` (0 errors),
+badge is watched** (`ReferralWatch.Attach`, invariant 44o). **And a screen open no longer costs
+a callable.** Every screen carrying a referral reading used to call `getReferral` on open — a
+transaction over the whole save, the most expensive thing a standing screen does — and the
+listener's first delivery asked again. Now the listener hands back the feed counter
+(`players/{uid}/private/referral.rev`, `IReferralBackend.WatchReferral(Action<long>)`), the
+cached answer is **stamped with the counter it was read under** (`ReferralState.FeedRev`, cache
+schema 3, taken *before* the ask so a bump in between can only cost one more read), and
+`ReferralLedger.NeedsAsk` skips the call when the two agree. A profile, shop or invite-page
+open is one listener read and no invocation, at any player count; the feed document does not
+exist for an account nothing has happened to, and nought equals nought, so the common case is
+free too. Every doubt fails toward asking, and each clause is held by a mutation. No server
+change: the counter was already written and already owner-readable. `WaitingBadge.cs` is the
+hub's nested badge lifted out into `Presentation/App/` and is a new file, so its **`.meta` does
+not exist yet** and Unity mints it on the next focus. Nothing here touches a rule, a function or
+a seed. Offline green: `compile.py` (all fifteen), `ReferralTests` + `ReferralFeedWatchTests`
+63/63 (thirteen new), `loc.py` (0 missing, four new keys), `content.py` (0 errors),
 `render_referral.py` (the climb state now draws two in-progress rows — and it caught the first
 sentence running under the pill), `render_shop.py --waiting 3`. **What is owed is an eye and a
 phone**: the touch keyboard's text goes through the same validator as a desktop one and nothing
@@ -2339,10 +2426,9 @@ honest state rather than a fault to chase. No season rollover has ever happened.
 - **Should a raider be framed to its body?** The pack feathers its baked shadow out to alpha 1, so every
   insect is framed around a halo and drawn smaller than it could be.
 
-**Daily Challenges is an empty room.** `DailyChallengesScreen` is the hub banner's destination and draws
-its chrome and one sentence; nothing else in the game references it, so filling it in is one file. Its
-banner is a **painted** picture with the English words in it (`Art/Ui/challenges`), so that one control has
-no translation until the art is re-cut — the only string in the game outside invariant 6.
+**The Daily Challenges banner is a painted picture with the English words in it** (`Art/Ui/challenges`),
+so that one control has no translation until the art is re-cut — the only string in the game outside
+invariant 6.
 
 **Play it.** None of the retention features or the last two chapters have been played. The questions worth
 an analytics event, one per feature: how many **shields** are bought while the streak is *not* at risk; how

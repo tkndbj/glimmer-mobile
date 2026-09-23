@@ -139,6 +139,12 @@ namespace GlimmerGrove.Persistence
                 // A star cannot be given back, so the further of the two is the answer
                 // whichever device is asking - invariant 11b's one legal shape for a count.
                 wardStars = Wards.WardStarLedger.Join(mine.wardStars, other.wardStars),
+
+                // The daily challenges: the later day's rows outright and the larger count
+                // within a shared day (the task ledger's rule), a per-genre max on the lifetime
+                // tally, and the later date per deal. The rule lives with the feature for the
+                // reason every join above it does.
+                challenges = Challenges.ChallengeLedger.Join(mine.challenges, other.challenges),
             };
 
             return merged;

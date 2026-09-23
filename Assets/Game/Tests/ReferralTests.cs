@@ -542,6 +542,59 @@ namespace GlimmerGrove.Tests
             Assert.IsTrue(first.IsKnown, "but it is the first one that is known, and that is the change");
         }
 
+        // --------------------------------------------------------------- the feed
+        [Test]
+        public void ADeliveryMatchingTheStampAsksNothing()
+        {
+            var read = new ReferralState("ABCDEFGH", 2, 1, null, false, false, true, 1700000000L, feedRev: 7);
+
+            Assert.IsFalse(ReferralLedger.NeedsAsk(read, 7), "the server has not moved since this was read");
+            Assert.IsTrue(ReferralLedger.NeedsAsk(read, 8), "it has");
+            Assert.IsTrue(ReferralLedger.NeedsAsk(read, 6), "any difference, either way - a counter is compared, not ordered");
+        }
+
+        [Test]
+        public void AnAccountNothingHasHappenedToIsAlsoFree()
+        {
+            // The feed document does not exist for an account nobody has referred and that has
+            // referred nobody, which is nearly every account. The listener says nought and the
+            // cached answer was read under nought, so the common case costs no call.
+            var quiet = new ReferralState("ABCDEFGH", 0, 0, null, false, false, true, 1700000000L, feedRev: 0);
+            Assert.IsFalse(ReferralLedger.NeedsAsk(quiet, 0));
+        }
+
+        [Test]
+        public void EveryDoubtFailsTowardAsking()
+        {
+            var stamped = new ReferralState("ABCDEFGH", 2, 1, null, false, false, true, 1700000000L, feedRev: 7);
+            var unstamped = new ReferralState("ABCDEFGH", 2, 1, null, false, false, true, 1700000000L);
+            var never = ReferralState.Empty;
+
+            Assert.IsTrue(ReferralLedger.NeedsAsk(null, 7));
+            Assert.IsTrue(ReferralLedger.NeedsAsk(never, 0), "nothing has ever been read");
+            Assert.IsTrue(ReferralLedger.NeedsAsk(unstamped, 7), "read with no listener speaking");
+            Assert.IsTrue(ReferralLedger.NeedsAsk(stamped, ReferralState.UnknownFeed), "the listener could not read the document");
+            Assert.IsTrue(ReferralLedger.NeedsAsk(unstamped, ReferralState.UnknownFeed), "both unknown is not agreement");
+        }
+
+        [Test]
+        public void TheStampRidesTheCacheAndIsNotAnAnswer()
+        {
+            var read = new ReferralState("ABCDEFGH", 2, 1, new[] { "rung:1:1" }, false, false, true, 1700000000L);
+            Assert.AreEqual(ReferralState.UnknownFeed, read.FeedRev, "unstamped until a listener has spoken");
+
+            var stamped = read.WithFeed(12);
+            Assert.AreEqual(12, stamped.FeedRev);
+            Assert.IsTrue(read.Matches(stamped), "the stamp is about the cache, not the account");
+            Assert.AreEqual(read.Code, stamped.Code);
+            Assert.AreEqual(1, stamped.PaidCount(ReferralClaimKind.Rung, 1, 2), "nothing else moved");
+
+            var back = ReferralState.FromDto(stamped.ToDto());
+            Assert.AreEqual(12, back.FeedRev, "and it survives the cache round trip");
+
+            Assert.AreEqual(ReferralState.UnknownFeed, read.WithFeed(-5).FeedRev, "a negative stamp is unknown");
+        }
+
         // -------------------------------------------------------------- the board
         [Test]
         public void ASeatIsFinishedThenPlayingThenOpen()

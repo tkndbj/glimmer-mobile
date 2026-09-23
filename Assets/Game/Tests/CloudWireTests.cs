@@ -188,7 +188,74 @@ namespace GlimmerGrove.Tests
                     new WardStarDto { ward = "mortar:b", stars = 5 },
                     new WardStarDto { ward = "mortar:r", stars = 3 },
                 },
+
+                // The daily challenges, all three lists, because each travels for a different
+                // reason: the day's rows so a second device cannot replay the allowance, the
+                // tally because the server derives XP from it, and a deal's date because a deal
+                // bought on one phone is a page the other draws as free.
+                challenges = new ChallengeStateDto
+                {
+                    day = 20_315,
+                    today = new[]
+                    {
+                        new ChallengeDayDto { genre = "merge", attempts = 2, wins = 1 },
+                        new ChallengeDayDto { genre = "pairs", attempts = 1, wins = 1 },
+                    },
+                    clears = new[]
+                    {
+                        new ChallengeCountDto { genre = "merge", count = 7 },
+                        new ChallengeCountDto { genre = "pairs", count = 12 },
+                    },
+                    tiers = new[] { new ChallengeTierStateDto { id = "bronze", fromDay = 20_311 } },
+                },
             };
+        }
+
+        /// <summary>
+        /// A document written before the daily challenges existed reads back as no day, no rows,
+        /// no tally and no deal — the fact the join treats as "knows nothing", so the local side
+        /// wins and nothing has to detect the upgrade.
+        /// </summary>
+        [Test]
+        public void ADocumentWithNoChallengesBlockReadsAsNothingPlayedYet()
+        {
+            var doc = FirestoreSaveMapper.ToDocument(Populated());
+            doc.Remove("challenges");
+
+            var restored = FirestoreSaveMapper.FromDocument(doc);
+
+            Assert.IsNotNull(restored.challenges);
+            Assert.AreEqual(0, restored.challenges.day);
+            Assert.IsEmpty(restored.challenges.today);
+            Assert.IsEmpty(restored.challenges.clears);
+            Assert.IsEmpty(restored.challenges.tiers);
+        }
+
+        /// <summary>
+        /// The block survives the round trip whole, and an empty one comes back as the writer
+        /// drops it — day nought with no rows — so SaveDelta never reads a launch as changed.
+        /// </summary>
+        [Test]
+        public void TheChallengeBlockSurvivesTheRoundTrip()
+        {
+            var restored = FirestoreSaveMapper.FromDocument(FirestoreSaveMapper.ToDocument(Populated()));
+
+            Assert.AreEqual(20_315, restored.challenges.day);
+            Assert.AreEqual(2, restored.challenges.today.Length);
+            Assert.AreEqual("merge", restored.challenges.today[0].genre);
+            Assert.AreEqual(2, restored.challenges.today[0].attempts);
+            Assert.AreEqual(1, restored.challenges.today[0].wins);
+            Assert.AreEqual(2, restored.challenges.clears.Length);
+            Assert.AreEqual(12, restored.challenges.clears[1].count);
+            Assert.AreEqual(1, restored.challenges.tiers.Length);
+            Assert.AreEqual("bronze", restored.challenges.tiers[0].id);
+            Assert.AreEqual(20_311, restored.challenges.tiers[0].fromDay);
+
+            var empty = Populated();
+            empty.challenges = new ChallengeStateDto { day = 20_315 };
+            var back = FirestoreSaveMapper.FromDocument(FirestoreSaveMapper.ToDocument(empty));
+            Assert.AreEqual(0, back.challenges.day, "a day with no rows is written as nought, so the round trip is a fixed point");
+            Assert.IsEmpty(back.challenges.today);
         }
 
         /// <summary>
@@ -344,6 +411,9 @@ namespace GlimmerGrove.Tests
                 ("tasks.counts",  "p.counts",        Tasks.TaskLedger.MaxGoals),
                 ("tasks.claimed", "p.claimed",       Tasks.TaskLedger.MaxClaimed),
                 ("tasks.lifetime","d.tasks.lifetime", Tasks.LifetimeTally.MaxGoals),
+                ("challenges.today",  "d.challenges.today",  Challenges.ChallengeLedger.MaxTodayRows),
+                ("challenges.clears", "d.challenges.clears", Challenges.ChallengeLedger.MaxClearRows),
+                ("challenges.tiers",  "d.challenges.tiers",  Challenges.ChallengeLedger.MaxTierRows),
             };
 
             foreach (var (field, expression, clientCap) in pairs)

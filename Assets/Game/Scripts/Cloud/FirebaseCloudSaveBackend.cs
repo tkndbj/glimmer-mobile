@@ -1613,12 +1613,13 @@ namespace GlimmerGrove.Cloud
         /// </para>
         /// <para>
         /// The first delivery is the document as it stands, not a change — Firestore always
-        /// opens a listener with a snapshot. It is left to fire: it costs one deduplicated
-        /// <c>Poke</c>, and suppressing it would need state that the resume path would then
-        /// have to work around.
+        /// opens a listener with a snapshot. It is left to fire, and it is what the ledger
+        /// wants: it carries the counter, and the ledger compares that with the stamp on its
+        /// cached answer to decide whether a call is needed at all
+        /// (<c>ReferralLedger.NeedsAsk</c>). That comparison is what a screen open costs now.
         /// </para>
         /// </summary>
-        public IDisposable WatchReferral(Action onChanged)
+        public IDisposable WatchReferral(Action<long> onChanged)
         {
             if (onChanged == null || _db == null) return null;
 
@@ -1628,7 +1629,7 @@ namespace GlimmerGrove.Cloud
             try
             {
                 var doc = PlayerDoc(uid).Collection("private").Document("referral");
-                return new ReferralWatchHandle(doc.Listen(_ => onChanged()));
+                return new ReferralWatchHandle(doc.Listen(snapshot => onChanged(FeedRevOf(snapshot))));
             }
             catch (Exception e)
             {
@@ -1636,6 +1637,32 @@ namespace GlimmerGrove.Cloud
                 // attach one is worth a line in the log and nothing else.
                 Debug.LogWarning($"[Cloud] could not watch the referral feed: {e.Message}");
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// The feed document's counter: its <c>rev</c>, nought for a document that does not
+        /// exist (nothing has ever happened to this account), and
+        /// <c>ReferralState.UnknownFeed</c> for anything that cannot be read — which the ledger
+        /// treats as "ask", so a fault here costs a call and never a stale badge. Runs on the
+        /// listener's thread and touches nothing but the snapshot.
+        /// </summary>
+        static long FeedRevOf(DocumentSnapshot snapshot)
+        {
+            try
+            {
+                if (snapshot == null) return Referral.ReferralState.UnknownFeed;
+                if (!snapshot.Exists) return 0L;
+
+                var data = snapshot.ToDictionary();
+                if (data == null || !data.ContainsKey("rev")) return Referral.ReferralState.UnknownFeed;
+
+                long rev = ReadLong(data, "rev");
+                return rev < 0 ? Referral.ReferralState.UnknownFeed : rev;
+            }
+            catch (Exception)
+            {
+                return Referral.ReferralState.UnknownFeed;
             }
         }
 

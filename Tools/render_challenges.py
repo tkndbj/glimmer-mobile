@@ -6,6 +6,8 @@
     python Tools/render_challenges.py --contact           # all four side by side
     python Tools/render_challenges.py --phone             # a 19.5:9 canvas instead of 16:9
     python Tools/render_challenges.py --out out/challenges.png
+    python Tools/render_challenges.py --list               # the list page: deal band, cards, badges
+    python Tools/render_challenges.py --list --held gold --spent pairs,merge
 
 **Why this exists.** `ChallengeTests` plays every row with a bot and proves it is winnable; it
 says nothing about whether the screen *reads*. Seven boards share one band arithmetic
@@ -309,6 +311,126 @@ def puzzle(sheet, row, top, bottom, txt):
     return cell
 
 
+# ------------------------------------------------------------------ the list page
+#: `DailyChallengesScreen.BannerH` / `.RuleH` / `.DealH` / `.DealW` / `.DealKeyW` / `.DealKeyH`.
+LIST_BANNER_H, RULE_H, DEAL_H, DEAL_W, DEAL_KEY_W, DEAL_KEY_H = 138.0, 76.0, 112.0, 960.0, 220.0, 84.0
+#: `DailyChallengesScreen.CardW` / `.CardH` / `.PlateW` / `.PlateH`.
+CARD_W, CARD_H, PLATE_W, PLATE_H = 960.0, 250.0, 940.0, 222.0
+#: `NavBar.Height` as hudkit carries it, and GridView's default top pad.
+GRID_PAD_TOP = 12.0
+
+#: `ChallengeGenres.Names`, in enum order.
+GENRE_ORDER = ["pairs", "pipes", "merge", "sokoban"]
+
+#: `DailyChallengesScreen.MarkSize` / `.MarkX` / `.TextX`.
+MARK_SIZE, MARK_X, TEXT_X = 176.0, 118.0, 226.0
+
+
+def table():
+    return json.load(open(FILE, encoding="utf-8"))
+
+
+def render_list(txt, canvas=(1080, 1920), held=None, spent=(), day_wins=None):
+    """`DailyChallengesScreen` at rest: the band saying what the day allows, one card per genre
+    with today's level, the plays left and the badge. `held` names a deal to draw as running,
+    `spent` the genres drawn with no play left. Every caption is measured against its box and
+    printed, because `UIKit.Shrinkable` truncates silently (invariant 19n)."""
+    global W
+    W, H = canvas
+    K.W, K.H = W, H
+    sheet = Image.new("RGBA", (W, H), (0, 0, 0, 255))
+    K.plain(sheet)
+    t = table()
+    genres = [g for g in GENRE_ORDER if any(r["genre"] == g for r in t["challenges"])]
+    free = (t.get("allowance") or {}).get("freePlays") or 2
+    tiers = t.get("tiers") or []
+    deal = next((x for x in tiers if x["id"] == held), None) if held else None
+    allowance = deal["plays"] if deal else free
+    floors = []
+
+    # The chrome: back key, ribbon, rule line.
+    cy = 22.0 + LIST_BANNER_H / 2.0
+    K.paste(sheet, K.skin("sq_blue", CHROME, CHROME), 76.0, cy)
+    icon = K.fit(K.load("ic_left")[0], (CHROME * .5, CHROME * .5))
+    K.paste(sheet, K.tint(icon, K.CREAM), 76.0, cy - CHROME * .0231)
+    ribbon = K.skin("ribbon_orange", 720, LIST_BANNER_H)
+    plate = Image.new("RGBA", ribbon.size, (0, 0, 0, 0))
+    plate.alpha_composite(ribbon)
+    K.one_line(plate, txt("ui.challenges.title").upper(), plate.width / 2, plate.height / 2,
+               720 * RIBBON_ROOM, 42, TITLE_FLOOR, outline=4)
+    K.paste(sheet, plate.rotate(RIBBON_TILT, Image.BICUBIC, expand=True), W / 2, cy)
+
+    rule_y = cy + LIST_BANNER_H / 2 + 10 + RULE_H / 2
+    floors.append(("rule", K.shrunk(sheet, txt("ui.challenges.rule"), W / 2, rule_y, 900, RULE_H, 24, 16,
+                                    fill=(255, 245, 224), outline=2), 16))
+
+    # The deal band.
+    deal_y = rule_y + RULE_H / 2 + 10 + DEAL_H / 2
+    K.paste(sheet, K.skin("Hud/plate_navy", DEAL_W, DEAL_H), W / 2, deal_y)
+    if deal:
+        days = txt("ui.challenges.days_left").replace("{0}", str(deal["days"]))
+        line = (txt("ui.challenges.held_deal").replace("{0}", txt("challenge.tier.%s.name" % deal["id"]))
+                .replace("{1}", str(deal["plays"])).replace("{2}", days))
+    else:
+        line = txt("ui.challenges.free_deal").replace("{0}", str(free))
+    line_w = DEAL_W - DEAL_KEY_W - 90
+    left = (W - DEAL_W) / 2 + 36
+    floors.append(("deal line", K.shrunk_left(sheet, line, left, deal_y - (DEAL_H - 20) / 2, line_w, DEAL_H - 20, 26, 16,
+                                              outline=2), 16))
+    key_cx = (W + DEAL_W) / 2 - 24 - DEAL_KEY_W / 2
+    K.paste(sheet, K.skin("btn_orange", DEAL_KEY_W, DEAL_KEY_H), key_cx, deal_y)
+    K.one_line(sheet, txt("ui.challenges.deals").upper(), key_cx, deal_y - 4, DEAL_KEY_W - 40, 26, 16, outline=3)
+
+    # The cards, one per genre, in the grid's window.
+    top = deal_y + DEAL_H / 2 + 10 + GRID_PAD_TOP
+    for i, genre in enumerate(genres):
+        ccy = top + CARD_H * i + CARD_H / 2
+        K.paste(sheet, K.skin("Hud/plate_blue", PLATE_W, PLATE_H), W / 2, ccy)
+        px = (W - PLATE_W) / 2
+        # `ChallengeArt.GenreMark`: the owner's picture, `Ui/challenge_{spelling}`, drawn off disk.
+        mark = K.fit(K.load("challenge_%s" % genre)[0], (MARK_SIZE, MARK_SIZE))
+        K.paste(sheet, mark, px + MARK_X, ccy)
+
+        # `_name` is MiddleLeft in a box centred 240 in from TEXT_X, so the text starts at TEXT_X.
+        K.text(sheet, txt("challenge.genre.%s.name" % genre), px + TEXT_X, ccy - 58, 40, outline=3, anchor="l")
+        floors.append(("blurb %s" % genre,
+                       K.shrunk_left(sheet, txt("challenge.genre.%s.blurb" % genre), px + TEXT_X, ccy + 4 - 33, 620, 66, 22, 15,
+                                     fill=(255, 245, 224), outline=2), 15))
+        row = next(r for r in t["challenges"] if r["genre"] == genre)
+        today = txt("ui.challenges.today_level").replace("{0}", txt("challenge.%s.name" % row["id"]))
+        floors.append(("level %s" % genre,
+                       K.shrunk_left(sheet, today, px + TEXT_X, ccy + 66 - 20, 400, 40, 22, 15, fill=K.GOLD, outline=2), 15))
+
+        is_spent = genre in spent
+        left_plays = 0 if is_spent else allowance - (day_wins or {}).get(genre, 0)
+        pill_w, pill_h = 250, 54
+        pill_cx = px + PLATE_W - 26 - pill_w / 2
+        pill_cy = ccy + 66
+        K.paste(sheet, K.round_rect(pill_w, pill_h, 24, (158, 168, 189) if is_spent else K.GOLD, .95), pill_cx, pill_cy)
+        caption = txt("ui.challenges.spent") if is_spent else \
+            txt("ui.challenges.plays_left").replace("{0}", str(left_plays)).replace("{1}", str(allowance))
+        floors.append(("pill %s" % genre, K.shrunk(sheet, caption, pill_cx, pill_cy, pill_w - 24, pill_h - 8, 22, 14,
+                                                   fill=K.INK, outline=0), 14))
+
+        if not is_spent and left_plays > 0:
+            # WaitingBadge.Disc: a 66 gold disc, a dark rim, the number, on the plate's top-right.
+            bx, by = px + PLATE_W - 30, ccy - PLATE_H / 2 + 28
+            disc = Image.new("RGBA", (66, 66), (0, 0, 0, 0))
+            ImageDraw.Draw(disc).ellipse([0, 0, 65, 65], fill=(*K.GOLD, 255))
+            ImageDraw.Draw(disc).ellipse([0, 0, 65, 65], outline=(41, 31, 10, 242), width=7)
+            K.paste(sheet, disc, bx, by)
+            K.text(sheet, str(left_plays), bx, by, 36, fill=K.INK, outline=0)
+
+    K.navbar(sheet, "home")
+
+    for what, got, floor in floors:
+        flag = "  <- AT ITS FLOOR: the string is too long for its box" if got <= floor else ""
+        print("  %-16s settled at %2d (floor %d)%s" % (what, got, floor, flag))
+    print("  list: %d genre(s), allowance %d, held %s, spent %s on %dx%d"
+          % (len(genres), allowance, held or "-", ",".join(spent) or "-", W, H))
+    return sheet
+
+
 # ------------------------------------------------------------------ one screen
 def render(row, txt, canvas=(1080, 1920)):
     global W
@@ -337,10 +459,21 @@ def main():
     ap.add_argument("--contact", action="store_true")
     ap.add_argument("--phone", action="store_true", help="a 19.5:9 canvas (1080x2340)")
     ap.add_argument("--out")
+    ap.add_argument("--list", action="store_true", help="the list page rather than a board")
+    ap.add_argument("--held", help="with --list: a deal id drawn as running")
+    ap.add_argument("--spent", default="", help="with --list: genres drawn with no play left, comma-separated")
     args = ap.parse_args()
 
     txt = lambda key: loc().get(key, key)
     canvas = (1080, 2340) if args.phone else (1080, 1920)
+
+    if args.list:
+        sheet = render_list(txt, canvas, args.held, [g for g in args.spent.split(",") if g])
+        path = Path(args.out) if args.out else REPO / "out" / "challenges_list.png"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        sheet.save(path)
+        print("wrote %s  %dx%d  - look at it" % (path, sheet.width, sheet.height))
+        return
     picked = [r for r in rows() if not args.id or r["id"] == args.id]
     if not picked:
         sys.exit("no challenge named %r" % args.id)

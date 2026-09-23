@@ -71,6 +71,7 @@ namespace GlimmerGrove.Persistence
             Tasks.TaskLedger.LoadFrom(dto);
             Events.SeasonLedger.LoadFrom(dto);
             Ads.RewardedAds.LoadFrom(dto);
+            Challenges.ChallengeLedger.LoadFrom(dto);
 
             // Not loaded from anything — dropped. The bonus wheel's position is the *server's*
             // count of this account's paid spins today, cached for the session and never stored
@@ -184,6 +185,7 @@ namespace GlimmerGrove.Persistence
             Tasks.TaskLedger.WriteInto(dto);
             Events.SeasonLedger.WriteInto(dto);
             Ads.RewardedAds.WriteInto(dto);
+            Challenges.ChallengeLedger.WriteInto(dto);
             ProgressionStore.WriteInto(dto);
             CloudState.WriteInto(dto);
 
@@ -222,6 +224,7 @@ namespace GlimmerGrove.Persistence
             Tasks.TaskLedger.LoadFrom(dto);
             Events.SeasonLedger.LoadFrom(dto);
             Ads.RewardedAds.LoadFrom(dto);
+            Challenges.ChallengeLedger.LoadFrom(dto);
 
             // Not loaded from anything — dropped. The bonus wheel's position is the *server's*
             // count of this account's paid spins today, cached for the session and never stored

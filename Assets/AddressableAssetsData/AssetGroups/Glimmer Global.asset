@@ -4640,6 +4640,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/shot_y
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1cfeb58e00b324a4882af0590d5f04f9
+    m_Address: Art/Ui/challenge_sokoban
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1d079b93dd103e94d9920f4ca1b1182b
     m_Address: Art/Siege/wildBrute_r_swing/f04
     m_ReadOnly: 0
@@ -8809,6 +8814,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Siege/charm_blast_y
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 369af05d9906ce4488646e1257501f56
+    m_Address: Art/Ui/challenge_pipes
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 369e83ba5b97e9f4990ba87e777922dc
     m_Address: Art/Fx/Siege/shot_howitzer_b/f04
@@ -14120,6 +14130,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Siege/muzzle_lighthouse_b
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 56b1c8f5118e1034aa41213f6bc40573
+    m_Address: Art/Ui/challenge_merge
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 56b422f5a7d1b8e49ac5a104b8f1e869
     m_Address: Art/Siege/rabbleMon_b/f01
@@ -31686,6 +31701,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Siege/shot_prism_r
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bfaf5f79baa28934cadedd1b8938cae6
+    m_Address: Art/Ui/challenge_pairs
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bfb33685b1fac0f41a5b9df2fe7a8b4e
     m_Address: Art/Siege/Wards/prism_b_fire/f03

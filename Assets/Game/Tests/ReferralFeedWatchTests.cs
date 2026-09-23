@@ -39,7 +39,7 @@ namespace GlimmerGrove.Tests
             public bool Available = true;
             public bool Refuse;
 
-            public Action Moved;
+            public Action<long> Moved;
 
             public ReferralFeedWatch Watch;
 
@@ -49,10 +49,11 @@ namespace GlimmerGrove.Tests
                     open: moved => { Moved = moved; return Open(); },
                     account: () => Account,
                     available: () => Available,
-                    moved: () => Signals++);
+                    moved: rev => { Signals++; LastRev = rev; });
             }
 
             public int Signals;
+            public long LastRev = -99;
 
             Handle Open()
             {
@@ -329,9 +330,10 @@ namespace GlimmerGrove.Tests
             using (feed.Watch.Hold())
             {
                 Assert.IsNotNull(feed.Moved, "the listener was handed something to call");
-                feed.Moved();
-                feed.Moved();
+                feed.Moved(4);
+                feed.Moved(5);
                 Assert.AreEqual(2, feed.Signals);
+                Assert.AreEqual(5, feed.LastRev, "and the counter it delivered travels with the signal");
             }
         }
     }

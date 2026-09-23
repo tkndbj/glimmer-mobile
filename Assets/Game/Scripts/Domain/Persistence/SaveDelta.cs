@@ -159,6 +159,12 @@ namespace GlimmerGrove.Persistence
             // something the server does not.
             if (!SameEndless(remote.endlessBest, merged.endlessBest)) return true;
             if (!SameStars(remote.wardStars, merged.wardStars)) return true;
+
+            // The daily challenges. Today's rows travel for the ad allowance's reason — the cap
+            // is the only thing between a second device and a fresh set of plays; the tally
+            // travels because the server derives XP from it; and a deal's date travels because a
+            // deal bought on one phone is a page the other draws as free.
+            if (!SameChallenges(remote.challenges, merged.challenges)) return true;
             if (!Same(remote.lastPlayedLevelId, merged.lastPlayedLevelId)) return true;
 
             var a = remote.settings ?? new SettingsDto();
@@ -318,6 +324,46 @@ namespace GlimmerGrove.Persistence
             {
                 if (a[i] == null || b[i] == null) return a[i] == b[i];
                 if (a[i].ward != b[i].ward || a[i].stars != b[i].stars) return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Whether two challenge blocks say the same thing. Every list is written sorted by
+        /// <c>ChallengeLedger.Write</c>, so each is an ordered walk.
+        /// </summary>
+        static bool SameChallenges(ChallengeStateDto a, ChallengeStateDto b)
+        {
+            int dayA = a?.day ?? 0, dayB = b?.day ?? 0;
+            if (dayA != dayB) return false;
+
+            var todayA = a?.today; var todayB = b?.today;
+            int ta = todayA?.Length ?? 0, tb = todayB?.Length ?? 0;
+            if (ta != tb) return false;
+            for (int i = 0; i < ta; i++)
+            {
+                if (todayA[i] == null || todayB[i] == null) return todayA[i] == todayB[i];
+                if (!Same(todayA[i].genre, todayB[i].genre)) return false;
+                if (todayA[i].attempts != todayB[i].attempts || todayA[i].wins != todayB[i].wins) return false;
+            }
+
+            var clearsA = a?.clears; var clearsB = b?.clears;
+            int ca = clearsA?.Length ?? 0, cb = clearsB?.Length ?? 0;
+            if (ca != cb) return false;
+            for (int i = 0; i < ca; i++)
+            {
+                if (clearsA[i] == null || clearsB[i] == null) return clearsA[i] == clearsB[i];
+                if (!Same(clearsA[i].genre, clearsB[i].genre) || clearsA[i].count != clearsB[i].count) return false;
+            }
+
+            var tiersA = a?.tiers; var tiersB = b?.tiers;
+            int na = tiersA?.Length ?? 0, nb = tiersB?.Length ?? 0;
+            if (na != nb) return false;
+            for (int i = 0; i < na; i++)
+            {
+                if (tiersA[i] == null || tiersB[i] == null) return tiersA[i] == tiersB[i];
+                if (!Same(tiersA[i].id, tiersB[i].id) || tiersA[i].fromDay != tiersB[i].fromDay) return false;
             }
 
             return true;

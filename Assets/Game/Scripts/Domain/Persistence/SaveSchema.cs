@@ -575,8 +575,33 @@ namespace GlimmerGrove.Persistence
         ///      yet. What a device drops is its own local copy, on its next write, which is what
         ///      removing a feature means.
         ///      </para>
+        /// v34 — the daily challenges (<see cref="SaveFileDto.challenges"/>): today's attempts
+        ///      and wins per genre, a lifetime tally of levels cleared per genre, and the day
+        ///      each deal was last bought.
+        ///      <para>
+        ///      <b>A new top-level key, so it costs the whole of invariant 12a</b> — the field
+        ///      is in this DTO, in <c>SaveDelta</c>, in the mapper both ways and in
+        ///      <c>hasOnly</c>, and the rules release goes out <em>before</em> the client. It
+        ///      is not folded into <c>tasks</c> the way the lifetime tally was, because the
+        ///      owner's instruction is that a challenge shares nothing with the core game, and
+        ///      a block of its own is what makes that true on the wire as well as in code.
+        ///      </para>
+        ///      <para>
+        ///      <b>Three merge rules, each the one its shape allows</b> (11b): the day's rows
+        ///      are period counters (later day wins, larger count within a day — the task
+        ///      ledger's rule), the tally is a per-genre <c>max</c> (the storable-count
+        ///      exception for the fifth time), and a deal is one date per tier id joined by
+        ///      <c>max</c> with its window derived from the tier's authored length (48c).
+        ///      </para>
+        ///      <para>
+        ///      <b>What a forged block buys</b>: plays, which pay nothing by themselves; XP
+        ///      inside a bounded range and no currency (13's fourth clause); and a page that
+        ///      offers more plays whose coin claims the server prices against the deal
+        ///      <em>it</em> sold. The version moves because <see cref="SaveChecksum"/> hashes
+        ///      the serialised object and a v33 file can never match a v34 hash.
+        ///      </para>
         /// </summary>
-        public const int Version = 33;
+        public const int Version = 34;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -881,10 +906,67 @@ namespace GlimmerGrove.Persistence
         public TaskStateDto tasks;
 
         /// <summary>
+        /// The daily challenges: today's plays, the lifetime tally and the deals. Added in
+        /// v34. See <see cref="ChallengeStateDto"/> and <c>Challenges.ChallengeLedger</c>.
+        /// </summary>
+        public ChallengeStateDto challenges;
+
+        /// <summary>
         /// Integrity check over the rest of the file. Empty on files written before
         /// checksums existed, which are accepted and gain one on the next write.
         /// </summary>
         public string checksum;
+    }
+
+    /// <summary>
+    /// The daily challenges' block. See <c>Challenges.ChallengeLedger</c> for the rules.
+    ///
+    /// <para>
+    /// <c>day</c> is the day the <c>today</c> rows describe, nought when there are none, and
+    /// every list is id-keyed on the wire and a map everywhere else (invariant 11a), written
+    /// sorted so <c>SaveDelta</c> can compare by walking. A genre or a tier spelling this build
+    /// cannot name is carried through untouched, for the reason a lesson id is: it is a row a
+    /// newer build wrote, and dropping it would cost that build the row on the next merge.
+    /// </para>
+    /// </summary>
+    [Serializable]
+    public sealed class ChallengeStateDto
+    {
+        public int day;
+
+        /// <summary>One row per genre played today, sorted by genre spelling.</summary>
+        public ChallengeDayDto[] today;
+
+        /// <summary>One row per genre ever cleared, sorted by genre spelling. Never written at zero.</summary>
+        public ChallengeCountDto[] clears;
+
+        /// <summary>One row per deal ever bought: the day it was last bought, sorted by id.</summary>
+        public ChallengeTierStateDto[] tiers;
+    }
+
+    /// <summary>Plays of one genre dealt and won on the block's day. Wins never exceed attempts.</summary>
+    [Serializable]
+    public sealed class ChallengeDayDto
+    {
+        public string genre;
+        public int attempts;
+        public int wins;
+    }
+
+    /// <summary>Levels of one genre ever cleared. A monotonic tally, joined by <c>max</c>.</summary>
+    [Serializable]
+    public sealed class ChallengeCountDto
+    {
+        public string genre;
+        public int count;
+    }
+
+    /// <summary>The day a deal was last bought. Its window is derived from the tier's authored length.</summary>
+    [Serializable]
+    public sealed class ChallengeTierStateDto
+    {
+        public string id;
+        public int fromDay;
     }
 
     /// <summary>

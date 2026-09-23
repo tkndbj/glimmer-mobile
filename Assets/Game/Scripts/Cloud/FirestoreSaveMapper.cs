@@ -272,6 +272,14 @@ namespace GlimmerGrove.Cloud
                 // phone reads half done on the other and a chest paid on one is paid again.
                 { "tasks", Tasks(dto.tasks) },
 
+                // The daily challenges: today's plays, the lifetime tally and the deals. The
+                // server reads the tally (`challengeXp`) and never the rows — a coin claim is
+                // bounded by the deal the wallet document recorded, not by anything here — but a
+                // second device needs all three, or a play spent on one phone is a fresh play on
+                // the other, a tally that stayed is a keeper level that fell, and a deal bought
+                // here is a page drawn as free there.
+                { "challenges", Challenges(dto.challenges) },
+
                 { "eventsSeeded", dto.eventsSeeded },
                 { "events", EventFloors(dto.events) },
 
@@ -561,6 +569,11 @@ namespace GlimmerGrove.Cloud
             // periods with key zero — what the join treats as "knows nothing", so the local
             // side wins. Nothing has to detect the upgrade.
             dto.tasks = ReadTasks(doc);
+
+            // Absent on a document written before the daily challenges existed, which reads back
+            // as no day, no rows, no tally and no deal — what the join treats as "knows nothing",
+            // so the local side wins. Nothing has to detect the upgrade.
+            dto.challenges = ReadChallenges(doc);
 
             // Absent on a document written before the grove existed, which reads back as no
             // rows — and no rows is "this device has no opinion about any slot", so the join
@@ -895,6 +908,114 @@ namespace GlimmerGrove.Cloud
             }
 
             return list.ToArray();
+        }
+
+        /// <summary>
+        /// The challenge block as one small map of three lists, in the shape every other id-keyed
+        /// section takes: rows of maps rather than a map keyed by genre, because a genre spelling
+        /// is content and a Firestore field name is not. Always written, so the reader and the
+        /// writer agree about what "nothing yet" looks like on both sides of a round trip.
+        /// </summary>
+        static Dictionary<string, object> Challenges(ChallengeStateDto block)
+        {
+            var today = new List<object>();
+            var clears = new List<object>();
+            var tiers = new List<object>();
+
+            if (block?.today != null)
+                foreach (var row in block.today)
+                {
+                    if (row == null || string.IsNullOrEmpty(row.genre) || (row.attempts <= 0 && row.wins <= 0)) continue;
+                    today.Add(new Dictionary<string, object>
+                    {
+                        { "genre", row.genre },
+                        { "attempts", (long)row.attempts },
+                        { "wins", (long)row.wins },
+                    });
+                }
+
+            if (block?.clears != null)
+                foreach (var row in block.clears)
+                {
+                    if (row == null || string.IsNullOrEmpty(row.genre) || row.count <= 0) continue;
+                    clears.Add(new Dictionary<string, object>
+                    {
+                        { "genre", row.genre },
+                        { "count", (long)row.count },
+                    });
+                }
+
+            if (block?.tiers != null)
+                foreach (var row in block.tiers)
+                {
+                    if (row == null || string.IsNullOrEmpty(row.id) || row.fromDay <= 0) continue;
+                    tiers.Add(new Dictionary<string, object>
+                    {
+                        { "id", row.id },
+                        { "fromDay", (long)row.fromDay },
+                    });
+                }
+
+            return new Dictionary<string, object>
+            {
+                { "day", (long)(block != null && today.Count > 0 && block.day > 0 ? block.day : 0) },
+                { "today", today },
+                { "clears", clears },
+                { "tiers", tiers },
+            };
+        }
+
+        /// <summary>Drops exactly what <see cref="Challenges"/> drops, so a round trip is a fixed point.</summary>
+        static ChallengeStateDto ReadChallenges(IDictionary<string, object> doc)
+        {
+            var block = new ChallengeStateDto
+            {
+                today = new ChallengeDayDto[0],
+                clears = new ChallengeCountDto[0],
+                tiers = new ChallengeTierStateDto[0],
+            };
+            if (!(Map(doc, "challenges") is IDictionary<string, object> map)) return block;
+
+            var today = new List<ChallengeDayDto>();
+            if (map.TryGetValue("today", out object rawToday) && rawToday is IEnumerable<object> todayRows)
+                foreach (object item in todayRows)
+                {
+                    if (!(item is IDictionary<string, object> row)) continue;
+                    string genre = Str(row, "genre");
+                    long attempts = Long(row, "attempts", 0L);
+                    long wins = Long(row, "wins", 0L);
+                    if (string.IsNullOrEmpty(genre) || (attempts <= 0L && wins <= 0L)) continue;
+                    today.Add(new ChallengeDayDto { genre = genre, attempts = Cap(attempts), wins = Cap(wins) });
+                }
+
+            var clears = new List<ChallengeCountDto>();
+            if (map.TryGetValue("clears", out object rawClears) && rawClears is IEnumerable<object> clearRows)
+                foreach (object item in clearRows)
+                {
+                    if (!(item is IDictionary<string, object> row)) continue;
+                    string genre = Str(row, "genre");
+                    long count = Long(row, "count", 0L);
+                    if (string.IsNullOrEmpty(genre) || count <= 0L) continue;
+                    clears.Add(new ChallengeCountDto { genre = genre, count = Cap(count) });
+                }
+
+            var tiers = new List<ChallengeTierStateDto>();
+            if (map.TryGetValue("tiers", out object rawTiers) && rawTiers is IEnumerable<object> tierRows)
+                foreach (object item in tierRows)
+                {
+                    if (!(item is IDictionary<string, object> row)) continue;
+                    string id = Str(row, "id");
+                    long fromDay = Long(row, "fromDay", 0L);
+                    if (string.IsNullOrEmpty(id) || fromDay <= 0L) continue;
+                    tiers.Add(new ChallengeTierStateDto { id = id, fromDay = Cap(fromDay) });
+                }
+
+            long day = Long(map, "day", 0L);
+            block.day = today.Count > 0 ? Cap(day) : 0;
+            block.today = today.ToArray();
+            block.clears = clears.ToArray();
+            block.tiers = tiers.ToArray();
+            return block;
         }
 
         static UtilityStockDto[] ReadUtilities(IDictionary<string, object> doc)

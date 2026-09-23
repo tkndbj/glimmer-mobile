@@ -72,6 +72,11 @@ namespace GlimmerGrove
             TaskLedger.Changed += OnTasksChanged;
             DailyStreak.Changed += OnStreakChanged;
 
+            // The challenge badge repaints on the same shape of cue: a play spent, a deal
+            // bought, a sync arriving with plays spent elsewhere, or the day turning under
+            // the ledger's own read.
+            ChallengeLedger.Changed += OnChallengesChanged;
+
             // The wallet's own two cues are not here: `BuildResources` attaches a
             // `WalletWatch`, which is the one place in the game that subscribes to them.
         }
@@ -80,6 +85,7 @@ namespace GlimmerGrove
         {
             TaskLedger.Changed -= OnTasksChanged;
             DailyStreak.Changed -= OnStreakChanged;
+            ChallengeLedger.Changed -= OnChallengesChanged;
             WardLoadout.Changed -= OnLoadoutChanged;
 
             _line?.Dispose();
@@ -97,6 +103,12 @@ namespace GlimmerGrove
         {
             if (this == null || !_streakBox) return;
             PaintStreak();
+        }
+
+        void OnChallengesChanged()
+        {
+            if (this == null || _challengeBadge == null) return;
+            PaintChallenges();
         }
 
         /// <summary>
@@ -1446,13 +1458,13 @@ namespace GlimmerGrove
         /// nothing of the glow left to see, and the art carries its own.
         /// </para>
         /// <para>
-        /// <b>The door is shut, and it says so.</b> <see cref="DailyChallengesScreen"/> is an
-        /// empty room, so the card is <c>Interactable = false</c> and carries a COMING SOON tag
-        /// on its top corner. The two go together on purpose: a card that swallows a tap and
-        /// explains nothing is a broken button (invariant 16o), and a tag on a card that still
-        /// opened an empty screen would be a label contradicting the thing it is labelling.
-        /// Nothing about the picture changes — the banner is the advertisement for a mode that
-        /// is coming, and the tag is what makes it an advertisement rather than an offer.
+        /// <b>The badge is the tasks pack's badge</b> — the same starburst, in the same corner,
+        /// painted with how many genres still have a play left today
+        /// (<see cref="ChallengeLedger.ReadyCount"/>) — so the two doors on the hub's foot say
+        /// "something is waiting" in one voice. It is painted rather than drawn (44j): a play
+        /// spent, a deal bought, a sync arriving with plays spent on another phone, and the day
+        /// turning all repaint it through <see cref="ChallengeLedger.Changed"/>, and it is built
+        /// after the window so it draws over the mask rather than being cropped by it.
         /// </para>
         /// </summary>
         void BuildChallenges()
@@ -1509,9 +1521,11 @@ namespace GlimmerGrove
             // The tag, built after the window so it draws over the picture rather than
             // under it — the banner is inside a Mask and this is its sibling.
             //
-            // `UIKit.Corner` rather than the margin typed straight in: Box always pivots at
-            // centre, so a corner-anchored tag given its margin directly hangs half of itself
-            // off the plate (invariant 44d, and it has shipped twice).
+            // The badge, built after the window so it draws over the picture rather than under
+            // it — the banner is inside a Mask and this is its sibling.
+            _challengeBadge = WaitingBadge.BurstTopLeft(card.transform);
+            PaintChallenges();
+
             card.transform.localScale = Vector3.zero;
             Tween.Pop(card.transform, 0f, .7f, .70f).OnDone(() =>
             {
@@ -1523,6 +1537,14 @@ namespace GlimmerGrove
                 // so it cannot spill past the corners. See Sheen.
                 Sheen.Attach((RectTransform)card.transform, 3.1f);
             });
+        }
+
+        WaitingBadge _challengeBadge;
+
+        /// <summary>Writes the ledger onto the door: how many genres still have a play left today.</summary>
+        void PaintChallenges()
+        {
+            _challengeBadge?.Paint(ChallengeRules.Table.IsEmpty ? 0 : ChallengeLedger.ReadyCount);
         }
 
         // ------------------------------------------------------------- the loadout

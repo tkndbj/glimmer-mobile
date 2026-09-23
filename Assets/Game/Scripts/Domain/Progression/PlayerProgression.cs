@@ -21,6 +21,7 @@ namespace GlimmerGrove.Progression
     {
         static ProgressionTotals _totals = ProgressionTotals.Zero;
         static long _endlessXp;
+        static long _challengeXp;
         static long _boostXp;
         static PlayerLevel _level;
         static bool _dirty = true;
@@ -51,6 +52,13 @@ namespace GlimmerGrove.Progression
             // nothing on its own, but the bonus it banks does — and a merge can move the banked
             // total without anybody playing, which the hub's badge has to repaint for.
             XpBoost.Changed += Invalidate;
+
+            // The third source of XP that is not a star (see `ChallengeRewardRule`): a lifetime
+            // tally of cleared daily challenges, which a merge can move without anybody playing
+            // — and the rule over it is content of its own file, so a retune of that file moves
+            // every keeper level that reads it.
+            Challenges.ChallengeLedger.Changed += Invalidate;
+            Challenges.ChallengeRules.Changed += Invalidate;
 
             // A season's chests are claims rather than derived credits, so they already
             // invalidate through `Award`. This is here for the other half — the hub's badge
@@ -93,6 +101,16 @@ namespace GlimmerGrove.Progression
         /// </para>
         /// </summary>
         public static long EndlessXp { get { EnsureFresh(); return _endlessXp; } }
+
+        /// <summary>
+        /// What the daily challenges have paid this account in XP: a rate over the lifetime
+        /// tally of levels cleared, bounded by a ceiling — the Infinite lane's shape exactly
+        /// (<see cref="EndlessXp"/>), and a separate addend for its reason. The rule lives in
+        /// <c>challenges.json</c> rather than in the reward table, so a challenge retune moves
+        /// nothing in <c>progression.json</c>; the server derives the same figure from the
+        /// same rows (<c>challengeXp</c>) and the shared vectors hold the pair.
+        /// </summary>
+        public static long ChallengeXp { get { EnsureFresh(); return _challengeXp; } }
 
         /// <summary>
         /// What XP boosts have paid this account, clamped to what it can prove.
@@ -258,18 +276,23 @@ namespace GlimmerGrove.Progression
             // mirrors stays the one the shared vectors prove. See `EndlessRewardTable`.
             _endlessXp = table.Endless.XpFor(EndlessLedger.LifetimeWaves);
 
-            // And what boosts have paid on top of both. Clamped against the two above it rather
-            // than against a ceiling of its own: a boost can only ever have multiplied XP that was
-            // really paid, so anything beyond `provable x maxPercent%` is arithmetically
+            // The daily challenges, the same shape one file over: a rate over a lifetime tally,
+            // read from the challenge table rather than the reward table because the two files
+            // are kept apart on purpose (invariant 56).
+            _challengeXp = Challenges.ChallengeRules.Table.Rewards.XpFor(Challenges.ChallengeLedger.LifetimeClears);
+
+            // And what boosts have paid on top of all three. Clamped against the sum above it
+            // rather than against a ceiling of its own: a boost can only ever have multiplied XP
+            // that was really paid, so anything beyond `provable x maxPercent%` is arithmetically
             // impossible however it got into the file. That is `groveWorth`'s "clamped to what the
             // account could afford" (19a) said about a multiplier, and it is a far tighter bound
             // than any flat figure would be. The server applies the identical clamp.
-            _boostXp = XpBoost.BonusFrom(_totals.Xp + _endlessXp);
+            _boostXp = XpBoost.BonusFrom(_totals.Xp + _endlessXp + _challengeXp);
 
             // Three floors, applied as one: whichever demands the most XP wins, and
             // everything downstream — level, progress bar, remaining XP — then stays
             // internally consistent instead of being patched up afterwards.
-            long effectiveXp = _totals.Xp + _endlessXp + _boostXp;
+            long effectiveXp = _totals.Xp + _endlessXp + _challengeXp + _boostXp;
             if (ProgressionStore.XpHighWater > effectiveXp) effectiveXp = ProgressionStore.XpHighWater;
 
             long levelFloorXp = table.XpToReach(ProgressionStore.LevelHighWater);

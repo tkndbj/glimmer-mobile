@@ -2663,6 +2663,98 @@ def check_challenges(keys, warnings):
     print(f"challenges: {len(rows)} row(s) on a line of {line.get('health')} health, "
           f"{line.get('damage')} a bolt, {line.get('strike')} a blow")
 
+    # The v2 blocks: the free allowance, the deal ladder and the two reward rates, mirroring
+    # `ChallengeTable.TryBuild` and `ChallengeRewardRule.Resolve` (and the seeder, which refuses
+    # the same shapes). Every figure is printed, because every one is content and the economy
+    # they add up to is the owner's to read: the most a day can pay under each deal is the
+    # sentence the shelf's prices are measured against.
+    MAX_FREE, MAX_PLAYS, MAX_GEMS, MAX_DAYS, MAX_TIERS = 100, 1000, 100000, 365, 16
+    MAX_COINS, MAX_XP, HARD_MAX_CLEARS = 200, 1000, 1000000
+    DEFAULTS = {"freePlays": 2, "coins": 40, "xp": 20, "maxClears": 25000}
+
+    def key_ok(name):
+        return isinstance(name, str) and 1 <= len(name) <= 32 and all(
+            c.islower() or c.isdigit() or c == "_" for c in name)
+
+    allowance = table.get("allowance") or {}
+    free = allowance.get("freePlays", 0)
+    if not isinstance(free, int) or free < 0 or free > MAX_FREE:
+        errors.append(f"challenges allowance.freePlays must be a whole number up to {MAX_FREE}")
+        free = DEFAULTS["freePlays"]
+    if free == 0:
+        free = DEFAULTS["freePlays"]
+
+    rewards = table.get("rewards") or {}
+    authored = any((rewards.get(k) or 0) > 0 for k in ("coins", "xp", "maxClears"))
+    coins = rewards.get("coins", 0) if authored else DEFAULTS["coins"]
+    xp = rewards.get("xp", 0) if authored else DEFAULTS["xp"]
+    max_clears = rewards.get("maxClears", 0) if authored else DEFAULTS["maxClears"]
+    for name, value, cap in (("coins", coins, MAX_COINS), ("xp", xp, MAX_XP), ("maxClears", max_clears, HARD_MAX_CLEARS)):
+        if not isinstance(value, int) or value < 0 or value > cap:
+            errors.append(f"challenges rewards.{name} must be a whole number up to {cap}")
+    if xp > 0 and max_clears <= 0:
+        errors.append("challenges rewards.xp is set with no maxClears; a rate with no ceiling pays "
+                      "nothing on both sides, which is a typo rather than a decision")
+    if coins == 0 and authored:
+        warnings.append("challenges rewards.coins is 0: a cleared challenge pays no credits")
+    if xp == 0 and authored:
+        warnings.append("challenges rewards.xp is 0: a cleared challenge pays no XP")
+
+    tiers = table.get("tiers") or []
+    if len(tiers) > MAX_TIERS:
+        errors.append(f"challenges lists {len(tiers)} deals; at most {MAX_TIERS} are supported")
+    last_plays, last_gems, tier_ids = free, 0, set()
+    for tier in tiers:
+        tid = tier.get("id") or ""
+        where = f"deal '{tid}'" if tid else "an unnamed deal"
+        if not key_ok(tid):
+            errors.append(f"{where} needs an id of 1-32 lower-case letters, digits or underscores")
+        elif tid in tier_ids:
+            errors.append(f"{where} is listed twice")
+        tier_ids.add(tid)
+        gems, plays, days = tier.get("gems", 0), tier.get("plays", 0), tier.get("days", 0)
+        if not isinstance(gems, int) or not 0 < gems <= MAX_GEMS:
+            errors.append(f"{where} needs a price between 1 and {MAX_GEMS} gems")
+        if not isinstance(plays, int) or not 0 < plays <= MAX_PLAYS:
+            errors.append(f"{where} needs plays between 1 and {MAX_PLAYS}")
+        if not isinstance(days, int) or not 0 < days <= MAX_DAYS:
+            errors.append(f"{where} needs days between 1 and {MAX_DAYS}")
+        if isinstance(plays, int) and plays <= last_plays:
+            errors.append(f"{where} gives {plays} plays a day, which does not beat the {last_plays} before it; deals must climb")
+        if isinstance(gems, int) and gems <= last_gems:
+            errors.append(f"{where} costs {gems} gems, which does not exceed the {last_gems} before it; deals must climb")
+        last_plays, last_gems = plays, gems
+        if f"challenge.tier.{tid}.name" not in keys:
+            errors.append(f"{where} needs string 'challenge.tier.{tid}.name'")
+
+    genres_shipped = sorted({r.get("genre") for r in rows if r.get("genre") in CHALLENGE_GENRES})
+    for genre in genres_shipped:
+        for key in (f"challenge.genre.{genre}.name", f"challenge.genre.{genre}.blurb"):
+            if key not in keys:
+                errors.append(f"genre '{genre}' needs string '{key}'")
+
+    n = len(genres_shipped)
+    print(f"       allowance: {free} free play(s) of each of {n} genre(s) a day; "
+          f"a clear pays {coins} credits and {xp} XP, up to {max_clears:,} lifetime clears "
+          f"({max_clears * xp:,} XP)")
+    print(f"       a full free day pays {free * n * coins:,} credits and {free * n * xp:,} XP "
+          f"({free * n} clears)")
+    for tier in tiers:
+        plays, gems, days = tier.get("plays", 0), tier.get("gems", 0), tier.get("days", 0)
+        per_day = gems / days if days else 0
+        print(f"       deal {tier.get('id'):<8} {gems:>6} gems / {days} day(s) = {per_day:.1f} a day: "
+              f"{plays} plays a genre, at most {plays * n * coins:,} credits and {plays * n * xp:,} XP a day")
+    per_genre = {}
+    for r in rows:
+        per_genre[r.get("genre")] = per_genre.get(r.get("genre"), 0) + 1
+    for genre in genres_shipped:
+        c = per_genre.get(genre, 0)
+        print(f"       {genre:<8} {c} level(s): slot nought visits every level once per {c}-day cycle")
+        top = max([free] + [t.get("plays", 0) for t in tiers])
+        if c < top:
+            warnings.append(f"genre '{genre}' has {c} level(s) against a largest allowance of {top} plays a day; "
+                            f"a player past {c} wins replays a level they beat today")
+
     for row in rows:
         cid = row.get("id") or ""
         where = f"challenge '{cid}'" if cid else "an unnamed challenge"
@@ -3794,7 +3886,7 @@ def main():
     # The catalog and the reward table version independently: progression.json is
     # delivered on its own and changes at a different rate, so a catalog format bump
     # must not invalidate it for clients that have not updated. See ProgressionSchema.
-    EXPECTED = {"manifest.json": 2, "progression.json": 1, "challenges.json": 1}
+    EXPECTED = {"manifest.json": 2, "progression.json": 1, "challenges.json": 2}
     for f in sorted(os.listdir(os.path.join(ROOT, "chapters"))):
         if f.endswith(".json"):
             EXPECTED[os.path.join("chapters", f)] = 2

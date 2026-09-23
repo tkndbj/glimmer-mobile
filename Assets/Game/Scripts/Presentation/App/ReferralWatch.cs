@@ -63,10 +63,12 @@ namespace GlimmerGrove
             var watch = host.GetComponent<ReferralWatch>();
             if (watch == null) watch = host.gameObject.AddComponent<ReferralWatch>();
 
-            // The first ask belongs to the page opening, not to the first tick of a timer. The
-            // ledger's own freshness window is what stops this costing a call when something
-            // else has just asked.
-            ReferralLedger.Poke();
+            // The first ask belongs to the page opening, not to the first tick of a timer —
+            // and with a listener attached (which `AddComponent` has just done, through
+            // `OnEnable`) the listener's first delivery *is* that ask, or proves it is not
+            // needed (`ReferralLedger.NeedsAsk`). Only a host that could not get a listener
+            // asks blind. This is the line that used to cost a callable per screen open.
+            ReferralLedger.Opened();
             watch._tick = 0f;
 
             return watch;
@@ -109,8 +111,9 @@ namespace GlimmerGrove
 
         void Update()
         {
-            // The listener's callback may arrive on any thread, so all it does is set a flag.
-            // This is the main thread, and this is where that flag becomes an ask.
+            // The listener's callback may arrive on any thread, so all it does is record the
+            // counter and set a flag. This is the main thread, and this is where that flag
+            // becomes an ask — or, when the counter matches the cached answer's stamp, nothing.
             ReferralLedger.Pump();
 
             _tick += Time.unscaledDeltaTime;

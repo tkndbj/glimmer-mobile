@@ -118,7 +118,8 @@ namespace GlimmerGrove.Challenges
     }
 
     /// <summary>
-    /// Every challenge this build can deal, read from <c>challenges.json</c>.
+    /// Every challenge this build can deal, read from <c>challenges.json</c>, with the
+    /// allowance, the deals and the reward rates beside them.
     ///
     /// <para>
     /// <b>The reader is the gate.</b> Everything a row can get wrong is refused here, by name,
@@ -129,32 +130,84 @@ namespace GlimmerGrove.Challenges
     /// ship, and a row that reaches a device has passed it.
     /// </para>
     /// <para>
+    /// <b>A genre is a ladder of rows</b> (<see cref="RowsOf"/>), kept in authored order. The
+    /// calendar deals one of them a slot (<see cref="ChallengeCalendar"/>), so adding a level to
+    /// a genre is a row appended to this file and nothing else — a build, a gate and the server
+    /// all learn of it through the same reader.
+    /// </para>
+    /// <para>
     /// <b>Versions independently of everything</b> (9b's rule): this file says its own
     /// <see cref="Version"/>, and a build refuses a file from the future rather than reading
-    /// it half.
+    /// it half. <b>v2</b> added the allowance, the deals and the rewards, and is refused by a v1
+    /// reader on purpose: a build that could not enforce the allowance would offer unlimited
+    /// plays against a file that promises two.
     /// </para>
     /// </summary>
     public sealed class ChallengeTable
     {
-        public const int Version = 1;
+        public const int Version = 2;
 
-        /// <summary>The built-in default is an empty slate: no challenge is ever hard-coded.</summary>
+        /// <summary>
+        /// The built-in default is an empty slate on the built-in figures: no challenge is ever
+        /// hard-coded (invariant 4), but the reward rates are, because the XP a lifetime tally
+        /// is worth has to be the same on a device with no file as on the server with no block
+        /// (<see cref="ChallengeLimits"/>).
+        /// </summary>
         public static readonly ChallengeTable Default =
-            new ChallengeTable(new ChallengeLine(1, 3, 1), Array.Empty<ChallengeDefinition>());
+            new ChallengeTable(new ChallengeLine(1, 3, 1), ChallengeLimits.DefaultFreePlays,
+                               Array.Empty<ChallengeTier>(), ChallengeRewardRule.Default,
+                               Array.Empty<ChallengeDefinition>());
 
         public readonly ChallengeLine Line;
 
-        readonly ChallengeDefinition[] _rows;
+        /// <summary>Plays of each genre a day that cost nothing.</summary>
+        public readonly int FreePlays;
 
-        ChallengeTable(ChallengeLine line, ChallengeDefinition[] rows)
+        /// <summary>What a cleared level pays.</summary>
+        public readonly ChallengeRewardRule Rewards;
+
+        readonly ChallengeTier[] _tiers;
+        readonly ChallengeDefinition[] _rows;
+        readonly Dictionary<ChallengeGenre, ChallengeDefinition[]> _byGenre;
+        readonly ChallengeGenre[] _genres;
+
+        ChallengeTable(ChallengeLine line, int freePlays, ChallengeTier[] tiers,
+                       ChallengeRewardRule rewards, ChallengeDefinition[] rows)
         {
             Line = line;
+            FreePlays = freePlays;
+            _tiers = tiers;
+            Rewards = rewards;
             _rows = rows;
+
+            _byGenre = new Dictionary<ChallengeGenre, ChallengeDefinition[]>();
+            var genres = new List<ChallengeGenre>();
+            foreach (ChallengeGenre genre in Enum.GetValues(typeof(ChallengeGenre)))
+            {
+                var mine = new List<ChallengeDefinition>();
+                for (int i = 0; i < rows.Length; i++)
+                    if (rows[i].Genre == genre) mine.Add(rows[i]);
+
+                if (mine.Count == 0) continue;
+                _byGenre[genre] = mine.ToArray();
+                genres.Add(genre);
+            }
+            _genres = genres.ToArray();
         }
 
         public IReadOnlyList<ChallengeDefinition> All => _rows;
         public int Count => _rows.Length;
         public bool IsEmpty => _rows.Length == 0;
+
+        /// <summary>The deals, cheapest first, as authored.</summary>
+        public IReadOnlyList<ChallengeTier> Tiers => _tiers;
+
+        /// <summary>Every genre with at least one row, in enum order. What the list draws a card for.</summary>
+        public IReadOnlyList<ChallengeGenre> Genres => _genres;
+
+        /// <summary>A genre's rows in authored order, or none.</summary>
+        public IReadOnlyList<ChallengeDefinition> RowsOf(ChallengeGenre genre)
+            => _byGenre.TryGetValue(genre, out var rows) ? rows : Array.Empty<ChallengeDefinition>();
 
         public ChallengeDefinition Find(string id)
         {
@@ -163,6 +216,17 @@ namespace GlimmerGrove.Challenges
                 if (_rows[i].Id == id) return _rows[i];
             return null;
         }
+
+        public ChallengeTier FindTier(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return null;
+            for (int i = 0; i < _tiers.Length; i++)
+                if (_tiers[i].Id == id) return _tiers[i];
+            return null;
+        }
+
+        /// <summary>The largest deal, or null when the file sells none. What a gate prints the ceiling from.</summary>
+        public ChallengeTier LargestTier => _tiers.Length == 0 ? null : _tiers[_tiers.Length - 1];
 
         // ------------------------------------------------------------------ reading
         public static bool TryRead(string json, out ChallengeTable table, List<string> problems)
@@ -188,8 +252,8 @@ namespace GlimmerGrove.Challenges
         /// Builds the table from its DTO, refusing anything a genre could not play.
         ///
         /// <b>Returns false when the file is unusable</b> (wrong version, no line, a duplicated
-        /// id) and true with problems listed when individual rows were dropped — a bad row costs
-        /// that challenge, never the slate.
+        /// id, a deal ladder that does not climb) and true with problems listed when individual
+        /// rows were dropped — a bad row costs that challenge, never the slate.
         /// </summary>
         public static bool TryBuild(ChallengeTableDto dto, out ChallengeTable table, List<string> problems)
         {
@@ -209,7 +273,7 @@ namespace GlimmerGrove.Challenges
             }
 
             var lineDto = dto.line;
-            if (lineDto.damage <= 0 || lineDto.health <= 0 || lineDto.strike <= 0)
+            if (lineDto == null || lineDto.damage <= 0 || lineDto.health <= 0 || lineDto.strike <= 0)
             {
                 problems.Add("challenges line needs damage, health and strike all above nought");
                 return false;
@@ -217,17 +281,22 @@ namespace GlimmerGrove.Challenges
 
             var line = new ChallengeLine(lineDto.damage, lineDto.health, lineDto.strike);
 
+            bool ok = true;
+
+            int freePlays = ReadAllowance(dto.allowance, problems);
+            var tiers = ReadTiers(dto.tiers, freePlays, problems, ref ok);
+            var rewards = ChallengeRewardRule.Resolve(dto.rewards, problems);
+
             var rows = new List<ChallengeDefinition>();
             var seen = new HashSet<string>(StringComparer.Ordinal);
-            bool ok = true;
 
             var list = dto.challenges ?? Array.Empty<ChallengeDto>();
             for (int i = 0; i < list.Length; i++)
             {
                 var row = list[i];
-                string where = string.IsNullOrEmpty(row.id) ? $"challenge #{i}" : $"challenge '{row.id}'";
+                string where = row == null || string.IsNullOrEmpty(row.id) ? $"challenge #{i}" : $"challenge '{row.id}'";
 
-                if (string.IsNullOrEmpty(row.id))
+                if (row == null || string.IsNullOrEmpty(row.id))
                 {
                     problems.Add($"{where} has no id");
                     continue;
@@ -244,8 +313,105 @@ namespace GlimmerGrove.Challenges
                 if (built != null) rows.Add(built);
             }
 
-            table = new ChallengeTable(line, rows.ToArray());
+            table = new ChallengeTable(line, freePlays, tiers, rewards, rows.ToArray());
             return ok;
+        }
+
+        /// <summary>The free allowance: unwritten inherits, out of range is clamped and named.</summary>
+        static int ReadAllowance(ChallengeAllowanceDto dto, List<string> problems)
+        {
+            if (dto == null || !dto.IsAuthored) return ChallengeLimits.DefaultFreePlays;
+
+            if (dto.freePlays > ChallengeLimits.MaxFreePlays)
+            {
+                problems.Add($"challenges allowance.freePlays is {dto.freePlays}, above the supported " +
+                             $"maximum {ChallengeLimits.MaxFreePlays}; clamped");
+                return ChallengeLimits.MaxFreePlays;
+            }
+
+            return dto.freePlays;
+        }
+
+        /// <summary>
+        /// The deals, refused as a set rather than row by row.
+        ///
+        /// <b>A ladder that does not climb is unusable</b>, for the season's reason about a paid
+        /// column with a hole in it (47b): a deal is "more plays for more gems", and two rows
+        /// where the dearer one gives fewer plays — or the same — is a page that sells a worse
+        /// thing for more money. Every row must beat the free figure, ids must be unique and
+        /// key-shaped, and the price, the plays and the days are each bounded.
+        /// </summary>
+        static ChallengeTier[] ReadTiers(ChallengeTierDto[] raw, int freePlays, List<string> problems, ref bool ok)
+        {
+            if (raw == null || raw.Length == 0) return Array.Empty<ChallengeTier>();
+
+            if (raw.Length > ChallengeLimits.MaxTiers)
+            {
+                problems.Add($"challenges lists {raw.Length} deals; at most {ChallengeLimits.MaxTiers} are supported");
+                ok = false;
+                return Array.Empty<ChallengeTier>();
+            }
+
+            var tiers = new List<ChallengeTier>(raw.Length);
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            int lastPlays = freePlays, lastGems = 0;
+
+            for (int i = 0; i < raw.Length; i++)
+            {
+                var row = raw[i];
+                string where = row == null || string.IsNullOrEmpty(row.id) ? $"deal #{i}" : $"deal '{row.id}'";
+                int before = problems.Count;
+
+                if (row == null || !IsValidTierId(row.id))
+                    problems.Add($"{where} needs an id of 1-32 lower-case letters, digits or underscores");
+                else if (!seen.Add(row.id))
+                    problems.Add($"{where} is listed twice");
+
+                if (row != null)
+                {
+                    if (row.gems <= 0 || row.gems > ChallengeLimits.MaxTierGems)
+                        problems.Add($"{where} needs a price between 1 and {ChallengeLimits.MaxTierGems} gems");
+                    if (row.plays <= 0 || row.plays > ChallengeLimits.MaxTierPlays)
+                        problems.Add($"{where} needs plays between 1 and {ChallengeLimits.MaxTierPlays}");
+                    if (row.days <= 0 || row.days > ChallengeLimits.MaxTierDays)
+                        problems.Add($"{where} needs days between 1 and {ChallengeLimits.MaxTierDays}");
+
+                    if (row.plays > 0 && row.plays <= lastPlays)
+                        problems.Add($"{where} gives {row.plays} plays a day, which does not beat the " +
+                                     $"{lastPlays} before it; deals must climb");
+                    if (row.gems > 0 && row.gems <= lastGems)
+                        problems.Add($"{where} costs {row.gems} gems, which does not exceed the " +
+                                     $"{lastGems} before it; deals must climb");
+                }
+
+                if (problems.Count > before)
+                {
+                    ok = false;
+                    continue;
+                }
+
+                lastPlays = row.plays;
+                lastGems = row.gems;
+                tiers.Add(new ChallengeTier(row.id, row.gems, row.plays, row.days));
+            }
+
+            return ok ? tiers.ToArray() : Array.Empty<ChallengeTier>();
+        }
+
+        /// <summary>
+        /// A deal id is a spend id, a wallet field and a loc key, so it is held to the shape all
+        /// three accept. Mirrors <c>TIER_ID</c> in <c>functions/src/challenges.ts</c>.
+        /// </summary>
+        public static bool IsValidTierId(string id)
+        {
+            if (string.IsNullOrEmpty(id) || id.Length > 32) return false;
+            for (int i = 0; i < id.Length; i++)
+            {
+                char c = id[i];
+                bool ok = (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_';
+                if (!ok) return false;
+            }
+            return true;
         }
 
         static ChallengeDefinition Build(ChallengeDto row, ChallengeLine line, string where, List<string> problems)
