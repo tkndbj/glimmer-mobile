@@ -1742,18 +1742,6 @@
       "text": "{0} deal active!"
     },
     {
-      "key": "ui.challenges.next_level",
-      "text": "Next level"
-    },
-    {
-      "key": "ui.challenges.reward",
-      "text": "+{0} coins   +{1} XP"
-    },
-    {
-      "key": "ui.challenges.reward_boost",
-      "text": "+{0} coins   +{1} XP (+{2} boost)"
-    },
-    {
       "key": "ui.challenges.hours_left",
       "text": "{0}h left"
     },
@@ -1772,10 +1760,6 @@
     {
       "key": "ui.challenges.empty",
       "text": "No challenge is on today. Come back tomorrow."
-    },
-    {
-      "key": "ui.challenges.lost",
-      "text": "The line has fallen"
     },
     {
       "key": "ui.challenges.next",
@@ -1798,16 +1782,16 @@
       "text": "Reach rank {0}"
     },
     {
-      "key": "ui.challenges.retry",
-      "text": "Try again"
-    },
-    {
       "key": "ui.challenges.today",
       "text": "TODAY"
     },
     {
       "key": "ui.challenges.turns",
       "text": "TURN {0}"
+    },
+    {
+      "key": "ui.challenges.victory",
+      "text": "VICTORY"
     },
     {
       "key": "ui.challenges.won",

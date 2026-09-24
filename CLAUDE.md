@@ -1674,6 +1674,19 @@ on a fresh clone).
 
 ## Owed
 
+**A challenge ends on the run's own panels since 2026-09-24, at the owner's instruction, and
+neither has been in the Editor.** `ChallengeWinOverlay` is the victory design (`VictoryFrame`,
+the `Payout` chips flying XP and coins out of the crest, the boost line) over what the clear
+paid and nothing about the day's allowance — no stars, route, record, rank, streak or "plays
+left"; NEXT LEVEL while a play is left, the list otherwise. `ChallengeDefeatOverlay` is the
+defeat design (`ModalView.MakePanel`, `DefeatPanel.Of` with nothing on offer) with the line's
+title and reason and no hearts, because a challenge has none: TRY AGAIN while a play is left, the
+no-plays sentence in the note's seat otherwise, and the list. Neither goes through
+`RankCeremony`, because a challenge is not a run; the compile rule is about the two run panels
+by name. The hand-built curtain and its five strings are gone. **Neither panel has a render
+mirror** — the frame is the shared one and the chips are the victory panel's, but the stack
+arithmetic here is new and only a device has seen it.
+
 **Pipeworks was replaced by the glade on 2026-09-23, at the owner's instruction, and none of it
 has been in the Editor.** The hill, the four posts, the waves and every ledger are untouched:
 `GladePuzzle` stands behind the same `IChallengePuzzle` seam, wrapping the real `Puzzle` dealt by

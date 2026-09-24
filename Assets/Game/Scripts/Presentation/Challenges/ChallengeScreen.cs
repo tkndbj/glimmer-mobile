@@ -321,6 +321,14 @@ namespace GlimmerGrove
             StartCoroutine(Curtain(won, reward));
         }
 
+        /// <summary>
+        /// A beat, the flash the board did not already give, and then the run's own ending
+        /// panel — the victory design over what the clear paid
+        /// (<see cref="ChallengeWinOverlay"/>), or the defeat design with the line's reason and
+        /// no hearts (<see cref="ChallengeDefeatOverlay"/>) — by the owner's instruction on
+        /// 2026-09-24. The boost's percentage is read here, at the moment the panel is raised,
+        /// because the ledger banked the bonus at the win and only the window knows its rate.
+        /// </summary>
         IEnumerator Curtain(bool won, ChallengeReward reward)
         {
             yield return new WaitForSecondsRealtime(.4f);
@@ -341,76 +349,24 @@ namespace GlimmerGrove
                 Audio.Sfx("felled", .7f);
             }
 
-            var scrim = UIKit.Scrim(Content, .62f);
-            var safe = SafeArea.Node("Ending", Content);
+            var genre = Genre;
+            var level = _play.Definition;
 
-            UIKit.Halo(safe, won ? Pal.Gold : Pal.Rose, 760f, .30f, new Vector2(0f, 250f));
-
-            var line = UIKit.Titled("Line", safe, Loc.Get(won ? "ui.challenges.won" : "ui.challenges.lost"), 60,
-                                    Pal.Cream, TextAnchor.MiddleCenter, new Vector2(880f, 200f),
-                                    new Vector2(.5f, .5f), new Vector2(0f, 250f), 3f, 5f, wrap: true);
-            UIKit.Shrinkable(line, 32);
-            line.transform.localScale = Vector3.zero;
-            Tween.Pop(line.transform, 0f, .5f);
-
-            UIKit.Titled("Turns", safe, Loc.Format("ui.challenges.turns", _run.Turns), 30,
-                         Pal.A(Pal.Cream, .85f), TextAnchor.MiddleCenter, new Vector2(600f, 60f),
-                         new Vector2(.5f, .5f), new Vector2(0f, 130f), 2f, 2f);
-
-            // What the win paid, said as a picture and a sentence rather than as a bullet point
-            // (45h): coins and XP, with the boost's share beside the XP when one is running.
-            if (won && reward.Any)
+            if (won)
             {
-                string paid = reward.BonusXp > 0
-                            ? Loc.Format("ui.challenges.reward_boost", reward.Coins, reward.Xp, reward.BonusXp)
-                            : Loc.Format("ui.challenges.reward", reward.Coins, reward.Xp);
-                var pill = Scenery.Pill(safe, paid, 30, new Vector2(620f, 74f), new Vector2(.5f, .5f),
-                                        new Vector2(0f, 50f), Pal.A(Pal.Gold, .22f));
-                UIKit.Shrinkable(pill, 20);
-                pill.transform.parent.localScale = Vector3.zero;
-                Tween.Pop(pill.transform.parent, .12f, .5f);
-            }
-
-            // The keys say what the day still allows. A play left offers the next level on a
-            // win and another go on a loss — both are the same deal, one more play — and none
-            // left says so in words rather than swallowing the tap (invariant 16o's rule).
-            int left = ChallengeLedger.PlaysLeft(Genre);
-            bool again = left > 0 && ChallengeLedger.CanPlay(Genre);
-
-            if (again)
-            {
-                string key = won ? "ui.challenges.next_level" : "ui.challenges.retry";
-                var go = UIKit.TextButton("Again", safe, Skins.Affirm, Loc.Get(key).ToUpperInvariant(),
-                                          32, new Vector2(460f, 118f), new Vector2(.5f, .5f), new Vector2(0f, -70f),
-                                          () => Flow.Go<ChallengeScreen>(v => v.Genre = Genre));
-                Enter(go);
-
-                var count = UIKit.Titled("Left", safe, Loc.Format("ui.challenges.plays_left", left, ChallengeLedger.Allowance),
-                                         24, Pal.A(Pal.Cream, .78f), TextAnchor.MiddleCenter, new Vector2(600f, 44f),
-                                         new Vector2(.5f, .5f), new Vector2(0f, -150f), 2f, 0f);
-                UIKit.Shrinkable(count, 16);
+                int boost = reward.BonusXp > 0L ? GlimmerGrove.Progression.XpBoost.Percent : 0;
+                Flow.Modal<ChallengeWinOverlay>(v =>
+                {
+                    v.Genre = genre;
+                    v.Reward = reward;
+                    v.BoostPercent = boost;
+                    v.Level = level;
+                });
             }
             else
             {
-                var spent = UIKit.Titled("Spent", safe, Loc.Get("ui.challenges.no_plays"), 28,
-                                         Pal.A(Pal.Cream, .85f), TextAnchor.MiddleCenter, new Vector2(720f, 60f),
-                                         new Vector2(.5f, .5f), new Vector2(0f, -70f), 2f, 2f, wrap: true);
-                UIKit.Shrinkable(spent, 18);
+                Flow.Modal<ChallengeDefeatOverlay>(v => v.Genre = genre);
             }
-
-            var done = UIKit.TextButton("Done", safe, Skins.Alternate, Loc.Get("ui.challenges.done").ToUpperInvariant(),
-                                        32, new Vector2(460f, 118f), new Vector2(.5f, .5f), new Vector2(0f, -220f), Leave);
-            Enter(done);
-
-            if (scrim != null) scrim.raycastTarget = true;
-        }
-
-        static void Enter(Btn key)
-        {
-            var rt = (RectTransform)key.transform;
-            var group = UIKit.Group(rt);
-            group.alpha = 0f;
-            Tween.Fade(group, 1f, .3f).Delay(.22f);
         }
 
         void Leave() => Flow.Go<DailyChallengesScreen>();
