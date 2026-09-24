@@ -112,6 +112,26 @@ namespace GlimmerGrove
         /// </summary>
         const int ChainLiftMax = 7;
 
+        /// <summary>
+        /// Somebody standing over the board who owns the turn: a daily challenge, whose hill
+        /// walks on every tap (invariant 56). When set, a tap on a turnable tile is handed
+        /// here with the tile's index <em>instead of</em> being applied, and the board draws
+        /// whatever the model then did through <see cref="Follow"/>. Null on every run, so
+        /// nothing about a glade played from the map changes: the refusals (a rooted tile,
+        /// an inert one, a latched board) are still answered here first, because they are
+        /// drawn here, and the celebration is still the board's own, because it is the glade.
+        /// </summary>
+        public Action<int> Referee;
+
+        /// <summary>
+        /// What a sleeping critter's face is, by the light it wants (an <see cref="Energy"/>
+        /// mask), when it is not a critter: the daily challenge stands a gem there, at the
+        /// owner's instruction (2026-09-23), because on that screen a critter is a raider and
+        /// a gem is what the turrets fire. Null on every run, where the critters are the
+        /// critters. Read once, when the tile is built (<see cref="TileView.Build"/>).
+        /// </summary>
+        public Func<int, Sprite> LampFace;
+
         public int Moves => P.Moves;
         public bool CanUndo => _history.Count > 0 && !Locked;
 
@@ -218,6 +238,8 @@ namespace GlimmerGrove
                 return;
             }
 
+            if (Referee != null) { Referee(i); return; }
+
             ApplyTurn(i, 1, countMove: true);
         }
 
@@ -227,18 +249,35 @@ namespace GlimmerGrove
             if (!P.Turn(i, dir)) return;
             if (countMove) { P.Moves++; _history.Add(i); }
 
+            Settle(i, dir, before, chains: countMove);
+
+            // Checked after Refresh, which owns the win: a last turn that solves the
+            // board is a win, so only an unfinished run can run out of turns.
+            if (P.OutOfMoves) Exhaust();
+        }
+
+        /// <summary>
+        /// Draw a turn the <see cref="Referee"/> applied to the model itself: the tile (and
+        /// its taproot) spins, the light is re-read and whatever woke is sounded, exactly as
+        /// a turn the board applied. <paramref name="before"/> is <see cref="CaptureLit"/>
+        /// taken before the model moved, which is what tells a wake from a repaint.
+        /// </summary>
+        public void Follow(int i, bool[] before)
+        {
+            if (before == null || before.Length != P.C.Length) before = CaptureLit();
+            Settle(i, 1, before, chains: true);
+        }
+
+        void Settle(int i, int dir, bool[] before, bool chains)
+        {
             SpinRoot(i, dir);
             Audio.SfxVaried(UnityEngine.Random.value < .5f ? "rotate_a" : "rotate_b", .42f, .08f);
 
             CollectDebris();
 
             P.Evaluate();
-            Refresh(before, chains: countMove);
+            Refresh(before, chains);
             OnChanged?.Invoke();
-
-            // Checked after Refresh, which owns the win: a last turn that solves the
-            // board is a win, so only an unfinished run can run out of turns.
-            if (P.OutOfMoves) Exhaust();
         }
 
         /// <summary>
@@ -301,7 +340,8 @@ namespace GlimmerGrove
             Tween.After(1.0f, () => OnDefeated?.Invoke(DefeatReason.ConduitLost), this);
         }
 
-        bool[] CaptureLit()
+        /// <summary>Which critters are awake right now, for <see cref="Follow"/> to difference against.</summary>
+        public bool[] CaptureLit()
         {
             var b = new bool[P.C.Length];
             Array.Copy(P.Lit, b, b.Length);

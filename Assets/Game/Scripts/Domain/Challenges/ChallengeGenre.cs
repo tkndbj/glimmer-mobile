@@ -9,7 +9,10 @@ namespace GlimmerGrove.Challenges
     /// <b>Three were built and withdrawn on 2026-09-22</b> after the owner played all seven:
     /// Sudoku, Minefield (minesweeper) and Stack (tetris). Their spellings (<c>sudoku</c>,
     /// <c>mines</c>, <c>tetris</c>) are refused at read like any unknown genre; nothing stores a
-    /// challenge id, so nothing is spent.
+    /// challenge id, so nothing is spent. <b>Pipeworks went on 2026-09-23</b>, replaced in its
+    /// seat by the glade — the classic conduit mode, hidden from the ladder since Thornwatch
+    /// went live — at the owner's instruction: the hill and the line are untouched, only the
+    /// board under them changed. <c>pipes</c> is retired the same way.
     /// </para>
     ///
     /// <para>
@@ -29,8 +32,8 @@ namespace GlimmerGrove.Challenges
         /// <summary>Memory. Turn two gems; a pair fires its turret.</summary>
         Pairs,
 
-        /// <summary>Pipe Mania. A colour connected from its source to its turret fires every turn.</summary>
-        Pipes,
+        /// <summary>The glade. A critter lit in its colour fires its turret every turn it stays lit.</summary>
+        Glade,
 
         /// <summary>2048. Two gems of a rank merge into the next, which fires the colour of the rank made.</summary>
         Merge,
@@ -46,7 +49,7 @@ namespace GlimmerGrove.Challenges
         /// permanent: a challenge id is not keyed on it, but a loc key and a render mirror both
         /// read the spelling.
         /// </summary>
-        static readonly string[] Names = { "pairs", "pipes", "merge", "sokoban" };
+        static readonly string[] Names = { "pairs", "glade", "merge", "sokoban" };
 
         /// <summary>
         /// Spellings that were shipped and withdrawn, refused by name at read (invariant 5f) and
@@ -54,7 +57,7 @@ namespace GlimmerGrove.Challenges
         /// save keeps counting under it after the genre is gone — so one may never come back
         /// meaning something else. <c>content.py</c> and the seeder hold the same list.
         /// </summary>
-        public static readonly string[] Retired = { "sudoku", "mines", "tetris" };
+        public static readonly string[] Retired = { "sudoku", "mines", "tetris", "pipes" };
 
         public static bool IsRetired(string name)
         {

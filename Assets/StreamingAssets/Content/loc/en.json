@@ -10,14 +10,6 @@
       "text": "Pairs"
     },
     {
-      "key": "challenge.d04_pipes.blurb",
-      "text": "Turn the pipes until each colour reaches its turret. A joined pipe fires every turn."
-    },
-    {
-      "key": "challenge.d04_pipes.name",
-      "text": "Pipeworks"
-    },
-    {
       "key": "challenge.d05_merge.blurb",
       "text": "Slide the board. Two of a kind become the next, and fire the colour they make."
     },
@@ -32,6 +24,14 @@
     {
       "key": "challenge.d06_sokoban.name",
       "text": "Push"
+    },
+    {
+      "key": "challenge.d08_glade.blurb",
+      "text": "Turn the conduits until every critter wakes. A woken critter fires its turret every turn."
+    },
+    {
+      "key": "challenge.d08_glade.name",
+      "text": "The Crossing"
     },
     {
       "key": "chapter.c01_shallows.name",
@@ -1630,12 +1630,12 @@
       "text": "Turn two gems. A pair fires its turret."
     },
     {
-      "key": "challenge.genre.pipes.name",
-      "text": "Pipeworks"
+      "key": "challenge.genre.glade.name",
+      "text": "Glade"
     },
     {
-      "key": "challenge.genre.pipes.blurb",
-      "text": "Turn the pipes. A colour joined to its turret fires every turn."
+      "key": "challenge.genre.glade.blurb",
+      "text": "Turn the conduits. A critter woken in its colour fires its turret every turn."
     },
     {
       "key": "challenge.genre.merge.name",
@@ -1655,15 +1655,15 @@
     },
     {
       "key": "challenge.tier.bronze.name",
-      "text": "Bronze"
+      "text": "Amethyst"
     },
     {
       "key": "challenge.tier.silver.name",
-      "text": "Silver"
+      "text": "Sapphire"
     },
     {
       "key": "challenge.tier.gold.name",
-      "text": "Gold"
+      "text": "Emerald"
     },
     {
       "key": "ui.challenges.plays_left",
@@ -1711,7 +1711,7 @@
     },
     {
       "key": "ui.challenges.deals_title",
-      "text": "Challenge Deals"
+      "text": "DEALS"
     },
     {
       "key": "ui.challenges.deal_line",
@@ -1719,7 +1719,7 @@
     },
     {
       "key": "ui.challenges.buy",
-      "text": "{0} gems"
+      "text": "{0}"
     },
     {
       "key": "ui.challenges.deal_held",
@@ -1759,7 +1759,7 @@
     },
     {
       "key": "ui.challenges.upgrade",
-      "text": "Upgrade: {0} gems"
+      "text": "{0}"
     },
     {
       "key": "ui.challenges.upgrade_note",
@@ -1790,8 +1790,8 @@
       "text": "{0} / {1} pairs"
     },
     {
-      "key": "ui.challenges.pipes",
-      "text": "{0} / {1} joined"
+      "key": "ui.challenges.lit",
+      "text": "{0} / {1} awake"
     },
     {
       "key": "ui.challenges.rank",
@@ -1800,10 +1800,6 @@
     {
       "key": "ui.challenges.retry",
       "text": "Try again"
-    },
-    {
-      "key": "ui.challenges.rule",
-      "text": "Every move you make, the raiders take a step. Finish the puzzle before your line falls."
     },
     {
       "key": "ui.challenges.today",

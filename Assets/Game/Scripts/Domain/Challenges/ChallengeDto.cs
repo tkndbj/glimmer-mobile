@@ -167,10 +167,14 @@ namespace GlimmerGrove.Challenges
         /// <summary>Sokoban's second layer: where the gems start. Same size as <see cref="rows"/>.</summary>
         public string[] gems;
 
-        /// <summary>Pipes: the colour entering each column from the top, or <c>.</c>.</summary>
+        /// <summary>
+        /// <b>Retired with the pipes genre (2026-09-23) and refused by name when written</b>
+        /// (invariant 5f): <c>JsonUtility</c> drops a field it does not know without a word, so
+        /// the two stay declared and the reader refuses a row that carries either.
+        /// </summary>
         public string sources;
 
-        /// <summary>Pipes: the turret each column feeds at the bottom, or <c>.</c>.</summary>
+        /// <summary>Retired with <see cref="sources"/>; refused when written.</summary>
         public string sinks;
 
         /// <summary>Merge: the rank to reach.</summary>

@@ -363,7 +363,14 @@ namespace GlimmerGrove.AssetPipeline
             // enum against this list so a genre added without its picture fails offline. Global
             // rather than scoped because the list page is one tap from the hub and an `Image`
             // with no sprite is a white rectangle on the card a player chooses from (7b).
-            "challenge_pairs", "challenge_pipes", "challenge_merge", "challenge_sokoban",
+            "challenge_pairs", "challenge_glade", "challenge_merge", "challenge_sokoban",
+
+            // The deal furniture on the same page: the crowned chest the deal band wears and
+            // one cut stone per deal rung on the sheet (`ChallengeArt.Chest`, `.DealMark`), cut
+            // from the shop pack by the same tool. A stone is keyed on its rung, so a fourth
+            // deal is a fourth name here and a fourth PNG; `ChallengeLedgerTests` holds the
+            // shipped deal count to this list.
+            "challenge_chest", "challenge_deal_1", "challenge_deal_2", "challenge_deal_3",
 
             // The map's boost clock, under the back key. Global because the map is one of the
             // first screens a session touches and the readout appears the moment a window opens

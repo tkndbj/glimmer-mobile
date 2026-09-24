@@ -214,6 +214,35 @@ namespace GlimmerGrove.Tests
             }
         }
 
+        /// <summary>
+        /// The deal band's chest and one stone per shipped deal are preloaded and on disk. A
+        /// stone is keyed on its rung (<c>ChallengeArt.DealMark</c>), so this is the gate that
+        /// asks for a fourth picture the day a fourth deal is authored — nothing else can, since
+        /// the address is built and <c>artnames.py</c> cannot see it.
+        /// </summary>
+        [Test]
+        public void TheDealChestAndEveryShippedDealsStoneArePreloadedAndOnDisk()
+        {
+            var declared = new HashSet<string>();
+            foreach (var request in AssetPipeline.AssetManifest.GlobalAssets())
+                declared.Add(request.Address);
+
+            string root = System.IO.Path.Combine(TestJson.RepoRoot(), "Assets", "Game", "Art", "Ui");
+
+            var keys = new List<string> { ChallengeArt.ChestKey };
+            int shipped = ChallengeTests.Shipped().Tiers.Count;
+            Assert.Greater(shipped, 0, "the shipped file sells no deal; the band's key would hide and this test would hold nothing");
+            for (int rung = 1; rung <= shipped; rung++) keys.Add(ChallengeArt.DealMarkKey(rung));
+
+            foreach (string key in keys)
+            {
+                Assert.IsTrue(declared.Contains(AssetPipeline.AssetManifest.Ui(key)),
+                              $"'{key}' is not in AssetManifest.UiSprites; the sheet would draw a white rectangle");
+                Assert.IsTrue(System.IO.File.Exists(System.IO.Path.Combine(root, key + ".png")),
+                              $"'{key}.png' is not on disk; cut it with Tools/make_challenge_art.py (PACK_CUTS)");
+            }
+        }
+
         // ------------------------------------------------------------------ the rotation
         [Test]
         public void EveryPlayerDealsTheSameLevelAndNoDayOpensOnYesterdays()

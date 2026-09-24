@@ -39,7 +39,7 @@ const equal = (what, got, want) =>
         `expected ${JSON.stringify(want)}, got ${JSON.stringify(got)}`);
 
 const CONFIG = {
-  genres: ["merge", "pairs", "pipes", "sokoban"],
+  genres: ["glade", "merge", "pairs", "sokoban"],
   freePlays: 2,
   tiers: [
     { id: "bronze", gems: 120, plays: 5, days: 7 },

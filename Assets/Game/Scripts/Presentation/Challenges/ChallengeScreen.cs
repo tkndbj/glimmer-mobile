@@ -70,10 +70,17 @@ namespace GlimmerGrove
         /// </summary>
         const float LineBandUnits = 1.7f;
 
-        /// <summary>The puzzle host's inset from the safe edge, either side.</summary>
-        const float PuzzleInset = 24f;
+        /// <summary>
+        /// The puzzle band runs edge to edge and to the foot of the screen, on an opaque
+        /// ground (<see cref="Ground"/>) — the owner's instruction on 2026-09-23: "make the
+        /// board cover the full area and make it non-transparent". So there is no inset, no
+        /// pad under it and no gap between it and the line; the board is centred in the whole
+        /// of what the hill leaves, and the brick backdrop stops at the rampart.
+        /// </summary>
+        const float PuzzleInset = 0f, BottomPad = 0f, BandGap = 0f;
 
-        const float BottomPad = 36f, BandGap = 14f;
+        /// <summary>The ground under the puzzle: the first chapter's slate, opaque.</summary>
+        public static readonly Color Ground = new Color(.059f, .165f, .290f, 1f);
 
         AssetHold _hold;
         ChallengePlay _play;
@@ -183,6 +190,8 @@ namespace GlimmerGrove
 
             Canvas.ForceUpdateCanvases();
 
+            GroundUnder(_puzzleHost);
+
             _hill = _hillHost.gameObject.AddComponent<ChallengeHillView>();
             _hill.Build(_hillHost, _run.Hill, unit, lineBand);
 
@@ -195,13 +204,37 @@ namespace GlimmerGrove
             Tween.Scale(_puzzleHost, 1f, .46f, Ease.OutBack);
         }
 
+        /// <summary>
+        /// The opaque ground under the puzzle band: full width, from the band's top edge to
+        /// the foot of the canvas — past the safe area's bottom inset, so a home indicator sits
+        /// on ground and not on brick. It goes into <c>Content</c> (which is full-bleed)
+        /// directly under the safe layer, so it covers the scenery and nothing else.
+        /// </summary>
+        void GroundUnder(RectTransform host)
+        {
+            var corners = new Vector3[4];
+            host.GetWorldCorners(corners);
+            float top = Content.InverseTransformPoint(corners[1]).y;
+
+            var ground = UIKit.Img("Ground", Content, Art.Pixel, Ground);
+            ground.raycastTarget = false;
+            var rt = ground.rectTransform;
+            rt.anchorMin = new Vector2(0f, 0f);
+            rt.anchorMax = new Vector2(1f, 0f);
+            rt.pivot = new Vector2(.5f, 0f);
+            rt.anchoredPosition = Vector2.zero;
+            rt.sizeDelta = new Vector2(0f, Mathf.Max(0f, top - Content.rect.yMin));
+
+            if (Safe.parent == Content) rt.SetSiblingIndex(Safe.GetSiblingIndex());
+        }
+
         /// <summary>The genre's view. A <c>switch</c> whose default refuses (invariant 44e).</summary>
         PuzzleView Make(ChallengeGenre genre)
         {
             switch (genre)
             {
                 case ChallengeGenre.Pairs: return _puzzleHost.gameObject.AddComponent<PairsView>();
-                case ChallengeGenre.Pipes: return _puzzleHost.gameObject.AddComponent<PipesView>();
+                case ChallengeGenre.Glade: return _puzzleHost.gameObject.AddComponent<GladeView>();
                 case ChallengeGenre.Merge: return _puzzleHost.gameObject.AddComponent<MergeView>();
                 case ChallengeGenre.Sokoban: return _puzzleHost.gameObject.AddComponent<SokobanView>();
                 default:
@@ -263,7 +296,7 @@ namespace GlimmerGrove
             switch (_run.Puzzle)
             {
                 case PairsPuzzle pairs: return Loc.Format("ui.challenges.pairs", pairs.Matched, pairs.Pairs);
-                case PipesPuzzle pipes: return Loc.Format("ui.challenges.pipes", pipes.Joined, pipes.Asked);
+                case GladePuzzle glade: return Loc.Format("ui.challenges.lit", glade.LampsLit, glade.LampCount);
                 case MergePuzzle merge: return Loc.Format("ui.challenges.rank", 1 << merge.Target);
                 case SokobanPuzzle sokoban: return Loc.Format("ui.challenges.pads", sokoban.SeatedCount, sokoban.Pads);
                 default: return string.Empty;
@@ -293,13 +326,16 @@ namespace GlimmerGrove
             yield return new WaitForSecondsRealtime(.4f);
             if (!this) yield break;
 
-            if (won)
+            // A board that celebrated its own win (the glade's fanfare) gets no second one here:
+            // a flash and confetti a second after the fanfare read as one celebration
+            // stuttering rather than as two (BoardView.Celebrate's own note).
+            if (won && !_puzzle.CelebratesItself)
             {
                 Flow.Flash(Pal.Gold, .34f, .55f);
                 Burst.Confetti(Content, 60);
                 Audio.Sfx("win", .8f);
             }
-            else
+            else if (!won)
             {
                 Flow.Flash(Pal.Rose, .22f, .5f);
                 Audio.Sfx("felled", .7f);

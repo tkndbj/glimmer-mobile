@@ -66,12 +66,11 @@ namespace GlimmerGrove.Challenges
         public readonly uint Seed;
         public readonly int Width, Height;
         public readonly string[] Rows, Gems;
-        public readonly string Sources, Sinks;
         public readonly int Target, Hill, Bolts;
         public readonly ChallengeWave[] Waves;
 
         public ChallengeDefinition(string id, ChallengeGenre genre, uint seed, int width, int height,
-                                   string[] rows, string[] gems, string sources, string sinks,
+                                   string[] rows, string[] gems,
                                    int target, int hill, int bolts, ChallengeWave[] waves)
         {
             Id = id;
@@ -81,8 +80,6 @@ namespace GlimmerGrove.Challenges
             Height = height;
             Rows = rows ?? Array.Empty<string>();
             Gems = gems ?? Array.Empty<string>();
-            Sources = sources ?? string.Empty;
-            Sinks = sinks ?? string.Empty;
             Target = target;
             Hill = hill;
             Bolts = bolts;
@@ -478,10 +475,15 @@ namespace GlimmerGrove.Challenges
             if (row.hill <= 0)
                 problems.Add($"{where} needs a hill of at least one step");
 
+            // The pipes genre's two edge strings, retired with it (2026-09-23). Refused by name
+            // rather than ignored, because JsonUtility drops an unknown field without a word (5f).
+            if (!string.IsNullOrEmpty(row.sources) || !string.IsNullOrEmpty(row.sinks))
+                problems.Add($"{where} writes 'sources' or 'sinks', which belonged to the withdrawn pipes genre and are refused (invariant 5f)");
+
             var waves = ParseWaves(row.waves, where, problems);
 
             var def = new ChallengeDefinition(row.id, genre, (uint)row.seed, row.width, row.height,
-                                              row.rows, row.gems, row.sources, row.sinks,
+                                              row.rows, row.gems,
                                               row.target, row.hill, row.bolts <= 0 ? 1 : row.bolts,
                                               waves);
 

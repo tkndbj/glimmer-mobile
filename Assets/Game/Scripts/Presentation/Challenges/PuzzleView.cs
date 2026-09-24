@@ -58,6 +58,19 @@ namespace GlimmerGrove
         /// </summary>
         protected virtual float EdgeRows => 0f;
 
+        /// <summary>
+        /// Whether the shared plate is drawn under the grid. False for a board that brings
+        /// its own floor (the glade's <c>BoardView</c>), or two plates stand one on the other.
+        /// </summary>
+        protected virtual bool DrawsPlate => true;
+
+        /// <summary>
+        /// Whether a win is celebrated by the board itself, so the screen's curtain arrives
+        /// without its own flash and confetti — the glade's fanfare is the glade, and a second
+        /// celebration a second later reads as one stuttering (<c>BoardView.Celebrate</c>).
+        /// </summary>
+        public virtual bool CelebratesItself => false;
+
         protected int Columns => Run.Puzzle.Width;
         protected int Rows => Run.Puzzle.Height;
 
@@ -91,12 +104,15 @@ namespace GlimmerGrove
             var span = new Vector2(Columns * Cell, Rows * Cell);
             var centre = new Vector2(0f, StripHeight * .5f);
 
-            var plate = ChallengeArt.Plate();
-            Plate = UIKit.Img("Plate", host, plate != null ? plate : Art.Round(34),
-                              plate != null ? Color.white : Pal.Board,
-                              span + Vector2.one * Cell * PlateRim + Vector2.one * Margin, new Vector2(.5f, .5f), centre);
-            Plate.type = Image.Type.Sliced;
-            Plate.raycastTarget = false;
+            if (DrawsPlate)
+            {
+                var plate = ChallengeArt.Plate();
+                Plate = UIKit.Img("Plate", host, plate != null ? plate : Art.Round(34),
+                                  plate != null ? Color.white : Pal.Board,
+                                  span + Vector2.one * Cell * PlateRim + Vector2.one * Margin, new Vector2(.5f, .5f), centre);
+                Plate.type = Image.Type.Sliced;
+                Plate.raycastTarget = false;
+            }
 
             Field = UIKit.Box("Field", host, span, new Vector2(.5f, .5f), centre);
 

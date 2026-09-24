@@ -46,7 +46,8 @@ namespace GlimmerGrove
     /// is whatever the device's aspect makes it — 1920 on a 16:9 phone, 2400 on a tall one and
     /// 1440 on a 4:3 tablet. A panel whose height depends on how much the run earned cannot be
     /// laid out against a fixed screen, so the whole block is measured and then fitted; see
-    /// <see cref="Fit"/>.
+    /// <see cref="VictoryFrame"/>, which holds the window, the crest and the fit for this
+    /// panel and for the challenge deal sheet alike.
     /// </para>
     /// </summary>
     public sealed class WinOverlay : ModalView
@@ -138,61 +139,9 @@ namespace GlimmerGrove
         const float PayoutOverlap = .45f;
 
         // ------------------------------------------------------------- geometry
-        /// <summary>
-        /// The panel, and how far the crown reaches above its top edge.
-        ///
-        /// <para>
-        /// The crest deliberately breaks the frame — a crown over a banner sitting <em>on</em>
-        /// the panel rather than inside it is what stops a tall rectangle reading as a
-        /// rectangle. <see cref="CrestReach"/> is what the fit has to allow for, so it is a
-        /// constant rather than something measured: the art is fixed and a measured version
-        /// would only be a slower way of writing 202 down. It has to move whenever
-        /// <see cref="CrownY"/> does, or the fit stops reserving the room the crown needs.
-        /// </para>
-        /// </summary>
-        const float PanelWidth = 900f, CrestReach = 202f;
-
-        /// <summary>
-        /// The frame's own tint.
-        ///
-        /// The window art is a mid teal-green; driven down to about 60% it becomes the deep
-        /// forest the gold and the cream sing against. Left at white the panel is brighter
-        /// than the stars on it, which is the wrong way round for the loudest screen in the
-        /// game.
-        /// </summary>
-        static readonly Color PanelInk = new Color(.588f, .722f, .690f, 1f);
-
-        /// <summary>
-        /// Where the crest's two pieces sit, measured from the panel's top edge.
-        ///
-        /// The crown is lifted until its base rests on the banner's top edge rather than
-        /// sinking into it — at 88 it sat inside the ribbon and read as one lumpy shape.
-        /// Raising it costs <see cref="CrestReach"/> the same 26px; the two move together.
-        /// </summary>
-        const float CrownY = 114f, BannerY = -30f;
-
-        /// <summary>How large the banner is drawn, at the art's own aspect.</summary>
-        static readonly Vector2 BannerSize = new Vector2(566f, 157f);
-
-        /// <summary>
-        /// Where the rank word sits on the banner, and how much of it it may use.
-        ///
-        /// <para>
-        /// <b>The banner's flat face is not the banner's centre</b>, and centring the word on
-        /// the sprite is what had it hanging off the bottom edge onto the draped tails. Measured
-        /// from the art: in the 361&#215;100 source the face runs from y&#8239;2 to y&#8239;54, so
-        /// its middle is 22px above the sprite's middle, and the sprite is drawn at
-        /// 566/361&#8239;=&#8239;1.568&#215;. That is where 34 comes from.
-        /// </para>
-        /// <para>
-        /// The width is measured the same way. At the face's own middle the red runs 231 source
-        /// pixels wide — 362 drawn — so a box of 430 let a long translation run out over the
-        /// folds. <see cref="UIKit.Shrinkable"/> then keeps it inside 356 rather than letting it
-        /// spill, which for a word this short only ever affects a translation.
-        /// </para>
-        /// </summary>
-        const float RankLift = 34f;
-        static readonly Vector2 RankBox = new Vector2(356f, 74f);
+        // The window, the crest and the fit are VictoryFrame's — shared with the
+        // challenge deal sheet since 2026-09-23, so every number measured off that art
+        // lives there once. What is left here is this panel's own furniture.
 
         /// <summary>
         /// The star row: where its centre sits, how big a star is, and how far apart they are.
@@ -378,42 +327,16 @@ namespace GlimmerGrove
 
             UIKit.Scrim(Content, .66f);
 
-            _fit = Fit(panelH);
-
-            // ------------------------------------------------------ the light show
-            // On the fit rather than on Content, so a panel scaled down on a short screen
-            // takes its own halo with it instead of sitting in a fan sized for a taller one.
-            // Built before the panel, which is what puts it behind.
-            float crestY = panelH * .5f - CrestReach * .5f;
-
-            var fan = UIKit.Img("Rays", _fit, Art.Rays(256, 14), new Color(1f, .80f, .30f, .20f),
-                                Vector2.one * 1680f, new Vector2(.5f, .5f), new Vector2(0f, crestY - 240f));
-            Tween.Run(46f, Ease.Linear,
-                      t => { if (fan) fan.transform.localRotation = Quaternion.Euler(0f, 0f, t * 360f); },
-                      fan.gameObject, "spin").Loop(-1, false);
-
-            UIKit.Img("Bloom", _fit, Art.Glow(128, 2.4f), new Color(1f, .82f, .38f, .22f),
-                      new Vector2(1240f, 1000f), new Vector2(.5f, .5f), new Vector2(0f, crestY - 200f));
-
-            // ---------------------------------------------------------- the frame
-            // Nine-sliced, which is new and was a real defect rather than a refinement: the
-            // window sprite had no border, so an 880x1330 panel stretched a 720x642 image to
-            // twice its aspect and smeared its corners and its inner hairline. It also carried
-            // a header tab nothing ever drew. Both are fixed in the art.
-            Backing = UIKit.Img("Panel", _fit, Art.S("Ui/Win/window"), PanelInk,
-                                new Vector2(PanelWidth, panelH), new Vector2(.5f, .5f),
-                                new Vector2(0f, -CrestReach * .5f));
-            Panel = (RectTransform)Backing.transform;
-            Panel.localScale = Vector3.zero;
-
-            // Light pooling under the crest, inside the frame. A soft gradient rather than a
-            // plate, for the reason the feature beacon's seat is one: it reads as light around
-            // an award and can never be mistaken for a mislaid rectangle.
-            UIKit.Img("Pool", Panel, Art.Glow(128, 1.9f), new Color(1f, .96f, .82f, .11f),
-                      new Vector2(PanelWidth - 60f, 700f), new Vector2(.5f, 1f), new Vector2(0f, -70f));
-
-            // ---------------------------------------------------------- the crest
-            var crown = BuildCrest(stars, out var banner, out var rank);
+            // The window, the light behind it and the crest are one builder, shared with the
+            // deal sheet (VictoryFrame). Every piece it animates comes back at scale nought,
+            // and the beats below are what land them.
+            var frame = VictoryFrame.Build(Content, panelH, Loc.Get(RankKeys[stars - 1]));
+            _fit = frame.Fit;
+            Backing = frame.Backing;
+            Panel = frame.Panel;
+            var crown = frame.Crown;
+            var banner = frame.Banner;
+            var rank = frame.Word;
 
             // ---------------------------------------------------------- the stars
             // A seat of shadow under the row, then gold light over it. The dark half is not
@@ -1056,79 +979,7 @@ namespace GlimmerGrove
             _bonus.SetCaption(Loc.Get("ui.wheel.collected"));
         }
 
-        // ================================================================= the fit
-        /// <summary>
-        /// A layer between the scrim and the panel, scaled so the whole block — crest included
-        /// — fits the screen it landed on.
-        ///
-        /// <para>
-        /// <b>Why a layer rather than a scale on the panel itself.</b> <see cref="Panel"/> is
-        /// what <see cref="ModalView.Close"/> scales out, and it does so to an absolute value;
-        /// a panel resting at 0.94 would visibly <em>grow</em> on the way out. Everything that
-        /// animates a child — <see cref="Tween.Pop"/>, <see cref="Tween.Punch"/> — writes
-        /// absolute local scales too. Keeping the fit on a parent means every one of those
-        /// numbers stays what it was written as.
-        /// </para>
-        /// <para>
-        /// The panel is offset upward by half the crest inside this layer, so what is centred
-        /// on the screen is the block the player sees rather than the frame's own rectangle.
-        /// </para>
-        /// </summary>
-        RectTransform Fit(float panelH)
-        {
-            var host = UIKit.Node("Fit", Content);
-
-            float reach = panelH + CrestReach;
-            float room = Flow.Size.y - FitMargin * 2f;
-            if (reach > room && reach > 1f) host.localScale = Vector3.one * (room / reach);
-
-            return host;
-        }
-
-        /// <summary>Air kept between the block and the top and bottom of the screen.</summary>
-        const float FitMargin = 20f;
-
-        // =============================================================== the crest
-        /// <summary>
-        /// A crown over a banner carrying the rank word.
-        ///
-        /// <para>
-        /// The banner is deliberately blank artwork with the word drawn on it as text. The pack
-        /// ships a matching "VICTORY" graphic and it is the one piece not imported: a word
-        /// painted into a texture cannot be translated, and invariant 6 says every
-        /// player-facing string is a loc key. Blank ribbon plus a key is the same picture and
-        /// ships in every language.
-        /// </para>
-        /// <para>
-        /// Two herald's horns flanked this and were cut. They read as a fanfare in a still
-        /// frame and as clutter on the device: the crest is the one thing on the panel that has
-        /// to be legible in a quarter of a second, and three gold shapes at three angles is not
-        /// that. The art is out of the project with them, because an addressed sprite nothing
-        /// draws is still built into the bundle and preloaded at every launch.
-        /// </para>
-        /// </summary>
-        Image BuildCrest(int stars, out Image banner, out Text rank)
-        {
-            var crown = UIKit.Img("Crown", Panel, Art.S("Ui/Win/crown"), Color.white,
-                                  new Vector2(180f, 162f), new Vector2(.5f, 1f), new Vector2(0f, CrownY));
-            crown.preserveAspect = true;
-            crown.transform.localScale = Vector3.zero;
-
-            banner = UIKit.Img("Banner", Panel, Art.S("Ui/Win/banner"), Color.white,
-                               BannerSize, new Vector2(.5f, 1f), new Vector2(0f, BannerY));
-            banner.preserveAspect = true;
-            banner.transform.localScale = Vector3.zero;
-
-            // Lifted onto the ribbon's flat face rather than centred on the sprite — see RankLift.
-            rank = UIKit.Titled("Rank", banner.transform, Loc.Get(RankKeys[stars - 1]), 58,
-                                Pal.Cream, TextAnchor.MiddleCenter, RankBox,
-                                new Vector2(.5f, .5f), new Vector2(0f, RankLift), 5f, 5f);
-            UIKit.Shrinkable(rank, 32);
-            rank.transform.localScale = Vector3.zero;
-
-            return crown;
-        }
-
+        // =============================================================== the seal
         /// <summary>
         /// The record, as a wax seal.
         ///

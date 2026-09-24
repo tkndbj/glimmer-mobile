@@ -2631,7 +2631,7 @@ def check_referral(manifest, progression, tasks, keys, warnings):
     }
 
 
-CHALLENGE_GENRES = ("pairs", "pipes", "merge", "sokoban")
+CHALLENGE_GENRES = ("pairs", "glade", "merge", "sokoban")
 
 
 def check_challenges(keys, warnings):
@@ -2672,7 +2672,7 @@ def check_challenges(keys, warnings):
     MAX_COINS, MAX_XP, HARD_MAX_CLEARS = 200, 1000, 1000000
     MAX_DAILY_COINS = 10000            # ChallengeLimits.MaxDailyCoins
     DEFAULTS = {"freePlays": 2, "coins": 40, "xp": 20, "maxClears": 25000}
-    RETIRED_GENRES = ("sudoku", "mines", "tetris")   # ChallengeGenres.Retired
+    RETIRED_GENRES = ("sudoku", "mines", "tetris", "pipes")   # ChallengeGenres.Retired
     RETIRED_TIERS = ()                                # ChallengeTable.RetiredTierIds
 
     def key_ok(name):

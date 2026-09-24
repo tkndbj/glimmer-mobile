@@ -768,7 +768,7 @@ function readChallenges() {
   const MAX_FREE_PLAYS = 100, MAX_TIER_PLAYS = 1000, MAX_TIER_GEMS = 100000, MAX_TIER_DAYS = 365;
   const MAX_TIERS = 16, MAX_COINS = 200, MAX_XP = 1000, HARD_MAX_CLEARS = 1000000;
   const MAX_DAILY_COINS = 10000;                       // ChallengeLimits.MaxDailyCoins
-  const RETIRED_GENRES = ["sudoku", "mines", "tetris"]; // ChallengeGenres.Retired
+  const RETIRED_GENRES = ["sudoku", "mines", "tetris", "pipes"]; // ChallengeGenres.Retired
   const RETIRED_TIERS = [];                             // ChallengeTable.RetiredTierIds
   const KEY = /^[a-z0-9_]{1,32}$/;
   const VERSION = 2;

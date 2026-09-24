@@ -14,7 +14,7 @@ namespace GlimmerGrove.Challenges
             switch (def.Genre)
             {
                 case ChallengeGenre.Pairs: return new PairsPuzzle(def);
-                case ChallengeGenre.Pipes: return new PipesPuzzle(def);
+                case ChallengeGenre.Glade: return new GladePuzzle(def);
                 case ChallengeGenre.Merge: return new MergePuzzle(def);
                 case ChallengeGenre.Sokoban: return new SokobanPuzzle(def);
                 default:
@@ -29,7 +29,7 @@ namespace GlimmerGrove.Challenges
             switch (def.Genre)
             {
                 case ChallengeGenre.Pairs: return PairsPuzzle.Fault(def);
-                case ChallengeGenre.Pipes: return PipesPuzzle.Fault(def);
+                case ChallengeGenre.Glade: return GladePuzzle.Fault(def);
                 case ChallengeGenre.Merge: return MergePuzzle.Fault(def);
                 case ChallengeGenre.Sokoban: return SokobanPuzzle.Fault(def);
                 default: return $"genre '{def.Genre}' has no puzzle registered";
@@ -42,7 +42,7 @@ namespace GlimmerGrove.Challenges
             switch (genre)
             {
                 case ChallengeGenre.Pairs:
-                case ChallengeGenre.Pipes:
+                case ChallengeGenre.Glade:
                 case ChallengeGenre.Merge:
                 case ChallengeGenre.Sokoban:
                     return true;

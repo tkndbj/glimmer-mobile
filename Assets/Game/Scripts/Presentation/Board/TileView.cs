@@ -284,6 +284,19 @@ namespace GlimmerGrove
             _halo = UIKit.Img("Halo", _fixture, HaloSprite(), Pal.A(want, SleepingHalo),
                               Vector2.one * _size * .82f, new Vector2(.5f, .5f), new Vector2(0, -_size * .02f));
 
+            // A face the board was handed (a gem, on the daily challenge) stands still where a
+            // critter would breathe: no flipbook, so every `_book` reader below takes its null
+            // branch and the sleep tint and the wake are the same on either face.
+            var face = _board.LampFace?.Invoke(cell.colour);
+            if (face != null)
+            {
+                _critter = UIKit.Img("Critter", _fixture, face, SleepTint, Vector2.one * _size * .60f,
+                                     new Vector2(.5f, .5f), new Vector2(0, _size * .01f));
+                _critter.preserveAspect = true;
+                _book = null;
+                return;
+            }
+
             var frames = Art.Frames("Critters/c" + (cell.critter + 1));
             _critter = UIKit.Img("Critter", _fixture, frames != null && frames.Length > 0 ? frames[0] : null,
                                  SleepTint, Vector2.one * _size * .68f, new Vector2(.5f, .5f),

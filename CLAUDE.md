@@ -904,7 +904,7 @@ is where they are written down, not what they mean.
 ### Daily challenges
 
 56. **A daily challenge is a proven puzzle genre fused with the ward line, and it shares the world
-   and nothing about being a run.** Four genres (`ChallengeGenre`: pairs, pipes, merge, sokoban),
+   and nothing about being a run.** Four genres (`ChallengeGenre`: pairs, glade, merge, sokoban),
    each a Domain class behind `IChallengePuzzle`, played on one fixed line
    of four starter turrets over a turn-based hill (`ChallengeHill`): **every move that costs a turn
    feeds the turret of its colour and walks every raider one step; the solving move wins before
@@ -1075,7 +1075,7 @@ being kept, because that chapter never left the working tree.
   models two dwelling rungs wear under new ids — minting a new id rather than promoting the decor one is
   what keeps the stock honest.
 - **The ad placement `run_continue`**; **the map sprite `boat`**.
-- **The challenge genre spellings `sudoku` `mines` `tetris`** (`ChallengeGenres.Retired`, refused
+- **The challenge genre spellings `sudoku` `mines` `tetris` `pipes`** (`ChallengeGenres.Retired`, refused
   by name at read and by both content gates): a spelling keys a lifetime row in the save. No
   challenge **deal id** has been retired yet; `ChallengeTable.RetiredTierIds` is where the first
   one goes, because a tier id is a spend id and a wallet field.
@@ -1674,11 +1674,73 @@ on a fresh clone).
 
 ## Owed
 
+**Pipeworks was replaced by the glade on 2026-09-23, at the owner's instruction, and none of it
+has been in the Editor.** The hill, the four posts, the waves and every ledger are untouched:
+`GladePuzzle` stands behind the same `IChallengePuzzle` seam, wrapping the real `Puzzle` dealt by
+the real `LevelGridParser` from the real grammar — arms, mixing, crossings, briars, rooted tiles
+and taproots are the mode's own and `Puzzle.Alike` is still asked exactly once (5b). The fusion
+is the pipes' sentence: **a critter woken in its colour fires its turret every turn it stays
+awake**; a light is a lane (R, G, B, and R|G is amber) and a critter wanting any other mix is
+refused at read. **`GladeView` stands the mode's own `BoardView` over it** (the tutorial's
+shape, 53) — the owner's verdict on a first cut that redrew the board in the challenge's
+procedural pieces was "doesn't look like my glade game mode at all". One additive hook,
+`BoardView.Referee`, hands a tap to the challenge instead of applying it, and `Follow` draws
+what the model did; both are null on every run, so a glade played from the map is untouched.
+The win is the glade's own fanfare, and the curtain waits for `OnSolved` and skips its own
+flash (`PuzzleView.CelebratesItself`). Two more of the owner's instructions the same day:
+**a critter is a gem** on this screen (`BoardView.LampFace`, a second null-on-every-run hook
+read once by `TileView.BuildCritter` — the gem its turret fires, dimmed asleep and lit awake),
+and **the puzzle band is a full-bleed opaque ground** from the rampart to the foot of the
+canvas (`ChallengeScreen.Ground`/`GroundUnder`, in `Content` under the safe layer; no inset,
+no pad, no gap), so the brick backdrop ends at the turrets. **The hidden glade chapters
+(`c01`–`c04`) are not touched** — they stay disabled in the manifest exactly as they were. The
+spelling `pipes` is retired (spent table; refused by name on both gates and the seeder), the
+row's `sources`/`sinks` are refused when written (5f), `PipesPuzzle`, `PipesView` and the
+`challenge_pipes` card went with their `.meta` and Addressables row (8d), and `d08_glade` is a
+7x4 with one crossing and one rooted tile. **The card is drawn by `make_challenge_art.py`**
+(`DRAWN`) rather than cut from owner artwork, so it sits plainer beside the three illustrated
+ones — the day `glade.png` is supplied, move the spelling into `CUTS`. `challenge_glade.png` is
+**on disk and unaddressed** (`artnames.py` reads one error until `▸ Addressables ▸ Sync All
+Assets` and save; until then the card draws a white square, 7b). **The re-seed is done**
+(2026-09-23): all four config documents were snapshotted and diffed field by field — the only
+change in any of them is `challenges.genres`, `pipes` out and `glade` in (the array is sorted),
+`config/products`, `config/grove` and `config/names` byte-identical, `version` still 8. No
+rules release, no function deploy, no schema version. Offline green: `compile.py`, `ChallengeTests` 26/26 (the glade won
+in 26 turns at 11/12 with the wake order printed), `ChallengeLedgerTests` 21/21, `content.py`,
+`loc.py`, `seed-config.mjs --check`, 70 function tests, `make_challenge_vectors.py --check`,
+`make_challenge_art.py --check`, both renders. **What no gate can answer**: whether a woken
+critter reads as *this one is firing*, and whether the crossing reads as a bridge at 138 units.
+
+**The Daily Challenges list page and its deal sheet were re-cut on 2026-09-23 at the owner's
+instruction, and none of it has been in the Editor.** The rule line under the title is gone
+(`ui.challenges.rule` retired); the deal band is the cards' width, **orange** (`PlateOrange`),
+wears the shop pack's crowned chest and larger type, and its key is the kit's green pill
+(`Skins.Affirm` — the owner asked for the season screen's mint, and a tint cannot reach it on a
+bought sprite, 44g); the cards are 1024 wide with the mark at 216 and every caption a size up;
+and the deal sheet wears **the victory panel's frame** — the green window, the fan, the crown
+and banner — at 1000 wide with one cut stone per deal rung and a price that is a figure with the
+gem trailing it (`Btn.IconTrails`, the pass key's shape). That frame is `VictoryFrame` now,
+shared by `WinOverlay` and `ChallengeTierOverlay` so the two cannot drift (44d, said of code);
+the width is a parameter and nothing else changed on the victory panel. **The three deals are
+named Amethyst, Sapphire and Emerald in `loc/en.json` and nowhere else** — their ids stay
+`bronze`, `silver`, `gold`, because a tier id is a spend id and a wallet field (56k) and renaming
+one is a retirement, a spent-table row, a rules-side and a re-seed for a word on a label. Four PNGs were cut by `make_challenge_art.py` from the Layer
+Lab pack (`PACK_CUTS`: `challenge_chest`, `challenge_deal_1..3`, keyed on the deal's **rung**,
+never its id) and, with `challenge_glade`, **are on disk and unaddressed** — `artnames.py` reads
+five errors until `▸ Addressables ▸ Sync All Assets` and save (7a), and until then the band draws
+no chest and each row no stone rather than a white rectangle. `VictoryFrame.cs` and the four PNGs
+have no `.meta` yet. Offline green: `compile.py`, `ChallengeLedgerTests` 22/22 (a new one holds
+the shipped deal count to the stones on disk and in the manifest), `loc.py` (0 missing),
+`content.py` (0 errors), `make_challenge_art.py --check`, `render_challenges.py --list` and
+`--deals` in both states, every caption above its floor. **What no gate can answer**: whether
+the owl-faced chest reads as a chest on the band (the shop tool once declined it for that
+reason, `make_shop_art.py`), and whether three stones in three colours read as a ladder.
+
 **The challenge screen was re-cut on 2026-09-23 at the owner's instruction ("the hills are too
 small"), and none of it has been in the Editor.** The board is asked first and the hill takes the
 rest (`PuzzleView.BandWanted`, `ChallengeScreen.HillLeastUnits`/`HillMostUnits`): every board was
 re-authored wide and short — Pairs 4x4 → **6x3** (nine pairs, a fifth wave), Pipeworks 4x5 →
-**6x4**, Merge 4x4 → **6x3**, Push 7x8 → **10x6** with a new route and its waves retimed off the
+**6x4** (since replaced by the glade's 7x4), Merge 4x4 → **6x3**, Push 7x8 → **10x6** with a new route and its waves retimed off the
 seat order — so the hill went from 3.3 siege cells to **5.2–5.4** on a 16:9 phone, and the four
 posts draw at `ChallengeHillView.PostScale` (.72) of a siege turret with the raiders unchanged.
 The pipes view declares the gem and ring it hangs past its plate (`EdgeRows`), or they were drawn
@@ -1750,7 +1812,7 @@ offline exercises it, so type a lower-case code with a hyphen on a device and pa
 message from a chat app — the two things the field was rebuilt for.
 
 **Daily Challenges opened on 2026-09-22 with seven puzzle genres; the owner played all seven the
-same day and cut three (56e), so four ship: Pairs, Pipeworks, Merge and Push.**
+same day and cut three (56e), so four ship: Pairs, Pipeworks (the Glade since 2026-09-23), Merge and Push.**
 `Assets/Game/Scripts/Domain/Challenges/`, `Presentation/Challenges/`, `Tests/ChallengeTests.cs`,
 `Tools/render_challenges.py`, `Content/challenges.json` and 20 loc keys. **It cuts no art and
 claims no address**: everything it draws is the siege's own hold (`SiegeMode.ArtFor(null)`) or

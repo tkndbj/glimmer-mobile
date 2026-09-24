@@ -399,36 +399,65 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(PairsPuzzle.Face.Hidden, pairs.FaceAt(1));
         }
 
-        // ------------------------------------------------------------------ pipes
+        // ------------------------------------------------------------------ the glade
+        /// <summary>
+        /// A critter lit in its colour feeds its turret every turn it stays lit — the pipes'
+        /// sentence, said of the glade — and the light is the real board's: a red crystal wakes
+        /// a red critter through a conduit turned home, and the turn that wakes it pays the red
+        /// turret. The board is a 3x1 the mode's own parser reads.
+        /// </summary>
         [Test]
-        public void PipesFireEveryTurnAColourStaysJoined()
+        public void ALitCritterFeedsItsTurretEveryTurnItStaysLit()
         {
             var problems = new List<string>();
-            var dto = Row("p", "pipes", 2, 2, new[] { "NS/1 NS", "NS NS/2" }, new[] { "0 r1" });
-            dto.sources = "r.";
-            dto.sinks = "r.";
+            var dto = Row("g", "glade", 3, 1, new[] { "*E#R/0 -EW/1 @W#R/0" }, new[] { "0 r1" }, hill: 6);
             ChallengeTable.TryBuild(Table(dto), out var table, problems);
             Assert.AreEqual(0, problems.Count, string.Join("; ", problems));
 
-            var run = new ChallengeRun(table.Find("p"), new ChallengeLine(1, 3, 1));
-            var pipes = (PipesPuzzle)run.Puzzle;
-            Assert.AreEqual(1, pipes.TapsLeft);
+            var run = new ChallengeRun(table.Find("g"), new ChallengeLine(1, 3, 1));
+            var glade = (GladePuzzle)run.Puzzle;
+            Assert.AreEqual(0, glade.LampsLit);
 
-            var join = run.Play(ChallengeInput.Tap(0));
-            Assert.AreEqual(ChallengeState.Won, join.State);
+            // A one-armed crystal is not inert (four angles, four pictures), so it turns and
+            // costs a step — and wakes nobody, so it feeds nothing.
+            var idle = run.Play(ChallengeInput.Tap(0));
+            Assert.IsFalse(idle.Move.Refused);
+            Assert.IsTrue(idle.Move.Turn);
+            Assert.AreEqual(0, idle.Move.Feeds.Count, "a dark critter feeds nothing");
+            for (int k = 0; k < 3; k++) run.Play(ChallengeInput.Tap(0));   // and back home
+
+            var wake = run.Play(ChallengeInput.Tap(1));
+            Assert.IsFalse(wake.Move.Refused);
+            Assert.IsTrue(wake.Move.Turn, "a turn costs a step");
+            Assert.AreEqual(1, wake.Move.Feeds.Count, "the woken critter fed its lane");
+            Assert.AreEqual(0, wake.Move.Feeds[0].Colour, "red light is the red turret");
+            Assert.AreEqual(ChallengeState.Won, wake.State, "the last critter waking wins before the hill walks");
         }
 
         [Test]
-        public void PipesAreAuthoredSolvedOrRefused()
+        public void AGladeIsAuthoredSolvedOrRefused()
         {
             var problems = new List<string>();
-            var dto = Row("p", "pipes", 2, 2, new[] { "NS/1 NS", "EW NS/2" }, new[] { "0 r1" });
-            dto.sources = "r.";
-            dto.sinks = "r.";
-            ChallengeTable.TryBuild(Table(dto), out var table, problems);
-
+            // The conduit's solved arms are N-S: nothing meets them, and zeroed it wakes nobody.
+            ChallengeTable.TryBuild(Table(Row("g", "glade", 3, 1, new[] { "*E#R/0 -NS/1 @W#R/0" }, new[] { "0 r1" })),
+                                    out var table, problems);
             Assert.AreEqual(0, table.Count);
-            Assert.IsTrue(problems.Exists(p => p.Contains("solved layout")), string.Join("; ", problems));
+            Assert.IsTrue(problems.Exists(p => p.Contains("arm")), string.Join("; ", problems));
+
+            // A critter wanting a light no turret fires is refused by name.
+            problems.Clear();
+            ChallengeTable.TryBuild(Table(Row("g", "glade", 3, 1, new[] { "*E#R/0 -EW/1 @W#M/0" }, new[] { "0 r1" })),
+                                    out table, problems);
+            Assert.AreEqual(0, table.Count);
+            Assert.IsTrue(problems.Exists(p => p.Contains("no turret")), string.Join("; ", problems));
+
+            // The pipes' edge strings are refused on any row that still carries them (5f).
+            problems.Clear();
+            var stale = Row("g", "glade", 3, 1, new[] { "*E#R/0 -EW/1 @W#R/0" }, new[] { "0 r1" });
+            stale.sources = "r..";
+            ChallengeTable.TryBuild(Table(stale), out table, problems);
+            Assert.AreEqual(0, table.Count);
+            Assert.IsTrue(problems.Exists(p => p.Contains("sources")), string.Join("; ", problems));
         }
 
         // ------------------------------------------------------------------ merge
@@ -533,31 +562,46 @@ namespace GlimmerGrove.Tests
         }
 
         [Test]
-        public void ShippedPipesIsWonByTurningEachTileHome()
+        public void ShippedGladeIsWonByTurningEachTileHome()
         {
             var table = Shipped();
-            var run = new ChallengeRun(table.Find("d04_pipes"), table.Line);
-            var pipes = (PipesPuzzle)run.Puzzle;
+            var run = new ChallengeRun(table.Find("d08_glade"), table.Line);
+            var glade = (GladePuzzle)run.Puzzle;
 
-            int expected = pipes.TapsLeft;
+            int expected = glade.Board.TurnsToSolution;
             Assert.Greater(expected, 0);
 
-            // A player joins one colour at a time, starting with the one whose raiders are
-            // nearest: the solved path of each colour, turned home cell by cell.
-            var path = new List<int>();
-            for (int colour = 0; colour < ChallengeColours.Count && run.State == ChallengeState.Playing; colour++)
+            // A player wakes one critter at a time, starting with the colour whose raiders are
+            // nearest (the lanes in wave order): its solved network, turned home crystal-first.
+            // The wake order is what the waves are timed against, so it is printed beside the
+            // margin (the Push route's seat order, said of a glade).
+            var network = new List<int>();
+            var awake = new HashSet<int>();
+            for (int lane = 0; lane < ChallengeColours.Count && run.State == ChallengeState.Playing; lane++)
             {
-                pipes.SolvedPath(colour, path);
-                foreach (int cell in path)
+                for (int lamp = 0; lamp < glade.Board.C.Length && run.State == ChallengeState.Playing; lamp++)
                 {
-                    int taps = PipesPuzzle.TapsToSolve(pipes.ArmsAt(cell), pipes.RotationAt(cell));
-                    for (int t = 0; t < taps && run.State == ChallengeState.Playing; t++)
-                        run.Play(ChallengeInput.Tap(cell));
+                    if (glade.Board.C[lamp].kind != Kind.Lamp || GladePuzzle.LaneOf(glade.Board.C[lamp].colour) != lane) continue;
+
+                    glade.SolutionNetwork(lamp, network);
+                    Assert.Greater(network.Count, 1, $"critter {lamp} has no network in the solution");
+
+                    foreach (int cell in network)
+                    {
+                        int taps = glade.Board.TurnsOwed(cell);
+                        for (int t = 0; t < taps && run.State == ChallengeState.Playing; t++)
+                            Assert.IsFalse(run.Play(ChallengeInput.Tap(cell)).Move.Refused, $"tap on {cell} refused");
+                    }
+
+                    for (int i = 0; i < glade.Board.C.Length; i++)
+                        if (glade.Board.C[i].kind == Kind.Lamp && glade.Board.Lit[i] && awake.Add(i))
+                            Console.WriteLine($"d08_glade: critter at {i % glade.Width},{i / glade.Width} " +
+                                              $"({ChallengeColours.LetterOf(GladePuzzle.LaneOf(glade.Board.C[i].colour))}) awake by turn {run.Turns}");
                 }
             }
 
-            Won(run, "d04_pipes");
-            Assert.LessOrEqual(run.Turns, expected, "turning each tile home never costs more than the tap count");
+            Won(run, "d08_glade");
+            Assert.LessOrEqual(run.Turns, expected, "turning each tile home never costs more than the solution's distance");
         }
 
         [Test]

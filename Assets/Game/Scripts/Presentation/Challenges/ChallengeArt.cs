@@ -41,6 +41,28 @@ namespace GlimmerGrove
         /// <summary>The address under <c>Ui/</c>, for the preload test to hold to the manifest.</summary>
         public static string GenreMarkKey(ChallengeGenre genre) => "challenge_" + ChallengeGenres.NameOf(genre);
 
+        /// <summary>
+        /// The crowned chest on the list page's deal band — the shop pack's, cut by the same
+        /// tool as the genre marks, at the owner's instruction on 2026-09-23. Global for the
+        /// genre marks' reason. Null until the address is synced, which the band draws as
+        /// nothing rather than as a white rectangle (7b).
+        /// </summary>
+        public static Sprite Chest() => AssetLibrary.Sprite(AssetManifest.Ui(ChestKey));
+
+        public const string ChestKey = "challenge_chest";
+
+        /// <summary>
+        /// The stone a deal's row wears on the sheet, keyed on the deal's <em>rung</em> — its
+        /// place in the authored order, counted from one — rather than on its id: a retune
+        /// that renames a deal keeps its stone, and a deal added at the top takes the next
+        /// picture (7c's shape). Null past the pictures that ship, which a row draws as nothing.
+        /// </summary>
+        public static Sprite DealMark(int rung)
+            => rung < 1 ? null : AssetLibrary.Sprite(AssetManifest.Ui(DealMarkKey(rung)));
+
+        /// <summary>The address under <c>Ui/</c>, for the preload test to hold to the manifest.</summary>
+        public static string DealMarkKey(int rung) => "challenge_deal_" + rung;
+
         static Sprite Piece(string key) => AssetLibrary.Sprite(AssetManifest.SiegeArt(key));
         static Sprite[] Reel(string key) => AssetLibrary.Frames(AssetManifest.SiegeArt(key));
         static Sprite[] Blast(string key) => AssetLibrary.Frames(AssetManifest.SiegeFx(key));

@@ -36,16 +36,29 @@ namespace GlimmerGrove
 
         const float ChromeSize = 92f;
         const float BannerH = 138f;
-        const float RuleH = 76f;
-        const float DealH = 112f, DealW = 960f, DealKeyW = 220f, DealKeyH = 84f;
-        const float HeaderHeight = 22f + BannerH + 10f + RuleH + 10f + DealH + 10f;
-        const float CardW = 960f, CardH = 250f, PlateW = 940f, PlateH = 222f;
+
+        /// <summary>
+        /// The deal band: a plate as wide as the cards under it, the crowned chest on its left
+        /// (<see cref="ChallengeArt.Chest"/>), the allowance in the middle and the key to the
+        /// sheet on its right. Re-cut on 2026-09-23 at the owner's instruction — the chest, the
+        /// larger type and the width all landed together, and the rule line that used to stand
+        /// above it is gone: the board teaches that rule on the first move.
+        /// </summary>
+        const float DealH = 200f, DealW = 1024f, DealKeyW = 200f, DealKeyH = 108f;
+        const float ChestSize = 170f, ChestX = 104f, DealTextX = 196f;
+        const float HeaderHeight = 22f + BannerH + 12f + DealH + 10f;
+
+        /// <summary>
+        /// A card: 28 units off each side of a 1080 canvas rather than 70, so the plate is the
+        /// page's width and the picture and the words on it have room to be a size up.
+        /// </summary>
+        const float CardW = 1040f, CardH = 292f, PlateW = 1024f, PlateH = 264f;
 
         /// <summary>
         /// The genre's picture: a square on the plate's left, and where the text starts after it.
         /// The owner's marks carry their own frame, so the card draws nothing round them.
         /// </summary>
-        const float MarkSize = 176f, MarkX = 118f, TextX = 226f;
+        const float MarkSize = 216f, MarkX = 132f, TextX = 268f;
 
         GridView _grid;
         Text _empty, _dealLine;
@@ -122,31 +135,37 @@ namespace GlimmerGrove
             ribbon.transform.localScale = Vector3.zero;
             Tween.Pop(ribbon.transform, 0f, .5f, .06f);
 
-            // The one rule every card shares, said once above them rather than on each.
-            float ruleY = cy - BannerH * .5f - 10f - RuleH * .5f;
-            UIKit.Shrinkable(
-                UIKit.Titled("Rule", Safe, Loc.Get("ui.challenges.rule"), 24, new Color(1f, .96f, .88f, .82f),
-                             TextAnchor.MiddleCenter, new Vector2(900f, RuleH), new Vector2(.5f, 1f),
-                             new Vector2(0f, ruleY), 2f, 0f, wrap: true),
-                16);
-
             // The deal band: what the day allows, and the key to the sheet that sells more. A
             // plate rather than a bare line, because it is the one thing on the page that is
             // both a readout and a door.
-            float dealY = ruleY - RuleH * .5f - 10f - DealH * .5f;
-            var band = UIKit.Img("Deal", Safe, Art.S("Ui/" + Skins.PlateNavy), Color.white,
+            float dealY = cy - BannerH * .5f - 12f - DealH * .5f;
+            // Orange, at the owner's instruction: the one warm plate on a page of blue cards,
+            // which is what makes the door read as a door rather than as a fifth card.
+            var band = UIKit.Img("Deal", Safe, Art.S("Ui/" + Skins.PlateOrange), Color.white,
                                  new Vector2(DealW, DealH), new Vector2(.5f, 1f), new Vector2(0f, dealY));
             band.type = Image.Type.Sliced;
             band.raycastTarget = false;
 
-            _dealLine = UIKit.Shrinkable(
-                UIKit.Titled("Line", band.transform, string.Empty, 26, Pal.Cream, TextAnchor.MiddleLeft,
-                             new Vector2(DealW - DealKeyW - 90f, DealH - 20f), new Vector2(0f, .5f),
-                             new Vector2(36f + (DealW - DealKeyW - 90f) * .5f, 0f), 2f, 2f, wrap: true),
-                16);
+            // The crowned chest, on the band's left. Null until its address is synced, and
+            // drawn as nothing rather than as a white rectangle until then (7b).
+            var chest = UIKit.Img("Chest", band.transform, ChallengeArt.Chest(), Color.white, Vector2.one * ChestSize,
+                                  new Vector2(0f, .5f), new Vector2(ChestX, 0f));
+            chest.preserveAspect = true;
+            chest.raycastTarget = false;
+            chest.enabled = chest.sprite != null;
 
-            _dealKey = UIKit.TextButton("Deals", band.transform, Skins.Buy, Loc.Get("ui.challenges.deals").ToUpperInvariant(),
-                                        26, new Vector2(DealKeyW, DealKeyH), new Vector2(1f, .5f),
+            float lineW = DealW - DealTextX - 20f - DealKeyW - 24f;
+            _dealLine = UIKit.Shrinkable(
+                UIKit.Titled("Line", band.transform, string.Empty, 32, Pal.Cream, TextAnchor.MiddleLeft,
+                             new Vector2(lineW, DealH - 24f), new Vector2(0f, .5f),
+                             new Vector2(DealTextX + lineW * .5f, 0f), 2f, 2f, wrap: true),
+                18);
+
+            // Green (`Skins.Affirm`, the kit's own green pill — a tint cannot reach the season
+            // screen's mint on an orange sprite, 44g), because on an orange plate the orange
+            // Buy key vanished into its own ground.
+            _dealKey = UIKit.TextButton("Deals", band.transform, Skins.Affirm, Loc.Get("ui.challenges.deals").ToUpperInvariant(),
+                                        32, new Vector2(DealKeyW, DealKeyH), new Vector2(1f, .5f),
                                         new Vector2(-(24f + DealKeyW * .5f), 0f),
                                         () => { if (!Flow.HasModal) Flow.Modal<ChallengeTierOverlay>(); });
         }
@@ -239,30 +258,30 @@ namespace GlimmerGrove
                 _mark.preserveAspect = true;
                 _mark.raycastTarget = false;
 
-                _name = UIKit.Titled("Name", t, string.Empty, 40, Pal.Cream, TextAnchor.MiddleLeft,
-                                     new Vector2(480f, 56f), new Vector2(0f, .5f), new Vector2(TextX + 240f, 58f), 3f, 3f);
+                _name = UIKit.Titled("Name", t, string.Empty, 48, Pal.Cream, TextAnchor.MiddleLeft,
+                                     new Vector2(560f, 64f), new Vector2(0f, .5f), new Vector2(TextX + 280f, 74f), 3f, 3f);
 
                 _blurb = UIKit.Shrinkable(
-                    UIKit.Titled("Blurb", t, string.Empty, 22, new Color(1f, .96f, .88f, .82f), TextAnchor.UpperLeft,
-                                 new Vector2(620f, 66f), new Vector2(0f, .5f), new Vector2(TextX + 310f, -4f), 2f, 0f, wrap: true),
-                    15);
+                    UIKit.Titled("Blurb", t, string.Empty, 27, new Color(1f, .96f, .88f, .82f), TextAnchor.UpperLeft,
+                                 new Vector2(700f, 80f), new Vector2(0f, .5f), new Vector2(TextX + 350f, -8f), 2f, 0f, wrap: true),
+                    17);
 
                 // Today's level, named so a player who talks to a friend can say which one it was.
                 _level = UIKit.Shrinkable(
-                    UIKit.Titled("Level", t, string.Empty, 22, Pal.A(Pal.Gold, .95f), TextAnchor.MiddleLeft,
-                                 new Vector2(400f, 40f), new Vector2(0f, .5f), new Vector2(TextX + 200f, -66f), 2f, 0f),
-                    15);
+                    UIKit.Titled("Level", t, string.Empty, 26, Pal.A(Pal.Gold, .95f), TextAnchor.MiddleLeft,
+                                 new Vector2(420f, 46f), new Vector2(0f, .5f), new Vector2(TextX + 210f, -82f), 2f, 0f),
+                    16);
 
                 // The plays left, on the right, as a pill. Colour says the state as well as the
                 // words do, but the words are what carry it (a pill that only changed colour
                 // would be the tile-board lesson of 48g).
-                var pillSize = new Vector2(250f, 54f);
+                var pillSize = new Vector2(290f, 66f);
                 _playsPlate = UIKit.Img("Plays", t, Art.Round(24), Pal.A(Pal.Gold, .95f), pillSize, new Vector2(1f, .5f),
-                                        new Vector2(-(26f + pillSize.x * .5f), -66f));
+                                        new Vector2(-(26f + pillSize.x * .5f), -82f));
                 _playsPlate.raycastTarget = false;
                 _plays = UIKit.Shrinkable(
-                    UIKit.Titled("PlaysText", _playsPlate.transform, string.Empty, 22, Pal.Ink,
-                                 TextAnchor.MiddleCenter, pillSize, default, default, 0f, 0f), 14);
+                    UIKit.Titled("PlaysText", _playsPlate.transform, string.Empty, 26, Pal.Ink,
+                                 TextAnchor.MiddleCenter, pillSize, default, default, 0f, 0f), 16);
 
                 // Built last, so it sits over the plate's own tap area (see WaitingBadge).
                 _badge = WaitingBadge.Disc(t);
