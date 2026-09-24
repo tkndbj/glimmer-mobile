@@ -70,8 +70,13 @@ GROUND = (15, 42, 74)
 MARGIN, PLATE_RIM = 18.0, 0.34
 MAX_CELL = {"pairs": 200, "glade": 190, "merge": 200, "sokoban": 150}
 STRIP = {}
-#: Each view's `EdgeRows`: what a board hangs past its plate, above and below together, in cells.
-EDGE_ROWS = {}
+#: Each view's `EdgeRows`: what a board hangs past its plate, above and below together, in cells,
+#: and `EdgeBelow`, the part of it under the plate. `MergeView.LadderRows` is the rank ladder.
+LADDER_ROWS = 0.58
+EDGE_ROWS = {"merge": LADDER_ROWS}
+EDGE_BELOW = {"merge": LADDER_ROWS}
+#: `MergeView.Dim`: an unlit rung, the gem dimmed toward the plate.
+RUNG_DIM = (117, 133, 158)
 
 #: `ChallengeHillView.RaiderTall`, `.PostScale` and `.HillTopInset`.
 RAIDER_TALL, POST_SCALE, HILL_TOP_INSET = 1.0, 0.72, 0.95
@@ -246,6 +251,9 @@ def puzzle(sheet, row, top, bottom, txt):
     span_w, span_h = cols * cell, rws * cell
     cx = W / 2
     cy = top + (host_h - strip) / 2                  # the field is centred above the strip
+    # `PuzzleView.Attach`: furniture hung below the plate alone shifts the field up by half of it.
+    edge = EDGE_ROWS.get(g, 0)
+    cy -= (2 * EDGE_BELOW.get(g, edge / 2) - edge) * cell / 2
 
     if g != "glade":                                  # the glade brings its own floor (`PuzzleView.DrawsPlate`)
         plate = K.nine(*S_load("plate"), span_w + cell * PLATE_RIM + MARGIN, span_h + cell * PLATE_RIM + MARGIN)
@@ -357,13 +365,35 @@ def puzzle(sheet, row, top, bottom, txt):
                 K.paste(sheet, K.tint(mark, (255, 235, 184)), x + size * .33, y + size * .33)
 
     elif g == "merge":
+        best = 0
         for i in range(cols * rws):
             socket(i)
             ch = row["rows"][i // cols][i % cols]
             if ch != ".":
                 rank = int(ch)
+                best = max(best, rank)
                 gem(i, (rank - 1) % 4, .66 + min(rank, 8) * .03)
                 K.text(sheet, str(1 << rank), *centre(i), int(cell * .30), outline=2)
+
+        # `MergeView.Ladder`: every rank to the target as the gem it draws, under the plate,
+        # lit up to the best on the board, the goal ringed in gold.
+        rungs = max(1, int(row["target"]))
+        tall = cell * LADDER_ROWS
+        ly = cy + rws * cell / 2 + PLATE_RIM * cell / 2 + MARGIN / 2 + tall / 2
+        pitch = min(cell * .62, cols * cell / rungs)
+        gsize = min(tall * .80, pitch * .86)
+        K.paste(sheet, K.round_rect(rungs * pitch + gsize * .6, tall * .92, 20, (0, 0, 0), .26), cx, ly)
+        for r in range(1, rungs + 1):
+            x = cx + (r - 1 - (rungs - 1) * .5) * pitch
+            im = K.fit(S.sprite("gem_%s" % LETTERS[(r - 1) % 4]), (gsize, gsize))
+            lit = r <= best
+            if not lit:
+                im = K.tint(im, RUNG_DIM, .55)
+            K.paste(sheet, im, x, ly)
+            K.text(sheet, str(1 << r), x, ly, int(gsize * .36),
+                   fill=K.CREAM if lit else tuple(K.CREAM[:3]) + (115,), outline=2)
+        goal_x = cx + ((rungs - 1) - (rungs - 1) * .5) * pitch
+        K.paste(sheet, K.round_rect(gsize * 1.34, gsize * 1.34, int(gsize * .67), K.GOLD, .95, width=8), goal_x, ly)
 
     elif g == "sokoban":
         for i in range(cols * rws):

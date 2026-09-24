@@ -4586,6 +4586,30 @@
       "text": "PLAY FOREVER"
     },
     {
+      "key": "ui.tip.merge_feed.body",
+      "text": "Every size has a colour.\n\nJoining gems feeds the turret of that colour. It fires at raiders of the same colour."
+    },
+    {
+      "key": "ui.tip.merge_feed.title",
+      "text": "A JOIN FEEDS A TURRET"
+    },
+    {
+      "key": "ui.tip.merge_goal.body",
+      "text": "Join gems until you make a {0}.\n\nA new gem lands after every swipe. No room and no moves left loses the run."
+    },
+    {
+      "key": "ui.tip.merge_goal.title",
+      "text": "REACH THE GOAL"
+    },
+    {
+      "key": "ui.tip.merge_swipe.body",
+      "text": "Swipe any way. Every gem slides that way.\n\nTwo matching gems that meet join into one, twice as big."
+    },
+    {
+      "key": "ui.tip.merge_swipe.title",
+      "text": "SWIPE TO SLIDE"
+    },
+    {
       "key": "ui.tip.mixing.body",
       "text": "This critter wants a mixed colour. Join two hearts and their light mixes.\n\nRed and yellow make orange."
     },

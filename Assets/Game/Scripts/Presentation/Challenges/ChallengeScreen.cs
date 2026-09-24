@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Challenges;
 using GlimmerGrove.Localization;
@@ -35,6 +36,13 @@ namespace GlimmerGrove
     /// <b>Leaving forfeits the run silently</b> — the play is already spent, the way a run that
     /// is quit is already paid for, and the way back in is one tap — so this is not a fourth
     /// confirmation.
+    /// </para>
+    /// <para>
+    /// <b>A board declares its lessons and <c>ScreenLessons</c> sequences them</b> (invariant
+    /// 6a). Two moments: the opening, once the entrance has landed, and the beat after a move
+    /// has been drawn and before the hill replays it, so a lesson taught at an event rings a
+    /// thing that has just happened (6b). The board is latched while a panel is up, exactly as
+    /// it is while a move is landing.
     /// </para>
     /// </summary>
     public sealed class ChallengeScreen : View
@@ -89,7 +97,7 @@ namespace GlimmerGrove
         PuzzleView _puzzle;
         Text _turn, _goal, _next;
         RectTransform _hillHost, _puzzleHost;
-        bool _ready, _busy, _ended;
+        bool _ready, _busy, _ended, _teaching;
 
         public override bool Ready => _ready;
 
@@ -131,6 +139,25 @@ namespace GlimmerGrove
 
             _ready = true;
             PaintReadout();
+
+            StartCoroutine(Opening());
+        }
+
+        /// <summary>
+        /// The board's opening lessons, after its entrance has landed - a ring drawn round a
+        /// plate still springing up is a ring round the wrong rectangle.
+        /// </summary>
+        IEnumerator Opening()
+        {
+            yield return new WaitForSecondsRealtime(.6f);
+            if (!this || _ended) yield break;
+
+            var lessons = new List<ScreenLesson>(2);
+            _puzzle.Lessons(lessons);
+            if (lessons.Count == 0) yield break;
+
+            _teaching = true;
+            ScreenLessons.Show(this, lessons, () => _teaching = false);
         }
 
         System.Threading.Tasks.Task Warm()
@@ -195,6 +222,12 @@ namespace GlimmerGrove
             _hill = _hillHost.gameObject.AddComponent<ChallengeHillView>();
             _hill.Build(_hillHost, _run.Hill, unit, lineBand);
 
+            // The board's one-way view of the line: where a colour's post is, for a feed to
+            // fly at and a lesson to ring, and the readout a goal lesson rings.
+            _puzzle.PostOf = _hill.PostNode;
+            _puzzle.FedPost = _hill.Fed;
+            _puzzle.GoalReadout = _goal != null ? _goal.transform.parent as RectTransform : null;
+
             _puzzle.Attach(_run, _puzzleHost, Play);
 
             var group = UIKit.Group(_puzzleHost);
@@ -245,7 +278,7 @@ namespace GlimmerGrove
         // ------------------------------------------------------------------ playing
         void Play(ChallengeInput input)
         {
-            if (!_ready || _busy || _ended || _run.State != ChallengeState.Playing) return;
+            if (!_ready || _busy || _teaching || _ended || _run.State != ChallengeState.Playing) return;
 
             var report = _run.Play(input);
             if (report.Move == null) return;
@@ -265,6 +298,20 @@ namespace GlimmerGrove
 
             yield return _puzzle.Animate(report.Move);
             if (!this) yield break;
+
+            // A lesson the move just made true goes up here, between the board landing and the
+            // hill answering, so what it rings is what the move did and the bolt it bought is
+            // watched after the sentence rather than under it.
+            var lessons = new List<ScreenLesson>(1);
+            _puzzle.LessonsAfter(report.Move, lessons);
+            if (lessons.Count > 0)
+            {
+                bool waiting = true;
+                _teaching = true;
+                ScreenLessons.Show(this, lessons, () => { _teaching = false; waiting = false; });
+                while (waiting && this) yield return null;
+                if (!this) yield break;
+            }
 
             if (report.Walked)
             {

@@ -1674,6 +1674,32 @@ on a fresh clone).
 
 ## Owed
 
+**Merge was rebuilt as a puzzle experience on 2026-09-24, at the owner's instruction ("I don't
+know what I'm doing", "everything happens too sudden"), and none of it has been in the Editor.**
+Three things, no id, no server, no schema. (1) **A move is drawn as a score rather than
+repainted**: `MergePuzzle.LastSlides` records where every gem that moved or met went and the
+rank it carried, because a settled board cannot say it (the moving-board rule in `CRAFT.md`);
+`MergeView` slides travellers in a layer above the residents, pops the cell two gems met in
+into the size it became, springs the dealt gem up *after* the slide with a ring off it, lights
+the ladder rung a new size earns, and **flies a mote from every merge to the post of its
+colour** (`PuzzleView.FlyFeed`, wired by the screen to `ChallengeHillView.PostNode`/`.Fed`),
+waited on so the bolt it bought starts after it lands. (2) **A rank ladder under the plate**
+(`MergeView.LadderRows`, counted into the band through `EdgeRows`/`EdgeBelow`): every size to
+the target as the gem it draws, lit once made, the goal ringed in gold - the colour map and the
+progress in one row, mirrored by `render_challenges.py`. (3) **Three lessons through the game's
+own tip machinery** (`Mechanic.MergeSwipe` with a coaching hand along a row of the real board,
+`MergeGoal` ringing the readout with the target printed as an argument, `MergeFeed` ringing the
+post the first merge fed, raised between the board landing and the hill replaying): a board
+declares them (`PuzzleView.Lessons`/`.LessonsAfter`) and `ScreenLessons` sequences them (6a),
+which grew `OfferGesture` and a `Trace` on `ScreenLesson` for the purpose. The board is
+latched while a panel is up. Offline green: `compile.py`, `ChallengeTests` 27/27 (a new one
+holds the trace), `TipTests` 31/31, `TipLedgerTests`, `ChallengeLedgerTests`, `loc.py` (0
+missing, six new keys), `content.py` (0 errors), `sfxnames.py`, `artnames.py`,
+`render_challenges.py --id d05_merge` on both canvases. **What no gate can answer**: whether
+the slide at .13 s reads as a slide rather than a blink, whether the mote to the post says
+*that swipe fed that turret*, and whether three panels on a first Merge is two too many - the
+owner asked for very short words, and the strings are, but the count is theirs to judge.
+
 **A challenge ends on the run's own panels since 2026-09-24, at the owner's instruction, and
 neither has been in the Editor.** `ChallengeWinOverlay` is the victory design (`VictoryFrame`,
 the `Payout` chips flying XP and coins out of the crest, the boost line) over what the clear

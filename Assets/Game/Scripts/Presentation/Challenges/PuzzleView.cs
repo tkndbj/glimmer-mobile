@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using GlimmerGrove.Challenges;
 using UnityEngine;
 using UnityEngine.UI;
@@ -46,6 +47,19 @@ namespace GlimmerGrove
 
         Action<ChallengeInput> _send;
 
+        /// <summary>
+        /// Where a colour's post stands, for a board to fly a feed at, or null. Wired by the
+        /// screen, because the hill is the screen's and a board knows nothing about it - the
+        /// same one-way seam the input goes through the other way.
+        /// </summary>
+        public Func<int, RectTransform> PostOf;
+
+        /// <summary>Told when a feed a board flew has reached a colour's post.</summary>
+        public Action<int> FedPost;
+
+        /// <summary>The readout saying what the puzzle is won by, for a lesson to ring, or null.</summary>
+        public RectTransform GoalReadout;
+
         /// <summary>Height of the key strip under the grid, or nought for none.</summary>
         public virtual float StripHeight => 0f;
 
@@ -57,6 +71,13 @@ namespace GlimmerGrove
         /// drawn into the rampart above or the foot of the screen below.
         /// </summary>
         protected virtual float EdgeRows => 0f;
+
+        /// <summary>
+        /// How much of <see cref="EdgeRows"/> hangs <em>below</em> the plate, in cells. The
+        /// field is shifted up by half the difference, so furniture on one side alone (the
+        /// merge ladder) is counted where it is drawn rather than centred as if it were on both.
+        /// </summary>
+        protected virtual float EdgeBelow => EdgeRows * .5f;
 
         /// <summary>
         /// Whether the shared plate is drawn under the grid. False for a board that brings
@@ -102,7 +123,7 @@ namespace GlimmerGrove
             if (Cell < 8f) Cell = 8f;
 
             var span = new Vector2(Columns * Cell, Rows * Cell);
-            var centre = new Vector2(0f, StripHeight * .5f);
+            var centre = new Vector2(0f, StripHeight * .5f + (2f * EdgeBelow - EdgeRows) * Cell * .5f);
 
             if (DrawsPlate)
             {
@@ -200,10 +221,79 @@ namespace GlimmerGrove
             return gem;
         }
 
+        /// <summary>
+        /// A feed leaving the board: a mote in the colour flies from a cell to that colour's
+        /// post and the hill is told when it lands. <b>The bridge between the two halves of a
+        /// challenge, drawn.</b> A merge feeds a turret by rule and nothing on the screen used
+        /// to say so - the bank pip changed, or a bolt left a post a beat later, and which
+        /// swipe bought it was not readable. Nothing flies when the screen has wired no posts.
+        /// </summary>
+        /// <returns>How long the flight takes, so a caller can wait for it.</returns>
+        protected float FlyFeed(int cell, int colour, float duration = .30f)
+        {
+            var post = PostOf?.Invoke(colour);
+            if (post == null || Field == null) return 0f;
+
+            var from = CentreOf(cell);
+            var to = CentreIn(post, Field);
+            var tint = ChallengeArt.Tint(colour);
+
+            var mote = UIKit.Img("Feed", Field, Art.Glow(96, 1.6f), tint, Vector2.one * Cell * .46f,
+                                 new Vector2(.5f, .5f), from);
+            mote.raycastTarget = false;
+            var core = UIKit.Img("Core", mote.transform, Art.Disc(48), Pal.Cream, Vector2.one * Cell * .14f);
+            core.raycastTarget = false;
+
+            // A lift off the straight line, so the mote reads as thrown rather than dragged.
+            var dir = to - from;
+            var side = new Vector2(-dir.y, dir.x).normalized * Cell * .55f;
+            var rt = mote.rectTransform;
+            var fed = FedPost;
+
+            Tween.Run(duration, Ease.InOutSine, t =>
+            {
+                if (!rt) return;
+                rt.anchoredPosition = Vector2.Lerp(from, to, t) + side * Mathf.Sin(t * Mathf.PI);
+                rt.localScale = Vector3.one * (1f + .35f * Mathf.Sin(t * Mathf.PI));
+            }, rt).OnDone(() =>
+            {
+                if (rt) Destroy(rt.gameObject);
+                fed?.Invoke(colour);
+            });
+
+            return duration;
+        }
+
+        /// <summary>A widget's centre in another node's space - <c>TipOverlay.RectOf</c>'s arithmetic.</summary>
+        protected static Vector2 CentreIn(RectTransform target, RectTransform space)
+        {
+            var corners = new Vector3[4];
+            target.GetWorldCorners(corners);
+            var min = (Vector2)space.InverseTransformPoint(corners[0]);
+            var max = (Vector2)space.InverseTransformPoint(corners[2]);
+            return (min + max) * .5f;
+        }
+
         protected abstract void Build();
 
         /// <summary>Put what is drawn back in step with the puzzle, without animating anything.</summary>
         public abstract void Repaint();
+
+        /// <summary>
+        /// The lessons this board teaches at its opening, for a first-timer. A board says what
+        /// it wants taught and about which of its own widgets; <c>ScreenLessons</c> owns the
+        /// order and the chaining (invariant 6a). Offered through <c>ScreenLessons.Offer</c>,
+        /// so a lesson already seen is never queued. The default teaches nothing.
+        /// </summary>
+        public virtual void Lessons(List<ScreenLesson> into) { }
+
+        /// <summary>
+        /// The lessons a move has just made true, taught at the event rather than at the
+        /// opening (invariant 6b: a ring goes round a thing that exists). Asked after
+        /// <see cref="Animate"/> has landed and before the hill replays, so what is ringed is
+        /// what the move just did. The default teaches nothing.
+        /// </summary>
+        public virtual void LessonsAfter(ChallengeMove move, List<ScreenLesson> into) { }
 
         /// <summary>Show the last move landing. The default is a plain repaint.</summary>
         public virtual IEnumerator Animate(ChallengeMove move)

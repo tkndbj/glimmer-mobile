@@ -483,6 +483,57 @@ namespace GlimmerGrove.Tests
             Assert.IsTrue(merge.LastDealt >= 0, "a slide deals one gem");
         }
 
+        /// <summary>
+        /// The trace the view animates from: every gem that moved or met another, with both
+        /// ends and the rank it carried, so a slide can be drawn rather than repainted.
+        /// </summary>
+        [Test]
+        public void ASlideSaysWhereEveryGemWentAndWhichPairMet()
+        {
+            var problems = new List<string>();
+            var dto = Row("g", "merge", 4, 2, new[] { "1..1", "2..." }, new[] { "9 r1" });
+            dto.target = 4;
+            ChallengeTable.TryBuild(Table(dto), out var table, problems);
+            Assert.AreEqual(0, problems.Count, string.Join("; ", problems));
+
+            var run = new ChallengeRun(table.Find("g"), new ChallengeLine(1, 3, 1));
+            var merge = (MergePuzzle)run.Puzzle;
+
+            Assert.AreEqual(0, merge.LastSlides.Count, "nothing has slid before the first move");
+
+            var left = run.Play(ChallengeInput.Swipe(-1, 0));
+            Assert.IsTrue(left.Move.Turn);
+
+            // The two ones met at the left wall: the standing one is listed although it did
+            // not move, the travelling one crossed three cells, both carry the rank they had
+            // on the way and both name the cell they met in. The two on the row below stood
+            // still and met nothing, so it is not in the trace at all.
+            var slides = merge.LastSlides;
+            Assert.AreEqual(2, slides.Count, "the two halves of the merge, and nothing else");
+            Assert.AreEqual(0, slides[0].From);
+            Assert.AreEqual(0, slides[0].To);
+            Assert.IsFalse(slides[0].Moved);
+            Assert.AreEqual(3, slides[1].From);
+            Assert.AreEqual(0, slides[1].To);
+            Assert.IsTrue(slides[1].Moved);
+            Assert.AreEqual(1, slides[0].Rank);
+            Assert.AreEqual(1, slides[1].Rank);
+            Assert.AreEqual(2, merge.RankAt(0), "and the cell they met in holds the rank they made");
+            Assert.AreEqual(1, merge.LastMerged.Count);
+            Assert.AreEqual(0, merge.LastMerged[0]);
+
+            // The deal is separate from the slide and says what it dealt.
+            Assert.IsTrue(merge.LastDealt >= 0);
+            Assert.IsTrue(merge.LastDealtRank == 1 || merge.LastDealtRank == 2);
+            Assert.AreEqual(merge.LastDealtRank, merge.RankAt(merge.LastDealt));
+            for (int i = 0; i < slides.Count; i++)
+                Assert.AreNotEqual(merge.LastDealt, slides[i].To, "a gem is never dealt onto a cell a slide filled");
+
+            // A refused slide leaves the trace empty rather than stale.
+            var up = run.Play(ChallengeInput.Swipe(0, 1));
+            if (up.Move.Refused) Assert.AreEqual(0, merge.LastSlides.Count);
+        }
+
         // ------------------------------------------------------------------ sokoban
         [Test]
         public void APushIntoAWallIsRefusedAndASeatedGemFiresEveryStep()

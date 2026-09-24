@@ -757,6 +757,42 @@ namespace GlimmerGrove.Progression
         /// </summary>
         public static readonly Mechanic LoadoutKit = new Mechanic("loadout_kit");
 
+        // ------------------------------------------------------------- the daily challenges
+        /// <summary>
+        /// Merge's verb: a swipe slides every gem, and two of a size that meet become one.
+        ///
+        /// <para>
+        /// <b>A lesson about a gesture is shown, not described</b> (the house rule
+        /// <c>Lesson.Trace</c> exists for): the panel's hand slides across the real board, in a
+        /// direction the mode's own input could produce, and the sentence is cut down to the
+        /// half a hand cannot show - that meeting gems join. Raised at the opening of the first
+        /// Merge a player ever deals, ringing the board itself, and once in a life like every
+        /// lesson here.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic MergeSwipe = new Mechanic("merge_swipe");
+
+        /// <summary>
+        /// What Merge is won by: a gem of the target value, printed rather than written
+        /// (<see cref="Args"/> is one, for <see cref="MapChapterGate"/>'s reason - the target
+        /// is a figure in <c>challenges.json</c> and a retune must not leave a stale number in
+        /// a sentence shown once). Rings the goal readout, because that is where the figure
+        /// lives for the rest of the run.
+        /// </summary>
+        public static readonly Mechanic MergeGoal = new Mechanic("merge_goal", 1);
+
+        /// <summary>
+        /// The fusion: a gem's size is a colour, and a merge feeds the turret of that colour.
+        ///
+        /// <para>
+        /// <b>Taught at the event and never at the opening</b> (the shape <see cref="SiegeBrim"/>
+        /// keeps): it goes up after the first merge a player makes, when a mote has just flown
+        /// from the board to a post and there is a real turret to ring (invariant 6b). A player
+        /// shown it before any merge would be told about a thing that had not happened.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic MergeFeed = new Mechanic("merge_feed");
+
         /// <summary>
         /// Teaching order, most disruptive first.
         ///
@@ -842,6 +878,7 @@ namespace GlimmerGrove.Progression
             // Grove and GroveShop are retired and deliberately absent. See the remarks above.
             MapLoadout, MapChapterGate, MapTrack,
             LoadoutSeats, LoadoutKit,
+            MergeSwipe, MergeGoal, MergeFeed,
         };
 
         /// <summary>

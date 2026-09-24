@@ -29,6 +29,20 @@ namespace GlimmerGrove
         /// </summary>
         public object[] Args;
 
+        /// <summary>
+        /// A route for a coaching hand to trace on the real screen, or null for a lesson that
+        /// is only a sentence. See <c>TipOverlay.Trace</c>: a lesson about a <em>gesture</em>
+        /// is shown rather than described, and the route must be one the screen's own input
+        /// could produce.
+        /// </summary>
+        public RectTransform[] Trace;
+
+        /// <summary>The colour the demonstration is drawn in.</summary>
+        public Color TraceTint;
+
+        /// <summary>How far the route reaches in cells, which decides its pace.</summary>
+        public int TraceCells;
+
         public ScreenLesson(Mechanic mechanic, RectTransform target, object[] args = null)
         {
             Mechanic = mechanic;
@@ -37,6 +51,10 @@ namespace GlimmerGrove
             // Empty and absent are one thing here, so a caller may hand over whatever `params`
             // gave it without the overlay having to know the difference.
             Args = args != null && args.Length > 0 ? args : null;
+
+            Trace = null;
+            TraceTint = Pal.Cream;
+            TraceCells = 1;
         }
     }
 
@@ -102,6 +120,32 @@ namespace GlimmerGrove
             if (TipLedger.HasSeen(mechanic)) return;
 
             queue.Add(Compose(mechanic, target, args));
+        }
+
+        /// <summary>
+        /// Queues a lesson about a gesture, demonstrated by a hand along <paramref name="trace"/>
+        /// on the real screen, when the player has never met it.
+        ///
+        /// <para>
+        /// <see cref="Offer"/>'s rules and one more: a route of fewer than two points is no
+        /// demonstration, so nothing is queued and nothing is spent - for the same reason an
+        /// absent target queues nothing. The ring still goes on <paramref name="target"/>; the
+        /// route says <em>do this</em> and the ring says <em>this is the thing</em>.
+        /// </para>
+        /// </summary>
+        public static void OfferGesture(List<ScreenLesson> queue, Mechanic mechanic, RectTransform target,
+                                        RectTransform[] trace, Color tint, int cells, params object[] args)
+        {
+            if (queue == null || target == null) return;
+            if (trace == null || trace.Length < 2) return;
+            for (int i = 0; i < trace.Length; i++) if (trace[i] == null) return;
+            if (TipLedger.HasSeen(mechanic)) return;
+
+            var lesson = Compose(mechanic, target, args);
+            lesson.Trace = trace;
+            lesson.TraceTint = tint;
+            lesson.TraceCells = cells < 1 ? 1 : cells;
+            queue.Add(lesson);
         }
 
         /// <summary>
@@ -206,6 +250,9 @@ namespace GlimmerGrove
                 v.Mechanic = lesson.Mechanic;
                 v.Target = lesson.Target;
                 v.BodyArgs = lesson.Args;
+                v.Trace = lesson.Trace;
+                v.TraceTint = lesson.TraceTint;
+                v.TraceCells = lesson.TraceCells;
 
                 v.Dismissed = () => Tween.After(
                     Between, () => Step(owner, queue, index + 1, finished, beforeEach), owner);

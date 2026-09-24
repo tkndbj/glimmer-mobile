@@ -216,6 +216,44 @@ namespace GlimmerGrove
             }
         }
 
+        // ------------------------------------------------------------------ the posts, from outside
+        /// <summary>
+        /// The node a colour's post is built in, for a puzzle to fly a feed at and a lesson to
+        /// ring. Null before <see cref="Build"/> or for a colour the line does not hold.
+        /// </summary>
+        public RectTransform PostNode(int colour)
+        {
+            if (_posts == null) return null;
+            for (int i = 0; i < _posts.Length; i++)
+                if (_hill.Wards[i].Colour == colour) return _posts[i].Node;
+            return null;
+        }
+
+        /// <summary>
+        /// A feed has just landed on a colour's post: the chassis takes it with a small punch
+        /// and a ring of its colour spreads off the socket, so the moment a merge reaches the
+        /// line is a thing that is seen rather than a number that changes. The replay that
+        /// follows draws what the feed bought; this is only the arrival.
+        /// </summary>
+        public void Fed(int colour)
+        {
+            Post post = null;
+            for (int i = 0; _posts != null && i < _posts.Length; i++)
+                if (_hill.Wards[i].Colour == colour) post = _posts[i];
+            if (post == null || post.Body == null) return;
+
+            Tween.Punch(post.Body.transform, .14f, .24f);
+
+            var tint = ChallengeArt.Tint(colour);
+            var ring = UIKit.Img("Fed", _fx, Art.Ring(128, 9f), Pal.A(tint, .9f),
+                                 new Vector2(_post * .9f, _post * .9f), new Vector2(.5f, .5f),
+                                 post.Node.anchoredPosition + new Vector2(0f, _post * .3f));
+            ring.raycastTarget = false;
+            var rt = ring.rectTransform;
+            Tween.Scale(rt, 2.2f, .34f, Ease.OutCubic);
+            Tween.Fade(ring, 0f, .34f, Ease.InQuad).OnDone(() => { if (rt) Destroy(rt.gameObject); });
+        }
+
         // ------------------------------------------------------------------ geometry
         public float PostX(int index)
         {

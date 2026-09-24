@@ -3,6 +3,25 @@ using System.Collections.Generic;
 namespace GlimmerGrove.Challenges
 {
     /// <summary>
+    /// One gem's journey on one slide: the cell it left, the cell it packed against, and the
+    /// rank it carried on the way. See <see cref="MergePuzzle.LastSlides"/>.
+    /// </summary>
+    public readonly struct MergeSlide
+    {
+        public readonly int From, To, Rank;
+
+        public MergeSlide(int from, int to, int rank)
+        {
+            From = from;
+            To = to;
+            Rank = rank;
+        }
+
+        /// <summary>Whether the gem travelled at all, or only met a partner where it stood.</summary>
+        public bool Moved => From != To;
+    }
+
+    /// <summary>
     /// Merge (2048): slide the board; two gems of a rank meet and become the next rank.
     ///
     /// <para>
@@ -27,14 +46,29 @@ namespace GlimmerGrove.Challenges
         readonly int _bolts;
         readonly ChallengeMove _move = new ChallengeMove();
         readonly List<int> _merged = new List<int>(8);
+        readonly List<MergeSlide> _slides = new List<MergeSlide>(24);
 
         ChallengeRng _rng;
 
         /// <summary>Cells a merge landed on last turn, for the view to pop.</summary>
         public IReadOnlyList<int> LastMerged => _merged;
 
+        /// <summary>
+        /// Where every gem that moved or met another went on the last slide, in the order the
+        /// lines were walked. <b>The trace exists because a settled board cannot say it</b>: the
+        /// state after a slide holds where each gem ended and has no opinion about where it
+        /// came from, so only the move that made it knows both ends (the rule every moving
+        /// board in this game keeps, <c>CRAFT.md</c>). A gem that neither moved nor merged is
+        /// not listed. Both halves of a merge are listed with the same <c>To</c>, each with the
+        /// rank it carried <em>before</em> they met.
+        /// </summary>
+        public IReadOnlyList<MergeSlide> LastSlides => _slides;
+
         /// <summary>The cell dealt last turn, or -1.</summary>
         public int LastDealt { get; private set; } = -1;
+
+        /// <summary>The rank the dealt gem carries, or nought when nothing was dealt.</summary>
+        public int LastDealtRank { get; private set; }
 
         public int Target { get; }
 
@@ -98,7 +132,9 @@ namespace GlimmerGrove.Challenges
         {
             _move.Clear();
             _merged.Clear();
+            _slides.Clear();
             LastDealt = -1;
+            LastDealtRank = 0;
 
             if (input.Kind != ChallengeInputKind.Swipe || (input.Dx == 0) == (input.Dy == 0))
             {
@@ -155,6 +191,7 @@ namespace GlimmerGrove.Challenges
                 bool lastMerged = false;
                 var packed = new int[length];
                 var mergedAt = new bool[length];
+                var dest = new int[length];
 
                 for (int i = 0; i < length; i++)
                 {
@@ -166,12 +203,23 @@ namespace GlimmerGrove.Challenges
                         packed[write - 1] = r + 1;
                         mergedAt[write - 1] = true;
                         lastMerged = true;
+                        dest[i] = write - 1;
                     }
                     else
                     {
+                        dest[i] = write;
                         packed[write++] = r;
                         lastMerged = false;
                     }
+                }
+
+                // The trace, read before the line is written back so every rank is the one the
+                // gem carried on the way. A gem that stood still and met nothing is left out.
+                for (int i = 0; i < length; i++)
+                {
+                    if (line[i] == 0) continue;
+                    if (dest[i] == i && !mergedAt[i]) continue;
+                    _slides.Add(new MergeSlide(from[i], from[dest[i]], line[i]));
                 }
 
                 for (int i = 0; i < length; i++)
@@ -201,6 +249,7 @@ namespace GlimmerGrove.Challenges
                 {
                     _rank[i] = rank;
                     LastDealt = i;
+                    LastDealtRank = rank;
                     return;
                 }
             }
