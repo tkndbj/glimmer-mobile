@@ -2503,7 +2503,8 @@ reseller lists merged and de-duplicated - pasted from each dashboard, so refresh
 the two copies (repo root, website `public/`) are byte-identical. Meta has the iOS platform, a new
 **Gemfire** business portfolio with verification submitted, and `tekoworld.com` domain-verified by a
 meta tag in the website's root layout. Payouts are three separate payees (AdMob, ironSource, Unity),
-each with its own W-8BEN; Unity's bank form assumes a Cypriot bank, so Revolut's `REVOLT21` is refused.
+each with its own W-8BEN and bank details, all set. Unity's bank form assumes a Cypriot bank and
+refuses Revolut's `REVOLT21`, so Unity pays into a different account.
 
 **Store and platform.**
 - **AdMob cannot verify `app-ads.txt` for iOS yet, and the file is not why**: the App Store listing
