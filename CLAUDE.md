@@ -1574,7 +1574,7 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   cold start with no signal enforces it and a force-quit is not a way out. It ships **asking for nothing on
   both stores**, which is the state a release is raised from. Proved on an Android device, including the
   force-quit-in-flight-mode pass. **iOS is armed and has never been exercised.**
-- **Privacy/ads plumbing** — Google UMP consent, ATT prompt, `app-ads.txt` (placeholders).
+- **Privacy/ads plumbing** — Google UMP consent, ATT prompt, `app-ads.txt` (filled 2026-09-25).
 
 ### Content shipped
 
@@ -2492,14 +2492,29 @@ wants to come down further.
 **`levin_muzzle` fails `fxreels.py` at 0.76% ink** and was already on disk at HEAD — it is the
 Thundercrag bake above, not the legendary band, and it is the only red reel of the 308.
 
+**Gemfire is live on the App Store (id `6804516450`) since 2026-09-25; Android is still on closed
+testing.** The iOS ad and attribution side was wired the same day, all of it dashboard work and no
+build: LevelPlay's iOS app has **three bidders on all five live rewarded units** - ironSource, Google
+(one AdMob *partner bidding* unit, `levelplay_bidding`, serves every LevelPlay unit) and Unity Ads
+(Game ID `800381062`, placement `BP_Rewarded_iOS`; the new Unity dashboard refuses LevelPlay's bidder
+auto-setup, so it is manual). **`app-ads.txt` is filled and live**: `OWNERDOMAIN=tekoworld.com`, the
+three DIRECT lines (ironSource publisher `676127`, Unity `137877980`, AdMob) and the two networks'
+reseller lists merged and de-duplicated - pasted from each dashboard, so refresh them from there, and
+the two copies (repo root, website `public/`) are byte-identical. Meta has the iOS platform, a new
+**Gemfire** business portfolio with verification submitted, and `tekoworld.com` domain-verified by a
+meta tag in the website's root layout. Payouts are three separate payees (AdMob, ironSource, Unity),
+each with its own W-8BEN; Unity's bank form assumes a Cypriot bank, so Revolut's `REVOLT21` is refused.
+
 **Store and platform.**
+- **AdMob cannot verify `app-ads.txt` for iOS yet, and the file is not why**: the App Store listing
+  names no developer website (the iTunes lookup's `sellerUrl` is empty), so the crawler has no domain.
+  Set App Store Connect's **Marketing URL** to `https://www.tekoworld.com` (it may ride the next
+  version), then AdMob ▸ app-ads.txt ▸ Check for updates. Give Play's "Website" the same domain.
+- Archive the retired `run_continue` unit in LevelPlay (unticked from Unity Ads, still present).
+- AppsFlyer's **iOS** app: activate Meta ads with the two level events, and set up SKAN conversion
+  values - the Meta connection made on 2026-09-13 was the Android app's.
 - Delete an Apple-linked account on a device and check it leaves **Settings ▸ Sign in with Apple**. Every
   account the live suite makes is anonymous, so Apple's token exchange and revoke have never executed.
-- Register the `appleNotification` URL for **both** production and sandbox.
-- AdMob **instances** under each LevelPlay ad unit — blocked on a public listing, because AdMob rejects an
-  app-store URL that does not resolve. Delete the retired `run_continue` unit while there.
-- Fill in `app-ads.txt` and host it on the domain in both listings; turn on in-app bidding. The ironSource
-  and Unity Ads lines are commented placeholders in **both** repos and must move together.
 - Watch the **EU consent form** actually appear — the gateway has only ever returned `NotRequired`, so the
   branch that shows a form has never run, and a consent failure here is silent.
 - **Deactivate `gg_first_bloom_pass`** in App Store Connect and Play Console. Nothing sells it and no
