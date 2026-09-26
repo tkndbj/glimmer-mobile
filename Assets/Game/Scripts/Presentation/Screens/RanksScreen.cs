@@ -24,9 +24,10 @@ namespace GlimmerGrove
     /// </para>
     ///
     /// <para>
-    /// <b>The light carries the rung's metal; the room does not.</b> The wash over the wall is
-    /// one deep navy-violet on every rung, because a wash tinted gold over a blue wall is
-    /// olive and one tinted copper is mud (invariant 44g, arriving through a blend rather than
+    /// <b>The light carries the rung's metal; the wall stays the wall.</b> There is no wash
+    /// behind the badge: a navy gradient over the top of the stage was cut on 2026-09-26 at the
+    /// owner's instruction, and a wash tinted per rung was never an option, because gold over a
+    /// blue wall is olive and copper is mud (invariant 44g, arriving through a blend rather than
     /// a multiply). What changes with the rung is everything that reads as <em>light</em> —
     /// the two ray fans turning behind the badge, the aurora drifting across the room, the
     /// halo, the ring and the spark at its head, the fireflies — which are additive-looking
@@ -52,10 +53,12 @@ namespace GlimmerGrove
     /// </para>
     ///
     /// <para>
-    /// <b>Laid out with anchors and nothing is measured off a rect.</b> The stage stretches
-    /// between the header and the rail, so a tall phone gives the badge air and the shortest
-    /// canvas this game is drawn on (<see cref="CanvasFit.ShortestCanvas"/>) still fits every
-    /// band. The plate's band is sized for the tallest rung the ladder ships and scrolls only
+    /// <b>Laid out top-down, with the spare height at the foot.</b> The stage hangs from the
+    /// header and is exactly as tall as the hero it holds, so the space between the ribbon and
+    /// the badge is the same on every phone; the rail and the plate follow it down, and
+    /// whatever a tall phone has left over lands under the plate (<see cref="StageFit"/>). The
+    /// shortest canvas this game is drawn on (<see cref="CanvasFit.ShortestCanvas"/>) still
+    /// fits every band. The plate's band is sized for the tallest rung the ladder ships and scrolls only
     /// if a retune ever gives a rung more lines than that band holds — a rung's lines are
     /// capped (<see cref="RankLadder.MaxRequirements"/>), so the band can never be asked for
     /// more than eight.
@@ -101,10 +104,10 @@ namespace GlimmerGrove
 
         /// <summary>
         /// The least the stage may be. On the shortest canvas the game draws on it is exactly
-        /// this; on a taller phone it takes every unit the other bands leave, and the cluster
-        /// standing in it grows to fill them (<see cref="StageMost"/>).
+        /// this; on a taller phone the cluster standing in it grows (<see cref="StageMost"/>)
+        /// and the stage grows with it, and nothing more.
         /// </summary>
-        public const float StageLeast = 820f;
+        public const float StageLeast = 790f;
 
         /// <summary>
         /// How far the hero cluster may grow on a tall canvas, as a scale over
@@ -146,17 +149,17 @@ namespace GlimmerGrove
         const float InsetAllowance = 150f;
 
         // ------------------------------------------------------------------ the stage
-        // Positions inside the stage, **down from its top**. The stage stretches to take a tall
-        // phone's air, and the cluster hangs from the top of it so the hero stands high and
-        // the air lands above the rail rather than splitting the badge from its name. `UIKit.Box`
-        // pivots at centre, so every one of these is a middle and a height (49h's lesson), and
-        // the last of them (the pill's foot) has to land inside `StageLeast`.
-        const float RingTop = 320f, RingSize = 540f, RingThick = 9f, BadgeSize = 420f;
+        // Positions inside the stage, **down from its top**. `UIKit.Box` pivots at centre, so
+        // every one of these is a middle and a height (49h's lesson), and the last of them (the
+        // pill's foot) has to land inside `StageLeast`. The ring's top edge is 20 under the
+        // header (`RingTop - RingSize / 2`): it was 50, and with the stage stretching the air
+        // over the badge grew with the phone - the owner's "too big gap at top", 2026-09-26.
+        const float RingTop = 290f, RingSize = 540f, RingThick = 9f, BadgeSize = 420f;
         const float ChevronX = 380f, ChevronSize = 92f;
         const float ChipTop = RingTop + RingSize * .5f, ChipW = 156f, ChipH = 46f;
-        const float EyebrowTop = 646f, EyebrowH = 32f;
-        const float NameTop = 704f, NameH = 76f;
-        const float PillTop = 790f, PillH = 56f, PillW = 600f;
+        const float EyebrowTop = 616f, EyebrowH = 32f;
+        const float NameTop = 674f, NameH = 76f;
+        const float PillTop = 760f, PillH = 56f, PillW = 600f;
         const float TextW = 900f;
 
         const float HaloSize = 980f, CoreSize = 560f, FanSize = 1300f, Fan2Size = 940f, SparkSize = 58f;
@@ -166,14 +169,6 @@ namespace GlimmerGrove
         static readonly Vector2[] AuroraHome = { new Vector2(-360f, -240f), new Vector2(380f, -470f) };
         static readonly float[] AuroraSize = { 980f, 820f };
         static readonly float[] AuroraAlpha = { .18f, .13f };
-
-        /// <summary>
-        /// The room's wash: one deep navy-violet on every rung, opaque at the top of the stage
-        /// and gone by its foot. See the class remarks for why it is not the rung's metal. It
-        /// is not black and it is not a vignette — the light on top of it is what keeps this
-        /// from being the room three ceremonies came back from as <em>so dark</em> (44m).
-        /// </summary>
-        static readonly Color WashDeep = Pal.Hex("#0F1552");
 
         /// <summary>The ring's trough, dark enough to read on the wash and on the light alike.</summary>
         static readonly Color Trough = new Color(.03f, .05f, .14f, .78f);
@@ -218,30 +213,58 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Fits the hero cluster to the stage it stands in: one scale, read off the stage's
-        /// own rect, clamped to <c>[1, StageMost]</c>. See <see cref="StageMost"/>.
+        /// Fits the page to the canvas: the room between the header and the lowest band is
+        /// read off the safe layer's rect, the hero cluster is scaled to it (clamped to
+        /// <c>[1, StageMost]</c>, see <see cref="StageMost"/>), the stage is cut to exactly
+        /// the scaled cluster, and the bands under it (the rail, the plate) are lifted by
+        /// whatever is left - so a tall phone's spare height lands at the foot of the page
+        /// rather than as a hole between the ribbon and the badge. Read on the frames after the
+        /// build, never on the build frame (<c>CRAFT.md</c>), and again whenever the canvas
+        /// changes shape.
         /// </summary>
         sealed class StageFit : MonoBehaviour
         {
             RectTransform _stage, _cluster;
+            float _floor;
+            readonly List<RectTransform> _below = new List<RectTransform>();
+            readonly List<float> _belowY = new List<float>();
             float _seen = -1f;
 
-            public void Init(RectTransform stage, RectTransform cluster)
+            /// <param name="floor">The stage's built bottom edge, above the safe layer's foot.</param>
+            public void Init(RectTransform stage, RectTransform cluster, float floor)
             {
                 _stage = stage;
                 _cluster = cluster;
+                _floor = floor;
+            }
+
+            /// <summary>A band under the stage that moves up with it, from its built position.</summary>
+            public void Follow(RectTransform band)
+            {
+                _below.Add(band);
+                _belowY.Add(band.anchoredPosition.y);
+                _seen = -1f;
             }
 
             void LateUpdate()
             {
-                if (!_stage || !_cluster) return;
+                if (!_stage || !_cluster || !(_stage.parent is RectTransform safe)) return;
 
-                float h = _stage.rect.height;
-                if (h <= 1f || Mathf.Abs(h - _seen) < .5f) return;
-                _seen = h;
+                float room = safe.rect.height - HeaderH - _floor;
+                if (room <= 1f || Mathf.Abs(room - _seen) < .5f) return;
+                _seen = room;
 
-                float k = Mathf.Clamp(h / StageLeast, 1f, StageMost);
+                float k = Mathf.Clamp(room / StageLeast, 1f, StageMost);
                 _cluster.localScale = new Vector3(k, k, 1f);
+
+                float spare = Mathf.Max(0f, room - StageLeast * k);
+                _stage.offsetMin = new Vector2(_stage.offsetMin.x, _floor + spare);
+                for (int i = 0; i < _below.Count; i++)
+                {
+                    if (!_below[i]) continue;
+                    var p = _below[i].anchoredPosition;
+                    _below[i].anchoredPosition = new Vector2(p.x, _belowY[i] + spare);
+                }
             }
         }
 
@@ -249,6 +272,7 @@ namespace GlimmerGrove
         readonly List<Line> _lines = new List<Line>();
 
         RectTransform _stage, _cluster, _plateBand, _plate;
+        StageFit _fit;
         Image _fanA, _fanB, _halo, _core, _track, _ring, _spark, _badge;
         Image[] _aurora;
         Fireflies _flies;
@@ -385,31 +409,23 @@ namespace GlimmerGrove
             UIKit.StretchTo((RectTransform)catcher.transform, 0f, 0f, 0f, 0f);
             catcher.raycastTarget = true;
 
-            // The wash: opaque at the top of the stage and gone by its foot, so the room reads
-            // as a place the badge is lit in and the wall shows through under it.
-            var wash = UIKit.Img("Wash", _stage,
-                                 Art.Gradient(Pal.A(Color.white, 0f), Pal.A(Color.white, .80f),
-                                              Pal.A(Color.white, .97f)),
-                                 WashDeep);
-            UIKit.StretchTo((RectTransform)wash.transform, 0f, 0f, 0f, 0f);
-
             // The fireflies live in the stage, not the cluster, so they fill whatever room a
             // tall canvas gives and are never scaled into blobs.
             _flies = Fireflies.Spawn(_stage, 16, Pal.Sun, 5f, 16f);
 
             // Everything that is *the hero* stands in one node the size of the least stage,
-            // standing on the stage's foot and scaled to the stage by `StageFit` — read off
-            // the stage's rect on the frames after the build, never on the build frame
-            // (`CRAFT.md`), and re-read whenever the canvas changes shape, which a tablet in
-            // split view does. **It stands on the foot, pivoted there, so it grows upward**:
-            // the pill is always a hand's width above the rail, and whatever air a tall phone
-            // has lands under the ribbon, where the wash and the fans fill it. Centred, the
-            // same air split in two and left a dead band of wall between the pill and the
-            // seats (the owner, 2026-09-26).
+            // standing on the stage's foot and scaled by `StageFit`, which also cuts the stage
+            // to the cluster's scaled height. **It stands on the foot, pivoted there, so it
+            // grows upward** and the pill is always a hand's width above the rail. Centred, a
+            // tall phone's air split in two and left a dead band of wall between the pill and
+            // the seats; hung from the foot of a stretched stage, the whole of it sat over the
+            // badge. Both came back from the owner (2026-09-26), so the air goes under the
+            // plate instead.
             _cluster = UIKit.Box("Cluster", _stage, new Vector2(Boot.RefWidth, StageLeast), Bottom, Vector2.zero);
             _cluster.pivot = new Vector2(.5f, 0f);
             _cluster.anchoredPosition = Vector2.zero;
-            _cluster.gameObject.AddComponent<StageFit>().Init(_stage, _cluster);
+            _fit = _cluster.gameObject.AddComponent<StageFit>();
+            _fit.Init(_stage, _cluster, bottom);
 
             _aurora = new Image[AuroraHome.Length];
             for (int i = 0; i < _aurora.Length; i++)
@@ -530,6 +546,7 @@ namespace GlimmerGrove
             float bottom = FootPad + PlateBand() + PlateGap;
             var rail = UIKit.Box("Rail", Safe, new Vector2(PlateW, RailH), Bottom,
                                  new Vector2(0f, bottom + RailH * .5f));
+            _fit.Follow(rail);
             if (n <= 0) return;
 
             float pitch = Mathf.Min(SeatPitchMost, (PlateW - 40f) / n);
@@ -611,6 +628,7 @@ namespace GlimmerGrove
             _plateBand = UIKit.Box("PlateBand", Safe, new Vector2(PlateW, PlateBand()), Bottom,
                                    new Vector2(0f, FootPad + PlateBand() * .5f));
             _plateBand.gameObject.AddComponent<RectMask2D>();
+            _fit.Follow(_plateBand);
         }
 
         /// <summary>

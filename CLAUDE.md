@@ -1685,7 +1685,9 @@ on a fresh clone).
 like a game at all"), and none of it has been in the Editor.** `RanksScreen` is one composed
 stage now rather than seven checklist cards: the chosen badge at 420 units under a radial
 progress ring with a spark at its head, two ray fans turning, an aurora drifting and a halo in
-the rung's metal over one navy-violet wash; the whole ladder as a tappable, swipeable rail of
+the rung's metal straight on the wall (the navy wash was cut later the same day, and the ring
+pulled up to 20 under the ribbon, with a tall phone's spare height now landing under the plate
+rather than over the badge — `StageFit`); the whole ladder as a tappable, swipeable rail of
 seven seats with a chain lit through the run held; and the chosen rung's lines on one plate,
 each with its own bar. Browsed by seat, chevron or swipe (`Swipe`, a new file in
 `Presentation/App/` with **no `.meta` yet**); the stage stretches and the hero cluster scales

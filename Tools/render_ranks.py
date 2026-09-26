@@ -65,7 +65,7 @@ RUNGS = (TABLE.get("ranks") or {}).get("rungs") or []
 # would be a mirror telling a comfortable lie about the screen (invariant 44d).
 CHROME, BANNER_H, HEADER_TOP = 92.0, 138.0, 22.0
 HEADER_H = HEADER_TOP + BANNER_H + 10.0
-STAGE_LEAST, STAGE_MOST = 820.0, 1.24
+STAGE_LEAST, STAGE_MOST = 790.0, 1.24
 RAIL_H = 150.0
 SEAT, SEAT_PITCH_MOST, SEAT_FACE, SEAT_FACE_LOCKED, SEAT_CHOSEN = 104.0, 140.0, .82, .64, 1.22
 LINK_THICK, LINK_GAP, LOCK_CHIP = 12.0, 6.0, 34.0
@@ -75,23 +75,20 @@ WELL_INSET, WELL_H, MARK, COUNT_W, BAR_H = 26.0, 78.0, 38.0, 210.0, 12.0
 INSET_ALLOWANCE = 150.0
 SHORTEST_CANVAS = 1080.0 * 1.75             # CanvasFit.ShortestCanvas
 
-# The stage, down from its top (`RanksScreen`: the cluster hangs from the top of a stage that
-# stretches, so a tall phone's air lands above the rail).
-RING_TOP, RING_SIZE, RING_THICK, BADGE = 320.0, 540.0, 9.0, 420.0
+# The stage, down from its top (`RanksScreen`: the stage is cut to the scaled cluster and the
+# rail and plate follow it, so a tall phone's air lands under the plate - `StageFit`).
+RING_TOP, RING_SIZE, RING_THICK, BADGE = 290.0, 540.0, 9.0, 420.0
 CHEVRON_X, CHEVRON = 380.0, 92.0
 CHIP_TOP, CHIP_W, CHIP_H = RING_TOP + RING_SIZE * .5, 156.0, 46.0
-EYEBROW_TOP, EYEBROW_H = 646.0, 32.0
-NAME_TOP, NAME_H = 704.0, 76.0
-PILL_TOP, PILL_H, PILL_W = 790.0, 56.0, 600.0
+EYEBROW_TOP, EYEBROW_H = 616.0, 32.0
+NAME_TOP, NAME_H = 674.0, 76.0
+PILL_TOP, PILL_H, PILL_W = 760.0, 56.0, 600.0
 TEXT_W = 900.0
 HALO, CORE, FAN, FAN2, SPARK = 980.0, 560.0, 1300.0, 940.0, 58.0
 FAN_A, FAN2_A, HALO_A, CORE_A = .22, .13, .46, .34
 AURORA_HOME = [(-360.0, 240.0), (380.0, 470.0)]      # down from the top
 AURORA_SIZE = [980.0, 820.0]
 AURORA_A = [.18, .13]
-WASH_MID, WASH_TOP = .80, .97
-
-WASH_DEEP = (0x0F, 0x15, 0x52)
 TROUGH = (8, 13, 36)
 LOCKED_INK = (147, 166, 196)
 BAR_ORANGE = (255, 150, 30)
@@ -274,16 +271,7 @@ def stage(sheet, top, bottom, held, chosen):
     standing = standing_of(order, held)
     live = standing != "locked"
 
-    # The wash: opaque at the top of the stage, gone at its foot.
-    wash = Image.new("RGBA", (W, sh), (0, 0, 0, 0))
-    wp = wash.load()
-    for y in range(sh):
-        k = 1 - y / float(sh - 1)                    # 1 at the top; `Art.Gradient` is linear
-        a = (WASH_MID + (WASH_TOP - WASH_MID) * (k - .5) * 2) if k > .5 else (WASH_MID * k * 2)
-        row = (*WASH_DEEP, int(255 * a))
-        for x in range(W):
-            wp[x, y] = row
-    room.alpha_composite(wash)
+    # No wash: the wall is the room (cut 2026-09-26 at the owner's instruction).
     # Fireflies, at rest: a scatter in the metal's lift.
     rng = 7
     for i in range(16):
@@ -500,7 +488,14 @@ def page(held, chosen=None, tall=False):
     K.plain(sheet)
 
     band = plate_band()
-    plate_bottom = height - FOOT_PAD
+    # `RanksScreen.StageFit`: the room between the header and the bands is what the cluster is
+    # scaled against; the stage is cut to the scaled cluster and everything under it rises by
+    # whatever is spare, which lands at the foot of the page.
+    floor = FOOT_PAD + band + PLATE_GAP + RAIL_H
+    room = height - HEADER_H - floor
+    grow = min(max(room / STAGE_LEAST, 1.0), STAGE_MOST)
+    spare = max(0.0, room - STAGE_LEAST * grow)
+    plate_bottom = height - FOOT_PAD - spare
     rail_bottom = plate_bottom - band - PLATE_GAP
     stage_bottom = rail_bottom - RAIL_H
 
@@ -510,8 +505,8 @@ def page(held, chosen=None, tall=False):
     plate(sheet, plate_bottom, band, held, chosen)
 
     stage_h = stage_bottom - HEADER_H
-    print("  stage %.0f tall on a %d canvas (least %.0f); plate band %.0f"
-          % (stage_h, height, STAGE_LEAST, band))
+    print("  stage %.0f tall on a %d canvas (least %.0f); plate band %.0f; %.0f spare at the foot"
+          % (stage_h, height, STAGE_LEAST, band, spare))
     if stage_h < STAGE_LEAST - .5:
         print("  STAGE SHORTER THAN ITS LEAST - the bands do not fit this canvas")
     return sheet.convert("RGB")

@@ -102,12 +102,25 @@ namespace GlimmerGrove
             // No scrim dismissal. This is a question with a price on it, and a stray tap
             // outside the panel is not an answer to it — the same call AccountOverlay's
             // destructive prompt makes.
-            MakePanel(new Vector2(880f, 800f), Loc.Get(TitleKey(Choice, Stake)), dismissOnScrim: false);
+            //
+            // A play's panel is its own, shorter geometry. Its sentence is two lines where a
+            // heart's is four, so in the heart's 190-unit band, top-aligned, it ended ~150 units
+            // above the tag and the panel read as two halves with a hole between them. Here the
+            // band is sized to the sentence and the text is centred in it (so a translation that
+            // runs to one line or three stays centred rather than hanging off the top), the tag
+            // follows it, and the panel is cut down to what is left: ~45 units of air from the
+            // sentence to the tag and ~50 from the tag to KEEP PLAYING, which are the same step.
+            bool play = Stake == Stakes.Play;
+            float panelHeight = play ? 700f : 800f;
+
+            MakePanel(new Vector2(880f, panelHeight), Loc.Get(TitleKey(Choice, Stake)), dismissOnScrim: false);
 
             UIKit.Shrinkable(
                 UIKit.Titled("Why", Panel, Loc.Get(BodyKey(Choice, Stake, Prepaid)), 32,
-                             new Color(.36f, .25f, .18f), TextAnchor.UpperCenter,
-                             new Vector2(680f, 190f), new Vector2(.5f, 1f), new Vector2(0f, -196f),
+                             new Color(.36f, .25f, .18f),
+                             play ? TextAnchor.MiddleCenter : TextAnchor.UpperCenter,
+                             play ? new Vector2(680f, 120f) : new Vector2(680f, 190f),
+                             new Vector2(.5f, 1f), new Vector2(0f, play ? -145f : -196f),
                              outline: 0f, shadow: 0f, wrap: true), 22);
 
             // The heart being spent, drawn once rather than described. A row of five would be
@@ -120,13 +133,16 @@ namespace GlimmerGrove
             // room either side. That glow is the tall part — anything moving the seat has to
             // count it, since it reaches 25px past the box on every side and was what the
             // button used to be sitting on top of.
+            //
+            // A play's tag: the sentence's band ends at -205, the 120-unit mark spans -230..-350
+            // around a seat at -290 and its glow -205..-375, and the Stay button's top edge is at
+            // -(700 - 301) = -399 — so the glow touches neither and the mark sits in the middle.
             var seat = UIKit.Box("Cost", Panel, new Vector2(200f, 120f), new Vector2(.5f, 1f),
-                                 new Vector2(0f, -390f));
+                                 new Vector2(0f, play ? -290f : -390f));
 
             // The tag is the same shape whatever is on it: a glow, the thing, and -1. A play
             // wears the Battle key's mark in gold — the mark a challenge is entered under —
             // where a run wears the heart in rose.
-            bool play = Stake == Stakes.Play;
             var ink = play ? Pal.Gold : Pal.Rose;
             var glowTint = play ? new Color(1f, .78f, .24f, .28f) : new Color(.91f, .38f, .35f, .30f);
 
