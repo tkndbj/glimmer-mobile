@@ -319,7 +319,7 @@ namespace GlimmerGrove.Tests
 
         // ------------------------------------------------------------------ the allowance
         [Test]
-        public void APlayIsSpentWhenDealtAndTheAllowanceIsTheFreeFigure()
+        public void APlayIsSpentAtTheFirstMoveAndTheAllowanceIsTheFreeFigure()
         {
             Assert.AreEqual(2, ChallengeLedger.Allowance);
             Assert.AreEqual(2, ChallengeLedger.PlaysLeft(ChallengeGenre.Pairs));
@@ -328,19 +328,59 @@ namespace GlimmerGrove.Tests
             var first = ChallengeLedger.Begin(ChallengeGenre.Pairs);
             Assert.IsNotNull(first);
             Assert.AreEqual(0, first.Slot);
+            Assert.IsFalse(first.Spent);
+            Assert.AreEqual(2, ChallengeLedger.PlaysLeft(ChallengeGenre.Pairs), "a deal costs nothing");
+
+            ChallengeLedger.Commit(first);
+            Assert.IsTrue(first.Spent);
             Assert.AreEqual(1, first.Attempt);
             Assert.AreEqual(1, ChallengeLedger.PlaysLeft(ChallengeGenre.Pairs));
             Assert.AreEqual(2, ChallengeLedger.PlaysLeft(ChallengeGenre.Merge), "genres spend apart");
+
+            ChallengeLedger.Commit(first);
+            Assert.AreEqual(1, ChallengeLedger.PlaysLeft(ChallengeGenre.Pairs), "a play is spent once");
 
             // A loss retries the same slot; the play is gone either way.
             ChallengeLedger.Lose(first, 3);
             var second = ChallengeLedger.Begin(ChallengeGenre.Pairs);
             Assert.AreEqual(0, second.Slot, "a lost level is dealt again");
             Assert.AreSame(first.Definition, second.Definition);
+            ChallengeLedger.Commit(second);
             Assert.AreEqual(0, ChallengeLedger.PlaysLeft(ChallengeGenre.Pairs));
             Assert.IsFalse(ChallengeLedger.CanPlay(ChallengeGenre.Pairs));
             Assert.IsNull(ChallengeLedger.Begin(ChallengeGenre.Pairs), "no third play for free");
             Assert.AreEqual(1, ChallengeLedger.ReadyCount);
+        }
+
+        [Test]
+        public void ADealLeftUntouchedCostsNothingAndDealsTheSameLevelAgain()
+        {
+            var looked = ChallengeLedger.Begin(ChallengeGenre.Pairs);
+            Assert.IsNotNull(looked);
+
+            // Opened, looked at, backed out of: no move, no commit, nothing written.
+            Assert.AreEqual(2, ChallengeLedger.PlaysLeft(ChallengeGenre.Pairs));
+            Assert.AreEqual(0, ChallengeLedger.AttemptsToday(ChallengeGenre.Pairs));
+
+            var again = ChallengeLedger.Begin(ChallengeGenre.Pairs);
+            Assert.AreSame(looked.Definition, again.Definition, "the calendar deals the same board");
+            Assert.AreEqual(looked.Slot, again.Slot);
+        }
+
+        [Test]
+        public void AWinOrALossSpendsAPlayNobodyCommitted()
+        {
+            var won = ChallengeLedger.Begin(ChallengeGenre.Pairs);
+            ChallengeLedger.Win(won);
+            Assert.IsTrue(won.Spent);
+            Assert.AreEqual(1, ChallengeLedger.AttemptsToday(ChallengeGenre.Pairs));
+            Assert.AreEqual(1, ChallengeLedger.WinsToday(ChallengeGenre.Pairs), "a win nobody committed still counts and still pays");
+
+            var lost = ChallengeLedger.Begin(ChallengeGenre.Pairs);
+            ChallengeLedger.Lose(lost, 4);
+            Assert.IsTrue(lost.Spent);
+            Assert.AreEqual(2, ChallengeLedger.AttemptsToday(ChallengeGenre.Pairs));
+            Assert.AreEqual(0, ChallengeLedger.PlaysLeft(ChallengeGenre.Pairs));
         }
 
         [Test]
@@ -575,7 +615,7 @@ namespace GlimmerGrove.Tests
             Fund(120);
             ChallengeLedger.TryBuyTier(ChallengeRules.Table.FindTier("bronze"));
             ChallengeLedger.Win(ChallengeLedger.Begin(ChallengeGenre.Pairs));
-            ChallengeLedger.Begin(ChallengeGenre.Pairs);
+            ChallengeLedger.Commit(ChallengeLedger.Begin(ChallengeGenre.Pairs));
 
             var dto = new SaveFileDto();
             ChallengeLedger.WriteInto(dto);

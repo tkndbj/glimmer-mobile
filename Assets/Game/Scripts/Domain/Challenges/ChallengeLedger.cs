@@ -6,7 +6,11 @@ using GlimmerGrove.Progression;
 
 namespace GlimmerGrove.Challenges
 {
-    /// <summary>One play dealt by <see cref="ChallengeLedger.Begin"/>: which level, on which day, as which slot.</summary>
+    /// <summary>
+    /// One play dealt by <see cref="ChallengeLedger.Begin"/>: which level, on which day, as
+    /// which slot — and whether it has been <see cref="Spent"/> yet, which happens at the
+    /// first move (<see cref="ChallengeLedger.Commit"/>), never at the deal.
+    /// </summary>
     public sealed class ChallengePlay
     {
         public readonly ChallengeGenre Genre;
@@ -18,16 +22,18 @@ namespace GlimmerGrove.Challenges
         /// <summary>The slot of the day's sequence this play is, which is the wins the day had when it was dealt.</summary>
         public readonly int Slot;
 
-        /// <summary>Which attempt of the day this was, one-based.</summary>
-        public readonly int Attempt;
+        /// <summary>Which attempt of the day this was, one-based. Nought until <see cref="Spent"/>.</summary>
+        public int Attempt { get; internal set; }
 
-        internal ChallengePlay(ChallengeGenre genre, ChallengeDefinition definition, int day, int slot, int attempt)
+        /// <summary>Whether one of the day's plays has been taken for this. False on a board nobody has touched.</summary>
+        public bool Spent { get; internal set; }
+
+        internal ChallengePlay(ChallengeGenre genre, ChallengeDefinition definition, int day, int slot)
         {
             Genre = genre;
             Definition = definition;
             Day = day;
             Slot = slot;
-            Attempt = attempt;
         }
     }
 
@@ -92,8 +98,14 @@ namespace GlimmerGrove.Challenges
     /// gates nothing that pays, which is <see cref="Events.SeasonLedger.OwnsPass"/>'s sentence.
     /// </para>
     /// <para>
-    /// <b>A play is spent when it is dealt</b> (<see cref="Begin"/>), never when it ends, or
-    /// leaving a losing board before it lost would be a free retry for ever. A win pays against
+    /// <b>A play is spent at the first move</b> (<see cref="Commit"/>), never at the deal and
+    /// never at the ending. Not at the ending, or leaving a losing board before it lost would be
+    /// a free retry for ever; and not at the deal — which is where it was until 2026-09-26 —
+    /// because a player who opens a board, looks at it and backs out has learned nothing they
+    /// could use: the calendar deals the same level again (56f), so an untouched deal is not
+    /// information and charging for it read as the game stealing a play (the owner's
+    /// instruction). <see cref="Begin"/> deals and <see cref="Commit"/> spends; a win or a loss
+    /// commits an uncommitted play first, so nothing can be won for free. A win pays against
     /// the day and slot the play was dealt as (<see cref="ChallengePlay"/>), so a run that
     /// crosses midnight is still paid — as the last win of the day it began, which is the day
     /// the server's window accepts it on.
@@ -292,11 +304,9 @@ namespace GlimmerGrove.Challenges
 
         // ------------------------------------------------------------- playing
         /// <summary>
-        /// Deals the next play of a genre, spending one of today's, or answers null when none
-        /// is left or the genre has no rows.
-        ///
-        /// Saved at once rather than marked dirty: an attempt is the one thing here a player
-        /// could want to lose, and a process killed on the board must find it spent on relaunch.
+        /// Deals the next play of a genre without spending anything, or answers null when none
+        /// is left or the genre has no rows. Nothing is written: a deal nobody touches costs
+        /// nothing (the class note), so a screen opened and closed leaves the ledger as it was.
         /// </summary>
         public static ChallengePlay Begin(ChallengeGenre genre)
         {
@@ -307,20 +317,37 @@ namespace GlimmerGrove.Challenges
             var def = ChallengeCalendar.Slot(Table, genre, _day, row.Wins);
             if (def == null) return null;
 
+            return new ChallengePlay(genre, def, _day, row.Wins);
+        }
+
+        /// <summary>
+        /// Spends one of today's plays on a dealt board, at its first move. Idempotent: a play
+        /// is spent once however many times this is asked.
+        ///
+        /// Saved at once rather than marked dirty: an attempt is the one thing here a player
+        /// could want to lose, and a process killed on the board must find it spent on relaunch.
+        /// The row charged is today's, whatever day the play was dealt on — a board opened
+        /// before midnight and first moved after it is a play of the day it was moved on.
+        /// </summary>
+        public static void Commit(ChallengePlay play)
+        {
+            if (play == null || play.Spent) return;
+            Sync();
+
+            var row = Mutable(play.Genre);
             row.Attempts = Bounded(row.Attempts + 1);
-            var play = new ChallengePlay(genre, def, _day, row.Wins, row.Attempts);
+            play.Attempt = row.Attempts;
+            play.Spent = true;
 
             SaveService.Save();
             Raise();
 
             Telemetry.Track("challenge_started",
-                            "genre", ChallengeGenres.NameOf(genre),
-                            "level", def.Id,
+                            "genre", ChallengeGenres.NameOf(play.Genre),
+                            "level", play.Definition.Id,
                             "slot", play.Slot,
                             "attempt", play.Attempt,
                             "allowance", Allowance);
-
-            return play;
         }
 
         /// <summary>
@@ -345,6 +372,7 @@ namespace GlimmerGrove.Challenges
         public static ChallengeReward Win(ChallengePlay play)
         {
             if (play == null) return ChallengeReward.None;
+            Commit(play);
             Sync();
 
             string name = ChallengeGenres.NameOf(play.Genre);
@@ -394,10 +422,11 @@ namespace GlimmerGrove.Challenges
             return new ChallengeReward(coins, xp, bonus);
         }
 
-        /// <summary>A lost play is already spent; this is the record of it, for the funnel.</summary>
+        /// <summary>A lost play is spent (a loss takes moves, and the first one spent it); this is the record of it, for the funnel.</summary>
         public static void Lose(ChallengePlay play, int turns)
         {
             if (play == null) return;
+            Commit(play);
             Telemetry.Track("challenge_lost",
                             "genre", ChallengeGenres.NameOf(play.Genre),
                             "level", play.Definition.Id,

@@ -27,19 +27,46 @@ namespace GlimmerGrove
     /// strip. <b>The width is meant to bind</b>: <see cref="BandWanted"/> tells the screen how
     /// tall the board is at the cell the width allows, and the screen gives the hill the rest
     /// — which is what makes a wide, short board a bigger hill rather than a taller plate.
-    /// The plate's rim is counted in on both axes, so a board at its widest still stands
-    /// <see cref="Margin"/> inside its host rather than overhanging it.
+    /// </para>
+    /// <para>
+    /// <b>The band is a framed plate, and the frame is as big as the band</b> (the owner's
+    /// "put some nice frames or something, I don't want to see empty gaps", 2026-09-26). The
+    /// first cut stood the grid's own plate in the middle of a bare ground, so on a tall phone
+    /// the board floated between two slabs of nothing. Now the kit's panel
+    /// (<see cref="Skins.Panel"/>) fills the band to <see cref="FrameInset"/> of its edges,
+    /// the grid's plate stands <see cref="FrameRim"/> inside it as the well, and whatever the
+    /// band has over what the grid wants is frame rather than gap. Both rims are counted
+    /// into the cell the width allows and into the band the board asks for, so the frame
+    /// never costs the grid a pixel it was not told about.
     /// </para>
     /// </summary>
     public abstract class PuzzleView : MonoBehaviour
     {
-        protected const float Margin = 18f;
+        /// <summary>The frame's air from the band's edges, on every side.</summary>
+        public const float FrameInset = 10f;
+
+        /// <summary>From the frame's edge to the plate's edge: the bezel the panel art draws plus breathing room.</summary>
+        public const float FrameRim = 28f;
+
+        /// <summary>What the frame takes off the band on each side before a board is laid out in it.</summary>
+        public const float FrameSide = FrameInset + FrameRim;
 
         /// <summary>The plate's overhang past the grid, in cells (each side is half of it).</summary>
         protected const float PlateRim = .34f;
 
         protected ChallengeRun Run { get; private set; }
         protected RectTransform Host { get; private set; }
+
+        /// <summary>The frame filling the band: the kit's panel, nine-sliced.</summary>
+        protected Image Frame { get; private set; }
+
+        /// <summary>
+        /// The frame's inside — the band minus <see cref="FrameSide"/> on every side — which
+        /// is what a board is laid out in. A board bringing its own floor (the glade's
+        /// <c>BoardView</c>) builds into this rather than into <see cref="Host"/>.
+        /// </summary>
+        protected RectTransform Inner { get; private set; }
+
         protected RectTransform Field { get; private set; }
         protected RectTransform Strip { get; private set; }
         protected Image Plate { get; private set; }
@@ -95,20 +122,20 @@ namespace GlimmerGrove
         protected int Columns => Run.Puzzle.Width;
         protected int Rows => Run.Puzzle.Height;
 
-        /// <summary>The cell a board of <c>columns</c> gets across <c>hostWidth</c>, plate and cap counted in.</summary>
+        /// <summary>The cell a board of <c>columns</c> gets across <c>hostWidth</c>, frame, plate and cap counted in.</summary>
         float CellAcross(int columns, float hostWidth)
-            => Mathf.Floor(Mathf.Min((hostWidth - Margin) / (columns + PlateRim), MaxCell));
+            => Mathf.Floor(Mathf.Min((hostWidth - FrameSide * 2f) / (columns + PlateRim), MaxCell));
 
         /// <summary>
         /// How tall a band this board wants when laid out across <c>hostWidth</c>: its rows at
-        /// the cell the width allows, the plate's rim, the margin and the key strip. The screen
+        /// the cell the width allows, the plate's rim, the frame and the key strip. The screen
         /// asks this before it sizes the hill, so the hill can take everything the board does
         /// not need.
         /// </summary>
         public float BandWanted(int columns, int rows, float hostWidth)
         {
             float cell = CellAcross(columns, hostWidth);
-            return (rows + PlateRim + EdgeRows) * cell + Margin + StripHeight;
+            return (rows + PlateRim + EdgeRows) * cell + FrameSide * 2f + StripHeight;
         }
 
         public void Attach(ChallengeRun run, RectTransform host, Action<ChallengeInput> send)
@@ -117,7 +144,20 @@ namespace GlimmerGrove
             Host = host;
             _send = send;
 
-            float h = host.rect.height - StripHeight - Margin;
+            // The frame first, filling the band; everything else stands inside it.
+            var panel = Art.S("Ui/" + Skins.Panel);
+            Frame = UIKit.Img("Frame", host, panel != null ? panel : Art.Round(34),
+                              panel != null ? Color.white : Skins.Plate);
+            Frame.type = Image.Type.Sliced;
+            Frame.raycastTarget = false;
+            UIKit.StretchTo(Frame.rectTransform, FrameInset, FrameInset, FrameInset, FrameInset);
+
+            Inner = UIKit.Node("Inner", host);
+            UIKit.StretchTo(Inner, FrameSide, FrameSide, FrameSide, FrameSide);
+
+            float innerW = host.rect.width - FrameSide * 2f;
+            float innerH = host.rect.height - FrameSide * 2f;
+            float h = innerH - StripHeight;
 
             Cell = Mathf.Floor(Mathf.Min(CellAcross(Columns, host.rect.width), h / (Rows + PlateRim + EdgeRows)));
             if (Cell < 8f) Cell = 8f;
@@ -128,17 +168,17 @@ namespace GlimmerGrove
             if (DrawsPlate)
             {
                 var plate = ChallengeArt.Plate();
-                Plate = UIKit.Img("Plate", host, plate != null ? plate : Art.Round(34),
+                Plate = UIKit.Img("Plate", Inner, plate != null ? plate : Art.Round(34),
                                   plate != null ? Color.white : Pal.Board,
-                                  span + Vector2.one * Cell * PlateRim + Vector2.one * Margin, new Vector2(.5f, .5f), centre);
+                                  span + Vector2.one * Cell * PlateRim, new Vector2(.5f, .5f), centre);
                 Plate.type = Image.Type.Sliced;
                 Plate.raycastTarget = false;
             }
 
-            Field = UIKit.Box("Field", host, span, new Vector2(.5f, .5f), centre);
+            Field = UIKit.Box("Field", Inner, span, new Vector2(.5f, .5f), centre);
 
             if (StripHeight > 0f)
-                Strip = UIKit.Box("Strip", host, new Vector2(host.rect.width, StripHeight),
+                Strip = UIKit.Box("Strip", Inner, new Vector2(innerW, StripHeight),
                                   new Vector2(.5f, 0f), new Vector2(0f, StripHeight * .5f));
 
             Build();

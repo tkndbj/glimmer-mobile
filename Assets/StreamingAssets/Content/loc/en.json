@@ -2750,6 +2750,14 @@
       "text": "Leave the glade?"
     },
     {
+      "key": "ui.forfeit.play_body",
+      "text": "The game has started. Leaving now will cost you 1 game."
+    },
+    {
+      "key": "ui.forfeit.play_title",
+      "text": "Leave the challenge?"
+    },
+    {
       "key": "ui.forfeit.restart_body",
       "text": "This run has begun, so starting again costs a heart — the same as running out of turns. You will get a fresh board and a fresh count."
     },
@@ -5716,6 +5724,22 @@
     {
       "key": "ui.ranks.percent",
       "text": "{0}%"
+    },
+    {
+      "key": "ui.ranks.locked",
+      "text": "Locked"
+    },
+    {
+      "key": "ui.ranks.progress",
+      "text": "{0}% of the way there"
+    },
+    {
+      "key": "ui.ranks.locked_hint",
+      "text": "Earn {0} first"
+    },
+    {
+      "key": "ui.ranks.requirements",
+      "text": "What it asks"
     },
     {
       "key": "ui.rankup.title",

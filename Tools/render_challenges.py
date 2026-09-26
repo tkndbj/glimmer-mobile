@@ -19,7 +19,10 @@ grid both get a cell a finger can use, does the hill the board leaves give the r
 worth watching, do the four posts line up under the four lanes, and does a strip of keys under
 a board push the board into the line. **The board is asked first and the hill takes the
 rest** (2026-09-23): a board is laid out at the widest cell the width allows, so the hill's
-height is what a wide, short board leaves it, bounded in siege cells either way.
+height is what a wide, short board leaves it, bounded in siege cells either way. **The band is a
+framed plate** (2026-09-26): the kit's panel fills whatever the hill leaves, the grid's plate
+stands inside it as the well, and the hill's ceiling is eight cells, so what a tall phone has
+over that is frame rather than the bare slab the owner circled.
 
 **It is a mirror, and mirrors drift.** Every constant is named after the field it copies
 (`ChallengeScreen.HillLeastUnits`, `PuzzleView.Margin`, `ChallengeHillView.PostScale`), the board
@@ -61,13 +64,16 @@ RIBBON_TILT, RIBBON_ROOM, TITLE_FLOOR = -1.6, 0.74, 24
 READOUT_H, READOUT_GAP = 56.0, 12.0
 
 #: `ChallengeScreen.HillLeastUnits` / `.HillMostUnits`, `.LineBandUnits`, `.BottomPad`, `.BandGap`, `.PuzzleInset`.
-HILL_LEAST_UNITS, HILL_MOST_UNITS = 3.6, 5.4
+HILL_LEAST_UNITS, HILL_MOST_UNITS = 3.6, 8.0
 LINE_BAND_UNITS, BOTTOM_PAD, BAND_GAP, PUZZLE_INSET = 1.7, 0.0, 0.0, 0.0
 #: `ChallengeScreen.Ground`: the opaque ground the puzzle band stands on, edge to edge.
 GROUND = (15, 42, 74)
 
-#: `PuzzleView.Margin` / `.PlateRim`, and each view's `MaxCell` / `StripHeight`.
-MARGIN, PLATE_RIM = 18.0, 0.34
+#: `PuzzleView.FrameInset` / `.FrameRim` / `.FrameSide` / `.PlateRim`, and each view's `MaxCell` / `StripHeight`.
+FRAME_INSET, FRAME_RIM, PLATE_RIM = 10.0, 28.0, 0.34
+FRAME_SIDE = FRAME_INSET + FRAME_RIM
+#: `MergeView.LadderGap`: the air between the plate's foot and the ladder.
+LADDER_GAP = 8.0
 MAX_CELL = {"pairs": 200, "glade": 190, "merge": 200, "sokoban": 150}
 STRIP = {}
 #: Each view's `EdgeRows`: what a board hangs past its plate, above and below together, in cells,
@@ -88,7 +94,7 @@ BACK = (31, 56, 87)
 SLAB = (77, 107, 143)
 WALL, WALL_FACE = (51, 43, 41), (92, 77, 69)
 #: `GladeView.Slate`, the first chapter's slate the glade's floor is themed from.
-GLADE_SLATE = (15, 42, 74)
+GLADE_SLATE = (9, 22, 47)
 
 
 def loc():
@@ -232,12 +238,12 @@ def S_load(name):
 # ------------------------------------------------------------------ the puzzle band
 def cell_across(genre, cols, host_w):
     """`PuzzleView.CellAcross`: the cell a board gets across its host, plate and cap counted in."""
-    return int(min((host_w - MARGIN) / (cols + PLATE_RIM), MAX_CELL[genre]))
+    return int(min((host_w - FRAME_SIDE * 2) / (cols + PLATE_RIM), MAX_CELL[genre]))
 
 
 def band_wanted(genre, cols, rws, host_w):
     """`PuzzleView.BandWanted`: how tall a band the board asks for at the cell the width allows."""
-    return (rws + PLATE_RIM + EDGE_ROWS.get(genre, 0)) * cell_across(genre, cols, host_w) + MARGIN + STRIP.get(genre, 0)
+    return (rws + PLATE_RIM + EDGE_ROWS.get(genre, 0)) * cell_across(genre, cols, host_w) + FRAME_SIDE * 2 + STRIP.get(genre, 0)
 
 
 def puzzle(sheet, row, top, bottom, txt):
@@ -246,17 +252,22 @@ def puzzle(sheet, row, top, bottom, txt):
     cols, rws = row["width"], row["height"]
     host_w, host_h = W - PUZZLE_INSET * 2, bottom - top
     strip = STRIP.get(g, 0)
-
-    cell = int(min(cell_across(g, cols, host_w), (host_h - strip - MARGIN) / (rws + PLATE_RIM + EDGE_ROWS.get(g, 0))))
-    span_w, span_h = cols * cell, rws * cell
     cx = W / 2
-    cy = top + (host_h - strip) / 2                  # the field is centred above the strip
+
+    # `PuzzleView.Attach`: the kit's panel fills the band to FrameInset of its edges, and the
+    # board is laid out in what is left inside FrameRim of the panel's edge.
+    K.paste(sheet, K.skin("Hud/panel", host_w - FRAME_INSET * 2, host_h - FRAME_INSET * 2), cx, top + host_h / 2)
+    inner_w, inner_h = host_w - FRAME_SIDE * 2, host_h - FRAME_SIDE * 2
+
+    cell = int(min(cell_across(g, cols, host_w), (inner_h - strip) / (rws + PLATE_RIM + EDGE_ROWS.get(g, 0))))
+    span_w, span_h = cols * cell, rws * cell
+    cy = top + FRAME_SIDE + (inner_h - strip) / 2    # the field is centred above the strip, inside the frame
     # `PuzzleView.Attach`: furniture hung below the plate alone shifts the field up by half of it.
     edge = EDGE_ROWS.get(g, 0)
     cy -= (2 * EDGE_BELOW.get(g, edge / 2) - edge) * cell / 2
 
     if g != "glade":                                  # the glade brings its own floor (`PuzzleView.DrawsPlate`)
-        plate = K.nine(*S_load("plate"), span_w + cell * PLATE_RIM + MARGIN, span_h + cell * PLATE_RIM + MARGIN)
+        plate = K.nine(*S_load("plate"), span_w + cell * PLATE_RIM, span_h + cell * PLATE_RIM)
         K.paste(sheet, plate, cx, cy)
 
     def centre(i):
@@ -286,7 +297,8 @@ def puzzle(sheet, row, top, bottom, txt):
         # because no shipped row opens lit and the light is `Puzzle`'s alone (5b). Tokens are
         # the glade grammar, read as far as the drawing needs.
         pad, cap = 34.0, 190.0                                   # BoardView's pad and pitch clamp
-        pitch = max(64.0, min((host_w - pad * 2) / cols, (host_h - strip - pad * 2) / rws, cap))
+        # `GladeView.Build`: the board is built into the frame's inside, so its pitch is read off that.
+        pitch = max(64.0, min((inner_w - pad * 2) / cols, (inner_h - strip - pad * 2) / rws, cap))
         board_w, board_h = pitch * cols, pitch * rws
         size = pitch * .965
         slate = GLADE_SLATE
@@ -379,7 +391,7 @@ def puzzle(sheet, row, top, bottom, txt):
         # lit up to the best on the board, the goal ringed in gold.
         rungs = max(1, int(row["target"]))
         tall = cell * LADDER_ROWS
-        ly = cy + rws * cell / 2 + PLATE_RIM * cell / 2 + MARGIN / 2 + tall / 2
+        ly = cy + rws * cell / 2 + PLATE_RIM * cell / 2 + LADDER_GAP + tall / 2
         pitch = min(cell * .62, cols * cell / rungs)
         gsize = min(tall * .80, pitch * .86)
         K.paste(sheet, K.round_rect(rungs * pitch + gsize * .6, tall * .92, 20, (0, 0, 0), .26), cx, ly)

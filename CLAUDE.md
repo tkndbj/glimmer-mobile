@@ -939,8 +939,13 @@ is where they are written down, not what they mean.
    over a shuffled cycle on 2026-09-23 because a cycle re-dealt the whole slate on every content
    drop. Nothing is stored. A genre with fewer rows than the largest allowance repeats a level
    within a day, and `content.py` warns.
-56g. **A play is spent when it is dealt, never when it ends** (`ChallengeLedger.Begin`), or leaving
-   a losing board would be a free retry for ever. A win advances to the next slot; a loss retries
+56g. **A play is spent at the first move, never at the deal and never at the ending**
+   (`ChallengeLedger.Commit`, since 2026-09-26; `Begin` only deals). Not at the ending, or
+   leaving a losing board would be a free retry for ever; not at the deal, because an untouched
+   board is dealt again by the calendar unchanged, so charging for a look read as theft (the
+   owner's instruction). A win or a loss commits an uncommitted play first. Leaving a moved-on
+   board asks through `ForfeitOverlay` with a play on the tag, which keeps the confirmations at
+   three. A win advances to the next slot; a loss retries
    the same one; a play dealt before midnight and won after is paid against the day it was dealt
    (`ChallengePlay`). The block is its own top-level save key (`challenges`, v34), by the owner's
    instruction that a challenge shares nothing with the core game — which cost the whole of 12a,
@@ -1146,14 +1151,16 @@ guess — verify offline.
   block is what the tool draws. The rule runs **offline on both sides** — `RankVectorTests`
   through `TestJson` (29e) and `firebase/functions/test/grove.mjs`. It caught two real faults on
   its first runs; do not let it become Editor-only.
-- **The ranks page:** `python Tools/render_ranks.py` (`--held 0`, `--held 7`, `--tall`,
-  `--scroll`, `--map`, `--contact`). **`--tall` draws the whole scrolling page**, and it is the
-  one that matters: every state but the first two is below the fold on a phone, so a sheet
-  without it answers "do the earned rows look right" and nothing else (invariant 44l). It draws off the shipped ladder, and it **measures every caption it can say
-  against the box it is drawn in** — a rank ladder is content, so a retune that lengthens a
-  sentence is one push away at all times. It caught two faults nothing else could: the progress
-  bar printing through the last requirement line, and an unmet line marked with a star on a page
-  whose own lines say "Earn 45 stars".
+- **The ranks page:** `python Tools/render_ranks.py` (`--held n`, `--show n`, `--tall`, `--map`,
+  `--contact`). **`--contact` is the one that matters**: it walks every rung onto the stage, so every
+  name, blurb and requirement sentence is measured once per run against the band it is drawn in
+  (invariant 19n) - a rank ladder is content, so a retune that lengthens a sentence is one push
+  away at all times. `--tall` is a 20:9 phone, where the hero cluster grows to the room
+  (`RanksScreen.StageMost`), and `--show` puts a locked or an earned rung on the stage, which are
+  the states a player reaches by tapping and a sheet at rest never shows (44l). It prints the stage's
+  height against `StageLeast` and refuses a canvas the bands do not fit. What it cannot answer: whether
+  the fans turning and the aurora drifting read as light, and whether the badge swap on a tap reads as
+  one thing turning.
 - **The rank ceremony:** `python Tools/render_rank_ceremony.py` (`--rung n`, `--gather`,
   `--strike`, `--long`, `--bare`, `--captions`, `--contact`). **`--contact` is the one that
   matters**, because the three states nobody may ever see are on it: a 24-rung ladder
@@ -1673,6 +1680,62 @@ half is `Assets/Game/Scripts/Cloud/`, Firebase Unity SDK
 on a fresh clone).
 
 ## Owed
+
+**The ranks page was rebuilt as a hall on 2026-09-26, at the owner's instruction ("doesn't feel
+like a game at all"), and none of it has been in the Editor.** `RanksScreen` is one composed
+stage now rather than seven checklist cards: the chosen badge at 420 units under a radial
+progress ring with a spark at its head, two ray fans turning, an aurora drifting and a halo in
+the rung's metal over one navy-violet wash; the whole ladder as a tappable, swipeable rail of
+seven seats with a chain lit through the run held; and the chosen rung's lines on one plate,
+each with its own bar. Browsed by seat, chevron or swipe (`Swipe`, a new file in
+`Presentation/App/` with **no `.meta` yet**); the stage stretches and the hero cluster scales
+to it (`StageFit`, read off the rect on later frames, never the build frame). It cuts **no
+art and claims no address** - the ring, fans, halo and spark are generated (7b) - and four
+strings were added (`ui.ranks.locked`, `.progress`, `.locked_hint`, `.requirements`); the
+subtitle and percent keys are unused now and left in place (5f). **The seven badges were
+re-cut at 512** (`make_rank_art.py`, `--check` green) against a hero drawn at 420 on a
+1440-wide phone, and the folder cap in `ProjectSetup.Caps` moved 256 -> 512 with them -
+**changing a cap reimports nothing**, so `Glimmer Grove > Art > Reapply Art Import Rules` is
+owed before the stage stops drawing a 256 upscaled 1.6x, and the seven metas will show 512
+afterwards. Then the standing discipline. Nothing on the server, no schema, no id. Offline
+green: `compile.py` (all sixteen, in a HEAD shadow because another agent has
+`ChallengeHillView.cs` mid-edit), `RankLadderTests` 24/24, `RankCeremonyTests` 11/11,
+`RankGateTests` 9/9, `loc.py` (0 missing), `content.py` (0 errors), `artnames.py` (0/0),
+`sfxnames.py`, `render_ranks.py --contact` (102 captions, none at its floor). **What no gate
+can answer**: whether the two fans turning at 48 s and 31 s read as light rather than as a
+spinning wall, whether the badge swap (shrink, swap, overshoot, ripple) reads as one thing
+turning, whether the pulse on the next seat draws the eye there, and whether a locked seat's
+smaller badge under a padlock chip reads as *later* rather than as *less*. The frames in
+`Downloads` (`badges.jpg`, `frames.jpg`, `dragonframe.png`) were looked at and not used: the
+badges are already frames, and a frame round a frame is ornament on ornament.
+
+**The challenge screen was re-cut on 2026-09-26 at the owner's instruction (the red circle:
+"close the gap", "make the hill taller", "smaller steps", "nice frames", "taps sometimes
+don't register on the glade"), and none of it has been in the Editor.** Four things, no id,
+no server, no schema. (1) **The hill's ceiling is 8 cells** (`ChallengeScreen.HillMostUnits`,
+was 5.4): the board is still asked first and the hill takes the rest, so on 16:9 the band is
+exactly what the board wants and on 19.5:9 the two-cell slab between the line and the board is
+hill. (2) **The band is a framed plate**: the kit's panel fills it (`PuzzleView.FrameInset` /
+`FrameRim`, counted into the cell and the band), the grid's plate or the glade's floor stands
+inside as the well, and whatever a phone has over is frame, never gap; the glade's floor went
+a step darker so it reads against the panel. (3) **Every row's `hill` grew ~1.6x** (pairs 6→10,
+glade 10→16, merge 8→13, sokoban 16→26) so a step is smaller — the owner's dial; the waves are
+untouched, so the first arrival is later and `ChallengeTests` prints the margins (the glade
+went 11/12 → 12/12 line health, the rest unchanged). (4) **A play is spent at the first accepted move, not at the deal** (56g rewritten):
+`ChallengeLedger.Begin` deals and `Commit` spends, a win or a loss commits first, and leaving
+a moved-on board raises `ForfeitOverlay` with a `Stakes.Play` tag (the Battle mark in gold and
+-1, two new strings `ui.forfeit.play_*`) — an untouched board leaves without a question and is
+dealt again. (5) **Input never waits for the hill.**
+The screen latched taps across the board's landing *and* the whole hill replay — about a
+second — and dropped them silently; now the hill is a queue (`ChallengeHillView.Enqueue`,
+hurrying when behind, **drawn off the event and never the model**, because the model is ahead
+of the picture with turns queued), one input is held while the board lands, the ending waits
+for `Idle`, and `TileView` answers the press rather than the click (a click needs a lift on
+the same tile inside a 10-pixel drag threshold — the glade mode gets that too). Offline green:
+`compile.py`, `ChallengeTests` 27/27, `content.py` (0 errors), `loc.py`, `artnames.py`,
+`render_challenges.py` on both canvases. **What no gate can answer**: whether the hurried
+hill reads as catching up rather than as skipping, and whether the navy frame is the "nice
+frame" meant or a slab the owner rejects on chrome.
 
 **Merge was rebuilt as a puzzle experience on 2026-09-24, at the owner's instruction ("I don't
 know what I'm doing", "everything happens too sudden"), and none of it has been in the Editor.**

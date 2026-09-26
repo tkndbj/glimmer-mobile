@@ -25,13 +25,27 @@ namespace GlimmerGrove
     /// else in this game, and here the affirmative is "keep playing" — putting it on the
     /// destructive half would spend the game's own colour language on losing a heart.
     /// </para>
+    /// <para>
+    /// <b>It is also the daily challenges' confirmation, and that is what keeps the count at
+    /// three.</b> A challenge stakes one of the day's plays rather than a heart (invariant 56g:
+    /// spent at the first move), and leaving a board that has been moved on is the same
+    /// question — a committed run being abandoned — with a different price on the tag. So
+    /// <see cref="Stake"/> picks the sentence and the picture, and nothing else about the
+    /// panel changes; a fourth confirmation would be this one with a new name.
+    /// </para>
     /// </summary>
     public sealed class ForfeitOverlay : ModalView
     {
         /// <summary>What the player is about to do, and what it will cost them.</summary>
         public enum Kind { Leave, Restart }
 
+        /// <summary>What is on the price tag: a heart (a run), or one of today's plays (a challenge).</summary>
+        public enum Stakes { Heart, Play }
+
         public Kind Choice = Kind.Leave;
+
+        /// <summary>What leaving costs. Only a challenge sets <see cref="Stakes.Play"/>, and only for a leave.</summary>
+        public Stakes Stake = Stakes.Heart;
 
         /// <summary>
         /// Whether this run was bought at the gate rather than owed for at its ending
@@ -67,11 +81,15 @@ namespace GlimmerGrove
         /// Written out rather than assembled from the enum, so the build's string checker can
         /// see every key — the reason <c>WinOverlay.RankKeys</c> is written out too.
         /// </summary>
-        static string TitleKey(Kind kind)
-            => kind == Kind.Restart ? "ui.forfeit.restart_title" : "ui.forfeit.leave_title";
-
-        static string BodyKey(Kind kind, bool prepaid)
+        static string TitleKey(Kind kind, Stakes stake)
         {
+            if (stake == Stakes.Play) return "ui.forfeit.play_title";
+            return kind == Kind.Restart ? "ui.forfeit.restart_title" : "ui.forfeit.leave_title";
+        }
+
+        static string BodyKey(Kind kind, Stakes stake, bool prepaid)
+        {
+            if (stake == Stakes.Play) return "ui.forfeit.play_body";
             if (kind != Kind.Restart) return "ui.forfeit.leave_body";
             return prepaid ? "ui.forfeit.restart_watch_body" : "ui.forfeit.restart_body";
         }
@@ -84,10 +102,10 @@ namespace GlimmerGrove
             // No scrim dismissal. This is a question with a price on it, and a stray tap
             // outside the panel is not an answer to it — the same call AccountOverlay's
             // destructive prompt makes.
-            MakePanel(new Vector2(880f, 800f), Loc.Get(TitleKey(Choice)), dismissOnScrim: false);
+            MakePanel(new Vector2(880f, 800f), Loc.Get(TitleKey(Choice, Stake)), dismissOnScrim: false);
 
             UIKit.Shrinkable(
-                UIKit.Titled("Why", Panel, Loc.Get(BodyKey(Choice, Prepaid)), 32,
+                UIKit.Titled("Why", Panel, Loc.Get(BodyKey(Choice, Stake, Prepaid)), 32,
                              new Color(.36f, .25f, .18f), TextAnchor.UpperCenter,
                              new Vector2(680f, 190f), new Vector2(.5f, 1f), new Vector2(0f, -196f),
                              outline: 0f, shadow: 0f, wrap: true), 22);
@@ -105,17 +123,33 @@ namespace GlimmerGrove
             var seat = UIKit.Box("Cost", Panel, new Vector2(200f, 120f), new Vector2(.5f, 1f),
                                  new Vector2(0f, -390f));
 
-            UIKit.Img("Glow", seat, Art.Glow(96, 2.2f), new Color(.91f, .38f, .35f, .30f),
+            // The tag is the same shape whatever is on it: a glow, the thing, and -1. A play
+            // wears the Battle key's mark in gold — the mark a challenge is entered under —
+            // where a run wears the heart in rose.
+            bool play = Stake == Stakes.Play;
+            var ink = play ? Pal.Gold : Pal.Rose;
+            var glowTint = play ? new Color(1f, .78f, .24f, .28f) : new Color(.91f, .38f, .35f, .30f);
+
+            UIKit.Img("Glow", seat, Art.Glow(96, 2.2f), glowTint,
                       Vector2.one * 170f, new Vector2(.5f, .5f), Vector2.zero);
 
-            var heart = UIKit.Img("Heart", seat, Art.S("Ui/ic_heart"), Pal.Rose,
-                                  Vector2.one * 92f, new Vector2(.5f, .5f), new Vector2(-40f, 0f));
-            heart.preserveAspect = true;
+            // The play's tag is drawn larger than the heart's, with a few units of air between
+            // the mark and the figure (the owner's reading of the first cut: "make them bigger",
+            // "a little gap"). The heart keeps the geometry the run's panel shipped with.
+            float tokenSize = play ? 120f : 92f;
+            float tokenX = play ? -58f : -40f;
+            const float gap = 8f;
 
-            UIKit.Titled("Minus", seat, "-1", 52, Pal.Rose, TextAnchor.MiddleLeft,
-                         new Vector2(90f, 68f), new Vector2(.5f, .5f), new Vector2(46f, 0f), 4f, 3f);
+            var token = UIKit.Img(play ? "Play" : "Heart", seat, Art.S(play ? "Ui/ic_battle" : "Ui/ic_heart"), ink,
+                                  Vector2.one * tokenSize, new Vector2(.5f, .5f), new Vector2(tokenX, 0f));
+            token.preserveAspect = true;
 
-            Tween.Breathe(heart.transform, .05f, 1.9f);
+            var minusBox = play ? new Vector2(110f, 84f) : new Vector2(90f, 68f);
+            float minusX = play ? tokenX + tokenSize * .5f + gap + minusBox.x * .5f : 46f;
+            UIKit.Titled("Minus", seat, "-1", play ? 64 : 52, ink, TextAnchor.MiddleLeft,
+                         minusBox, new Vector2(.5f, .5f), new Vector2(minusX, 0f), 4f, 3f);
+
+            Tween.Breathe(token.transform, .05f, 1.9f);
 
             UIKit.TextButton("Stay", Panel, "btn_green", Loc.Get("ui.forfeit.stay"), 46,
                              new Vector2(620f, 138f), new Vector2(.5f, 0f), new Vector2(0f, 232f),

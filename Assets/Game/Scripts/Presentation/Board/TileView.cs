@@ -7,7 +7,7 @@ using UnityEngine.UI;
 namespace GlimmerGrove
 {
     /// <summary>One cell of the grove: a turnable conduit, a heart-crystal or a sleeping critter.</summary>
-    public sealed class TileView : MonoBehaviour, IPointerClickHandler
+    public sealed class TileView : MonoBehaviour, IPointerDownHandler
     {
         BoardView _board;
         Puzzle _p;
@@ -559,7 +559,15 @@ namespace GlimmerGrove
         }
 
         // ---------------------------------------------------------------- input
-        public void OnPointerClick(PointerEventData e) => _board.OnTileTapped(this);
+        /// <summary>
+        /// A tile answers the press, not the release. A click needs the finger to lift on the
+        /// same tile it landed on and to have travelled less than the event system's drag
+        /// threshold in between — ten pixels, which on a 500-dpi phone is half a millimetre —
+        /// so a tap that rolled slightly, or lifted over the gap between two tiles, was a tap
+        /// the glade never heard. Nothing on a board is cancelled by sliding off it, so the
+        /// press is the whole gesture, and a turn lands the frame the finger does.
+        /// </summary>
+        public void OnPointerDown(PointerEventData e) => _board.OnTileTapped(this);
 
         // ------------------------------------------------------------ animation
         public void Spin(int direction)

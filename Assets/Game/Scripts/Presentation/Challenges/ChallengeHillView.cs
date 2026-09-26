@@ -13,11 +13,22 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// <b>It draws a state and replays a list; it decides nothing.</b> <see cref="Repaint"/>
-    /// puts every widget where <see cref="ChallengeHill"/> says it is, and
-    /// <see cref="Replay"/> walks one turn's events in the order the rules resolved them —
-    /// bolts, steps, blows, musters — so what a player sees is exactly the order the model
-    /// used and nothing this class made up. A widget the replay leaves behind is put right by
-    /// the repaint that follows it.
+    /// puts every widget where <see cref="ChallengeHill"/> says it is, and a replay walks one
+    /// turn's events in the order the rules resolved them — bolts, steps, blows, musters — so
+    /// what a player sees is exactly the order the model used and nothing this class made up.
+    /// </para>
+    /// <para>
+    /// <b>Turns are queued, never awaited by the board</b> (2026-09-26). The first cut had the
+    /// screen wait for the whole replay — a bolt, a step and a blow is about a second — and
+    /// refuse every tap made inside it, which on the glade read as conduits that "sometimes
+    /// don't rotate". Now <see cref="Enqueue"/> takes a turn and returns; the hill drains its
+    /// queue on its own, and a player who moves faster than the hill walks sees it hurry
+    /// (<see cref="Hurry"/>) rather than sees their tap thrown away. <b>Which is why every
+    /// event is drawn off the event and never off the model</b>: with two turns queued the
+    /// model is already two steps ahead of the picture, so a step reads its new distance from
+    /// the event, a bolt takes its damage off the widget's own drawn health, and only the
+    /// repaint that follows the <em>last</em> queued turn asks the model where things stand.
+    /// A widget the replay leaves behind is put right by that repaint.
     /// </para>
     /// <para>
     /// <b>Each colour has a lane, and the lane ends on that colour's post.</b> That is the
@@ -30,6 +41,10 @@ namespace GlimmerGrove
         sealed class Mob
         {
             public int Id, Colour;
+
+            /// <summary>The health the widget is drawn at, stepped by events (see the class note).</summary>
+            public int Shown;
+
             public RectTransform Node;
             public Image Body, Fill;
             public bool Dying;
@@ -37,6 +52,9 @@ namespace GlimmerGrove
 
         sealed class Post
         {
+            /// <summary>The health the post is drawn at, stepped by events.</summary>
+            public int Shown;
+
             public RectTransform Node;
             public Image Body, Fill, Bank;
             public Text Held;
@@ -58,6 +76,14 @@ namespace GlimmerGrove
 
         const float FlightFor = .22f, StepFor = .30f, Stagger = .10f;
 
+        /// <summary>
+        /// How much faster a turn is replayed while another is already waiting behind it. A
+        /// player two moves ahead of the hill sees it catch up in a beat rather than drift
+        /// further behind with every move; the tweens keep their own pace and only the waits
+        /// between beats shorten, so nothing snaps.
+        /// </summary>
+        public const float Hurry = 1.6f;
+
         /// <summary>How far below the band's top edge a raider stands when it musters, in units.</summary>
         public const float HillTopInset = .95f;
 
@@ -66,10 +92,16 @@ namespace GlimmerGrove
         readonly List<Mob> _mob = new List<Mob>(16);
         Post[] _posts;
 
+        readonly Queue<List<ChallengeEvent>> _turns = new Queue<List<ChallengeEvent>>(4);
+        bool _draining;
+
         float _unit, _post, _wide, _hillTop, _hillFoot, _lineY;
 
         /// <summary>The line's top edge, in the host's space: where the puzzle band may begin.</summary>
         public float Foot { get; private set; }
+
+        /// <summary>Whether every queued turn has been drawn. The ending waits on it.</summary>
+        public bool Idle => !_draining && _turns.Count == 0;
 
         // ------------------------------------------------------------------ building
         /// <summary>
@@ -158,7 +190,7 @@ namespace GlimmerGrove
             for (int i = 0; i < _posts.Length; i++)
             {
                 var ward = _hill.Wards[i];
-                var post = new Post();
+                var post = new Post { Shown = ward.Health };
 
                 post.Node = UIKit.Node("Ward", _wall);
                 post.Node.anchorMin = post.Node.anchorMax = new Vector2(.5f, .5f);
@@ -268,29 +300,53 @@ namespace GlimmerGrove
             return Mathf.Lerp(_hillTop, _hillFoot + _unit * .45f, t);
         }
 
-        /// <summary>Bodies sharing a lane step sideways a little so two at one distance both read.</summary>
-        Vector2 Seat(ChallengeRaider raider)
+        /// <summary>
+        /// Where a body of a colour stands at a distance. Bodies sharing a lane step sideways
+        /// a little so two at one distance both read. Takes the distance rather than the
+        /// raider, because during a queued replay the raider's own distance is ahead of the
+        /// picture (the class note).
+        /// </summary>
+        Vector2 Seat(int colour, int id, int distance)
         {
-            float side = ((raider.Id % 3) - 1) * _unit * .28f;
-            return new Vector2(PostX(raider.Colour) + side, MarchY(raider.Distance));
+            float side = ((id % 3) - 1) * _unit * .28f;
+            return new Vector2(PostX(colour) + side, MarchY(distance));
         }
 
         // ------------------------------------------------------------------ painting
+        /// <summary>Put everything where the model says it is, and draw every health as the model holds it.</summary>
         public void Repaint()
         {
-            for (int i = 0; i < _posts.Length; i++) PaintPost(i);
+            for (int i = 0; i < _posts.Length; i++)
+            {
+                _posts[i].Shown = _hill.Wards[i].Health;
+                PaintPost(i);
+            }
 
             for (int i = 0; i < _hill.Raiders.Count; i++)
             {
                 var raider = _hill.Raiders[i];
-                var mob = Widget(raider);
+                var mob = Widget(raider, raider.Distance);
                 if (mob == null) continue;
 
-                mob.Node.anchoredPosition = Seat(raider);
+                mob.Node.anchoredPosition = Seat(raider.Colour, raider.Id, raider.Distance);
+                mob.Shown = raider.Health;
                 PaintHealth(mob, raider);
             }
 
             Reap();
+        }
+
+        void PaintBanks()
+        {
+            for (int i = 0; i < _posts.Length; i++)
+            {
+                var ward = _hill.Wards[i];
+                var post = _posts[i];
+                bool show = ward.Alive && ward.Banked > 0;
+                post.Bank.enabled = show;
+                post.Held.enabled = show;
+                post.Held.text = show ? ward.Banked.ToString() : string.Empty;
+            }
         }
 
         void PaintPost(int i)
@@ -298,7 +354,8 @@ namespace GlimmerGrove
             var ward = _hill.Wards[i];
             var post = _posts[i];
 
-            float frac = ward.MaxHealth > 0 ? ward.Health / (float)ward.MaxHealth : 0f;
+            int shown = Mathf.Clamp(post.Shown, 0, ward.MaxHealth);
+            float frac = ward.MaxHealth > 0 ? shown / (float)ward.MaxHealth : 0f;
             var size = post.Fill.rectTransform.sizeDelta;
             post.Fill.rectTransform.sizeDelta = new Vector2((_post * 1.06f - 4f) * frac, size.y);
             post.Fill.color = frac > .34f ? Pal.Cream : Pal.Rose;
@@ -308,7 +365,7 @@ namespace GlimmerGrove
             post.Held.enabled = show;
             post.Held.text = show ? ward.Banked.ToString() : string.Empty;
 
-            if (!ward.Alive && !post.Down)
+            if (shown <= 0 && !post.Down)
             {
                 post.Down = true;
                 var down = ChallengeArt.WardDown();
@@ -317,20 +374,26 @@ namespace GlimmerGrove
             }
         }
 
-        Mob Widget(ChallengeRaider raider)
+        Mob Widget(ChallengeRaider raider, int distance)
         {
             for (int i = 0; i < _mob.Count; i++) if (_mob[i].Id == raider.Id) return _mob[i];
-            return raider.Alive ? Hatch(raider) : null;
+            return raider.Alive ? Hatch(raider, distance) : null;
         }
 
-        Mob Hatch(ChallengeRaider raider)
+        Mob Widget(int id)
         {
-            var mob = new Mob { Id = raider.Id, Colour = raider.Colour };
+            for (int i = 0; i < _mob.Count; i++) if (_mob[i].Id == id) return _mob[i];
+            return null;
+        }
+
+        Mob Hatch(ChallengeRaider raider, int distance)
+        {
+            var mob = new Mob { Id = raider.Id, Colour = raider.Colour, Shown = raider.MaxHealth };
 
             mob.Node = UIKit.Node("Raider", _mobs);
             mob.Node.anchorMin = mob.Node.anchorMax = new Vector2(.5f, .5f);
             mob.Node.sizeDelta = new Vector2(_unit, _unit);
-            mob.Node.anchoredPosition = Seat(raider);
+            mob.Node.anchoredPosition = Seat(raider.Colour, raider.Id, distance);
 
             float tall = _unit * RaiderTall;
             var frames = ChallengeArt.Raider(raider.Colour);
@@ -393,7 +456,8 @@ namespace GlimmerGrove
 
         void PaintHealth(Mob mob, ChallengeRaider raider)
         {
-            float frac = raider.MaxHealth > 0 ? raider.Health / (float)raider.MaxHealth : 0f;
+            int shown = Mathf.Clamp(mob.Shown, 0, raider.MaxHealth);
+            float frac = raider.MaxHealth > 0 ? shown / (float)raider.MaxHealth : 0f;
             var size = mob.Fill.rectTransform.sizeDelta;
             mob.Fill.rectTransform.sizeDelta = new Vector2((_unit * RaiderTall * .72f - 4f) * Mathf.Clamp01(frac), size.y);
         }
@@ -427,9 +491,46 @@ namespace GlimmerGrove
 
         // ------------------------------------------------------------------ the replay
         /// <summary>
-        /// Play one turn's events in order, then put everything in step. Yields until done.
+        /// Queue one turn's events to be drawn after whatever is already drawing. Returns at
+        /// once; <see cref="Idle"/> says when the queue has run dry. The list is copied,
+        /// because the run reuses its report on the next input.
         /// </summary>
-        public IEnumerator Replay(IReadOnlyList<ChallengeEvent> events)
+        public void Enqueue(IReadOnlyList<ChallengeEvent> events)
+        {
+            var copy = new List<ChallengeEvent>(events.Count);
+            for (int i = 0; i < events.Count; i++) copy.Add(events[i]);
+            _turns.Enqueue(copy);
+
+            if (!_draining) StartCoroutine(Drain());
+        }
+
+        IEnumerator Drain()
+        {
+            _draining = true;
+
+            while (_turns.Count > 0)
+            {
+                var turn = _turns.Dequeue();
+                float pace = _turns.Count > 0 ? Hurry : 1f;
+
+                yield return Replay(turn, pace);
+                if (!this) yield break;
+
+                // Between queued turns only the banks are re-read — they carry no position
+                // and no step, so the model's answer cannot jump anything. The last turn is
+                // followed by the full repaint.
+                if (_turns.Count > 0) PaintBanks();
+                else Repaint();
+            }
+
+            _draining = false;
+        }
+
+        /// <summary>
+        /// Play one turn's events in order, at <paramref name="pace"/> times the resting speed.
+        /// Everything is drawn off the event (the class note).
+        /// </summary>
+        IEnumerator Replay(List<ChallengeEvent> events, float pace)
         {
             int at = 0;
             while (at < events.Count)
@@ -444,11 +545,11 @@ namespace GlimmerGrove
                         int end = at;
                         while (end < events.Count && events[end].Kind == ChallengeEventKind.Bolt) end++;
                         int count = end - at;
-                        float stagger = count > 6 ? .05f : Stagger;
+                        float stagger = (count > 6 ? .05f : Stagger) / pace;
 
                         for (int i = at; i < end; i++) Bolt(events[i], (i - at) * stagger);
 
-                        yield return new WaitForSecondsRealtime((count - 1) * stagger + FlightFor + .12f);
+                        yield return new WaitForSecondsRealtime((count - 1) * stagger + FlightFor + .12f / pace);
                         at = end;
                         continue;
                     }
@@ -460,20 +561,20 @@ namespace GlimmerGrove
 
                         for (int i = at; i < end; i++) Step(events[i]);
 
-                        yield return new WaitForSecondsRealtime(StepFor);
+                        yield return new WaitForSecondsRealtime(StepFor / pace);
                         at = end;
                         continue;
                     }
 
                     case ChallengeEventKind.Struck:
                         Struck(e);
-                        yield return new WaitForSecondsRealtime(.16f);
+                        yield return new WaitForSecondsRealtime(.16f / pace);
                         break;
 
                     case ChallengeEventKind.Mustered:
                     {
                         var raider = _hill.Find(e.Raider);
-                        if (raider != null) Widget(raider);
+                        if (raider != null) Widget(raider, e.Amount);
                         break;
                     }
                 }
@@ -481,16 +582,14 @@ namespace GlimmerGrove
                 at++;
             }
 
-            yield return new WaitForSecondsRealtime(.08f);
-            Repaint();
+            yield return new WaitForSecondsRealtime(.08f / pace);
         }
 
         void Bolt(ChallengeEvent e, float delay)
         {
             var post = _posts[e.Ward];
             var raider = _hill.Find(e.Raider);
-            Mob mob = null;
-            for (int i = 0; i < _mob.Count; i++) if (_mob[i].Id == e.Raider) mob = _mob[i];
+            var mob = Widget(e.Raider);
             if (mob == null || raider == null) return;
 
             int colour = _hill.Wards[e.Ward].Colour;
@@ -545,12 +644,16 @@ namespace GlimmerGrove
 
                     if (node) Tween.Punch(node, .1f, .14f);
 
+                    // The blow comes off the drawn health, never the model's: with turns
+                    // queued the model may already hold the next turn's answer.
+                    mob.Shown -= e.Amount;
+
                     if (e.Ended)
                     {
                         Audio.SfxVaried("zap", .42f);
-                        if (mob != null && !mob.Dying) Fell(mob);
+                        if (!mob.Dying) Fell(mob);
                     }
-                    else if (mob != null)
+                    else
                     {
                         PaintHealth(mob, raider);
                     }
@@ -605,11 +708,13 @@ namespace GlimmerGrove
             var raider = _hill.Find(e.Raider);
             if (raider == null) return;
 
-            var mob = Widget(raider);
+            // Hatched at the step's own distance plus one if a muster was never drawn, so a
+            // body the picture has not met walks in from the top rather than appearing mid-hill.
+            var mob = Widget(raider, e.Amount + 1);
             if (mob == null) return;
 
             Tween.KillChannel(mob.Node, "walk");
-            Tween.Move(mob.Node, Seat(raider), StepFor, Ease.InOutSine);
+            Tween.Move(mob.Node, Seat(raider.Colour, raider.Id, e.Amount), StepFor, Ease.InOutSine);
         }
 
         void Struck(ChallengeEvent e)
@@ -617,12 +722,14 @@ namespace GlimmerGrove
             var post = _posts[e.Ward];
             Tween.Punch(post.Body.transform, .16f, .22f);
             Tween.Shake(post.Node, _unit * .08f, .25f);
+
+            post.Shown -= e.Amount;
             PaintPost(e.Ward);
 
             Audio.Sfx(e.Ended ? "shatter" : "poke", .5f);
 
-            for (int i = 0; i < _mob.Count; i++)
-                if (_mob[i].Id == e.Raider) Tween.Punch(_mob[i].Node, .2f, .2f);
+            var mob = Widget(e.Raider);
+            if (mob != null) Tween.Punch(mob.Node, .2f, .2f);
         }
     }
 }

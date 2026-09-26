@@ -1,92 +1,102 @@
 # -*- coding: utf-8 -*-
-"""Draws the Ranks page and the map's rank badge, at the size a phone draws them.
+"""Draws the hall of ranks (`RanksScreen`) and the map's rank badge, at the size a phone draws them.
 
-    python Tools/render_ranks.py                 # the page, three rungs earned
-    python Tools/render_ranks.py --held 0        # an account below the first rung
-    python Tools/render_ranks.py --held 7        # the top of the ladder
-    python Tools/render_ranks.py --tall          # the whole scrolling page
-    python Tools/render_ranks.py --map           # the badge in the map's chrome
-    python Tools/render_ranks.py --contact       # every state side by side
+    python Tools/render_ranks.py                    # three rungs held, the held one on the stage
+    python Tools/render_ranks.py --held 0           # an account below the first rung
+    python Tools/render_ranks.py --held 7           # the top of the ladder
+    python Tools/render_ranks.py --held 3 --show 5  # a locked rung chosen on the stage
+    python Tools/render_ranks.py --tall             # a 20:9 phone, where the stage takes the air
+    python Tools/render_ranks.py --map              # the badge in the map's chrome
+    python Tools/render_ranks.py --contact          # every state side by side
 
-**Why this exists.** Every question this page raises is a picture. Does the ladder read as a
-ladder or as seven unrelated badges; is the rung being climbed obviously the one to look at;
-does a locked rung read as *not yet* or as broken art; does a rank name fit its plate. No
-numeric gate in this project can open a PNG, and the Editor cannot photograph a
-`ScreenSpaceOverlay` canvas — so the page is judged here, the way every board is (`CRAFT.md`).
+**Why this exists.** Every question this page raises is a picture. Does the badge on the stage
+read as *the thing you hold* or as a sticker on a wall; does the ring read as filling; does the
+rail read as a ladder with a place on it; does a locked rung read as *not yet* rather than as
+broken; does a rank name fit its band. No numeric gate in this project can open a PNG and the
+Editor cannot photograph a `ScreenSpaceOverlay` canvas, so the page is judged here, the way
+every board is (`CRAFT.md`).
 
 **And it measures, which is the half a picture cannot do.** `UIKit.Shrinkable` truncates
 silently, so a caption that does not fit is not a caption that wraps — it is a caption with its
 end cut off, and the tell is Best Fit settling at its floor (invariant 19n). Every line this
-page can say is measured against the box it is drawn in, and the settled size is printed.
+page can say is measured against the box it is drawn in and the settled size is printed.
 **That is the reading to look at first**, because a rank ladder is content: a live-ops retune
-that pushes a target from 100 to 100,000 lengthens a sentence nobody re-measured.
+that pushes a target from 100 to 100,000 lengthens a sentence nobody re-measured. `--contact`
+walks every rung onto the stage precisely so that every name, blurb and sentence is measured
+once per run.
 
 **It reads the shipped content.** The rungs, their requirements, their names and every sentence
 come out of `progression.json` and `loc/en.json`, so a retune redraws rather than going stale —
 a mirror with its own numbers answers questions about a screen the game does not draw
-(invariant 44d).
+(invariant 44d). Every layout constant is named after the `RanksScreen` field it copies.
 
-**Nothing on this page is transparent, and the mirror has to be honest about that.** An
-unearned rung is a *darker plate* rather than a fainter one (`RanksScreen`'s class remarks), so
-this file carries no alpha fade for a locked card, a locked well or a locked badge. If one
-creeps back in, the sheet stops being able to answer the question the change was made for.
-
-**It does not draw the tweens.** Nothing here says whether the light around the rung being
-climbed *breathes* well; what it says is whether the light is visible at all against the kit's
-navy, and whether exactly one row has it.
+**What it cannot answer.** Whether the fans turning and the aurora drifting read as light or as
+noise; whether the badge swap on a tap reads as one thing turning; whether the spark at the
+head of the ring reads as the arc *filling*. Those are a device, and the C# says where the dials
+are.
 """
 from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from PIL import Image                                       # noqa: E402
+from PIL import Image, ImageDraw                            # noqa: E402
 import hudkit as K                                          # noqa: E402
 
+REPO = Path(__file__).resolve().parents[1]
+RANK_ART = REPO / "Assets" / "Game" / "Art" / "Ui" / "Rank"
+CONTENT = REPO / "Assets" / "StreamingAssets" / "Content"
+
 W, H = K.W, K.H
+TALL_H = 2400                       # a 20:9 phone's canvas, 1080 across
 
-CONTENT = K.REPO / "Assets" / "StreamingAssets" / "Content"
-RANK_ART = K.UI / "Rank"
-
+TABLE = json.loads((CONTENT / "progression.json").read_text(encoding="utf8"))
 LOC = {e["key"]: e["text"]
-       for e in json.loads((CONTENT / "loc" / "en.json").read_text(encoding="utf-8"))["entries"]}
-TABLE = json.loads((CONTENT / "progression.json").read_text(encoding="utf-8"))
-MANIFEST = json.loads((CONTENT / "manifest.json").read_text(encoding="utf-8"))
-
+       for e in json.loads((CONTENT / "loc" / "en.json").read_text(encoding="utf8"))["entries"]}
 RUNGS = (TABLE.get("ranks") or {}).get("rungs") or []
 
 # ------------------------------------------------------------------ RanksScreen's numbers
-CHROME = 92.0
-BANNER_H = 138.0
-HERO_H = 420.0
-WIDTH = 1024.0
-ROW_HEAD, LINE_H, BAR_BAND, ROW_FOOT, ROW_GAP = 214.0, 66.0, 84.0, 26.0, 28.0
-WELL_INSET, WELL_H = 30.0, 56.0
-BADGE, BADGE_SEAT = 176.0, 198.0
-MARK_W, COUNT_W, ANSWER = 34.0, 200.0, 88.0
-CHIP_W, CHIP_H = 136.0, 40.0
-BAR_TROUGH, BAR_H = 36.0, 32.0
-HERO_BADGE, HERO_BADGE_X = 268.0, 216.0
-TEXT_X = HERO_BADGE_X + HERO_BADGE * .5 + 40.0
-PIP_SEAT, PIP_GAP, PIP_FACE = 68.0, 22.0, .84
-LINK_W = 14.0
+# The stack. Every one of these is named after the field it mirrors; a typed copy that drifted
+# would be a mirror telling a comfortable lie about the screen (invariant 44d).
+CHROME, BANNER_H, HEADER_TOP = 92.0, 138.0, 22.0
+HEADER_H = HEADER_TOP + BANNER_H + 10.0
+STAGE_LEAST, STAGE_MOST = 820.0, 1.24
+RAIL_H = 150.0
+SEAT, SEAT_PITCH_MOST, SEAT_FACE, SEAT_FACE_LOCKED, SEAT_CHOSEN = 104.0, 140.0, .82, .64, 1.22
+LINK_THICK, LINK_GAP, LOCK_CHIP = 12.0, 6.0, 34.0
+PLATE_W, PLATE_HEAD, LINE_H, PLATE_FOOT = 1024.0, 76.0, 88.0, 22.0
+PLATE_GAP, FOOT_PAD = 18.0, 24.0
+WELL_INSET, WELL_H, MARK, COUNT_W, BAR_H = 26.0, 78.0, 38.0, 210.0, 12.0
+INSET_ALLOWANCE = 150.0
+SHORTEST_CANVAS = 1080.0 * 1.75             # CanvasFit.ShortestCanvas
 
-#: `RankLook.Ghost` - how the hero and the map corner draw the first rung to an account that
-#: has not reached it. The one alpha on this page, and the C# says why it is not the fault the
-#: rest of the page was rebuilt to fix.
-GHOST = .38
+# The stage, down from its top (`RanksScreen`: the cluster hangs from the top of a stage that
+# stretches, so a tall phone's air lands above the rail).
+RING_TOP, RING_SIZE, RING_THICK, BADGE = 320.0, 540.0, 9.0, 420.0
+CHEVRON_X, CHEVRON = 380.0, 92.0
+CHIP_TOP, CHIP_W, CHIP_H = RING_TOP + RING_SIZE * .5, 156.0, 46.0
+EYEBROW_TOP, EYEBROW_H = 646.0, 32.0
+NAME_TOP, NAME_H = 704.0, 76.0
+PILL_TOP, PILL_H, PILL_W = 790.0, 56.0, 600.0
+TEXT_W = 900.0
+HALO, CORE, FAN, FAN2, SPARK = 980.0, 560.0, 1300.0, 940.0, 58.0
+FAN_A, FAN2_A, HALO_A, CORE_A = .22, .13, .46, .34
+AURORA_HOME = [(-360.0, 240.0), (380.0, 470.0)]      # down from the top
+AURORA_SIZE = [980.0, 820.0]
+AURORA_A = [.18, .13]
+WASH_MID, WASH_TOP = .80, .97
 
-#: `RanksScreen.LockedInk` and `LockedName` - **opaque**, and recede by value. There is no
-#: `Unearned` alpha here any more and there must not be one again; see the module docstring.
+WASH_DEEP = (0x0F, 0x15, 0x52)
+TROUGH = (8, 13, 36)
 LOCKED_INK = (147, 166, 196)
-LOCKED_NAME = (192, 207, 228)
+BAR_ORANGE = (255, 150, 30)
 
-#: `RankLook.Metals`, in ladder order. Measured off the badges themselves and two settled by
-#: eye - the C# file says which two and why.
+#: `RankLook.Metals`, in ladder order.
 METALS = [
     (0xF0, 0x8A, 0x46),   # 1 Cinderling  - copper
     (0xC6, 0xD8, 0xEE),   # 2 Silverwatch - steel
@@ -99,10 +109,7 @@ METALS = [
 
 #: `LevelsScreen.CornerSize` / `CornerX` / `CornerY`, and `RankBadge`'s own block.
 CORNER, CORNER_X, CORNER_Y = 118.0, 96.0, 132.0
-#: `RankBadge`'s own block, twice the size it was cut at. The width is what bounds it: the
-#: block is centred on `CornerX`, 96 from the safe area's edge, so a box wider than 192 hangs a
-#: centred rank name off the side of the screen.
-MARK_SIZE, NAME_H, BADGE_W = 184.0, 44.0, 192.0
+MARK_SIZE, NAME_BLOCK_H, BADGE_W = 184.0, 44.0, 192.0
 BOOST_GAP = 18.0
 
 #: Every settled font size this run measured, so the floors can be reported in one place.
@@ -114,6 +121,11 @@ def metal(ordinal):
     return METALS[max(0, ordinal - 1) % len(METALS)]
 
 
+def lift(colour, t):
+    """`Pal.Lift` - toward white."""
+    return tuple(int(round(c + (255 - c) * t)) for c in colour)
+
+
 def txt(key, *args):
     s = LOC.get(key, "<%s>" % key)
     for i, a in enumerate(args):
@@ -121,383 +133,387 @@ def txt(key, *args):
     return s
 
 
-def badge(rid, box, ghost=False):
-    """One rung's picture, at `box` pixels, ghosted when it is standing in for an unheld rank.
-
-    **A card's badge is never dimmed, in any state**, mirroring `RanksScreen`: the badge is the
-    thing a player is working toward and the only reason to scroll, and a page of bright
-    medallions down a ladder is a trophy case. What says *not yet* is the plate under it, the
-    padlock beside it and the drained ordinal chip - three solid things instead of one faded
-    one.
-
-    **`ghost` is for the two places that draw a badge nobody holds** - the hero's seat and the
-    map's corner, both showing the first rung to an account below it (`RankLook.Ghost`). Alpha
-    and never a tint, because a multiply turns bronze to mud (invariant 44g).
-    """
+def badge(rid, box):
+    """One rung's picture, at `box` pixels. **Never dimmed, in any state** (`RanksScreen`)."""
     path = RANK_ART / ("%s.png" % rid)
     if not path.exists():
         return Image.new("RGBA", (int(box), int(box)), (255, 0, 0, 90))
-
-    im = K.fit(Image.open(path).convert("RGBA"), (box, box))
-    if not ghost:
-        return im
-
-    faded = im.copy()
-    faded.putalpha(im.getchannel("A").point(lambda a: int(a * GHOST)))
-    return faded
+    return K.fit(Image.open(path).convert("RGBA"), (box, box))
 
 
-def burst(box, colour, alpha):
-    """`Art.Rays(256, 16)` in a rung's metal - the light behind an earned badge.
+def icon(name, box, colour):
+    return K.tint(K.fit(Image.open(K.UI / (name + ".png")).convert("RGBA"), (box, box)), colour)
 
-    A fan rather than the kit's starburst, and the C# says why: a hard-rimmed star overhangs the
-    plate at any size that reads as rays, because the badge column is inset only `WELL_INSET`.
-    """
-    box = int(box)
-    fan = K.rays(256, 16).resize((box, box), Image.LANCZOS)
-    im = Image.new("RGBA", fan.size, (*colour, 0))
-    im.putalpha(fan.point(lambda v: int(v * alpha)))
+
+def ring(size, thick, colour, alpha=1.0, sweep=None):
+    """`Art.Ring` at `size`, and with `sweep` the radial fill uGUI draws over it: clockwise
+    from the bottom, which is where the chip covers the seam."""
+    size = int(size)
+    im = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    t = thick * size / 256.0
+    box = [t / 2, t / 2, size - t / 2, size - t / 2]
+    fill = (*colour, int(255 * alpha))
+    if sweep is None or sweep >= .999:
+        d.ellipse(box, outline=fill, width=int(round(t)))
+    elif sweep > 0:
+        # Pillow's angles run clockwise from 3 o'clock on a y-down image. Bottom is 90; a
+        # clockwise sweep on screen from the bottom goes toward the right on a y-down image,
+        # which is *decreasing* angle here.
+        d.arc(box, start=90 - sweep * 360, end=90, fill=fill, width=int(round(t)))
+    return im
+
+
+def spark(size, colour):
+    """`Art.Spark(96)` - a four-pointed star of light."""
+    size = int(size)
+    im = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    px = im.load()
+    h = size / 2.0
+    for y in range(size):
+        for x in range(size):
+            dx, dy = abs(x - h) / (h - 1), abs(y - h) / (h - 1)
+            v = dx ** .45 + dy ** .45
+            a = max(0.0, min(1.0, (1 - v) * 5))
+            px[x, y] = (*colour, int(255 * a))
     return im
 
 
 # ------------------------------------------------------------------ the readings
-def held_of(rung, order, held):
-    """What state a row is in: earned, the one being climbed, or locked."""
-    if order <= held:
+def standing_of(order, held):
+    if order == held:
+        return "held"
+    if order < held:
         return "earned"
-    return "climbing" if order == held + 1 else "locked"
+    return "next" if order == held + 1 else "locked"
 
 
 def chapter_name(cid):
-    key = "chapter.%s.name" % cid
-    return LOC.get(key, cid)
+    return LOC.get("chapter.%s.name" % cid, cid)
 
 
 def level_name(lid):
-    key = "level.%s.name" % lid
-    return LOC.get(key, lid)
+    return LOC.get("level.%s.name" % lid, lid)
 
 
 def sentence(line):
     """One requirement, exactly as `RankRequirement.Sentence` builds it."""
     measure, scope, target = line["measure"], line.get("scope"), line["target"]
-
     if scope:
         named = chapter_name(scope) if measure != "best_wave" else level_name(scope)
         key = "rank.req.%s.in" % measure
         if key in LOC:
             return txt(key, target, named)
-
     return txt("rank.req.%s" % measure, target)
 
 
 def progress(line, held, order):
-    """A plausible figure for the drawing: full on an earned rung, part-way on the next.
+    """A plausible figure for the drawing: full on an earned rung, part-way on the next, a
+    little on the one after.
 
-    **Invented rather than read**, and said out loud because a mirror may not tell a comfortable
-    lie about the screen (invariant 44d): there is no save here, so what this draws is the
-    *shape* of a fraction rather than anybody's real one. What it is for is measuring how wide
-    the widest of them gets.
+    **Invented rather than read**, and said out loud because a mirror may not tell a
+    comfortable lie about the screen (invariant 44d): there is no save here, so what this draws
+    is the *shape* of a fraction rather than anybody's real one. What it is for is measuring how
+    wide the widest of them gets and how a part-filled ring and bar look.
     """
     target = line["target"]
     if order <= held:
         return target
     if order == held + 1:
         return max(0, int(target * .45))
+    if order == held + 2:
+        return max(0, int(target * .12))
     return 0
 
 
+def share(rung, held, order):
+    """`RanksScreen.Share` - the mean of the clamped line shares."""
+    lines = rung["requires"]
+    if not lines:
+        return 1.0
+    return sum(min(1.0, progress(l, held, order) / float(l["target"])) for l in lines) / len(lines)
+
+
+def plate_band():
+    """`RanksScreen.PlateBand` - the tallest rung's plate, bounded by the shortest canvas."""
+    most = max((len(r["requires"]) for r in RUNGS), default=1)
+    wanted = PLATE_HEAD + max(1, most) * LINE_H + PLATE_FOOT
+    room = SHORTEST_CANVAS - INSET_ALLOWANCE - HEADER_H - STAGE_LEAST - RAIL_H - PLATE_GAP - FOOT_PAD
+    return min(wanted, room)
+
+
 # ------------------------------------------------------------------ the page
-def header(sheet, y):
+def header(sheet):
     """`RanksScreen.BuildHeader`."""
-    cy = y + BANNER_H / 2
+    cy = HEADER_TOP + BANNER_H / 2
     K.paste(sheet, K.skin("sq_blue", CHROME, CHROME), 76, cy)
-    K.paste(sheet, K.tint(K.fit(Image.open(K.UI / "ic_left.png").convert("RGBA"), (46, 46)),
-                          K.CREAM), 76, cy)
+    K.paste(sheet, icon("ic_left", 46, K.CREAM), 76, cy)
 
-    ribbon = K.skin("Hud/title", 720, BANNER_H)
-    plate = Image.new("RGBA", ribbon.size, (0, 0, 0, 0))
-    plate.alpha_composite(ribbon)
-    K.text(plate, txt("ui.ranks.title").upper(), plate.width / 2, plate.height / 2 - 6, 42,
-           fill=K.SUN)
-    K.paste(sheet, plate, W / 2, cy)
-    y += BANNER_H + 4
-
-    px = K.shrunk(sheet, txt("ui.ranks.subtitle"), W / 2, y + 16, 880, 32, 24, 15,
-                  fill=(219, 229, 255), outline=0)
-    MEASURED.append(("subtitle", px, 15))
-
-    return y + 32 + 16
+    ribbon = K.skin("ribbon_orange", 720, BANNER_H).rotate(1.6, resample=Image.BICUBIC, expand=True)
+    K.paste(sheet, ribbon, W / 2, cy)
+    K.text(sheet, txt("ui.ranks.title").upper(), W / 2, cy - 4, 42, fill=K.CREAM, outline=4)
 
 
-def pips(sheet, cy, held):
-    """`RanksScreen.BuildPips` - every rung in the game as one strip of seats.
+def stage(sheet, top, bottom, held, chosen):
+    """`RanksScreen.BuildStage` + `DressStage` + `PaintStage`: the room, the light, the ring,
+    the badge, the words - for the rung chosen."""
+    sh = int(bottom - top)
+    room = Image.new("RGBA", (W, sh), (0, 0, 0, 0))
+    cx = W / 2
 
-    **An unearned seat is drawn empty rather than dimmed.** A strip of seven bright badges says
-    nothing at all and a strip of seven faint ones says the art is broken; a hole is
-    unambiguous. It is the only thing on the page that answers "how far up am I" without
-    scrolling, which on a phone is four of seven rungs away.
-    """
+    # `RanksScreen.StageFit`: the hero cluster is laid out at the least stage's size and scaled
+    # to the room, so everything from here down to the fireflies is drawn on `layer` at 1:1 and
+    # the layer is scaled once, exactly as the canvas scales the node. Captions are therefore
+    # measured at the size they are *laid out* at, which is the size Best Fit sees.
+    grow = min(max(sh / STAGE_LEAST, 1.0), STAGE_MOST)
+    layer = Image.new("RGBA", (W, int(STAGE_LEAST)), (0, 0, 0, 0))
+    order = chosen
+    rung = RUNGS[order - 1]
+    tone = metal(order)
+    lit = lift(tone, .45)
+    standing = standing_of(order, held)
+    live = standing != "locked"
+
+    # The wash: opaque at the top of the stage, gone at its foot.
+    wash = Image.new("RGBA", (W, sh), (0, 0, 0, 0))
+    wp = wash.load()
+    for y in range(sh):
+        k = 1 - y / float(sh - 1)                    # 1 at the top; `Art.Gradient` is linear
+        a = (WASH_MID + (WASH_TOP - WASH_MID) * (k - .5) * 2) if k > .5 else (WASH_MID * k * 2)
+        row = (*WASH_DEEP, int(255 * a))
+        for x in range(W):
+            wp[x, y] = row
+    room.alpha_composite(wash)
+    # Fireflies, at rest: a scatter in the metal's lift.
+    rng = 7
+    for i in range(16):
+        rng = (rng * 1103515245 + 12345) & 0x7fffffff
+        fx = (rng % 1080) - 540
+        rng = (rng * 1103515245 + 12345) & 0x7fffffff
+        fy = rng % sh
+        rng = (rng * 1103515245 + 12345) & 0x7fffffff
+        fs = 5 + rng % 12
+        K.paste(room, K.glow(int(fs * 2), 1.7, lift(tone, .35), .45), cx + fx, fy)
+
+
+    # The aurora is the stage's, hung from its top; the fans, the halo and the core are the
+    # cluster's but **unclipped by it** - only the stage masks - so they are drawn on the room at
+    # the cluster's scale rather than on the layer, which would crop them to the cluster's box
+    # (a mirror that under-draws sends you off to fix what is not broken, 44d).
+    for i, (hx, hy) in enumerate(AURORA_HOME):
+        K.paste(room, K.glow(int(AURORA_SIZE[i]), 1.7, tone if i == 0 else lit, AURORA_A[i]),
+                cx + hx, hy)
+    ry_room = sh - (STAGE_LEAST - RING_TOP) * grow
+
+    def fan(size, count, colour, alpha, angle):
+        f = K.rays(256, count).resize((int(size), int(size)), Image.LANCZOS).rotate(angle, resample=Image.BICUBIC)
+        im = Image.new("RGBA", f.size, (*colour, 0))
+        im.putalpha(f.point(lambda v: int(v * alpha)))
+        return im
+
+    ry = RING_TOP
+    K.paste(room, fan(FAN * grow, 14, tone, FAN_A, 11), cx, ry_room)
+    K.paste(room, fan(FAN2 * grow, 7, lit, FAN2_A, -23), cx, ry_room)
+    K.paste(room, K.glow(int(HALO * grow), 1.8, tone, HALO_A), cx, ry_room)
+
+    K.paste(room, K.glow(int(CORE * grow), 2.4, lift(tone, .5), CORE_A), cx, ry_room)
+    K.paste(layer, ring(RING_SIZE, RING_THICK, TROUGH, .78), cx, ry)
+    fill = share(rung, held, order)
+    K.paste(layer, ring(RING_SIZE, RING_THICK, tone, 1.0, sweep=fill), cx, ry)
+    if fill > .004:
+        a = fill * math.pi * 2
+        r = RING_SIZE / 2 - RING_THICK * (RING_SIZE / 256.0) / 2
+        K.paste(layer, spark(SPARK, lift(tone, .55)), cx - math.sin(a) * r, ry + math.cos(a) * r)
+
+    K.paste(layer, badge(rung["id"], BADGE), cx, ry)
+
+    for sx, name, on in ((-CHEVRON_X, "ic_left", order > 1), (CHEVRON_X, "ic_right", order < len(RUNGS))):
+        cap = K.skin("sq_blue", CHEVRON, CHEVRON)
+        if not on:
+            cap = K.tint(cap, (158, 168, 179), .85)
+        K.paste(layer, cap, cx + sx, ry)
+        K.paste(layer, icon(name, CHEVRON * .5, K.CREAM if on else (255, 255, 255)), cx + sx, ry - CHEVRON * .04)
+
+    # The ordinal chip on the ring's foot.
+    chip_y = CHIP_TOP
+    K.paste(layer, K.round_rect(CHIP_W, CHIP_H, 14, (0, 0, 0), .55), cx, chip_y)
+    K.paste(layer, K.round_rect(CHIP_W, CHIP_H, 14, tone, 1.0, width=3), cx, chip_y)
+    ordinal = txt("ui.ranks.ordinal", order)
+    px = K.shrunk(layer, ordinal, cx, chip_y, CHIP_W - 16, 30, 24, 14, fill=tone, outline=2)
+    MEASURED.append(("ordinal '%s'" % ordinal, px, 14))
+
+    eyebrow = {"held": "ui.ranks.mark", "earned": "ui.ranks.earned",
+               "next": "ui.ranks.next", "locked": "ui.ranks.locked"}[standing]
+    eyebrow = txt(eyebrow).upper()
+    px = K.shrunk(layer, eyebrow, cx, EYEBROW_TOP, TEXT_W, EYEBROW_H, 26, 15,
+                  fill=lift(tone, .25) if live else LOCKED_INK, outline=2)
+    MEASURED.append(("eyebrow '%s'" % eyebrow, px, 15))
+
+    # The name, with `TextGradient`'s shimmer across it: lift .70 at the ends, .30 in the
+    # middle, over white type.
+    name = txt("rank.%s.name" % rung["id"])
+    px = K.shrunk(layer, name, cx, NAME_TOP, TEXT_W, NAME_H, 78, 34, fill=lift(tone, .55), outline=3)
+    MEASURED.append(("name '%s'" % name, px, 34))
+
+    if standing == "held":
+        pill = txt("ui.ranks.top") if order >= len(RUNGS) else txt("ui.ranks.held_count", held, len(RUNGS))
+    elif standing == "earned":
+        pill = txt("ui.ranks.held_count", held, len(RUNGS))
+    elif standing == "next":
+        pill = txt("ui.ranks.progress", int(round(fill * 100)))
+    else:
+        pill = txt("ui.ranks.locked_hint", txt("rank.%s.name" % RUNGS[order - 2]["id"]))
+
+    py = PILL_TOP
+    K.paste(layer, K.round_rect(PILL_W, PILL_H, 28, (10, 18, 46), .82), cx, py)
+    K.paste(layer, K.round_rect(PILL_W, PILL_H, 28, (255, 255, 255), .13, width=3), cx, py)
+    K.paste(layer, icon("ic_star", PILL_H * .52, K.CREAM), cx - PILL_W / 2 + PILL_H * .42, py)
+    left = cx - PILL_W / 2 + PILL_H * .82
+    px = K.shrunk_left(layer, pill, left, py - (PILL_H - 4) / 2, PILL_W - PILL_H * .82 - 16, PILL_H - 4,
+                       26, 16, fill=K.CREAM, outline=3)
+    MEASURED.append(("pill '%s'" % pill, px, 16))
+
+    if grow != 1.0:
+        layer = layer.resize((int(round(layer.width * grow)), int(round(layer.height * grow))), Image.LANCZOS)
+    # Pivoted at its foot: the cluster stands on the stage's bottom edge and grows upward.
+    room.alpha_composite(layer, (int((W - layer.width) / 2), int(sh - layer.height)))
+    print("  hero cluster at x%.2f in a %d stage" % (grow, sh))
+    sheet.alpha_composite(room, (0, int(top)))
+
+
+def rail(sheet, bottom, held, chosen):
+    """`RanksScreen.BuildRail` + `PaintRail`: every rung as a seat, chained."""
     n = len(RUNGS)
-    if n <= 0:
-        return
-
-    room = WIDTH - 80
-    pitch = min(PIP_SEAT + PIP_GAP, room / n)
-    seat = min(PIP_SEAT, pitch - 8)
+    cy = bottom - RAIL_H / 2
+    pitch = min(SEAT_PITCH_MOST, (PLATE_W - 40) / n)
+    seat = min(SEAT, pitch - 10)
     x0 = W / 2 - pitch * (n - 1) / 2
 
+    # The chain first, under every seat.
+    for i in range(n - 1):
+        tone = metal(i + 1)
+        length = pitch - seat - LINK_GAP * 2
+        on = (i + 1) < held
+        K.paste(sheet, K.round_rect(length, LINK_THICK, LINK_THICK / 2,
+                                    tone if on else (255, 243, 220), .85 if on else .14),
+                x0 + pitch * i + pitch / 2, cy)
+
     for i, rung in enumerate(RUNGS):
+        order = i + 1
         x = x0 + pitch * i
-        K.paste(sheet, K.skin("Hud/slot", seat, seat), x, cy)
-        if i < held:
-            K.paste(sheet, badge(rung["id"], seat * PIP_FACE), x, cy)
-        if i == held - 1:
-            K.paste(sheet, K.round_rect(seat + 6, seat + 6, 18, metal(i + 1), .95, width=4), x, cy)
+        tone = metal(order)
+        standing = standing_of(order, held)
+        earned = standing in ("held", "earned")
+        nxt = standing == "next"
+        scale = SEAT_CHOSEN if order == chosen else 1.0
+        s = seat * scale
+
+        if earned:
+            K.paste(sheet, K.glow(int(s * 1.9), 2.0, tone, .34), x, cy)
+        elif nxt:
+            K.paste(sheet, K.glow(int(s * 1.9), 2.0, tone, .18), x, cy)
+            # The pulse, caught mid-breath.
+            K.paste(sheet, ring(s + 16 + 24, 8 * 128 / (s + 16), tone, .45), x, cy)
+
+        K.paste(sheet, K.skin("Hud/slot", s, s), x, cy)
+        K.paste(sheet, K.round_rect(s, s, 20, tone, .95 if earned else (.75 if nxt else .30), width=5), x, cy)
+        face = SEAT_FACE if (earned or nxt) else SEAT_FACE_LOCKED
+        K.paste(sheet, badge(rung["id"], s * face), x, cy)
+
+        if not earned and not nxt:
+            lx = x + s / 2 - LOCK_CHIP * .34
+            ly = cy + s / 2 - LOCK_CHIP * .34
+            K.paste(sheet, K.skin("sq_dark", LOCK_CHIP, LOCK_CHIP), lx, ly)
+            K.paste(sheet, icon("ic_lock", LOCK_CHIP * .58, LOCKED_INK), lx, ly)
 
 
-def hero(sheet, y, held):
-    """`RanksScreen.BuildHero` - the badge worn now, large, in its own metal, over the strip."""
-    cy = y + HERO_H / 2
-    K.paste(sheet, K.skin("Hud/panel", WIDTH, HERO_H), W / 2, cy)
-
-    left = W / 2 - WIDTH / 2
-    accent = metal(held) if held else K.SUN
-
-    # **Clipped to the plate, because the screen clips it** - `BuildHero` parents the fan to a
-    # `RectMask2D` inset 8 from the plate's own edge. An unclipped mirror draws a sunburst
-    # spilling onto the wall, which is a picture of a screen this game does not draw (44d).
-    fan = K.rays(256, 14).resize((int(HERO_H * 2.3), int(HERO_H * 2.3)), Image.LANCZOS)
-    lit = Image.new("RGBA", fan.size, (*accent, 0))
-    lit.putalpha(fan.point(lambda v: int(v * .17)))
-
-    clip = Image.new("RGBA", (int(WIDTH - 16), int(HERO_H - 16)), (0, 0, 0, 0))
-    clip.alpha_composite(lit, (int(clip.width / 2 - lit.width / 2),
-                               int(clip.height / 2 - 24 - lit.height / 2)))
-    K.paste(sheet, clip, W / 2, cy)
-
-    bx, by = left + HERO_BADGE_X, cy - 34
-    K.paste(sheet, K.glow(int(HERO_BADGE * 1.5), 2.1, accent, .34 if held else .18), bx, by)
-    K.paste(sheet, K.skin("Hud/slot", HERO_BADGE * 1.12, HERO_BADGE * 1.12), bx, by)
-
-    K.paste(sheet, K.round_rect(HERO_BADGE * 1.12, HERO_BADGE * 1.12, 24, accent,
-                                .95 if held else .35, width=6), bx, by)
-
-    rid = RUNGS[held - 1]["id"] if held else RUNGS[0]["id"]
-    K.paste(sheet, badge(rid, HERO_BADGE, ghost=not held), bx, by)
-
-    name = txt("rank.%s.name" % rid) if held else txt("ui.ranks.unranked")
-    blurb = txt("rank.%s.blurb" % rid) if held else txt("ui.ranks.unranked_blurb")
-
-    text_x = left + TEXT_X
-    text_w = (left + WIDTH) - text_x - 40
-
-    px = K.shrunk_left(sheet, txt("ui.ranks.mark"), text_x, cy - 148 - 15, text_w, 30, 24, 14,
-                       fill=accent, outline=2)
-    MEASURED.append(("hero kicker", px, 14))
-
-    px = K.shrunk_left(sheet, name, text_x, cy - 84 - 37, text_w, 74, 60, 28,
-                       fill=K.GOLD if held else (255, 243, 220))
-    MEASURED.append(("hero name '%s'" % name, px, 28))
-
-    px = K.shrunk_left(sheet, blurb, text_x, cy - 4 - 46, text_w, 92, 28, 18,
-                       fill=(255, 243, 220), outline=2)
-    MEASURED.append(("hero blurb", px, 18))
-
-    line = txt("ui.ranks.held_count", held, len(RUNGS))
-    K.paste(sheet, K.round_rect(text_w, 62, 28, (13, 23, 46), .80), text_x + text_w / 2, cy + 74)
-    K.paste(sheet, K.tint(K.fit(Image.open(K.UI / "ic_star.png").convert("RGBA"), (32, 32)),
-                          K.CREAM), text_x + 26, cy + 74)
-    px = K.shrunk_left(sheet, line, text_x + 54, cy + 74 - 16, text_w - 88, 52, 28, 17,
-                       fill=K.CREAM, outline=2)
-    MEASURED.append(("hero count '%s'" % line, px, 17))
-
-    rule = Image.new("RGBA", (int(WIDTH - WELL_INSET * 2), 2), (*accent, 56))
-    K.paste(sheet, rule, W / 2, cy + 116)
-
-    pips(sheet, cy + 160, held)
-
-    return y + HERO_H + 22
-
-
-def row(sheet, y, rung, order, held, chained):
-    """`RanksScreen.BuildRow` - one rung, as tall as its own line count makes it."""
+def plate(sheet, band_bottom, band_h, held, chosen):
+    """`RanksScreen.BuildPlate` + `PaintPlate`: the chosen rung's lines, each with its bar."""
+    order = chosen
+    rung = RUNGS[order - 1]
     lines = rung["requires"]
-    state = held_of(rung, order, held)
-    earned = state == "earned"
-    climbing = state == "climbing"
-    live = earned or climbing
     tone = metal(order)
+    standing = standing_of(order, held)
+    live = standing != "locked"
 
-    # `RanksScreen.BarBand` - the bar's seat belongs to the one row that draws a bar.
-    height = ROW_HEAD + len(lines) * LINE_H + (BAR_BAND if climbing else ROW_FOOT)
-    cy = y + height / 2
+    height = PLATE_HEAD + len(lines) * LINE_H + PLATE_FOOT
+    top = band_bottom - band_h
+    cy = top + height / 2
+    K.paste(sheet, K.skin("Hud/plate_navy" if live else "Hud/panel", PLATE_W, height), W / 2, cy)
+    K.paste(sheet, K.round_rect(PLATE_W, height, 30, tone, .55 if live else .22, width=6), W / 2, cy)
 
-    left = W / 2 - WIDTH / 2
-    bx = left + WELL_INSET + BADGE_SEAT / 2
+    well_w = PLATE_W - WELL_INSET * 2
+    well_left = W / 2 - well_w / 2
+    head_y = top + PLATE_HEAD / 2
 
-    if climbing:
-        K.paste(sheet, K.glow(int(WIDTH + 280), 1.35, tone, .28), W / 2, cy)
+    title = txt("ui.ranks.requirements").upper()
+    px = K.shrunk_left(sheet, title, well_left, head_y - 17, well_w * .6, 34, 28, 15,
+                       fill=tone if live else LOCKED_INK, outline=2)
+    MEASURED.append(("plate title '%s'" % title, px, 15))
 
-    # The link down to the next rung, hung in the gap under the badge column. See the C#.
-    if chained:
-        K.paste(sheet,
-                K.round_rect(LINK_W, ROW_GAP + 12, LINK_W / 2,
-                             tone if earned else (255, 243, 220), .85 if earned else .12),
-                bx, cy + height / 2 + ROW_GAP / 2)
+    met = sum(1 for l in lines if progress(l, held, order) >= l["target"])
+    count = txt("ui.ranks.fraction", met, len(lines))
+    K.text(sheet, count, well_left + well_w - K.font(30).getlength(count) / 2, head_y, 30,
+           fill=K.MINT if met >= len(lines) else K.CREAM, outline=2)
 
-    # **Value, never alpha**: a locked rung stands on the muted plate at full strength.
-    K.paste(sheet, K.skin("Hud/plate_navy" if live else "Hud/panel", WIDTH, height), W / 2, cy)
-
-    K.paste(sheet, K.round_rect(int(WIDTH), int(height), 30,
-                                (255, 244, 206) if climbing else tone,
-                                .80 if climbing else (.55 if earned else .22), width=8),
-            W / 2, cy)
-
-    head_y = cy - height / 2 + ROW_HEAD / 2
-
-    if earned:
-        K.paste(sheet, burst(BADGE_SEAT * 1.60, tone, .34), bx, head_y)
-    K.paste(sheet, K.glow(int(BADGE_SEAT * 1.34), 2.1, tone,
-                          .22 if earned else (.24 if climbing else .10)), bx, head_y)
-    K.paste(sheet, K.skin("Hud/slot", BADGE_SEAT, BADGE_SEAT), bx, head_y)
-    K.paste(sheet, K.round_rect(BADGE_SEAT, BADGE_SEAT, 24, tone,
-                                .95 if earned else (.80 if climbing else .45), width=5),
-            bx, head_y)
-    K.paste(sheet, badge(rung["id"], BADGE), bx, head_y)
-
-    # The answer column: one answer per row, and exactly one of the three is up (48g).
-    answer_x = left + WIDTH - WELL_INSET - ANSWER / 2
-    if earned:
-        K.paste(sheet, K.glow(int(ANSWER), 1.0, K.MINT, 1.0), answer_x, head_y)
-        K.paste(sheet, K.tint(K.fit(Image.open(K.UI / "ic_check.png").convert("RGBA"),
-                                    (ANSWER * .58, ANSWER * .58)), (255, 255, 255)),
-                answer_x, head_y)
-    elif climbing:
-        K.paste(sheet, K.skin("Hud/slot", ANSWER, ANSWER), answer_x, head_y)
-        K.paste(sheet, K.round_rect(ANSWER, ANSWER, 20, tone, 1.0, width=4), answer_x, head_y)
-        pct = txt("ui.ranks.percent", 45)
-        px = K.shrunk(sheet, pct, answer_x, head_y, ANSWER - 12, 40, 30, 16, fill=tone, outline=2)
-        MEASURED.append(("standing '%s'" % pct, px, 16))
-    else:
-        K.paste(sheet, K.skin("sq_dark", ANSWER, ANSWER), answer_x, head_y)
-        K.paste(sheet, K.tint(K.fit(Image.open(K.UI / "ic_lock.png").convert("RGBA"),
-                                    (ANSWER * .56, ANSWER * .56)), LOCKED_INK),
-                answer_x, head_y)
-
-    text_x = bx + BADGE_SEAT / 2 + 28
-    text_w = (answer_x - ANSWER / 2 - 24) - text_x
-
-    # The ordinal in a chip rather than on the plate - a pale metal written straight onto
-    # `PlateNavy` is the yellow-bar-on-a-yellow-card fault with a different pair of colours.
-    chip_x, chip_y = text_x + CHIP_W / 2, head_y - 66
-    K.paste(sheet, K.round_rect(CHIP_W, CHIP_H, 14, (0, 0, 0), .40 if live else .26),
-            chip_x, chip_y)
-    K.paste(sheet, K.round_rect(CHIP_W, CHIP_H, 14, tone, .95 if live else .55, width=3),
-            chip_x, chip_y)
-    ordinal = txt("ui.ranks.ordinal", order)
-    px = K.shrunk(sheet, ordinal, chip_x, chip_y, CHIP_W - 16, 28, 22, 13, fill=tone, outline=2)
-    MEASURED.append(("ordinal '%s'" % ordinal, px, 13))
-
-    name = txt("rank.%s.name" % rung["id"])
-    px = K.shrunk_left(sheet, name, text_x, head_y - 12 - 29, text_w, 58, 50, 24,
-                       fill=K.GOLD if earned else (K.CREAM if climbing else LOCKED_NAME))
-    MEASURED.append(("row name '%s'" % name, px, 24))
-
-    px = K.shrunk_left(sheet, txt("rank.%s.blurb" % rung["id"]), text_x, head_y + 52 - 31,
-                       text_w, 62, 26, 16,
-                       fill=(255, 243, 220) if live else LOCKED_INK, outline=2)
-    MEASURED.append(("row blurb '%s'" % rung["id"], px, 16))
-
-    # The hairline between the head and the checklist, in the rung's metal.
-    rule = Image.new("RGBA", (int(WIDTH - WELL_INSET * 2), 2),
-                     (*tone, int(255 * (.34 if live else .20))))
-    K.paste(sheet, rule, W / 2, cy - height / 2 + ROW_HEAD - 6)
-
-    well_w = WIDTH - WELL_INSET * 2
-    line_y = cy - height / 2 + ROW_HEAD + LINE_H / 2
-
+    line_y = top + PLATE_HEAD + LINE_H / 2
     for line in lines:
         have = progress(line, held, order)
-        met = have >= line["target"]
-
-        # Full strength on every row: a faded checklist under a solid plate is the one thing on
-        # the card that looks unfinished rather than unearned.
+        done = have >= line["target"]
         K.paste(sheet, K.skin("Hud/trough", well_w, WELL_H), W / 2, line_y)
 
-        well_left = W / 2 - well_w / 2
-        mx = well_left + 26 + MARK_W / 2
-
-        if met:
-            K.paste(sheet, K.tint(K.fit(Image.open(K.UI / "ic_check.png").convert("RGBA"),
-                                        (MARK_W, MARK_W)), K.MINT), mx, line_y)
+        mx = well_left + 22 + MARK / 2
+        if done:
+            K.paste(sheet, icon("ic_check", MARK, K.MINT), mx, line_y)
         else:
-            # `Art.Ring` in the rung's metal - deliberately not a star. See `RanksScreen`.
-            K.paste(sheet, K.round_rect(MARK_W, MARK_W, MARK_W / 2, tone,
-                                        .70 if live else .45, width=5), mx, line_y)
+            K.paste(sheet, K.round_rect(MARK, MARK, MARK / 2, tone, .70 if live else .45, width=5), mx, line_y)
 
-        said_x = well_left + 26 + MARK_W + 22
-        said_w = well_w - (said_x - well_left) - COUNT_W - 34
-
+        said_x = well_left + 22 + MARK + 18
+        said_w = well_w - (said_x - well_left) - COUNT_W - 30
         said = sentence(line)
-        px = K.shrunk_left(sheet, said, said_x, line_y - (WELL_H - 10) / 2, said_w, WELL_H - 10,
-                           30, 17, fill=K.CREAM if live else LOCKED_INK, outline=2)
-        MEASURED.append(("line '%s'" % said, px, 17))
+        px = K.shrunk_left(sheet, said, said_x, line_y - 13 - 19, said_w, 38, 32, 18,
+                           fill=K.CREAM if live else LOCKED_INK, outline=2)
+        MEASURED.append(("line '%s'" % said, px, 18))
+
+        K.paste(sheet, K.round_rect(said_w, BAR_H, BAR_H / 2, (0, 0, 0), .42), said_x + said_w / 2, line_y + 21)
+        frac = min(1.0, have / float(line["target"]))
+        if frac > 0:
+            K.paste(sheet, K.round_rect(said_w * frac, BAR_H, BAR_H / 2, K.MINT if done else BAR_ORANGE),
+                    said_x + said_w * frac / 2, line_y + 21)
 
         fraction = txt("ui.ranks.fraction", have, line["target"])
-        px = K.shrunk(sheet, fraction, well_left + well_w - 26 - COUNT_W / 2, line_y,
-                      COUNT_W, WELL_H - 10, 32, 18,
-                      fill=K.MINT if met else K.GOLD if climbing else LOCKED_INK, outline=2)
+        px = K.shrunk(sheet, fraction, well_left + well_w - 22 - COUNT_W / 2, line_y, COUNT_W, WELL_H - 10,
+                      32, 18, fill=K.MINT if done else (K.GOLD if live else LOCKED_INK), outline=2)
         MEASURED.append(("fraction '%s'" % fraction, px, 18))
-
         line_y += LINE_H
 
-    if climbing:
-        bar_y = cy + height / 2 - BAR_BAND / 2
-        K.paste(sheet, K.skin("Hud/trough", well_w, BAR_TROUGH), W / 2, bar_y)
-        fill = K.skin("Hud/fill", (well_w - 6) * .45, BAR_H)
-        K.paste(sheet, K.tint(fill, (255, 150, 30)),
-                W / 2 - well_w / 2 + 3 + (well_w - 6) * .45 / 2, bar_y)
 
-    return height
-
-
-def page(held, scroll=0.0, tall=False):
-    """The page. `scroll` drops the list the way a thumb would; `tall` draws the whole thing.
-
-    **A mirror that cannot reach a state cannot be asked about it** (invariant 44l), and on this
-    page every state but the first two is below the fold: the rung being climbed, the locked
-    rungs and the padlock column are all off the bottom of a phone at rest. Without one of these
-    the sheet answers "do the earned rows look right" and nothing else.
-    """
-    last = len(RUNGS) - 1
-
-    height = H
-    if tall:
-        # Measure the list first so the sheet is exactly as tall as the page really is.
-        probe = Image.new("RGBA", (W, H * 8), (0, 0, 0, 0))
-        y = 22.0
-        y = header(probe, y)
-        y = hero(probe, y, held)
-        for order, rung in enumerate(RUNGS, start=1):
-            y += row(probe, y, rung, order, held, order - 1 < last) + ROW_GAP
-        height = int(y + 40)
-        MEASURED.clear()          # the probe pass would otherwise count every caption twice
+def page(held, chosen=None, tall=False):
+    """The page, on a 16:9 canvas or a 20:9 one. `chosen` is the rung on the stage; the screen
+    opens on the held rung, or the first when none is held (`RanksScreen.Opening`)."""
+    height = TALL_H if tall else H
+    if chosen is None:
+        chosen = held if held > 0 else 1
+    chosen = max(1, min(chosen, len(RUNGS)))
 
     sheet = Image.new("RGBA", (W, height), (*K.GROUND, 255))
     K.plain(sheet)
-    K.rail(sheet, top=True)
 
-    y = 22.0
-    y = header(sheet, y)
-    y = hero(sheet, y, held)
-    y -= scroll
+    band = plate_band()
+    plate_bottom = height - FOOT_PAD
+    rail_bottom = plate_bottom - band - PLATE_GAP
+    stage_bottom = rail_bottom - RAIL_H
 
-    for order, rung in enumerate(RUNGS, start=1):
-        y += row(sheet, y, rung, order, held, order - 1 < last) + ROW_GAP
-        if y > height:
-            break
+    stage(sheet, HEADER_H, stage_bottom, held, chosen)
+    header(sheet)
+    rail(sheet, rail_bottom, held, chosen)
+    plate(sheet, plate_bottom, band, held, chosen)
 
+    stage_h = stage_bottom - HEADER_H
+    print("  stage %.0f tall on a %d canvas (least %.0f); plate band %.0f"
+          % (stage_h, height, STAGE_LEAST, band))
+    if stage_h < STAGE_LEAST - .5:
+        print("  STAGE SHORTER THAN ITS LEAST - the bands do not fit this canvas")
     return sheet.convert("RGB")
 
 
@@ -507,54 +523,39 @@ def map_corner(held):
 
     **The other half of the change, and the half with a neighbour.** The page can be judged on
     its own; the badge cannot, because what can be wrong with it is where it sits against the
-    two controls it shares a column with.
-
-    **Nothing here is ghosted, in either state.** The map's badge is drawn solid even for an
-    account below the first rung (`RankBadge`'s class remarks): a faded stand-in read as art
-    that had failed to load, and what says *not yet* is the word under it. The hero on the page
-    still ghosts its own, which is why `badge(ghost=...)` is still a parameter.
-
-    **It is drawn on the ranked lane only**, so this is a picture of the Infinite hub's corner
-    and of no other. On the ordinary ladder there is no badge and the boost clock takes its seat
-    at the top of the column; nothing draws that, because nothing in this repo mirrors the
-    chapter map. `render_endless.py` draws this same corner inside the whole hub, which is the
-    sheet to look at for whether it sits well against its neighbours.
+    two controls it shares a column with. Nothing here is ghosted: the map's badge is drawn
+    solid even for an account below the first rung, and what says *not yet* is the word under
+    it. It is drawn on the ranked lane only; `render_endless.py` draws this same corner inside
+    the whole hub.
     """
     sheet = Image.new("RGBA", (W, H), (*K.GROUND, 255))
     K.plain(sheet)
 
     K.paste(sheet, K.skin("sq_blue", CORNER, CORNER), CORNER_X, CORNER_Y)
-    K.paste(sheet, K.tint(K.fit(Image.open(K.UI / "ic_left.png").convert("RGBA"), (59, 59)),
-                          K.CREAM), CORNER_X, CORNER_Y)
+    K.paste(sheet, icon("ic_left", 59, K.CREAM), CORNER_X, CORNER_Y)
 
-    rank_y = CORNER_Y + CORNER / 2 + BOOST_GAP + (MARK_SIZE + NAME_H) / 2
+    rank_y = CORNER_Y + CORNER / 2 + BOOST_GAP + (MARK_SIZE + NAME_BLOCK_H) / 2
     rid = RUNGS[held - 1]["id"] if held else RUNGS[0]["id"]
 
     K.paste(sheet, badge(rid, MARK_SIZE),
-            CORNER_X, rank_y - (MARK_SIZE + NAME_H) / 2 + MARK_SIZE / 2)
+            CORNER_X, rank_y - (MARK_SIZE + NAME_BLOCK_H) / 2 + MARK_SIZE / 2)
 
     name = txt("rank.%s.name" % rid) if held else txt("ui.ranks.unranked")
-    px = K.shrunk(sheet, name, CORNER_X, rank_y - (MARK_SIZE + NAME_H) / 2 + MARK_SIZE + NAME_H / 2,
-                  BADGE_W, NAME_H, 32, 18, fill=K.GOLD if held else (255, 243, 220), outline=0)
+    px = K.shrunk(sheet, name, CORNER_X, rank_y - (MARK_SIZE + NAME_BLOCK_H) / 2 + MARK_SIZE + NAME_BLOCK_H / 2,
+                  BADGE_W, NAME_BLOCK_H, 32, 18, fill=K.GOLD if held else (255, 243, 220), outline=0)
     MEASURED.append(("map badge '%s'" % name, px, 18))
 
-    # The boost clock's seat, so the column reads as a column. Drawn as an outline rather than
-    # as a clock, because what is being judged here is the *gap*: the badge is above the clock
-    # precisely so that a session with no boost running leaves its hole at the bottom of the
-    # column rather than in the middle of it (`LevelsScreen.RankY`).
-    boost_y = rank_y + (MARK_SIZE + NAME_H) / 2 + BOOST_GAP + 80 / 2
-    K.paste(sheet, K.round_rect(BADGE_W, 80, 12, (255, 243, 220), .22, width=2),
-            CORNER_X, boost_y)
+    boost_y = rank_y + (MARK_SIZE + NAME_BLOCK_H) / 2 + BOOST_GAP + 80 / 2
+    K.paste(sheet, K.round_rect(BADGE_W, 80, 12, (255, 243, 220), .22, width=2), CORNER_X, boost_y)
     K.text(sheet, "boost", CORNER_X, boost_y, 20, fill=(255, 243, 220, 140), outline=0)
-
     return sheet
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--held", type=int, default=3, help="how many rungs are earned")
-    ap.add_argument("--scroll", type=float, default=0.0, help="drop the list, as a thumb would")
-    ap.add_argument("--tall", action="store_true", help="the whole page, however long it is")
+    ap.add_argument("--show", type=int, default=None, help="which rung is on the stage (default: the held one)")
+    ap.add_argument("--tall", action="store_true", help="a 20:9 phone rather than a 16:9 one")
     ap.add_argument("--map", action="store_true", help="the badge in the map's chrome")
     ap.add_argument("--contact", action="store_true", help="every state side by side")
     ap.add_argument("--out", type=Path, default=Path("ranks.png"))
@@ -563,34 +564,37 @@ def main():
     if not RUNGS:
         sys.exit("progression.json has no 'ranks' block; there is nothing to draw")
 
+    n = len(RUNGS)
     if args.contact:
-        shots = [page(n, tall=True) for n in (0, 3, len(RUNGS))]
+        # Unranked; three held; the top; three held with the next chosen; three held with a
+        # locked rung chosen; and every remaining rung walked onto the stage so each name,
+        # blurb and sentence is measured once.
+        states = [(0, None), (3, None), (n, None), (3, 4), (3, 6)]
+        seen = {s[1] or (s[0] if s[0] else 1) for s in states}
+        states += [(3, o) for o in range(1, n + 1) if o not in seen]
+        shots = [page(h, c) for h, c in states]
         cell = 540
         sheet = Image.new("RGB", (cell * len(shots), int(cell * H / W)), K.GROUND)
         for i, s in enumerate(shots):
             sheet.paste(s.resize((cell, int(cell * H / W)), Image.LANCZOS), (i * cell, 0))
         out = sheet
     elif args.map:
-        out = map_corner(args.held).convert("RGB")
+        out = map_corner(max(0, min(args.held, n))).convert("RGB")
     else:
-        out = page(max(0, min(args.held, len(RUNGS))), args.scroll, args.tall)
+        out = page(max(0, min(args.held, n)), args.show, args.tall)
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     out.save(args.out)
 
-    # The measurement, which is the half a picture cannot do. A caption settling at its floor
-    # has not fitted, it has been truncated (invariant 19n), so the floors are printed whether
-    # or not anything reached one — a line that is one retune away from its floor is worth
-    # seeing before it gets there.
     print("  %d caption(s) measured" % len(MEASURED))
-    tight = sorted(MEASURED, key=lambda m: m[1] - m[2])[:6]
+    tight = sorted(MEASURED, key=lambda m: m[1] - m[2])[:8]
     for what, px, floor in tight:
         flag = "  <- AT ITS FLOOR, truncated" if px <= floor else ""
         print("    %-58s %2dpx (floor %d)%s" % (what[:58], px, floor, flag))
 
     at_floor = [m for m in MEASURED if m[1] <= m[2]]
     if at_floor:
-        print("  %d caption(s) settled at their floor; widen the plate or shorten the string"
+        print("  %d caption(s) settled at their floor; widen the band or shorten the string"
               % len(at_floor))
 
     print("  wrote %s  %dx%d  - look at it" % (args.out, out.width, out.height))

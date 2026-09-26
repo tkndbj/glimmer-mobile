@@ -75,6 +75,9 @@ namespace GlimmerGrove
         /// <summary>The highest rank the ladder shows lit. Trails the model by one beat while a climb plays.</summary>
         int _lit;
 
+        /// <summary>The air between the plate's foot and the ladder.</summary>
+        const float LadderGap = 8f;
+
         protected override float EdgeRows => LadderRows;
         protected override float EdgeBelow => LadderRows;
 
@@ -143,7 +146,7 @@ namespace GlimmerGrove
         {
             int rungs = Mathf.Max(1, _merge.Target);
             float tall = Cell * LadderRows;
-            float y = -(Rows * Cell * .5f + PlateRim * Cell * .5f + Margin * .5f + tall * .5f);
+            float y = -(Rows * Cell * .5f + PlateRim * Cell * .5f + LadderGap + tall * .5f);
 
             _ladder = UIKit.Box("Ladder", Field, new Vector2(Columns * Cell, tall), new Vector2(.5f, .5f),
                                 new Vector2(0f, y));

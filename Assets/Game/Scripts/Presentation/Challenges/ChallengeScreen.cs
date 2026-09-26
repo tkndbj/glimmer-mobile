@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using GlimmerGrove.Analytics;
 using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Challenges;
 using GlimmerGrove.Localization;
@@ -21,21 +22,32 @@ namespace GlimmerGrove
     /// (<see cref="ChallengeArt"/>), the kit and the flow.
     /// </para>
     /// <para>
-    /// <b>Opened by genre, dealt by the ledger.</b> The list says which genre; which level that
-    /// is today, and whether a play is left, is <see cref="ChallengeLedger.Begin"/>'s answer —
-    /// so a screen that is somehow reached with no play left goes straight back to the list,
-    /// and a screen that is reached is one that has spent the play (invariant 56h: spent at the
-    /// deal, never at the ending).
+    /// <b>Opened by genre, dealt by the ledger, spent at the first move.</b> The list says
+    /// which genre; which level that is today, and whether a play is left, is
+    /// <see cref="ChallengeLedger.Begin"/>'s answer — so a screen that is somehow reached
+    /// with no play left goes straight back to the list. The play itself is taken by
+    /// <see cref="ChallengeLedger.Commit"/> on the first move the rules accept (invariant
+    /// 56g), so a board opened, looked at and backed out of costs nothing and is dealt
+    /// again untouched — the owner's instruction, 2026-09-26.
     /// </para>
     /// <para>
-    /// <b>One door for every input.</b> A view hands its input to <see cref="Play"/>, which
-    /// asks the run, then animates the puzzle's answer and replays the hill's, with the board
-    /// latched until both have landed. A refused input shakes and costs nothing.
+    /// <b>One door for every input, and nothing behind it is thrown away.</b> A view hands
+    /// its input to <see cref="Play"/>, which asks the run, animates the puzzle's answer and
+    /// <em>queues</em> the hill's (<see cref="ChallengeHillView.Enqueue"/>): the hill draws
+    /// its turns on its own and hurries when it falls behind, so the board is never latched
+    /// for a walk it is not part of. The board is latched only for its own landing, and an
+    /// input made inside that is <b>held, not dropped</b> — one deep, the latest wins — and
+    /// played the frame the board is free. The first cut latched for both and refused every
+    /// tap inside the second they took, which on the glade was reported as conduits that
+    /// "sometimes don't rotate" (2026-09-26). A refused input shakes and costs nothing.
     /// </para>
     /// <para>
-    /// <b>Leaving forfeits the run silently</b> — the play is already spent, the way a run that
-    /// is quit is already paid for, and the way back in is one tap — so this is not a fourth
-    /// confirmation.
+    /// <b>Leaving a board that has been moved on asks first, through the run's own
+    /// confirmation</b> (<see cref="ForfeitOverlay"/> with a play on the price tag rather
+    /// than a heart), because the play is spent and walking out is the one thing here a
+    /// player could want back. Leaving an untouched board asks nothing, for the reason that
+    /// overlay gives: a confirmation over a free exit teaches a player to tap through the
+    /// one that costs something. The count of confirmations in this game is still three.
     /// </para>
     /// <para>
     /// <b>A board declares its lessons and <c>ScreenLessons</c> sequences them</b> (invariant
@@ -68,8 +80,12 @@ namespace GlimmerGrove
         /// that shrinks its cells. The owner's reading of the first cut (2026-09-23) was
         /// "the hills are too small": at a fixed share of the room the hill was 3.3 cells
         /// against a 4x4 board given 6.6, and the four posts stood two cells tall over it.
+        /// <b>The ceiling went from 5.4 to 8 on 2026-09-26</b>, because at 5.4 a 19.5:9 phone
+        /// had four cells of room the hill was refused, and they landed as a bare slab between
+        /// the line and the board (the owner's red circle). Whatever a phone has over eight
+        /// goes into the board's frame rather than into a gap (<see cref="PuzzleView"/>).
         /// </summary>
-        const float HillLeastUnits = 3.6f, HillMostUnits = 5.4f;
+        const float HillLeastUnits = 3.6f, HillMostUnits = 8.0f;
 
         /// <summary>
         /// The line band, in units of the siege's cell. Sized to the <em>post</em>
@@ -98,6 +114,13 @@ namespace GlimmerGrove
         Text _turn, _goal, _next;
         RectTransform _hillHost, _puzzleHost;
         bool _ready, _busy, _ended, _teaching;
+
+        /// <summary>The one input held while the board lands its last (the class note).</summary>
+        ChallengeInput _pending;
+        bool _holding;
+
+        /// <summary>Whether the leave confirmation is up. The board takes nothing under it.</summary>
+        bool _asking;
 
         public override bool Ready => _ready;
 
@@ -278,7 +301,17 @@ namespace GlimmerGrove
         // ------------------------------------------------------------------ playing
         void Play(ChallengeInput input)
         {
-            if (!_ready || _busy || _teaching || _ended || _run.State != ChallengeState.Playing) return;
+            if (!_ready || _teaching || _ended || _asking || _run.State != ChallengeState.Playing) return;
+
+            if (_busy)
+            {
+                // The board is still landing its last move: keep this one and play it the
+                // frame the board is free. One deep, latest wins — the model has not moved,
+                // so the newest intention is the only one worth keeping.
+                _pending = input;
+                _holding = true;
+                return;
+            }
 
             var report = _run.Play(input);
             if (report.Move == null) return;
@@ -289,7 +322,20 @@ namespace GlimmerGrove
                 return;
             }
 
+            // The first move the rules accepted is the play being spent — written before
+            // anything is drawn, so a process killed on the board finds it spent on relaunch.
+            ChallengeLedger.Commit(_play);
+
             StartCoroutine(Resolve(report));
+        }
+
+        /// <summary>Play the held input, if any, now that the board is free.</summary>
+        void Flush()
+        {
+            if (!_holding) return;
+            _holding = false;
+            var input = _pending;
+            Play(input);
         }
 
         IEnumerator Resolve(ChallengeTurnReport report)
@@ -313,16 +359,34 @@ namespace GlimmerGrove
                 if (!this) yield break;
             }
 
-            if (report.Walked)
-            {
-                yield return _hill.Replay(report.Events);
-                if (!this) yield break;
-            }
+            // The hill is queued, never awaited: it draws this turn after whatever it is
+            // still drawing, and the board is free to take the next move meanwhile.
+            if (report.Walked) _hill.Enqueue(report.Events);
 
             PaintReadout();
             _busy = false;
 
-            if (report.State != ChallengeState.Playing) End(report.State == ChallengeState.Won);
+            if (report.State != ChallengeState.Playing)
+            {
+                StartCoroutine(Ending(report.State == ChallengeState.Won));
+                yield break;
+            }
+
+            Flush();
+        }
+
+        /// <summary>
+        /// The run is decided; the curtain waits for the hill to finish drawing what decided
+        /// it, so a line that fell is seen to fall before the panel says so. Input is already
+        /// shut, because the run's own state refuses it.
+        /// </summary>
+        IEnumerator Ending(bool won)
+        {
+            _holding = false;
+            while (this && !_hill.Idle) yield return null;
+            if (!this) yield break;
+
+            End(won);
         }
 
         void PaintReadout()
@@ -416,7 +480,40 @@ namespace GlimmerGrove
             }
         }
 
-        void Leave() => Flow.Go<DailyChallengesScreen>();
+        /// <summary>
+        /// The way out. A board nobody has moved on, or a run already decided, is left at
+        /// once; a board with a spent play on it and a run still open is asked about first
+        /// (the class note). While the question is up the board takes nothing.
+        /// </summary>
+        void Leave()
+        {
+            if (_asking) return;
+
+            bool committed = _play != null && _play.Spent;
+            bool open = _run != null && _run.State == ChallengeState.Playing && !_ended;
+            if (!committed || !open)
+            {
+                Flow.Go<DailyChallengesScreen>();
+                return;
+            }
+
+            _asking = true;
+            Flow.Modal<ForfeitOverlay>(v =>
+            {
+                v.Choice = ForfeitOverlay.Kind.Leave;
+                v.Stake = ForfeitOverlay.Stakes.Play;
+                v.OnConfirm = () =>
+                {
+                    if (!this) return;
+                    Telemetry.Track("challenge_left",
+                                    "genre", ChallengeGenres.NameOf(Genre),
+                                    "level", _play.Definition.Id,
+                                    "turns", _run.Turns);
+                    Flow.Go<DailyChallengesScreen>();
+                };
+                v.OnCancel = () => { if (this) _asking = false; };
+            });
+        }
 
         public override bool OnBack()
         {

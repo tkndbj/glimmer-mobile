@@ -19,8 +19,9 @@ from the widest and the tallest of them, and every badge is scaled by that one n
 centred in a shared frame. The artist's relative sizing survives exactly; nothing is normalised
 away.
 
-**Cut at 256 against a folder rule of 256** (`ArtImportRules.Caps`). The badge is drawn at 96 on
-the map and at 132 on the page, so 256 is already a comfortable upscale margin and the rule is
+**Cut at 512 against a folder rule of 512** (`ArtImportRules.Caps`). The badge is drawn at 96 on
+the map, at 132 on a board row and at **400 on the ranks page's stage** (2026-09-26, the hall
+rewrite), so 512 is the first size that is not an upscale on a 1440-wide phone; the rule is
 what stops a re-cut at source size quietly shipping seven megabyte textures (invariant 7d).
 
 **It passes with no source folder on disk**, which is `make_boost_icon.py`'s bargain: the PNGs
@@ -64,7 +65,7 @@ RUNGS = [
 SOURCES = [Path(r"C:\Users\Digikey\Downloads\ranks"),
            Path(r"C:\Users\Digikey\Downloads\2D ASSETS\ranks")]
 
-SIZE = 256
+SIZE = 512
 
 #: Air inside the frame, in pixels a side. A badge that touched the edge would have its
 #: outermost spike clipped by the sprite's own border the moment anything drew it with a

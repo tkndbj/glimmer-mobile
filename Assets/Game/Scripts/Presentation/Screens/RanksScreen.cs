@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using GlimmerGrove.Content;
+using GlimmerGrove.Layout;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Ranks;
 using UnityEngine;
@@ -8,283 +9,278 @@ using UnityEngine.UI;
 namespace GlimmerGrove
 {
     /// <summary>
-    /// The rank ladder, rung by rung: the badge a keeper wears now, and exactly what every one
-    /// of them asks for.
+    /// The hall of ranks: one badge at a time on a lit stage, the whole ladder as a rail of
+    /// seats under it, and exactly what the chosen rung asks for on a plate at the foot.
     ///
     /// <para>
-    /// <b>The page exists because a badge with no requirements beside it is a puzzle.</b> A rank
-    /// drawn on the map says what somebody has and nothing about what it took or what is next,
-    /// and a progression display that cannot be interrogated reads as decoration. So every rung
-    /// prints every line it asks for, with the player's own figure against each — which is also
-    /// what makes the whole ladder honest: there is nothing here a player cannot check.
-    /// </para>
-    ///
-    /// <para>
-    /// <b>A locked rung is a darker plate, never a fainter one.</b> The first cut of this page
-    /// drew every unearned card at 38% alpha, which is the reflex and is wrong twice over: a
-    /// see-through card reads as art that failed to load rather than as a thing not yet won
-    /// (invariant 7b's neighbour — a half-drawn plate says "broken", not "later"), and it takes
-    /// the whole bottom of the page down with it, which is four of the seven rungs on a phone
-    /// and the only reason anybody scrolls. So <em>nothing on this page is transparent</em>: an
-    /// unearned rung stands on <see cref="Skins.Panel"/>, which is a solid, muted navy plainly
-    /// below <see cref="Skins.PlateNavy"/> in value, its wells are full strength, and its ink is
-    /// an opaque steel. What says "not yet" is the plate's own value, the padlock in the answer
-    /// column and the drained ordinal chip — three solid things instead of one faded one.
-    /// </para>
-    /// <para>
-    /// <b>And the badge is never dimmed at all</b>, locked or not. It is the thing the player is
-    /// working toward and the only reason to scroll; a page of seven bright medallions down a
-    /// ladder is a trophy case, which is what this screen is for.
+    /// <b>It is one composed screen and not a list, and that is the whole of the change.</b>
+    /// The page before this was seven checklist cards down a scrolling wall — every fact was
+    /// on it and none of it felt like a game, which was the owner's verdict on 2026-09-26. A
+    /// rank screen in any game people rate is a <em>stage</em>: the badge you hold, large and
+    /// lit, the ladder as a row of seats you can see the whole of at once, and the details of
+    /// one rung at a time underneath. So the ladder is browsed rather than scrolled — tap a
+    /// seat, tap a chevron or swipe the stage — and the stage redresses itself for the rung
+    /// chosen: its light, its ring, its name, its plate.
     /// </para>
     ///
     /// <para>
-    /// <b>Every rung wears its own metal</b> (<see cref="RankLook"/>). The badges are a copper,
-    /// silver, gold, violet, crimson, ice and prism ramp and the page used to throw all of it
-    /// away onto one navy plate with one gold rim seven times; now the accent is spent on the
-    /// seat's rim, the glow behind the badge, the ordinal chip, the hairline, the unmet marks
-    /// and the link down to the next rung — never on the badge, which is finished art
-    /// (invariant 44g).
-    /// </para>
-    /// <para>
-    /// <b>The rungs are chained.</b> A short link in each gap joins one badge seat to the next,
-    /// lit through the run a player holds and dark above it, so the column of badges reads as a
-    /// ladder climbed from the bottom rather than as seven unrelated cards stacked up
-    /// (<c>render_ranks.py</c> was written to ask exactly that question and the answer was no).
-    /// The hero repeats it in miniature: every rung in the game as one strip of seats, filled as
-    /// far as the player has come.
+    /// <b>The light carries the rung's metal; the room does not.</b> The wash over the wall is
+    /// one deep navy-violet on every rung, because a wash tinted gold over a blue wall is
+    /// olive and one tinted copper is mud (invariant 44g, arriving through a blend rather than
+    /// a multiply). What changes with the rung is everything that reads as <em>light</em> —
+    /// the two ray fans turning behind the badge, the aurora drifting across the room, the
+    /// halo, the ring and the spark at its head, the fireflies — which are additive-looking
+    /// over a dark ground and stay the colour they were given (<see cref="RankLook"/>).
     /// </para>
     ///
     /// <para>
-    /// <b>Three states and one of them shines.</b> Earned rungs carry a tick and a burst behind
-    /// the badge, the rung being climbed carries a pool of light, a bright rim and the only
-    /// progress bar on the page, and everything above it is a muted plate behind a padlock.
-    /// Exactly one row shines, which is what makes a glance at the page enough — seven glowing
-    /// rows would say nothing at all.
-    /// </para>
-    /// <para>
-    /// <b>The answer column carries one answer per row and the first of them is a word</b>
-    /// (invariant 48g). A climbing row used to carry <em>nothing</em> there, which left a hole
-    /// down the one column a reader scans; it shows how far up the rung stands now. The bar at
-    /// the foot is the fine reading of the same number and the chip is the coarse one, which is
-    /// the ordinary division between a column and a gauge.
+    /// <b>The ring is the progress, and it is drawn with uGUI's radial fill over a generated
+    /// ring</b> — no art, no address, nothing that can arrive as a white rectangle (7b). Its
+    /// share is the mean of the rung's clamped line shares (<see cref="Share"/>), the same
+    /// arithmetic <see cref="RankLedger.Progress01"/> runs for the next rung, run here for
+    /// whichever rung is chosen so a locked rung can honestly show how much of it is already
+    /// done. The spark rides the head of the fill so the arc reads as a thing that is
+    /// <em>filling</em> rather than as a static band.
     /// </para>
     ///
     /// <para>
-    /// <b>Built once and repainted from the ledger</b> (<c>CRAFT.md</c>: Show animates, Refresh
-    /// does not). A rank can move while this page is standing — a merge landing another device's
-    /// battles is the ordinary case — and the one thing a repaint cannot do is change which
-    /// rungs exist, so a retuned ladder rebuilds whole.
+    /// <b>Nothing on the rail is dimmed, and a locked seat still shows its badge.</b> A page
+    /// of bright medallions is a trophy case, and a ladder whose upper rungs are hidden is a
+    /// ladder nobody wants to climb; what says <em>not yet</em> is the seat — smaller badge, dim
+    /// rim, a padlock chip on the corner — and never the picture. The one thing that moves
+    /// with the ledger is which seats are lit, which is the only reading a glance needs.
     /// </para>
+    ///
+    /// <para>
+    /// <b>Laid out with anchors and nothing is measured off a rect.</b> The stage stretches
+    /// between the header and the rail, so a tall phone gives the badge air and the shortest
+    /// canvas this game is drawn on (<see cref="CanvasFit.ShortestCanvas"/>) still fits every
+    /// band. The plate's band is sized for the tallest rung the ladder ships and scrolls only
+    /// if a retune ever gives a rung more lines than that band holds — a rung's lines are
+    /// capped (<see cref="RankLadder.MaxRequirements"/>), so the band can never be asked for
+    /// more than eight.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>Built once, redressed on a tap, repainted from the ledger</b> (<c>CRAFT.md</c>: Show
+    /// animates, Refresh does not). A rank can move while the page is standing — a merge
+    /// landing another device's battles is the ordinary case — and a repaint rewrites the
+    /// ring, the seats, the counts and the bars without replaying any entrance. A retuned
+    /// ladder is a different page and rebuilds whole. Choosing a rung <em>is</em> a gesture,
+    /// so the swap is allowed to move.
+    /// </para>
+    ///
     /// <para>
     /// <b>No nav bar, and a back key to the map.</b> This is a side page off
-    /// <see cref="LevelsScreen"/>, which has no bar either, and it is reached from that screen's
-    /// badge — so the loop is map, page, map. <c>MapMemory</c> puts the player back on the
-    /// chapter they left (invariant 8b), which is why the back key needs no argument.
+    /// <see cref="LevelsScreen"/>, reached from that screen's badge and the hub's seat, so the
+    /// loop is map, hall, map. <c>MapMemory</c> puts the player back on the chapter they left
+    /// (invariant 8b), which is why the back key needs no argument.
+    /// </para>
+    ///
+    /// <para>
+    /// The mirror is <c>Tools/render_ranks.py</c>, which draws every state of the stage off
+    /// the shipped ladder and measures every caption it can say against the box it is drawn
+    /// in (invariant 19n) — a rank ladder is content, and a sentence is one retune away from
+    /// outgrowing its band at all times.
     /// </para>
     /// </summary>
     public sealed class RanksScreen : View
     {
         public override string Track => "mus_menu";
 
-        // The stack, in canvas units from the top of the safe area.
-        const float ChromeSize = 92f;
-        const float BannerH = 138f;
+        // ------------------------------------------------------------------ the stack
+        // Every band below is a height, and the bands are stacked by anchors: the header hangs
+        // from the top, the rail and the plate stand on the bottom, and the stage stretches
+        // between them. Nothing here reads a rect, because a screen cannot trust its own on the
+        // frame it is built (`CRAFT.md`).
+        const float ChromeSize = 92f, BannerH = 138f;
+        const float HeaderTop = 22f;
+
+        /// <summary>The header band: the ribbon and the air under it.</summary>
+        public const float HeaderH = HeaderTop + BannerH + 10f;
 
         /// <summary>
-        /// The hero, which grew to carry the pip strip. See <see cref="BuildPips"/>: the strip is
-        /// the one control on the page that answers "how far up am I" without scrolling, and a
-        /// band it has to share is a band it loses.
+        /// The least the stage may be. On the shortest canvas the game draws on it is exactly
+        /// this; on a taller phone it takes every unit the other bands leave, and the cluster
+        /// standing in it grows to fill them (<see cref="StageMost"/>).
         /// </summary>
-        const float HeroH = 420f;
+        public const float StageLeast = 820f;
 
         /// <summary>
-        /// How wide a card is drawn, against the 1080 this game is designed at.
-        ///
-        /// <b>Nearly full bleed on purpose.</b> At 1000 the page read as a column of chips on a
-        /// wall; a rank card is the most important thing on its own screen and should take the
-        /// screen, which is also what makes room for a badge big enough to see the metal on.
+        /// How far the hero cluster may grow on a tall canvas, as a scale over
+        /// <see cref="StageLeast"/>. A 20:9 phone leaves the stage half as tall again as the
+        /// shortest canvas does, and a cluster hung at one size in that room left a dead band
+        /// of wall above the rail; so the cluster is scaled to the room instead, which is what
+        /// every hero screen in a game people rate does with a taller phone. The cap is where
+        /// the chevrons would leave the canvas: <c>(ChevronX + ChevronSize / 2) x 1.24</c> is
+        /// 528 of a 540 half-width.
         /// </summary>
-        const float Width = 1024f;
+        public const float StageMost = 1.24f;
 
-        /// <summary>A row's fixed part, what each requirement line adds, and its plain foot.</summary>
-        /// <remarks>
-        /// <b>The gap is wide enough to hang a link in</b>, which is the only reason it is 28 and
-        /// not the 20 every other list on this page's shelf uses — see <see cref="BuildRow"/>.
-        /// </remarks>
-        const float RowHead = 214f, LineH = 66f, RowFoot = 26f, RowGap = 28f;
+        /// <summary>The rail's band, the seats in it, and the air between two seats.</summary>
+        public const float RailH = 150f;
+        const float SeatSize = 104f, SeatPitchMost = 140f, SeatFace = .82f, SeatFaceLocked = .64f;
+
+        /// <summary>How much larger the chosen seat stands than its neighbours.</summary>
+        const float SeatChosen = 1.22f;
+
+        /// <summary>The chain between two seats: its thickness and the air it leaves each end.</summary>
+        const float LinkThick = 12f, LinkGap = 6f;
+
+        /// <summary>The padlock chip on a locked seat's corner.</summary>
+        const float LockChip = 34f;
 
         /// <summary>
-        /// One requirement's own well, and the furniture in it.
-        ///
-        /// <b>Every line sits in a trough rather than floating on the plate</b>, which is the
-        /// single change that made this page read as a game rather than as a list. A checklist
-        /// of bare sentences on a card is a paragraph; the same sentences in wells are rows a
-        /// player counts. The well is inset from the card so the plate's own moulding still
-        /// frames them.
+        /// The plate: its width, its head, one line's pitch, its foot, and the air under it.
+        /// Grown on 2026-09-26 at the owner's instruction ("make the box bigger so texts are
+        /// more readable"): the line pitch went 72 -> 88 and the sentence 27 -> 32pt, paid for
+        /// by the blurb coming off the stage and <see cref="StageLeast"/> coming down with it.
         /// </summary>
-        const float WellInset = 30f, WellH = 56f;
+        public const float PlateW = 1024f, PlateHead = 76f, LineH = 88f, PlateFoot = 22f;
+        public const float PlateGap = 18f, FootPad = 24f;
+
+        /// <summary>One line's well and the furniture in it.</summary>
+        const float WellInset = 26f, WellH = 78f, MarkSize = 38f, CountW = 210f, BarH = 12f;
+
+        /// <summary>How much of the shortest canvas the display's insets may take before the plate's band gives way.</summary>
+        const float InsetAllowance = 150f;
+
+        // ------------------------------------------------------------------ the stage
+        // Positions inside the stage, **down from its top**. The stage stretches to take a tall
+        // phone's air, and the cluster hangs from the top of it so the hero stands high and
+        // the air lands above the rail rather than splitting the badge from its name. `UIKit.Box`
+        // pivots at centre, so every one of these is a middle and a height (49h's lesson), and
+        // the last of them (the pill's foot) has to land inside `StageLeast`.
+        const float RingTop = 320f, RingSize = 540f, RingThick = 9f, BadgeSize = 420f;
+        const float ChevronX = 380f, ChevronSize = 92f;
+        const float ChipTop = RingTop + RingSize * .5f, ChipW = 156f, ChipH = 46f;
+        const float EyebrowTop = 646f, EyebrowH = 32f;
+        const float NameTop = 704f, NameH = 76f;
+        const float PillTop = 790f, PillH = 56f, PillW = 600f;
+        const float TextW = 900f;
+
+        const float HaloSize = 980f, CoreSize = 560f, FanSize = 1300f, Fan2Size = 940f, SparkSize = 58f;
+        const float FanAlpha = .22f, Fan2Alpha = .13f, HaloAlpha = .46f, CoreAlpha = .34f;
+
+        /// <summary>The two aurora masses and their drift, in the ceremony's own figures.</summary>
+        static readonly Vector2[] AuroraHome = { new Vector2(-360f, -240f), new Vector2(380f, -470f) };
+        static readonly float[] AuroraSize = { 980f, 820f };
+        static readonly float[] AuroraAlpha = { .18f, .13f };
 
         /// <summary>
-        /// The band under the last requirement line, which is the bar's seat.
-        ///
-        /// <b>Every row pays for it, including the ones that never draw a bar</b>, and that is
-        /// the point: only the rung being climbed shows one, and which rung that is changes
-        /// while the page is standing — a repaint cannot move a row that has already been laid
-        /// out, so a row sized without room for a bar would have the bar printed through its own
-        /// last line the moment it became the one being climbed. `render_ranks.py` drew exactly
-        /// that before this was a band. Trough plus air above and below.
-        ///
-        /// <para>
-        /// <b>Only the row being climbed pays for it.</b> Every other row gets
-        /// <see cref="RowFoot"/>, because a reserved band with no bar in it is dead space and
-        /// there were five of them down the page. That is affordable because the page is rebuilt
-        /// whenever the held rung moves (<see cref="LadderKey"/>) — a promotion happens a
-        /// handful of times in an account's life, and the card's <em>shape</em> genuinely depends
-        /// on which rung is being climbed, so rebuilding is the honest answer rather than a
-        /// dodge.
-        /// </para>
+        /// The room's wash: one deep navy-violet on every rung, opaque at the top of the stage
+        /// and gone by its foot. See the class remarks for why it is not the rung's metal. It
+        /// is not black and it is not a vignette — the light on top of it is what keeps this
+        /// from being the room three ceremonies came back from as <em>so dark</em> (44m).
         /// </summary>
-        const float BarBand = 84f;
+        static readonly Color WashDeep = Pal.Hex("#0F1552");
 
-        /// <summary>The badge, and the moulded seat it stands in.</summary>
-        const float BadgeSize = 176f, BadgeSeat = 198f;
+        /// <summary>The ring's trough, dark enough to read on the wash and on the light alike.</summary>
+        static readonly Color Trough = new Color(.03f, .05f, .14f, .78f);
 
-        /// <summary>The hero's badge, and where its writing starts from the plate's left edge.</summary>
-        /// <remarks>
-        /// Derived rather than typed at three call sites, because `UIKit.Box` always pivots at
-        /// centre and every one of those sites has to add half its own width to it — which is
-        /// exactly the arithmetic that put the update wall's sentence 89 units out (49h).
-        /// </remarks>
-        const float HeroBadge = 268f, HeroBadgeX = 216f;
-        const float TextX = HeroBadgeX + HeroBadge * .5f + 40f;
-
-        /// <summary>
-        /// One seat on the hero's strip, the air between two of them, and the picture inside.
-        ///
-        /// <b>Sized from the room rather than typed</b>, because the ladder is content: seven
-        /// rungs fit at these figures with air to spare, and a ladder long enough to overrun the
-        /// plate closes the gaps and then the seats instead of drawing off the edge. See
-        /// <see cref="BuildPips"/>.
-        /// </summary>
-        const float PipSeat = 68f, PipGap = 22f, PipFace = .84f;
-
-        /// <summary>The link hung in the gap between two rungs. See <see cref="BuildRow"/>.</summary>
-        const float LinkWidth = 14f;
-
-        static readonly Vector2 Top = new Vector2(.5f, 1f);
-        static readonly Vector2 Left = new Vector2(0f, .5f);
-        static readonly Vector2 Centre = new Vector2(.5f, .5f);
-
-        /// <summary>
-        /// The bar's orange, pre-divided against <see cref="Skins.Fill"/> exactly as
-        /// <c>TasksScreen.BarOrange</c> is, and copied rather than shared for that field's own
-        /// reason: it is not a colour, it is what the kit's off-white fill has to be multiplied
-        /// by to come out orange, and it may not be reasoned about — only drawn.
-        /// </summary>
-        /// <remarks>
-        /// <b>Deliberately not the rung's own metal</b> (<see cref="RankLook"/>), which was tried
-        /// and is the one place the accent must not go: a bar is read for its <em>length</em>,
-        /// and silver at rung 2 or ice at rung 6 against this trough is a fill you have to look
-        /// for. Gold is what this game already fills a bar with everywhere else (45h), and the
-        /// rim, the chip and the seat are carrying the rank's colour a hand's width above it.
-        /// </remarks>
-        static readonly Color BarOrange = new Color(1f, .588f, .118f, 1f);
-
-        /// <summary>The bar's trough and the fill inside it, both grown with the rest of the page.</summary>
-        const float BarTrough = 36f, BarH = 32f;
-
-        /// <summary>
-        /// A locked rung's writing: a cool steel, and <b>opaque</b>.
-        ///
-        /// It was cream at 48% alpha, which is the same mistake the plate made one size down —
-        /// faded ink over a faded card is two thin things on top of each other, and a caption
-        /// that is hard to read is a caption a player assumes is broken rather than one they
-        /// understand to be out of reach. Recede by <em>value</em>, at full strength.
-        /// </summary>
+        /// <summary>A locked rung's writing: a cool steel, and <b>opaque</b> (the old page's lesson).</summary>
         static readonly Color LockedInk = Pal.Hex("#93A6C4");
 
-        /// <summary>A locked rung's own name, one step brighter than its lines. See <see cref="LockedInk"/>.</summary>
-        static readonly Color LockedName = Pal.Hex("#C0CFE4");
+        /// <summary>
+        /// The bar's orange, pre-divided against <see cref="Skins.Fill"/> as every bar in the
+        /// game is (45h). Deliberately not the rung's metal — a bar is read for its length, and
+        /// silver on a navy trough is a fill you have to look for.
+        /// </summary>
+        static readonly Color BarOrange = new Color(1f, .588f, .118f, 1f);
 
-        /// <summary>One rung's row, kept so a repaint can write onto it.</summary>
-        sealed class Row
+        static readonly Vector2 Top = new Vector2(.5f, 1f);
+        static readonly Vector2 Bottom = new Vector2(.5f, 0f);
+        static readonly Vector2 Centre = new Vector2(.5f, .5f);
+        static readonly Vector2 Left = new Vector2(0f, .5f);
+
+        // ------------------------------------------------------------------ state
+        sealed class Seat
         {
             public RankDefinition Rung;
-            public Color Metal;
             public RectTransform Root;
-            public Image Plate;
-            public Image Badge;
-            public Image Burst;
-            public Image Halo;
-            public Image SeatRim;
             public Image Rim;
-            public Image Pool;
-            public Image Seal;
+            public Image Glow;
+            public Image Badge;
             public Image Lock;
-            public Image Standing;
-            public Text Percent;
+            public Image Pulse;
             public Image Link;
-            public Image Chip;
-            public Image ChipRim;
-            public Text Ordinal;
-            public Text Name;
-            public Text Blurb;
-            public Image Rule;
-            public readonly List<Image> Wells = new List<Image>();
-            public RectTransform Bar;
-            public readonly List<Text> Lines = new List<Text>();
-            public readonly List<Text> Counts = new List<Text>();
-            public readonly List<Image> Marks = new List<Image>();
-
-            /// <summary>
-            /// Whether the light is running on this row right now.
-            ///
-            /// The thing being turned on and off rather than a state it agrees with, for
-            /// <c>TasksScreen.Row.Lit</c>'s reason: a guard on a state is a guard that stops
-            /// firing the moment two states stop meaning the same thing.
-            /// </summary>
-            public bool Lit;
+            public bool Pulsing;
         }
 
-        readonly List<Row> _rows = new List<Row>();
+        sealed class Line
+        {
+            public RankRequirement Req;
+            public Image Mark;
+            public Text Said;
+            public Text Count;
+            public RectTransform Fill;
+            public float Room;
+        }
 
-        Image _heroPlate;
-        Image _heroBadge;
-        Image _heroRays;
-        Image _heroGlow;
-        Image _heroRim;
-        Image _heroRule;
-        Text _heroKicker;
-        Text _heroName;
-        Text _heroBlurb;
-        Text _heroCount;
+        /// <summary>
+        /// Fits the hero cluster to the stage it stands in: one scale, read off the stage's
+        /// own rect, clamped to <c>[1, StageMost]</c>. See <see cref="StageMost"/>.
+        /// </summary>
+        sealed class StageFit : MonoBehaviour
+        {
+            RectTransform _stage, _cluster;
+            float _seen = -1f;
 
-        /// <summary>The hero's strip: one seat per rung, the picture in it, and its rim.</summary>
-        readonly List<Image> _pipBadges = new List<Image>();
-        readonly List<Image> _pipRims = new List<Image>();
+            public void Init(RectTransform stage, RectTransform cluster)
+            {
+                _stage = stage;
+                _cluster = cluster;
+            }
+
+            void LateUpdate()
+            {
+                if (!_stage || !_cluster) return;
+
+                float h = _stage.rect.height;
+                if (h <= 1f || Mathf.Abs(h - _seen) < .5f) return;
+                _seen = h;
+
+                float k = Mathf.Clamp(h / StageLeast, 1f, StageMost);
+                _cluster.localScale = new Vector3(k, k, 1f);
+            }
+        }
+
+        readonly List<Seat> _seats = new List<Seat>();
+        readonly List<Line> _lines = new List<Line>();
+
+        RectTransform _stage, _cluster, _plateBand, _plate;
+        Image _fanA, _fanB, _halo, _core, _track, _ring, _spark, _badge;
+        Image[] _aurora;
+        Fireflies _flies;
+        Image _chip, _chipRim;
+        Text _ordinal, _eyebrow, _name, _pill, _plateTitle, _plateCount;
+        TextGradient _shimmer;
+        Btn _prev, _next;
+        Image _plateFace;
+
+        /// <summary>The rung on the stage, by ordinal. Nought only while the ladder is empty.</summary>
+        int _chosen;
 
         /// <summary>The rung ids this page was built for, so a retuned ladder rebuilds whole.</summary>
         string _built;
 
         protected override void Build()
         {
-            _rows.Clear();
-            _pipBadges.Clear();
-            _pipRims.Clear();
-            _heroBadge = null;
-
-            // The profile's ground rather than the hub's: this is a page made of plates laid
-            // across the width, so a painted *place* under it would only ever show in the gaps.
-            // `TasksScreen.Build` records the distinction.
-            Scenery.Plain(Content);
-            Fireflies.Spawn(Content, 18, new Color(1f, .93f, .70f), 6f, 22f);
-
+            _seats.Clear();
+            _lines.Clear();
             _built = LadderKey();
 
-            float y = 22f;
-            y = BuildHeader(y);
-            y = BuildHero(y);
-            BuildList(y);
+            Scenery.Plain(Content);
+
+            var ladder = RankLedger.Ladder;
+            _chosen = ladder.IsEmpty ? 0 : Opening(ladder);
+
+            BuildHeader();
+            BuildStage();
+            BuildRail();
+            BuildPlateBand();
+
+            Dress(animate: true);
         }
 
         void OnEnable() { RankLedger.Changed += OnChanged; }
@@ -293,21 +289,21 @@ namespace GlimmerGrove
         public override bool OnBack() { Flow.Go<LevelsScreen>(); return true; }
 
         /// <summary>
-        /// The ladder as a string, so a content push that changes which rungs exist is
-        /// distinguishable from one that only moves a target. The first is a different page and
-        /// the second is a repaint.
+        /// Which rung the hall opens on: the one held, or the first one to climb when none is.
+        /// "What am I" is the question the page is opened with, and the seat being climbed is
+        /// a tap away and already pulsing on the rail.
         /// </summary>
-        /// <remarks>
-        /// <b>The held ordinal is part of it</b>, not only the rung ids: the row being climbed is
-        /// the only one that reserves a seat for a bar (<see cref="BarBand"/>), so a promotion
-        /// changes the <em>shape</em> of two cards and not just their colours. A repaint cannot
-        /// move a row that has already been laid out, so that is a rebuild.
-        /// </remarks>
+        static int Opening(RankLadder ladder)
+        {
+            int held = RankLedger.Ordinal;
+            return held > 0 ? held : 1;
+        }
+
         string LadderKey()
         {
             var sb = new System.Text.StringBuilder();
             foreach (var rung in RankLedger.Ladder.Rungs) sb.Append(rung.Id).Append('|');
-            return sb.Append('#').Append(RankLedger.Ordinal).ToString();
+            return sb.ToString();
         }
 
         void OnChanged()
@@ -318,10 +314,41 @@ namespace GlimmerGrove
             Repaint();
         }
 
-        // ------------------------------------------------------------------ chrome
-        float BuildHeader(float y)
+        // ------------------------------------------------------------------ readings
+        /// <summary>
+        /// How much of a rung is done: the mean of its clamped line shares, which is
+        /// <see cref="RankLedger.Progress01"/>'s arithmetic asked of any rung rather than of
+        /// the next one only. A held rung answers one; a rung with no lines answers one too,
+        /// because there is nothing left of it to do.
+        /// </summary>
+        static float Share(RankDefinition rung, CatalogIndex index)
         {
-            float cy = -(y + BannerH * .5f);
+            if (rung == null || rung.Requirements.Count == 0) return 1f;
+
+            float total = 0f;
+            for (int i = 0; i < rung.Requirements.Count; i++)
+            {
+                var line = rung.Requirements[i];
+                float share = line.Target <= 0 ? 1f : line.Held(index) / (float)line.Target;
+                total += Mathf.Clamp01(share);
+            }
+            return total / rung.Requirements.Count;
+        }
+
+        enum Standing { Held, Earned, Next, Locked }
+
+        static Standing StandingOf(RankDefinition rung)
+        {
+            int held = RankLedger.Ordinal;
+            if (rung.Ordinal == held) return Standing.Held;
+            if (rung.Ordinal < held) return Standing.Earned;
+            return rung.Ordinal == held + 1 ? Standing.Next : Standing.Locked;
+        }
+
+        // ------------------------------------------------------------------ chrome
+        void BuildHeader()
+        {
+            float cy = -(HeaderTop + BannerH * .5f);
 
             UIKit.IconButton("Back", Safe, Skins.Nav, "ic_left", Vector2.one * ChromeSize,
                              new Vector2(0f, 1f), new Vector2(76f, cy),
@@ -331,629 +358,707 @@ namespace GlimmerGrove
                                              new Vector2(720f, BannerH), Top, new Vector2(0f, cy), 42);
             ribbon.transform.localScale = Vector3.zero;
             Tween.Pop(ribbon.transform, 0f, .5f, .06f);
-            y += BannerH + 4f;
-
-            UIKit.Shrinkable(
-                UIKit.Titled("Sub", Safe, Loc.Get("ui.ranks.subtitle"), 24,
-                             new Color(.86f, .90f, 1f, .78f), TextAnchor.MiddleCenter,
-                             new Vector2(880f, 32f), Top, new Vector2(0f, -(y + 16f)), 3f, 3f), 15);
-
-            return y + 32f + 16f;
         }
 
+        // ------------------------------------------------------------------ the stage
         /// <summary>
-        /// The badge the player wears now, large, in its own metal, over a strip of every rung
-        /// there is.
-        ///
-        /// <para>
-        /// It repeats the first row of the list when the first rung is held, and that repetition
-        /// is the point: the question the page is opened with is "what am I", and making
-        /// somebody find their own row in a list of seven to answer it is a page that starts
-        /// with a search.
-        /// </para>
+        /// The room and the light in it, then the ring, then the badge, then the words — in
+        /// that order, so each draws over the last.
         /// </summary>
-        float BuildHero(float y)
+        void BuildStage()
         {
-            _heroPlate = UIKit.Img("Hero", Safe, Art.S("Ui/" + Skins.Panel), Color.white,
-                                   new Vector2(Width, HeroH), Top, new Vector2(0f, -(y + HeroH * .5f)));
-            var plate = _heroPlate.transform;
+            float bottom = FootPad + PlateBand() + PlateGap + RailH;
 
-            var clip = UIKit.Node("Clip", plate);
-            UIKit.StretchTo(clip, 8f, 8f, 8f, 8f);
-            clip.gameObject.AddComponent<RectMask2D>();
+            _stage = UIKit.Node("Stage", Safe);
+            UIKit.StretchTo(_stage, 0f, bottom, 0f, HeaderH);
 
-            _heroRays = UIKit.Img("Rays", clip, Art.Rays(512, 14), Pal.A(Pal.Sun, .17f),
-                                  new Vector2(HeroH * 2.3f, HeroH * 2.3f), Centre, new Vector2(0f, 24f));
-            _heroRays.raycastTarget = false;
+            // Clipped, so the fans and the aurora stop at the stage's own edges rather than
+            // turning behind the ribbon and the rail.
+            _stage.gameObject.AddComponent<RectMask2D>();
 
-            float left = -Width * .5f;
-            float bx = left + HeroBadgeX;
-            const float by = 34f;
+            // A swipe turns the page. The handler is on the stage itself, because the event
+            // system finds a drag handler by walking *up* from whatever was hit — so a drag
+            // that starts on the badge, the name or a chevron still turns the page. The
+            // catcher under everything is what makes the empty parts of the stage hittable.
+            _stage.gameObject.AddComponent<Swipe>().Swiped = dir => Step(-dir);
+            var catcher = UIKit.Img("Catcher", _stage, Art.Pixel, new Color(0f, 0f, 0f, 0f));
+            UIKit.StretchTo((RectTransform)catcher.transform, 0f, 0f, 0f, 0f);
+            catcher.raycastTarget = true;
 
-            _heroGlow = UIKit.Img("Glow", plate, Art.Glow(128, 2.1f), Pal.A(Pal.Sun, .30f),
-                                  Vector2.one * (HeroBadge * 1.5f), Centre, new Vector2(bx, by));
+            // The wash: opaque at the top of the stage and gone by its foot, so the room reads
+            // as a place the badge is lit in and the wall shows through under it.
+            var wash = UIKit.Img("Wash", _stage,
+                                 Art.Gradient(Pal.A(Color.white, 0f), Pal.A(Color.white, .80f),
+                                              Pal.A(Color.white, .97f)),
+                                 WashDeep);
+            UIKit.StretchTo((RectTransform)wash.transform, 0f, 0f, 0f, 0f);
 
-            // The seat, so the badge stands in the plate rather than on it. The kit's slot is
-            // the same moulding the action bar's cells wear, which is what makes a picture
-            // dropped into it read as equipment rather than as a sticker.
-            var seat = UIKit.Img("Seat", plate, Art.S("Ui/" + Skins.Slot), Color.white,
-                                 Vector2.one * (HeroBadge * 1.12f), Centre, new Vector2(bx, by));
-            seat.raycastTarget = false;
+            // The fireflies live in the stage, not the cluster, so they fill whatever room a
+            // tall canvas gives and are never scaled into blobs.
+            _flies = Fireflies.Spawn(_stage, 16, Pal.Sun, 5f, 16f);
 
-            // The same metal rim every card's seat wears, so the hero reads as one of them made
-            // large rather than as a different object that happens to hold a badge.
-            _heroRim = UIKit.Img("SeatRim", plate, Art.RoundOutline(24, 6f), Pal.Sun,
-                                 Vector2.one * (HeroBadge * 1.12f), Centre, new Vector2(bx, by));
+            // Everything that is *the hero* stands in one node the size of the least stage,
+            // standing on the stage's foot and scaled to the stage by `StageFit` — read off
+            // the stage's rect on the frames after the build, never on the build frame
+            // (`CRAFT.md`), and re-read whenever the canvas changes shape, which a tablet in
+            // split view does. **It stands on the foot, pivoted there, so it grows upward**:
+            // the pill is always a hand's width above the rail, and whatever air a tall phone
+            // has lands under the ribbon, where the wash and the fans fill it. Centred, the
+            // same air split in two and left a dead band of wall between the pill and the
+            // seats (the owner, 2026-09-26).
+            _cluster = UIKit.Box("Cluster", _stage, new Vector2(Boot.RefWidth, StageLeast), Bottom, Vector2.zero);
+            _cluster.pivot = new Vector2(.5f, 0f);
+            _cluster.anchoredPosition = Vector2.zero;
+            _cluster.gameObject.AddComponent<StageFit>().Init(_stage, _cluster);
 
-            _heroBadge = UIKit.Img("Badge", plate, null, Color.white,
-                                   Vector2.one * HeroBadge, Centre, new Vector2(bx, by));
-            _heroBadge.preserveAspect = true;
+            _aurora = new Image[AuroraHome.Length];
+            for (int i = 0; i < _aurora.Length; i++)
+            {
+                // In the stage rather than the cluster, hung from its top: on a tall phone the
+                // room above the hero is theirs to fill, and scaling them with the badge would
+                // make blobs.
+                _aurora[i] = UIKit.Img("Aurora" + i, _stage, Art.Glow(256, 1.7f), Pal.A(Pal.Sun, 0f),
+                                       Vector2.one * AuroraSize[i], Top, AuroraHome[i]);
+                Drift(_aurora[i], AuroraHome[i], i == 0 ? 120f : 90f, i == 0 ? 17f : 23f);
+            }
 
-            float textX = left + TextX;
-            float textW = Width * .5f - textX - 40f;
+            _fanA = UIKit.Img("Fan", _cluster, Art.Rays(512, 14), Pal.A(Pal.Sun, 0f),
+                              Vector2.one * FanSize, Top, new Vector2(0f, -RingTop));
+            Turn((RectTransform)_fanA.transform, 360f, 48f);
 
-            _heroKicker = UIKit.Shrinkable(
-                UIKit.Titled("Kicker", plate, Loc.Get("ui.ranks.mark"), 24,
-                             Pal.A(Pal.Sun, .85f), TextAnchor.MiddleLeft,
-                             new Vector2(textW, 30f), Centre,
-                             new Vector2(textX + textW * .5f, 148f), 0f, 2f), 14);
+            _fanB = UIKit.Img("Fan2", _cluster, Art.Rays(256, 7), Pal.A(Pal.Sun, 0f),
+                              Vector2.one * Fan2Size, Top, new Vector2(0f, -RingTop));
+            Turn((RectTransform)_fanB.transform, -360f, 31f);
 
-            _heroName = UIKit.Shrinkable(
-                UIKit.Titled("Name", plate, string.Empty, 60, Pal.Gold,
-                             TextAnchor.MiddleLeft, new Vector2(textW, 74f), Centre,
-                             new Vector2(textX + textW * .5f, 84f)), 28);
+            _halo = UIKit.Img("Halo", _cluster, Art.Glow(256, 1.8f), Pal.A(Pal.Sun, 0f),
+                              Vector2.one * HaloSize, Top, new Vector2(0f, -RingTop));
 
-            _heroBlurb = UIKit.Shrinkable(
-                UIKit.Titled("Blurb", plate, string.Empty, 28, Pal.A(Pal.Cream, .84f),
-                             TextAnchor.UpperLeft, new Vector2(textW, 92f), Centre,
-                             new Vector2(textX + textW * .5f, 4f), 0f, 2f, wrap: true), 18);
+            // A tighter light under the badge itself, so it reads as lit rather than as a
+            // sticker on a lit wall.
+            _core = UIKit.Img("Core", _cluster, Art.Glow(128, 2.4f), Pal.A(Pal.Sun, 0f),
+                              Vector2.one * CoreSize, Top, new Vector2(0f, -RingTop));
 
-            _heroCount = UIKit.Shrinkable(
-                Scenery.Pill(plate, string.Empty, 28, new Vector2(textW, 62f), Centre,
-                             new Vector2(textX + textW * .5f, -74f),
-                             new Color(.05f, .09f, .18f, .80f), "ic_star"), 17);
+            // The ring: a dark trough and a radial fill over it. `fillOrigin` 0 on a
+            // `Radial360` is the bottom, and the fill runs clockwise from there, which is
+            // where the ordinal chip sits and so where the seam is hidden.
+            _track = UIKit.Img("Track", _cluster, Art.Ring(256, RingThick), Trough,
+                               Vector2.one * RingSize, Top, new Vector2(0f, -RingTop));
 
-            _heroRule = UIKit.Img("Rule", plate, Art.Pixel, Pal.A(Pal.Sun, .18f),
-                                  new Vector2(Width - WellInset * 2f, 2f), Centre,
-                                  new Vector2(0f, -116f));
+            _ring = UIKit.Img("Ring", _cluster, Art.Ring(256, RingThick), Pal.Sun,
+                              Vector2.one * RingSize, Top, new Vector2(0f, -RingTop));
+            _ring.type = Image.Type.Filled;
+            _ring.fillMethod = Image.FillMethod.Radial360;
+            _ring.fillOrigin = (int)Image.Origin360.Bottom;
+            _ring.fillClockwise = true;
+            _ring.fillAmount = 0f;
 
-            BuildPips(plate, -160f);
+            _spark = UIKit.Img("Spark", _cluster, Art.Spark(96), Pal.Sun,
+                               Vector2.one * SparkSize, Top, new Vector2(0f, -ChipTop));
 
-            return y + HeroH + 22f;
+            _badge = UIKit.Img("Badge", _cluster, null, Color.white,
+                               Vector2.one * BadgeSize, Top, new Vector2(0f, -RingTop));
+            _badge.preserveAspect = true;
+            // From nothing on the first dress, so the open is an arrival rather than a shrink.
+            _badge.transform.localScale = Vector3.zero;
+
+            _prev = UIKit.IconButton("Prev", _cluster, Skins.Nav, "ic_left",
+                                     Vector2.one * ChevronSize, Top, new Vector2(-ChevronX, -RingTop),
+                                     () => Step(-1));
+            _next = UIKit.IconButton("Next", _cluster, Skins.Nav, "ic_right",
+                                     Vector2.one * ChevronSize, Top, new Vector2(ChevronX, -RingTop),
+                                     () => Step(1));
+
+            // The ordinal, in a chip on the ring's foot. It covers the fill's seam and is the
+            // one line on the stage that is true whether or not the rung is held.
+            _chip = UIKit.Img("Chip", _cluster, Art.Round(14), new Color(0f, 0f, 0f, .55f),
+                              new Vector2(ChipW, ChipH), Top, new Vector2(0f, -ChipTop));
+            _chipRim = UIKit.Img("ChipRim", _chip.transform, Art.RoundOutline(14, 3f), Pal.Sun);
+            UIKit.StretchTo((RectTransform)_chipRim.transform, 0f, 0f, 0f, 0f);
+            _ordinal = UIKit.Shrinkable(
+                UIKit.Titled("Ordinal", _chip.transform, string.Empty, 24, Pal.Sun,
+                             TextAnchor.MiddleCenter, new Vector2(ChipW - 16f, 30f), Centre,
+                             Vector2.zero, 0f, 2f), 14);
+
+            _eyebrow = UIKit.Shrinkable(
+                UIKit.Titled("Eyebrow", _cluster, string.Empty, 26, Pal.Sun,
+                             TextAnchor.MiddleCenter, new Vector2(TextW, EyebrowH), Top,
+                             new Vector2(0f, -EyebrowTop), 0f, 2f), 15);
+
+            // The name wears a shimmer of the rung's metal — `TextGradient` runs across the
+            // glyphs, so the light lands as a highlight rather than as a flat tint — over the
+            // dark outline every caption here carries, which is what keeps silver legible on
+            // a lit room (44n).
+            _name = UIKit.Shrinkable(
+                UIKit.Titled("Name", _cluster, string.Empty, 78, Color.white,
+                             TextAnchor.MiddleCenter, new Vector2(TextW, NameH), Top,
+                             new Vector2(0f, -NameTop), 3f, 4f), 34);
+            _shimmer = _name.gameObject.AddComponent<TextGradient>();
+
+            _pill = UIKit.Shrinkable(
+                Scenery.Pill(_cluster, string.Empty, 26, new Vector2(PillW, PillH), Top,
+                             new Vector2(0f, -PillTop), new Color(.04f, .07f, .18f, .82f), "ic_star"), 16);
         }
 
+        /// <summary>One aurora mass wandering a loop round its home.</summary>
+        static void Drift(Image blob, Vector2 home, float span, float period)
+        {
+            var rt = (RectTransform)blob.transform;
+            Tween.Run(period, Ease.Linear, t =>
+            {
+                if (!rt) return;
+                float a = t * Mathf.PI * 2f;
+                rt.anchoredPosition = home + new Vector2(Mathf.Sin(a) * span, Mathf.Cos(a * 2f) * span * .5f);
+            }, blob, "drift").Loop(-1, false);
+        }
+
+        /// <summary>A fan turning for ever — a whole turn per loop so the join is invisible.</summary>
+        static void Turn(RectTransform rt, float degrees, float period)
+        {
+            Tween.RotateBy(rt, degrees, period, Ease.Linear).Loop(-1, false);
+        }
+
+        // ------------------------------------------------------------------ the rail
         /// <summary>
-        /// Every rung in the game as one strip of seats, filled as far as the player has come.
-        ///
-        /// <para>
-        /// <b>It is the only thing on the page that answers "how far up am I" without
-        /// scrolling</b>, which on a phone is four of seven rungs away. The pill above it says
-        /// the same thing in words and the two are not redundant: "3 of 7" is a fact and a strip
-        /// three-sevenths full is a shape, and a shape is what a glance reads.
-        /// </para>
-        /// <para>
-        /// <b>An unearned seat is drawn empty rather than dimmed</b>, which is the same rule the
-        /// cards follow one size up: a strip of seven bright badges says nothing at all, and a
-        /// strip of seven faint ones says the art is broken. A hole is unambiguous.
-        /// </para>
+        /// Every rung as a seat on one rail, chained, standing on the plate's band. Sized from
+        /// the room rather than typed: a longer ladder closes the air, then the seats.
         /// </summary>
-        void BuildPips(Transform plate, float cy)
+        void BuildRail()
         {
             var ladder = RankLedger.Ladder;
             int n = ladder.Count;
+
+            float bottom = FootPad + PlateBand() + PlateGap;
+            var rail = UIKit.Box("Rail", Safe, new Vector2(PlateW, RailH), Bottom,
+                                 new Vector2(0f, bottom + RailH * .5f));
             if (n <= 0) return;
 
-            // Sized from the room rather than typed: the ladder is content and a longer one has
-            // to fit on the same plate. Close the air first, then the seats.
-            float room = Width - 80f;
-            float pitch = Mathf.Min(PipSeat + PipGap, room / n);
-            float seat = Mathf.Min(PipSeat, pitch - 8f);
+            float pitch = Mathf.Min(SeatPitchMost, (PlateW - 40f) / n);
+            float seat = Mathf.Min(SeatSize, pitch - 10f);
             float x0 = -pitch * (n - 1) * .5f;
 
+            // The chain first, so every link is under every seat.
+            var links = UIKit.Node("Links", rail);
             for (int i = 0; i < n; i++)
             {
                 var rung = ladder.At(i + 1);
                 float x = x0 + pitch * i;
 
-                UIKit.Img("PipSeat", plate, Art.S("Ui/" + Skins.Slot), Color.white,
-                          Vector2.one * seat, Centre, new Vector2(x, cy));
+                var s = new Seat { Rung = rung };
+                s.Root = UIKit.Box("Seat_" + rung.Id, rail, Vector2.one * seat, Centre, new Vector2(x, 0f));
 
-                var badge = UIKit.Img("Pip", plate, rung != null ? Art.S(rung.Icon) : null,
-                                      Color.white, Vector2.one * (seat * PipFace), Centre,
-                                      new Vector2(x, cy));
-                badge.preserveAspect = true;
-                _pipBadges.Add(badge);
+                if (i < n - 1)
+                {
+                    float length = pitch - seat - LinkGap * 2f;
+                    s.Link = UIKit.Img("Link_" + rung.Id, links, Art.Capsule((int)LinkThick, 48),
+                                       Pal.A(Pal.Cream, .14f), new Vector2(length, LinkThick), Centre,
+                                       new Vector2(x + pitch * .5f, 0f));
+                }
 
-                var rim = UIKit.Img("PipRim", plate, Art.RoundOutline(18, 4f),
-                                    Pal.A(Pal.Sun, 0f), Vector2.one * (seat + 6f), Centre,
-                                    new Vector2(x, cy));
-                _pipRims.Add(rim);
+                s.Glow = UIKit.Img("Glow", s.Root, Art.Glow(128, 2.0f), Pal.A(Pal.Sun, 0f),
+                                   Vector2.one * (seat * 1.9f), Centre, Vector2.zero);
+
+                // The pulse on the seat being climbed, under the moulding so it comes out
+                // from behind it. Built for every seat and lit on one, because which seat that
+                // is moves while the page is standing.
+                s.Pulse = UIKit.Img("Pulse", s.Root, Art.Ring(128, 8f), Pal.A(Pal.Sun, 0f),
+                                    Vector2.one * (seat + 16f), Centre, Vector2.zero);
+
+                var slot = UIKit.Img("Slot", s.Root, Art.S("Ui/" + Skins.Slot), Color.white,
+                                     Vector2.one * seat, Centre, Vector2.zero);
+                slot.raycastTarget = true;
+                slot.gameObject.AddComponent<Btn>().Setup(() => Choose(rung.Ordinal));
+
+                s.Rim = UIKit.Img("Rim", s.Root, Art.RoundOutline(20, 5f), Pal.A(Pal.Sun, 0f),
+                                  Vector2.one * seat, Centre, Vector2.zero);
+
+                s.Badge = UIKit.Img("Badge", s.Root, null, Color.white,
+                                    Vector2.one * (seat * SeatFace), Centre, Vector2.zero);
+                s.Badge.preserveAspect = true;
+                if (!RankArt.Paint(s.Badge, rung.Id)) s.Badge.enabled = false;
+
+                s.Lock = UIKit.Img("Lock", s.Root, Art.S("Ui/" + Skins.Resting), Color.white,
+                                   Vector2.one * LockChip, Centre,
+                                   new Vector2(seat * .5f - LockChip * .34f, -seat * .5f + LockChip * .34f));
+                var shackle = UIKit.Img("Shackle", s.Lock.transform, Art.S("Ui/ic_lock"), LockedInk,
+                                        Vector2.one * (LockChip * .58f), Centre, Vector2.zero);
+                shackle.preserveAspect = true;
+
+                _seats.Add(s);
             }
         }
 
-        // ------------------------------------------------------------------ the ladder
+        // ------------------------------------------------------------------ the plate
         /// <summary>
-        /// Every rung in one scrolling band down to the bottom of the screen. The band is
-        /// measured rather than assumed, exactly as the task slates are: on a tall phone the
-        /// list may fit and sit still, on a short one it scrolls, and neither shape is written
-        /// down.
+        /// The plate's band: as tall as the tallest rung the ladder ships needs, and never so
+        /// tall that the stage is pushed under the header on the shortest canvas.
         /// </summary>
-        void BuildList(float top)
+        float PlateBand()
         {
-            var band = UIKit.Node("Ladder", Safe);
-            UIKit.StretchTo(band, 0f, 20f, 0f, top);
-            band.gameObject.AddComponent<RectMask2D>();
+            int most = 0;
+            foreach (var rung in RankLedger.Ladder.Rungs)
+                if (rung.Requirements.Count > most) most = rung.Requirements.Count;
+
+            float wanted = PlateHeight(Mathf.Max(1, most));
+            float room = CanvasFit.ShortestCanvas - InsetAllowance
+                       - HeaderH - StageLeast - RailH - PlateGap - FootPad;
+            return Mathf.Min(wanted, room);
+        }
+
+        public static float PlateHeight(int lines) => PlateHead + lines * LineH + PlateFoot;
+
+        void BuildPlateBand()
+        {
+            _plateBand = UIKit.Box("PlateBand", Safe, new Vector2(PlateW, PlateBand()), Bottom,
+                                   new Vector2(0f, FootPad + PlateBand() * .5f));
+            _plateBand.gameObject.AddComponent<RectMask2D>();
+        }
+
+        /// <summary>
+        /// The chosen rung's plate, built fresh: the old one is hidden and let go, the new one
+        /// is laid out at its own height from the top of the band and scrolls only if it
+        /// overruns it.
+        /// </summary>
+        void BuildPlate(RankDefinition rung, bool animate)
+        {
+            if (_plate != null)
+            {
+                // Hidden before it is destroyed: `Destroy` lands at the end of the frame, and
+                // an outgoing plate would draw over its replacement for one (CRAFT.md).
+                _plate.gameObject.SetActive(false);
+                Destroy(_plate.gameObject);
+                _plate = null;
+            }
+            _lines.Clear();
+
+            if (rung == null) return;
+
+            var lines = rung.Requirements;
+            float height = PlateHeight(lines.Count);
+            var standing = StandingOf(rung);
+            bool live = standing != Standing.Locked;
+            var metal = RankLook.Metal(rung);
+
+            var band = UIKit.Node("Plate_" + rung.Id, _plateBand);
+            _plate = band;
 
             var list = UIKit.Node("List", band);
             list.anchorMin = new Vector2(0f, 1f);
             list.anchorMax = new Vector2(1f, 1f);
             list.pivot = new Vector2(.5f, 1f);
-
-            // Every row's pool and every link lives here, built first so all of them are **under
-            // every plate**. A light hung off a row's own plate would have to be a child, which
-            // draws over the plate it is meant to light, or a sibling, which draws over the row
-            // above — the arrangement `TasksScreen.BuildSlates` records.
-            var lights = UIKit.Node("Lights", list);
-            lights.anchorMin = new Vector2(0f, 1f);
-            lights.anchorMax = new Vector2(1f, 1f);
-            lights.pivot = new Vector2(.5f, 1f);
-            UIKit.StretchTo(lights, 0f, 0f, 0f, 0f);
-
-            var ladder = RankLedger.Ladder;
-
-            float y = 4f;
-            if (ladder.IsEmpty)
-            {
-                // The honest answer to a content file with no ladder in it. There is no built-in
-                // one to fall back to (`RankLadder`), so there is nothing true to draw.
-                UIKit.Shrinkable(
-                    UIKit.Titled("None", list, Loc.Get("ui.ranks.unranked_blurb"), 26,
-                                 Pal.A(Pal.Cream, .7f), TextAnchor.MiddleCenter,
-                                 new Vector2(Width, 80f), Top, new Vector2(0f, -(y + 40f)),
-                                 0f, 2f, wrap: true), 16);
-                y += 96f;
-            }
-            else
-            {
-                int last = ladder.Count - 1;
-                for (int i = 0; i < ladder.Count; i++)
-                {
-                    y += BuildRow(list, lights, ladder.At(i + 1), y, i < last) + RowGap;
-                }
-            }
-
-            list.sizeDelta = new Vector2(0f, y);
+            list.sizeDelta = new Vector2(0f, height);
             list.anchoredPosition = Vector2.zero;
 
-            var catcher = band.gameObject.AddComponent<Image>();
-            catcher.color = new Color(0f, 0f, 0f, 0f);
-            catcher.raycastTarget = true;
+            _plateFace = UIKit.Img("Face", list, Art.S("Ui/" + (live ? Skins.PlateNavy : Skins.Panel)),
+                                   Color.white, new Vector2(PlateW, height), Top, new Vector2(0f, -height * .5f));
+            var face = _plateFace.transform;
 
-            var scroll = band.gameObject.AddComponent<ScrollRect>();
-            scroll.content = list;
-            scroll.viewport = band;
-            scroll.horizontal = false;
-            scroll.vertical = true;
-            scroll.movementType = ScrollRect.MovementType.Elastic;
-            scroll.elasticity = .14f;
-            scroll.inertia = true;
-            scroll.decelerationRate = .04f;
-            scroll.scrollSensitivity = 55f;
+            var rim = UIKit.Img("Rim", face, Art.RoundOutline(30, 6f), Pal.A(metal, live ? .55f : .22f));
+            UIKit.StretchTo((RectTransform)rim.transform, 0f, 0f, 0f, 0f);
 
-            Repaint();
-        }
+            float headY = height * .5f - PlateHead * .5f;
+            float wellW = PlateW - WellInset * 2f;
 
-        /// <summary>One rung. Returns how tall it came out, which its own line count decides.</summary>
-        float BuildRow(RectTransform list, RectTransform lights, RankDefinition rung, float y,
-                       bool chained)
-        {
-            var lines = rung.Requirements;
+            _plateTitle = UIKit.Shrinkable(
+                UIKit.Titled("Title", face, Loc.Get("ui.ranks.requirements").ToUpperInvariant(), 28,
+                             live ? metal : LockedInk, TextAnchor.MiddleLeft,
+                             new Vector2(wellW * .6f, 34f), Centre,
+                             new Vector2(-wellW * .5f + wellW * .3f, headY), 0f, 2f), 15);
 
-            // See `BarBand`: the bar's seat belongs to the one row that draws a bar, and the
-            // page is rebuilt when that moves.
-            bool climbing = ReferenceEquals(RankLedger.Next, rung);
-            float height = RowHead + lines.Count * LineH + (climbing ? BarBand : RowFoot);
-            float cy = -(y + height * .5f);
+            _plateCount = UIKit.Shrinkable(
+                UIKit.Titled("Count", face, string.Empty, 30, Pal.Cream, TextAnchor.MiddleRight,
+                             new Vector2(CountW, 34f), Centre,
+                             new Vector2(wellW * .5f - CountW * .5f, headY), 0f, 2f), 15);
 
-            var row = new Row { Rung = rung, Metal = RankLook.Metal(rung) };
-
-            row.Pool = UIKit.Img("Light_" + rung.Id, lights, Art.Glow(128, 1.35f), Pal.A(Pal.Sun, 0f),
-                                 new Vector2(Width + 280f, height + 200f), Top, new Vector2(0f, cy));
-
-            float left = -Width * .5f;
-            float badgeX = left + WellInset + BadgeSeat * .5f;
-
-            // **The link down to the next rung**, hung in the gap under the badge column. It is
-            // the whole reason the gap is 28 rather than 20: a chain of seats reads as a ladder
-            // climbed from the bottom where seven stacked cards read as seven cards, and there
-            // is nowhere else on a full-bleed plate to draw one. It belongs to the row above it
-            // so the run lights from the bottom without any row knowing what is under it.
-            if (chained)
+            float lineY = height * .5f - PlateHead - LineH * .5f;
+            foreach (var req in lines)
             {
-                row.Link = UIKit.Img("Link_" + rung.Id, lights, Art.Capsule(14, 36),
-                                     Pal.A(Pal.Cream, .12f),
-                                     new Vector2(LinkWidth, RowGap + 12f), Top,
-                                     new Vector2(badgeX, cy - height * .5f - RowGap * .5f));
-            }
-
-            row.Plate = UIKit.Img("Row_" + rung.Id, list, Art.S("Ui/" + Skins.PlateNavy), Color.white,
-                                  new Vector2(Width, height), Top, new Vector2(0f, cy));
-            row.Root = (RectTransform)row.Plate.transform;
-
-            // The rim is drawn over the plate rather than behind it. It went behind once on the
-            // streak board and was simply invisible: the kit's plates are opaque (invariant 48i).
-            row.Rim = UIKit.Img("Rim", row.Root, Art.RoundOutline(30, 8f), Pal.A(row.Metal, 0f));
-            UIKit.StretchTo((RectTransform)row.Rim.transform, 0f, 0f, 0f, 0f);
-
-            float headY = height * .5f - RowHead * .5f;
-
-            // The light behind an earned badge, which is what makes a held rank read as *won*
-            // rather than as ticked off. Drawn before the seat so it comes out from behind the
-            // moulding.
-            //
-            // <b>A fan and not the kit's starburst, and the reason is the card's own edge.</b>
-            // `Skins.Badge` was tried first and fails twice over: it is a chunky eight-pointed
-            // star with a hard rim, so at any size that reads as rays it overhangs the plate by
-            // its points and lands on the wall — the badge column is inset only
-            // <see cref="WellInset"/> — and at half strength it composites to a grey-blue haze
-            // over `PlateNavy`'s saturated blue, which is a smudge rather than light (invariant
-            // 44g arriving through the alpha instead of the tint). `Art.Rays` fades to nothing
-            // at its own rim, so it may be drawn larger than the plate and simply is not there
-            // when it gets to the edge.
-            row.Burst = UIKit.Img("Burst", row.Root, Art.Rays(256, 16), Pal.A(row.Metal, 0f),
-                                  Vector2.one * (BadgeSeat * 1.60f), Centre, new Vector2(badgeX, headY));
-            row.Burst.preserveAspect = true;
-
-            row.Halo = UIKit.Img("Glow", row.Root, Art.Glow(128, 2.1f), Pal.A(row.Metal, .18f),
-                                 Vector2.one * (BadgeSeat * 1.34f), Centre, new Vector2(badgeX, headY));
-
-            var seat = UIKit.Img("Seat", row.Root, Art.S("Ui/" + Skins.Slot), Color.white,
-                                 Vector2.one * BadgeSeat, Centre, new Vector2(badgeX, headY));
-            seat.raycastTarget = false;
-
-            // The seat's own rim in the rung's metal — the piece that does most of the work of
-            // telling seven cards apart, because it is a hard edge on a dark hole rather than a
-            // wash over a bright plate. A tint over the plate was tried and silver over
-            // `PlateNavy` is invisible.
-            row.SeatRim = UIKit.Img("SeatRim", row.Root, Art.RoundOutline(24, 5f), row.Metal,
-                                    Vector2.one * BadgeSeat, Centre, new Vector2(badgeX, headY));
-
-            // **Never dimmed, in any state.** See the class remarks: the badge is the reason to
-            // scroll and a page of bright medallions is a trophy case.
-            row.Badge = UIKit.Img("Badge", row.Root, Art.S(rung.Icon), Color.white,
-                                  Vector2.one * BadgeSize, Centre, new Vector2(badgeX, headY));
-            row.Badge.preserveAspect = true;
-
-            // The right end carries one answer, and the first of them is a word — the streak
-            // board's rule (invariant 48g), which is what stops three glyphs meaning three
-            // different things in the same column.
-            float answerX = Width * .5f - WellInset - AnswerSize * .5f;
-
-            row.Seal = UIKit.Img("Seal", row.Root, Art.Disc(96), Pal.Mint,
-                                 Vector2.one * AnswerSize, Centre, new Vector2(answerX, headY));
-            var tick = UIKit.Img("Tick", row.Seal.transform, Art.S("Ui/ic_check"), Color.white,
-                                 Vector2.one * (AnswerSize * .58f), Centre, Vector2.zero);
-            tick.preserveAspect = true;
-
-            // A padlock in a chip rather than a padlock floating on a plate. `Skins.Resting` is
-            // the kit's own "not a control" square, which is exactly what this is.
-            row.Lock = UIKit.Img("Lock", row.Root, Art.S("Ui/" + Skins.Resting), Color.white,
-                                 Vector2.one * AnswerSize, Centre, new Vector2(answerX, headY));
-            var shackle = UIKit.Img("Shackle", row.Lock.transform, Art.S("Ui/ic_lock"), LockedInk,
-                                    Vector2.one * (AnswerSize * .56f), Centre, Vector2.zero);
-            shackle.preserveAspect = true;
-
-            // And the climbing row's answer: how far up this rung stands. Before this the one
-            // column a reader scans had a hole in it on the one row they came to look at.
-            row.Standing = UIKit.Img("Standing", row.Root, Art.S("Ui/" + Skins.Slot), Color.white,
-                                     Vector2.one * AnswerSize, Centre, new Vector2(answerX, headY));
-            var standRim = UIKit.Img("Rim", row.Standing.transform, Art.RoundOutline(20, 4f), row.Metal);
-            UIKit.StretchTo((RectTransform)standRim.transform, 0f, 0f, 0f, 0f);
-            row.Percent = UIKit.Shrinkable(
-                UIKit.Titled("Pct", row.Standing.transform, string.Empty, 30, row.Metal,
-                             TextAnchor.MiddleCenter, new Vector2(AnswerSize - 12f, 40f), Centre,
-                             Vector2.zero, 0f, 2f), 16);
-
-            float textX = badgeX + BadgeSeat * .5f + 28f;
-            float textW = (answerX - AnswerSize * .5f - 24f) - textX;
-
-            // **The ordinal, above the name, and in a chip rather than on the plate.** A ladder
-            // wants a number on it: "RANK 3" says where this badge sits without the player
-            // counting rows, and it is the one line on the card that is true whether or not the
-            // rung is held. It is the rung's metal on a dark chip rather than metal ink on the
-            // plate, because a pale metal written straight onto `PlateNavy` is the yellow-bar-on-
-            // a-yellow-card fault (`Skins.Buy`) with a different pair of colours.
-            //
-            // **The radius is 14 and not a capsule's 20**, which is invariant 44a in miniature:
-            // `Art.Round(20)` is a 48-unit bitmap whose nine-slice borders come to 46, so drawn
-            // 40 tall it has no middle left to repeat and both curves are squashed into each
-            // other. 14 leaves 34 of the 40, so the corner is the corner it was drawn as.
-            row.Chip = UIKit.Img("Chip", row.Root, Art.Round(14), new Color(0f, 0f, 0f, .40f),
-                                 new Vector2(ChipWidth, ChipHeight), Centre,
-                                 new Vector2(textX + ChipWidth * .5f, headY + 66f));
-            row.ChipRim = UIKit.Img("ChipRim", row.Chip.transform, Art.RoundOutline(14, 3f), row.Metal);
-            UIKit.StretchTo((RectTransform)row.ChipRim.transform, 0f, 0f, 0f, 0f);
-
-            row.Ordinal = UIKit.Shrinkable(
-                UIKit.Titled("Ordinal", row.Chip.transform,
-                             Loc.Format("ui.ranks.ordinal", rung.Ordinal), 22, row.Metal,
-                             TextAnchor.MiddleCenter, new Vector2(ChipWidth - 16f, 28f), Centre,
-                             Vector2.zero, 0f, 2f), 13);
-
-            row.Name = UIKit.Shrinkable(
-                UIKit.Titled("Name", row.Root, rung.Name, 50, Pal.Gold, TextAnchor.MiddleLeft,
-                             new Vector2(textW, 58f), Centre,
-                             new Vector2(textX + textW * .5f, headY + 12f)), 24);
-
-            row.Blurb = UIKit.Shrinkable(
-                UIKit.Titled("Blurb", row.Root, Loc.Get(rung.BlurbKey), 26, Pal.A(Pal.Cream, .76f),
-                             TextAnchor.UpperLeft, new Vector2(textW, 62f), Centre,
-                             new Vector2(textX + textW * .5f, headY - 52f), 0f, 2f, wrap: true), 16);
-
-            // A hairline between the head and the checklist, so the card reads as two zones
-            // rather than as one crowded one, and in the rung's metal so it is one more place
-            // the colour lands. Barely there: a rule that can be *seen* is a rule that competes
-            // with the plate's own moulding.
-            row.Rule = UIKit.Img("Rule", row.Root, Art.Pixel, Pal.A(row.Metal, .30f),
-                                 new Vector2(Width - WellInset * 2f, 2f), Centre,
-                                 new Vector2(0f, height * .5f - RowHead + 6f));
-
-            float wellW = Width - WellInset * 2f;
-            float lineY = height * .5f - RowHead - LineH * .5f;
-
-            foreach (var line in lines)
-            {
-                var well = UIKit.Img("Well", row.Root, Art.S("Ui/" + Skins.Trough), Color.white,
+                var well = UIKit.Img("Well", face, Art.S("Ui/" + Skins.Trough), Color.white,
                                      new Vector2(wellW, WellH), Centre, new Vector2(0f, lineY));
-                row.Wells.Add(well);
 
                 float wellLeft = -wellW * .5f;
+                var line = new Line { Req = req };
 
-                // **A ring rather than a star**, and the whole reason is that a star is a
-                // currency on this very page: a line reading "Earn 60 stars" with a star in
-                // front of it says two different things with one glyph, which the render caught
-                // and no fixture could. A tick replaces the ring when the line is met.
-                var mark = UIKit.Img("M", well.transform, Art.Ring(64, 9f), Pal.A(row.Metal, .55f),
-                                     Vector2.one * MarkSize, Centre,
-                                     new Vector2(wellLeft + 26f + MarkSize * .5f, 0f));
-                mark.preserveAspect = true;
-                row.Marks.Add(mark);
+                // A ring rather than a star: a star is a currency on this very plate, and a
+                // line reading "Earn 60 stars" with a star in front of it says two things
+                // with one glyph. A tick replaces the ring when the line is met.
+                line.Mark = UIKit.Img("M", well.transform, Art.Ring(64, 9f), Pal.A(metal, .6f),
+                                      Vector2.one * MarkSize, Centre,
+                                      new Vector2(wellLeft + 22f + MarkSize * .5f, 0f));
+                line.Mark.preserveAspect = true;
 
-                float saidX = wellLeft + 26f + MarkSize + 22f;
-                float saidW = wellW - (saidX - wellLeft) - CountWidth - 34f;
+                float saidX = wellLeft + 22f + MarkSize + 18f;
+                float saidW = wellW - (saidX - wellLeft) - CountW - 30f;
 
-                row.Lines.Add(UIKit.Shrinkable(
-                    UIKit.Titled("L", well.transform, line.Sentence(GameContent.Index), 30, Pal.Cream,
-                                 TextAnchor.MiddleLeft, new Vector2(saidW, WellH - 10f), Centre,
-                                 new Vector2(saidX + saidW * .5f, 0f), 0f, 2f), 17));
+                line.Said = UIKit.Shrinkable(
+                    UIKit.Titled("L", well.transform, req.Sentence(GameContent.Index), 32, Pal.Cream,
+                                 TextAnchor.MiddleLeft, new Vector2(saidW, 38f), Centre,
+                                 new Vector2(saidX + saidW * .5f, 13f), 0f, 2f), 18);
 
-                row.Counts.Add(UIKit.Shrinkable(
+                // The bar under the sentence: the line's own fill, so five lines read as five
+                // gauges rather than as five fractions to be subtracted in the head.
+                var trough = UIKit.Img("Trough", well.transform, Art.Capsule((int)BarH, 48),
+                                       new Color(0f, 0f, 0f, .42f), new Vector2(saidW, BarH), Centre,
+                                       new Vector2(saidX + saidW * .5f, -21f));
+                var fill = UIKit.Img("Fill", trough.transform, Art.Capsule((int)BarH, 48), BarOrange,
+                                     new Vector2(0f, BarH), Left, new Vector2(0f, 0f));
+                line.Fill = (RectTransform)fill.transform;
+                line.Fill.pivot = new Vector2(0f, .5f);
+                line.Room = saidW;
+
+                line.Count = UIKit.Shrinkable(
                     UIKit.Titled("C", well.transform, string.Empty, 32, Pal.Gold,
-                                 TextAnchor.MiddleRight, new Vector2(CountWidth, WellH - 10f), Centre,
-                                 new Vector2(wellW * .5f - 26f - CountWidth * .5f, 0f), 0f, 2f), 18));
+                                 TextAnchor.MiddleRight, new Vector2(CountW, WellH - 10f), Centre,
+                                 new Vector2(wellW * .5f - 22f - CountW * .5f, 0f), 0f, 2f), 18);
 
+                _lines.Add(line);
                 lineY -= LineH;
             }
 
-            // The only bar on the page, and only the rung being climbed ever shows it.
-            var trough = UIKit.Img("Trough", row.Root, Art.S("Ui/" + Skins.Trough), Color.white,
-                                   new Vector2(wellW, BarTrough), Centre,
-                                   new Vector2(0f, -height * .5f + BarBand * .5f));
-            trough.gameObject.SetActive(climbing);
+            // The band scrolls only if this rung's plate is taller than it — which no shipped
+            // rung is, and a retune that makes one so still reads rather than clips.
+            if (height > _plateBand.sizeDelta.y + .5f)
+            {
+                var scroll = band.gameObject.AddComponent<ScrollRect>();
+                scroll.content = list;
+                scroll.viewport = _plateBand;
+                scroll.horizontal = false;
+                scroll.vertical = true;
+                scroll.movementType = ScrollRect.MovementType.Elastic;
+                scroll.elasticity = .14f;
+                scroll.inertia = true;
+                scroll.decelerationRate = .04f;
+                scroll.scrollSensitivity = 55f;
+                var catcher = band.gameObject.AddComponent<Image>();
+                catcher.color = new Color(0f, 0f, 0f, 0f);
+                catcher.raycastTarget = true;
+            }
 
-            var fill = UIKit.Img("Fill", trough.transform, Art.S("Ui/" + Skins.Fill), BarOrange,
-                                 new Vector2(0f, BarH), Left, new Vector2(3f, 0f));
-            row.Bar = (RectTransform)fill.transform;
-            row.Bar.pivot = new Vector2(0f, .5f);
-
-            _rows.Add(row);
-            return height;
+            if (animate)
+            {
+                var group = UIKit.Group(band);
+                group.alpha = 0f;
+                Tween.Fade(group, 1f, .22f, Ease.OutQuad);
+                list.anchoredPosition = new Vector2(0f, -26f);
+                Tween.Move(list, Vector2.zero, .30f, Ease.OutCubic);
+            }
         }
 
-        /// <summary>The checklist's own furniture, named because three call sites place against it.</summary>
-        const float MarkSize = 34f, CountWidth = 200f, AnswerSize = 88f;
+        // ------------------------------------------------------------------ choosing
+        void Step(int by)
+        {
+            var ladder = RankLedger.Ladder;
+            if (ladder.IsEmpty) return;
+            int to = Mathf.Clamp(_chosen + by, 1, ladder.Count);
+            if (to == _chosen) return;
+            Choose(to);
+        }
 
-        /// <summary>The ordinal's chip. Wide enough for "RANK 10" before the caption shrinks.</summary>
-        const float ChipWidth = 136f, ChipHeight = 40f;
+        /// <summary>
+        /// A rung chosen: the stage redresses itself and the seat rises. A gesture, so it is
+        /// allowed to move — the one place on this page a change is animated rather than
+        /// repainted.
+        /// </summary>
+        void Choose(int ordinal)
+        {
+            if (ordinal == _chosen || ordinal < 1 || ordinal > RankLedger.Ladder.Count) return;
+            _chosen = ordinal;
+            Audio.Sfx("tick", .8f);
+            Dress(animate: true);
+        }
+
+        /// <summary>
+        /// The stage, the rail and the plate written for the chosen rung. With
+        /// <paramref name="animate"/> the badge is swapped through a scale and the plate slides
+        /// in; without it every value lands where it is, which is what a repaint from the ledger
+        /// wants.
+        /// </summary>
+        void Dress(bool animate)
+        {
+            var ladder = RankLedger.Ladder;
+            var rung = ladder.At(_chosen);
+            var index = GameContent.Index;
+
+            DressStage(rung, index, animate);
+            BuildPlate(rung, animate);
+            Repaint();
+        }
+
+        void DressStage(RankDefinition rung, CatalogIndex index, bool animate)
+        {
+            var metal = RankLook.Metal(rung);
+            var lift = Pal.Lift(metal, .45f);
+            float dur = animate ? .38f : 0f;
+
+            // The light, cross-faded into the rung's metal. Everything on the stage that reads
+            // as light takes the colour; the wash under it does not (class remarks).
+            Tint(_fanA, Pal.A(metal, FanAlpha), dur);
+            Tint(_fanB, Pal.A(lift, Fan2Alpha), dur);
+            Tint(_halo, Pal.A(metal, HaloAlpha), dur);
+            Tint(_core, Pal.A(Pal.Lift(metal, .5f), CoreAlpha), dur);
+            Tint(_aurora[0], Pal.A(metal, AuroraAlpha[0]), dur);
+            Tint(_aurora[1], Pal.A(lift, AuroraAlpha[1]), dur);
+            Tint(_ring, metal, dur);
+            Tint(_spark, Pal.Lift(metal, .55f), dur);
+            Tint(_chipRim, metal, dur);
+            _ordinal.color = metal;
+
+            if (_flies != null) Flies(_flies, metal);
+
+            _shimmer.Paint(Pal.Lift(metal, .70f), Pal.Lift(metal, .30f), Pal.Lift(metal, .80f));
+
+            if (rung == null)
+            {
+                // The honest answer to a content file with no ladder in it (`RankLadder` has
+                // no built-in one to fall back to).
+                _badge.enabled = false;
+                _ordinal.text = string.Empty;
+                _eyebrow.text = string.Empty;
+                _name.text = Loc.Get("ui.ranks.unranked");
+                _pill.text = Loc.Get("ui.ranks.unranked_blurb");
+                _prev.Interactable = _next.Interactable = false;
+                return;
+            }
+
+            _ordinal.text = Loc.Format("ui.ranks.ordinal", rung.Ordinal);
+            _name.text = rung.Name;
+
+            var badgeRt = (RectTransform)_badge.transform;
+            if (animate)
+            {
+                // Out, swap, in: the badge leaves through a short shrink and arrives with an
+                // overshoot, and the words follow it a beat later so the swap reads as one
+                // thing turning rather than five things changing.
+                Tween.KillChannel(badgeRt, "breathe");
+                Tween.Scale(badgeRt, .55f, .12f, Ease.InCubic).OnDone(() =>
+                {
+                    if (!_badge) return;
+                    RankArt.Paint(_badge, rung.Id);
+                    Tween.Scale(badgeRt, 1f, .34f, Ease.OutBack)
+                         .OnDone(() => { if (badgeRt) Tween.Breathe(badgeRt, .022f, 3.4f); });
+                    Ripple(metal);
+                });
+
+                foreach (var t in new[] { _eyebrow, _name })
+                {
+                    if (!t) continue;
+                    var c = t.color; c.a = 0f; t.color = c;
+                    Tween.Fade(t, 1f, .26f, Ease.OutQuad).Delay(.10f);
+                }
+            }
+            else
+            {
+                RankArt.Paint(_badge, rung.Id);
+                if (badgeRt.localScale.sqrMagnitude < 1e-6f) badgeRt.localScale = Vector3.one;
+                Tween.Breathe(badgeRt, .022f, 3.4f);
+            }
+
+            _prev.Interactable = rung.Ordinal > 1;
+            _next.Interactable = rung.Ordinal < RankLedger.Ladder.Count;
+        }
+
+        /// <summary>A ring of light leaving the badge as a new one lands.</summary>
+        void Ripple(Color metal)
+        {
+            var wave = UIKit.Img("Wave", _cluster, Art.Ring(256, 10f), Pal.A(Pal.Lift(metal, .4f), .8f),
+                                 Vector2.one * (BadgeSize * .8f), Top, new Vector2(0f, -RingTop));
+            var rt = (RectTransform)wave.transform;
+            Tween.Run(.62f, Ease.OutQuint, t =>
+            {
+                if (!rt) return;
+                rt.localScale = Vector3.one * Mathf.Lerp(.8f, 2.1f, t);
+                wave.color = Pal.A(Pal.Lift(metal, .4f), .8f * (1f - t));
+            }, wave).OnDone(() => { if (wave) Destroy(wave.gameObject); });
+        }
+
+        static void Tint(Graphic g, Color to, float dur)
+        {
+            if (!g) return;
+            if (dur <= 0f) { g.color = to; return; }
+            Tween.Tint(g, to, dur, Ease.OutQuad);
+        }
+
+        /// <summary>The fireflies recoloured in place: their alpha is theirs to breathe, so only the hue is written.</summary>
+        static void Flies(Fireflies flies, Color metal)
+        {
+            var tint = Pal.Lift(metal, .35f);
+            foreach (var img in flies.GetComponentsInChildren<Image>())
+            {
+                var c = img.color;
+                img.color = new Color(tint.r, tint.g, tint.b, c.a);
+            }
+        }
 
         // ------------------------------------------------------------------ the repaint
         /// <summary>
-        /// Writes the state onto rows that already exist, replaying no entrance — a rank moving
-        /// is a redraw and not a new page (<c>CRAFT.md</c>: Show animates, Refresh does not).
+        /// Writes the ledger's state onto what already stands, replaying no entrance. Which
+        /// rung is chosen does not change here; what it is worth might.
         /// </summary>
         void Repaint()
         {
             var ladder = RankLedger.Ladder;
             var index = GameContent.Index;
-            var held = RankLedger.Held;
-            var next = RankLedger.Next;
+            var rung = ladder.At(_chosen);
 
-            PaintHero(ladder, held);
+            PaintStage(rung, index);
+            PaintRail(ladder);
+            PaintPlate(rung, index);
+        }
 
-            foreach (var row in _rows)
+        void PaintStage(RankDefinition rung, CatalogIndex index)
+        {
+            if (rung == null) return;
+
+            var standing = StandingOf(rung);
+            var metal = RankLook.Metal(rung);
+            bool live = standing != Standing.Locked;
+
+            _eyebrow.text = EyebrowOf(standing).ToUpperInvariant();
+            var ink = live ? Pal.Lift(metal, .25f) : LockedInk;
+            _eyebrow.color = Pal.A(ink, _eyebrow.color.a);
+
+            _pill.text = PillOf(rung, standing, index);
+
+            float share = Share(rung, index);
+            Tween.KillChannel(_ring, "fill");
+            float from = _ring.fillAmount;
+            Tween.Run(.8f, Ease.OutCubic, t =>
             {
-                bool earned = ladder.IsHeld(row.Rung, index);
-                bool climbing = next != null && ReferenceEquals(next, row.Rung);
-                bool live = earned || climbing;
+                if (!_ring) return;
+                float f = Mathf.Lerp(from, share, t);
+                _ring.fillAmount = f;
+                PlaceSpark(f);
+            }, _ring, "fill");
 
-                // **Value, never alpha.** A locked rung stands on the muted plate at full
-                // strength; see the class remarks for the page this rule was bought by.
-                row.Plate.sprite = Art.S("Ui/" + (live ? Skins.PlateNavy : Skins.Panel));
+            // A seam at the foot when the ring is full is a seam the chip covers; when the
+            // ring is empty the spark still stands at the foot, which reads as the start.
+            _spark.enabled = share > .004f;
+        }
 
-                row.Badge.color = Color.white;
-                row.Burst.color = Pal.A(row.Metal, earned ? .34f : 0f);
-                row.Halo.color = Pal.A(row.Metal, earned ? .22f : climbing ? .24f : .10f);
-                row.SeatRim.color = Pal.A(row.Metal, earned ? .95f : climbing ? .80f : .45f);
+        /// <summary>The spark at the head of the fill — clockwise from the bottom, as the fill runs.</summary>
+        void PlaceSpark(float fill)
+        {
+            float a = fill * Mathf.PI * 2f;
+            float r = RingSize * .5f - RingThick * (RingSize / 256f) * .5f;
+            ((RectTransform)_spark.transform).anchoredPosition =
+                new Vector2(-Mathf.Sin(a) * r, -RingTop - Mathf.Cos(a) * r);
+        }
 
-                row.Name.color = earned ? Pal.Gold : climbing ? Pal.Cream : LockedName;
-                row.Blurb.color = live ? Pal.A(Pal.Cream, .76f) : LockedInk;
-                row.Rule.color = Pal.A(row.Metal, live ? .34f : .20f);
+        static string EyebrowOf(Standing standing)
+        {
+            switch (standing)
+            {
+                case Standing.Held: return Loc.Get("ui.ranks.mark");
+                case Standing.Earned: return Loc.Get("ui.ranks.earned");
+                case Standing.Next: return Loc.Get("ui.ranks.next");
+                case Standing.Locked: return Loc.Get("ui.ranks.locked");
+            }
+            return string.Empty;
+        }
 
-                row.Chip.color = new Color(0f, 0f, 0f, live ? .40f : .26f);
-                row.ChipRim.color = Pal.A(row.Metal, live ? .95f : .55f);
-                row.Ordinal.color = live ? row.Metal : Pal.A(row.Metal, .75f);
+        /// <summary>The one sentence under the name, per standing (invariant 48g: one answer, and the first of them a word).</summary>
+        static string PillOf(RankDefinition rung, Standing standing, CatalogIndex index)
+        {
+            var ladder = RankLedger.Ladder;
+            switch (standing)
+            {
+                case Standing.Held:
+                    return rung.Ordinal >= ladder.Count
+                        ? Loc.Get("ui.ranks.top")
+                        : Loc.Format("ui.ranks.held_count", RankLedger.Ordinal, ladder.Count);
+                case Standing.Earned:
+                    return Loc.Format("ui.ranks.held_count", RankLedger.Ordinal, ladder.Count);
+                case Standing.Next:
+                    return Loc.Format("ui.ranks.progress",
+                                      Mathf.RoundToInt(Mathf.Clamp01(Share(rung, index)) * 100f));
+                case Standing.Locked:
+                    var below = ladder.At(rung.Ordinal - 1);
+                    return below != null ? Loc.Format("ui.ranks.locked_hint", below.Name) : string.Empty;
+            }
+            return string.Empty;
+        }
 
-                if (row.Link != null)
-                    row.Link.color = earned ? Pal.A(row.Metal, .85f) : Pal.A(Pal.Cream, .12f);
+        void PaintRail(RankLadder ladder)
+        {
+            int held = RankLedger.Ordinal;
 
-                // The wells stay at full strength on every row, which is the other half of the
-                // no-transparency rule: a faded checklist under a solid plate is the one thing
-                // on the card that looks unfinished rather than unearned.
-                foreach (var well in row.Wells) well.color = Color.white;
+            foreach (var s in _seats)
+            {
+                var standing = StandingOf(s.Rung);
+                var metal = RankLook.Metal(s.Rung);
+                bool earned = standing == Standing.Held || standing == Standing.Earned;
+                bool next = standing == Standing.Next;
+                bool chosen = s.Rung.Ordinal == _chosen;
 
-                // One answer per row and exactly one of the three is up (invariant 48g).
-                row.Seal.gameObject.SetActive(earned);
-                row.Standing.gameObject.SetActive(climbing);
-                row.Lock.gameObject.SetActive(!live);
+                float face = earned || next ? SeatFace : SeatFaceLocked;
+                s.Badge.rectTransform.sizeDelta = Vector2.one * (s.Root.sizeDelta.x * face);
 
-                if (climbing)
-                    row.Percent.text = Loc.Format(
-                        "ui.ranks.percent",
-                        Mathf.RoundToInt(Mathf.Clamp01(RankLedger.Progress01) * 100f));
+                s.Rim.color = Pal.A(metal, earned ? .95f : next ? .75f : .30f);
+                s.Glow.color = Pal.A(metal, earned ? .34f : next ? .18f : 0f);
+                s.Lock.gameObject.SetActive(!earned && !next);
 
-                // Only when the light is *not* running: `Shine` owns the rim while a rung is
-                // being climbed, and a repaint that wrote it as well would fight the tween.
-                if (!climbing) row.Rim.color = Pal.A(row.Metal, earned ? .55f : .22f);
+                if (s.Link != null)
+                    s.Link.color = s.Rung.Ordinal < held ? Pal.A(metal, .85f) : Pal.A(Pal.Cream, .14f);
 
-                for (int i = 0; i < row.Lines.Count; i++)
-                {
-                    var line = row.Rung.Requirements[i];
-                    long have = line.Held(index);
-                    bool met = have >= line.Target;
+                // The chosen seat stands up. Tweened rather than set, because a tap is a
+                // gesture; a repaint from the ledger lands on the same value and moves nothing.
+                float scale = chosen ? SeatChosen : 1f;
+                if (Mathf.Abs(s.Root.localScale.x - scale) > .001f)
+                    Tween.Scale(s.Root, scale, .28f, Ease.OutBack);
 
-                    row.Marks[i].sprite = met ? Art.S("Ui/ic_check") : Art.Ring(64, 9f);
-                    row.Marks[i].color = met ? Pal.Mint : Pal.A(row.Metal, live ? .70f : .45f);
-
-                    row.Lines[i].color = earned ? Pal.A(Pal.Cream, .82f)
-                                       : climbing ? Pal.Cream
-                                       : LockedInk;
-
-                    // A met line prints its own target rather than the figure that passed it:
-                    // "250 / 250" is what finishing looks like, and a lifetime tally that went
-                    // on climbing afterwards would read as a bar that overflowed.
-                    long shown = have > line.Target ? line.Target : have;
-                    row.Counts[i].text = Loc.Format("ui.ranks.fraction",
-                                                    Compact.Number(shown),
-                                                    Compact.Number(line.Target));
-                    row.Counts[i].color = met ? Pal.Mint : climbing ? Pal.Gold : LockedInk;
-                }
-
-                PaintBar(row, climbing);
-
-                if (row.Lit != climbing) { row.Lit = climbing; Shine(row, climbing, earned); }
+                if (s.Pulsing != next) { s.Pulsing = next; Pulse(s, next, metal); }
             }
         }
 
-        void PaintHero(RankLadder ladder, RankDefinition held)
+        /// <summary>The breath on the seat being climbed: the one thing on the rail that moves by itself.</summary>
+        static void Pulse(Seat s, bool on, Color metal)
         {
-            if (_heroBadge == null) return;
+            Tween.KillChannel(s.Pulse, "pulse");
+            if (!on) { s.Pulse.color = Pal.A(metal, 0f); return; }
 
-            var rung = held ?? ladder.At(1);
-            var metal = RankLook.Metal(held);
-
-            // **The first rung, ghosted, for an account below it** — the profile's medallion and
-            // the map's badge both take this stance and this is the third. A hero seat standing
-            // empty is a hole at the top of the page on the one launch where the page has the
-            // most to prove, and the player looking at it is exactly the player it is for. It is
-            // the one transparent thing here and <see cref="RankLook.Ghost"/> says why that is
-            // not the fault the rest of the page was rebuilt to fix: a faded *card* reads as
-            // broken art, where a faded badge under the word "Unranked" reads as what is next.
-            //
-            // The pips below it stay empty, and the two are not in disagreement: one badge
-            // ghosted is a preview, seven ghosted is a strip that says nothing (`BuildPips`).
-            // **There is no early return here**, which is where the profile's version of this
-            // can afford one: that method paints a badge and its name and nothing else, where
-            // this one owns the rays, the rim, the glow, the rule, the kicker, the name, the
-            // blurb, the count and the pips. An empty ladder is precisely when
-            // `ui.ranks.unranked_blurb` most needs to be on the screen, so the badge switches
-            // itself off and everything below it still runs.
-            bool drawn = rung != null;
-            if (_heroBadge.enabled != drawn) _heroBadge.enabled = drawn;
-            if (drawn)
+            var rt = (RectTransform)s.Pulse.transform;
+            Tween.Run(1.6f, Ease.OutQuad, t =>
             {
-                _heroBadge.sprite = Art.S(rung.Icon);
-                _heroBadge.color = held != null ? Color.white : RankLook.Ghost;
-            }
-
-            _heroRays.color = Pal.A(held != null ? metal : Pal.Sun, .17f);
-            _heroRim.color = Pal.A(held != null ? metal : Pal.Sun, held != null ? .95f : .35f);
-            _heroGlow.color = Pal.A(held != null ? metal : Pal.Sun, held != null ? .34f : .18f);
-            _heroRule.color = Pal.A(held != null ? metal : Pal.Sun, .22f);
-            _heroKicker.color = Pal.A(held != null ? metal : Pal.Sun, .90f);
-
-            _heroName.text = held != null ? held.Name : Loc.Get("ui.ranks.unranked");
-            _heroName.color = held != null ? Pal.Gold : Pal.A(Pal.Cream, .7f);
-
-            _heroBlurb.text = held != null ? Loc.Get(held.BlurbKey)
-                                           : Loc.Get("ui.ranks.unranked_blurb");
-
-            _heroCount.text = ladder.IsEmpty
-                ? string.Empty
-                : Loc.Format("ui.ranks.held_count", RankLedger.Ordinal, ladder.Count);
-
-            int ordinal = RankLedger.Ordinal;
-            for (int i = 0; i < _pipBadges.Count; i++)
-            {
-                bool lit = i < ordinal;
-                _pipBadges[i].enabled = lit;
-                _pipRims[i].color = Pal.A(RankLook.Metal(i + 1), i == ordinal - 1 ? .95f : 0f);
-            }
+                if (!rt) return;
+                rt.localScale = Vector3.one * Mathf.Lerp(.96f, 1.42f, t);
+                s.Pulse.color = Pal.A(metal, .85f * (1f - t));
+            }, s.Pulse, "pulse").Loop(-1, false);
         }
 
-        /// <summary>
-        /// The bar, on the rung being climbed and nowhere else. Its trough is the fill's parent,
-        /// so switching the trough carries both.
-        /// </summary>
-        void PaintBar(Row row, bool climbing)
+        void PaintPlate(RankDefinition rung, CatalogIndex index)
         {
-            if (row.Bar == null) return;
+            if (rung == null || _plateCount == null) return;
 
-            var trough = row.Bar.parent as RectTransform;
-            if (trough == null) return;
+            var standing = StandingOf(rung);
+            bool live = standing != Standing.Locked;
+            var metal = RankLook.Metal(rung);
+            int met = 0;
 
-            if (trough.gameObject.activeSelf != climbing) trough.gameObject.SetActive(climbing);
-            if (!climbing) return;
-
-            float room = trough.sizeDelta.x - 6f;
-            row.Bar.sizeDelta = new Vector2(room * Mathf.Clamp01(RankLedger.Progress01), BarH);
-        }
-
-        /// <summary>
-        /// The pool and the rim on the rung being climbed. <c>TasksScreen.Shine</c>'s loop, with
-        /// its channel, and turned down: there is exactly <em>one</em> of these on this page
-        /// where that one can have six, so it can afford to be a swell rather than a flicker,
-        /// and it is the only thing on a page of seven plates that moves at all.
-        /// </summary>
-        /// <remarks>
-        /// <b>The pool is the rung's own metal and the rim is not.</b> A pale metal breathing
-        /// behind a card is still a pool of that colour; a pale metal rim against
-        /// <c>Pal.Radiance</c>'s swell has nowhere left to go at the top of the tween, so the
-        /// rim keeps the near-white it has always had and the colour is carried by the light
-        /// underneath it.
-        /// </remarks>
-        static void Shine(Row row, bool on, bool earned)
-        {
-            if (row.Pool) Tween.KillChannel(row.Pool.transform, "holy");
-            if (row.Rim) Tween.KillChannel(row.Rim.transform, "holy");
-
-            if (!on)
+            foreach (var line in _lines)
             {
-                // **It has to be told where to land**, because the tween outlives the repaint
-                // that set the resting colour a few lines earlier and would otherwise fade an
-                // earned rung's rim down to a locked one's. It is very nearly dead code — a
-                // promotion rebuilds the page (`LadderKey`) — and that is exactly why it would
-                // have gone unnoticed.
-                if (row.Pool) Tween.Tint(row.Pool, Pal.A(row.Metal, 0f), .3f);
-                if (row.Rim) Tween.Tint(row.Rim, Pal.A(row.Metal, earned ? .55f : .22f), .3f);
-                return;
+                long have = line.Req.Held(index);
+                bool done = have >= line.Req.Target;
+                if (done) met++;
+
+                line.Mark.sprite = done ? Art.S("Ui/ic_check") : Art.Ring(64, 9f);
+                line.Mark.color = done ? Pal.Mint : Pal.A(metal, live ? .70f : .45f);
+
+                line.Said.color = live ? Pal.Cream : LockedInk;
+
+                // A met line prints its own target rather than the figure that passed it:
+                // "250 / 250" is what finishing looks like, and a lifetime tally that went on
+                // climbing afterwards would read as a bar that overflowed.
+                long shown = have > line.Req.Target ? line.Req.Target : have;
+                line.Count.text = Loc.Format("ui.ranks.fraction", Compact.Number(shown),
+                                             Compact.Number(line.Req.Target));
+                line.Count.color = done ? Pal.Mint : live ? Pal.Gold : LockedInk;
+
+                float share = line.Req.Target <= 0 ? 1f : Mathf.Clamp01(have / (float)line.Req.Target);
+                line.Fill.sizeDelta = new Vector2(line.Room * share, BarH);
+                line.Fill.GetComponent<Image>().color = done ? Pal.Mint : BarOrange;
             }
 
-            var metal = row.Metal;
-            Tween.Run(2.1f, Ease.InOutSine, t =>
-            {
-                if (row.Pool) row.Pool.color = Pal.A(metal, Mathf.Lerp(.14f, .34f, t));
-                if (row.Rim) row.Rim.color = Pal.A(Pal.Radiance, Mathf.Lerp(.45f, .95f, t));
-            }, row.Pool, "holy").Loop(-1, true);
+            _plateCount.text = Loc.Format("ui.ranks.fraction", met, _lines.Count);
+            _plateCount.color = met >= _lines.Count && _lines.Count > 0 ? Pal.Mint : Pal.Cream;
         }
     }
 }

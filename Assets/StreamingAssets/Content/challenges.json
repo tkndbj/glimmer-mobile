@@ -30,7 +30,7 @@
         "ygbrgb",
         "brygyb"
       ],
-      "hill": 6,
+      "hill": 10,
       "bolts": 2,
       "waves": [
         "0 r2 g2",
@@ -52,7 +52,7 @@
         "-NE/2 -EW/0! =NS+EW/0 -SW/3 -ES/2 -EW/1 *W#B/2",
         ". @E#G/2 -NW/2 @N#R/3 @N#B/2 . ."
       ],
-      "hill": 10,
+      "hill": 16,
       "bolts": 1,
       "waves": [
         "0 r2",
@@ -74,7 +74,7 @@
         "......"
       ],
       "target": 6,
-      "hill": 8,
+      "hill": 13,
       "bolts": 1,
       "waves": [
         "0 g2",
@@ -107,7 +107,7 @@
         ".....y....",
         ".........."
       ],
-      "hill": 16,
+      "hill": 26,
       "bolts": 1,
       "waves": [
         "0 r2",

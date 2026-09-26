@@ -37,8 +37,14 @@ namespace GlimmerGrove
     /// </summary>
     public sealed class GladeView : PuzzleView
     {
-        /// <summary>The floor's tint: the first chapter's slate, which is what the glade was authored on.</summary>
-        static readonly Color Slate = new Color(.059f, .165f, .290f, 1f);
+        /// <summary>
+        /// The floor's tint. It was the first chapter's slate, which is what the glade was
+        /// authored on - and, once the band became a framed panel of nearly that blue
+        /// (2026-09-26), a floor nobody could see. Sunk to a deeper navy so it reads as the
+        /// well inside the frame, as the other three boards' dark plate does; the arms and the
+        /// hub are derived from it by <c>Pal.BoardTheme.From</c> and stay blue-grey.
+        /// </summary>
+        static readonly Color Slate = new Color(.035f, .086f, .184f, 1f);
 
         /// <summary>The most a fanfare is waited on, in seconds, whatever the board says.</summary>
         const float FanfareMost = 9f;
@@ -66,7 +72,10 @@ namespace GlimmerGrove
             // A critter is a gem here (the owner's instruction, 2026-09-23): the gem the turret
             // it feeds fires, dimmed while it sleeps and lit when its light reaches it.
             _board.LampFace = energy => ChallengeArt.Gem(GladePuzzle.LaneOf(energy));
-            _board.Build(Host, _glade.Board, Pal.BoardTheme.From(Slate));
+
+            // Into the frame's inside, not the band: the board sizes its own pitch off the
+            // rect it is given, and the frame has already taken its rim off the band.
+            _board.Build(Inner, _glade.Board, Pal.BoardTheme.From(Slate));
         }
 
         void Tapped(int cell)
@@ -102,10 +111,12 @@ namespace GlimmerGrove
                 float until = Time.unscaledTime + FanfareMost;
                 while (!_settled && Time.unscaledTime < until) yield return null;
             }
-            else
-            {
-                yield return new WaitForSecondsRealtime(.2f);
-            }
+
+            // Nothing else is waited on. The spin and the light walk are the board's own
+            // tweens and run whether or not the next tap has landed — a tap held back until
+            // they finished was the "sometimes it doesn't rotate" the owner reported
+            // (2026-09-26): the screen was latched for the spin and then for the hill, and
+            // every tap inside that second was thrown away.
         }
 
         public override void Refuse()
