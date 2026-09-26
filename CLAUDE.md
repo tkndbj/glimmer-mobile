@@ -1189,6 +1189,9 @@ guess — verify offline.
   the foundation (rotation, allowance, deals, payout, merge); `ChallengeRewardTests` and
   `firebase/functions/test/challenges.mjs` are the two halves of the shared rules, pinned by
   `python Tools/make_challenge_vectors.py --check`. `content.py` prints the whole economy per deal.
+- **The glade challenges:** `python Tools/make_glade_challenges.py --report` prints every glade row's
+  par, mated and winning arrangement counts and slack (a mirror; `ChallengeTests` is the authority),
+  and `--draft medium|hard --size WxH` proposes boards. Winning must be **one** on every row.
 - **The tutorial:** `python Tools/verify/tests.py TutorialTests` plays the whole script against
   the real rules — the taught swap, the pour, the overcharge, the sweep — and proves it ends with
   the line intact; its board reaches **no content gate**, so this is the only thing that would
@@ -1680,6 +1683,26 @@ half is `Assets/Game/Scripts/Cloud/`, Firebase Unity SDK
 on a fresh clone).
 
 ## Owed
+
+**Thirty glade challenges shipped on 2026-09-26 (`d09_glade`..`d38_glade`), and none has been
+in the Editor.** Fourteen medium (5x5 to 7x4, two or three lanes, a bridge, an amber blend, a
+taproot, one twist) and sixteen hard (6x5 to 7x6, all four lanes, twists, briars, taproots). Drafted
+and measured by `Tools/make_glade_challenges.py` (`--report`), which writes nothing: the rows are
+authored data. **Three gates hold every glade row now**, each proved by mutation: `content.py`
+holds it to the chapter validator with every warning an error, to **exactly one** arrangement that
+mates every arm and wakes every critter (5d), and refuses a wave colour no critter feeds;
+`ChallengeTests` plays every row (`EveryShippedGlade*`), allows the bot's line one blow at most,
+runs the real `LevelValidator`, and holds the **slack** - the slowest pace, as a multiple of the
+bot's turns, that still wins - to 1.40x, `d08_glade`'s own reading (medium rows read 1.70-2.00x,
+hard 1.60x). Two code changes ride with it: `GladeView.BandWanted` asks for its band in
+`BoardView.Pad`/`MaxPitch` terms, so a 7x6 glade gets exactly the band it fills and the hill takes
+the rest (4.0 cells on 16:9, 7.0 on 19.5:9); and `GladeView.Lessons` teaches the mode's own tile
+lessons (rooted, mixing, crossing, briar, taproot - two at most an opening, after the sweep lands,
+`PuzzleView.Landed`), because the glade chapters are hidden and a taproot met untaught reads as a
+tap turning the wrong tile. No server, no schema, no seed (`seed-config --check` unchanged), no art.
+**What no gate can answer**: whether 50-odd taps is a *hard* puzzle or a long one, and whether the
+slack targets (a player at 1.6x the bot's turns) match how people really play - `ChallengeTests`
+prints every row's figure, and `hill`/`waves` are the dials.
 
 **The ranks page was rebuilt as a hall on 2026-09-26, at the owner's instruction ("doesn't feel
 like a game at all"), and none of it has been in the Editor.** `RanksScreen` is one composed
@@ -2574,10 +2597,9 @@ each with its own W-8BEN and bank details, all set. Unity's bank form assumes a 
 refuses Revolut's `REVOLT21`, so Unity pays into a different account.
 
 **Store and platform.**
-- **AdMob cannot verify `app-ads.txt` for iOS yet, and the file is not why**: the App Store listing
-  names no developer website (the iTunes lookup's `sellerUrl` is empty), so the crawler has no domain.
-  Set App Store Connect's **Marketing URL** to `https://www.tekoworld.com` (it may ride the next
-  version), then AdMob ▸ app-ads.txt ▸ Check for updates. Give Play's "Website" the same domain.
+- **AdMob verified `app-ads.txt` for iOS on 2026-09-26.** What had blocked it was the listing naming no
+  developer website (the iTunes lookup's `sellerUrl` was empty); 1.0.3 carries the Marketing URL
+  `https://www.tekoworld.com`. Give Play's "Website" the same domain before Android's listing goes public.
 - Archive the retired `run_continue` unit in LevelPlay (unticked from Unity Ads, still present).
 - AppsFlyer's **iOS** app: activate Meta ads with the two level events, and set up SKAN conversion
   values - the Meta connection made on 2026-09-13 was the Android app's.
