@@ -2355,9 +2355,11 @@ floor under the tally rises with it — so it is pinned by tests and by nothing 
 Beat the record once and check the panel still says waves x 15 exactly. And nothing has tested 15
 a wave as a *feeling*; the pace was reasoned against a table and approved on figures alone.
 
-**Money paths that have never executed.** A real receipt reaching `redeemPurchase` and a real impression
-reaching `adReward`. Both are fully built and deployed and **neither has ever run once**, which reads as
-done. Ads *load* on device; no view has ever paid. Do both the day closed testing opens.
+**A real receipt has reached `redeemPurchase`; a real impression has not reached `adReward`.** The first
+production App Store purchase (`gg_gems_1`, `sandbox: false`) was verified and granted on 2026-09-25,
+launch day, and sits in `receipts` - so the real-money path is proved end to end on iOS. `adReward` is
+still fully built and deployed and has never run once with a live impression; watch one rewarded video
+on the store build and look for the grant.
 
 **The ember re-cut of 2026-09-18 is unaddressed and has never been played.** Four new reels
 (`burn_r/g/b/y`, twenty-four frames each) went in with the Editor closed, so every one of them is
