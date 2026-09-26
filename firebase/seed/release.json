@@ -27,7 +27,7 @@
 
   "ios": {
     "_store": "The numeric Apple id is minted by App Store Connect and is derivable from nothing in the build, so it is typed once here. The link 404s in a browser until the listing is public, which does not matter: it is only ever opened by a player who has met a wall, and a wall is only raised once Apple is serving the build.",
-    "minimum": "0.0.0",
+    "minimum": "1.0.3",
     "store": "https://apps.apple.com/app/id6804516450"
   }
 }
