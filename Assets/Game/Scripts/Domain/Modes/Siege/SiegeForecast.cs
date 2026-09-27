@@ -18,16 +18,23 @@ namespace GlimmerGrove.Modes
         /// <summary>Whether a boss is in it, and what it is. A creeper when there is none.</summary>
         public readonly SiegeKind Boss;
 
+        /// <summary>
+        /// The second boss of a pair wave, or a creeper. A chapter's duel
+        /// (<c>SiegeLayout.BossJoin</c>) and the Infinite lane's pair both send one.
+        /// </summary>
+        public readonly SiegeKind Partner;
+
         /// <summary>Whether there is a wave at all. False past the last one.</summary>
         public readonly bool Any;
 
-        SiegeForecast(int r, int g, int b, int y, SiegeKind boss, bool any)
+        SiegeForecast(int r, int g, int b, int y, SiegeKind boss, SiegeKind partner, bool any)
         {
             R = r;
             G = g;
             B = b;
             Y = y;
             Boss = boss;
+            Partner = partner;
             Any = any;
         }
 
@@ -62,6 +69,9 @@ namespace GlimmerGrove.Modes
         /// <summary>Whether a boss is in this wave.</summary>
         public bool HasBoss => Any && SiegeTuning.IsBoss(Boss);
 
+        /// <summary>Whether two bosses walk on together in this wave.</summary>
+        public bool IsDuel => HasBoss && SiegeTuning.IsBoss(Partner);
+
         /// <summary>Nothing is coming: past the last wave of an authored ladder.</summary>
         public static SiegeForecast None => default;
 
@@ -81,6 +91,7 @@ namespace GlimmerGrove.Modes
 
             int r = 0, g = 0, b = 0, y = 0;
             var boss = SiegeKind.Creeper;
+            var partner = SiegeKind.Creeper;
 
             for (int i = 0; i < size; i++)
             {
@@ -93,10 +104,15 @@ namespace GlimmerGrove.Modes
                 }
 
                 var kind = layout.KindAt(wave, i);
-                if (SiegeTuning.IsBoss(kind)) boss = kind;
+                if (!SiegeTuning.IsBoss(kind)) continue;
+
+                // The first boss is the wave's, the second its partner - in the order they
+                // walk on, which is the order a duel's token names them.
+                if (!SiegeTuning.IsBoss(boss)) boss = kind;
+                else if (!SiegeTuning.IsBoss(partner)) partner = kind;
             }
 
-            return new SiegeForecast(r, g, b, y, boss, true);
+            return new SiegeForecast(r, g, b, y, boss, partner, true);
         }
     }
 }

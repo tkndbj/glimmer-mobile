@@ -542,12 +542,21 @@ MEDLEY = (
     ("bone",   "rabble", "wild",   "brood"),
 )
 
+#: The eighth chapter's square, mirroring `SiegeMode.ReunionOrder` - the same six families dealt
+#: so that no slot draws the body `MEDLEY` draws in it.
+REUNION = (
+    ("rabble", "court",  "wild",   "bone"),
+    ("brood",  "",       "bone",   "wild"),
+    ("",       "brood",  "court",  "rabble"),
+)
+
 #: Which row of `MEDLEY` a kind reads, in `SiegeMode.CastAddress`'s own order.
 MEDLEY_ROWS = {"mon": 0, "brute": 1, "bulwark": 2}
 
 
 def skin(kind, colour):
-    cast = MEDLEY[MEDLEY_ROWS[kind]][colour] if CAST == "medley" else CAST
+    square = MEDLEY if CAST == "medley" else REUNION if CAST == "reunion" else None
+    cast = square[MEDLEY_ROWS[kind]][colour] if square else CAST
 
     return "%s%s_%s" % (cast, kind if not cast else kind[0].upper() + kind[1:],
                         siege.LETTERS[colour])
@@ -1571,7 +1580,7 @@ def foretell(sheet, lay, wave, span, cell, hill_top, hill_foot, at):
     # were the wrong news.
     kinds = [k for _, k in sent if k in BOSSES]
     if not kinds and not lay.endless and lay.boss_wave >= 0:
-        kinds = [lay.boss_kind]
+        kinds = list(lay.boss_kinds)
 
     facing = kinds[0] if kinds else None
 
@@ -1580,7 +1589,8 @@ def foretell(sheet, lay, wave, span, cell, hill_top, hill_foot, at):
 
     # Fitted to the board like every other caption on this hill (`SiegeView.Foretell`): a boss's
     # name is drawn here at half a cell of type and "THE BLIGHTCALLER" is sixteen characters.
-    said = boss_banner(facing) if facing else loc("mode.siege.next")
+    # A pair is said as a pair (`SiegeView.Foretell`, `SiegeForecast.IsDuel`).
+    said = (loc("mode.siege.duel") if len(kinds) > 1 else boss_banner(facing)) if facing         else loc("mode.siege.next")
     font, _, _ = fit_line(said, cell * (0.52 if facing else 0.34),
                           caption_room(span, cell), cell * CAPTION_FLOOR)
 
@@ -1733,13 +1743,13 @@ def coming(lay, wave):
         return siege.endless_wave(list(lay.deal), lay.seed, wave)
 
     if lay.boss_wave >= 0:
-        # The boss itself is index nought and is drawn on its own, below.
-        beside = lay.coming[lay.boss_wave][1:]
+        # The bosses stand at the head and are drawn on their own, below.
+        beside = lay.coming[lay.boss_wave][len(lay.boss_kinds):]
         if beside:
             return beside
 
     body = [w for i, w in enumerate(lay.waves) if i != lay.boss_wave]
-    return siege.read_wave(body[-1] if body else "", lay.boss_kind, False)
+    return siege.read_wave(body[-1] if body else "", None)
 
 
 def ground(rung):
@@ -2048,7 +2058,7 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
     # the Infinite lane sends two from wave 21, and drawing both is the only way this picture can
     # say whether a pair reads as a climax or as a pile-up (invariant 43).
     if lay.boss:
-        bosses = [(lay.boss, lay.boss_kind)]
+        bosses = list(zip(lay.boss_wears, lay.boss_kinds))
 
     for slot, (letter, kind) in enumerate(bosses[:2]):
         warlord(sheet, draw_on, kind, letter, len(lay.wards), span, cell, hill_top, hill_foot,
@@ -2594,6 +2604,8 @@ CHAPTER_CASTS = {
     # harrower and the hollowking are cut from the family that already stands in front of the
     # insects (`make_siege_art.BOSS_SET`).
     "s08_bonereach": "",
+    # The eighth chapter draws the reunion, a second square over the six (`SiegeMode.Reunion`).
+    "s09_cloudkeep": "reunion",
     "s02_endlesswatch": "medley",
 }
 

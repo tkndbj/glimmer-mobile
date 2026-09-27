@@ -794,6 +794,50 @@ namespace GlimmerGrove.Progression
         public static readonly Mechanic MergeFeed = new Mechanic("merge_feed");
 
         /// <summary>
+        /// Pairs' verb: turn two cards, and the same gem twice is a pair that fires the turret
+        /// of its colour. Rings the board. Raised at the opening of the first Pairs a player
+        /// ever deals, once the deal has landed (<c>PairsView.Landed</c>), and by the info key.
+        /// </summary>
+        public static readonly Mechanic PairsFlip = new Mechanic("pairs_flip");
+
+        /// <summary>
+        /// Pairs back to back are a combo, and each pays more (<c>PairsPuzzle.ComboCap</c>).
+        /// <b>Taught at the event</b>: after the first second match in a row, ringing the card
+        /// that made it, because a combo explained before one has happened is a number with
+        /// nothing to point at (<see cref="MergeFeed"/>'s shape).
+        /// </summary>
+        public static readonly Mechanic PairsCombo = new Mechanic("pairs_combo");
+
+        /// <summary>
+        /// A cursed stone ends the turn and walks the raiders an extra step. <b>Taught at the
+        /// event</b>, ringing the card the first curse was just turned on - the one place it is
+        /// true that there is a curse to point at, since a face-down card is not one yet.
+        /// </summary>
+        public static readonly Mechanic PairsCurse = new Mechanic("pairs_curse");
+
+        /// <summary>
+        /// The glade challenge's verb: turn the conduits until every critter is lit in its own
+        /// colour, and a woken critter fires its turret every turn. Rings the board. Info key
+        /// only, for <see cref="PairsFlip"/>'s reason; the tiles the board carries (a crossing,
+        /// a briar, a rooted tile, a taproot) are the mode's own lessons and follow it.
+        /// </summary>
+        public static readonly Mechanic GladeWake = new Mechanic("glade_wake");
+
+        /// <summary>
+        /// Push's verb: swipe to walk, and a gem pushed onto the pad of its colour arms that
+        /// turret for as long as it stays there. Rings the keeper, because the sentence is
+        /// about moving it (invariant 6b). Info key only, for <see cref="PairsFlip"/>'s reason.
+        /// </summary>
+        public static readonly Mechanic SokobanPush = new Mechanic("sokoban_push");
+
+        /// <summary>
+        /// The rule every challenge shares: every move walks the raiders a step, a turret fires
+        /// only at its own colour, and the run is lost when no turret is left standing. Rings
+        /// the hill. Info key only, shown after the genre's own lessons.
+        /// </summary>
+        public static readonly Mechanic ChallengeHill = new Mechanic("challenge_hill");
+
+        /// <summary>
         /// Teaching order, most disruptive first.
         ///
         /// Only one tip is ever shown on entering a glade — two modal lessons before a
@@ -879,6 +923,7 @@ namespace GlimmerGrove.Progression
             MapLoadout, MapChapterGate, MapTrack,
             LoadoutSeats, LoadoutKit,
             MergeSwipe, MergeGoal, MergeFeed,
+            PairsFlip, PairsCombo, PairsCurse, GladeWake, SokobanPush, ChallengeHill,
         };
 
         /// <summary>

@@ -291,6 +291,36 @@
       ]
     },
     {
+      "id": "s09_cloudkeep",
+      "version": 1,
+      "order": 153,
+      "disabled": false,
+      "minAppVersion": 0,
+      "mode": "siege",
+      "levels": [
+        "s09_firstcloud",
+        "s09_windward",
+        "s09_stepstones",
+        "s09_skyferry",
+        "s09_mawgate",
+        "s09_tallgrass",
+        "s09_towerwatch",
+        "s09_hollowpine",
+        "s09_longspan",
+        "s09_glarecrown",
+        "s09_highmeadow",
+        "s09_farmstead",
+        "s09_ironrain",
+        "s09_cloudbreak",
+        "s09_stormhold",
+        "s09_thinline",
+        "s09_lanternrise",
+        "s09_whitewater",
+        "s09_lastferry",
+        "s09_crownofclouds"
+      ]
+    },
+    {
       "id": "s02_endlesswatch",
       "version": 1,
       "order": 150,

@@ -1001,6 +1001,9 @@ namespace GlimmerGrove
             }
         }
 
+        /// <summary>How long after a duel's first name its second is said. See <c>Arrival</c>.</summary>
+        const float DuelBeat = 1.1f;
+
         void Arrival(int wave)
         {
             _wave = wave + 1;
@@ -1039,6 +1042,22 @@ namespace GlimmerGrove
             // the arrival - the flash, the shake, the voice and the body.
             Announce(boss ? Loc.Get(banner) : Loc.Format("mode.siege.wave", _wave, _board.Waves),
                     boss ? Color.white : Pal.Cream, boss ? .78f : .46f, boss ? 2.4f : 1.5f, boss);
+
+            // **A duel names both, one after the other** (`SiegeLayout.BossJoin`). Two names on
+            // one line is a caption wider than the board (37ej), and a pair announced under one
+            // name is invariant 37z's fault said about a banner. So the second is said a beat
+            // later in the same place with its own flash and voice, over the first as it fades.
+            if (boss && _layout.IsDuel)
+            {
+                var second = _layout.BossKinds[1];
+                Tween.After(DuelBeat, () =>
+                {
+                    if (_waveLabel == null) return;
+                    Announce(Loc.Get(BossKey(second)), Color.white, .78f, 2.4f, true);
+                    Audio.Sfx("boss", .9f, Pitch(second) + .2f);
+                    Flow.Flash(Pal.A(Casting(second), 1f), .5f, .45f);
+                }, this);
+            }
 
             // **No sound of its own, except for the warlord.** The first wave steps out on the
             // same frame the countdown says GO!, so a bell there was the same bell twice a frame

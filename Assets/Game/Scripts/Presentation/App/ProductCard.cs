@@ -388,11 +388,12 @@ namespace GlimmerGrove
 
             ShopArt.PaintGood(_art, good);
 
+
             // **Switched rather than asked twice with a ternary**, which is invariant 44e's
             // rule: a two-way test whose `else` is a real answer hides the case nobody is
             // looking at, and a third kind added to one would have drawn an XP boost as a pile
             // of hearts — silently, on a card somebody is being asked to pay for.
-            bool hours = good.Kind == StoreGoodKind.HeartBoost || good.Kind == StoreGoodKind.XpBoost;
+            bool hours = good.Kind == StoreGoodKind.HeartBoost || StoreGoodKinds.IsXp(good.Kind);
 
             // **The XP boost names itself rather than printing its length**, and it is the one
             // good on this shelf that has to. "24h" is an honest headline for a heart boost,
@@ -402,9 +403,8 @@ namespace GlimmerGrove
             // `XpBoostTable` rather than the copy, for the reason the offer panel's facts do:
             // both figures are retunable content and a sentence that repeats one of them is the
             // first thing to rot (invariant 6, and 9e's "the windows are content").
-            _amount.text = good.Kind == StoreGoodKind.XpBoost
-                ? Loc.Format("ui.shop.xp_boost_card",
-                             ProgressionRules.Table.XpBoost.BoughtPercent, good.Amount)
+            _amount.text = StoreGoodKinds.IsXp(good.Kind)
+                ? Loc.Format("ui.shop.xp_boost_card", XpPercentOf(good.Kind), good.Amount)
                 : hours ? Loc.Format("ui.shop.boost_hours", good.Amount)
                         : Compact.Number(good.Amount);
 
@@ -415,6 +415,7 @@ namespace GlimmerGrove
                     _sub.text = Loc.Get("ui.shop.boost_note");
                     break;
 
+                case StoreGoodKind.XpSurge:
                 case StoreGoodKind.XpBoost:
                     // Aqua rather than the heart boost's amber, because the two sit on the same
                     // shelf and a player scanning it should not have to read to tell them apart.
@@ -541,6 +542,14 @@ namespace GlimmerGrove
             PaintRibbon(Loc.Get("ui.shop.ad_free"));
             PaintSeal(null);
         }
+
+        /// <summary>
+        /// The percentage an XP good's window pays, read from `XpBoostTable` per track so the
+        /// card can never print one strength over the other's picture.
+        /// </summary>
+        static int XpPercentOf(StoreGoodKind kind)
+            => kind == StoreGoodKind.XpSurge ? ProgressionRules.Table.XpBoost.SurgePercent
+                                             : ProgressionRules.Table.XpBoost.BoughtPercent;
 
         /// <summary>
         /// The noun under the headline figure, in the shelf's own words.

@@ -41,7 +41,7 @@ namespace GlimmerGrove
             // Both boosts are measured in hours and read the same way; what differs is the
             // sentence and the number beside it. Kept as one flag for the layout and switched
             // where the words are chosen, so a third kind cannot inherit the wrong copy (44e).
-            bool xp = Good.Kind == StoreGoodKind.XpBoost;
+            bool xp = StoreGoodKinds.IsXp(Good.Kind);
             bool boost = xp || Good.Kind == StoreGoodKind.HeartBoost;
 
             var panel = MakePanel(new Vector2(PanelW, PanelH), Loc.Get(Good.NameKey));
@@ -151,6 +151,14 @@ namespace GlimmerGrove
         /// </summary>
         string Explanation(bool boost)
         {
+            if (Good.Kind == StoreGoodKind.XpSurge)
+            {
+                // Its own sentence, because it stacks with *both* other windows where the day
+                // boost's sentence names only the free one.
+                return Loc.Format("ui.shop.xp_surge_explain",
+                                  Progression.ProgressionRules.Table.XpBoost.SurgePercent);
+            }
+
             if (Good.Kind == StoreGoodKind.XpBoost)
             {
                 // The published percentage rather than a number typed into the copy, for this
@@ -178,6 +186,9 @@ namespace GlimmerGrove
         {
             switch (Good.Kind)
             {
+                case StoreGoodKind.XpSurge:
+                    return Loc.Format("ui.shop.xp_surge_added",
+                                      Progression.ProgressionRules.Table.XpBoost.SurgePercent, Good.Amount);
                 case StoreGoodKind.XpBoost: return Loc.Format("ui.shop.xp_boost_added", Good.Amount);
                 case StoreGoodKind.HeartBoost: return Loc.Format("ui.shop.boost_added", Good.Amount);
                 default: return Loc.Format("ui.shop.hearts_added", Good.Amount);
@@ -189,6 +200,7 @@ namespace GlimmerGrove
         {
             switch (Good.Kind)
             {
+                case StoreGoodKind.XpSurge:
                 case StoreGoodKind.XpBoost: return Pal.Aqua;
                 case StoreGoodKind.HeartBoost: return Pal.Sun;
                 default: return Pal.Rose;

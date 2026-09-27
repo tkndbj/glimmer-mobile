@@ -84,8 +84,12 @@ namespace GlimmerGrove
         /// <summary>Told when a feed a board flew has reached a colour's post.</summary>
         public Action<int> FedPost;
 
-        /// <summary>The readout saying what the puzzle is won by, for a lesson to ring, or null.</summary>
-        public RectTransform GoalReadout;
+        /// <summary>
+        /// How many inputs the screen holds while this board lands its last move. One, latest
+        /// wins, for a board a newer swipe supersedes; more for a board of taps, where every
+        /// tap is a separate intention (Pairs).
+        /// </summary>
+        public virtual int InputsHeld => 1;
 
         /// <summary>Height of the key strip under the grid, or nought for none.</summary>
         public virtual float StripHeight => 0f;
@@ -212,7 +216,14 @@ namespace GlimmerGrove
             return slots;
         }
 
-        /// <summary>One invisible tap target per cell.</summary>
+        /// <summary>
+        /// One invisible tap target per cell, <b>answering the press rather than the click</b>
+        /// (<c>TileView</c>'s rule, 2026-09-26): a click needs the finger to lift on the same
+        /// cell inside the event system's drag threshold, so a quick tap that slid a few
+        /// pixels was dropped without a word - reported on the glade as taps that "don't
+        /// register". Nothing on a board is cancelled by sliding off it, so the press is the
+        /// whole gesture and a card turns the frame the finger lands.
+        /// </summary>
         protected void Targets(Action<int> tap)
         {
             for (int cell = 0; cell < Columns * Rows; cell++)
@@ -222,10 +233,16 @@ namespace GlimmerGrove
                 img.raycastTarget = true;
                 img.rectTransform.anchoredPosition = CentreOf(at);
 
-                var btn = img.gameObject.AddComponent<Btn>();
-                btn.PressScale = 1f;
-                btn.Setup(() => tap(at), silent: true);
+                img.gameObject.AddComponent<CellPress>().Pressed = () => tap(at);
             }
+        }
+
+        /// <summary>A cell's target: speaks on the press. See <see cref="Targets"/>.</summary>
+        sealed class CellPress : MonoBehaviour, UnityEngine.EventSystems.IPointerDownHandler
+        {
+            public Action Pressed;
+
+            public void OnPointerDown(UnityEngine.EventSystems.PointerEventData e) => Pressed?.Invoke();
         }
 
         /// <summary>
@@ -346,12 +363,27 @@ namespace GlimmerGrove
         /// </summary>
         public virtual void LessonsAfter(ChallengeMove move, List<ScreenLesson> into) { }
 
+        /// <summary>
+        /// Every lesson about this genre, for the screen's info key: queued through
+        /// <c>ScreenLessons.Add</c>, so a lesson already seen is shown again — a player who
+        /// pressed the key has asked. The genre's verb first, then anything this board carries.
+        /// The screen appends the lesson every genre shares (<c>Mechanic.ChallengeHill</c>).
+        /// </summary>
+        public abstract void Review(List<ScreenLesson> into);
+
         /// <summary>Show the last move landing. The default is a plain repaint.</summary>
         public virtual IEnumerator Animate(ChallengeMove move)
         {
             Repaint();
             yield break;
         }
+
+        /// <summary>
+        /// The screen has an input waiting while this board lands its last. A board holding
+        /// something up to be looked at (a Pairs miss) may end the look early; the default
+        /// does nothing.
+        /// </summary>
+        public virtual void Hurry() { }
 
         /// <summary>Say a refused input, without changing anything.</summary>
         public virtual void Refuse()

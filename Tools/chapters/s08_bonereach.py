@@ -53,6 +53,14 @@ chapter's clears land at a lower share of par and its lines have to come down wi
 Set from this chapter's own sweep.
 
 **And there is no move allowance anywhere in it** (invariant 37b).
+**Retuned 2026-09-27, harder, at the owner's word** ("ember one-star turrets can clear all 8
+chapters ... chapter 7-8 can be slightly harder"). The composition rule above (37ef) had
+flattened the ladder: this chapter carried the sixth's total hill at a tenth more surge and a
+four-seat one-star ember line held 45% of it. Brutes went back into the waves, the chapter's cog
+rate came down from 25 to 20 (the finale from 40 to 30), and `s08_ropebridge` was re-dealt
+(seed 268133 -> 446192) because its old field was a wall on its own - 0% on every ember line at
+any star count. Measured on four seats at nine rhythms after the retune: one-star ember 24%,
+three-star 58%, five-star 86%, three-star pyre 98% (MODES.md 37ef, corrected).
 """
 from __future__ import annotations
 
@@ -99,27 +107,27 @@ LEVELS = (
     # different is the thing that is meant to be: the same shapes walk a tenth further than
     # Dustcrown's before they fall.
     dict(id="s08_firstreach", seed=259695, swaps=6, charms="plsfha",
-         wards="rgby", gems="rgby", cogs=25, boss="",
+         wards="rgby", gems="rgby", cogs=20, boss="",
          waves=["RGbyrgbyr", "RGby#rRGby", "RGBY#g#bRGbyr"]),
 
     # A swarm with nothing armoured in it, which is the rung that says what fifty per cent of
     # health really costs: the same bodies, and the line no longer clears them before they land.
     dict(id="s08_bonespur", seed=267464, swaps=6, charms="plsfha",
-         wards="rgby", gems="rgby", cogs=25, boss="",
+         wards="rgby", gems="rgby", cogs=20, boss="",
          waves=["rgbyrgbyrgby", "RGby#rRGby", "RGBY#g#bRGbyr"]),
 
     # Two shields in every wave, in two colours, so the player is asked to feed two specific
     # wards while the rest of the hill walks.
-    dict(id="s08_ropebridge", seed=268133, swaps=6, charms="plsfha",
-         wards="rgby", gems="rgby", cogs=25, boss="",
-         waves=["RGby#rRGby", "RGBY#g#bRGby", "RGby#r#yRGbyr"]),
+    dict(id="s08_ropebridge", seed=446192, swaps=6, charms="plsfha",
+         wards="rgby", gems="rgby", cogs=20, boss="",
+         waves=["RGby#rrgby", "rgby#g#bRGby", "RGby#r#yrgby"]),
 
     # Bombers standing inside the plate, which is the rung that teaches holding a bomb for the
     # wave (invariant 40i): a bomb takes a plus of five boxes, and a bulwark standing in it is
     # the one raider a colour match is slowest against.
     dict(id="s08_crystalrise", seed=269448, swaps=6, charms="plsfha",
-         wards="rgby", gems="rgby", cogs=25, boss="",
-         waves=["RGby#rRGby", "RGBY#g!gRG#bby", "RGby!b#rRGByby"]),
+         wards="rgby", gems="rgby", cogs=20, boss="",
+         waves=["RGby#rRGbyrg", "RGBY#g!gRG#bby", "RGBY!b#rRGByby"]),
 
     # **The harrower, after three waves worth ranking up through.** What it takes is a rank, and
     # the cog it drops is lying on the hill for as long as the player leaves it there - so the
@@ -127,24 +135,24 @@ LEVELS = (
     # and the fight is about whether a beat spent reaching down is a beat worth spending. It
     # wears red, which decides nothing (37dn) and is what the token's letter is for.
     dict(id="s08_harrowgate", seed=270069, swaps=6, charms="plsfha",
-         wards="rgby", gems="rgby", cogs=25, boss="harrower:r",
+         wards="rgby", gems="rgby", cogs=20, boss="harrower:r",
          waves=["RGbyRGby", "RGby#rRG!bby", "RGby#gRGby"]),
 
     # **One colour at a time with plate in it**: a bolt is worth double against its own colour,
     # so the one ward that can help is the only ward that can, three waves running.
     dict(id="s08_thinair", seed=270518, swaps=6, charms="plsfha",
-         wards="rgby", gems="rgby", cogs=25, boss="",
-         waves=["RRRR#rrrrg", "GGGG#g#ggggb", "BBBB#b#bbbYYY#y#yy"]),
+         wards="rgby", gems="rgby", cogs=20, boss="",
+         waves=["RRRR#rrrrrg", "GGGG#g#gggggb", "BBBB#b#bbbYYYY#y#yy"]),
 
     # Three shields in one wave - the most armour the mode carries without a new rule - with a
     # bomb in the wave behind it to answer them with.
     dict(id="s08_shatterstep", seed=275372, swaps=6, charms="plsfha",
-         wards="rgby", gems="rgby", cogs=25, boss="",
+         wards="rgby", gems="rgby", cogs=20, boss="",
          waves=["RGbyRGby", "RGby#g#b#yrgby", "RGBY!rRG#by"]),
 
     # Four waves and a bomb at the end of them, which is attrition with one answer held back.
     dict(id="s08_deadfall", seed=276498, swaps=6, charms="plsfha",
-         wards="rgby", gems="rgby", cogs=25, boss="",
+         wards="rgby", gems="rgby", cogs=20, boss="",
          waves=["RGbyrgby", "RGBY#rRGby", "RGby#g#brgby", "RGBY!yRGby"]),
 
     # **The longest climb in the chapter**, four waves with plate in three of them and no boss at
@@ -152,7 +160,7 @@ LEVELS = (
     # minutes - which is the rehearsal the finale then bills.
     dict(id="s08_thelastspan", seed=252462, swaps=5, charms="plsfha",
          wards="rgby", gems="rgby", cogs=25, boss="",
-         waves=["rgbyrgby", "RGby#rrgby", "rgby#brgbyby", "RGBYrgbyr"]),
+         waves=["rgbyrgbyrg", "RGby#rrgby", "rgby#brgbyby", "RGBYrgbyr"]),
 
     # **The hollowking, and it asks the one question this mode has never asked.** A wane strikes
     # every post that has landed nothing since its last cast and spares every post that has been
@@ -169,8 +177,8 @@ LEVELS = (
     # earns and not health on the hill, so the rung that asks the most of the line hands the line
     # the most ranks. **Par and both star lines do not move by one.**
     dict(id="s08_hollowcrown", seed=256059, swaps=5, charms="plsfha",
-         wards="rgby", gems="rgby", cogs=40, boss="hollowking:b",
-         waves=["rgbyrgby", "rgby#rrgby", "RGbyrgby"]),
+         wards="rgby", gems="rgby", cogs=30, boss="hollowking:b",
+         waves=["RGbyrgbyrg", "RGby#rRGbyrg", "RGBYrgbyrg"]),
 )
 
 

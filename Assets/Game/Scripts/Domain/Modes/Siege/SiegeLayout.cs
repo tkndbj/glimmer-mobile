@@ -209,6 +209,59 @@ namespace GlimmerGrove.Modes
         /// <summary>The colour a boss may wear. Lower case only — case no longer means anything.</summary>
         public const string BossColours = "rgby";
 
+        /// <summary>
+        /// What joins the two bosses of a <b>duel</b>: <c>"gravemaw:r+harrower:b"</c>.
+        ///
+        /// <para>
+        /// <b>A duel is the Infinite lane's pair wave said in the idiom of an authored ladder</b>
+        /// (<see cref="SiegeEndless.BossesAt"/>): two bosses walking on together as the last wave,
+        /// alone on a cleared hill, seated either side of the middle by
+        /// <see cref="SiegeTuning.BossLane"/>. The board has played that shape since the lane
+        /// shipped - <c>Muster</c> asks <see cref="BossesIn"/> and <see cref="KindAt"/> per raider,
+        /// every stand, floor and spell is a fact about its own caster - so what a chapter needed
+        /// was only a way to <em>say</em> it, and it is this one character.
+        /// </para>
+        /// <para>
+        /// <b>Two, never more, and never the same kind twice.</b> Two of one verb is one fight at
+        /// twice the health, which is invariant 37z's fault said about a pair; three is a hill the
+        /// lane has never sent and nobody has measured. Both are refused at read, by name.
+        /// </para>
+        /// </summary>
+        public const char BossJoin = '+';
+
+        /// <summary>The most bosses one authored wave may send. See <see cref="BossJoin"/>.</summary>
+        public const int MostBosses = 2;
+
+        /// <summary>
+        /// What share of its own health each boss of an authored duel stands with, in per cent.
+        ///
+        /// <para>
+        /// <b>A duel is one fight's worth of health and a fifth, split over two bodies</b> - so it
+        /// is sixty. Measured before it existed: a sunlord and a hollowking at their full lone
+        /// figures (9,520 and 10,080 at this chapter's surge) stood five hundred seconds against
+        /// the strongest line on the shelf, the hollowking casting a hundred times over a line
+        /// that never broke - a stalemate rather than a finale, which is 37di's promise broken
+        /// from the other side. Each boss keeps all three stands and all three floors (they are
+        /// shares of its own health), so every verb still fights; what moved is how long the
+        /// line has to hold two of them at once.
+        /// </para>
+        /// <para>
+        /// <b>Authored duels only.</b> The Infinite lane's pairs are its four lightest bosses on a
+        /// ramp the lane is tuned against (invariant 43) and are left exactly as they were. Par
+        /// reads the same share (<see cref="ShareAt"/>), so a duel is graded on the hill it is.
+        /// </para>
+        /// </summary>
+        public const int DuelSharePercent = 60;
+
+        /// <summary>
+        /// What share of its own health the raider at this place stands with, in per cent - a
+        /// hundred everywhere but the bosses of an authored duel (<see cref="DuelSharePercent"/>).
+        /// Asked by the muster and by <see cref="SiegeTuning.Par"/>, so the two cannot disagree.
+        /// </summary>
+        public int ShareAt(int wave, int index)
+            => !IsEndless && IsDuel && wave == BossWave && index >= 0 && index < BossKinds.Length
+               ? DuelSharePercent : 100;
+
         /// <summary>How many wards a line may hold. Four colours, so four is the whole line.</summary>
         public const int MaxWards = 4;
 
@@ -305,6 +358,19 @@ namespace GlimmerGrove.Modes
         public readonly SiegeKind BossKind = SiegeKind.Creeper;
 
         /// <summary>
+        /// Every boss this siege ends with, in the order they walk on: one, or two for a duel
+        /// (<see cref="BossJoin"/>). Empty for a siege that sends none. <see cref="BossKind"/> is
+        /// the first of them, and is what every reading that only ever meant "the boss" still asks.
+        /// </summary>
+        public readonly SiegeKind[] BossKinds = Array.Empty<SiegeKind>();
+
+        /// <summary>The colour each of <see cref="BossKinds"/> wears, in the same order.</summary>
+        public readonly char[] BossWears = Array.Empty<char>();
+
+        /// <summary>Whether this siege ends with two bosses at once. See <see cref="BossJoin"/>.</summary>
+        public bool IsDuel => BossKinds.Length > 1;
+
+        /// <summary>
         /// Which wave the boss stands in, or -1. Always the last one when there is one — either a
         /// wave of its own, or, for a boss that cannot bring a ward down, the last authored wave
         /// with the boss at its head. <see cref="BossesIn"/> says how many of that wave are
@@ -325,8 +391,8 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public SiegeKind KindAt(int wave, int index)
         {
-            if (!IsEndless && wave == BossWave && index == 0
-                && wave >= 0 && wave < Coming.Length) return BossKind;
+            if (!IsEndless && wave == BossWave && index >= 0 && index < BossKinds.Length
+                && wave >= 0 && wave < Coming.Length) return BossKinds[index];
 
             var spec = At(wave, index);
             return spec.Kind;
@@ -440,7 +506,7 @@ namespace GlimmerGrove.Modes
         int _dealtWave = -1;
 
         /// <summary>Parses one authored wave into the raiders it names.</summary>
-        static SiegeSpec[] Read(string wave, SiegeKind bossKind, bool boss)
+        static SiegeSpec[] Read(string wave, SiegeKind[] bosses)
         {
             if (string.IsNullOrEmpty(wave)) return Array.Empty<SiegeSpec>();
 
@@ -456,7 +522,8 @@ namespace GlimmerGrove.Modes
                 // raider in it, which was exactly right while a boss wave held nothing else - and
                 // a boss that rides the last wave (see the constructor) stands at its head with
                 // an ordinary wave behind it.
-                var kind = boss && made.Count == 0 ? bossKind
+                // A duel's two stand at the head in the order the token names them.
+                var kind = bosses != null && made.Count < bosses.Length ? bosses[made.Count]
                          : mark != '\0' ? Modified(mark)
                          : char.IsUpper(letter) ? SiegeKind.Brute : SiegeKind.Creeper;
 
@@ -578,10 +645,12 @@ namespace GlimmerGrove.Modes
             // invariant 5f exists to refuse: content written for a build that is not this one has
             // to be said out loud rather than quietly interpreted. The same clause is what refuses
             // the retired one-letter form.
-            if (Named((boss ?? string.Empty).Trim(), out var kind, out char colour))
+            if (Bossed((boss ?? string.Empty).Trim(), out var kinds, out var wears))
             {
-                BossKind = kind;
-                Boss = colour;
+                BossKinds = kinds;
+                BossWears = wears;
+                BossKind = kinds[0];
+                Boss = wears[0];
             }
 
             var coming = new List<string>(Trim(waves));
@@ -612,14 +681,14 @@ namespace GlimmerGrove.Modes
                 // riding above is history. Kept as prose because it explains why three bosses
                 // once had company, and why every boss spell takes health now.
                 BossWave = coming.Count;
-                coming.Add(Boss.ToString());
+                coming.Add(new string(BossWears));
             }
 
             Waves = coming.ToArray();
 
             Coming = new SiegeSpec[Waves.Length][];
             for (int i = 0; i < Waves.Length; i++)
-                Coming[i] = Read(Waves[i], BossKind, i == BossWave);
+                Coming[i] = Read(Waves[i], i == BossWave ? BossKinds : null);
 
             Seed = Hash(grid);
             Fault = Check(boss, charms);
@@ -679,6 +748,35 @@ namespace GlimmerGrove.Modes
 
             Seed = Hash(grid);
             Fault = Check(string.Empty, charms);
+        }
+
+        /// <summary>
+        /// Reads a boss token - <c>"warlord:r"</c>, or a duel <c>"gravemaw:r+harrower:b"</c> -
+        /// and answers false for anything that is not exactly that shape: an empty half, a third
+        /// boss, a kind named twice, or any half <see cref="Named"/> refuses.
+        /// </summary>
+        static bool Bossed(string token, out SiegeKind[] kinds, out char[] wears)
+        {
+            kinds = null;
+            wears = null;
+
+            if (string.IsNullOrEmpty(token)) return false;
+
+            var halves = token.Split(BossJoin);
+            if (halves.Length > MostBosses) return false;
+
+            kinds = new SiegeKind[halves.Length];
+            wears = new char[halves.Length];
+
+            for (int i = 0; i < halves.Length; i++)
+            {
+                if (!Named(halves[i], out kinds[i], out wears[i])) return false;
+
+                for (int k = 0; k < i; k++)
+                    if (kinds[k] == kinds[i]) return false;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -843,7 +941,8 @@ namespace GlimmerGrove.Modes
                     known.Append(i == 0 ? "" : ", ").Append(BossNames[i].Name).Append(":<colour>");
 
                 return $"'{boss}' is not a boss this mode knows; a boss is written as a kind and "
-                     + $"the colour it wears ({known}, colour one of '{BossColours}'), and an "
+                     + $"the colour it wears ({known}, colour one of '{BossColours}'), a duel as "
+                     + $"two of those joined by '{BossJoin}' naming two different kinds, and an "
                      + "empty field is how a siege says it sends none";
             }
 

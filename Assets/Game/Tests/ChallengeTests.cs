@@ -131,7 +131,7 @@ namespace GlimmerGrove.Tests
         static ChallengeDefinition Pairs4(string[] waves = null, int hill = 5)
         {
             var problems = new List<string>();
-            ChallengeTable.TryBuild(Table(Row("t_pairs", "pairs", 2, 2, new[] { "rg", "gr" },
+            ChallengeTable.TryBuild(Table(Row("t_pairs", "pairs", 2, 2, new[] { "r1 g1", "g1 r1" },
                                              waves ?? new[] { "0 r1" }, hill, 1)),
                                     out var table, problems);
             Assert.AreEqual(0, problems.Count, string.Join("; ", problems));
@@ -152,7 +152,7 @@ namespace GlimmerGrove.Tests
                 Assert.IsTrue(ChallengeGenres.IsRetired(spelling));
 
                 var problems = new List<string>();
-                ChallengeTable.TryBuild(Table(Row("t", spelling, 2, 2, new[] { "rg", "gr" }, new[] { "0 r1" })), out var table, problems);
+                ChallengeTable.TryBuild(Table(Row("t", spelling, 2, 2, new[] { "r1 g1", "g1 r1" }, new[] { "0 r1" })), out var table, problems);
                 Assert.AreEqual(0, table.Count);
                 Assert.IsTrue(problems.Exists(p => p.Contains("withdrawn")), string.Join("; ", problems));
             }
@@ -199,7 +199,7 @@ namespace GlimmerGrove.Tests
         public void AnUnknownGenreIsRefusedByName()
         {
             var problems = new List<string>();
-            ChallengeTable.TryBuild(Table(Row("t", "chess", 2, 2, new[] { "rg", "gr" }, new[] { "0 r1" })),
+            ChallengeTable.TryBuild(Table(Row("t", "chess", 2, 2, new[] { "r1 g1", "g1 r1" }, new[] { "0 r1" })),
                                     out var table, problems);
 
             Assert.AreEqual(0, table.Count);
@@ -210,7 +210,7 @@ namespace GlimmerGrove.Tests
         public void AWaveNamingNoColourIsRefused()
         {
             var problems = new List<string>();
-            ChallengeTable.TryBuild(Table(Row("t", "pairs", 2, 2, new[] { "rg", "gr" }, new[] { "0 p2" })),
+            ChallengeTable.TryBuild(Table(Row("t", "pairs", 2, 2, new[] { "r1 g1", "g1 r1" }, new[] { "0 p2" })),
                                     out var table, problems);
 
             Assert.AreEqual(0, table.Count);
@@ -221,7 +221,7 @@ namespace GlimmerGrove.Tests
         public void WavesMustClimb()
         {
             var problems = new List<string>();
-            ChallengeTable.TryBuild(Table(Row("t", "pairs", 2, 2, new[] { "rg", "gr" }, new[] { "3 r1", "3 g1" })),
+            ChallengeTable.TryBuild(Table(Row("t", "pairs", 2, 2, new[] { "r1 g1", "g1 r1" }, new[] { "3 r1", "3 g1" })),
                                     out _, problems);
 
             Assert.IsTrue(problems.Exists(p => p.Contains("out of order")), string.Join("; ", problems));
@@ -231,8 +231,8 @@ namespace GlimmerGrove.Tests
         public void ADuplicatedIdFailsTheFile()
         {
             var problems = new List<string>();
-            bool ok = ChallengeTable.TryBuild(Table(Row("t", "pairs", 2, 2, new[] { "rg", "gr" }, new[] { "0 r1" }),
-                                                    Row("t", "pairs", 2, 2, new[] { "rg", "gr" }, new[] { "0 r1" })),
+            bool ok = ChallengeTable.TryBuild(Table(Row("t", "pairs", 2, 2, new[] { "r1 g1", "g1 r1" }, new[] { "0 r1" }),
+                                                    Row("t", "pairs", 2, 2, new[] { "r1 g1", "g1 r1" }, new[] { "0 r1" })),
                                               out _, problems);
 
             Assert.IsFalse(ok);
@@ -241,7 +241,7 @@ namespace GlimmerGrove.Tests
         [Test]
         public void AFileFromTheFutureIsRefusedWhole()
         {
-            var dto = Table(Row("t", "pairs", 2, 2, new[] { "rg", "gr" }, new[] { "0 r1" }));
+            var dto = Table(Row("t", "pairs", 2, 2, new[] { "r1 g1", "g1 r1" }, new[] { "0 r1" }));
             dto.schemaVersion = ChallengeTable.Version + 1;
 
             var problems = new List<string>();
@@ -253,8 +253,8 @@ namespace GlimmerGrove.Tests
         public void ABadRowCostsThatRowAndNotTheSlate()
         {
             var problems = new List<string>();
-            bool ok = ChallengeTable.TryBuild(Table(Row("good", "pairs", 2, 2, new[] { "rg", "gr" }, new[] { "0 r1" }),
-                                                    Row("odd", "pairs", 3, 1, new[] { "rgb" }, new[] { "0 r1" })),
+            bool ok = ChallengeTable.TryBuild(Table(Row("good", "pairs", 2, 2, new[] { "r1 g1", "g1 r1" }, new[] { "0 r1" }),
+                                                    Row("odd", "pairs", 3, 1, new[] { "r1 g1 b1" }, new[] { "0 r1" })),
                                               out var table, problems);
 
             Assert.IsTrue(ok);
@@ -431,6 +431,161 @@ namespace GlimmerGrove.Tests
             var pairs = (PairsPuzzle)run.Puzzle;
             Assert.AreEqual(PairsPuzzle.Face.Hidden, pairs.FaceAt(0));
             Assert.AreEqual(PairsPuzzle.Face.Hidden, pairs.FaceAt(1));
+        }
+
+        static ChallengeDefinition PairsRow(int w, int h, string[] rows, string[] waves = null, int hill = 9, int bolts = 1)
+        {
+            var problems = new List<string>();
+            ChallengeTable.TryBuild(Table(Row("p", "pairs", w, h, rows, waves ?? new[] { "0 r1" }, hill, bolts)),
+                                    out var table, problems);
+            Assert.AreEqual(0, problems.Count, string.Join("; ", problems));
+            return table.Find("p");
+        }
+
+        /// <summary>
+        /// <b>A pair is a gem, never a colour</b> (56m): two reds of different stones are a miss,
+        /// and the same stone twice is a pair that feeds the red turret.
+        /// </summary>
+        [Test]
+        public void APairIsTheSameGemNotTheSameColour()
+        {
+            var run = new ChallengeRun(PairsRow(2, 2, new[] { "r1 r2", "r2 r1" }), new ChallengeLine(1, 3, 1));
+            var pairs = (PairsPuzzle)run.Puzzle;
+            Assert.AreEqual(2, pairs.Pairs);
+
+            run.Play(ChallengeInput.Tap(0));
+            var miss = run.Play(ChallengeInput.Tap(1));
+            Assert.IsTrue(miss.Move.Turn);
+            Assert.AreEqual(0, miss.Move.Feeds.Count, "a red heart and a red drop are not a pair");
+
+            run.Play(ChallengeInput.Tap(0));
+            var pair = run.Play(ChallengeInput.Tap(3));
+            Assert.AreEqual(1, pair.Move.Feeds.Count);
+            Assert.AreEqual(0, pair.Move.Feeds[0].Colour, "a pair of red stones feeds the red turret");
+            Assert.IsTrue(pair.Move.Feeds[0].Banks, "a pair is a burst, and a burst banks");
+            Assert.AreEqual(PairsPuzzle.Face.Matched, pairs.FaceAt(0));
+        }
+
+        /// <summary>
+        /// Pairs made back to back are a combo: the n-th in a row pays bolts x min(n, cap), and a
+        /// miss starts the count again.
+        /// </summary>
+        [Test]
+        public void PairsMadeBackToBackAreACombo()
+        {
+            var run = new ChallengeRun(PairsRow(6, 2, new[] { "r1 r1 g1 g1 b1 b1", "y1 y2 y1 y2 r2 r2" }, bolts: 2),
+                                       new ChallengeLine(1, 3, 1));
+            var pairs = (PairsPuzzle)run.Puzzle;
+
+            int Pay(int a, int b)
+            {
+                run.Play(ChallengeInput.Tap(a));
+                var report = run.Play(ChallengeInput.Tap(b));
+                return report.Move.Feeds.Count == 0 ? 0 : report.Move.Feeds[0].Bolts;
+            }
+
+            Assert.AreEqual(2, Pay(0, 1), "the first pair pays its bolts");
+            Assert.AreEqual(4, Pay(2, 3), "the second in a row pays twice");
+            Assert.AreEqual(6, Pay(4, 5), "the third pays three times");
+            Assert.AreEqual(3, pairs.Streak);
+            Assert.AreEqual(0, Pay(6, 7), "a miss");
+            Assert.AreEqual(0, pairs.Streak, "a miss ends the combo");
+            Assert.AreEqual(2, Pay(10, 11), "and the next pair is a first again");
+            Assert.AreEqual(1, pairs.LastCombo);
+        }
+
+        /// <summary>
+        /// A cursed stone ends the turn the moment it is turned, first flip or second: a card
+        /// already up goes back down, the combo breaks, and the hill walks a step more than a turn.
+        /// </summary>
+        [Test]
+        public void ACursedStoneEndsTheTurnAndWalksTheHillAnExtraStep()
+        {
+            var run = new ChallengeRun(PairsRow(5, 1, new[] { "r1 o r1 g1 g1" }, new[] { "0 r9" }, hill: 9),
+                                       new ChallengeLine(1, 3, 1));
+            var pairs = (PairsPuzzle)run.Puzzle;
+            Assert.AreEqual(1, pairs.Curses);
+            Assert.AreEqual(2, pairs.Pairs);
+
+            Assert.IsFalse(run.Play(ChallengeInput.Tap(0)).Move.Turn, "a first flip is free");
+            var cursed = run.Play(ChallengeInput.Tap(1));
+            Assert.IsTrue(cursed.Move.Turn);
+            Assert.AreEqual(1, cursed.Move.Stumbles);
+            Assert.AreEqual(2, run.Turns, "the hill walked the turn and the stumble");
+            Assert.AreEqual(7, run.Hill.Raiders[0].Distance, "two steps down a hill of nine");
+            Assert.AreEqual(PairsPuzzle.Face.Hidden, pairs.FaceAt(0), "the card that was up goes back down");
+            Assert.AreEqual(PairsPuzzle.Face.Hidden, pairs.FaceAt(1), "and so does the curse");
+            Assert.IsTrue(pairs.LastCursed);
+            Assert.AreEqual(-1, pairs.First);
+
+            // Turned first, it ends the turn on its own.
+            var alone = run.Play(ChallengeInput.Tap(1));
+            Assert.IsTrue(alone.Move.Turn);
+            Assert.AreEqual(-1, pairs.LastA);
+            Assert.AreEqual(4, run.Turns);
+
+            // It never pairs, and the board is solved without it.
+            run.Play(ChallengeInput.Tap(0));
+            run.Play(ChallengeInput.Tap(2));
+            run.Play(ChallengeInput.Tap(3));
+            Assert.AreEqual(ChallengeState.Won, run.Play(ChallengeInput.Tap(4)).State);
+        }
+
+        /// <summary>A row is tokens; a bare colour, an odd stone and a fourth curse are each refused by name.</summary>
+        [Test]
+        public void APairsRowIsRefusedWithAReason()
+        {
+            string Fault(int w, int h, params string[] rows)
+            {
+                var problems = new List<string>();
+                ChallengeTable.TryBuild(Table(Row("p", "pairs", w, h, rows, new[] { "0 r1" })), out var table, problems);
+                Assert.AreEqual(0, table.Count, string.Join("; ", problems));
+                return string.Join("; ", problems);
+            }
+
+            StringAssert.Contains("a colour and not a gem", Fault(2, 1, "r g"));
+            StringAssert.Contains("gem token", Fault(2, 1, "rg"));
+            StringAssert.Contains("cannot all pair", Fault(3, 1, "r1 r1 r1"));
+            StringAssert.Contains("not a gem", Fault(2, 1, "r7 r7"));
+            StringAssert.Contains("cursed stones", Fault(6, 1, "o o o o r1 r1"));
+        }
+
+        /// <summary>
+        /// <b>The row authors which cards, never where</b>: a deal shuffles them - the same deal
+        /// the same way on every device, a different deal differently - and changes nothing
+        /// else; a deal of nought keeps the row as written. The ledger's deal is the day and the
+        /// attempt, never nought, and the next attempt is a different board.
+        /// </summary>
+        [Test]
+        public void ADealShufflesTheCardsAndNothingElse()
+        {
+            var table = Shipped();
+            var def = ShippedPairs(table)[0];
+
+            int[] Kinds(uint deal)
+            {
+                var p = (PairsPuzzle)new ChallengeRun(def, table.Line, deal).Puzzle;
+                var k = new int[p.Width * p.Height];
+                for (int i = 0; i < k.Length; i++) k[i] = p.KindAt(i);
+                return k;
+            }
+
+            var written = Kinds(0u);
+            var first = PairsGems.Tokens(def.Rows[0]);
+            for (int x = 0; x < def.Width; x++)
+            {
+                PairsGems.TryParse(first[x], out int kind);
+                Assert.AreEqual(kind, written[x], "deal nought is the row as written");
+            }
+
+            CollectionAssert.AreEqual(Kinds(5u), Kinds(5u), "one deal is one board");
+            CollectionAssert.AreNotEqual(Kinds(5u), Kinds(6u), "two deals are two boards");
+            CollectionAssert.AreEquivalent(written, Kinds(5u), "a deal moves the cards and deals no new one");
+
+            Assert.AreEqual(ChallengePlay.DealOf(20000, 1), ChallengePlay.DealOf(20000, 1));
+            Assert.AreNotEqual(ChallengePlay.DealOf(20000, 1), ChallengePlay.DealOf(20000, 2), "a retry is a fresh board");
+            Assert.AreNotEqual(ChallengePlay.DealOf(20000, 1), ChallengePlay.DealOf(20001, 1), "tomorrow is a fresh board");
+            for (int d = 0; d < 400; d++) Assert.AreNotEqual(0u, ChallengePlay.DealOf(20000 + d, 1 + d % 7));
         }
 
         // ------------------------------------------------------------------ the glade
@@ -645,64 +800,246 @@ namespace GlimmerGrove.Tests
         }
 
         // ------------------------------------------------------------------ the shipped four
-        [Test]
-        public void ShippedPairsIsWonByAPlayerWithAMemory()
+        // ------------------------------------------------------------------ every shipped pairs
+        /// <summary>
+        /// How many deals of a Pairs row are played, and which: 1..<c>PairsDeals</c>, mixed by
+        /// the puzzle with the row's seed. <c>Tools/make_pairs_challenges.py</c> plays the same
+        /// deals (<c>DEALS</c>), so a figure printed here is the figure the tool prints.
+        /// </summary>
+        internal const int PairsDeals = 48;
+
+        /// <summary>
+        /// The band every Pairs row's slack must sit in, in hundredths of a perfect memory's
+        /// turns, on its median deal (<c>SLACK_BAND</c>): a medium row is tuned to 1.70x and a
+        /// hard one to 1.45x. The floor keeps a hard row from asking for a perfect memory; the
+        /// ceiling keeps a miss costing something.
+        /// </summary>
+        const int PairsSlackFloor = 135, PairsSlackCeiling = 185;
+
+        /// <summary>What the turrets must be worth: the same run with no bolt fed forgives this much less (<c>FIRE_WORTH</c>).</summary>
+        const int PairsFireWorth = 25;
+
+        /// <summary>The most raiders standing on an average turn of the median deal (<c>MOST_CROWD</c>).</summary>
+        const float PairsMostCrowd = 4.5f;
+
+        /// <summary>A row with this many pairs or more is hard (<c>HARD_PAIRS</c>).</summary>
+        const int PairsHard = 13;
+
+        /// <summary>The line health the unluckiest deal keeps at a perfect memory's pace (<c>LUCK_FLOOR</c>).</summary>
+        static int LuckFloor(PairsPuzzle pairs) => pairs.Pairs >= PairsHard ? 3 : 6;
+
+        static IReadOnlyList<ChallengeDefinition> ShippedPairs(ChallengeTable table)
         {
-            var table = Shipped();
-            var run = new ChallengeRun(table.Find("d01_pairs"), table.Line);
+            var rows = table.RowsOf(ChallengeGenre.Pairs);
+            Assert.Greater(rows.Count, 0, "challenges.json ships no pairs");
+            return rows;
+        }
+
+        /// <summary>
+        /// A player with a perfect memory who explores in reading order: cash a known pair, else
+        /// turn the first unseen card, take its partner if it has been seen, else turn the next
+        /// unseen one. Over a shuffled deal reading order is a random order, which is how a
+        /// first-sight player explores. Returns what every walked resolve was fed - a curse's
+        /// stumble is an empty one - and leaves the run at its end.
+        /// </summary>
+        static List<ChallengeFeed[]> PerfectMemory(ChallengeDefinition def, ChallengeLine line, uint deal, out ChallengeRun run)
+        {
+            run = new ChallengeRun(def, line, deal);
             var pairs = (PairsPuzzle)run.Puzzle;
+            int n = pairs.Width * pairs.Height;
+            var known = new bool[n];
+            var fed = new List<ChallengeFeed[]>();
+            var r = run;
 
-            var known = new Dictionary<int, List<int>>();
-            int cells = pairs.Width * pairs.Height;
-            int cursor = 0;
-            int guard = 0;
+            bool Hidden(int c) => pairs.FaceAt(c) == PairsPuzzle.Face.Hidden;
 
-            while (run.State == ChallengeState.Playing && guard++ < 200)
+            bool Tap(int c)
             {
-                int a = -1, b = -1;
-                foreach (var kv in known)
+                known[c] = true;
+                var report = r.Play(ChallengeInput.Tap(c));
+                Assert.IsFalse(report.Move.Refused, $"{def.Id}: the bot's tap on {c} was refused");
+                if (report.Walked)
                 {
-                    kv.Value.RemoveAll(c => pairs.FaceAt(c) != PairsPuzzle.Face.Hidden);
-                    if (kv.Value.Count >= 2) { a = kv.Value[0]; b = kv.Value[1]; break; }
+                    fed.Add(report.Move.Feeds.ToArray());
+                    for (int s = 0; s < report.Move.Stumbles; s++) fed.Add(new ChallengeFeed[0]);
                 }
-
-                if (a < 0)
-                {
-                    while (cursor < cells && (pairs.FaceAt(cursor) != PairsPuzzle.Face.Hidden || Seen(known, cursor))) cursor++;
-                    a = cursor;
-                    Learn(known, a, pairs.ColourAt(a));
-
-                    int partner = -1;
-                    foreach (int c in known[pairs.ColourAt(a)])
-                        if (c != a && pairs.FaceAt(c) == PairsPuzzle.Face.Hidden) { partner = c; break; }
-
-                    if (partner >= 0) b = partner;
-                    else
-                    {
-                        int next = cursor + 1;
-                        while (next < cells && (pairs.FaceAt(next) != PairsPuzzle.Face.Hidden || Seen(known, next))) next++;
-                        b = next;
-                        Learn(known, b, pairs.ColourAt(b));
-                    }
-                }
-
-                run.Play(ChallengeInput.Tap(a));
-                run.Play(ChallengeInput.Tap(b));
+                return pairs.IsCurse(c);
             }
 
-            Won(run, "d01_pairs");
+            int guard = 0;
+            while (run.State == ChallengeState.Playing && guard++ < 4 * n * n)
+            {
+                int a = -1, b = -1;
+                for (int i = 0; i < n && a < 0; i++)
+                {
+                    if (!known[i] || !Hidden(i) || pairs.IsCurse(i)) continue;
+                    for (int j = i + 1; j < n; j++)
+                        if (known[j] && Hidden(j) && pairs.KindAt(j) == pairs.KindAt(i)) { a = i; b = j; break; }
+                }
+
+                if (a >= 0)
+                {
+                    Tap(a);
+                    Tap(b);
+                    continue;
+                }
+
+                a = 0;
+                while (known[a] || !Hidden(a)) a++;
+                if (Tap(a)) continue;
+
+                b = -1;
+                for (int j = 0; j < n && b < 0; j++)
+                    if (j != a && known[j] && Hidden(j) && pairs.KindAt(j) == pairs.KindAt(a)) b = j;
+                if (b < 0)
+                {
+                    b = 0;
+                    while (b == a || known[b] || !Hidden(b)) b++;
+                }
+                Tap(b);
+            }
+
+            return fed;
         }
 
-        static bool Seen(Dictionary<int, List<int>> known, int cell)
+        /// <summary>The deal whose perfect-memory run is the median length, ties to the lower deal (<c>schedules</c>).</summary>
+        static uint MedianDeal(ChallengeDefinition def, ChallengeLine line, out List<ChallengeFeed[]> fed)
         {
-            foreach (var kv in known) if (kv.Value.Contains(cell)) return true;
-            return false;
+            var runs = new List<KeyValuePair<int, uint>>();
+            for (uint d = 1; d <= PairsDeals; d++)
+                runs.Add(new KeyValuePair<int, uint>(PerfectMemory(def, line, d, out _).Count, d));
+            runs.Sort((x, y) => x.Key != y.Key ? x.Key.CompareTo(y.Key) : x.Value.CompareTo(y.Value));
+
+            uint median = runs[runs.Count / 2].Value;
+            fed = PerfectMemory(def, line, median, out _);
+            return median;
         }
 
-        static void Learn(Dictionary<int, List<int>> known, int cell, int colour)
+        static int Health(ChallengeRun run)
         {
-            if (!known.TryGetValue(colour, out var list)) known[colour] = list = new List<int>();
-            if (!list.Contains(cell)) list.Add(cell);
+            int health = 0;
+            for (int i = 0; i < run.Hill.Wards.Count; i++) health += run.Hill.Wards[i].Health;
+            return health;
+        }
+
+        static int SlackOf(ChallengeDefinition def, ChallengeLine line, List<ChallengeFeed[]> fed)
+        {
+            int slowest = 100;
+            for (int pace = 105; pace <= 500; pace += 5)
+            {
+                if (!HoldsAt(def, line, fed, fed.Count + 1, pace, out _)) break;
+                slowest = pace;
+            }
+            return slowest;
+        }
+
+        /// <summary>
+        /// Every row is won on every one of its deals by a perfect memory, with the line whole
+        /// but for one blow on the median deal and at least <see cref="LuckFloor"/> standing on
+        /// the unluckiest - a shuffle may be unkind, but it may not decide the run. Prints the
+        /// spread of turns across the deals, which is how much luck a row carries.
+        /// </summary>
+        [Test]
+        public void EveryShippedPairsIsWonOnEveryDeal()
+        {
+            var table = Shipped();
+
+            foreach (var def in ShippedPairs(table))
+            {
+                int fewest = int.MaxValue, most = 0, worst = int.MaxValue;
+                PairsPuzzle pairs = null;
+
+                for (uint d = 1; d <= PairsDeals; d++)
+                {
+                    var fed = PerfectMemory(def, table.Line, d, out var run);
+                    pairs = (PairsPuzzle)run.Puzzle;
+                    Assert.AreEqual(ChallengeState.Won, run.State, $"{def.Id} is lost by a perfect memory on deal {d}");
+                    fewest = Math.Min(fewest, fed.Count + 1);
+                    most = Math.Max(most, fed.Count + 1);
+                    worst = Math.Min(worst, Health(run));
+                }
+
+                uint median = MedianDeal(def, table.Line, out var medianFed);
+                PerfectMemory(def, table.Line, median, out var medianRun);
+
+                Console.WriteLine($"{def.Id}: {def.Width}x{def.Height}, {pairs.Pairs} pairs, {pairs.Curses} curse(s); " +
+                                  $"a perfect memory takes {fewest}-{most} turns ({medianFed.Count + 1} on the median deal), " +
+                                  $"line {Health(medianRun)}/12 there and {worst}/12 on the unluckiest");
+
+                Assert.GreaterOrEqual(Health(medianRun), 11, $"{def.Id}: the median deal's line took more than one blow");
+                Assert.GreaterOrEqual(worst, LuckFloor(pairs),
+                                      $"{def.Id}: the unluckiest deal leaves the line at {worst}/12; a shuffle decides it " +
+                                      "(make_pairs_challenges.py --write)");
+            }
+        }
+
+        /// <summary>
+        /// <b>How poor a memory can a player have and still win</b> - the glade's slack, asked of
+        /// a memory game: a player's extra turns are the misses a perfect memory would not make.
+        /// Held to the band on the median deal, and the turrets held to being worth something:
+        /// the same run with every bolt taken away must forgive <see cref="PairsFireWorth"/>
+        /// less (invariant 5d - a fusion that changes nothing is decoration).
+        /// </summary>
+        [Test]
+        public void EveryShippedPairsForgivesAPoorerMemory()
+        {
+            var table = Shipped();
+
+            foreach (var def in ShippedPairs(table))
+            {
+                MedianDeal(def, table.Line, out var fed);
+                int slack = SlackOf(def, table.Line, fed);
+
+                var dry = new List<ChallengeFeed[]>(fed.Count);
+                for (int i = 0; i < fed.Count; i++) dry.Add(new ChallengeFeed[0]);
+                int bare = SlackOf(def, table.Line, dry);
+
+                Console.WriteLine($"{def.Id}: a player may take {slack / 100f:0.00}x a perfect memory's turns " +
+                                  $"({bare / 100f:0.00}x if no pair fed a turret) on a hill of {def.Hill}");
+
+                Assert.GreaterOrEqual(slack, PairsSlackFloor, $"{def.Id} asks for a near-perfect memory (make_pairs_challenges.py --write)");
+                Assert.LessOrEqual(slack, PairsSlackCeiling, $"{def.Id} forgives {slack / 100f:0.00}x; a miss costs nothing there");
+                Assert.GreaterOrEqual(slack - bare, PairsFireWorth,
+                                      $"{def.Id}: the turrets buy only {(slack - bare) / 100f:0.00}x; what a pair feeds barely matters");
+            }
+        }
+
+        /// <summary>The hill is never empty at a perfect memory's pace, and never a smear of bodies.</summary>
+        [Test]
+        public void EveryShippedPairsKeepsTheHillPeopled()
+        {
+            var table = Shipped();
+
+            foreach (var def in ShippedPairs(table))
+            {
+                MedianDeal(def, table.Line, out var fed);
+                Assert.IsTrue(HoldsAt(def, table.Line, fed, fed.Count + 1, 100, out var crowd), $"{def.Id}: the bot's line fell");
+
+                int empty = 0, standing = 0;
+                foreach (int on in crowd) { if (on == 0) empty++; standing += on; }
+                float density = standing / (float)Math.Max(1, crowd.Count);
+                Console.WriteLine($"{def.Id}: {density:0.0} raider(s) on the hill on an average turn of {crowd.Count}");
+
+                Assert.AreEqual(0, empty, $"{def.Id}: the hill stands empty on {empty} of the bot's {crowd.Count} turns");
+                Assert.LessOrEqual(density, PairsMostCrowd, $"{def.Id}: {density:0.0} raiders stand on an average turn");
+            }
+        }
+
+        /// <summary>
+        /// Every stone a row can name, the curse and the two cards are on disk. The addresses are
+        /// built from the kind (<c>PairsGems.ArtKey</c>), so <c>artnames.py</c> cannot see one and
+        /// this is the gate that would: a missing stone is a card that turns over onto nothing.
+        /// </summary>
+        [Test]
+        public void EveryPairsGemIsOnDisk()
+        {
+            string root = Path.Combine(TestJson.RepoRoot(), "Assets", "Game", "Art", "Challenge");
+            var keys = ChallengeArt.PairsArtKeys();
+            Assert.AreEqual(PairsGems.Kinds + 3, keys.Count, "two cards, every stone and the curse");
+
+            foreach (var key in keys)
+                Assert.IsTrue(File.Exists(Path.Combine(root, key + ".png")),
+                              $"'{key}.png' is not on disk; cut it with Tools/make_pairs_art.py");
         }
 
         // ------------------------------------------------------------------ every shipped glade

@@ -962,6 +962,21 @@ namespace GlimmerGrove.Store
                 if (Wallet.HeartBoostSecondsLeft + good.Amount * 3600L > ceiling)
                     return GoodOfferState.BoostNearlyFull;
             }
+            else if (good.Kind == StoreGoodKind.XpSurge)
+            {
+                // A surge nobody pays for is not offered - the built-in table has none, and a
+                // shelf selling a window at nought percent is gems for nothing.
+                if (!Progression.ProgressionRules.Table.XpBoost.OffersSurge)
+                    return GoodOfferState.Missing;
+
+                // The ceiling, measured against the surge's own deadline for the bought
+                // window's reason below: that is the one this buys.
+                long ceiling = Progression.XpBoostLimits.MaxHours * 3600L;
+                long held = Progression.XpBoost.SurgeUntilUnix - GameClock.NowUnix();
+                if (held < 0L) held = 0L;
+
+                if (held + good.Amount * 3600L > ceiling) return GoodOfferState.BoostNearlyFull;
+            }
             else if (good.Kind == StoreGoodKind.XpBoost)
             {
                 // The same refusal as the heart boost above and for its reason: a window that
@@ -1019,6 +1034,11 @@ namespace GlimmerGrove.Store
                 case StoreGoodKind.XpBoost:
                     // The bought window, which is the one with no cooldown. See `XpBoost`.
                     Progression.XpBoost.GrantBought(good.Amount);
+                    break;
+
+                case StoreGoodKind.XpSurge:
+                    // The surge window, a deadline of its own. See `XpBoost.GrantSurge`.
+                    Progression.XpBoost.GrantSurge(good.Amount);
                     break;
             }
 

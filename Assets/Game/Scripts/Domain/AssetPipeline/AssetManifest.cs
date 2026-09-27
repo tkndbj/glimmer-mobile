@@ -63,6 +63,14 @@ namespace GlimmerGrove.AssetPipeline
         public static string SiegeArt(string key) => ArtRoot + "Siege/" + key;
 
         /// <summary>
+        /// The daily challenges' own pieces: Pairs' cards and the twenty-four stones it deals
+        /// (<c>Tools/make_pairs_art.py</c>). Their own folder, for the siege's reason - a
+        /// challenge is not a chapter and must be deletable without touching one - and loaded
+        /// only by the challenge screen's hold, for the genre that draws them (invariant 7b).
+        /// </summary>
+        public static string ChallengePiece(string key) => ArtRoot + "Challenge/" + key;
+
+        /// <summary>
         /// One turret's shelf thumbnail. <c>Ui/Wards/{id}</c>.
         ///
         /// <b>Nothing draws these any more</b>, and they are kept rather than deleted. The loadout
@@ -356,6 +364,11 @@ namespace GlimmerGrove.AssetPipeline
             // The gem-priced XP boost's card glyph, beside `ic_heart_boost` in spirit and drawn
             // on the same shelf.
             "ic_xp_boost",
+
+            // The XP surge's two card pictures, the rungs of `ShopArt.SurgeLadder` - global for
+            // `ic_xp_boost`'s reason, since they are drawn on the same shelf the moment it opens.
+            "ic_xp_surge_1",
+            "ic_xp_surge_2",
 
             // The daily challenges' four genre marks, one per `ChallengeGenres` spelling
             // (`ChallengeArt.GenreMark` builds `challenge_{spelling}`). **Listed by hand rather

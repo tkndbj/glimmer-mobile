@@ -3,11 +3,251 @@
   "entries": [
     {
       "key": "challenge.d01_pairs.blurb",
-      "text": "Turn two gems. A pair fires its turret."
+      "text": "Turn two cards. The same gem twice fires its turret."
     },
     {
       "key": "challenge.d01_pairs.name",
-      "text": "Pairs"
+      "text": "Twin Sparks"
+    },
+    {
+      "key": "challenge.d39_pairs.blurb",
+      "text": "Ten pairs in three colours. Remember where each gem hides."
+    },
+    {
+      "key": "challenge.d39_pairs.name",
+      "text": "Ruby Row"
+    },
+    {
+      "key": "challenge.d40_pairs.blurb",
+      "text": "Green, blue and amber. Nine pairs to find."
+    },
+    {
+      "key": "challenge.d40_pairs.name",
+      "text": "Moss and Sea"
+    },
+    {
+      "key": "challenge.d41_pairs.blurb",
+      "text": "Four colours, ten pairs. Every miss walks the raiders on."
+    },
+    {
+      "key": "challenge.d41_pairs.name",
+      "text": "Garnet Gate"
+    },
+    {
+      "key": "challenge.d42_pairs.blurb",
+      "text": "Two blues are only a pair if they are the same stone."
+    },
+    {
+      "key": "challenge.d42_pairs.name",
+      "text": "Sapphire Steps"
+    },
+    {
+      "key": "challenge.d43_pairs.blurb",
+      "text": "One cursed stone hides here. Turn it and the raiders take an extra step."
+    },
+    {
+      "key": "challenge.d43_pairs.name",
+      "text": "The Black Stone"
+    },
+    {
+      "key": "challenge.d44_pairs.blurb",
+      "text": "Only reds and blues. Look closely at the shapes."
+    },
+    {
+      "key": "challenge.d44_pairs.name",
+      "text": "Red and Blue"
+    },
+    {
+      "key": "challenge.d45_pairs.blurb",
+      "text": "Make pairs one after another for a combo."
+    },
+    {
+      "key": "challenge.d45_pairs.name",
+      "text": "Jewel Box"
+    },
+    {
+      "key": "challenge.d46_pairs.blurb",
+      "text": "Three colours, and one cursed stone among them."
+    },
+    {
+      "key": "challenge.d46_pairs.name",
+      "text": "Honey Moss"
+    },
+    {
+      "key": "challenge.d47_pairs.blurb",
+      "text": "Greens and ambers only. Tell them apart by shape."
+    },
+    {
+      "key": "challenge.d47_pairs.name",
+      "text": "Emerald Honey"
+    },
+    {
+      "key": "challenge.d48_pairs.blurb",
+      "text": "Three cursed stones on a short board. Find them once, then leave them be."
+    },
+    {
+      "key": "challenge.d48_pairs.name",
+      "text": "Three Curses"
+    },
+    {
+      "key": "challenge.d49_pairs.blurb",
+      "text": "Red, blue and amber, and one cursed stone."
+    },
+    {
+      "key": "challenge.d49_pairs.name",
+      "text": "Ember Hollow"
+    },
+    {
+      "key": "challenge.d50_pairs.blurb",
+      "text": "A long, low board with a cursed stone in it."
+    },
+    {
+      "key": "challenge.d50_pairs.name",
+      "text": "Lantern Night"
+    },
+    {
+      "key": "challenge.d51_pairs.blurb",
+      "text": "Every red stone and every green one. Six shapes of each."
+    },
+    {
+      "key": "challenge.d51_pairs.name",
+      "text": "Holly and Ivy"
+    },
+    {
+      "key": "challenge.d52_pairs.blurb",
+      "text": "Two cursed stones. Find them once and never touch them again."
+    },
+    {
+      "key": "challenge.d52_pairs.name",
+      "text": "Twin Curses"
+    },
+    {
+      "key": "challenge.d53_pairs.blurb",
+      "text": "Fifteen pairs in four colours. Keep your head."
+    },
+    {
+      "key": "challenge.d53_pairs.name",
+      "text": "Treasure Vault"
+    },
+    {
+      "key": "challenge.d54_pairs.blurb",
+      "text": "Fourteen pairs across a wide hall. Chain them for combos."
+    },
+    {
+      "key": "challenge.d54_pairs.name",
+      "text": "The Long Hall"
+    },
+    {
+      "key": "challenge.d55_pairs.blurb",
+      "text": "Fourteen pairs and two cursed stones."
+    },
+    {
+      "key": "challenge.d55_pairs.name",
+      "text": "Cursed Vault"
+    },
+    {
+      "key": "challenge.d56_pairs.blurb",
+      "text": "Five red shapes, and two cursed stones hiding among them."
+    },
+    {
+      "key": "challenge.d56_pairs.name",
+      "text": "Blood Moon"
+    },
+    {
+      "key": "challenge.d57_pairs.blurb",
+      "text": "Five shapes of every colour. Look hard."
+    },
+    {
+      "key": "challenge.d57_pairs.name",
+      "text": "Deepwater"
+    },
+    {
+      "key": "challenge.d58_pairs.blurb",
+      "text": "Seventeen pairs and a cursed stone. The biggest hoard yet."
+    },
+    {
+      "key": "challenge.d58_pairs.name",
+      "text": "Dragon Hoard"
+    },
+    {
+      "key": "challenge.d59_pairs.blurb",
+      "text": "Green, blue and amber, and two cursed stones."
+    },
+    {
+      "key": "challenge.d59_pairs.name",
+      "text": "Witch's Table"
+    },
+    {
+      "key": "challenge.d60_pairs.blurb",
+      "text": "Reds, blues and ambers, five shapes of most."
+    },
+    {
+      "key": "challenge.d60_pairs.name",
+      "text": "Fire and Ice"
+    },
+    {
+      "key": "challenge.d61_pairs.blurb",
+      "text": "Every red and every green stone at once, and a curse."
+    },
+    {
+      "key": "challenge.d61_pairs.name",
+      "text": "King's Ransom"
+    },
+    {
+      "key": "challenge.d62_pairs.blurb",
+      "text": "Red, green and amber, five shapes of each."
+    },
+    {
+      "key": "challenge.d62_pairs.name",
+      "text": "Sunstone"
+    },
+    {
+      "key": "challenge.d63_pairs.blurb",
+      "text": "Three cursed stones among sixteen pairs."
+    },
+    {
+      "key": "challenge.d63_pairs.name",
+      "text": "Obsidian Hall"
+    },
+    {
+      "key": "challenge.d64_pairs.blurb",
+      "text": "Four colours, two curses, a wide board."
+    },
+    {
+      "key": "challenge.d64_pairs.name",
+      "text": "Shadow Market"
+    },
+    {
+      "key": "challenge.d65_pairs.blurb",
+      "text": "Red, blue and amber, with two cursed stones."
+    },
+    {
+      "key": "challenge.d65_pairs.name",
+      "text": "Ember Crypt"
+    },
+    {
+      "key": "challenge.d66_pairs.blurb",
+      "text": "Every green stone, and three curses in the deep."
+    },
+    {
+      "key": "challenge.d66_pairs.name",
+      "text": "Sunken Temple"
+    },
+    {
+      "key": "challenge.d67_pairs.blurb",
+      "text": "Every red and green shape, and a cursed stone."
+    },
+    {
+      "key": "challenge.d67_pairs.name",
+      "text": "Grand Gallery"
+    },
+    {
+      "key": "challenge.d68_pairs.blurb",
+      "text": "Sixteen pairs, three curses, four colours. The hardest crown."
+    },
+    {
+      "key": "challenge.d68_pairs.name",
+      "text": "Gemfire Crown"
     },
     {
       "key": "challenge.d05_merge.blurb",
@@ -1494,6 +1734,10 @@
       "text": "THE WARLORD"
     },
     {
+      "key": "mode.siege.duel",
+      "text": "TWO BOSSES"
+    },
+    {
       "key": "mode.siege.chain",
       "text": "CHAIN x{0}"
     },
@@ -2012,6 +2256,14 @@
     {
       "key": "ui.challenges.pairs",
       "text": "{0} / {1} pairs"
+    },
+    {
+      "key": "ui.challenges.combo",
+      "text": "COMBO x{0}"
+    },
+    {
+      "key": "ui.challenges.cursed",
+      "text": "CURSED!"
     },
     {
       "key": "ui.challenges.lit",
@@ -4858,6 +5110,54 @@
       "text": "SWIPE TO SLIDE"
     },
     {
+      "key": "ui.tip.pairs_flip.body",
+      "text": "Tap two cards to turn them over.\n\nThe same gem twice is a pair. It fires the turret of its colour. A miss turns back over."
+    },
+    {
+      "key": "ui.tip.pairs_flip.title",
+      "text": "TURN TWO CARDS"
+    },
+    {
+      "key": "ui.tip.pairs_combo.body",
+      "text": "Pairs made one after another are a combo.\n\nEach pair in a row fires more bolts. A miss starts over."
+    },
+    {
+      "key": "ui.tip.pairs_combo.title",
+      "text": "COMBO!"
+    },
+    {
+      "key": "ui.tip.pairs_curse.body",
+      "text": "That black stone is cursed.\n\nTurning it ends your turn and moves the raiders an extra step. Remember where it is."
+    },
+    {
+      "key": "ui.tip.pairs_curse.title",
+      "text": "A CURSED STONE"
+    },
+    {
+      "key": "ui.tip.glade_wake.body",
+      "text": "Tap a tile to turn it.\n\nLight each critter in its own colour to wake it. A woken critter fires its turret every turn. Two colours that meet put the light out."
+    },
+    {
+      "key": "ui.tip.glade_wake.title",
+      "text": "WAKE THE CRITTERS"
+    },
+    {
+      "key": "ui.tip.sokoban_push.body",
+      "text": "Swipe to walk. Walk into a gem to push it.\n\nA gem on the pad of its colour arms that turret. Seat them all to win."
+    },
+    {
+      "key": "ui.tip.sokoban_push.title",
+      "text": "PUSH THE GEMS"
+    },
+    {
+      "key": "ui.tip.challenge_hill.body",
+      "text": "Every turn walks the raiders one step.\n\nA turret only hits raiders of its own colour. Lose every turret and the run is over."
+    },
+    {
+      "key": "ui.tip.challenge_hill.title",
+      "text": "HOLD THE LINE"
+    },
+    {
       "key": "ui.tip.mixing.body",
       "text": "This critter wants a mixed colour. Join two hearts and their light mixes.\n\nRed and yellow make orange."
     },
@@ -5554,6 +5854,14 @@
       "text": "A Day of Double XP"
     },
     {
+      "key": "store.good.xp_surge_day",
+      "text": "A Day of Triple XP"
+    },
+    {
+      "key": "store.good.xp_surge_two_day",
+      "text": "Two Days of Triple XP"
+    },
+    {
       "key": "ui.shop.xp_boost_note",
       "text": "Double XP"
     },
@@ -5580,6 +5888,14 @@
     {
       "key": "ui.shop.xp_boost_full",
       "text": "Your XP boost is already nearly at its limit"
+    },
+    {
+      "key": "ui.shop.xp_surge_explain",
+      "text": "Every glade, watch and wave pays {0}% more XP while this is running. It stacks with every other XP boost."
+    },
+    {
+      "key": "ui.shop.xp_surge_added",
+      "text": "+{0}% XP for {1} more hours"
     },
     {
       "key": "ui.ads.xp_boost_title",
@@ -5776,6 +6092,170 @@
     {
       "key": "level.s08_hollowcrown.tagline",
       "text": "It strikes whatever has gone quiet"
+    },
+    {
+      "key": "chapter.s09_cloudkeep.name",
+      "text": "Cloudkeep"
+    },
+    {
+      "key": "level.s09_firstcloud.name",
+      "text": "First Cloud"
+    },
+    {
+      "key": "level.s09_firstcloud.tagline",
+      "text": "More of them, each a little softer"
+    },
+    {
+      "key": "level.s09_windward.name",
+      "text": "Windward"
+    },
+    {
+      "key": "level.s09_windward.tagline",
+      "text": "Fourteen at once, and nothing armoured"
+    },
+    {
+      "key": "level.s09_stepstones.name",
+      "text": "Stepstones"
+    },
+    {
+      "key": "level.s09_stepstones.tagline",
+      "text": "Two shields a wave, inside the crowd"
+    },
+    {
+      "key": "level.s09_skyferry.name",
+      "text": "Sky Ferry"
+    },
+    {
+      "key": "level.s09_skyferry.tagline",
+      "text": "Hold the bomb until the crowd is in it"
+    },
+    {
+      "key": "level.s09_mawgate.name",
+      "text": "Mawgate"
+    },
+    {
+      "key": "level.s09_mawgate.tagline",
+      "text": "One drops your rank, the other eats it"
+    },
+    {
+      "key": "level.s09_tallgrass.name",
+      "text": "Tallgrass"
+    },
+    {
+      "key": "level.s09_tallgrass.tagline",
+      "text": "One colour at a time, in a flood"
+    },
+    {
+      "key": "level.s09_towerwatch.name",
+      "text": "Tower Watch"
+    },
+    {
+      "key": "level.s09_towerwatch.tagline",
+      "text": "Four waves under the old tower"
+    },
+    {
+      "key": "level.s09_hollowpine.name",
+      "text": "Hollowpine"
+    },
+    {
+      "key": "level.s09_hollowpine.tagline",
+      "text": "Brutes in front, plate behind"
+    },
+    {
+      "key": "level.s09_longspan.name",
+      "text": "Long Span"
+    },
+    {
+      "key": "level.s09_longspan.tagline",
+      "text": "Feed all four, evenly, for two minutes"
+    },
+    {
+      "key": "level.s09_glarecrown.name",
+      "text": "Glarecrown"
+    },
+    {
+      "key": "level.s09_glarecrown.tagline",
+      "text": "Pour into one, but not the one she watches"
+    },
+    {
+      "key": "level.s09_highmeadow.name",
+      "text": "High Meadow"
+    },
+    {
+      "key": "level.s09_highmeadow.tagline",
+      "text": "The crowd climbs every wave"
+    },
+    {
+      "key": "level.s09_farmstead.name",
+      "text": "Farmstead"
+    },
+    {
+      "key": "level.s09_farmstead.tagline",
+      "text": "Fourteen from the very first wave"
+    },
+    {
+      "key": "level.s09_ironrain.name",
+      "text": "Iron Rain"
+    },
+    {
+      "key": "level.s09_ironrain.tagline",
+      "text": "Three shields a wave, and one bomb"
+    },
+    {
+      "key": "level.s09_cloudbreak.name",
+      "text": "Cloudbreak"
+    },
+    {
+      "key": "level.s09_cloudbreak.tagline",
+      "text": "Four waves, and the bomb for the last"
+    },
+    {
+      "key": "level.s09_stormhold.name",
+      "text": "Stormhold"
+    },
+    {
+      "key": "level.s09_stormhold.tagline",
+      "text": "The chained turret fills, and the storm drains it"
+    },
+    {
+      "key": "level.s09_thinline.name",
+      "text": "Thin Line"
+    },
+    {
+      "key": "level.s09_thinline.tagline",
+      "text": "Three brutes of one colour at a time"
+    },
+    {
+      "key": "level.s09_lanternrise.name",
+      "text": "Lanternrise"
+    },
+    {
+      "key": "level.s09_lanternrise.tagline",
+      "text": "Plate and bombs in the same wave"
+    },
+    {
+      "key": "level.s09_whitewater.name",
+      "text": "Whitewater"
+    },
+    {
+      "key": "level.s09_whitewater.tagline",
+      "text": "The longest climb in the chapter"
+    },
+    {
+      "key": "level.s09_lastferry.name",
+      "text": "Last Ferry"
+    },
+    {
+      "key": "level.s09_lastferry.tagline",
+      "text": "Everything this chapter taught, at once"
+    },
+    {
+      "key": "level.s09_crownofclouds.name",
+      "text": "Crown of Clouds"
+    },
+    {
+      "key": "level.s09_crownofclouds.tagline",
+      "text": "Fill the sealed one, keep the rest working"
     },
     {
       "key": "rank.cinderling.name",

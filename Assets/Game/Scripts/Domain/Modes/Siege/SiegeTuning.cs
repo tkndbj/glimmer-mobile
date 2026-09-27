@@ -2644,8 +2644,47 @@ namespace GlimmerGrove.Modes
         /// tool</b>, which is what lets the board carry it — see <c>SiegeDto.tough</c>.
         /// </summary>
         public static int ToughnessFor(int ordinal)
-            => ordinal < ToughFrom ? 10
-             : 10 + (ordinal - ToughFrom + 1) * ChapterToughStep;
+        {
+            for (int i = 0; i < Traded.Length; i++)
+                if (Traded[i].Ordinal == ordinal) return Traded[i].Tenths;
+
+            return ordinal < ToughFrom ? 10
+                 : 10 + (ordinal - ToughFrom + 1) * ChapterToughStep;
+        }
+
+        /// <summary>
+        /// The chapters that <b>trade surge for headcount</b>, by 0-based ordinal, and the tenths
+        /// each one deals instead of what <see cref="ToughnessFor"/> would derive.
+        ///
+        /// <para>
+        /// <b>One row: the eighth chapter deals 1.4, against the 1.6 the ladder would have
+        /// given it and the seventh's 1.5</b> - the owner's figure on 2026-09-27, stated with its
+        /// reason: that chapter is commissioned as a <em>crowd</em>, more raiders on the hill at
+        /// once than any chapter before it, and a crowd at a fresh tenth of surge on top is
+        /// exactly the wall invariant 37ef measured (surge and composition together). So the trade
+        /// is written the other way round from 37ef's rule - the difficulty comes from the
+        /// bodies and the surge steps <em>down</em> to pay for them.
+        /// </para>
+        /// <para>
+        /// <b>A table rather than a number typed into the body</b>, so the rule "a chapter's
+        /// surge is arithmetic on its place" stays true with one named exception rather than
+        /// becoming a field an author sets. Mirrored by <c>Tools/verify/siege.TRADED</c>.
+        /// </para>
+        /// </summary>
+        public static readonly (int Ordinal, int Tenths)[] Traded = { (7, 14) };
+
+        /// <summary>
+        /// A health figure at a share of itself, in per cent, never under one - the one place a
+        /// duel's split (<see cref="SiegeLayout.DuelSharePercent"/>) is applied, so the muster and
+        /// <see cref="Par"/> read the same number.
+        /// </summary>
+        public static int Shared(int health, int sharePercent)
+        {
+            if (sharePercent >= 100 || sharePercent <= 0) return health;
+
+            int shared = health * sharePercent / 100;
+            return shared < 1 ? 1 : shared;
+        }
 
         /// <summary>The most a body may be surged, so a mistyped body cannot ship an unkillable hill.</summary>
         public const int MostTough = 40;
@@ -3134,7 +3173,7 @@ namespace GlimmerGrove.Modes
                     // fighting — three stars unreachable for the whole chapter, with every number
                     // in the file plausible.
                     var surge = layout.SurgeOf(w);
-                    health += surge.Health(HealthOf(kind));
+                    health += Shared(surge.Health(HealthOf(kind)), layout.ShareAt(w, i));
 
                     // **What a bonecaller will raise, counted in full and whether it ever does.**
                     // Par is the hill's health over the most one match could deliver, and a raise

@@ -10,11 +10,15 @@ namespace GlimmerGrove
     /// Every picture a challenge draws, and where it comes from.
     ///
     /// <para>
-    /// <b>A challenge cuts no art of its own.</b> The gems, the four starter turrets, their bolt
-    /// reels, the insects and the first hill are all the live mode's, resident through the same
-    /// hold the tutorial takes (<c>SiegeMode.ArtFor(null)</c>), so nothing here can be a white
-    /// rectangle that the siege itself would not also be (invariant 7b). Everything else — a
-    /// pipe, a pad, a wall, a mine's number — is procedural (<c>Art</c>).
+    /// <b>A challenge borrows the live mode's art, and Pairs alone cuts its own.</b> The gems,
+    /// the four starter turrets, their bolt reels, the insects and the first hill are all the
+    /// live mode's, resident through the same hold the tutorial takes
+    /// (<c>SiegeMode.ArtFor(null)</c>), so nothing there can be a white rectangle that the siege
+    /// itself would not also be (invariant 7b). Pairs deals twenty-four different stones on a
+    /// card, which the siege has no picture for, so its cards and stones are
+    /// <c>Art/Challenge/</c>, cut by <c>Tools/make_pairs_art.py</c> and added to the same hold
+    /// for that genre only (56m). Everything else — a pad, a wall, a ring — is procedural
+    /// (<c>Art</c>).
     /// </para>
     /// <para>
     /// <b>Names are written out at the call, one per line</b>, so <c>artnames.py</c> can hold
@@ -64,6 +68,7 @@ namespace GlimmerGrove
         public static string DealMarkKey(int rung) => "challenge_deal_" + rung;
 
         static Sprite Piece(string key) => AssetLibrary.Sprite(AssetManifest.SiegeArt(key));
+        static Sprite PairsPiece(string key) => AssetLibrary.Sprite(AssetManifest.ChallengePiece(key));
         static Sprite[] Reel(string key) => AssetLibrary.Frames(AssetManifest.SiegeArt(key));
         static Sprite[] Blast(string key) => AssetLibrary.Frames(AssetManifest.SiegeFx(key));
 
@@ -77,6 +82,25 @@ namespace GlimmerGrove
                 case 3: return Piece("gem_y");
                 default: return null;
             }
+        }
+
+        // ------------------------------------------------------------------ pairs
+        /// <summary>The back every Pairs card is dealt face down under: a stone frame and a crown.</summary>
+        public static Sprite CardBack() => PairsPiece("pairs_back");
+
+        /// <summary>The face a turned card shows its gem on: the same frame, cream inside.</summary>
+        public static Sprite CardFace() => PairsPiece("pairs_face");
+
+        /// <summary>
+        /// The stone a kind is (<see cref="PairsGems"/>), or the cursed one. The address is built
+        /// from the kind (7c's shape), so <c>artnames.py</c> cannot see it and
+        /// <c>ChallengeTests.EveryPairsGemIsOnDisk</c> walks every kind instead. Null until the
+        /// hold lands, which a card draws as nothing rather than as a white rectangle (7b).
+        /// </summary>
+        public static Sprite PairGem(int kind)
+        {
+            string key = PairsGems.ArtKey(kind);
+            return PairsPiece(key);
         }
 
         /// <summary>The starter turret in a colour: the one line every challenge is fought on.</summary>
@@ -147,14 +171,30 @@ namespace GlimmerGrove
 
         /// <summary>
         /// What a challenge holds: the siege with no chapter behind it, which is the insects
-        /// and the starter line, the field's gems and the shared effects.
+        /// and the starter line, the field's gems and the shared effects - and, for Pairs
+        /// alone, its two cards and every stone it can deal, so the other three genres never
+        /// load a card they do not draw.
         /// </summary>
-        public static System.Collections.Generic.List<AssetRequest> Requests()
+        public static System.Collections.Generic.List<AssetRequest> Requests(ChallengeGenre genre)
         {
             var list = new System.Collections.Generic.List<AssetRequest>();
             var mode = LevelModes.Find(GameMode.Siege);
             if (mode != null) list.AddRange(mode.ArtFor(null));
+
+            if (genre == ChallengeGenre.Pairs)
+                foreach (var key in PairsArtKeys())
+                    list.Add(AssetRequest.Sprite(AssetManifest.ChallengePiece(key)));
+
             return list;
+        }
+
+        /// <summary>Every picture Pairs draws, under <c>Art/Challenge/</c>: the two cards, each stone and the curse.</summary>
+        public static System.Collections.Generic.List<string> PairsArtKeys()
+        {
+            var keys = new System.Collections.Generic.List<string> { "pairs_back", "pairs_face" };
+            for (int kind = 0; kind < PairsGems.Kinds; kind++) keys.Add(PairsGems.ArtKey(kind));
+            keys.Add(PairsGems.ArtKey(PairsGems.Curse));
+            return keys;
         }
     }
 }

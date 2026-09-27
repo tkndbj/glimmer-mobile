@@ -35,7 +35,8 @@
     "watchedCooldownHours": 4,
     "boughtPercent": 100,
     "boughtHours": 24,
-    "maxPercent": 150
+    "surgePercent": 200,
+    "maxPercent": 350
   },
   "chapterRewards": [
     {
@@ -464,6 +465,18 @@
         "kind": "xp_boost",
         "amount": 24,
         "gems": 120
+      },
+      {
+        "id": "xp_surge_day",
+        "kind": "xp_surge",
+        "amount": 24,
+        "gems": 200
+      },
+      {
+        "id": "xp_surge_two_day",
+        "kind": "xp_surge",
+        "amount": 48,
+        "gems": 300
       }
     ]
   },
@@ -1214,23 +1227,21 @@
         "id": "cinderling",
         "requires": [
           { "measure": "keeper_level", "target": 10 },
-          { "measure": "levels_cleared", "scope": "s01_thornwatch", "target": 8 },
+          { "measure": "stars", "target": 20 },
           { "measure": "runs", "target": 15 }
         ]
       },
       {
         "id": "silverwatch",
         "requires": [
-          { "measure": "levels_cleared", "scope": "s01_thornwatch", "target": 10 },
-          { "measure": "stars", "scope": "s01_thornwatch", "target": 22 },
+          { "measure": "stars", "target": 40 },
           { "measure": "runs", "target": 50 }
         ]
       },
       {
         "id": "goldbrand",
         "requires": [
-          { "measure": "levels_cleared", "scope": "s03_broodmarch", "target": 10 },
-          { "measure": "stars", "target": 60 },
+          { "measure": "stars", "target": 75 },
           { "measure": "keeper_level", "target": 12 },
           { "measure": "raiders", "target": 2500 }
         ]
@@ -1238,9 +1249,8 @@
       {
         "id": "duskcrown",
         "requires": [
-          { "measure": "levels_cleared", "scope": "s04_barrowfell", "target": 10 },
-          { "measure": "stars", "target": 95 },
-          { "measure": "three_stars", "target": 20 },
+          { "measure": "stars", "target": 115 },
+          { "measure": "three_stars", "target": 26 },
           { "measure": "runs", "target": 200 },
           { "measure": "best_wave", "scope": "s02_endless", "target": 20 }
         ]
@@ -1248,9 +1258,8 @@
       {
         "id": "fireheart",
         "requires": [
-          { "measure": "levels_cleared", "scope": "s05_ashenhold", "target": 10 },
-          { "measure": "stars", "target": 125 },
-          { "measure": "three_stars", "target": 35 },
+          { "measure": "stars", "target": 145 },
+          { "measure": "three_stars", "target": 44 },
           { "measure": "bosses", "target": 30 },
           { "measure": "best_wave", "scope": "s02_endless", "target": 30 }
         ]
@@ -1258,8 +1267,7 @@
       {
         "id": "frozencrest",
         "requires": [
-          { "measure": "levels_cleared", "scope": "s06_thundercrag", "target": 10 },
-          { "measure": "stars", "target": 155 },
+          { "measure": "stars", "target": 170 },
           { "measure": "runs", "target": 450 },
           { "measure": "charms", "target": 300 },
           { "measure": "best_wave", "scope": "s02_endless", "target": 45 }
@@ -1268,9 +1276,8 @@
       {
         "id": "gemfire",
         "requires": [
-          { "measure": "levels_cleared", "scope": "s07_dustcrown", "target": 10 },
-          { "measure": "stars", "target": 175 },
-          { "measure": "three_stars", "target": 55 },
+          { "measure": "stars", "target": 195 },
+          { "measure": "three_stars", "target": 62 },
           { "measure": "bosses", "target": 60 },
           { "measure": "best_wave", "scope": "s02_endless", "target": 60 }
         ]

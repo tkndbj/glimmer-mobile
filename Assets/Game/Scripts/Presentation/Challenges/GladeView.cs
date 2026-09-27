@@ -188,6 +188,24 @@ namespace GlimmerGrove
             }
         }
 
+        /// <summary>
+        /// The verb, ringing the board, then every one of the mode's tile lessons this board
+        /// carries - all of them rather than <see cref="LessonsAtOnce"/>, because a player who
+        /// pressed the key asked for them.
+        /// </summary>
+        public override void Review(List<ScreenLesson> into)
+        {
+            if (!_board) return;
+
+            ScreenLessons.Add(into, Mechanic.GladeWake, Inner);
+
+            foreach (var sighting in MechanicScan.Taught(_glade.Board))
+            {
+                if (sighting.CellIndex < 0 || !Teaches(sighting.Mechanic)) continue;
+                ScreenLessons.Add(into, sighting.Mechanic, _board.TileAt(sighting.CellIndex));
+            }
+        }
+
         static bool Teaches(Mechanic mechanic)
             => mechanic.Equals(Mechanic.RootedTile)
             || mechanic.Equals(Mechanic.Crossing) || mechanic.Equals(Mechanic.Briar)

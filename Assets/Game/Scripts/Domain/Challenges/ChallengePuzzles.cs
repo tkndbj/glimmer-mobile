@@ -9,11 +9,12 @@ namespace GlimmerGrove.Challenges
     /// </summary>
     public static class ChallengePuzzles
     {
-        public static IChallengePuzzle Build(ChallengeDefinition def)
+        /// <param name="deal">Which deal of the row, for a genre that shuffles it; nought keeps it as written.</param>
+        public static IChallengePuzzle Build(ChallengeDefinition def, uint deal = 0u)
         {
             switch (def.Genre)
             {
-                case ChallengeGenre.Pairs: return new PairsPuzzle(def);
+                case ChallengeGenre.Pairs: return new PairsPuzzle(def, deal);
                 case ChallengeGenre.Glade: return new GladePuzzle(def);
                 case ChallengeGenre.Merge: return new MergePuzzle(def);
                 case ChallengeGenre.Sokoban: return new SokobanPuzzle(def);

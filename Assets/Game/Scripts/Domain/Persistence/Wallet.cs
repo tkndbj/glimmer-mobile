@@ -54,6 +54,7 @@ namespace GlimmerGrove.Persistence
         // all joined by `max` (invariant 11b). See `XpBoost` for the rule over them.
         static long _xpBoostWatchedUntil;
         static long _xpBoostBoughtUntil;
+        static long _xpBoostSurgeUntil;
         static long _xpBoostEarned;
 
         static Hints _hints = Hints.Full;
@@ -119,6 +120,9 @@ namespace GlimmerGrove.Persistence
         /// <summary>When the bought XP boost runs out, or 0. See <c>XpBoost</c>.</summary>
         public static long XpBoostBoughtUntilUnix => _xpBoostBoughtUntil;
 
+        /// <summary>When the surge XP boost runs out, or 0. See <c>XpBoost</c>.</summary>
+        public static long XpBoostSurgeUntilUnix => _xpBoostSurgeUntil;
+
         /// <summary>Bonus XP boosts have paid over this account's life. Only ever rises.</summary>
         public static long XpBoostEarned => _xpBoostEarned;
 
@@ -134,6 +138,9 @@ namespace GlimmerGrove.Persistence
 
         /// <summary>Starts, or extends, the bought XP boost. The track with no cooldown.</summary>
         public static void GrantXpBoostBought(long hours) => GrantXpBoost(ref _xpBoostBoughtUntil, hours);
+
+        /// <summary>Opens or extends the surge XP boost - a track of its own. See <c>XpBoost.GrantSurge</c>.</summary>
+        public static void GrantXpBoostSurge(long hours) => GrantXpBoost(ref _xpBoostSurgeUntil, hours);
 
         static void GrantXpBoost(ref long deadline, long hours)
         {
@@ -508,6 +515,7 @@ namespace GlimmerGrove.Persistence
             // sentinel. See `XpBoost` for why a boost has to bank rather than multiply.
             _xpBoostWatchedUntil = w.xpBoostWatchedUntilUnix < 0 ? 0L : w.xpBoostWatchedUntilUnix;
             _xpBoostBoughtUntil = w.xpBoostBoughtUntilUnix < 0 ? 0L : w.xpBoostBoughtUntilUnix;
+            _xpBoostSurgeUntil = w.xpBoostSurgeUntilUnix < 0 ? 0L : w.xpBoostSurgeUntilUnix;
             _xpBoostEarned = w.xpBoostEarned < 0 ? 0L : w.xpBoostEarned;
 
             _hearts = ReadHearts(w).At(GameClock.NowUnix(), _heartBoostUntil);
@@ -633,6 +641,7 @@ namespace GlimmerGrove.Persistence
                 // The XP boost. Two deadlines and the lifetime bonus they have paid.
                 xpBoostWatchedUntilUnix = _xpBoostWatchedUntil,
                 xpBoostBoughtUntilUnix = _xpBoostBoughtUntil,
+                xpBoostSurgeUntilUnix = _xpBoostSurgeUntil,
                 xpBoostEarned = _xpBoostEarned,
 
                 // The hint ledger. No derived mirror beside it, unlike hearts: a build that

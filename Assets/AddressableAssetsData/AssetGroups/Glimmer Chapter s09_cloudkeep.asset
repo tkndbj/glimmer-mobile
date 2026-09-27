@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Glimmer Chapter s09_cloudkeep
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Glimmer Chapter s09_cloudkeep
+  m_GUID: 6474cb35afe795d448361ba3aad7de93
+  m_SerializeEntries:
+  - m_GUID: 191a34d79cfc18d40bb4825744028d27
+    m_Address: Art/Map/map8_strip3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 45bf7f834a447724289400c99dcff73b
+    m_Address: Art/Map/map8_strip4
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b96940bf730d0c9458ae5e00e03d5703
+    m_Address: Art/Map/map8_strip2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bef48b1354e8ab94db3290739508c802
+    m_Address: Art/Map/map8_strip0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d19dcd717d9060c4f996a16d5906435f
+    m_Address: Art/Map/map8_strip5
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f7edfe01ac1205342ac60780e23c06f0
+    m_Address: Art/Map/map8_strip1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 6c4c5f6eb57af6542b195d29840b42f2, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 08ace4b3a142bfc4fb99554e5c6894c0, type: 2}
+    - {fileID: 11400000, guid: 2332fea569dfb424cae2b7531f31ce6e, type: 2}
+    m_SchemaDisplayOrder:
+    - Glimmer Chapter s09_cloudkeep_BundledAssetGroupSchema
+    - Glimmer Chapter s09_cloudkeep_ContentUpdateGroupSchema
+  m_IncludeInBuild: 1
+  m_IncludeInBuildMigrated: 1

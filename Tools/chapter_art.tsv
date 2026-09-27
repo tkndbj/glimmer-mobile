@@ -65,6 +65,12 @@ s07_dustcrown	craftpix-357622-wasteland-level-map-2d-backgrounds/_PNG/01/layers/
 # read is a file that is simply not there.
 # Drawn by s08_bonereach, and by whatever seventh chapter comes next.
 s08_bonereach	craftpix-229916-dead-lands-level-map-2d-backgrounds/_PNG/01/layers/l1-sky.png+craftpix-229916-dead-lands-level-map-2d-backgrounds/_PNG/01/layers/l2-ground.png+craftpix-229916-dead-lands-level-map-2d-backgrounds/_PNG/01/layers/l3-decorations.png|craftpix-229916-dead-lands-level-map-2d-backgrounds/_PNG/02/layers/l1-sky.png+craftpix-229916-dead-lands-level-map-2d-backgrounds/_PNG/02/layers/l2-ground.png+craftpix-229916-dead-lands-level-map-2d-backgrounds/_PNG/02/layers/l3-decorations.png
+# map8 - six strips, and the first single tall painting since map4: the sky islands of
+# `craftpix-net-390835`, 1080x6568 on its own, a winding slate road across six floating meadows
+# with stepping stones, a tower, a farmhouse and an airship between them. No `+` and no `|`: the
+# pack ships the map flattened (`Png/Level map.png`), and its layered source is a .psd.
+# Drawn by s09_cloudkeep - the first twenty-rung chapter - and by whatever eighth chapter comes next.
+s09_cloudkeep	craftpix-net-390835-the-top-down-level-selection-asset-pack/Png/Level map.png
 f01_lightfall	-
 f02_glasswater	-
 f03_whorlwater	-

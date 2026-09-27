@@ -136,10 +136,20 @@ namespace GlimmerGrove
         public static void OfferGesture(List<ScreenLesson> queue, Mechanic mechanic, RectTransform target,
                                         RectTransform[] trace, Color tint, int cells, params object[] args)
         {
+            if (queue == null || TipLedger.HasSeen(mechanic)) return;
+            AddGesture(queue, mechanic, target, trace, tint, cells, args);
+        }
+
+        /// <summary>
+        /// <see cref="OfferGesture"/> whether or not the player has met it: <see cref="Add"/>'s
+        /// reading of a gesture, for an info key replaying a lesson that is shown with a hand.
+        /// </summary>
+        public static void AddGesture(List<ScreenLesson> queue, Mechanic mechanic, RectTransform target,
+                                      RectTransform[] trace, Color tint, int cells, params object[] args)
+        {
             if (queue == null || target == null) return;
             if (trace == null || trace.Length < 2) return;
             for (int i = 0; i < trace.Length; i++) if (trace[i] == null) return;
-            if (TipLedger.HasSeen(mechanic)) return;
 
             var lesson = Compose(mechanic, target, args);
             lesson.Trace = trace;

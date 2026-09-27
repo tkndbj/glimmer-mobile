@@ -4,14 +4,16 @@ using GlimmerGrove.Analytics;
 using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Challenges;
 using GlimmerGrove.Localization;
+using GlimmerGrove.Progression;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace GlimmerGrove
 {
     /// <summary>
-    /// One daily challenge being played: the hill and the line above, the puzzle below, and a
-    /// readout between them.
+    /// One daily challenge being played: the hill and the line above, the puzzle below. There
+    /// is no readout row: the turn, goal and wave counters were taken off at the owner's
+    /// instruction (2026-09-27) and the hill starts under the ribbon.
     ///
     /// <para>
     /// <b>A screen of its own, sharing the world and nothing about being a run</b> (MODES.md
@@ -68,8 +70,8 @@ namespace GlimmerGrove
         const float BannerW = 620f, BannerH = 112f;
         const int BannerSize = 34;
 
-        /// <summary>The readout row under the ribbon, and the air above the hill.</summary>
-        const float ReadoutH = 56f, ReadoutGap = 12f;
+        /// <summary>The air between the ribbon and the hill.</summary>
+        const float RibbonGap = 12f;
 
         /// <summary>
         /// The hill's bounds, in units of the siege's cell (see <see cref="Unit"/>). <b>The
@@ -111,13 +113,14 @@ namespace GlimmerGrove
         ChallengeRun _run;
         ChallengeHillView _hill;
         PuzzleView _puzzle;
-        Text _turn, _goal, _next;
         RectTransform _hillHost, _puzzleHost;
         bool _ready, _busy, _ended, _teaching;
 
-        /// <summary>The one input held while the board lands its last (the class note).</summary>
-        ChallengeInput _pending;
-        bool _holding;
+        /// <summary>
+        /// The inputs held while the board lands its last (the class note), oldest first and
+        /// never more than the board asks for (<see cref="PuzzleView.InputsHeld"/>).
+        /// </summary>
+        readonly Queue<ChallengeInput> _pending = new Queue<ChallengeInput>(2);
 
         /// <summary>Whether the leave confirmation is up. The board takes nothing under it.</summary>
         bool _asking;
@@ -139,7 +142,7 @@ namespace GlimmerGrove
                 yield break;
             }
 
-            _run = new ChallengeRun(_play.Definition, ChallengeRules.Table.Line);
+            _run = new ChallengeRun(_play.Definition, ChallengeRules.Table.Line, _play.Deal);
 
             var task = Warm();
             while (!task.IsCompleted) yield return null;
@@ -161,7 +164,6 @@ namespace GlimmerGrove
             BuildBands();
 
             _ready = true;
-            PaintReadout();
 
             StartCoroutine(Opening());
         }
@@ -183,6 +185,11 @@ namespace GlimmerGrove
             while (this && !_ended && !_puzzle.Landed && Time.unscaledTime < until) yield return null;
             if (!this || _ended) yield break;
 
+            // A player who opened the tips from the key before these arrived reads them there;
+            // what they dismissed is marked seen, so the offer below skips it.
+            while (this && _teaching) yield return null;
+            if (!this || _ended) yield break;
+
             var lessons = new List<ScreenLesson>(2);
             _puzzle.Lessons(lessons);
             if (lessons.Count == 0) yield break;
@@ -194,7 +201,7 @@ namespace GlimmerGrove
         System.Threading.Tasks.Task Warm()
         {
             _hold = _hold ?? AssetLibrary.Hold(ChallengeArt.Hold);
-            return _hold.LoadAsync(ChallengeArt.Requests(), null, Lifetime);
+            return _hold.LoadAsync(ChallengeArt.Requests(_play.Genre), null, Lifetime);
         }
 
         void BuildChrome(ChallengeDefinition def)
@@ -204,23 +211,20 @@ namespace GlimmerGrove
             UIKit.IconButton("Back", Safe, Skins.Nav, "ic_left", Vector2.one * ChromeSize,
                              new Vector2(0f, 1f), new Vector2(76f, cy), Leave);
 
+            // The genre's tips on demand, mirroring the way out (the owner, 2026-09-27).
+            UIKit.IconButton("Info", Safe, Skins.Aside, "ic_info", Vector2.one * ChromeSize,
+                             new Vector2(1f, 1f), new Vector2(-76f, cy), Review);
+
             var ribbon = Scenery.TitleRibbon(Safe, Loc.Get(def.NameKey).ToUpperInvariant(),
                                              new Vector2(BannerW, BannerH), new Vector2(.5f, 1f),
                                              new Vector2(0f, cy), BannerSize);
             ribbon.transform.localScale = Vector3.zero;
             Tween.Pop(ribbon.transform, 0f, .5f, .06f);
-
-            float ry = cy - BannerH * .5f - ReadoutGap - ReadoutH * .5f;
-            var size = new Vector2(300f, ReadoutH);
-
-            _turn = Scenery.Pill(Safe, string.Empty, 24, size, new Vector2(0f, 1f), new Vector2(40f + size.x * .5f, ry));
-            _goal = Scenery.Pill(Safe, string.Empty, 24, new Vector2(360f, ReadoutH), new Vector2(.5f, 1f), new Vector2(0f, ry));
-            _next = Scenery.Pill(Safe, string.Empty, 24, size, new Vector2(1f, 1f), new Vector2(-(40f + size.x * .5f), ry));
         }
 
         void BuildBands()
         {
-            float top = 22f + BannerH + ReadoutGap + ReadoutH + ReadoutGap;
+            float top = 22f + BannerH + RibbonGap;
             float room = Safe.rect.height - top - BottomPad;
 
             float unit = Unit;
@@ -254,10 +258,9 @@ namespace GlimmerGrove
             _hill.Build(_hillHost, _run.Hill, unit, lineBand);
 
             // The board's one-way view of the line: where a colour's post is, for a feed to
-            // fly at and a lesson to ring, and the readout a goal lesson rings.
+            // fly at and a lesson to ring.
             _puzzle.PostOf = _hill.PostNode;
             _puzzle.FedPost = _hill.Fed;
-            _puzzle.GoalReadout = _goal != null ? _goal.transform.parent as RectTransform : null;
 
             _puzzle.Attach(_run, _puzzleHost, Play);
 
@@ -314,10 +317,17 @@ namespace GlimmerGrove
             if (_busy)
             {
                 // The board is still landing its last move: keep this one and play it the
-                // frame the board is free. One deep, latest wins — the model has not moved,
-                // so the newest intention is the only one worth keeping.
-                _pending = input;
-                _holding = true;
+                // frame the board is free. As deep as the board asks and no deeper, latest
+                // wins - one for a swipe, whose older intention the newest replaces; two for
+                // Pairs, where a quick player turns two cards while a match is still landing
+                // and dropping the first would be a tap that did not register.
+                int deep = Mathf.Max(1, _puzzle.InputsHeld);
+                while (_pending.Count >= deep) _pending.Dequeue();
+                _pending.Enqueue(input);
+
+                // A board holding something up to be looked at (a Pairs miss) lets go early:
+                // the player has seen it and moved on, so the peek ends at their pace.
+                _puzzle.Hurry();
                 return;
             }
 
@@ -337,13 +347,16 @@ namespace GlimmerGrove
             StartCoroutine(Resolve(report));
         }
 
-        /// <summary>Play the held input, if any, now that the board is free.</summary>
+        /// <summary>
+        /// Play the held inputs, oldest first, until one keeps the board busy. A refused one
+        /// (a tap on a card a held tap already turned) costs nothing and must not strand the
+        /// taps behind it, so the loop goes on past it; <see cref="Resolve"/> marks the board
+        /// busy before its first yield, which is what stops it.
+        /// </summary>
         void Flush()
         {
-            if (!_holding) return;
-            _holding = false;
-            var input = _pending;
-            Play(input);
+            while (_pending.Count > 0 && !_busy && !_ended && _run.State == ChallengeState.Playing)
+                Play(_pending.Dequeue());
         }
 
         IEnumerator Resolve(ChallengeTurnReport report)
@@ -371,7 +384,6 @@ namespace GlimmerGrove
             // still drawing, and the board is free to take the next move meanwhile.
             if (report.Walked) _hill.Enqueue(report.Events);
 
-            PaintReadout();
             _busy = false;
 
             if (report.State != ChallengeState.Playing)
@@ -390,36 +402,11 @@ namespace GlimmerGrove
         /// </summary>
         IEnumerator Ending(bool won)
         {
-            _holding = false;
+            _pending.Clear();
             while (this && !_hill.Idle) yield return null;
             if (!this) yield break;
 
             End(won);
-        }
-
-        void PaintReadout()
-        {
-            if (_run == null || _turn == null) return;
-
-            _turn.text = Loc.Format("ui.challenges.turns", _run.Turns);
-            _goal.text = Goal();
-
-            var wave = _run.Hill.NextWave;
-            _next.text = wave == null ? string.Empty : Loc.Format("ui.challenges.next", wave.Turn - _run.Turns);
-            _next.transform.parent.gameObject.SetActive(wave != null);
-        }
-
-        /// <summary>What is left to do, in the genre's own count.</summary>
-        string Goal()
-        {
-            switch (_run.Puzzle)
-            {
-                case PairsPuzzle pairs: return Loc.Format("ui.challenges.pairs", pairs.Matched, pairs.Pairs);
-                case GladePuzzle glade: return Loc.Format("ui.challenges.lit", glade.LampsLit, glade.LampCount);
-                case MergePuzzle merge: return Loc.Format("ui.challenges.rank", 1 << merge.Target);
-                case SokobanPuzzle sokoban: return Loc.Format("ui.challenges.pads", sokoban.SeatedCount, sokoban.Pads);
-                default: return string.Empty;
-            }
         }
 
         // ------------------------------------------------------------------ the endings
@@ -521,6 +508,27 @@ namespace GlimmerGrove
                 };
                 v.OnCancel = () => { if (this) _asking = false; };
             });
+        }
+
+        /// <summary>
+        /// The info key: every lesson about this genre, then the rule every genre shares, shown
+        /// whether or not they have been seen (<c>ScreenLessons.Add</c>) - the loadout's key and
+        /// for its reason. The board is latched exactly as it is for the opening lessons, and
+        /// the key is refused while a move is landing, a lesson is already up or the run is
+        /// over, so two chains can never run at once.
+        /// </summary>
+        void Review()
+        {
+            if (!this || !_ready || _busy || _teaching || _ended || _asking || Flow.HasModal) return;
+            if (_run.State != ChallengeState.Playing) return;
+
+            var lessons = new List<ScreenLesson>(4);
+            _puzzle.Review(lessons);
+            ScreenLessons.Add(lessons, Mechanic.ChallengeHill, _hillHost);
+            if (lessons.Count == 0) return;
+
+            _teaching = true;
+            ScreenLessons.Show(this, lessons, () => _teaching = false);
         }
 
         public override bool OnBack()

@@ -664,7 +664,12 @@ namespace GlimmerGrove.Tests
             // **The figure was guessed at two first and the gate is what corrected it**, which
             // is the reason it counts rather than exempting a named list: a list is written
             // from the failures somebody happened to see, and this gate stops at the first.
-            const int Unreachable = 4;
+            //
+            // **Nought since 2026-09-27**, when `Strongest` became four three-star pyres - the line
+            // the balance run measured as strongest - and every boss rung in the game, the four
+            // listed above included, was reached and fought on it. The count stays a count, so one
+            // rung falling out of reach again is red rather than a note.
+            const int Unreachable = 0;
             var unreached = new List<string>();
 
             foreach (var (name, rungs) in ShippedChapters())
@@ -692,37 +697,56 @@ namespace GlimmerGrove.Tests
                         // is winnable at all is the chapter gates' question, and they
                         // carry the accepted walls.
                         var board = SiegeBoard.Build(layout, Strongest());
-                        SiegeRaider boss = null;
 
-                        Hold(board, rhythm, out int _, b => { var w = b.Warlord; if (w != null) boss = w; });
+                        // **Every boss that walks on, by id**, because a duel sends two
+                        // (`SiegeLayout.BossJoin`) and a gate that watched `Warlord` - the first
+                        // one standing - would have measured whichever of the pair happened to
+                        // outlive the other and called that the fight.
+                        var bosses = new Dictionary<int, SiegeRaider>();
+
+                        Hold(board, rhythm, out int _, b =>
+                        {
+                            foreach (var raider in b.Raiders)
+                                if (raider.Boss) bosses[raider.Id] = raider;
+                        });
 
                         // A boss waits for the hill to be cleared (37dn), so a line that fell to
                         // the wave before it never meets the boss at all - a lost run, and not a
                         // reading of the fight.
-                        if (boss == null && board.WardsStanding == 0) continue;
+                        if (bosses.Count == 0 && board.WardsStanding == 0) continue;
 
-                        Assert.IsNotNull(boss, $"{rung.Id}: the boss never walked on at {rhythm}");
+                        Assert.AreEqual(layout.BossKinds.Length, bosses.Count,
+                                        $"{rung.Id}: {bosses.Count} boss(es) walked on at {rhythm}, "
+                                        + $"against the {layout.BossKinds.Length} the rung sends");
 
-                        if (!boss.Alive) fell++;
+                        bool all = true;
+                        foreach (var boss in bosses.Values) all &= !boss.Alive;
+
+                        if (all) fell++;
                         if (board.IsFinished && board.WardsStanding >= 2) held++;
 
                         // **A run the line lost is not a reading of the fight.** The boss stands
                         // over a dead line with nothing to aim at and nothing shooting back, so
                         // its casts and its seconds say nothing about it; whether a rung is lost
-                        // too often is the chapter sweep's question, not this one's.
-                        if (boss.Alive) continue;
+                        // too often is the chapter sweep's question, not this one's. Asked per
+                        // boss: the half of a duel that fell is a reading even when its partner
+                        // outlived the line.
+                        foreach (var boss in bosses.Values)
+                        {
+                            if (boss.Alive) continue;
 
-                        if (boss.Casts < leastCasts) leastCasts = boss.Casts;
-                        if (boss.Casts > mostCasts) mostCasts = boss.Casts;
-                        if (boss.Stood < leastStood) leastStood = boss.Stood;
-                        if (boss.Stood > mostStood) mostStood = boss.Stood;
+                            if (boss.Casts < leastCasts) leastCasts = boss.Casts;
+                            if (boss.Casts > mostCasts) mostCasts = boss.Casts;
+                            if (boss.Stood < leastStood) leastStood = boss.Stood;
+                            if (boss.Stood > mostStood) mostStood = boss.Stood;
 
-                        if (boss.Casts < LeastCasts)
-                            faults.Add($"{rung.Id} at {rhythm:0.00}: {rung.Boss} threw {boss.Casts} "
-                                       + $"spells against a floor of {LeastCasts}");
-                        if (boss.Stood < LeastStood)
-                            faults.Add($"{rung.Id} at {rhythm:0.00}: {rung.Boss} stood {boss.Stood:0.0}s "
-                                       + $"against a floor of {LeastStood}");
+                            if (boss.Casts < LeastCasts)
+                                faults.Add($"{rung.Id} at {rhythm:0.00}: {boss.Kind} threw {boss.Casts} "
+                                           + $"spells against a floor of {LeastCasts}");
+                            if (boss.Stood < LeastStood)
+                                faults.Add($"{rung.Id} at {rhythm:0.00}: {boss.Kind} stood {boss.Stood:0.0}s "
+                                           + $"against a floor of {LeastStood}");
+                        }
                     }
 
                     // **A boss nobody reaches is unmeasured rather than a fight that
@@ -739,7 +763,7 @@ namespace GlimmerGrove.Tests
                     if (fell == 0) unreached.Add($"{rung.Id} ({rung.Boss})");
 
 
-                    table.AppendLine($"  {name,-11} {rung.Id,-18} {rung.Boss,-15}"
+                    table.AppendLine($"  {name,-11} {rung.Id,-20} {rung.Boss,-24}"
                                      + $" cast {leastCasts,2}-{mostCasts,2}  stood {leastStood,5:0.0}-{mostStood,5:0.0}s"
                                      + $"  fell {fell}/{rhythms.Length}  held {held}/{rhythms.Length}");
                 }
@@ -835,6 +859,7 @@ namespace GlimmerGrove.Tests
             yield return ("thundercrag", Thundercrag);
             yield return ("dustcrown", Dustcrown);
             yield return ("bonereach", Bonereach);
+            yield return ("cloudkeep", Cloudkeep);
         }
     }
 }

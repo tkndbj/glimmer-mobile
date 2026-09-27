@@ -159,12 +159,21 @@ for (const list of Object.values(byChapter)) list.sort();
 function gladesMeeting(rung) {
   const wanted = new Set();
   let everything = false;
+  let floorExtra = 0;
+
+  // Every glade this probe clears is at three stars, so a star line is a count of glades a
+  // third its size and a three-star line is a count of glades its own size.
+  const gladesFor = (line) =>
+    line.measure === "stars" ? Math.ceil(line.target / 3) : line.target;
 
   for (const line of rung.requires) {
-    if (line.measure === "levels_cleared" && line.scope) {
+    if (["levels_cleared", "stars", "three_stars"].includes(line.measure) && line.scope) {
       const list = byChapter[line.scope] ?? [];
-      if (list.length < line.target) return null;
-      for (const l of list.slice(0, line.target)) wanted.add(l);
+      const need = gladesFor(line);
+      if (list.length < need) return null;
+      for (const l of list.slice(0, need)) wanted.add(l);
+    } else if ((line.measure === "stars" || line.measure === "three_stars") && !line.scope) {
+      floorExtra = Math.max(floorExtra, gladesFor(line));
     } else if (line.measure === "keeper_level" && !line.scope) {
       everything = true;
     } else if (line.measure === "levels_cleared" || line.measure === "runs" ||
@@ -177,6 +186,7 @@ function gladesMeeting(rung) {
 
   const floorTarget = Math.max(
     everything ? Object.keys(levelMap).length : 0,
+    floorExtra,
     ...rung.requires.filter((r) => ["runs", "wins", "levels_cleared"].includes(r.measure) && !r.scope)
                     .map((r) => r.target));
 

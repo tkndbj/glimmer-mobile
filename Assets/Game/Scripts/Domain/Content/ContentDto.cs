@@ -1149,6 +1149,12 @@ namespace GlimmerGrove.Content
         public int boughtHours = -1;
 
         /// <summary>
+        /// What a surge window adds, as a percentage - the third track, sold as shop goods of kind
+        /// <c>xp_surge</c> whose amount is the hours. Unwritten is nought: no surge on offer.
+        /// </summary>
+        public int surgePercent = -1;
+
+        /// <summary>
         /// The most every running window may add together.
         ///
         /// <b>It is also the factor the stored bonus is clamped against</b>

@@ -149,7 +149,12 @@ Grove, and the bundle id can never move.
    proportional** — the banked total is clamped on every read to `(star XP + endless XP) x
    maxPercent%`, which is `groveWorth`'s "clamped to what the account could afford" (19a) said about
    a multiplier, and far tighter than any flat ceiling. Mirrored by `xpBoostXp` in `grove.ts` and
-   held by `xpBoostCases`.
+   held by `xpBoostCases`. **A third window since 2026-09-27, the surge** (+200%, sold as
+   `xp_surge` goods for 24h and 48h): a strength is a *deadline of its own* rather than a
+   percentage on the bought one, because a deadline cannot carry which strength it was through a
+   `max` merge - one deadline per strength is the only shape that never loses a purchase. The
+   three add, capped at `maxPercent` (350), and raising the cap widened the forged-save clamp by
+   the same factor, which still buys keeper levels only and no currency.
 9f. **The Infinite lane pays credits as well as XP, and the two are paid in opposite shapes.**
    XP is derived from the monotonic lifetime tally and needs no claim (9d); a credit cannot copy
    that, because a lifetime tally times a rate is a number a forged save mints once and keeps —
@@ -1005,6 +1010,18 @@ is where they are written down, not what they mean.
    waves are **generated** (`make_glade_challenges.py --write`): one stream per colour, opened in
    the order a good player answers them, tuned to a slack of 1.50x (medium) or 1.35x (all four
    lanes), held to **1.25–1.65x** and to a hill **never empty** while the bot plays.
+56m. **A Pairs card is a gem, never a colour, and a Pairs row authors which cards and never
+   where** (2026-09-27). Each colour is six stones (`r1`..`y6`, `PairsGems`) and only the same
+   stone pairs, so a colour-only board with nothing to remember is gone; `o` is a cursed stone
+   (ends the turn, walks the hill an extra step via `ChallengeMove.Stumbles`), and pairs back to
+   back are a combo (`PairsPuzzle.ComboCap`). Every play is **shuffled** by
+   `ChallengePlay.Deal`, a pure function of the day and the attempt: everyone's first try of a
+   day is one board, a retry is a fresh one (an authored layout is learned by losing it once),
+   and an untouched board is dealt again unchanged. So a row is measured over **48 deals** by
+   a perfect-memory bot mirrored bit for bit in `Tools/make_pairs_challenges.py`: every deal
+   won above a luck floor, the median deal's slack in 1.35-1.85x, the turrets worth at least
+   0.25x of it (5d), the hill peopled and never a smear - held by `ChallengeTests` and
+   `content.py` alike.
 
 ### Art credits
 
@@ -1500,8 +1517,8 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
 - **Content pipeline** — levels as data, stable `LevelId`s, manifest-built `CatalogIndex`, lazy chapter
   bodies, `Content ▸ Sync Manifest`, build gate.
 - **Save** — versioned atomic file with checksum, backup rotation, corrupt-file recovery, tested
-  migrations, monotonic merge. **Save schema v33** (v33 removed the Grovement's five fields —
-  16aa). Content schema: manifest and chapter bodies **v2**; `ContentSchema.Version` stays at **3**,
+  migrations, monotonic merge. **Save schema v35** (v33 removed the Grovement's five fields —
+  16aa; v34 added the daily challenges; v35 the XP surge's deadline, inside the `wallet` map). Content schema: manifest and chapter bodies **v2**; `ContentSchema.Version` stays at **3**,
   which only the retired grove body ever used.
 - **Cloud** — Firebase (Firestore + Auth + Functions), anonymous by default, Apple/Google linking,
   per-account local archive for switching, debounce/backoff.
@@ -1528,7 +1545,8 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   baseline ordinal per session, re-taken on an account switch or a ladder retune — and is proved
   offline by `RankCeremonyTests`.
 - **One live mode, three hidden.** **Thornwatch**: `s01_thornwatch`, `s03_broodmarch`, `s04_barrowfell`,
-  `s05_ashenhold`, `s06_thundercrag`, `s07_dustcrown`, `s08_bonereach` (ten rungs each) on the ordinary
+  `s05_ashenhold`, `s06_thundercrag`, `s07_dustcrown`, `s08_bonereach` (ten rungs each) and
+  `s09_cloudkeep` (**twenty**, a two-boss duel on every fifth, MODES.md 37eq-37et) on the ordinary
   ladder, and `s02_endlesswatch` on an **Infinite** track beside it. The map draws no *mode* switcher and
   does draw the **track** switcher; the ordinary ladder draws a map and the Infinite lane draws a **hub**,
   opening at **keeper level 10**. Six casts and **fourteen** boss verbs, one cast per chapter by ordinal:
@@ -1609,12 +1627,13 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
 | `s06_thundercrag` | siege | 10 | 65–110 matches | the fifth chapter: the **wild** cast of stone golems, a yeti, a minotaur and a mud clod; a **thunderer** on 5 (drains banked charges) and a **colossus** on 10 (buries a turret for four seconds, sooner if the player digs); **three tenths of surge**; deals all five charms, the **hourglass** new |
 | `s07_dustcrown` | siege | 10 | 61–101 matches | the sixth chapter: the **court** cast of three robed wizards, a hooded archer, a falcon-headed war-god and a bone knight; **four tenths of surge**, which is **+40% raider health against the first chapter**; a **gorgon** on 5 (her glare wastes what is poured into a ward) and a **sunlord** on 10 (he seals a ward — fill it or lose it, and never the last one standing); deals all six charms, the **anvil** new |
 | `s08_bonereach` | siege | 10 | 69–100 matches | the seventh chapter, and the cheapest one this mode has ever shipped: **five tenths of surge**, which is **+50% raider health against the first chapter**, and *nothing else new but the two fights* — no charm (the roster clamps at six) and no cast (the table wraps to the insects). A **harrower** on 5 (it tears a rank off a ward and drops it on the hill as a cog you can pick back up) and a **hollowking** on 10 (it strikes every post that has fired nothing since its last cast and spares every post that has been working). Draws `map7`, the dead lands |
+| `s09_cloudkeep` | siege | 20 | 50–108 matches | the eighth chapter and the first of **twenty rungs** - four islands of five, levels 71–90 - on `map8`, the sky islands, seated on the pack's own node layout read out of its PSD (`make_map_seats.ROUTES`). **A crowd at a softer surge**: four tenths (`SiegeTuning.Traded`, the owner's 40% against Bonereach's 50%) with waves of ten to fifteen. **A duel on 5, 10, 15 and 20** - two bosses at once, each at 60% of its health (37er): gravemaw + harrower, blightcaller + gorgon, thunderer + shackler, sunlord + hollowking. Draws the **reunion** cast, a second square over all six chapter casts (37et) |
 | `s02_endlesswatch` | siege *(infinite)* | 1 | 3★ at wave 30 | waves that never stop, graded on how far it got, drawing a **medley** of every cast; **both star waves are guesses until somebody plays it**; opens at keeper level 10; **a heart to enter and none to lose** (43e) |
 
 **No level authors a difficulty number except the first glade in the game, and no chapter authors a clock.**
 Par is derived; star lines are multiples of it. **Par is never monotonic within a chapter** — par is length,
 not difficulty. Every siege authors `budgetFactor: -1`. Chapter art is generated and **shared by ordinal**
-(7c): **seven maps** and forty skies serve every chapter of every mode — `map5` is the lava crag, `map6`
+(7c): **eight maps** and forty skies serve every chapter of every mode — `map5` is the lava crag, `map6`
 the wasteland mesas and `map7` the dead lands, cut for ordinals 5, 6 and 7, and the three sources here
 that are **tiled** (two boards joined end to end). The skies wrap at forty where the maps no longer do, so
 a sixth chapter draws the second block again and a seventh the third. **`map7` draws no path at all** —
@@ -1665,8 +1684,9 @@ obvious from the files are worth recording:
   sixteen good runs. Against ~7,160 a day from everything else, so the lane is worth up to **174%**
   of the whole rest of the game's income — the owner's call, and the figure to revisit first if the
   economy reads wrong. A forged save is bounded to the same 10,000. `content.py` prints all of it.
-- **XP boost** (9e) — **+50% for 2h, watched, once every 4h**; **+100% for 24h, 120 gems**; they add,
-  capped at **+150%**. So a run paying 150 XP pays 375 with both running. The gem window is a
+- **XP boost** (9e) — **+50% for 2h, watched, once every 4h**; **+100% for 24h, 120 gems**;
+  **+200% surge for 24h at 200 gems or 48h at 300** (2026-09-27, the owner's gem sink); they all
+  add, capped at **+350%**. So a run paying 150 XP pays 675 with all three running. The gem window is a
   `store.goods` row (`xp_boost_day`) and the watched one an ad placement (`xp_boost`), so both are
   content. **The advert's `amount` and `xpBoost.watchedHours` describe one window and both gates
   error when they drift** — the cooldown is derived by subtracting the second from the stored
@@ -1693,6 +1713,42 @@ on a fresh clone).
 
 ## Owed
 
+**Chapters 7 and 8 were retuned harder on 2026-09-27, and a three-player balance run was made.**
+The run played every one of the 90 levels on 14 four-seat turret lines at nine rhythms (11,340
+games, real rules) and 300 simulated casual / regular / power players for 180 days against the
+shipped reward tables. It found the late ladder flat - total hill (par) 61-110 from chapter 5 to
+8, a one-star ember line holding 38-47% in all four - which was MODES.md 37ef's wave-trimming rule
+(corrected). Bonereach and Cloudkeep now read, one-star / three-star / five-star ember / three-star
+pyre on four seats: **Dustcrown 47 / 70 / 91 / 97, Bonereach 24 / 58 / 86 / 98, Cloudkeep 17 / 53 /
+85 / 92**. Chapter cog rate 25 -> 20; `s08_ropebridge` re-dealt (it was 0% on every ember line).
+Both chapter gates' floors are set off that run. **What the run found that is still open, all the
+owner's to decide**: `s07_saltpan` (level 53) is 0% up to three-star ember and 22% at five-star;
+XP, not coins, gates progress (a casual player reaches keeper 16 by day 180, a power player holds
+~1.3M unspendable coins); adverts are 39-70% of coin income; the Infinite lane pays 150-240 coins a
+run on every line (all die by wave 5-8) against its 10,000 cap; gems (1,500-3,000 by day 180) have
+nothing to buy; an engaged player finishes all 90 levels in 31-55 days.
+
+**Cloudkeep shipped on 2026-09-27 and has never been played or swept.** The eighth chapter
+(`s09_cloudkeep`, ordinal 8, order 153): twenty rungs, a duel on every fifth, `map8`, the reunion cast
+and a traded 1.4 surge (MODES.md 37eq-37et). **Server done**: re-seeded from a HEAD shadow (two
+other agents had uncommitted `progression.json` and `challenges.json` edits the live config did not
+carry), all four documents read back - exactly the twenty `s09_*` level ids added, nothing else
+moved. **Editor done**: `Sync All Assets` and save (the six strips in a new chapter group; skies
+30-39 moved to global, correctly, because two chapters now share that block), `Audit Addresses`
+clean, `Validate Content` verifies all twenty. **What is owed is the sweep**: the chapter was tuned
+against a spot probe on `ember` at five rhythms, side by side with Bonereach, to be "a little harder,
+not super hard" (the owner): **38 of 100 held against Bonereach's 20 of 50** on the identical probe,
+no walls but the finale - a first cut with eight brutes a wave held 7 of 40 and was cut back; cogs are
+25 (35/40/35 on the duels, 60 on the finale), so
+`TheEighthChapterIsFoughtOnABoughtLine` ships with `BoughtFloor` and `AcceptedWalls` **UNSET** and
+`siege.STAR_FACTORS[8]` provisional at Dustcrown's (0.45, 0.59); `EveryShippedBossRungIsAFight` now
+measures both bosses of a duel and its `Unreachable` count (4) was not re-measured. The finale is a
+peak by design: won three times in five, twice on the last ward - at 65% or 70% boss health it was
+won on none of five fields, which is why a duel boss stands at 60%. **What no gate
+can answer**: whether two boss names said a beat apart read as a pair, whether a duel's two verbs
+read as one question (the probe player cannot play a verb), and whether 15 accepted badge overlaps
+on the densest map in the game read as crowded - the node places are the pack artist's own.
+
 **The advert's showcase boards (2026-09-26/27) are inert: their keys were deleted after the
 recordings.** `Dev/ShowcaseDoor.cs` and its one call in `LevelsScreen.BuildHeader` are gone, so
 nothing in the game opens `ShowcaseScreen`; what stays is the harness a future advert is re-cut
@@ -1709,6 +1765,27 @@ boss-colour skip asks the kind rather than the place. The one PNG is addressed a
 the bundle (about 130 KB); deleting the harness is the way to take it out (8d: with its `.meta`
 and its Addressables row), and is deliberately not done here. The APK build menu no longer
 passes the development flag, by the owner's decision on 2026-09-27 (`DevBuild.cs`).
+
+**Pairs was rebuilt and given thirty levels on 2026-09-27 (56m), and none of it has been in the
+Editor.** At the owner's instruction ("so primitive, no animation, nothing"): real cards drawn in
+the style of the owner's genre art (stone frame, crowned blue back, cream face) and twenty-four
+stones plus a cursed obsidian cut from the RPG gem pack by `Tools/make_pairs_art.py`
+(`Art/Challenge/`, `--check`, `--contact`); `PairsView` rewritten as a score - a dealt entrance,
+a lifted flip with a falling shadow, a breathing halo on the waiting card, a thread of light and
+rings on a pair, a rising COMBO callout, motes flown to the post, a shaken miss, a cursed stone
+that shudders the board, an idle glint, a finale wave; taps answer the **press**, a held miss
+ends early when the player taps on (`PuzzleView.Hurry`), and the screen now holds **two** taps
+for Pairs (`PuzzleView.InputsHeld`). Two lessons were added (`pairs_combo`, `pairs_curse`,
+taught at the event). `d01_pairs` was re-authored and `d39_pairs`..`d68_pairs` added: 14
+medium (9-12 pairs, 1.70x target) and 16 hard (13-17 pairs, most with curses, 1.45x). No
+server, no schema, no seed (`seed-config --check` unchanged). **The 27 PNGs are on disk and
+unaddressed** - until `▸ Addressables ▸ Sync All Assets` and save, every card draws the
+procedural fallback and every turned card an empty face (7b); the new `.cs`-free folder needs
+its `.meta` files minted on focus. Offline green: `compile.py`, `ChallengeTests` 42/42 (gates
+proved by mutation), `ChallengeLedgerTests`, `TipTests`, `content.py` (0 errors, mutation-proved),
+`loc.py`, `artnames.py`, `render_challenges.py --midgame`. **What no gate can answer**: whether
+the flip at .24 s reads as a card turning, whether 1.70x/1.45x of a perfect memory is the right
+difficulty for real players, and whether a curse's extra step reads as the cost it is.
 
 **Thirty glade challenges shipped on 2026-09-26 (`d09_glade`..`d38_glade`), and none has been
 in the Editor.** Fourteen medium (5x5 to 7x4, two or three lanes, a bridge, an amber network, a

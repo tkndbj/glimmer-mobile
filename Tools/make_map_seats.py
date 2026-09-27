@@ -265,10 +265,17 @@ NUDGE = {
 #: rule: 61/62, 63/64, 64/65 and 65/66 - and **64 and 65 are inside the disc rule too**, 209
 #: units between centres against a 220 minimum, which is the two discs touching rather than one
 #: plate reaching over the other's record mark. Every one of them is where it was asked to be.
+#:
+#: **`map8` accepts every rung, and it is the pack's own layout that is being accepted.** The
+#: chain is not searched for at all (`ROUTES`): it stands on twenty of the thirty places the
+#: painting's own artist stood a level node, and a route that dense cannot keep every record
+#: mark clear - the pack packs thirty nodes onto it. The twenty are chosen to overlap *least*
+#: (`routed`), and what is left is the look the owner asked for by picture on 2026-09-27.
 ACCEPTED_OVERLAPS = {
     5: True,
     6: True,
     7: {1, 2, 3, 4, 5, 6, 8, 9},
+    8: True,
 }
 
 
@@ -307,6 +314,42 @@ def _overlap_accepted(which: int, rung: int) -> bool:
 #: state: the numbers say no, the picture says yes, and the picture was looked at. Re-list
 #: `GROUND[6]` as the road and this whole entry can go.
 BORROWS = {6: 5}
+
+#: Maps whose pack ships **its own node layout**, and the layout it ships.
+#:
+#: **The strongest reading of a painting there is, and it is only available when the artist left
+#: it in the file.** Every other map here is searched: the tool finds the road by colour and walks
+#: a chain up it, because all a pack gives us is the flattened picture. `craftpix-net-390835`
+#: also ships its layered source (`Ai Eps Psd/Level Select V10.psd`), and that file stands thirty
+#: level nodes along its own road - on the stepping stones between the islands, on the plank
+#: bridge, on every bend - which is exactly the picture the owner sent as the brief. So the seats
+#: are read off it rather than guessed at.
+#:
+#: Each row is the bounding box of one node's **base** (the ellipse it stands on, in the PSD's
+#: 1116x6603 canvas), bottom of the route first, read from the layer records (layer indices 1360,
+#: 1394, ... 2118). The base rather than the disc, because the base is where the node meets the
+#: road and a node here is centred on its footing (`FOOTING_RADIUS`). `offset` is how the
+#: flattened `Png/Level map.png` sits inside the PSD canvas, **measured, not assumed**: it is the
+#: shift that puts the most bases on this map's `GROUND` (22 of 30 inside a 7-pixel box; the rest
+#: stand on the stepping stones and the plank bridge, which the road colour does not name).
+ROUTES = {
+    8: dict(
+        size=(1080, 6568),
+        offset=(-16, -28),
+        bases=(
+            (327, 6162, 491, 6239), (238, 5937, 402, 6014), (502, 5839, 666, 5916),
+            (662, 5639, 826, 5716), (567, 5417, 731, 5493), (297, 5358, 460, 5435),
+            (201, 5111, 365, 5188), (490, 5010, 654, 5087), (612, 4791, 775, 4867),
+            (610, 4503, 774, 4580), (591, 4242, 755, 4319), (555, 4019, 719, 4096),
+            (334, 3871, 497, 3948), (273, 3622, 437, 3699), (247, 3361, 411, 3438),
+            (188, 3104, 352, 3181), (455, 3011, 618, 3088), (569, 2807, 733, 2884),
+            (542, 2575, 705, 2652), (647, 2359, 810, 2436), (725, 2134, 889, 2211),
+            (573, 1905, 737, 1982), (330, 1751, 494, 1827), (195, 1535, 358, 1612),
+            (207, 1227, 370, 1304), (403, 1056, 567, 1133), (469, 821, 633, 898),
+            (350, 603, 514, 680), (546, 412, 710, 489), (765, 236, 928, 312),
+        ),
+    ),
+}
 
 
 def nudged(which: int, rung, seat):
@@ -369,6 +412,15 @@ GROUND = {
     # **cliff faces** below them are (45, 51, 58) - 46 clear of the nearer top - and stay out,
     # which is what keeps a node off the side of a plateau where the drop begins.
     7: [(70, 97, 114), (86, 121, 143)],
+
+    # `map8` is the sky islands, and it is `map2` again: a painting that draws a **road** the
+    # player is meant to read as the route, in one flat colour, across meadows that are not the
+    # way. The road is (83, 145, 138) and nothing else - its step edges where it drops a tier are
+    # (81, 135, 129), inside this map's tolerance, and the meadows either side are yellow-greens
+    # nowhere near it. **Its cliff faces are the trap**, for `map1`'s reason: (68, 119, 114) is
+    # 26 from the road in green, so at the default tolerance a seat could hang on the side of an
+    # island, and `TOLERANCE` holds this map at 12.
+    8: [(83, 145, 138)],
 }
 
 # `map5` is the one painting here whose **road cannot be used**, and that is a fact about the
@@ -399,6 +451,7 @@ STREAM = {
     5: [],
     6: [],
     7: [],
+    8: [],
 }
 
 #: What each painting draws **instead of land**: sea, sky, lake, chasm, void.
@@ -441,6 +494,14 @@ VOID = {
     # in the fissures painted across the tops, which is not wanted at all and cannot be argued
     # away in colour** — see `HEAL`, which closes them by shape instead.
     7: [(12, 23, 41)],
+
+    # `map8`'s void is a daytime sky and the two lakes painted on its islands: the deep and mid
+    # blues of the sky, its pale haze, and the clouds' two whites. Every one of them is 60 or more
+    # from the road and the meadows, so `VOID_TOLERANCE` closes the gradients between them without
+    # reaching anything a node may stand on. The lake beside the farmhouse is (49, 193, 244), which
+    # the mid blue already takes in - a node on the lake's edge is the same fault as one on a bridge.
+    8: [(39, 170, 225), (34, 145, 207), (197, 240, 255), (174, 235, 254), (234, 253, 249),
+        (211, 248, 250)],
 }
 
 # `map4`'s own shadow deliberately does not appear above, and that is the correction worth
@@ -463,7 +524,7 @@ VOID = {
 #: at 12 its seatable ground fell from 8.1% to 5.4% and it could not seat ten nodes at all.
 #: A flat-colour map wants a tight tolerance and a shaded one wants a loose one; there is no
 #: number that is right for both.
-TOLERANCE = {1: 12, 5: 12}
+TOLERANCE = {1: 12, 5: 12, 8: 12}
 DEFAULT_TOLERANCE = 26
 
 
@@ -860,7 +921,8 @@ MIN_ASCENT = 240.0
 
 def _walk(which: int, ground: Ground, ascent: float):
     """
-    Ten seats up one map at this stride, or `None` and the rung it gave up on.
+    A chapter's seats up one map at this stride (`mapart.nodes_on`), or `None` and the rung it
+    gave up on.
 
     **It backtracks, and `map1` is why.** Placing each rung at its own best seat and moving on
     is a greedy walk, and a greedy walk up an archipelago strands itself: the sea gaps push
@@ -883,13 +945,19 @@ def _walk(which: int, ground: Ground, ascent: float):
     deepest = [0]
     budget = [6_000]
 
+    # **How many rungs this map carries** (`mapart.NODES`): ten for every map a ten-rung chapter
+    # draws, twenty for the sky islands. The search is the same search either way - what it
+    # cannot be is a constant, because a chain one rung short is a chapter whose last glade
+    # stands in the field beside its own map.
+    count = mapart.nodes_on(which)
+
     def place(taken, want_y):
         i = len(taken)
-        if i == mapart.PER_CHAPTER:
+        if i == count:
             return taken
         deepest[0] = max(deepest[0], i)
         floor_y = taken[-1][1] + ascent / height if taken else -1.0
-        for found in candidates(ground, mapart.XS[i], min(want_y, top), taken,
+        for found in candidates(ground, mapart.prefers(i), min(want_y, top), taken,
                                 reach=SEAT_REACH, floor_y=floor_y, roof_y=top):
             if budget[0] <= 0:
                 break
@@ -899,7 +967,7 @@ def _walk(which: int, ground: Ground, ascent: float):
             # added to a seat that was itself pushed upward compounds: on `map1`, whose land
             # is three islands separated by 1,300 units of open sea, the eighth rung was being
             # asked for a height above the ceiling.
-            left = mapart.PER_CHAPTER - 1 - i
+            left = count - 1 - i
             done = place(taken + [found],
                          found[1] + (top - found[1]) / left if left > 0 else top)
             if done is not None:
@@ -962,7 +1030,8 @@ def _clear_of(taken, y, ground):
 
 def seats_for(which: int, score: np.ndarray, land: np.ndarray):
     """
-    Where a chapter drawing this map stands its ten nodes, and its end-of-chapter marker.
+    Where a chapter drawing this map stands its nodes (`mapart.nodes_on`), and its end-of-chapter
+    marker.
 
     `MIN_ASCENT` is what the walk *wants*; a painting may not be able to give it. `map1` has
     three islands and 40% of its height in open water, and its own top island cannot take two
@@ -1057,6 +1126,96 @@ def borrowed(which: int, source: int, score: np.ndarray):
     return places, marker
 
 
+def _route_places(which: int, height: float):
+    """The pack's own node places on this map, as seats, bottom of the route first.
+
+    The painting is cut exactly as `make_chapter_art.strips` cuts it - scaled on its height to
+    whole strips and trimmed from the centre - so a place in the PSD lands where the strip drew it.
+    """
+    route = ROUTES[which]
+    width_px, height_px = route["size"]
+    dx, dy = route["offset"]
+    zoom = height / height_px
+    trim = (width_px * zoom - WIDTH) / 2.0
+    places = []
+    for left, top, right, bottom in route["bases"]:
+        x = ((left + right) / 2.0 + dx) * zoom - trim
+        y = height - ((top + bottom) / 2.0 + dy) * zoom
+        places.append((round(x / WIDTH, PRECISION), round(y / height, PRECISION), False))
+    return places
+
+
+def _collisions(a, b, height: float) -> int:
+    """How badly two seats collide: a disc overlap is fatal, a record mark reached over is one."""
+    dx, dy = (a[0] - b[0]) * WIDTH, (a[1] - b[1]) * height
+    if (dx * dx + dy * dy) ** 0.5 < MIN_SEPARATION:
+        return 1000
+    count = 0
+    for body, crown in ((a, b), (b, a)):
+        if abs(body[0] - crown[0]) * WIDTH >= BODY_HALF + CROWN_HALF:
+            continue
+        ay = (body[1] - crown[1]) * height
+        if ay - BODY_BELOW < CROWN_TOP and ay + BODY_ABOVE > CROWN_BOTTOM:
+            count += 1
+    return count
+
+
+def routed(which: int, score: np.ndarray, land: np.ndarray):
+    """
+    A chapter's chain chosen off the pack's own route (`ROUTES`), and its marker.
+
+    **Chosen, never typed.** The route offers more places than a chapter has rungs - thirty on
+    `map8` against a twenty-rung chapter - so which of them stand a node is a search: every place
+    under the marker's headroom is a candidate, and the kept set is the one with the fewest
+    record marks reached over (`_collisions`), then the widest smallest step between two rungs.
+    A disc overlap is never kept. Places five rungs apart are further apart than any crown
+    reaches on this route, so only near neighbours are asked.
+    """
+    import itertools
+
+    height = float(score.shape[0])
+    count = mapart.nodes_on(which)
+    ceiling = 1.0 - TEASER_HEADROOM / height
+    pool = [seat for seat in _route_places(which, height) if seat[1] <= ceiling]
+    if len(pool) < count:
+        raise SystemExit(f"  map{which}: its route offers {len(pool)} places under the marker's "
+                         f"headroom against a {count}-rung chapter")
+
+    clash = [[_collisions(a, b, height) for b in pool] for a in pool]
+    best = None
+    for dropped in itertools.combinations(range(len(pool)), len(pool) - count):
+        gone = set(dropped)
+        keep = [i for i in range(len(pool)) if i not in gone]
+        cost = sum(clash[keep[a]][keep[b]]
+                   for a in range(count) for b in range(a + 1, min(count, a + 5)))
+        step = min(pool[keep[i + 1]][1] - pool[keep[i]][1] for i in range(count - 1))
+        key = (cost, -step)
+        if best is None or key < best[0]:
+            best = (key, keep)
+
+    if best[0][0] >= 1000:
+        raise SystemExit(f"  map{which}: no {count} places on its route clear each other's discs")
+    places = [pool[i] for i in best[1]]
+
+    # The marker is found exactly as a searched map finds it: pinned to the height the game
+    # derives (`ChapterMap.TeaserPosition`), on this map's ground where that height has any.
+    ground = Ground(score, land, bool(STREAM[which]))
+    aim = min(ceiling, places[-1][1] + TEASER_GAP)
+    seated = candidates(ground, TEASER_X, aim, places, reach=0.0, keep=1)
+    marker = seated[0] if seated else _clear_of(places, aim, ground)
+
+    places, marker = apply_nudges(which, places, marker, height)
+
+    off = [str(i + 1) for i, seat in enumerate(places)
+           if score[max(0, min(int(height) - 1, int(round((1.0 - seat[1]) * height)))),
+                    max(0, min(score.shape[1] - 1, int(round(seat[0] * WIDTH))))] < 0.5]
+    print(f"  map{which}: {count} of the pack's {len(pool)} route places, "
+          f"{best[0][0]} record mark(s) reached over" +
+          (f"; rungs {', '.join(off)} stand where the road-colour footing test refuses - on a stepping stone, the bridge or a road edge the artist chose, see ROUTES"
+           if off else ""))
+    return places, marker
+
+
 #: Every map measured once, because a borrow asks for the map it borrows from.
 _MEASURED: dict = {}
 
@@ -1069,7 +1228,9 @@ def measure(which: int):
     mask = ground_mask(image, which)
     land = land_mask(image, which)
     score = footing(mask, land, stream_mask(image, which))
-    if which in BORROWS:
+    if which in ROUTES:
+        places, marker = routed(which, score, land)
+    elif which in BORROWS:
         places, marker = borrowed(which, BORROWS[which], score)
     else:
         places, marker = seats_for(which, score, land)

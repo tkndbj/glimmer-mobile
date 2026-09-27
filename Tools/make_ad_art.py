@@ -54,6 +54,14 @@ CUTS = {
     # (0.74 of the 300 art box), so 384 is comfortable headroom for a tablet without the 512 a
     # full card illustration needs.
     "xp": ("ic_xp_boost", 384),
+
+    # The XP surge's two goods, one picture per length (2026-09-27, the owner's artwork): orange
+    # for the day, blue for the two days. A picture *ladder* in `ShopArt.SurgeLadder` rather than
+    # an address per good id - the good's rank among the surge rows picks the rung, which is the
+    # rule every priced shelf here follows (18e) - so the ladder is exactly as long as the shelf.
+    # Cut at `ic_xp_boost`'s size because `PaintGood` draws all three the same way.
+    "orangexp": ("ic_xp_surge_1", 384),
+    "bluexp": ("ic_xp_surge_2", 384),
 }
 
 

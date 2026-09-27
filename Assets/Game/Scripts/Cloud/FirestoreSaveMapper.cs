@@ -186,6 +186,7 @@ namespace GlimmerGrove.Cloud
                         // rules release (invariant 12a's cheap half).
                         { "xpBoostWatchedUntilUnix", dto.wallet?.xpBoostWatchedUntilUnix ?? 0L },
                         { "xpBoostBoughtUntilUnix", dto.wallet?.xpBoostBoughtUntilUnix ?? 0L },
+                        { "xpBoostSurgeUntilUnix", dto.wallet?.xpBoostSurgeUntilUnix ?? 0L },
                         { "xpBoostEarned", dto.wallet?.xpBoostEarned ?? 0L },
 
                         // The hint ledger, whole, for the heart ledger's reason. -1 rather
@@ -515,6 +516,7 @@ namespace GlimmerGrove.Cloud
                 dto.wallet.heartBoostUntilUnix = Long(wallet, "heartBoostUntilUnix", 0);
                 dto.wallet.xpBoostWatchedUntilUnix = Long(wallet, "xpBoostWatchedUntilUnix", 0);
                 dto.wallet.xpBoostBoughtUntilUnix = Long(wallet, "xpBoostBoughtUntilUnix", 0);
+                dto.wallet.xpBoostSurgeUntilUnix = Long(wallet, "xpBoostSurgeUntilUnix", 0);
                 dto.wallet.xpBoostEarned = Long(wallet, "xpBoostEarned", 0);
 
                 // -1 when the document predates the hint pool, which SaveMerge reads as "no

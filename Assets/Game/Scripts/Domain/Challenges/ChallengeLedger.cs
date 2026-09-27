@@ -25,16 +25,33 @@ namespace GlimmerGrove.Challenges
         /// <summary>Which attempt of the day this was, one-based. Nought until <see cref="Spent"/>.</summary>
         public int Attempt { get; internal set; }
 
+        /// <summary>
+        /// Which deal of the row this play is: a pure function of the day and the attempt it
+        /// will be (<see cref="DealOf"/>), never stored. A genre that shuffles what its row
+        /// authors (Pairs, 56m) deals from it, so every player's first try of a day is one
+        /// board, a retry is a fresh one, and a board opened and left untouched - which spends
+        /// nothing - is dealt again exactly as it was. Never nought, which means "as written".
+        /// </summary>
+        public readonly uint Deal;
+
         /// <summary>Whether one of the day's plays has been taken for this. False on a board nobody has touched.</summary>
         public bool Spent { get; internal set; }
 
-        internal ChallengePlay(ChallengeGenre genre, ChallengeDefinition definition, int day, int slot)
+        internal ChallengePlay(ChallengeGenre genre, ChallengeDefinition definition, int day, int slot, int attempt)
         {
             Genre = genre;
             Definition = definition;
             Day = day;
             Slot = slot;
+            Deal = DealOf(day, attempt);
         }
+
+        /// <summary>
+        /// The deal of a day's <paramref name="attempt"/>-th play (one-based): mixed, so two
+        /// neighbouring attempts are unrelated boards, and never nought.
+        /// </summary>
+        public static uint DealOf(int day, int attempt)
+            => ChallengeCalendar.Mix(unchecked((uint)day * 0x9E3779B1u + (uint)attempt * 0x85EBCA6Bu)) | 1u;
     }
 
     /// <summary>What a win paid. Nought all round when the rule pays nothing or the claim already existed.</summary>
@@ -317,7 +334,9 @@ namespace GlimmerGrove.Challenges
             var def = ChallengeCalendar.Slot(Table, genre, _day, row.Wins);
             if (def == null) return null;
 
-            return new ChallengePlay(genre, def, _day, row.Wins);
+            // The attempt this play will be once its first move spends it, so the deal is known
+            // before the board is drawn and does not move when the play is committed.
+            return new ChallengePlay(genre, def, _day, row.Wins, row.Attempts + 1);
         }
 
         /// <summary>

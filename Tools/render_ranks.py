@@ -334,7 +334,7 @@ def stage(sheet, top, bottom, held, chosen):
                "next": "ui.ranks.next", "locked": "ui.ranks.locked"}[standing]
     eyebrow = txt(eyebrow).upper()
     px = K.shrunk(layer, eyebrow, cx, EYEBROW_TOP, TEXT_W, EYEBROW_H, 26, 15,
-                  fill=lift(tone, .25) if live else LOCKED_INK, outline=2)
+                  fill=lift(tone, .25) if live else K.AMBER, outline=2)
     MEASURED.append(("eyebrow '%s'" % eyebrow, px, 15))
 
     # The name, with `TextGradient`'s shimmer across it: lift .70 at the ends, .30 in the

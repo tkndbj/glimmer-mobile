@@ -66,7 +66,29 @@ job, `ChapterIndexEntry`), and this file writes bodies.
 #: three cannot seat ten nodes on a 3600-unit climb once the marker's 700 units of headroom are
 #: taken out. Its chain of floating plateaus snakes up the middle, so 60% keeps every slab the
 #: chain stands on and throws away only the outlying rocks nothing stands on.
-STRIPS = {1: 6, 2: 4, 3: 5, 4: 6, 5: 4, 6: 4, 7: 4}
+#: `map8` is the sky islands (`craftpix-net-390835`), and it is the first painting since `map4` to
+#: arrive as **one tall picture** rather than as boards to tile: 1080x6568, already the canvas's
+#: own width. Cut at **six**, because six is the only whole count that fills the width without
+#: stretching - five would scale it to 986 across and leave a strip of nothing down one side -
+#: and at six it is zoomed 1.10x, which trims 52 pixels of cloud off each edge and nothing a node
+#: could stand on. It is also the first map drawn for a **twenty**-rung chapter (`NODES`), and
+#: 7,200 units less the marker's 700 of headroom is 342 a rung, well over `MIN_ASCENT`.
+STRIPS = {1: 6, 2: 4, 3: 5, 4: 6, 5: 4, 6: 4, 7: 4, 8: 6}
+
+#: How many nodes a chapter drawing each map stands on it, where that is not `PER_CHAPTER`.
+#:
+#: **A fact about the map's chapter rather than about its painting, and it lives here because the
+#: seats do.** A seat table is one per *map* (below), so a map drawn by a twenty-rung chapter is
+#: seated twenty times, and every other chapter that ever draws it - a later mode's eighth
+#: chapter - inherits twenty seats whether it uses them or not. That is the same bargain the art
+#: itself strikes (invariant 7c): the eighth chapter of the game looks like the eighth chapter of
+#: the game. A chapter shorter than its map's chain stands on the first rungs of it.
+NODES = {8: 20}
+
+
+def nodes_on(which):
+    """How many seats map `which` carries. See `NODES`."""
+    return NODES.get(which, PER_CHAPTER)
 
 #: Skies per chapter. Every chapter shipped so far has exactly ten levels; a chapter with
 #: more wraps round inside its own block rather than borrowing the next ordinal's, so two
@@ -92,6 +114,12 @@ BLOCKS = 4
 #: search aims at when the ground gives it a choice - which is most of the time, because all
 #: four paintings wind from side to side anyway.
 XS = (0.70, 0.28, 0.74, 0.30, 0.72, 0.26, 0.70, 0.32, 0.74, 0.28)
+
+
+def prefers(rung):
+    """The side rung `rung` (0-based) leans toward. A chain longer than `XS` walks it again, so
+    a twenty-rung chapter alternates exactly as a ten-rung one does."""
+    return XS[rung % len(XS)]
 
 #: Where a chapter's ten nodes stand on each map, as fractions of that map.
 #:
@@ -201,6 +229,28 @@ SEATS = {
         (0.513, 0.716, False),
         (0.343, 0.832, False),
     ),
+    8: (
+        (0.351, 0.060, False),
+        (0.260, 0.094, False),
+        (0.691, 0.140, False),
+        (0.320, 0.183, False),
+        (0.223, 0.220, False),
+        (0.640, 0.269, False),
+        (0.638, 0.313, False),
+        (0.619, 0.353, False),
+        (0.357, 0.409, False),
+        (0.296, 0.447, False),
+        (0.270, 0.487, False),
+        (0.210, 0.526, False),
+        (0.596, 0.571, False),
+        (0.569, 0.606, False),
+        (0.755, 0.673, False),
+        (0.600, 0.708, False),
+        (0.354, 0.732, False),
+        (0.228, 0.812, False),
+        (0.428, 0.838, False),
+        (0.495, 0.873, False),
+    ),
 }
 
 #: Where the end-of-chapter marker stands on each map, found the same way.
@@ -212,6 +262,7 @@ MARKERS = {
     5: (0.660, 0.854, False),
     6: (0.660, 0.854, False),
     7: (0.788, 0.854, False),
+    8: (0.851, 0.903, False),
 }
 
 

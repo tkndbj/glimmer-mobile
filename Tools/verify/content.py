@@ -2822,11 +2822,56 @@ def check_challenges(keys, warnings):
 
         if genre == "glade" and row.get("rows"):
             check_glade_challenge(cid, where, row, warnings)
+        if genre == "pairs":
+            check_pairs_challenge(where, row)
 
     for name in CHALLENGE_GENRES:
         if not any(r.get("genre") == name for r in rows):
             warnings.append(f"no challenge ships the '{name}' genre")
 
+
+
+def check_pairs_challenge(where, row):
+    """A Pairs row (56m): gem tokens rather than colours, every stone an even number of times,
+    and the gates `ChallengeTests` holds, read through `Tools/make_pairs_challenges.py` - the
+    rules, the shuffle and the perfect-memory bot mirrored from C# bit for bit. **Every deal**
+    is won with the line above the luck floor, the median deal forgives a player inside the
+    slack band, the turrets are worth something (5d), and the hill is peopled but never a smear.
+    Every stone a row names must be on disk, because its address is built from the token and
+    `artnames.py` cannot see it.
+    """
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+    import make_pairs_challenges as pairs
+
+    shape = pairs.faults(row)
+    for fault in shape:
+        errors.append(f"{where}: {fault}")
+    if shape:
+        return
+
+    art = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "Assets", "Game", "Art", "Challenge")
+    for kind in set(pairs.kinds_of(row)):
+        name = "pair_curse" if kind == pairs.CURSE else f"pair_{pairs.token(kind)}"
+        if not os.path.exists(os.path.join(art, name + ".png")):
+            errors.append(f"{where}: '{name}.png' is not on disk (Tools/make_pairs_art.py)")
+
+    r = pairs.report(row)
+    lo, hi = pairs.SLACK_BAND
+    if r["losses"]:
+        errors.append(f"{where}: a perfect memory loses on deal(s) {r['losses']}")
+    if r["worst_health"] < pairs.LUCK_FLOOR[r["tier"]]:
+        errors.append(f"{where}: the unluckiest deal leaves the line at {r['worst_health']}/12; a shuffle decides it")
+    if not r["won"] or r["health"] < 11:
+        errors.append(f"{where}: the median deal's line takes more than one blow")
+    if not lo <= r["slack"] <= hi:
+        errors.append(f"{where}: slack {r['slack'] / 100:.2f}x is outside {lo / 100:.2f}-{hi / 100:.2f}x "
+                      "(make_pairs_challenges.py --write)")
+    if r["slack"] - r["dry"] < pairs.FIRE_WORTH:
+        errors.append(f"{where}: the turrets buy only {(r['slack'] - r['dry']) / 100:.2f}x; what a pair feeds barely matters")
+    if r["empty"]:
+        errors.append(f"{where}: the hill stands empty on {r['empty']} of the bot's turns")
+    if r["density"] > pairs.MOST_CROWD:
+        errors.append(f"{where}: {r['density']:.1f} raiders stand on an average turn")
 
 
 def check_glade_challenge(cid, where, row, warnings):
@@ -3455,7 +3500,7 @@ def art_on_disk():
     return found
 
 
-GOOD_KINDS = {"hearts", "heart_boost", "xp_boost"}
+GOOD_KINDS = {"hearts", "heart_boost", "xp_boost", "xp_surge"}
 
 
 def check_store(progression, keys, manifest=None):
@@ -3665,7 +3710,7 @@ def check_store(progression, keys, manifest=None):
             errors.append(f"store good '{gid}' hands over {amount} hearts, above the ceiling of "
                           f"{ceiling}; it can never be bought")
 
-        if kind in ("heart_boost", "xp_boost") and amount > max_boost:
+        if kind in ("heart_boost", "xp_boost", "xp_surge") and amount > max_boost:
             errors.append(f"store good '{gid}' hands over {amount}h of boost, above the "
                           f"{max_boost}h cap; it can never be bought")
 
@@ -4757,7 +4802,7 @@ def main():
     XPB_MAX_COOLDOWN_HOURS = 24 * 7
     XPB_DEFAULTS = {
         "watchedPercent": 50, "watchedHours": 2, "watchedCooldownHours": 4,
-        "boughtPercent": 100, "boughtHours": 24, "maxPercent": 150,
+        "boughtPercent": 100, "boughtHours": 24, "maxPercent": 150, "surgePercent": 0,
     }
 
     boost_block = progression.get("xpBoost") or {}
@@ -4784,20 +4829,32 @@ def main():
     bought_pc = boost_number("boughtPercent", XPB_MAX_PERCENT)
     bought_h = boost_number("boughtHours", XPB_MAX_HOURS)
     boost_max_pc = boost_number("maxPercent", XPB_MAX_PERCENT)
+    surge_pc = boost_number("surgePercent", XPB_MAX_PERCENT)
+
+    # **A surge good sells the surge window, so the window has to pay.** `xp_surge` rows are
+    # shop goods whose amount is hours at `xpBoost.surgePercent`; a row with no percentage behind
+    # it is gems for nothing, and the client hides it (`StoreService.OfferForGood`) - which is a
+    # shelf that silently shrank, so it is refused here instead.
+    surge_goods = [g.get("id") for g in (progression.get("store") or {}).get("goods") or []
+                   if g.get("kind") == "xp_surge"]
+    if surge_goods and surge_pc <= 0:
+        errors.append(f"store sells {', '.join(surge_goods)} (xp_surge) and xpBoost.surgePercent "
+                      "is nought, so the surge window pays nothing")
 
     print()
     if boost_max_pc <= 0 or (watched_pc <= 0 and bought_pc <= 0):
         print("xp boost: withdrawn - nothing multiplies XP")
     else:
         # A cap under one window's own figure is a window a player is shown and never given.
-        single = max(watched_pc, bought_pc)
+        single = max(watched_pc, bought_pc, surge_pc)
         if boost_max_pc < single:
             errors.append(f"progression xpBoost maxPercent is {boost_max_pc}, below the {single}% "
                           "a single window already pays; the window would be advertised at a "
                           "figure the rule refuses to honour")
 
         print(f"xp boost: +{watched_pc}% for {watched_h}h every {watched_cd}h watched, "
-              f"+{bought_pc}% for {bought_h}h bought, capped at +{boost_max_pc}%")
+              f"+{bought_pc}% for {bought_h}h bought, +{surge_pc}% surge "
+              f"({', '.join(surge_goods) or 'not sold'}), capped at +{boost_max_pc}%")
 
         # **Two numbers describing one window.** The advert's `amount` is what a view is
         # advertised to pay; `watchedHours` is the window the rule actually opens, because the

@@ -67,6 +67,17 @@ namespace GlimmerGrove.Progression
         /// source will need.
         /// </summary>
         public const int DefaultMaxPercent = DefaultWatchedPercent + DefaultBoughtPercent;
+
+        /// <summary>
+        /// The surge window, which the built-in table does not offer: nought.
+        ///
+        /// <b>Content-only on purpose.</b> The surge is sold by two shop rows that exist only in
+        /// <c>progression.json</c>, beside the percentage they pay, so a device that fell back to
+        /// the built-in table has neither the rows nor the rate - and the built-in cap above stays
+        /// the one the server's own default (<c>grove.ts DEFAULT_XP_BOOST</c>) agrees with, which
+        /// is the pairing 9e's clamp depends on.
+        /// </summary>
+        public const int DefaultSurgePercent = 0;
     }
 
     /// <summary>
@@ -81,8 +92,9 @@ namespace GlimmerGrove.Progression
     public sealed class XpBoostTable
     {
         XpBoostTable(int watchedPercent, int watchedHours, int watchedCooldownHours,
-                     int boughtPercent, int boughtHours, int maxPercent)
+                     int boughtPercent, int boughtHours, int maxPercent, int surgePercent)
         {
+            SurgePercent = surgePercent;
             WatchedPercent = watchedPercent;
             WatchedHours = watchedHours;
             WatchedCooldownHours = watchedCooldownHours;
@@ -114,6 +126,25 @@ namespace GlimmerGrove.Progression
         public int BoughtHours { get; }
 
         /// <summary>
+        /// What a <b>surge</b> window adds, as a percentage - the third track, and the strongest.
+        ///
+        /// <para>
+        /// <b>A track of its own rather than a second percentage on the bought one</b>, because a
+        /// window is one monotonic deadline joined by <c>max</c> (9e) and a deadline cannot carry
+        /// "which strength" through a merge: two devices buying two different windows would have
+        /// to pick one percentage, and the loser would be hours somebody paid for at a rate they
+        /// never received. One deadline per strength merges exactly. Its length is the good's -
+        /// a day or two - so it has no hours of its own here.
+        /// </para>
+        /// <para>
+        /// <b>It adds to the others</b>, for the watched window's reason: a strength that replaced
+        /// the running one would make buying the bigger boost during the smaller a partial loss,
+        /// and an offer that is sometimes a trap is worse than one that is always worth taking.
+        /// </para>
+        /// </summary>
+        public int SurgePercent { get; }
+
+        /// <summary>
         /// The most every running window may add together — the cap on the sum, and the factor
         /// the stored bonus is clamped against. See <see cref="XpBoostLimits.MaxPercent"/>.
         /// </summary>
@@ -126,16 +157,20 @@ namespace GlimmerGrove.Progression
             XpBoostLimits.DefaultWatchedCooldownHours,
             XpBoostLimits.DefaultBoughtPercent,
             XpBoostLimits.DefaultBoughtHours,
-            XpBoostLimits.DefaultMaxPercent);
+            XpBoostLimits.DefaultMaxPercent,
+            XpBoostLimits.DefaultSurgePercent);
 
         /// <summary>Whether anything here can pay at all.</summary>
-        public bool Pays => MaxPercent > 0 && (WatchedPercent > 0 || BoughtPercent > 0);
+        public bool Pays => MaxPercent > 0 && (WatchedPercent > 0 || BoughtPercent > 0 || SurgePercent > 0);
 
         /// <summary>Whether a watched window is offered.</summary>
         public bool OffersWatched => WatchedPercent > 0 && WatchedHours > 0;
 
         /// <summary>Whether a bought window is offered.</summary>
         public bool OffersBought => BoughtPercent > 0 && BoughtHours > 0;
+
+        /// <summary>Whether a surge window pays anything, so a shelf knows whether to sell one.</summary>
+        public bool OffersSurge => SurgePercent > 0;
 
         // ------------------------------------------------------------------ building
         /// <summary>
@@ -169,11 +204,15 @@ namespace GlimmerGrove.Progression
             int maxPercent = Read(dto.maxPercent, XpBoostLimits.DefaultMaxPercent,
                                   0, XpBoostLimits.MaxPercent, "xpBoost maxPercent", problems);
 
+            int surgePercent = Read(dto.surgePercent, XpBoostLimits.DefaultSurgePercent,
+                                    0, XpBoostLimits.MaxPercent, "xpBoost surgePercent", problems);
+
             // A cap under what one window already pays is not a smaller cap, it is a contradiction:
             // the window would be published at a figure the rule refuses to honour, and a player
             // would watch an advert for a number that never arrives. Raised to the larger of the
             // two rather than the block being rejected, because the author's intent is unambiguous.
             int single = watchedPercent > boughtPercent ? watchedPercent : boughtPercent;
+            if (surgePercent > single) single = surgePercent;
             if (maxPercent > 0 && maxPercent < single)
             {
                 problems.Add($"xpBoost maxPercent is {maxPercent}, below the {single}% a single " +
@@ -192,7 +231,7 @@ namespace GlimmerGrove.Progression
                              "so the effective rate is higher than the cooldown suggests");
 
             return new XpBoostTable(watchedPercent, watchedHours, cooldown,
-                                    boughtPercent, boughtHours, maxPercent);
+                                    boughtPercent, boughtHours, maxPercent, surgePercent);
         }
 
         /// <summary>
@@ -262,6 +301,9 @@ namespace GlimmerGrove.Progression
         /// <summary>When the bought window runs out, or 0. Monotonic; joined by <c>max</c>.</summary>
         public static long BoughtUntilUnix => Wallet.XpBoostBoughtUntilUnix;
 
+        /// <summary>When the surge window runs out, or 0. Monotonic; joined by <c>max</c>.</summary>
+        public static long SurgeUntilUnix => Wallet.XpBoostSurgeUntilUnix;
+
         /// <summary>
         /// What every running window adds together, as a percentage, at a given moment.
         ///
@@ -277,6 +319,7 @@ namespace GlimmerGrove.Progression
 
             if (WatchedUntilUnix > now) percent += table.WatchedPercent;
             if (BoughtUntilUnix > now) percent += table.BoughtPercent;
+            if (SurgeUntilUnix > now) percent += table.SurgePercent;
 
             if (percent < 0) percent = 0;
             return percent > table.MaxPercent ? table.MaxPercent : percent;
@@ -301,6 +344,7 @@ namespace GlimmerGrove.Progression
             {
                 long now = GameClock.NowUnix();
                 long until = WatchedUntilUnix > BoughtUntilUnix ? WatchedUntilUnix : BoughtUntilUnix;
+                if (SurgeUntilUnix > until) until = SurgeUntilUnix;
 
                 // Only counts a window this table still pays for; a percentage retuned to nought
                 // withdraws the boost, and a countdown over it would be a clock on nothing.
@@ -384,6 +428,21 @@ namespace GlimmerGrove.Progression
             if (hours <= 0L) return;
 
             Wallet.GrantXpBoostBought(hours);
+            Raise();
+        }
+
+        /// <summary>
+        /// Opens or extends the surge window - the strongest track, sold by the hour.
+        ///
+        /// <b>Extends rather than replaces</b>, for <see cref="GrantBought"/>'s reason: a second
+        /// purchase while one runs must never take time away. Its own deadline, so nothing it does
+        /// moves the watched cooldown or the bought window's length.
+        /// </summary>
+        public static void GrantSurge(long hours)
+        {
+            if (hours <= 0L) return;
+
+            Wallet.GrantXpBoostSurge(hours);
             Raise();
         }
 

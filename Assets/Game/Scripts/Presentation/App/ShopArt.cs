@@ -167,6 +167,23 @@ namespace GlimmerGrove
             float size = box.rect.width;
             if (size <= 1f) size = 200f;
 
+            if (good.Kind == StoreGoodKind.XpSurge)
+            {
+                // A rung of the surge's own picture ladder, read at the good's rank among the
+                // surge rows (18e): orange for the shorter window, blue for the longer. Drawn
+                // exactly as the day boost's wordmark below - same box, same breath - because the
+                // three sit side by side and must read as one family at three strengths.
+                var (rank, of) = StoreRules.Catalog.RankOf(good);
+                int rung = rank < 0 ? 0 : ShopLadder.Rung(rank + 1, of, SurgeLadder.Length);
+
+                var surge = UIKit.Img("XpSurge", box, Art.S("Ui/" + SurgeLadder[rung]), Color.white,
+                                      Vector2.one * (size * .74f), new Vector2(.5f, .5f), Vector2.zero);
+                surge.preserveAspect = true;
+
+                Tween.Breathe(surge.transform, .035f, 2.6f);
+                return;
+            }
+
             if (good.Kind == StoreGoodKind.XpBoost)
             {
                 // The wordmark rather than the keeper ladder's star. A boost is a rate on
@@ -360,6 +377,13 @@ namespace GlimmerGrove
         /// bottles already in the build.
         /// </summary>
         static readonly string[] Vessels = { "potion2", "potion4", "potion6" };
+
+        /// <summary>
+        /// The XP surge's picture ladder, cheapest rung first: the owner's orange wordmark and
+        /// the blue one (<c>Tools/make_ad_art.py</c>). Exactly as long as the shelf that ships it
+        /// (18e); a third surge row would be read onto the top rung until a third is cut.
+        /// </summary>
+        static readonly string[] SurgeLadder = { "ic_xp_surge_1", "ic_xp_surge_2" };
 
         /// <summary>
         /// Draws a heart container: a vessel with hearts spilling over its lip.

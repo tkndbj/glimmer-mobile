@@ -148,6 +148,35 @@ namespace GlimmerGrove.Store
 
         public IReadOnlyList<StoreGood> Goods => _goods;
 
+        /// <summary>
+        /// Where <paramref name="good"/> stands among the goods of its own kind, cheapest first
+        /// (0-based), and how many of that kind there are - the rung a shelf picture ladder is
+        /// read at (<c>ShopLadder</c>, invariant 18e). Ranked by price, then amount, then id, so
+        /// two devices order a tie the same way. (-1, 0) for a good this catalog does not hold.
+        /// </summary>
+        public (int Rank, int Of) RankOf(StoreGood good)
+        {
+            if (good == null) return (-1, 0);
+
+            int rank = 0, of = 0;
+            bool found = false;
+
+            foreach (var other in _goods)
+            {
+                if (other.Kind != good.Kind) continue;
+                of++;
+
+                if (other.Id == good.Id) { found = true; continue; }
+
+                int by = other.Gems != good.Gems ? other.Gems.CompareTo(good.Gems)
+                       : other.Amount != good.Amount ? other.Amount.CompareTo(good.Amount)
+                       : string.CompareOrdinal(other.Id, good.Id);
+                if (by < 0) rank++;
+            }
+
+            return found ? (rank, of) : (-1, of);
+        }
+
         /// <summary>True when there is anything at all to sell.</summary>
         public bool HasAnything => _products.Length > 0 || _goods.Length > 0;
 
@@ -310,6 +339,14 @@ namespace GlimmerGrove.Store
                 // to buy. `StoreTests.TheBuiltInLadderMatchesTheShippedContent` says so and runs
                 // only in the Editor, which is why it sat red rather than being noticed.
                 new StoreGood("xp_boost_day", StoreGoodKind.XpBoost, 24, 120),
+
+                // The surge's two lengths. Listed here for the reason the day boost above is:
+                // a device on the built-in catalog would otherwise sell a shelf the content
+                // file does not. The built-in *table* pays no surge (`DefaultSurgePercent`), so
+                // the shelf hides them there - `StoreGood`s whose window pays nothing are not
+                // offered (`StoreService.OfferForGood`).
+                new StoreGood("xp_surge_day", StoreGoodKind.XpSurge, 24, 200),
+                new StoreGood("xp_surge_two_day", StoreGoodKind.XpSurge, 48, 300),
             });
 
         /// <summary>A catalog with nothing in it, which is what a deployment with no shop has.</summary>
@@ -575,8 +612,9 @@ namespace GlimmerGrove.Store
             if (kind == StoreGoodKind.None)
             {
                 problems.Add($"store good '{id}' names unknown kind '{dto.kind}'. Only " +
-                             $"'{StoreGoodKinds.Hearts}', '{StoreGoodKinds.HeartBoost}' and " +
-                             $"'{StoreGoodKinds.XpBoost}' can be bought with gems — currency cannot, " +
+                             $"'{StoreGoodKinds.Hearts}', '{StoreGoodKinds.HeartBoost}', " +
+                             $"'{StoreGoodKinds.XpBoost}' and '{StoreGoodKinds.XpSurge}' can be " +
+                             "bought with gems — currency cannot, " +
                              "because only the server may grant it");
                 return null;
             }

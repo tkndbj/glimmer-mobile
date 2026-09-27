@@ -629,9 +629,18 @@ namespace GlimmerGrove.Content
         /// </summary>
         static void Bossed(SiegeLayout layout, ICollection<LevelIssue> issues)
         {
-            string who = SiegeTuning.NameOf(layout.BossKind);
+            // **Asked of every boss the rung sends**: a duel's two take two different things
+            // (`SiegeLayout.BossJoin`), and each one has to be asked whether its own is there.
+            for (int b = 0; b < layout.BossKinds.Length; b++)
+                Bossed(layout, layout.BossKinds[b], layout.BossWears[b], issues);
+        }
 
-            switch (SiegeTuning.SpellOf(layout.BossKind))
+        static void Bossed(SiegeLayout layout, SiegeKind kind, char wears,
+                           ICollection<LevelIssue> issues)
+        {
+            string who = SiegeTuning.NameOf(kind);
+
+            switch (SiegeTuning.SpellOf(kind))
             {
                 // A douse takes one ward out of a line for five seconds. On a line of two that is
                 // half the player's answer gone every few seconds, which is not a decision about
@@ -704,9 +713,9 @@ namespace GlimmerGrove.Content
                 // that could make it decide nothing is a line with no ward wearing that colour:
                 // every bolt would be worth half, and what the boss added would be answered by
                 // arithmetic rather than by a choice about where the fuel goes.
-                case SiegeSpell.Raise when layout.WardOf(layout.Boss) < 0:
+                case SiegeSpell.Raise when layout.WardOf(wears) < 0:
                     issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
-                        $"this siege ends with a {who} wearing '{layout.Boss}', and no ward on the "
+                        $"this siege ends with a {who} wearing '{wears}', and no ward on the "
                         + "line carries it - so every creeper it raises is answered at half weight "
                         + "by whichever ward happens to be fed"));
                     break;
@@ -812,7 +821,8 @@ namespace GlimmerGrove.Content
             // so a level whose only threat were one of them could not be lost at all — which is
             // invariant 5d asked of a fail state, and exactly the reading "there is a boss, so the
             // line is in danger" would have got wrong in silence.
-            if (layout.HasBoss && SiegeTuning.EndangersTheLine(layout.BossKind)) return true;
+            foreach (var boss in layout.BossKinds)
+                if (SiegeTuning.EndangersTheLine(boss)) return true;
 
             for (int w = 0; w < layout.Coming.Length; w++)
             {

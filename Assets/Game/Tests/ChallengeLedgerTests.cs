@@ -60,7 +60,7 @@ namespace GlimmerGrove.Tests
         static ChallengeDto Pairs(string id, int seed = 7)
             => new ChallengeDto
             {
-                id = id, genre = "pairs", width = 2, height = 2, rows = new[] { "rg", "gr" },
+                id = id, genre = "pairs", width = 2, height = 2, rows = new[] { "r1 g1", "g1 r1" },
                 waves = new[] { "0 r1" }, hill = 5, bolts = 1, seed = seed,
             };
 

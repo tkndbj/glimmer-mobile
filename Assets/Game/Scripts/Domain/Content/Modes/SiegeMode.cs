@@ -913,7 +913,7 @@ namespace GlimmerGrove.Content
         /// textual order and one that ran first would deal twelve nulls.
         /// </para>
         /// </summary>
-        static readonly AssetRequest[] MedleyCast = Dealt(false);
+        static readonly AssetRequest[] MedleyCast = Dealt(MedleyOrder, false);
 
         /// <summary>
         /// What the medley swings, with an <b>empty</b> entry for a body whose pack drew no
@@ -924,7 +924,42 @@ namespace GlimmerGrove.Content
         /// six slots have nothing to name and say so. <see cref="CastSwing"/> answers empty for
         /// them and the view keeps walking — which is exactly what those two chapters do today.
         /// </summary>
-        static readonly AssetRequest[] MedleySwings = Dealt(true);
+        static readonly AssetRequest[] MedleySwings = Dealt(MedleyOrder, true);
+
+        /// <summary>
+        /// Which cast each of the <b>reunion</b>'s twelve slots is dealt from - the eighth
+        /// chapter's cast, and the second square over the six chapter casts.
+        ///
+        /// <para>
+        /// <b>A chapter commissioned as "every raider we have already fought"</b> (the owner,
+        /// 2026-09-27), which is exactly what the Infinite lane's medley is - and a chapter may
+        /// not simply draw the medley, because the lane is one tap away on the same map and what
+        /// a chapter sends has to be its own (<see cref="RabbleCast"/>). So it is a second square
+        /// over the same six casts, dealt so that <b>no slot draws the body the medley draws in
+        /// it</b>: a red creeper here is never the red creeper on the Infinite hill.
+        /// </para>
+        /// <para>
+        /// <b>The same three rules as the medley's square</b>: every family is dealt exactly
+        /// twice, no colour draws one family twice, and nothing is typed that could be derived -
+        /// the reels are indexed out of the casts that own them, so it costs no art at all.
+        /// <c>SiegeCastTests</c> holds all of it, including the slot-by-slot difference.
+        /// </para>
+        /// </summary>
+        static readonly int[] ReunionOrder =
+        {
+            Rabble,  Court,   Wild,    Bones,      // creepers  r g b y
+            Brood,   Insects, Bones,   Wild,       // brutes
+            Insects, Brood,   Court,   Rabble,     // bulwarks
+        };
+
+        /// <summary>The twelve bodies the reunion draws. See <see cref="ReunionOrder"/>.</summary>
+        static readonly AssetRequest[] ReunionCast = Dealt(ReunionOrder, false);
+
+        /// <summary>
+        /// What the reunion swings, with an empty entry for a body whose pack drew no attack -
+        /// the medley's honest gap (<see cref="MedleySwings"/>), for the same two families.
+        /// </summary>
+        static readonly AssetRequest[] ReunionSwings = Dealt(ReunionOrder, true);
 
         /// <summary>
         /// One of the medley's two arrays, dealt out of <see cref="MedleyOrder"/>.
@@ -933,13 +968,13 @@ namespace GlimmerGrove.Content
         /// dealt from different squares — which would load one family's body and swing another's
         /// at the ward line.
         /// </summary>
-        static AssetRequest[] Dealt(bool swinging)
+        static AssetRequest[] Dealt(int[] order, bool swinging)
         {
             var into = new AssetRequest[CastBodies];
 
             for (int i = 0; i < CastBodies; i++)
             {
-                var from = swinging ? CastSwingArt(MedleyOrder[i]) : CastArt(MedleyOrder[i]);
+                var from = swinging ? CastSwingArt(order[i]) : CastArt(order[i]);
 
                 // Default is an empty address, which is the "this body does not swing" answer
                 // `CastSwing` already gives — never a made-up name.
@@ -983,8 +1018,14 @@ namespace GlimmerGrove.Content
         /// </summary>
         public const int Court = 6;
 
+        /// <summary>
+        /// The eighth chapter's cast: a second square over the six chapter casts. See
+        /// <see cref="ReunionOrder"/>.
+        /// </summary>
+        public const int Reunion = 7;
+
         /// <summary>How many casts this mode ships.</summary>
-        public const int CastSets = 7;
+        public const int CastSets = 8;
 
         /// <summary>
         /// The casts the <b>main ladder</b> draws from, in the order its chapters meet them.
@@ -995,7 +1036,17 @@ namespace GlimmerGrove.Content
         /// year costs no cast at all</b>, and no chapter can ship drawing bodies nobody chose. A
         /// third pack lengthens this array and changes nothing else.
         /// </summary>
-        static readonly int[] MainCasts = { Insects, Brood, Bones, Rabble, Wild, Court };
+        ///
+        /// <para>
+        /// <b>Eight entries, and the seventh is the first again on purpose.</b> Bonereach shipped
+        /// as the seventh chapter drawing the insects, because the table then wrapped at six -
+        /// and its two bosses were chosen against that cast. The eighth chapter was commissioned
+        /// as a reunion of every cast (<see cref="ReunionOrder"/>), so the table grew by two rather
+        /// than one: the seventh entry writes down what Bonereach already draws, which is what
+        /// keeps a lengthened table from moving a shipped chapter onto a new cast.
+        /// </para>
+        static readonly int[] MainCasts = { Insects, Brood, Bones, Rabble, Wild, Court,
+                                            Insects, Reunion };
 
         /// <summary>
         /// How many casts the main ladder draws from before it starts again.
@@ -1052,6 +1103,7 @@ namespace GlimmerGrove.Content
             switch (set)
             {
                 case Medley: return MedleyCast;
+                case Reunion: return ReunionCast;
                 case Brood: return BroodCast;
                 case Bones: return BoneCast;
                 case Rabble: return RabbleCast;
@@ -1077,6 +1129,7 @@ namespace GlimmerGrove.Content
         public static IReadOnlyList<AssetRequest> CastSwingArt(int set)
             => set == Bones ? BoneSwings
              : set == Medley ? MedleySwings
+             : set == Reunion ? ReunionSwings
              : set == Rabble ? RabbleSwings
              : set == Wild ? WildSwings
              : set == Court ? CourtSwings : null;
@@ -1248,14 +1301,20 @@ namespace GlimmerGrove.Content
                 // One ground per rung (invariant 7c). Asked of every level rather than of the
                 // siege ones alone, because the place a level sits in its chapter is what decides
                 // this and `ChapterModeValidator` already proves a chapter is one mode.
-                list.Add(Ground(i));
+                // A chapter longer than the grounds wraps onto them (`Ground`), and a scope asks
+                // for each picture once.
+                if (i < Grounds) list.Add(Ground(i));
 
                 if (!(chapter.Levels[i].Rules is SiegeRules siege)) continue;
 
                 var sends = siege.Layout;
-                if (sends == null || !sends.HasBoss || !seen.Add(sends.BossKind)) continue;
+                if (sends == null || !sends.HasBoss) continue;
 
-                Bosses(sends.BossKind, list);
+                // **Every boss the rung sends, not the first**: a duel stands two
+                // (`SiegeLayout.BossJoin`), and a boss whose body was never scoped is a white
+                // rectangle two cells tall in the middle of the hill (invariant 7b).
+                foreach (var kind in sends.BossKinds)
+                    if (seen.Add(kind)) Bosses(kind, list);
             }
 
             return list;

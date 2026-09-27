@@ -311,6 +311,8 @@ namespace GlimmerGrove.Persistence
                                                            other.xpBoostWatchedUntilUnix),
                 xpBoostBoughtUntilUnix = Hearts.JoinBoost(mine.xpBoostBoughtUntilUnix,
                                                           other.xpBoostBoughtUntilUnix),
+                xpBoostSurgeUntilUnix = Hearts.JoinBoost(mine.xpBoostSurgeUntilUnix,
+                                                         other.xpBoostSurgeUntilUnix),
                 xpBoostEarned = Hearts.JoinBoost(mine.xpBoostEarned, other.xpBoostEarned),
 
                 // Hints join exactly as hearts do, and through the same arithmetic — see

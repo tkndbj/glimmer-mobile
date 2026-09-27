@@ -1,5 +1,7 @@
 using System.Collections;
+using System.Collections.Generic;
 using GlimmerGrove.Challenges;
+using GlimmerGrove.Progression;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -73,6 +75,10 @@ namespace GlimmerGrove
 
             Swipes(dir => Send(ChallengeInput.Swipe(dir.x, dir.y)));
         }
+
+        /// <summary>Rings the keeper, because the sentence is about moving it (invariant 6b).</summary>
+        public override void Review(List<ScreenLesson> into)
+            => ScreenLessons.Add(into, Mechanic.SokobanPush, _keeper);
 
         public override void Repaint()
         {

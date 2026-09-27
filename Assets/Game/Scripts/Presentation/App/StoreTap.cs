@@ -140,7 +140,7 @@ namespace GlimmerGrove
                 // "nearly full" and the sentence is about whichever was tapped; without the kind
                 // a player refused an XP boost is told about their hearts.
                 case GoodOfferState.BoostNearlyFull:
-                    return kind == StoreGoodKind.XpBoost ? "ui.shop.xp_boost_full"
+                    return StoreGoodKinds.IsXp(kind) ? "ui.shop.xp_boost_full"
                                                          : "ui.shop.boost_full";
                 default: return "ui.shop.unknown_product";
             }

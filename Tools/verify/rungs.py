@@ -58,6 +58,7 @@ TABLES = (
     ("Thundercrag", "s06_thundercrag", "SiegeRuleTests.Chapters.cs"),
     ("Dustcrown", "s07_dustcrown", "SiegeRuleTests.Chapters.cs"),
     ("Bonereach", "s08_bonereach", "SiegeRuleTests.Chapters.cs"),
+    ("Cloudkeep", "s09_cloudkeep", "SiegeRuleTests.Chapters.cs"),
 )
 
 #: One `new Rung(...)` line. Deliberately narrow - it matches the shape this project writes and

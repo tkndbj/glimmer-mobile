@@ -152,7 +152,26 @@ AD_PICTURE = {"credits": "ad_coin", "hearts": "ad_heart", "xp_boost": "ad_xp"}
 
 # `StoreGoodKinds.ShelfFor` — a fact about the good rather than a line in the screen, so the
 # mirror asks the same question the shelf does. Anything not named here is a supply.
-GOOD_SHELF = {"xp_boost": "utilities"}
+GOOD_SHELF = {"xp_boost": "utilities", "xp_surge": "utilities"}
+
+# `ShopArt.SurgeLadder` - the XP surge's picture ladder, cheapest rung first, read at the good's
+# rank among the surge rows (`StoreCatalog.RankOf`, `ShopLadder.Rung`).
+SURGE_LADDER = ("ic_xp_surge_1", "ic_xp_surge_2")
+
+
+def surge_rung(good_id):
+    """`ShopLadder.Rung(rank + 1, of, rungs)` over the surge rows, ranked by gems, amount, id."""
+    rows = [g for g in rules()["store"].get("goods", []) if g.get("kind") == "xp_surge"]
+    rows.sort(key=lambda g: (g.get("gems", 0), g.get("amount", 0), g.get("id", "")))
+    ids = [g.get("id") for g in rows]
+    if good_id not in ids or len(SURGE_LADDER) <= 1:
+        return 0
+    tier, size, rungs = ids.index(good_id) + 1, len(ids), len(SURGE_LADDER)
+    if size <= 1:
+        return rungs - 1
+    steps = size - 1
+    rung = ((tier - 1) * (rungs - 1) * 2 + steps) // (steps * 2)
+    return max(0, min(rungs - 1, rung))
 
 AD_TOKEN = {"credits": "Coin/f0", "hearts": "ic_heart", "xp_boost": "ic_xp_boost"}
 AD_UNIT = {"credits": "Coins", "hearts": "Hearts", "xp_boost": "XP boost"}
@@ -303,7 +322,7 @@ def ad_card(sheet, x, top, shelf, kind, amount):
     if kind == "xp_boost":
         said = xp_headline(rules().get("xpBoost", {}).get("watchedPercent", 50), amount)
         SETTLED.append(("ad " + kind, said,
-                        headline(sheet, said, plate_cx, pbot - AMOUNT_RISE, AD_TINT[kind], 24), 24))
+                        headline(sheet, said, plate_cx, pbot - AMOUNT_RISE, AD_TINT[kind]), 24))
         unit = ""
     else:
         K.text(sheet, f"{amount:,}", plate_cx, pbot - AMOUNT_RISE, 46,
@@ -335,7 +354,7 @@ def ad_card(sheet, x, top, shelf, kind, amount):
            fill=K.SUN, outline=3)
 
 
-def good_card(sheet, x, top, kind, amount, gems):
+def good_card(sheet, x, top, kind, amount, gems, good_id=""):
     """A gem-priced good: `ProductCard.Draw(StoreGood, GoodOfferState)` and `ShopArt.PaintGood`.
 
     The supplies shelf could not be drawn here at all until the free spot went onto it — this
@@ -351,7 +370,14 @@ def good_card(sheet, x, top, kind, amount, gems):
 
     K.paste(sheet, K.glow(370, 1.6, ACCENT["supplies"], SPOT_ALPHA), plate_cx, ptop + ART_DROP)
 
-    if kind == "xp_boost":
+    if kind == "xp_surge":
+        # `ShopArt.PaintGood`'s surge arm: a rung of the surge ladder, drawn like the day boost.
+        pic = SURGE_LADDER[surge_rung(good_id)]
+        mark = K.fit(Image.open(UI / (pic + ".png")).convert("RGBA"), (ART * .74, ART * .74))
+        K.paste(sheet, mark, plate_cx, ptop + ART_DROP)
+        said, unit, tint = xp_headline(
+            rules().get("xpBoost", {}).get("surgePercent", 0), amount), "", K.AQUA
+    elif kind == "xp_boost":
         # `ShopArt.PaintGood` — the wordmark, because a boost is a rate on something the player
         # already has and there is no object to draw. The letters say what is multiplied.
         mark = K.fit(Image.open(UI / "ic_xp_boost.png").convert("RGBA"), (ART * .74, ART * .74))
@@ -612,7 +638,7 @@ def utilities(sheet, top, shift):
 
         if n < len(goods):
             g = goods[n]
-            good_card(sheet, x, y, g["kind"], g["amount"], g["gems"])
+            good_card(sheet, x, y, g["kind"], g["amount"], g["gems"], g.get("id", ""))
             continue
 
         item = kit[n - len(goods)]

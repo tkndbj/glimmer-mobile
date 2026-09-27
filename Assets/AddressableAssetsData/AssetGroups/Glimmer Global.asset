@@ -849,6 +849,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Siege/fire3_y
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 05f12ce72147eef428a4d956a06ba42c
+    m_Address: Art/Challenge/pair_g2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 05fb1777e15ea72479d43c9eb6512957
     m_Address: Art/Siege/boneBulwark_y/f05
     m_ReadOnly: 0
@@ -942,6 +947,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 06d5b4f41f3ca3544ba4ecc9ab324b17
+    m_Address: Art/Challenge/pair_b1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 06d6c07751627db4493f1a129b155cf9
     m_Address: Art/Fx/Siege/muzzle_stasis/f03
     m_ReadOnly: 0
@@ -971,6 +981,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Siege/Wards/glacier_g_fire
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0705f38fd3b02ce43a5109115c9a6b03
+    m_Address: Art/Challenge/pair_r1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 07097dc2c3bb40c4aad6a0702a8822a1
     m_Address: Art/Siege/boneBulwark_y/f00
@@ -3162,6 +3177,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/charm_blast_b
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 14bf33b0a3adfdf499e33c3fa8f4f2e8
+    m_Address: Art/Bg/sky_32
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 14cc952a9da095b47a44181ec6f4f03c
     m_Address: Art/Siege/wildBulwark_r/f00
     m_ReadOnly: 0
@@ -5202,6 +5222,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Siege/shot_prism_g
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 20770803ea794e84abc6abede12bcd1d
+    m_Address: Art/Challenge/pair_b5
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 208ea6f599368104d8ef66f7d28ea006
     m_Address: Art/Fx/Siege/muzzle_lighthouse_y/f04
@@ -8174,6 +8199,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/hit_stasis
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 327864e03838b6643acb5aa28de844e9
+    m_Address: Art/Bg/sky_30
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 327e8cd2a9c92924781270dbcbd6e02e
     m_Address: Art/Siege/fire1_r/f04
     m_ReadOnly: 0
@@ -8459,6 +8489,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/hit_tempest
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 342446f69d709c5448ce2e1dc55d0ed5
+    m_Address: Art/Bg/sky_37
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3433fea2acf90a746bddd10886d30a78
     m_Address: Art/Fx/Siege/muzzle_bolt_y/f02
     m_ReadOnly: 0
@@ -8689,6 +8724,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Siege/Wards/bolt_y_fire
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3572fc8c315f40645aeb02a8b73bbe95
+    m_Address: Art/Challenge/pair_curse
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3595f138a68f048478157016e3e4e2f2
     m_Address: Art/Fx/Siege/muzzle_siphon_r/f00
@@ -10990,6 +11030,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 433108ce5c79b824983a208780dfdbed
+    m_Address: Art/Challenge/pair_y2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 43392648c48734e4b972035a9ac19613
     m_Address: Art/Siege/rabbleBulwark_g/f08
     m_ReadOnly: 0
@@ -12737,6 +12782,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/hit_apex_r
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4d8de82c9c6ed6d49a53553eaab3a49b
+    m_Address: Art/Challenge/pair_r4
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4d95a2125cce2b14f8d2a2a45b49ee0a
     m_Address: Art/Siege/bulwark_b/f08
     m_ReadOnly: 0
@@ -13007,6 +13057,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Siege/courtBulwark_y_swing
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4fbbedbe7a687aa4abf927d1ffd3ba24
+    m_Address: Art/Challenge/pair_y3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4fbcc14c1a75ee046981ec48aa59aefd
     m_Address: Art/Fx/Siege/charm_blast_g/f01
     m_ReadOnly: 0
@@ -13161,6 +13216,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Siege/bulwark_b
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 50c65d622ca1ca745abcf73d6b0f6411
+    m_Address: Art/Ui/ic_xp_surge_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 50ced2740adf0b242bb2f9c976dd4e54
     m_Address: Art/Fx/Siege/roar_muzzle/f06
@@ -14118,6 +14178,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/hit_bolt_r
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5691197f7547cd547b43db0693b1857d
+    m_Address: Art/Bg/sky_31
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 569365bf77f4c234f99bc8ed062b3f50
     m_Address: Art/Siege/fire3_g/f05
     m_ReadOnly: 0
@@ -14176,6 +14241,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Siege/shot_mortar_b
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 56d09bb4eec6d5c4483acf12eb39df2c
+    m_Address: Art/Bg/sky_38
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 56d43923814a96147a5e2ca3ac05b488
     m_Address: Art/Siege/rabbleMon_g_swing/f03
@@ -15755,6 +15825,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Siege/Wards/arcstorm_g_fire
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5facb0072e181564dba134d7582b84f6
+    m_Address: Art/Challenge/pair_g4
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5fb23cd640f71f947b2d2f0a52c77498
     m_Address: Art/Fx/Siege/shot_apex_b/f12
     m_ReadOnly: 0
@@ -16330,6 +16405,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Siege/shot_arcstorm_y
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 63240a889836eef4ca5cd8ae38fff92c
+    m_Address: Art/Bg/sky_36
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 632642ccebb9c3a4894a85801f3d22e8
     m_Address: Art/Siege/Wards/wellspring_fire/f02
@@ -18623,6 +18703,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Siege/fire1_y
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 71a32b0631554634a86a620281b6072e
+    m_Address: Art/Challenge/pair_y4
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 71a6de367f90fdf4c9cfba8bed04cd55
     m_Address: Art/Bg/event_sky
     m_ReadOnly: 0
@@ -19617,6 +19702,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Siege/rabbleBulwark_g
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 76d2fbbd73edae241ad00033d6fd05f9
+    m_Address: Art/Challenge/pair_r2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 76da44eda1187ee48a9af9eda1eede75
     m_Address: Art/Fx/Siege/muzzle_cleaver_y/f01
     m_ReadOnly: 0
@@ -20366,6 +20456,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Siege/rabbleBrute_y_swing
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7b3c51b3ab3272249bd12f03096e73a3
+    m_Address: Art/Challenge/pair_g3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7b417c0ef9836b14ebbc482dd7b38ebd
     m_Address: Art/Fx/Siege/muzzle_spark_b/f07
     m_ReadOnly: 0
@@ -20776,6 +20871,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Siege/wildBrute_g
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7d5de3ee272512c4cb6ac77ca07d66b4
+    m_Address: Art/Challenge/pair_b3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7d5fe9b87045496458de1a999b206c51
     m_Address: Art/Fx/Siege/boulder_muzzle/f08
@@ -21689,6 +21789,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Siege/rabbleBrute_y
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 834f1260e71bbcd4ea03fdf3b65a127f
+    m_Address: Art/Bg/sky_39
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 835dae080e1ce4e4998b7cd5dd77320f
     m_Address: Art/Fx/Siege/hit_howitzer_r/f07
@@ -22688,6 +22793,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 89eef02d440eeadba5aac1bf5e34d66c
     m_Address: Art/Map/node_open
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 89f504fffe0b882428fc68b804b4f419
+    m_Address: Art/Challenge/pairs_face
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -24018,6 +24128,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Siege/boneMon_r_swing
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9244a001c80e35749a5146536a989500
+    m_Address: Art/Bg/sky_34
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 92486ac26822e8244aea7bb86974f293
     m_Address: Art/Fx/Siege/hit_ember_y/f04
     m_ReadOnly: 0
@@ -24058,6 +24173,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Siege/muzzle_lighthouse_r
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 92af8c33317e9d34d83920c4ab63e9bc
+    m_Address: Art/Challenge/pair_b2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 92ba28fcd19101d4791b99ffc5c3c75c
     m_Address: Art/Fx/Siege/boulder/f04
@@ -24497,6 +24617,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Siege/shot_harpoon_g
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9533f521eda4730478b306290da39da7
+    m_Address: Art/Challenge/pair_r6
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 95388de5c7cb6704c962225b360978fb
     m_Address: Art/Siege/mon_b/f01
@@ -25681,6 +25806,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Siege/courtMon_r
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9b03cb4d74b9f414bb3e578f3c7c2218
+    m_Address: Art/Challenge/pairs_back
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9b1794c918e50ef4eb49c7a893b401cb
     m_Address: Art/Siege/wildBrute_r/f02
     m_ReadOnly: 0
@@ -26527,6 +26657,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Siege/wildMon_y
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a02776e0e5c92cb439aa9536de38faf2
+    m_Address: Art/Challenge/pair_r5
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a02adcccfb3dd4849af0c7b787bb14a6
     m_Address: Art/Fx/Siege/storm/f17
@@ -28086,6 +28221,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Prism/flare_bloom
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a922c2f058f9db044b8e0e8d1f85c8da
+    m_Address: Art/Challenge/pair_y6
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a9240f972e8c0b148a39b941ca0da53d
     m_Address: Art/Fx/Prism/flare_bloom/f05
     m_ReadOnly: 0
@@ -28564,6 +28704,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Siege/Wards/cleaver_b_fire
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ac4f7c80e31199f448d0830ec0451567
+    m_Address: Art/Challenge/pair_g1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ac5afebbd2d2e5045b2eb127d8af41b2
     m_Address: Art/Siege/boneBulwark_g_swing/f03
@@ -29237,6 +29382,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/shot_leech_g
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b075912d04465f6439b3123d89f9722e
+    m_Address: Art/Bg/sky_33
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b07edeb83eaf1ef47812dbae0c8a137e
     m_Address: Art/Fx/Siege/shot_prism_b/f10
     m_ReadOnly: 0
@@ -29296,6 +29446,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Siege/Wards/bolt_g_fire
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b0e0ccd025e94f64ba728d9e0bbdff01
+    m_Address: Art/Ui/ic_xp_surge_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b0f99c67d1630bc488d069383d74c566
     m_Address: Art/Fx/Siege/hex_muzzle/f08
@@ -30520,6 +30675,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b7852d1ab7fc3d747946d8f18780f071
+    m_Address: Art/Challenge/pair_y5
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b795c65631ab1da4c8ea4d9831dc4b7e
     m_Address: Art/Fx/Siege/muzzle_howitzer_y/f07
     m_ReadOnly: 0
@@ -30616,6 +30776,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b8b85eeb4ee704b478e4fc8b7f691097
     m_Address: Art/Bg/sky_22
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b8b90efa32f31624f994ef9433c7a8de
+    m_Address: Art/Challenge/pair_g6
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -34634,6 +34799,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d271031fbad3d5447b0f5b825b78b8ad
+    m_Address: Art/Challenge/pair_g5
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d2724191ed7789e49bc3f22fae8ff762
     m_Address: Art/Siege/Wards/pyre_b_fire/f03
     m_ReadOnly: 0
@@ -36601,6 +36771,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Siege/shot_bolt_y
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ddef620025165044685f3bd347581e88
+    m_Address: Art/Challenge/pair_y1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ddf961ff0c70aaf40838df1a57e872fc
     m_Address: Art/Siege/Wards/ember_y_fire/f00
@@ -39697,6 +39872,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Siege/Wards/beacon_g_fire
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: efc9083edc0edda4fb08849a9900daa1
+    m_Address: Art/Challenge/pair_r3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: efd519a0203e2174099e02d4e27d682b
     m_Address: Art/Fx/Siege/hit_stasis/f05
     m_ReadOnly: 0
@@ -41037,6 +41217,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Siege/courtMon_g_swing
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f7890e68ccba8c447b45d036854685fb
+    m_Address: Art/Challenge/pair_b4
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f78990fbfbb65724687d98a7dc04d7ec
     m_Address: Art/Fx/Siege/hit_spectrum_g/f03
     m_ReadOnly: 0
@@ -41708,6 +41893,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/shot_eclipse
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fbbade98458269f4b8b1b5c12724796d
+    m_Address: Art/Bg/sky_35
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fbc23f1863e024d45a03e07ce5966405
     m_Address: Art/Fx/Siege/shot_glacier_r/f03
     m_ReadOnly: 0
@@ -42157,6 +42347,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Siege/hit_ember_r
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fe8d6c4dbcfd3fd4a8e8b1ad1fdc95df
+    m_Address: Art/Challenge/pair_b6
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fe932d654c77cea0f63672f7ea109e6b
     m_Address: Art/Critters/c3/f14

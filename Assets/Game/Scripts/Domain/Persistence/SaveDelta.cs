@@ -188,6 +188,7 @@ namespace GlimmerGrove.Persistence
             if (walletA.heartBoostUntilUnix != walletB.heartBoostUntilUnix) return true;
             if (walletA.xpBoostWatchedUntilUnix != walletB.xpBoostWatchedUntilUnix) return true;
             if (walletA.xpBoostBoughtUntilUnix != walletB.xpBoostBoughtUntilUnix) return true;
+            if (walletA.xpBoostSurgeUntilUnix != walletB.xpBoostSurgeUntilUnix) return true;
             if (walletA.xpBoostEarned != walletB.xpBoostEarned) return true;
 
             // The hint ledger, for the reason above it: three counters and no derived count,

@@ -247,7 +247,12 @@ namespace GlimmerGrove
             // is given up, and the trade is deliberate.
             bool boss = coming.HasBoss;
 
-            string say = Loc.Get(boss ? BossKey(coming.Boss) : "mode.siege.next");
+            // **A pair is announced as a pair.** Two names do not fit this band on one line,
+            // and the arrival banner names each of them in turn (`Arrival`), so what the
+            // forecast owes the player is the one fact that changes the plan: two at once.
+            string say = Loc.Get(!boss ? "mode.siege.next"
+                                 : coming.IsDuel ? "mode.siege.duel"
+                                 : BossKey(coming.Boss));
 
             _forecastTitle.text = say;
             // **A boss's name is said in white, never in the boss's own colour.** Half this

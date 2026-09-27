@@ -931,7 +931,10 @@ namespace GlimmerGrove
             bool live = standing != Standing.Locked;
 
             _eyebrow.text = EyebrowOf(standing).ToUpperInvariant();
-            var ink = live ? Pal.Lift(metal, .25f) : LockedInk;
+            // A locked rung's eyebrow is solid orange rather than the steel its other writing
+            // wears — the one word on the stage saying "not yet", at the owner's instruction
+            // (2026-09-27). The alpha is kept because the swap fades the eyebrow in.
+            var ink = live ? Pal.Lift(metal, .25f) : Pal.Amber;
             _eyebrow.color = Pal.A(ink, _eyebrow.color.a);
 
             _pill.text = PillOf(rung, standing, index);

@@ -167,8 +167,10 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public readonly SiegeSurge Surge;
 
+        /// <param name="sharePercent">What share of its own health it stands with - a hundred
+        /// except for a boss of an authored duel (<see cref="SiegeLayout.ShareAt"/>).</param>
         public SiegeRaider(int id, int colour, SiegeKind kind, int lane, float wait,
-                           SiegeSurge surge = default)
+                           SiegeSurge surge = default, int sharePercent = 100)
         {
             Id = id;
             Colour = colour;
@@ -177,7 +179,7 @@ namespace GlimmerGrove.Modes
             Wait = wait;
             Hold = SiegeTuning.HoldOf(kind);
             Surge = surge.HealthTenths <= 0 ? SiegeSurge.None : surge;
-            MaxHealth = Surge.Health(SiegeTuning.HealthOf(kind));
+            MaxHealth = SiegeTuning.Shared(Surge.Health(SiegeTuning.HealthOf(kind)), sharePercent);
             Health = MaxHealth;
             Blow = SiegeTuning.BlowEvery * .5f;
             // A boss's first spell is decided when its first phase opens (`SiegeBoard.OpenPhase`),

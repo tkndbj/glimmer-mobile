@@ -75,7 +75,8 @@ namespace GlimmerGrove.Tests
         /// the shipped mapper, said one file over.
         /// </summary>
         static void Publish(int maxPercent, int watchedPercent = 50, int watchedHours = 2,
-                            int cooldownHours = 4, int boughtPercent = 100, int boughtHours = 24)
+                            int cooldownHours = 4, int boughtPercent = 100, int boughtHours = 24,
+                            int surgePercent = 0)
         {
             var dto = new ProgressionDto
             {
@@ -91,6 +92,7 @@ namespace GlimmerGrove.Tests
                     boughtPercent = boughtPercent,
                     boughtHours = boughtHours,
                     maxPercent = maxPercent,
+                    surgePercent = surgePercent,
                 },
             };
 
@@ -223,6 +225,110 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(150, XpBoost.Percent,
                             "watching during a bought window has to be worth taking, or the " +
                             "offer is a trap that has to be hidden");
+        }
+
+        // ---------------------------------------------------------------- the surge
+        /// <summary>
+        /// <b>The surge is a third track and adds to the other two</b>, for the watched window's
+        /// reason: buying the strong boost during a weaker one must never be a partial loss.
+        /// </summary>
+        [Test]
+        public void TheSurgeAddsToBothOtherWindows()
+        {
+            Publish(350, surgePercent: 200);
+
+            XpBoost.GrantSurge(24);
+            Assert.AreEqual(200, XpBoost.Percent);
+
+            XpBoost.GrantBought(24);
+            XpBoost.GrantWatched();
+            Assert.AreEqual(350, XpBoost.Percent, "surge + bought + watched");
+            Assert.AreEqual(3500L, XpBoost.Bank(1000L), "a 1,000 XP payment banks 3,500 at +350%");
+        }
+
+        /// <summary>
+        /// <b>Its own deadline</b>: a surge moves neither the bought window nor the watched
+        /// cooldown, which is the whole reason it is a field of its own.
+        /// </summary>
+        [Test]
+        public void TheSurgeWritesItsOwnDeadlineAndNoOther()
+        {
+            Publish(350, surgePercent: 200);
+
+            XpBoost.GrantSurge(48);
+
+            Assert.Greater(XpBoost.SurgeUntilUnix, 0L);
+            Assert.AreEqual(0L, XpBoost.BoughtUntilUnix, "a surge moved the bought window");
+            Assert.AreEqual(0L, XpBoost.WatchedUntilUnix, "a surge moved the watched cooldown");
+            Assert.IsTrue(XpBoost.WatchedReady);
+
+            long left = XpBoost.SecondsLeft;
+            Assert.Greater(left, 47L * 3600L, "the clock reads the surge's deadline");
+            Assert.LessOrEqual(left, 48L * 3600L);
+        }
+
+        [Test]
+        public void ASecondSurgeExtendsTheFirst()
+        {
+            Publish(350, surgePercent: 200);
+
+            XpBoost.GrantSurge(24);
+            long first = XpBoost.SurgeUntilUnix;
+            XpBoost.GrantSurge(48);
+
+            Assert.GreaterOrEqual(XpBoost.SurgeUntilUnix - first, 48L * 3600L - 5L,
+                                  "a second purchase took time away from the first");
+        }
+
+        /// <summary>The cap still binds all three together, and a withdrawn surge pays nothing.</summary>
+        [Test]
+        public void TheCapBindsTheSurgeAndAWithdrawnSurgePaysNothing()
+        {
+            Publish(250, surgePercent: 200);
+            XpBoost.GrantSurge(24);
+            XpBoost.GrantBought(24);
+            Assert.AreEqual(250, XpBoost.Percent);
+
+            Publish(150);                                   // no surgePercent: withdrawn
+            Assert.AreEqual(100, XpBoost.Percent, "a window the table no longer pays still paid");
+            Assert.IsFalse(ProgressionRules.Table.XpBoost.OffersSurge);
+        }
+
+        /// <summary>
+        /// A cap under the surge's own figure is raised to it, for the watched and bought
+        /// windows' reason: a window advertised at a figure the rule refuses is a lie.
+        /// </summary>
+        [Test]
+        public void ACapUnderTheSurgeIsRaisedToIt()
+        {
+            var problems = new List<string>();
+            var table = XpBoostTable.Resolve(new XpBoostDto { maxPercent = 150, surgePercent = 200 },
+                                             problems);
+
+            Assert.AreEqual(200, table.MaxPercent);
+            Assert.IsNotEmpty(problems);
+        }
+
+        /// <summary>
+        /// Two devices that each bought a surge offline keep the later deadline - a monotonic
+        /// join (11b), so no purchase is ever lost to a merge - and the delta and the wire see it.
+        /// </summary>
+        [Test]
+        public void TheSurgeMergesByMaxAndTravelsOnTheWire()
+        {
+            var mine = new SaveFileDto { wallet = new WalletDto { xpBoostSurgeUntilUnix = 2_000_000_000 } };
+            var theirs = new SaveFileDto { wallet = new WalletDto { xpBoostSurgeUntilUnix = 2_000_086_400 } };
+
+            Assert.AreEqual(2_000_086_400L, SaveMerge.Join(mine, theirs).wallet.xpBoostSurgeUntilUnix);
+            Assert.AreEqual(2_000_086_400L, SaveMerge.Join(theirs, mine).wallet.xpBoostSurgeUntilUnix);
+
+            Assert.IsTrue(SaveDelta.Between(mine, theirs).ScalarsChanged,
+                          "a surge bought on one device is not pushed");
+
+            var back = GlimmerGrove.Cloud.FirestoreSaveMapper.FromDocument(
+                GlimmerGrove.Cloud.FirestoreSaveMapper.ToDocument(theirs));
+            Assert.AreEqual(2_000_086_400L, back.wallet.xpBoostSurgeUntilUnix,
+                            "the surge's deadline does not survive the round trip to Firestore");
         }
 
         [Test]

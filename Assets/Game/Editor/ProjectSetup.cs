@@ -205,6 +205,10 @@ namespace GlimmerGrove.EditorTools
             // at once (`SiegeMode.ArtFor`), which is why this is 1024 and not a backdrop's 2048.
             ("/Art/Siege/hill", 1024),
             ("/Art/Siege/", 512),       // Thornwatch: its ward line, its gems and the raid
+            // Pairs' cards and stones (`Tools/make_pairs_art.py`): a card fills a cell of at
+            // most 200 units and a stone is drawn at 0.56 of one, so the 256 cards and 192
+            // stones are cut at the cap and this binds only a re-cut at source size (7d).
+            ("/Art/Challenge/", 256),
             ("/Art/Fx/", 512),          // explosions, drawn at ~2 cells and mostly soft
             // **Before the rest of the folder, because the loop takes the first match** - the
             // hill's rule, one folder over. A rank badge is drawn at 96 in the map's chrome,

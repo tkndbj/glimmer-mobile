@@ -134,16 +134,47 @@ namespace GlimmerGrove.Tests
         /// </summary>
         static readonly Rung[] Bonereach =
         {
-            new Rung("s08_firstreach", new[] { "rgrbygrr", "bgrbgrby", "gyygybgr", "bbgrbgyg", "rgyrbybg" }, "rgby", "rgby", new[] { "RGbyrgbyr", "RGby#rRGby", "RGBY#g#bRGbyr" }, "", 25, 15, 42, 56, "plsfha"),
-            new Rung("s08_bonespur", new[] { "bgyygrrg", "yrgbybbr", "grgrgbgg", "gbbyyrgb", "byrybryr" }, "rgby", "rgby", new[] { "rgbyrgbyrgby", "RGby#rRGby", "RGBY#g#bRGbyr" }, "", 25, 15, 42, 56, "plsfha"),
-            new Rung("s08_ropebridge", new[] { "ggbgrygy", "ryybgrbr", "brbrybyg", "gybgrryy", "bygyybgg" }, "rgby", "rgby", new[] { "RGby#rRGby", "RGBY#g#bRGby", "RGby#r#yRGbyr" }, "", 25, 15, 42, 56, "plsfha"),
-            new Rung("s08_crystalrise", new[] { "bgbyygrg", "gbgrrbyb", "yrybyygg", "bgbgrbrr", "rrbrgbyb" }, "rgby", "rgby", new[] { "RGby#rRGby", "RGBY#g!gRG#bby", "RGby!b#rRGByby" }, "", 25, 15, 42, 56, "plsfha"),
-            new Rung("s08_harrowgate", new[] { "ryryrbrg", "bbryrgby", "gbgrgybb", "grygbyyg", "bgrgbrrg" }, "rgby", "rgby", new[] { "RGbyRGby", "RGby#rRG!bby", "RGby#gRGby" }, "harrower:r", 25, 15, 42, 56, "plsfha"),
-            new Rung("s08_thinair", new[] { "ygrrbyby", "gybgrgrr", "rbbygbyg", "ryyrgygy", "bgrbybrb" }, "rgby", "rgby", new[] { "RRRR#rrrrg", "GGGG#g#ggggb", "BBBB#b#bbbYYY#y#yy" }, "", 25, 15, 42, 56, "plsfha"),
-            new Rung("s08_shatterstep", new[] { "rbbryryr", "gbgrybyb", "grrgbrry", "bybryggb", "yybbyrry" }, "rgby", "rgby", new[] { "RGbyRGby", "RGby#g#b#yrgby", "RGBY!rRG#by" }, "", 25, 15, 42, 56, "plsfha"),
-            new Rung("s08_deadfall", new[] { "gbgrrgbr", "brygygyg", "rbgbrbry", "gyrbgrgb", "bgyrbrgb" }, "rgby", "rgby", new[] { "RGbyrgby", "RGBY#rRGby", "RGby#g#brgby", "RGBY!yRGby" }, "", 25, 15, 42, 56, "plsfha"),
-            new Rung("s08_thelastspan", new[] { "gbrbrbyy", "rgyyrggy", "bbggbgyr", "rrygybrb", "rybrrygy" }, "rgby", "rgby", new[] { "rgbyrgby", "RGby#rrgby", "rgby#brgbyby", "RGBYrgbyr" }, "", 25, 15, 42, 56, "plsfha"),
-            new Rung("s08_hollowcrown", new[] { "ggyrbyby", "ygbgbrrg", "byrygyry", "gbgyybbr", "gbbrrggr" }, "rgby", "rgby", new[] { "rgbyrgby", "rgby#rrgby", "RGbyrgby" }, "hollowking:b", 40, 15, 42, 56, "plsfha"),
+            new Rung("s08_firstreach", new[] { "rgrbygrr", "bgrbgrby", "gyygybgr", "bbgrbgyg", "rgyrbybg" }, "rgby", "rgby", new[] { "RGbyrgbyr", "RGby#rRGby", "RGBY#g#bRGbyr" }, "", 20, 15, 42, 56, "plsfha"),
+            new Rung("s08_bonespur", new[] { "bgyygrrg", "yrgbybbr", "grgrgbgg", "gbbyyrgb", "byrybryr" }, "rgby", "rgby", new[] { "rgbyrgbyrgby", "RGby#rRGby", "RGBY#g#bRGbyr" }, "", 20, 15, 42, 56, "plsfha"),
+            new Rung("s08_ropebridge", new[] { "rygrybry", "grbybbgb", "ggbrgyrb", "ryrbyrby", "bgygyrgg" }, "rgby", "rgby", new[] { "RGby#rrgby", "rgby#g#bRGby", "RGby#r#yrgby" }, "", 20, 15, 42, 56, "plsfha"),
+            new Rung("s08_crystalrise", new[] { "bgbyygrg", "gbgrrbyb", "yrybyygg", "bgbgrbrr", "rrbrgbyb" }, "rgby", "rgby", new[] { "RGby#rRGbyrg", "RGBY#g!gRG#bby", "RGBY!b#rRGByby" }, "", 20, 15, 42, 56, "plsfha"),
+            new Rung("s08_harrowgate", new[] { "ryryrbrg", "bbryrgby", "gbgrgybb", "grygbyyg", "bgrgbrrg" }, "rgby", "rgby", new[] { "RGbyRGby", "RGby#rRG!bby", "RGby#gRGby" }, "harrower:r", 20, 15, 42, 56, "plsfha"),
+            new Rung("s08_thinair", new[] { "ygrrbyby", "gybgrgrr", "rbbygbyg", "ryyrgygy", "bgrbybrb" }, "rgby", "rgby", new[] { "RRRR#rrrrrg", "GGGG#g#gggggb", "BBBB#b#bbbYYYY#y#yy" }, "", 20, 15, 42, 56, "plsfha"),
+            new Rung("s08_shatterstep", new[] { "rbbryryr", "gbgrybyb", "grrgbrry", "bybryggb", "yybbyrry" }, "rgby", "rgby", new[] { "RGbyRGby", "RGby#g#b#yrgby", "RGBY!rRG#by" }, "", 20, 15, 42, 56, "plsfha"),
+            new Rung("s08_deadfall", new[] { "gbgrrgbr", "brygygyg", "rbgbrbry", "gyrbgrgb", "bgyrbrgb" }, "rgby", "rgby", new[] { "RGbyrgby", "RGBY#rRGby", "RGby#g#brgby", "RGBY!yRGby" }, "", 20, 15, 42, 56, "plsfha"),
+            new Rung("s08_thelastspan", new[] { "gbrbrbyy", "rgyyrggy", "bbggbgyr", "rrygybrb", "rybrrygy" }, "rgby", "rgby", new[] { "rgbyrgbyrg", "RGby#rrgby", "rgby#brgbyby", "RGBYrgbyr" }, "", 25, 15, 42, 56, "plsfha"),
+            new Rung("s08_hollowcrown", new[] { "ggyrbyby", "ygbgbrrg", "byrygyry", "gbgyybbr", "gbbrrggr" }, "rgby", "rgby", new[] { "RGbyrgbyrg", "RGby#rRGbyrg", "RGBYrgbyrg" }, "hollowking:b", 30, 15, 42, 56, "plsfha"),
+        };
+
+        // ------------------------------------------------------------------ the eighth chapter
+        /// <summary>
+        /// Cloudkeep, the eighth chapter: the sky islands, twenty rungs, a duel on every fifth, a
+        /// crowd on every other, and raiders four tenths tougher than the baseline - one tenth
+        /// *softer* than Bonereach, traded for the crowd (`SiegeTuning.Traded`). Held to
+        /// `s09_cloudkeep.json` by `Tools/verify/rungs.py`.
+        /// </summary>
+        static readonly Rung[] Cloudkeep =
+        {
+            new Rung("s09_firstcloud", new[] { "rgyyrgyb", "bbybgyrg", "rygrgybb", "ygbbyrgg", "rrbyrbgg" }, "rgby", "rgby", new[] { "rgbyrgbyrgby", "RGbyrgbyRG", "RGbyRGby#rrg" }, "", 20, 14, 45, 59, "plsfha"),
+            new Rung("s09_windward", new[] { "bggyggbr", "yyrrbgyy", "ybrybrgy", "bbygrgbr", "rgrbgbrg" }, "rgby", "rgby", new[] { "rgbyrgbyrgby", "RGbyRGbyrgby", "RGbyRGbyrgbyrg" }, "", 20, 14, 45, 59, "plsfha"),
+            new Rung("s09_stepstones", new[] { "gbrbybry", "gryrgrbg", "brbgyygb", "rygbrggb", "gygbryby" }, "rgby", "rgby", new[] { "RGby#rRGby", "rgbyRGby#b#yRG", "RGby#r#gRGbyrg" }, "", 20, 14, 45, 59, "plsfha"),
+            new Rung("s09_skyferry", new[] { "grgbrgyy", "rrggybbr", "gyyryrrg", "gbrrbgyb", "yyrbbygg" }, "rgby", "rgby", new[] { "RGbyRGby!rRG", "RGBY#gRGby!b", "RGBY!y#rRGbyrg" }, "", 20, 14, 45, 59, "plsfha"),
+            new Rung("s09_mawgate", new[] { "yrbybrbg", "ggygbgry", "ybgbybgb", "gbrrgyrr", "ygyrgryb" }, "rgby", "rgby", new[] { "RGbyRGbyRG", "RGby#r!gRGby", "RGBY#b#yRGby" }, "gravemaw:r+harrower:b", 20, 14, 45, 59, "plsfha"),
+            new Rung("s09_tallgrass", new[] { "gbbgrgbr", "rygbgygr", "rbyrgrby", "ygrryygb", "gybgbryr" }, "rgby", "rgby", new[] { "RRRrrrr#rggg", "GGGggggg#gbbb", "BBB#bbbbYYY#yyy" }, "", 20, 14, 45, 59, "plsfha"),
+            new Rung("s09_towerwatch", new[] { "yrbybygg", "yrggrbrb", "rgbbyyry", "gyyrgbyr", "gbrbyggr" }, "rgby", "rgby", new[] { "RGbyRGbyrg", "RGby#r#gRGby", "rgby!rRGBY#bby", "RGbyrgbyrgby" }, "", 20, 14, 45, 59, "plsfha"),
+            new Rung("s09_hollowpine", new[] { "rybgbrby", "ggrrgryy", "brbybggr", "ygygybgy", "gbrbgbyb" }, "rgby", "rgby", new[] { "RGBYrgbyrg", "RGby#g#brgby", "RGBY!grgby#r" }, "", 20, 14, 45, 59, "plsfha"),
+            new Rung("s09_longspan", new[] { "yygbgybr", "rbbyybry", "ybggrrgb", "gryygybr", "brgbyrgr" }, "rgby", "rgby", new[] { "RGbyrgbyrg", "rgby#rRGbyRG", "RGby#brgbyrgby", "RGBYrgbyrgby" }, "", 20, 14, 45, 59, "plsfha"),
+            new Rung("s09_glarecrown", new[] { "gbgryrbb", "yrgybygg", "ggbrgyby", "brgybgrr", "bybrygry" }, "rgby", "rgby", new[] { "RGbyrgbyrg", "RGby#yRGbyrg", "rgby#g#rRGby" }, "blightcaller:g+gorgon:y", 30, 14, 45, 59, "plsfha"),
+            new Rung("s09_highmeadow", new[] { "ygbbgrry", "rybggygb", "rgryryrb", "bygyrbbr", "bbrbyggr" }, "rgby", "rgby", new[] { "RGbyrgbyRGby", "RGBY#r#grgbyRG", "RGby!b#yRGbyrgby" }, "", 20, 14, 45, 59, "plsfha"),
+            new Rung("s09_farmstead", new[] { "bygryrbg", "yrbgbgyy", "bgygyrrg", "gbrbggbb", "rryyrbrb" }, "rgby", "rgby", new[] { "rgbyrgbyrgbyrg", "RGBY#b!rRGbyrg", "RGby#g#yrgbyrg" }, "", 20, 14, 45, 59, "plsfha"),
+            new Rung("s09_ironrain", new[] { "rgrgbbry", "ybbyrgbr", "gygrrgbg", "ggrybyry", "yyrbbryg" }, "rgby", "rgby", new[] { "RGby#r#g#brg", "RGby#y#r!gRGby", "RGby#g#b#yRGBYrg" }, "", 20, 14, 45, 59, "plsfha"),
+            new Rung("s09_cloudbreak", new[] { "ggbygrgy", "bgyrrybg", "ryrybbrr", "rbbgryrb", "byrgbygy" }, "rgby", "rgby", new[] { "rgbyrgbyrg", "rgby#rRGbyrg", "rgby#g#brgby", "rgby!yrgbyrg" }, "", 20, 14, 45, 59, "plsfha"),
+            new Rung("s09_stormhold", new[] { "gbbgrbby", "ygryrggb", "rbbgybbr", "gygygryr", "gybbrygy" }, "rgby", "rgby", new[] { "RGbyRGbyRGby", "RGby#b!rRGbyRG", "RGBY#r#gRGbyrg" }, "thunderer:b+shackler:r", 25, 14, 45, 59, "plsfha"),
+            new Rung("s09_thinline", new[] { "brrgyrgr", "gybgbgyr", "ygyybryb", "gygrgybg", "rrbrygry" }, "rgby", "rgby", new[] { "RRRR#rrrrgg", "GGGG#gggg#gbb", "BBBB#bbbbYYYY#yyy" }, "", 20, 14, 45, 59, "plsfha"),
+            new Rung("s09_lanternrise", new[] { "bgybrggr", "yybrygbr", "bbrgyryg", "ryybrgry", "brrgyybb" }, "rgby", "rgby", new[] { "RGbyRGbyRGby", "rgby#r#g!bRGbyrg", "RGby#b#yRGbyrg" }, "", 20, 14, 45, 59, "plsfha"),
+            new Rung("s09_whitewater", new[] { "yybygrbg", "grbgbyrb", "bygyrgyr", "rbrybgbr", "yrbgbybg" }, "rgby", "rgby", new[] { "RGbyrgbyRG", "rgby#rRGbyrg", "rgby#g#b!yRGby", "RGbyrgbyRGby" }, "", 20, 14, 45, 59, "plsfha"),
+            new Rung("s09_lastferry", new[] { "yrygrbrg", "rrbgbbgb", "ygbyygyb", "byrbrrbr", "bbrgrbyg" }, "rgby", "rgby", new[] { "RGbyrgbyRGbyrg", "RGby#r#g#brgbyrg", "RGby!y#rrgbyrg" }, "", 20, 14, 45, 59, "plsfha"),
+            new Rung("s09_crownofclouds", new[] { "ryrbgrry", "gbgybygb", "rbrbgrgg", "ygrryybb", "rgybyybr" }, "rgby", "rgby", new[] { "rgbyrgbyrg", "rgby#rrgbyrg", "rgbyrgby" }, "sunlord:y+hollowking:g", 50, 14, 45, 59, "plsfha"),
         };
 
         // ------------------------------------------------------------------ the lines it plays
@@ -226,8 +257,28 @@ namespace GlimmerGrove.Tests
         /// refill stopped dealing free chains (37el) - they are the walls the owner accepted
         /// on 2026-09-20 - so the rule fixtures are given a line that can get there.
         /// </para>
+        /// <para>
+        /// <b>Four three-star pyres since 2026-09-27</b>, and that is a measurement rather than
+        /// a choice: the balance run played all ninety levels on fourteen four-seat lines, and
+        /// this is the one that wins most of them (98% of Bonereach, 92% of Cloudkeep) - the
+        /// mortar/breaker mix it replaced never reached two of the eighth chapter's duels that
+        /// this line wins every time, so the fight gate was reporting a line rather than a boss.
+        /// It is still a line nobody can have early (keeper 23, 112,000 credits), which is what
+        /// this helper is for.
+        /// </para>
         /// </summary>
-        static WardLine Strongest() => Mixed("mortar", "breaker", "mortar", "breaker");
+        static WardLine Strongest() => Starred("pyre", 3);
+
+        /// <summary>Four of one turret at <paramref name="stars"/>, as a line a player upgraded.</summary>
+        static WardLine Starred(string id, int stars)
+        {
+            var chosen = new List<WardSlot>();
+            for (int i = 0; i < WardLine.Colours.Length; i++)
+                chosen.Add(new WardSlot(WardLine.Colours[i], id));
+
+            return WardLine.Resolve(WardCatalog.Default, chosen, (model, colour) => true,
+                                    (model, colour) => stars);
+        }
 
         /// <summary>Four of one turret, whichever rung of the shelf it is.</summary>
         static WardLine Standing(string id)
@@ -345,6 +396,7 @@ namespace GlimmerGrove.Tests
             ("Thundercrag", Thundercrag),
             ("Dustcrown", Dustcrown),
             ("Bonereach", Bonereach),
+            ("Cloudkeep", Cloudkeep),
         };
 
         static Sweep Play(Rung[] chapter, WardLine line)
@@ -498,7 +550,8 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// Each chapter sends <b>two</b> bosses, on its fifth rung and its tenth.
+        /// Every fifth rung of every chapter sends a boss, and no other rung does - which is two
+        /// a ten-rung chapter, on its fifth rung and its tenth, and four a twenty-rung one.
         ///
         /// <para>
         /// <b>A structural rule rather than a tuning one, and the reason is that a count is what a
@@ -514,7 +567,7 @@ namespace GlimmerGrove.Tests
         /// </para>
         /// </summary>
         [Test]
-        public void EachChapterSendsTwoBossesOnTheFifthAndTheTenthRung()
+        public void EveryFifthRungSendsABossAndNoOtherDoes()
         {
             var faults = new List<string>();
 
@@ -523,11 +576,17 @@ namespace GlimmerGrove.Tests
                 var name = pair.Item1;
                 var rungs = pair.Item2;
 
-                Assert.AreEqual(10, rungs.Length, $"{name} is not ten rungs long any more");
+                // **A chapter is a whole number of fives**, which is what "a midpoint and a
+                // finale" became the day a chapter was twenty rungs long (Cloudkeep): four
+                // islands, each ending on a fight. A chapter that stopped mid-island would end on
+                // a rung that is not a finale.
+                Assert.AreEqual(0, rungs.Length % 5,
+                                $"{name} is {rungs.Length} rungs long, which is not a whole number "
+                                + "of five-rung stretches each ending on a boss");
 
                 for (int i = 0; i < rungs.Length; i++)
                 {
-                    bool wanted = i == 4 || i == 9;
+                    bool wanted = (i + 1) % 5 == 0;
                     bool sends = rungs[i].Built().HasBoss;
 
                     if (sends == wanted) continue;
@@ -617,10 +676,21 @@ namespace GlimmerGrove.Tests
         /// point of checking it here rather than trusting it.
         /// </para>
         /// </summary>
+        /// <para>
+        /// <b>A duel is the other half of the rule, and it is the Infinite lane's argument.</b>
+        /// Two bosses at once (`SiegeLayout.BossJoin`) is a new <em>fight</em> made of two verbs
+        /// the player already knows, which is exactly why the lane sends pairs only after every
+        /// boss in them has been met alone (`SiegeEndless.PairsAfter`). So a duel may re-send a
+        /// verb, and it is held to three things instead: every verb in it was met <b>alone,
+        /// earlier on the ladder</b>; no verb is in two duels; and the two are two different
+        /// verbs. A lone boss is still held to the original sentence - no verb sent alone twice.
+        /// </para>
+        /// </summary>
         [Test]
         public void NoBossVerbIsSentByAnyTwoChapters()
         {
-            var seen = new Dictionary<SiegeSpell, string>();
+            var alone = new Dictionary<SiegeSpell, string>();
+            var dueled = new Dictionary<SiegeSpell, string>();
             var faults = new List<string>();
 
             foreach (var pair in Ladder)
@@ -630,13 +700,39 @@ namespace GlimmerGrove.Tests
                     var layout = rung.Built();
                     if (!layout.HasBoss) continue;
 
-                    var craft = SiegeTuning.SpellOf(layout.BossKind);
+                    if (!layout.IsDuel)
+                    {
+                        var craft = SiegeTuning.SpellOf(layout.BossKind);
 
-                    if (seen.TryGetValue(craft, out string already))
-                        faults.Add($"{rung.Id} sends a {craft} and so does {already}, so one fight "
-                                   + "is sent twice across the two chapters");
-                    else
-                        seen[craft] = rung.Id;
+                        if (alone.TryGetValue(craft, out string already))
+                            faults.Add($"{rung.Id} sends a {craft} and so does {already}, so one "
+                                       + "fight is sent twice across the two chapters");
+                        else
+                            alone[craft] = rung.Id;
+
+                        continue;
+                    }
+
+                    var pairOf = new HashSet<SiegeSpell>();
+
+                    foreach (var kind in layout.BossKinds)
+                    {
+                        var craft = SiegeTuning.SpellOf(kind);
+
+                        if (!pairOf.Add(craft))
+                            faults.Add($"{rung.Id} is a duel of two {craft}s, which is one fight "
+                                       + "at twice the health");
+
+                        if (!alone.ContainsKey(craft))
+                            faults.Add($"{rung.Id} sends a {craft} in a duel before the ladder has "
+                                       + "ever sent one alone, so the player meets two fights at "
+                                       + "once without having learned either");
+
+                        if (dueled.TryGetValue(craft, out string twice))
+                            faults.Add($"{rung.Id} sends a {craft} in a duel and so does {twice}");
+                        else
+                            dueled[craft] = rung.Id;
+                    }
                 }
             }
 
@@ -1345,8 +1441,15 @@ namespace GlimmerGrove.Tests
             // the starter loses and paying a grade, and `cleaver` beating `siphon` on a chapter
             // built out of plate.
             const int AcceptedWalls = 2;  // rungs held at no rhythm on the workhorse, measured
-            const int BoughtFloor = 33;     // measured on the workhorse, 2026-09-20
-            const int Recovers = 30;        // per cent of the runs the starter loses
+            // **Re-measured 2026-09-27 after the late-chapter retune** (the owner: "ember one-star
+            // turrets can clear all 8 chapters ... chapter 7-8 can be slightly harder"): cogs
+            // 25 -> 20 and heavier waves took the workhorse from ~41 held to 21 of 90, with one
+            // rung (the finale) held at no rhythm. A clear margin under that, as every floor here.
+            const int BoughtFloor = 17;
+            // **20, down from 30, on 2026-09-27** - the owner asked that a one-star line stop
+            // clearing the late chapters, and one rung of the shelf now recovers 21 of the 90 runs
+            // the starter loses (23%). The clause still refuses a shelf that recovers nothing.
+            const int Recovers = 20;
             const int Grades = 2;           // three-starred runs the shelf is worth
             const string Answers = "cleaver";
 
@@ -1436,6 +1539,125 @@ namespace GlimmerGrove.Tests
                 + $"{spread.Silvered} two-starred, {spread.Bronzed} one-starred):\n"
                 + spread.Table
                 + $"\nDustcrown on the starter for comparison ({before.Held}/{before.Runs} "
+                + $"held):\n" + before.Table;
+
+            System.Console.WriteLine(report);
+
+            Assert.IsEmpty(faults, string.Join("\n", faults) + "\n\n" + report);
+        }
+
+        /// <summary>
+        /// The eighth chapter, measured the way the fourth to the seventh were - and the first
+        /// one measured over <b>twenty</b> rungs, so every count here is out of 180 runs rather
+        /// than 90.
+        ///
+        /// <para>
+        /// <b>What changed, and so what this gate has to be able to see.</b> The surge stepped
+        /// <em>down</em> a tenth (1.4, `SiegeTuning.Traded`) and the crowd went up - waves of
+        /// ten to fifteen - so this is 37ef's rule read the other way round and the first
+        /// chapter whose difficulty is composition rather than health. The relative clauses
+        /// are the ones every chapter since the fourth carries and need no measurement: no more
+        /// walls than accepted, harder than the second chapter on the workhorse, one rung of the
+        /// shelf recovering a share of what the starter loses and paying a grade, and a chapter
+        /// full of plate answered by the ability that ignores it.
+        /// </para>
+        /// <para>
+        /// <b>`BoughtFloor` and `AcceptedWalls` are UNSET</b> - this chapter has never been swept
+        /// (the owner runs the sweeps). `BoughtFloor` is nought, which is a check that cannot fail
+        /// and is said here rather than hidden; `AcceptedWalls` is the whole chapter, for the same
+        /// reason. <b>Read both off the first run</b> - the WriteLine at the foot prints every
+        /// table - and set them a clear margin under what was measured, as every chapter from the
+        /// fourth on was. The same run sets `siege.STAR_FACTORS[8]`, which ships at Dustcrown's
+        /// (0.45, 0.59) because this chapter carries Dustcrown's surge.
+        /// </para>
+        /// <para>
+        /// <b>What it cannot see is the duels.</b> The model player pours by rhythm and reaches for
+        /// nothing on the ground, so a harrow's cog racing a devour, a douse and a glare marking the
+        /// same post, a chain filling the ward a storm drains, and a seal asked for while a wane
+        /// bills the idle posts are all invisible here. What proves each boss stands and casts is
+        /// `EveryShippedBossRungIsAFight`, which now measures both bosses of a duel.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void TheEighthChapterIsFoughtOnABoughtLine()
+        {
+            // **Measured 2026-09-27** on the workhorse at nine rhythms, after the late-chapter
+            // retune: 31 of 180 held with two wards standing, and six rungs held at no rhythm
+            // (hollowpine, ironrain, stormhold, lanternrise, whitewater, crownofclouds) - which is
+            // the chapter doing its job, since the owner asked that a one-star line stop clearing
+            // it. `Walled` re-asks each at four times the resolution, so the count it reports can
+            // only be lower; the floor sits a clear margin under what was measured.
+            const int AcceptedWalls = 7;
+            const int BoughtFloor = 25;
+            // Measured 2026-09-27: one rung of the shelf recovers 30 of the 179 runs the starter
+            // loses (17%) and pays one more three-star run than the starter - the one-star line
+            // is meant to struggle here (the owner's call), so both clauses sit at what it does.
+            const int Recovers = 15;
+            const int Grades = 1;
+            const string Answers = "cleaver";
+
+            var bare = Play(Cloudkeep, Bare());
+            var cheap = Play(Cloudkeep, Standing(FirstRung));
+            var bought = Play(Cloudkeep, Bought());
+            var answered = Play(Cloudkeep, Standing(Answers));
+            var spread = Play(Cloudkeep, Mixed("siphon", "ember", "rime", "cleaver"));
+            var before = Play(Broodmarch, Bought());
+
+            var faults = new List<string>();
+
+            if (bought.Walled > AcceptedWalls)
+                faults.Add($"{bought.Walled} rung(s) of Cloudkeep are held at no rhythm at all "
+                           + $"on a '{Workhorse}' line, against the {AcceptedWalls} accepted");
+
+            // **As a share, because this chapter plays twice the runs of the second.** The
+            // sentence the ladder owes is unchanged - every chapter past the second is harder
+            // than the second - and a count out of 180 against a count out of 90 would say it
+            // about the length of the chapter instead.
+            if (bought.Held * before.Runs >= before.Held * bought.Runs)
+                faults.Add($"on a '{Workhorse}' line Cloudkeep held {bought.Held} of "
+                           + $"{bought.Runs} runs against Broodmarch's {before.Held} of "
+                           + $"{before.Runs} - the eighth chapter is not harder than the second");
+
+            int losing = bare.Runs - bare.Held;
+            int back = bought.Held - bare.Held;
+
+            if (losing <= 0 || back * 100 < losing * Recovers)
+                faults.Add($"one rung of the shelf moved Cloudkeep from {bare.Held} to "
+                           + $"{bought.Held} of {bought.Runs} runs - {back} of the {losing} the "
+                           + $"starter loses, against the {Recovers}% this chapter is authored "
+                           + "to recover");
+
+            if (bought.Starred < bare.Starred + Grades)
+                faults.Add($"one rung of the shelf moved Cloudkeep from {bare.Starred} "
+                           + $"three-starred runs to {bought.Starred}, which is under the "
+                           + $"{Grades} it is authored to be worth");
+
+            if (answered.Held <= cheap.Held)
+                faults.Add($"'{Answers}', which ignores a bulwark's soak, held "
+                           + $"{answered.Held} of {answered.Runs} runs against "
+                           + $"'{FirstRung}'s {cheap.Held} - so a chapter carrying three shields "
+                           + "a wave is not answered by the one ability that beats armour");
+
+            if (bought.Held < BoughtFloor)
+                faults.Add($"one rung up the shelf Cloudkeep held {bought.Held} of "
+                           + $"{bought.Runs} runs against a floor of {BoughtFloor}");
+
+            if (bought.Starred == 0)
+                faults.Add("three stars was out of reach on every rung at every rhythm even one "
+                           + "rung up the shelf, so nobody playing this way ever sees three");
+
+            string report =
+                $"Cloudkeep on the starter ({bare.Held}/{bare.Runs} held, "
+                + $"{bare.Starred} three-starred):\n" + bare.Table
+                + $"\nCloudkeep on {FirstRung} ({bought.Held}/{bought.Runs} held, "
+                + $"{bought.Starred} three-starred, {bought.Walled} walled):\n" + bought.Table
+                + $"\nCloudkeep on {Answers} ({answered.Held}/{answered.Runs} held, "
+                + $"{answered.Starred} three-starred):\n" + answered.Table
+                + $"\nCloudkeep on four different one-star turrets - siphon, ember, rime, "
+                + $"cleaver ({spread.Held}/{spread.Runs} held, {spread.Starred} three-starred, "
+                + $"{spread.Silvered} two-starred, {spread.Bronzed} one-starred):\n"
+                + spread.Table
+                + $"\nBroodmarch on {FirstRung} for comparison ({before.Held}/{before.Runs} "
                 + $"held):\n" + before.Table;
 
             System.Console.WriteLine(report);

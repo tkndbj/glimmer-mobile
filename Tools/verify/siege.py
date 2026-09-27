@@ -313,8 +313,16 @@ RAISE_SIZE, RAISES = 4, 3
 CHAPTER_TOUGH_STEP, TOUGH_FROM, MOST_TOUGH = 1, 2, 40
 
 
+#: `SiegeTuning.Traded` - the chapters that trade surge for headcount, by 0-based ordinal. The
+#: eighth deals 1.4 rather than the 1.6 the ladder derives: it is a crowd, and a crowd on a fresh
+#: tenth is the wall invariant 37ef measured. The owner's figure, 2026-09-27.
+TRADED = {7: 14}
+
+
 def toughness_for(ordinal):
     """`SiegeTuning.ToughnessFor` - what a chapter at this ordinal deals, in tenths."""
+    if ordinal in TRADED:
+        return TRADED[ordinal]
     return 10 if ordinal < TOUGH_FROM else 10 + (ordinal - TOUGH_FROM + 1) * CHAPTER_TOUGH_STEP
 
 
@@ -414,6 +422,16 @@ STAR_FACTORS = {
     #: chapters before it make (0.75, 0.75, 0.67, 0.52, 0.48, 0.45), which is the honest
     #: starting guess and never the answer.
     7: (0.42, 0.56),
+
+    #: Cloudkeep, whose raiders carry **four** tenths more health than the baseline - one tenth
+    #: *less* than Bonereach, traded for a bigger crowd (`TRADED`). A line is a share of par and par
+    #: scales with the surge, so the chapter at Dustcrown's surge starts on Dustcrown's lines.
+    #:
+    #: **Provisional until this chapter's own sweep has been read** - see
+    #: `SiegeRuleTests.TheEighthChapterIsFoughtOnABoughtLine`, which prints the spent-share table
+    #: these two are set from. A bigger crowd pays more cogs and bombs per run, which pulls clears
+    #: *under* par further, so the likelier correction is down.
+    8: (0.45, 0.59),
 }
 
 
@@ -612,7 +630,10 @@ class Layout(object):
         # and it means the plain figure.
         self.tough = 10 if not tough else tough
 
-        self.boss_kind, self.boss = named_boss(boss)
+        # `SiegeLayout.BossKinds` / `BossWears`: one boss, or two for a duel ("a:r+b:g").
+        self.boss_kinds, self.boss_wears = named_bosses(boss)
+        self.boss_kind = self.boss_kinds[0] if self.boss_kinds else None
+        self.boss = self.boss_wears[0] if self.boss_wears else None
         self.boss_wave = -1
 
         # The boss is *derived into* the wave list rather than authored into one - the last wave is
@@ -630,11 +651,11 @@ class Layout(object):
         # cleared. The riding above is history, kept for why three bosses once had company.
         if self.boss:
             self.boss_wave = len(self.waves)
-            self.waves = self.waves + [self.boss]
+            self.waves = self.waves + ["".join(self.boss_wears)]
 
         # Every wave parsed once into (colour, kind) pairs. Nothing below asks a wave's text
         # how many raiders it holds - see `SHIELD`.
-        self.coming = [read_wave(w, self.boss_kind, i == self.boss_wave)
+        self.coming = [read_wave(w, self.boss_kinds if i == self.boss_wave else None)
                        for i, w in enumerate(self.waves)]
 
         # `SiegeLayout.Hash` - FNV-1a over the authored field, 32-bit throughout. Where the
@@ -659,7 +680,8 @@ class Layout(object):
 
         if boss and boss.strip() and not self.boss:
             return ("'%s' is not a boss this mode knows; a boss is written as a kind and the "
-                    "colour it wears (%s, colour one of '%s'), and an empty field is how a siege "
+                    "colour it wears (%s, colour one of '%s'), a duel as two of those joined by "
+                    "'+' naming two different kinds, and an empty field is how a siege "
                     "says it sends none"
                     % (boss, ", ".join("%s:<colour>" % n for n in BOSS_NAMES), BOSS_COLOURS))
 
@@ -721,7 +743,7 @@ class Layout(object):
         for w, line in enumerate(self.coming):
             for i, (colour, kind) in enumerate(line):
                 # A boss wears no colour (37dn), so its letter is not checked against the line.
-                if w == self.boss_wave and i == 0:
+                if w == self.boss_wave and i < len(self.boss_kinds):
                     continue
                 if colour in self.wards:
                     continue
@@ -757,8 +779,9 @@ def sweep(wave):
     return "".join(kept)
 
 
-def read_wave(wave, boss_kind, boss):
-    """One authored wave, as (colour, kind) pairs - `SiegeLayout.Read`."""
+def read_wave(wave, bosses):
+    """One authored wave, as (colour, kind) pairs - `SiegeLayout.Read`. `bosses` is the boss
+    wave's kinds in walking order, or None for any other wave."""
     made = []
     i = 0
     while i < len(wave):
@@ -772,13 +795,56 @@ def read_wave(wave, boss_kind, boss):
 
         # The first raider of the boss wave, and only the first: a boss that rides the last
         # authored wave stands at its head with an ordinary wave behind it.
-        kind = (boss_kind if boss and not made
+        kind = (bosses[len(made)] if bosses and len(made) < len(bosses)
                 else MODIFIERS[mark] if mark is not None
                 else "brute" if letter.isupper() else "creeper")
         made.append((letter.lower(), kind))
         i += 1
 
     return made
+
+
+#: `SiegeLayout.BossJoin` / `MostBosses` - how a duel joins its two bosses, and the most a wave sends.
+BOSS_JOIN = "+"
+MOST_BOSSES = 2
+
+#: `SiegeLayout.DuelSharePercent` - each boss of an authored duel stands with this share of its own
+#: health: one fight's worth and a fifth, split over two bodies.
+DUEL_SHARE_PERCENT = 60
+
+
+def share_at(layout, wave, index):
+    """`SiegeLayout.ShareAt` - a hundred everywhere but the bosses of an authored duel."""
+    if (not layout.endless and len(layout.boss_kinds) > 1 and wave == layout.boss_wave
+            and index < len(layout.boss_kinds)):
+        return DUEL_SHARE_PERCENT
+    return 100
+
+
+def shared(health, percent):
+    """`SiegeTuning.Shared`."""
+    if percent >= 100 or percent <= 0:
+        return health
+    return max(1, health * percent // 100)
+
+
+def named_bosses(token):
+    """`SiegeLayout.Bossed` - one boss or a duel, as ([kinds], [colours]), or ([], []) for
+    anything that is not exactly that shape: an empty half, a third boss, a kind named twice."""
+    token = (token or "").strip()
+    if not token:
+        return [], []
+    halves = token.split(BOSS_JOIN)
+    if len(halves) > MOST_BOSSES:
+        return [], []
+    kinds, wears = [], []
+    for half in halves:
+        kind, colour = named_boss(half)
+        if kind is None or kind in kinds:
+            return [], []
+        kinds.append(kind)
+        wears.append(colour)
+    return kinds, wears
 
 
 def named_boss(token):
@@ -819,8 +885,8 @@ def kind_at(layout, wave, index):
     36 `SiegeTuning.Par` computes, because nine raiders were valued at a blightcaller's health
     each.
     """
-    if wave == layout.boss_wave and index == 0:
-        return layout.boss_kind
+    if wave == layout.boss_wave and index < len(layout.boss_kinds):
+        return layout.boss_kinds[index]
 
     return layout.coming[wave][index][1]
 
@@ -838,7 +904,7 @@ def par(layout):
             # Surged, because the hill really is - see `toughness_for`. A chapter whose raiders
             # carry more health and whose par did not move would put three stars out of reach for
             # the whole chapter, with every number in the file plausible.
-            health += surged(health_of(kind), layout.tough)
+            health += shared(surged(health_of(kind), layout.tough), share_at(layout, w, i))
             health += surged(raises_in_all(kind) * CREEPER_HEALTH, layout.tough)
 
     return max(1, -(-health // PERFECT_MATCH))
@@ -876,7 +942,7 @@ def raises_in_all(kind):
 
 def threatens(layout):
     """Whether one wave could ever fell a ward. Mirrors `SiegeValidator.Threatens`."""
-    if layout.boss and endangers(layout.boss_kind):
+    if any(endangers(kind) for kind in layout.boss_kinds):
         return True
 
     # **Every wave, the boss's included.** `blow_of` already answers nought for anything that
@@ -954,8 +1020,8 @@ def readings(layout):
                 bulwarks=bulwarks, weavers=weavers, thieves=thieves,
                 colours=len(colours), wards=len(layout.wards),
                 boss=layout.boss or "",
-                kind=layout.boss_kind or "",
-                spell=BOSSES[layout.boss_kind]["spell"] if layout.boss_kind else "",
+                kind="+".join(layout.boss_kinds),
+                spell="+".join(BOSSES[k]["spell"] for k in layout.boss_kinds),
                 cogs=layout.cogs, drops=layout.raiders * layout.cogs // 100,
                 tough=layout.tough,
                 charms="".join(dict((c, l) for l, c in CHARM_ROSTER)[c]

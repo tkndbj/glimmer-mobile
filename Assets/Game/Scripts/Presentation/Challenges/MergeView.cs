@@ -39,7 +39,7 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>Three lessons, once in a life, through the game's own tip machinery</b>: the swipe
-    /// (a hand slides across the real board), the goal (ringing the readout that carries the
+    /// (a hand slides across the real board), the goal (ringing the goal gem on the ladder, which carries the
     /// figure) and the feed (ringing the post the first merge reached, at that moment).
     /// </para>
     /// </summary>
@@ -395,7 +395,22 @@ namespace GlimmerGrove
             if (Route(out var from, out var to, out int cells))
                 ScreenLessons.OfferGesture(into, Mechanic.MergeSwipe, Field, new[] { from, to }, Pal.Cream, cells);
 
-            ScreenLessons.Offer(into, Mechanic.MergeGoal, GoalReadout, 1 << _merge.Target);
+            ScreenLessons.Offer(into, Mechanic.MergeGoal, _goalRing.rectTransform, 1 << _merge.Target);
+        }
+
+        /// <summary>
+        /// All three, in the order a first Merge meets them. The feed rings the post of the
+        /// smallest gem's colour, since there is no merge to point at from the key.
+        /// </summary>
+        public override void Review(List<ScreenLesson> into)
+        {
+            if (Route(out var from, out var to, out int cells))
+                ScreenLessons.AddGesture(into, Mechanic.MergeSwipe, Field, new[] { from, to }, Pal.Cream, cells);
+            else
+                ScreenLessons.Add(into, Mechanic.MergeSwipe, Field);
+
+            ScreenLessons.Add(into, Mechanic.MergeGoal, _goalRing.rectTransform, 1 << _merge.Target);
+            ScreenLessons.Add(into, Mechanic.MergeFeed, PostOf?.Invoke(MergePuzzle.ColourOf(1)));
         }
 
         public override void LessonsAfter(ChallengeMove move, List<ScreenLesson> into)

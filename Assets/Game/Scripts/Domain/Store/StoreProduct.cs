@@ -391,6 +391,14 @@ namespace GlimmerGrove.Store
         /// product grants currency and nothing else, so a boost is a gem sink like every other.
         /// </summary>
         XpBoost,
+
+        /// <summary>
+        /// A window on the <b>surge</b> track - the strongest XP boost, at
+        /// <c>XpBoostTable.SurgePercent</c>. Amount is the duration in hours, like
+        /// <see cref="XpBoost"/>. A kind of its own because it grants a different deadline, and a
+        /// kind is what decides which one a purchase writes.
+        /// </summary>
+        XpSurge,
     }
 
     /// <summary>The permanent ids a content file uses for good kinds. See <c>ChestDropKinds</c>.</summary>
@@ -399,6 +407,11 @@ namespace GlimmerGrove.Store
         public const string Hearts = "hearts";
         public const string HeartBoost = "heart_boost";
         public const string XpBoost = "xp_boost";
+        public const string XpSurge = "xp_surge";
+
+        /// <summary>Whether this kind sells an XP window, of either strength.</summary>
+        public static bool IsXp(StoreGoodKind kind)
+            => kind == StoreGoodKind.XpBoost || kind == StoreGoodKind.XpSurge;
 
         /// <summary>
         /// The shelf a good of this kind is sold on.
@@ -418,13 +431,14 @@ namespace GlimmerGrove.Store
         /// </para>
         /// </summary>
         public static StoreShelf ShelfFor(StoreGoodKind kind)
-            => kind == StoreGoodKind.XpBoost ? StoreShelf.Utilities : StoreShelf.Supplies;
+            => IsXp(kind) ? StoreShelf.Utilities : StoreShelf.Supplies;
 
         public static StoreGoodKind Parse(string id)
         {
             if (string.Equals(id, Hearts, StringComparison.Ordinal)) return StoreGoodKind.Hearts;
             if (string.Equals(id, HeartBoost, StringComparison.Ordinal)) return StoreGoodKind.HeartBoost;
             if (string.Equals(id, XpBoost, StringComparison.Ordinal)) return StoreGoodKind.XpBoost;
+            if (string.Equals(id, XpSurge, StringComparison.Ordinal)) return StoreGoodKind.XpSurge;
             return StoreGoodKind.None;
         }
 
@@ -434,6 +448,8 @@ namespace GlimmerGrove.Store
             {
                 case StoreGoodKind.Hearts: return Hearts;
                 case StoreGoodKind.HeartBoost: return HeartBoost;
+                case StoreGoodKind.XpBoost: return XpBoost;
+                case StoreGoodKind.XpSurge: return XpSurge;
                 default: return string.Empty;
             }
         }

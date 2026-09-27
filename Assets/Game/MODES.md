@@ -299,7 +299,8 @@ marked *(art)* are one-line pointers — the working detail is in `CRAFT.md`.
 37bc. **A shelf is read in three bands, and a band is a label on an order that already exists** — it keys
    on the shelf rung, nothing may key on it, and the grid is laid out by a **cursor**, not `i / Columns`.
 37bd. **A boss may not be a raider drawn three times the size, and a chapter may not be half boss rungs** —
-   two a chapter, on rungs five and ten, with the verbs dealt one each across twenty rungs.
+   one every fifth rung (two a ten-rung chapter, four a twenty-rung one, 37eq), with the verbs dealt one
+   each across the lone-boss rungs.
 37be. **"Hard with the default turret, doable with a little better" is a measurement**, and making it one
    meant playing a *chosen* line for the first time.
 37bg. **A star count is the rarest thing in this save: a stored number that may be stored**, because an
@@ -748,6 +749,18 @@ marked *(art)* are one-line pointers — the working detail is in `CRAFT.md`.
    a sixth chapter should. **At four tenths, the surge is the whole lever**: 37bz measured a tenth
    as a cliff, and what that means for an author is that a chapter past the fourth gets its
    difficulty from `ToughnessFor` and its *identity* from its cast, its bosses and its charm.
+   <br>**Corrected 2026-09-27, because the rule as written flattened the ladder.** Three chapters
+   followed it and each trimmed its waves until the sweep stopped calling a wall - and every trim
+   took back what the next tenth of surge added, so total hill health (par) sat at 61-110 from the
+   fifth chapter to the eighth and a four-seat one-star ember line held 38-47% in all four. The
+   owner's verdict on the numbers: a player must be *forced* to upgrade, and a strong line must
+   still not win everything. **So the question a late chapter answers is "is it harder than the
+   chapter before it on the line a player is expected to own", not only "is it a wall".** The
+   difficulty-in-waves design still stands - a chapter may be a breather after a peak - but the
+   peaks climb. Measured after the retune on four seats at nine rhythms (one-star / three-star /
+   five-star ember / three-star pyre): Dustcrown 47 / 70 / 91 / 97, **Bonereach 24 / 58 / 86 /
+   98, Cloudkeep 17 / 53 / 85 / 92**. What moved was composition (brutes back in), the chapter cog
+   rate (25 -> 20, a cog is a free rank) and two dealt fields that were walls on their own.
 37eg. **A boss spell may be drawn rather than baked, and the fifth chapter's reels are the
    argument.** Every spell reel before the sixth chapter's came out of `SiegeShotBake` and a
    licensed particle pack, and Thundercrag's two are still owed months later because a batch-mode
@@ -908,7 +921,45 @@ marked *(art)* are one-line pointers — the working detail is in `CRAFT.md`.
    drawing nothing at all. `SiegeView.Gears` reconciles against `SiegeBoard.Cogs` in both
    directions now, exactly as it already did to take a trampled one down.
 
-**Adding a boss rung, or a boss.** A rung: author `boss: "<kind>:<colour>"` on rung five or ten, no
+37eq. **A chapter may be twenty rungs, and what it counts in is fives.** Cloudkeep (`s09_cloudkeep`,
+   2026-09-27) is four islands of five, each ending on a fight - so the rule 37bd wrote as "rungs five and
+   ten" is **every fifth rung, and a chapter is a whole number of fives**
+   (`EveryFifthRungSendsABossAndNoOtherDoes`). Nothing in the content pipeline had counted to ten; what
+   did was the map - a seat table is per *map*, so a twenty-rung chapter's map carries twenty seats
+   (`mapart.NODES`) - and the grounds and skies, which already wrapped. Every gate that counts runs now
+   counts 180 of them for this chapter, so its ladder clauses are written as **shares** rather than
+   against another chapter's count.
+37er. **A duel is the Infinite lane's pair said in the ladder's idiom, and it costs one character.**
+   `boss: "gravemaw:r+harrower:b"` (`SiegeLayout.BossJoin`): two bosses walking on together as the last
+   wave, alone on a cleared hill, seated either side of the middle by `BossLane`. The board had played
+   that shape since the lane shipped - every stand, floor and spell is a fact about its own caster - so
+   what changed was the grammar, the art scope (`SiegeMode.ArtFor` scopes every boss), the forecast
+   (`SiegeForecast.Partner`, said as TWO BOSSES) and the arrival (each name said in turn, `DuelBeat`).
+   **Three rules hold a duel, and they are the lane's argument** (`SiegeEndless.PairsAfter`): every verb
+   in it was met **alone, earlier on the ladder**; **no verb is in two duels**; and the two are two
+   different kinds - two of one verb is one fight at twice the health. A malformed token (a third boss,
+   an empty half, a kind twice) is refused by name at read (5f). **37br's budget is a rule about lone
+   bosses**: a duel spends combinations of known verbs, so a chapter of duels costs no code. **And each
+   boss of a duel stands with 60% of its own health** (`SiegeLayout.DuelSharePercent`, read by the
+   muster and by par through `ShareAt`): at full figures a sunlord and a hollowking stood five hundred
+   seconds against the strongest line and the fight was a stalemate. Authored duels only - the lane's
+   pairs are its four lightest bosses on a ramp tuned without this.
+37es. **A chapter may trade surge for headcount, and the trade is a named row rather than a typed
+   number.** Cloudkeep deals 1.4 against Bonereach's 1.5 and the 1.6 the ladder derives, the owner's
+   figure: it is a *crowd* (waves of ten to fifteen and rungs of thirty to forty-two raiders, against
+   Bonereach's eight to thirteen and twenty-five to thirty-seven; brutes capped at about four a wave,
+   because a first cut at eight a wave held 7 probed runs of 40), and 37ef measured surge and composition together as a wall. So `SiegeTuning.Traded` (and
+   `siege.TRADED`) carries `{7: 14}` and `ToughnessFor` answers it - the chapter's surge is still
+   arithmetic on its place, with one exception written down beside the rule it bends.
+37et. **The eighth chapter's cast is a second square over the six, not the medley.** Commissioned as
+   "every raider we have already fought", which is what the Infinite lane's medley is - and a chapter
+   may not draw the medley, because the lane is one tap away on the same map. `SiegeMode.ReunionOrder`
+   deals the same six families twice each, no colour one family twice, and **no slot the body the medley
+   draws in it** (`SiegeCastTests`). `MainCasts` grew by two, not one: its seventh entry writes down the
+   insects Bonereach already draws, so lengthening the table moved no shipped chapter onto a new cast.
+
+**Adding a boss rung, or a boss.** A rung: author `boss: "<kind>:<colour>"` - or a duel,
+`"<kind>:<colour>+<kind>:<colour>"` (37er) - on every fifth rung, no
 other number; copy the rung into the chapter's table in `SiegeRuleTests.Chapters.cs` (`rungs.py` holds
 it to the body); **add the chapter to `SiegeRuleTests.ShippedChapters` if it is not there** — that one
 line is the whole of what a chapter costs the fight gate, and Dustcrown shipped without it, so its

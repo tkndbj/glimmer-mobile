@@ -446,7 +446,7 @@ function readStore(progression) {
     if (!/^[a-z0-9_]{1,64}$/.test(String(good?.id ?? ""))) {
       throw new Error(`store good id '${good?.id}' is unusable`);
     }
-    const GOOD_KINDS = ["hearts", "heart_boost", "xp_boost"];
+    const GOOD_KINDS = ["hearts", "heart_boost", "xp_boost", "xp_surge"];
     if (!GOOD_KINDS.includes(good.kind)) {
       throw new Error(
         `store good '${good.id}' names kind '${good.kind}'. Only ${GOOD_KINDS.join(", ")} can ` +
@@ -666,7 +666,8 @@ function readXpBoost(progression) {
   // Refused here rather than repaired, because the seeder is the last gate before every account.
   const single = Math.max(
     Math.floor(Number(boost.watchedPercent ?? 0)) || 0,
-    Math.floor(Number(boost.boughtPercent ?? 0)) || 0
+    Math.floor(Number(boost.boughtPercent ?? 0)) || 0,
+    Math.floor(Number(boost.surgePercent ?? 0)) || 0
   );
   if (maxPercent > 0 && single > maxPercent) {
     throw new Error(

@@ -40,8 +40,11 @@ namespace GlimmerGrove.Tests
         static readonly int[] Sets =
         {
             SiegeMode.Insects, SiegeMode.Medley, SiegeMode.Brood, SiegeMode.Bones,
-            SiegeMode.Rabble, SiegeMode.Wild, SiegeMode.Court,
+            SiegeMode.Rabble, SiegeMode.Wild, SiegeMode.Court, SiegeMode.Reunion,
         };
+
+        /// <summary>The two casts dealt out of the six rather than cut: the lane's and the eighth chapter's.</summary>
+        static readonly int[] Squares = { SiegeMode.Medley, SiegeMode.Reunion };
 
         /// <summary>
         /// The six a <b>chapter</b> can draw. The medley is not one of them: it is dealt out of
@@ -275,8 +278,66 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(SiegeMode.Wild, SiegeMode.CastFor(GameTrack.Main, 4),
                             "Thundercrag does not draw the wild");
 
+            Assert.AreEqual(SiegeMode.Court, SiegeMode.CastFor(GameTrack.Main, 5),
+                            "Dustcrown does not draw the court");
+
+            // Bonereach's bosses were chosen against the insects, so the table that grew past
+            // six has to keep it there (`SiegeMode.MainCasts`).
+            Assert.AreEqual(SiegeMode.Insects, SiegeMode.CastFor(GameTrack.Main, 6),
+                            "Bonereach does not draw the insects any more");
+
+            Assert.AreEqual(SiegeMode.Reunion, SiegeMode.CastFor(GameTrack.Main, 7),
+                            "Cloudkeep does not draw the reunion");
+
             Assert.AreEqual(SiegeMode.Medley, SiegeMode.CastFor(GameTrack.Infinite, 0),
                             "the Infinite lane does not draw the medley");
+        }
+
+        /// <summary>
+        /// **The reunion is dealt out of the six chapter casts and draws nothing of its own**, the
+        /// medley's rule (see <see cref="TheMedleyDrawsFromEveryChapterCast"/>) - and it is its
+        /// *own* square: no slot draws the body the medley draws in it, because the Infinite lane
+        /// is one tap from this chapter on the same map and a chapter's cast has to be its own.
+        /// </summary>
+        [Test]
+        public void TheReunionIsASecondSquareOverTheSixAndSharesNoSlotWithTheMedley()
+        {
+            var owners = new Dictionary<string, int>();
+            foreach (int set in Chapters)
+                foreach (var request in SiegeMode.CastArt(set)) owners[request.Address] = set;
+
+            var reunion = SiegeMode.CastArt(SiegeMode.Reunion);
+            var medley = SiegeMode.CastArt(SiegeMode.Medley);
+
+            var dealt = new Dictionary<int, int>();
+
+            for (int slot = 0; slot < SiegeMode.CastBodies; slot++)
+            {
+                string address = reunion[slot].Address;
+
+                Assert.That(owners.ContainsKey(address), Is.True,
+                            $"the reunion draws {address}, which no chapter cast owns");
+
+                Assert.AreNotEqual(medley[slot].Address, address,
+                                   $"slot {slot} of the reunion draws the Infinite lane's body");
+
+                int family = owners[address];
+                dealt[family] = dealt.TryGetValue(family, out int n) ? n + 1 : 1;
+            }
+
+            foreach (int set in Chapters)
+                Assert.AreEqual(2, dealt.TryGetValue(set, out int n) ? n : 0,
+                                $"the reunion deals cast {set} a number of times other than twice");
+
+            // No colour draws one family twice, in any of its three roles.
+            int colours = Wards.WardLine.Colours.Length;
+            for (int colour = 0; colour < colours; colour++)
+            {
+                var families = new HashSet<int>();
+                for (int row = 0; row < 3; row++)
+                    Assert.That(families.Add(owners[reunion[row * colours + colour].Address]),
+                                Is.True, $"colour {colour} of the reunion draws one family twice");
+            }
         }
 
         /// <summary>
@@ -350,10 +411,10 @@ namespace GlimmerGrove.Tests
                         // keeps walking. Only the medley has one (see the remarks).
                         if (string.IsNullOrEmpty(address))
                         {
-                            Assert.AreEqual(SiegeMode.Medley, set,
+                            CollectionAssert.Contains(Squares, set,
                                             $"cast {set} swings nothing for a {kind} in colour "
-                                            + $"{Wards.WardLine.Colours[colour]}, and only the "
-                                            + "medley is allowed a gap");
+                                            + $"{Wards.WardLine.Colours[colour]}, and only a cast "
+                                            + "dealt out of the others is allowed a gap");
                             continue;
                         }
 

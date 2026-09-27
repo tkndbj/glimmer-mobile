@@ -60,8 +60,8 @@ TINTS = [(242, 64, 79), (123, 216, 106), (79, 193, 255), (255, 138, 43)]
 BANNER_W, BANNER_H, BANNER_SIZE, CHROME = 620.0, 112.0, 34, 92.0
 RIBBON_TILT, RIBBON_ROOM, TITLE_FLOOR = -1.6, 0.74, 24
 
-#: `ChallengeScreen.ReadoutH` / `.ReadoutGap`.
-READOUT_H, READOUT_GAP = 56.0, 12.0
+#: `ChallengeScreen.RibbonGap`.
+RIBBON_GAP = 12.0
 
 #: `ChallengeScreen.HillLeastUnits` / `.HillMostUnits`, `.LineBandUnits`, `.BottomPad`, `.BandGap`, `.PuzzleInset`.
 HILL_LEAST_UNITS, HILL_MOST_UNITS = 3.6, 8.0
@@ -127,6 +127,11 @@ def chrome(sheet, txt, row):
     icon = K.fit(K.load("ic_left")[0], (CHROME * .5, CHROME * .5))
     K.paste(sheet, K.tint(icon, K.CREAM), 76.0, cy - CHROME * .0231)
 
+    # The info key, mirroring the way out (`ChallengeScreen.Review`).
+    K.paste(sheet, K.skin("sq_orange", CHROME, CHROME), W - 76.0, cy)
+    info = K.fit(K.load("ic_info")[0], (CHROME * .5, CHROME * .5))
+    K.paste(sheet, K.tint(info, K.CREAM), W - 76.0, cy - CHROME * .0231)
+
     ribbon = K.skin("ribbon_orange", BANNER_W, BANNER_H)
     plate = Image.new("RGBA", ribbon.size, (0, 0, 0, 0))
     plate.alpha_composite(ribbon)
@@ -134,38 +139,7 @@ def chrome(sheet, txt, row):
                BANNER_W * RIBBON_ROOM, BANNER_SIZE, TITLE_FLOOR, outline=4)
     K.paste(sheet, plate.rotate(RIBBON_TILT, Image.BICUBIC, expand=True), W / 2, cy)
 
-    ry = cy + BANNER_H / 2 + READOUT_GAP + READOUT_H / 2
-    for x, wide, caption in ((40 + 150, 300, txt("ui.challenges.turns").replace("{0}", "0")),
-                             (W / 2, 360, goal(txt, row)),
-                             (W - 40 - 150, 300, next_wave(txt, row))):
-        if not caption:
-            continue
-        K.paste(sheet, K.round_rect(wide, READOUT_H, 28, (15, 31, 43), .72), x, ry)
-        K.paste(sheet, K.round_rect(wide, READOUT_H, 28, (255, 255, 255), .13, width=3), x, ry)
-        K.shrunk(sheet, caption, x, ry, wide - 36, READOUT_H - 4, 24, 16)
-
-    return cy + BANNER_H / 2 + READOUT_GAP + READOUT_H + READOUT_GAP
-
-
-def goal(txt, row):
-    g = row["genre"]
-    w, h = row["width"], row["height"]
-    if g == "pairs":
-        return txt("ui.challenges.pairs").replace("{0}", "0").replace("{1}", str(w * h // 2))
-    if g == "glade":
-        lamps = sum(1 for r in row["rows"] for tok in r.split() if tok.startswith("@"))
-        return txt("ui.challenges.lit").replace("{0}", "0").replace("{1}", str(lamps))
-    if g == "merge":
-        return txt("ui.challenges.rank").replace("{0}", str(1 << row["target"]))
-    if g == "sokoban":
-        pads = sum(1 for r in row["rows"] for ch in r if ch in "RGBY")
-        return txt("ui.challenges.pads").replace("{0}", "0").replace("{1}", str(pads))
-    return ""
-
-
-def next_wave(txt, row):
-    later = [int(w.split()[0]) for w in row["waves"] if int(w.split()[0]) > 0]
-    return txt("ui.challenges.next").replace("{0}", str(min(later))) if later else ""
+    return cy + BANNER_H / 2 + RIBBON_GAP
 
 
 # ------------------------------------------------------------------ the hill and the line
@@ -230,6 +204,17 @@ def hill(sheet, row, top, height, unit, line_band, txt):
         K.paste(sheet, gem, cx, cy - tall * .58 - unit * .24)
 
 
+#: `PairsView.CardShare` / `.GemShare`, and where the Pairs pictures live (`AssetManifest.ChallengePiece`).
+CARD_SHARE, GEM_SHARE = .92, .56
+PAIRS_ART = REPO / "Assets" / "Game" / "Art" / "Challenge"
+#: `--midgame`: draw a Pairs board with some pairs claimed and one card up.
+MIDGAME = False
+
+
+def pairs_art(name):
+    return Image.open(PAIRS_ART / (name + ".png")).convert("RGBA")
+
+
 def S_load(name):
     im = S.sprite(name)
     return im, K.border_of(S.ART / (name + ".png"))
@@ -292,10 +277,44 @@ def puzzle(sheet, row, top, bottom, txt):
         K.paste(sheet, im, *centre(i))
 
     if g == "pairs":
+        # `PairsView.MakeCard` at rest: a socket, a card at `CardShare` of the cell with its
+        # shadow under it, the back (`pairs_back`) until turned. `--midgame` draws the state a
+        # sheet at rest never shows (44l): the first third of the pairs claimed - face warmed
+        # toward its colour, rim lit - and one card up and waiting, haloed.
+        tokens = [t for line in row["rows"] for t in line.split()]
+        claimed, up = set(), -1
+        if MIDGAME:
+            seen = {}
+            for i, t in enumerate(tokens):
+                seen.setdefault(t, []).append(i)
+            stones = [t for t in seen if t != "o"]
+            for t in stones[:max(1, len(stones) // 3)]:
+                claimed.update(seen[t][:2])
+            up = next(i for i, t in enumerate(tokens) if i not in claimed and t != "o")
+        size = cell * CARD_SHARE
+        back = pairs_art("pairs_back").resize((int(size), int(size)), Image.LANCZOS)
+        face = pairs_art("pairs_face").resize((int(size), int(size)), Image.LANCZOS)
         for i in range(cols * rws):
-            socket(i)
-            K.paste(sheet, K.round_rect(cell * .86, cell * .86, 18, BACK), *centre(i))
-            K.paste(sheet, K.round_rect(cell * .34, cell * .34, 8, K.CREAM, .35), *centre(i))
+            socket(i, .94)
+            x, y = centre(i)
+            K.paste(sheet, K.round_rect(size, size, 22, (0, 5, 20), .45), x, y + cell * .04)
+            t = tokens[i]
+            if i in claimed or i == up:
+                colour = TINTS[LETTERS.index(t[0])]
+                if i in claimed:
+                    warm = tuple(int(255 + (c - 255) * .22) for c in colour)
+                    K.paste(sheet, K.tint(face, warm), x, y)
+                else:
+                    K.paste(sheet, face, x, y)
+                K.paste(sheet, K.glow(size * .98, 1.8, colour, .38 if i in claimed else .5), x, y)
+                g_im = K.fit(pairs_art("pair_" + t), (cell * GEM_SHARE, cell * GEM_SHARE))
+                K.paste(sheet, g_im, x, y)
+                if i in claimed:
+                    K.paste(sheet, K.round_rect(size * 1.03, size * 1.03, 22, colour, .95, width=6), x, y)
+                else:
+                    K.paste(sheet, K.round_rect(size * 1.12, size * 1.12, 26, K.CREAM, .7, width=5), x, y)
+            else:
+                K.paste(sheet, back, x, y)
 
     elif g == "glade":
         # The glade is the mode's own `BoardView` standing in the band (2026-09-23), so this
@@ -754,7 +773,10 @@ def main():
     ap.add_argument("--deals", action="store_true", help="the deal sheet (ChallengeTierOverlay) rather than a board")
     ap.add_argument("--held", help="with --list or --deals: a deal id drawn as running")
     ap.add_argument("--spent", default="", help="with --list: genres drawn with no play left, comma-separated")
+    ap.add_argument("--midgame", action="store_true", help="a Pairs board with a third of its pairs claimed and one card up")
     args = ap.parse_args()
+    global MIDGAME
+    MIDGAME = args.midgame
 
     txt = lambda key: loc().get(key, key)
     canvas = (1080, 2340) if args.phone else (1080, 1920)

@@ -601,7 +601,15 @@ namespace GlimmerGrove.Persistence
         ///      the serialised object and a v33 file can never match a v34 hash.
         ///      </para>
         /// </summary>
-        public const int Version = 34;
+        /// v35 — the XP surge (<see cref="WalletDto.xpBoostSurgeUntilUnix"/>): a third XP boost
+        ///      window, bought from the shop in two lengths at a higher percentage than the day
+        ///      boost. <b>A deadline of its own rather than a strength on the bought one</b>,
+        ///      because a window is one monotonic number joined by <c>max</c> (9e) and a deadline
+        ///      cannot carry which strength it was through a merge. It rides inside the existing
+        ///      <c>wallet</c> map, so no rules release (12a); absent is nought, so no migration.
+        ///      The version moves because <see cref="SaveChecksum"/> hashes the serialised object
+        ///      and a v34 file can never match a v35 hash.
+        public const int Version = 35;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -1179,6 +1187,16 @@ namespace GlimmerGrove.Persistence
         /// only a separate field keeps the derived cooldown above exact.
         /// </summary>
         public long xpBoostBoughtUntilUnix;
+
+        /// <summary>
+        /// When the <em>surge</em> XP boost runs out, or 0. Monotonic; joined by <c>max</c>.
+        ///
+        /// The third track (<c>XpBoostTable.SurgePercent</c>), sold as shop goods in hours and
+        /// added to the other two like they add to each other. A field of its own for
+        /// <see cref="xpBoostBoughtUntilUnix"/>'s reason: one deadline per strength is the only
+        /// shape that merges without choosing whose purchase to lose. Added in v35.
+        /// </summary>
+        public long xpBoostSurgeUntilUnix;
 
         /// <summary>
         /// Bonus XP that boosts have paid, over this account's whole life. Only ever rises.

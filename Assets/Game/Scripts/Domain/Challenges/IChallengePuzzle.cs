@@ -60,12 +60,19 @@ namespace GlimmerGrove.Challenges
         /// <summary>Whether the input was refused outright, so a view can say so.</summary>
         public bool Refused;
 
+        /// <summary>
+        /// Extra steps the hill walks after this turn's own, with nothing fed: what a Pairs
+        /// cursed stone costs (<c>PairsPuzzle</c>). Nought for every other move of every genre.
+        /// </summary>
+        public int Stumbles;
+
         public readonly List<ChallengeFeed> Feeds = new List<ChallengeFeed>(4);
 
         public void Clear()
         {
             Turn = false;
             Refused = false;
+            Stumbles = 0;
             Feeds.Clear();
         }
 

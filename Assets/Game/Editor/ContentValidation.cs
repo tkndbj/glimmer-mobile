@@ -267,7 +267,7 @@ namespace GlimmerGrove.EditorTools
             ValidateKeeperWalls(table, index, result, verbose);
             ValidateContinue(table.Continue, table.Store, result, verbose);
             ValidateEndless(table.Endless, table, index, result, verbose);
-            ValidateXpBoost(table.XpBoost, table.Ads, result, verbose);
+            ValidateXpBoost(table.XpBoost, table.Ads, table.Store, result, verbose);
             ValidateDailyChests(table.Daily, table.Hearts, result, verbose);
             ValidateUtilities(table.Utilities, table.Daily, result, verbose);
             ValidateTasks(table.Tasks, table.Utilities, table.Hearts, result, verbose);
@@ -1815,10 +1815,19 @@ namespace GlimmerGrove.EditorTools
         /// which two numbers it is talking about.
         /// </para>
         /// </summary>
-        static void ValidateXpBoost(XpBoostTable boost, AdRewardTable ads,
+        static void ValidateXpBoost(XpBoostTable boost, AdRewardTable ads, StoreCatalog store,
                                     ContentValidationResult result, bool verbose)
         {
             if (boost == null) { result.Errors.Add("progression.json produced no xpBoost rule"); return; }
+
+            // **A surge good sells the surge window, so the window has to pay** - the client hides
+            // an `xp_surge` row whose window pays nothing (`StoreService.OfferForGood`), which is a
+            // shelf that silently shrank. `Tools/verify/content.py` refuses the same thing.
+            if (store != null && !boost.OffersSurge)
+                foreach (var good in store.Goods)
+                    if (good.Kind == StoreGoodKind.XpSurge)
+                        result.Errors.Add($"store good '{good.Id}' sells the XP surge and " +
+                                          "xpBoost.surgePercent is nought, so it pays nothing");
 
             if (!boost.Pays)
             {
@@ -1847,7 +1856,8 @@ namespace GlimmerGrove.EditorTools
 
             Debug.Log($"[Glimmer] xp boost: +{boost.WatchedPercent}% for {boost.WatchedHours}h " +
                       $"every {boost.WatchedCooldownHours}h watched, +{boost.BoughtPercent}% for " +
-                      $"{boost.BoughtHours}h bought, capped at +{boost.MaxPercent}%");
+                      $"{boost.BoughtHours}h bought, +{boost.SurgePercent}% surge, capped at " +
+                      $"+{boost.MaxPercent}%");
 
             Debug.Log("[Glimmer]        the banked bonus is clamped to that share of provable XP, " +
                       "so a forged figure buys a keeper level inside an honest range and no " +

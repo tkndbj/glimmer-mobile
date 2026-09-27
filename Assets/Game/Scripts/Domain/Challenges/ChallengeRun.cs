@@ -46,10 +46,14 @@ namespace GlimmerGrove.Challenges
         /// <summary>Moves that cost a turn so far.</summary>
         public int Turns => Hill.Turn;
 
-        public ChallengeRun(ChallengeDefinition definition, ChallengeLine line)
+        /// <param name="deal">
+        /// Which deal of the row this play is (<c>ChallengePlay.Deal</c>), for a genre that
+        /// shuffles what the row authors - Pairs. Nought keeps the row exactly as written.
+        /// </param>
+        public ChallengeRun(ChallengeDefinition definition, ChallengeLine line, uint deal = 0u)
         {
             Definition = definition;
-            Puzzle = ChallengePuzzles.Build(definition);
+            Puzzle = ChallengePuzzles.Build(definition, deal);
             Hill = new ChallengeHill(line, definition.Hill, definition.Waves);
         }
 
@@ -104,6 +108,12 @@ namespace GlimmerGrove.Challenges
 
             Hill.Resolve(_report.Events);
             _report.Walked = true;
+
+            // A stumble is the hill walking again with nothing fed (a Pairs cursed stone): the
+            // same resolve, appended to the same report, so the view replays it as one turn
+            // that went badly rather than as two.
+            for (int s = 0; s < move.Stumbles && Hill.LineStanding; s++)
+                Hill.Resolve(_report.Events);
 
             if (!Hill.LineStanding) State = ChallengeState.Lost;
 
