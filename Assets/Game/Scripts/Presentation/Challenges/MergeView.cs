@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using GlimmerGrove.Challenges;
+using GlimmerGrove.Localization;
 using GlimmerGrove.Progression;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,39 +9,24 @@ using UnityEngine.UI;
 namespace GlimmerGrove
 {
     /// <summary>
-    /// Merge: a gem per cell in the colour of its rank, with the rank's value written on it,
-    /// growing a little with each rank so a 32 reads as heavier than a 2. A swipe anywhere on
-    /// the board slides it.
+    /// Merge: an authored board of gems and rocks, a gem per cell in the colour of its rank
+    /// with the rank's value written on it. <b>A drag on a gem slides that gem and nothing
+    /// else</b> (<see cref="MergePuzzle"/>), so every move is one gem travelling and the rest
+    /// of the board standing still — the owner's objection to the 2048 board it replaced was
+    /// exactly that everything moved at once (2026-09-27).
     ///
     /// <para>
-    /// <b>A move is drawn as a score, in the order the rules resolved it</b> (the rule every
-    /// moving board here keeps, <c>CRAFT.md</c>): every gem the trace names slides from the
-    /// cell it left to the cell it packed against; the two halves of a merge arrive together
-    /// and the cell they met in pops into the new rank; the dealt gem lands <em>after</em> the
-    /// slide has settled, so it reads as a thing that arrived rather than a thing that was
-    /// always there; a rung of the ladder lights when a new size is made; and a mote flies from
-    /// each merge to the turret it fed, which is the whole fusion drawn. The first cut
-    /// repainted the settled board in one frame with a punch on top, and the owner's reading
-    /// was "everything happens too sudden, and what is happening is not clear" (2026-09-24).
+    /// <b>A move is drawn as a score</b> (<c>CRAFT.md</c>'s moving-board rule): the gem lifts
+    /// off its cell, travels at a pace per cell so a long slide reads as long, and lands. A
+    /// gem that met nothing lands with a thud against whatever stopped it; one that met its
+    /// own size becomes the next size with a ring and sparks in the new colour, a rung of
+    /// the ladder lights when a size is made for the first time, and a mote flies to the
+    /// turret the merge fed. An undo is the same flight run home, dimmed, so it never reads
+    /// as a move that earned anything.
     /// </para>
     /// <para>
-    /// <b>A thing that is leaving and a thing that is arriving never share a transform.</b>
-    /// The residents (one piece per cell) draw the settled state and nothing else; travellers
-    /// in a layer above them stand in for every gem the trace names while it moves, and the
-    /// resident at each end is dark until they land. A repaint lands the travellers, so a
-    /// board put right mid-flight can never keep a copy of a gem in the air.
-    /// </para>
-    /// <para>
-    /// <b>The ladder under the plate is the colour map and the progress in one row</b>: every
-    /// rank up to the target as the gem it draws, lit once that size has been made, the goal
-    /// ringed in gold. It is what lets a first-timer read which turret a merge will feed
-    /// without a caption, and it is counted into the band the board asks for
-    /// (<see cref="PuzzleView.EdgeRows"/>), never drawn into the foot of the screen.
-    /// </para>
-    /// <para>
-    /// <b>Three lessons, once in a life, through the game's own tip machinery</b>: the swipe
-    /// (a hand slides across the real board), the goal (ringing the goal gem on the ladder, which carries the
-    /// figure) and the feed (ringing the post the first merge reached, at that moment).
+    /// <b>The ladder under the plate is the colour map and the progress in one row</b>, with
+    /// the UNDO key at its right end.
     /// </para>
     /// </summary>
     public sealed class MergeView : PuzzleView
@@ -52,11 +38,14 @@ namespace GlimmerGrove
             public Text Value;
         }
 
-        /// <summary>The score's beats: the slide, the meeting, the deal, the flight, a rung.</summary>
-        const float SlideFor = .13f, MeetFor = .18f, DealFor = .22f, FeedFor = .30f, RungFor = .24f;
+        /// <summary>The score's beats: a cell of travel, the lift, a meeting, the flight, a rung.</summary>
+        const float PerCell = .075f, LeastTravel = .14f, MostTravel = .40f, MeetFor = .20f, FeedFor = .30f, RungFor = .24f;
 
         /// <summary>The ladder's height under the plate, in cells. Mirrored by <c>render_challenges.py</c>.</summary>
         public const float LadderRows = .58f;
+
+        /// <summary>The UNDO key's width at the ladder's right end, in cells.</summary>
+        public const float UndoCells = 1.25f;
 
         /// <summary>An unlit rung: the gem dimmed toward the plate, not recoloured (44g).</summary>
         static readonly Color Dim = new Color(.46f, .52f, .62f, .55f);
@@ -64,13 +53,16 @@ namespace GlimmerGrove
         MergePuzzle _merge;
         Piece[] _cell;
         RectTransform _flight;
-        readonly List<Piece> _travellers = new List<Piece>(24);
-        readonly List<Piece> _pool = new List<Piece>(24);
+        Piece _traveller;
 
         RectTransform _ladder;
         Image[] _rung;
         Text[] _rungValue;
         Image _goalRing;
+        Btn _undo;
+
+        /// <summary>The cell the last drag started on, so a refusal shakes that gem rather than the board.</summary>
+        int _asked = -1;
 
         /// <summary>The highest rank the ladder shows lit. Trails the model by one beat while a climb plays.</summary>
         int _lit;
@@ -87,7 +79,17 @@ namespace GlimmerGrove
             _merge = (MergePuzzle)Run.Puzzle;
             int n = Columns * Rows;
 
-            Sockets();
+            for (int i = 0; i < n; i++)
+            {
+                if (_merge.IsRock(i)) RockAt(i);
+                else
+                {
+                    var slot = UIKit.Img("Slot", Field, Art.Round(16), Pal.Slot, Vector2.one * Cell * .92f);
+                    slot.raycastTarget = false;
+                    slot.type = Image.Type.Sliced;
+                    slot.rectTransform.anchoredPosition = CentreOf(i);
+                }
+            }
 
             _cell = new Piece[n];
             for (int i = 0; i < n; i++)
@@ -96,18 +98,67 @@ namespace GlimmerGrove
                 _cell[i].Node.anchoredPosition = CentreOf(i);
             }
 
-            // Above every resident, so a gem in flight is never drawn under the cell it is
-            // leaving. Sized to the field, positioned by the field's own centre.
+            // Above every resident, so the gem in flight is never drawn under a cell it crosses.
             _flight = UIKit.Node("Flight", Field);
             _flight.anchorMin = _flight.anchorMax = new Vector2(.5f, .5f);
             _flight.sizeDelta = Field.sizeDelta;
             _flight.anchoredPosition = Vector2.zero;
+            _traveller = MakePiece(_flight, "Traveller");
+            _traveller.Node.gameObject.SetActive(false);
+
+            Grips();
 
             Ladder();
             _lit = _merge.Best;
             PaintLadder();
+        }
 
-            Swipes(dir => Send(ChallengeInput.Swipe(dir.x, dir.y)));
+        /// <summary>A rock: dark stone in the cell, the Push board's walls (they are the same fact).</summary>
+        void RockAt(int i)
+        {
+            var rock = UIKit.Img("Rock", Field, Art.Round(14), new Color(.20f, .17f, .16f, 1f), Vector2.one * Cell * .94f);
+            rock.raycastTarget = false;
+            rock.type = Image.Type.Sliced;
+            rock.rectTransform.anchoredPosition = CentreOf(i);
+
+            var face = UIKit.Img("Face", rock.transform, Art.Round(12), new Color(.36f, .30f, .27f, 1f),
+                                 Vector2.one * Cell * .78f);
+            face.raycastTarget = false;
+            face.type = Image.Type.Sliced;
+        }
+
+        /// <summary>
+        /// One drag target per cell: the gem under the finger is the gem that moves. A press
+        /// lifts it, so the player sees which one they have hold of before it goes anywhere.
+        /// </summary>
+        void Grips()
+        {
+            for (int cell = 0; cell < Columns * Rows; cell++)
+            {
+                if (_merge.IsRock(cell)) continue;
+
+                int at = cell;
+                var hit = UIKit.Img("Grip", Field, Art.Pixel, new Color(0f, 0f, 0f, 0f), Vector2.one * Cell);
+                hit.raycastTarget = true;
+                hit.rectTransform.anchoredPosition = CentreOf(at);
+
+                var drag = hit.gameObject.AddComponent<CellDrag>();
+                drag.Threshold = Cell * .30f;
+                drag.Began = () => Lift(at, true);
+                drag.Ended = () => Lift(at, false);
+                drag.Dragged = dir =>
+                {
+                    if (_merge.RankAt(at) <= 0) return;
+                    _asked = at;
+                    Send(ChallengeInput.Slide(at, dir.x, dir.y));
+                };
+            }
+        }
+
+        void Lift(int cell, bool up)
+        {
+            if (_cell == null || _merge.RankAt(cell) <= 0) return;
+            Tween.Scale(_cell[cell].Node, up ? 1.10f : 1f, .10f, Ease.OutQuad);
         }
 
         Piece MakePiece(Transform parent, string name)
@@ -131,14 +182,16 @@ namespace GlimmerGrove
         /// <summary>How big a rank's gem draws, as a share of the cell: a 32 heavier than a 2.</summary>
         static float SizeOf(int rank) => .66f + Mathf.Min(rank, 8) * .03f;
 
-        void Dress(Piece piece, int rank)
+        void Dress(Piece piece, int rank, float alpha = 1f)
         {
             bool shown = rank > 0;
             piece.Gem.sprite = shown ? ChallengeArt.Gem(MergePuzzle.ColourOf(rank)) : null;
             piece.Gem.enabled = shown && piece.Gem.sprite != null;
+            piece.Gem.color = new Color(1f, 1f, 1f, alpha);
             piece.Gem.rectTransform.sizeDelta = Vector2.one * Cell * SizeOf(rank);
             piece.Value.enabled = shown;
             piece.Value.text = shown ? (1 << rank).ToString() : string.Empty;
+            piece.Value.color = Pal.A(Pal.Cream, alpha);
         }
 
         // ------------------------------------------------------------------ the ladder
@@ -147,15 +200,21 @@ namespace GlimmerGrove
             int rungs = Mathf.Max(1, _merge.Target);
             float tall = Cell * LadderRows;
             float y = -(Rows * Cell * .5f + PlateRim * Cell * .5f + LadderGap + tall * .5f);
+            float wide = Columns * Cell;
 
-            _ladder = UIKit.Box("Ladder", Field, new Vector2(Columns * Cell, tall), new Vector2(.5f, .5f),
-                                new Vector2(0f, y));
+            _ladder = UIKit.Box("Ladder", Field, new Vector2(wide, tall), new Vector2(.5f, .5f), new Vector2(0f, y));
 
-            float pitch = Mathf.Min(Cell * .62f, Columns * Cell / rungs);
+            // The UNDO key takes the right end; the rungs are centred in what is left.
+            float keyW = Cell * UndoCells;
+            float room = wide - keyW - Cell * .15f;
+            float left = -wide * .5f + room * .5f;
+
+            float pitch = Mathf.Min(Cell * .62f, room / (rungs + .6f));
             float gem = Mathf.Min(tall * .80f, pitch * .86f);
 
             var ground = UIKit.Img("Ground", _ladder, Art.Round(20), new Color(0f, 0f, 0f, .26f),
-                                   new Vector2(rungs * pitch + gem * .6f, tall * .92f));
+                                   new Vector2(rungs * pitch + gem * .6f, tall * .92f), new Vector2(.5f, .5f),
+                                   new Vector2(left, 0f));
             ground.raycastTarget = false;
             ground.type = Image.Type.Sliced;
 
@@ -164,7 +223,7 @@ namespace GlimmerGrove
 
             for (int r = 1; r <= rungs; r++)
             {
-                float x = (r - 1 - (rungs - 1) * .5f) * pitch;
+                float x = left + (r - 1 - (rungs - 1) * .5f) * pitch;
 
                 var img = UIKit.Img("Rung", _ladder, ChallengeArt.Gem(MergePuzzle.ColourOf(r)), Color.white,
                                     Vector2.one * gem, new Vector2(.5f, .5f), new Vector2(x, 0f));
@@ -182,11 +241,16 @@ namespace GlimmerGrove
             }
 
             // The goal: a gold ring round the last rung, breathing so the eye finds the finish.
-            float goalX = ((rungs - 1) - (rungs - 1) * .5f) * pitch;
+            float goalX = left + ((rungs - 1) - (rungs - 1) * .5f) * pitch;
             _goalRing = UIKit.Img("Goal", _ladder, Art.Ring(128, 8f), Pal.A(Pal.Gold, .95f),
                                   Vector2.one * gem * 1.34f, new Vector2(.5f, .5f), new Vector2(goalX, 0f));
             _goalRing.raycastTarget = false;
             Tween.Breathe(_goalRing.transform, .08f, 1.6f);
+
+            _undo = UIKit.TextButton("Undo", _ladder, Skins.Alternate, Loc.Get("ui.challenges.undo").ToUpperInvariant(),
+                                     Mathf.RoundToInt(Mathf.Min(tall * .34f, 30f)), new Vector2(keyW, tall * .92f),
+                                     new Vector2(.5f, .5f), new Vector2(wide * .5f - keyW * .5f, 0f),
+                                     () => { _asked = -1; Send(ChallengeInput.Undo()); });
         }
 
         void PaintLadder()
@@ -199,6 +263,14 @@ namespace GlimmerGrove
                 _rung[r].color = lit ? Color.white : Dim;
                 _rungValue[r].color = lit ? Pal.Cream : Pal.A(Pal.Cream, .45f);
             }
+
+            PaintUndo();
+        }
+
+        /// <summary>The key reads as dark when there is nothing to take back.</summary>
+        void PaintUndo()
+        {
+            if (_undo != null) _undo.Interactable = _merge.CanUndo;
         }
 
         /// <summary>The rungs a new best just reached light one after another, bottom up.</summary>
@@ -218,8 +290,6 @@ namespace GlimmerGrove
                 yield return new WaitForSecondsRealtime(.07f);
             }
 
-            // The goal made: the ring stops breathing before it is punched, or two tweens
-            // write one scale (the house rule about channels, CRAFT.md).
             if (_lit >= _rung.Length && _goalRing)
             {
                 Tween.KillChannel(_goalRing.transform, "breathe");
@@ -232,7 +302,10 @@ namespace GlimmerGrove
         {
             Land();
             for (int i = 0; i < _cell.Length; i++) Paint(i);
-            _lit = _merge.Best;
+
+            // The ladder never goes dark again: a size made once was made (an undo is a step
+            // back on the board, not a rung taken off the climb).
+            if (_merge.Best > _lit) _lit = _merge.Best;
             PaintLadder();
         }
 
@@ -244,107 +317,79 @@ namespace GlimmerGrove
             piece.Node.localScale = Vector3.one;
             piece.Node.anchoredPosition = CentreOf(i);
             piece.Node.gameObject.SetActive(true);
-            Dress(piece, _merge.RankAt(i));
+            Dress(piece, Mathf.Max(0, _merge.RankAt(i)));
         }
 
-        Piece Traveller()
-        {
-            Piece piece;
-            if (_pool.Count > 0)
-            {
-                piece = _pool[_pool.Count - 1];
-                _pool.RemoveAt(_pool.Count - 1);
-            }
-            else
-            {
-                piece = MakePiece(_flight, "Traveller");
-            }
-
-            piece.Node.localScale = Vector3.one;
-            piece.Node.gameObject.SetActive(true);
-            _travellers.Add(piece);
-            return piece;
-        }
-
-        /// <summary>Every traveller back in the pool, with every tween it owns killed.</summary>
         void Land()
         {
-            for (int i = 0; i < _travellers.Count; i++)
-            {
-                var piece = _travellers[i];
-                Tween.KillAll(piece.Node);
-                piece.Node.gameObject.SetActive(false);
-                _pool.Add(piece);
-            }
-            _travellers.Clear();
+            if (_traveller == null) return;
+            Tween.KillAll(_traveller.Node);
+            _traveller.Node.gameObject.SetActive(false);
         }
 
         // ------------------------------------------------------------------ the move
         public override IEnumerator Animate(ChallengeMove move)
         {
-            var slides = _merge.LastSlides;
-            var merged = _merge.LastMerged;
-            int dealt = _merge.LastDealt;
-
-            if (slides.Count == 0)
+            int from = _merge.LastFrom, to = _merge.LastTo;
+            if (from < 0 || to < 0 || _merge.LastRank <= 0)
             {
                 Repaint();
                 yield break;
             }
 
-            // 1. The slide. A traveller stands in for every gem the trace names, dressed in the
-            //    rank it carried, and the resident at each end goes dark until it lands.
-            for (int s = 0; s < slides.Count; s++)
-            {
-                var slide = slides[s];
-                _cell[slide.From].Node.gameObject.SetActive(false);
-                _cell[slide.To].Node.gameObject.SetActive(false);
+            bool undone = _merge.LastUndone;
+            int made = _merge.LastMade;
 
-                var traveller = Traveller();
-                Dress(traveller, slide.Rank);
-                traveller.Node.anchoredPosition = CentreOf(slide.From);
-                if (slide.Moved) Tween.Move(traveller.Node, CentreOf(slide.To), SlideFor, Ease.OutCubic);
-            }
+            // 1. The flight. The resident it left goes dark; the resident it lands on keeps
+            //    showing what stood there (the partner of a merge) until the gem arrives.
+            _cell[from].Node.gameObject.SetActive(false);
+            if (undone) _cell[to].Node.gameObject.SetActive(false);
 
-            Audio.SfxVaried("whoosh", .32f);
-            yield return new WaitForSecondsRealtime(SlideFor);
-            if (!this) yield break;
+            var a = CentreOf(from);
+            var b = CentreOf(to);
+            int cells = Mathf.RoundToInt((b - a).magnitude / Cell);
+            float travel = Mathf.Clamp(cells * PerCell, LeastTravel, MostTravel);
 
-            // 2. Landed. The residents come back in their new ranks; a cell two gems met in
-            //    pops into the size it became, in the colour it will feed. The dealt cell is
-            //    left dark for one more beat, whether or not a gem just left it.
             Land();
-            for (int s = 0; s < slides.Count; s++)
-            {
-                if (slides[s].From != dealt) Paint(slides[s].From);
-                if (slides[s].To != dealt) Paint(slides[s].To);
-            }
+            _traveller.Node.gameObject.SetActive(true);
+            Dress(_traveller, _merge.LastRank, undone ? .6f : 1f);
+            _traveller.Node.anchoredPosition = a;
+            _traveller.Node.localScale = Vector3.one * (undone ? 1f : 1.10f);
+            Tween.Move(_traveller.Node, b, travel, undone ? Ease.InOutQuad : Ease.InQuad);
 
-            for (int i = 0; i < merged.Count; i++) Meet(merged[i]);
-            if (merged.Count > 0) Audio.SfxVaried("chime", .55f);
-
-            yield return new WaitForSecondsRealtime(merged.Count > 0 ? MeetFor * .5f : .04f);
+            Audio.SfxVaried("whoosh", undone ? .18f : .30f);
+            yield return new WaitForSecondsRealtime(travel);
             if (!this) yield break;
 
-            // 3. The deal: one gem arriving, sprung up from nothing with a ring off it.
-            if (dealt >= 0)
+            // 2. Arrived. The cells come back as the model has them.
+            Land();
+            Paint(from);
+            Paint(to);
+            PaintUndo();
+
+            if (undone)
             {
-                Paint(dealt);
-                var node = _cell[dealt].Node;
-                node.localScale = Vector3.zero;
-                Tween.Pop(node, 0f, DealFor);
-
-                var ring = UIKit.Img("Dealt", _flight, Art.Ring(128, 7f), Pal.A(Pal.Cream, .7f),
-                                     Vector2.one * Cell * .5f, new Vector2(.5f, .5f), CentreOf(dealt));
-                ring.raycastTarget = false;
-                var rt = ring.rectTransform;
-                Tween.Scale(rt, 1.9f, .3f, Ease.OutCubic);
-                Tween.Fade(ring, 0f, .3f, Ease.InQuad).OnDone(() => { if (rt) Destroy(rt.gameObject); });
-
-                Audio.Sfx("pop2", .26f);
+                Tween.Punch(_cell[to].Node, .10f, .18f);
+                // A take-back that split a merge shows both halves come apart.
+                if (_merge.RankAt(from) > 0) Tween.Punch(_cell[from].Node, .10f, .18f);
+                Audio.Sfx("pop2", .18f);
+                yield return new WaitForSecondsRealtime(.08f);
+                yield break;
             }
 
-            yield return new WaitForSecondsRealtime(merged.Count > 0 ? MeetFor * .5f : DealFor * .6f);
+            if (made <= 0)
+            {
+                // A thud against whatever stopped it: squashed along the travel, a puff behind.
+                Bump(to, (b - a).normalized);
+                Audio.Sfx("blocked", .22f);
+                yield return new WaitForSecondsRealtime(.10f);
+                yield break;
+            }
+
+            // 3. The meeting: the next size, in the colour it will feed.
+            Meet(to);
+            Audio.SfxVaried("chime", .55f);
+            yield return new WaitForSecondsRealtime(MeetFor);
             if (!this) yield break;
 
             // 4. The ladder, when a size was made for the first time this run.
@@ -354,17 +399,27 @@ namespace GlimmerGrove
                 if (!this) yield break;
             }
 
-            // 5. The feed: a mote from every merge to the post of its colour. Waited on, so the
-            //    hill's replay - the bolt the feed bought - starts after the feed has arrived.
+            // 5. The feed, when the merge paid one (a re-made merge after an undo does not).
             float longest = 0f;
-            for (int i = 0; i < merged.Count; i++)
+            for (int i = 0; i < move.Feeds.Count; i++)
             {
-                int colour = MergePuzzle.ColourOf(_merge.RankAt(merged[i]));
-                float flight = FlyFeed(merged[i], colour, FeedFor);
+                float flight = FlyFeed(to, move.Feeds[i].Colour, FeedFor);
                 if (flight > longest) longest = flight;
             }
 
             if (longest > 0f) yield return new WaitForSecondsRealtime(longest + .06f);
+        }
+
+        void Bump(int cell, Vector2 along)
+        {
+            var node = _cell[cell].Node;
+            var squash = new Vector3(1f - Mathf.Abs(along.x) * .16f + Mathf.Abs(along.y) * .08f,
+                                     1f - Mathf.Abs(along.y) * .16f + Mathf.Abs(along.x) * .08f, 1f);
+            node.localScale = squash;
+            Tween.Scale(node, 1f, .20f, Ease.OutBack);
+
+            Burst.Sparks(Field, CentreOf(cell) + along * Cell * .42f, Pal.A(Pal.Cream, .6f), 4, Cell * .45f,
+                         Cell * .05f, .22f);
         }
 
         /// <summary>Two gems became one here: a squash, a ring in the new colour, sparks.</summary>
@@ -373,7 +428,7 @@ namespace GlimmerGrove
             var node = _cell[cell].Node;
             var tint = ChallengeArt.Tint(MergePuzzle.ColourOf(_merge.RankAt(cell)));
 
-            Tween.Punch(node, .30f, MeetFor + .12f);
+            Tween.Punch(node, .32f, MeetFor + .14f);
 
             var ring = UIKit.Img("Meet", _flight, Art.Ring(128, 10f), Pal.A(tint, .95f),
                                  Vector2.one * Cell * .7f, new Vector2(.5f, .5f), CentreOf(cell));
@@ -382,26 +437,32 @@ namespace GlimmerGrove
             Tween.Scale(rt, 1.9f, .32f, Ease.OutCubic);
             Tween.Fade(ring, 0f, .32f, Ease.InQuad).OnDone(() => { if (rt) Destroy(rt.gameObject); });
 
-            Burst.Sparks(Field, CentreOf(cell), tint, 8, Cell * 1.3f, Cell * .1f, .38f);
+            Burst.Sparks(Field, CentreOf(cell), tint, 10, Cell * 1.3f, Cell * .1f, .38f);
+        }
+
+        /// <summary>A refused drag shakes the gem that could not go, not the whole board.</summary>
+        public override void Refuse()
+        {
+            if (_asked >= 0 && _asked < _cell.Length && _merge.RankAt(_asked) > 0)
+            {
+                Tween.Shake(_cell[_asked].Node, Cell * .08f, .22f);
+                Audio.Sfx("blocked", .5f);
+                return;
+            }
+            base.Refuse();
         }
 
         // ------------------------------------------------------------------ the lessons
         public override void Lessons(List<ScreenLesson> into)
         {
-            // The verb, shown: a hand slides along a row from a dealt gem toward the wall it
-            // would pack against. A straight line the input can produce, on the real board,
-            // and it demonstrates a slide rather than solving anything - a slide is the only
-            // move this board has.
+            // The verb, shown: a hand drags one real gem to where it would stop, a merging
+            // slide when the board has one, so the first demonstration is also a good move.
             if (Route(out var from, out var to, out int cells))
                 ScreenLessons.OfferGesture(into, Mechanic.MergeSwipe, Field, new[] { from, to }, Pal.Cream, cells);
 
             ScreenLessons.Offer(into, Mechanic.MergeGoal, _goalRing.rectTransform, 1 << _merge.Target);
         }
 
-        /// <summary>
-        /// All three, in the order a first Merge meets them. The feed rings the post of the
-        /// smallest gem's colour, since there is no merge to point at from the key.
-        /// </summary>
         public override void Review(List<ScreenLesson> into)
         {
             if (Route(out var from, out var to, out int cells))
@@ -410,42 +471,65 @@ namespace GlimmerGrove
                 ScreenLessons.Add(into, Mechanic.MergeSwipe, Field);
 
             ScreenLessons.Add(into, Mechanic.MergeGoal, _goalRing.rectTransform, 1 << _merge.Target);
-            ScreenLessons.Add(into, Mechanic.MergeFeed, PostOf?.Invoke(MergePuzzle.ColourOf(1)));
+            ScreenLessons.Add(into, Mechanic.MergeFeed, PostOf?.Invoke(MergePuzzle.ColourOf(2)));
         }
 
         public override void LessonsAfter(ChallengeMove move, List<ScreenLesson> into)
         {
             if (move == null || move.Feeds.Count == 0) return;
 
-            // Rings the post the first merge just fed - the mote has landed on it by now.
             var post = PostOf?.Invoke(move.Feeds[0].Colour);
             ScreenLessons.Offer(into, Mechanic.MergeFeed, post);
         }
 
         /// <summary>
-        /// The demonstration's two ends: a gem on the board and the cell at the far end of
-        /// its row, on whichever side is farther. False on a board with no gem.
+        /// The demonstration's two ends: a gem and the cell its slide would end on, a merging
+        /// slide first. False on a board where nothing can move.
         /// </summary>
         bool Route(out RectTransform from, out RectTransform to, out int cells)
         {
             from = to = null;
             cells = 0;
 
-            for (int i = 0; i < _cell.Length; i++)
+            for (int pass = 0; pass < 2; pass++)
             {
-                if (_merge.RankAt(i) <= 0) continue;
+                for (int i = 0; i < _cell.Length; i++)
+                {
+                    if (_merge.RankAt(i) <= 0) continue;
 
-                int x = i % Columns, y = i / Columns;
-                int wall = x >= Columns - 1 - x ? 0 : Columns - 1;
-                if (wall == x) continue;
+                    for (int d = 0; d < 4; d++)
+                    {
+                        int dx = d == 0 ? 1 : d == 1 ? -1 : 0, dy = d == 2 ? 1 : d == 3 ? -1 : 0;
+                        if (!_merge.Where(i, dx, dy, out bool merges)) continue;
+                        if (pass == 0 && !merges) continue;
 
-                from = _cell[i].Node;
-                to = _cell[y * Columns + wall].Node;
-                cells = Mathf.Abs(wall - x);
-                return true;
+                        int end = End(i, dx, dy);
+                        from = _cell[i].Node;
+                        to = _cell[end].Node;
+                        cells = Mathf.Abs(end % Columns - i % Columns) + Mathf.Abs(end / Columns - i / Columns);
+                        return true;
+                    }
+                }
             }
 
             return false;
+        }
+
+        /// <summary>The cell a slide from <c>cell</c> in board rows (down positive) ends on.</summary>
+        int End(int cell, int dx, int dy)
+        {
+            int rank = _merge.RankAt(cell);
+            int x = cell % Columns, y = cell / Columns;
+            while (true)
+            {
+                int nx = x + dx, ny = y + dy;
+                if (nx < 0 || ny < 0 || nx >= Columns || ny >= Rows) break;
+                int next = _merge.RankAt(ny * Columns + nx);
+                if (next == 0) { x = nx; y = ny; continue; }
+                if (next == rank) return ny * Columns + nx;
+                break;
+            }
+            return y * Columns + x;
         }
     }
 }

@@ -251,7 +251,7 @@
     },
     {
       "key": "challenge.d05_merge.blurb",
-      "text": "Slide the board. Two of a kind become the next, and fire the colour they make."
+      "text": "Slide one gem at a time. Two of a kind become the next, and fire the colour they make."
     },
     {
       "key": "challenge.d05_merge.name",
@@ -2127,7 +2127,7 @@
     },
     {
       "key": "challenge.genre.merge.blurb",
-      "text": "Slide to merge. Each rank you make fires its colour."
+      "text": "Slide a gem into its twin. Each size you make fires its colour."
     },
     {
       "key": "challenge.genre.sokoban.name",
@@ -2264,6 +2264,10 @@
     {
       "key": "ui.challenges.cursed",
       "text": "CURSED!"
+    },
+    {
+      "key": "ui.challenges.undo",
+      "text": "Undo"
     },
     {
       "key": "ui.challenges.lit",
@@ -5095,7 +5099,7 @@
     },
     {
       "key": "ui.tip.merge_goal.body",
-      "text": "Join gems until you make a {0}.\n\nA new gem lands after every swipe. No room and no moves left loses the run."
+      "text": "Join gems until you make a {0}.\n\nRocks stop a slide. UNDO takes a move back, but the raiders still step."
     },
     {
       "key": "ui.tip.merge_goal.title",
@@ -5103,11 +5107,11 @@
     },
     {
       "key": "ui.tip.merge_swipe.body",
-      "text": "Swipe any way. Every gem slides that way.\n\nTwo matching gems that meet join into one, twice as big."
+      "text": "Drag a gem. Only that gem slides, until something stops it.\n\nIf it stops against its twin, the two join into one, twice as big."
     },
     {
       "key": "ui.tip.merge_swipe.title",
-      "text": "SWIPE TO SLIDE"
+      "text": "DRAG A GEM"
     },
     {
       "key": "ui.tip.pairs_flip.body",

@@ -709,77 +709,107 @@ namespace GlimmerGrove.Tests
         }
 
         // ------------------------------------------------------------------ merge
-        [Test]
-        public void AMergeFeedsTheColourOfTheRankItMade()
+        static MergePuzzle Merge(string[] rows, int target, out ChallengeRun run, int bolts = 1)
         {
             var problems = new List<string>();
-            var dto = Row("g", "merge", 4, 4, new[] { "1..1", "....", "....", "...." }, new[] { "9 r1" });
-            dto.target = 3;
+            var dto = Row("g", "merge", rows[0].Length, rows.Length, rows, new[] { "40 r1" }, 5, bolts);
+            dto.target = target;
             ChallengeTable.TryBuild(Table(dto), out var table, problems);
             Assert.AreEqual(0, problems.Count, string.Join("; ", problems));
 
-            var run = new ChallengeRun(table.Find("g"), new ChallengeLine(1, 3, 1));
-            var merge = (MergePuzzle)run.Puzzle;
-
-            Assert.IsTrue(run.Play(ChallengeInput.Swipe(0, 1)).Move.Refused, "nothing moves up");
-
-            var left = run.Play(ChallengeInput.Swipe(-1, 0));
-            Assert.IsTrue(left.Move.Turn);
-            Assert.AreEqual(2, merge.RankAt(0));
-            Assert.AreEqual(1, left.Move.Feeds.Count);
-            Assert.AreEqual(MergePuzzle.ColourOf(2), left.Move.Feeds[0].Colour);
-            Assert.IsTrue(merge.LastDealt >= 0, "a slide deals one gem");
+            run = new ChallengeRun(table.Find("g"), new ChallengeLine(1, 3, 1));
+            return (MergePuzzle)run.Puzzle;
         }
 
         /// <summary>
-        /// The trace the view animates from: every gem that moved or met another, with both
-        /// ends and the rank it carried, so a slide can be drawn rather than repainted.
+        /// Only the dragged gem moves: it slides until something stops it, the rest of the
+        /// board stands still, nothing is dealt, and meeting its own size makes the next one
+        /// and feeds that size's colour.
         /// </summary>
         [Test]
-        public void ASlideSaysWhereEveryGemWentAndWhichPairMet()
+        public void OneGemSlidesAndMergesWithItsOwnSizeOnly()
+        {
+            var merge = Merge(new[] { "1..1#", "2..2." }, 3, out var run);
+
+            var report = run.Play(ChallengeInput.Slide(3, -1, 0));
+            Assert.IsTrue(report.Move.Turn);
+            Assert.AreEqual(0, merge.RankAt(3));
+            Assert.AreEqual(2, merge.RankAt(0), "two ones became a two where they met");
+            Assert.AreEqual(3, merge.LastFrom);
+            Assert.AreEqual(0, merge.LastTo);
+            Assert.AreEqual(1, merge.LastRank);
+            Assert.AreEqual(2, merge.LastMade);
+            Assert.AreEqual(1, report.Move.Feeds.Count);
+            Assert.AreEqual(MergePuzzle.ColourOf(2), report.Move.Feeds[0].Colour);
+
+            // The row below never moved, and nothing was dealt anywhere.
+            Assert.AreEqual(2, merge.RankAt(5));
+            Assert.AreEqual(2, merge.RankAt(8));
+            int gems = 0;
+            for (int i = 0; i < 10; i++) if (merge.RankAt(i) > 0) gems++;
+            Assert.AreEqual(3, gems, "a slide deals nothing");
+        }
+
+        [Test]
+        public void ASlideStopsAgainstARockAnEdgeOrAStrangerAndFeedsNothing()
+        {
+            var merge = Merge(new[] { "1.#.2", "1...3" }, 4, out var run);
+
+            var report = run.Play(ChallengeInput.Slide(0, 1, 0));
+            Assert.IsTrue(report.Move.Turn);
+            Assert.AreEqual(1, merge.RankAt(1), "stopped short of the rock");
+            Assert.AreEqual(0, merge.LastMade);
+            Assert.AreEqual(0, report.Move.Feeds.Count);
+
+            Assert.IsTrue(run.Play(ChallengeInput.Slide(4, 0, -1)).Move.Refused, "a two on a three goes nowhere");
+
+            run.Play(ChallengeInput.Slide(9, -1, 0));
+            Assert.AreEqual(6, merge.LastTo, "a three stops against a one");
+
+            run.Play(ChallengeInput.Slide(5, 0, 1));
+            Assert.AreEqual(0, merge.LastTo, "a slide runs to the edge");
+
+            Assert.IsTrue(run.Play(ChallengeInput.Slide(2, 1, 0)).Move.Refused, "a rock is not a gem");
+            Assert.IsTrue(run.Play(ChallengeInput.Swipe(1, 0)).Move.Refused, "a swipe on no gem moves nothing");
+        }
+
+        /// <summary>
+        /// Undo is a move: the board goes back, the hill still walks, and a merge re-made after
+        /// a take-back pays nothing, so merge-undo-merge cannot farm the turrets.
+        /// </summary>
+        [Test]
+        public void UndoCostsATurnAndAMergePaysOnce()
+        {
+            var merge = Merge(new[] { "1.1", "..2" }, 3, out var run);
+            Assert.IsFalse(merge.CanUndo);
+            Assert.IsTrue(run.Play(ChallengeInput.Undo()).Move.Refused, "nothing to take back");
+
+            Assert.AreEqual(1, run.Play(ChallengeInput.Slide(2, -1, 0)).Move.Feeds.Count);
+            Assert.AreEqual(2, merge.RankAt(0));
+
+            int before = run.Hill.Turn;
+            var back = run.Play(ChallengeInput.Undo());
+            Assert.IsTrue(back.Move.Turn, "an undo walks the hill");
+            Assert.AreEqual(before + 1, run.Hill.Turn);
+            Assert.IsTrue(merge.LastUndone);
+            Assert.AreEqual(1, merge.RankAt(0));
+            Assert.AreEqual(1, merge.RankAt(2));
+            Assert.IsFalse(merge.CanUndo);
+
+            var again = run.Play(ChallengeInput.Slide(2, -1, 0));
+            Assert.AreEqual(2, merge.RankAt(0));
+            Assert.AreEqual(0, again.Move.Feeds.Count, "the same merge made twice pays once");
+        }
+
+        [Test]
+        public void AMergeRowIsRefusedWhenItsGemsCannotReachTheTarget()
         {
             var problems = new List<string>();
-            var dto = Row("g", "merge", 4, 2, new[] { "1..1", "2..." }, new[] { "9 r1" });
-            dto.target = 4;
+            var dto = Row("g", "merge", 3, 2, new[] { "1.1", "#.." }, new[] { "0 r1" });
+            dto.target = 3;
             ChallengeTable.TryBuild(Table(dto), out var table, problems);
-            Assert.AreEqual(0, problems.Count, string.Join("; ", problems));
-
-            var run = new ChallengeRun(table.Find("g"), new ChallengeLine(1, 3, 1));
-            var merge = (MergePuzzle)run.Puzzle;
-
-            Assert.AreEqual(0, merge.LastSlides.Count, "nothing has slid before the first move");
-
-            var left = run.Play(ChallengeInput.Swipe(-1, 0));
-            Assert.IsTrue(left.Move.Turn);
-
-            // The two ones met at the left wall: the standing one is listed although it did
-            // not move, the travelling one crossed three cells, both carry the rank they had
-            // on the way and both name the cell they met in. The two on the row below stood
-            // still and met nothing, so it is not in the trace at all.
-            var slides = merge.LastSlides;
-            Assert.AreEqual(2, slides.Count, "the two halves of the merge, and nothing else");
-            Assert.AreEqual(0, slides[0].From);
-            Assert.AreEqual(0, slides[0].To);
-            Assert.IsFalse(slides[0].Moved);
-            Assert.AreEqual(3, slides[1].From);
-            Assert.AreEqual(0, slides[1].To);
-            Assert.IsTrue(slides[1].Moved);
-            Assert.AreEqual(1, slides[0].Rank);
-            Assert.AreEqual(1, slides[1].Rank);
-            Assert.AreEqual(2, merge.RankAt(0), "and the cell they met in holds the rank they made");
-            Assert.AreEqual(1, merge.LastMerged.Count);
-            Assert.AreEqual(0, merge.LastMerged[0]);
-
-            // The deal is separate from the slide and says what it dealt.
-            Assert.IsTrue(merge.LastDealt >= 0);
-            Assert.IsTrue(merge.LastDealtRank == 1 || merge.LastDealtRank == 2);
-            Assert.AreEqual(merge.LastDealtRank, merge.RankAt(merge.LastDealt));
-            for (int i = 0; i < slides.Count; i++)
-                Assert.AreNotEqual(merge.LastDealt, slides[i].To, "a gem is never dealt onto a cell a slide filled");
-
-            // A refused slide leaves the trace empty rather than stale.
-            var up = run.Play(ChallengeInput.Swipe(0, 1));
-            if (up.Move.Refused) Assert.AreEqual(0, merge.LastSlides.Count);
+            Assert.AreEqual(0, table.Count);
+            Assert.IsTrue(problems.Exists(p => p.Contains("needs more gems")), string.Join("; ", problems));
         }
 
         // ------------------------------------------------------------------ sokoban
@@ -1299,28 +1329,59 @@ namespace GlimmerGrove.Tests
             }
         }
 
+        /// <summary>
+        /// The shipped Merge board played by its shortest route (breadth-first search,
+        /// <c>Tools/make_merge_challenges.py --report</c>), and then played the way a player
+        /// who tries things plays it: a wasted slide and its undo before every other step of
+        /// the route, twice the turns the route takes. Both must win; the margins print.
+        /// </summary>
         [Test]
-        public void ShippedMergeIsWonByACornerPlayer()
+        public void ShippedMergeIsWonByItsAuthoredRoute()
         {
+            const string id = "d05_merge";
             var table = Shipped();
-            var run = new ChallengeRun(table.Find("d05_merge"), table.Line);
 
-            var order = new[] { ChallengeInput.Swipe(0, -1), ChallengeInput.Swipe(-1, 0),
-                                ChallengeInput.Swipe(1, 0), ChallengeInput.Swipe(0, 1) };
-            int guard = 0;
+            Assert.AreEqual(ChallengeState.Won, PlayMerge(table, id, false).State);
+            Assert.AreEqual(ChallengeState.Won, PlayMerge(table, id, true).State);
+        }
 
-            while (run.State == ChallengeState.Playing && guard++ < 2000)
+        /// <summary>The route as cell and direction in board terms (down is D), e.g. <c>7U</c>.</summary>
+        const string MergeRoute = "7U 2L 5L 8L 7D 17L 16D 22L 1D 18R";
+
+        static ChallengeRun PlayMerge(ChallengeTable table, string id, bool fumbling)
+        {
+            var run = new ChallengeRun(table.Find(id), table.Line);
+            var merge = (MergePuzzle)run.Puzzle;
+
+            var steps = MergeRoute.Split(' ');
+            for (int k = 0; k < steps.Length; k++)
             {
-                bool moved = false;
-                for (int i = 0; i < order.Length && !moved; i++)
+                string step = steps[k];
+                if (run.State != ChallengeState.Playing) break;
+
+                if (fumbling && k % 2 == 0)
                 {
-                    var report = run.Play(order[i]);
-                    moved = report.Move != null && !report.Move.Refused;
+                    // A wasted look: some slide up that is not a merge, then taken back.
+                    for (int c = 0; c < merge.Width * merge.Height; c++)
+                    {
+                        if (merge.RankAt(c) <= 0 || !merge.Where(c, 0, -1, out bool m) || m) continue;
+                        run.Play(ChallengeInput.Slide(c, 0, 1));
+                        run.Play(ChallengeInput.Undo());
+                        break;
+                    }
+                    if (run.State != ChallengeState.Playing) break;
                 }
-                Assert.IsTrue(moved, "no slide was accepted on a board the rules say is not stuck");
+
+                int cell = int.Parse(step.Substring(0, step.Length - 1));
+                char d = step[step.Length - 1];
+                int dx = d == 'L' ? -1 : d == 'R' ? 1 : 0;
+                int dy = d == 'U' ? 1 : d == 'D' ? -1 : 0;
+                var report = run.Play(ChallengeInput.Slide(cell, dx, dy));
+                Assert.IsFalse(report.Move == null || report.Move.Refused, $"{id}: the route's {step} was refused");
             }
 
-            Won(run, "d05_merge");
+            Won(run, id + (fumbling ? " (fumbling)" : ""));
+            return run;
         }
 
         [Test]

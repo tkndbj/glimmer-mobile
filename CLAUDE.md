@@ -1023,6 +1023,13 @@ is where they are written down, not what they mean.
    0.25x of it (5d), the hill peopled and never a smear - held by `ChallengeTests` and
    `content.py` alike.
 
+56n. **A Merge move is one gem, and nothing is dealt** (2026-09-27, the owner: "it feels like you
+   are doing random stuff … I don't like when all the gems move all together"). A dragged gem slides
+   until an edge, a rock (`#`) or a gem stops it and merges with its own size; the board is
+   authored and measured by `Tools/make_merge_challenges.py` (par by BFS, openings that keep it).
+   **Undo is a move** (the hill walks) and **a merge pays once** — the k-th merge into a size pays
+   only the first time the board holds k — so merge-undo-merge buys nothing.
+
 ### Art credits
 
 46. **An art credit belongs wherever its licence says, and for this game that is nowhere in the app.**
@@ -1766,6 +1773,15 @@ the bundle (about 130 KB); deleting the harness is the way to take it out (8d: w
 and its Addressables row), and is deliberately not done here. The APK build menu no longer
 passes the development flag, by the owner's decision on 2026-09-27 (`DevBuild.cs`).
 
+**Merge was rebuilt as a one-gem sliding puzzle on 2026-09-27 (56n) and has not been in the
+Editor.** `d05_merge` is a 6x4 of rocks and seven gems to a 32: par 10 (6 merges, 4 set-up
+slides), 2 of 10 openings keep par; won by its route at 12/12 line health and at twice its turns
+at 8/12 (`ChallengeTests.ShippedMergeIsWonByItsAuthoredRoute`). `MergeView` drags per cell, lifts
+the held gem, flies one traveller, thuds a quiet slide, and carries an UNDO key at the ladder's end
+(`ui.challenges.undo`, new). No art, no server, no schema, no seed. **What no gate can answer**:
+whether a first-timer finds the drag on a gem rather than a swipe on the board, and whether ten
+moves reads as a puzzle or as a chore.
+
 **Pairs was rebuilt and given thirty levels on 2026-09-27 (56m), and none of it has been in the
 Editor.** At the owner's instruction ("so primitive, no animation, nothing"): real cards drawn in
 the style of the owner's genre art (stone frame, crowned blue back, cream face) and twenty-four
@@ -1935,9 +1951,8 @@ no pad, no gap), so the brick backdrop ends at the turrets. **The hidden glade c
 spelling `pipes` is retired (spent table; refused by name on both gates and the seeder), the
 row's `sources`/`sinks` are refused when written (5f), `PipesPuzzle`, `PipesView` and the
 `challenge_pipes` card went with their `.meta` and Addressables row (8d), and `d08_glade` is a
-7x4 with one crossing and one rooted tile. **The card is drawn by `make_challenge_art.py`**
-(`DRAWN`) rather than cut from owner artwork, so it sits plainer beside the three illustrated
-ones — the day `glade.png` is supplied, move the spelling into `CUTS`. `challenge_glade.png` is
+7x4 with one crossing and one rooted tile. **The card is cut from the owner's `glade.png`** by
+`make_challenge_art.py` (`CUTS`, since 2026-09-27; the drawn stand-in and its branch are gone). `challenge_glade.png` is
 **on disk and unaddressed** (`artnames.py` reads one error until `▸ Addressables ▸ Sync All
 Assets` and save; until then the card draws a white square, 7b). **The re-seed is done**
 (2026-09-23): all four config documents were snapshotted and diffed field by field — the only

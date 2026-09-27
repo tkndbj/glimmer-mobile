@@ -7,8 +7,14 @@ namespace GlimmerGrove.Challenges
         /// <summary>A finger on a cell. <c>Cell</c> says which.</summary>
         Tap,
 
-        /// <summary>A swipe across the board. <c>Dx</c>/<c>Dy</c> is the direction, y up.</summary>
+        /// <summary>
+        /// A swipe. <c>Dx</c>/<c>Dy</c> is the direction, y up; <c>Cell</c> is the cell it
+        /// started on for a board that moves one piece (Merge), or -1 for one that moves whole.
+        /// </summary>
         Swipe,
+
+        /// <summary>Take the last move back (Merge). Every other genre refuses it.</summary>
+        Undo,
     }
 
     /// <summary>What a finger did, in the puzzle's own vocabulary and no widget's.</summary>
@@ -27,6 +33,11 @@ namespace GlimmerGrove.Challenges
 
         public static ChallengeInput Tap(int cell) => new ChallengeInput(ChallengeInputKind.Tap, cell, 0, 0);
         public static ChallengeInput Swipe(int dx, int dy) => new ChallengeInput(ChallengeInputKind.Swipe, -1, dx, dy);
+
+        /// <summary>A swipe that started on a cell: the piece there is the one that moves.</summary>
+        public static ChallengeInput Slide(int cell, int dx, int dy) => new ChallengeInput(ChallengeInputKind.Swipe, cell, dx, dy);
+
+        public static ChallengeInput Undo() => new ChallengeInput(ChallengeInputKind.Undo, -1, 0, 0);
     }
 
     /// <summary>

@@ -79,6 +79,7 @@ STRIP = {}
 #: Each view's `EdgeRows`: what a board hangs past its plate, above and below together, in cells,
 #: and `EdgeBelow`, the part of it under the plate. `MergeView.LadderRows` is the rank ladder.
 LADDER_ROWS = 0.58
+UNDO_CELLS = 1.25  # `MergeView.UndoCells`
 EDGE_ROWS = {"merge": LADDER_ROWS}
 EDGE_BELOW = {"merge": LADDER_ROWS}
 #: `MergeView.Dim`: an unlit rung, the gem dimmed toward the plate.
@@ -407,24 +408,33 @@ def puzzle(sheet, row, top, bottom, txt):
     elif g == "merge":
         best = 0
         for i in range(cols * rws):
-            socket(i)
             ch = row["rows"][i // cols][i % cols]
+            if ch == "#":
+                # `MergeView.RockAt`: the Push board's walls, a touch inside the cell.
+                K.paste(sheet, K.round_rect(cell * .94, cell * .94, 14, WALL), *centre(i))
+                K.paste(sheet, K.round_rect(cell * .78, cell * .78, 12, WALL_FACE), *centre(i))
+                continue
+            socket(i)
             if ch != ".":
                 rank = int(ch)
                 best = max(best, rank)
                 gem(i, (rank - 1) % 4, .66 + min(rank, 8) * .03)
                 K.text(sheet, str(1 << rank), *centre(i), int(cell * .30), outline=2)
 
-        # `MergeView.Ladder`: every rank to the target as the gem it draws, under the plate,
-        # lit up to the best on the board, the goal ringed in gold.
+        # `MergeView.Ladder`: every rank to the target as the gem it draws, lit up to the best
+        # on the board, the goal ringed in gold, centred in the room the UNDO key leaves.
         rungs = max(1, int(row["target"]))
         tall = cell * LADDER_ROWS
         ly = cy + rws * cell / 2 + PLATE_RIM * cell / 2 + LADDER_GAP + tall / 2
-        pitch = min(cell * .62, cols * cell / rungs)
+        wide = cols * cell
+        key_w = cell * UNDO_CELLS
+        room = wide - key_w - cell * .15
+        left = cx - wide / 2 + room / 2
+        pitch = min(cell * .62, room / (rungs + .6))
         gsize = min(tall * .80, pitch * .86)
-        K.paste(sheet, K.round_rect(rungs * pitch + gsize * .6, tall * .92, 20, (0, 0, 0), .26), cx, ly)
+        K.paste(sheet, K.round_rect(rungs * pitch + gsize * .6, tall * .92, 20, (0, 0, 0), .26), left, ly)
         for r in range(1, rungs + 1):
-            x = cx + (r - 1 - (rungs - 1) * .5) * pitch
+            x = left + (r - 1 - (rungs - 1) * .5) * pitch
             im = K.fit(S.sprite("gem_%s" % LETTERS[(r - 1) % 4]), (gsize, gsize))
             lit = r <= best
             if not lit:
@@ -432,8 +442,14 @@ def puzzle(sheet, row, top, bottom, txt):
             K.paste(sheet, im, x, ly)
             K.text(sheet, str(1 << r), x, ly, int(gsize * .36),
                    fill=K.CREAM if lit else tuple(K.CREAM[:3]) + (115,), outline=2)
-        goal_x = cx + ((rungs - 1) - (rungs - 1) * .5) * pitch
+        goal_x = left + ((rungs - 1) - (rungs - 1) * .5) * pitch
         K.paste(sheet, K.round_rect(gsize * 1.34, gsize * 1.34, int(gsize * .67), K.GOLD, .95, width=8), goal_x, ly)
+
+        # The UNDO key at the right end, drawn dark: nothing has moved yet (`MergeView.PaintUndo`).
+        kx = cx + wide / 2 - key_w / 2
+        key = K.skin("btn_blue", key_w, tall * .92)
+        K.paste(sheet, K.tint(key, (158, 168, 178), .85), kx, ly)
+        K.text(sheet, "UNDO", kx, ly - tall * .04, int(min(tall * .34, 30)), outline=2)
 
     elif g == "sokoban":
         for i in range(cols * rws):

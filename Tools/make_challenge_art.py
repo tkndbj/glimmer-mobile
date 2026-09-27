@@ -45,19 +45,8 @@ CUTS = {
     "pairs": "pairs",
     "merge": "merge",
     "push": "sokoban",
+    "glade": "glade",
 }
-
-# Genres whose mark is *drawn* here rather than cut from artwork: the glade took the pipes'
-# seat on 2026-09-23 with no owner picture, so its card is the same frame the others wear
-# (a rounded square in a colour) holding a conduit cross with a lit gem on it, composed from
-# the siege's own gem and turret sprites so it sits beside the three illustrated ones. The
-# day the owner supplies `glade.png`, move the spelling into CUTS and this branch is unused.
-DRAWN = {
-    "glade": (0x4F, 0xC1, 0xFF),   # azure frame, the glade's own accent
-}
-
-#: The siege art the drawn card composes from (committed PNGs; no licensed pack needed).
-SIEGE_ART = ROOT / "Assets" / "Game" / "Art" / "Siege"
 
 # The deal furniture, cut from the same licensed Layer Lab pack the shop's money ladders come
 # from (`make_shop_art.PACK`, outside the repo — see the art-source-packs note). The band on
@@ -90,70 +79,6 @@ def pack_folder():
 
 def address(spelling):
     return "challenge_" + spelling
-
-
-def draw_glade(frame_rgb):
-    """The glade's card: a framed board of four conduits, one lit, a gem on the hub and the
-    blue turret in the corner, at LONG_EDGE square."""
-    from PIL import Image, ImageDraw
-
-    size = LONG_EDGE
-    card = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    d = ImageDraw.Draw(card)
-
-    def rounded(box, radius, fill):
-        d.rounded_rectangle(box, radius=radius, fill=fill)
-
-    # The frame and the board's floor, both rounded squares like the owner's marks.
-    rim = int(size * .07)
-    rounded((0, 0, size - 1, size - 1), int(size * .16), (*frame_rgb, 255))
-    rounded((rim, rim, size - 1 - rim, size - 1 - rim), int(size * .12), (14, 42, 74, 255))
-
-    # A 3x3 of conduits: the middle row lit from a red crystal on the left to a critter ring
-    # on the right, the rest dormant.
-    cell = (size - 2 * rim) / 3.0
-    thick = int(cell * .26)
-    dormant, lit = (58, 80, 100, 255), (242, 64, 79, 255)
-
-    def centre(cx, cy):
-        return rim + (cx + .5) * cell, rim + (cy + .5) * cell
-
-    arms = {(0, 1): "E", (1, 1): "EW", (2, 1): "W", (1, 0): "S", (1, 2): "NE", (2, 0): "SW", (0, 2): "NE", (2, 2): "NW", (0, 0): "ES"}
-    for (cx, cy), a in arms.items():
-        x, y = centre(cx, cy)
-        colour = lit if cy == 1 else dormant
-        for letter in a:
-            ox, oy = {"N": (0, -1), "E": (1, 0), "S": (0, 1), "W": (-1, 0)}[letter]
-            x2, y2 = x + ox * cell * .5, y + oy * cell * .5
-            d.line([(x, y), (x2, y2)], fill=colour, width=thick)
-        r = thick * .65
-        d.ellipse([x - r, y - r, x + r, y + r], fill=colour)
-
-    # The crystal (a red gem) on the left, the critter's ring on the right, and the blue turret
-    # standing in the bottom corner as every other card's turret does.
-    def sprite(rel):
-        p = SIEGE_ART / rel
-        return Image.open(p).convert("RGBA") if p.exists() else None
-
-    gem = sprite("gem_r.png")
-    if gem is not None:
-        g = int(cell * .62)
-        gem = gem.resize((g, g), Image.LANCZOS)
-        x, y = centre(0, 1)
-        card.alpha_composite(gem, (int(x - g / 2), int(y - g / 2)))
-
-    x, y = centre(2, 1)
-    r = cell * .30
-    d.ellipse([x - r, y - r, x + r, y + r], outline=(255, 244, 206, 255), width=int(cell * .07))
-
-    turret = sprite("Wards/bolt_b.png")
-    if turret is not None:
-        t = int(size * .42)
-        scale = t / float(max(turret.size))
-        turret = turret.resize((max(1, int(turret.width * scale)), max(1, int(turret.height * scale))), Image.LANCZOS)
-        card.alpha_composite(turret, (rim + int(size * .02), size - rim - turret.height + int(size * .04)))
-
-    return card
 
 
 def load(source, stem):
@@ -211,19 +136,12 @@ def same(path, art):
     return shipped.size == art.size and shipped.tobytes() == art.tobytes()
 
 
-def drawn():
-    """The marks this tool draws itself, which need no source."""
-    return {address(spelling): draw_glade(rgb) for spelling, rgb in DRAWN.items()}
-
-
 def draw(source):
-    made = {address(spelling): cut(load(source, stem)) for stem, spelling in CUTS.items()}
-    made.update(drawn())
-    return made
+    return {address(spelling): cut(load(source, stem)) for stem, spelling in CUTS.items()}
 
 
 def spellings():
-    return sorted(list(CUTS.values()) + list(DRAWN.keys()))
+    return sorted(CUTS.values())
 
 
 def contact():
@@ -262,7 +180,7 @@ def contact():
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--source", help="folder holding pairs.png, pipe.png, merge.png and push.png")
+    ap.add_argument("--source", help="folder holding pairs.png, merge.png, push.png and glade.png")
     ap.add_argument("--check", action="store_true",
                     help="prove the shipped PNGs are what this cuts from --source, and change nothing")
     ap.add_argument("--contact", action="store_true", help="draw the sheet and change nothing")
@@ -281,10 +199,8 @@ def main():
     if not args.source:
         # The source lives outside the repo (`art-source-packs`); without it the shipped PNGs are
         # the artifact and there is nothing to compare against. Reproducibility is proved with
-        # `--source` plus a clean `git status` — except for the drawn marks, which need no
-        # source and are proved (or written) here either way.
-        made = drawn()
-        made.update(pack)
+        # `--source` plus a clean `git status`; the pack's cuts are proved (or written) here.
+        made = dict(pack)
         if args.check:
             wanted = [address(s) for s in spellings()] + list(PACK_CUTS.values())
             missing = [name for name in wanted if not (OUT / (name + ".png")).exists()]
@@ -293,15 +209,15 @@ def main():
             drift = [name for name, art in made.items() if not same(OUT / (name + ".png"), art)]
             if drift:
                 sys.exit("not what this draws: " + ", ".join(drift))
-            print(f"challenge art: {len(wanted)} picture(s) on disk, {len(made)} drawn or cut from the pack "
+            print(f"challenge art: {len(wanted)} picture(s) on disk, {len(made)} cut from the pack "
                   "and reproducible; --source is needed to prove the owner's marks")
             return
 
         OUT.mkdir(parents=True, exist_ok=True)
         for name, art in made.items():
             art.save(OUT / (name + ".png"))
-            print(f"  {name:<20} {art.width}x{art.height}  ({'pack' if name in pack else 'drawn'})")
-        print(f"drew {len(made)} picture(s) into {OUT}; --source cuts the rest; then Addressables > Sync All Assets and save")
+            print(f"  {name:<20} {art.width}x{art.height}  (pack)")
+        print(f"cut {len(made)} picture(s) into {OUT}; --source cuts the rest; then Addressables > Sync All Assets and save")
         return
 
     made = draw(args.source)

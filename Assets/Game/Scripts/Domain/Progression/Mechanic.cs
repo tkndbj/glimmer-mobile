@@ -759,12 +759,13 @@ namespace GlimmerGrove.Progression
 
         // ------------------------------------------------------------- the daily challenges
         /// <summary>
-        /// Merge's verb: a swipe slides every gem, and two of a size that meet become one.
+        /// Merge's verb: a drag slides one gem until something stops it, and two of a size that
+        /// meet become one (one gem at a time since 2026-09-27; it was a whole-board swipe).
         ///
         /// <para>
         /// <b>A lesson about a gesture is shown, not described</b> (the house rule
-        /// <c>Lesson.Trace</c> exists for): the panel's hand slides across the real board, in a
-        /// direction the mode's own input could produce, and the sentence is cut down to the
+        /// <c>Lesson.Trace</c> exists for): the panel's hand drags one real gem to where it would
+        /// stop, a slide the mode's own input could produce, and the sentence is cut down to the
         /// half a hand cannot show - that meeting gems join. Raised at the opening of the first
         /// Merge a player ever deals, ringing the board itself, and once in a life like every
         /// lesson here.

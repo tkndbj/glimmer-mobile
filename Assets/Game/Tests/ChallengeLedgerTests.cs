@@ -67,7 +67,7 @@ namespace GlimmerGrove.Tests
         static ChallengeDto Merge(string id)
             => new ChallengeDto
             {
-                id = id, genre = "merge", width = 4, height = 4, rows = new[] { "1..1", "....", "....", "...." },
+                id = id, genre = "merge", width = 4, height = 4, rows = new[] { "1..1", "2...", "....", "...." },
                 waves = new[] { "9 r1" }, hill = 9, bolts = 1, seed = 3, target = 3,
             };
 
