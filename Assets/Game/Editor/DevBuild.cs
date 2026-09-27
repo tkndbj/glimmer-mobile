@@ -438,8 +438,17 @@ namespace GlimmerGrove.EditorTools
                 locationPathName = ApkPath,
                 target = BuildTarget.Android,
                 targetGroup = BuildTargetGroup.Android,
-                options = BuildOptions.Development | BuildOptions.AllowDebugging
-                          | (andRun ? BuildOptions.AutoRunPlayer : BuildOptions.None),
+                // **No development flag, by the owner's decision on 2026-09-27.** It used to
+                // pass `BuildOptions.Development | BuildOptions.AllowDebugging`, which buys
+                // three things and stamps "Development Build" on the screen for all of them:
+                // script symbols (a phone crash names its file and line), a debugger and
+                // Profiler that can attach to the phone, and everything compiled under
+                // `DEVELOPMENT_BUILD` (`ConsentDebug.ForceEea`, the debug analytics sink,
+                // AppsFlyer's debug mode). None of that is wanted on an ordinary phone test or
+                // on a screen recording. The day a phone-only bug needs a readable stack trace
+                // or the EU consent form has to be forced, add the two flags back for that one
+                // build and take them off again.
+                options = andRun ? BuildOptions.AutoRunPlayer : BuildOptions.None,
             };
 
             var report = BuildPipeline.BuildPlayer(opts);

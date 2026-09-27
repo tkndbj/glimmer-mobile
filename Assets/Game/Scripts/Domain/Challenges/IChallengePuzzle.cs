@@ -29,14 +29,22 @@ namespace GlimmerGrove.Challenges
         public static ChallengeInput Swipe(int dx, int dy) => new ChallengeInput(ChallengeInputKind.Swipe, -1, dx, dy);
     }
 
+    /// <summary>
+    /// Bolts a move earned for one turret. <see cref="Banks"/> says what happens to a bolt with
+    /// nothing of its colour on the hill: it waits on the ward (a burst — a merge, a pair, a
+    /// seated gem — is paid in full whenever a target comes), or it is spent into the air
+    /// (a <em>steady</em> fire, the glade's lit critter, which is paid again next turn anyway).
+    /// </summary>
     public readonly struct ChallengeFeed
     {
         public readonly int Colour, Bolts;
+        public readonly bool Banks;
 
-        public ChallengeFeed(int colour, int bolts)
+        public ChallengeFeed(int colour, int bolts, bool banks = true)
         {
             Colour = colour;
             Bolts = bolts;
+            Banks = banks;
         }
     }
 
@@ -61,18 +69,28 @@ namespace GlimmerGrove.Challenges
             Feeds.Clear();
         }
 
-        public void Feed(int colour, int bolts)
+        /// <summary>Bolts that bank on the ward until something of their colour is on the hill.</summary>
+        public void Feed(int colour, int bolts) => Add(colour, bolts, true);
+
+        /// <summary>
+        /// Bolts that fire this turn or not at all (<see cref="ChallengeHill.Volley"/>): the shape
+        /// of a source that pays every turn it holds, which banked would stockpile a turret
+        /// against every raider still to come and empty the hill.
+        /// </summary>
+        public void Stream(int colour, int bolts) => Add(colour, bolts, false);
+
+        void Add(int colour, int bolts, bool banks)
         {
             if (bolts <= 0) return;
 
             for (int i = 0; i < Feeds.Count; i++)
             {
-                if (Feeds[i].Colour != colour) continue;
-                Feeds[i] = new ChallengeFeed(colour, Feeds[i].Bolts + bolts);
+                if (Feeds[i].Colour != colour || Feeds[i].Banks != banks) continue;
+                Feeds[i] = new ChallengeFeed(colour, Feeds[i].Bolts + bolts, banks);
                 return;
             }
 
-            Feeds.Add(new ChallengeFeed(colour, bolts));
+            Feeds.Add(new ChallengeFeed(colour, bolts, banks));
         }
     }
 

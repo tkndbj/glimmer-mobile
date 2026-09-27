@@ -1,5 +1,7 @@
 using System.Collections;
+using System.Collections.Generic;
 using GlimmerGrove.Challenges;
+using GlimmerGrove.Progression;
 using UnityEngine;
 
 namespace GlimmerGrove
@@ -56,7 +58,23 @@ namespace GlimmerGrove
         bool _settled;
 
         /// <summary><see cref="BoardView"/>'s own pitch cap, so the band arithmetic and the board agree.</summary>
-        protected override float MaxCell => 190f;
+        protected override float MaxCell => BoardView.MaxPitch;
+
+        /// <summary>
+        /// The band this board fills at the pitch the width allows, asked in
+        /// <see cref="BoardView.Build"/>'s own terms: its pad on every side of the grid, inside
+        /// the frame. The shared answer assumes the shared plate, whose rim is a fraction of a
+        /// cell, and on a tall glade that under-asked by a few units, so the board came out
+        /// height-bound and a hair smaller than its width allowed. Asked exactly, a glade of any
+        /// size is laid out at the widest pitch the phone has room for and the hill takes
+        /// precisely what is left (<c>ChallengeScreen.BuildBands</c>) - which is what lets a
+        /// hard 7x6 glade stand under a shorter hill than a 7x4 one without either being cramped.
+        /// </summary>
+        public override float BandWanted(int columns, int rows, float hostWidth)
+        {
+            float pitch = Mathf.Min((hostWidth - FrameSide * 2f - BoardView.Pad * 2f) / columns, BoardView.MaxPitch);
+            return rows * pitch + BoardView.Pad * 2f + FrameSide * 2f;
+        }
 
         protected override bool DrawsPlate => false;
         public override bool CelebratesItself => true;
@@ -73,9 +91,21 @@ namespace GlimmerGrove
             // it feeds fires, dimmed while it sleeps and lit when its light reaches it.
             _board.LampFace = energy => ChallengeArt.Gem(GladePuzzle.LaneOf(energy));
 
+            // And every light is its gem's colour (the owner's instruction, 2026-09-26): red,
+            // green, blue and amber exactly as the turrets burn, where the mode's own wheel paints
+            // green light yellow. Dark stays the mode's dark.
+            _board.Tint = Light;
+
             // Into the frame's inside, not the band: the board sizes its own pitch off the
             // rect it is given, and the frame has already taken its rim off the band.
             _board.Build(Inner, _glade.Board, Pal.BoardTheme.From(Slate));
+        }
+
+        /// <summary>A light's colour on this board: its turret's tint, or the mode's paint for dark.</summary>
+        static Color Light(int energy)
+        {
+            int lane = GladePuzzle.LaneOf(energy);
+            return lane >= 0 ? ChallengeArt.Tint(lane) : Pal.EnergyColour(energy);
         }
 
         void Tapped(int cell)
@@ -118,6 +148,50 @@ namespace GlimmerGrove
             // (2026-09-26): the screen was latched for the spin and then for the hill, and
             // every tap inside that second was thrown away.
         }
+
+        /// <summary>The board has swept in and is taking input: <see cref="BoardView"/>'s own latch.</summary>
+        public override bool Landed => _board && !_board.Locked;
+
+        /// <summary>
+        /// The most lessons one opening raises. A hard glade can carry a rooted tile, a crossing,
+        /// a briar and a taproot at once, and four panels before the first tap is a wall of text
+        /// in front of a puzzle; a lesson not raised today is raised the next time a board
+        /// carries it, because <c>ScreenLessons.Offer</c> only ever skips what was seen.
+        /// </summary>
+        const int LessonsAtOnce = 2;
+
+        /// <summary>
+        /// The glade's own lessons, asked of the board exactly as the mode asks them
+        /// (<see cref="MechanicScan.Taught"/>, in <see cref="Mechanic.TeachingOrder"/>), each
+        /// ringing the first tile that shows it (invariant 6b). <b>The glade chapters are
+        /// hidden</b>, so for nearly every player this board is the first place a crossing, a
+        /// briar, a rooted tile or a taproot is ever met - and a taproot met
+        /// untaught reads as a tap that turned the wrong tile. The same ids as the mode's, so
+        /// a lesson learnt here is never taught again on the map, and the other way round.
+        /// Only the four a challenge row can carry are asked: the move budget and fragile
+        /// conduits are refused at read (<see cref="GladePuzzle.Fault"/>) or are not this
+        /// screen's, and a challenge critter always wants a colour. <b>Mixing is never taught
+        /// here</b>, because this board never mixes (invariant 56l): the mode's lesson says red
+        /// and yellow make orange, which on this screen is a sentence about a rule that is off,
+        /// and an amber critter is a sighting of that lesson all the same.
+        /// </summary>
+        public override void Lessons(List<ScreenLesson> into)
+        {
+            if (!_board) return;
+
+            foreach (var sighting in MechanicScan.Taught(_glade.Board))
+            {
+                if (into.Count >= LessonsAtOnce) break;
+                if (sighting.CellIndex < 0 || !Teaches(sighting.Mechanic)) continue;
+
+                ScreenLessons.Offer(into, sighting.Mechanic, _board.TileAt(sighting.CellIndex));
+            }
+        }
+
+        static bool Teaches(Mechanic mechanic)
+            => mechanic.Equals(Mechanic.RootedTile)
+            || mechanic.Equals(Mechanic.Crossing) || mechanic.Equals(Mechanic.Briar)
+            || mechanic.Equals(Mechanic.BoundConduit);
 
         public override void Refuse()
         {

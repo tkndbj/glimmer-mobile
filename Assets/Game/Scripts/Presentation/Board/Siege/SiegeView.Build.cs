@@ -740,6 +740,8 @@ namespace GlimmerGrove
 
         void CountBeat(int i, float step)
         {
+            if (Muted) return;
+
             string say = i > 0 ? i.ToString() : Loc.Get("mode.siege.go");
             int type = Mathf.RoundToInt(Cell * (i > 0 ? 1.5f : 1.1f));
 

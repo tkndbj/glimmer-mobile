@@ -100,6 +100,14 @@ namespace GlimmerGrove.Challenges
     /// puzzle that fires in bursts (a flood-filled corner, a cleared line) is paid in full.
     /// </para>
     /// <para>
+    /// <b>A steady fire does not bank</b> (<see cref="Volley"/>). The glade's lit critter pays
+    /// its turret every turn it stays lit, and banked, a critter woken early stockpiled a bolt
+    /// a turn against every raider still to come: each one after that died the turn it
+    /// mustered and the hill stood empty for the rest of the run, which is what the owner
+    /// reported (2026-09-26, "there are times that there are no enemies on the hill"). A
+    /// volley fires this turn at the front raider of its colour or is spent into the air.
+    /// </para>
+    /// <para>
     /// <b>The order within a turn is fire, step, strike, muster</b>, and it is the same order
     /// every time: the bolts a move earned land before the hill moves, a raider that reaches the
     /// line this turn strikes this turn, and a wave mustered this turn stands at the top and
@@ -113,6 +121,7 @@ namespace GlimmerGrove.Challenges
 
         readonly ChallengeWave[] _waves;
         readonly ChallengeWard[] _wards;
+        readonly int[] _volley = new int[ChallengeColours.Count];
         readonly List<ChallengeRaider> _raiders = new List<ChallengeRaider>(16);
 
         int _nextId;
@@ -203,6 +212,19 @@ namespace GlimmerGrove.Challenges
             _wards[colour].Banked += bolts;
         }
 
+        /// <summary>
+        /// Bolts that fire at the next <see cref="Resolve"/> or not at all: a steady source's
+        /// turn of fire. Never banked, so a turret fed every turn is exactly as strong as what
+        /// feeds it <em>now</em>. A dead ward takes nothing.
+        /// </summary>
+        public void Volley(int colour, int bolts)
+        {
+            if (colour < 0 || colour >= _wards.Length || bolts <= 0) return;
+            if (!_wards[colour].Alive) return;
+
+            _volley[colour] += bolts;
+        }
+
         // ------------------------------------------------------------------ one turn
         /// <summary>
         /// Resolve one move's worth of hill: fire what is banked, walk, strike, muster.
@@ -222,14 +244,18 @@ namespace GlimmerGrove.Challenges
             for (int w = 0; w < _wards.Length; w++)
             {
                 var ward = _wards[w];
+                int volley = _volley[w];
+                _volley[w] = 0;
                 if (!ward.Alive) continue;
 
-                while (ward.Banked > 0)
+                // The volley first: it is this turn's or nobody's, and the bank keeps.
+                while (volley > 0 || ward.Banked > 0)
                 {
                     var target = FrontMost(ward.Colour);
                     if (target == null) break;
 
-                    ward.Banked--;
+                    if (volley > 0) volley--;
+                    else ward.Banked--;
                     target.Health -= Line.Damage;
                     if (target.Health < 0) target.Health = 0;
 

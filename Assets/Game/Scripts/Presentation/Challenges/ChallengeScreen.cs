@@ -170,9 +170,17 @@ namespace GlimmerGrove
         /// The board's opening lessons, after its entrance has landed - a ring drawn round a
         /// plate still springing up is a ring round the wrong rectangle.
         /// </summary>
+        /// <summary>The longest the opening lessons wait on a board's own entrance, in seconds.</summary>
+        const float LandedMost = 2f;
+
         IEnumerator Opening()
         {
             yield return new WaitForSecondsRealtime(.6f);
+
+            // A board with an entrance of its own (the glade's sweep, which grows with its
+            // width) is waited on, never for longer than a board has any reason to take.
+            float until = Time.unscaledTime + LandedMost;
+            while (this && !_ended && !_puzzle.Landed && Time.unscaledTime < until) yield return null;
             if (!this || _ended) yield break;
 
             var lessons = new List<ScreenLesson>(2);

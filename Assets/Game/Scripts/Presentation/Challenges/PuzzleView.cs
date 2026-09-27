@@ -130,9 +130,11 @@ namespace GlimmerGrove
         /// How tall a band this board wants when laid out across <c>hostWidth</c>: its rows at
         /// the cell the width allows, the plate's rim, the frame and the key strip. The screen
         /// asks this before it sizes the hill, so the hill can take everything the board does
-        /// not need.
+        /// not need. Virtual for a board that lays itself out rather than on the shared plate
+        /// (the glade's <c>BoardView</c>), which answers with its own arithmetic so the band it
+        /// is given is the band it fills.
         /// </summary>
-        public float BandWanted(int columns, int rows, float hostWidth)
+        public virtual float BandWanted(int columns, int rows, float hostWidth)
         {
             float cell = CellAcross(columns, hostWidth);
             return (rows + PlateRim + EdgeRows) * cell + FrameSide * 2f + StripHeight;
@@ -326,6 +328,15 @@ namespace GlimmerGrove
         /// so a lesson already seen is never queued. The default teaches nothing.
         /// </summary>
         public virtual void Lessons(List<ScreenLesson> into) { }
+
+        /// <summary>
+        /// Whether the board's own entrance has finished. A lesson's ring is measured once, off
+        /// the target's drawn rectangle (<c>TipOverlay</c>), so a ring cut round a tile still
+        /// popping up is a ring round a smaller tile; the screen waits on this, bounded, before
+        /// it asks for <see cref="Lessons"/>. True for every board whose entrance is the
+        /// screen's own fade.
+        /// </summary>
+        public virtual bool Landed => true;
 
         /// <summary>
         /// The lessons a move has just made true, taught at the event rather than at the

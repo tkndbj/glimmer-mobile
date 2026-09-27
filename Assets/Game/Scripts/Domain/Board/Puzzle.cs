@@ -181,7 +181,7 @@ namespace GlimmerGrove
         public const int Strands = 2;
 
         readonly int[] _comp;         // group id per strand, -1 where no strand exists
-        readonly int[] _compColour;   // additive mix per group
+        readonly int[] _compColour;   // additive mix per group (or the one colour, or dark, when !Blends)
         readonly int[] _strandDepth;  // steps from the nearest source, per strand, -1 if dark
 
         /// <summary>
@@ -254,9 +254,24 @@ namespace GlimmerGrove
             }
         }
 
-        public Puzzle(LevelId id, int w, int h, LevelTuning tuning, Cell[] cells)
+        /// <summary>
+        /// Whether two colours of light meeting on one network mix (the mode's rule: red and
+        /// yellow make orange) or put each other out.
+        ///
+        /// <para>
+        /// <b>False on the daily challenge's glade, and only there</b> (invariant 56l). Its
+        /// lights are the line's four gems and a turret fires one colour, so a blend is a light
+        /// no turret answers; an amber critter is woken by an amber crystal, and a red crystal
+        /// joined to a green one leaves the whole network dark rather than orange. Decided at
+        /// construction, because every reading here is a function of it, and true on every
+        /// board the map deals.
+        /// </para>
+        /// </summary>
+        public readonly bool Blends;
+
+        public Puzzle(LevelId id, int w, int h, LevelTuning tuning, Cell[] cells, bool blends = true)
         {
-            Id = id; W_ = w; H_ = h; Tuning = tuning; C = cells;
+            Id = id; W_ = w; H_ = h; Tuning = tuning; C = cells; Blends = blends;
             Wear = new int[cells.Length];
             _comp = new int[cells.Length * Strands];
             _compColour = new int[cells.Length * Strands];
@@ -646,6 +661,7 @@ namespace GlimmerGrove
 
                 int g = _groups++;
                 int colour = 0;
+                bool clash = false;
                 _q.Clear();
                 _q.Enqueue(start);
                 _comp[start] = g;
@@ -653,7 +669,12 @@ namespace GlimmerGrove
                 {
                     int node = _q.Dequeue();
                     int a = node / Strands, onA = node % Strands;
-                    if (C[a].kind == Kind.Source) colour |= C[a].colour;
+                    if (C[a].kind == Kind.Source)
+                    {
+                        if (Blends) colour |= C[a].colour;
+                        else if (colour == 0) colour = C[a].colour;
+                        else if (colour != C[a].colour) clash = true;
+                    }
                     int ma = Live(a);
                     for (int d = 0; d < 4; d++)
                     {
@@ -674,7 +695,8 @@ namespace GlimmerGrove
                         _q.Enqueue(into);
                     }
                 }
-                _compColour[g] = colour;
+                // Two colours on a network that does not blend put it out (Blends).
+                _compColour[g] = clash ? 0 : colour;
             }
 
             // light travel distance, so the glow can ripple outward from the sources

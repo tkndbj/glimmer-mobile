@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using GlimmerGrove.Challenges;
+using GlimmerGrove.Content;
 using NUnit.Framework;
 
 namespace GlimmerGrove.Tests
@@ -175,16 +176,22 @@ namespace GlimmerGrove.Tests
             }
         }
 
+        /// <summary>
+        /// Every genre deals something, and a genre may ship any number of levels: the first
+        /// slate was one of each, and a genre is a ladder of rows the calendar walks
+        /// (invariant 56f) - thirty-one glades since 2026-09-26.
+        /// </summary>
         [Test]
-        public void TheShippedSlateHasOneOfEveryGenre()
+        public void TheShippedSlateDealsEveryGenre()
         {
             var table = Shipped();
-            var seen = new HashSet<ChallengeGenre>();
+            var ids = new HashSet<string>();
 
             foreach (var row in table.All)
-                Assert.IsTrue(seen.Add(row.Genre), $"{row.Genre} is shipped twice; the first slate is one of each");
+                Assert.IsTrue(ids.Add(row.Id), $"{row.Id} is shipped twice");
 
-            Assert.AreEqual(ChallengeGenres.Count, seen.Count, "every genre ships one challenge");
+            for (int g = 0; g < ChallengeGenres.Count; g++)
+                Assert.Greater(table.RowsOf((ChallengeGenre)g).Count, 0, $"{(ChallengeGenre)g} ships no level");
         }
 
         // ------------------------------------------------------------------ the reader
@@ -278,6 +285,33 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(3, hill.Wards[0].Banked, "red bolts bank with no red raider to fire at");
             Assert.AreEqual(1, hill.Standing);
             Assert.IsFalse(events.Exists(e => e.Kind == ChallengeEventKind.Bolt));
+        }
+
+        /// <summary>
+        /// A volley — a steady source's turn of fire — lands this turn or is spent. Banked, a
+        /// glade critter woken early stockpiled a turret against every raider to come and the
+        /// hill stood empty for the rest of the run (the owner, 2026-09-26).
+        /// </summary>
+        [Test]
+        public void AVolleyFiresThisTurnOrIsSpent()
+        {
+            var hill = new ChallengeHill(new ChallengeLine(1, 3, 1), 5,
+                                         new[] { new ChallengeWave(1, new[] { new ChallengeRaiderSpec(0, 2) }) });
+
+            hill.Volley(0, 3);
+            hill.Resolve(null);                       // turn 1: nothing red to shoot; the red raider musters
+            Assert.AreEqual(0, hill.Wards[0].Banked, "a volley never banks");
+            Assert.AreEqual(1, hill.Standing);
+
+            var events = new List<ChallengeEvent>();
+            hill.Resolve(events);                     // turn 2: nothing fed, nothing fires
+            Assert.IsFalse(events.Exists(e => e.Kind == ChallengeEventKind.Bolt), "the spent volley did not come back");
+
+            hill.Volley(0, 1);
+            events.Clear();
+            hill.Resolve(events);                     // turn 3: one bolt lands
+            Assert.AreEqual(1, events.FindAll(e => e.Kind == ChallengeEventKind.Bolt).Count);
+            Assert.AreEqual(1, hill.Raiders[0].Health);
         }
 
         [Test]
@@ -431,6 +465,7 @@ namespace GlimmerGrove.Tests
             Assert.IsTrue(wake.Move.Turn, "a turn costs a step");
             Assert.AreEqual(1, wake.Move.Feeds.Count, "the woken critter fed its lane");
             Assert.AreEqual(0, wake.Move.Feeds[0].Colour, "red light is the red turret");
+            Assert.IsFalse(wake.Move.Feeds[0].Banks, "a lit critter's fire is this turn's or nobody's (56l)");
             Assert.AreEqual(ChallengeState.Won, wake.State, "the last critter waking wins before the hill walks");
         }
 
@@ -458,6 +493,64 @@ namespace GlimmerGrove.Tests
             ChallengeTable.TryBuild(Table(stale), out table, problems);
             Assert.AreEqual(0, table.Count);
             Assert.IsTrue(problems.Exists(p => p.Contains("sources")), string.Join("; ", problems));
+        }
+
+        /// <summary>
+        /// <b>Light never mixes on a challenge glade</b> (invariant 56l). The same three cells —
+        /// a red crystal, a conduit, a green crystal — are one orange network on the map and a
+        /// dark one here, because there a blend is a light no turret answers.
+        /// </summary>
+        [Test]
+        public void TwoColoursThatMeetPutEachOtherOutRatherThanBlend()
+        {
+            var parsed = LevelGridParser.Parse(new LevelLayout(3, 1, new[] { "*E#R/0 -EW/0 *W#G/0" }));
+            Assert.IsTrue(parsed.Ok);
+
+            var map = new Puzzle(LevelId.None, 3, 1, LevelTuning.Default(1), (Cell[])parsed.Cells.Clone());
+            var challenge = new Puzzle(LevelId.None, 3, 1, LevelTuning.Default(1), (Cell[])parsed.Cells.Clone(), blends: false);
+
+            Assert.AreEqual(Energy.R | Energy.G, map.EnergyOn(1, 0), "the map's glade mixes red and green");
+            Assert.AreEqual(Energy.None, challenge.EnergyOn(1, 0), "a challenge glade puts them out");
+            Assert.AreEqual(Energy.None, challenge.EnergyOn(0, 0));
+            Assert.AreEqual(Energy.None, challenge.EnergyOn(2, 0));
+
+            // Two crystals of one colour are one light, not a clash.
+            var twin = LevelGridParser.Parse(new LevelLayout(3, 1, new[] { "*E#Y/0 -EW/0 *W#Y/0" }));
+            var amber = new Puzzle(LevelId.None, 3, 1, LevelTuning.Default(1), twin.Cells, blends: false);
+            Assert.AreEqual(Energy.R | Energy.G, amber.EnergyOn(1, 0));
+        }
+
+        /// <summary>
+        /// An amber critter is woken by an amber crystal and pays the amber turret; one that only
+        /// a red and a green crystal could reach is a board with no answer, refused at read, and
+        /// so is a solution in which two colours meet on a network with nobody on it.
+        /// </summary>
+        [Test]
+        public void AnAmberCritterWantsAnAmberCrystal()
+        {
+            var problems = new List<string>();
+            ChallengeTable.TryBuild(Table(Row("g", "glade", 3, 1, new[] { "*E#Y/0 -EW/1 @W#Y/0" }, new[] { "0 y1" })),
+                                    out var table, problems);
+            Assert.AreEqual(0, problems.Count, string.Join("; ", problems));
+
+            var run = new ChallengeRun(table.Find("g"), new ChallengeLine(1, 3, 1));
+            var wake = run.Play(ChallengeInput.Tap(1));
+            Assert.AreEqual(ChallengeState.Won, wake.State);
+            Assert.AreEqual(3, wake.Move.Feeds[0].Colour, "amber light is the amber turret");
+
+            // The blend the map's glade would accept: red one side, green the other.
+            problems.Clear();
+            ChallengeTable.TryBuild(Table(Row("g", "glade", 5, 1, new[] { "*E#R/0 -EW/1 @EW#Y/0 -EW/0 *W#G/0" }, new[] { "0 y1" })),
+                                    out table, problems);
+            Assert.AreEqual(0, table.Count, "a critter only a blend could wake is refused");
+
+            // Two colours meeting on a network with no critter on it: solved, and dark.
+            problems.Clear();
+            ChallengeTable.TryBuild(Table(Row("g", "glade", 3, 2,
+                                              new[] { "*E#R/0 -EW/1 @W#R/0", "*E#B/0 -EW/0 *W#G/0" }, new[] { "0 r1" })),
+                                    out table, problems);
+            Assert.AreEqual(0, table.Count);
+            Assert.IsTrue(problems.Exists(p => p.Contains("never mixes")), string.Join("; ", problems));
         }
 
         // ------------------------------------------------------------------ merge
@@ -612,47 +705,261 @@ namespace GlimmerGrove.Tests
             if (!list.Contains(cell)) list.Add(cell);
         }
 
-        [Test]
-        public void ShippedGladeIsWonByTurningEachTileHome()
+        // ------------------------------------------------------------------ every shipped glade
+        /// <summary>
+        /// The band every glade row's slack must sit in, in hundredths of the bot's turns: a
+        /// player that many times slower than the bot, every critter waking that much later,
+        /// still wins, and one much slower does not. <b>The ceiling is the owner's</b>
+        /// (2026-09-26: "I can rotate conduits a lot") — the first cut forgave 1.6-2.0x, which is
+        /// a hill a player can ignore; the floor keeps a hard row from asking for the bot's own
+        /// line. <c>Tools/make_glade_challenges.py</c> tunes a medium row to 1.50x and a hard one
+        /// (all four lanes) to 1.35x inside this band (<c>SLACK_BAND</c>, <c>TARGET</c>).
+        /// </summary>
+        const int SlowestPaceFloor = 125, SlowestPaceCeiling = 165;
+
+        static IReadOnlyList<ChallengeDefinition> ShippedGlades(ChallengeTable table)
         {
-            var table = Shipped();
-            var run = new ChallengeRun(table.Find("d08_glade"), table.Line);
+            var glades = table.RowsOf(ChallengeGenre.Glade);
+            Assert.Greater(glades.Count, 0, "challenges.json ships no glade");
+            return glades;
+        }
+
+        /// <summary>
+        /// A player who wakes one critter at a time, lanes in the order their first raider
+        /// musters (the nearest threat first), each critter's solved network turned home
+        /// crystal-first. Returns what every turn the hill walked was fed, exactly as the run
+        /// fed it (a volley or a bank), and leaves the run at its end for the caller to judge.
+        /// </summary>
+        static List<ChallengeFeed[]> WakeHome(ChallengeDefinition def, ChallengeLine line, out ChallengeRun run, bool print)
+        {
+            run = new ChallengeRun(def, line);
             var glade = (GladePuzzle)run.Puzzle;
 
-            int expected = glade.Board.TurnsToSolution;
-            Assert.Greater(expected, 0);
+            var first = new int[ChallengeColours.Count];
+            for (int lane = 0; lane < first.Length; lane++) first[lane] = int.MaxValue;
+            foreach (var wave in def.Waves)
+                foreach (var raider in wave.Raiders)
+                    first[raider.Colour] = Math.Min(first[raider.Colour], wave.Turn);
 
-            // A player wakes one critter at a time, starting with the colour whose raiders are
-            // nearest (the lanes in wave order): its solved network, turned home crystal-first.
-            // The wake order is what the waves are timed against, so it is printed beside the
-            // margin (the Push route's seat order, said of a glade).
+            var lanes = new List<int> { 0, 1, 2, 3 };
+            lanes.Sort((a, b) => first[a] != first[b] ? first[a].CompareTo(first[b]) : a.CompareTo(b));
+
+            var fed = new List<ChallengeFeed[]>();
             var network = new List<int>();
             var awake = new HashSet<int>();
-            for (int lane = 0; lane < ChallengeColours.Count && run.State == ChallengeState.Playing; lane++)
+
+            foreach (int lane in lanes)
             {
                 for (int lamp = 0; lamp < glade.Board.C.Length && run.State == ChallengeState.Playing; lamp++)
                 {
                     if (glade.Board.C[lamp].kind != Kind.Lamp || GladePuzzle.LaneOf(glade.Board.C[lamp].colour) != lane) continue;
 
                     glade.SolutionNetwork(lamp, network);
-                    Assert.Greater(network.Count, 1, $"critter {lamp} has no network in the solution");
+                    Assert.Greater(network.Count, 1, $"{def.Id}: critter {lamp} has no network in the solution");
 
                     foreach (int cell in network)
                     {
                         int taps = glade.Board.TurnsOwed(cell);
                         for (int t = 0; t < taps && run.State == ChallengeState.Playing; t++)
-                            Assert.IsFalse(run.Play(ChallengeInput.Tap(cell)).Move.Refused, $"tap on {cell} refused");
+                        {
+                            var report = run.Play(ChallengeInput.Tap(cell));
+                            Assert.IsFalse(report.Move.Refused, $"{def.Id}: tap on {cell} refused");
+                            if (!report.Walked) continue;
+
+                            fed.Add(report.Move.Feeds.ToArray());
+                        }
                     }
 
+                    if (!print) continue;
                     for (int i = 0; i < glade.Board.C.Length; i++)
                         if (glade.Board.C[i].kind == Kind.Lamp && glade.Board.Lit[i] && awake.Add(i))
-                            Console.WriteLine($"d08_glade: critter at {i % glade.Width},{i / glade.Width} " +
+                            Console.WriteLine($"{def.Id}: critter at {i % glade.Width},{i / glade.Width} " +
                                               $"({ChallengeColours.LetterOf(GladePuzzle.LaneOf(glade.Board.C[i].colour))}) awake by turn {run.Turns}");
                 }
             }
 
-            Won(run, "d08_glade");
-            Assert.LessOrEqual(run.Turns, expected, "turning each tile home never costs more than the solution's distance");
+            return fed;
+        }
+
+        [Test]
+        public void EveryShippedGladeIsWonByTurningEachTileHome()
+        {
+            var table = Shipped();
+
+            foreach (var def in ShippedGlades(table))
+            {
+                var probe = new ChallengeRun(def, table.Line);
+                int expected = ((GladePuzzle)probe.Puzzle).Board.TurnsToSolution;
+                Assert.Greater(expected, 0, $"{def.Id} is dealt with nothing to do");
+
+                WakeHome(def, table.Line, out var run, print: true);
+
+                Won(run, def.Id);
+                Assert.LessOrEqual(run.Turns, expected, $"{def.Id}: turning each tile home never costs more than the solution's distance");
+
+                // A row the bot wins while the line takes a blow is a row that hurts a
+                // perfect player; nothing is promised to anybody slower.
+                int health = 0;
+                for (int i = 0; i < run.Hill.Wards.Count; i++) health += run.Hill.Wards[i].Health;
+                Assert.GreaterOrEqual(health, run.Hill.Wards.Count * run.Hill.Line.Health - 1,
+                                      $"{def.Id}: the bot's line took more than one blow");
+            }
+        }
+
+        /// <summary>
+        /// <b>How slow can a player be and still win</b> — the hill's whole question, asked as a
+        /// count (invariant 5d). The bot's run is replayed against a fresh hill at a slower
+        /// pace: at pace <c>p</c> the player's <c>k</c>-th turn has done what the bot had done
+        /// by turn <c>k·100/p</c>, so every critter wakes that much later and every raider has
+        /// that much longer to walk. The printed figure is what a row is tuned against
+        /// (<c>Tools/make_glade_challenges.py</c> mirrors it), and every row is held to the
+        /// band: forgiving enough to be fair, tight enough that a wasted turn costs something.
+        /// </summary>
+        [Test]
+        public void EveryShippedGladeForgivesASlowerPlayer()
+        {
+            var table = Shipped();
+
+            foreach (var def in ShippedGlades(table))
+            {
+                var fed = WakeHome(def, table.Line, out var run, print: false);
+                Assert.AreEqual(ChallengeState.Won, run.State, $"{def.Id} was not won by the bot");
+
+                int total = fed.Count + 1;
+                int slowest = 100;
+                for (int pace = 105; pace <= 500; pace += 5)
+                {
+                    if (!HoldsAt(def, table.Line, fed, total, pace, out _)) break;
+                    slowest = pace;
+                }
+
+                Console.WriteLine($"{def.Id}: {def.Width}x{def.Height}, won in {total} turn(s); a player may take " +
+                                  $"{slowest / 100f:0.00}x that ({(total * slowest + 99) / 100} turns) on a hill of {def.Hill}");
+
+                Assert.GreaterOrEqual(slowest, SlowestPaceFloor,
+                                      $"{def.Id} is lost by a player {slowest / 100f + .05f:0.00}x the bot's pace; " +
+                                      "lengthen the hill or lighten the waves (make_glade_challenges.py --write)");
+                Assert.LessOrEqual(slowest, SlowestPaceCeiling,
+                                   $"{def.Id} forgives a player {slowest / 100f:0.00}x the bot's pace; a wasted turn " +
+                                   "costs nothing there (make_glade_challenges.py --write)");
+            }
+        }
+
+        /// <summary>
+        /// <b>The hill is never empty while the bot plays</b> — the owner's report (2026-09-26:
+        /// "there are times that there are no enemies on the hill"), asked as a count. Every turn
+        /// the bot walks starts with a raider standing, so every turn a player spends is a step
+        /// somebody takes toward the line. Printed beside it: how many stand on an average turn.
+        /// </summary>
+        [Test]
+        public void EveryShippedGladeKeepsTheHillPeopled()
+        {
+            var table = Shipped();
+
+            foreach (var def in ShippedGlades(table))
+            {
+                var fed = WakeHome(def, table.Line, out var run, print: false);
+                Assert.AreEqual(ChallengeState.Won, run.State, $"{def.Id} was not won by the bot");
+
+                Assert.IsTrue(HoldsAt(def, table.Line, fed, fed.Count + 1, 100, out var crowd), $"{def.Id}: the bot's line fell");
+
+                int empty = 0, standing = 0;
+                foreach (int on in crowd) { if (on == 0) empty++; standing += on; }
+                Console.WriteLine($"{def.Id}: {standing / (float)Math.Max(1, crowd.Count):0.0} raider(s) on the hill " +
+                                  $"on an average turn of {crowd.Count}");
+
+                Assert.AreEqual(0, empty, $"{def.Id}: the hill stands empty on {empty} of the bot's {crowd.Count} turns");
+            }
+        }
+
+        /// <summary>
+        /// The bot's run at <paramref name="pace"/> hundredths of its speed, against a fresh hill;
+        /// <paramref name="crowd"/> is how many raiders stood on it as each walked turn began.
+        /// </summary>
+        static bool HoldsAt(ChallengeDefinition def, ChallengeLine line, List<ChallengeFeed[]> fed, int total, int pace,
+                            out List<int> crowd)
+        {
+            var hill = new ChallengeHill(line, def.Hill, def.Waves);
+            int finish = (total * pace + 99) / 100;
+            crowd = new List<int>(finish);
+
+            // The solving turn never walks the hill; every turn before it does.
+            for (int k = 1; k < finish; k++)
+            {
+                int progress = Math.Min(total - 1, k * 100 / pace);
+                if (progress >= 1)
+                    foreach (var feed in fed[progress - 1])
+                    {
+                        if (feed.Banks) hill.Feed(feed.Colour, feed.Bolts);
+                        else hill.Volley(feed.Colour, feed.Bolts);
+                    }
+
+                crowd.Add(hill.Standing);
+                hill.Resolve(null);
+                if (!hill.LineStanding) return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Every glade row is held to <b>the chapter validator</b>, with every warning an error.
+        /// <c>GladePuzzle.Fault</c> asks what a device needs — the row parses, nothing crumbles,
+        /// the solution wakes everything — and nothing more; the chapter's rules are the ones
+        /// that ask whether a board is <em>fit</em>: a crossing that crosses nothing, a briar or a
+        /// twist nothing on the board settles, a taproot that can never agree. A challenge is a
+        /// glade a player meets once a day, so it is held to the same bar as one on the map.
+        /// </summary>
+        [Test]
+        public void EveryShippedGladeMeetsTheChapterValidator()
+        {
+            var table = Shipped();
+
+            foreach (var def in ShippedGlades(table))
+            {
+                var layout = new LevelLayout(def.Width, def.Height, def.Rows);
+                var parsed = LevelGridParser.Parse(layout);
+                Assert.IsTrue(parsed.Ok, $"{def.Id} does not parse");
+
+                var level = new LevelDefinition(
+                    LevelId.Parse(def.Id), ChapterId.Parse("challenges"), layout,
+                    LevelTuning.Default(Math.Max(1, PuzzleFactory.MinimumMoves(parsed.Cells))),
+                    new LevelPresentation(new UnityEngine.Vector2(.5f, .5f), null, null, null));
+
+                var report = LevelValidator.Validate(level);
+                var issues = new List<string>();
+                foreach (var issue in report.Issues) issues.Add(issue.ToString());
+
+                Assert.AreEqual(0, issues.Count, $"{def.Id}:\n  " + string.Join("\n  ", issues));
+            }
+        }
+
+        /// <summary>
+        /// A raider walks at the turret of its colour, and only a critter of that colour feeds
+        /// that turret — so a wave naming a colour the board has no critter for sends a raider
+        /// nothing on the board can answer. It would strike its post until the post fell and
+        /// then walk on to the next, which is a loss the puzzle had no say in.
+        /// </summary>
+        [Test]
+        public void EveryShippedGladeSendsOnlyColoursItCanAnswer()
+        {
+            var table = Shipped();
+
+            foreach (var def in ShippedGlades(table))
+            {
+                var run = new ChallengeRun(def, table.Line);
+                var board = ((GladePuzzle)run.Puzzle).Board;
+
+                var fed = new bool[ChallengeColours.Count];
+                for (int i = 0; i < board.C.Length; i++)
+                    if (board.C[i].kind == Kind.Lamp) fed[GladePuzzle.LaneOf(board.C[i].colour)] = true;
+
+                foreach (var wave in def.Waves)
+                    foreach (var raider in wave.Raiders)
+                        Assert.IsTrue(fed[raider.Colour],
+                                      $"{def.Id}: the wave at turn {wave.Turn} sends a " +
+                                      $"'{ChallengeColours.LetterOf(raider.Colour)}' raider and no critter feeds that turret");
+            }
         }
 
         [Test]

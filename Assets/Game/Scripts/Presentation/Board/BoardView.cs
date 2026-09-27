@@ -132,6 +132,18 @@ namespace GlimmerGrove
         /// </summary>
         public Func<int, Sprite> LampFace;
 
+        /// <summary>
+        /// What colour a light is drawn in, by its <see cref="Energy"/> mask, when it is not the
+        /// mode's paint (<see cref="Pal.EnergyColour"/>): the daily challenge draws its four lights
+        /// in the gems' own colours (<c>ChallengeArt.Tint</c>), at the owner's instruction
+        /// (2026-09-26), because there a light is a turret and the mode's wheel paints green light
+        /// yellow and red|green marigold. Null on every run. Every tile asks <see cref="Paint"/>.
+        /// </summary>
+        public Func<int, Color> Tint;
+
+        /// <summary>The colour a light is drawn in on this board: <see cref="Tint"/>, else the mode's paint.</summary>
+        public Color Paint(int energy) => Tint != null ? Tint(energy) : Pal.EnergyColour(energy);
+
         public int Moves => P.Moves;
         public bool CanUndo => _history.Count > 0 && !Locked;
 
@@ -165,6 +177,17 @@ namespace GlimmerGrove
         /// </summary>
         public bool Accepting => !Locked && !_celebrating && !_lost;
 
+        /// <summary>
+        /// The air <see cref="Build"/> keeps between the rect it is given and the grid, on every
+        /// side. Public, with the pitch bounds, so a host that sizes the rect first (the
+        /// challenge's <c>GladeView</c>, asking the screen for a band) asks for exactly what
+        /// this lays out rather than a copy of it.
+        /// </summary>
+        public const float Pad = 34f;
+
+        /// <summary>The narrowest and widest a tile's pitch is ever laid out at.</summary>
+        public const float MinPitch = 64f, MaxPitch = 190f;
+
         public void Build(RectTransform host, Puzzle puzzle, Pal.BoardTheme theme)
         {
             P = puzzle;
@@ -172,9 +195,8 @@ namespace GlimmerGrove
             _start = puzzle.Snapshot();
 
             var rect = host.rect;
-            float pad = 34f;
-            float pitch = Mathf.Min((rect.width - pad * 2f) / P.W_, (rect.height - pad * 2f) / P.H_);
-            _pitch = Mathf.Clamp(pitch, 64f, 190f);
+            float pitch = Mathf.Min((rect.width - Pad * 2f) / P.W_, (rect.height - Pad * 2f) / P.H_);
+            _pitch = Mathf.Clamp(pitch, MinPitch, MaxPitch);
 
             float boardW = _pitch * P.W_, boardH = _pitch * P.H_;
 

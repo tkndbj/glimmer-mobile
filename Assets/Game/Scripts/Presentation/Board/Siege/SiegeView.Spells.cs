@@ -1089,7 +1089,7 @@ namespace GlimmerGrove
         /// </summary>
         void Announce(string text, Color colour, float size, float seconds, bool swell)
         {
-            if (_waveLabel == null) return;
+            if (_waveLabel == null || Muted) return;
 
             _waveLabel.text = text;
             _waveLabel.color = colour;

@@ -10,8 +10,7 @@ namespace GlimmerGrove.Challenges
     /// <para>
     /// <b>It re-implements nothing.</b> The board is a real <see cref="Puzzle"/> dealt by the
     /// real <see cref="LevelGridParser"/> from the real grammar (<see cref="LevelLayout.Grammar"/>):
-    /// arms, colours that mix, crossings, briars, rooted tiles and taproots are all the mode's
-    /// own, and "is this tile solved" is still <see cref="Puzzle.Alike"/> asked exactly once
+    /// arms, crossings, briars, rooted tiles and taproots are all the mode's own, and "is this tile solved" is still <see cref="Puzzle.Alike"/> asked exactly once
     /// (invariant 5b). What this class adds is the fusion with the line, and it is the same
     /// sentence the pipes had: <b>a critter lit in its colour fires its turret every turn it
     /// stays lit.</b> So the order the critters are woken in is the decision — wake the colour
@@ -20,10 +19,19 @@ namespace GlimmerGrove.Challenges
     /// quiet.
     /// </para>
     /// <para>
-    /// <b>A colour is a lane</b>: red, green and blue light are the red, green and blue turrets,
-    /// and the mixed R|G — which the board paints marigold — is the amber one. A critter that
-    /// wants any other mix (or any light at all) has no turret to feed, so <see cref="Fault"/>
-    /// refuses it at read rather than letting a board ship a critter whose waking pays nothing.
+    /// <b>A colour is a lane, and a lane is a gem</b>: red, green, blue and amber light are the
+    /// four turrets of the line, painted in the gems' own colours (<c>GladeView</c>). <b>Light
+    /// never mixes here</b> (invariant 56l, the owner's instruction on 2026-09-26): the board is
+    /// dealt with <see cref="Puzzle.Blends"/> off, so an amber critter is woken by an amber
+    /// crystal (<c>#Y</c>, which the grammar has always spelled R|G) and a red network joined to
+    /// a green one goes dark rather than amber. A critter or crystal in any other colour has no
+    /// turret, and a solution in which two colours meet has a dark network in it; <see cref="Fault"/>
+    /// refuses both at read.
+    /// </para>
+    /// <para>
+    /// <b>A lit critter's fire does not bank</b> (<see cref="ChallengeMove.Stream"/>): it fires
+    /// at its colour's front raider this turn or into the air. Banked, a critter woken early
+    /// stockpiled a turret against every raider still to come and the hill stood empty.
     /// </para>
     /// <para>
     /// <b>Authored solved, dealt turned, and the dealt board is what ships</b> (invariant 5g).
@@ -46,15 +54,19 @@ namespace GlimmerGrove.Challenges
             _bolts = def.Bolts;
 
             var parsed = LevelGridParser.Parse(new LevelLayout(def.Width, def.Height, def.Rows));
-            Board = new Puzzle(LevelId.None, def.Width, def.Height, LevelTuning.Default(1), parsed.Cells);
+            Board = Deal(def, parsed.Cells);
 
             var zeroed = new Cell[parsed.Cells.Length];
             for (int i = 0; i < zeroed.Length; i++) { zeroed[i] = parsed.Cells[i]; zeroed[i].rot = 0; }
-            _solved = new Puzzle(LevelId.None, def.Width, def.Height, LevelTuning.Default(1), zeroed);
+            _solved = Deal(def, zeroed);
         }
 
         /// <summary>The same board with every rotation at nought: the authored solution, for its networks.</summary>
         readonly Puzzle _solved;
+
+        /// <summary>A challenge glade over these cells: one tile of hill a turn, and light that never blends.</summary>
+        static Puzzle Deal(ChallengeDefinition def, Cell[] cells)
+            => new Puzzle(LevelId.None, def.Width, def.Height, LevelTuning.Default(1), cells, blends: false);
 
         /// <summary>
         /// The cells of the solved network a critter belongs to — every conduit and crystal
@@ -98,9 +110,9 @@ namespace GlimmerGrove.Challenges
         public bool Failed => false;
 
         /// <summary>
-        /// The turret a light feeds, or -1 for a mix no turret fires. R, G and B are the three
-        /// lanes of their name; R|G is the amber lane, because that is the colour the board
-        /// paints it (<c>Pal.Marigold</c>) and the one gem the line has left.
+        /// The turret a light feeds, or -1 for a colour no turret fires. R, G and B are the three
+        /// lanes of their name; <c>Y</c> (the mask R|G) is the amber lane — its own light here,
+        /// shone by its own crystal, because this board never blends (<see cref="Puzzle.Blends"/>).
         /// </summary>
         public static int LaneOf(int energy)
         {
@@ -134,7 +146,7 @@ namespace GlimmerGrove.Challenges
             {
                 if (Board.C[i].kind != Kind.Lamp || !Board.Lit[i]) continue;
                 int lane = LaneOf(Board.C[i].colour);
-                if (lane >= 0) _move.Feed(lane, _bolts);
+                if (lane >= 0) _move.Stream(lane, _bolts);
             }
 
             return _move;
@@ -206,10 +218,16 @@ namespace GlimmerGrove.Challenges
             // rotations zeroed, asked of Puzzle.Won and never of rot == 0).
             var zeroed = new Cell[cells.Length];
             for (int i = 0; i < cells.Length; i++) { zeroed[i] = cells[i]; zeroed[i].rot = 0; }
-            var solved = new Puzzle(LevelId.None, def.Width, def.Height, LevelTuning.Default(1), zeroed);
+            var solved = Deal(def, zeroed);
             if (!solved.Won) return "glade's solved layout does not wake every critter; check the arms and colours";
 
-            var dealt = new Puzzle(LevelId.None, def.Width, def.Height, LevelTuning.Default(1), cells);
+            // Light never mixes here, so a crystal dark in the solution is two colours meeting
+            // on its network: a solved board with a dead light in it, drawn as a fault.
+            for (int i = 0; i < cells.Length; i++)
+                if (cells[i].kind == Kind.Source && solved.EnergyOn(i, 0) == 0)
+                    return $"glade heart-crystal at {i % def.Width},{i / def.Width} meets another colour in the solution; a challenge glade never mixes light";
+
+            var dealt = Deal(def, cells);
             if (dealt.Won) return "glade opens already solved: give at least one tile a /k";
             if (dealt.TurnsToSolution <= 0) return "glade is dealt with no turn owed; give a tile the solution needs a /k";
 

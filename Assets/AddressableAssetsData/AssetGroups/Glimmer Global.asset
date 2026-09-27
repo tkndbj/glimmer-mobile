@@ -22798,6 +22798,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Siege/boneBulwark_g_swing
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8aa9061f67dfb124298cc59d628ed15d
+    m_Address: Art/Ui/showcase_hand
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8ab41f3219279a4458174933ca620fc3
     m_Address: Art/Fx/Siege/shot_beacon_y/f01
     m_ReadOnly: 0

@@ -225,7 +225,7 @@ namespace GlimmerGrove
             // 2.4 - and no countdown ever blinks out mid-count, because the only banner that can
             // arrive over a standing band is a wave's, which ends the breather anyway.
             bool speaking = Speaking;
-            bool show = BandShows(_board.Resting, Over, _chain != null, speaking);
+            bool show = !Muted && BandShows(_board.Resting, Over, _chain != null, speaking);
 
             // Taken down at once rather than faded while a banner stands, so there is no frame
             // with both of them half drawn on the same row. Everywhere else it fades.

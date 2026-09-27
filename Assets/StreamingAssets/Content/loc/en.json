@@ -34,6 +34,246 @@
       "text": "The Crossing"
     },
     {
+      "key": "challenge.d09_glade.blurb",
+      "text": "A bridge lifts one light over another. Walk each colour home."
+    },
+    {
+      "key": "challenge.d09_glade.name",
+      "text": "Mossy Bend"
+    },
+    {
+      "key": "challenge.d10_glade.blurb",
+      "text": "Three crystals, three colours. Keep each light to its own critters."
+    },
+    {
+      "key": "challenge.d10_glade.name",
+      "text": "Fern Hollow"
+    },
+    {
+      "key": "challenge.d11_glade.blurb",
+      "text": "Green passes over red on a bridge. Neither may touch the other."
+    },
+    {
+      "key": "challenge.d11_glade.name",
+      "text": "Dewdrop Run"
+    },
+    {
+      "key": "challenge.d12_glade.blurb",
+      "text": "Every arm meets an arm, and there is only one way they all can."
+    },
+    {
+      "key": "challenge.d12_glade.name",
+      "text": "Willow Ring"
+    },
+    {
+      "key": "challenge.d13_glade.blurb",
+      "text": "The green critter's raider arrives first. Wake it early."
+    },
+    {
+      "key": "challenge.d13_glade.name",
+      "text": "Brookside"
+    },
+    {
+      "key": "challenge.d14_glade.blurb",
+      "text": "A long, low glade. Red's raider is already walking; wake red first."
+    },
+    {
+      "key": "challenge.d14_glade.name",
+      "text": "Lantern Row"
+    },
+    {
+      "key": "challenge.d15_glade.blurb",
+      "text": "The red road crosses the green on a bridge. Keep them apart."
+    },
+    {
+      "key": "challenge.d15_glade.name",
+      "text": "Thistle Way"
+    },
+    {
+      "key": "challenge.d16_glade.blurb",
+      "text": "Two amber crystals light one pool. Keep blue out of it."
+    },
+    {
+      "key": "challenge.d16_glade.name",
+      "text": "Amber Pool"
+    },
+    {
+      "key": "challenge.d17_glade.blurb",
+      "text": "Amber wants amber light. Where blue touches it, both go dark."
+    },
+    {
+      "key": "challenge.d17_glade.name",
+      "text": "Honey Glen"
+    },
+    {
+      "key": "challenge.d18_glade.blurb",
+      "text": "Two amber critters share one amber light. Build it once."
+    },
+    {
+      "key": "challenge.d18_glade.name",
+      "text": "Marigold"
+    },
+    {
+      "key": "challenge.d19_glade.blurb",
+      "text": "Red and amber run side by side. Where two colours meet, both go dark."
+    },
+    {
+      "key": "challenge.d19_glade.name",
+      "text": "Ember Ford"
+    },
+    {
+      "key": "challenge.d20_glade.blurb",
+      "text": "Two conduits share a root and turn together. Settle them at once."
+    },
+    {
+      "key": "challenge.d20_glade.name",
+      "text": "Twin Roots"
+    },
+    {
+      "key": "challenge.d21_glade.blurb",
+      "text": "A taproot binds two conduits. One tap turns both."
+    },
+    {
+      "key": "challenge.d21_glade.name",
+      "text": "Rootbound"
+    },
+    {
+      "key": "challenge.d22_glade.blurb",
+      "text": "A twisted crossing bends two lights. Only the colours say which way."
+    },
+    {
+      "key": "challenge.d22_glade.name",
+      "text": "Knotwood"
+    },
+    {
+      "key": "challenge.d23_glade.blurb",
+      "text": "Four colours, one twist, two amber critters. Read the whole glade first."
+    },
+    {
+      "key": "challenge.d23_glade.name",
+      "text": "Duskwood"
+    },
+    {
+      "key": "challenge.d24_glade.blurb",
+      "text": "Every arm can meet an arm the wrong way. Colour decides."
+    },
+    {
+      "key": "challenge.d24_glade.name",
+      "text": "Owl Hollow"
+    },
+    {
+      "key": "challenge.d25_glade.blurb",
+      "text": "Every colour marches at once. Wake red first, and never let two lights meet."
+    },
+    {
+      "key": "challenge.d25_glade.name",
+      "text": "Tangle Deep"
+    },
+    {
+      "key": "challenge.d26_glade.blurb",
+      "text": "A twisted crossing bends blue past red. Only one way wakes them all."
+    },
+    {
+      "key": "challenge.d26_glade.name",
+      "text": "Moonwell"
+    },
+    {
+      "key": "challenge.d27_glade.blurb",
+      "text": "A bridge and a twist in one tall glade. Four lights, no leaks."
+    },
+    {
+      "key": "challenge.d27_glade.name",
+      "text": "Starlit Maze"
+    },
+    {
+      "key": "challenge.d28_glade.blurb",
+      "text": "Red marches first and amber last. Plan the order."
+    },
+    {
+      "key": "challenge.d28_glade.name",
+      "text": "Night Weave"
+    },
+    {
+      "key": "challenge.d29_glade.blurb",
+      "text": "Two amber critters, one twist, one bridge. Keep the lights apart."
+    },
+    {
+      "key": "challenge.d29_glade.name",
+      "text": "Crosswind"
+    },
+    {
+      "key": "challenge.d30_glade.blurb",
+      "text": "A bridge and a twist side by side. Only one reading of the colours wins."
+    },
+    {
+      "key": "challenge.d30_glade.name",
+      "text": "Weaver's Knot"
+    },
+    {
+      "key": "challenge.d31_glade.blurb",
+      "text": "Two twisted crossings. Each one bends a light the colours decide."
+    },
+    {
+      "key": "challenge.d31_glade.name",
+      "text": "Twisted Vale"
+    },
+    {
+      "key": "challenge.d32_glade.blurb",
+      "text": "A briar opens one way and thorns the other. Only one way wakes them all."
+    },
+    {
+      "key": "challenge.d32_glade.name",
+      "text": "Briar Gate"
+    },
+    {
+      "key": "challenge.d33_glade.blurb",
+      "text": "The briar decides which two lights meet. Open the right way."
+    },
+    {
+      "key": "challenge.d33_glade.name",
+      "text": "Thornknot"
+    },
+    {
+      "key": "challenge.d34_glade.blurb",
+      "text": "Eight ways for every arm to meet, and only one wakes the glade."
+    },
+    {
+      "key": "challenge.d34_glade.name",
+      "text": "Bramble Heart"
+    },
+    {
+      "key": "challenge.d35_glade.blurb",
+      "text": "Two blue conduits share a taproot. Turn one and the other follows."
+    },
+    {
+      "key": "challenge.d35_glade.name",
+      "text": "Deep Roots"
+    },
+    {
+      "key": "challenge.d36_glade.blurb",
+      "text": "Rooted conduits turn as one across the glade. Count before you tap."
+    },
+    {
+      "key": "challenge.d36_glade.name",
+      "text": "Ironroot"
+    },
+    {
+      "key": "challenge.d37_glade.blurb",
+      "text": "A bridge, a twist and a taproot, all in one glade."
+    },
+    {
+      "key": "challenge.d37_glade.name",
+      "text": "Elder Roots"
+    },
+    {
+      "key": "challenge.d38_glade.blurb",
+      "text": "The largest glade: two bridges, a twist, and a taproot that turns three conduits at once."
+    },
+    {
+      "key": "challenge.d38_glade.name",
+      "text": "The Old Oak"
+    },
+    {
       "key": "chapter.c01_shallows.name",
       "text": "The Shallows"
     },

@@ -2820,10 +2820,70 @@ def check_challenges(keys, warnings):
               f"{len(row.get('waves') or [])} wave(s), {raiders} raider(s), {health} health, "
               f"{max(1, row.get('bolts') or 1)} bolt(s) a unit")
 
+        if genre == "glade" and row.get("rows"):
+            check_glade_challenge(cid, where, row, warnings)
+
     for name in CHALLENGE_GENRES:
         if not any(r.get("genre") == name for r in rows):
             warnings.append(f"no challenge ships the '{name}' genre")
 
+
+
+def check_glade_challenge(cid, where, row, warnings):
+    """A glade challenge is held to the chapter validator's rules, with every warning an error,
+    and to the two questions only a glade row can be asked.
+
+    `GladePuzzle.Fault` asks what a device needs and nothing more; the chapter's rules ask
+    whether a board is fit - a crossing that crosses nothing, a twist or a briar nothing on the
+    board settles, a taproot that never agrees. A challenge is a glade a player meets once a
+    day, so it meets the same bar (`ChallengeTests.EveryShippedGladeMeetsTheChapterValidator`
+    holds the C# half). Then: **one answer** - exactly one arrangement that mates every arm
+    wakes every critter, counted by `Tools/make_glade_challenges.py` (invariant 5d: a count,
+    not an argument) - and **every raider answerable**, because a wave naming a colour no
+    critter feeds is a loss the puzzle had no say in.
+    Then the tool's own faults (**no light mixes**: a crystal dark in the solution is two
+    colours meeting), and the hill it tuned: never empty, and a slack inside `SLACK_BAND`.
+    """
+    before = len(warnings)
+    check_level({"id": cid, "width": row.get("width"), "height": row.get("height"),
+                 "rows": row.get("rows")}, "challenges")
+    for message in warnings[before:]:
+        errors.append(f"{where}: {message} (a challenge glade is held to every chapter rule)")
+    del warnings[before:]
+
+    fed = {tok[tok.index('#') + 1].lower() for line in row["rows"] for tok in line.split()
+           if tok.startswith("@") and "#" in tok}
+    for wave in row.get("waves") or []:
+        for tok in str(wave).split()[1:]:
+            if tok and tok[0] in "rgby" and tok[0] not in fed:
+                errors.append(f"{where}: wave \"{wave}\" sends a '{tok[0]}' raider and no critter "
+                              "on the board feeds that turret")
+
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+    import make_glade_challenges as glade
+    board = glade.Board.of_row(row)
+    mated, wins, done = board.dealt_copy_zero().arrangements()
+    if not done:
+        errors.append(f"{where}: more than {mated} arrangements mate every arm; too open to count")
+    elif len(wins) != 1:
+        errors.append(f"{where}: {len(wins)} arrangements that mate every arm wake every critter; "
+                      "a glade has exactly one answer (root a tile that tells them apart)")
+
+    # Light never mixes on a challenge glade (invariant 56l), and the hill is tuned rather than
+    # typed: every raider answered, never empty while the bot plays, a slack inside the band.
+    # The mirror is the tool's; `ChallengeTests` holds the same three in C#.
+    for fault in glade.faults(board):
+        errors.append(f"{where}: {fault}")
+    reading = glade.report(row)
+    if not reading["won"] or reading["health"] < 11:
+        errors.append(f"{where}: the bot does not win with the line whole but for one blow")
+    if reading["empty"]:
+        errors.append(f"{where}: the hill stands empty on {reading['empty']} of the bot's turns "
+                      "(make_glade_challenges.py --write)")
+    lo, hi = glade.SLACK_BAND
+    if not lo <= reading["slack"] <= hi:
+        errors.append(f"{where}: slack {reading['slack'] / 100:.2f}x is outside {lo / 100:.2f}-{hi / 100:.2f}x "
+                      "(make_glade_challenges.py --write)")
 
 
 def notification_kinds():

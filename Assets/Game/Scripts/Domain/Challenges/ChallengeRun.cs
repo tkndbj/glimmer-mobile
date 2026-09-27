@@ -96,7 +96,11 @@ namespace GlimmerGrove.Challenges
             }
 
             for (int i = 0; i < move.Feeds.Count; i++)
-                Hill.Feed(move.Feeds[i].Colour, move.Feeds[i].Bolts);
+            {
+                var feed = move.Feeds[i];
+                if (feed.Banks) Hill.Feed(feed.Colour, feed.Bolts);
+                else Hill.Volley(feed.Colour, feed.Bolts);
+            }
 
             Hill.Resolve(_report.Events);
             _report.Walked = true;

@@ -241,8 +241,16 @@ def cell_across(genre, cols, host_w):
     return int(min((host_w - FRAME_SIDE * 2) / (cols + PLATE_RIM), MAX_CELL[genre]))
 
 
+#: `BoardView.Pad` / `.MaxPitch`: the glade lays itself out rather than on the shared plate.
+BOARD_PAD, BOARD_MAX_PITCH = 34.0, 190.0
+
+
 def band_wanted(genre, cols, rws, host_w):
-    """`PuzzleView.BandWanted`: how tall a band the board asks for at the cell the width allows."""
+    """`PuzzleView.BandWanted`: how tall a band the board asks for at the cell the width allows.
+    The glade answers in `BoardView`'s own terms (`GladeView.BandWanted`)."""
+    if genre == "glade":
+        pitch = min((host_w - FRAME_SIDE * 2 - BOARD_PAD * 2) / cols, BOARD_MAX_PITCH)
+        return rws * pitch + BOARD_PAD * 2 + FRAME_SIDE * 2
     return (rws + PLATE_RIM + EDGE_ROWS.get(genre, 0)) * cell_across(genre, cols, host_w) + FRAME_SIDE * 2 + STRIP.get(genre, 0)
 
 
@@ -296,7 +304,7 @@ def puzzle(sheet, row, top, bottom, txt):
         # base colour, a crystal on its glow, a sleeping critter in its halo. Nothing is lit,
         # because no shipped row opens lit and the light is `Puzzle`'s alone (5b). Tokens are
         # the glade grammar, read as far as the drawing needs.
-        pad, cap = 34.0, 190.0                                   # BoardView's pad and pitch clamp
+        pad, cap = BOARD_PAD, BOARD_MAX_PITCH                    # BoardView's pad and pitch clamp
         # `GladeView.Build`: the board is built into the frame's inside, so its pitch is read off that.
         pitch = max(64.0, min((inner_w - pad * 2) / cols, (inner_h - strip - pad * 2) / rws, cap))
         board_w, board_h = pitch * cols, pitch * rws
@@ -308,8 +316,9 @@ def puzzle(sheet, row, top, bottom, txt):
         arm_base = tuple(int(a + (b - a) * .44) for a, b in zip(slate, (148, 184, 214)))
         hub_col = tuple(int(a + (b - a) * .54) for a, b in zip(slate, (168, 204, 235)))
         thick = round(size * .175)
-        energy = {"R": (242, 64, 79), "G": (255, 221, 87), "B": (79, 193, 255), "Y": (255, 138, 31),
-                  "M": (180, 120, 255), "C": (84, 228, 140), "W": (255, 244, 206)}
+        # `GladeView.Light`: every light is its turret's gem colour (`ChallengeArt.Tint`), and
+        # a challenge glade never mixes, so R, G, B and Y are the only four there are.
+        energy = {letter: TINTS[i] for i, letter in enumerate("RGBY")}
 
         def at(i):
             x, y = i % cols, i // cols

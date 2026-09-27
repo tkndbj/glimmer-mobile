@@ -254,7 +254,7 @@ namespace GlimmerGrove
 
         void BuildCrystal(Cell cell)
         {
-            var col = Pal.EnergyColour(cell.colour);
+            var col = _board.Paint(cell.colour);
             _crystalGlow = UIKit.Img("SourceGlow", _fixture, Art.Glow(128, 2f), Pal.A(col, .45f),
                                      Vector2.one * _size * 1.22f, new Vector2(.5f, .5f), Vector2.zero);
             _crystal = UIKit.Img("Crystal", _fixture, Art.Crystal(128), Pal.Lift(col, .45f),
@@ -351,10 +351,10 @@ namespace GlimmerGrove
 
         Color HaloColour()
         {
-            if (!AcceptsAnyColour) return Pal.EnergyColour(_p.C[_i].colour);
+            if (!AcceptsAnyColour) return _board.Paint(_p.C[_i].colour);
 
             int reaching = _p.Energy(_i);
-            return reaching != 0 ? Pal.EnergyColour(reaching) : Pal.Cream;
+            return reaching != 0 ? _board.Paint(reaching) : Pal.Cream;
         }
 
         Sprite HaloSprite()
@@ -681,7 +681,7 @@ namespace GlimmerGrove
         void ArmRest(int k, out Color lit, out Color glow)
         {
             int flow = _p.EnergyOn(_i, _armStrand[k]);
-            var col = Pal.EnergyColour(flow);
+            var col = _board.Paint(flow);
 
             lit = flow != 0 ? Pal.A(Pal.Lift(col, .35f), 1f) : Pal.A(col, 0f);
             glow = flow != 0 ? Pal.A(col, .5f) : Pal.A(col, 0f);
@@ -691,7 +691,7 @@ namespace GlimmerGrove
         void HubRest(out Color lit, out Color glow)
         {
             int flow = _p.EnergyOn(_i, 0);
-            var col = Pal.EnergyColour(flow);
+            var col = _board.Paint(flow);
 
             lit = flow != 0 ? Pal.A(Pal.Lift(col, .55f), 1f) : Pal.A(col, 0f);
             glow = flow != 0 ? Pal.A(col, .62f) : Pal.A(col, 0f);
@@ -840,7 +840,7 @@ namespace GlimmerGrove
             {
                 if (this == null) return;
 
-                var col = Pal.EnergyColour(Mathf.Max(1, _p.Energy(_i)));
+                var col = _board.Paint(Mathf.Max(1, _p.Energy(_i)));
                 var hot = Pal.A(Pal.Lift(col, .88f), 1f);
 
                 Ripple(Pal.A(Pal.Lift(col, .55f), .9f), 1.35f);
@@ -1052,7 +1052,7 @@ namespace GlimmerGrove
             {
                 if (this == null) return;
 
-                var col = Pal.EnergyColour(Mathf.Max(1, _p.Energy(_i)));
+                var col = _board.Paint(Mathf.Max(1, _p.Energy(_i)));
                 Ripple(Pal.A(Pal.Radiance, .95f), 1.5f);
                 Tween.Punch(_rotor, .18f, .5f);
 
@@ -1189,7 +1189,7 @@ namespace GlimmerGrove
         /// </summary>
         public void Flare(float delay)
         {
-            var col = Pal.EnergyColour(Mathf.Max(1, _p.Energy(_i)));
+            var col = _board.Paint(Mathf.Max(1, _p.Energy(_i)));
             Tween.After(delay, () =>
             {
                 if (this == null) return;

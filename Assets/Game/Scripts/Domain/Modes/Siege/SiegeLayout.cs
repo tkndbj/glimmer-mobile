@@ -626,6 +626,62 @@ namespace GlimmerGrove.Modes
         }
 
         /// <summary>
+        /// A layout handed its roster as specs rather than as wave strings: any kind at any
+        /// place in any wave, which is what the endless lane already sends (a pair of bosses
+        /// with an escort) said of an authored list.
+        ///
+        /// <para>
+        /// <b>Reached by nothing in content.</b> A chapter body speaks the string grammar above,
+        /// where a boss is one token and always the last wave; this is for a board authored in
+        /// code (<c>SiegeShowcase</c>) that wants two bosses walking in with a crowd, which the
+        /// grammar cannot say and the board can already play — <c>SiegeBoard.Muster</c> asks
+        /// <see cref="KindAt"/> per raider and <c>SiegeTuning.BossLane</c> seats a pair.
+        /// <see cref="HasBoss"/> is false here on purpose: <see cref="Boss"/> and
+        /// <see cref="BossWave"/> describe the grammar's one-boss-last shape, and the readings
+        /// that matter (<see cref="BossesIn"/>, <see cref="KindAt"/>, <see cref="SizeOf"/>) are
+        /// answered off <see cref="Coming"/> for every layout alike.
+        /// </para>
+        /// </summary>
+        public SiegeLayout(ProtoGrid grid, string deal, string wards, SiegeSpec[][] coming,
+                           int cogs = 0, int tough = 0, string charms = null)
+        {
+            Grid = grid;
+            Charms = Charmed(charms);
+            Tough = new SiegeSurge(tough <= 0 ? 10 : tough, 10);
+            Deal = Tidy(deal, Letters);
+            Wards = Tidy(wards, WardLetters).ToCharArray();
+            Cogs = cogs < 0 ? 0 : cogs;
+
+            var kept = new List<SiegeSpec[]>();
+            for (int i = 0; coming != null && i < coming.Length; i++)
+                if (coming[i] != null && coming[i].Length > 0) kept.Add(coming[i]);
+
+            Coming = kept.ToArray();
+
+            // Spelled back into the grammar for the readouts that print a wave; a boss is
+            // written as the letter it wears, which is all the grammar has for a body inside
+            // a wave.
+            Waves = new string[Coming.Length];
+            for (int w = 0; w < Coming.Length; w++)
+            {
+                var text = new System.Text.StringBuilder(Coming[w].Length * 2);
+                for (int i = 0; i < Coming[w].Length; i++)
+                {
+                    var spec = Coming[w][i];
+                    for (int m = 0; m < Modifiers.Length; m++)
+                        if (Modifiers[m].Kind == spec.Kind) text.Append(Modifiers[m].Mark);
+
+                    text.Append(spec.Kind == SiegeKind.Brute
+                                ? char.ToUpperInvariant(spec.Colour) : spec.Colour);
+                }
+                Waves[w] = text.ToString();
+            }
+
+            Seed = Hash(grid);
+            Fault = Check(string.Empty, charms);
+        }
+
+        /// <summary>
         /// Reads <c>"warlord:r"</c>, and answers false for anything at all that is not exactly
         /// that shape.
         ///
@@ -857,7 +913,9 @@ namespace GlimmerGrove.Modes
                     // so the letter on its token decides nothing about the line and is not
                     // checked against it. A bonecaller's raised creepers still wear it, and
                     // `ModeValidator.Bossed` warns when no ward does.
-                    if (w == BossWave && i == 0) continue;
+                    // Asked of the kind rather than of the place, so a roster handed in as
+                    // specs (the constructor above) is read by the same clause.
+                    if (SiegeTuning.IsBoss(Coming[w][i].Kind)) continue;
 
                     char colour = Coming[w][i].Colour;
                     if (Array.IndexOf(Wards, colour) >= 0) continue;

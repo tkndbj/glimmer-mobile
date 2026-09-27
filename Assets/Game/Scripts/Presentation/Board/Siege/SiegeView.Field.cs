@@ -470,6 +470,8 @@ namespace GlimmerGrove
         /// </summary>
         void Chain(int depth)
         {
+            if (Muted) return;
+
             // **The hill holds one wide caption at a time, and whichever is already standing
             // keeps it.** This banner and the forecast band are the only two, and neither is
             // small: the forecast is 2.95 cells tall and this 1.9, against a hill that is 6.15
