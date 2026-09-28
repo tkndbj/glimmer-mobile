@@ -177,6 +177,13 @@ namespace GlimmerGrove
             var card = UIKit.Img("Card", bar, Art.S("Ui/" + Skins.Card), Color.white,
                                  new Vector2(620f, 138f), new Vector2(0f, .5f), new Vector2(352f, 0f));
 
+            // **The name card is the door to the keeper ladder** (invariant 57), at the owner's
+            // instruction: the level, the bar and the name are all facts about the ladder, so the
+            // card that carries them is where a player expects to find it. A `Btn` on the card
+            // itself rather than a key beside it, because the whole card is the thing tapped.
+            card.raycastTarget = true;
+            card.gameObject.AddComponent<Btn>().Setup(() => Flow.Go<KeeperScreen>());
+
             // The kit's inset slot — the one piece in it that reads as a hole rather than as a
             // thing standing on the screen, which is what a seal wants to sit in.
             var frame = UIKit.Img("Seat", card.transform, Art.S("Ui/" + Skins.Slot), Color.white,

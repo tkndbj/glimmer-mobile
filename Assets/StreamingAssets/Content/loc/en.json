@@ -255,7 +255,247 @@
     },
     {
       "key": "challenge.d05_merge.name",
-      "text": "Merge"
+      "text": "First Forge"
+    },
+    {
+      "key": "challenge.d69_merge.blurb",
+      "text": "Three 8s wait for a fourth. Build it out of the 2s."
+    },
+    {
+      "key": "challenge.d69_merge.name",
+      "text": "Amber Steps"
+    },
+    {
+      "key": "challenge.d70_merge.blurb",
+      "text": "A lone 16. Make its twin from the small gems."
+    },
+    {
+      "key": "challenge.d70_merge.name",
+      "text": "Quarry Gate"
+    },
+    {
+      "key": "challenge.d71_merge.blurb",
+      "text": "Two rocks guard the middle. Use them to stop a slide."
+    },
+    {
+      "key": "challenge.d71_merge.name",
+      "text": "Stonecutter"
+    },
+    {
+      "key": "challenge.d72_merge.blurb",
+      "text": "Three 8s and four 2s. The fourth 8 is yours to make."
+    },
+    {
+      "key": "challenge.d72_merge.name",
+      "text": "Tumbled Eights"
+    },
+    {
+      "key": "challenge.d73_merge.blurb",
+      "text": "Rocks split the board. Every gem has to find a way round."
+    },
+    {
+      "key": "challenge.d73_merge.name",
+      "text": "Split Stone"
+    },
+    {
+      "key": "challenge.d74_merge.blurb",
+      "text": "Seven first moves, and only one of them is the best."
+    },
+    {
+      "key": "challenge.d74_merge.name",
+      "text": "Low Road"
+    },
+    {
+      "key": "challenge.d75_merge.blurb",
+      "text": "A slide only stops against something. Use the rocks as walls."
+    },
+    {
+      "key": "challenge.d75_merge.name",
+      "text": "Two Pillars"
+    },
+    {
+      "key": "challenge.d76_merge.blurb",
+      "text": "The 8s are scattered. Bring them together one at a time."
+    },
+    {
+      "key": "challenge.d76_merge.name",
+      "text": "Mason's Yard"
+    },
+    {
+      "key": "challenge.d77_merge.blurb",
+      "text": "Seven rocks, seven gems. Line each pair up before you slide."
+    },
+    {
+      "key": "challenge.d77_merge.name",
+      "text": "Cellar Stair"
+    },
+    {
+      "key": "challenge.d78_merge.blurb",
+      "text": "Twins meet only in a straight line. Move one into place first."
+    },
+    {
+      "key": "challenge.d78_merge.name",
+      "text": "Garnet Rows"
+    },
+    {
+      "key": "challenge.d79_merge.blurb",
+      "text": "Three 4s, and the fourth hides in the two 2s."
+    },
+    {
+      "key": "challenge.d79_merge.name",
+      "text": "Twin Fours"
+    },
+    {
+      "key": "challenge.d80_merge.blurb",
+      "text": "Two 8s and three 4s. Finish each size before the next."
+    },
+    {
+      "key": "challenge.d80_merge.name",
+      "text": "Ember Loft"
+    },
+    {
+      "key": "challenge.d81_merge.blurb",
+      "text": "Four 2s, three 8s, and not much room to slide."
+    },
+    {
+      "key": "challenge.d81_merge.name",
+      "text": "Keystone"
+    },
+    {
+      "key": "challenge.d82_merge.blurb",
+      "text": "Twelve moves if you plan it. Half of them are set-up slides."
+    },
+    {
+      "key": "challenge.d82_merge.name",
+      "text": "Last Light"
+    },
+    {
+      "key": "challenge.d83_merge.blurb",
+      "text": "Four 2s, an 8 and a 16, far apart. Every slide has to count."
+    },
+    {
+      "key": "challenge.d83_merge.name",
+      "text": "Watchtower"
+    },
+    {
+      "key": "challenge.d84_merge.blurb",
+      "text": "One of every size to 32. Make the 64."
+    },
+    {
+      "key": "challenge.d84_merge.name",
+      "text": "Long Climb"
+    },
+    {
+      "key": "challenge.d85_merge.blurb",
+      "text": "Three 16s, and the fourth has to be built from the small gems."
+    },
+    {
+      "key": "challenge.d85_merge.name",
+      "text": "Three Crowns"
+    },
+    {
+      "key": "challenge.d86_merge.blurb",
+      "text": "A wide hall of stone. Make the 2s meet first, then climb."
+    },
+    {
+      "key": "challenge.d86_merge.name",
+      "text": "Wide Hall"
+    },
+    {
+      "key": "challenge.d87_merge.blurb",
+      "text": "The 2s are spread across the board. Gather them first."
+    },
+    {
+      "key": "challenge.d87_merge.name",
+      "text": "Scattered Sparks"
+    },
+    {
+      "key": "challenge.d88_merge.blurb",
+      "text": "Every size from 2 to 32. Each one waits for the size below it."
+    },
+    {
+      "key": "challenge.d88_merge.name",
+      "text": "Stairway"
+    },
+    {
+      "key": "challenge.d89_merge.blurb",
+      "text": "Three 16s stand apart. The small gems decide which pair meets."
+    },
+    {
+      "key": "challenge.d89_merge.name",
+      "text": "Crown Jewels"
+    },
+    {
+      "key": "challenge.d90_merge.blurb",
+      "text": "Rocks everywhere. Find the lane each gem can stop in."
+    },
+    {
+      "key": "challenge.d90_merge.name",
+      "text": "Deep Quarry"
+    },
+    {
+      "key": "challenge.d91_merge.blurb",
+      "text": "Only five first moves, and two of them keep you on the best path."
+    },
+    {
+      "key": "challenge.d91_merge.name",
+      "text": "Narrow Start"
+    },
+    {
+      "key": "challenge.d92_merge.blurb",
+      "text": "Three 16s wait. Every small gem has to become the fourth."
+    },
+    {
+      "key": "challenge.d92_merge.name",
+      "text": "Stone Garden"
+    },
+    {
+      "key": "challenge.d93_merge.blurb",
+      "text": "No 2s at all. Start from the 4s and climb to 64."
+    },
+    {
+      "key": "challenge.d93_merge.name",
+      "text": "No Small Change"
+    },
+    {
+      "key": "challenge.d94_merge.blurb",
+      "text": "Fifteen moves at best, and ten of them only line things up."
+    },
+    {
+      "key": "challenge.d94_merge.name",
+      "text": "Ember Stair"
+    },
+    {
+      "key": "challenge.d95_merge.blurb",
+      "text": "Build each size in turn. The 32 waits for the rest."
+    },
+    {
+      "key": "challenge.d95_merge.name",
+      "text": "Fallen Tower"
+    },
+    {
+      "key": "challenge.d96_merge.blurb",
+      "text": "Seven wide and full of rock. Plan the whole climb before you move."
+    },
+    {
+      "key": "challenge.d96_merge.name",
+      "text": "Great Hall"
+    },
+    {
+      "key": "challenge.d97_merge.blurb",
+      "text": "Sixteen moves at best. Most of them are set-up."
+    },
+    {
+      "key": "challenge.d97_merge.name",
+      "text": "Labyrinth"
+    },
+    {
+      "key": "challenge.d98_merge.blurb",
+      "text": "The longest climb here. Seventeen moves if you see it all."
+    },
+    {
+      "key": "challenge.d98_merge.name",
+      "text": "Summit"
     },
     {
       "key": "challenge.d06_sokoban.blurb",
@@ -6472,6 +6712,114 @@
     {
       "key": "ui.rankup.onward",
       "text": "ONWARD"
+    },
+    {
+      "key": "ui.keeper.subtitle",
+      "text": "Every level opens more of the shelf. Earn it with XP, or buy the next one outright."
+    },
+    {
+      "key": "ui.keeper.level_heading",
+      "text": "Progress"
+    },
+    {
+      "key": "ui.keeper.rank_note",
+      "text": "Bought levels open everything a level opens. They never count toward your rank."
+    },
+    {
+      "key": "ui.keeper.ladder_heading",
+      "text": "The ladder"
+    },
+    {
+      "key": "ui.keeper.to_top",
+      "text": "to level {0}"
+    },
+    {
+      "key": "ui.keeper.level_n",
+      "text": "Level {0}"
+    },
+    {
+      "key": "ui.keeper.buy",
+      "text": "Buy level {0}"
+    },
+    {
+      "key": "ui.keeper.buy_short",
+      "text": "Buy"
+    },
+    {
+      "key": "ui.keeper.at_top",
+      "text": "Top of the ladder"
+    },
+    {
+      "key": "ui.keeper.not_sold",
+      "text": "Levels are not for sale right now"
+    },
+    {
+      "key": "ui.keeper.bought_n",
+      "text": "{0} bought outright"
+    },
+    {
+      "key": "ui.keeper.bought_none",
+      "text": "Every level earned"
+    },
+    {
+      "key": "ui.keeper.bought_toast",
+      "text": "Level {0} is yours!"
+    },
+    {
+      "key": "ui.keeper.too_poor_gems",
+      "text": "You need {0} gems for this level"
+    },
+    {
+      "key": "ui.keeper.too_poor_coins",
+      "text": "You need {0} coins for this level"
+    },
+    {
+      "key": "ui.keeper.unlocks_turret",
+      "text": "Unlocks {0}"
+    },
+    {
+      "key": "ui.keeper.unlocks_chapter",
+      "text": "Opens {0}"
+    },
+    {
+      "key": "ui.keeper.title_tier",
+      "text": "You become {0}"
+    },
+    {
+      "key": "ui.keeper.reached",
+      "text": "Reached"
+    },
+    {
+      "key": "ui.keeper.earn_it",
+      "text": "Earn it with XP"
+    },
+    {
+      "key": "ui.keeper.price_gems",
+      "text": "{0} gems to buy"
+    },
+    {
+      "key": "ui.keeper.price_coins",
+      "text": "{0} coins to buy"
+    },
+    {
+      "key": "ui.keeper.here",
+      "text": "You are here"
+    },
+    {
+      "key": "ui.keeper.bought_chip",
+      "text": "Bought"
+    },
+    {
+      "key": "ui.keeper.page_title",
+      "text": "Keeper Level"
+    },
+    {
+      "key": "ui.keeper.key_top",
+      "text": "At the top"
+    },
+    {
+      "key": "ui.keeper.key_not_sold",
+      "text": "Not for sale"
     }
   ]
 }

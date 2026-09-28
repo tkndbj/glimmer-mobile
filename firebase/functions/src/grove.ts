@@ -1266,7 +1266,12 @@ export function buildCard(
   nowUnix: number,
   confirmedName: string | null,
   list?: PreparedBlocklist,
-  groveDenied = false
+  groveDenied = false,
+  // The level XP alone pays for, when it differs from `level`: a keeper level bought outright
+  // (invariant 57) moves every gate this card draws and no badge, so the rank below is asked
+  // about this and never about `level`. Defaults to `level` for every caller that has not
+  // bought one - which is what every card written before this deployment says.
+  earnedLevel: number = level
 ): GroveCardDoc {
   const wallet = (save.wallet ?? {}) as Record<string, unknown>;
 
@@ -1370,7 +1375,7 @@ export function buildCard(
   // omitted when empty for the document's: a keeper below the first rung publishes no rung,
   // and so does every card written before this deployment.
   const rung = rungOf(save, progression, {
-    keeperLevel: level,
+    keeperLevel: earnedLevel,
     lifetimeWaves: endlessWaves(save),
   });
 

@@ -361,6 +361,13 @@ namespace GlimmerGrove
             /// <summary>The light behind the glyph, in the ward's own colour.</summary>
             public Image Halo;
 
+            /// <summary>
+            /// The unscaled instant the glyph last came up, or below nought while it is down —
+            /// what <c>SiegeView.Ready</c> times the glyph's arrival and its pulse from, so every
+            /// bolt starts its beat at rest rather than mid-swell.
+            /// </summary>
+            public float LitAt = -1f;
+
             /// <summary>How many overcharges are banked, drawn only when it is more than one.</summary>
             public Text Held;
 

@@ -19,6 +19,7 @@
  */
 
 import { logger } from "firebase-functions";
+import type { KeeperLadderConfig } from "./keeper";
 import type { RankRungConfig } from "./ranks";
 
 import type { ReferralConfig } from "./referral";
@@ -128,6 +129,18 @@ export interface ProgressionConfig {
    * been told what the file sells cannot price a play. Re-seed after any change to the file.
    */
   challenges?: ChallengesConfig;
+
+  /**
+   * The price of a keeper level bought outright, published by the seeder out of
+   * `progression.json`'s `keeperLevels` block (`keeper.ts`, invariant 57).
+   *
+   * **Absent sells nothing**, which is `referral`'s stance rather than `endless`'s, and the
+   * difference is what a missing block costs: a keeper debit this server cannot price is
+   * refused, the client drops it and takes the level back, and the player keeps their money -
+   * loud, and correct. Falling back to built-in figures would instead let a stale server sell a
+   * level at a price nobody authored. Re-seed after any change to the block.
+   */
+  keeperLevels?: KeeperLadderConfig;
 }
 
 /**

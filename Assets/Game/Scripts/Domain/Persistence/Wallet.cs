@@ -57,6 +57,11 @@ namespace GlimmerGrove.Persistence
         static long _xpBoostSurgeUntil;
         static long _xpBoostEarned;
 
+        // Keeper levels bought outright (invariant 57): a count, monotonic by play and joined by
+        // `max`, lowered only by the server's word. Held here for the XP boost's reason - this
+        // class is the single writer of `dto.wallet`. `KeeperLedger` is the rule over it.
+        static int _keeperBought;
+
         static Hints _hints = Hints.Full;
 
         // Empty until the player chooses, never DefaultName — see WalletDto.displayName.
@@ -125,6 +130,31 @@ namespace GlimmerGrove.Persistence
 
         /// <summary>Bonus XP boosts have paid over this account's life. Only ever rises.</summary>
         public static long XpBoostEarned => _xpBoostEarned;
+
+        // ------------------------------------------------------------- bought keeper levels
+        /// <summary>How many keeper levels this account has bought outright. See <c>KeeperLedger</c>.</summary>
+        public static int KeeperLevelsBought => _keeperBought;
+
+        /// <summary>Raises the bought count, never lowering it. The join, applied locally.</summary>
+        public static void RaiseKeeperLevelsBought(int count)
+        {
+            if (count <= _keeperBought) return;
+            _keeperBought = count;
+            SaveService.MarkDirty();
+        }
+
+        /// <summary>
+        /// Sets the bought count outright, downward included. <b>Only for the server's word</b>
+        /// - a refused debit or a wallet reply with nothing in flight (<c>KeeperLedger</c>);
+        /// everything else goes through <see cref="RaiseKeeperLevelsBought"/>.
+        /// </summary>
+        internal static void SetKeeperLevelsBought(int count)
+        {
+            if (count < 0) count = 0;
+            if (count == _keeperBought) return;
+            _keeperBought = count;
+            SaveService.MarkDirty();
+        }
 
         /// <summary>
         /// Starts, or extends, the watched XP boost.
@@ -518,6 +548,9 @@ namespace GlimmerGrove.Persistence
             _xpBoostSurgeUntil = w.xpBoostSurgeUntilUnix < 0 ? 0L : w.xpBoostSurgeUntilUnix;
             _xpBoostEarned = w.xpBoostEarned < 0 ? 0L : w.xpBoostEarned;
 
+            // Negative or absent is nought, for the boost fields' reason one line up.
+            _keeperBought = w.keeperLevelsBought < 0 ? 0 : w.keeperLevelsBought;
+
             _hearts = ReadHearts(w).At(GameClock.NowUnix(), _heartBoostUntil);
             _hints = ReadHints(w).At(GameClock.NowUnix());
 
@@ -643,6 +676,9 @@ namespace GlimmerGrove.Persistence
                 xpBoostBoughtUntilUnix = _xpBoostBoughtUntil,
                 xpBoostSurgeUntilUnix = _xpBoostSurgeUntil,
                 xpBoostEarned = _xpBoostEarned,
+
+                // Keeper levels bought outright (invariant 57).
+                keeperLevelsBought = _keeperBought,
 
                 // The hint ledger. No derived mirror beside it, unlike hearts: a build that
                 // predates this one had nothing to read a hint count into, so there is

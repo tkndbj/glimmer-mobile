@@ -1329,59 +1329,156 @@ namespace GlimmerGrove.Tests
             }
         }
 
-        /// <summary>
-        /// The shipped Merge board played by its shortest route (breadth-first search,
-        /// <c>Tools/make_merge_challenges.py --report</c>), and then played the way a player
-        /// who tries things plays it: a wasted slide and its undo before every other step of
-        /// the route, twice the turns the route takes. Both must win; the margins print.
-        /// </summary>
-        [Test]
-        public void ShippedMergeIsWonByItsAuthoredRoute()
+        // ------------------------------------------------------------------ every shipped merge
+        static IReadOnlyList<ChallengeDefinition> ShippedMerges(ChallengeTable table)
         {
-            const string id = "d05_merge";
-            var table = Shipped();
-
-            Assert.AreEqual(ChallengeState.Won, PlayMerge(table, id, false).State);
-            Assert.AreEqual(ChallengeState.Won, PlayMerge(table, id, true).State);
+            var merges = table.RowsOf(ChallengeGenre.Merge);
+            Assert.Greater(merges.Count, 0, "challenges.json ships no merge");
+            return merges;
         }
 
-        /// <summary>The route as cell and direction in board terms (down is D), e.g. <c>7U</c>.</summary>
-        const string MergeRoute = "7U 2L 5L 8L 7D 17L 16D 22L 1D 18R";
-
-        static ChallengeRun PlayMerge(ChallengeTable table, string id, bool fumbling)
+        /// <summary>
+        /// A row's shortest route (<see cref="MergeRoutes"/>, written by
+        /// <c>Tools/make_merge_challenges.py</c>) played against the real rules. Returns what
+        /// every walked turn was fed and leaves the run at its end for the caller to judge.
+        /// </summary>
+        static List<ChallengeFeed[]> PlayRoute(ChallengeDefinition def, ChallengeLine line, out ChallengeRun run)
         {
-            var run = new ChallengeRun(table.Find(id), table.Line);
-            var merge = (MergePuzzle)run.Puzzle;
+            Assert.IsTrue(MergeRoutes.Shortest.TryGetValue(def.Id, out var route),
+                          $"{def.Id} has no route; run make_merge_challenges.py --write");
 
-            var steps = MergeRoute.Split(' ');
-            for (int k = 0; k < steps.Length; k++)
+            run = new ChallengeRun(def, line);
+            var fed = new List<ChallengeFeed[]>();
+
+            foreach (var step in route.Split(' '))
             {
-                string step = steps[k];
-                if (run.State != ChallengeState.Playing) break;
-
-                if (fumbling && k % 2 == 0)
-                {
-                    // A wasted look: some slide up that is not a merge, then taken back.
-                    for (int c = 0; c < merge.Width * merge.Height; c++)
-                    {
-                        if (merge.RankAt(c) <= 0 || !merge.Where(c, 0, -1, out bool m) || m) continue;
-                        run.Play(ChallengeInput.Slide(c, 0, 1));
-                        run.Play(ChallengeInput.Undo());
-                        break;
-                    }
-                    if (run.State != ChallengeState.Playing) break;
-                }
+                Assert.AreEqual(ChallengeState.Playing, run.State, $"{def.Id}: the run ended before its route's {step}");
 
                 int cell = int.Parse(step.Substring(0, step.Length - 1));
                 char d = step[step.Length - 1];
                 int dx = d == 'L' ? -1 : d == 'R' ? 1 : 0;
                 int dy = d == 'U' ? 1 : d == 'D' ? -1 : 0;
+
                 var report = run.Play(ChallengeInput.Slide(cell, dx, dy));
-                Assert.IsFalse(report.Move == null || report.Move.Refused, $"{id}: the route's {step} was refused");
+                Assert.IsFalse(report.Move == null || report.Move.Refused, $"{def.Id}: the route's {step} was refused");
+                if (report.Walked) fed.Add(report.Move.Feeds.ToArray());
             }
 
-            Won(run, id + (fumbling ? " (fumbling)" : ""));
-            return run;
+            return fed;
+        }
+
+        /// <summary>
+        /// Every row is won by its route, with every gem joined into one (a shipped board's
+        /// gems are exactly the target's worth, so par is the merges plus the set-up slides
+        /// the board forces), and the route's line takes a blow at most.
+        /// </summary>
+        [Test]
+        public void EveryShippedMergeIsWonByItsShortestRoute()
+        {
+            var table = Shipped();
+
+            foreach (var def in ShippedMerges(table))
+            {
+                PlayRoute(def, table.Line, out var run);
+                Won(run, def.Id);
+
+                var merge = (MergePuzzle)run.Puzzle;
+                int gems = 0;
+                for (int i = 0; i < merge.Width * merge.Height; i++) if (merge.RankAt(i) > 0) gems++;
+                Assert.AreEqual(1, gems, $"{def.Id}: the target is made with gems left over");
+
+                int health = 0;
+                for (int i = 0; i < run.Hill.Wards.Count; i++) health += run.Hill.Wards[i].Health;
+                Assert.GreaterOrEqual(health, run.Hill.Wards.Count * run.Hill.Line.Health - 1,
+                                      $"{def.Id}: the route's line took more than one blow");
+            }
+
+            foreach (var id in MergeRoutes.Shortest.Keys)
+                Assert.IsNotNull(table.Find(id), $"MergeRoutes carries {id}, which is not shipped");
+        }
+
+        /// <summary>
+        /// <b>How slow can a player be and still win</b>, asked of Merge exactly as of the glade
+        /// (<see cref="EveryShippedGladeForgivesASlowerPlayer"/>), and held to the same band.
+        /// </summary>
+        [Test]
+        public void EveryShippedMergeForgivesASlowerPlayer()
+        {
+            var table = Shipped();
+
+            foreach (var def in ShippedMerges(table))
+            {
+                var fed = PlayRoute(def, table.Line, out var run);
+                Assert.AreEqual(ChallengeState.Won, run.State, $"{def.Id} was not won by its route");
+
+                int total = fed.Count + 1;
+                int slowest = 100;
+                for (int pace = 105; pace <= 500; pace += 5)
+                {
+                    if (!MergeHoldsAt(def, table.Line, fed, total, pace, out _)) break;
+                    slowest = pace;
+                }
+
+                Console.WriteLine($"{def.Id}: {def.Width}x{def.Height} to {1 << def.Target}, won in {total} turn(s); " +
+                                  $"a player may take {slowest / 100f:0.00}x that on a hill of {def.Hill}");
+
+                Assert.GreaterOrEqual(slowest, SlowestPaceFloor,
+                                      $"{def.Id} is lost by a player {slowest / 100f + .05f:0.00}x the route's pace " +
+                                      "(make_merge_challenges.py --write)");
+                Assert.LessOrEqual(slowest, SlowestPaceCeiling,
+                                   $"{def.Id} forgives a player {slowest / 100f:0.00}x the route's pace " +
+                                   "(make_merge_challenges.py --write)");
+            }
+        }
+
+        [Test]
+        public void EveryShippedMergeKeepsTheHillPeopled()
+        {
+            var table = Shipped();
+
+            foreach (var def in ShippedMerges(table))
+            {
+                var fed = PlayRoute(def, table.Line, out _);
+                Assert.IsTrue(MergeHoldsAt(def, table.Line, fed, fed.Count + 1, 100, out var crowd), $"{def.Id}: the route's line fell");
+
+                int empty = 0, standing = 0;
+                foreach (int on in crowd) { if (on == 0) empty++; standing += on; }
+                Console.WriteLine($"{def.Id}: {standing / (float)Math.Max(1, crowd.Count):0.0} raider(s) on the hill " +
+                                  $"on an average turn of {crowd.Count}");
+
+                Assert.AreEqual(0, empty, $"{def.Id}: the hill stands empty on {empty} of the route's {crowd.Count} turns");
+            }
+        }
+
+        /// <summary>
+        /// <see cref="HoldsAt"/> for a board whose feeds <b>bank</b>: a step's merge is fed
+        /// once, on the turn the slower player reaches it, where the glade's lit critter is a
+        /// volley re-fired every turn it stays lit. Mirrored by the tool's <c>run</c>.
+        /// </summary>
+        static bool MergeHoldsAt(ChallengeDefinition def, ChallengeLine line, List<ChallengeFeed[]> fed, int total, int pace,
+                                 out List<int> crowd)
+        {
+            var hill = new ChallengeHill(line, def.Hill, def.Waves);
+            int finish = (total * pace + 99) / 100;
+            crowd = new List<int>(finish);
+            int done = 0;
+
+            for (int k = 1; k < finish; k++)
+            {
+                int progress = Math.Min(total - 1, k * 100 / pace);
+                for (; done < progress; done++)
+                    foreach (var feed in fed[done])
+                    {
+                        if (feed.Banks) hill.Feed(feed.Colour, feed.Bolts);
+                        else hill.Volley(feed.Colour, feed.Bolts);
+                    }
+
+                crowd.Add(hill.Standing);
+                hill.Resolve(null);
+                if (!hill.LineStanding) return false;
+            }
+
+            return true;
         }
 
         [Test]

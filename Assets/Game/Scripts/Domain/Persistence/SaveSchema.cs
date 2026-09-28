@@ -609,7 +609,11 @@ namespace GlimmerGrove.Persistence
         ///      <c>wallet</c> map, so no rules release (12a); absent is nought, so no migration.
         ///      The version moves because <see cref="SaveChecksum"/> hashes the serialised object
         ///      and a v34 file can never match a v35 hash.
-        public const int Version = 35;
+        /// v36: <see cref="WalletDto.keeperLevelsBought"/> - how many keeper levels were bought
+        ///      outright (invariant 57). A monotonic count inside the existing <c>wallet</c> map,
+        ///      so no rules release (12a); absent is nought, so no migration. The version moves
+        ///      for v35's reason.
+        public const int Version = 36;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -1226,6 +1230,27 @@ namespace GlimmerGrove.Persistence
         /// </para>
         /// </summary>
         public long xpBoostEarned;
+
+        /// <summary>
+        /// How many keeper levels this account has bought outright (invariant 57). Only ever
+        /// rises by play; joined by <c>max</c>.
+        ///
+        /// <para>
+        /// <b>A count of purchases, not a level.</b> The level a player stands at is the earned
+        /// level plus this, composed on every read (<c>KeeperLadder.Compose</c>), so an earned
+        /// level arriving later lifts every bought one with it and nothing here has to move. It
+        /// is an entitlement, so the wallet document the server writes is the truth and this is
+        /// the device's copy of it: raised by a purchase the moment the debit lands, raised by a
+        /// sync that brings another device's purchase, and <em>lowered</em> only when the server
+        /// refuses the debit behind it or reports a smaller count with nothing in flight
+        /// (<c>KeeperLedger</c>). Absent is nought, which is what every file written before this
+        /// means and what a rolled-back client writes, so no migration and no sentinel.
+        /// </para>
+        /// <para>
+        /// It rides inside the <c>wallet</c> map, so no rules release (12a). Added in v36.
+        /// </para>
+        /// </summary>
+        public int keeperLevelsBought;
 
         /// <summary>
         /// Every hint ever handed to this player — timer refills, the starting set, a

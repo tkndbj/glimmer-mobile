@@ -242,6 +242,7 @@ function buildProgressionConfig() {
       golden: readGolden(progression),
       endless: readEndless(progression),
       xpBoost: readXpBoost(progression),
+      keeperLevels: readKeeperLevels(progression),
       challenges: readChallenges(),
       // Read before the calendar and before the streak, because both name chest tiers and
       // the seeder is the one place that can prove a named tier actually exists — a
@@ -677,6 +678,59 @@ function readXpBoost(progression) {
   }
 
   return { maxPercent };
+}
+
+/**
+ * The price of a keeper level bought outright (invariant 57), published so `submitSpends` can
+ * price a `keeper:` debit. Read to `KeeperLadder.Resolve`'s rules exactly, and **refused rather
+ * than repaired** on any fault, because the seeder is the last gate before every account: a
+ * ladder with a hole in it is a purchase refused on a device that already showed the price.
+ *
+ * Absent publishes nothing, which sells nothing on both sides - the block is the one XP-adjacent
+ * thing that fails closed, because the alternative is a stale server selling a level at a price
+ * nobody authored.
+ */
+function readKeeperLevels(progression) {
+  const LOWEST = 2, MAX_TOP = 200, MAX_ANCHORS = 16, MAX_PRICE = 10_000_000;
+  const block = progression.keeperLevels;
+  if (!block) return undefined;
+
+  const whole = (raw, name, max) => {
+    const value = Math.floor(Number(raw));
+    if (!Number.isFinite(value) || value < 0) throw new Error(`keeperLevels ${name} is ${raw}, which is not a whole number`);
+    if (value > max) throw new Error(`keeperLevels ${name} is ${value}, above the supported maximum ${max}`);
+    return value;
+  };
+
+  const top = whole(block.top, "top", MAX_TOP);
+  if (top < LOWEST) throw new Error(`keeperLevels top is ${top}; nothing below level ${LOWEST} can be sold`);
+  const curveTop = Math.floor(progression.maxLevel ?? 60);
+  if (top > curveTop) throw new Error(`keeperLevels top is ${top} but the curve ends at level ${curveTop}`);
+
+  const rows = Array.isArray(block.anchors) ? block.anchors : [];
+  if (rows.length === 0) throw new Error("keeperLevels has a top and no anchors");
+  if (rows.length > MAX_ANCHORS) throw new Error(`keeperLevels lists ${rows.length} anchors; at most ${MAX_ANCHORS} are supported`);
+
+  const anchors = [];
+  let last = null;
+  rows.forEach((row, i) => {
+    const level = whole(row?.level, `anchor ${i} level`, top);
+    const price = whole(row?.price, `anchor ${i} price`, MAX_PRICE);
+    const currency = row?.currency;
+    if (level < LOWEST) throw new Error(`keeperLevels anchor ${i} prices level ${level}, below ${LOWEST}`);
+    if (price < 1) throw new Error(`keeperLevels anchor ${i} costs ${price}; a price is at least 1`);
+    if (currency !== "credits" && currency !== "gems") throw new Error(`keeperLevels anchor ${i} is priced in '${currency}'`);
+    if (last && level <= last.level) throw new Error(`keeperLevels anchor ${i} prices level ${level} after ${last.level}; anchors must climb`);
+    if (last && last.currency === currency && price < last.price) {
+      throw new Error(`keeperLevels anchor ${i} costs ${price} after ${last.price} in the same currency; a band never gets cheaper`);
+    }
+    last = { level, currency, price };
+    anchors.push(last);
+  });
+  if (last.level !== top) throw new Error(`keeperLevels top is ${top} but the last anchor prices level ${last.level}`);
+
+  console.log(`  keeperLevels: levels ${anchors[0].level}..${top} for sale over ${anchors.length} anchor(s)`);
+  return { top, anchors };
 }
 
 function readEndless(progression) {

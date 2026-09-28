@@ -93,7 +93,7 @@ namespace GlimmerGrove.Progression
                          ContinueTable carryOn, UtilityCatalog utilities,
                          WardCatalog wards, TaskTable tasks, ReferralTable referral,
                          EndlessRewardTable endless, XpBoostTable xpBoost,
-                         RankLadder ranks)
+                         RankLadder ranks, KeeperLadder keeperLevels)
         {
             _cumulative = cumulative;
             _defaultRule = defaultRule;
@@ -115,6 +115,7 @@ namespace GlimmerGrove.Progression
             Endless = endless ?? EndlessRewardTable.Default;
             XpBoost = xpBoost ?? XpBoostTable.Default;
             Ranks = ranks ?? RankLadder.Empty;
+            KeeperLevels = keeperLevels ?? KeeperLadder.Empty;
         }
 
         /// <summary>
@@ -167,6 +168,13 @@ namespace GlimmerGrove.Progression
         /// </para>
         /// </summary>
         public XpBoostTable XpBoost { get; }
+
+        /// <summary>
+        /// What a bought keeper level costs (invariant 57). <see cref="KeeperLadder.Empty"/> — nothing
+        /// for sale — when the file carries no block, because a level sold against a ladder the
+        /// server was never told about is a debit refused and a level taken back.
+        /// </summary>
+        public KeeperLadder KeeperLevels { get; }
 
         /// <summary>
         /// The rank ladder, published with the curve for the reason every block here is and one
@@ -336,7 +344,8 @@ namespace GlimmerGrove.Progression
             referral: ReferralTable.Default,
             endless: EndlessRewardTable.Default,
             xpBoost: XpBoostTable.Default,
-            ranks: RankLadder.Empty);
+            ranks: RankLadder.Empty,
+            keeperLevels: KeeperLadder.Empty);
 
         /// <summary>Highest level this curve defines. Level 1 always exists.</summary>
         public int MaxLevel => _cumulative.Length;
@@ -622,10 +631,24 @@ namespace GlimmerGrove.Progression
             // badges and never the game — there is no built-in one, deliberately (`RankLadder`).
             var ranks = RankLadder.Resolve(dto.ranks, problems);
 
+            // And the price of a keeper level. Read against the curve because it names levels
+            // the curve has to define: a top above `maxLevel` would sell a level nobody can stand
+            // at. Absent sells nothing (`KeeperLadder`), which is the one XP-adjacent block that
+            // fails closed rather than falling back, because a sale the server refuses is money
+            // shown and taken away.
+            var keeperLevels = KeeperLadder.Resolve(dto.keeperLevels, problems);
+            if (keeperLevels.Sells && keeperLevels.Top > maxLevel)
+            {
+                problems.Add($"keeperLevels top is {keeperLevels.Top} but the curve ends at level " +
+                             $"{maxLevel}; a level above the curve cannot be stood at, so the ladder " +
+                             "is withdrawn");
+                keeperLevels = KeeperLadder.Empty;
+            }
+
             table = Build(dto.xpToNext, dto.tailXpToNext, dto.tailXpIncrement, maxLevel,
                           defaultRule, chapterRules, daily, ads, streak, golden, hearts, hints,
                           store, prompts, chapterGate, carryOn, utilities, wards, tasks, referral,
-                          endless, xpBoost, ranks);
+                          endless, xpBoost, ranks, keeperLevels);
             return true;
         }
 
@@ -640,7 +663,8 @@ namespace GlimmerGrove.Progression
                                       ContinueTable carryOn, UtilityCatalog utilities,
                                       WardCatalog wards, TaskTable tasks,
                                       ReferralTable referral, EndlessRewardTable endless,
-                                      XpBoostTable xpBoost, RankLadder ranks)
+                                      XpBoostTable xpBoost, RankLadder ranks,
+                                      KeeperLadder keeperLevels = null)
         {
             if (maxLevel < 1) maxLevel = 1;
 
@@ -660,7 +684,7 @@ namespace GlimmerGrove.Progression
             return new ProgressionTable(cumulative, defaultRule, chapterRules, daily, ads, streak,
                                         golden, hearts, hints, store, prompts,
                                         chapterGate, carryOn, utilities, wards, tasks, referral,
-                                        endless, xpBoost, ranks);
+                                        endless, xpBoost, ranks, keeperLevels);
         }
     }
 }

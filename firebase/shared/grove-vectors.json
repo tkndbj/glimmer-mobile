@@ -6940,5 +6940,816 @@
       "price": 0,
       "upgrades": ""
     }
+  ],
+  "_keeperPriceComment": [
+    "The keeper price ladder, derived twice and pinned here (invariant 57).",
+    "",
+    "A keeper level can be bought outright. The price of the level reached is decided on the",
+    "device (KeeperLadder.PriceFor, which shows and debits it) and on the server (keeperPrice in",
+    "keeper.ts, which holds the debit to it). A drift is a purchase refused as underpaid: the",
+    "client drops the debit and takes the level back, so nothing is lost but a player's trust.",
+    "",
+    "`keeperPriceLadders` are the blocks the cases run on; `shipped` is progression.json's own, so",
+    "a retune re-runs this tool. `keeperPriceCases` are prices, `keeperPriceRejected` are blocks",
+    "both readers must resolve to nothing, and `keeperSpendIds` are debit ids both parsers must",
+    "read alike. The curve blocks beside these (`keeperCurve`, `keeperCases`) are the level curve's.",
+    "",
+    "Written by Tools/make_keeper_vectors.py - a third implementation. Do not hand-edit."
+  ],
+  "keeperPriceLadders": {
+    "shipped": {
+      "top": 70,
+      "anchors": [
+        {
+          "level": 2,
+          "currency": "credits",
+          "price": 2000
+        },
+        {
+          "level": 10,
+          "currency": "credits",
+          "price": 10000
+        },
+        {
+          "level": 11,
+          "currency": "gems",
+          "price": 100
+        },
+        {
+          "level": 20,
+          "currency": "gems",
+          "price": 500
+        },
+        {
+          "level": 21,
+          "currency": "gems",
+          "price": 600
+        },
+        {
+          "level": 40,
+          "currency": "gems",
+          "price": 3000
+        },
+        {
+          "level": 41,
+          "currency": "gems",
+          "price": 3200
+        },
+        {
+          "level": 70,
+          "currency": "gems",
+          "price": 9000
+        }
+      ]
+    },
+    "bands": {
+      "top": 12,
+      "anchors": [
+        {
+          "level": 2,
+          "currency": "credits",
+          "price": 100
+        },
+        {
+          "level": 5,
+          "currency": "credits",
+          "price": 250
+        },
+        {
+          "level": 6,
+          "currency": "gems",
+          "price": 10
+        },
+        {
+          "level": 12,
+          "currency": "gems",
+          "price": 25
+        }
+      ]
+    },
+    "single": {
+      "top": 3,
+      "anchors": [
+        {
+          "level": 3,
+          "currency": "gems",
+          "price": 7
+        }
+      ]
+    },
+    "flat": {
+      "top": 4,
+      "anchors": [
+        {
+          "level": 2,
+          "currency": "credits",
+          "price": 500
+        },
+        {
+          "level": 4,
+          "currency": "credits",
+          "price": 500
+        }
+      ]
+    }
+  },
+  "keeperPriceCases": [
+    {
+      "name": "shipped level 2 is its anchor",
+      "ladder": "shipped",
+      "level": 2,
+      "sold": true,
+      "currency": "credits",
+      "price": 2000
+    },
+    {
+      "name": "shipped level 10 is its anchor",
+      "ladder": "shipped",
+      "level": 10,
+      "sold": true,
+      "currency": "credits",
+      "price": 10000
+    },
+    {
+      "name": "shipped level 11 is its anchor",
+      "ladder": "shipped",
+      "level": 11,
+      "sold": true,
+      "currency": "gems",
+      "price": 100
+    },
+    {
+      "name": "shipped level 20 is its anchor",
+      "ladder": "shipped",
+      "level": 20,
+      "sold": true,
+      "currency": "gems",
+      "price": 500
+    },
+    {
+      "name": "shipped level 21 is its anchor",
+      "ladder": "shipped",
+      "level": 21,
+      "sold": true,
+      "currency": "gems",
+      "price": 600
+    },
+    {
+      "name": "shipped level 40 is its anchor",
+      "ladder": "shipped",
+      "level": 40,
+      "sold": true,
+      "currency": "gems",
+      "price": 3000
+    },
+    {
+      "name": "shipped level 41 is its anchor",
+      "ladder": "shipped",
+      "level": 41,
+      "sold": true,
+      "currency": "gems",
+      "price": 3200
+    },
+    {
+      "name": "shipped level 70 is its anchor",
+      "ladder": "shipped",
+      "level": 70,
+      "sold": true,
+      "currency": "gems",
+      "price": 9000
+    },
+    {
+      "name": "shipped level 3 is drawn between its anchors",
+      "ladder": "shipped",
+      "level": 3,
+      "sold": true,
+      "currency": "credits",
+      "price": 3000
+    },
+    {
+      "name": "shipped level 5 is drawn between its anchors",
+      "ladder": "shipped",
+      "level": 5,
+      "sold": true,
+      "currency": "credits",
+      "price": 5000
+    },
+    {
+      "name": "shipped level 9 is drawn between its anchors",
+      "ladder": "shipped",
+      "level": 9,
+      "sold": true,
+      "currency": "credits",
+      "price": 9000
+    },
+    {
+      "name": "shipped level 12 is drawn between its anchors",
+      "ladder": "shipped",
+      "level": 12,
+      "sold": true,
+      "currency": "gems",
+      "price": 144
+    },
+    {
+      "name": "shipped level 15 is drawn between its anchors",
+      "ladder": "shipped",
+      "level": 15,
+      "sold": true,
+      "currency": "gems",
+      "price": 278
+    },
+    {
+      "name": "shipped level 19 is drawn between its anchors",
+      "ladder": "shipped",
+      "level": 19,
+      "sold": true,
+      "currency": "gems",
+      "price": 456
+    },
+    {
+      "name": "shipped level 25 is drawn between its anchors",
+      "ladder": "shipped",
+      "level": 25,
+      "sold": true,
+      "currency": "gems",
+      "price": 1105
+    },
+    {
+      "name": "shipped level 30 is drawn between its anchors",
+      "ladder": "shipped",
+      "level": 30,
+      "sold": true,
+      "currency": "gems",
+      "price": 1737
+    },
+    {
+      "name": "shipped level 35 is drawn between its anchors",
+      "ladder": "shipped",
+      "level": 35,
+      "sold": true,
+      "currency": "gems",
+      "price": 2368
+    },
+    {
+      "name": "shipped level 39 is drawn between its anchors",
+      "ladder": "shipped",
+      "level": 39,
+      "sold": true,
+      "currency": "gems",
+      "price": 2874
+    },
+    {
+      "name": "shipped level 45 is drawn between its anchors",
+      "ladder": "shipped",
+      "level": 45,
+      "sold": true,
+      "currency": "gems",
+      "price": 4000
+    },
+    {
+      "name": "shipped level 50 is drawn between its anchors",
+      "ladder": "shipped",
+      "level": 50,
+      "sold": true,
+      "currency": "gems",
+      "price": 5000
+    },
+    {
+      "name": "shipped level 55 is drawn between its anchors",
+      "ladder": "shipped",
+      "level": 55,
+      "sold": true,
+      "currency": "gems",
+      "price": 6000
+    },
+    {
+      "name": "shipped level 60 is drawn between its anchors",
+      "ladder": "shipped",
+      "level": 60,
+      "sold": true,
+      "currency": "gems",
+      "price": 7000
+    },
+    {
+      "name": "shipped level 65 is drawn between its anchors",
+      "ladder": "shipped",
+      "level": 65,
+      "sold": true,
+      "currency": "gems",
+      "price": 8000
+    },
+    {
+      "name": "shipped level 69 is drawn between its anchors",
+      "ladder": "shipped",
+      "level": 69,
+      "sold": true,
+      "currency": "gems",
+      "price": 8800
+    },
+    {
+      "name": "shipped level 1 is nobody's purchase",
+      "ladder": "shipped",
+      "level": 1,
+      "sold": false,
+      "currency": null,
+      "price": 0
+    },
+    {
+      "name": "shipped top plus one is not sold",
+      "ladder": "shipped",
+      "level": 71,
+      "sold": false,
+      "currency": null,
+      "price": 0
+    },
+    {
+      "name": "shipped nought is not sold",
+      "ladder": "shipped",
+      "level": 0,
+      "sold": false,
+      "currency": null,
+      "price": 0
+    },
+    {
+      "name": "shipped a negative level is not sold",
+      "ladder": "shipped",
+      "level": -4,
+      "sold": false,
+      "currency": null,
+      "price": 0
+    },
+    {
+      "name": "the last coin level costs the coin anchor",
+      "ladder": "bands",
+      "level": 5,
+      "sold": true,
+      "currency": "credits",
+      "price": 250
+    },
+    {
+      "name": "the first gem level costs the gem anchor",
+      "ladder": "bands",
+      "level": 6,
+      "sold": true,
+      "currency": "gems",
+      "price": 10
+    },
+    {
+      "name": "a coin level between anchors is on the line",
+      "ladder": "bands",
+      "level": 3,
+      "sold": true,
+      "currency": "credits",
+      "price": 150
+    },
+    {
+      "name": "a coin level with a half step rounds up",
+      "ladder": "bands",
+      "level": 4,
+      "sold": true,
+      "currency": "credits",
+      "price": 200
+    },
+    {
+      "name": "a gem level between anchors rounds half up",
+      "ladder": "bands",
+      "level": 9,
+      "sold": true,
+      "currency": "gems",
+      "price": 18
+    },
+    {
+      "name": "a gem level just under the top",
+      "ladder": "bands",
+      "level": 11,
+      "sold": true,
+      "currency": "gems",
+      "price": 23
+    },
+    {
+      "name": "the top itself",
+      "ladder": "bands",
+      "level": 12,
+      "sold": true,
+      "currency": "gems",
+      "price": 25
+    },
+    {
+      "name": "above the top is not sold",
+      "ladder": "bands",
+      "level": 13,
+      "sold": false,
+      "currency": null,
+      "price": 0
+    },
+    {
+      "name": "below the first anchor is not sold",
+      "ladder": "bands",
+      "level": 1,
+      "sold": false,
+      "currency": null,
+      "price": 0
+    },
+    {
+      "name": "a single anchor sells its one level",
+      "ladder": "single",
+      "level": 3,
+      "sold": true,
+      "currency": "gems",
+      "price": 7
+    },
+    {
+      "name": "a single anchor sells nothing below it",
+      "ladder": "single",
+      "level": 2,
+      "sold": false,
+      "currency": null,
+      "price": 0
+    },
+    {
+      "name": "a single anchor sells nothing above it",
+      "ladder": "single",
+      "level": 4,
+      "sold": false,
+      "currency": null,
+      "price": 0
+    },
+    {
+      "name": "a flat band costs the same at its foot",
+      "ladder": "flat",
+      "level": 2,
+      "sold": true,
+      "currency": "credits",
+      "price": 500
+    },
+    {
+      "name": "a flat band costs the same in the middle",
+      "ladder": "flat",
+      "level": 3,
+      "sold": true,
+      "currency": "credits",
+      "price": 500
+    },
+    {
+      "name": "a flat band costs the same at its top",
+      "ladder": "flat",
+      "level": 4,
+      "sold": true,
+      "currency": "credits",
+      "price": 500
+    }
+  ],
+  "keeperPriceRejected": [
+    {
+      "name": "no block at all",
+      "block": null
+    },
+    {
+      "name": "an empty block",
+      "block": {}
+    },
+    {
+      "name": "a top with no anchors",
+      "block": {
+        "top": 4,
+        "anchors": []
+      }
+    },
+    {
+      "name": "a top below the lowest level",
+      "block": {
+        "top": 1,
+        "anchors": [
+          {
+            "level": 1,
+            "currency": "gems",
+            "price": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "a top above the ceiling",
+      "block": {
+        "top": 201,
+        "anchors": [
+          {
+            "level": 201,
+            "currency": "gems",
+            "price": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "a last anchor that is not the top",
+      "block": {
+        "top": 5,
+        "anchors": [
+          {
+            "level": 2,
+            "currency": "gems",
+            "price": 5
+          },
+          {
+            "level": 4,
+            "currency": "gems",
+            "price": 9
+          }
+        ]
+      }
+    },
+    {
+      "name": "anchors that do not climb",
+      "block": {
+        "top": 4,
+        "anchors": [
+          {
+            "level": 4,
+            "currency": "gems",
+            "price": 5
+          },
+          {
+            "level": 2,
+            "currency": "gems",
+            "price": 9
+          }
+        ]
+      }
+    },
+    {
+      "name": "two anchors on one level",
+      "block": {
+        "top": 4,
+        "anchors": [
+          {
+            "level": 4,
+            "currency": "gems",
+            "price": 5
+          },
+          {
+            "level": 4,
+            "currency": "gems",
+            "price": 9
+          }
+        ]
+      }
+    },
+    {
+      "name": "a band that gets cheaper",
+      "block": {
+        "top": 4,
+        "anchors": [
+          {
+            "level": 2,
+            "currency": "gems",
+            "price": 9
+          },
+          {
+            "level": 4,
+            "currency": "gems",
+            "price": 5
+          }
+        ]
+      }
+    },
+    {
+      "name": "a currency nobody spends",
+      "block": {
+        "top": 4,
+        "anchors": [
+          {
+            "level": 2,
+            "currency": "hearts",
+            "price": 5
+          },
+          {
+            "level": 4,
+            "currency": "hearts",
+            "price": 9
+          }
+        ]
+      }
+    },
+    {
+      "name": "a price of nought",
+      "block": {
+        "top": 4,
+        "anchors": [
+          {
+            "level": 2,
+            "currency": "gems",
+            "price": 0
+          },
+          {
+            "level": 4,
+            "currency": "gems",
+            "price": 9
+          }
+        ]
+      }
+    },
+    {
+      "name": "a price above the ceiling",
+      "block": {
+        "top": 4,
+        "anchors": [
+          {
+            "level": 2,
+            "currency": "gems",
+            "price": 5
+          },
+          {
+            "level": 4,
+            "currency": "gems",
+            "price": 10000001
+          }
+        ]
+      }
+    },
+    {
+      "name": "an anchor above the top",
+      "block": {
+        "top": 4,
+        "anchors": [
+          {
+            "level": 2,
+            "currency": "gems",
+            "price": 5
+          },
+          {
+            "level": 6,
+            "currency": "gems",
+            "price": 9
+          }
+        ]
+      }
+    },
+    {
+      "name": "too many anchors",
+      "block": {
+        "top": 18,
+        "anchors": [
+          {
+            "level": 2,
+            "currency": "gems",
+            "price": 1
+          },
+          {
+            "level": 3,
+            "currency": "gems",
+            "price": 2
+          },
+          {
+            "level": 4,
+            "currency": "gems",
+            "price": 3
+          },
+          {
+            "level": 5,
+            "currency": "gems",
+            "price": 4
+          },
+          {
+            "level": 6,
+            "currency": "gems",
+            "price": 5
+          },
+          {
+            "level": 7,
+            "currency": "gems",
+            "price": 6
+          },
+          {
+            "level": 8,
+            "currency": "gems",
+            "price": 7
+          },
+          {
+            "level": 9,
+            "currency": "gems",
+            "price": 8
+          },
+          {
+            "level": 10,
+            "currency": "gems",
+            "price": 9
+          },
+          {
+            "level": 11,
+            "currency": "gems",
+            "price": 10
+          },
+          {
+            "level": 12,
+            "currency": "gems",
+            "price": 11
+          },
+          {
+            "level": 13,
+            "currency": "gems",
+            "price": 12
+          },
+          {
+            "level": 14,
+            "currency": "gems",
+            "price": 13
+          },
+          {
+            "level": 15,
+            "currency": "gems",
+            "price": 14
+          },
+          {
+            "level": 16,
+            "currency": "gems",
+            "price": 15
+          },
+          {
+            "level": 17,
+            "currency": "gems",
+            "price": 16
+          },
+          {
+            "level": 18,
+            "currency": "gems",
+            "price": 17
+          }
+        ]
+      }
+    }
+  ],
+  "keeperSpendIds": [
+    {
+      "id": "keeper:1:2",
+      "ordinal": 1,
+      "level": 2
+    },
+    {
+      "id": "keeper:3:17",
+      "ordinal": 3,
+      "level": 17
+    },
+    {
+      "id": "keeper:69:70",
+      "ordinal": 69,
+      "level": 70
+    },
+    {
+      "id": "keeper:1:1",
+      "invalid": true
+    },
+    {
+      "id": "keeper:2:2",
+      "invalid": true
+    },
+    {
+      "id": "keeper:0:5",
+      "invalid": true
+    },
+    {
+      "id": "keeper:01:5",
+      "invalid": true
+    },
+    {
+      "id": "keeper:1:05",
+      "invalid": true
+    },
+    {
+      "id": "keeper:1",
+      "invalid": true
+    },
+    {
+      "id": "keeper:1:2:3",
+      "invalid": true
+    },
+    {
+      "id": "keeper::2",
+      "invalid": true
+    },
+    {
+      "id": "keeper:a:2",
+      "invalid": true
+    },
+    {
+      "id": "keeper:1:-2",
+      "invalid": true
+    },
+    {
+      "id": "keeper:1:2.0",
+      "invalid": true
+    },
+    {
+      "id": "keeper:1:9999999999",
+      "invalid": true
+    },
+    {
+      "id": "pass:watch_0001",
+      "invalid": true
+    },
+    {
+      "id": "",
+      "invalid": true
+    }
   ]
 }

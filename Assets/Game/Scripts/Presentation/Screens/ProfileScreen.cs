@@ -402,6 +402,10 @@ namespace GlimmerGrove
             // keeper level sits exactly where it sat, whatever happened inside it.
             var levelBadge = UIKit.Img("LevelBadge", medallion, Art.Disc(128), Pal.Gold,
                                        new Vector2(92f, 92f), new Vector2(1f, 0f), new Vector2(-6f, 6f));
+
+            // The level disc opens the keeper ladder (invariant 57), as the hub's name card does.
+            levelBadge.raycastTarget = true;
+            levelBadge.gameObject.AddComponent<Btn>().Setup(() => Flow.Go<KeeperScreen>());
             UIKit.Titled("N", levelBadge.transform, level.Level.ToString(), 44, new Color(.30f, .20f, .05f),
                          TextAnchor.MiddleCenter, outline: 0f, shadow: 0f);
 

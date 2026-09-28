@@ -2535,12 +2535,14 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
         tint = TINTS[siege.LETTERS.index(lay.wards[i])]
 
         glow = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
-        ImageDraw.Draw(glow).ellipse([cx - cell * 0.6, cy - cell * 0.6,
-                                      cx + cell * 0.6, cy + cell * 0.6],
+        ImageDraw.Draw(glow).ellipse([cx - cell * 0.75, cy - cell * 0.75,
+                                      cx + cell * 0.75, cy + cell * 0.75],
                                      fill=tint + (128,))
         sheet.alpha_composite(glow)
 
-        put(sheet, sprite("charge"), cx, cy, cell * 0.62, cell * 0.62)
+        # At the top of its pulse (`SiegeView.ChargeSize` x (1 + `PulseReach`)), which is the
+        # frame a player is most likely to be asked about: `put` preserves the bolt's aspect.
+        put(sheet, sprite("charge"), cx, cy, cell * 1.2 * 1.2, cell * 1.2 * 1.2)
 
     if aim == "hill":
         hill_grid(sheet, span, cell, hill_top, hill_foot, at, burn)

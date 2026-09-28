@@ -91,6 +91,10 @@ import {
 } from "./challenges";
 import type { ChallengeClaim } from "./challenges";
 import {
+  earnedKeeperLevel, isKeeperSpendId, judgeKeeperSpend, keeperBoughtOf, parseKeeperSpendId,
+  usableKeeperLadder,
+} from "./keeper";
+import {
   deriveEarned,
   loadProgressionConfig,
   readWallet,
@@ -288,6 +292,14 @@ export const submitSpends = onCall(callOptions, async (request): Promise<{
 
     const earned = await deriveEarned(transaction, uid, state, config);
 
+    // A keeper level's debit is priced against the level the save already proves, so the save
+    // is read - before any write, with everything else - only when a spend in this call asks
+    // for it. The common call carries none and costs no extra read.
+    const wantsSave = clean.some((spend) => isKeeperSpendId(spend.id));
+    const saveForKeeper = wantsSave
+      ? ((await transaction.get(db.doc(PATHS.player(uid)))).data() as Record<string, unknown> | undefined)
+      : undefined;
+
     const balances: Partial<Record<CurrencyId, number>> = {};
     for (const currency of CURRENCIES) {
       balances[currency] = spendableBalance(currency, state, earned);
@@ -407,6 +419,42 @@ export const submitSpends = onCall(callOptions, async (request): Promise<{
         }
 
         state.challengeTiers = holdTier(state.challengeTiers ?? {}, deal.tierId, deal.fromDay);
+      }
+
+      // A keeper level bought outright is the third debit this server turns into a permission
+      // (`keeper:{ordinal}:{level}`, `SpendEntry.KeeperLevelId`, invariant 57). Refused unless
+      // the published ladder sells the level, the ordinal is the very next one this wallet has
+      // not bought, the level named is not below what the save already proves plus that ordinal,
+      // and the amount is at least the price in the ladder's own currency. Every refusal here is
+      // one the client answers by dropping the debit and taking the level back (47o), so none
+      // is a loop (13a). The count lands on this same wallet document in this same transaction,
+      // so the purchase and the level cannot come apart - and it is what `publishGrove` adds to
+      // the earned level on every card.
+      const keeper = parseKeeperSpendId(spend.id);
+
+      if (isKeeperSpendId(spend.id) && !keeper) {
+        logger.warn("refused a keeper debit this server cannot read", { uid, spendId: spend.id });
+        rejected.push(spend.id);
+        continue;
+      }
+
+      if (keeper) {
+        const ladder = usableKeeperLadder((config as { keeperLevels?: unknown }).keeperLevels);
+        const earnedLevel = saveForKeeper ? earnedKeeperLevel(saveForKeeper, config) : 1;
+        const verdict = judgeKeeperSpend(ladder, keeper, keeperBoughtOf(state), earnedLevel,
+                                         spend.currency, spend.amount);
+
+        if (!verdict.ok) {
+          logger.warn("refused a keeper level debit", {
+            uid, spendId: spend.id, reason: verdict.reason, ordinal: keeper.ordinal,
+            level: keeper.level, bought: keeperBoughtOf(state), earnedLevel,
+            currency: spend.currency, paid: spend.amount, price: verdict.price ?? null,
+          });
+          rejected.push(spend.id);
+          continue;
+        }
+
+        state.keeperBought = keeper.ordinal;
       }
 
       transaction.set(db.doc(PATHS.spend(uid, spend.id)), {
@@ -1598,7 +1646,13 @@ export const publishGrove = onCall(callOptions, async (request): Promise<{
   // the Infinite lane and the daily challenges. The client sums the same three
   // (`PlayerProgression.EnsureFresh`); the shared vectors hold each pair.
   const provableXp = derivedXp(save.levels, config) + endlessXp(save, config) + challengeXp(save, config);
-  const level = keeperLevel(provableXp + xpBoostXp(save, config, provableXp), curve);
+  const earnedLevel = keeperLevel(provableXp + xpBoostXp(save, config, provableXp), curve);
+
+  // Plus every level bought outright (invariant 57), read off the wallet document this call
+  // already fetches - the entitlement, never the save's copy of it. The card carries the sum,
+  // because that is the level every gate on the device reads and what a stranger is owed the
+  // truth about; the rank below is asked about the earned level alone.
+  const level = earnedLevel + keeperBoughtOf(walletSnapshot.data());
 
   // The ceiling on the bought half: everything this account has ever legitimately had to
   // spend. Derived earnings plus whatever the server itself granted — never a number out of
@@ -1668,7 +1722,8 @@ export const publishGrove = onCall(callOptions, async (request): Promise<{
   // next sync with nothing anywhere noticing. The wallet is already open, so it costs no read.
   const card = buildCard(
     uid, save, groveConfig, config, worth, level, nowUnix, publishableName(holding), list,
-    isGroveDenied(heldGrove(walletDoc as Record<string, unknown> | undefined))
+    isGroveDenied(heldGrove(walletDoc as Record<string, unknown> | undefined)),
+    earnedLevel
   );
 
   await db.doc(GROVE_PATHS.card(uid)).set(card);

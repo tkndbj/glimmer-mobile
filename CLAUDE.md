@@ -893,6 +893,48 @@ is where they are written down, not what they mean.
    or the ward already owns (`SiegeBoard.Pour`/`.Kindle`/`.Sheltered`, `SiegeWard.Stoke`);
    `SiegeTutorial` writes to nothing.
 
+### Keeper levels for sale
+
+57. **A keeper level can be bought outright, one at a time, and the rank ladder never sees it.**
+   Built 2026-09-27 at the owner's instruction, after the balance run showed XP as the one wall
+   neither play nor money could move. The level a player stands at is the *earned* level (XP,
+   invariant 9) plus a **count of purchases** — an entitlement, so it lives on the wallet
+   document no client can write (`keeperBought`) with a device copy in the save's `wallet` map
+   (`keeperLevelsBought`, v36, joined by `max`; no rules release, 12a). `KeeperLadder.Compose`
+   is the one place the two are added, and `PlayerProgression.Level` reads the sum everywhere: a
+   gate, an honorific, the card, the public profile, the Infinite lane's wall — transparent by
+   the owner's decision, nothing hidden. **The one reading that is not the sum is the rank's**:
+   `LedgerRankSource.KeeperLevel` and the card's `SaveRankSource` read `EarnedLevel`, and
+   `rungOf` is handed `earnedLevel` — a badge is a reading of play and a badge for sale is worth
+   nothing to the people who earned theirs. **The floors ratchet the earned level only**, or a
+   bought level fed back through `XpToReach` is counted twice on the next read.
+57a. **The debit is the season pass's shape** (47e): `keeper:{ordinal}:{level}`
+   (`SpendEntry.KeeperLevelId`), priced by the server off the published `keeperLevels` block at
+   the level named, refused unless the ordinal is the next this wallet has not bought and the
+   level is at least what the save the server holds proves plus that ordinal — a client cannot
+   name a cheaper rung than the one it stands on, and a save one sync behind can only understate
+   — and turned into the count on the wallet document in the transaction that takes the money.
+   Every refusal is answered by the client dropping the debit and taking the level back
+   **and every level bought above it** (`KeeperLedger.OnSpendRejected`), so none is a loop (13a).
+   The wallet reply carries `keeperBought` on every row and `KeeperLedger.ApplyServerState`
+   folds it in **upward always, downward only when no keeper debit is pending** — the one field
+   here a merge may not lower and the server may.
+57b. **The price is a function of the level reached, drawn between a few anchors, and it exists
+   three times.** On the line between two anchors of one currency, flat at the lower anchor
+   between two of different currencies (that is how coins hand over to gems), integer and
+   round-half-up on both sides. `KeeperLadder.PriceFor`, `keeperPrice` in `keeper.ts` and the
+   Python in `Tools/make_keeper_vectors.py` are held together by `keeperPriceCases` in the shared
+   vectors, with the **shipped** block copied in so a retune re-runs the tool. **Absent sells
+   nothing on every side** — the one XP-adjacent block that fails closed rather than falling
+   back, because a level sold against a ladder the server never heard of is a debit refused and
+   a level taken back, which is money shown and taken away. `content.py`, the C# reader, the
+   server and the seeder refuse the same faults, and `content.py` prints the dollar table.
+57c. **The page is a `GridView` of one column** (44ma), a node per level on a spine — the
+   level-selection pack's three discs (`make_keeper_art.py`: reached, locked, and the crowned
+   one stood on) beside a plate saying what the level opens, read off the roster's own gate,
+   the manifest's wall and `KeeperTitle`'s floors, never a table of its own. Opened from the
+   hub's name card and the profile's level disc. `render_keeper_ladder.py` is the mirror.
+
 ### Consent
 
 55. **The consent form comes before Apple's tracking prompt on every path, and a network call
@@ -1028,7 +1070,9 @@ is where they are written down, not what they mean.
    until an edge, a rock (`#`) or a gem stops it and merges with its own size; the board is
    authored and measured by `Tools/make_merge_challenges.py` (par by BFS, openings that keep it).
    **Undo is a move** (the hill walks) and **a merge pays once** — the k-th merge into a size pays
-   only the first time the board holds k — so merge-undo-merge buys nothing.
+   only the first time the board holds k — so merge-undo-merge buys nothing. **Every shipped board
+   joins all its gems into one** (mass exactly the target's), which fixes the merges and makes par
+   the set-up slides a board forces; that is also what makes the 0-1 search fast.
 
 ### Art credits
 
@@ -1175,6 +1219,11 @@ guess — verify offline.
 - **The rank badges:** `python Tools/make_rank_art.py --check` proves the seven shipped PNGs are
   what the tool cuts; `--contact` is the sheet, and it is the only thing that can answer whether
   the ladder reads as a ladder rather than as seven unrelated badges.
+- **The hall's furniture:** `python Tools/make_rank_kit_art.py --check` proves the six pieces
+  (`Art/Ui/Rank/kit_*`, `ic_raiders`) are what the tool cuts from the owner's bought UI kit,
+  reading the `.unitypackage` in the Asset Store cache directly; `--contact` lays each at the
+  size the page draws it. `RankLadderTests` holds `RankKit.All` and every measure's icon to
+  `UiSprites` and to disk.
 - **The boards:** `python Tools/render_boards.py` (`--row`, `--mixed`, `--unranked`, `--empty`,
   `--contact`). **`--row` is the one that matters** — a rank badge's whole meaning is its
   silhouette, and the question "can you tell bronze from gold in a list" is only answerable at
@@ -1184,6 +1233,22 @@ guess — verify offline.
   block is what the tool draws. The rule runs **offline on both sides** — `RankVectorTests`
   through `TestJson` (29e) and `firebase/functions/test/grove.mjs`. It caught two real faults on
   its first runs; do not let it become Editor-only.
+- **Keeper price vectors:** `python Tools/make_keeper_vectors.py --check` proves the committed
+  `keeperPriceCases`, `keeperPriceRejected` and `keeperSpendIds` blocks are what the tool draws (and
+  that the `shipped` ladder is `progression.json`'s). Both halves run offline: `KeeperLevelTests`
+  through `TestJson` and `firebase/functions/test/keeper.mjs`. **Beside, not inside, the older
+  `keeperCases` block**, which is the level *curve*'s and was overwritten once by mistake.
+- **That the live server prices a keeper level:** `node firebase/e2e/keeper-spend.mjs` -
+  differential for `endless-xp.mjs`'s reason: a `submitSpends` that has never heard of a `keeper:`
+  id *charges* it, and a `getWallet` that has never heard of the count answers a valid reply the
+  client reads as "not carried". It reads the ladder off the published config, asks for the count
+  on every row and asks the four refusals. **10/10 live** (2026-09-27, the first run after the
+  deploy and seed); the honest purchase runs only when the account seed can afford level 2, which
+  at 1,250 against 2,000 it cannot - that half is `KeeperLevelTests` until a device buys one.
+- **The keeper ladder page:** `python Tools/render_keeper_ladder.py` (`--standing n --bought k`,
+  `--unsold`, `--contact`). It measures every caption and reads the ladder, the turret gates,
+  the lane's wall and the honorifics off the shipped files. `python Tools/make_keeper_art.py
+  --check` holds the three node discs to the pack.
 - **The ranks page:** `python Tools/render_ranks.py` (`--held n`, `--show n`, `--tall`, `--map`,
   `--contact`). **`--contact` is the one that matters**: it walks every rung onto the stage, so every
   name, blurb and requirement sentence is measured once per run against the band it is drawn in
@@ -1225,6 +1290,10 @@ guess — verify offline.
 - **The glade challenges:** `python Tools/make_glade_challenges.py --report` prints every glade row's
   par, mated and winning arrangement counts and slack (a mirror; `ChallengeTests` is the authority),
   and `--draft medium|hard --size WxH` proposes boards. Winning must be **one** on every row.
+- **The Merge levels:** `python Tools/make_merge_challenges.py --check` proves every row is what its
+  draft composes, meets its tier, tunes inside the slack band and matches `Tests/MergeRoutes.cs`;
+  `--report` prints par, openings, slack and the route. `ChallengeTests.EveryShippedMerge*` is the
+  authority. Re-run `--write` after any change to the hill rules or a row.
 - **The tutorial:** `python Tools/verify/tests.py TutorialTests` plays the whole script against
   the real rules — the taught swap, the pour, the overcharge, the sweep — and proves it ends with
   the line intact; its board reaches **no content gate**, so this is the only thing that would
@@ -1524,8 +1593,9 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
 - **Content pipeline** — levels as data, stable `LevelId`s, manifest-built `CatalogIndex`, lazy chapter
   bodies, `Content ▸ Sync Manifest`, build gate.
 - **Save** — versioned atomic file with checksum, backup rotation, corrupt-file recovery, tested
-  migrations, monotonic merge. **Save schema v35** (v33 removed the Grovement's five fields —
-  16aa; v34 added the daily challenges; v35 the XP surge's deadline, inside the `wallet` map). Content schema: manifest and chapter bodies **v2**; `ContentSchema.Version` stays at **3**,
+  migrations, monotonic merge. **Save schema v36** (v33 removed the Grovement's five fields —
+  16aa; v34 added the daily challenges; v35 the XP surge's deadline, inside the `wallet` map;
+  v36 the count of keeper levels bought, inside the `wallet` map, 57). Content schema: manifest and chapter bodies **v2**; `ContentSchema.Version` stays at **3**,
   which only the retired grove body ever used.
 - **Cloud** — Firebase (Firestore + Auth + Functions), anonymous by default, Apple/Google linking,
   per-account local archive for switching, debounce/backoff.
@@ -1720,6 +1790,52 @@ on a fresh clone).
 
 ## Owed
 
+**The ranks hall's furniture was re-cut from the owner's bought UI kit on 2026-09-27, and
+none of it has been in the Editor.** Three cuts in one day: the procedural chip, pill, rim and
+chain were rejected ("doesn't look like a game"), a stone-tile cut was rejected ("horrendous"),
+and the instruction that stuck was: a proper board for "what it asks", the badges in proper
+seats, a star beside "Earn N stars", no ticks, from the *2D Mobile Game UI Kit* (300Mind) in
+the Asset Store cache. `Tools/make_rank_kit_art.py` reads that `.unitypackage` with `tarfile`,
+cuts five plates by the kit's own slice rects (the notched cyan panel as the board, its orange
+hanging tab as the title, its dark bar per requirement line, its rimmed square per seat, its
+navy pill for the ordinal), pre-scaled to the size the page draws them with a **measured**
+border, plus Layer Lab's crossed swords for "Defeat N raiders"; every other line icon is art
+the game already ships (`RankKit.IconFor`, keyed on the measure's id). The sentence under the
+name stands bare on the wall. **The six PNGs are on disk and unaddressed** (`artnames.py` reads
+six errors until `▸ Addressables ▸ Sync All Assets` and save; until then `RankKit.Piece` falls
+back to the interface kit's nearest plate, 7b) and `RankKit.cs` has no `.meta` yet. No loc key,
+no server, no schema. Offline green in a HEAD shadow (another agent has the cloud and
+persistence files mid-edit): `compile.py` (all sixteen), `RankLadderTests` 25/25 with the new
+gate proved by mutation, `loc.py` (0 missing), `make_rank_kit_art.py --check`,
+`render_ranks.py --contact` (83 captions, none at its floor). **What no gate can answer**: the
+kit is a second family beside the CraftPix interface kit (44) and only a device can say whether
+the cyan board reads as furniture of this game or as a sticker from another; and whether the
+`ic_endless` square beside "Reach wave N" wants a rounder crop.
+
+**Keeper levels went on sale on 2026-09-27 (invariant 57) and none of it has been in the Editor,
+on a device or on the server.** The client half is built and green offline: `compile.py` (all
+sixteen), `KeeperLevelTests` 18/18, the twelve fixtures the level rule touches green one by one
+(ranks, ceremony, card, board, boost, endless, progression, wire, gate, profile, merge), and the
+first 136 fixtures of the whole suite clean before the siege sweeps timed the run out, `content.py` (its
+only errors are another agent's in-flight `d69`/`d82` merge strings), `loc.py` (0 missing, 27 new
+`ui.keeper.*` keys), `make_keeper_vectors.py --check`, every neighbouring vector check,
+`make_keeper_art.py --check`, `render_keeper_ladder.py --contact` (66 captions, none at the
+floor). The server half is built, its 846 function tests pass, and **the four functions are
+deployed** (2026-09-27, one batch by name: `submitSpends`, `publishGrove`, `getWallet`,
+`claimAwards`), every archive downloaded and its `lib/` proved identical to the local build.
+**The re-seed is done too** (2026-09-27, from a HEAD shadow with only `progression.json`
+grafted on; all four config documents snapshotted and diffed field by field - exactly one field
+added, `keeperLevels`, `version` still 8, 91 levels before and after, nothing else moved in any
+of them). **What is left**: (4) the Editor's three: `Sync All Assets` and save (`keeper_node_open`,
+`keeper_node_locked`, `keeper_node_crown` are on disk and unaddressed, 7a — a white disc on
+every row until then), `Audit Addresses`, `Validate Content`; `KeeperScreen.cs`,
+`KeeperLadder.cs`, `KeeperLedger.cs`, `KeeperLevelTests.cs` and the three PNGs have no `.meta`
+yet; (5) `smoke-test.mjs`. **Then buy one level on a device** and watch the wallet reply bring
+`keeperBought` back — the fold is tested, the wire has never carried it. **What no gate can
+answer**: whether the crowned disc reads as *you are here* against the lit ones, whether a
+seventy-row scroll reads as a climb or a list, and whether the first coin levels are cheap
+enough to teach the habit before the gem band begins.
+
 **Chapters 7 and 8 were retuned harder on 2026-09-27, and a three-player balance run was made.**
 The run played every one of the 90 levels on 14 four-seat turret lines at nine rhythms (11,340
 games, real rules) and 300 simulated casual / regular / power players for 180 days against the
@@ -1773,10 +1889,16 @@ the bundle (about 130 KB); deleting the harness is the way to take it out (8d: w
 and its Addressables row), and is deliberately not done here. The APK build menu no longer
 passes the development flag, by the owner's decision on 2026-09-27 (`DevBuild.cs`).
 
-**Merge was rebuilt as a one-gem sliding puzzle on 2026-09-27 (56n) and has not been in the
-Editor.** `d05_merge` is a 6x4 of rocks and seven gems to a 32: par 10 (6 merges, 4 set-up
-slides), 2 of 10 openings keep par; won by its route at 12/12 line health and at twice its turns
-at 8/12 (`ChallengeTests.ShippedMergeIsWonByItsAuthoredRoute`). `MergeView` drags per cell, lifts
+**Merge was rebuilt as a one-gem sliding puzzle on 2026-09-27 (56n), given thirty levels the same
+day, and none of it has been in the Editor.** `d69_merge`..`d82_merge` are medium (5x4 and 6x4 to
+a 32, par 9-12, 3-6 set-up slides, one opening of 7-11 keeps par, slack 1.50-1.55x) and
+`d83_merge`..`d98_merge` hard (6x5 and 7x5, mostly to a 64, par 13-17, 7-12 set-up slides, at most
+two openings keep par, slack 1.30-1.40x); `d05_merge` ("First Forge") was retuned into the medium
+band. Seeds, tiers and gates are `Tools/make_merge_challenges.py` (`DRAFTS`, `TIERS`, `--search`,
+`--draft`, `--write`, `--check`); each row's shortest route is generated into
+`Tests/MergeRoutes.cs` and `ChallengeTests.EveryShippedMerge*` replays,
+paces (the glade's slack band, with a merge's bolts fed once rather than re-volleyed) and counts
+the hill, ~3 raiders on an average turn. The route gate is mutation-proved. `MergeView` drags per cell, lifts
 the held gem, flies one traveller, thuds a quiet slide, and carries an UNDO key at the ladder's end
 (`ui.challenges.undo`, new). No art, no server, no schema, no seed. **What no gate can answer**:
 whether a first-timer finds the drag on a gem rather than a swipe on the board, and whether ten

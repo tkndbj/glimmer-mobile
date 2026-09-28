@@ -175,7 +175,8 @@ namespace GlimmerGrove.Social
             }
 
             var card = GroveCard.OfSave(receipt.Save, CloudState.UserId,
-                                        PlayerProgression.Level.Level, SaveSchema.NowUnix());
+                                        PlayerProgression.Level.Level,
+                                        PlayerProgression.EarnedLevel.Level, SaveSchema.NowUnix());
 
             _policy.Request(card.Fingerprint(), receipt.ServerRevision,
                             GrovePublishPolicy.WorthPublishing(card));

@@ -315,6 +315,13 @@ namespace GlimmerGrove.Persistence
                                                          other.xpBoostSurgeUntilUnix),
                 xpBoostEarned = Hearts.JoinBoost(mine.xpBoostEarned, other.xpBoostEarned),
 
+                // Keeper levels bought outright: a count that only ever rises by play, so `max`
+                // for the boost fields' reason (11b). The one thing that lowers it is the server's
+                // word, which arrives through `KeeperLedger.ApplyServerState` and never through a
+                // merge - a merge that could lower it would hand a stale device the last say.
+                keeperLevelsBought = mine.keeperLevelsBought > other.keeperLevelsBought
+                                   ? mine.keeperLevelsBought : other.keeperLevelsBought,
+
                 // Hints join exactly as hearts do, and through the same arithmetic — see
                 // RegenLedger.Join. There is no legacy shape to rebase from here, because a
                 // hint allowance was never written to a save file at all: it was three per

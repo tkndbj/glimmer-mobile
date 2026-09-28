@@ -370,6 +370,11 @@ namespace GlimmerGrove.AssetPipeline
             "ic_xp_surge_1",
             "ic_xp_surge_2",
 
+            // The keeper ladder's three node discs (invariant 57), cut by `make_keeper_art.py`
+            // from the level-selection pack: reached, locked, and the level stood on. Global for
+            // the adverts' reason - the ladder is one tap off the hub and every row wears one.
+            "keeper_node_open", "keeper_node_locked", "keeper_node_crown",
+
             // The daily challenges' four genre marks, one per `ChallengeGenres` spelling
             // (`ChallengeArt.GenreMark` builds `challenge_{spelling}`). **Listed by hand rather
             // than derived**, so `artnames.py` can see them; `ChallengeLedgerTests` walks the
@@ -384,6 +389,16 @@ namespace GlimmerGrove.AssetPipeline
             // deal is a fourth name here and a fourth PNG; `ChallengeLedgerTests` holds the
             // shipped deal count to this list.
             "challenge_chest", "challenge_deal_1", "challenge_deal_2", "challenge_deal_3",
+
+            // The hall of ranks' furniture (`RankKit`, cut from the owner's bought UI kit by
+            // `Tools/make_rank_kit_art.py`): the requirement board, one line's row, a rail
+            // seat, the board's title tab, the ordinal's chip, and the swords beside "Defeat N
+            // raiders". **Listed by hand rather than derived**, so `artnames.py` can see them;
+            // `RankLadderTests` walks `RankKit.All` against this list and against disk. Global
+            // because the page is one tap from the map's badge and a seat with nothing under it
+            // is a white rectangle under every badge on the rail (7b).
+            "Rank/kit_board", "Rank/kit_row", "Rank/kit_seat", "Rank/kit_tab", "Rank/kit_chip",
+            "Rank/ic_raiders",
 
             // The map's boost clock, under the back key. Global because the map is one of the
             // first screens a session touches and the readout appears the moment a window opens

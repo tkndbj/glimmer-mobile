@@ -24,6 +24,7 @@ namespace GlimmerGrove.Progression
         static long _challengeXp;
         static long _boostXp;
         static PlayerLevel _level;
+        static PlayerLevel _earned;
         static bool _dirty = true;
         static bool _hooked;
 
@@ -65,6 +66,13 @@ namespace GlimmerGrove.Progression
             // and the pills repaint on the same cue the rest of the wallet does, so a rung
             // taken on the season page cannot leave a stale number behind it.
             Events.SeasonLedger.Changed += Invalidate;
+
+            // The one addend on the keeper level that is not XP at all: levels bought outright
+            // (invariant 57). A purchase, a refusal and a sync each move the count, and every
+            // gate in the game reads the level it moves. Hooked here as well as in the ledger's
+            // own constructor, so a refusal heard before any screen asks is still heard.
+            KeeperLedger.Hook();
+            KeeperLedger.Changed += Invalidate;
         }
 
         /// <summary>Forces the next read to recompute. Cheap; safe to call often.</summary>
@@ -125,7 +133,19 @@ namespace GlimmerGrove.Progression
         /// </summary>
         public static long BoostXp { get { EnsureFresh(); return _boostXp; } }
 
+        /// <summary>
+        /// The level the player stands at: the earned level plus every level bought
+        /// (<see cref="KeeperLadder.Compose"/>). What every gate, honorific, card and profile
+        /// reads — the one reading that is <em>not</em> this is the rank ladder's.
+        /// </summary>
         public static PlayerLevel Level { get { EnsureFresh(); return _level; } }
+
+        /// <summary>
+        /// The level XP alone pays for, with no bought level on top. The rank ladder's reading
+        /// (<c>LiveRankSource.KeeperLevel</c>) and the server's (<c>rungOf</c>): a badge is a
+        /// reading of play, and a level for sale must not move one (invariant 57).
+        /// </summary>
+        public static PlayerLevel EarnedLevel { get { EnsureFresh(); return _earned; } }
 
         /// <summary>Credits earned from play, before grants and spends.</summary>
         public static long EarnedCredits { get { EnsureFresh(); return _totals.EarnedCredits; } }
@@ -298,7 +318,13 @@ namespace GlimmerGrove.Progression
             long levelFloorXp = table.XpToReach(ProgressionStore.LevelHighWater);
             if (levelFloorXp > effectiveXp) effectiveXp = levelFloorXp;
 
-            _level = table.LevelFor(effectiveXp);
+            _earned = table.LevelFor(effectiveXp);
+
+            // Plus the levels bought outright, added here and nowhere else (invariant 57). The
+            // floors below ratchet the *earned* level: a bought level is an entitlement the
+            // wallet already remembers, and a floor that counted it would be fed back through
+            // `XpToReach` as XP on the next read and count it twice.
+            _level = KeeperLadder.Compose(_earned, KeeperLedger.Bought, table.MaxLevel);
 
             RatchetFloors(effectiveXp);
         }
@@ -313,7 +339,7 @@ namespace GlimmerGrove.Progression
         static void RatchetFloors(long effectiveXp)
         {
             bool moved = ProgressionStore.RaiseXp(effectiveXp);
-            moved |= ProgressionStore.RaiseLevel(_level.Level);
+            moved |= ProgressionStore.RaiseLevel(_earned.Level);
             moved |= Wallet.Ledger(Currency.Credits).RaiseEarnedHighWater(_totals.EarnedCredits);
 
             // Keeps the retired v1 balance fields meaningful for a rolled-back client.

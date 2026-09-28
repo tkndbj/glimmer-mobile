@@ -29,6 +29,19 @@
     "creditsPerWave": 30,
     "dailyCreditCap": 10000
   },
+  "keeperLevels": {
+    "top": 70,
+    "anchors": [
+      { "level": 2, "currency": "credits", "price": 2000 },
+      { "level": 10, "currency": "credits", "price": 10000 },
+      { "level": 11, "currency": "gems", "price": 100 },
+      { "level": 20, "currency": "gems", "price": 500 },
+      { "level": 21, "currency": "gems", "price": 600 },
+      { "level": 40, "currency": "gems", "price": 3000 },
+      { "level": 41, "currency": "gems", "price": 3200 },
+      { "level": 70, "currency": "gems", "price": 9000 }
+    ]
+  },
   "xpBoost": {
     "watchedPercent": 50,
     "watchedHours": 2,

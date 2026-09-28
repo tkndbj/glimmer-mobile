@@ -317,6 +317,24 @@ namespace GlimmerGrove.Cloud
         public int EndlessPaid;
 
         /// <summary>
+        /// How many keeper levels the server has recorded this account buying (invariant 57).
+        ///
+        /// The entitlement itself, carried for <see cref="EndlessPaid"/>'s reason: it is an
+        /// account fact the wallet document owns and every device has to agree about, and the
+        /// cost of disagreeing is a level drawn on one phone and not the other. Folded in by
+        /// <c>KeeperLedger.ApplyServerState</c>.
+        /// </summary>
+        public int KeeperBought;
+
+        /// <summary>
+        /// Whether the reply carried the bought count at all - asked separately for
+        /// <see cref="CarriesEndless"/>'s reason: a fresh account answers nought and a deployment
+        /// that predates the field also sends nothing, and only one of those is something to
+        /// believe.
+        /// </summary>
+        public bool CarriesKeeper;
+
+        /// <summary>
         /// Whether the reply carried the lane's figure at all.
         ///
         /// <b>Asked separately for <c>CarriesWheel</c>'s reason</b>: a fresh account's honest

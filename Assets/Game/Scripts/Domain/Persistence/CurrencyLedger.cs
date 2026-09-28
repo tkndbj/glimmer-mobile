@@ -147,6 +147,54 @@ namespace GlimmerGrove.Persistence
         /// <summary>What a support reader sees against a deal debit.</summary>
         public const string ChallengeTierReason = "challenge_tier";
 
+        /// <summary>
+        /// A bought keeper level's debit: <c>keeper:{ordinal}:{level}</c>.
+        ///
+        /// <para>
+        /// Derived for <em>both</em> of the pass's reasons (invariant 57). The server has to
+        /// recognise it: <c>submitSpends</c> prices it against the published ladder at
+        /// <paramref name="level"/>, refuses it unless <paramref name="ordinal"/> is the very
+        /// next level this wallet has not yet bought, and raises <c>keeperBought</c> on the
+        /// wallet document in the same transaction that takes the money — so the purchase and
+        /// the level cannot come apart. And two devices buying the same ordinal offline write
+        /// byte-identical entries, so the player is charged once (48e).
+        /// </para>
+        /// <para>
+        /// <b>The ordinal is what is bought; the level is what it cost.</b> The ordinal — the
+        /// first bought level is 1, the next 2 — is the fact the wallet stores, because an
+        /// <em>earned</em> level can arrive later and shift every bought one up without any of
+        /// them having been bought again. The level is the keeper level this purchase reached
+        /// as the device saw it (earned + ordinal), and it is in the id so the server prices
+        /// the same rung the device did: it refuses a level below what its own copy of the
+        /// save already proves, so a client cannot name a cheap rung, and it never minds a
+        /// level <em>above</em> that, because a save one sync behind can only understate what
+        /// was earned. Parsed back by <c>parseKeeperSpendId</c>; the format is a wire contract.
+        /// </para>
+        /// </summary>
+        public static string KeeperLevelId(int ordinal, int level)
+            => "keeper:" + ordinal + ":" + level;
+
+        /// <summary>The ordinal and the level a keeper debit names, or false for any other id.</summary>
+        public static bool TryParseKeeperLevelId(string id, out int ordinal, out int level)
+        {
+            ordinal = 0;
+            level = 0;
+            if (string.IsNullOrEmpty(id) || !id.StartsWith("keeper:", StringComparison.Ordinal)) return false;
+
+            var parts = id.Split(':');
+            if (parts.Length != 3) return false;
+            if (!int.TryParse(parts[1], out int k) || k <= 0 || k.ToString() != parts[1]) return false;
+            if (!int.TryParse(parts[2], out int l) || l <= 1 || l.ToString() != parts[2]) return false;
+            if (l <= k) return false;                    // a purchase reaches at least ordinal + 1
+
+            ordinal = k;
+            level = l;
+            return true;
+        }
+
+        /// <summary>What a support reader sees against a keeper level debit.</summary>
+        public const string KeeperLevelReason = "keeper_level";
+
         public SpendEntryDto ToDto()
             => new SpendEntryDto { id = Id, amount = Amount, unix = Unix, reason = Reason };
 

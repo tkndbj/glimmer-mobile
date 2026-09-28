@@ -4418,11 +4418,21 @@ def build():
     return made
 
 
-#: How big the overcharge glyph is cut, and how round its corners are.
-#:
-#: Square, because the turret's chassis carries a square panel and a badge that fits it reads as
-#: part of the machine rather than as a sticker on one. 128 is twice what a phone draws it at.
+#: The hub marks' old tile size, kept because `tile_of` is still theirs. The overcharge glyph
+#: stopped being a tile on 2026-09-27 - see `charge`.
 CHARGE_SIZE, CHARGE_ROUND = 128, 22
+
+#: **Where the overcharge glyph comes from since 2026-09-27**: Layer Lab's Casual Icon Pack, read
+#: straight out of Unity's Asset Store cache (`make_nav_icons.py`'s bargain - unpacking the
+#: `.unitypackage` under `Assets/` would ship a demo scene to draw one bolt).
+CASUAL_PACK = (Path.home() / "AppData/Roaming/Unity/Asset Store-5.x/LAYERLAB"
+               / "Textures MaterialsIcons UI" / "2D Icons - Casual Icon Pack.unitypackage")
+CHARGE_SOURCE = "Assets/Layer Lab/2D Icons-CasualIconPack/Icons/512/Icon_Resources_Lightning01_Blue.png"
+
+#: The glyph's longest side. A phone draws it at about 170 px at the top of its pulse
+#: (`SiegeView.ChargeSize` x `PulseReach` on a 1440-wide canvas), so 256 is headroom rather than
+#: waste, and `/Art/Siege/` caps at 512.
+CHARGE_LONG = 256
 
 
 #: The three marks the Infinite lane's hub reads its lines against, and what each is for.
@@ -4456,15 +4466,76 @@ def hub_marks(root):
 
 
 def charge(root):
-    """The overcharge glyph: one of the pack's skill icons, squared and rounded.
+    """The overcharge glyph: the Casual Icon Pack's lightning bolt, trimmed to its ink.
 
-    **Kept as a tile rather than keyed out of its own background.** These icons are painted *on*
-    their ground - the glow round the bolt is most of what makes it read - so a flood or a colour
-    key takes the light with it and leaves a thin yellow scribble (the shop's own sheet-keying
-    lesson, met again). A rounded tile on the turret's square chassis panel is what the art is
-    already shaped like.
+    **A cut-out rather than a tile, and that is what the tile was standing in for.** The first
+    glyph was a skill icon squared into a rounded tile (`CHARGE_ICON`), because those icons are
+    painted *on* their ground and keying one leaves a scribble. At half a cell it still came back
+    from the owner as "not really visible": a dark square on a chassis reads as part of the
+    machine, which is exactly what a control must not. This bolt is drawn as a sticker - a heavy
+    black keyline round a saturated body - so it separates from all four ward colours on its own,
+    and `SiegeView.Ready` pulses it. `root` is unused and kept for the caller's shape.
     """
-    return tile_of(root, CHARGE_ICON, CHARGE_SIZE, CHARGE_ROUND)
+    if not CASUAL_PACK.exists():
+        return None
+
+    import tarfile
+
+    with tarfile.open(CASUAL_PACK, "r:gz") as tar:
+        for m in tar.getmembers():
+            if not m.name.endswith("/pathname"):
+                continue
+            path = tar.extractfile(m).read().decode("utf8").splitlines()[0].strip()
+            if path != CHARGE_SOURCE:
+                continue
+            im = Image.open(io.BytesIO(tar.extractfile(m.name.rsplit("/", 1)[0] + "/asset").read()))
+            break
+        else:
+            sys.exit("the Casual Icon Pack no longer carries " + CHARGE_SOURCE)
+
+    im = im.convert("RGBA")
+    im = im.crop(im.getbbox())
+
+    k = CHARGE_LONG * CHARGE_BOLT / max(im.size)
+    im = im.resize((max(1, round(im.width * k)), max(1, round(im.height * k))), Image.LANCZOS)
+
+    glyph = haloed(CHARGE_LONG)
+    glyph.alpha_composite(im, ((CHARGE_LONG - im.width) // 2, (CHARGE_LONG - im.height) // 2))
+    return glyph
+
+
+#: How the glyph is laid out on its square canvas, as fractions of its side: the bolt's height,
+#: the solid white disc's radius and where the glow round it fades out.
+#:
+#: **The owner's ask on 2026-09-28, the second after the bolt was cut**: a white keyline traced
+#: round the bolt still read as too quiet on a phone, so the bolt stands on a white disc with a
+#: soft white halo, and the pack's own black keyline is what separates the two. White is the one
+#: colour none of the four ward chassis is, and a disc is a shape nothing else on the line draws.
+#: The bolt's corners reach .39 of the side from the centre, inside the disc's .40.
+CHARGE_BOLT, CHARGE_DISC, CHARGE_GLOW = .60, .40, .50
+
+
+def haloed(size):
+    """A white disc with a soft white glow round it, on a transparent square of `size`.
+
+    **Drawn as a radial field rather than as two shapes**, so the edge of the disc is
+    anti-aliased and the glow falls off smoothly into nothing at the canvas edge, which is
+    what keeps a pulse scaling it up from ever showing a square.
+    """
+    c = (size - 1) / 2
+    y, x = np.mgrid[0:size, 0:size].astype(np.float32)
+    d = np.hypot(x - c, y - c) / size
+
+    disc = np.clip((CHARGE_DISC - d) * size + .5, 0, 1)
+    fall = np.clip(1 - (d - CHARGE_DISC) / (CHARGE_GLOW - CHARGE_DISC), 0, 1)
+    glow = fall * fall * .7
+
+    alpha = np.maximum(disc, glow)
+
+    out = np.zeros((size, size, 4), np.uint8)
+    out[..., :3] = 255
+    out[..., 3] = np.round(alpha * 255).astype(np.uint8)
+    return Image.fromarray(out, "RGBA")
 
 
 def tile_of(root, number, size, round_to):

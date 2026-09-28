@@ -25,6 +25,13 @@ namespace GlimmerGrove
     public sealed partial class SiegeView
     {
         /// <summary>
+        /// The overcharge glyph's beat: how long the bolt takes to spring up, how often it swells
+        /// once it is up, and by how much. About a beat and a half a second and a fifth of its
+        /// size, which is loud enough to find from the gems without reading as an alarm.
+        /// </summary>
+        const float ArriveSeconds = .32f, PulseHz = 1.5f, PulseReach = .2f;
+
+        /// <summary>
         /// Paints every tube's readiness: the pulse that says a tube may be spent.
         ///
         /// <para>
@@ -55,23 +62,33 @@ namespace GlimmerGrove
 
                 post.Dump.raycastTarget = armed;
 
-                float lit = armed
-                          ? .6f + Mathf.PingPong(Time.unscaledTime * 2.6f, 1f) * .4f
-                          : 0f;
+                float now = Time.unscaledTime;
 
-                float beat = armed ? 1f + Mathf.Sin(Time.unscaledTime * 6f) * .09f : 1f;
+                if (!armed) post.LitAt = -1f;
+                else if (post.LitAt < 0f) post.LitAt = now;
+
+                float age = armed ? now - post.LitAt : 0f;
+
+                // **It arrives, then it beats.** The bolt springs up from nothing with an
+                // overshoot, and from then on swells by a fifth and settles, never dimming: the
+                // owner's note on the glyph before this one was that it could not be seen, and an
+                // alpha pulse spends half of every beat being harder to see. What breathes is the
+                // size and the light behind it, on a cosine timed from the arrival so every bolt
+                // opens its beat at rest rather than mid-swell.
+                float arrive = armed ? Ease.OutBack(Mathf.Clamp01(age / ArriveSeconds)) : 0f;
+                float swell = armed ? .5f - .5f * Mathf.Cos(age * PulseHz * 2f * Mathf.PI) : 0f;
 
                 // **White, because the glyph carries its own colour.** Tinting it would be the
                 // multiply invariant 37l records - `Image.color` can only ever darken, so a
-                // coloured badge asked to look *lit* comes out muddy. What pulses is its alpha and
-                // the halo behind it.
-                post.Dump.color = Pal.A(Color.white, lit);
-                post.Dump.rectTransform.localScale = Vector3.one * beat;
+                // coloured badge asked to look *lit* comes out muddy.
+                post.Dump.color = Pal.A(Color.white, armed ? 1f : 0f);
+                post.Dump.rectTransform.localScale = Vector3.one * (arrive * (1f + swell * PulseReach));
 
                 if (post.Halo != null)
                 {
-                    post.Halo.color = Pal.A(TintOf(ward.Colour), lit * .7f);
-                    post.Halo.rectTransform.localScale = Vector3.one * (.85f + lit * .3f) * beat;
+                    post.Halo.color = Pal.A(Pal.Lift(TintOf(ward.Colour), .35f),
+                                            Mathf.Clamp01(arrive) * (.45f + swell * .5f));
+                    post.Halo.rectTransform.localScale = Vector3.one * (arrive * (.9f + swell * .45f));
                 }
 
                 // **How many are held, and only once there is more than one.** A badge saying "1"

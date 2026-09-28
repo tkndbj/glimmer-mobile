@@ -508,6 +508,47 @@ namespace GlimmerGrove.Tests
                               $"'{rung.Icon}' is not preloaded; the map would draw a white rectangle");
         }
 
+        /// <summary>
+        /// The furniture the hall is built from (<c>RankKit</c>) is in the global preload set
+        /// and on disk. The addresses are constants, so <c>artnames.py</c> reads them off the
+        /// manifest list rather than off a call site — and nothing but this holds the
+        /// constants to that list: a piece renamed in one place and not the other is a white
+        /// rectangle under every badge on the rail (invariant 7b). The icon table is walked
+        /// too, so a measure that names a picture the game does not ship fails here rather
+        /// than as a blank beside a sentence.
+        /// </summary>
+        [Test]
+        public void EveryKitPieceAndMeasureIconIsPreloadedAndOnDisk()
+        {
+            var declared = new HashSet<string>();
+            foreach (var request in AssetPipeline.AssetManifest.GlobalAssets())
+                declared.Add(request.Address);
+
+            string root = System.IO.Path.Combine(TestJson.RepoRoot(), "Assets", "Game", "Art", "Ui");
+
+            Assert.AreEqual(6, RankKit.All.Length);
+            foreach (var piece in RankKit.All)
+            {
+                Assert.IsTrue(declared.Contains(AssetPipeline.AssetManifest.Ui(piece)),
+                              $"'{piece}' is not in AssetManifest.UiSprites; the page would draw a white rectangle");
+                Assert.IsTrue(System.IO.File.Exists(System.IO.Path.Combine(root, piece + ".png")),
+                              $"'{piece}.png' is not on disk; cut it with Tools/make_rank_kit_art.py");
+            }
+
+            foreach (var id in new[] { "stars", "three_stars", "keeper_level", "best_wave", "levels_cleared",
+                                       "runs", "raiders", "bosses", "charms", "never_heard_of" })
+            {
+                var measure = RankMeasures.Parse(id);
+                var (address, _) = RankKit.IconFor(measure);
+                Assert.IsTrue(declared.Contains(AssetPipeline.AssetManifest.Ui(address)),
+                              $"'{address}' (for '{id}') is not preloaded");
+                Assert.IsTrue(System.IO.File.Exists(System.IO.Path.Combine(root, address + ".png")),
+                              $"'{address}.png' (for '{id}') is not on disk");
+            }
+            Assert.AreEqual("star_full", RankKit.IconFor(RankMeasures.Parse("stars")).address,
+                            "a star beside 'Earn N stars', at the owner's instruction");
+        }
+
         [Test]
         public void ASentenceKeyIsDerivedFromTheMeasure()
         {

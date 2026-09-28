@@ -47,6 +47,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from PIL import Image, ImageDraw                            # noqa: E402
 import hudkit as K                                          # noqa: E402
+from make_rank_kit_art import nine as slice9                # noqa: E402  (one nine-slice, shared)
 
 REPO = Path(__file__).resolve().parents[1]
 RANK_ART = REPO / "Assets" / "Game" / "Art" / "Ui" / "Rank"
@@ -70,8 +71,21 @@ RAIL_H = 150.0
 SEAT, SEAT_PITCH_MOST, SEAT_FACE, SEAT_FACE_LOCKED, SEAT_CHOSEN = 104.0, 140.0, .82, .64, 1.22
 LINK_THICK, LINK_GAP, LOCK_CHIP = 12.0, 6.0, 34.0
 PLATE_W, PLATE_HEAD, LINE_H, PLATE_FOOT = 1024.0, 76.0, 88.0, 22.0
-PLATE_GAP, FOOT_PAD = 18.0, 24.0
-WELL_INSET, WELL_H, MARK, COUNT_W, BAR_H = 26.0, 78.0, 38.0, 210.0, 12.0
+PLATE_GAP, FOOT_PAD = 40.0, 24.0
+WELL_INSET, ROW_H, ICON, COUNT_W, BAR_H = 36.0, 78.0, 58.0, 210.0, 14.0
+
+# The furniture (`RankKit`): the pieces `make_rank_kit_art.py` cuts from the owner's UI kit,
+# pre-scaled, so every one is drawn 1:1 by the border its own `.meta` carries.
+TAB_W, TAB_H, TAB_PT = 420.0, 84.0, 30
+KIT_BOARD, KIT_ROW, KIT_SEAT, KIT_TAB, KIT_CHIP = ("Rank/kit_board", "Rank/kit_row", "Rank/kit_seat",
+                                                    "Rank/kit_tab", "Rank/kit_chip")
+
+#: `RankKit.IconFor` - the measure id to (sprite under Ui/, tint).
+MEASURE_ICON = {
+    "stars": ("star_full", None), "three_stars": ("ic_stars", "gold"), "keeper_level": ("ic_xp_boost", None),
+    "best_wave": ("ic_endless", None), "runs": ("ic_battle", None), "raiders": ("Rank/ic_raiders", None),
+    "bosses": ("crest_gold", None), "charms": ("ic_gem", None), "levels_cleared": ("ic_trophy", "gold"),
+}
 INSET_ALLOWANCE = 150.0
 SHORTEST_CANVAS = 1080.0 * 1.75             # CanvasFit.ShortestCanvas
 
@@ -136,6 +150,19 @@ def badge(rid, box):
     if not path.exists():
         return Image.new("RGBA", (int(box), int(box)), (255, 0, 0, 90))
     return K.fit(Image.open(path).convert("RGBA"), (box, box))
+
+
+def piece(name, w, h):
+    """One kit piece (`RankKit.Lay`): the cut sprite, nine-sliced by its own meta's border."""
+    im, border = K.load(name)
+    return slice9(im, border[0], w, h, 1.0)
+
+
+def measure_icon(measure_id, box):
+    """`RankKit.PaintIcon` - the picture beside a line, the trophy for a measure with none."""
+    name, tint = MEASURE_ICON.get(measure_id, ("ic_trophy", "gold"))
+    im = K.fit(Image.open(K.UI / (name + ".png")).convert("RGBA"), (box, box))
+    return K.tint(im, K.GOLD) if tint == "gold" else im
 
 
 def icon(name, box, colour):
@@ -322,10 +349,9 @@ def stage(sheet, top, bottom, held, chosen):
         K.paste(layer, cap, cx + sx, ry)
         K.paste(layer, icon(name, CHEVRON * .5, K.CREAM if on else (255, 255, 255)), cx + sx, ry - CHEVRON * .04)
 
-    # The ordinal chip on the ring's foot.
+    # The ordinal on the kit's pill at the ring's foot.
     chip_y = CHIP_TOP
-    K.paste(layer, K.round_rect(CHIP_W, CHIP_H, 14, (0, 0, 0), .55), cx, chip_y)
-    K.paste(layer, K.round_rect(CHIP_W, CHIP_H, 14, tone, 1.0, width=3), cx, chip_y)
+    K.paste(layer, piece(KIT_CHIP, CHIP_W, CHIP_H), cx, chip_y)
     ordinal = txt("ui.ranks.ordinal", order)
     px = K.shrunk(layer, ordinal, cx, chip_y, CHIP_W - 16, 30, 24, 14, fill=tone, outline=2)
     MEASURED.append(("ordinal '%s'" % ordinal, px, 14))
@@ -352,13 +378,10 @@ def stage(sheet, top, bottom, held, chosen):
     else:
         pill = txt("ui.ranks.locked_hint", txt("rank.%s.name" % RUNGS[order - 2]["id"]))
 
+    # The sentence under the name stands on the wall with no box round it (the owner's
+    # verdict on the pill, 2026-09-27): a caption in the eyebrow's manner, a size up.
     py = PILL_TOP
-    K.paste(layer, K.round_rect(PILL_W, PILL_H, 28, (10, 18, 46), .82), cx, py)
-    K.paste(layer, K.round_rect(PILL_W, PILL_H, 28, (255, 255, 255), .13, width=3), cx, py)
-    K.paste(layer, icon("ic_star", PILL_H * .52, K.CREAM), cx - PILL_W / 2 + PILL_H * .42, py)
-    left = cx - PILL_W / 2 + PILL_H * .82
-    px = K.shrunk_left(layer, pill, left, py - (PILL_H - 4) / 2, PILL_W - PILL_H * .82 - 16, PILL_H - 4,
-                       26, 16, fill=K.CREAM, outline=3)
+    px = K.shrunk(layer, pill, cx, py, PILL_W, PILL_H, 28, 16, fill=K.CREAM, outline=3)
     MEASURED.append(("pill '%s'" % pill, px, 16))
 
     if grow != 1.0:
@@ -377,15 +400,6 @@ def rail(sheet, bottom, held, chosen):
     seat = min(SEAT, pitch - 10)
     x0 = W / 2 - pitch * (n - 1) / 2
 
-    # The chain first, under every seat.
-    for i in range(n - 1):
-        tone = metal(i + 1)
-        length = pitch - seat - LINK_GAP * 2
-        on = (i + 1) < held
-        K.paste(sheet, K.round_rect(length, LINK_THICK, LINK_THICK / 2,
-                                    tone if on else (255, 243, 220), .85 if on else .14),
-                x0 + pitch * i + pitch / 2, cy)
-
     for i, rung in enumerate(RUNGS):
         order = i + 1
         x = x0 + pitch * i
@@ -403,8 +417,8 @@ def rail(sheet, bottom, held, chosen):
             # The pulse, caught mid-breath.
             K.paste(sheet, ring(s + 16 + 24, 8 * 128 / (s + 16), tone, .45), x, cy)
 
-        K.paste(sheet, K.skin("Hud/slot", s, s), x, cy)
-        K.paste(sheet, K.round_rect(s, s, 20, tone, .95 if earned else (.75 if nxt else .30), width=5), x, cy)
+        # The seat is the kit's rimmed square, the same for every standing.
+        K.paste(sheet, piece(KIT_SEAT, s, s), x, cy)
         face = SEAT_FACE if (earned or nxt) else SEAT_FACE_LOCKED
         K.paste(sheet, badge(rung["id"], s * face), x, cy)
 
@@ -427,50 +441,52 @@ def plate(sheet, band_bottom, band_h, held, chosen):
     height = PLATE_HEAD + len(lines) * LINE_H + PLATE_FOOT
     top = band_bottom - band_h
     cy = top + height / 2
-    K.paste(sheet, K.skin("Hud/plate_navy" if live else "Hud/panel", PLATE_W, height), W / 2, cy)
-    K.paste(sheet, K.round_rect(PLATE_W, height, 30, tone, .55 if live else .22, width=6), W / 2, cy)
+
+    # The board is the kit's notched panel, the same for a live rung and a locked one.
+    K.paste(sheet, piece(KIT_BOARD, PLATE_W, height), W / 2, cy)
 
     well_w = PLATE_W - WELL_INSET * 2
     well_left = W / 2 - well_w / 2
     head_y = top + PLATE_HEAD / 2
 
+    # The kit's tab hanging from the board's top edge, with the title on it.
+    K.paste(sheet, piece(KIT_TAB, TAB_W, TAB_H), W / 2, top + TAB_H / 2)
     title = txt("ui.ranks.requirements").upper()
-    px = K.shrunk_left(sheet, title, well_left, head_y - 17, well_w * .6, 34, 28, 15,
-                       fill=tone if live else LOCKED_INK, outline=2)
-    MEASURED.append(("plate title '%s'" % title, px, 15))
+    px = K.one_line(sheet, title, W / 2, top + TAB_H / 2 - TAB_H * .07, TAB_W * .8, TAB_PT, 16,
+                    fill=K.CREAM, outline=3)
+    MEASURED.append(("plate title '%s'" % title, px, 16))
 
     met = sum(1 for l in lines if progress(l, held, order) >= l["target"])
     count = txt("ui.ranks.fraction", met, len(lines))
-    K.text(sheet, count, well_left + well_w - K.font(30).getlength(count) / 2, head_y, 30,
-           fill=K.MINT if met >= len(lines) else K.CREAM, outline=2)
+    K.text(sheet, count, well_left + well_w - K.font(28).getlength(count) / 2, head_y + 6, 28,
+           fill=K.MINT if met >= len(lines) else (K.CREAM if live else LOCKED_INK), outline=2)
 
-    line_y = top + PLATE_HEAD + LINE_H / 2
+    line_y = top + PLATE_HEAD + LINE_H / 2 + 2
     for line in lines:
         have = progress(line, held, order)
         done = have >= line["target"]
-        K.paste(sheet, K.skin("Hud/trough", well_w, WELL_H), W / 2, line_y)
 
-        mx = well_left + 22 + MARK / 2
-        if done:
-            K.paste(sheet, icon("ic_check", MARK, K.MINT), mx, line_y)
-        else:
-            K.paste(sheet, K.round_rect(MARK, MARK, MARK / 2, tone, .70 if live else .45, width=5), mx, line_y)
+        # One requirement on one of the kit's dark bars: the measure's icon on the left, the
+        # sentence, the bar under it, the count on the right. No tick.
+        K.paste(sheet, piece(KIT_ROW, well_w, ROW_H), W / 2, line_y)
+        K.paste(sheet, measure_icon(line["measure"], ICON), well_left + 16 + ICON / 2, line_y)
 
-        said_x = well_left + 22 + MARK + 18
-        said_w = well_w - (said_x - well_left) - COUNT_W - 30
+        said_x = well_left + 16 + ICON + 16
+        said_w = well_w - (said_x - well_left) - COUNT_W - 24
         said = sentence(line)
         px = K.shrunk_left(sheet, said, said_x, line_y - 13 - 19, said_w, 38, 32, 18,
                            fill=K.CREAM if live else LOCKED_INK, outline=2)
         MEASURED.append(("line '%s'" % said, px, 18))
 
-        K.paste(sheet, K.round_rect(said_w, BAR_H, BAR_H / 2, (0, 0, 0), .42), said_x + said_w / 2, line_y + 21)
+        K.paste(sheet, K.skin("Hud/trough", said_w, BAR_H + 8), said_x + said_w / 2, line_y + 22)
         frac = min(1.0, have / float(line["target"]))
         if frac > 0:
-            K.paste(sheet, K.round_rect(said_w * frac, BAR_H, BAR_H / 2, K.MINT if done else BAR_ORANGE),
-                    said_x + said_w * frac / 2, line_y + 21)
+            fw = max(BAR_H, (said_w - 8) * frac)
+            K.paste(sheet, K.tint(K.skin("Hud/fill", fw, BAR_H), K.MINT if done else BAR_ORANGE),
+                    said_x + 4 + fw / 2, line_y + 22)
 
         fraction = txt("ui.ranks.fraction", have, line["target"])
-        px = K.shrunk(sheet, fraction, well_left + well_w - 22 - COUNT_W / 2, line_y, COUNT_W, WELL_H - 10,
+        px = K.shrunk(sheet, fraction, well_left + well_w - 16 - COUNT_W / 2, line_y, COUNT_W, ROW_H - 10,
                       32, 18, fill=K.MINT if done else (K.GOLD if live else LOCKED_INK), outline=2)
         MEASURED.append(("fraction '%s'" % fraction, px, 18))
         line_y += LINE_H

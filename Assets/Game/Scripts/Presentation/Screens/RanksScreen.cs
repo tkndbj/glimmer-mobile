@@ -45,10 +45,23 @@ namespace GlimmerGrove
     /// </para>
     ///
     /// <para>
+    /// <b>The furniture is the owner's bought UI kit</b> (<see cref="RankKit"/>, 2026-09-27).
+    /// The page drew its furniture procedurally first — a round-rect chip, a round-rect pill, a
+    /// plate with a generated rim, capsule links — then in stone tiles, and the owner rejected
+    /// both: neither looked like a game. What was asked for was a <em>proper board</em>, the
+    /// badges in proper seats, and a picture on every line with no ticks. So the board is the
+    /// kit's notched panel with its hanging tab as the title; each requirement is written on
+    /// the kit's dark bar with the measure's own icon on its left — a star beside "Earn N
+    /// stars" — and the bar under the sentence is the interface kit's trough and fill; a seat
+    /// is the kit's rimmed square; the ordinal stands on its pill. The sentence under the name
+    /// stands on the wall with no box round it at all, and nothing here is drawn by code.
+    /// </para>
+    ///
+    /// <para>
     /// <b>Nothing on the rail is dimmed, and a locked seat still shows its badge.</b> A page
     /// of bright medallions is a trophy case, and a ladder whose upper rungs are hidden is a
-    /// ladder nobody wants to climb; what says <em>not yet</em> is the seat — smaller badge, dim
-    /// rim, a padlock chip on the corner — and never the picture. The one thing that moves
+    /// ladder nobody wants to climb; what says <em>not yet</em> is the seat — smaller badge, no
+    /// glow, a padlock chip on the corner — and never the picture. The one thing that moves
     /// with the ledger is which seats are lit, which is the only reading a glance needs.
     /// </para>
     ///
@@ -127,9 +140,6 @@ namespace GlimmerGrove
         /// <summary>How much larger the chosen seat stands than its neighbours.</summary>
         const float SeatChosen = 1.22f;
 
-        /// <summary>The chain between two seats: its thickness and the air it leaves each end.</summary>
-        const float LinkThick = 12f, LinkGap = 6f;
-
         /// <summary>The padlock chip on a locked seat's corner.</summary>
         const float LockChip = 34f;
 
@@ -140,10 +150,16 @@ namespace GlimmerGrove
         /// by the blurb coming off the stage and <see cref="StageLeast"/> coming down with it.
         /// </summary>
         public const float PlateW = 1024f, PlateHead = 76f, LineH = 88f, PlateFoot = 22f;
-        public const float PlateGap = 18f, FootPad = 24f;
 
-        /// <summary>One line's well and the furniture in it.</summary>
-        const float WellInset = 26f, WellH = 78f, MarkSize = 38f, CountW = 210f, BarH = 12f;
+        /// <summary>The air between the rail and the board, and under the board.</summary>
+        public const float PlateGap = 40f, FootPad = 24f;
+
+        /// <summary>One line's furniture: the row's inset from the board's edge and its height, the icon, the count's column and the bar.</summary>
+        const float WellInset = 36f, RowH = 78f, IconSize = 58f, CountW = 210f, BarH = 14f;
+
+        /// <summary>The kit's tab hanging from the board's top edge, with the title on it.</summary>
+        const float TabW = 420f, TabH = 84f;
+        const int TabPt = 30;
 
         /// <summary>How much of the shortest canvas the display's insets may take before the plate's band gives way.</summary>
         const float InsetAllowance = 150f;
@@ -193,19 +209,16 @@ namespace GlimmerGrove
         {
             public RankDefinition Rung;
             public RectTransform Root;
-            public Image Rim;
             public Image Glow;
             public Image Badge;
             public Image Lock;
             public Image Pulse;
-            public Image Link;
             public bool Pulsing;
         }
 
         sealed class Line
         {
             public RankRequirement Req;
-            public Image Mark;
             public Text Said;
             public Text Count;
             public RectTransform Fill;
@@ -276,11 +289,10 @@ namespace GlimmerGrove
         Image _fanA, _fanB, _halo, _core, _track, _ring, _spark, _badge;
         Image[] _aurora;
         Fireflies _flies;
-        Image _chip, _chipRim;
-        Text _ordinal, _eyebrow, _name, _pill, _plateTitle, _plateCount;
+        Image _chip;
+        Text _ordinal, _eyebrow, _name, _pill, _plateCount;
         TextGradient _shimmer;
         Btn _prev, _next;
-        Image _plateFace;
 
         /// <summary>The rung on the stage, by ordinal. Nought only while the ladder is empty.</summary>
         int _chosen;
@@ -484,12 +496,10 @@ namespace GlimmerGrove
                                      Vector2.one * ChevronSize, Top, new Vector2(ChevronX, -RingTop),
                                      () => Step(1));
 
-            // The ordinal, in a chip on the ring's foot. It covers the fill's seam and is the
-            // one line on the stage that is true whether or not the rung is held.
-            _chip = UIKit.Img("Chip", _cluster, Art.Round(14), new Color(0f, 0f, 0f, .55f),
-                              new Vector2(ChipW, ChipH), Top, new Vector2(0f, -ChipTop));
-            _chipRim = UIKit.Img("ChipRim", _chip.transform, Art.RoundOutline(14, 3f), Pal.Sun);
-            UIKit.StretchTo((RectTransform)_chipRim.transform, 0f, 0f, 0f, 0f);
+            // The ordinal, on the kit's pill at the ring's foot. It covers the fill's seam and
+            // is the one line on the stage that is true whether or not the rung is held.
+            _chip = RankKit.Lay("Chip", _cluster, RankKit.Chip, new Vector2(ChipW, ChipH), Top,
+                                new Vector2(0f, -ChipTop));
             _ordinal = UIKit.Shrinkable(
                 UIKit.Titled("Ordinal", _chip.transform, string.Empty, 24, Pal.Sun,
                              TextAnchor.MiddleCenter, new Vector2(ChipW - 16f, 30f), Centre,
@@ -510,9 +520,14 @@ namespace GlimmerGrove
                              new Vector2(0f, -NameTop), 3f, 4f), 34);
             _shimmer = _name.gameObject.AddComponent<TextGradient>();
 
+            // The sentence under the name stands on the wall with nothing round it: the pill it
+            // sat in was the first thing the owner named when the page was called procedural
+            // (2026-09-27). A caption in the eyebrow's manner, a size up and outlined, which
+            // is what keeps cream legible on a lit wall (44n).
             _pill = UIKit.Shrinkable(
-                Scenery.Pill(_cluster, string.Empty, 26, new Vector2(PillW, PillH), Top,
-                             new Vector2(0f, -PillTop), new Color(.04f, .07f, .18f, .82f), "ic_star"), 16);
+                UIKit.Titled("Pill", _cluster, string.Empty, 28, Pal.Cream,
+                             TextAnchor.MiddleCenter, new Vector2(PillW, PillH), Top,
+                             new Vector2(0f, -PillTop), 3f, 3f), 16);
         }
 
         /// <summary>One aurora mass wandering a loop round its home.</summary>
@@ -553,8 +568,6 @@ namespace GlimmerGrove
             float seat = Mathf.Min(SeatSize, pitch - 10f);
             float x0 = -pitch * (n - 1) * .5f;
 
-            // The chain first, so every link is under every seat.
-            var links = UIKit.Node("Links", rail);
             for (int i = 0; i < n; i++)
             {
                 var rung = ladder.At(i + 1);
@@ -562,14 +575,6 @@ namespace GlimmerGrove
 
                 var s = new Seat { Rung = rung };
                 s.Root = UIKit.Box("Seat_" + rung.Id, rail, Vector2.one * seat, Centre, new Vector2(x, 0f));
-
-                if (i < n - 1)
-                {
-                    float length = pitch - seat - LinkGap * 2f;
-                    s.Link = UIKit.Img("Link_" + rung.Id, links, Art.Capsule((int)LinkThick, 48),
-                                       Pal.A(Pal.Cream, .14f), new Vector2(length, LinkThick), Centre,
-                                       new Vector2(x + pitch * .5f, 0f));
-                }
 
                 s.Glow = UIKit.Img("Glow", s.Root, Art.Glow(128, 2.0f), Pal.A(Pal.Sun, 0f),
                                    Vector2.one * (seat * 1.9f), Centre, Vector2.zero);
@@ -580,13 +585,11 @@ namespace GlimmerGrove
                 s.Pulse = UIKit.Img("Pulse", s.Root, Art.Ring(128, 8f), Pal.A(Pal.Sun, 0f),
                                     Vector2.one * (seat + 16f), Centre, Vector2.zero);
 
-                var slot = UIKit.Img("Slot", s.Root, Art.S("Ui/" + Skins.Slot), Color.white,
-                                     Vector2.one * seat, Centre, Vector2.zero);
-                slot.raycastTarget = true;
-                slot.gameObject.AddComponent<Btn>().Setup(() => Choose(rung.Ordinal));
-
-                s.Rim = UIKit.Img("Rim", s.Root, Art.RoundOutline(20, 5f), Pal.A(Pal.Sun, 0f),
-                                  Vector2.one * seat, Centre, Vector2.zero);
+                // The seat is the kit's rimmed square, the same for every standing: what says
+                // earned, next and locked is the glow, the pulse and the padlock (class remarks).
+                var plate = RankKit.Lay("Seat", s.Root, RankKit.Seat, Vector2.one * seat, Centre, Vector2.zero);
+                plate.raycastTarget = true;
+                plate.gameObject.AddComponent<Btn>().Setup(() => Choose(rung.Ordinal));
 
                 s.Badge = UIKit.Img("Badge", s.Root, null, Color.white,
                                     Vector2.one * (seat * SeatFace), Centre, Vector2.zero);
@@ -654,7 +657,6 @@ namespace GlimmerGrove
             float height = PlateHeight(lines.Count);
             var standing = StandingOf(rung);
             bool live = standing != Standing.Locked;
-            var metal = RankLook.Metal(rung);
 
             var band = UIKit.Node("Plate_" + rung.Id, _plateBand);
             _plate = band;
@@ -666,67 +668,72 @@ namespace GlimmerGrove
             list.sizeDelta = new Vector2(0f, height);
             list.anchoredPosition = Vector2.zero;
 
-            _plateFace = UIKit.Img("Face", list, Art.S("Ui/" + (live ? Skins.PlateNavy : Skins.Panel)),
-                                   Color.white, new Vector2(PlateW, height), Top, new Vector2(0f, -height * .5f));
-            var face = _plateFace.transform;
-
-            var rim = UIKit.Img("Rim", face, Art.RoundOutline(30, 6f), Pal.A(metal, live ? .55f : .22f));
-            UIKit.StretchTo((RectTransform)rim.transform, 0f, 0f, 0f, 0f);
+            // The board: the kit's notched panel, the same for a live rung and a locked one -
+            // what says locked is the writing on it, in steel rather than cream.
+            var face = (RectTransform)RankKit.Lay("Board", list, RankKit.Board, new Vector2(PlateW, height),
+                                                  Top, new Vector2(0f, -height * .5f)).transform;
 
             float headY = height * .5f - PlateHead * .5f;
             float wellW = PlateW - WellInset * 2f;
 
-            _plateTitle = UIKit.Shrinkable(
-                UIKit.Titled("Title", face, Loc.Get("ui.ranks.requirements").ToUpperInvariant(), 28,
-                             live ? metal : LockedInk, TextAnchor.MiddleLeft,
-                             new Vector2(wellW * .6f, 34f), Centre,
-                             new Vector2(-wellW * .5f + wellW * .3f, headY), 0f, 2f), 15);
+            // The kit's tab hanging from the board's top edge, with the title on it. One caption
+            // for every rung, since what the board asks is the same question of each of them.
+            var tab = RankKit.Lay("Tab", face, RankKit.Tab, new Vector2(TabW, TabH), Top,
+                                  new Vector2(0f, -TabH * .5f));
+            UIKit.OneLineLabel(
+                UIKit.Titled("Title", tab.transform, Loc.Get("ui.ranks.requirements").ToUpperInvariant(),
+                             TabPt, Pal.Cream, TextAnchor.MiddleCenter,
+                             new Vector2(TabW * .8f, TabH * .6f), Centre, new Vector2(0f, TabH * .07f), 3f, 3f),
+                TabW * .8f, TabPt, 16);
 
+            // The count of lines met, at the head's right.
             _plateCount = UIKit.Shrinkable(
-                UIKit.Titled("Count", face, string.Empty, 30, Pal.Cream, TextAnchor.MiddleRight,
+                UIKit.Titled("Count", face, string.Empty, 28, Pal.Cream, TextAnchor.MiddleRight,
                              new Vector2(CountW, 34f), Centre,
-                             new Vector2(wellW * .5f - CountW * .5f, headY), 0f, 2f), 15);
+                             new Vector2(wellW * .5f - CountW * .5f, headY - 6f), 0f, 2f), 15);
 
-            float lineY = height * .5f - PlateHead - LineH * .5f;
+            float lineY = height * .5f - PlateHead - LineH * .5f - 2f;
             foreach (var req in lines)
             {
-                var well = UIKit.Img("Well", face, Art.S("Ui/" + Skins.Trough), Color.white,
-                                     new Vector2(wellW, WellH), Centre, new Vector2(0f, lineY));
-
                 float wellLeft = -wellW * .5f;
                 var line = new Line { Req = req };
 
-                // A ring rather than a star: a star is a currency on this very plate, and a
-                // line reading "Earn 60 stars" with a star in front of it says two things
-                // with one glyph. A tick replaces the ring when the line is met.
-                line.Mark = UIKit.Img("M", well.transform, Art.Ring(64, 9f), Pal.A(metal, .6f),
-                                      Vector2.one * MarkSize, Centre,
-                                      new Vector2(wellLeft + 22f + MarkSize * .5f, 0f));
-                line.Mark.preserveAspect = true;
+                // One requirement on one of the kit's dark bars: the measure's own picture on
+                // the left (a star beside "Earn N stars", at the owner's instruction), the
+                // sentence, the bar under it, the count on the right. No tick: a met line is
+                // said by its full green bar and its green count.
+                var row = RankKit.Lay("Row", face, RankKit.Row, new Vector2(wellW, RowH), Centre,
+                                      new Vector2(0f, lineY));
 
-                float saidX = wellLeft + 22f + MarkSize + 18f;
-                float saidW = wellW - (saidX - wellLeft) - CountW - 30f;
+                var icon = UIKit.Img("I", row.transform, null, Color.white, Vector2.one * IconSize, Centre,
+                                     new Vector2(wellLeft + 16f + IconSize * .5f, 0f));
+                icon.preserveAspect = true;
+                RankKit.PaintIcon(icon, req.Measure);
+
+                float saidX = wellLeft + 16f + IconSize + 16f;
+                float saidW = wellW - (saidX - wellLeft) - CountW - 24f;
 
                 line.Said = UIKit.Shrinkable(
-                    UIKit.Titled("L", well.transform, req.Sentence(GameContent.Index), 32, Pal.Cream,
+                    UIKit.Titled("L", row.transform, req.Sentence(GameContent.Index), 32, Pal.Cream,
                                  TextAnchor.MiddleLeft, new Vector2(saidW, 38f), Centre,
                                  new Vector2(saidX + saidW * .5f, 13f), 0f, 2f), 18);
 
-                // The bar under the sentence: the line's own fill, so five lines read as five
-                // gauges rather than as five fractions to be subtracted in the head.
-                var trough = UIKit.Img("Trough", well.transform, Art.Capsule((int)BarH, 48),
-                                       new Color(0f, 0f, 0f, .42f), new Vector2(saidW, BarH), Centre,
-                                       new Vector2(saidX + saidW * .5f, -21f));
-                var fill = UIKit.Img("Fill", trough.transform, Art.Capsule((int)BarH, 48), BarOrange,
-                                     new Vector2(0f, BarH), Left, new Vector2(0f, 0f));
+                // The bar under the sentence is the interface kit's trough and fill, as every
+                // bar in the game is: the line's own gauge, so five lines read as five gauges
+                // rather than as five fractions to be subtracted in the head.
+                var trough = UIKit.Img("Trough", row.transform, Art.S("Ui/" + Skins.Trough), Color.white,
+                                       new Vector2(saidW, BarH + 8f), Centre,
+                                       new Vector2(saidX + saidW * .5f, -22f));
+                var fill = UIKit.Img("Fill", trough.transform, Art.S("Ui/" + Skins.Fill), BarOrange,
+                                     new Vector2(0f, BarH), Left, new Vector2(4f, 0f));
                 line.Fill = (RectTransform)fill.transform;
                 line.Fill.pivot = new Vector2(0f, .5f);
-                line.Room = saidW;
+                line.Room = saidW - 8f;
 
                 line.Count = UIKit.Shrinkable(
-                    UIKit.Titled("C", well.transform, string.Empty, 32, Pal.Gold,
-                                 TextAnchor.MiddleRight, new Vector2(CountW, WellH - 10f), Centre,
-                                 new Vector2(wellW * .5f - 22f - CountW * .5f, 0f), 0f, 2f), 18);
+                    UIKit.Titled("C", row.transform, string.Empty, 32, Pal.Gold,
+                                 TextAnchor.MiddleRight, new Vector2(CountW, RowH - 10f), Centre,
+                                 new Vector2(wellW * .5f - 16f - CountW * .5f, 0f), 0f, 2f), 18);
 
                 _lines.Add(line);
                 lineY -= LineH;
@@ -817,7 +824,6 @@ namespace GlimmerGrove
             Tint(_aurora[1], Pal.A(lift, AuroraAlpha[1]), dur);
             Tint(_ring, metal, dur);
             Tint(_spark, Pal.Lift(metal, .55f), dur);
-            Tint(_chipRim, metal, dur);
             _ordinal.color = metal;
 
             if (_flies != null) Flies(_flies, metal);
@@ -1000,8 +1006,6 @@ namespace GlimmerGrove
 
         void PaintRail(RankLadder ladder)
         {
-            int held = RankLedger.Ordinal;
-
             foreach (var s in _seats)
             {
                 var standing = StandingOf(s.Rung);
@@ -1013,12 +1017,8 @@ namespace GlimmerGrove
                 float face = earned || next ? SeatFace : SeatFaceLocked;
                 s.Badge.rectTransform.sizeDelta = Vector2.one * (s.Root.sizeDelta.x * face);
 
-                s.Rim.color = Pal.A(metal, earned ? .95f : next ? .75f : .30f);
                 s.Glow.color = Pal.A(metal, earned ? .34f : next ? .18f : 0f);
                 s.Lock.gameObject.SetActive(!earned && !next);
-
-                if (s.Link != null)
-                    s.Link.color = s.Rung.Ordinal < held ? Pal.A(metal, .85f) : Pal.A(Pal.Cream, .14f);
 
                 // The chosen seat stands up. Tweened rather than set, because a tap is a
                 // gesture; a repaint from the ledger lands on the same value and moves nothing.
@@ -1051,7 +1051,6 @@ namespace GlimmerGrove
 
             var standing = StandingOf(rung);
             bool live = standing != Standing.Locked;
-            var metal = RankLook.Metal(rung);
             int met = 0;
 
             foreach (var line in _lines)
@@ -1059,9 +1058,6 @@ namespace GlimmerGrove
                 long have = line.Req.Held(index);
                 bool done = have >= line.Req.Target;
                 if (done) met++;
-
-                line.Mark.sprite = done ? Art.S("Ui/ic_check") : Art.Ring(64, 9f);
-                line.Mark.color = done ? Pal.Mint : Pal.A(metal, live ? .70f : .45f);
 
                 line.Said.color = live ? Pal.Cream : LockedInk;
 
@@ -1073,13 +1069,15 @@ namespace GlimmerGrove
                                              Compact.Number(line.Req.Target));
                 line.Count.color = done ? Pal.Mint : live ? Pal.Gold : LockedInk;
 
+                // A fill shorter than it is tall is a fill the sliced sprite cannot draw, so
+                // any progress at all shows as one cap's worth; none shows as nothing.
                 float share = line.Req.Target <= 0 ? 1f : Mathf.Clamp01(have / (float)line.Req.Target);
-                line.Fill.sizeDelta = new Vector2(line.Room * share, BarH);
+                line.Fill.sizeDelta = new Vector2(share <= 0f ? 0f : Mathf.Max(BarH, line.Room * share), BarH);
                 line.Fill.GetComponent<Image>().color = done ? Pal.Mint : BarOrange;
             }
 
             _plateCount.text = Loc.Format("ui.ranks.fraction", met, _lines.Count);
-            _plateCount.color = met >= _lines.Count && _lines.Count > 0 ? Pal.Mint : Pal.Cream;
+            _plateCount.color = met >= _lines.Count && _lines.Count > 0 ? Pal.Mint : live ? Pal.Gold : LockedInk;
         }
     }
 }

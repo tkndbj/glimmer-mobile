@@ -16,6 +16,7 @@ import { readFloor, StreakFloor } from "./streak";
 import { readWheelPosition } from "./wheel";
 import { readTaskPaid, TaskPaid } from "./tasks";
 import { EndlessDay, readEndlessDay } from "./endless";
+import { keeperBoughtOf } from "./keeper";
 import { ChallengeTiersHeld, readChallengeTiers } from "./challenges";
 
 export interface CurrencyState {
@@ -126,6 +127,16 @@ export type WalletDoc = Record<CurrencyId, CurrencyState> & {
    * because every writer writes this document whole.
    */
   challengeTiers?: ChallengeTiersHeld;
+
+  /**
+   * How many keeper levels this account has bought outright (`keeper.ts`, invariant 57).
+   * Server-owned for the streak floor's reason, and it is the entitlement itself: the level a
+   * published card carries is the earned level plus this, and the device's own copy is a hint
+   * this figure overrides in both directions. Written by `submitSpends` in the transaction that
+   * takes the money; carried through `readWallet` because every writer writes this document
+   * whole.
+   */
+  keeperBought?: number;
 };
 
 /** What the client's `CloudWalletState` expects back. */
@@ -187,6 +198,17 @@ export interface WalletReply {
    */
   endlessDay: number;
   endlessPaid: number;
+
+  /**
+   * How many keeper levels this server has recorded the account buying (invariant 57).
+   *
+   * Reported for the lane's reason: it is the entitlement, every device has to agree about it,
+   * and a device that believed in a level the server never recorded would draw a gate open that
+   * the published card shows shut. Always present, including as nought, so the client can read
+   * the *presence* of the field as "this deployment understands bought levels" — the wheel's
+   * trick, for the wheel's reason.
+   */
+  keeperBought: number;
 }
 
 export function emptyCurrency(): CurrencyState {
@@ -272,6 +294,14 @@ export function readWallet(
   const tiers = readChallengeTiers((raw as { challengeTiers?: unknown } | undefined)?.challengeTiers);
   if (Object.keys(tiers).length > 0) wallet.challengeTiers = tiers;
 
+  // The keeper levels bought, carried through for exactly the reason every field above it is:
+  // every writer of this document writes it *whole*, so a field this function does not copy is
+  // a field the next spend or claim silently deletes - and deleting this one takes back every
+  // level the account paid for, on its next sync, with the money already spent. Assigned only
+  // when there is one, for the `undefined` reason above.
+  const keeperBought = keeperBoughtOf(raw);
+  if (keeperBought > 0) wallet.keeperBought = keeperBought;
+
   // Whether this server has ever recorded currency for the account, which is what "brand new"
   // has always meant here. It used to be read off `snapshot.exists`, and that stopped being
   // the same question the moment a second feature wrote to this document: a name claimed
@@ -351,6 +381,7 @@ export function toReply(
     wheelSpins: wheel.spins,
     endlessDay: lane.day,
     endlessPaid: lane.paid,
+    keeperBought: wallet.keeperBought ?? 0,
   }));
 }
 

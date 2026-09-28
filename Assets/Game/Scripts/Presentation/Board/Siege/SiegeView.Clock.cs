@@ -73,7 +73,16 @@ namespace GlimmerGrove
             // scales is not being read while the run is held.
             Pacing(Time.unscaledDeltaTime);
 
-            if (!Live) return;
+            // **And the overcharge glyph, for `Breathe`'s reason.** The tutorial raises its
+            // "tap the turret" panel over a held board with a ring round this very glyph, so a
+            // bolt that stopped beating the moment the panel opened would freeze at whatever size
+            // it happened to be. `Ready` only reads the board, and the tap it enables is still
+            // refused by `Tappable` while the run is held.
+            if (!Live)
+            {
+                Ready();
+                return;
+            }
 
             // **The run's own clock, which is the only place in this mode it may be bent.**
             // Everything below is driven by what `Advance` is handed, so slowing this is slowing

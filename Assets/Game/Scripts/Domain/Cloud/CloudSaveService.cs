@@ -1414,6 +1414,10 @@ namespace GlimmerGrove.Cloud
                 // server owns and every device has to agree about.
                 Progression.EndlessCoins.ApplyServerState(
                     state.CarriesEndless, state.EndlessDay, state.EndlessPaid);
+
+                // The keeper levels bought (invariant 57), for the same reason once more: the
+                // wallet document is the entitlement and every device has to agree about it.
+                Progression.KeeperLedger.ApplyServerState(state.CarriesKeeper, state.KeeperBought);
             }
 
             SaveService.MarkDirty();

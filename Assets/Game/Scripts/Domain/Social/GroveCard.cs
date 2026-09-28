@@ -242,6 +242,19 @@ namespace GlimmerGrove.Social
         /// </summary>
         public static GroveCard OfSave(Persistence.SaveFileDto save,
                                        string ownerId, int keeperLevel, long nowUnix)
+            => OfSave(save, ownerId, keeperLevel, keeperLevel, nowUnix);
+
+        /// <summary>
+        /// <see cref="OfSave(Persistence.SaveFileDto, string, int, long)"/> with the two levels
+        /// told apart: <paramref name="keeperLevel"/> is what the card carries - earned plus
+        /// bought, the level a stranger sees - and <paramref name="earnedLevel"/> is what the
+        /// rank ladder is asked about, because a bought level moves no badge (invariant 57).
+        /// The server makes the same split: the card's level reads the wallet's count, `rungOf`
+        /// never does.
+        /// </summary>
+        public static GroveCard OfSave(Persistence.SaveFileDto save,
+                                       string ownerId, int keeperLevel, int earnedLevel,
+                                       long nowUnix)
         {
             string stored = save?.wallet?.displayName;
             string name = string.IsNullOrEmpty(stored) ? Persistence.Wallet.DefaultName : stored;
@@ -281,7 +294,7 @@ namespace GlimmerGrove.Social
             // the server has not seen the play behind. It is also the exact reading the server
             // will take, which is what keeps the fingerprint honest rather than merely stable.
             var rung = Ranks.RankLedger.Ladder.Held(
-                new Ranks.SaveRankSource(save, Content.GameContent.Index, keeperLevel));
+                new Ranks.SaveRankSource(save, Content.GameContent.Index, earnedLevel));
 
             return Build(ownerId, name, keeperLevel, EndlessLedger.BestIn(save), nowUnix,
                          line, rungs, rung?.Id);

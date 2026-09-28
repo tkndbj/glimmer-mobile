@@ -3139,6 +3139,122 @@ def reachable_keeper_level(manifest, progression):
     return level, total, glades, top
 
 
+def check_keeper_levels(progression, warnings, wards=None):
+    """The price of a keeper level bought outright (invariant 57). `KeeperLadder.Resolve`, offline.
+
+    Three things, and only the first is a rule the reader also enforces.
+
+    * **The block resolves, or the ladder is withdrawn whole.** Levels climb strictly from 2 to
+      `top`, the last anchor *is* the top, a currency is one of two, a price is 1..MAX and a band
+      never gets cheaper as it climbs. The C# reader, `keeper.ts` and the seeder all refuse the
+      same faults; a block one of them accepted and another refused is a purchase refused on a
+      device that has already shown its price. Mirrored, so a mistake fails here first.
+    * **The top reaches the shelf.** Every turret's keeper gate should be a level the ladder can
+      reach, or the dearest turret is one nothing can open - a warning, because the owner may
+      mean it.
+    * **What it costs, printed.** Cumulative gems to each milestone against the shop's best gem
+      rate, because a price only means something beside the money that pays it.
+    """
+    LOWEST, MAX_TOP, MAX_ANCHORS, MAX_PRICE = 2, 200, 16, 10_000_000
+    errors = []
+    block = progression.get("keeperLevels")
+    if not block:
+        print("keeper levels: not for sale (no keeperLevels block)")
+        return errors, None
+
+    top = block.get("top")
+    rows = block.get("anchors") or []
+    if not isinstance(top, int) or top < LOWEST or top > MAX_TOP:
+        errors.append(f"keeperLevels top is {top!r}; it must be a whole number {LOWEST}..{MAX_TOP}")
+        return errors, None
+    curve_top = progression.get("maxLevel", 1)
+    if top > curve_top:
+        errors.append(f"keeperLevels top is {top} but the curve ends at level {curve_top}")
+    if not rows:
+        errors.append("keeperLevels has a top and no anchors, so no level has a price")
+        return errors, None
+    if len(rows) > MAX_ANCHORS:
+        errors.append(f"keeperLevels lists {len(rows)} anchors; at most {MAX_ANCHORS} are supported")
+        return errors, None
+
+    last = None
+    for i, row in enumerate(rows):
+        where = f"keeperLevels anchor {i}"
+        level, price, currency = row.get("level"), row.get("price"), row.get("currency")
+        if not isinstance(level, int) or level < LOWEST or level > top:
+            errors.append(f"{where} prices level {level!r}, outside {LOWEST}..{top}")
+        if not isinstance(price, int) or price < 1 or price > MAX_PRICE:
+            errors.append(f"{where} costs {price!r}; a price is 1..{MAX_PRICE}")
+        if currency not in ("credits", "gems"):
+            errors.append(f"{where} is priced in {currency!r}; only 'credits' and 'gems' are spent")
+        if last and isinstance(level, int) and level <= last["level"]:
+            errors.append(f"{where} prices level {level} after level {last['level']}; anchors must climb")
+        if (last and isinstance(price, int) and last["currency"] == currency
+                and price < last["price"]):
+            errors.append(f"{where} costs {price} after {last['price']} in the same currency; a band "
+                          "never gets cheaper as it climbs")
+        last = {"level": level, "currency": currency, "price": price}
+    if last and last["level"] != top:
+        errors.append(f"keeperLevels top is {top} but the last anchor prices level {last['level']}; "
+                      "the last anchor must be the top")
+    if errors:
+        return errors, None
+
+    def between(a, b, step, steps):
+        if steps <= 0:
+            return a
+        return a + (2 * (b - a) * step + steps) // (2 * steps)
+
+    def price_of(level):
+        if level < rows[0]["level"] or level > top:
+            return None
+        i = 0
+        while i + 1 < len(rows) and rows[i + 1]["level"] <= level:
+            i += 1
+        lower = rows[i]
+        if i + 1 >= len(rows) or lower["level"] == level:
+            return lower["currency"], lower["price"]
+        upper = rows[i + 1]
+        if lower["currency"] != upper["currency"]:
+            return lower["currency"], lower["price"]
+        return lower["currency"], between(lower["price"], upper["price"],
+                                          level - lower["level"], upper["level"] - lower["level"])
+
+    # The shelf's gates against the ladder's reach.
+    gates = sorted((w.get("minLevel", 0), w.get("id", "?")) for w in ((progression.get("wards") or {}).get("models") or [])
+                   if w.get("minLevel", 0) > 0)
+    unreachable = [(g, i) for g, i in gates if g > top]
+    if unreachable:
+        warnings.append(f"keeperLevels top is {top}, below the keeper gate of {len(unreachable)} turret(s) "
+                        f"({', '.join(f'{i} at {g}' for g, i in unreachable)}); nothing on the ladder opens them")
+
+    # What it costs. The best gem rate the shop sells, for the dollar column.
+    packs = [(p.get("gems", 0), p.get("referenceUsdCents", 0)) for p in ((progression.get("store") or {}).get("products") or [])
+             if p.get("gems", 0) > 0 and p.get("referenceUsdCents", 0) > 0]
+    best = max((g / c for g, c in packs), default=0)          # gems per cent
+    coins_total = gems_total = 0
+    marks = {}
+    for level in range(2, top + 1):
+        currency, price = price_of(level)
+        if currency == "credits":
+            coins_total += price
+        else:
+            gems_total += price
+        marks[level] = (coins_total, gems_total)
+    print("")
+    print(f"keeper levels: {rows[0]['level']}..{top} for sale over {len(rows)} anchor(s); "
+          f"{coins_total:,} coins and {gems_total:,} gems to buy every level")
+    print("       level   this one          coins so far   gems so far   about")
+    for level in sorted({10, 20, 30, 40, 50, 60, top} | {a['level'] for a in rows}):
+        if level < 2 or level > top:
+            continue
+        currency, price = price_of(level)
+        c, g = marks[level]
+        usd = f"${g / best / 100:,.0f}" if best and g else "-"
+        print(f"       {level:<7} {price:>7,} {currency:<9} {c:>12,}   {g:>11,}   {usd}")
+    return errors, {"top": top, "coins": coins_total, "gems": gems_total}
+
+
 def check_keeper_walls(manifest, progression, warnings):
     """The keeper walls the manifest puts in front of chapters. `ContentValidation.ValidateKeeperWalls`.
 
@@ -4244,6 +4360,12 @@ def main():
     # progression.json times every glade in the catalog - a sum neither file can do alone.
     wall_errors, keeper_walls, keeper_reach = check_keeper_walls(manifest, progression, warnings)
     errors.extend(wall_errors)
+
+    # The price of a keeper level bought outright (invariant 57). Read after the walls because a
+    # bought level opens what a wall shuts, and the reader, the server and the seeder all refuse
+    # the same faults - this is where a mistake fails first.
+    keeper_errors, _ = check_keeper_levels(progression, warnings)
+    errors.extend(keeper_errors)
 
     # The rank ladder. Read after the keeper walls because a rung may ask for a keeper level and
     # what the shipped content pays for is the ceiling that has just been worked out - and after

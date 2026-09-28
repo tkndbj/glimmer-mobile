@@ -1055,6 +1055,21 @@ namespace GlimmerGrove.Content
         public XpBoostDto xpBoost;
 
         /// <summary>
+        /// The price ladder for keeper levels bought outright. Optional; see
+        /// <see cref="Progression.KeeperLadder"/>.
+        ///
+        /// <para>
+        /// The one block here that turns currency into a keeper level (invariant 57), so it
+        /// carries the season pass's obligation: <c>seed-config.mjs</c> publishes it, because a
+        /// level is a spend the server prices — a client that sold a level for one coin against
+        /// a server that had never heard of the ladder would have that debit refused and the
+        /// level taken back, and a server that priced it differently from the device would
+        /// refuse an honest purchase. <b>Absent sells nothing</b>, on both sides.
+        /// </para>
+        /// </summary>
+        public KeeperLadderDto keeperLevels;
+
+        /// <summary>
         /// The rank ladder. Optional; see <see cref="Ranks.RankLadder"/>.
         ///
         /// <para>
@@ -1168,6 +1183,52 @@ namespace GlimmerGrove.Content
         public bool IsAuthored => watchedPercent >= 0 || watchedHours >= 0
                                || watchedCooldownHours >= 0 || boughtPercent >= 0
                                || boughtHours >= 0 || maxPercent >= 0;
+    }
+
+    /// <summary>
+    /// What buying a keeper level costs: a handful of anchors the price is drawn between.
+    ///
+    /// <para>
+    /// <b>Anchors rather than seventy rows</b>, because a ladder is a shape and a shape has a
+    /// few corners. Each anchor names a level, a currency and the price at exactly that level;
+    /// the price of a level between two anchors of the <em>same</em> currency is drawn on the
+    /// straight line between them, and a level between two anchors of <em>different</em>
+    /// currencies costs what the lower anchor says — which is how a coin band hands over to a
+    /// gem band without a rule of its own. Nothing below the first anchor is sold, nothing
+    /// above <see cref="top"/> is sold, and the last anchor has to <em>be</em> the top so the
+    /// ladder never has to guess past its own last figure.
+    /// </para>
+    /// <para>
+    /// The arithmetic is integer throughout and rounds half up, on both sides of the wire
+    /// (<c>KeeperLadder.PriceFor</c>, <c>keeperPrice</c> in <c>keeper.ts</c>), because nothing
+    /// that decides a payment may be a float — the runtimes disagree about them.
+    /// </para>
+    /// </summary>
+    [Serializable]
+    public sealed class KeeperLadderDto
+    {
+        /// <summary>The highest level sold, and the level the last anchor must name. Unwritten is -1.</summary>
+        public int top = -1;
+
+        /// <summary>The corners of the ladder, lowest level first.</summary>
+        public KeeperAnchorDto[] anchors;
+
+        /// <summary>Whether the file wrote this block at all; see <see cref="DailyChestEntryDto.IsAuthored"/>.</summary>
+        public bool IsAuthored => top >= 0 || (anchors != null && anchors.Length > 0);
+    }
+
+    /// <summary>One corner of the keeper price ladder. See <see cref="KeeperLadderDto"/>.</summary>
+    [Serializable]
+    public sealed class KeeperAnchorDto
+    {
+        /// <summary>The keeper level this anchor prices — the level a purchase <em>reaches</em>.</summary>
+        public int level;
+
+        /// <summary><c>credits</c> or <c>gems</c>. Anything else refuses the block.</summary>
+        public string currency;
+
+        /// <summary>What reaching <see cref="level"/> costs, in <see cref="currency"/>.</summary>
+        public int price;
     }
 
     /// <summary>

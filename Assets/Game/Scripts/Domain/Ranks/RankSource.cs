@@ -119,7 +119,11 @@ namespace GlimmerGrove.Ranks
             return full;
         }
 
-        public long KeeperLevel => PlayerProgression.Level.Level;
+        // The *earned* level, never the effective one: a level bought outright moves every gate
+        // in the game and no rank (invariant 57). The server reads the same figure (`rungOf`
+        // walks the save's XP and never the wallet's count), which is what keeps a device's badge
+        // and a stranger's copy of it the same badge.
+        public long KeeperLevel => PlayerProgression.EarnedLevel.Level;
 
         public long BestWave(string scope)
         {

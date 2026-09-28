@@ -423,9 +423,10 @@ namespace GlimmerGrove
                 // with its light, so a turret with nothing to throw cannot be tapped either.
                 int seat = i;
 
+                // Wider than the glyph's own white halo, so the ward's colour rims it.
                 post.Halo = UIKit.Img("Halo", post.Node, Art.Glow(96, 2.1f),
                                       Pal.A(TintOf(ward.Colour), 0f),
-                                      new Vector2(Cell * 1.3f, Cell * 1.3f));
+                                      new Vector2(Cell * 1.5f, Cell * 1.5f));
                 post.Halo.raycastTarget = false;
                 post.Halo.rectTransform.anchoredPosition = new Vector2(0f, ChargeY);
 
@@ -490,13 +491,19 @@ namespace GlimmerGrove
         /// hair under the node's - which is the flat panel every turret in this pack carries, and
         /// the spot a device circled.
         ///
-        /// <b>It is a tile rather than a line glyph</b>, because the first cut was `Ui/ic_power` in
-        /// cream and came back from a device as simply not visible: a thin monochrome outline over
-        /// a saturated chassis has nothing to separate it from what it is drawn on. A colourful
-        /// badge with its own dark ground reads on all four ward colours at once - see
-        /// <c>make_siege_art.charge</c>, which is where six candidates were compared at this size.
+        /// <b>It is a sticker, and it is the third cut.</b> `Ui/ic_power` in cream was a thin
+        /// outline nothing separated from the chassis; the rounded skill-icon tile after it was a
+        /// dark square that read as part of the machine, and both came back from a device as "not
+        /// really visible". The Casual Icon Pack's bolt carries a heavy black keyline round a
+        /// saturated body, so it stands off all four ward colours on its own - see
+        /// <c>make_siege_art.charge</c> - and it is drawn bigger than the tile was because a bolt
+        /// is narrower than a square. <c>Ready</c> pulses it.
+        ///
+        /// <b>And it stands on a white disc since 2026-09-28</b>, the owner's second ask for more:
+        /// the glyph is a square now with the bolt at .6 of it (<c>make_siege_art.haloed</c>), so
+        /// it is drawn at 1.2 cells to keep the bolt near the .72 of a cell it was.
         /// </summary>
-        const float ChargeY = 0f, ChargeSize = .62f;
+        const float ChargeY = 0f, ChargeSize = 1.2f;
 
         void Badge(Post post, SiegeWard ward)
         {

@@ -1910,6 +1910,14 @@ namespace GlimmerGrove.Cloud
                     state.EndlessDay = (int)ReadLong(entry, "endlessDay");
                 }
 
+                // The keeper levels bought (invariant 57), read exactly as the lane's day is and
+                // for the same reason: presence first, the number second.
+                if (entry.TryGetValue("keeperBought", out object bought) && bought != null)
+                {
+                    state.CarriesKeeper = true;
+                    state.KeeperBought = (int)ReadLong(entry, "keeperBought");
+                }
+
                 states.Add(state);
             }
 
