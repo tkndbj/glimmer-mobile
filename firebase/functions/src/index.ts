@@ -25,7 +25,7 @@ import {
 } from "./config";
 import {
   ackBody, adCurrencyOf, adCurrencyValue, adGrantId,
-  isAdGrantId, usableAdConfig, verifyAdCallback,
+  callbackQuery, isAdGrantId, usableAdConfig, verifyAdCallback,
 } from "./ads";
 import {
   chestCurrencyValue, DailyClaim, MAX_DAYS_AHEAD, MAX_DAYS_BEHIND,
@@ -1059,23 +1059,11 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
 export const adReward = onRequest(
   { region: REGION, secrets: [LEVELPLAY_SECRET], cors: false },
   async (request, response) => {
-    const query = request.query as Record<string, string | undefined>;
+    const query = callbackQuery(request.query as Record<string, unknown>);
 
-    const eventId = typeof query.eventId === "string" ? query.eventId : "";
+    const eventId = query.eventId ?? "";
 
-    const verdict = verifyAdCallback(
-      {
-        eventId,
-        userId: query.userId,
-        rewards: query.rewards,
-        timestamp: query.timestamp,
-        signature: query.signature,
-        placement: query.placement,
-        placementName: query.placementName,
-        itemName: query.itemName,
-      },
-      configured(LEVELPLAY_SECRET)
-    );
+    const verdict = verifyAdCallback({ ...query, eventId }, configured(LEVELPLAY_SECRET));
 
     if (!verdict.ok) {
       logger.error("rewarded ad callback refused", {

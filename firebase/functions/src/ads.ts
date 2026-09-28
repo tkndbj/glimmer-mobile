@@ -192,6 +192,42 @@ export interface AdCallbackQuery {
   placement?: string;
   placementName?: string;
   itemName?: string;
+
+  /** Which network served the view; recorded on the grant, never checked. */
+  adNetwork?: string;
+}
+
+/**
+ * The callback's query, read as one string per parameter.
+ *
+ * <p>
+ * Express turns a parameter that appears twice into an array, and the handler used to cast
+ * the whole query to strings - so a callback URL carrying `timestamp` and `signature` twice
+ * (once as LevelPlay's unresolved `[TIMESTAMP]` placeholder, once with the value LevelPlay
+ * appends itself) threw inside the signature check and answered 500 on every retry, and no
+ * coin reward was ever paid. A repeated parameter now reads as its last value that is not an
+ * unresolved `[MACRO]`; the signature is still checked over whatever that yields, so this
+ * widens nothing a forger can use.
+ * </p>
+ */
+export function callbackQuery(raw: Record<string, unknown>): AdCallbackQuery {
+  const one = (value: unknown): string | undefined => {
+    const all = (Array.isArray(value) ? value : [value])
+      .filter((v): v is string => typeof v === "string" && v !== "" && !/^\[[A-Z_]+\]$/.test(v));
+    return all.length ? all[all.length - 1] : undefined;
+  };
+
+  return {
+    eventId: one(raw.eventId),
+    userId: one(raw.userId),
+    rewards: one(raw.rewards),
+    timestamp: one(raw.timestamp),
+    signature: one(raw.signature),
+    placement: one(raw.placement),
+    placementName: one(raw.placementName),
+    itemName: one(raw.itemName),
+    adNetwork: one(raw.adNetwork),
+  };
 }
 
 export type AdCallbackVerdict =

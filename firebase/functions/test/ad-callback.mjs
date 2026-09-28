@@ -11,7 +11,7 @@
 
 import { createHash } from "node:crypto";
 import {
-  adCurrencyOf, adCurrencyValue, adGrantId, ackBody,
+  adCurrencyOf, adCurrencyValue, adGrantId, ackBody, callbackQuery,
   isAdGrantId, usableAdConfig, usableEventId, verifyAdCallback,
 } from "../lib/ads.js";
 
@@ -186,6 +186,33 @@ console.log("== acknowledgement");
 
 check("the acknowledgement is exactly what LevelPlay looks for",
       ackBody("dae8e6cf42b1357f8652ad6ecb5b24f1") === "dae8e6cf42b1357f8652ad6ecb5b24f1:OK");
+
+console.log("== a query with repeated parameters");
+
+{
+  // What LevelPlay sent while the dashboard URL still carried timestamp=[TIMESTAMP] and
+  // signature=[SIGNATURE] beside the pair it appends itself: Express reads each as an array.
+  const signed = callback();
+  const raw = {
+    ...signed,
+    timestamp: ["[TIMESTAMP]", signed.timestamp],
+    signature: ["[SIGNATURE]", signed.signature],
+  };
+  let verdict;
+  let threw = false;
+  try { verdict = verifyAdCallback(callbackQuery(raw), KEY); } catch { threw = true; }
+  check("a repeated parameter never throws", !threw);
+  check("the real value is read past an unresolved placeholder", !threw && verdict.ok);
+
+  const forged = { ...raw, signature: ["[SIGNATURE]", "0".repeat(32)] };
+  check("a repeated parameter is still held to the signature",
+        !verifyAdCallback(callbackQuery(forged), KEY).ok);
+
+  check("a placeholder alone reads as missing",
+        callbackQuery({ timestamp: "[TIMESTAMP]" }).timestamp === undefined);
+  check("a plain query reads unchanged",
+        callbackQuery(signed).signature === signed.signature);
+}
 
 console.log(`\n${pass} ad callback check(s), ${fail} failure(s)`);
 process.exit(fail === 0 ? 0 : 1);
