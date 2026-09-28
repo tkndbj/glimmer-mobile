@@ -29,15 +29,15 @@ namespace GlimmerGrove
     /// paints from <see cref="ReferralLedger.State"/> the moment it opens and asks the server
     /// for a fresh copy in the same frame; a row goes lit when the server's count reaches it
     /// and never when this device believes it should have. A tap on a lit row asks the server
-    /// to pay one chest, and only what the server answers is opened — through the same
+    /// to pay one chest, and only what the server answers is opened - through the same
     /// ceremony every chest in this game opens (<see cref="ChestOverlay"/> via
     /// <see cref="ChestClaim.ForReferral"/>). A row paying two chests is tapped twice, and
     /// says so between the taps.
     /// </para>
     /// <para>
     /// <b>The board is a <see cref="GridView"/>, and that is the whole of why this page stopped
-    /// reloading.</b> It drew every row the cap allows — fifty, the owner's instruction of
-    /// 2026-09-20 — as fifty built subtrees, and threw the lot away whenever the offer band
+    /// reloading.</b> It drew every row the cap allows - fifty, the owner's instruction of
+    /// 2026-09-20 - as fifty built subtrees, and threw the lot away whenever the offer band
     /// changed shape, which replayed the staggered entrance on all of them and lost the scroll.
     /// That is the exact fault <c>GridView</c> was written for and already describes in its own
     /// words. Here the board keeps only the rows that fit on the glass, a redraw is
@@ -46,12 +46,12 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>The offer band is the one thing that changes shape, so it is the only thing rebuilt.</b>
-    /// It has three shapes — type a code, the welcome chests, or nothing — and it sits in a
+    /// It has three shapes - type a code, the welcome chests, or nothing - and it sits in a
     /// band of its own between the hero and the heading. When it changes,
     /// <see cref="RebuildOffer"/> redraws that band and <see cref="LayoutBelowOffer"/> slides
     /// the heading and the board's viewport; the board itself is not touched, keeps its cells
     /// and keeps the player's place. Nothing else on this page can change shape, so nothing
-    /// else can force a restage — and <see cref="Restage"/> is left for the one case that
+    /// else can force a restage - and <see cref="Restage"/> is left for the one case that
     /// genuinely is a different page, a content push that retunes the cap or the tiers.
     /// </para>
     /// </summary>
@@ -67,7 +67,7 @@ namespace GlimmerGrove
         const float Width = 1000f;
 
         /// <summary>
-        /// One friend is one row, the full width of the page — the streak's row (48g), and the
+        /// One friend is one row, the full width of the page - the streak's row (48g), and the
         /// tasks page's card.
         ///
         /// <para>
@@ -93,7 +93,7 @@ namespace GlimmerGrove
         /// really leaves that pill's words.
         ///
         /// <para>
-        /// The streak board's numbers, because this is the streak board's row — one width for
+        /// The streak board's numbers, because this is the streak board's row - one width for
         /// the two, since the right end carries exactly one of them at a time, and the line is
         /// fitted on write from <see cref="MarkType"/> rather than drawn at whatever size it was
         /// built at. English fits either way here; a translation of <c>ui.referral.settling</c>
@@ -108,7 +108,7 @@ namespace GlimmerGrove
         /// <summary>
         /// The offer band between the hero and the board.
         ///
-        /// <b>The same height as a row, because in one of its two shapes it <em>is</em> one</b> —
+        /// <b>The same height as a row, because in one of its two shapes it <em>is</em> one</b> -
         /// the welcome chests are furnished by <see cref="Furnish"/> exactly as a friend's row
         /// is, so a band shorter than a row would draw the same furniture in a smaller box and
         /// the seat would stand proud of its own plate.
@@ -159,7 +159,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>It has to outlast the claim call, and it did not.</b> It was cleared before
         /// <c>Flow.Modal</c> was called, and <see cref="ChestOverlay"/> runs its claim inside
-        /// its own <c>Build</c> — so <c>payout.Land()</c> adopted the new state, raised
+        /// its own <c>Build</c> - so <c>payout.Land()</c> adopted the new state, raised
         /// <see cref="OnChanged"/>, and found the guard already down, on the frame the chest
         /// was opening. It is cleared after the panel is up and the page has caught up.
         /// </para>
@@ -170,7 +170,7 @@ namespace GlimmerGrove
         /// True while <see cref="Restage"/> is drawing the whole page again.
         ///
         /// <para>
-        /// It suppresses the entrance — the page is already in front of the player — and it is
+        /// It suppresses the entrance - the page is already in front of the player - and it is
         /// the re-entrancy guard: <c>Build</c> asks the server, an answer can arrive on an
         /// already-completed task, and <see cref="OnChanged"/> would otherwise restage a page
         /// that is halfway through being restaged. Same distinction <c>ModalView.Rebuilding</c>
@@ -191,7 +191,7 @@ namespace GlimmerGrove
         /// <b>Every field here is written by <see cref="Paint"/> on every bind</b>, and that is
         /// a requirement rather than a tidiness: a <see cref="GridView"/> cell is recycled, so
         /// the row a player scrolls onto is a row that was drawing somebody else a moment ago.
-        /// Anything a state leaves alone is the previous row's answer showing through — which
+        /// Anything a state leaves alone is the previous row's answer showing through - which
         /// is invariant 48l's fault ("a repaint is a drawing of a state, so anything a one-off
         /// path switches off it has to switch back on") with recycling added on top.
         /// </para>
@@ -208,7 +208,7 @@ namespace GlimmerGrove
             /// <para>
             /// <see cref="Pool"/> is 150 units wider than the card and 130 taller, so it spills
             /// over whatever is drawn beside it. In the board that is the neighbouring cells,
-            /// and cells are recycled in no particular order — so the lit one is sunk to the
+            /// and cells are recycled in no particular order - so the lit one is sunk to the
             /// bottom of the sibling list and its halo passes under its neighbours' plates.
             /// On the offer band there is nothing to sink: the welcome row's pool is built
             /// before its plate and is already behind it.
@@ -236,7 +236,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Built once and bound many times. It holds no friend number of its own beyond
-        /// <see cref="RowWidgets.Goal"/>, which <see cref="Bind"/> rewrites — so the tap
+        /// <see cref="RowWidgets.Goal"/>, which <see cref="Bind"/> rewrites - so the tap
         /// handler asks the widgets what they are drawing rather than closing over a number
         /// that recycling would make a lie.
         /// </para>
@@ -255,12 +255,12 @@ namespace GlimmerGrove
                 Root = UIKit.Node("Friend", parent);
                 Root.sizeDelta = new Vector2(Width, CellH);
 
-                // The pool first, so it is behind the plate it haloes — a light drawn over an
+                // The pool first, so it is behind the plate it haloes - a light drawn over an
                 // opaque plate is what invariant 48i was bought by, from the other direction.
                 var pool = UIKit.Img("Light", Root, Art.Glow(128, 1.35f), Pal.A(Pal.Sun, 0f),
                                      new Vector2(Width + 150f, RowH + 130f), Centre, Vector2.zero);
 
-                // `Skins.PlateNavy`, which is what every reward row in this game is drawn on —
+                // `Skins.PlateNavy`, which is what every reward row in this game is drawn on -
                 // the tasks page, the streak board and the season ladder. This board was the one
                 // left on `Skins.Card`, and the difference is not a shade: a card is a
                 // *container*, flat and unlit with nothing at its edge but a keyline, and at the
@@ -378,7 +378,7 @@ namespace GlimmerGrove
         /// <summary>
         /// Anything the page did not do itself: the ledger adopting a new answer, a remote
         /// content push, or a cloud merge bringing in levels cleared on another device. All
-        /// three are the same question — is this still the page it was — so all three go to
+        /// three are the same question - is this still the page it was - so all three go to
         /// <see cref="Settle"/>.
         /// </summary>
         void OnChanged()
@@ -399,8 +399,8 @@ namespace GlimmerGrove
         /// <para>
         /// Three scales, and the page nearly always lands on the cheapest. A content push is a
         /// different page and restages it. A change of offer shape rebuilds one band and slides
-        /// what is under it, leaving the board alone. Everything else — a friend finishing, a
-        /// chest paid, a code minted — is a repaint of the handful of rows on the glass.
+        /// what is under it, leaving the board alone. Everything else - a friend finishing, a
+        /// chest paid, a code minted - is a repaint of the handful of rows on the glass.
         /// </para>
         /// <para>
         /// <b>Every path that changes the state ends here</b> rather than choosing for itself,
@@ -432,7 +432,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// It opens at the top rather than keeping the player's place, which is
-        /// <see cref="GridView.Show"/>'s own rule and right here for its own reason — a board
+        /// <see cref="GridView.Show"/>'s own rule and right here for its own reason - a board
         /// whose length has just changed is not a board somebody still has a place in.
         /// </para>
         /// </summary>
@@ -467,7 +467,7 @@ namespace GlimmerGrove
         /// Which offer row the page draws.
         ///
         /// Before the server has ever answered on this device, the device's own ledger decides
-        /// whether a code could still be typed — a veteran is shown nothing rather than a row
+        /// whether a code could still be typed - a veteran is shown nothing rather than a row
         /// the server will refuse. Once the server has answered, its word governs.
         /// </summary>
         Offer OfferShape
@@ -483,7 +483,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Every friend the cap allows, always — the whole board, at the owner's instruction
+        /// Every friend the cap allows, always - the whole board, at the owner's instruction
         /// (2026-09-20).
         ///
         /// <para>
@@ -506,8 +506,8 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>The comparison it replaces could never be true.</b> <c>OnChanged</c> asked
-        /// <c>RowCount != _rowCount</c>, and both sides read <see cref="_table"/> — snapshotted
-        /// at the top of <see cref="Build"/> — so the guard the comment described did not
+        /// <c>RowCount != _rowCount</c>, and both sides read <see cref="_table"/> - snapshotted
+        /// at the top of <see cref="Build"/> - so the guard the comment described did not
         /// exist. A leftover from the shape this board had before 2026-09-20, when the count
         /// moved with the server's tally rather than with the cap.
         /// </para>
@@ -517,7 +517,7 @@ namespace GlimmerGrove
         /// chapter the milestone is are all here too, and a retune of any of them leaves a
         /// standing page drawing the old one. <c>ProgressionRules.Table</c> is a field replaced
         /// whole by <c>Publish</c> and <c>Referral</c> is one instance hanging off it, so this
-        /// is false exactly when a new table has been published and never otherwise — it cannot
+        /// is false exactly when a new table has been published and never otherwise - it cannot
         /// loop. A push that happens to carry an identical block costs one silent restage,
         /// which is the right way round to be wrong.
         /// </para>
@@ -674,7 +674,7 @@ namespace GlimmerGrove
 
             Telemetry.Track("referral_shared", "bound", state.Bound, "finished", state.Finished);
 
-            // The Editor, and any platform with no sheet, copies instead and says so — a
+            // The Editor, and any platform with no sheet, copies instead and says so - a
             // key that did nothing visible would read as broken.
             if (!ShareSheet.Share(ReferralLedger.ShareMessage, Loc.Get("ui.referral.share_title")))
                 Scenery.Toast(Content, Loc.Get("ui.referral.copied"), Pal.Mint, 1.8f);
@@ -709,7 +709,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// The row between the hero and the board: an invitation to type a friend's code, or
-        /// the welcome chests a typed code earns — or nothing, for a player who can do neither.
+        /// the welcome chests a typed code earns - or nothing, for a player who can do neither.
         /// </summary>
         void BuildOffer()
         {
@@ -734,7 +734,7 @@ namespace GlimmerGrove
             if (_offer == Offer.Code)
             {
                 // On the seat's own column, so the two shapes this band can take start their
-                // picture in the same place — `Furnish` puts the welcome row's well at SeatX.
+                // picture in the same place - `Furnish` puts the welcome row's well at SeatX.
                 UIKit.Img("Glow", plate.transform, Art.Glow(128, 2f), Pal.A(Pal.Aqua, .24f),
                           new Vector2(286f, 286f), Left, new Vector2(SeatX, 0f));
                 var key = UIKit.Img("Key", plate.transform, Art.S("Ui/ic_key"), Color.white,
@@ -750,13 +750,13 @@ namespace GlimmerGrove
                 // **The hint was drawn at 14 and 23 was never possible**, which is invariant
                 // 44l's tell exactly: a `Shrinkable` settling on its floor is a box too small
                 // for its sentence, not a sentence that wanted to be small. This one wraps to
-                // two lines at any size, and two lines of 23 is 55 units in a box 34 tall — so
+                // two lines at any size, and two lines of 23 is 55 units in a box 34 tall - so
                 // Best Fit walked all the way down to the floor and drew the page's only
                 // explanation of what a code is for at half the size of everything round it.
                 //
                 // **What buys the size is height, not width.** The column keeps `TextW`, which
                 // is the row's own and is why the sentence starts where a friend's name starts;
-                // 96 units takes three lines, and the sentence settles at 26 — measured through
+                // 96 units takes three lines, and the sentence settles at 26 - measured through
                 // `render_referral.py`'s mirror of Best Fit, not eyed. The floor goes 14 to 16
                 // for the same reason it exists: a translation half again as long still has two
                 // lines of room above the floor before it truncates.
@@ -852,7 +852,7 @@ namespace GlimmerGrove
                 _viewport.offsetMax = new Vector2(0f, -y);
 
                 // The window just changed height under a list that has not changed at all, so
-                // the grid is told in the same frame rather than noticing on its next one — a
+                // the grid is told in the same frame rather than noticing on its next one - a
                 // frame late is a frame with a gap at the bottom of the board.
                 _grid?.Relayout();
             }
@@ -900,7 +900,7 @@ namespace GlimmerGrove
             w.Icon = chest;
 
             // The count, on the well's corner. Built always and shown by `Paint`, because a
-            // recycled cell cannot grow a widget it was not built with — and whether the count
+            // recycled cell cannot grow a widget it was not built with - and whether the count
             // is worth drawing is a property of the payment, which a retune can move.
             var badge = UIKit.Img("Count", root, Art.Disc(64), Pal.Gold,
                                   new Vector2(54f, 54f), Left,
@@ -994,7 +994,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <paramref name="instant"/> says this row is drawing a different payment from the one
-        /// it was drawing a moment ago — a recycled cell. A light that faded out over three
+        /// it was drawing a moment ago - a recycled cell. A light that faded out over three
         /// tenths of a second would then be the *previous* friend's light going out on a row
         /// that has already become somebody else.
         /// </para>
@@ -1020,8 +1020,8 @@ namespace GlimmerGrove
             bool clearedHere = welcome && total > 0 && cleared >= total;
 
             // The chest's picture is a property of the tier, and a tier is content: it is
-            // written on every bind rather than at build time so a recycled cell — or a retune
-            // — can never leave the previous tier's lid on this row (invariant 7b).
+            // written on every bind rather than at build time so a recycled cell - or a retune
+            // - can never leave the previous tier's lid on this row (invariant 7b).
             if (w.Icon) w.Icon.sprite = payment.Tier != null ? Art.S(payment.Tier.Icon) : null;
 
             // "x2" on a single chest is a number that says nothing, so the badge is shown only
@@ -1053,7 +1053,7 @@ namespace GlimmerGrove
             // board looks like on the account that matters.** Both were `ahead ? .74f : 1f`,
             // which works on the streak board because at most a night or two is ahead and the
             // rest of the list is solid beside it. Here *every* row is ahead until a friend
-            // finishes — so a new player, who is the whole audience for an invite page, met a
+            // finishes - so a new player, who is the whole audience for an invite page, met a
             // board of ghosts with the wall showing through it. A task's row dims only when it
             // is **spent**, and that reads correctly at any mix: a paid row steps back, and
             // everything still owed is a solid card. What says "not yet" is the count on the
@@ -1116,7 +1116,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The loop is keyed on the row it was started for</b>, which is what makes it
         /// survive recycling: a cell that scrolls off a lit row and back onto a dark one must
-        /// stop shining, and a cell rebound to the same lit row must <em>not</em> restart — a
+        /// stop shining, and a cell rebound to the same lit row must <em>not</em> restart - a
         /// breath that jumps back to its beginning on every repaint is the flicker this page
         /// was reported for, wearing different clothes.
         /// </para>
@@ -1180,7 +1180,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The row is read off the widgets, and read again when the reply lands.</b> A cell
         /// is recycled, so by the time the server answers these widgets may be drawing a
-        /// different friend — which is why the spark is only thrown if they are still drawing
+        /// different friend - which is why the spark is only thrown if they are still drawing
         /// the one that was asked for.
         /// </para>
         /// </summary>
@@ -1219,7 +1219,7 @@ namespace GlimmerGrove
                 if (!Living) { _collecting = false; return; }
 
                 // Held right through the ceremony being raised, because `ChestOverlay` runs its
-                // claim inside its own `Build` — so `payout.Land` adopts the state and raises
+                // claim inside its own `Build` - so `payout.Land` adopts the state and raises
                 // `OnChanged` on this very frame.
                 try
                 {
@@ -1250,7 +1250,7 @@ namespace GlimmerGrove
                             break;
 
                         default:
-                            // Nothing was adopted, so nothing about the page has changed — but
+                            // Nothing was adopted, so nothing about the page has changed - but
                             // the row must come back out of its pressed state and go on offering
                             // the tap, which is what the settle below does.
                             Scenery.Toast(Content, Loc.Get("ui.chest.needs_connection"), Pal.Rose, 3f);

@@ -7,14 +7,14 @@ namespace GlimmerGrove.Tests
 {
     /// <summary>
     /// The listener's lifetime: one attached exactly while somebody is watching, the app is in
-    /// the foreground and an account is signed in — and stopped exactly once, every way out.
+    /// the foreground and an account is signed in - and stopped exactly once, every way out.
     ///
     /// <para>
     /// <b>This is the fixture the drop exists for.</b> A stream left open is a radio kept warm
     /// for a page nobody is looking at, and one left pointed at the account a player just
     /// switched away from is worse than that. Neither is visible in a render, a compile or a
     /// content gate, and neither would ever have been executed by a test if the lifetime had
-    /// stayed inline in <c>ReferralLedger</c> — it would have needed a Firestore, a signed-in
+    /// stayed inline in <c>ReferralLedger</c> - it would have needed a Firestore, a signed-in
     /// account and a save file to run once. It takes a function that opens a listener, so here
     /// it takes one that counts.
     /// </para>
@@ -71,7 +71,7 @@ namespace GlimmerGrove.Tests
             ///
             /// <para>
             /// <c>Settle</c> always closes before it opens, so the live one is the last opened.
-            /// Counting it as a leak is what this property got wrong first time — and a leak
+            /// Counting it as a leak is what this property got wrong first time - and a leak
             /// check that fires on the correct case is a leak check that gets deleted.
             /// </para>
             /// </summary>
@@ -274,7 +274,7 @@ namespace GlimmerGrove.Tests
         public void ABackendThatCannotWatchIsAskedAgainNextTime()
         {
             // Answering null must not be remembered as "watching this account", or the listener
-            // could never be attached again for the rest of the session — which is exactly the
+            // could never be attached again for the rest of the session - which is exactly the
             // state a device that opened the page while signed out would be stuck in.
             var feed = new Feed { Refuse = true };
 

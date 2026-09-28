@@ -5,8 +5,8 @@ namespace GlimmerGrove.Progression
     ///
     /// It would have been tidier to reuse <c>ContentSchema.Version</c> for everything in
     /// the content folder, and that is wrong for a reason worth writing down. The reward
-    /// table is delivered on its own — the manifest carries a <c>progressionVersion</c>
-    /// precisely so it can be refetched without touching a chapter — and it changes at a
+    /// table is delivered on its own - the manifest carries a <c>progressionVersion</c>
+    /// precisely so it can be refetched without touching a chapter - and it changes at a
     /// completely different rate from the catalog. Rewards get retuned; the manifest's
     /// shape almost never moves.
     ///
@@ -17,7 +17,7 @@ namespace GlimmerGrove.Progression
     /// versions.
     ///
     /// The rules are otherwise identical to <c>ContentSchema</c>: read anything at or
-    /// below this version, skip — never crash on — anything above it, and treat a new
+    /// below this version, skip - never crash on - anything above it, and treat a new
     /// optional field as non-breaking.
     /// </summary>
     public static class ProgressionSchema
@@ -33,7 +33,7 @@ namespace GlimmerGrove.Progression
         public static string Explain(int schemaVersion)
         {
             if (schemaVersion > Version)
-                return $"needs progression schema v{schemaVersion}, this build reads up to v{Version} — update the app";
+                return $"needs progression schema v{schemaVersion}, this build reads up to v{Version} - update the app";
             if (schemaVersion < MinimumSupported)
                 return $"uses retired progression schema v{schemaVersion}, this build needs at least v{MinimumSupported}";
             return null;

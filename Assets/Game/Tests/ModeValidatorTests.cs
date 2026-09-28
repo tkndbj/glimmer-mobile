@@ -18,8 +18,8 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// <see cref="ModeValidator"/> cuts the cycle, and the bill for cutting it is exactly this
     /// file: a registry can be missing an entry where an abstract member cannot. That would be
-    /// silent in the worst possible way — <c>Validate Content</c> would print a green tick over a
-    /// mode nothing had looked at — so the registration is asserted rather than assumed, and
+    /// silent in the worst possible way - <c>Validate Content</c> would print a green tick over a
+    /// mode nothing had looked at - so the registration is asserted rather than assumed, and
     /// <c>LevelValidator</c> reports an unregistered mode as an error rather than a pass.
     /// </para>
     /// </summary>
@@ -32,13 +32,13 @@ namespace GlimmerGrove.Tests
                 Assert.IsNotNull(ModeValidators.Of(mode),
                     $"'{mode}' is a mode this build can load and has no ModeValidator, so every "
                     + "level of it would be reported as fine without anything having looked at "
-                    + "it — register one in ModeValidators");
+                    + "it - register one in ModeValidators");
         }
 
         [Test]
         public void NoTwoValidatorsClaimTheSameMode()
         {
-            // The lookup returns the first match, so a duplicate is not an error anywhere — it is
+            // The lookup returns the first match, so a duplicate is not an error anywhere - it is
             // a set of checks that silently never runs.
             var seen = new HashSet<string>();
 
@@ -64,7 +64,7 @@ namespace GlimmerGrove.Tests
         public void AnUnregisteredModeAnswersNothingRatherThanFallingBackToTheClassicOne()
         {
             // The one place this must differ from ModeLooks, which answers an unknown mode with
-            // the glade's look on purpose — a map with an odd-looking node beats a map that will
+            // the glade's look on purpose - a map with an odd-looking node beats a map that will
             // not open. There is no equivalent trade here: the fallback would be "checked as a
             // glade", which for a mode that is not a glade means "checked nothing" and looks
             // exactly like a pass.

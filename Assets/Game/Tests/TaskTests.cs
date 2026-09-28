@@ -18,7 +18,7 @@ namespace GlimmerGrove.Tests
     /// without anything firing at midnight, and only ever forward. Progress is derived
     /// from counters, so a task can be added by content mid-period and read correctly at
     /// once. A task pays exactly once, however many devices claim it. And the merge is a
-    /// join — commutative, idempotent — because a counter of things that happened only
+    /// join - commutative, idempotent - because a counter of things that happened only
     /// rises. The fifth, that the chest rolls identically to the server, is in
     /// <see cref="RewardVectorTests"/> against the shared vectors.
     /// </para>
@@ -603,7 +603,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// Every picture a task row or the hub's ladder asks for is one the manifest loads, and
         /// every tier's reel is one the chest scope declares. Both addresses are built from an
-        /// id, so <c>artnames.py</c> reads neither — a missing one is a white rectangle on the
+        /// id, so <c>artnames.py</c> reads neither - a missing one is a white rectangle on the
         /// first screen after the splash (invariant 7b).
         /// </summary>
         [Test]

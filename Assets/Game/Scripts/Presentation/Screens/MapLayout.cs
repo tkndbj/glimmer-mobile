@@ -9,8 +9,8 @@ namespace GlimmerGrove
     ///
     /// A chapter, not the whole game. That is the decision that makes the map scale:
     /// the screen renders one chapter at a time, so the number of background strips,
-    /// map nodes and loaded textures is bounded by a chapter's size — around twenty
-    /// levels — and never by the size of the catalog. A fiftieth chapter costs
+    /// map nodes and loaded textures is bounded by a chapter's size - around twenty
+    /// levels - and never by the size of the catalog. A fiftieth chapter costs
     /// exactly what the first one does.
     ///
     /// It is also why a level's authored <c>mapX</c>/<c>mapY</c> are fractions of its

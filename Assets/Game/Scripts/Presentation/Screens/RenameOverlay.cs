@@ -14,7 +14,7 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// The name is stored locally and travels with the save, so on this device it is still a
-    /// private label a player picks for themselves — <see cref="Clean"/> is deliberately only
+    /// private label a player picks for themselves - <see cref="Clean"/> is deliberately only
     /// what a text field owes a database: bounded length, no control characters, no leading or
     /// trailing space. Two further rules sit on top of it and neither can live here.
     /// <c>GroveNames</c> decides what a <em>stranger</em> may be shown, and moderation is
@@ -28,7 +28,7 @@ namespace GlimmerGrove
     /// <see cref="NameCheckScheduler"/> so a name typed at speed costs one read rather than one
     /// per keystroke; the claim is a transaction on the server and is the only answer that
     /// counts. Two players can be typing one name at the same moment, so a hint that says free
-    /// and a claim that says taken is an ordinary sequence rather than a bug — which is exactly
+    /// and a claim that says taken is an ordinary sequence rather than a bug - which is exactly
     /// why the cheap half is allowed to be approximate.
     /// </para>
     /// <para>
@@ -106,7 +106,7 @@ namespace GlimmerGrove
                          new Vector2(700f, 36f), new Vector2(.5f, 1f), new Vector2(0f, -330f), 0f, 0f);
 
             // Shrinkable because it holds a translated sentence and UIKit.Label overflows
-            // rather than clipping — an over-long line here would simply keep drawing over the
+            // rather than clipping - an over-long line here would simply keep drawing over the
             // buttons underneath it.
             _status = UIKit.Shrinkable(
                 UIKit.Titled("Status", Panel, string.Empty, 30, Muted, TextAnchor.MiddleCenter,
@@ -134,8 +134,8 @@ namespace GlimmerGrove
         /// <summary>
         /// Polls the field rather than subscribing to <c>onValueChanged</c>.
         ///
-        /// The scheduler has to be handed elapsed time every frame regardless — that is what
-        /// makes the debounce a debounce — so a subscription would be a second path into the
+        /// The scheduler has to be handed elapsed time every frame regardless - that is what
+        /// makes the debounce a debounce - so a subscription would be a second path into the
         /// same state and one more thing to unwind on close. Same reasoning as the run clock's
         /// start edge, which polls the move count for the same reason.
         /// </summary>
@@ -162,7 +162,7 @@ namespace GlimmerGrove
         /// <summary>
         /// Asks the server about one name.
         ///
-        /// <c>async void</c> because it is fired from <c>Update</c> and nothing waits on it —
+        /// <c>async void</c> because it is fired from <c>Update</c> and nothing waits on it -
         /// which makes the try/catch mandatory rather than tidy: an exception escaping an
         /// <c>async void</c> has no caller to reach and is raised on the synchronisation
         /// context, where in a player build it is simply lost.
@@ -238,7 +238,7 @@ namespace GlimmerGrove
         /// Saving.
         ///
         /// <c>async void</c> because it is a button handler; the try/catch is therefore
-        /// mandatory for <see cref="BeginCheck"/>'s reason, and the <c>finally</c> more so — a
+        /// mandatory for <see cref="BeginCheck"/>'s reason, and the <c>finally</c> more so - a
         /// throw that left <c>_claiming</c> set would leave the save button dead for as long as
         /// the panel was open, with nothing on screen to explain it.
         /// </summary>
@@ -248,8 +248,8 @@ namespace GlimmerGrove
 
             string chosen = Clean(_field != null ? _field.text : null);
 
-            // Unchanged is the commonest press of this button by a wide margin — somebody
-            // opened the panel and thought better of it — and it must cost nothing at all.
+            // Unchanged is the commonest press of this button by a wide margin - somebody
+            // opened the panel and thought better of it - and it must cost nothing at all.
             if (string.Equals(chosen, Profile.Name, StringComparison.Ordinal))
             {
                 Dismiss();
@@ -304,7 +304,7 @@ namespace GlimmerGrove
             else
             {
                 // The hint believed this name was free a moment ago and it is not, so the
-                // claim's answer replaces it — otherwise pressing save twice would report two
+                // claim's answer replaces it - otherwise pressing save twice would report two
                 // different things about one name.
                 _names.Adopt(GroveNames.Key(chosen), NameAvailability.Taken);
             }
@@ -368,6 +368,6 @@ namespace GlimmerGrove
         }
 
         // No OnDestroy. Cancelling what this panel started is View.Lifetime's job, and it is
-        // a component rather than a field precisely so it cannot be forgotten — see Lifeline.
+        // a component rather than a field precisely so it cannot be forgotten - see Lifeline.
     }
 }

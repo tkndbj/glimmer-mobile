@@ -7,7 +7,7 @@ namespace GlimmerGrove.Analytics
     ///
     /// <para>
     /// <b>This is the tutorial, because this game has no other one.</b> There is no scripted
-    /// opening sequence to instrument — a player learns by meeting a lesson at the moment the
+    /// opening sequence to instrument - a player learns by meeting a lesson at the moment the
     /// board first demonstrates the rule (invariant 37bk), so the lessons <em>are</em> the first
     /// ten minutes, and the first ten minutes are what decides whether anybody comes back
     /// tomorrow. Without these events a retention number says people left and nothing says where.
@@ -17,7 +17,7 @@ namespace GlimmerGrove.Analytics
     /// of its own.</b> A ratio needs a numerator and a denominator that can be counted
     /// independently. And the gap between them is itself the measurement that matters most: a
     /// tip that was shown and never finished is a player whose process died while a modal was up
-    /// — the app swapped out, the phone killed it, or they closed it — which is the one exit a
+    /// - the app swapped out, the phone killed it, or they closed it - which is the one exit a
     /// panel cannot report for itself, because <c>TipOverlay.OnDestroy</c> never runs. Inferring
     /// that from a single event carrying a flag would mean trusting an event that by definition
     /// is not sent.
@@ -26,7 +26,7 @@ namespace GlimmerGrove.Analytics
     /// <b>Every parameter here is bounded on purpose.</b> A mechanic id is one of about
     /// thirty-five permanent strings and a screen is one of about twenty-five type names, so
     /// both group cleanly in a report for ever. Reading time is whole seconds rather than
-    /// <c>LevelAnalytics.Round</c>'s tenths — a tip is read in one to thirty of them, and the
+    /// <c>LevelAnalytics.Round</c>'s tenths - a tip is read in one to thirty of them, and the
     /// tenths would be precision about nothing.
     /// </para>
     /// </summary>
@@ -39,15 +39,15 @@ namespace GlimmerGrove.Analytics
         /// How a lesson ended.
         ///
         /// <para>
-        /// The panel treats the back gesture as the OK button on purpose — a lesson is shown
-        /// once in a player's life and must not be skippable in silence — so these two are one
+        /// The panel treats the back gesture as the OK button on purpose - a lesson is shown
+        /// once in a player's life and must not be skippable in silence - so these two are one
         /// outcome to the game and deliberately two to a report. A player who backs out of every
         /// tip has read none of them, which looks identical to a player who read them all if the
         /// two exits are counted together, and the answers are opposite: one is a teaching
         /// problem, the other is not a problem at all.
         /// </para>
         /// <para>
-        /// <see cref="ByNavigation"/> is the panel being torn down underneath itself — a screen
+        /// <see cref="ByNavigation"/> is the panel being torn down underneath itself - a screen
         /// navigating away mid-chain. It is the default, so an exit nobody thought to name is
         /// counted as the unexplained one rather than quietly as a completion.
         /// </para>
@@ -64,7 +64,7 @@ namespace GlimmerGrove.Analytics
         /// <c>Flow</c>. Null on a lesson raised with no screen behind it.
         /// </param>
         /// <param name="repeat">
-        /// Whether the player had met this lesson before — what an info key asks for
+        /// Whether the player had met this lesson before - what an info key asks for
         /// (<c>ScreenLessons.Add</c>). A repeat is a player looking something up, which is a
         /// different act from being taught and must not dilute the first-showing figures.
         /// </param>

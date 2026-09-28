@@ -277,7 +277,7 @@ namespace GlimmerGrove
         /// What a matched gem comes apart into.
         ///
         /// <para>
-        /// One white reel tinted to the gem's colour rather than four painted ones — eighty
+        /// One white reel tinted to the gem's colour rather than four painted ones - eighty
         /// textures against twenty, and four chances for one of them to stop matching <c>Pal</c>
         /// against none. It is the same reel every colour uses and the same <see cref="TintOf"/>
         /// the ward it feeds is painted from, which is what makes a match, its fuel and the bolt
@@ -313,7 +313,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>A cog that bought nothing goes nowhere</b>, and that is the whole reason this is
         /// drawn rather than folded into the ordinary burst. A cog taken by a colour whose ward has
-        /// fallen — or is already at the top of the ladder — is spent for nothing, and the player
+        /// fallen - or is already at the top of the ladder - is spent for nothing, and the player
         /// has to be able to see that it was: something coming apart and *not* travelling is the
         /// only way a wrong answer here reads as a wrong answer (invariant 26h).
         /// </para>
@@ -425,7 +425,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// How hot a chain reads. Yellow, gold, ember, rose — a heat ladder rather than one
+        /// How hot a chain reads. Yellow, gold, ember, rose - a heat ladder rather than one
         /// colour at four sizes, because the thing being said is <em>how big</em>.
         /// </summary>
         /// <summary>The dark behind the banner, which a heavy outline alone cannot replace here.</summary>
@@ -450,7 +450,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>Over the turrets rather than over the field, which is where it was and where nobody
-        /// saw it.</b> It sat just above the gems in a plain label at half the size it is now — on
+        /// saw it.</b> It sat just above the gems in a plain label at half the size it is now - on
         /// top of the one part of the board the player is already staring at, in the same band as
         /// forty gems, with no outline to separate it from any of them. A chain is the loudest
         /// thing that can happen on this board and it read as a caption.
@@ -463,7 +463,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// <b>One banner, reused.</b> A cascade raises this once per wave of it, so two arriving in
-        /// a quarter of a second would otherwise be two labels in one place — the second one
+        /// a quarter of a second would otherwise be two labels in one place - the second one
         /// re-punches the first instead, which is also what makes a long chain read as one thing
         /// getting louder.
         /// </para>
@@ -475,7 +475,7 @@ namespace GlimmerGrove
             // **The hill holds one wide caption at a time, and whichever is already standing
             // keeps it.** This banner and the forecast band are the only two, and neither is
             // small: the forecast is 2.95 cells tall and this 1.9, against a hill that is 6.15
-            // cells on a 19.5:9 phone and 3.54 on the sheet the render draws — so unlike the
+            // cells on a 19.5:9 phone and 3.54 on the sheet the render draws - so unlike the
             // wave banner (`SiegeView.Captions`) there is no arrangement that stacks them, and
             // they were sharing a row on every shape with this landing squarely on the
             // countdown. A breather is exactly when a player keeps matching, so it is not a rare
@@ -485,7 +485,7 @@ namespace GlimmerGrove
             // way or the other: a countdown that blinks out mid-count reads as broken, and a
             // banner that appears half way through its own life reads as a glitch. `Foretell`
             // asks the mirror of this question and the pair of them is the whole rule. **What is
-            // never given up is the sound** — the news still arrives.
+            // never given up is the sound** - the news still arrives.
             // **And to the count-in, which is the same rule about the same seat.** The opening
             // quiet is 3.4 seconds long and the player is meant to be matching through it - the
             // idle nudge exists to say so - so a cascade landing on "2" is an ordinary event

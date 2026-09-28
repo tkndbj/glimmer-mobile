@@ -10,7 +10,7 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// <b>It has the tightest budget of any stack in this game and the least able to be seen
     /// wrong.</b> The column is drawn between two pieces of furniture that were sized without it
-    /// — the map's header above it and the loadout shelf below — so the room it has is a
+    /// - the map's header above it and the loadout shelf below - so the room it has is a
     /// subtraction nobody looking at either of those numbers would think to do, and the device
     /// where it runs out is the <em>shortest</em> canvas rather than the commonest one. That is
     /// <c>PanelStack</c>'s fault exactly, met a seventh time: a hand-written height that was
@@ -46,9 +46,11 @@ namespace GlimmerGrove.Tests
         public void TheColumnReadsDownwards()
         {
             Assert.Less(EndlessHubLayout.HeroCentre, EndlessHubLayout.PanelCentre,
-                        "the plate is not under the medal");
-            Assert.Less(EndlessHubLayout.PanelCentre, EndlessHubLayout.ButtonCentre,
-                        "the button is not under the plate");
+                        "the plate is not under the rank");
+            Assert.Less(EndlessHubLayout.PanelCentre, EndlessHubLayout.RecordCentre,
+                        "the record is not under the plate");
+            Assert.Less(EndlessHubLayout.RecordCentre, EndlessHubLayout.ButtonCentre,
+                        "the button is not under the record");
 
             float last = EndlessHubLayout.RowCentre(0);
 
@@ -69,15 +71,15 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// The subtraction is the point. <c>CanvasFit.ShortestCanvas</c> is what a 7:4 display
-        /// gets — the squarest phone this game supports, and the one with the least height to
-        /// spend — and out of it come the header column (<c>LevelsScreen.HeaderUnderside</c>, the
+        /// gets - the squarest phone this game supports, and the one with the least height to
+        /// spend - and out of it come the header column (<c>LevelsScreen.HeaderUnderside</c>, the
         /// plaque and both switchers) and the loadout shelf. A taller phone has more room in hand
         /// even after its notch and its home indicator are paid for, because the canvas grows by
         /// far more than the insets do.
         /// </para>
         /// <para>
         /// <b>The shelf is <c>LoadoutBar.Bare</c> rather than <c>Height</c>, and that is not a
-        /// convenience.</b> <c>Height</c> reads the display's safe area — a native call — so a
+        /// convenience.</b> <c>Height</c> reads the display's safe area - a native call - so a
         /// fixture asking it is reported as "needs the Editor" and becomes the one gate nobody
         /// runs on the way past (invariant 29e). On this canvas the two are the same number
         /// anyway: a squarish phone has no home indicator to pay for.
@@ -98,13 +100,38 @@ namespace GlimmerGrove.Tests
                        - EndlessHubLayout.HeadClear
                        - LoadoutBar.Bare - LoadoutBar.Overhang;
 
+            // **Asked at the floor scale since 2026-09-28**, when the record moved under the lines
+            // and the column became taller than this band at full size: the column is drawn to
+            // fit (`ScaleIn`), so what can fail is the floor, never a key behind the shelf.
             Assert.IsTrue(EndlessHubLayout.Fits(band),
-                          $"the hub's column is {EndlessHubLayout.Height} tall and the shortest "
-                          + $"canvas leaves it {band} once a two-pill header's {header} and the "
-                          + $"shelf's {LoadoutBar.Bare} plus its {LoadoutBar.Overhang} of tab are "
-                          + "taken out - it has to lose "
-                          + $"{EndlessHubLayout.Height - band} units, or the key is drawn behind "
+                          $"the hub's column is {EndlessHubLayout.Height} tall, "
+                          + $"{EndlessHubLayout.Height * EndlessHubLayout.MinScale} at its floor "
+                          + $"scale, and the shortest canvas leaves it {band} once a two-pill "
+                          + $"header's {header} and the shelf's {LoadoutBar.Bare} plus its "
+                          + $"{LoadoutBar.Overhang} of tab are taken out - so the key is drawn behind "
                           + "the loadout bar on the squarest phone this game supports");
+
+            float scale = EndlessHubLayout.ScaleIn(band);
+            Assert.GreaterOrEqual(band, EndlessHubLayout.Height * scale - .001f,
+                                  $"at x{scale} the column is still taller than its band");
+        }
+
+        /// <summary>
+        /// The column is drawn whole wherever it fits, shrunk to its band where it does not, and
+        /// never below the floor.
+        /// </summary>
+        [Test]
+        public void TheColumnScalesToItsBandAndNeverBelowTheFloor()
+        {
+            float h = EndlessHubLayout.Height;
+
+            Assert.AreEqual(1f, EndlessHubLayout.ScaleIn(h + 400f), .0001f, "a roomy band shrank the column");
+            Assert.AreEqual(1f, EndlessHubLayout.ScaleIn(h), .0001f, "an exact band shrank the column");
+            Assert.AreEqual(.9f, EndlessHubLayout.ScaleIn(h * .9f), .0001f,
+                            "a short band did not shrink the column to fit it");
+            Assert.AreEqual(EndlessHubLayout.MinScale, EndlessHubLayout.ScaleIn(10f), .0001f,
+                            "the column was drawn below its floor");
+            Assert.Less(EndlessHubLayout.MinScale, 1f);
         }
 
         /// <summary>
@@ -135,7 +162,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// The three addresses are a table rather than literals at the call site, because a loop
-        /// cannot write a literal — and <c>Tools/verify/artnames.py</c> reads literals off call
+        /// cannot write a literal - and <c>Tools/verify/artnames.py</c> reads literals off call
         /// sites and can see nothing else. So the chain is closed here instead, exactly as
         /// <c>SkinsTests</c> closes it for the interface kit's own names: what the hub asks for has
         /// to be something <c>AssetManifest.GlobalAssets</c> loads, or the first player to open

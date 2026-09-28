@@ -11,7 +11,7 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// The heart gate is the only rule in this game that can stop somebody playing, so the
-    /// window that suspends it is worth proving rather than eyeballing — in both directions.
+    /// window that suspends it is worth proving rather than eyeballing - in both directions.
     /// Too narrow and a beginner is charged for our teaching; too wide and the gate the whole
     /// free-play economy is paced by quietly stops existing for a chapter at a time.
     /// </para>
@@ -26,7 +26,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The published table and the save, both ways round. The rule reads a table another
         /// fixture may have published and a record another fixture may have loaded, and the
-        /// offline runner promises no order — so independence is taken rather than assumed,
+        /// offline runner promises no order - so independence is taken rather than assumed,
         /// exactly as <c>ChapterGateTests</c> takes it next door.
         /// </summary>
         [SetUp]
@@ -139,7 +139,7 @@ namespace GlimmerGrove.Tests
         // --------------------------------------------------------- a lane bought at the gate
         /// <summary>
         /// <b>A lane with no ladder is paid for when the watch begins, and every ending of it is
-        /// free</b> — invariant 43's price, and the one clause here that moves <em>when</em> the
+        /// free</b> - invariant 43's price, and the one clause here that moves <em>when</em> the
         /// heart goes rather than whether.
         ///
         /// <para>
@@ -182,7 +182,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// The three predicates, of all four prices at once — which is what stops a fifth being
+        /// The three predicates, of all four prices at once - which is what stops a fifth being
         /// added without somebody deciding when its heart goes.
         /// </summary>
         [Test]
@@ -217,7 +217,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// A level nothing can name is priced like every other glade rather than handed a rule
-        /// nothing can confirm applies to it — <c>PriceOf</c>'s safe direction, at the new clause.
+        /// nothing can confirm applies to it - <c>PriceOf</c>'s safe direction, at the new clause.
         /// </summary>
         [Test]
         public void ALevelNoIndexCanNameIsNeverBoughtAtTheGate()
@@ -284,7 +284,7 @@ namespace GlimmerGrove.Tests
         public void TheWindowStopsAtTheEndOfTheFirstChapter()
         {
             // A published number longer than the chapter it lands in must not spill into the
-            // next one — "the first chapter is free" is what the information panel prints, and
+            // next one - "the first chapter is free" is what the information panel prints, and
             // a window running past it would make that sentence untrue.
             Grace(HeartLimits.MaxGraceLevels);
             var index = Catalog();
@@ -402,7 +402,7 @@ namespace GlimmerGrove.Tests
         {
             // The distinction the whole clause turns on, and one a record alone does not make:
             // attempting a glade writes a record too. Only a star says it was beaten, and only
-            // a beaten board is free — otherwise one lost run would buy every later run on that
+            // a beaten board is free - otherwise one lost run would buy every later run on that
             // board, and the gate would stop existing for exactly whoever is stuck.
             Grace(3);
             var index = Catalog();
@@ -415,7 +415,7 @@ namespace GlimmerGrove.Tests
         public void TheTwoClausesAreToldApartRatherThanMerelyCounted()
         {
             // The defeat panel prints one sentence per reason, so the reason has to be the true
-            // one — "one of the free levels" over the last glade of a chapter is a panel nobody
+            // one - "one of the free levels" over the last glade of a chapter is a panel nobody
             // believes twice.
             Grace(3);
             var index = Catalog();
@@ -433,7 +433,7 @@ namespace GlimmerGrove.Tests
         public void AFinishedGladeIsFreeEvenWhenTheCatalogCannotNameIt()
         {
             // A clear is the record of a run that was won, and it means what it means whether
-            // or not the index currently carries the glade — one held back by minAppVersion is
+            // or not the index currently carries the glade - one held back by minAppVersion is
             // still a board they beat. Note it is not the typo case above: a record saying
             // "finished" cannot be produced by a mistyped id, only by a run that was won.
             Grace(3);
@@ -461,7 +461,7 @@ namespace GlimmerGrove.Tests
         public void TheReplayRuleCountsNothingTowardsTheChaptersFreeOpenings()
         {
             // What the panel prints is about the chapter, so finishing glades must not inflate
-            // it — a player replaying their way through a chapter would otherwise be told the
+            // it - a player replaying their way through a chapter would otherwise be told the
             // first ten levels of it are free.
             Grace(3);
             var index = Catalog();
@@ -476,7 +476,7 @@ namespace GlimmerGrove.Tests
         // A heart is charged when a run ends badly and the gate is asked when a run begins, and
         // the rule joining those two moments is that a run may only start if the player could
         // pay for it if it went wrong. It was written into the map's node tap and nowhere else,
-        // so the victory panel's "next", an event's tile and — worst — the restart key all
+        // so the victory panel's "next", an event's tile and - worst - the restart key all
         // opened charged runs on an empty bar. The restart was unbounded, because at nought
         // hearts the abandonment it pays for takes nothing at all: Wallet.TrySpendHeart reports
         // "already out" rather than refusing, so the board came back free, for ever.
@@ -492,7 +492,7 @@ namespace GlimmerGrove.Tests
             Assert.IsTrue(HeartStake.CanBegin(HeartPrice.Charged, 1));
 
             // Both free clauses, on an empty bar. A run that costs nothing to lose cannot
-            // coherently be refused for lack of something to lose — and the replay clause is
+            // coherently be refused for lack of something to lose - and the replay clause is
             // what keeps the whole of what somebody has beaten open while their hearts fill.
             Assert.IsTrue(HeartStake.CanBegin(HeartPrice.Opening, 0));
             Assert.IsTrue(HeartStake.CanBegin(HeartPrice.Replay, 0));
@@ -503,7 +503,7 @@ namespace GlimmerGrove.Tests
         {
             // hearts > 0, exactly as Hearts.CanPlay and Wallet.TrySpendHeart both read it. A
             // published cost above one is a decision about how much a defeat takes, not about
-            // who is allowed to sit down — reading it as an entry requirement would lock a
+            // who is allowed to sit down - reading it as an entry requirement would lock a
             // player out of the game holding a heart.
             Assert.Greater(HeartLimits.MaxDefeatCost, 1, "the cost is retunable, so this matters");
             Assert.IsTrue(HeartStake.CanBegin(HeartPrice.Charged, 1));
@@ -513,7 +513,7 @@ namespace GlimmerGrove.Tests
         public void RestartingAChargedRunPaysForTheOneBeingLeftBeforeTheGateIsAsked()
         {
             // The bug this exists to refuse, in one line: one heart is enough to abandon a run
-            // and nowhere near enough to begin another, and the old code did both anyway —
+            // and nowhere near enough to begin another, and the old code did both anyway -
             // charging the heart, dropping the player to nought, and dealing a fresh board that
             // was never paid for. Two is the honest floor, and it is not a stricter rule than
             // the map's: leaving to the glades and walking back in spends the same heart and is
@@ -549,7 +549,7 @@ namespace GlimmerGrove.Tests
         {
             // Both clauses, committed and not. A mode's opening glades are where the one player
             // this gate would shut out is the one still working out what the verb is, and a
-            // replay is a board they have already beaten — neither takes a heart on any exit,
+            // replay is a board they have already beaten - neither takes a heart on any exit,
             // so neither has anything for the gate to refuse.
             foreach (var price in new[] { HeartPrice.Opening, HeartPrice.Replay })
                 foreach (bool owed in new[] { true, false })

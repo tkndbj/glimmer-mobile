@@ -31,7 +31,7 @@ namespace GlimmerGrove
         /// working toward.
         ///
         /// <para>
-        /// They are equals on purpose. Both were smaller than the thing they carried — the
+        /// They are equals on purpose. Both were smaller than the thing they carried - the
         /// streak was a chip squeezed into the top bar beside the settings gear, and the
         /// event was a 56-high strip that had to fit a name, a clock, a bar and a count.
         /// Between them they are the two reasons a player opens the game on a day they had
@@ -117,7 +117,7 @@ namespace GlimmerGrove
         /// <para>
         /// <c>Destroy</c> only lands at the end of the frame, so a panel replaced in place is
         /// drawn <em>over</em> its own replacement for the rest of the frame it was replaced
-        /// in — and since everything here enters from <c>Tween.Pop</c> at scale zero, what
+        /// in - and since everything here enters from <c>Tween.Pop</c> at scale zero, what
         /// the player sees is the old panel, then a gap, then the new one springing in. One
         /// of those reads as a flourish; two in a second reads as a fault.
         /// </para>
@@ -142,8 +142,8 @@ namespace GlimmerGrove
         /// <para>
         /// <b>It replaced three painted forest layers, a pulsing shaft of light and thirty
         /// fireflies</b>, and the trade is worth stating because what went was not bad. Those
-        /// layers were a *place* and the panels standing on them were primitives — rounded
-        /// rectangles with a traced outline — so the hub read as a good painting with a
+        /// layers were a *place* and the panels standing on them were primitives - rounded
+        /// rectangles with a traced outline - so the hub read as a good painting with a
         /// prototype UI on it. The room is a worse painting and the whole screen is now one
         /// object, which is the trade the owner asked for.
         /// </para>
@@ -167,7 +167,7 @@ namespace GlimmerGrove
 
             // 620 wide rather than 500: the streak chip used to sit at the far end of this
             // bar and the card was cut back to make room for it. With the chip gone the
-            // space belongs to the name and the rank bar, which were both short of it —
+            // space belongs to the name and the rank bar, which were both short of it -
             // a name is the one string here whose length the game does not choose.
             //
             // The kit's card, nine-sliced, rather than a rounded rectangle and a traced
@@ -184,7 +184,7 @@ namespace GlimmerGrove
             card.raycastTarget = true;
             card.gameObject.AddComponent<Btn>().Setup(() => Flow.Go<KeeperScreen>());
 
-            // The kit's inset slot — the one piece in it that reads as a hole rather than as a
+            // The kit's inset slot - the one piece in it that reads as a hole rather than as a
             // thing standing on the screen, which is what a seal wants to sit in.
             var frame = UIKit.Img("Seat", card.transform, Art.S("Ui/" + Skins.Slot), Color.white,
                                   new Vector2(116f, 116f), new Vector2(0f, .5f), new Vector2(70f, 0f));
@@ -196,13 +196,13 @@ namespace GlimmerGrove
             // **The rank this keeper holds**, where the companion they were wearing used to be.
             // Drawn rather than watched, which is the exception `RankBadge` is not: this bar is
             // rebuilt whenever the hub is entered and a rank cannot move while the hub is
-            // standing — every reading behind one is recorded by finishing a run, and finishing
+            // standing - every reading behind one is recorded by finishing a run, and finishing
             // a run leaves this screen. The keeper level beside it has always been drawn the
             // same way, for the same reason.
             //
             // The first rung dimmed for an account below it, exactly as the map's badge and the
             // profile's medallion draw it: a player who has not reached Cinderling is the player
-            // it is for, and an empty seat invites nobody. Alpha and never a tint — a multiply
+            // it is for, and an empty seat invites nobody. Alpha and never a tint - a multiply
             // takes bronze to mud (invariant 44g).
             var ladder = Ranks.RankLedger.Ladder;
             var heldRung = Ranks.RankLedger.Held;
@@ -225,7 +225,7 @@ namespace GlimmerGrove
                              new Vector2(460f, 46f), new Vector2(0f, .5f), new Vector2(362f, 22f),
                              3f, 3f), 24);
 
-            // The rank bar, filled by stars toward the next rank — the kit's own trough with
+            // The rank bar, filled by stars toward the next rank - the kit's own trough with
             // the kit's own fill in it, rather than two drawn rounded rectangles.
             //
             // **The fill is a white sprite tinted**, which is what `Skins.Fill` is cut for: it
@@ -255,8 +255,8 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>Painted on change rather than rebuilt, and the row itself only on navigation.</b>
-        /// All three move while this screen is open — a heart lands on a timer, and a chest
-        /// pays out into an overlay drawn on top of it — and a pill still showing the number
+        /// All three move while this screen is open - a heart lands on a timer, and a chest
+        /// pays out into an overlay drawn on top of it - and a pill still showing the number
         /// from thirty seconds ago is how a player concludes the reward did not arrive. It used
         /// to answer that by rebuilding the row, which replayed the pills' entrance from scale
         /// zero: one of those is a flourish, and several in a second (returning to the game
@@ -265,7 +265,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>That also removed a re-entrancy that was quietly worse than the flashing.</b>
         /// Reading <c>Wallet.Hearts</c> commits a refill and raises <c>HeartsChanged</c> from
-        /// inside the getter, so this method — which reads it while placing the first pill —
+        /// inside the getter, so this method - which reads it while placing the first pill -
         /// could be re-entered halfway through itself. The inner call built the row the player
         /// ends up with; the outer one carried on and registered <em>its</em> pills with
         /// <see cref="ResourceSlots"/>, which are on the row destroyed at the end of the frame,
@@ -284,7 +284,7 @@ namespace GlimmerGrove
 
             // The plus always opens the same panel, and that is the change worth explaining.
             // It used to choose between three destinations by asking whether an ad happened
-            // to be loaded — the offer panel, the out-of-hearts gate, or a toast — which
+            // to be loaded - the offer panel, the out-of-hearts gate, or a toast - which
             // meant the one control on this screen that looks like a question mark answered
             // a different question depending on the state of an ad network. A player who
             // tapped it twice got two different screens and learned nothing from either.
@@ -300,15 +300,15 @@ namespace GlimmerGrove
                          () => Flow.Modal<AdOfferOverlay>(v => v.PlacementId = AdPlacement.CoinBonus),
                          ResourceSlots.Kind.Credits, Compact.Number);
             // The gem shelf, not a "coming soon" panel. It said gems would arrive one day and
-            // was left behind when they did — they buy hearts, boosts, a continue on a lost run
-            // and a heart rescue, all shipped — so the one control on this row that promises
+            // was left behind when they did - they buy hearts, boosts, a continue on a lost run
+            // and a heart rescue, all shipped - so the one control on this row that promises
             // something was the only one that did nothing, in hardcoded English that the loc
             // gate could not see because it is not key-shaped.
             //
             // GemShopOverlay rather than the shop tab, and that is the same answer a lost run
             // gets: it brings the shelf to the player instead of navigating, so the hub is
             // still underneath when they close it. It also keeps the house rule this row
-            // exists to obey — a `+` beside a resource always opens that resource's panel,
+            // exists to obey - a `+` beside a resource always opens that resource's panel,
             // whatever the state of the world.
             ResourcePill(row, 322f, Pal.Bloom, "ic_gem", Compact.Number(Profile.Gems), false,
                          () => Flow.Modal<GemShopOverlay>(),
@@ -328,7 +328,7 @@ namespace GlimmerGrove
         /// Each pill registers itself with <see cref="ResourceSlots"/> as it is built, which
         /// is what lets the daily chest fly its prizes into this row from an overlay drawn on
         /// top of it. Registration happens here rather than at the call site precisely because
-        /// this row is destroyed and rebuilt whenever the wallet moves — anything holding a
+        /// this row is destroyed and rebuilt whenever the wallet moves - anything holding a
         /// reference from the last build would be pointing at a dead object, and the one place
         /// guaranteed to run on every rebuild is the builder itself.
         /// </remarks>
@@ -339,7 +339,7 @@ namespace GlimmerGrove
             // The kit's trough, drawn at white: it carries its own near-black interior, its own
             // orange rim and its own side clips, so there is nothing here to tint and nothing to
             // trace. It is the same rim the storefront's balances sit in and the same rim a
-            // title is written on — one shape for "a number or a word the game owns", which is
+            // title is written on - one shape for "a number or a word the game owns", which is
             // one thing for a player to learn instead of three.
             var bg = UIKit.Img("Pill", parent, Art.S("Ui/" + Skins.Trough), Color.white,
                                new Vector2(304f, 96f), new Vector2(.5f, .5f), new Vector2(x, 0f));
@@ -358,7 +358,7 @@ namespace GlimmerGrove
             var t = UIKit.Titled("V", bg.transform, value, 37, Pal.Cream, TextAnchor.MiddleCenter,
                                  new Vector2(128f, 52f), new Vector2(.5f, .5f), new Vector2(22f, 0f), 3f, 3f);
 
-            // The kit's own "+", which is a painted control rather than a glyph on a square —
+            // The kit's own "+", which is a painted control rather than a glyph on a square -
             // so it is one image instead of two, and it is the same "+" the storefront draws.
             var add = UIKit.Button("Add", bg.transform, Art.S("Ui/" + Skins.Add), new Vector2(64f, 64f),
                                    new Vector2(1f, .5f), new Vector2(-16f, 0f), onAdd);
@@ -392,7 +392,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// The first cut of this box was a plate with four small icons on it and a line of
-        /// text, and the owner's verdict was that it was not creative — the reference was a
+        /// text, and the owner's verdict was that it was not creative - the reference was a
         /// store's chest-pack card, which sells a pack by making the chests the picture. So
         /// the chests are the picture here, and everything else on the card is furniture
         /// around that.
@@ -404,7 +404,7 @@ namespace GlimmerGrove
         /// <em>bigger and closer</em>: a title, a sentence and a button between them had
         /// pushed the pack down to a third of the plate, so the one thing the box is about was
         /// the smallest thing on it. All three are gone, which leaves the row the whole 240 to
-        /// stand in — <see cref="BuildChestRow"/>. Two of them cost nothing to lose (the card
+        /// stand in - <see cref="BuildChestRow"/>. Two of them cost nothing to lose (the card
         /// has always been the door, and the badge already counts what is ready); the third
         /// is the only thing worth stating plainly: <b>nothing on this card says the word
         /// "tasks" any more.</b> What is left saying it is the chests themselves, the clock,
@@ -442,7 +442,7 @@ namespace GlimmerGrove
             // rectangle: at every corner the rays ran out past the painted face and sat in the
             // notch between the keyline and the box, which reads as the light escaping the
             // card. "Near enough" was the note the first version left itself, and it was not.
-            // The mould's own sprite is the mask now — the same stencil the challenge banner is
+            // The mould's own sprite is the mask now - the same stencil the challenge banner is
             // cut with, `showMaskGraphic` false so the plate is not painted twice and the
             // near-nothing alpha doing the writing.
             var clip = UIKit.Img("Clip", card.transform, Art.S("Ui/" + Skins.PlateViolet),
@@ -457,13 +457,13 @@ namespace GlimmerGrove
             // after playing it.** A slow rotation is a thing that never stops moving on the one
             // screen a player sits on between runs, and on a box that already breathes, bobs its
             // chests and lights a rim when something is waiting it was the movement with nothing
-            // to say — the pack reads as treasure from the shelf under it and the chests
+            // to say - the pack reads as treasure from the shelf under it and the chests
             // themselves. The tasks page keeps its own (`TasksScreen.BuildLadder`): that one is
             // entered deliberately and left, where this one is standing furniture.
 
             // The shelf: the pool the chests stand in, so they read as placed rather than
             // floating on the plate. **It is a shadow rather than a light, and that is the
-            // plate's fault rather than a preference** — the violet is saturated enough that a
+            // plate's fault rather than a preference** - the violet is saturated enough that a
             // warm glow over it is invisible at any alpha worth using (44g from the other
             // end: you cannot light a bright colour, you can only darken it), while a pool
             // under the feet reads immediately.
@@ -477,7 +477,7 @@ namespace GlimmerGrove
             // never be cut by the shape the light is cut by.
             BuildChestRow(card.transform, ProgressionRules.Table.Tasks.Tiers);
 
-            // The name, across the top. **The whole title, not a corner label** — it is the one
+            // The name, across the top. **The whole title, not a corner label** - it is the one
             // thing on the card that says the pack is a feature rather than a shop shelf, and
             // it is the page's own `ui.tasks.title` rather than a key of its own, because the
             // words are the same words and one string cannot come to disagree with itself.
@@ -501,25 +501,25 @@ namespace GlimmerGrove
 
         /// <summary>
         /// The pack itself: one row of chests, humblest to grandest left to right, drawn as a
-        /// symmetric arch — biggest in the middle, standing on a floor that dips with it, each
+        /// symmetric arch - biggest in the middle, standing on a floor that dips with it, each
         /// pushed into its neighbour until they overlap.
         ///
         /// <para>
         /// <b>The shape is the ask.</b> Four chests spread evenly across a 960-wide plate at a
         /// size that fits under a title read as an inventory of four icons; the reference the
-        /// owner gave is a pack — chests big enough to fill the plate's height, touching, with
+        /// owner gave is a pack - chests big enough to fill the plate's height, touching, with
         /// the tallest in the middle so the row's top arches and its feet dip. Both readings of
         /// "a V" are the same drawing.
         /// </para>
         /// <para>
         /// <b>The arithmetic is <see cref="ChestPack"/>'s</b>, because the tasks page draws this
         /// row too and a pack is a shape rather than a picture. What is here is the five numbers
-        /// this plate has room for and the widgets a hub card wants — a contact shadow under
+        /// this plate has room for and the widgets a hub card wants - a contact shadow under
         /// each chest, and a halo that lights when a chest can be taken.
         /// </para>
         /// <para>
         /// <b>The middles are drawn last.</b> An arch where the far end overlaps the crest is an
-        /// arch drawn back to front — and a lit chest still steps to the front of it
+        /// arch drawn back to front - and a lit chest still steps to the front of it
         /// (<see cref="PaintTasks"/>).
         /// </para>
         /// </summary>
@@ -528,7 +528,7 @@ namespace GlimmerGrove
             const float Tall = 188f;     // the drawn height of the chest at the crest
             const float Short = 130f;    // ... and of the two on the ends
             const float Dip = 20f;       // how much lower than the ends the crest stands
-            const float Floor = -92f;    // where an end chest's feet are — the title is the ceiling
+            const float Floor = -92f;    // where an end chest's feet are - the title is the ceiling
             const float Overlap = .07f;  // of the narrower of two neighbours
 
             _taskChests.Clear();
@@ -556,7 +556,7 @@ namespace GlimmerGrove
         /// <paramref name="at"/> is where the <em>drawn</em> chest's middle goes and
         /// <paramref name="tall"/> is how tall it is drawn; the sprite is hung higher and
         /// larger than both (see <see cref="ChestPack.Fill"/>). The halo is a child of the
-        /// sprite and so is pushed back down by hand — a glow centred on a box a quarter of
+        /// sprite and so is pushed back down by hand - a glow centred on a box a quarter of
         /// which is empty is a glow that lights the air above a chest.
         /// </para>
         /// </summary>
@@ -573,7 +573,7 @@ namespace GlimmerGrove
             // chest went with the card's own starburst**, and for the same reason: this box sits
             // on the screen a player returns to between every run, and a light that is
             // permanently in motion there is movement with nothing to say. What is left says
-            // the same thing without it — the halo, the breathe and the corner's count.
+            // the same thing without it - the halo, the breathe and the corner's count.
             var halo = UIKit.Halo(img.transform, Pal.Gold, tall * 1.9f, .55f);
             ((RectTransform)halo.transform).anchoredPosition = new Vector2(0f, -tall * ChestPack.Lift);
             halo.gameObject.SetActive(false);
@@ -589,7 +589,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Writes the ledger onto the card: the clock, the starburst, the beacon and which
-        /// chests are lit. Only a chest that <em>changed</em> starts or stops breathing —
+        /// chests are lit. Only a chest that <em>changed</em> starts or stops breathing -
         /// a breathe restarted on every repaint is a chest that jumps each time a counter moves.
         /// </summary>
         void PaintTasks()
@@ -649,7 +649,7 @@ namespace GlimmerGrove
         /// Builds both boxes and decides how wide each of them is.
         ///
         /// <para>
-        /// The streak is always drawn, including for a player who has never had one — that
+        /// The streak is always drawn, including for a player who has never had one - that
         /// is how they learn the thing exists before they have one to lose. So the only
         /// question here is whether there is a second box: when no event is running and the
         /// roster holds nothing further, the streak takes the whole row rather than sitting
@@ -696,7 +696,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// The card is the button rather than carrying an invisible one, so a press squashes
-        /// the whole box — glyph, number and strip together — instead of an overlay nobody
+        /// the whole box - glyph, number and strip together - instead of an overlay nobody
         /// can see. There is no plate behind the row and no rule between the two: each box
         /// earns its own contrast from its fill and rim, which it has to, because
         /// <c>grove_near</c> runs from near-white inside the light shaft to dark teal beside
@@ -710,7 +710,7 @@ namespace GlimmerGrove
                                    new Vector2(.5f, .5f), Vector2.zero, onTap);
             btn.PressScale = .985f;
 
-            // The kit's card carries its own keyline, so the traced rim is gone — but the
+            // The kit's card carries its own keyline, so the traced rim is gone - but the
             // box's own colour is not, because it is what tells the streak from the event at a
             // glance and the plate is now the same teal on both. It is a light along the top
             // edge rather than an outline around the whole card: a coloured rectangle traced
@@ -724,7 +724,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The box's name, and the one fact that has to sit beside it rather than under it —
+        /// The box's name, and the one fact that has to sit beside it rather than under it -
         /// a countdown, or that a companion is still locked.
         ///
         /// Both are placed from the card's own edges rather than by eye, and both shrink:
@@ -738,7 +738,7 @@ namespace GlimmerGrove
             // of it less a gap. Worked out from the edges rather than by eye: both strings
             // are translated, both are right up against their box, and nothing clips them.
             //
-            // A box with no meta still does not get the full width — the top-right corner is
+            // A box with no meta still does not get the full width - the top-right corner is
             // where a count badge hangs, and a title long enough to reach it would run under
             // one rather than being clipped by it.
             //
@@ -777,7 +777,7 @@ namespace GlimmerGrove
             float vx = -w * .5f + 299f;
 
             // **The box grew with the type, and it had to.** `UIKit.Shrinkable` is Best Fit,
-            // which takes the largest size that fits in *both* directions — and at 62 this was
+            // which takes the largest size that fits in *both* directions - and at 62 this was
             // height-limited on the nail: Gemfire Display's line box is 72 units at 62pt inside
             // a box 74 tall. Raising the number alone would have drawn exactly what it drew
             // before, silently, which is the kind of change that gets reported as "nothing
@@ -814,7 +814,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// The corner badge says <em>that</em> there is a reward and how many; this says
-        /// <em>which box</em> from across the screen. They are not redundant — a 54px disc is
+        /// <em>which box</em> from across the screen. They are not redundant - a 54px disc is
         /// something you find once you are already looking at the row, and the whole problem
         /// with a collect-by-hand reward is getting somebody to look at the row at all. A
         /// player who opens the hub for the daily chests has no reason to read the box beside
@@ -822,7 +822,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// Three layers, because each does a job the others cannot. A soft gold light sits
-        /// <em>behind</em> the box and breathes — the same trick the nav caps use to hold
+        /// <em>behind</em> the box and breathes - the same trick the nav caps use to hold
         /// their own contrast, run in reverse: a seat of light instead of a seat of shadow,
         /// and the only part of this visible from the far corner of the screen. Over the
         /// resting rim, a gold edge brightens with it, which is what says the border is lit
@@ -831,13 +831,13 @@ namespace GlimmerGrove
         /// catches peripherally, and a rim that only brightens does not.
         /// </para>
         /// <para>
-        /// The ring is cream rather than gold, and that is not a taste call — the first
+        /// The ring is cream rather than gold, and that is not a taste call - the first
         /// version was gold, travelling out of a gold rim into a gold glow, and it was
         /// invisible on the screen while looking perfectly reasonable in the code.
         /// </para>
         /// <para>
         /// It grows by a fixed number of pixels rather than by a scale factor, because a
-        /// percentage would drift the moment a box changes width — which it does: the streak
+        /// percentage would drift the moment a box changes width - which it does: the streak
         /// takes the whole row when there is no second box. Eighteen is further than the 24px
         /// gap between the boxes would allow a solid shape, and it can be, because the ring is
         /// down to a tenth of its alpha before it gets there.
@@ -887,7 +887,7 @@ namespace GlimmerGrove
 
             // Not ping-ponged: a ring that steps out and then walks back in reads as
             // something breathing rather than as something leaving. It also rests for the
-            // back half of the cycle — a pulse that never stops is a pulse nobody sees.
+            // back half of the cycle - a pulse that never stops is a pulse nobody sees.
             Tween.Run(2.4f, Ease.Linear, t =>
             {
                 if (!ringRT) return;
@@ -937,14 +937,14 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// This is the one thing on the screen the player already owns, and the only one
-        /// they can lose by doing nothing — which is exactly why it is the strongest reason
+        /// they can lose by doing nothing - which is exactly why it is the strongest reason
         /// on the screen to come back tomorrow, and why it is no longer a chip beside the
         /// settings gear.
         /// </para>
         /// <para>
         /// Three states, drawn differently on purpose. Held and fed today: a lit flame. Held
         /// but not yet fed: the same flame, dimmed and pulsing, with the hours left in place
-        /// of the caption — the only moment in the game where the screen says "this is going
+        /// of the caption - the only moment in the game where the screen says "this is going
         /// to be taken away", and it earns that by being true. Not held at all: a grey flame
         /// and an invitation, so a new player learns the thing exists before they have one
         /// to lose.
@@ -952,7 +952,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Built once, painted from the ledger</b> (<see cref="PaintStreak"/>). The three
         /// states differ in what is lit, what the words say and whether the corner carries a
-        /// count — all of which exist from the first frame and are switched, so a run
+        /// count - all of which exist from the first frame and are switched, so a run
         /// finishing behind the hub changes a number rather than popping the box in again.
         /// </para>
         /// </summary>
@@ -985,13 +985,13 @@ namespace GlimmerGrove
             // **A calendar, still, in place of the flipbook flame.** What the number under it
             // counts is nights in a row, which a calendar says without being taught; and the
             // flame was the one animated thing on a screen of still ones, which is a lot of
-            // motion to spend on a readout. The three states are still told apart — by the
+            // motion to spend on a readout. The three states are still told apart - by the
             // number, by the caption, and by the pulse below when the flame is at risk.
             _streakFlame = UIKit.Img("Flame", card, Art.S("Ui/ic_streak"), Color.white,
                                      new Vector2(130f, 130f), new Vector2(.5f, .5f), new Vector2(gx, 4f));
             _streakFlame.preserveAspect = true;
 
-            (_streakValue, _streakCaption) = FeatureValue(card, w, "—", Pal.Cream, string.Empty, tint);
+            (_streakValue, _streakCaption) = FeatureValue(card, w, "-", Pal.Cream, string.Empty, tint);
 
             var strip = FeatureStrip(card, w);
             float sw = w - 72f;
@@ -1051,7 +1051,7 @@ namespace GlimmerGrove
                     _streakFlame.color = days > 0 ? Color.white : new Color(.78f, .82f, .88f, 1f);
             }
 
-            if (_streakValue) _streakValue.text = days > 0 ? days.ToString() : "—";
+            if (_streakValue) _streakValue.text = days > 0 ? days.ToString() : "-";
             if (_streakCaption) _streakCaption.text = StreakCaption(days, atRisk);
 
             PaintStreakStrip(pending);
@@ -1074,7 +1074,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// <b>A chest night says the chest.</b> A rung pays credits, gems or a chest, and a
-        /// chest has no amount — so the strip draws the tier's own closed icon and names it,
+        /// chest has no amount - so the strip draws the tier's own closed icon and names it,
         /// which is the same picture and the same words the streak board draws. Reaching for
         /// <c>RewardArt</c> here would have meant inventing a second way to say "a Royal
         /// Chest" on the one screen that has the least room to say anything.
@@ -1091,7 +1091,7 @@ namespace GlimmerGrove
             if (_streakStripIcon)
             {
                 // A coin is a flipbook and everything else is a still, so the reel comes off
-                // before the sprite is swapped — Glyph attaches one, and a still drawn over a
+                // before the sprite is swapped - Glyph attaches one, and a still drawn over a
                 // running reel is a still for one frame.
                 Flipbook.Detach(_streakStripIcon);
                 _streakStripIcon.sprite = plain ? Art.S("Ui/ic_gift")
@@ -1142,7 +1142,7 @@ namespace GlimmerGrove
         /// week; the event will not.
         /// </para>
         /// <para>
-        /// This is the choice the old 56-high strip already made — it simply hid the loser.
+        /// This is the choice the old 56-high strip already made - it simply hid the loser.
         /// The difference now is that the loser takes the slot when the winner is absent,
         /// which is why there is no state of this screen with one box and a gap.
         /// </para>
@@ -1155,13 +1155,13 @@ namespace GlimmerGrove
         bool BuildFocusBox(float w)
         {
             // Featured, not Live. Chests are opened by hand, so a window closing must not take
-            // one the player earned and never opened — and the box is the only way back to the
+            // one the player earned and never opened - and the box is the only way back to the
             // page holding it, so `Featured` answers the *oldest* season still owing something
             // and falls back to the live one (GroveEvents.Featured).
             //
             // **The shipped season repeats, so there is always a live one and this box is now
             // permanent.** The goal box below takes the slot only when the catalog has no
-            // season at all — a build standing before the first window opens, which is the
+            // season at all - a build standing before the first window opens, which is the
             // state the game shipped in and which a content push leaves behind for good.
             var featured = GroveEvents.Featured;
             if (featured == null) return BuildGoalBox(w);
@@ -1175,7 +1175,7 @@ namespace GlimmerGrove
         /// it wears.
         ///
         /// The mark is the interesting part. It is <see cref="SeasonCrest"/> rather than a
-        /// fixed glyph, so the season picks it from the manifest — and the shipped one is a
+        /// fixed glyph, so the season picks it from the manifest - and the shipped one is a
         /// crest cut from this app's own interface kit rather than a shape drawn here, for the
         /// reason <see cref="SeasonCrest.Watch"/> gives. How far through the track the player
         /// is was said by the crest and by the bar under it; it is said by the bar alone now,
@@ -1209,7 +1209,7 @@ namespace GlimmerGrove
             Tween.Breathe(mark, .055f, 2.6f);
 
             // The caption gives way to the instruction when there is something to take. The
-            // fraction is still drawn right above it, so nothing is lost — and a box whose
+            // fraction is still drawn right above it, so nothing is lost - and a box whose
             // border is lit and whose corner carries a count should say what to do about it.
             FeatureValue(card, w, Loc.Format("ui.home.fraction", progress.Marks, goal),
                          Pal.Cream,
@@ -1230,7 +1230,7 @@ namespace GlimmerGrove
         ///
         /// The same disc the streak wears, and deliberately the same: a gold badge on a
         /// feature box means one thing across this screen. Not redundant with the beacon
-        /// either, for the reason stated there — the lit border is what is visible from
+        /// either, for the reason stated there - the lit border is what is visible from
         /// across the room, the badge is what says how much once you are looking.
         /// </summary>
         void OpenEvent()
@@ -1247,7 +1247,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>Every fifth rung, not every rung.</b> A season carries forty of them and this
-        /// bar is under six hundred units wide, so one pip each is a dotted line — measured,
+        /// bar is under six hundred units wide, so one pip each is a dotted line - measured,
         /// they overlap, which is a row of pictures pretending to be a scale (the tasks
         /// ladder's captions, 45h, on an axis rather than a row). The ones drawn are the
         /// rungs that pay a better chest than the one below, which is also what makes them
@@ -1281,14 +1281,14 @@ namespace GlimmerGrove
         /// <para>
         /// <b>This box used to be the next companion the keeper level would hand over.</b> The
         /// roster is gone, and what replaced it is the thing that was always the better answer:
-        /// a rank is the game's own ladder, it is named, it has a picture, and — unlike a rank
-        /// bar — it does not empty every time it fills, because a rung asks for several things
+        /// a rank is the game's own ladder, it is named, it has a picture, and - unlike a rank
+        /// bar - it does not empty every time it fills, because a rung asks for several things
         /// at once and the bar is the mean of them (<see cref="Ranks.RankLedger.Progress01"/>).
         /// That is the endowed-progress framing the companion version was written for, kept, and
         /// now pointed at something the player is actually working toward.
         /// </para>
         /// <para>
-        /// <b>It only ever draws when the catalog has no season at all</b> — see
+        /// <b>It only ever draws when the catalog has no season at all</b> - see
         /// <see cref="BuildFocusBox"/>. The shipped season recurs, so this is the state a build
         /// standing before the first window opens is in, and the one a content push leaves
         /// behind for good. It is kept rather than deleted because that state is real and a box
@@ -1305,8 +1305,8 @@ namespace GlimmerGrove
             var next = Ranks.RankLedger.Next;
 
             // Nothing left to climb, or no ladder at all in this build's content. Drawing an
-            // empty box would be worse than drawing none — a goal bar with no goal reads as
-            // something the game forgot to fill in — and `RankLadder` answers an empty ladder
+            // empty box would be worse than drawing none - a goal bar with no goal reads as
+            // something the game forgot to fill in - and `RankLadder` answers an empty ladder
             // honestly rather than standing a built-in one in for it.
             if (next == null) return false;
 
@@ -1327,7 +1327,7 @@ namespace GlimmerGrove
             badge.raycastTarget = false;
 
             // Unearned, and shown as such. Alpha rather than a tint, because `Image.color` is a
-            // multiply and would take the badge toward black along its own hue — every one of
+            // multiply and would take the badge toward black along its own hue - every one of
             // these is saturated metal and a multiply turns bronze to mud (invariant 44g).
             badge.color = new Color(1f, 1f, 1f, .55f);
 
@@ -1350,8 +1350,8 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>One stack rather than three anchors, because they have to clear each other.</b>
-        /// Everything here is bottom-anchored on <see cref="View.Content"/> — the nav bar's own
-        /// frame of reference — and each row's centre is the sum of what is under it, so moving
+        /// Everything here is bottom-anchored on <see cref="View.Content"/> - the nav bar's own
+        /// frame of reference - and each row's centre is the sum of what is under it, so moving
         /// one number moves the rest rather than leaving a gap for somebody to find on a phone.
         /// The one thing the arithmetic cannot check is the <em>top</em>: the loadout strip is
         /// the tallest of the three and the feature row hangs from the other end of the screen,
@@ -1399,7 +1399,7 @@ namespace GlimmerGrove
             }
             // **No pool of light under the key**, at the owner's instruction. A 760-unit halo
             // on a 620-wide button is a light the size of a third of the screen, and on a
-            // ground that is one flat pattern it does not read as the key being lit — it reads
+            // ground that is one flat pattern it does not read as the key being lit - it reads
             // as the wall being brighter in the middle, which is a picture nothing on this
             // screen is composed around. What says "this is the control" is still here: the
             // key is the only gold thing on the hub, it is the widest, it pops in last and it
@@ -1421,7 +1421,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>The picture is the caption.</b> The words <em>Daily Challenges</em> are painted
-        /// into the art, so nothing here writes them a second time — a caption under a banner
+        /// into the art, so nothing here writes them a second time - a caption under a banner
         /// that already says the same thing is the furniture the tasks card had to lose
         /// (<see cref="BuildTasks"/>). That does cost this control the one thing every other
         /// string in the game has, which is a translation (invariant 6): <b>the banner is
@@ -1432,7 +1432,7 @@ namespace GlimmerGrove
         /// <b>The plate is <see cref="Skins.PlateBlue"/> rather than a button face.</b>
         /// <c>btn_blue</c> is sliced across its width only (its border is <c>15,0,15,0</c>), so
         /// drawn at this height it stretches its own moulded face by 1.7 and reads as a smeared
-        /// pill — invariant 44a, from the other end. The plate is sliced on all four edges and
+        /// pill - invariant 44a, from the other end. The plate is sliced on all four edges and
         /// scales to any box, which is what "wide and smooth-cornered" actually needs.
         /// </para>
         /// <para>
@@ -1440,7 +1440,7 @@ namespace GlimmerGrove
         /// owner's call after playing it: fitted inside, the art was an island with a hand's
         /// width of blue at each end and read as a picture somebody had dropped on a button.
         /// The art is 2.67:1 and the plate is 3.43:1, so covering is width-led and the crop
-        /// comes off the top and bottom — about a ninth at each end, which is glow and empty
+        /// comes off the top and bottom - about a ninth at each end, which is glow and empty
         /// sky above the lettering and leaf and rock below it.
         /// </para>
         /// <para>
@@ -1453,8 +1453,8 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// <b>And the window is <see cref="BannerInset"/> inside the plate rather than flush
-        /// with it.</b> Flush, the picture covered the plate's own painted bevel — the border
-        /// that is what makes the sprite read as a button at all — so the art went right to the
+        /// with it.</b> Flush, the picture covered the plate's own painted bevel - the border
+        /// that is what makes the sprite read as a button at all - so the art went right to the
         /// outside edge and past the curve at the four corners, and was reported as overflowing
         /// its box. The inset is small on purpose: enough to leave the plate's frame drawn all
         /// the way round, not enough to turn the picture back into an island.
@@ -1465,9 +1465,9 @@ namespace GlimmerGrove
         /// nothing of the glow left to see, and the art carries its own.
         /// </para>
         /// <para>
-        /// <b>The badge is the tasks pack's badge</b> — the same starburst, in the same corner,
+        /// <b>The badge is the tasks pack's badge</b> - the same starburst, in the same corner,
         /// painted with how many genres still have a play left today
-        /// (<see cref="ChallengeLedger.ReadyCount"/>) — so the two doors on the hub's foot say
+        /// (<see cref="ChallengeLedger.ReadyCount"/>) - so the two doors on the hub's foot say
         /// "something is waiting" in one voice. It is painted rather than drawn (44j): a play
         /// spent, a deal bought, a sync arriving with plays spent on another phone, and the day
         /// turning all repaint it through <see cref="ChallengeLedger.Changed"/>, and it is built
@@ -1482,7 +1482,7 @@ namespace GlimmerGrove
                                     () => Flow.Go<DailyChallengesScreen>());
 
             // A press-scale that squashes a plate this wide reads as the screen flinching
-            // rather than as a key going down — the same reason the loadout shelf and the
+            // rather than as a key going down - the same reason the loadout shelf and the
             // tasks card both hold theirs near one. Kept through the shut state so the number
             // does not have to be found again the day the door opens.
             card.PressScale = .985f;
@@ -1526,10 +1526,10 @@ namespace GlimmerGrove
             art.enabled = aspect > 0f;
 
             // The tag, built after the window so it draws over the picture rather than
-            // under it — the banner is inside a Mask and this is its sibling.
+            // under it - the banner is inside a Mask and this is its sibling.
             //
             // The badge, built after the window so it draws over the picture rather than under
-            // it — the banner is inside a Mask and this is its sibling.
+            // it - the banner is inside a Mask and this is its sibling.
             _challengeBadge = WaitingBadge.BurstTopLeft(card.transform);
             PaintChallenges();
 
@@ -1603,7 +1603,7 @@ namespace GlimmerGrove
         /// <summary>
         /// This screen's own hold on the four bodies standing on the line.
         ///
-        /// <b>Never the map bar's and never a board's</b> — invariant 7b's second rule: an
+        /// <b>Never the map bar's and never a board's</b> - invariant 7b's second rule: an
         /// address owned by another scope is never re-claimed, so taking one of theirs here
         /// would drop a live screen's turrets when the hub went away.
         /// </summary>
@@ -1611,7 +1611,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// The four turrets the player is standing on the line and how far each has been taken
-        /// — a readout on the hub, and the door to the shelf that changes it.
+        /// - a readout on the hub, and the door to the shelf that changes it.
         ///
         /// <para>
         /// <b>Built once and dressed when the art lands.</b> An <c>Image</c> with no sprite is a
@@ -1663,7 +1663,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>A redraw rather than an entrance</b> (invariant 16d): the cells are remade because
-        /// a whole cell changes when its seat does, and nothing in here animates — the pop
+        /// a whole cell changes when its seat does, and nothing in here animates - the pop
         /// belongs to <see cref="BuildLoadout"/>, which runs once.
         /// </para>
         /// <para>
@@ -1773,7 +1773,7 @@ namespace GlimmerGrove
 
             // Everything the player may open is finished, and since the chapter boundary
             // became a star gate that is two different situations. One is a finished game and
-            // the other is a player two stars short of the next chapter — telling the second
+            // the other is a player two stars short of the next chapter - telling the second
             // one that every level is awake would be the game congratulating them for being
             // stuck, on the screen whose whole job is to say what to do next. The gate names
             // itself instead, in the number that moves.
@@ -1785,7 +1785,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Says so when a heart went on a run the last launch never finished — a force-quit, a
+        /// Says so when a heart went on a run the last launch never finished - a force-quit, a
         /// crash, a flat battery. See <see cref="RunGuard"/>.
         ///
         /// <para>

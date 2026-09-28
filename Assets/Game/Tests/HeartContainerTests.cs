@@ -15,7 +15,7 @@ namespace GlimmerGrove.Tests
     /// Three properties are pinned here and none of them can be seen by reading the catalog.
     /// The <b>cap is derived</b> from the ids held, so it is the largest container rather than
     /// the sum and it moves with a retune. <b>Granting is idempotent</b>, which is the whole
-    /// reason a real-money product may hand over an entitlement at all — it is what removes
+    /// reason a real-money product may hand over an entitlement at all - it is what removes
     /// the "did I already apply this transaction" record whose absence invariant 18 protects,
     /// and it is what lets a Restore rebuild the entitlement on a phone with no save at all.
     /// And <b>a refund reaches every device</b>, because a permanent upgrade that outlived its
@@ -76,7 +76,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// The largest, never the sum — which is what makes buying the rungs out of order,
+        /// The largest, never the sum - which is what makes buying the rungs out of order,
         /// buying one twice through a restore, or restoring onto a device that already holds a
         /// better one all resolve to the same number with no special case anywhere.
         /// </summary>
@@ -127,7 +127,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The rule the shop asks. A cap is the largest container held and never the sum, so
         /// the rungs under the one somebody owns would take real money and change nothing
-        /// they can see — and neither store can refuse that for us, because the three are
+        /// they can see - and neither store can refuse that for us, because the three are
         /// separate non-consumables and both would happily charge for the 10.
         /// </summary>
         [Test]
@@ -161,7 +161,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// Asked of the derived cap rather than of the held set, so a refund puts the rungs
-        /// under a container back on sale the moment the revocation lands — with no second
+        /// under a container back on sale the moment the revocation lands - with no second
         /// rule to keep in step with <see cref="HeartContainerLedger.RefillCap"/>.
         /// </summary>
         [Test]
@@ -186,7 +186,7 @@ namespace GlimmerGrove.Tests
         // ------------------------------------------------------------- idempotence
         /// <summary>
         /// The property the whole feature rests on. Applying a container twice is applying it
-        /// once, so no record of "have I already applied this transaction" has to exist — and
+        /// once, so no record of "have I already applied this transaction" has to exist - and
         /// without that record, invariant 18's argument against a real-money product granting
         /// something other than currency simply does not apply.
         /// </summary>
@@ -226,7 +226,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The safety property of the whole refund path: the server reports what it
         /// <em>revoked</em>, never what it thinks the account owns. An empty answer therefore
-        /// means "nothing was refunded" and can never confiscate a purchase — which is what a
+        /// means "nothing was refunded" and can never confiscate a purchase - which is what a
         /// short reply, a cold account or a deployment predating the field all look like.
         /// </summary>
         [Test]
@@ -292,7 +292,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// A refund honoured on one device is not undone by a sync from another. This is the
-        /// case that decides whether the revocation set was worth a schema field at all — the
+        /// case that decides whether the revocation set was worth a schema field at all - the
         /// cloud save still names the container, so a plain union over the owned set alone
         /// would hand it straight back.
         /// </summary>
@@ -383,7 +383,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// Buying a container hands over the hearts the player really did wait for while they
-        /// were sitting at their old cap — the refill deadline idles in the past, so the
+        /// were sitting at their old cap - the refill deadline idles in the past, so the
         /// catch-up walk pays it out the moment there is room. Bounded by the cap that was
         /// paid for, and unrepeatable without buying again.
         /// </summary>
@@ -393,7 +393,7 @@ namespace GlimmerGrove.Tests
             long start = 1_700_000_000;
             long later = start + HeartRules.RefillSeconds * 30;
 
-            // Full, with a deadline long since passed — a player who has not lost a run in a
+            // Full, with a deadline long since passed - a player who has not lost a run in a
             // fortnight, which is the commonest state a container is bought from.
             var full = Hearts.Ledger(HeartRules.RefillCap, 0, start);
             Assert.AreEqual(HeartRules.RefillCap, full.At(later).Count);
@@ -444,7 +444,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// It is keyed on the catalog by <em>reference</em>, so a push swapping in a whole new
         /// immutable table invalidates it with no event to subscribe to and no install step to
-        /// forget. Retuning a shipped container upward is a legitimate thing to want — it
+        /// forget. Retuning a shipped container upward is a legitimate thing to want - it
         /// reaches everybody who already paid for it, which is the whole reason the cap is
         /// derived from the id rather than stored beside it.
         /// </para>
@@ -519,7 +519,7 @@ namespace GlimmerGrove.Tests
             }, problems);
 
             // The store itself is what stops a permanent upgrade being sold twice, and only a
-            // non-consumable gets that guarantee — it is also what makes Restore able to bring
+            // non-consumable gets that guarantee - it is also what makes Restore able to bring
             // the entitlement back on a phone with no save at all.
             Assert.IsNull(catalog.Find("repeatable"));
         }
@@ -572,7 +572,7 @@ namespace GlimmerGrove.Tests
             }, problems);
 
             // Clamping would sell a capacity nobody authored against a ledger that honours a
-            // different one — a card promising more than it gives.
+            // different one - a card promising more than it gives.
             Assert.IsNull(catalog.Find("too_small"));
             Assert.IsNull(catalog.Find("too_big"));
         }
@@ -580,7 +580,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The client's two ceilings agree. A container selling a cap the ledger clamps away
         /// is a player charged for a number they never receive, and the two constants live in
-        /// different files for good reasons — one bounds content, the other bounds the ledger.
+        /// different files for good reasons - one bounds content, the other bounds the ledger.
         /// </summary>
         [Test]
         public void TheCatalogCeilingAndTheLedgerCeilingAgree()

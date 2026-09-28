@@ -21,13 +21,13 @@ namespace GlimmerGrove.Content
         /// <summary>The field, authored settled. See <see cref="SiegeShowcase.Rows"/>.</summary>
         public readonly string[] Rows;
 
-        /// <summary>The roster, wave by wave, in the grammar's spelling — or null when <see cref="Roster"/> is used.</summary>
+        /// <summary>The roster, wave by wave, in the grammar's spelling - or null when <see cref="Roster"/> is used.</summary>
         public readonly string[] Waves;
 
         /// <summary>The boss token in the grammar's spelling, or empty. Only with <see cref="Waves"/>.</summary>
         public readonly string Boss;
 
-        /// <summary>The roster as specs, for a shape the grammar cannot say — or null when <see cref="Waves"/> is used.</summary>
+        /// <summary>The roster as specs, for a shape the grammar cannot say - or null when <see cref="Waves"/> is used.</summary>
         public readonly SiegeSpec[][] Roster;
 
         /// <summary>How often a felled raider leaves a cog, in a hundred.</summary>
@@ -93,7 +93,7 @@ namespace GlimmerGrove.Content
         public SiegeRules Rules() => new SiegeRules(Layout(), LineUp());
 
         /// <summary>
-        /// What is wrong with the board, or null — the reading every authored siege gets, asked
+        /// What is wrong with the board, or null - the reading every authored siege gets, asked
         /// of one that is not authored. The fixture asks it, because nothing else can.
         /// </summary>
         public string Fault()
@@ -128,8 +128,8 @@ namespace GlimmerGrove.Content
     /// <para>
     /// <b>It is <see cref="SiegeTutorial"/>'s shape, pointed the other way.</b> The tutorial is
     /// the live mode with a script beside it that teaches two things; this is the live mode with
-    /// a script beside it that <em>plays</em> — every raider kind, every charm, a cog rate high
-    /// enough to be seen, and the biggest lines the shelf sells — so a screen recording of it is
+    /// a script beside it that <em>plays</em> - every raider kind, every charm, a cog rate high
+    /// enough to be seen, and the biggest lines the shelf sells - so a screen recording of it is
     /// a recording of the game and not of a mock-up. Nothing below re-implements a rule:
     /// <c>SiegeBoard</c> answers every question, and every decision the model takes goes through
     /// a door the board already has (<c>Swap</c>, <c>Overcharge</c>, <c>Take</c>, <c>Detonate</c>,
@@ -138,7 +138,7 @@ namespace GlimmerGrove.Content
     /// <para>
     /// <b>Authored here rather than in a chapter body</b>, for the tutorial's reason and one
     /// more: these have no <c>LevelId</c>, no record, no stars, no reward, no place in the
-    /// manifest and no gate (53d) — and they stand lines the player does not own, which no
+    /// manifest and no gate (53d) - and they stand lines the player does not own, which no
     /// chapter may do (15a). Descriptions, holding no state and mutating nothing except through
     /// <see cref="Plant"/>, which is the one deliberate gift: a charm stood on the field so the
     /// recording meets all six in a minute rather than in the two hundred gems the dealt window
@@ -148,7 +148,7 @@ namespace GlimmerGrove.Content
     /// <b>They reach no player.</b> Nothing in the game opens <c>ShowcaseScreen</c> any more:
     /// the CUSTOM keys (<c>Dev/ShowcaseDoor.cs</c>) were deleted after the recordings on
     /// 2026-09-27, and the fixture that holds all of this (<c>ShowcaseTests</c>) is the only
-    /// gate they pass through — a board here is read by no content gate, exactly as the
+    /// gate they pass through - a board here is read by no content gate, exactly as the
     /// tutorial's is not.
     /// </para>
     /// </summary>
@@ -188,7 +188,7 @@ namespace GlimmerGrove.Content
 
         // ------------------------------------------------------------------ the boards
         /// <summary>
-        /// <b>Custom.</b> A lost run: five waves of sixty raiders — the cap — overrun a line of
+        /// <b>Custom.</b> A lost run: five waves of sixty raiders - the cap - overrun a line of
         /// four five-star legendaries on the fifth wave.
         ///
         /// <para>
@@ -198,8 +198,8 @@ namespace GlimmerGrove.Content
         /// ends with the crowd on the hill is a run no boss can be in. <b>No bombers</b>, at the
         /// same instruction: a bomb is a thing to look at beside the fight. The waves grow and
         /// come on the clock (<c>SiegeBoard.Muster</c>), so the fifth stacks on what is left of
-        /// the fourth. <c>Tough</c> is chaotic — a step of twenty moves which wave the line falls
-        /// on — so retune by reading what <c>ShowcaseTests</c> prints.
+        /// the fourth. <c>Tough</c> is chaotic - a step of twenty moves which wave the line falls
+        /// on - so retune by reading what <c>ShowcaseTests</c> prints.
         /// </para>
         /// </summary>
         public static readonly ShowcaseBoard Overrun = new ShowcaseBoard(
@@ -222,13 +222,13 @@ namespace GlimmerGrove.Content
         /// run is won.
         ///
         /// <para>
-        /// <b>A shape the chapter grammar cannot say</b> — a boss there is one token and always
-        /// the last wave — and the board can already play, because the endless lane deals a
+        /// <b>A shape the chapter grammar cannot say</b> - a boss there is one token and always
+        /// the last wave - and the board can already play, because the endless lane deals a
         /// pair with an escort through exactly the same muster (<c>SiegeTuning.BossLane</c>
         /// seats two either side of the middle). So the roster is handed in as specs
         /// (<c>SiegeLayout</c>'s second constructor): an overlord and a harrower at the head of
         /// the first wave, the insect cast walking in behind them from the first second, and
-        /// two crowds after — which cannot muster until both bosses are down (37dn), so the
+        /// two crowds after - which cannot muster until both bosses are down (37dn), so the
         /// duel is the whole of the opening.
         /// </para>
         /// <para>
@@ -264,7 +264,7 @@ namespace GlimmerGrove.Content
 
         /// <summary>
         /// One wave as specs: <paramref name="lead"/> first, then <paramref name="wave"/> read in
-        /// the grammar's spelling — lower case a creeper, upper case a brute, <c>#</c> a bulwark.
+        /// the grammar's spelling - lower case a creeper, upper case a brute, <c>#</c> a bulwark.
         ///
         /// <b>No bombers, by construction.</b> A <c>!</c> is refused rather than read, because
         /// the owner took bombs off the advert and a token that read as something would be the
@@ -488,7 +488,7 @@ namespace GlimmerGrove.Content
         /// The bomb worth tapping, or -1.
         ///
         /// <b>Asked before the tap, because the board refuses a bomb that catches nothing and a
-        /// refused tap on a recording reads as a fumble — and a refused bomb stays where it is,
+        /// refused tap on a recording reads as a fumble - and a refused bomb stays where it is,
         /// so a hand told to tap it would tap it again on the next pass, for ever.</b> The
         /// reach is the firepot's own (<c>SiegeTuning.Caught</c>) and the hurt is
         /// <c>SiegeBoard.Wound</c>'s own refusals (a boss still walking in, or resting on its
@@ -535,7 +535,7 @@ namespace GlimmerGrove.Content
         ///
         /// <b>Every one, once, and never while another stands</b>: the dealt window would take
         /// two hundred gems to show them all and a recording has a minute. A charm is stood on a
-        /// cell a legal swap will sweep into a run, so the next move springs it — the point of
+        /// cell a legal swap will sweep into a run, so the next move springs it - the point of
         /// showing one is showing it go off.
         /// </summary>
         public static readonly SiegeCharm[] Planted =
@@ -564,7 +564,7 @@ namespace GlimmerGrove.Content
         /// <para>
         /// <b>On a cell a legal swap sweeps into a run</b>, so the model's next move springs it
         /// (<see cref="Aimed"/> scores that above everything). The cell is the swapped gem that
-        /// lands inside the run — stood there, the charm travels with its gem into the match. A
+        /// lands inside the run - stood there, the charm travels with its gem into the match. A
         /// prism is a wild and can line up where it stands, so a seat where it would already
         /// be three-alike is refused (<c>SiegeLayout.Lined</c>), because a charm that goes off
         /// before anybody moved is the tutorial's cascade fault with a halo on it.

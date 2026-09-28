@@ -10,26 +10,26 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// <b>It is the one panel in this game with no way out, and every other property follows
-    /// from that.</b> No scrim dismissal, no corner cross, no back key, and no second button —
+    /// from that.</b> No scrim dismissal, no corner cross, no back key, and no second button -
     /// because there is no second answer. Everywhere else this file's rules push the other way
     /// (a panel that cannot end is a game that has stopped; a button that does nothing is a
     /// broken button), and the reason they invert here is that the thing on the other side of
     /// this panel is not a game the player may have: it is a client the deployment has
     /// withdrawn. What replaces "a way out" is that the requirement itself is reversible from
-    /// the server — see <see cref="ReleaseGate"/>, where lifting every wall in the world is one
+    /// the server - see <see cref="ReleaseGate"/>, where lifting every wall in the world is one
     /// document edit.
     /// </para>
     /// <para>
     /// <b>Being dismissed is not how it ends, and it is not what keeps it up either.</b> A
     /// screen change destroys every modal in the stack, so nothing raised once could survive
     /// the first <c>Flow.Go</c> that happened to run. <see cref="UpdateGate"/> owns the standing
-    /// of it, frame by frame, against <see cref="ReleaseGate.IsShut"/> — so the panel is a
+    /// of it, frame by frame, against <see cref="ReleaseGate.IsShut"/> - so the panel is a
     /// <em>drawing of a state</em> rather than an event somebody has to remember to repeat, and
     /// it goes away exactly when the state does.
     /// </para>
     /// <para>
     /// <b>It says one sentence, and the first cut said three.</b> That cut also promised the
-    /// player's grove was safe — struck by the owner, and rightly: a wall carrying two
+    /// player's grove was safe - struck by the owner, and rightly: a wall carrying two
     /// paragraphs reads as a screen that is arguing with somebody, and the reassurance was
     /// answering a worry the panel had created by being long in the first place. A title, a
     /// mark, a line and a key is the whole of it.
@@ -39,8 +39,8 @@ namespace GlimmerGrove
     /// game already draws.</b> The parchment, the ribbon and the green pill are on every modal
     /// here; the mark is cut by <c>Tools/make_update_icon.py</c> and registered in the
     /// <em>global</em> set rather than a scope, because a scope has two failure modes and this
-    /// is the one screen in the game where an <c>Image</c> with no sprite — a white rectangle,
-    /// invariant 7b — would be the last thing a player ever saw of it.
+    /// is the one screen in the game where an <c>Image</c> with no sprite - a white rectangle,
+    /// invariant 7b - would be the last thing a player ever saw of it.
     /// </para>
     /// </summary>
     public sealed class UpdateRequiredOverlay : ModalView
@@ -64,7 +64,7 @@ namespace GlimmerGrove
         /// This was 230 and carried a second paragraph promising the player's grove was safe.
         /// The owner cut it, and the cut is right: a wall with two paragraphs on it reads as a
         /// screen that is arguing, and the reassurance was answering a worry the panel itself
-        /// had created by being long. What is left says the one thing the title does not — that
+        /// had created by being long. What is left says the one thing the title does not - that
         /// there is a newer *Glimmer Grove*, rather than merely that something is wrong here.
         /// </para>
         /// <para>
@@ -92,7 +92,7 @@ namespace GlimmerGrove
         /// <para>
         /// The warm accent that stood beside this went with the generated mark it painted. A
         /// colour nothing reads is decoration (invariant 5d), and one left behind next to a
-        /// sprite that carries its own palette is worse than decoration — it is an invitation to
+        /// sprite that carries its own palette is worse than decoration - it is an invitation to
         /// tint the sprite back to a hue the artist did not choose.
         /// </para>
         /// </summary>
@@ -102,7 +102,7 @@ namespace GlimmerGrove
         {
             // Every one of these is a **centre**, because UIKit.Box always pivots at centre
             // whatever it is anchored to (invariant 44d). `bodyY` was the band's *top*, which
-            // drew the sentence half its own height too high — 89 units of text straight over
+            // drew the sentence half its own height too high - 89 units of text straight over
             // the mark, reported from a device as exactly that. The others were right, which is
             // what made it survive a reading: the shape of the arithmetic looks uniform.
             float y = HeadRoom;
@@ -144,7 +144,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>A bought sprite rather than a generated shape, and the owner rejected the
         /// generated one on sight.</b> What stood here was a ring, a shaft and two rotated
-        /// bars — every part of it real and none of it drawn by anybody — which next to a panel
+        /// bars - every part of it real and none of it drawn by anybody - which next to a panel
         /// cut from a licensed kit reads as a placeholder. `Tools/make_update_icon.py` cuts
         /// `Ui/ic_update` out of CraftPix's vector map pack and records why that arrow and not
         /// one of the others.
@@ -185,8 +185,8 @@ namespace GlimmerGrove
         /// satisfies the requirement.
         /// </para>
         /// <para>
-        /// The URL is checked again at the moment of use. It cannot be unusable — a requirement
-        /// with no usable door is never applied, let alone stored — so this is the assertion
+        /// The URL is checked again at the moment of use. It cannot be unusable - a requirement
+        /// with no usable door is never applied, let alone stored - so this is the assertion
         /// that keeps that true rather than a branch anybody expects to take: the alternative to
         /// checking is handing the platform something it answers by doing nothing at all, which
         /// on a device is indistinguishable from a dead button on the one panel that has only
@@ -212,7 +212,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Answering it is the whole of what stops the back key walking past this panel.</b>
         /// <c>Flow.HandleBack</c> walks the stack downwards until something says it dealt with
-        /// the press — so a wall that stayed silent would hand the press to the screen
+        /// the press - so a wall that stayed silent would hand the press to the screen
         /// underneath, which would navigate, which would destroy every modal in the stack
         /// including this one. The gate would put it back a frame later, so the visible symptom
         /// is not an escape: it is the whole interface flickering under a panel every time
@@ -226,7 +226,7 @@ namespace GlimmerGrove
         /// Takes the wall down, for the one caller allowed to decide that.
         ///
         /// <para>
-        /// The requirement was rolled back, or this build now satisfies it — see
+        /// The requirement was rolled back, or this build now satisfies it - see
         /// <see cref="UpdateGate"/>, which is the only thing that asks. Exposed rather than left
         /// to <c>ModalView.Close</c>'s protection because the panel itself deliberately offers no
         /// route to it: an overlay that could close itself is one a stray tap can close.

@@ -5,7 +5,7 @@ using NUnit.Framework;
 namespace GlimmerGrove.Tests
 {
     /// <summary>
-    /// The out-of-hearts panel's column of ways out — the arithmetic a screenshot cannot check.
+    /// The out-of-hearts panel's column of ways out - the arithmetic a screenshot cannot check.
     ///
     /// <para>
     /// It grew a third button, which is the point at which a hand-written height stops being
@@ -20,7 +20,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// Nothing overlaps, in any of the four shapes the panel can take.
         ///
-        /// Structurally guaranteed by a cursor — but that is a claim about the implementation,
+        /// Structurally guaranteed by a cursor - but that is a claim about the implementation,
         /// and this is the property. A row placed by an absolute offset would compile and fail
         /// here.
         ///
@@ -65,7 +65,7 @@ namespace GlimmerGrove.Tests
         ///
         /// The independence is the part worth asserting. Both callers happen to pass the video
         /// flag from the same reading, so a column that quietly tied the paid row to it would
-        /// look correct on the out-of-hearts panel — which always wants both — and would silently
+        /// look correct on the out-of-hearts panel - which always wants both - and would silently
         /// drop the rescue on the restart gate whenever no video had loaded.
         /// </summary>
         [Test]

@@ -9,7 +9,7 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// <b>The finder is in Domain and the drawing is not, which is what makes this checkable.</b>
     /// A hint that found its own answer would be a second opinion about the only question this
-    /// field asks — <c>SiegeBoard.Lines</c> — and the two would drift the first time either
+    /// field asks - <c>SiegeBoard.Lines</c> - and the two would drift the first time either
     /// moved. <c>AnySwap</c> is literally this scan, so a field the shuffle believes is playable
     /// is a field a hint can always point at.
     /// </para>
@@ -22,7 +22,7 @@ namespace GlimmerGrove.Tests
     public sealed class SiegeHintTests
     {
         /// <summary>
-        /// The shipped opening rung's own field — settled, playable, and carrying every colour.
+        /// The shipped opening rung's own field - settled, playable, and carrying every colour.
         ///
         /// Hand-drawn fields are the trap <c>SiegeFieldRaiderTests</c> already records: a board
         /// with no run and no swap on it re-deals itself the moment it advances, so a fixture
@@ -43,7 +43,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// <b>Four colours stepped by one a row, not a two-colour checkerboard.</b> A checkerboard
         /// is the obvious fixture and it is wrong: it has no <em>run</em> on it, which is what
-        /// makes it look right, and it has plenty of legal swaps — swapping across a row leaves
+        /// makes it look right, and it has plenty of legal swaps - swapping across a row leaves
         /// two alike either side of the cell that moved. Written down because it was the first
         /// thing tried here and the test that caught it is the one below.
         /// </para>
@@ -115,7 +115,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// Asking again from where the last answer stopped walks the field rather than handing
-        /// back the same pair — which is the whole reason <see cref="SiegeSwap.At"/> exists. Three
+        /// back the same pair - which is the whole reason <see cref="SiegeSwap.At"/> exists. Three
         /// nudges pointing at one pair reads as the board repeating itself, not as it helping.
         /// </summary>
         [Test]
@@ -168,8 +168,8 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// <b>It matters because the count-in holds nothing.</b> <c>SiegeView.CountIn</c> draws
-        /// four beats over a board that is already <c>Playable</c> — the clock runs underneath it
-        /// deliberately — so "has the run started" cannot be asked of the view's latches at all,
+        /// four beats over a board that is already <c>Playable</c> - the clock runs underneath it
+        /// deliberately - so "has the run started" cannot be asked of the view's latches at all,
         /// and the first nudge landed six tenths of a second after GO!. A flag set by the count
         /// was the obvious fix and has an exit that clears nothing; this is the same fact with
         /// nothing to keep in step, so it is worth knowing that it holds.

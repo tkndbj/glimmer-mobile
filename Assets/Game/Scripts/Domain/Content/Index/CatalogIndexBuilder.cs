@@ -9,7 +9,7 @@ namespace GlimmerGrove.Content
     /// Every rejection is recorded rather than thrown, for the same reason the rest of
     /// the content system works that way: a manifest can arrive from a CDN, and one
     /// malformed entry must cost that chapter rather than the launch. The builder
-    /// salvages what it can and hands the problems back to be reported — as warnings
+    /// salvages what it can and hands the problems back to be reported - as warnings
     /// at runtime, as build failures in the Editor.
     /// </summary>
     public sealed class CatalogIndexBuilder
@@ -25,7 +25,7 @@ namespace GlimmerGrove.Content
         /// The one repeating season, or null. At most one, and the reader refuses a second.
         ///
         /// <b>Two recurrences would be two answers to "which season is running"</b>, decided by
-        /// whichever the loop reached first — an ordering nothing in a JSON file promises, which
+        /// whichever the loop reached first - an ordering nothing in a JSON file promises, which
         /// is the same reason <c>SiegeBoard</c> states its contested-cog rule rather than letting
         /// a <c>HashSet</c> walk decide it (invariant 37w).
         /// </summary>
@@ -40,7 +40,7 @@ namespace GlimmerGrove.Content
 
         /// <summary>
         /// Reads one manifest entry. Returns false when the chapter is not for this
-        /// client — retired, or needing newer code — which is a decision rather than a
+        /// client - retired, or needing newer code - which is a decision rather than a
         /// problem and so is reported to nobody.
         /// </summary>
         public bool Add(ManifestChapterDto entry, int appVersion)
@@ -124,7 +124,7 @@ namespace GlimmerGrove.Content
 
         /// <summary>
         /// Reads one companion entry. Rejections are recorded and the companion is
-        /// dropped, never thrown on — a malformed roster entry must cost that companion
+        /// dropped, never thrown on - a malformed roster entry must cost that companion
         /// rather than the launch, exactly like a malformed chapter.
         /// </summary>
         public bool AddCompanion(ManifestCompanionDto entry)
@@ -173,14 +173,14 @@ namespace GlimmerGrove.Content
         /// <para>
         /// Stricter than a chapter or a companion, and refused whole rather than salvaged,
         /// because a rung dropped or reordered is a different ladder from the one somebody
-        /// authored — and eighty chests is not a thing anybody eyeballs. A half-read season
+        /// authored - and eighty chests is not a thing anybody eyeballs. A half-read season
         /// is not a degraded season, it is a reward table nobody signed off. Skipping it
         /// entirely costs one season and nothing else.
         /// </para>
         /// <para>
         /// <b>Tier ids are not checked against the tier table here, and cannot be.</b> The
         /// ladder lives in <c>manifest.json</c> and the tiers in <c>progression.json</c>,
-        /// which version independently (invariant 9b) and are fetched separately — so the
+        /// which version independently (invariant 9b) and are fetched separately - so the
         /// table this build holds at parse time is not necessarily the one it will hold a
         /// minute later. The gates check it (<c>content.py</c> and the Editor validator both
         /// error on a rung naming a tier the tasks block does not define), and at runtime an
@@ -309,7 +309,7 @@ namespace GlimmerGrove.Content
             // A mark is refused only for being unusable as a name. Whether the client has
             // one drawn is not knowable here and must not be checked here: content ships
             // ahead of builds, so a manifest naming a mark an older client lacks has to
-            // stay valid — that client draws the default, which is a working screen.
+            // stay valid - that client draws the default, which is a working screen.
             string icon = entry.icon ?? string.Empty;
             if (icon.Length > 0 && !IsCleanId(icon))
             {
@@ -326,7 +326,7 @@ namespace GlimmerGrove.Content
             }
 
             // A repeating season's id is a stem the clock builds on, so the room the suffix
-            // needs has to exist inside the ceiling the server parses ids against — a stem that
+            // needs has to exist inside the ceiling the server parses ids against - a stem that
             // only just fits would mint ids `season.ts` refuses, and the symptom is every claim
             // in the game's longest-running feature coming back unconfirmed.
             int room = Events.EventRules.MaxSeasonIdLength - (Events.SeasonCycle.IndexDigits + 1);
@@ -391,7 +391,7 @@ namespace GlimmerGrove.Content
         public CatalogIndex Build()
         {
             // Sparse orders let a chapter slot between two shipped ones. Ties break on
-            // id so the result is deterministic rather than dependent on file order —
+            // id so the result is deterministic rather than dependent on file order -
             // a tie is still an authoring mistake, and validation says so.
             _chapters.Sort((a, b) =>
             {
@@ -450,7 +450,7 @@ namespace GlimmerGrove.Content
         /// <b>A season no longer names levels, so there is nothing left to check against the
         /// catalog here.</b> That is the whole shape of the v28 change: a track graded on
         /// marks is a track no mode owns, so withdrawing a mode can no longer take a season
-        /// down with it — which is exactly how the first one died, and the same bargain
+        /// down with it - which is exactly how the first one died, and the same bargain
         /// invariant 20a already struck for the star ledger.
         /// </para>
         /// <para>

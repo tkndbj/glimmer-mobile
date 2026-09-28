@@ -8,7 +8,7 @@ namespace GlimmerGrove.Social
     /// the document under <c>players/{uid}</c> and reports that document's revision back;
     /// the client asked after a sync it knows the revision of, so the two can be compared.
     /// A publish that answers with an older revision than the one asked for has built a card
-    /// from a save this device had already replaced — which is the shape of the bug this
+    /// from a save this device had already replaced - which is the shape of the bug this
     /// exists to make impossible, and which no other reading can see: the call succeeds, the
     /// card is well-formed, and the board shows last week's grove.
     /// </para>
@@ -16,7 +16,7 @@ namespace GlimmerGrove.Social
     /// <b>Absence is not staleness.</b> A deployment that predates the field reports no
     /// revision, and treating that as stale would have every client retrying against a server
     /// that cannot ever satisfy them (invariant 13a). So the check only runs when both sides
-    /// have a number — invariant 25's rule that presence of a field says a deployment
+    /// have a number - invariant 25's rule that presence of a field says a deployment
     /// understands it.
     /// </para>
     /// </summary>
@@ -46,8 +46,8 @@ namespace GlimmerGrove.Social
         /// Whether this card was built from the save at <paramref name="revision"/> or a
         /// later one.
         ///
-        /// True when nothing can be checked — the server did not report, or the client did
-        /// not know what it had pushed — because an unprovable publish is the situation the
+        /// True when nothing can be checked - the server did not report, or the client did
+        /// not know what it had pushed - because an unprovable publish is the situation the
         /// game was in before the field existed, and it must not become a refusal.
         /// </summary>
         public bool Proves(long revision)

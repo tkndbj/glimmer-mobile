@@ -12,7 +12,7 @@ namespace GlimmerGrove.Content.Sources
     ///
     /// This is the floor the game can always stand on: it needs no network, no cache
     /// and no permissions, so a fresh install is playable offline the moment it
-    /// finishes downloading. StreamingAssets rather than Resources on purpose —
+    /// finishes downloading. StreamingAssets rather than Resources on purpose -
     /// Resources is force-loaded into the build's serialised blob and can never be
     /// patched, while these stay ordinary files that a remote pack can shadow.
     /// </summary>

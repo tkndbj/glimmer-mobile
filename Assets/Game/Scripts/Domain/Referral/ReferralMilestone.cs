@@ -7,7 +7,7 @@ namespace GlimmerGrove.Referral
     /// Whether the milestone chapter is cleared, asked of the index and a star ledger.
     ///
     /// <para>
-    /// The device's answer is only a hint — it decides whether to <em>ask</em> the server
+    /// The device's answer is only a hint - it decides whether to <em>ask</em> the server
     /// after a sync, never whether anybody is paid. The server asks the same question of the
     /// save it holds (<c>referral.ts</c>), which is why the two copies read the same shape: a
     /// chapter's level ids from the manifest, and a star count per id.

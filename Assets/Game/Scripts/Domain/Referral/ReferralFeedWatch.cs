@@ -9,15 +9,15 @@ namespace GlimmerGrove.Referral
     /// <para>
     /// <b>It is a class of its own so that the lifetime can be tested without a server.</b>
     /// Written inline in <see cref="ReferralLedger"/> it would have needed a Firestore, a
-    /// signed-in account and a save file to exercise even once — which is to say it would
+    /// signed-in account and a save file to exercise even once - which is to say it would
     /// never have been exercised, and "the listener is properly torn down" would have been an
     /// assertion rather than a fact. Here the thing that opens a listener is a function, so a
     /// test hands it one that counts.
     /// </para>
     /// <para>
     /// <b>Every path ends at <see cref="Settle"/>.</b> Holding, releasing, pausing, resuming and
-    /// switching account all change one of the three facts and then ask the same question — is
-    /// what I have what I should have — so no path has to know about any other, and no
+    /// switching account all change one of the three facts and then ask the same question - is
+    /// what I have what I should have - so no path has to know about any other, and no
     /// sequence of them can leave a listener running with nobody to hear it. That is the whole
     /// design, and it is why there is no `if` anywhere else that mentions a listener.
     /// </para>
@@ -38,7 +38,7 @@ namespace GlimmerGrove.Referral
         /// <param name="open">Opens a listener, calling back with the feed's counter whenever it is delivered. May answer null.</param>
         /// <param name="account">Who is signed in, or empty.</param>
         /// <param name="available">Whether the feature and the backend exist at all.</param>
-        /// <param name="moved">Raised — possibly off the main thread — with the counter the feed now reads.</param>
+        /// <param name="moved">Raised - possibly off the main thread - with the counter the feed now reads.</param>
         public ReferralFeedWatch(Func<Action<long>, IDisposable> open, Func<string> account,
                                  Func<bool> available, Action<long> moved)
         {
@@ -74,7 +74,7 @@ namespace GlimmerGrove.Referral
         /// The claim is spent by nulling the back-reference; the <c>&gt; 0</c> below is belt and
         /// braces and, on the paths that exist, unreachable. It is kept because the cost of
         /// being wrong about that is a listener that can never be re-attached for the life of
-        /// the process, and the cost of keeping it is one comparison — but it is *not* what
+        /// the process, and the cost of keeping it is one comparison - but it is *not* what
         /// makes a second dispose safe, and a mutation test will not move for it.
         /// </para>
         /// </summary>
@@ -104,7 +104,7 @@ namespace GlimmerGrove.Referral
 
         /// <summary>
         /// The app is back. Answers whether a listener was re-attached, so the caller knows
-        /// whether it has just re-opened a window it was blind through — and can ask once for
+        /// whether it has just re-opened a window it was blind through - and can ask once for
         /// what it missed, which no callback will ever tell it.
         /// </summary>
         public bool Resume()
@@ -141,7 +141,7 @@ namespace GlimmerGrove.Referral
 
             // Only remember the account when something really opened, so the field means what
             // its name says. The early return above already refuses to trust it while `_live`
-            // is null, so this is not what makes a refused attach try again — the test for that
+            // is null, so this is not what makes a refused attach try again - the test for that
             // (`ABackendThatCannotWatchIsAskedAgainNextTime`) passes either way. It is here so
             // the two can never come apart if that return is ever loosened.
             _liveFor = _live != null ? account : null;
@@ -161,7 +161,7 @@ namespace GlimmerGrove.Referral
 
         /// <summary>
         /// Drops everything: no holders, not paused, nothing attached. For a teardown that has
-        /// to leave no thread running — a test, or an account being deleted.
+        /// to leave no thread running - a test, or an account being deleted.
         /// </summary>
         public void Reset()
         {

@@ -17,7 +17,7 @@ namespace GlimmerGrove.EditorTools
     /// Writes the address convention into the Addressables settings.
     ///
     /// One asset at a time, so the importer hook and the full repair sweep run exactly
-    /// the same code — the sweep is just this in a loop. Nothing here decides *what* an
+    /// the same code - the sweep is just this in a loop. Nothing here decides *what* an
     /// address should be; that is <see cref="AddressableAddresses"/>.
     /// </summary>
     public static class AddressableRegistry
@@ -43,7 +43,7 @@ namespace GlimmerGrove.EditorTools
         /// Files one asset: correct address, correct group, correct frame label.
         ///
         /// Idempotent, which is what lets it be called from an import hook on every
-        /// reimport without churning the settings asset — an asset already in the right
+        /// reimport without churning the settings asset - an asset already in the right
         /// place reports no change and dirties nothing.
         /// </summary>
         public static void Register(AddressableAssetSettings settings, string assetPath,
@@ -110,7 +110,7 @@ namespace GlimmerGrove.EditorTools
         ///
         /// <para>
         /// <c>AssetDatabase.GUIDToAssetPath</c> keeps answering with the old path for a while
-        /// after a file is deleted — especially when it went outside the Editor — so a path
+        /// after a file is deleted - especially when it went outside the Editor - so a path
         /// coming back non-empty proves nothing. <c>GetMainAssetTypeAtPath</c> is null exactly
         /// when the bundle builder would say <em>"is not a valid Asset or Scene"</em>, which is
         /// the sentence that ends an Android build twenty minutes in, so it is the one this
@@ -167,7 +167,7 @@ namespace GlimmerGrove.EditorTools
         public static IEnumerable<string> EnumerateManagedAssets()
         {
             // SpriteAtlas is in the list because the grove's browse atlases are addressed
-            // like any other asset — a sweep blind to them would leave the shop's art
+            // like any other asset - a sweep blind to them would leave the shop's art
             // unregistered and the audit would then be the only thing that noticed.
             var guids = AssetDatabase.FindAssets("t:Texture2D t:AudioClip t:Font t:SpriteAtlas",
                                                  new[] { "Assets/Game" });

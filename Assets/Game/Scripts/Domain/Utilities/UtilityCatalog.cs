@@ -24,7 +24,7 @@ namespace GlimmerGrove.Utilities
     /// <para>
     /// <b>What content may not do is invent a kind.</b> A utility's <em>kind</em> is a rule with a
     /// fail state and a grade attached, so an entry naming one this build has never heard of is
-    /// skipped whole and reported to nobody — invariant 20's answer for a chapter naming an
+    /// skipped whole and reported to nobody - invariant 20's answer for a chapter naming an
     /// unknown mode, one level down. The honest response to content from the future is to lose
     /// that entry rather than to draw a button that cannot do anything.
     /// </para>
@@ -64,7 +64,7 @@ namespace GlimmerGrove.Utilities
         ///
         /// <para>
         /// Present so the feature works on a first launch that has not reached the content yet,
-        /// and so a malformed file costs a retune rather than a session — the bargain
+        /// and so a malformed file costs a retune rather than a session - the bargain
         /// <c>ProgressionTable.Default</c> and <c>DailyChestTable.Default</c> both make.
         /// </para>
         /// <para>
@@ -78,7 +78,7 @@ namespace GlimmerGrove.Utilities
         /// </para>
         /// <para>
         /// <b>The prices are a day of free play apart on purpose.</b> Free play collects about six
-        /// gems a day, so a firepot at 12 is two days and a mending at 8 is a day and a half —
+        /// gems a day, so a firepot at 12 is two days and a mending at 8 is a day and a half -
         /// dear enough that a chest drop is the ordinary way to hold one and cheap enough that the
         /// gem price is a real answer on the evening somebody is stuck. They are content, and
         /// they are the numbers most likely to be wrong first guess.
@@ -88,14 +88,14 @@ namespace GlimmerGrove.Utilities
         /// a player holds prices <em>how often</em> across a lifetime; it says nothing about a
         /// moment, so a hundred firepots is a hundred taps in four seconds and every wave has
         /// the same answer. <see cref="UtilityCooldown"/> prices <em>when</em>, which is what
-        /// makes the four items differ in a second dimension — a stormcall at thirty seconds is
+        /// makes the four items differ in a second dimension - a stormcall at thirty seconds is
         /// held for the wave that needs it rather than being the strongest tap on the bar. It
         /// can never buy a grade, because it only ever refuses a use (invariant 39).
         /// </para>
         /// <para>
         /// <b>The ceiling is a hundred, and it is a bound on a pack rather than a rationing of
-        /// one.</b> It shipped at nine, which read as a ration — a shelf that refuses a tenth is
-        /// a shop telling somebody they have bought enough — and nine is also low enough that the
+        /// one.</b> It shipped at nine, which read as a ration - a shelf that refuses a tenth is
+        /// a shop telling somebody they have bought enough - and nine is also low enough that the
         /// gem price could never be the answer to anything but tonight. What the ceiling is
         /// actually for is keeping a grant bounded and a badge legible; a hundred does both and
         /// asks nothing of the save, since <c>UtilityStock</c>'s structural clamp is 9,999 and
@@ -107,7 +107,7 @@ namespace GlimmerGrove.Utilities
         public static readonly UtilityCatalog Default = new UtilityCatalog(new[]
         {
             // Damage, into everything standing on the plus of boxes it is thrown at
-            // (`SiegeTuning.BlastReach`) — full damage to each, never shared out. Two creepers
+            // (`SiegeTuning.BlastReach`) - full damage to each, never shared out. Two creepers
             // die; a brute is left with four health for a ward to finish. Widening it needed no
             // retune, because a firepot is charged for what it absorbs (invariant 39): catching
             // three raiders instead of one bills three raiders' worth of matches.
@@ -117,7 +117,7 @@ namespace GlimmerGrove.Utilities
             new UtilityItem("mending", UtilityKind.Mend, magnitude: 6,
                             gemPrice: 8, maxHeld: 100, order: 2, cooldownSeconds: 15),
 
-            // Magnitude is fuel in tenths, so 90 is nine shots — a ward that had run dry firing
+            // Magnitude is fuel in tenths, so 90 is nine shots - a ward that had run dry firing
             // for about two seconds, which is most of a creeper.
             new UtilityItem("surge", UtilityKind.Surge, magnitude: 90,
                             gemPrice: 10, maxHeld: 100, order: 3, cooldownSeconds: 20),
@@ -214,7 +214,7 @@ namespace GlimmerGrove.Utilities
                     entry.cooldownSeconds > UtilityCooldown.MaxSeconds)
                 {
                     // **Refused rather than clamped**, because the only way to write a number
-                    // this far out is to have written it in the wrong unit — ten seconds typed
+                    // this far out is to have written it in the wrong unit - ten seconds typed
                     // as ten thousand milliseconds is an item usable once a run, which plays as
                     // a broken bar rather than as a retune somebody meant. A clamp would hide
                     // exactly the mistake worth failing a build over.

@@ -10,14 +10,14 @@ namespace GlimmerGrove.Tests
     /// a player found it both times.</b> The reel is baked with its flash near the foot of the
     /// frame and the bolt filling the rest, and the board then has to put the *sprite's centre*
     /// somewhere such that the flash ends up on the raider. First the centre went on the raider,
-    /// so the strike went off half a frame above it — reported as lightning hitting random spots
+    /// so the strike went off half a frame above it - reported as lightning hitting random spots
     /// rather than enemies. Then the offset had the right shape and the wrong sign, which put the
     /// flash 3.3 cells *below* the raider: the ward line stands about that far down, so what a
     /// player saw was their own turrets being struck.
     /// </para>
     /// <para>
     /// <b>Nothing else in this project can see it.</b> No numeric gate opens a PNG, so par, the
-    /// readings, the validators, the content check and the art audit are all green either way —
+    /// readings, the validators, the content check and the art audit are all green either way -
     /// and <c>Tools/render_siege.py</c>, which is the eye for exactly this class of fault, drew
     /// the *second* version correctly: it mirrors the same expression, but PIL's y runs down the
     /// picture where Unity's runs up it, so the mirror agreed with itself and disagreed with the
@@ -28,7 +28,7 @@ namespace GlimmerGrove.Tests
     /// <b>It asserts the consequence rather than the formula.</b> Restating
     /// <c>targetY + tall * (.5f - StrikeAt)</c> here would agree with a wrong sign as happily as
     /// with a right one; what is checked is where the flash comes out, worked forward from how
-    /// the sprite is actually laid out — a rectangle of height <c>tall</c> centred on the answer,
+    /// the sprite is actually laid out - a rectangle of height <c>tall</c> centred on the answer,
     /// with the flash <see cref="SiegeView.StrikeAt"/> of the way up it.
     /// </para>
     /// </summary>
@@ -46,7 +46,7 @@ namespace GlimmerGrove.Tests
         public void AStrikeLandsOnTheThingItStruck()
         {
             // Cell sizes and hill positions vary by phone, so this is asked at several, including
-            // a raider below the middle of the board — which is where the sign error hid, because
+            // a raider below the middle of the board - which is where the sign error hid, because
             // at the origin both signs give the same magnitude.
             foreach (float target in new[] { 0f, 120f, -260f, 640f })
                 foreach (float tall in new[] { 180f, 390f, 512f })

@@ -14,12 +14,12 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// <b>It is one composed screen and not a list, and that is the whole of the change.</b>
-    /// The page before this was seven checklist cards down a scrolling wall — every fact was
+    /// The page before this was seven checklist cards down a scrolling wall - every fact was
     /// on it and none of it felt like a game, which was the owner's verdict on 2026-09-26. A
     /// rank screen in any game people rate is a <em>stage</em>: the badge you hold, large and
     /// lit, the ladder as a row of seats you can see the whole of at once, and the details of
-    /// one rung at a time underneath. So the ladder is browsed rather than scrolled — tap a
-    /// seat, tap a chevron or swipe the stage — and the stage redresses itself for the rung
+    /// one rung at a time underneath. So the ladder is browsed rather than scrolled - tap a
+    /// seat, tap a chevron or swipe the stage - and the stage redresses itself for the rung
     /// chosen: its light, its ring, its name, its plate.
     /// </para>
     ///
@@ -28,15 +28,15 @@ namespace GlimmerGrove
     /// behind the badge: a navy gradient over the top of the stage was cut on 2026-09-26 at the
     /// owner's instruction, and a wash tinted per rung was never an option, because gold over a
     /// blue wall is olive and copper is mud (invariant 44g, arriving through a blend rather than
-    /// a multiply). What changes with the rung is everything that reads as <em>light</em> —
+    /// a multiply). What changes with the rung is everything that reads as <em>light</em> -
     /// the two ray fans turning behind the badge, the aurora drifting across the room, the
-    /// halo, the ring and the spark at its head, the fireflies — which are additive-looking
+    /// halo, the ring and the spark at its head, the fireflies - which are additive-looking
     /// over a dark ground and stay the colour they were given (<see cref="RankLook"/>).
     /// </para>
     ///
     /// <para>
     /// <b>The ring is the progress, and it is drawn with uGUI's radial fill over a generated
-    /// ring</b> — no art, no address, nothing that can arrive as a white rectangle (7b). Its
+    /// ring</b> - no art, no address, nothing that can arrive as a white rectangle (7b). Its
     /// share is the mean of the rung's clamped line shares (<see cref="Share"/>), the same
     /// arithmetic <see cref="RankLedger.Progress01"/> runs for the next rung, run here for
     /// whichever rung is chosen so a locked rung can honestly show how much of it is already
@@ -46,13 +46,13 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// <b>The furniture is the owner's bought UI kit</b> (<see cref="RankKit"/>, 2026-09-27).
-    /// The page drew its furniture procedurally first — a round-rect chip, a round-rect pill, a
-    /// plate with a generated rim, capsule links — then in stone tiles, and the owner rejected
+    /// The page drew its furniture procedurally first - a round-rect chip, a round-rect pill, a
+    /// plate with a generated rim, capsule links - then in stone tiles, and the owner rejected
     /// both: neither looked like a game. What was asked for was a <em>proper board</em>, the
     /// badges in proper seats, and a picture on every line with no ticks. So the board is the
     /// kit's notched panel with its hanging tab as the title; each requirement is written on
-    /// the kit's dark bar with the measure's own icon on its left — a star beside "Earn N
-    /// stars" — and the bar under the sentence is the interface kit's trough and fill; a seat
+    /// the kit's dark bar with the measure's own icon on its left - a star beside "Earn N
+    /// stars" - and the bar under the sentence is the interface kit's trough and fill; a seat
     /// is the kit's rimmed square; the ordinal stands on its pill. The sentence under the name
     /// stands on the wall with no box round it at all, and nothing here is drawn by code.
     /// </para>
@@ -60,8 +60,8 @@ namespace GlimmerGrove
     /// <para>
     /// <b>Nothing on the rail is dimmed, and a locked seat still shows its badge.</b> A page
     /// of bright medallions is a trophy case, and a ladder whose upper rungs are hidden is a
-    /// ladder nobody wants to climb; what says <em>not yet</em> is the seat — smaller badge, no
-    /// glow, a padlock chip on the corner — and never the picture. The one thing that moves
+    /// ladder nobody wants to climb; what says <em>not yet</em> is the seat - smaller badge, no
+    /// glow, a padlock chip on the corner - and never the picture. The one thing that moves
     /// with the ledger is which seats are lit, which is the only reading a glance needs.
     /// </para>
     ///
@@ -72,15 +72,15 @@ namespace GlimmerGrove
     /// whatever a tall phone has left over lands under the plate (<see cref="StageFit"/>). The
     /// shortest canvas this game is drawn on (<see cref="CanvasFit.ShortestCanvas"/>) still
     /// fits every band. The plate's band is sized for the tallest rung the ladder ships and scrolls only
-    /// if a retune ever gives a rung more lines than that band holds — a rung's lines are
+    /// if a retune ever gives a rung more lines than that band holds - a rung's lines are
     /// capped (<see cref="RankLadder.MaxRequirements"/>), so the band can never be asked for
     /// more than eight.
     /// </para>
     ///
     /// <para>
     /// <b>Built once, redressed on a tap, repainted from the ledger</b> (<c>CRAFT.md</c>: Show
-    /// animates, Refresh does not). A rank can move while the page is standing — a merge
-    /// landing another device's battles is the ordinary case — and a repaint rewrites the
+    /// animates, Refresh does not). A rank can move while the page is standing - a merge
+    /// landing another device's battles is the ordinary case - and a repaint rewrites the
     /// ring, the seats, the counts and the bars without replaying any entrance. A retuned
     /// ladder is a different page and rebuilds whole. Choosing a rung <em>is</em> a gesture,
     /// so the swap is allowed to move.
@@ -96,7 +96,7 @@ namespace GlimmerGrove
     /// <para>
     /// The mirror is <c>Tools/render_ranks.py</c>, which draws every state of the stage off
     /// the shipped ladder and measures every caption it can say against the box it is drawn
-    /// in (invariant 19n) — a rank ladder is content, and a sentence is one retune away from
+    /// in (invariant 19n) - a rank ladder is content, and a sentence is one retune away from
     /// outgrowing its band at all times.
     /// </para>
     /// </summary>
@@ -148,17 +148,29 @@ namespace GlimmerGrove
         /// Grown on 2026-09-26 at the owner's instruction ("make the box bigger so texts are
         /// more readable"): the line pitch went 72 -> 88 and the sentence 27 -> 32pt, paid for
         /// by the blurb coming off the stage and <see cref="StageLeast"/> coming down with it.
+        /// The head and the foot are the board's own cap and plinth since 2026-09-28
+        /// (<see cref="RankKit.BoardCap"/>, <see cref="RankKit.BoardPlinth"/>), plus the ribbon's
+        /// rise over the cap, so the lines always start on the cream and end above the plinth.
         /// </summary>
-        public const float PlateW = 1024f, PlateHead = 76f, LineH = 88f, PlateFoot = 22f;
+        public const float PlateW = 1024f, LineH = 88f;
+        public const float PlateHead = TitleRise + RankKit.BoardCap + CapGap;
+        public const float PlateFoot = RankKit.BoardPlinth + PlinthGap;
+        const float CapGap = 14f, PlinthGap = 10f;
 
         /// <summary>The air between the rail and the board, and under the board.</summary>
         public const float PlateGap = 40f, FootPad = 24f;
 
         /// <summary>One line's furniture: the row's inset from the board's edge and its height, the icon, the count's column and the bar.</summary>
-        const float WellInset = 36f, RowH = 78f, IconSize = 58f, CountW = 210f, BarH = 14f;
+        const float WellInset = RankKit.BoardSide + 14f, RowH = 78f, IconSize = 58f, CountW = 210f, BarH = 14f;
 
-        /// <summary>The kit's tab hanging from the board's top edge, with the title on it.</summary>
-        const float TabW = 420f, TabH = 84f;
+        /// <summary>
+        /// The kit's ribbon (<see cref="Skins.Title"/>) laid over the board's cap with the title on
+        /// it, drawn at its own aspect (775x208) and centred on the cap, so it rises
+        /// <see cref="TitleRise"/> above the board's top edge - which the band has to hold, because
+        /// the band clips.
+        /// </summary>
+        const float RibbonW = 440f, RibbonH = RibbonW * 208f / 775f;
+        const float TitleRise = RibbonH * .5f - RankKit.BoardCap * .5f + 2f;
         const int TabPt = 30;
 
         /// <summary>How much of the shortest canvas the display's insets may take before the plate's band gives way.</summary>
@@ -194,7 +206,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// The bar's orange, pre-divided against <see cref="Skins.Fill"/> as every bar in the
-        /// game is (45h). Deliberately not the rung's metal — a bar is read for its length, and
+        /// game is (45h). Deliberately not the rung's metal - a bar is read for its length, and
         /// silver on a navy trough is a fill you have to look for.
         /// </summary>
         static readonly Color BarOrange = new Color(1f, .588f, .118f, 1f);
@@ -398,7 +410,7 @@ namespace GlimmerGrove
 
         // ------------------------------------------------------------------ the stage
         /// <summary>
-        /// The room and the light in it, then the ring, then the badge, then the words — in
+        /// The room and the light in it, then the ring, then the badge, then the words - in
         /// that order, so each draws over the last.
         /// </summary>
         void BuildStage()
@@ -413,7 +425,7 @@ namespace GlimmerGrove
             _stage.gameObject.AddComponent<RectMask2D>();
 
             // A swipe turns the page. The handler is on the stage itself, because the event
-            // system finds a drag handler by walking *up* from whatever was hit — so a drag
+            // system finds a drag handler by walking *up* from whatever was hit - so a drag
             // that starts on the badge, the name or a chevron still turns the page. The
             // catcher under everything is what makes the empty parts of the stage hittable.
             _stage.gameObject.AddComponent<Swipe>().Swiped = dir => Step(-dir);
@@ -510,8 +522,8 @@ namespace GlimmerGrove
                              TextAnchor.MiddleCenter, new Vector2(TextW, EyebrowH), Top,
                              new Vector2(0f, -EyebrowTop), 0f, 2f), 15);
 
-            // The name wears a shimmer of the rung's metal — `TextGradient` runs across the
-            // glyphs, so the light lands as a highlight rather than as a flat tint — over the
+            // The name wears a shimmer of the rung's metal - `TextGradient` runs across the
+            // glyphs, so the light lands as a highlight rather than as a flat tint - over the
             // dark outline every caption here carries, which is what keeps silver legible on
             // a lit room (44n).
             _name = UIKit.Shrinkable(
@@ -542,7 +554,7 @@ namespace GlimmerGrove
             }, blob, "drift").Loop(-1, false);
         }
 
-        /// <summary>A fan turning for ever — a whole turn per loop so the join is invisible.</summary>
+        /// <summary>A fan turning for ever - a whole turn per loop so the join is invisible.</summary>
         static void Turn(RectTransform rt, float degrees, float period)
         {
             Tween.RotateBy(rt, degrees, period, Ease.Linear).Loop(-1, false);
@@ -668,31 +680,35 @@ namespace GlimmerGrove
             list.sizeDelta = new Vector2(0f, height);
             list.anchoredPosition = Vector2.zero;
 
-            // The board: the kit's notched panel, the same for a live rung and a locked one -
-            // what says locked is the writing on it, in steel rather than cream.
-            var face = (RectTransform)RankKit.Lay("Board", list, RankKit.Board, new Vector2(PlateW, height),
-                                                  Top, new Vector2(0f, -height * .5f)).transform;
+            // The board: the cartoon kit's notice board, the same for a live rung and a locked
+            // one - what says locked is the writing on it, in steel rather than cream. It stands
+            // `TitleRise` under the band's top so the ribbon over its cap is not clipped.
+            float boardH = height - TitleRise;
+            var face = (RectTransform)RankKit.Lay("Board", list, RankKit.Board, new Vector2(PlateW, boardH),
+                                                  Top, new Vector2(0f, -TitleRise - boardH * .5f)).transform;
 
-            float headY = height * .5f - PlateHead * .5f;
+            float capY = boardH * .5f - RankKit.BoardCap * .5f;
             float wellW = PlateW - WellInset * 2f;
 
-            // The kit's tab hanging from the board's top edge, with the title on it. One caption
-            // for every rung, since what the board asks is the same question of each of them.
-            var tab = RankKit.Lay("Tab", face, RankKit.Tab, new Vector2(TabW, TabH), Top,
-                                  new Vector2(0f, -TabH * .5f));
+            // The kit's ribbon over the cap, with the title on it. One caption for every rung,
+            // since what the board asks is the same question of each of them.
+            var ribbon = UIKit.Img("Ribbon", face, Art.S("Ui/" + Skins.Title), Color.white,
+                                   new Vector2(RibbonW, RibbonH), Centre, new Vector2(0f, capY));
+            ribbon.preserveAspect = true;
             UIKit.OneLineLabel(
-                UIKit.Titled("Title", tab.transform, Loc.Get("ui.ranks.requirements").ToUpperInvariant(),
+                UIKit.Titled("Title", ribbon.transform, Loc.Get("ui.ranks.requirements").ToUpperInvariant(),
                              TabPt, Pal.Cream, TextAnchor.MiddleCenter,
-                             new Vector2(TabW * .8f, TabH * .6f), Centre, new Vector2(0f, TabH * .07f), 3f, 3f),
-                TabW * .8f, TabPt, 16);
+                             new Vector2(RibbonW * .66f, RibbonH * .5f), Centre,
+                             new Vector2(0f, RibbonH * Skins.RibbonLift), 3f, 3f),
+                RibbonW * .66f, TabPt, 16);
 
-            // The count of lines met, at the head's right.
+            // The count of lines met, on the cap's right, clear of the rivets.
             _plateCount = UIKit.Shrinkable(
-                UIKit.Titled("Count", face, string.Empty, 28, Pal.Cream, TextAnchor.MiddleRight,
-                             new Vector2(CountW, 34f), Centre,
-                             new Vector2(wellW * .5f - CountW * .5f, headY - 6f), 0f, 2f), 15);
+                UIKit.Titled("Count", face, string.Empty, 30, Pal.Cream, TextAnchor.MiddleRight,
+                             new Vector2(CountW - 40f, 38f), Centre,
+                             new Vector2(wellW * .5f - (CountW - 40f) * .5f - 24f, capY + 2f), 0f, 3f), 15);
 
-            float lineY = height * .5f - PlateHead - LineH * .5f - 2f;
+            float lineY = boardH * .5f - RankKit.BoardCap - CapGap - LineH * .5f;
             foreach (var req in lines)
             {
                 float wellLeft = -wellW * .5f;
@@ -739,7 +755,7 @@ namespace GlimmerGrove
                 lineY -= LineH;
             }
 
-            // The band scrolls only if this rung's plate is taller than it — which no shipped
+            // The band scrolls only if this rung's plate is taller than it - which no shipped
             // rung is, and a retune that makes one so still reads rather than clips.
             if (height > _plateBand.sizeDelta.y + .5f)
             {
@@ -780,7 +796,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// A rung chosen: the stage redresses itself and the seat rises. A gesture, so it is
-        /// allowed to move — the one place on this page a change is animated rather than
+        /// allowed to move - the one place on this page a change is animated rather than
         /// repainted.
         /// </summary>
         void Choose(int ordinal)
@@ -938,7 +954,7 @@ namespace GlimmerGrove
 
             _eyebrow.text = EyebrowOf(standing).ToUpperInvariant();
             // A locked rung's eyebrow is solid orange rather than the steel its other writing
-            // wears — the one word on the stage saying "not yet", at the owner's instruction
+            // wears - the one word on the stage saying "not yet", at the owner's instruction
             // (2026-09-27). The alpha is kept because the swap fades the eyebrow in.
             var ink = live ? Pal.Lift(metal, .25f) : Pal.Amber;
             _eyebrow.color = Pal.A(ink, _eyebrow.color.a);
@@ -961,7 +977,7 @@ namespace GlimmerGrove
             _spark.enabled = share > .004f;
         }
 
-        /// <summary>The spark at the head of the fill — clockwise from the bottom, as the fill runs.</summary>
+        /// <summary>The spark at the head of the fill - clockwise from the bottom, as the fill runs.</summary>
         void PlaceSpark(float fill)
         {
             float a = fill * Mathf.PI * 2f;

@@ -11,18 +11,18 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// <b>The list is the screen.</b> The player's own standing used to be drawn above it in a
-    /// box of its own — their grove's worth and where that put them — and it is gone: the same
+    /// box of its own - their grove's worth and where that put them - and it is gone: the same
     /// two numbers are on the profile, the row a player is looking for is lit in the list
     /// (<see cref="Row.Bind"/>), and a panel restating what the screen below it already says is
     /// a header the player scrolls past to reach the thing they came for.
     /// </para>
     /// <para>
     /// <b>One board, and the tabs went with the other one.</b> The Endless Watch is how far
-    /// anybody has held the line on the Infinite lane (invariant 43). The finest groves — what
-    /// a keeper has <em>built</em> — is <b>held</b> while the Grovement is rebuilt, and a hold
+    /// anybody has held the line on the Infinite lane (invariant 43). The finest groves - what
+    /// a keeper has <em>built</em> - is <b>held</b> while the Grovement is rebuilt, and a hold
     /// is drawn by taking the board away rather than by greying a tab: a tab that cannot be
     /// tapped is the broken button invariant 16o refuses, and a lone tab is a caption wearing a
-    /// control's clothes. <b>Nothing server-side moved</b> — <c>LeaderboardBoard.Global</c> is
+    /// control's clothes. <b>Nothing server-side moved</b> - <c>LeaderboardBoard.Global</c> is
     /// still a live id and <c>BOARD_IDS</c> still names it, so the document goes on being
     /// written and is never pruned (invariant 19k), and putting the board back is this screen
     /// alone. A board id that had been <em>spent</em> could not come back at all.
@@ -31,18 +31,18 @@ namespace GlimmerGrove
     /// <b>What used to stand where the second tab was is MY LEAGUE, and it is gone for good.</b>
     /// Nine more boards, nine queries and nine counts a night bought a second cut of the
     /// <em>same</em> number the global board is ordered on, into bands nothing in the game ever
-    /// named — and "where do I stand" was already answered exactly by the published
+    /// named - and "where do I stand" was already answered exactly by the published
     /// distribution (<see cref="GroveRanks"/>, invariant 19c), which is what the profile prints.
     /// Those ids are spent; the global board's is not.
     /// </para>
     /// <para>
     /// What is still deliberately missing is a "keepers near you" list, which needs an exact
-    /// global ordering — the one thing this design refuses to maintain, and the reason the
+    /// global ordering - the one thing this design refuses to maintain, and the reason the
     /// whole feature costs three scheduled documents.
     /// </para>
     /// <para>
     /// <b>Every refusal renders a sentence.</b> No backend, no session, opted out, nothing
-    /// published yet, a board that has never been built, a fetch that failed — six states, and
+    /// published yet, a board that has never been built, a fetch that failed - six states, and
     /// each says which one it is. That is <c>AdOfferState</c>'s rule and it is here for its
     /// reason: a screen that shows an empty list for six different causes teaches players that
     /// the feature is broken.
@@ -66,7 +66,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>132 while a row carried a companion's head, 176 now.</b> A portrait is a face and
         /// reads at any size; a rank badge is a piece of shaped metal whose whole meaning is in
-        /// its silhouette — bronze against silver against gold, wings against spikes — and at
+        /// its silhouette - bronze against silver against gold, wings against spikes - and at
         /// 84 units the seven of them are one smudge. The badge is cut at 256 and drawn at 132
         /// on the map and the ranks page (<c>RankBadge.MarkSize</c>, <c>RanksScreen</c>), so a
         /// row that draws it smaller than every other screen in the game is the one place a
@@ -85,7 +85,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Breathing room between the last row and the nav bar. The boards are a tab now, so
-        /// the bar is drawn here exactly as it is on the shop, and the list stops above it —
+        /// the bar is drawn here exactly as it is on the shop, and the list stops above it -
         /// a row half-covered by the bar is a row nobody can tap.
         /// </summary>
         const float BottomPad = 24f;
@@ -123,13 +123,13 @@ namespace GlimmerGrove
             // **Nothing is opened for the badges, and that is the point of them being badges.**
             // A row used to draw a companion, whose art is a scope this screen had to hold open
             // for its whole life and repaint when it arrived (invariant 7b). The seven rank
-            // badges are small and global — they are already resident for the map's own readout
-            // — so a hundred rows cost no scope, no hold, no arrival repaint and no white
+            // badges are small and global - they are already resident for the map's own readout
+            // - so a hundred rows cost no scope, no hold, no arrival repaint and no white
             // rectangle while a load is in flight.
 
             // Asked for on arrival rather than at boot, so a player who never opens this
-            // screen never pays for the read. Nothing here draws it any more — the profile is
-            // where the percentile is said — but this is still the screen a player reaches
+            // screen never pays for the read. Nothing here draws it any more - the profile is
+            // where the percentile is said - but this is still the screen a player reaches
             // first, and the fetch is once a session however many times it is asked for.
             GroveBoard.BeginRanksRefresh();
 
@@ -181,7 +181,7 @@ namespace GlimmerGrove
 
             // Home, not the Grovement. This is a tab of its own now and can be reached from
             // the bar on any screen, so the one destination that is right however the player
-            // arrived is the way back — ShopScreen's rule, and the other tabs are one tap
+            // arrived is the way back - ShopScreen's rule, and the other tabs are one tap
             // away in the bar below regardless.
             UIKit.IconButton("Back", chrome, Skins.Nav, "ic_left", new Vector2(112f, 112f),
                              new Vector2(0f, 1f), new Vector2(92f, -104f),
@@ -204,7 +204,7 @@ namespace GlimmerGrove
             // reasons.** The caption said how many keepers the board holds, which is a fact
             // about the population rather than about the player's standing. The tabs chose
             // between two boards and there is one, so what they would draw now is a pair of
-            // plates of which one refuses and one re-enters the screen you are standing on —
+            // plates of which one refuses and one re-enters the screen you are standing on -
             // and a lone tab is a caption that looks like a control. The board this screen
             // draws is named by the rows themselves (`Row.Bind` prints the figure it is
             // ordered on) and by the info panel in the corner.
@@ -243,7 +243,7 @@ namespace GlimmerGrove
             _failed = !result.Ok;
             _board = board ?? LeaderboardBoard.None;
 
-            // A new list, so it animates. A repaint of the same list does not — the rule
+            // A new list, so it animates. A repaint of the same list does not - the rule
             // GridView exists to keep, and the reason the shop stopped flickering.
             _grid?.Show(_board.Entries.Count);
             PaintEmpty();
@@ -260,7 +260,7 @@ namespace GlimmerGrove
         /// <summary>
         /// Six ways for a list to be empty, and each says which one it is.
         ///
-        /// A board with rows on it is the only case that draws nothing here — which is why the
+        /// A board with rows on it is the only case that draws nothing here - which is why the
         /// label is cleared last rather than first.
         /// </summary>
         void PaintEmpty()
@@ -277,7 +277,7 @@ namespace GlimmerGrove
             // are true when the radio is off; "the boards could not be reached, try again in a
             // moment" reads as *the game is broken* to somebody sitting in a tunnel, and it is
             // the reading they keep, because they will not try again in a moment. The radio is
-            // asked *after* the request has already failed rather than before it is made —
+            // asked *after* the request has already failed rather than before it is made -
             // see `Net`, which may never refuse anything, only explain something that has.
             else if (_failed)
                 _empty.text = Loc.Get(Net.Offline ? "ui.board.no_connection" : "ui.board.failed");
@@ -294,7 +294,7 @@ namespace GlimmerGrove
         /// stranger's grovement; then there were two destinations and <c>KeeperOverlay</c> was
         /// the chooser between them, because a row that silently picked one would leave the
         /// other reachable from nowhere. The grovement is <b>held</b> while it is rebuilt, so
-        /// there is one door left — and a chooser with one door in it is a confirmation for a
+        /// there is one door left - and a chooser with one door in it is a confirmation for a
         /// free navigation, which this game keeps to exactly three (none of them this).
         /// </para>
         /// <para>
@@ -390,7 +390,7 @@ namespace GlimmerGrove
                 _name.text = _entry.Name;
 
                 // What a row says is the board's decision and not the row's, because every row
-                // on one list says the same thing — see `LeaderboardBoard.IsEndless`. The figure
+                // on one list says the same thing - see `LeaderboardBoard.IsEndless`. The figure
                 // a board is *ordered* on is the one it has to print, or the list reads as
                 // shuffled: a wave board drawn with grove worth on it would descend by a number
                 // nobody can see and ascend by one they can.
@@ -405,14 +405,14 @@ namespace GlimmerGrove
                 // **The badge is the server's answer, and an absent one draws nothing.** Below
                 // the first rung is an ordinary state and so is a card published before this
                 // server learned to derive a rung, and neither may be drawn as a greyed picture
-                // of somebody else's badge — that would be a sentence the row does not mean.
+                // of somebody else's badge - that would be a sentence the row does not mean.
                 // `RankArt` switches the node off rather than handing it a null sprite, which
                 // is a white rectangle (invariant 7b) and would be one on every row at once.
                 RankArt.Paint(_badge, _entry.RungId);
 
                 // The player's own row is lit rather than merely present. A list somebody is
                 // on and cannot find is a list that did not answer the question they opened it
-                // with — and this is the one row on the screen they are looking for.
+                // with - and this is the one row on the screen they are looking for.
                 bool mine = !string.IsNullOrEmpty(CloudState.UserId)
                          && _entry.OwnerId == CloudState.UserId;
 

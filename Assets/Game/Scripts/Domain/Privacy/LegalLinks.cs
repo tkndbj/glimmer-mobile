@@ -8,7 +8,7 @@ namespace GlimmerGrove.Privacy
     /// policy to be reachable *inside* the app as well as named in the store metadata, and a
     /// link only in App Store Connect is a documented rejection. Google Play asks for the same
     /// pages on the listing, and Guideline 1.2 asks that an app carrying user-generated content
-    /// — which a public leaderboard of keeper names is — publish a contact route. One row of
+    /// - which a public leaderboard of keeper names is - publish a contact route. One row of
     /// three links in Settings answers all three obligations.
     /// </para>
     /// <para>
@@ -22,7 +22,7 @@ namespace GlimmerGrove.Privacy
     /// <para>
     /// <b>The host is <c>www</c>, deliberately.</b> The site is the publisher's own
     /// (Tekoworld) and Vercel serves www and 308-redirects the apex to it, so the apex would
-    /// work and would spend a redirect on every open — and the same www host is what belongs
+    /// work and would spend a redirect on every open - and the same www host is what belongs
     /// in the Developer website field of both store listings, so that ad crawlers fetch
     /// <c>app-ads.txt</c> directly rather than through the hop. One spelling everywhere is
     /// the point; the website's <c>site.url</c> carries the same value.
@@ -48,7 +48,7 @@ namespace GlimmerGrove.Privacy
 
         /// <summary>
         /// Where a player reaches a person. This is the "published contact information" half of
-        /// Guideline 1.2, which the reporting flow does not satisfy on its own — a report is a
+        /// Guideline 1.2, which the reporting flow does not satisfy on its own - a report is a
         /// way to flag somebody else, not a way to reach us.
         /// </summary>
         public const string Support = Site + "/support";
@@ -58,7 +58,7 @@ namespace GlimmerGrove.Privacy
         ///
         /// <para>
         /// Every value here is a compile-time constant, so this can only fail if somebody edits
-        /// one badly — which is precisely the case worth catching, because the symptom is a
+        /// one badly - which is precisely the case worth catching, because the symptom is a
         /// control that silently does nothing on a device and cannot be seen in the Editor.
         /// <c>LegalLinkTests</c> asks it of all three.
         /// </para>

@@ -16,7 +16,7 @@ namespace GlimmerGrove.AssetPipeline
         /// through <see cref="AssetLibrary.AtlasSprite"/>.
         ///
         /// Its own kind rather than a sprite, because what loads is neither a Texture2D nor a
-        /// Sprite and asking for either would hand back null — the same trap the kind field
+        /// Sprite and asking for either would hand back null - the same trap the kind field
         /// exists for. See <c>AssetManifest.BrowseAtlas</c> for why the grove browses through
         /// one.
         /// </summary>

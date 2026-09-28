@@ -14,7 +14,7 @@ namespace GlimmerGrove.Tests
     /// <b>Every case here is offline and none of them touches <c>JsonUtility</c>, a
     /// <c>MonoBehaviour</c> or a clock.</b> That is deliberate and it is invariant 29e: a
     /// fixture that needs the Editor is the one nobody runs on the way past, and this is the
-    /// arithmetic a whole feature's security rests on — the id a phone writes into a save row
+    /// arithmetic a whole feature's security rests on - the id a phone writes into a save row
     /// and a grant-log key, and the bound that decides how much a forged save can extract.
     /// </para>
     /// <para>
@@ -66,7 +66,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// A clock before the first cycle answers "no cycle", never cycle nought.
         ///
-        /// C#'s integer division truncates toward zero, so <c>-1 / period</c> is <c>0</c> — a
+        /// C#'s integer division truncates toward zero, so <c>-1 / period</c> is <c>0</c> - a
         /// device whose clock is a day slow, or a build shipped a week before the season opens,
         /// would otherwise be inside cycle nought early and earning marks toward it.
         /// </summary>
@@ -108,7 +108,7 @@ namespace GlimmerGrove.Tests
         /// The one rule that keeps invariant 47c true on a calendar that never ends.
         ///
         /// A forged save's reach used to be bounded by the ladder being a finite list; a
-        /// recurrence has no list, so what bounds it is the clock — a cycle that has not opened
+        /// recurrence has no list, so what bounds it is the clock - a cycle that has not opened
         /// does not exist, and the most any save can extract is one ladder per elapsed period.
         /// </summary>
         [Test]
@@ -178,7 +178,7 @@ namespace GlimmerGrove.Tests
         /// Every other spelling names nothing.
         ///
         /// Two spellings of one cycle would be two save rows and two sets of grant-log keys for
-        /// one ladder — which reads as a reset to the player who hits it and as nothing at all
+        /// one ladder - which reads as a reset to the player who hits it and as nothing at all
         /// to everybody else.
         /// </summary>
         [Test]
@@ -210,7 +210,7 @@ namespace GlimmerGrove.Tests
         /// An id is built with the invariant culture, always.
         ///
         /// A device set to a locale whose digits are not ASCII would otherwise write a save row
-        /// and a claim id no other device can read and no server can parse — and it would do it
+        /// and a claim id no other device can read and no server can parse - and it would do it
         /// silently, on that player's phone only.
         /// </summary>
         [Test]
@@ -244,7 +244,7 @@ namespace GlimmerGrove.Tests
         /// A negative index cannot reach a key with a minus sign in it.
         ///
         /// C#'s <c>%</c> keeps the sign of the dividend, so the naive form would build
-        /// <c>ui.season.-5.name</c> — a key that resolves to nothing, drawn as an empty banner
+        /// <c>ui.season.-5.name</c> - a key that resolves to nothing, drawn as an empty banner
         /// on the hub's largest card.
         /// </summary>
         [Test]
@@ -295,7 +295,7 @@ namespace GlimmerGrove.Tests
 
             // Asserted through the derivation rather than against a spelled-out key, and that
             // is not squeamishness: a season's name key is *derived*, so the string table has
-            // no entry for an id invented in a fixture — and `loc.py` scans this source for
+            // no entry for an id invented in a fixture - and `loc.py` scans this source for
             // key-shaped literals and refuses one it cannot find (invariant 6). Writing the
             // rule out is also the stronger assertion of the two.
             Assert.AreEqual(GroveEvent.DefaultNameKey("yule_feast"), season.NameKey);

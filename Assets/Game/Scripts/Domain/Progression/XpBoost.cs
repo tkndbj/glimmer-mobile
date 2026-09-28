@@ -20,8 +20,8 @@ namespace GlimmerGrove.Progression
         /// The most bonus XP the ledger may ever hold, whatever a content file says.
         ///
         /// <para>
-        /// <b>This is not the bound that matters</b> — that one is proportional and lives in
-        /// <see cref="XpBoost.BonusFrom"/> — and saying so here is the point of the constant. A
+        /// <b>This is not the bound that matters</b> - that one is proportional and lives in
+        /// <see cref="XpBoost.BonusFrom"/> - and saying so here is the point of the constant. A
         /// flat ceiling on a stored number is a weak defence, because it has to be set high
         /// enough for the best honest player and is therefore also high enough for a forger. What
         /// really holds this down is that the bonus is clamped to a <em>fraction of XP the account
@@ -62,7 +62,7 @@ namespace GlimmerGrove.Progression
         ///
         /// <b>The tracks add rather than the larger one winning</b>, and that is a decision with a
         /// reason: if the best won, watching an advert during a bought window would pay nothing,
-        /// so the offer would have to be hidden — and an offer that is sometimes a trap is worse
+        /// so the offer would have to be hidden - and an offer that is sometimes a trap is worse
         /// than one that is always worth taking. Adding also composes, which is what a third
         /// source will need.
         /// </summary>
@@ -81,7 +81,7 @@ namespace GlimmerGrove.Progression
     }
 
     /// <summary>
-    /// What an XP boost is worth and how long it lasts — content, not code.
+    /// What an XP boost is worth and how long it lasts - content, not code.
     ///
     /// <para>
     /// Published with the curve for <see cref="EndlessRewardTable"/>'s reason and one sharper: a
@@ -145,7 +145,7 @@ namespace GlimmerGrove.Progression
         public int SurgePercent { get; }
 
         /// <summary>
-        /// The most every running window may add together — the cap on the sum, and the factor
+        /// The most every running window may add together - the cap on the sum, and the factor
         /// the stored bonus is clamped against. See <see cref="XpBoostLimits.MaxPercent"/>.
         /// </summary>
         public int MaxPercent { get; }
@@ -236,7 +236,7 @@ namespace GlimmerGrove.Progression
 
         /// <summary>
         /// One authored number: unwritten inherits, out of range is clamped and named.
-        /// <c>HintRuleTable</c>'s reader, and clamped for its reason — refusing one scalar would
+        /// <c>HintRuleTable</c>'s reader, and clamped for its reason - refusing one scalar would
         /// mean discarding the whole block.
         /// </summary>
         static int Read(int authored, int fallback, int min, int max, string name, List<string> problems)
@@ -264,8 +264,8 @@ namespace GlimmerGrove.Progression
     /// through.
     ///
     /// <para>
-    /// <b>Why a boost on XP cannot simply multiply XP.</b> XP is <em>derived</em> — recomputed
-    /// from the star ledger every time it is asked for (invariant 9) — so there is no running
+    /// <b>Why a boost on XP cannot simply multiply XP.</b> XP is <em>derived</em> - recomputed
+    /// from the star ledger every time it is asked for (invariant 9) - so there is no running
     /// total to scale. Scaling the derived figure while a window is open would make a player's
     /// level <em>fall</em> when it closed, which every floor in this project exists to prevent. So
     /// the bonus has to be worked out at the moment it is earned and remembered, and what is
@@ -275,7 +275,7 @@ namespace GlimmerGrove.Progression
     /// <para>
     /// <b>And why that is not the thing <c>AdPlacement.WinBonus</c> refused.</b> That comment
     /// rejects multiplying <em>what one run earned</em> in credits, because doing so means storing
-    /// which runs were doubled — a forgeable per-level set that pays money. This stores no set and
+    /// which runs were doubled - a forgeable per-level set that pays money. This stores no set and
     /// no per-level anything: it is a single total, it pays <b>XP and never currency</b> (credits
     /// still derive from the star ledger alone), and it is clamped to a fraction of XP the account
     /// can prove. A forged figure moves a keeper level inside an honest range and moves no
@@ -283,7 +283,7 @@ namespace GlimmerGrove.Progression
     /// </para>
     /// <para>
     /// <b>The seam is <see cref="Bank"/>, and it is the only multiplier in the game.</b> Anything
-    /// that pays XP hands its figure to it and is boosted for free — that is what makes a future
+    /// that pays XP hands its figure to it and is boosted for free - that is what makes a future
     /// source "just work", and it is why no other file may compute a percentage of XP.
     /// </para>
     /// </summary>
@@ -308,8 +308,8 @@ namespace GlimmerGrove.Progression
         /// What every running window adds together, as a percentage, at a given moment.
         ///
         /// Summed and then capped (<see cref="XpBoostTable.MaxPercent"/>). A percentage rather
-        /// than a factor because nothing that decides a payment here may be a float — the
-        /// runtimes disagree about them — so the multiply is integer throughout and the divide
+        /// than a factor because nothing that decides a payment here may be a float - the
+        /// runtimes disagree about them - so the multiply is integer throughout and the divide
         /// happens once, at the end, in <see cref="BonusOn"/>.
         /// </summary>
         public static int PercentAt(long now)
@@ -334,7 +334,7 @@ namespace GlimmerGrove.Progression
         /// <summary>
         /// Seconds until every running window has closed, for a countdown. 0 when none is.
         ///
-        /// The <em>later</em> of the two deadlines, because that is when the readout should stop —
+        /// The <em>later</em> of the two deadlines, because that is when the readout should stop -
         /// not when the percentage next changes. A pill that vanished at the first expiry while a
         /// boost was still running is the stale-readout fault invariant 44j is written about.
         /// </summary>
@@ -363,7 +363,7 @@ namespace GlimmerGrove.Progression
         /// <b>Derived from the one stored deadline rather than costing a field of its own</b>
         /// (invariant 48c's shape): the window ran from <c>until - watchedHours</c>, so the
         /// cooldown is up at <c>until - watchedHours + cooldownHours</c>. One number, so "when
-        /// does my boost end" and "when may I watch again" cannot disagree — and nothing but
+        /// does my boost end" and "when may I watch again" cannot disagree - and nothing but
         /// <see cref="GrantWatched"/> ever writes it, which is what keeps the derivation exact.
         /// </para>
         /// <para>
@@ -400,7 +400,7 @@ namespace GlimmerGrove.Progression
         ///
         /// <b>Extends rather than replaces</b>, which is <c>Wallet.GrantHeartBoost</c>'s rule and
         /// for its reason: a window won while one is running must not take time away from somebody
-        /// for doing well twice. The cooldown is enforced by the caller, not here — a grant that
+        /// for doing well twice. The cooldown is enforced by the caller, not here - a grant that
         /// has already been paid for must never be silently dropped, which is the fault invariant
         /// 10d describes in the shape it can take on this side of the wire.
         /// </summary>
@@ -415,7 +415,7 @@ namespace GlimmerGrove.Progression
 
         // -------------------------------------------------------------- the bought window
         /// <summary>
-        /// Opens or extends the bought window — the track with no cooldown.
+        /// Opens or extends the bought window - the track with no cooldown.
         ///
         /// <b>A gift lands here rather than on the watched track</b>, and that is what keeps
         /// <see cref="WatchedReadyAt"/> honest: the cooldown is derived from the watched deadline,
@@ -455,7 +455,7 @@ namespace GlimmerGrove.Progression
         ///
         /// <para>
         /// <b>Integer throughout, and the divide happens once.</b> Nothing that decides a payment
-        /// may be a float — .NET, Mono and IL2CPP disagree about them — and a percentage applied
+        /// may be a float - .NET, Mono and IL2CPP disagree about them - and a percentage applied
         /// as <c>x * 1.5f</c> would pay a different figure on a phone than on the server. The
         /// hundredths are kept and divided at the end, which is the rule this project keeps for
         /// every factor.
@@ -480,7 +480,7 @@ namespace GlimmerGrove.Progression
         /// </para>
         /// <para>
         /// Returns the bonus alone rather than the total, so a caller can print "+N" beside the
-        /// base figure — a multiplier the player cannot see is one they have no reason to buy.
+        /// base figure - a multiplier the player cannot see is one they have no reason to buy.
         /// </para>
         /// </summary>
         public static long Bank(long baseXp)
@@ -503,12 +503,12 @@ namespace GlimmerGrove.Progression
         /// only ever have multiplied XP that was actually paid, so a bonus above
         /// <c>provable x maxPercent%</c> is arithmetically impossible however it got into the
         /// file. That clamps a forged figure to a multiple of real progress instead of to some
-        /// generous absolute ceiling — the same shape <c>groveWorth</c> uses when it clamps a
+        /// generous absolute ceiling - the same shape <c>groveWorth</c> uses when it clamps a
         /// grove to what the account could afford (invariant 19a), and a far stronger bound than
         /// <see cref="XpBoostLimits.HardMaxBonusXp"/> behind it.
         /// </para>
         /// <para>
-        /// <paramref name="provableXp"/> is the star ledger's XP plus the Infinite lane's — every
+        /// <paramref name="provableXp"/> is the star ledger's XP plus the Infinite lane's - every
         /// source the bonus could have been a percentage <em>of</em>. The server computes the
         /// identical clamp from the same two figures; if the two ever disagree, a published card
         /// silently drops whatever the lower keeper level gated (19a).

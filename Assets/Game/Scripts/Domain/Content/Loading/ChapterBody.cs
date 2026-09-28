@@ -6,7 +6,7 @@ namespace GlimmerGrove.Content
     /// <summary>
     /// One chapter, fully read: its shared art and every level definition inside it.
     ///
-    /// This is the expensive half of the catalog — grids, tuning, colours — and it is
+    /// This is the expensive half of the catalog - grids, tuning, colours - and it is
     /// scoped exactly the way chapter art is, loaded on entering a chapter and dropped
     /// on leaving it. That symmetry is deliberate: a chapter is the unit of delivery,
     /// the unit of shared art and now also the unit of parsed content, so all three
@@ -50,7 +50,7 @@ namespace GlimmerGrove.Content
         ///
         /// The index is the authority on order, so a body that happens to list its
         /// levels differently does not change what the player sees. A level the index
-        /// names but the body does not carry is skipped — validation fails the build on
+        /// names but the body does not carry is skipped - validation fails the build on
         /// exactly that case, so at runtime it can only mean a partial download.
         /// </summary>
         public IEnumerable<LevelDefinition> InIndexOrder(IReadOnlyList<LevelId> order)

@@ -12,7 +12,7 @@ namespace GlimmerGrove.Challenges
     /// The published challenge slate, loaded once at boot beside <c>ProgressionRules</c> and
     /// read by the screens.
     ///
-    /// <b>Its own static, its own file, its own version</b> — see <see cref="ChallengeTableDto"/>
+    /// <b>Its own static, its own file, its own version</b> - see <see cref="ChallengeTableDto"/>
     /// for why a challenge shares nothing with the reward table. A missing or unreadable file
     /// leaves the slate empty, which the hub's door reads as shut; it never falls back to a
     /// built-in challenge, because there is none (invariant 4: content is data).

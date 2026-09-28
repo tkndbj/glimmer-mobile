@@ -26,7 +26,7 @@ namespace GlimmerGrove
         public static Sprite[] Frames(string folder) => AssetLibrary.Frames(AssetManifest.ArtRoot + folder);
 
         /// <summary>
-        /// The credits coin, face on and still — the glyph to put beside a price in coins.
+        /// The credits coin, face on and still - the glyph to put beside a price in coins.
         ///
         /// <para>
         /// It is frame zero of the <c>Ui/Coin</c> flipbook because credits have no still
@@ -36,7 +36,7 @@ namespace GlimmerGrove
         /// because it is drawn large and watched; a caption read at a glance cannot.
         /// </para>
         /// <para>
-        /// Here rather than copied into each buy panel — there are four, and the point of one
+        /// Here rather than copied into each buy panel - there are four, and the point of one
         /// coin is that they are all the same coin. Null when the frames have not arrived,
         /// which every caller renders as no glyph rather than as a white square (invariant
         /// 7b); in practice <c>Ui/Coin</c> is in <c>AssetManifest</c>'s preloaded set, so the
@@ -98,7 +98,7 @@ namespace GlimmerGrove
         ///
         /// Everything else generated here is a white mask coloured by <c>Image.color</c>,
         /// which is what makes one shape serve a dozen tints. A glyph built from several
-        /// colours at once cannot work that way — a tint multiplies, so the darkest part of
+        /// colours at once cannot work that way - a tint multiplies, so the darkest part of
         /// the sprite decides the result and the whole thing goes to mud.
         /// </summary>
         static Sprite MakeRGBA(string key, int w, int h, System.Func<float, float, Color> paint)
@@ -147,7 +147,7 @@ namespace GlimmerGrove
         static float Cover(float d) => Mathf.Clamp01(.5f - d / Feather);
 
         /// <summary>
-        /// A capsule whose radius changes along its length — a finger, or a thumb.
+        /// A capsule whose radius changes along its length - a finger, or a thumb.
         ///
         /// The radius is interpolated rather than solved for the true slanted cone, which
         /// understates the distance slightly along a strong taper. That is invisible here: the
@@ -196,7 +196,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>For a panel something else is stacked directly under.</b> A fully rounded plate
         /// sitting on a square shelf leaves two notches where the corners curve away from it, and
-        /// at the foot of a board they read as a gap rather than as a join — which is exactly what
+        /// at the foot of a board they read as a gap rather than as a join - which is exactly what
         /// they are. Rounding the end that is open and squaring the end that meets something is
         /// the general rule; this is the first place it was needed.
         /// </para>
@@ -335,7 +335,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>It exists because a circle was already taken.</b> A bead was first drawn with
         /// <see cref="Ring"/>, which is also what a sleeping critter wears to say which colour it
-        /// wants — so a grove came out carrying eleven rings in six colours, five of them places
+        /// wants - so a grove came out carrying eleven rings in six colours, five of them places
         /// to go through and six of them creatures to reach, told apart only by whether something
         /// was standing inside. That is a distinction you have to look for, on the one screen
         /// where reading the board at a glance is the entire game. A hexagon is a third
@@ -369,7 +369,7 @@ namespace GlimmerGrove
         /// <para>
         /// Generated for the reason <see cref="Bloom"/> and <see cref="PrismRing"/> are.
         /// This is the glyph on the continue offer, which is shown at the instant a run is
-        /// lost — an <c>Image</c> whose sprite has not finished loading is a white
+        /// lost - an <c>Image</c> whose sprite has not finished loading is a white
         /// rectangle rather than a blank (invariant 7b), and a white rectangle on the panel
         /// asking somebody to watch a video is the worst possible moment to look broken. It
         /// also needs no address, no group and no audit entry, which is the whole argument
@@ -379,7 +379,7 @@ namespace GlimmerGrove
         /// The hands are fixed at ten past ten. That is the position every watch in every
         /// advertisement has worn for a century, and the reason is the same here: it frames
         /// the face symmetrically and reads as a clock at 48px, where a vertical pair reads
-        /// as a line. Nothing about this dial tracks a real time — it is a noun, not a
+        /// as a line. Nothing about this dial tracks a real time - it is a noun, not a
         /// readout, and a hand that moved would imply the offer was itself on a countdown.
         /// </para>
         /// </summary>
@@ -436,7 +436,7 @@ namespace GlimmerGrove
         /// <para>
         /// It exists because a flat cream ring was doing two jobs. Every other halo on a
         /// board is an <see cref="Pal.EnergyColour"/>, so cream read as a fifth colour
-        /// rather than as "no colour required" — and that only became ambiguous on the first
+        /// rather than as "no colour required" - and that only became ambiguous on the first
         /// board where an unfussy critter sat beside a fussy one, which is exactly the board
         /// where it matters. Three arcs say "any of these" in a way no translation has to
         /// carry (invariant 6), and the arcs are the actual channels rather than a rainbow,
@@ -495,7 +495,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>A fourth silhouette, and it had to be one.</b> A mote is a filled disc, a lens is a
-        /// rim with a four-point glint in it, and a critter is a circle — so a whorl drawn as any
+        /// rim with a four-point glint in it, and a critter is a circle - so a whorl drawn as any
         /// of those would read as a dim one of them, on the one screen where reading the board at
         /// a glance is the entire game. A spiral is the shape everybody already reads as
         /// <em>things go in here</em>, and it is legible at a cell's width on a phone, which a
@@ -508,13 +508,13 @@ namespace GlimmerGrove
         /// 7b).
         /// </para>
         /// <para>
-        /// The arms taper outward and the hub is solid, so it holds together when it is spun —
+        /// The arms taper outward and the hub is solid, so it holds together when it is spun -
         /// which is what the view does with it, and the reason the arm count is two rather than
         /// three: two arms turning read as a rotation, and three read as a flicker.
         /// </para>
         /// <para>
         /// <b>The three numbers were chosen by looking at it</b>
-        /// (<c>scratchpad/render_whorl.py</c>, which draws this arithmetic without Unity — see
+        /// (<c>scratchpad/render_whorl.py</c>, which draws this arithmetic without Unity - see
         /// <c>Tools/render_wheel.py</c> for the same bargain). Nothing provable about a generated
         /// sprite can say whether it reads as a mouth: at <c>turns</c> .58 the two arms met after
         /// most of a turn and closed the shape into a plain ring, which is a silhouette this mode
@@ -562,7 +562,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>It is the rule drawn on the board rather than said in a panel.</b> A whorl draws in
         /// the cells to its <em>left and right</em> and nothing else, and there is no way to
-        /// infer that from a spiral — invariant 20g's complaint exactly, and the cheapest
+        /// infer that from a spiral - invariant 20g's complaint exactly, and the cheapest
         /// possible answer to it. Inward rather than outward: the whorl pulls, and an arrow
         /// pointing out would say it throws, which is what the lens does.
         /// </para>
@@ -618,7 +618,7 @@ namespace GlimmerGrove
         /// <para>
         /// One of the two generated shapes that is not a white mask, for the reason
         /// <see cref="Gem"/> is the other: <c>Image.color</c> multiplies, so a layer holding
-        /// more than one colour cannot be a mask tinted at the call site — the darkest stop
+        /// more than one colour cannot be a mask tinted at the call site - the darkest stop
         /// would decide the result.
         /// </para>
         /// <para>
@@ -658,12 +658,12 @@ namespace GlimmerGrove
         /// <para>
         /// <b>It carries its own colour</b>, for the reason <see cref="Gradient"/> and
         /// <see cref="Gem"/> do: <c>Image.color</c> multiplies, so a layer holding more than one
-        /// colour cannot be a white mask tinted at the call site — the darkest corner would
+        /// colour cannot be a white mask tinted at the call site - the darkest corner would
         /// decide the result. The <c>Image</c> drawing this is left at white and faded by alpha.
         /// </para>
         /// <para>
         /// 64 square rather than the screen's size. The texture is bilinear and clamped, so the
-        /// hardware does the interpolation when it is stretched to fill a canvas — a wash has no
+        /// hardware does the interpolation when it is stretched to fill a canvas - a wash has no
         /// detail to lose, and generating one at a phone's real resolution would be four
         /// megabytes of texture to say what sixteen kilobytes says exactly as well.
         /// </para>
@@ -694,7 +694,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The alpha is the shape of the light, not just its edge.</b> It rises from nothing
         /// at both ends to a peak in the middle and is squared, so what travels is a core with a
-        /// long falloff either side rather than a coloured rectangle with soft ends — which is
+        /// long falloff either side rather than a coloured rectangle with soft ends - which is
         /// the difference between a light passing through a letter and a swatch sliding past it.
         /// It never reaches 1: the letters underneath are white and are meant to stay legible as
         /// white that has been lit, rather than being replaced by the colour.
@@ -714,12 +714,12 @@ namespace GlimmerGrove
 
                 // **The core is opaque, and that is the whole difference between neon and a
                 // pastel.** This band is drawn over *white* lettering, so anything short of
-                // full alpha is the colour mixed with white — which is exactly how a saturated
+                // full alpha is the colour mixed with white - which is exactly how a saturated
                 // magenta arrives on screen as pale pink.
                 //
                 // **And it is a plateau rather than a peak, which is what makes it colourful.**
                 // A ramp that peaks in the middle is only ever opaque *in* the middle, so the
-                // only stops ever really seen are the middle ones — the first cut faded its
+                // only stops ever really seen are the middle ones - the first cut faded its
                 // pink and its yellow to nothing at the two ends and read as a blue-green
                 // glint, on a card asked for in colour. Held open across four fifths of its
                 // width, the whole spectrum is lit at once and travels as one band.
@@ -736,7 +736,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// Private: it was public while a bloom outside the mask had to be tinted from the same
-        /// ramp, and that bloom is gone — an opaque sheet does not leak light around its own
+        /// ramp, and that bloom is gone - an opaque sheet does not leak light around its own
         /// cut-out. Nothing outside this file has any business asking what colour the band is.
         /// </para>
         /// </summary>
@@ -795,7 +795,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// It exists because the set ships no glyph for experience. <see cref="Spark"/> stood
-        /// in and was wrong twice over — a thin astroid washes out at icon size, and it sat
+        /// in and was wrong twice over - a thin astroid washes out at icon size, and it sat
         /// next to a painted, glossy coin looking like a different game. Nothing paintable
         /// could be borrowed either: <c>ic_gem</c> is the gems currency, <c>ic_star3d</c>
         /// collides with the star row, and every painted glyph here carries its own colour,
@@ -809,7 +809,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// The ring is the body's own hue driven down rather than a shared outline colour,
-        /// because that is what the shipped art does — the coin's ring is brown, the gem's
+        /// because that is what the shipped art does - the coin's ring is brown, the gem's
         /// is plum. A common ink outline reads as UI chrome; a hue-matched one reads as an
         /// object.
         /// </para>
@@ -872,7 +872,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// <b>Lobes rather than a plain bar</b>, because a plain bar on this board is a
-        /// <em>channel</em> — that is exactly what a drawn channel looks like, a capsule of colour
+        /// <em>channel</em> - that is exactly what a drawn channel looks like, a capsule of colour
         /// laid along a line of cells. A barrier that reads as somebody's channel is the worst
         /// possible confusion here, since one is ground you may never enter and the other is
         /// ground you may not enter <em>yet</em>. The bumpy silhouette is the whole of what tells
@@ -881,13 +881,13 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// Drawn lying flat, along x. An upright hedge is this turned a quarter turn, which is one
-        /// sprite for both orientations — the same bargain <see cref="Wedge"/> makes for a wheel.
+        /// sprite for both orientations - the same bargain <see cref="Wedge"/> makes for a wheel.
         /// </para>
         /// <para>
         /// <b>The core has to be thick enough that two cells of it read as one hedge</b>, which is
         /// the whole of what the numbers below were tuned for. At a third of the texture the lobes
         /// pinched together at every cell boundary and a four-cell run came out as beads on a
-        /// string — the one silhouette this must not have, since a row of round things on the
+        /// string - the one silhouette this must not have, since a row of round things on the
         /// ground is what a bead already is. Measured on the real board at the real size, which is
         /// the only way to see it.
         /// </para>
@@ -934,7 +934,7 @@ namespace GlimmerGrove
         // ------------------------------------------------------------------ explosions
         //
         // **Budburst's whole effect set, generated.** It was cut from a licensed VFX pack
-        // twice and thrown away twice — the first cut took the pack's shader utility maps by
+        // twice and thrown away twice - the first cut took the pack's shader utility maps by
         // mistake (a colour ramp drawn as a flare, a noise field as a shockwave), and the
         // second, correct cut still put a smoke plume onto a puzzle grid. What both attempts
         // really proved is that a pack authored for world-space particles is the wrong shelf:
@@ -943,7 +943,7 @@ namespace GlimmerGrove
         //
         // Generated art answers that and four other things this project keeps asking for
         // (invariant 7b): no address to register, no group to belong to, no bundle to grow, no
-        // frame where an Image is a white rectangle because the art had not arrived — and, the
+        // frame where an Image is a white rectangle because the art had not arrived - and, the
         // one that matters most here, every shape is a coverage mask, so it takes the exact
         // colour of the flower that went off rather than a tint over somebody else's paint.
 
@@ -952,7 +952,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// The instant of a burst. <paramref name="points"/> spikes on a radius that swings
-        /// between a stub and the full circle, so the silhouette has straight edges in it —
+        /// between a stub and the full circle, so the silhouette has straight edges in it -
         /// which is the whole reason it is here rather than a <see cref="Glow"/>. A burst built
         /// only from round soft shapes reads as a puff; it needs one thing with a corner on it
         /// to read as a bang.
@@ -978,7 +978,7 @@ namespace GlimmerGrove
                 float lobe = Mathf.Abs(Mathf.Cos(Mathf.Atan2(dy, dx) * n * .5f));
 
                 // **Sharp, and that exponent is the whole shape.** At 2.6 the lobes come out
-                // fat and the thing reads as a twelve-petal flower — on a board made of
+                // fat and the thing reads as a twelve-petal flower - on a board made of
                 // flowers, the one silhouette it must not have. Past about 4 they are needles
                 // with a hot middle, which is what a bang looks like.
                 float rad = Mathf.Lerp(.19f, .99f, Mathf.Pow(lobe, 4.4f));
@@ -994,7 +994,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Not <see cref="Ring"/>, which is even on both sides and is what a cocoon's cracks
-        /// wear. A wave has a direction — it is going outward — and the only way a still shape
+        /// wear. A wave has a direction - it is going outward - and the only way a still shape
         /// can say so is to be hard on its leading edge and soft behind it. Tween its
         /// <c>sizeDelta</c> rather than its scale and the front keeps the same width however
         /// wide the ring gets, which is what a wave leaving actually looks like; scaling it
@@ -1025,7 +1025,7 @@ namespace GlimmerGrove
         /// A four-pointed twinkle: a bright dot with needle rays off it.
         ///
         /// <para>
-        /// <see cref="Spark"/> is an astroid — a fat four-pointed star, and the right shape for
+        /// <see cref="Spark"/> is an astroid - a fat four-pointed star, and the right shape for
         /// a spray of debris, which is what <c>Burst.Sparks</c> makes it. This is the other
         /// thing: a point of light with rays so thin they read as a lens catching it. The two
         /// are used within a few pixels of each other after every burst, so they had to be
@@ -1083,7 +1083,7 @@ namespace GlimmerGrove
         /// A moon at a given phase: 0 is new, 1 is full, waxing from the right.
         ///
         /// The streak page prints one per night, so the shape has to come from the
-        /// number rather than from a set of hand-drawn phases — a ladder retuned to ten
+        /// number rather than from a set of hand-drawn phases - a ladder retuned to ten
         /// nights would otherwise need ten new sprites.
         /// </summary>
         public static Sprite Moon(int size = 96, float phase = 1f)
@@ -1108,7 +1108,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// It exists because an event needed a mark and the set ships none. <c>ic_stars</c>
-        /// stood in and was wrong twice over — three stars are what a <em>glade</em> pays, so
+        /// stood in and was wrong twice over - three stars are what a <em>glade</em> pays, so
         /// the one place in the game that meant "limited time" was drawn in the vocabulary of
         /// the one thing that is always there; and being a fixed silhouette it could say
         /// nothing about how far through the track the player was.
@@ -1134,8 +1134,8 @@ namespace GlimmerGrove
             int n = Mathf.Clamp(petals, 3, 12);
 
             // Both numbers carry the openness, and both had to be tuned against the screen
-            // rather than reasoned about. Drawing a closed bud at a third of the size — the
-            // obvious first move — reads as a dot at icon size, which says nothing to the one
+            // rather than reasoned about. Drawing a closed bud at a third of the size - the
+            // obvious first move - reads as a dot at icon size, which says nothing to the one
             // player the mark most needs to speak to: the one who has finished none of the
             // track. Holding the size constant and lobing alone fails the other way, because
             // 0 and 4 of 4 then look like the same flower and the mark stops being progress.
@@ -1163,7 +1163,7 @@ namespace GlimmerGrove
         /// A leaf, tip up: two arcs meeting at a point, with the midrib cut out of it.
         ///
         /// Generated for the reason <see cref="Bloom"/> is, and it earns it twice over here
-        /// — the event page hangs one of these every few dozen pixels along a vine whose
+        /// - the event page hangs one of these every few dozen pixels along a vine whose
         /// length is decided by content, so the alternative is either an address the asset
         /// audit has to know about or a sprite that is the wrong size at every scale but
         /// one. A coverage mask takes its colour from <c>Image.color</c>, so the same shape
@@ -1193,7 +1193,7 @@ namespace GlimmerGrove
                 float body = Cover((Mathf.Abs(u - .5f) - half * .62f) * size);
 
                 // A vein of nought means no vein. It used to leave a half-covered hairline
-                // down the middle, because Cover(0) is .5 — invisible on an event page's
+                // down the middle, because Cover(0) is .5 - invisible on an event page's
                 // grown leaf and a dark slot down the centre of a petal thrown by a burst.
                 if (v <= 0f) return body;
 
@@ -1209,14 +1209,14 @@ namespace GlimmerGrove
         /// below, drawn once and turned with the tile.
         ///
         /// <para>
-        /// Generated rather than addressed, for <see cref="Bloom"/>'s reason — an
+        /// Generated rather than addressed, for <see cref="Bloom"/>'s reason - an
         /// <c>Image</c> whose sprite has not arrived is a white rectangle, and a white
         /// rectangle laid across a conduit is a tile whose rule the player would read exactly
         /// backwards.
         /// </para>
         /// <para>
         /// The barbs are offset along the bar rather than facing each other, which is the
-        /// whole of what stops it reading as a plus sign — the one shape this board must
+        /// whole of what stops it reading as a plus sign - the one shape this board must
         /// never put on a tile, since a crossroads is what a briar is not.
         /// </para>
         /// </summary>
@@ -1239,7 +1239,7 @@ namespace GlimmerGrove
             if (t < 0f) return 0f;
 
             // Past the tip the half-width goes negative, so the coverage fades out on its own
-            // rather than being cut off — a spike that ends in a hard edge reads as a chip.
+            // rather than being cut off - a spike that ends in a hard edge reads as a chip.
             return Cover((Mathf.Abs(u - centre) - .095f * (1f - t)) * size);
         }
 
@@ -1249,7 +1249,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>One sprite for every slice.</b> The wedge is drawn pointing straight up and each
         /// slice is a rotation of it, so a wheel of any size costs one texture and a handful of
-        /// <c>Image</c>s that can each be tinted independently — the same "one shape, many
+        /// <c>Image</c>s that can each be tinted independently - the same "one shape, many
         /// tints" bargain the rest of this file makes, and the reason the slice count can be
         /// content without an art order following it.
         /// </para>
@@ -1301,7 +1301,7 @@ namespace GlimmerGrove
         /// A teardrop rather than a triangle because it has to read at a glance against a rim
         /// full of coloured wedges, and a triangle at this size is three straight lines that the
         /// rim's own edges keep rhyming with. The round shoulder gives it a silhouette nothing
-        /// else on the panel has — the argument <see cref="HexRing"/> makes about a bead against
+        /// else on the panel has - the argument <see cref="HexRing"/> makes about a bead against
         /// a critter, on a screen where the shapes are all curves instead of all circles.
         /// </para>
         /// <para>
@@ -1325,7 +1325,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Generated, and this is the strongest case of any of them.</b> An <c>Image</c>
         /// whose sprite has not arrived is a white rectangle, and this one is drawn on top of a
-        /// dimmed board over a modal that is only ever shown once in a player's life — there is
+        /// dimmed board over a modal that is only ever shown once in a player's life - there is
         /// no second showing to catch it at. A hand is also chrome in the strictest sense: it
         /// belongs to no chapter, so it would sit in the global group and be loaded by every
         /// screen in the game to be used by two.
@@ -1333,7 +1333,7 @@ namespace GlimmerGrove
         /// <para>
         /// Painted with <see cref="MakeRGBA"/> rather than as a white mask, because it needs an
         /// ink rim and a drop shadow of its own. A tinted mask cannot carry either, and without
-        /// them the glyph disappears wherever the board underneath it happens to be pale — which
+        /// them the glyph disappears wherever the board underneath it happens to be pale - which
         /// on a grove is wherever a channel has just been drawn, so the hand would vanish exactly
         /// where it is doing its work.
         /// </para>
@@ -1377,7 +1377,7 @@ namespace GlimmerGrove
                 c = Over(c, ink, Cover(d - rim));
 
                 // Whiter at the fingertip than at the wrist, which is all the modelling a
-                // silhouette this size can carry — a highlight and a shaded edge on top of it
+                // silhouette this size can carry - a highlight and a shaded edge on top of it
                 // would only be two more things to read.
                 float v = Mathf.Clamp01((y / size - .08f) / .82f);
                 var body = Color.Lerp(shade, lit, v * v * (3f - 2f * v));
@@ -1397,7 +1397,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// The two scallops are subtracted from the closed side, and they are what make it a
-        /// fist rather than a mitten — without them the silhouette reads as a glove, which is
+        /// fist rather than a mitten - without them the silhouette reads as a glove, which is
         /// the one shape that does not say "your finger goes here".
         /// </para>
         /// </summary>
@@ -1416,8 +1416,8 @@ namespace GlimmerGrove
         /// Where the fingertip sits in <see cref="Hand"/>, as a pivot in sprite space.
         ///
         /// <para>
-        /// Derived, never typed. The whole hand is positioned by this point — it is what the
-        /// fingertip is placed with — so a stale one slides the hand off the route it is
+        /// Derived, never typed. The whole hand is positioned by this point - it is what the
+        /// fingertip is placed with - so a stale one slides the hand off the route it is
         /// tracing and the demonstration quietly stops pointing at anything, which is invisible
         /// in a compile and easy to miss in motion.
         /// </para>
@@ -1445,7 +1445,7 @@ namespace GlimmerGrove
         static float HandSd(float x, float y, int size)
         {
             // Sampled in the glyph's own frame, which is tilted anticlockwise about the centre
-            // of the sprite. A pointing hand drawn upright is not a pointing hand — a single
+            // of the sprite. A pointing hand drawn upright is not a pointing hand - a single
             // finger raised straight up from a closed fist is a gesture this game must never
             // put on a teaching panel in any market, and no amount of thumb makes it read as
             // anything else. The tilt is the fix rather than a flourish: it is what puts the

@@ -8,7 +8,7 @@ namespace GlimmerGrove.Modes
     /// A siege: a field of gems, a line of wards and a hill with raiders coming down it.
     ///
     /// <para>
-    /// <b>The clock is passed in.</b> Nothing here reads <c>Time</c> — <see cref="Advance"/> takes
+    /// <b>The clock is passed in.</b> Nothing here reads <c>Time</c> - <see cref="Advance"/> takes
     /// the seconds that have gone by, so the whole mode is Domain and can be stepped by a test at
     /// whatever rate a test likes. That is the same bargain every board here makes and the reason
     /// this one is not simply written inside the view.
@@ -29,11 +29,11 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>A second array rather than a second alphabet, which is the opposite of what this
         /// field has twice shipped.</b> A cog in a cell and a thief's sack were both <em>glyphs</em>
-        /// — things that were not a colour — and both were taken back out, because every rule here
+        /// - things that were not a colour - and both were taken back out, because every rule here
         /// asks either <em>what colour is this</em> or <em>what is standing here</em> and one
         /// alphabet answers the first with a thing that has none. A charm is not a second answer to
         /// the first question: the cell is still a gem, still that colour, still worth that fuel.
-        /// So it sits beside the cell exactly as a weaver's web did, and for the same reason — the
+        /// So it sits beside the cell exactly as a weaver's web did, and for the same reason - the
         /// player can see both facts at once.
         /// </para>
         /// <para>
@@ -60,14 +60,14 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>State on the board rather than a chance taken per gem</b>, which is what makes the
-        /// gap <em>bounded</em> — see <see cref="SiegeTuning.CharmWithin"/> for the measurement that
+        /// gap <em>bounded</em> - see <see cref="SiegeTuning.CharmWithin"/> for the measurement that
         /// bought it. Both are a pure function of the field's own stream, so two devices playing
         /// the same swaps meet the same charms in the same cells, exactly as they meet the same
         /// gems.
         /// </para>
         /// <para>
         /// <b>The first window is picked from the seed and not from nought</b>, or every board in
-        /// the mode would deal its first charm on the same gem of the first refill — a tell a
+        /// the mode would deal its first charm on the same gem of the first refill - a tell a
         /// player would find in one session and the one thing a deterministic stream makes easy to
         /// get wrong.
         /// </para>
@@ -79,8 +79,8 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>A flag rather than a glyph, and a thief's sack is the opposite case.</b> A webbed
-        /// gem is still that colour — the player can see exactly what they are being denied, and
-        /// the web comes off with the weaver — so it has to sit <em>beside</em> the cell rather
+        /// gem is still that colour - the player can see exactly what they are being denied, and
+        /// the web comes off with the weaver - so it has to sit <em>beside</em> the cell rather
         /// than replace it. A sack is not a colour at all, so it is a glyph
         /// and every rule that walks the field is already
         /// correct about it.
@@ -88,7 +88,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>One array and not two.</b> Anything parallel to the field has to be carried through
         /// <see cref="Collapse"/> and <see cref="Settle"/> in lockstep, and every extra array is
-        /// another chance for one of them to be forgotten — which is why a sack carries no memory
+        /// another chance for one of them to be forgotten - which is why a sack carries no memory
         /// of the colour it took and simply bursts into a freshly dealt gem.
         /// </para>
         /// </summary>
@@ -128,7 +128,7 @@ namespace GlimmerGrove.Modes
         /// Seconds left on a warbringer's roar, or nought.
         ///
         /// <b>One number for the whole hill rather than one per raider</b>, because a roar is a
-        /// fact about the ground and not about who is standing on it — a raider that steps out
+        /// fact about the ground and not about who is standing on it - a raider that steps out
         /// mid-roar charges with the rest, which is what a player watching the hill expects and
         /// what a per-raider timer would quietly get wrong.
         /// </summary>
@@ -154,15 +154,15 @@ namespace GlimmerGrove.Modes
         /// <b>Separate from <see cref="_rng"/>, and only for the draws a player's taps do not
         /// order.</b> The field's stream must be a pure function of the swaps that were made, or
         /// two devices playing the same board deal different gems. A wave's lanes are safe to draw
-        /// from it — a lane is drawn once per raider, in a sequence fixed by play rather than by
-        /// frame rate — but a weaver reaching for a cell every few seconds is not: how many times
+        /// from it - a lane is drawn once per raider, in a sequence fixed by play rather than by
+        /// frame rate - but a weaver reaching for a cell every few seconds is not: how many times
         /// it has reached by the time a gem is dealt depends on wall-clock time, which is a frame
         /// rate, a background-and-resume and a slower phone.
         /// </para>
         /// <para>
         /// <b>Narrow on purpose.</b> Moving the lanes here as well was tried and reverted: it does
         /// not merely change which lane a raider walks in, it stops the muster consuming the
-        /// field's stream at all — so every gem dealt after the first wave changes, and the ten
+        /// field's stream at all - so every gem dealt after the first wave changes, and the ten
         /// rungs of a tuned chapter are re-rolled. Three of them became unholdable and two became
         /// trivial, with nothing wrong in any file. <b>A random stream is part of a level's
         /// content</b>, and anything that changes how often it is drawn from is a content change.
@@ -181,7 +181,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <b>Handed in rather than read out of a static</b>, so a fixture can play the same hill
         /// against the weakest line a player could bring and against a decked-out one without
-        /// touching a save — which is what <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c>
+        /// touching a save - which is what <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c>
         /// needs in order to prove a rung is holdable rather than merely holdable by somebody who
         /// has been shopping.
         /// </b>
@@ -239,7 +239,7 @@ namespace GlimmerGrove.Modes
         /// Builds a board for this level, standing the player's chosen turrets on it.
         ///
         /// <b>Null is the starter line</b>, which is what every content gate, every offline
-        /// mirror and every rule test plays against — the weakest line a player could bring.
+        /// mirror and every rule test plays against - the weakest line a player could bring.
         /// </summary>
         public static SiegeBoard Build(SiegeLayout layout, WardLine line = null)
             => new SiegeBoard(layout, line);
@@ -303,14 +303,14 @@ namespace GlimmerGrove.Modes
         /// turret up sixty times a second, which works and is the wrong shape twice over: the
         /// model is briefly in a state it should never have reached, and the rule lives in a
         /// <c>MonoBehaviour</c> where nothing in Domain can see or test it. Read by
-        /// <see cref="Bear"/> and <see cref="Topple"/> — the two doors a ward can lose through —
+        /// <see cref="Bear"/> and <see cref="Topple"/> - the two doors a ward can lose through -
         /// so a ward under it is never hurt in the first place and never has to be put back.
         /// </para>
         /// <para>
         /// <b>What it does not touch is the hill.</b> Raiders walk, arrive, swing and are
         /// reported swinging; the blows simply take nothing. So the mode a first-timer is shown
         /// is the mode they will play, at its own pace, with the one consequence they are not
-        /// ready for removed — rather than a slower hill, which would teach a pace that does not
+        /// ready for removed - rather than a slower hill, which would teach a pace that does not
         /// exist.
         /// </para>
         /// </summary>
@@ -349,13 +349,13 @@ namespace GlimmerGrove.Modes
         /// <b>It exists so the count-in can be <em>derived</em> from the quiet it counts rather
         /// than timed alongside it.</b> The view drew three, two, one and GO! from a coroutine on
         /// the wall clock, on the reasoning that the two would agree because both were
-        /// <see cref="SiegeTuning.FirstWaveAfter"/> long — which is arithmetic held in step by
+        /// <see cref="SiegeTuning.FirstWaveAfter"/> long - which is arithmetic held in step by
         /// hand, and it came apart the first time anything held the run. A first-timer's tip
         /// holds the board (<c>RunHold.Teaching</c>) and so does the pause menu, the action bar's
         /// shop and the opening transition; none of them holds a wall clock, so the count ran out
         /// behind the panel and the player was handed a hill with no count-in at all. Read off
         /// this, the two cannot disagree on any frame, for any reason, without somebody changing
-        /// this line — which is invariant 33g's bargain (a fact derived from a shape can never
+        /// this line - which is invariant 33g's bargain (a fact derived from a shape can never
         /// come apart from it), and 39j's about a cooldown that must not be payable by opening a
         /// panel.
         /// </para>
@@ -398,7 +398,7 @@ namespace GlimmerGrove.Modes
         /// <b>An endless lane is finished when the line falls, and that is not a euphemism.</b> A
         /// run that can never be won still has to <em>end</em>, and the ending it has is the only
         /// one it has: the hill got through. Routing it here rather than through the defeat path
-        /// is what makes an endless run an ordinary run in every way that matters — it is graded
+        /// is what makes an endless run an ordinary run in every way that matters - it is graded
         /// (on how far it got, <c>LevelTuning.Climbs</c>), it promotes stars, it pays the credits
         /// and the XP those stars derive, and it costs the save file nothing at all beyond the
         /// high-water wave (invariant 20a, one more time).
@@ -421,8 +421,8 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>Derived from the state of the hill, never from a tally of kills, and the difference
-        /// is a run that could not end.</b> It was <c>Goals - _felled</c> — the authored raider
-        /// count less everything that has died — which is exact on every board whose raiders are
+        /// is a run that could not end.</b> It was <c>Goals - _felled</c> - the authored raider
+        /// count less everything that has died - which is exact on every board whose raiders are
         /// all authored, and wrong the day one of them <em>makes</em> raiders. A bonecaller raises
         /// <see cref="SiegeTuning.RaisesInAll"/> creepers that <see cref="SiegeLayout.RaiderCount"/>
         /// has never heard of and that <c>Fell</c> counts like any other death, so on the shipped
@@ -431,7 +431,7 @@ namespace GlimmerGrove.Modes
         /// </para>
         /// <para>
         /// <b>Both halves of that are bugs and only the second was reported.</b> The model reads
-        /// the equality the frame it happens and so declared the level cleared mid-fight — which
+        /// the equality the frame it happens and so declared the level cleared mid-fight - which
         /// is what the hold simulation had been measuring on that rung, so its whole reading of it
         /// was of a run that stopped when 27 things had died. The <em>view</em> is not allowed to
         /// ask while the field is coming apart or while something is dying (<c>SiegeView.Judge</c>
@@ -440,7 +440,7 @@ namespace GlimmerGrove.Modes
         /// and a run that simply never ended. Reported from play in exactly those words.
         /// </para>
         /// <para>
-        /// <b>The general rule is that a terminal reading has to be monotone</b> — an equality on
+        /// <b>The general rule is that a terminal reading has to be monotone</b> - an equality on
         /// a counter that can overshoot its target is not an ending, it is a coincidence that has
         /// to be observed on the exact frame it happens. This cannot overshoot: nothing may be
         /// raised onto a hill with nothing alive on it, because the only thing that raises is a
@@ -456,8 +456,8 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>What it costs is that <c>Goals - GoalsLeft</c> steps backwards when a caster
         /// raises</b>, and that is the truth rather than a defect: the hill really did just get
-        /// four raiders longer. It is read in one place — <c>ProtoScreen</c>'s <c>lit</c> on the
-        /// defeat record, since the victory record passes <see cref="Goals"/> for both — and it
+        /// four raiders longer. It is read in one place - <c>ProtoScreen</c>'s <c>lit</c> on the
+        /// defeat record, since the victory record passes <see cref="Goals"/> for both - and it
         /// cannot go negative, because the only board that raises anything raises it from the last
         /// wave, by which point nothing is unsent.
         /// </para>
@@ -542,14 +542,14 @@ namespace GlimmerGrove.Modes
         /// <b>A line with nothing standing on it is where a run of this mode ends</b>, and it is
         /// honestly this question rather than a special case: with every ward down, a match feeds
         /// nothing, so there is no legal move left however many gems are on the field. The gem
-        /// field itself always has a swap — <see cref="Settle"/> deals it again rather than
+        /// field itself always has a swap - <see cref="Settle"/> deals it again rather than
         /// letting it lock (invariant 20j's second test: every input has to move something).
         /// </summary>
         public bool AnyMove => WardsStanding > 0;
 
         /// <summary>
         /// <b>Never stranded, and that is arithmetic rather than generosity.</b> A run here ends
-        /// when the last ward falls — <see cref="AnyMove"/> — and what a continue sells is the
+        /// when the last ward falls - <see cref="AnyMove"/> - and what a continue sells is the
         /// line itself: <see cref="Rally"/> puts every turret back up at full health with the
         /// hill exactly where it stood. So a fallen line is a shortage that a purchase really
         /// does fix, which is the only thing this predicate is asked (invariant 28f), and
@@ -558,13 +558,13 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>Note what does not make it true either.</b> A pod carrying a cage jams the line
         /// rather than passing through it (invariant 33b), so every goal a board opened with is
-        /// still standing on it however long the run goes on — more cores always help. And the
+        /// still standing on it however long the run goes on - more cores always help. And the
         /// gem field is dealt again rather than allowed to lock (invariant 20j), so there is
         /// always a swap. There is no siege state no purchase rescues.
         /// </para>
         /// <para>
         /// It is <em>this</em> rather than the run's own gate that decides whether an offer is
-        /// honest. Whether one is actually made is <c>RunContinueFlow</c>'s — a run nobody is
+        /// honest. Whether one is actually made is <c>RunContinueFlow</c>'s - a run nobody is
         /// charged for is a run nobody is sold, so the opening rungs of the chapter never see it.
         /// </para>
         /// </summary>

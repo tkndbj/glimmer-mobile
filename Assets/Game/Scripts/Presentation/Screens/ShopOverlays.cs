@@ -15,8 +15,8 @@ namespace GlimmerGrove
     /// is confirmed by the store's own sheet, which names the product, states the price and
     /// asks for a fingerprint; putting a panel in front of that would be a tap for a
     /// question about to be asked properly. A gem purchase has no sheet and no
-    /// authentication — a mistap on a 280-gem card is two months of free gems gone with no
-    /// way back — so this is the only thing standing between a thumb and that.
+    /// authentication - a mistap on a 280-gem card is two months of free gems gone with no
+    /// way back - so this is the only thing standing between a thumb and that.
     /// </para>
     /// <para>
     /// It leads with what the player gets and puts the cost second, which is the same order
@@ -28,7 +28,7 @@ namespace GlimmerGrove
     {
         /// <summary>
         /// Set by the caller's configure callback before <c>Init</c> runs, which is why it
-        /// is a property rather than a field — the same shape <c>WinOverlay.Run</c> uses.
+        /// is a property rather than a field - the same shape <c>WinOverlay.Run</c> uses.
         /// A public field of a non-serialisable type is flagged by Unity's serialization
         /// analyser, correctly: nothing here is meant to survive a domain reload.
         /// </summary>
@@ -50,7 +50,7 @@ namespace GlimmerGrove
                                 new Vector2(0f, -300f));
             ShopArt.PaintGood(art, Good);
 
-            // What arrives, said as a number rather than as a sentence — it is the one thing
+            // What arrives, said as a number rather than as a sentence - it is the one thing
             // on the panel the player is actually deciding about.
             UIKit.Shrinkable(
                 UIKit.Titled("Amount", panel,
@@ -61,7 +61,7 @@ namespace GlimmerGrove
                              outline: 0f, shadow: 2f), 30);
 
             // What it does, read from the rules rather than written into the copy. A panel
-            // explaining the game is the first thing to rot when the game is retuned — the
+            // explaining the game is the first thing to rot when the game is retuned - the
             // lesson StreakInfoOverlay and AdOfferOverlay were both rebuilt around.
             UIKit.Shrinkable(
                 UIKit.Titled("Note", panel, Explanation(boost), 28, Ink, TextAnchor.UpperCenter,
@@ -81,7 +81,7 @@ namespace GlimmerGrove
                              Confirm, "ic_gem");
 
             // Red rather than the resting grey. Grey means "not a control right now"
-            // (see Skins), and this is a live way out of a panel that is asking for gems —
+            // (see Skins), and this is a live way out of a panel that is asking for gems -
             // the same job btn_red already does for leaving and for wiping.
             UIKit.TextButton("Cancel", panel, "btn_red", Loc.Get("ui.common.cancel"), 30,
                              new Vector2(360f, 92f), new Vector2(.5f, 0f), new Vector2(0f, 96f),
@@ -91,7 +91,7 @@ namespace GlimmerGrove
         // ------------------------------------------------------------- the layout
         /// <summary>
         /// Where each row sits, measured from the top of the panel to the row's <em>centre</em>
-        /// — <c>UIKit.Box</c> always pivots at the middle, whatever it is anchored to.
+        /// - <c>UIKit.Box</c> always pivots at the middle, whatever it is anchored to.
         ///
         /// <para>
         /// Written down as constants because they were not, and the panel shipped with three
@@ -120,7 +120,7 @@ namespace GlimmerGrove
         static readonly Color Rose = new Color(.70f, .19f, .17f);
         static readonly Color Amber = new Color(.62f, .34f, .08f);
 
-        /// <summary>A darkened aqua, for <see cref="Ink"/>'s reason — the plate is light parchment.</summary>
+        /// <summary>A darkened aqua, for <see cref="Ink"/>'s reason - the plate is light parchment.</summary>
         static readonly Color Aqua = new Color(.11f, .40f, .45f);
 
         /// <summary>
@@ -175,7 +175,7 @@ namespace GlimmerGrove
                 return Loc.Format("ui.shop.boost_explain", fast, normal);
             }
 
-            // This player's cap rather than the published one — a keeper who bought a
+            // This player's cap rather than the published one - a keeper who bought a
             // container is told their hearts refill to twenty, which is the number they
             // paid for and the only one this sentence can honestly print.
             return Loc.Format("ui.shop.hearts_explain", Wallet.MaxHearts, HeartRules.Ceiling);
@@ -213,7 +213,7 @@ namespace GlimmerGrove
 
             if (state != GoodOfferState.Ready)
             {
-                // Reachable: the balance can move while the panel is open — a sync landing,
+                // Reachable: the balance can move while the panel is open - a sync landing,
                 // another device spending. Refusing here rather than trusting the state the
                 // panel was built from is what stops a debit going through on a balance that
                 // no longer covers it.
@@ -243,7 +243,7 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// Raised by <c>StoreService.Granted</c> and therefore <b>only after the money has
-    /// become currency</b> — never when the payment sheet closes, and never on a retry that
+    /// become currency</b> - never when the payment sheet closes, and never on a retry that
     /// granted nothing. That ordering is the whole point of the panel: it is the receipt,
     /// and a receipt that appears before the goods arrive is the thing that makes a player
     /// distrust a shop.
@@ -265,14 +265,14 @@ namespace GlimmerGrove
     /// existed.</b> The product lands with a shockwave; <see cref="Payout"/> throws its
     /// contents out of it and rolls each figure up one landing at a time; and COLLECT hands
     /// the whole thing to <see cref="RewardFlight"/>, which empties the chips into the
-    /// balance row of whatever screen is underneath — the shop's own purse, or the hub's
+    /// balance row of whatever screen is underneath - the shop's own purse, or the hub's
     /// pills when the grant arrives while the player is standing somewhere else. That last
     /// step is why the panel is worth a button at all: without it a player is told a number
     /// and left to go and check.
     /// </para>
     /// <para>
     /// <b>What keeps it from becoming an obstacle by the fourth purchase.</b> There is a way
-    /// out about half a second in — the button appears when the tokens start flying, not when
+    /// out about half a second in - the button appears when the tokens start flying, not when
     /// they land, and tapping it early is safe because the flight's snapshot was taken at
     /// build time and owes nothing to the ceremony. The confetti and the single haptic are on
     /// the last landing and nowhere else: <c>Handheld.Vibrate</c> is one fixed-length pulse on
@@ -292,8 +292,8 @@ namespace GlimmerGrove
         /// <para>
         /// From <c>OnDestroy</c> and never from the button, which is the rule
         /// <c>AdOfferOverlay.Dismissed</c> and <c>PauseOverlay</c> both arrived at the hard
-        /// way: this panel has four exits — the button, the back key, the cascade finishing,
-        /// and the screen dying underneath it — so anything wired to one of them fires from
+        /// way: this panel has four exits - the button, the back key, the cascade finishing,
+        /// and the screen dying underneath it - so anything wired to one of them fires from
         /// one of them. The safe outcome has to be the default and the exception has to be the
         /// thing somebody declares.
         /// </para>
@@ -304,7 +304,7 @@ namespace GlimmerGrove
         // Laid out by a cursor walking down the panel rather than by absolute offsets,
         // because the panel is not a fixed length: a coin pack has one currency line and a
         // bundle has two. Absolute offsets would mean the note printed through the button on
-        // whichever shelf nobody checked — the failure AdOfferOverlay's layout was rewritten
+        // whichever shelf nobody checked - the failure AdOfferOverlay's layout was rewritten
         // to remove.
         const float PanelW = 880f;
         const float HeadRoom = 150f;      // under the ribbon
@@ -322,7 +322,7 @@ namespace GlimmerGrove
         /// <para>
         /// <see cref="ArriveAt"/> is the beat the panel has to itself before the product lands
         /// in it, so the shockwave breaks against something that already exists rather than
-        /// arriving with it — the same reason <c>Payout.LeadIn</c> exists one level down.
+        /// arriving with it - the same reason <c>Payout.LeadIn</c> exists one level down.
         /// <see cref="PayoutAt"/> is late enough that the impact has been seen and early
         /// enough that nobody is waiting; it is also when the button appears, so there is
         /// never more than about half a second in which this panel cannot be left.
@@ -360,12 +360,12 @@ namespace GlimmerGrove
             // Snapshotted here rather than when COLLECT is pressed, and it is the one thing
             // about this panel that has to happen in Build. The grant is what raised the
             // event, so the balance has already moved; AfterGrant takes it back off to find
-            // what the purse read a moment ago. Doing it later would usually be identical —
+            // what the purse read a moment ago. Doing it later would usually be identical -
             // doing it here means the figure cannot drift if the player leaves the panel
             // standing while something else lands.
             _flight = RewardFlight.AfterGrant(Grant.Credits, Grant.Gems);
 
-            // A container has exactly one line — what the cap is now — and every currency
+            // A container has exactly one line - what the cap is now - and every currency
             // product has one per currency it granted.
             int lines = Grant.IsContainer || Grant.Product.IsEventPass
                 ? 1
@@ -374,7 +374,7 @@ namespace GlimmerGrove
             // Only a container's receipt has a line under the chips, and the room for it is
             // reserved only when it does. A currency product's chips already say the whole
             // of what arrived, so a sentence under them was words for the sake of the shape
-            // of the panel — and a panel that keeps the gap after losing the sentence is a
+            // of the panel - and a panel that keeps the gap after losing the sentence is a
             // band of empty plate above its button.
             bool note = Grant.IsContainer;
 
@@ -388,7 +388,7 @@ namespace GlimmerGrove
             // Never dismissed by a stray tap on the scrim. This is the receipt for a real
             // payment, and one that can be flicked away by a thumb landing anywhere is one a
             // player can miss entirely and then wonder what they were charged for. The back
-            // key still works throughout — see OnBack.
+            // key still works throughout - see OnBack.
             var panel = MakePanel(new Vector2(PanelW, y), Loc.Get("ui.shop.thanks"),
                                   dismissOnScrim: false);
 
@@ -420,8 +420,8 @@ namespace GlimmerGrove
 
             // The label tells the truth about what the button does. Where there is a balance
             // row underneath, this empties the panel into it and COLLECT is the honest verb;
-            // where there is not — the map, the grove, a purchase credited on the next launch
-            // — it simply closes, and calling that "collect" would promise something the
+            // where there is not - the map, the grove, a purchase credited on the next launch
+            // - it simply closes, and calling that "collect" would promise something the
             // player then does not see happen.
             _done = UIKit.TextButton("Done", panel, "btn_green",
                                      Loc.Get(CanFly() ? "ui.chest.collect" : "ui.common.ok"), 36,
@@ -472,7 +472,7 @@ namespace GlimmerGrove
         /// One <see cref="Payout"/> per currency the product granted.
         ///
         /// Gems lead where a bundle has both, which is the order the shelf uses and the order
-        /// the card printed — a receipt that reorders what was bought reads as a different
+        /// the card printed - a receipt that reorders what was bought reads as a different
         /// purchase.
         /// </summary>
         void BuildChips(RectTransform panel, float top)
@@ -504,7 +504,7 @@ namespace GlimmerGrove
         /// It says what <em>changed</em> rather than what was bought, because the card the
         /// player tapped already said "20" and the number they need is the one they had
         /// before it. <see cref="StoreGrant.CapacityWas"/> is read at redemption for exactly
-        /// this — after the entitlement lands the old figure is gone.
+        /// this - after the entitlement lands the old figure is gone.
         /// </para>
         /// <para>
         /// A plate rather than a <c>Payout</c> chip, and the difference is not decoration: a
@@ -526,7 +526,7 @@ namespace GlimmerGrove
             glyph.preserveAspect = true;
 
             // The label sits to the right of the glyph, and the offset has to carry half its
-            // own width because UIKit.Box *always* pivots at centre however it is anchored —
+            // own width because UIKit.Box *always* pivots at centre however it is anchored -
             // the trap Corner() exists for, which cannot be used here because it reads an
             // anchor y of .5 as "top" and would drop the line 30 units. Passing the margin
             // straight through put this 400-wide box at -84..316 on a plate starting at 0, so
@@ -562,7 +562,7 @@ namespace GlimmerGrove
                                    n => "+" + Compact.Number(n), amount,
                                    token, tokenTint, sfx: "coin");
 
-            // Credits have no sprite of their own — they are the spinning flipbook — and this
+            // Credits have no sprite of their own - they are the spinning flipbook - and this
             // is the call that also covers the frames not having arrived. See RewardArt.Glyph.
             RewardArt.Glyph(chip.Glyph, kind, 11f);
 
@@ -629,7 +629,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The goods land: a spring, two shockwaves and a burst — and no sound of its own.
+        /// The goods land: a spring, two shockwaves and a burst - and no sound of its own.
         ///
         /// The clunk that used to ride the entrance was withdrawn by the owner. What is left
         /// still carries the beat, because the tokens start half a second later and the tune
@@ -657,7 +657,7 @@ namespace GlimmerGrove
         /// A ring breaking outwards from the goods.
         ///
         /// The starting alpha is captured rather than the live colour being scaled down each
-        /// frame — scaling the live value compounds, so the fade would depend on how many
+        /// frame - scaling the live value compounds, so the fade would depend on how many
         /// frames it got. <c>Payout.Ping</c> records the same trap.
         /// </summary>
         void Shockwave(float delay, float to, float dur, float alpha)
@@ -684,7 +684,7 @@ namespace GlimmerGrove
         /// The last figure has landed. Everything loud is here and nowhere else.
         ///
         /// One haptic, on the rarest event in the game, at the moment the numbers finish
-        /// rather than at any of the four beats before it — see the class remarks for why
+        /// rather than at any of the four beats before it - see the class remarks for why
         /// several would be one rumble instead of several taps.
         /// </summary>
         void Payoff()
@@ -700,7 +700,7 @@ namespace GlimmerGrove
         // ------------------------------------------------------------- collecting
         /// <summary>
         /// The player took the receipt. Where there is a balance row underneath, the chips
-        /// empty into it — the same cascade the daily chest and the rewarded ad use, so the
+        /// empty into it - the same cascade the daily chest and the rewarded ad use, so the
         /// three places money turns into currency all read as one gesture.
         /// </summary>
         void OnCollect()
@@ -716,7 +716,7 @@ namespace GlimmerGrove
                 any |= _flight.Add(new ChestDrop(ChestDropKind.Credits, Amount(Grant.Credits)), _credits.Root);
 
             // Asked before the latch, so a panel with nowhere to fly to is still an ordinary
-            // close — including its sound and its scale-out, which the cascade does not use.
+            // close - including its sound and its scale-out, which the cascade does not use.
             if (!any) { Close(); return; }
 
             _collecting = true;
@@ -726,7 +726,7 @@ namespace GlimmerGrove
         /// <summary>
         /// A grant as a drop's amount.
         ///
-        /// Only ever read for its token count, which is clamped to a handful — so the
+        /// Only ever read for its token count, which is clamped to a handful - so the
         /// saturating cast is a fact about the throw rather than a truncation of the payment.
         /// A product granting more than two billion of anything is not a rounding question.
         /// </summary>
@@ -740,7 +740,7 @@ namespace GlimmerGrove
         /// out of, so they have to outlive their own parent by a beat, while everything else
         /// here is chrome the moment the receipt has been read. <c>SetParent</c> keeps their
         /// world position, so nothing moves as it changes hands. The scrim stops taking taps
-        /// as well as fading — one at zero alpha still swallows everything aimed at what is
+        /// as well as fading - one at zero alpha still swallows everything aimed at what is
         /// now visible through it.
         /// </summary>
         void Fly()
@@ -774,7 +774,7 @@ namespace GlimmerGrove
         /// mid-flight and leave the balance row rewound to its old figures.
         ///
         /// Before that it closes, which is what gives this panel a way out from the first
-        /// frame — the scrim does not dismiss it and the button takes half a second to arrive.
+        /// frame - the scrim does not dismiss it and the button takes half a second to arrive.
         /// </summary>
         public override bool OnBack()
         {

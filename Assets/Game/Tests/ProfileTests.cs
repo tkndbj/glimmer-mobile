@@ -18,7 +18,7 @@ namespace GlimmerGrove.Tests
     {
         /// <summary>
         /// The roster is a process-wide static, so a test that publishes one would
-        /// otherwise leave it published for whatever runs next — and these tests would
+        /// otherwise leave it published for whatever runs next - and these tests would
         /// pass or fail on their order. Snapshot and restore makes each independent.
         /// </summary>
         AvatarDefinition[] _rosterBefore;
@@ -85,12 +85,12 @@ namespace GlimmerGrove.Tests
 
             // Derived from the roster rather than typed. The ladder is content: it was retuned
             // to gate its last two companions at 61 and 66, at which point a hard-coded 60 made
-            // this permanently red — and a suite with a standing failure in it is a suite
+            // this permanently red - and a suite with a standing failure in it is a suite
             // nobody reads. Whatever the top gate becomes, the claim stays the same one.
             //
             // What the claim is stopped being "every companion is reachable" when the rule
             // became keeper level AND purchase: levelling alone now reaches only the ones the
-            // roster puts no price on. The monotonicity is the part worth pinning either way —
+            // roster puts no price on. The monotonicity is the part worth pinning either way -
             // a count that goes down as a player levels up is the shape of bug this catches.
             int top = 0;
             foreach (var avatar in AvatarCatalog.All)
@@ -296,7 +296,7 @@ namespace GlimmerGrove.Tests
             // The rename is old. The file carrying it was written long ago.
             var renamed = File(updatedUnix: 100, name: "Fern");
 
-            // The other device renamed *earlier still*, but its file is a fresh snapshot —
+            // The other device renamed *earlier still*, but its file is a fresh snapshot -
             // which is what every local side looks like, every sync, for ever.
             var stale = File(updatedUnix: 9_000_000, name: "Bracken");
             stale.wallet.displayNameSetUnix = 50;
@@ -324,7 +324,7 @@ namespace GlimmerGrove.Tests
 
             var fresh = File(updatedUnix: 9_000_000);
             Assert.AreEqual(string.Empty, fresh.wallet.displayName,
-                            "an unnamed keeper stores nothing — DefaultName is shown, never written");
+                            "an unnamed keeper stores nothing - DefaultName is shown, never written");
 
             foreach (var merged in new[] { SaveMerge.Join(fresh, server), SaveMerge.Join(server, fresh) })
                 Assert.AreEqual("Fern", merged.wallet.displayName);
@@ -332,7 +332,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// A v14 file carries a real name and no stamp, which reads as the oldest possible
-        /// choice — so it survives against a device that never chose, and yields to any
+        /// choice - so it survives against a device that never chose, and yields to any
         /// rename made since. Nothing has to detect the upgrade.
         /// </summary>
         [Test]
@@ -351,7 +351,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// Two names dated the same second — two devices renamed at once, or, far more
+        /// Two names dated the same second - two devices renamed at once, or, far more
         /// likely, two files that both predate the stamps. The answer is arbitrary and
         /// must be <em>stable</em>: an order-dependent one would leave the two devices
         /// pushing over each other for ever.
@@ -372,7 +372,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A rename has to be sent, and it has to be sent with its date — a name that
+        /// A rename has to be sent, and it has to be sent with its date - a name that
         /// travelled without one would be re-dated by whichever device asked last, which
         /// is the whole failure schema v15 removes.
         /// </summary>
@@ -416,7 +416,7 @@ namespace GlimmerGrove.Tests
                           "a choice the server has not seen must be sent");
 
             // Same companion, chosen at the same moment: the file's own date has moved on
-            // — a snapshot is stamped with now — and that must still send nothing, which
+            // - a snapshot is stamped with now - and that must still send nothing, which
             // is the whole reason SaveDelta compares fields rather than timestamps.
             var unchanged = File(updatedUnix: 300, avatar: "timber");
             unchanged.wallet.avatarSetUnix = remote.wallet.avatarSetUnix;
@@ -442,7 +442,7 @@ namespace GlimmerGrove.Tests
         /// unnamed keeper is <em>shown</em>, and is never what is stored.
         ///
         /// Writing it down is what made a device with no opinion indistinguishable from
-        /// one that had chosen — after which no merge rule could have been right, because
+        /// one that had chosen - after which no merge rule could have been right, because
         /// the information it needed had already been thrown away.
         /// </summary>
         [Test]
@@ -471,8 +471,8 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A pre-v15 file holding the default name and no stamp is ambiguous — never
-        /// chosen, or chosen and it happened to be the default — and reading it as never
+        /// A pre-v15 file holding the default name and no stamp is ambiguous - never
+        /// chosen, or chosen and it happened to be the default - and reading it as never
         /// chosen is the safe half: the player still sees Grovekeeper, and a device that
         /// was never renamed stops outranking one that was.
         /// </summary>

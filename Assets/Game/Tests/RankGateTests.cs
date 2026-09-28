@@ -11,7 +11,7 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// <b>This fixture is half the point of the rule living in <c>GlimmerGrove.Authoring</c>.</b>
     /// The first cut of <see cref="RankGate"/> was written inside <c>ContentValidation</c>, where
-    /// the suite cannot reach it — so it shipped compiled and never once executed, which is a
+    /// the suite cannot reach it - so it shipped compiled and never once executed, which is a
     /// gate that cannot fail and therefore is not a gate. Every branch below is one this file
     /// would otherwise be trusting.
     /// </para>
@@ -97,7 +97,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// **The lowest wall, not the first chapter listed.** The rule is "the ladder may not open
         /// before ranked play can be reached", so a second lane opening sooner moves the anchor
-        /// down — and reading the *first* entry would leave a window in which the cheaper lane is
+        /// down - and reading the *first* entry would leave a window in which the cheaper lane is
         /// playable and the ladder is still shut.
         /// </summary>
         [Test]
@@ -131,7 +131,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// A keeper line on the *second* rung gates the rungs above it and nothing below, so it is
-        /// not an opening — which is the one way a ladder could look gated and not be.
+        /// not an opening - which is the one way a ladder could look gated and not be.
         /// </summary>
         [Test]
         public void AKeeperLineAboveTheFirstRungOpensNothing()

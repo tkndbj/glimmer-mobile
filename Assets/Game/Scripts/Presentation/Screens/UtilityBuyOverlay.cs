@@ -17,31 +17,31 @@ namespace GlimmerGrove
     /// The ceiling is a hundred (<c>UtilityCatalog.Default</c>), which makes that argument say
     /// the opposite: a shelf that sold a hundred one tap at a time would be a hundred taps, and
     /// a player stocking up before a chapter is doing exactly what the ceiling was raised for.
-    /// It counts out loud for <see cref="HomesteadBuyOverlay"/>'s reason — the total is what is
+    /// It counts out loud for <see cref="HomesteadBuyOverlay"/>'s reason - the total is what is
     /// being agreed to, so the button says the total rather than the unit price.
     /// </para>
     /// <para>
     /// <b>It opens from two places and is one panel on purpose.</b> The empty slot on the action
     /// bar raises it over a live siege; the shop's kit shelf raises it over a page of cards. Two
     /// panels would be two prices, two ceilings and two chances to disagree about what somebody
-    /// is carrying — <c>RunContinueFlow</c>'s argument, one screen along. The order starts at one,
+    /// is carrying - <c>RunContinueFlow</c>'s argument, one screen along. The order starts at one,
     /// so nothing about the in-run route costs a tap more than it did.
     /// </para>
     /// <para>
     /// <b>It opens over a live board and the board stops while it is up.</b> It shipped without
     /// that and was reported from play: the hill kept walking behind the panel, so a player who
-    /// tapped an empty slot was reading a price while raiders closed on their ward line — a run
+    /// tapped an empty slot was reading a price while raiders closed on their ward line - a run
     /// being lost by somebody who had asked the game a question. It is not this panel's rule,
     /// though, and it is deliberately not written here: <c>RunHold.Covered</c> holds any run
     /// behind any panel, asked once a frame by <c>RunScreen</c>. What survives as this panel's
-    /// own business is the <em>manner</em> — it says its price and closes, with none of the
+    /// own business is the <em>manner</em> - it says its price and closes, with none of the
     /// ceremony a grove piece gets, because it is an errand in the middle of a raid.
     /// </para>
     /// <para>
     /// <b>A short balance keeps a live button</b>, which is <see cref="HomesteadBuyOverlay"/>'s
     /// rule and its reason: this is the moment a player has decided they want something, and a
     /// greyed control spends it on teaching them the feature is broken. The gem shelf is stacked
-    /// on top rather than navigated to — <c>ContinueOverlay</c>'s argument, and it survives the
+    /// on top rather than navigated to - <c>ContinueOverlay</c>'s argument, and it survives the
     /// board being held: leaving the screen would abandon a run that is still standing, where
     /// stacking keeps the raid exactly where the player left it.
     /// </para>
@@ -59,7 +59,7 @@ namespace GlimmerGrove
         /// <summary>Raised after a purchase lands, so the bar behind can repaint.</summary>
         public System.Action Bought { get; set; }
 
-        // The panel grew by the stepper's block rather than by squeezing what was there —
+        // The panel grew by the stepper's block rather than by squeezing what was there -
         // HomesteadBuyOverlay's `StepperRoom`, and its lesson, which is that a control counting
         // out loud has to be clear of both the sentence above it and the button below. Every
         // measurement above the stepper is lifted by half the growth, so the picture, the note
@@ -68,7 +68,7 @@ namespace GlimmerGrove
         const float StepperRoom = 140f, Lift = StepperRoom * .5f;
 
         // The panel is parchment, so it is written in ink rather than in the cream the board
-        // uses — HomesteadBuyOverlay's note, and the same measured accents.
+        // uses - HomesteadBuyOverlay's note, and the same measured accents.
         static readonly Color Ink = new Color(.36f, .25f, .18f);
         static readonly Color Short = new Color(.58f, .31f, .06f);
         static readonly Color Held = new Color(.18f, .42f, .21f);
@@ -83,8 +83,8 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>A greyed key is a state, not an answer.</b> The stepper's upper stop is the lesser
-        /// of two completely different facts — the gems in hand and the room left
-        /// (<c>UtilityLedger.MaxQuantity</c>) — and both of them wore the same dimmed <c>+</c>,
+        /// of two completely different facts - the gems in hand and the room left
+        /// (<c>UtilityLedger.MaxQuantity</c>) - and both of them wore the same dimmed <c>+</c>,
         /// with the status line underneath busy saying what the player was carrying. Reported
         /// from a device as a <c>+</c> that "sometimes does not increment"; every gate was green,
         /// because the clamp is correct and nothing here was wrong except that the panel never
@@ -103,7 +103,7 @@ namespace GlimmerGrove
         /// <summary>
         /// How many this order is for. Starts at one and is clamped to
         /// <c>UtilityLedger.MaxQuantity</c> on every repaint, because the balance and the room
-        /// both move under an open panel — a stepper left reading twelve over a button that will
+        /// both move under an open panel - a stepper left reading twelve over a button that will
         /// only sell two is the panel lying about the one thing it exists to be exact about.
         /// </summary>
         int _quantity = 1;
@@ -159,7 +159,7 @@ namespace GlimmerGrove
 
         // -------------------------------------------------------------- the stepper
         /// <summary>
-        /// Minus, the count, plus — and nothing else, because the total is on the button.
+        /// Minus, the count, plus - and nothing else, because the total is on the button.
         ///
         /// <para>
         /// Built even for a chest-only utility, greyed at both stops rather than absent: a
@@ -200,7 +200,7 @@ namespace GlimmerGrove
         /// Moves the order by one, clamped to what the ledger will actually sell.
         ///
         /// The upper stop is re-read on every tap rather than cached at build, because both
-        /// halves of it move under this panel — gems landing from the stacked shelf raise it, a
+        /// halves of it move under this panel - gems landing from the stacked shelf raise it, a
         /// chest opened elsewhere lowers it. <c>HomesteadBuyOverlay.Nudge</c>'s rule.
         /// </summary>
         void Nudge(int delta)
@@ -240,7 +240,7 @@ namespace GlimmerGrove
 
             _count.text = "×" + _quantity;
 
-            // Greyed rather than hidden at the stops — a player who has just pressed + four
+            // Greyed rather than hidden at the stops - a player who has just pressed + four
             // times needs to see why the fifth did nothing.
             if (_less) _less.Interactable = _quantity > 1;
             if (_more) _more.Interactable = _quantity < most;
@@ -268,7 +268,7 @@ namespace GlimmerGrove
         }
 
         // The *total*, never the unit price. A control labelled with a price has to charge
-        // that price — HomesteadBuyOverlay's rule, and the one complaint every shop with a
+        // that price - HomesteadBuyOverlay's rule, and the one complaint every shop with a
         // stepper gets is from somebody who did not know what they were agreeing to.
         /// <summary>
         /// What the paying button says.
@@ -303,13 +303,13 @@ namespace GlimmerGrove
 
             PaintStepper();
 
-            // The latch is dropped the moment the stop stops binding — gems landing from the
-            // stacked shelf, or a chest opened elsewhere raising the room — so a refusal can
+            // The latch is dropped the moment the stop stops binding - gems landing from the
+            // stacked shelf, or a chest opened elsewhere raising the room - so a refusal can
             // never outlive the thing it was about.
             if (_capped && _quantity < most) _capped = false;
 
             // **Why the `+` stopped, said instead of what the player is carrying.** The order
-            // itself is fine — the clamp saw to that — so without this the panel answers a
+            // itself is fine - the clamp saw to that - so without this the panel answers a
             // refused tap with the cheerful holding line, which is what was reported.
             //
             // Which of the two walls it is comes from the ledger's own arithmetic:
@@ -370,13 +370,13 @@ namespace GlimmerGrove
         /// Draws the paying button for an answer.
         ///
         /// Split out of <see cref="Repaint"/> so the capped branch can take its own early exit
-        /// without leaving the button behind — a status line that changes over a button that
+        /// without leaving the button behind - a status line that changes over a button that
         /// does not is exactly the disagreement this panel exists not to have.
         /// </summary>
         void PaintAction(UtilityRefusal refusal)
         {
             // The button swaps between paying and earning, so it is rebuilt rather than
-            // relabelled when the answer changes — HomesteadBuyOverlay's shape, minus the
+            // relabelled when the answer changes - HomesteadBuyOverlay's shape, minus the
             // stepper it has to keep in step.
             bool wantsGems = refusal == UtilityRefusal.Poor;
 
@@ -406,7 +406,7 @@ namespace GlimmerGrove
         {
             // Stacked on this panel rather than navigated to: the board behind is held while
             // anything is over it (RunHold.Covered), and it stays held because this panel is
-            // still up underneath the shelf — where leaving the screen would abandon the run
+            // still up underneath the shelf - where leaving the screen would abandon the run
             // outright. ContinueOverlay's rule, one screen along.
             Flow.Modal<GemShopOverlay>(v => v.Bought = () => { if (this) Repaint(); });
         }
@@ -443,7 +443,7 @@ namespace GlimmerGrove
             Bought?.Invoke();
 
             // Closed on a short delay rather than at once, so the player sees the panel confirm
-            // before it goes — and with no unveiling, because a raid is waiting behind it. The
+            // before it goes - and with no unveiling, because a raid is waiting behind it. The
             // delay is the last of the hold: the run is handed back when this panel is, not when
             // the gems left.
             Tween.After(.55f, () => { if (this) Close(); }, this);

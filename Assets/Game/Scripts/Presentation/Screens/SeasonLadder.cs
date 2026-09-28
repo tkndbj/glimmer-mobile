@@ -15,7 +15,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>Its own type because it recycles, and it recycles because forty rungs is eighty
     /// chests.</b> Built whole, the ladder is around five hundred images standing on a
-    /// phone for the life of the screen — bounded by <see cref="EventRules.MaxMilestones"/>
+    /// phone for the life of the screen - bounded by <see cref="EventRules.MaxMilestones"/>
     /// rather than unbounded, so not quite the grid invariant 16d is about, but the same
     /// arithmetic with the same answer. Nine rows fit a tall phone, so eleven are built and
     /// rebound as they scroll.
@@ -23,7 +23,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>Bind writes everything, and it never animates.</b> A recycled row is a different
     /// rung a frame later, so an entrance played on bind would fire every time the list
-    /// moved — <c>CRAFT.md</c>'s rule that <c>Show</c> animates and <c>Refresh</c> does not,
+    /// moved - <c>CRAFT.md</c>'s rule that <c>Show</c> animates and <c>Refresh</c> does not,
     /// arriving where it is easiest to get wrong. The one thing that does move is the
     /// breathing on a chest that can be opened, and it is started and killed by the bind
     /// that changed the state rather than on every pass.
@@ -48,7 +48,7 @@ namespace GlimmerGrove
         /// <b>The floor moved up, on the owner's verdict after playing it.</b> A rung pays a
         /// chest and the chest was the smallest thing on the card that named it; 164 with a 97
         /// chest in it read as a table of contents. The row is a scrolling list, so the whole
-        /// cost of the change is how many rungs a phone shows at once — one fewer — against a
+        /// cost of the change is how many rungs a phone shows at once - one fewer - against a
         /// prize that is now a picture. See <see cref="ChestTall"/> for the other half.
         /// </para>
         /// </summary>
@@ -73,8 +73,8 @@ namespace GlimmerGrove
         /// <para>
         /// <b>This row typed its own box and was the last screen in the game still doing it.</b>
         /// A closed chest is frame nought of its opening reel, so the 176x244 sprite carries the
-        /// lid's headroom: a box set straight to 110x152 draws a chest 97 tall — two thirds of
-        /// what the number says — and hangs it <b>24 units below</b> the middle of the cell it
+        /// lid's headroom: a box set straight to 110x152 draws a chest 97 tall - two thirds of
+        /// what the number says - and hangs it <b>24 units below</b> the middle of the cell it
         /// claims to be centred in, which is what "the chests are not centred in their cards"
         /// was. The hub, the tasks page and the streak board all convert through
         /// <see cref="ChestPack"/>; this one did not, and nothing could see it because
@@ -98,7 +98,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// The seal and the padlock, on the lower right of the <em>drawn</em> chest rather than
-        /// of its sprite — measured off <see cref="ChestTall"/> so a retune takes them with it,
+        /// of its sprite - measured off <see cref="ChestTall"/> so a retune takes them with it,
         /// which is what a hand-typed pair of offsets stopped doing the moment the chest grew.
         /// </summary>
         static readonly Vector2 StampAt = new Vector2(ChestTall * .46f, -ChestTall * .42f);
@@ -180,8 +180,8 @@ namespace GlimmerGrove
             _list.pivot = new Vector2(.5f, 1f);
 
             // Every lit row's pool lives here, built before any card so all of them are under
-            // every card. A light hung off a card would have to be either a child — which
-            // draws over the plate it is meant to light — or a sibling inserted beside it,
+            // every card. A light hung off a card would have to be either a child - which
+            // draws over the plate it is meant to light - or a sibling inserted beside it,
             // which draws over the row above. The tasks page's rule, kept.
             _lights = UIKit.Node("Lights", _list);
             _lights.anchorMin = new Vector2(0f, 1f);
@@ -223,7 +223,7 @@ namespace GlimmerGrove
             row.Pool = UIKit.Img("Light", _lights, Art.Glow(128, 1.35f), Pal.A(Pal.Sun, 0f),
                                  new Vector2(_width + 150f, RowHeight + 130f), Top, Vector2.zero);
 
-            // `Skins.PlateNavy` — the profile's own blue box, darker. One reward row means one
+            // `Skins.PlateNavy` - the profile's own blue box, darker. One reward row means one
             // thing across this game, so the season's ladder, the streak's board and the tasks
             // page draw the same card (invariant 44: the way to restyle every screen at once is
             // to re-cut what a name points at). See `Skins.PlateNavy`.
@@ -245,7 +245,7 @@ namespace GlimmerGrove
 
             // The rule between the two columns. A rung is one goal paying two chests, and with
             // nothing separating them the card reads as two unrelated pictures sitting on it;
-            // with a line *joining* them — which is what this was first — it reads as one
+            // with a line *joining* them - which is what this was first - it reads as one
             // reward drawn twice. A divider is the arrangement the headings above already
             // promise, so it is the one that needs no explaining.
             row.Spine = UIKit.Img("Split", row.Root, Art.Pixel, new Color(1f, 1f, 1f, .14f),
@@ -255,7 +255,7 @@ namespace GlimmerGrove
             row.Free = BuildCell(row, FreeX, SeasonTrack.Free);
             row.Pass = BuildCell(row, PassX, SeasonTrack.Pass);
 
-            // The rim, on the card's own edge and over everything on it — the half of the lit
+            // The rim, on the card's own edge and over everything on it - the half of the lit
             // state that has to be a child, because a light behind a plate the kit cuts opaque
             // is a light with a hole in the middle of it.
             row.Rim = UIKit.Img("Rim", row.Root, Art.RoundOutline(30, 7f), Pal.A(Pal.Sun, 0f));
@@ -271,7 +271,7 @@ namespace GlimmerGrove
                                  Centre, new Vector2(x, 0f));
             cell.Host = host;
 
-            // On the drawn chest's own middle — which is this host's middle, because the sprite
+            // On the drawn chest's own middle - which is this host's middle, because the sprite
             // is the thing that moves (see ChestTall). A halo centred on the sprite's box would
             // light the empty air the lid opens into.
             cell.Halo = UIKit.Img("Halo", host, Art.Glow(128, 2f), Pal.A(Pal.Gold, 0f),
@@ -316,7 +316,7 @@ namespace GlimmerGrove
         /// Which rung a row is drawing, so the caller can find a card to burst on.
         ///
         /// <b>The cell rather than the chest image</b>, because the image is the sprite's box
-        /// and that is hung a fifth of a chest above the picture inside it — sparks thrown from
+        /// and that is hung a fifth of a chest above the picture inside it - sparks thrown from
         /// it come out of the air over the lid rather than off the chest.
         /// </summary>
         public RectTransform ChestOf(int index, SeasonTrack track)
@@ -429,7 +429,7 @@ namespace GlimmerGrove
             // rule (see the class note) and was broken here. `rebound` is true for *every*
             // visible row each time the list crosses a rung, so scrolling re-entered `Shine`
             // eleven times a pitch: each call kills the loop and starts it again at its
-            // dimmest, so every lit card on the screen dipped and rose together — read as a
+            // dimmest, so every lit card on the screen dipped and rose together - read as a
             // flicker, and the faster the scroll the more of them. A light that is already
             // breathing on a row that is still lit wants nothing done to it, whichever rung
             // the row is now showing.
@@ -452,7 +452,7 @@ namespace GlimmerGrove
                      : ready ? Face.Ready
                      : Face.Claimed;      // reached-but-not-yet, or simply not reached: drawn plain
 
-            // The picture is the tier's, and it only ever changes when the rung does — a
+            // The picture is the tier's, and it only ever changes when the rung does - a
             // sprite assignment per scroll frame is a material rebind the list does not need.
             if (rebound) cell.Chest.sprite = tier == null ? null : Art.S(tier.Icon);
 
@@ -474,7 +474,7 @@ namespace GlimmerGrove
             {
                 // Both on the *change* into Ready, for the reason above: a rebind that found
                 // the cell already ready restarted the breathe from scale one and started a
-                // second tint toward a colour the halo was already wearing — a jump on every
+                // second tint toward a colour the halo was already wearing - a jump on every
                 // chest that could be opened, once per rung scrolled.
                 if (!wasReady)
                 {

@@ -14,29 +14,29 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// <b>It exists because <c>OutOfHeartsOverlay</c> cannot be raised over a run.</b> That
-    /// panel is right everywhere it is raised today — a refused map node, an event tile, the
-    /// victory panel's next — precisely because nothing is standing behind it: it navigates to
+    /// panel is right everywhere it is raised today - a refused map node, an event tile, the
+    /// victory panel's next - precisely because nothing is standing behind it: it navigates to
     /// the shop, and it closes itself the moment <c>Profile.CanPlay</c> reads true. Both of
     /// those are wrong here. Leaving this screen through <c>Flow.Go</c> abandons a committed run
     /// <em>without resolving it</em>, so <c>RunGuard</c>'s marker survives on disk and charges a
     /// heart at the next launch for a run nobody finished; and the commonest refusal on this
     /// panel is a player holding one heart, which is a state that panel would close itself on
     /// while the restart was still refused. So the shelf comes to them and the panel decides for
-    /// itself when the gate has lifted — invariant 23's rule, which <c>GemShopOverlay</c>
+    /// itself when the gate has lifted - invariant 23's rule, which <c>GemShopOverlay</c>
     /// already answers for a lost run one panel over.
     /// </para>
     /// <para>
     /// <b>It is composition rather than a fourth copy of anything.</b> The free way is
-    /// <see cref="HeartVideoFlow"/> and the paid way is <see cref="HeartRescueFlow"/> — both
+    /// <see cref="HeartVideoFlow"/> and the paid way is <see cref="HeartRescueFlow"/> - both
     /// were lifted out of the defeat panel as collaborators taking a panel and two callbacks,
-    /// which is exactly what a second caller needs — and the column they sit in is
+    /// which is exactly what a second caller needs - and the column they sit in is
     /// <see cref="HeartGatePanel"/>, shared with the panel above. What is left here is the two
     /// things only this panel knows: which sentence explains the refusal, and what onward means.
     /// </para>
     /// <para>
     /// <b>Onward is <c>RunScreen.RestartLevel</c> again, never <c>Rewind</c>, and that is the
-    /// clause with teeth.</b> Hearts arriving do not imply the gate has lifted — a rescue of one
-    /// heart to a player holding none leaves a charged restart still refused — so calling the
+    /// clause with teeth.</b> Hearts arriving do not imply the gate has lifted - a rescue of one
+    /// heart to a player holding none leaves a charged restart still refused - so calling the
     /// mode's rewind directly would be the very bug this panel was built for, reintroduced by
     /// its own fix. Re-entering the door instead re-asks the gate, and when it does pass the
     /// player gets the ordinary forfeit confirmation they would have got with hearts in hand:
@@ -57,7 +57,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Told at build time rather than read here, because which of the two refusals this is
-        /// cannot be worked out afterwards from a wallet that has since moved — and because it
+        /// cannot be worked out afterwards from a wallet that has since moved - and because it
         /// is also what the rescue prices itself against. See <see cref="RefusalKey"/>.
         /// </para>
         /// </summary>
@@ -69,7 +69,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <c>PauseOverlay</c>'s flag exactly, and for its reason: this panel has four ways out
-        /// — two offers, a dismiss button and the scrim — and a panel with several exits reports
+        /// - two offers, a dismiss button and the scrim - and a panel with several exits reports
         /// through none of them reliably, so the board is handed back by <see cref="OnDestroy"/>
         /// and the exception is the thing somebody declares. Forgetting to declare a hand-off
         /// costs a board that thaws a moment before the question over it is answered; forgetting
@@ -90,13 +90,13 @@ namespace GlimmerGrove
         protected override void Build()
         {
             // Resolved once, at the top, because both decide the panel's height as well as its
-            // buttons — and asking twice risks the two disagreeing if fill arrives in between,
+            // buttons - and asking twice risks the two disagreeing if fill arrives in between,
             // leaving a button drawn outside the panel it belongs to.
             _offering = RewardedAds.ShouldOffer(AdPlacement.HeartRefill);
 
             // Once per visit, never per paint: it decides the offer, counts the impression and
             // subscribes to the balance, none of which a redraw may do again. canRetry is false
-            // because this panel only exists when the answer was no — the gate has already been
+            // because this panel only exists when the answer was no - the gate has already been
             // asked, by the door, of the whole rule rather than of a heart count.
             if (_rescue == null)
                 _rescue = new HeartRescueFlow(this, Level, HeartsHeld, canRetry: false,
@@ -107,13 +107,13 @@ namespace GlimmerGrove
             MakePanel(new Vector2(HeartGatePanel.Width, stack.Height),
                       Loc.Get("ui.hearts.restart_title"));
 
-            // Wrapped and unadorned, matching every other body paragraph in the game — and
+            // Wrapped and unadorned, matching every other body paragraph in the game - and
             // shrinkable, which the panel this borrows its column from does not need to be.
             // Both sentences here are about twice the length of that one (measured: two lines
             // against one at the same size in the same box), so the headroom a translation has
             // before it runs into the heart below it is halved. UIKit.Label defaults to
             // Overflow with no clipping, so the failure is a paragraph drawn through the art
-            // rather than a truncated one — the house rule, and DefeatPanel's own body copy
+            // rather than a truncated one - the house rule, and DefeatPanel's own body copy
             // takes the same guard at the same floor.
             UIKit.Shrinkable(
                 UIKit.Titled("Why", Panel, Loc.Get(RefusalKey(HeartsHeld)), 32,
@@ -127,7 +127,7 @@ namespace GlimmerGrove
             empty.preserveAspect = true;
             Tween.Breathe(empty.transform, .05f, 2.2f);
 
-            // The countdown is a heading, not prose, so it keeps its outline — it is the one
+            // The countdown is a heading, not prose, so it keeps its outline - it is the one
             // number on this panel the player actually came to read.
             _countdown = UIKit.Titled("Clock", Panel, string.Empty, 52, Pal.Rose,
                                       TextAnchor.MiddleCenter, new Vector2(640f, 84f),
@@ -167,7 +167,7 @@ namespace GlimmerGrove
         /// Two keys written out rather than one built from a count, for
         /// <c>WinOverlay.RankKeys</c> reason: a key assembled at runtime is invisible to the
         /// build's string scanner and ships missing in whichever language nobody tested. They
-        /// are genuinely different news and a player can act on the difference — an empty bar
+        /// are genuinely different news and a player can act on the difference - an empty bar
         /// is a wait, and a last heart is a choice they still have, spent on this board or on a
         /// fresh one.
         /// </para>
@@ -181,7 +181,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Raised by both offers and by the clock, so there is one way onward however the hearts
-        /// arrived. It hands the run on — see <see cref="_handedOn"/> — because
+        /// arrived. It hands the run on - see <see cref="_handedOn"/> - because
         /// <c>RestartLevel</c> takes the board over itself, either with the forfeit confirmation
         /// or by raising this panel again on an offer that turned out not to be enough.
         /// </para>
@@ -227,11 +227,11 @@ namespace GlimmerGrove
             // The gate rather than Profile.CanPlay, which is the whole reason this is not
             // OutOfHeartsOverlay: a restart is an abandonment and an entry, so one heart landing
             // is not necessarily enough. Asked of the screen, so there is no second copy of the
-            // rule — and guarded, because the screen can be torn down under this panel.
+            // rule - and guarded, because the screen can be torn down under this panel.
             //
             // Only while nothing is stacked on this one, and that clause is not defensive. The
             // hearts land the instant a video finishes, which is several seconds before the
-            // celebration over this panel has been collected — so without it this would close
+            // celebration over this panel has been collected - so without it this would close
             // out from under PrizeOverlay and put a forfeit confirmation up behind somebody's
             // confetti. Same for a heart arriving off the clock while the gem shelf is open.
             // The offers each raise Proceed themselves when they are done, so nothing is lost

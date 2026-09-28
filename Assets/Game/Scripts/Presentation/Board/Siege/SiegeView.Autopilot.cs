@@ -9,7 +9,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>Every entry here is the handler a finger reaches, called by name.</b> A drag lands in
     /// <c>Drag</c>, a tube tap in <c>Unleashed</c>, a cog in <c>Grabbed</c>, a bomb in
-    /// <c>Tapped</c>, a heap in <c>Digging</c> — the same latches, the same refusals, the same
+    /// <c>Tapped</c>, a heap in <c>Digging</c> - the same latches, the same refusals, the same
     /// drawing. Nothing below decides anything or draws anything of its own, so a run played by
     /// <c>ShowcaseScreen</c>'s hand is a run played by a hand: what the recording shows is what
     /// a thumb gets.
@@ -99,7 +99,7 @@ namespace GlimmerGrove
         ///
         /// <b>For a charm stood on the field between moves</b> (<c>SiegeShowcase.Plant</c>): the
         /// board knows the cell carries one and the picture does not until it is dressed again,
-        /// which is what <c>Repaint</c> does — but <c>Repaint</c> also seats every gem, and a
+        /// which is what <c>Repaint</c> does - but <c>Repaint</c> also seats every gem, and a
         /// field mid-cascade has gems in the air. Refused while the field is not settled.
         /// </summary>
         public bool Restyle()

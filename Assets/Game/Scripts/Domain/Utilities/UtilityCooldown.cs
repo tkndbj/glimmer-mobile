@@ -12,7 +12,7 @@ namespace GlimmerGrove.Utilities
     /// (<see cref="UtilityItem.MaxHeld"/>) and by what it costs, and neither of those is a bound
     /// on a <em>moment</em>. A hundred firepots is a hundred taps in four seconds, so the answer
     /// to every wave a player cannot out-match is the same answer, given as fast as a thumb
-    /// moves — which is a mode decided by inventory rather than by play. What a cooldown prices
+    /// moves - which is a mode decided by inventory rather than by play. What a cooldown prices
     /// is the one thing a stock cannot: <em>when</em>. It is also what makes the four items
     /// different from each other in a second dimension, so a stormcall at thirty seconds is a
     /// thing held for the wave that needs it rather than the strongest tap on the bar.
@@ -28,7 +28,7 @@ namespace GlimmerGrove.Utilities
     /// <b>Nothing here reaches the save file, and that is a rule rather than an omission.</b>
     /// Seconds remaining is a count that goes both ways, so it is exactly what invariant 11b
     /// refuses a merge: two devices showing 4 and 0 are equally consistent with "one just used
-    /// it" and "one has not heard". It is also per <em>run</em> — a cooldown surviving a restart
+    /// it" and "one has not heard". It is also per <em>run</em> - a cooldown surviving a restart
     /// would punish restarting, and one surviving a level would make what a board asks of a
     /// player depend on the board before it, which is invariant 29c's objection to a companion
     /// that changed what a move does. So it is built with the board and dies with it.
@@ -63,7 +63,7 @@ namespace GlimmerGrove.Utilities
         }
 
         // A list rather than a dictionary: a catalog is at most `UtilityCatalog.MaxItems` long,
-        // so a linear walk is cheaper than a hash and — the half that matters — it can be walked
+        // so a linear walk is cheaper than a hash and - the half that matters - it can be walked
         // backwards and compacted in place every frame without allocating.
         readonly List<Cooling> _cooling = new List<Cooling>(UtilityCatalog.MaxItems);
 
@@ -89,7 +89,7 @@ namespace GlimmerGrove.Utilities
         /// Whether this one may be used now.
         ///
         /// <b>A utility that authors no cooldown is always ready</b>, which is what makes the
-        /// field's absence mean "as it was before this existed" — the shape every optional block
+        /// field's absence mean "as it was before this existed" - the shape every optional block
         /// in this project takes, because <c>JsonUtility</c> writes a nought into a field an
         /// older file never had.
         /// </summary>
@@ -125,7 +125,7 @@ namespace GlimmerGrove.Utilities
         /// <para>
         /// Up rather than down, and that is the only honest direction: rounding down shows a
         /// nought for the last whole second of a cooldown, so the number says ready over a cell
-        /// that still refuses a tap — a readout disagreeing with the rule it is a readout of.
+        /// that still refuses a tap - a readout disagreeing with the rule it is a readout of.
         /// </para>
         /// </summary>
         public int Seconds(UtilityItem item)
@@ -147,8 +147,8 @@ namespace GlimmerGrove.Utilities
         /// </para>
         /// <para>
         /// It <em>restarts</em> rather than adds. A cooldown is a bound on when the next one may
-        /// be used, not a debt, so a second use — which cannot happen while one is running, but
-        /// could the day a caller forgets to ask — resets the clock rather than stacking two.
+        /// be used, not a debt, so a second use - which cannot happen while one is running, but
+        /// could the day a caller forgets to ask - resets the clock rather than stacking two.
         /// </para>
         /// </summary>
         public void Spend(UtilityItem item)
@@ -173,7 +173,7 @@ namespace GlimmerGrove.Utilities
         ///
         /// <para>
         /// The answer is what lets a caller repaint on the frame something became usable again
-        /// and not on the other fifty-nine — the edge, rather than a poll, which is
+        /// and not on the other fifty-nine - the edge, rather than a poll, which is
         /// <c>SiegeView.Charge</c>'s rule about a ward's rank.
         /// </para>
         /// </summary>
@@ -206,7 +206,7 @@ namespace GlimmerGrove.Utilities
         /// Forgets everything, because this is a fresh run.
         ///
         /// A restart is a new board and a new bar, so what was cooling on the board that was
-        /// thrown away is not a debt the next one inherits — the same reason
+        /// thrown away is not a debt the next one inherits - the same reason
         /// <c>SiegeScreen.Rewind</c> puts down whatever was armed.
         /// </summary>
         public void Clear() => _cooling.Clear();

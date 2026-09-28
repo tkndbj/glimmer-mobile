@@ -7,7 +7,7 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// A glade counts <em>turns</em> and a hollow counts <em>sparks</em>, and the same run has
-    /// to read the same way wherever it appears — the node on the map and the victory panel are
+    /// to read the same way wherever it appears - the node on the map and the victory panel are
     /// already careful to quote a record in exactly one format, and a second mode would have
     /// broken that by having each of them decide the word for itself. So the choice is made
     /// here, from the level's own mode, and both callers ask.
@@ -27,7 +27,7 @@ namespace GlimmerGrove
         /// <para>
         /// Two keys per mode, and the <em>strings</em> behind them are as much a part of that
         /// contract as the names are. Both stems shipped reading "{0} turns · {1}", because a
-        /// record used to carry a time as well as a count — and when the clock went (invariant
+        /// record used to carry a time as well as a count - and when the clock went (invariant
         /// 22) the two timed forms were dropped from this method while the table kept the timed
         /// text. <see cref="Loc.Format"/> swallows the <c>FormatException</c> a missing argument
         /// raises and hands back the pattern, so every map node and every victory panel in the
@@ -46,7 +46,7 @@ namespace GlimmerGrove
             // with real plural rules. It used to be four: a run also carried a time, and one
             // that resolved before the clock could read anything needed a form with no time
             // in it. There is no clock and a record is a count, so the two timed forms went
-            // with it — see LevelRecord.BestMillis for what became of the number itself.
+            // with it - see LevelRecord.BestMillis for what became of the number itself.
             return moves == 1 ? stem + "_one" : stem;
         }
 

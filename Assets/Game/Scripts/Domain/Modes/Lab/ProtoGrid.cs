@@ -8,7 +8,7 @@ namespace GlimmerGrove.Modes
     /// <para>
     /// <b>The one place every prototype mode agrees about what a board file looks like.</b> Each
     /// of them authors a grid of letters and a short deal string, and each of the five built at
-    /// once was about to write its own reader — which is five copies of "spaces are ignored",
+    /// once was about to write its own reader - which is five copies of "spaces are ignored",
     /// five copies of the row-length message and five chances for one of them to accept a board
     /// the others would refuse. What differs between the modes is which letters mean something,
     /// and that is one parameter.
@@ -29,7 +29,7 @@ namespace GlimmerGrove.Modes
         public const int MinSide = 3;
 
         /// <summary>
-        /// The widest. Not a drawing limit — it is the search: every one of these modes costs
+        /// The widest. Not a drawing limit - it is the search: every one of these modes costs
         /// roughly its board's size to the power of its par, so a board twice as wide is not twice
         /// as expensive (invariant 26d). Ten a side is comfortably inside
         /// <see cref="ProtoSearch.NodeBudget"/> at the pars these modes are authored to.

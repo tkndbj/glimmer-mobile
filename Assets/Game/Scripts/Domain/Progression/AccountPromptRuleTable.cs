@@ -11,7 +11,7 @@ namespace GlimmerGrove.Progression
     /// <c>HeartLimits</c>' and <c>DifficultyLimits</c>' job for the account prompt: content may
     /// retune how often the game asks, it may not redefine what asking is. Everything here is a
     /// compile-time constant precisely because it is what a published file is checked
-    /// <em>against</em> — a limit that could itself be published would not be a limit.
+    /// <em>against</em> - a limit that could itself be published would not be a limit.
     /// </para>
     /// </summary>
     public static class AccountPromptLimits
@@ -38,7 +38,7 @@ namespace GlimmerGrove.Progression
         ///
         /// <para>
         /// If the prompt turns out to cost more conversion than the protection is worth, the
-        /// fix has to be available in minutes rather than in a store review — so "ask nobody"
+        /// fix has to be available in minutes rather than in a store review - so "ask nobody"
         /// is a value a published file can set, for either trigger independently. That is why
         /// the DTO's "unset" sentinel is -1 rather than 0: the difference between an author
         /// writing zero and an author writing nothing has to survive, which is the convention
@@ -59,7 +59,7 @@ namespace GlimmerGrove.Progression
     }
 
     /// <summary>
-    /// How often the game may ask an anonymous player to attach a real account — content, not
+    /// How often the game may ask an anonymous player to attach a real account - content, not
     /// code.
     ///
     /// <para>
@@ -69,7 +69,7 @@ namespace GlimmerGrove.Progression
     /// interruption, it is not adjudicated by anything, and the right value is discovered from
     /// live link rates rather than known in advance. Shipping it as a <c>const</c> would mean
     /// that finding out the modal costs conversion, or that two asks are not enough, needs a
-    /// store review — which is the mistake this project has already recorded against the heart
+    /// store review - which is the mistake this project has already recorded against the heart
     /// gate, the chest odds and the clock.
     /// </para>
     /// <para>
@@ -79,7 +79,7 @@ namespace GlimmerGrove.Progression
     /// merged and nothing that pays, so a retune needs no migration and no deploy.
     /// </para>
     /// <para>
-    /// Like every other optional block this is not a schema bump — a client that predates it
+    /// Like every other optional block this is not a schema bump - a client that predates it
     /// keeps the built-in pacing.
     /// </para>
     /// </summary>
@@ -95,7 +95,7 @@ namespace GlimmerGrove.Progression
         /// <summary>Times a finished chapter may raise the panel, for the life of an install.</summary>
         public int ChapterBudget { get; }
 
-        /// <summary>Times a completed purchase may raise it. Separate on purpose — see the policy.</summary>
+        /// <summary>Times a completed purchase may raise it. Separate on purpose - see the policy.</summary>
         public int PurchaseBudget { get; }
 
         /// <summary>The shortest gap between any two automatic asks, whatever raised them.</summary>
@@ -154,7 +154,7 @@ namespace GlimmerGrove.Progression
     }
 
     /// <summary>
-    /// The live prompt pacing, read the way <c>HeartRules</c> and <c>DifficultyRules</c> are —
+    /// The live prompt pacing, read the way <c>HeartRules</c> and <c>DifficultyRules</c> are -
     /// a facade over the published table, so a call site reads as it did when these were
     /// constants.
     /// </summary>

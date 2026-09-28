@@ -23,7 +23,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>A pure function, so the one thing a picture cannot answer can be pinned.</b> A
         /// render says whether the hill reads and whether a fuel tube has fallen behind the
-        /// field's plate, and it says it one screen shape at a time — which is how the line band
+        /// field's plate, and it says it one screen shape at a time - which is how the line band
         /// came to be able to collapse on a 4:3 while every phone was fine. The shares are
         /// arithmetic over three numbers, so they can be swept instead.
         /// </para>
@@ -40,7 +40,7 @@ namespace GlimmerGrove
             /// <para>
             /// <b>Here rather than in <c>Compose</c>, so that anything measured against them can
             /// be swept.</b> They were three statements inside the build, which is where the
-            /// shares used to be too — and the reason those moved is the reason these follow:
+            /// shares used to be too - and the reason those moved is the reason these follow:
             /// a render draws one screen shape at a time, so nothing could see a band collapse
             /// on a 4:3 or two captions sharing a row on all of them. A number a fixture cannot
             /// reach is a number only a picture can check.
@@ -114,12 +114,12 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>A ladder rather than two placements, because whether two things on a screen overlap
-        /// is arithmetic</b> — and arithmetic inside a <c>MonoBehaviour</c> is arithmetic nothing
+        /// is arithmetic</b> - and arithmetic inside a <c>MonoBehaviour</c> is arithmetic nothing
         /// can check (invariant 8a, and <c>ProductCardBadges</c> for the same fault on a shop
         /// card). These two were placed independently and against <em>different anchors</em>: the
         /// chain against the ward line and the wave banner against the hill's foot, which sit
         /// between .45 and .71 of a cell apart depending on the display. Each number was
-        /// reasonable and the pair was wrong on every shape — measured, the wave banner floated
+        /// reasonable and the pair was wrong on every shape - measured, the wave banner floated
         /// up through the chain banner and shared about 1.4 cells with it on a 19.5:9 phone, a
         /// 16:9 sheet and a tablet alike, which is what came back from play as "CHAIN x2" and
         /// "WAVE 1 OF 3" drawn on top of each other.
@@ -129,13 +129,13 @@ namespace GlimmerGrove
         /// of cells rather than something a band ratio can close. The chain keeps the place it
         /// was given (invariant 37k: the empty run of hill just above the turrets, where the eye
         /// is already going to see what they are shooting) and the wave banner is stacked clear
-        /// above it — which is also the right way round to read, since a wave arrives from the
+        /// above it - which is also the right way round to read, since a wave arrives from the
         /// top of the hill and a cascade happened on the field.
         /// </para>
         /// <para>
         /// <b>The ladder may reach above the hill on a short board, and that is stated rather
         /// than clamped.</b> On the shortest hill any display leaves, the two of them together
-        /// are taller than it is — so no arrangement fits, and clamping would put them back on
+        /// are taller than it is - so no arrangement fits, and clamping would put them back on
         /// top of each other, which is the one thing this exists to stop.
         /// <c>SiegeCaptionTests</c> holds the separation at every shape and the fit at the shapes
         /// that have the room, which is the same split <c>SiegeBandTests</c> already makes.
@@ -293,7 +293,7 @@ namespace GlimmerGrove
         /// <summary>Where the chain banner sits above the ward line, its box, and its drift.</summary>
         // The box is a quarter wider than the largest font a chain is ever drawn at (`Chain`
         // ramps it to 1.02 cells at depth six), which is what a single centred line needs and no
-        // more. It was 1.6 — harmless on its own, and a third of a cell of nothing that the
+        // more. It was 1.6 - harmless on its own, and a third of a cell of nothing that the
         // banner above it would have had to be lifted clear of.
         const float ChainRise = 2.35f, ChainBox = 1.25f, ChainDrift = .30f;
 
@@ -344,7 +344,7 @@ namespace GlimmerGrove
         /// this screen that had no reason to be inset. See <see cref="MaxGemBand"/> for what caps
         /// it, and `Compose` for how the hill and the line then share what is left.
         ///
-        /// <b>And the width it leads on is a <em>phone's</em></b> — see <see cref="CellFor"/>,
+        /// <b>And the width it leads on is a <em>phone's</em></b> - see <see cref="CellFor"/>,
         /// which is where the whole of that argument lives.
         /// </summary>
         protected override float Fit(Vector2 room)
@@ -355,19 +355,19 @@ namespace GlimmerGrove
 
         /// <summary>
         /// How big a cell may be in a room this size, on a canvas drawn at
-        /// <paramref name="scale"/> — 1 on every phone, and about .67 on a 4:3 tablet.
+        /// <paramref name="scale"/> - 1 on every phone, and about .67 on a 4:3 tablet.
         ///
         /// <para>
         /// <b>This board is the one layout in the game that grows when the canvas widens, and
         /// that is what a tablet reported as the gem field eating the hill</b> (invariant 37cc).
         /// <c>CanvasFit</c> widens a squarer display's canvas so that every screen here keeps its
-        /// sizes in units and is simply drawn smaller — which works because every other screen is
+        /// sizes in units and is simply drawn smaller - which works because every other screen is
         /// a vertical stack of <em>fixed-height</em> chrome. A field laid out to the width is not:
         /// handed 1620 units across instead of 1080 it asks for a cell half again as big, and
         /// since a cell is square it takes that back out of the height. Measured on a 4:3 tablet
         /// the cell came out at 160 units against a phone's 124, which put the field on its
         /// <see cref="MaxGemBand"/> ceiling, left the hill 3.2 cells against a phone's 6.9, and
-        /// pinned the ward line on its own furniture floor — a turret's plinth and fuel tube
+        /// pinned the ward line on its own furniture floor - a turret's plinth and fuel tube
         /// drawn behind the field's plate, which is invariants 37g and 37y arriving together on
         /// a screen shape no render had been taken at.
         /// </para>
@@ -376,7 +376,7 @@ namespace GlimmerGrove
         /// extra width on a short canvas was bought to buy height and is not the board's to
         /// spend: scaled back, the cell lands within two units of a phone's on every display this
         /// game runs on, which is exactly what <c>CanvasFit</c> promises every other screen.
-        /// Nothing else moves — the plate, the ground, the rampart, the lanes and the aiming grid
+        /// Nothing else moves - the plate, the ground, the rampart, the lanes and the aiming grid
         /// still run to the edges of the room (invariant 39g), so the board still fills the
         /// display and what a tablet gains is a hill that is wider as well as three cells taller.
         /// The field is then narrower than the plate it stands on, which is why
@@ -445,7 +445,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The one arithmetic, and it is written in terms of <see cref="MarchY"/> rather than
         /// beside it.</b> The panes a player taps and the boxes <c>SiegeBoard.Blast</c> reads have
-        /// to be the same twenty rectangles — invariant 33g — and the cheapest way to guarantee
+        /// to be the same twenty rectangles - invariant 33g - and the cheapest way to guarantee
         /// that is for the drawing to be a function of the mapping the rule uses, so there is
         /// nothing left to agree about.
         /// </para>
@@ -453,17 +453,17 @@ namespace GlimmerGrove
         /// <b>It was two, and both differences were silent.</b> The panes were laid out from
         /// <c>_hillTop + Cell * .35f</c> downward, where <c>march</c> nought is <c>_hillTop</c>
         /// exactly, so every row boundary on the screen sat up to a third of a cell above the one
-        /// the rule read — a raider near a boundary was genuinely in the band above the box it
+        /// the rule read - a raider near a boundary was genuinely in the band above the box it
         /// looked like it was in. And the panes were <c>Span.x / Lanes</c> wide while their centres
         /// were spaced on <see cref="LaneX"/>'s inset pitch of <c>Span.x / (Lanes + .6f)</c>, so
-        /// each one overlapped its neighbour by about a tenth of its width and the later sibling —
-        /// the higher lane — won every tap in the seam. Reported from play as tapping a raider and
+        /// each one overlapped its neighbour by about a tenth of its width and the later sibling -
+        /// the higher lane - won every tap in the seam. Reported from play as tapping a raider and
         /// being told nothing was there.
         /// </para>
         /// <para>
         /// <b>The grid is spaced flat and the raiders are inset, deliberately.</b> A raider's x is
         /// pulled in (see <see cref="LaneX"/>) so that a wide reel does not hang off the plate;
-        /// the grid is not, because a grid must tile the board it is drawn over — an inset one
+        /// the grid is not, because a grid must tile the board it is drawn over - an inset one
         /// would leave a strip down each edge that belongs to no box, and a tap there would fall
         /// through the targeting layer onto the gems underneath. Every lane's inset centre still
         /// lands inside its own flat box, so nothing is misfiled by the difference.
@@ -485,7 +485,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Sitting on the top edge of the field's plate, in the strip under the plinths.</b>
         /// Worked out from the plate rather than typed as an offset from the turret, because that
-        /// edge is what a player reads it against — and because both the cell and the way the bands
+        /// edge is what a player reads it against - and because both the cell and the way the bands
         /// divide move with the screen (see <c>Compose</c>), so a typed number is right on one
         /// phone and wrong on the next.
         /// </para>
@@ -493,7 +493,7 @@ namespace GlimmerGrove
         /// <b>The plinths and the plate overlap</b>, which is why this cannot be the middle of a
         /// gap: on every screen this mode has been drawn at, the foot of a turret is already behind
         /// the field. What there is instead is the band immediately above the plate's edge, which
-        /// is empty on every board and is directly over the gems whose colour fills it — the two
+        /// is empty on every board and is directly over the gems whose colour fills it - the two
         /// halves of the decision this mode asks, one above the other.
         /// </para>
         /// </summary>

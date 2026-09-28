@@ -14,15 +14,15 @@ namespace GlimmerGrove
     /// <b>Why this is a whole screen and not a line on the purchase panel.</b> The first
     /// version applied the unlock where the transaction happened: the price button became
     /// "WEAR", a few sparks fired, and the balance moved. Everything about that was correct
-    /// and nothing about it was a reward — it is the same mistake the streak shipped and undid
+    /// and nothing about it was a reward - it is the same mistake the streak shipped and undid
     /// in save schema v10, and the event track in v11. A player has just spent somewhere
     /// between two and thirty days of income on one thing; the game has to react like it
     /// noticed. So the transaction panel closes and this takes over the screen.
     /// </para>
     /// <para>
     /// <b>It is a <see cref="Cue"/>, not a pile of delays.</b> The timing <em>is</em> the
-    /// design here — the anticipation only works if the flash lands after the rings have
-    /// collapsed and before the portrait arrives — and <c>Cue</c> exists because absolute
+    /// design here - the anticipation only works if the flash lands after the rings have
+    /// collapsed and before the portrait arrives - and <c>Cue</c> exists because absolute
     /// delays had already drifted into a collision on the victory panel. Every beat below says
     /// only how long after the previous one it happens, so the sequence reads in the order the
     /// player sees it and inserting a beat cannot desynchronise the rest.
@@ -30,7 +30,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>Everything is built up front and hidden, then revealed.</b> Beats change opacity and
     /// scale; none of them creates anything the sequence depends on later. That is what makes
-    /// <see cref="Settle"/> possible — one method that puts every element in its final state —
+    /// <see cref="Settle"/> possible - one method that puts every element in its final state -
     /// and skipping is then a single call rather than a second choreography that has to agree
     /// with the first.
     /// </para>
@@ -41,15 +41,15 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>No new art.</b> The fan, the shockwaves, the glow, the vignette and the stars are all
-    /// procedural — <see cref="Art.Rays"/>, <see cref="Art.Ring"/>, <see cref="Art.Glow"/>,
-    /// <see cref="Art.Vignette"/> — for the reason <c>Art.Bloom</c> is: a reveal that scales
+    /// procedural - <see cref="Art.Rays"/>, <see cref="Art.Ring"/>, <see cref="Art.Glow"/>,
+    /// <see cref="Art.Vignette"/> - for the reason <c>Art.Bloom</c> is: a reveal that scales
     /// with the roster cannot depend on a sprite somebody has to draw per companion, and the
     /// spectacle has to be a function of the companion rather than a fixed animation.
     /// </para>
     /// <para>
     /// <b>It happens in a coloured room, and that is not decoration.</b> The first version staged
     /// everything against near-black, which is exactly what a screen looks like when its art has
-    /// failed to load — so the most expensive thing a player can buy arrived looking like a
+    /// failed to load - so the most expensive thing a player can buy arrived looking like a
     /// loading error with a portrait on it. A single tint over black does not fix it either: one
     /// colour and nothing else is a monochrome image however bright the colour is. See
     /// <see cref="Chroma"/> for the three-colour scheme that replaced it.
@@ -59,7 +59,7 @@ namespace GlimmerGrove
     {
         /// <summary>
         /// Who is being revealed. A property rather than a field for the reason
-        /// <c>CompanionUnlockOverlay.Avatar</c> is one — see there.
+        /// <c>CompanionUnlockOverlay.Avatar</c> is one - see there.
         /// </summary>
         public AvatarDefinition Avatar { get; set; }
 
@@ -71,7 +71,7 @@ namespace GlimmerGrove
         const float StarGap = 74f;
 
         // Resting brightnesses of the stage. Named because Play fades up to them and Skip
-        // assigns them directly, and the two agreeing is the whole reason Skip works — they
+        // assigns them directly, and the two agreeing is the whole reason Skip works - they
         // were four pairs of hand-repeated literals before.
         const float VignetteAlpha = .70f;
         const float FanAlpha = .34f;
@@ -97,7 +97,7 @@ namespace GlimmerGrove
         /// The corner cross, held as its group rather than as its <see cref="Image"/>.
         ///
         /// An icon button's glyph is a <em>child</em> of the plate, so fading the plate's own
-        /// Image leaves the cross drawn at full strength over the reveal — and still clickable,
+        /// Image leaves the cross drawn at full strength over the reveal - and still clickable,
         /// which put a live exit on screen through the whole sequence it was meant to appear
         /// after. One group fades both and gates the taps with it.
         /// </summary>
@@ -136,8 +136,8 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// A <em>presentation</em> decision and deliberately not a content field. It buys
-        /// nothing and gates nothing — it decides how many stars pop, how wide the fan opens
-        /// and how much confetti falls — so making it authorable would be inventing a rarity
+        /// nothing and gates nothing - it decides how many stars pop, how wide the fan opens
+        /// and how much confetti falls - so making it authorable would be inventing a rarity
         /// system nobody asked for and another number per companion to keep in step with the
         /// price. Derived from the gate, it is automatically right for every companion a drop
         /// adds, including ones added after this file was last read.
@@ -161,7 +161,7 @@ namespace GlimmerGrove
         }
 
         // -------------------------------------------------------------- chroma
-        // The scheme is Chroma, shared with the grove's own unveiling — see there for why the
+        // The scheme is Chroma, shared with the grove's own unveiling - see there for why the
         // rarity ladder is one table rather than one per celebration.
 
         // --------------------------------------------------------------- stage
@@ -175,7 +175,7 @@ namespace GlimmerGrove
             // a tap anywhere that is not the button lands here.
             //
             // Lit from below by the partner colour and falling to night above, because a flat
-            // field of one colour is only marginally better than a flat field of black — a
+            // field of one colour is only marginally better than a flat field of black - a
             // gradient is what makes it read as depth rather than as a backing plate. One draw:
             // see Art.Gradient for why it is not three washes.
             _sky = UIKit.Img("Sky", Content,
@@ -209,7 +209,7 @@ namespace GlimmerGrove
             _fanRt.localScale = Vector3.zero;
             _fan.raycastTarget = false;
 
-            // A second fan turning the other way, in the partner colour — two colours of light
+            // A second fan turning the other way, in the partner colour - two colours of light
             // crossing, which is what a single fan can never be however fast it spins. It used
             // to be a top-two-tiers luxury and that was the wrong economy: the cost is one Image
             // and a 256² mask, and the tiers that needed the help most were the pale ones.
@@ -232,7 +232,7 @@ namespace GlimmerGrove
         // -------------------------------------------------------------- aurora
         // Where the three blobs sit, how big they are and how bright they rest. Static because
         // they are a composition rather than a random scatter: the point is one mass of colour
-        // high and left, one across the middle, one low — so the frame is lit unevenly, the way
+        // high and left, one across the middle, one low - so the frame is lit unevenly, the way
         // a place is, instead of evenly, the way a backdrop is.
         static readonly Vector2[] AuroraHome = { new Vector2(-360f, 560f), new Vector2(400f, 60f), new Vector2(-250f, -650f) };
         static readonly float[] AuroraSize = { 1180f, 980f, 1240f };
@@ -243,7 +243,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// These do most of the work of making the room a room. They are cheap for what they
-        /// buy — three soft blobs reusing the mask the core glow already generated — and they
+        /// buy - three soft blobs reusing the mask the core glow already generated - and they
         /// are deliberately huge and dim rather than small and bright: a small bright blob is a
         /// light with an edge, which reads as an object nobody put there.
         /// </para>
@@ -272,7 +272,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// Owned by the blob and channelled, so it survives the <see cref="Skip"/> path's
-        /// <c>KillAll</c> — a fast-forward should land on the resting state, not on a room whose
+        /// <c>KillAll</c> - a fast-forward should land on the resting state, not on a room whose
         /// lights have stopped moving.
         /// </para>
         /// </summary>
@@ -321,7 +321,7 @@ namespace GlimmerGrove
         {
             // The plate is the room's own deep hue lifted towards the friend's colour, not a
             // fixed teal. A fixed one belonged to whichever scheme it was picked against and sat
-            // in every other as a stray colour — a teal disc in a plum room is the one thing on
+            // in every other as a stray colour - a teal disc in a plum room is the one thing on
             // screen that looks like it came from a different screen. Lifted rather than equal,
             // because a plate the value of its backdrop is not a plate.
             _disc = UIKit.Img("Disc", Content, Art.Disc(300),
@@ -331,13 +331,13 @@ namespace GlimmerGrove
             _discRt.localScale = Vector3.zero;
             _disc.raycastTarget = false;
 
-            // What ModalView.Close() scales out — the same hand-off ChestOverlay, WinOverlay
+            // What ModalView.Close() scales out - the same hand-off ChestOverlay, WinOverlay
             // and TipOverlay make. Every overlay that skips MakePanel has to name its own
             // Panel, because Close() scales it unconditionally: leaving it null threw out of
             // the click handler *after* the content had been faded to nothing and *before*
             // Flow.Dismiss ran, stranding an invisible full-screen blocker over the game with
             // _closing already latched, so nothing could dismiss it. The friend is the right
-            // choice here — the composition shrinks away around the portrait it was staged for.
+            // choice here - the composition shrinks away around the portrait it was staged for.
             Panel = _discRt;
 
             _rim = UIKit.Img("Rim", _disc.transform, Art.Ring(300, 9f), Pal.A(_tint, .95f));
@@ -350,7 +350,7 @@ namespace GlimmerGrove
             _face.raycastTarget = false;
 
             // The roster's art lives in a scope and this can open over any screen, so the
-            // portrait may not be resident yet — and an Image with no sprite is a white disc,
+            // portrait may not be resident yet - and an Image with no sprite is a white disc,
             // not a blank one. Invariant 7b; CompanionArt.Paint hides the frame until it has
             // something to draw and the callback repaints when it arrives.
             CompanionArt.Paint(_face, Avatar);
@@ -428,7 +428,7 @@ namespace GlimmerGrove
         /// The sequence, in the order it is seen. Gaps, never absolute times.
         ///
         /// Read as three movements: the room darkens and something gathers, it breaks, and the
-        /// friend is standing there. The pause before the flash is the whole trick — take it
+        /// friend is standing there. The pause before the flash is the whole trick - take it
         /// out and the reveal becomes an announcement.
         /// </summary>
         void Play()
@@ -499,8 +499,8 @@ namespace GlimmerGrove
                 Tween.Tint(_face, Color.white, .46f, Ease.OutQuad).Delay(.12f);
 
                 // The one sound in the reveal, and it lands on the beat the friend appears.
-                // The sequence used to ring on all six of its beats — a whoosh, the break, a
-                // bell under this, a pop on the name, one per star and a chime to settle — and
+                // The sequence used to ring on all six of its beats - a whoosh, the break, a
+                // bell under this, a pop on the name, one per star and a chime to settle - and
                 // played back it read as a pile-up rather than as a fanfare: six cues inside
                 // two seconds leave nothing for the eye to be told about. One is the arrival.
                 Audio.Sfx("win", .62f);
@@ -539,7 +539,7 @@ namespace GlimmerGrove
             // -- the stars ---------------------------------------------------
             // One per tier, each a little later than the last. It used to climb in pitch as
             // well, which said "and there is more" without a word and is the one cue here
-            // genuinely worth missing — but five of them land inside half a second on top of
+            // genuinely worth missing - but five of them land inside half a second on top of
             // everything else the reveal was ringing, and the stagger says the same thing.
             cue.Then(.16f, null).Repeat(_tier, .13f, i =>
             {
@@ -547,8 +547,8 @@ namespace GlimmerGrove
 
                 Tween.Pop(_stars[i].transform, 0f, .46f);
 
-                // The stars stay gold — they are the rarity count, and counting in five colours
-                // would read as five kinds of thing — but each one throws its own colour of the
+                // The stars stay gold - they are the rarity count, and counting in five colours
+                // would read as five kinds of thing - but each one throws its own colour of the
                 // scheme, so a five-star reveal walks the whole palette on the way up.
                 Burst.Sparks((RectTransform)_stars[i].transform, Vector2.zero,
                              Pal.Lift(_c.Nth(i), .2f), 7, 130f, 15f, .45f);
@@ -577,8 +577,8 @@ namespace GlimmerGrove
         /// path need it, and a rotation defined twice is a rotation that will one day disagree
         /// with itself.
         ///
-        /// Channelled, so reaching the resting state twice — the sequence, then a skip landing
-        /// after it — replaces the turn rather than running two of them a frame out of step
+        /// Channelled, so reaching the resting state twice - the sequence, then a skip landing
+        /// after it - replaces the turn rather than running two of them a frame out of step
         /// against the same rotation.
         /// </summary>
         void Spin()
@@ -670,7 +670,7 @@ namespace GlimmerGrove
         /// fireflies drifting up through the fan.
         ///
         /// Started at the end of the sequence and by <see cref="Settle"/>, and guarded so the
-        /// two cannot both run it — a second Bob would fight the first over the same
+        /// two cannot both run it - a second Bob would fight the first over the same
         /// anchoredPosition and the portrait would jitter.
         /// </summary>
         void Idle()
@@ -706,8 +706,8 @@ namespace GlimmerGrove
         /// Ends the sequence now, in the state it was heading for.
         ///
         /// <para>
-        /// Possible only because every element already exists — the beats reveal things rather
-        /// than build them — so this is one pass of assignments instead of a second
+        /// Possible only because every element already exists - the beats reveal things rather
+        /// than build them - so this is one pass of assignments instead of a second
         /// choreography that would have to be kept in agreement with <see cref="Play"/>. That
         /// agreement is exactly what a skip path normally gets wrong.
         /// </para>
@@ -729,8 +729,8 @@ namespace GlimmerGrove
             if (_vignette) SetAlpha(_vignette, VignetteAlpha);
             if (_flash) SetAlpha(_flash, 0f);
 
-            // The blobs keep drifting — Drift is owned by each blob rather than by this view, so
-            // KillAll never touched it — and only their brightness has to be caught up.
+            // The blobs keep drifting - Drift is owned by each blob rather than by this view, so
+            // KillAll never touched it - and only their brightness has to be caught up.
             if (_aurora != null)
                 for (int i = 0; i < _aurora.Length; i++)
                     SetAlpha(_aurora[i], AuroraAlpha[i]);

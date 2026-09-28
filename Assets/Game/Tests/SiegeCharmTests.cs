@@ -11,7 +11,7 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// <b>Its own fixture rather than a region of <c>SiegeRuleTests</c></b>, because these are
-    /// rules about the <em>field</em> and that file is about the hill — and because every case
+    /// rules about the <em>field</em> and that file is about the hill - and because every case
     /// here needs a board with a charm stood on a known cell, which is a seam
     /// (<c>SiegeBoard.Stand</c>) nothing else in the project uses.
     /// </para>
@@ -76,8 +76,8 @@ namespace GlimmerGrove.Tests
         /// payoff is not about colour.
         ///
         /// <b>A second field rather than one shared one</b>, because the prism's case rests on the
-        /// cell underneath the charm being a colour the run is <em>not</em> — that is the whole
-        /// thing it proves — and these two rest on the swap itself lining something up, which a
+        /// cell underneath the charm being a colour the run is <em>not</em> - that is the whole
+        /// thing it proves - and these two rest on the swap itself lining something up, which a
         /// pair of identical letters cannot do.
         /// </summary>
         static string[] Crossed() => new[]
@@ -111,7 +111,7 @@ namespace GlimmerGrove.Tests
         {
             var board = Board(Quiet());
 
-            // Row 1, column 2 — the 'g' under the top row's own 'g'.
+            // Row 1, column 2 - the 'g' under the top row's own 'g'.
             board.Stand(7, SiegeCharm.Prism);
 
             Assert.IsFalse(board.Lines(0, 1), "the field was not authored quiet");
@@ -129,7 +129,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// The prism in this case is standing on a <c>'g'</c>. If it were paid as its own letter
-        /// the green ward would take a gem's worth out of a run of reds — which is a payoff the
+        /// the green ward would take a gem's worth out of a run of reds - which is a payoff the
         /// player can neither see nor aim, and the one way a wild could be worse than an ordinary
         /// gem. It is the whole reason <c>SiegeLayout.Runs</c> hands back what each cell was worth
         /// rather than only which cells went.
@@ -160,7 +160,7 @@ namespace GlimmerGrove.Tests
         /// buys in <c>SiegeLayout.Runs</c>.
         ///
         /// Without it a column of wilds would clear itself the moment it landed, pay a colour
-        /// nobody chose, and do it again on the refill — a cascade with no player in it.
+        /// nobody chose, and do it again on the refill - a cascade with no player in it.
         /// </summary>
         [Test]
         public void ABlockOfPrismsAloneIsNotARun()
@@ -282,7 +282,7 @@ namespace GlimmerGrove.Tests
 
             board.Stand(7, SiegeCharm.Lance);
 
-            // The bottom of the column the first lance will stand in, and in no run of its own —
+            // The bottom of the column the first lance will stand in, and in no run of its own -
             // so the only thing on this board that can reach it is the first lance's cross.
             board.Stand(12, SiegeCharm.Lance);
 
@@ -306,7 +306,7 @@ namespace GlimmerGrove.Tests
         ///
         /// It joined no run, so there is no colour it chose; the letter underneath is whatever the
         /// deal handed it and the player can neither see it nor have aimed at it. The beam is drawn
-        /// in the lance's colour, so that is the only answer the board agrees with — and without
+        /// in the lance's colour, so that is the only answer the board agrees with - and without
         /// this the fuel would go to a ward the player had no way of knowing about.
         /// </summary>
         [Test]
@@ -340,7 +340,7 @@ namespace GlimmerGrove.Tests
 
         // ------------------------------------------------------------------ the stormglass
         /// <summary>
-        /// <b>A stormglass lands after the gem it came out of has burst, and not before</b> —
+        /// <b>A stormglass lands after the gem it came out of has burst, and not before</b> -
         /// invariant 37s, which turn-based modes are immune to by construction and this one is not.
         ///
         /// <para>
@@ -381,7 +381,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// Every standing ward throws at every raider on the hill, and the ward wearing the
-        /// charm's own colour throws twice — so what a stormglass is worth is decided by the
+        /// charm's own colour throws twice - so what a stormglass is worth is decided by the
         /// turrets the player bought and the ranks their cogs paid for. A flat figure was the
         /// first shape and is quietly corrosive: free damage that does not scale with the shelf
         /// flattens the one ladder in this mode anybody pays for (invariant 42), and it did,
@@ -404,7 +404,7 @@ namespace GlimmerGrove.Tests
             Assert.Greater(hill, 0, "nothing walked on, so this case proves nothing");
             Assert.AreEqual(4, board.WardsStanding, "this case assumes a full line");
 
-            // Stood on cell 7, which carries a red — so the red ward is the one that fires twice.
+            // Stood on cell 7, which carries a red - so the red ward is the one that fires twice.
             Assert.AreEqual('r', board.At(7));
 
             board.Stand(7, SiegeCharm.Storm);
@@ -759,7 +759,7 @@ namespace GlimmerGrove.Tests
         /// Invariant 41: a random stream is part of a level's content, and anything that changes
         /// how often it is drawn from is a content change. A second <c>Next()</c> for the charm
         /// roll would have dealt a different gem into every column of every rung from the first
-        /// refill on — the last time that happened three of the first chapter's ten became
+        /// refill on - the last time that happened three of the first chapter's ten became
         /// unholdable with nothing in any file wrong. So the charm is read out of the same word,
         /// and this is the case that says so: two boards from one field, one dealing every charm
         /// and one dealing none, deal the <em>same letters</em> for five hundred gems.
@@ -796,12 +796,12 @@ namespace GlimmerGrove.Tests
         /// <b>A charm falls once a window, and the gap between two of them is bounded.</b>
         ///
         /// <para>
-        /// <b>Bounded is the assertion, not the average — and the average is what the first
+        /// <b>Bounded is the assertion, not the average - and the average is what the first
         /// version shipped.</b> A rate rolled per gem is uniform over a long enough stream and
         /// useless on a board, because this stream is deterministic: a geometric gap is sometimes
         /// long, and a long one on a shipped field is the same board dealing the same nothing to
         /// every player who ever opens it. <c>s01_stonewatch</c> put its first charm at deal 351
-        /// against a run that ends at about 324 — the rung that <em>introduces</em> the prism,
+        /// against a run that ends at about 324 - the rung that <em>introduces</em> the prism,
         /// dealing none, for ever, with every gate green. It was found by somebody playing it.
         /// </para>
         /// <para>
@@ -888,15 +888,15 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// <c>ACharmIsRareAndEveryOneOfThemTurnsUp</c> calls <c>Deal</c> back to back on one field,
-        /// which feeds the roll a clean walk of the whole stream — and the roll passed that while
+        /// which feeds the roll a clean walk of the whole stream - and the roll passed that while
         /// being <em>broken</em>. In a run the stream is also drawn from by the shuffle and the
         /// muster, so what reaches the roll is a subsequence, and the first version's "mix" only
         /// relabelled xorshift32's weakest bits: two shipped rungs dealt no charm at all, in any
         /// run, at any rhythm. What found it was somebody playing the game.
         /// </para>
         /// <para>
-        /// So this asks the question the way a player does — <b>several different shipped fields,
-        /// interleaved with the shuffles a real board performs</b> — and holds every one of them to
+        /// So this asks the question the way a player does - <b>several different shipped fields,
+        /// interleaved with the shuffles a real board performs</b> - and holds every one of them to
         /// the same band. A board that deals none is the failure this exists for, so the floor is
         /// per board and not an average across them.
         /// </para>
@@ -958,7 +958,7 @@ namespace GlimmerGrove.Tests
         /// <c>CharmWithin</c> bounds the gap between one charm and the next; the opening gap was
         /// drawn from that same window, so a run could be a whole window old before it met one.
         /// That is invisible to every fixture above, because all of them walk thousands of gems
-        /// off one board and a run is a few hundred — the rate was right and the <em>opening</em>
+        /// off one board and a run is a few hundred - the rate was right and the <em>opening</em>
         /// was empty. Reported twice, at two different rates, as "I never see them"
         /// (<c>SiegeTuning.CharmOpening</c>).
         /// </para>
@@ -1024,7 +1024,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <c>SiegeCharms.Roster</c> is what a body is parsed against, what a chapter's ladder is
         /// cut from and what the art table is keyed on, so a charm added to the enum and forgotten
-        /// here is one no level can ever deal — a rule, its picture and its lesson, all shipped and
+        /// here is one no level can ever deal - a rule, its picture and its lesson, all shipped and
         /// unreachable, with every gate green. Invariant 40a, which cost this mode two whole raider
         /// kinds.
         /// </summary>
@@ -1069,7 +1069,7 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual("plsfh", SiegeCharms.Upto(5));
             Assert.AreEqual("plsfha", SiegeCharms.Upto(6));
 
-            // **It runs out, and a fifth chapter has to know that before it is commissioned** —
+            // **It runs out, and a fifth chapter has to know that before it is commissioned** -
             // invariant 37br's argument about boss verbs, which is the same argument.
             Assert.AreEqual(SiegeCharms.Letters, SiegeCharms.Upto(SiegeCharms.Roster.Length + 4));
         }
@@ -1078,7 +1078,7 @@ namespace GlimmerGrove.Tests
         /// <b>A charm letter this build does not know is refused by name rather than ignored.</b>
         ///
         /// Invariant 5f. <c>JsonUtility</c> drops a field it has never heard of without a word, so
-        /// the opposite failure — a body naming a charm that has been retired — has to be loud, or
+        /// the opposite failure - a body naming a charm that has been retired - has to be loud, or
         /// the level deals the charms it recognised and ships a field nobody composed.
         /// </summary>
         [Test]
@@ -1098,7 +1098,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// <b>An empty charm field is not a fault</b>, because the opening rung of the first
-        /// chapter deals none at all — the one moment a player is still working out what the verb
+        /// chapter deals none at all - the one moment a player is still working out what the verb
         /// is (invariant 24).
         /// </summary>
         [Test]

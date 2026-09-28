@@ -12,7 +12,7 @@ namespace GlimmerGrove.Privacy
     /// </para>
     /// <para>
     /// Note that this installs but does not <em>resolve</em>. Asking the player anything is a
-    /// network round trip and possibly a native dialog, so it happens from the splash — see
+    /// network round trip and possibly a native dialog, so it happens from the splash - see
     /// <c>RewardedAds.StartAsync</c>, which owns the ordering between consent and mediation.
     /// </para>
     /// </summary>

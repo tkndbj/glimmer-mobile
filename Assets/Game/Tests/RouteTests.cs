@@ -11,7 +11,7 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// The whole reason this needs pinning is that the number is <b>beatable</b>.
     /// <see cref="Puzzle.TurnsToSolution"/> counts the turns to the authored solution, but a
-    /// glade is won when every lamp is lit — spare conduits may be left pointing anywhere. So
+    /// glade is won when every lamp is lit - spare conduits may be left pointing anywhere. So
     /// a player can finish in fewer turns than the route, and any design that called the
     /// route "perfect" or "the minimum" would be showing those players a contradiction. Three
     /// readings, not two, and this fixture exists to keep the third one from being optimised
@@ -73,7 +73,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The reading the whole design turns on. A player who lights every lamp without
-        /// straightening conduits the authored solution turned finishes under the route — and
+        /// straightening conduits the authored solution turned finishes under the route - and
         /// this is a real result, not a miscount. The save that prompted this feature has 31
         /// moves on a glade whose route is 34.
         /// </summary>
@@ -129,7 +129,7 @@ namespace GlimmerGrove.Tests
         // ------------------------------------------------------------ what is worth saying
         /// <summary>
         /// Drawn upward only. The bars themselves are now a section of the victory panel and
-        /// appear on every run that has a route — they cost nothing, so there is nothing to
+        /// appear on every run that has a route - they cost nothing, so there is nothing to
         /// ration. What is rationed is the <em>sentence</em> under them, because a line
         /// reporting twenty wasted turns after every win is a scolding on a victory screen.
         /// </summary>
@@ -152,7 +152,7 @@ namespace GlimmerGrove.Tests
         /// It used to, and the argument held while this decided whether the player was sent to
         /// a panel of its own: a player who has just played their own best game deserves to be
         /// shown how it measured up at whatever standard they are currently at. Merging that
-        /// panel into the victory screen removed the trip, so all this can buy now is a line —
+        /// panel into the victory screen removed the trip, so all this can buy now is a line -
         /// and the only line available to a record that is still 56 turns over the route is
         /// "56 turns from a perfect route", printed directly beside a stamp saying the run was
         /// the player's finest yet. The stamp keeps the recognition; the sentence keeps the half
@@ -165,7 +165,7 @@ namespace GlimmerGrove.Tests
             var sloppyRecord = Win(moves: 90, route: 34);
 
             Assert.IsTrue(sloppyRecord.NewBest, "first clear, so there is no record to beat");
-            Assert.IsTrue(sloppyRecord.HasRoute, "the bars are still drawn — they always are");
+            Assert.IsTrue(sloppyRecord.HasRoute, "the bars are still drawn - they always are");
             Assert.IsFalse(sloppyRecord.RouteWorthSaying,
                            "the stamp says the kind thing; a sentence here could only scold");
 

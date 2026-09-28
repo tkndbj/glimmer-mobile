@@ -13,7 +13,7 @@ namespace GlimmerGrove
     /// <b>Drawn the way the bomber's bomb is drawn, deliberately.</b> They are the only two things
     /// on that hill a finger does anything to, and a player who has learnt one has learnt the
     /// other: a thing that arrives with a thump, sits in a box of the aiming grid, breathes, and
-    /// goes away when it is tapped. What separates them is colour and a clock — a cog wears the
+    /// goes away when it is tapped. What separates them is colour and a clock - a cog wears the
     /// turret it will rank, and it starts blinking when its time is nearly up.
     /// </para>
     /// </summary>
@@ -58,7 +58,7 @@ namespace GlimmerGrove
             gear.Glow.raycastTarget = false;
 
             // The ring is the clock. It is the ward's own colour rather than a warning red,
-            // because what it is counting down is a *prize* — an alarm colour on a thing the
+            // because what it is counting down is a *prize* - an alarm colour on a thing the
             // player wants would read as one more threat on a hill already full of them.
             gear.Ring = UIKit.Img("Ring", gear.Node, Art.Ring(96, 9f), Pal.A(tint, .85f),
                                   new Vector2(Cell * 1.15f, Cell * 1.15f));
@@ -96,7 +96,7 @@ namespace GlimmerGrove
         /// <b>The fanfare is not raised here.</b> <c>Charge</c> reads every ward's rank off the
         /// board each frame and turns a change into an edge exactly once (<c>Post.Rank</c>), so a
         /// rank bought by a cog is celebrated by the same code that celebrates one bought any
-        /// other way. What is left for this to draw is the *journey* — which turret the cog went
+        /// other way. What is left for this to draw is the *journey* - which turret the cog went
         /// to, which is the only part a player could otherwise miss.
         /// </para>
         /// </summary>
@@ -162,8 +162,8 @@ namespace GlimmerGrove
         /// Keeps the drawn cogs in step with the board's, and fades the ones that ran out.
         ///
         /// <b>Polled rather than driven by the report, for the reason <c>Fuses</c> is.</b> A cog
-        /// can leave the board three ways — taken, trampled, or the board rebuilt under a
-        /// continue — and a widget that only knew about the first two would be a cog standing on a
+        /// can leave the board three ways - taken, trampled, or the board rebuilt under a
+        /// continue - and a widget that only knew about the first two would be a cog standing on a
         /// hill that no longer has one.
         /// </summary>
         void Gears()
@@ -172,7 +172,7 @@ namespace GlimmerGrove
 
             // **Anything lying on the hill with no widget is drawn here, and that is a repair
             // rather than tidiness.** A cog is minted by `SiegeBoard.Cog` at the one kill door and
-            // announced in the step's report — but a firepot, a utility and an overcharge all kill
+            // announced in the step's report - but a firepot, a utility and an overcharge all kill
             // from a tap, *outside* `Advance`, and `Advance` clears the report before it does
             // anything. So those cogs were booked into a report nothing ever read, and what they
             // were on the board was a real, tappable prize that drew nothing at all. Reconciling

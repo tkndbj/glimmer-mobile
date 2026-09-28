@@ -10,7 +10,7 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// <b>Why not just call <see cref="Tween.After"/>.</b> A payoff sequence is the one
-    /// piece of interface where the timing <em>is</em> the design — a star that lands
+    /// piece of interface where the timing <em>is</em> the design - a star that lands
     /// before the panel has settled, or a reward line that arrives on top of the rank,
     /// costs the moment its whole effect. Written as a set of absolute delays, that
     /// timing is held in arithmetic scattered across a build method, every constant
@@ -24,7 +24,7 @@ namespace GlimmerGrove
     /// A playhead makes the gaps relative and therefore local: each beat says only how
     /// long after the previous one it lands, inserting a beat cannot desynchronise the
     /// ones after it, and the sequence reads top to bottom in the order the player sees
-    /// it. Beats that genuinely belong together — a sound and the pop it accompanies —
+    /// it. Beats that genuinely belong together - a sound and the pop it accompanies -
     /// share one with <see cref="With"/>.
     /// </para>
     /// <para>
@@ -49,7 +49,7 @@ namespace GlimmerGrove
         /// <summary>Seconds from the sequence's start to the most recently placed beat.</summary>
         public float Playhead => _at;
 
-        /// <summary>Advances the playhead without scheduling anything — a held breath.</summary>
+        /// <summary>Advances the playhead without scheduling anything - a held breath.</summary>
         public Cue Wait(float seconds)
         {
             if (seconds > 0f) _at += seconds;
@@ -68,7 +68,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Places a beat at the playhead without advancing it, for the second half of a
-        /// moment that is really one thing — the flash under a bang, the sparks under a
+        /// moment that is really one thing - the flash under a bang, the sparks under a
         /// star.
         /// </summary>
         public Cue With(Action beat)
@@ -106,8 +106,8 @@ namespace GlimmerGrove
     /// <para>
     /// The reward for the run is the one line on a victory panel a player actually reads,
     /// and printing it finished spends it in a single frame. Rolling it hands the same
-    /// information back as anticipation — the number is visibly still climbing, so the
-    /// interesting part is always a moment ahead — which is the difference between being
+    /// information back as anticipation - the number is visibly still climbing, so the
+    /// interesting part is always a moment ahead - which is the difference between being
     /// told what you won and watching yourself win it.
     /// </para>
     /// <para>
@@ -125,7 +125,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Runs a roll from 0 to 1, ticking as it goes, and hands the eased progress to
-        /// <paramref name="apply"/>. The general form — for a line carrying more than one
+        /// <paramref name="apply"/>. The general form - for a line carrying more than one
         /// number, where the caller owns the formatting.
         /// </summary>
         public static Tw Progress(float duration, Action<float> apply, UnityEngine.Object owner,

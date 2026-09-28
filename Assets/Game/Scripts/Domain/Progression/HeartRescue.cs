@@ -12,8 +12,8 @@ namespace GlimmerGrove.Progression
     /// <para>
     /// Shaped exactly like <see cref="ContinueOffer"/> and deliberately not the same type. The
     /// two offers sit on different panels, are decided by different facts and buy different
-    /// things — one carries <em>this</em> run on where it stood, the other pays for a fresh
-    /// one — and folding them together would mean a field that is meaningless on one branch,
+    /// things - one carries <em>this</em> run on where it stood, the other pays for a fresh
+    /// one - and folding them together would mean a field that is meaningless on one branch,
     /// which is how a panel comes to print a number nobody authored.
     /// </para>
     /// </summary>
@@ -85,7 +85,7 @@ namespace GlimmerGrove.Progression
     ///
     /// <para>
     /// <b>It is not a continue, and the difference is the whole design.</b> A continue
-    /// (<c>RunContinue</c>) sells the <em>run</em> — the board stays exactly as it stood, with
+    /// (<c>RunContinue</c>) sells the <em>run</em> - the board stays exactly as it stood, with
     /// its counter already past the two-star line, so a bought run can only ever score one
     /// star. This sells a <em>heart</em>, which is the gate rather than the run: the board is
     /// rebuilt from nothing, the attempt is a fresh one, and it is graded like any other. That
@@ -96,7 +96,7 @@ namespace GlimmerGrove.Progression
     /// <b>Why nothing about it reaches the server or the save file.</b> The gems leave through
     /// <see cref="PlayerProgression.TrySpend"/>, which carries an idempotency key, lands
     /// locally so it works on a plane, and is refused by <c>submitSpends</c> on the next sync
-    /// if the server-derived balance could not cover it — the same two lines that buy a
+    /// if the server-derived balance could not cover it - the same two lines that buy a
     /// companion or a continue. What they buy is a heart, which is <em>already</em> a
     /// produced/spent ledger merged by <c>max</c> (invariant 11b) and is exactly what the shop
     /// has always sold for gems (invariant 18). So this is a second call site for two proven
@@ -125,7 +125,7 @@ namespace GlimmerGrove.Progression
         ///
         /// <para>
         /// Pure: the table and every varying fact are passed in, so every branch is proved
-        /// offline against plain integers. That is deliberate — this is the function that
+        /// offline against plain integers. That is deliberate - this is the function that
         /// decides whether somebody is asked for money, and the facts that decide it are
         /// exactly the ones that differ between a test and a phone.
         /// </para>
@@ -135,7 +135,7 @@ namespace GlimmerGrove.Progression
         /// <param name="gemsHeld">The player's gem balance.</param>
         /// <param name="gemsForSale">
         /// Whether a shop is reachable that could sell them some. False in a build with no
-        /// store SDK and while the store has not connected — and a "get gems" button in either
+        /// store SDK and while the store has not connected - and a "get gems" button in either
         /// of those leads nowhere, which is worse than no button at all.
         /// </param>
         public static HeartRescueOffer Offer(HeartRuleTable table, int heartsHeld,
@@ -147,7 +147,7 @@ namespace GlimmerGrove.Progression
             long price = table.RescueGems;
 
             // Nought hearts is how the block withdraws the offer, and it is the one place a
-            // zero here is a decision rather than a mistake — an offer that hands over nothing
+            // zero here is a decision rather than a mistake - an offer that hands over nothing
             // is not a cheap offer, it is no offer. A price of nought is refused by the reader
             // instead (see HeartRuleTable), because a free heart is a gate that no longer gates.
             if (hearts <= 0 || price <= 0L) return HeartRescueOffer.None;
@@ -176,8 +176,8 @@ namespace GlimmerGrove.Progression
         ///
         /// <para>
         /// <b>Here rather than in the panel, because it is the rule and not the plumbing.</b>
-        /// A balance moves for reasons that have nothing to do with the player — a background
-        /// sync, another device, a server grant landing — and a panel that rebuilt on every one
+        /// A balance moves for reasons that have nothing to do with the player - a background
+        /// sync, another device, a server grant landing - and a panel that rebuilt on every one
         /// of them would flicker at somebody reading it. So the question is not "did the number
         /// change" but "did what they can <em>do</em> change", which is a comparison of two
         /// offers and is exactly the kind of branch this project keeps out of a
@@ -210,7 +210,7 @@ namespace GlimmerGrove.Progression
         /// <para>
         /// Affordability is re-decided through the ledger rather than trusted from the offer
         /// this was handed, and that is reachable rather than defensive: the balance moves
-        /// while a panel is open — a sync landing, another device spending — and routing
+        /// while a panel is open - a sync landing, another device spending - and routing
         /// through <see cref="PlayerProgression.TrySpend"/> is what makes the decision happen
         /// at the instant of the charge, which is the only instant that means anything.
         /// </para>

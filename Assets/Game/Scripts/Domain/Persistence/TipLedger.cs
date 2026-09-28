@@ -11,7 +11,7 @@ namespace GlimmerGrove.Persistence
     /// purely about what someone has <em>seen</em> rather than what they have done.
     /// That makes it the easiest kind of state to merge: seeing something is
     /// irreversible, so two devices can only ever have seen more between them, and the
-    /// join is a union — idempotent, commutative and associative without trying.
+    /// join is a union - idempotent, commutative and associative without trying.
     /// </para>
     /// <para>
     /// Unknown ids are kept rather than dropped. A player who meets a mechanic on a
@@ -27,7 +27,7 @@ namespace GlimmerGrove.Persistence
         /// <para>
         /// <b>Matches the bound in <c>firestore.rules</c>, and has to.</b> <c>hasOnly</c> is an
         /// allow-list over the whole document, so a list one entry longer than the rules permit
-        /// does not lose that entry — it loses <em>every</em> save write for that account, for
+        /// does not lose that entry - it loses <em>every</em> save write for that account, for
         /// ever, with nothing on any screen saying so (invariant 12a). That is exactly what
         /// happened on 2026-09-16: the ledger keeps every id it has ever seen, including the
         /// lessons of every withdrawn mode, so the longest-played account crossed the old bound
@@ -131,7 +131,7 @@ namespace GlimmerGrove.Persistence
         /// Under the cap nothing is touched, so no player who has ever existed sees a change
         /// from this. Over it, ids go in the order that costs the least: every retired lesson
         /// first, because no build will teach one again; then every id this build does not
-        /// recognise, which is a withdrawn mode's lesson or a newer build's — the second is
+        /// recognise, which is a withdrawn mode's lesson or a newer build's - the second is
         /// re-taught once on that build, and that is the whole price of a cap. A live lesson
         /// is never dropped, and <c>TipLedgerTests</c> proves the live set fits with room.
         /// </para>

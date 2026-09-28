@@ -16,15 +16,15 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// <b>One widget because it is one job.</b> The preview a player opens from the loadout and the
-    /// bench used to judge the nineteen projectiles ask exactly the same question — <em>what does
-    /// this turret look like when it shoots?</em> — and two answers to that would be two places
+    /// bench used to judge the nineteen projectiles ask exactly the same question - <em>what does
+    /// this turret look like when it shoots?</em> - and two answers to that would be two places
     /// where a bolt is anchored, sized or timed differently, which is the fault this project keeps
     /// recording under other names (two copies of one rule, each correct until one of them is not).
     /// </para>
     /// <para>
     /// <b>The number of things it shoots at is the ability, and that is the whole of what this
     /// widget grew.</b> It stood one target and fired one bolt, so a splash turret, a chain turret
-    /// and a pierce turret — three of the ten abilities, six of the twenty models — previewed
+    /// and a pierce turret - three of the ten abilities, six of the twenty models - previewed
     /// <em>identically to the free one</em>: the thing being paid for was the only thing not on
     /// screen. A player deciding between them was reading a sentence and watching a bolt that said
     /// nothing. <see cref="Compose"/> stands the arrangement each ability is about, and
@@ -33,8 +33,8 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>It mirrors the rules rather than inventing a demonstration.</b> The extra hits are the
-    /// board's own — a splash takes the neighbours inside <c>Extent</c>, a chain arcs to
-    /// <c>Extent</c> more, a lance runs the lane every <c>Extent</c> shots — and they are drawn
+    /// board's own - a splash takes the neighbours inside <c>Extent</c>, a chain arcs to
+    /// <c>Extent</c> more, a lance runs the lane every <c>Extent</c> shots - and they are drawn
     /// smaller than the shot that caused them, which is the one thing <c>SiegeBolt.Extra</c> exists
     /// for. A preview that flattered a turret would be worse than none: what it is for is deciding
     /// whether to spend nine thousand credits.
@@ -62,7 +62,7 @@ namespace GlimmerGrove
         /// <summary>
         /// What an <em>extra</em> hit is drawn at, against the shot that caused it.
         ///
-        /// <b>Smaller, which is the only thing <c>SiegeBolt.Extra</c> is for</b> — a splinter that
+        /// <b>Smaller, which is the only thing <c>SiegeBolt.Extra</c> is for</b> - a splinter that
         /// looked like a shot would make a splash turret read as firing three times rather than
         /// once and spreading. The board makes the same distinction with the same number.
         /// </summary>
@@ -93,7 +93,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The top is headroom for the primary impact rather than a margin.</b> A hit is drawn
         /// <see cref="HitWide"/> across and centred on what it hit, so anything nearer the top than
-        /// half of that has the loudest frame in the whole exchange cut off — the box is masked, so
+        /// half of that has the loudest frame in the whole exchange cut off - the box is masked, so
         /// it is cut rather than merely overhanging.
         /// </para>
         /// <para>
@@ -147,7 +147,7 @@ namespace GlimmerGrove
         float BarrelTop => _node.rect.height - (TurretFoot + TurretTall) * _cell;
 
         /// <summary>
-        /// The middle of the turret's own box, in the anchoring the rest of this file uses —
+        /// The middle of the turret's own box, in the anchoring the rest of this file uses -
         /// down from the top, so it reads the same way as <see cref="BarrelTop"/> and every
         /// <c>y</c> handed to <see cref="Reel"/>.
         ///
@@ -201,7 +201,7 @@ namespace GlimmerGrove
         /// <summary>
         /// Points the stage at a turret, loads what it draws with, and starts firing.
         ///
-        /// <b>Safe to call again</b> — the loadout's bench switches colour with it — and a load
+        /// <b>Safe to call again</b> - the loadout's bench switches colour with it - and a load
         /// that lands after a second call is discarded rather than drawn, which is what
         /// <see cref="_generation"/> is for.
         /// </summary>
@@ -215,7 +215,7 @@ namespace GlimmerGrove
             Compose();
 
             // **The first volley is the one being paid for.** A pierce turret lances every
-            // `Extent` shots — five, on the earned rung — so a stage counting up from nothing
+            // `Extent` shots - five, on the earned rung - so a stage counting up from nothing
             // would fire four plain bolts before showing the thing a player is deciding about, and
             // most of them will have closed the panel by then. Seeding the counter moves the
             // *phase* and leaves the rate exactly as authored, which is the only part of it a
@@ -252,7 +252,7 @@ namespace GlimmerGrove
         /// <b>Each formation is the shape the rule is decided by, not a tidy row.</b> A splash is
         /// decided by <em>where</em> raiders stand, so it gets a clump; a chain by how <em>many</em>
         /// there are, so it gets a line of them; a lance by the lane, so it gets a column marching
-        /// in single file — which is precisely the arrangement a splash is worst against and the
+        /// in single file - which is precisely the arrangement a splash is worst against and the
         /// reason the two abilities are not the same one twice (<c>WardAbility.Chain</c>'s note).
         /// </para>
         /// <para>
@@ -263,7 +263,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Everything else stands one</b>, and it is deliberate that most of the roster does:
         /// frost, stun, ember, siphon and beacon all act on the raider that was hit or on the ward
-        /// itself, so a second body would be a raider nothing happens to — the decoration invariant
+        /// itself, so a second body would be a raider nothing happens to - the decoration invariant
         /// 5d names, drawn on the one screen that exists to say what a turret does.
         /// </para>
         /// </summary>
@@ -333,7 +333,7 @@ namespace GlimmerGrove
         /// Where a target stands, given how far down the band it is.
         ///
         /// <paramref name="down"/> is 0 at the top of the band and 1 at its foot; the band itself
-        /// is derived from the stage rather than typed — see <see cref="BandTop"/>.
+        /// is derived from the stage rather than typed - see <see cref="BandTop"/>.
         /// </summary>
         Vector2 Where(float acrossCells, float down)
         {
@@ -456,7 +456,7 @@ namespace GlimmerGrove
 
             // Stopped first, so starting is idempotent whoever got here. `Claim` arms a restart
             // on a timer, and a load that lands *after* that timer would otherwise leave two
-            // firing loops running against one turret — two volleys a beat apart, from a race
+            // firing loops running against one turret - two volleys a beat apart, from a race
             // that only shows up on a slow load.
             Stop();
 
@@ -500,8 +500,8 @@ namespace GlimmerGrove
         /// <summary>
         /// Fires on a loop, so a turret can be watched rather than poked at.
         ///
-        /// <b>Real seconds throughout.</b> A modal sets <c>Time.timeScale</c> to nought — and this
-        /// widget's whole reason for existing is to be shown inside one — so a coroutine waiting in
+        /// <b>Real seconds throughout.</b> A modal sets <c>Time.timeScale</c> to nought - and this
+        /// widget's whole reason for existing is to be shown inside one - so a coroutine waiting in
         /// scaled seconds is one that never finishes (invariant 30h).
         /// </summary>
         IEnumerator Firing()
@@ -546,7 +546,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Which mark the shot itself is aimed at: the first, which the formations put where the
-        /// rule starts — the middle of a clump, the near end of a line, the foot of a column.
+        /// rule starts - the middle of a clump, the near end of a line, the foot of a column.
         ///
         /// <b>Kept as a method now that every turret answers nought.</b> It alternated for a prism,
         /// whose two colours were both doubles; what stood here after that was withdrawn is the one
@@ -583,7 +583,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// One bolt, from the barrel to a mark — <b>or one per barrel, on a turret drawn with
+        /// One bolt, from the barrel to a mark - <b>or one per barrel, on a turret drawn with
         /// two.</b>
         ///
         /// <para>
@@ -619,7 +619,7 @@ namespace GlimmerGrove
                 var from = new Vector2(step, -BarrelTop);
 
                 // Landing beside the mark rather than on it, so a pair stays parallel instead of
-                // converging into one comet a few hundredths of a second in — `SiegeView.Bolt`'s
+                // converging into one comet a few hundredths of a second in - `SiegeView.Bolt`'s
                 // own rule, and the reason the first cut of this read as a single shot.
                 var land = to + new Vector2(step * SiegeView.ApartOnArrival, 0f);
                 float angle = Aim(from, land);
@@ -679,7 +679,7 @@ namespace GlimmerGrove
         ///
         /// <b>Nought is straight up</b>, which is how these are baked: a comet's head is at the top
         /// of its own frame. Rotating <c>(0,1)</c> by θ gives <c>(-sin θ, cos θ)</c>, so the angle
-        /// that lands on a direction is <c>atan2(-x, y)</c> — and getting the sign wrong here is
+        /// that lands on a direction is <c>atan2(-x, y)</c> - and getting the sign wrong here is
         /// the fault invariant 37aj records, where a mirror that re-derived it in the opposite axis
         /// agreed with itself and disagreed with the game.
         /// </summary>
@@ -719,7 +719,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>Three of the ten do something a still frame could not show</b>, and all three are
-        /// lasting rather than instant — a freeze, a stun and a burn are the abilities whose whole
+        /// lasting rather than instant - a freeze, a stun and a burn are the abilities whose whole
         /// value is what happens <em>after</em> the bolt. Drawn for the length the model authors,
         /// in real seconds, so the preview says how long as well as what.
         /// </para>
@@ -767,7 +767,7 @@ namespace GlimmerGrove
         /// The mark catching fire, in the ward's own colour, for the seconds the model authors.
         ///
         /// <para>
-        /// <b>Every number here is read off <c>SiegeView</c> rather than chosen</b> — the reel, the
+        /// <b>Every number here is read off <c>SiegeView</c> rather than chosen</b> - the reel, the
         /// rate it plays at, how tall the fire is drawn against the body and where its seat sits in
         /// its own frame. A panel that drew a taller, faster or differently-seated flame than the
         /// board would be the disagreement this widget exists to rule out, and it is the sort that
@@ -896,14 +896,14 @@ namespace GlimmerGrove
         const float ClaimRingTo = 5.4f, ClaimRingGap = .085f;
 
         /// <summary>
-        /// The turret arrives — the moment it stops being something on a shelf and becomes the
+        /// The turret arrives - the moment it stops being something on a shelf and becomes the
         /// player's.
         ///
         /// <para>
         /// <b>Drawn as an arrival rather than as a flourish over what was already there</b>, which
         /// is this project's own language for a thing the player earned (invariant 20m: bare for a
         /// beat, motes gathering back, the thing standing up under a ring). The panel showed this
-        /// turret firing before it was bought — that is what the preview is for — so what has
+        /// turret firing before it was bought - that is what the preview is for - so what has
         /// changed is not that it is visible, it is that it is *theirs*, and something has to say
         /// so. A shower of sparks over a turret that never moved would say a purchase went
         /// through; a turret standing up says what was bought.
@@ -917,14 +917,14 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Firing stops for the length of it and starts again after.</b> A recoil reel half
         /// played under a turret springing up from nothing is the one thing here that would read
-        /// as a fault rather than as a flourish — and the restart is pinned to the generation it
+        /// as a fault rather than as a flourish - and the restart is pinned to the generation it
         /// was armed in, so a <see cref="Show"/> landing mid-claim (the bench switches colour
         /// under it) leaves one firing loop rather than two.
         /// </para>
         /// </summary>
         /// <param name="whiteOut">
         /// Whether the stage flashes white on its own. <b>False when something bigger is already
-        /// doing it</b> — the reveal whites out the whole screen on the same beat, and two flashes
+        /// doing it</b> - the reveal whites out the whole screen on the same beat, and two flashes
         /// a frame apart is not twice as bright, it is one flash with a seam in it.
         /// </param>
         public void Claim(bool whiteOut = true)
@@ -1016,7 +1016,7 @@ namespace GlimmerGrove
         ///
         /// A comet's head sits <c>SiegeView.HeadAt</c> of the way up its own frame and a muzzle
         /// flash sits at <c>MuzzleAt</c>, so drawing one is placing its <em>anchor</em> rather than
-        /// its centre — getting that wrong is a bolt that appears to land before it arrives.
+        /// its centre - getting that wrong is a bolt that appears to land before it arrives.
         /// </summary>
         Image Reel(string name, Sprite[] frames, float wide, Vector2 at, float angle, float anchor,
                    float fps, bool loop)
@@ -1044,7 +1044,7 @@ namespace GlimmerGrove
         ///
         /// <b>Along the reel's own axis rather than along the box's.</b> A bolt that travels
         /// sideways is turned, so backing the frame off by its head offset in screen-y would put
-        /// the head off the line it is flying down — invisible on the one formation that fires
+        /// the head off the line it is flying down - invisible on the one formation that fires
         /// straight up and wrong on every other.
         /// </summary>
         static void Head(Image img, Vector2 at, float anchor, float angle)
@@ -1058,7 +1058,7 @@ namespace GlimmerGrove
             img.rectTransform.anchoredPosition = at - up * back;
         }
 
-        /// <summary>The light under a bolt's head — the one thing the board tints from `Pal`.</summary>
+        /// <summary>The light under a bolt's head - the one thing the board tints from `Pal`.</summary>
         Image Halo(Vector2 at, float scale)
         {
             var img = UIKit.Img("Halo", _node, Art.Glow(96, 2.0f), Pal.A(Pal.Lift(Tint, .5f), .8f),

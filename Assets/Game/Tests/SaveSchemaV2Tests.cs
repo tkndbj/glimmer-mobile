@@ -33,7 +33,7 @@ namespace GlimmerGrove.Tests
         // ------------------------------------------------------------- checksum
         /// <summary>
         /// The checksum covers the serialised object, so a file written by v1 can never
-        /// hash to what v2 computes — v2's object has fields v1 had never heard of.
+        /// hash to what v2 computes - v2's object has fields v1 had never heard of.
         /// Without the version check in <see cref="SaveChecksum.Verify"/>, shipping any
         /// new field would fail every save on every device, fall through to a backup
         /// that fails identically, and hand the player a brand-new game.
@@ -62,7 +62,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// The relaxation above is scoped to a version change and nothing else — a
+        /// The relaxation above is scoped to a version change and nothing else - a
         /// current-version file that has actually been damaged must still be caught.
         /// </summary>
         [Test]

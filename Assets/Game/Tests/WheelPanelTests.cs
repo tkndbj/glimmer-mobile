@@ -20,14 +20,14 @@ namespace GlimmerGrove.Tests
             => Assert.LessOrEqual(WheelPanel.Tallest, PanelStack.TallestPanel,
                                   $"the wheel panel reaches {WheelPanel.Tallest} and the shortest " +
                                   $"canvas holds {PanelStack.TallestPanel}. The wheel's own " +
-                                  "diameter is nine tenths of the budget — shrink that before " +
+                                  "diameter is nine tenths of the budget - shrink that before " +
                                   "anything else");
 
         /// <summary>
         /// Every row clears the one above it, read as boxes rather than as centres.
         ///
-        /// The status paragraph used to be the odd one out — placed from its <em>top</em> while
-        /// its neighbours were placed from their centres — and the overlay read it as a centre
+        /// The status paragraph used to be the odd one out - placed from its <em>top</em> while
+        /// its neighbours were placed from their centres - and the overlay read it as a centre
         /// like everything else, which drew it 46 units up through the odds line. This test
         /// passed throughout, because it was checking the arithmetic the panel did not use.
         /// Every number here is now a centre.
@@ -57,7 +57,7 @@ namespace GlimmerGrove.Tests
         /// The height is derived from the parts, not typed beside them.
         ///
         /// Driven by moving a part and watching the total follow, because a constant that
-        /// happens to equal the sum today is indistinguishable from one that is derived — right
+        /// happens to equal the sum today is indistinguishable from one that is derived - right
         /// up until somebody inserts a row.
         /// </summary>
         [Test]
@@ -83,7 +83,7 @@ namespace GlimmerGrove.Tests
         /// did: <c>PanelStack.TightestCanvas</c> is the shortest canvas this game is drawn on,
         /// and <c>CanvasFit</c> widened that from a 4:3 tablet's 1440 to 1890, so every modal in
         /// the game gained 450 units of budget. The wheel is deliberately not spending any of
-        /// it — a modal that fills the screen was the complaint the widening answered.
+        /// it - a modal that fills the screen was the complaint the widening answered.
         /// </para>
         /// </summary>
         [Test]

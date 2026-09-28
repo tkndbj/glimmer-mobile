@@ -28,7 +28,7 @@ namespace GlimmerGrove.Modes
     ///
     /// <para>
     /// <b>It is the mode's budget, in the unit the mode is graded in</b> (invariant 22b). A
-    /// Lightfall run is measured in drops — a drop is this mode's turn — so the same
+    /// Lightfall run is measured in drops - a drop is this mode's turn - so the same
     /// <c>par × budgetFactor</c> every other mode is dealt is dealt here as motes, the tray
     /// counts them down, and the run ends when the last one has fallen with the well not empty.
     /// Nothing about the grading is special: the same three factors over the same derived par,
@@ -39,9 +39,9 @@ namespace GlimmerGrove.Modes
     /// glade's move budget, and it is what a player has to be told (see <c>Mechanic</c>): a
     /// glade hands a turn back for every undo without limit, so exploring costs nothing there,
     /// and somebody who learned that rule and was never taught this one would tap about and
-    /// lose. What keeps it fair is that a wrong drop is cheap to <em>discover</em> — the ghost
+    /// lose. What keeps it fair is that a wrong drop is cheap to <em>discover</em> - the ghost
     /// under the thumb says where the mote lands, whether it enriches and whether it bursts,
-    /// before anything is committed — and only expensive to <em>make</em>.
+    /// before anything is committed - and only expensive to <em>make</em>.
     /// </para>
     /// <para>
     /// Pure integers and no policy at all, for <c>RippleSatchel</c>'s reason: where the budget comes
@@ -56,7 +56,7 @@ namespace GlimmerGrove.Modes
         /// A well with no supply budget, which therefore cannot run dry.
         ///
         /// <see cref="int.MaxValue"/> rather than a flag, so <see cref="Left"/> compares without
-        /// special-casing at every call site — the bargain <c>LevelTuning.MoveBudget</c> already
+        /// special-casing at every call site - the bargain <c>LevelTuning.MoveBudget</c> already
         /// makes for a glade authored with no budget.
         /// </summary>
         public const int Unlimited = int.MaxValue;
@@ -66,7 +66,7 @@ namespace GlimmerGrove.Modes
         ///
         /// The pot rather than a constant, because it can be topped up: a continue that has
         /// been paid for raises this and nothing else. Note what it deliberately does not touch
-        /// — <see cref="Spent"/>, which is the grade, so a well finished with bought motes
+        /// - <see cref="Spent"/>, which is the grade, so a well finished with bought motes
         /// scores exactly what it spent (invariant 23).
         /// </summary>
         public int Dealt { get; private set; }

@@ -37,7 +37,7 @@ namespace GlimmerGrove.Cloud
             /// Two things at once, and it is worth being clear that the second is a bonus
             /// rather than the reason. The reason is proof: an account with a provider on it
             /// may have been left signed in on somebody else's phone, and deletion is the one
-            /// act here that cannot be walked back — so the provider is asked to confirm the
+            /// act here that cannot be walked back - so the provider is asked to confirm the
             /// person holding the device is the person who owns the account. What it also
             /// buys, for Apple, is the fresh authorization code that
             /// <c>revokeAppleGrant</c> needs; capturing that at link time instead would mean
@@ -49,7 +49,7 @@ namespace GlimmerGrove.Cloud
 
             /// <summary>
             /// Nothing to delete here. No backend is configured, so there is no account and
-            /// nothing has ever left the device — offering the control would be
+            /// nothing has ever left the device - offering the control would be
             /// <c>ContinueChoice.Unavailable</c>'s complaint, a button that can never work.
             /// </summary>
             Unavailable,
@@ -102,7 +102,7 @@ namespace GlimmerGrove.Cloud
         /// Whether the control is drawn at all.
         ///
         /// <para>
-        /// Drawn in every state a deletion could possibly succeed in — including the mismatched
+        /// Drawn in every state a deletion could possibly succeed in - including the mismatched
         /// one, and that is deliberate rather than an oversight. A device caught between two
         /// accounts is the state a player is most likely to want out of, and it is exactly the
         /// state where every *other* control is hedged. Refusing there would leave the one
@@ -131,7 +131,7 @@ namespace GlimmerGrove.Cloud
             CloudFailure.Busy => Outcome.Busy,
 
             // The provider signed in as somebody else. Its own sentence, never "something
-            // went wrong" — see the outcome.
+            // went wrong" - see the outcome.
             CloudFailure.AccountMismatch => Outcome.WrongAccount,
 
             _ => Outcome.Failed,
@@ -145,7 +145,7 @@ namespace GlimmerGrove.Cloud
         /// certain to have changed nothing may offer the button again, where anything else
         /// must send the player back to a screen that re-reads the account. Every outcome
         /// except <see cref="Outcome.Deleted"/> happens strictly before the server is asked to
-        /// remove anything, which is what makes the answer knowable at all — see
+        /// remove anything, which is what makes the answer knowable at all - see
         /// <c>CloudSaveService.DeleteAccountAsync</c>, where the local erasure runs only after
         /// the server has confirmed.
         /// </para>

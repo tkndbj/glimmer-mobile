@@ -6,8 +6,8 @@ namespace GlimmerGrove.Cloud
     /// <para>
     /// Before this, a sync happened at exactly three moments: after the splash, when the
     /// app was backgrounded, and when it came back. That is enough while everything the
-    /// player changes is something they will keep changing for another twenty minutes —
-    /// stars, hearts, chests — and it is not enough for a change they make once and
+    /// player changes is something they will keep changing for another twenty minutes -
+    /// stars, hearts, chests - and it is not enough for a change they make once and
     /// expect to stick. Two failures came out of it, and both were reported as "it does
     /// not save".
     /// </para>
@@ -15,14 +15,14 @@ namespace GlimmerGrove.Cloud
     /// The first is that backgrounding is the <em>worst</em> moment to start a network
     /// call, not the best: the process is being frozen, the continuation may not run
     /// again for hours, and on Android it may not run at all. The second is that a sync
-    /// which failed was simply forgotten — a player who renamed themselves on a train
+    /// which failed was simply forgotten - a player who renamed themselves on a train
     /// pushed nothing, and pushed nothing again when the signal came back, because
     /// nothing was watching for the signal coming back.
     /// </para>
     /// <para>
     /// So this is a debounce with a backoff and a reconnect. It holds no clock and no
     /// socket: it is handed elapsed time and told whether the network is up, which is
-    /// what makes the whole policy runnable in the test suite — see <c>SyncTests</c>.
+    /// what makes the whole policy runnable in the test suite - see <c>SyncTests</c>.
     /// That is the same bargain <c>RunScreen.Tick</c> makes, for the same reason.
     /// </para>
     /// </summary>
@@ -37,13 +37,30 @@ namespace GlimmerGrove.Cloud
         /// </summary>
         public const float DebounceSeconds = 3f;
 
+        /// <summary>
+        /// How long a change nobody named waits, since 2026-09-28.
+        ///
+        /// <para>
+        /// A deliberate act - a purchase, a claim, a finished run - is sent after
+        /// <see cref="DebounceSeconds"/>. Everything else the save moves (a loadout, a heart
+        /// spent at the start of a run, a lesson seen) is still owed to the server, and is sent
+        /// within this: soon enough that a second device open at the same time catches up
+        /// without a relaunch, slow enough that a busy minute of menus is one sync rather than
+        /// twenty. A sync is a document read and a callable whether or not it writes, so at
+        /// scale this constant is the bill. Leaving the app is covered separately and at once
+        /// (<c>CloudSaveService.Depart</c>), so nothing depends on this firing before the
+        /// player puts the phone down.
+        /// </para>
+        /// </summary>
+        public const float AmbientSeconds = 60f;
+
         /// <summary>The first retry after a failure. Doubles from here.</summary>
         public const float FirstRetrySeconds = 5f;
 
         /// <summary>
         /// The longest gap between retries. Five minutes: far enough apart to be free on
         /// a battery, near enough that a player who has been in a tunnel is up to date
-        /// before they notice. A device is not left broken at this bound — a foreground,
+        /// before they notice. A device is not left broken at this bound - a foreground,
         /// a background or the network returning all reset it.
         /// </summary>
         public const float MaxRetrySeconds = 300f;
@@ -81,9 +98,26 @@ namespace GlimmerGrove.Cloud
             _wanted = true;
 
             // A backoff is not shortened by asking again. The server is failing or the
-            // network is down, and neither is fixed by trying harder — the reconnect
+            // network is down, and neither is fixed by trying harder - the reconnect
             // below is what resets it, because that is genuinely new information.
             if (_backoff <= 0f) _wait = DebounceSeconds;
+        }
+
+        /// <summary>
+        /// Something local changed that is owed to the server but was not a deliberate act,
+        /// so it may wait up to <see cref="AmbientSeconds"/>.
+        ///
+        /// <para>
+        /// It never pushes a sooner attempt further away: a pending <see cref="Request"/>
+        /// keeps its few seconds, and a backoff keeps its length for <see cref="Request"/>'s
+        /// reason. Nor does asking again restart the wait, or a player who never stops
+        /// touching things would never be synced at all.
+        /// </para>
+        /// </summary>
+        public void RequestEventually()
+        {
+            if (_backoff <= 0f && (!_wanted || _wait > AmbientSeconds)) _wait = AmbientSeconds;
+            _wanted = true;
         }
 
         /// <summary>
@@ -92,7 +126,7 @@ namespace GlimmerGrove.Cloud
         /// Regaining it schedules a sync whether or not anything local is pending: the
         /// point of coming back online is as much what the <em>other</em> device did while
         /// this one was away. It costs a document read and, if the two already agree, no
-        /// write at all — <c>SaveDelta</c> makes that the cheap case.
+        /// write at all - <c>SaveDelta</c> makes that the cheap case.
         /// </summary>
         public void NetworkChanged(bool reachable)
         {
@@ -124,7 +158,7 @@ namespace GlimmerGrove.Cloud
             _wait = 0f;
         }
 
-        /// <summary>Clears the backoff without asking for a sync — a foreground, say.</summary>
+        /// <summary>Clears the backoff without asking for a sync - a foreground, say.</summary>
         public void Settled()
         {
             _backoff = 0f;
@@ -136,7 +170,12 @@ namespace GlimmerGrove.Cloud
         {
             _inFlight = false;
             _backoff = 0f;
-            _wait = _wanted ? DebounceSeconds : 0f;
+
+            // What was asked for while the push was out keeps its own urgency - a deliberate act
+            // its few seconds, an ambient change its minute - but never less than a debounce, so
+            // a burst that straddles a sync is still one write.
+            if (!_wanted) _wait = 0f;
+            else if (_wait < DebounceSeconds) _wait = DebounceSeconds;
         }
 
         /// <summary>
@@ -160,7 +199,7 @@ namespace GlimmerGrove.Cloud
         ///
         /// <para>
         /// Returns true once per attempt and then waits to be told the outcome, so a slow
-        /// sync cannot be started twice — the service's own latch would refuse the second
+        /// sync cannot be started twice - the service's own latch would refuse the second
         /// anyway, and a refusal recorded as a failure would back the timer off for a
         /// reason that was never real.
         /// </para>

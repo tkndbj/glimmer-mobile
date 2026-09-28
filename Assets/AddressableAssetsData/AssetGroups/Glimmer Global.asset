@@ -3564,11 +3564,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Siege/rabbleMon_b
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 172162ca7ecaab863af72625fc8863df
-    m_Address: Art/Ui/Rank/kit_tab
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1727c8f90cebc7f468500a4eceed211c
     m_Address: Art/Fx/Siege/hit_r/f03
     m_ReadOnly: 0

@@ -45,7 +45,7 @@ namespace GlimmerGrove
         ///
         /// This is what makes exploration cost something. Without it a player can spin
         /// every tile at random forever and arrive at the solution by exhaustion, which
-        /// is why a move budget alone still feels arbitrary — nothing on the board was
+        /// is why a move budget alone still feels arbitrary - nothing on the board was
         /// ever at stake, only the counter.
         /// </summary>
         public byte fragile;
@@ -56,7 +56,7 @@ namespace GlimmerGrove
         /// <para>
         /// A crossing carries all four arms in two pairs that never meet, so one mask says
         /// everything: the other strand is <c>solved &amp; ~cross</c>. Which of the two is
-        /// written down does not matter — the strands are interchangeable labels, and
+        /// written down does not matter - the strands are interchangeable labels, and
         /// <see cref="Puzzle.Alike"/> treats a rotation that swaps them as no rotation at all.
         /// That is what makes a straight crossing inert and a twisted one worth exactly one
         /// tap, with no second rule anywhere.
@@ -68,7 +68,7 @@ namespace GlimmerGrove
         /// On a <see cref="Kind.Briar"/>, the two arms light is allowed along. 0 everywhere else.
         ///
         /// <para>
-        /// The other two arms are drawn, mate their neighbours and carry nothing — thorns have
+        /// The other two arms are drawn, mate their neighbours and carry nothing - thorns have
         /// closed them. So one mask says everything here too, and it is the mask that decides
         /// the tile: <see cref="Puzzle.Alike"/> asks whether a turn leaves the same pair open,
         /// which is why a straight briar is worth one tap where a straight crossing is worth
@@ -78,7 +78,7 @@ namespace GlimmerGrove
         /// <para>
         /// Kept apart from <see cref="cross"/> rather than folded into it, though both name
         /// two of four arms. Every reader of <c>cross</c> asks it "how many flows does this
-        /// tile carry", and the answer for a briar is one — a shared field would have
+        /// tile carry", and the answer for a briar is one - a shared field would have
         /// <see cref="Puzzle.StrandCount"/> reporting two and the light walking down a closed
         /// way with nothing anywhere saying so.
         /// </para>
@@ -86,7 +86,7 @@ namespace GlimmerGrove
         public byte gate;
 
         /// <summary>
-        /// A conduit, plain, crossed or gated — the tiles fragility and taproots are allowed
+        /// A conduit, plain, crossed or gated - the tiles fragility and taproots are allowed
         /// to modify.
         ///
         /// A crossing is still a length of conduit; it only happens to carry two flows, and a
@@ -112,15 +112,15 @@ namespace GlimmerGrove
     /// A <b>crossing</b> (<see cref="Kind.Crossing"/>) is the third and the only one that
     /// touches the graph itself, and it does so by splitting a cell rather than by changing
     /// what a join means: the traversal walks <em>strands</em>, of which an ordinary cell has
-    /// one and a crossing has two. Everything above the walk — colour, lighting, winning,
-    /// par, the near-miss reading — is unchanged, because to all of them a strand is simply
+    /// one and a crossing has two. Everything above the walk - colour, lighting, winning,
+    /// par, the near-miss reading - is unchanged, because to all of them a strand is simply
     /// what a cell always was. That is the whole reason the light model survived a mechanic
     /// whose entire point is that two networks can occupy one tile.
     /// </para>
     /// <para>
     /// A <b>briar</b> (<see cref="Kind.Briar"/>) is the fourth, and it is the crossing's
     /// opposite number: four arms again, but only one pair open and the other pair thorned
-    /// shut. So it changes neither the graph nor what a join means — only <em>which of a
+    /// shut. So it changes neither the graph nor what a join means - only <em>which of a
     /// tile's arms conduct</em>, which is <see cref="Live"/> and one word in two walks. What
     /// it buys is the thing arms cannot buy: all four of its neighbours mate it at every
     /// angle, so nothing about the pipe-fitting settles it and only colour can.
@@ -151,7 +151,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>It moves the budget and nothing else.</b> Par is derived from the board, the two
-        /// star lines are held against par, and neither reads this — so a bought turn can
+        /// star lines are held against par, and neither reads this - so a bought turn can
         /// never buy a star (invariant 22). A run that had to be continued has by definition
         /// spent more than <c>par x 1.40</c> and so scores one, which is less than replaying
         /// the glade for nothing would pay: the offer sells a <em>finish</em>, never a
@@ -159,7 +159,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// Cleared by <see cref="Reset"/> along with the move count, because a restart is a
-        /// new run and not a continuation of this one — the same rule <c>RippleRun</c>'s rebuild
+        /// new run and not a continuation of this one - the same rule <c>RippleRun</c>'s rebuild
         /// follows for a fresh pot of light, and the reason the restart key is priced like any
         /// other abandonment (<c>RunScreen.RestartLevel</c>).
         /// </para>
@@ -173,7 +173,7 @@ namespace GlimmerGrove
         /// <para>
         /// The light graph is indexed by <em>strand</em> rather than by cell, and this is the
         /// only number that says so. Two rather than "however many" because a crossing is two
-        /// pairs of arms and four arms cannot be split three ways — a fixed two keeps the
+        /// pairs of arms and four arms cannot be split three ways - a fixed two keeps the
         /// walk's arrays a flat multiple of the board instead of a jagged one, which is what
         /// makes the whole mechanic cost an index rather than a data structure.
         /// </para>
@@ -236,7 +236,7 @@ namespace GlimmerGrove
         /// A warning rather than an error, and only in the validator: this is a judgement
         /// about what a player can read, which is exactly the class of thing
         /// <c>ValidateHearts</c> and <c>CheckClock</c> also decline to fail a build over.
-        /// What it must never do is nothing — a board silently drawing its seventh root with
+        /// What it must never do is nothing - a board silently drawing its seventh root with
         /// the sixth root's mark is two different roots wearing one identity.
         /// </para>
         /// </summary>
@@ -338,7 +338,7 @@ namespace GlimmerGrove
         ///
         /// This is load-bearing now that a crumble ends the run. Validation allows a
         /// conduit to be owed exactly its whole allowance, so with a &gt;= here the last
-        /// turn of a legitimate solution would break the tile and lose the glade — an
+        /// turn of a legitimate solution would break the tile and lose the glade - an
         /// unwinnable level that looks perfectly authored.
         /// </summary>
         public bool Shattered(int i) => IsFragile(i) && Wear[i] > C[i].fragile;
@@ -368,7 +368,7 @@ namespace GlimmerGrove
         /// five times over as <c>Rotl(solved, k) == solved</c>. That copy was correct until a
         /// tile appeared whose arm mask is not the whole of its orientation: a crossing wears
         /// all four arms at every angle, so the old test called every crossing solved and every
-        /// twisted one free — a board that validates, derives a plausible par and cannot be
+        /// twisted one free - a board that validates, derives a plausible par and cannot be
         /// finished. One rule, in one place, because a proved copy proves nothing.
         /// </para>
         /// <para>
@@ -383,7 +383,7 @@ namespace GlimmerGrove
             int solved = cell.solved;
             if (Rotl(solved, turns) != solved) return false;
 
-            // A briar is decided by which pair is open and by nothing else — its arms are the
+            // A briar is decided by which pair is open and by nothing else - its arms are the
             // same four at every angle, exactly like a crossing's, and the mask comparison
             // above has therefore already said yes. Asked before the crossing branch because
             // the two fields are exclusive and this one is the stricter reading: a turn that
@@ -403,7 +403,7 @@ namespace GlimmerGrove
         /// <para>
         /// Every tile but a briar answers <see cref="Mask"/>, because every other tile
         /// conducts along every arm it draws. A briar draws four and conducts two, so the
-        /// light walks this and the drawing walks <c>Mask</c> — the one place in the game
+        /// light walks this and the drawing walks <c>Mask</c> - the one place in the game
         /// where "there is an arm here" and "light may go this way" are different questions.
         /// </para>
         /// <para>
@@ -438,7 +438,7 @@ namespace GlimmerGrove
         /// <summary>
         /// How many quarter turns are still owed on this tile, on its own.
         ///
-        /// Rarely the number a caller wants — see <see cref="TurnsOwed"/>, which asks the
+        /// Rarely the number a caller wants - see <see cref="TurnsOwed"/>, which asks the
         /// same question of a bound tile's whole taproot. This one exists because the
         /// group answer is defined in terms of it.
         /// </summary>
@@ -456,7 +456,7 @@ namespace GlimmerGrove
         /// For a bound conduit that is the count for its whole taproot, because one tap
         /// turns every conduit on it: the answer is the smallest number of turns after
         /// which <em>every</em> member is solved. That is not generally the largest of
-        /// their individual counts — a straight conduit reads the same every half turn, so
+        /// their individual counts - a straight conduit reads the same every half turn, so
         /// it is solved at two of the four offsets and simply goes along with whatever the
         /// elbows on its root demand.
         /// </para>
@@ -502,13 +502,13 @@ namespace GlimmerGrove
         /// <para>
         /// <b>This is an upper bound, and the bound is the point.</b> A board is won when
         /// every lamp is lit (see <see cref="Evaluate"/>), which can happen with spare
-        /// conduits still pointing anywhere — so the true minimum number of turns to a win
+        /// conduits still pointing anywhere - so the true minimum number of turns to a win
         /// may be lower than this, and computing it exactly would mean searching the whole
         /// rotation space of the board on the frame a run ends. What is cheap is the
         /// distance along the solution the level was authored with, and that is sound in
         /// the direction that matters: if this reads 1, then one turn <em>definitely</em>
         /// finishes the glade. Nothing that quotes this number can therefore overstate how
-        /// close the player was, which is the whole reason it exists — a near-miss line the
+        /// close the player was, which is the whole reason it exists - a near-miss line the
         /// player can catch being generous is worse than none.
         /// </para>
         /// <para>
@@ -518,7 +518,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// -1 when a conduit the solution needs has crumbled. There is then no turn count
-        /// that means anything — the board this measures against no longer exists — and
+        /// that means anything - the board this measures against no longer exists - and
         /// returning a number computed over the survivors would quietly report the player
         /// as closer than they were, because <see cref="Used"/> drops a shattered cell and
         /// takes its owed turns with it.
@@ -568,7 +568,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// The second is a briar's doing, and without it <see cref="TurnsToSolution"/> can be
-        /// <em>generous</em> — the single thing it exists not to be. Before briars this could
+        /// <em>generous</em> - the single thing it exists not to be. Before briars this could
         /// not happen: joining the light to an island of dark needs a mated pair of arms, the
         /// authored solution mates none across that divide, so one of the two tiles had to be
         /// a lit one turned off its solution and was already being counted. A briar's shut
@@ -587,7 +587,7 @@ namespace GlimmerGrove
         /// Tiles whose four orientations are identical never need a turn.
         ///
         /// A bound conduit is inert only when every conduit on its taproot is, because
-        /// tapping it turns them all — a crossroads that happens to sit on a root worth
+        /// tapping it turns them all - a crossroads that happens to sit on a root worth
         /// turning is still worth tapping, and refusing the tap would leave the player
         /// poking a tile that visibly moves its partners for everyone else.
         /// </summary>
@@ -609,7 +609,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Turns a tile. <paramref name="wear"/> is false for an undo, which rewinds the
-        /// rotation but never gives fragility back — exploring costs the conduit whether
+        /// rotation but never gives fragility back - exploring costs the conduit whether
         /// or not the player keeps the result, and that is precisely what makes a
         /// fragile board worth thinking about instead of spinning.
         /// </summary>
@@ -748,7 +748,7 @@ namespace GlimmerGrove
             }
 
             // A glade settles when every critter on it is awake, and that is the whole
-            // rule. It used to carry a second term — no duskcap woken — and the mechanic
+            // rule. It used to carry a second term - no duskcap woken - and the mechanic
             // was removed because no board could ever demonstrate it: light spilling
             // somewhere unwanted looks exactly like a finished glade that will not settle.
             Won = all && LampCount > 0;
@@ -759,7 +759,7 @@ namespace GlimmerGrove
         /// Energy currently reaching a cell, on every strand it has.
         ///
         /// A crossing is the only tile that can be answering two different colours at once,
-        /// and it is never a critter or a heart-crystal — so the union is only ever read by
+        /// and it is never a critter or a heart-crystal - so the union is only ever read by
         /// the drawing, and the rules that care about an exact colour ask a cell that has
         /// one strand.
         /// </summary>
@@ -778,14 +778,14 @@ namespace GlimmerGrove
             return g < 0 ? 0 : _compColour[g];
         }
 
-        /// <summary>Whether two of a cell's arms carry the same flow — false across a crossing.</summary>
+        /// <summary>Whether two of a cell's arms carry the same flow - false across a crossing.</summary>
         public bool SameStrand(int i, int a, int b) => StrandAt(i, a) == StrandAt(i, b);
 
         /// <summary>
         /// Which network a strand belongs to, or -1 where there is no strand.
         ///
         /// Exposed for the validator alone, which has to be able to ask whether a crossing's
-        /// two flows are the same flow joined up somewhere else on the board — the one thing
+        /// two flows are the same flow joined up somewhere else on the board - the one thing
         /// about the mechanic that cannot be seen from a single tile.
         /// </summary>
         public int Comp(int i, int strand)
@@ -804,7 +804,7 @@ namespace GlimmerGrove
         /// the tile happens to be turned right now.
         ///
         /// The solution walk has to ask this rather than <see cref="StrandAt"/>, because it is
-        /// measuring the board the level was authored as — a crossing turned away from its
+        /// measuring the board the level was authored as - a crossing turned away from its
         /// solution would otherwise route the walk down the wrong pair and call half the
         /// board decoration.
         /// </summary>
@@ -820,8 +820,8 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// One copy for invariant 5b's reason at the smallest scale it appears at: two walks
-        /// of the solution now exist — how far from a heart every tile is, and which hearts
-        /// reach a given tile — and a second reading of "do these two tiles join" is a second
+        /// of the solution now exist - how far from a heart every tile is, and which hearts
+        /// reach a given tile - and a second reading of "do these two tiles join" is a second
         /// reading that can come to disagree with the first. It is also <em>symmetric</em>,
         /// which is what lets <see cref="SolutionFeeders"/> walk outwards from a critter and
         /// still arrive at exactly the hearts whose light reaches it.
@@ -852,7 +852,7 @@ namespace GlimmerGrove
         /// one caller is a lesson: a tip pointing at the hearts that happen to be joined to a
         /// critter before the player has turned anything would point at nothing on almost
         /// every board. It walks rather than reads a stored answer for the same reason
-        /// <see cref="Owed"/> is a method — a set per tile is a table nobody else wants, and
+        /// <see cref="Owed"/> is a method - a set per tile is a table nobody else wants, and
         /// the question is asked once, while a lesson is being built.
         /// </para>
         /// </summary>
@@ -929,7 +929,7 @@ namespace GlimmerGrove
         ///
         /// Shared rather than re-derived by each caller, because a second copy of "which
         /// tiles matter" is a second copy that can disagree with the number the player was
-        /// quoted — and the one place this is used is the moment a defeat screen points at
+        /// quoted - and the one place this is used is the moment a defeat screen points at
         /// them and says how close it was.
         /// </summary>
         public void Owed(List<int> into)
@@ -1000,7 +1000,7 @@ namespace GlimmerGrove
         ///
         /// <see cref="int.MaxValue"/> on a glade with no budget, where <see cref="Granted"/>
         /// is meaningless and adding it would overflow into a board that is instantly out of
-        /// turns — which is the one arithmetic mistake here that would be catastrophic and
+        /// turns - which is the one arithmetic mistake here that would be catastrophic and
         /// silent.
         /// </summary>
         public int MoveBudget

@@ -12,7 +12,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>This file exists because an ember turret read as a machine gun, and the rules were never
     /// the reason.</b> A burn has always been a damage-over-time in the model
-    /// (<c>SiegeBoard.Smoulder</c>), but every tick of it was reported as a <c>SiegeBolt</c> — and
+    /// (<c>SiegeBoard.Smoulder</c>), but every tick of it was reported as a <c>SiegeBolt</c> - and
     /// the one thing <see cref="Bolt"/> knows how to draw is a shot: the turret recoils, the
     /// barrel flashes, a comet crosses the hill and something lands. The tick fired every frame it
     /// took a whole point of health, so a single ember turret drew some thirty complete shots a
@@ -25,12 +25,12 @@ namespace GlimmerGrove
     /// (<c>SiegeTuning.BurnTick</c>); the drawing here is a looping reel that lives on the raider
     /// for exactly as long as the model says it is alight, and the ticks are small flares over the
     /// top of it. So what a player reads is <em>this one is burning</em>, continuously, with a
-    /// rhythm under it — which is what the ability is.
+    /// rhythm under it - which is what the ability is.
     /// </para>
     /// <para>
     /// <b>Driven off the model every frame rather than latched on the tick that lit it.</b> A burn
     /// starts on a bolt, is refreshed by later bolts, is outlived by the ward that lit it, and is
-    /// ended by the clock — four edges, three of which the view never sees. <c>SiegeRaider.Alight</c>
+    /// ended by the clock - four edges, three of which the view never sees. <c>SiegeRaider.Alight</c>
     /// is the one question with one answer, asked once a frame, which is the same discipline
     /// <see cref="Braced"/> follows for an anvil's lean and for the same reason.
     /// </para>
@@ -44,7 +44,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>Against the width, and sizing it by height is the mistake this records.</b> Every
-        /// raider in this mode is a top-down insect drawn far wider than it is tall — a <c>mon</c>
+        /// raider in this mode is a top-down insect drawn far wider than it is tall - a <c>mon</c>
         /// reel is about 300 x 180, so <c>Mob.Height</c> is barely half the body's own width.
         /// Scaled by that the fire came out a candle standing on a beetle four times its width:
         /// right in every number, and plainly wrong in the first picture anybody drew of it
@@ -55,13 +55,13 @@ namespace GlimmerGrove
         /// the foot of the fire nine tenths of the way down its frame, so that the under-glow has
         /// somewhere to spread; anchoring the widget by its middle would stand the fire a tenth of
         /// its own height in the air. What is placed is the <em>seat</em>, on the ground
-        /// <see cref="FootOf"/> answers — the same ground the shadow is drawn on, so a fire and
+        /// <see cref="FootOf"/> answers - the same ground the shadow is drawn on, so a fire and
         /// the shadow under the thing burning cannot disagree about where the floor is.
         /// </para>
         /// <para>
         /// <b>Public because <c>WardFiringStage</c> asks them</b>, which is <see cref="TintOf"/>'s
         /// own note: that widget draws a turret's ability outside a board, and a second set of
-        /// these numbers would be a second opinion about how big a fire is and where it stands —
+        /// these numbers would be a second opinion about how big a fire is and where it stands -
         /// on the one screen whose whole job is agreeing with the hill.
         /// </para>
         /// </summary>
@@ -71,7 +71,7 @@ namespace GlimmerGrove
         /// The rate the flame reel is played at. <b>Must be <c>make_burn_fx.FPS</c>.</b>
         ///
         /// The reel is cut to loop over exactly its own frames, so a different rate here does not
-        /// break the loop — it only changes how fast the fire moves. It is written as the tool's
+        /// break the loop - it only changes how fast the fire moves. It is written as the tool's
         /// number all the same, because a flame running at some other speed than the one it was
         /// drawn for is the kind of drift nothing in this project can see.
         /// </summary>
@@ -81,7 +81,7 @@ namespace GlimmerGrove
         /// How long a flame takes to catch, and the seconds of burn left over which it dies down.
         ///
         /// <b>A fire that ended the instant the model stopped burning would pop out of existence</b>
-        /// — the one thing in this mode a player reads as a fault rather than as an effect. The
+        /// - the one thing in this mode a player reads as a fault rather than as an effect. The
         /// fade is read off <c>SiegeRaider.Burn</c> rather than tweened, so a burn refreshed by
         /// another bolt while it is guttering comes straight back up instead of finishing a fade
         /// that is no longer true.
@@ -93,7 +93,7 @@ namespace GlimmerGrove
         /// and deep.
         ///
         /// <b>Off the width like the flame itself</b> (<see cref="BlazeWide"/>), because a pool of
-        /// firelight is the shape of the thing standing in it — and a raider here is drawn far
+        /// firelight is the shape of the thing standing in it - and a raider here is drawn far
         /// wider than it is tall, so a glow measured against its height would be a coin under a
         /// beetle.
         /// </summary>
@@ -105,7 +105,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Deliberately slow, and the reel is carrying most of this.</b> The flame is drawn with
         /// its own sparks coming off it, so these are the few that leave the picture and drift
-        /// across the hill — the part a reel cannot do, because a reel is anchored to the body and
+        /// across the hill - the part a reel cannot do, because a reel is anchored to the body and
         /// a raider is walking. Three a second per burning raider against the fifty a second a
         /// boss's orb wake used to emit, which is the measurement that file records
         /// (<see cref="Cinder"/>): every <c>Image</c> re-tinted marks its canvas dirty, and this
@@ -120,7 +120,7 @@ namespace GlimmerGrove
         /// <b>A multiply can only darken, so this is firelight and not fire</b> (invariant 44g):
         /// pulling the green and blue channels down leaves a body lit by something orange, which
         /// is exactly what is happening to it. Reaching for a brighter tint here would be the
-        /// mistake that note records — the light comes from the reel, which is additive art.
+        /// mistake that note records - the light comes from the reel, which is additive art.
         /// </summary>
         public static readonly Color Charred = new Color(1f, .78f, .58f);
         const float CharFlicker = .22f;
@@ -143,7 +143,7 @@ namespace GlimmerGrove
 
                 // **A falling body keeps its fire, and that is not an oversight.** `Reap` takes a
                 // mob out of `_mob` the frame the model has finished with it, so a raider a burn
-                // killed is already gone from here — what is left in the list mid-death is one the
+                // killed is already gone from here - what is left in the list mid-death is one the
                 // view is still animating, and a fire that vanished a frame before the body it was
                 // on would be the burn visibly failing to be the thing that killed it.
                 if (mob.Falling) continue;
@@ -163,7 +163,7 @@ namespace GlimmerGrove
 
             // **Re-lit rather than re-tinted when a fiercer ward of another colour takes it
             // over.** `SiegeRaider.Kindle` keeps the fiercer burn and its ward travels with it,
-            // so this is a real change of who is paying — and the reel is baked per colour
+            // so this is a real change of who is paying - and the reel is baked per colour
             // (`WardModel.BurnFor`) precisely because a multiply cannot turn one flame into
             // another. It is rare by construction: a burn only changes hands when a *stronger*
             // one lands.
@@ -282,7 +282,7 @@ namespace GlimmerGrove
         /// the fire dies.
         ///
         /// <b>Asked by <see cref="Follow"/> rather than written here</b>, so the one place that
-        /// decides what colour a raider's body is stays the one place — a second writer would be
+        /// decides what colour a raider's body is stays the one place - a second writer would be
         /// the fault invariant 48l records (a repaint that draws a state, and a one-off path that
         /// switched something off it and never back on).
         /// </summary>
@@ -307,7 +307,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>Small on purpose, and that is the whole point of the change.</b> This is what used to
-        /// be a full bolt. What it says now is only "the fire is working" — the figure joins the
+        /// be a full bolt. What it says now is only "the fire is working" - the figure joins the
         /// raider's running tally exactly as every other hit does (<see cref="Number"/>), and the
         /// flare is a fifth of the size of an impact. The thing the player watches is the flame,
         /// which is standing there the whole time.
@@ -315,7 +315,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>No sound on an ordinary tick.</b> A burn pays twice a second for up to six seconds
         /// and can be running on a whole wave, so a voice on each would be the loudest thing in
-        /// the mix saying what the figure already says — <see cref="Land"/>'s own finding about a
+        /// the mix saying what the figure already says - <see cref="Land"/>'s own finding about a
         /// lit line landing eighteen hits a second. A kill still gets the turret's voice, because
         /// a kill is the beat worth marking.
         /// </para>
@@ -368,7 +368,7 @@ namespace GlimmerGrove
         ///
         /// <b>The seat's colour rather than the turret's, because a burn outlives the ward that
         /// lit it.</b> <c>SiegeRaider.BurnFrom</c> names a post, and a post can fall while its
-        /// fire is still on the hill — so an index that no longer stands falls back to whatever
+        /// fire is still on the hill - so an index that no longer stands falls back to whatever
         /// this body was already wearing, and the flame carries on in the colour the player has
         /// been watching rather than changing hue because a turret died.
         /// </summary>

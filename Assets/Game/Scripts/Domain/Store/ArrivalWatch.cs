@@ -10,7 +10,7 @@ namespace GlimmerGrove.Store
     /// <b>It is in Domain because "this cannot get stuck" is a claim, and a claim in
     /// Presentation is one no gate can check.</b> The panel this drives is raised over whatever
     /// the player is looking at, including a live siege (invariant 39i, where a modal holds the
-    /// run) — so a rule that could leave it up for ever is a game that has stopped, and the one
+    /// run) - so a rule that could leave it up for ever is a game that has stopped, and the one
     /// place it must not be written is inside the thing it would trap. Everything here is plain
     /// arithmetic over a list of strings, so <c>StoreArrivalTests</c> can drive a thousand
     /// seconds of it with no Editor open.
@@ -18,7 +18,7 @@ namespace GlimmerGrove.Store
     /// <para>
     /// <b>It waits on <see cref="StoreService.IsPending"/> rather than on an event, and that is
     /// the whole safety argument.</b> An event pair only reports the endings somebody
-    /// remembered to announce; the dictionary is emptied by <em>every</em> ending there is — the
+    /// remembered to announce; the dictionary is emptied by <em>every</em> ending there is - the
     /// grant, the one refusal that is closed out rather than retried (invariant 18a), and a
     /// <c>Reset</c>. A watcher that asks the authority cannot be left waiting by an outcome
     /// nobody thought to raise, which is a stronger promise than "we handled all four cases",
@@ -31,7 +31,7 @@ namespace GlimmerGrove.Store
     /// against a product missing from <c>config/products</c>, the transaction stays in that
     /// dictionary and no amount of correctness elsewhere brings the panel down. After
     /// <see cref="Patience"/> the panel stops being a wait and becomes a statement with a
-    /// button on it — the shop's own <c>ui.shop.awaiting</c> sentence, which is true and
+    /// button on it - the shop's own <c>ui.shop.awaiting</c> sentence, which is true and
     /// actionable and has always been the right thing to say about a purchase that is taking a
     /// while.
     /// </para>
@@ -47,7 +47,7 @@ namespace GlimmerGrove.Store
         /// springs in with a chime and the receipt panel is a beat behind it, so a redemption
         /// that lands on a warm connection would put a panel on screen and take it off again
         /// between the payment sheet closing and the thank-you. Under this, nothing is shown at
-        /// all and the receipt goes straight up — which is what the fast path should look like.
+        /// all and the receipt goes straight up - which is what the fast path should look like.
         /// </para>
         /// </summary>
         public const float Grace = .35f;
@@ -65,8 +65,8 @@ namespace GlimmerGrove.Store
         public const float Patience = 6f;
 
         /// <summary>
-        /// Transaction keys, not product ids. Two transactions can carry one product — a player
-        /// who buys the same gem pack twice in a row — and a set keyed on the product would
+        /// Transaction keys, not product ids. Two transactions can carry one product - a player
+        /// who buys the same gem pack twice in a row - and a set keyed on the product would
         /// settle the panel on the first of them while the second was still owed.
         /// </summary>
         readonly List<string> _keys = new List<string>(2);
@@ -87,7 +87,7 @@ namespace GlimmerGrove.Store
         ///
         /// <para>
         /// Latched rather than recomputed, so a panel that has offered a way out never takes it
-        /// back — a control that appears and disappears under a thumb is worse than one that was
+        /// back - a control that appears and disappears under a thumb is worse than one that was
         /// never offered, and the only thing that could un-latch it is a second purchase
         /// arriving, which is not a reason to trap anybody.
         /// </para>
@@ -120,7 +120,7 @@ namespace GlimmerGrove.Store
         /// <para>
         /// <paramref name="unscaledSeconds"/>, and the name is the instruction: a modal takes
         /// <c>Time.timeScale</c> to nought (invariant 30h), so a panel counting scaled time would
-        /// wait for ever behind any other modal — which is precisely the state this exists to
+        /// wait for ever behind any other modal - which is precisely the state this exists to
         /// make impossible. Zero is a legal step and is how a caller prunes on the spot when it
         /// hears a grant land.
         /// </para>

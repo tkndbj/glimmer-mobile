@@ -37,7 +37,7 @@ namespace GlimmerGrove.Modes
     ///
     /// <para>
     /// <b>Its own record, and that it was a <see cref="SiegeBolt"/> is the whole of what made an
-    /// ember turret read as a machine gun.</b> A bolt means <em>something left a barrel</em> — the
+    /// ember turret read as a machine gun.</b> A bolt means <em>something left a barrel</em> - the
     /// view answers one with a recoil, a muzzle flash, a comet crossing the hill and an impact
     /// (<c>SiegeView.Bolt</c>), which is right for a shot and is a lie about a burn. The burn
     /// tick reported one every frame it took a whole point, so a single ember turret drew some
@@ -103,14 +103,14 @@ namespace GlimmerGrove.Modes
     ///
     /// <para>
     /// <b>Its own record on the beat rather than a flag on the ward, because the view has to draw
-    /// a journey.</b> The player's decision was made on the field — <em>which colour do I line up
-    /// beside that cog</em> — and it is paid on the line, so what the drawing has to say is that
+    /// a journey.</b> The player's decision was made on the field - <em>which colour do I line up
+    /// beside that cog</em> - and it is paid on the line, so what the drawing has to say is that
     /// those two things are one thing. <see cref="Cell"/> is where it stood and
     /// <see cref="Ward"/> is where it went.
     /// </para>
     /// <para>
     /// <see cref="Rank"/> is what the ward came out at, and it is <b>nought when nothing
-    /// happened</b> — a cog taken by a colour whose ward has fallen, or is already at the top of
+    /// happened</b> - a cog taken by a colour whose ward has fallen, or is already at the top of
     /// the ladder, is a cog spent for nothing. That is a real mistake with a real cost, which is
     /// what makes choosing the colour a decision (invariant 26h) rather than a formality, and the
     /// view says so by drawing the cog coming apart where it stood and going nowhere.
@@ -163,8 +163,8 @@ namespace GlimmerGrove.Modes
         public readonly int Raider;
 
         /// <summary>
-        /// Which ward it is aimed at, <b>-1</b> for a warbringer's roar at the hill, or — for a
-        /// spell aimed at the field rather than at the line — <b>the cell of the field</b>.
+        /// Which ward it is aimed at, <b>-1</b> for a warbringer's roar at the hill, or - for a
+        /// spell aimed at the field rather than at the line - <b>the cell of the field</b>.
         ///
         /// <b>Ask <see cref="SiegeTuning.AimsAtAWard"/> rather than testing the number.</b> Three
         /// things can be in here and only the caster's kind says which, which is exactly why that
@@ -182,7 +182,7 @@ namespace GlimmerGrove.Modes
         public readonly int Phase;
 
         /// <summary>
-        /// Whether this is the spell that opens its phase — the one the guard is standing in
+        /// Whether this is the spell that opens its phase - the one the guard is standing in
         /// front of, and the one the view draws as a roar rather than as a throw.
         /// </summary>
         public readonly bool Opens;
@@ -244,7 +244,7 @@ namespace GlimmerGrove.Modes
     /// What an overcharge did: where it landed and what it was worth.
     ///
     /// <b>A reading rather than an int</b>, because the view has to draw the strike where the
-    /// model put it — and a caller handed only "it worked" would go back to the board for a
+    /// model put it - and a caller handed only "it worked" would go back to the board for a
     /// target that is, by then, very likely dead.
     /// </summary>
     public readonly struct SiegeUnleash
@@ -289,7 +289,7 @@ namespace GlimmerGrove.Modes
         /// Bombs a bomber left standing on the hill this step.
         ///
         /// <b>Its own list rather than a flag on the bomb</b>, because the view has to play the
-        /// drop exactly once and a flag would have to be cleared by whoever noticed it first —
+        /// drop exactly once and a flag would have to be cleared by whoever noticed it first -
         /// which is the class of two-places-hold-one-state bug this report exists to remove.
         /// </summary>
         public readonly List<SiegeBomb> Dropped = new List<SiegeBomb>(2);
@@ -303,7 +303,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>The one list here that carries a corpse rather than a fact about one, and it exists
         /// because the view cannot go and look.</b> A raider is a <em>state</em> the view reads
-        /// off <c>SiegeBoard.Raiders</c> after the step — but <c>Advance</c> musters, walks and
+        /// off <c>SiegeBoard.Raiders</c> after the step - but <c>Advance</c> musters, walks and
         /// fires in one call and then sweeps the dead out of that list, so a raider that steps
         /// onto the hill and is shot in the same call was never in it at any moment the view could
         /// look. A ward with nothing to shoot at holds its cooldown at nought
@@ -313,7 +313,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// What that cost is not one missing body. Everything the view draws about a raider is
         /// keyed on a widget it mints from that list, so a raider it never saw takes its bolt, its
-        /// muzzle flash, its impact and its death burst down with it — and the only thing left on
+        /// muzzle flash, its impact and its death burst down with it - and the only thing left on
         /// the screen is the cog, which carries its own coordinates. Reported from play as
         /// <em>no raider came in, the hill was empty, but cogs were dropping</em>.
         /// </para>
@@ -330,7 +330,7 @@ namespace GlimmerGrove.Modes
         public readonly List<int> Trampled = new List<int>(2);
 
         /// <summary>
-        /// Loose things a gravemaw ate this step, by id — cogs and bombs together.
+        /// Loose things a gravemaw ate this step, by id - cogs and bombs together.
         ///
         /// <b>One list rather than two, because both id spaces are one</b>: a cog, a bomb and a
         /// raider are all minted from <c>SiegeBoard._minted</c>, so an id names exactly one thing
@@ -345,14 +345,14 @@ namespace GlimmerGrove.Modes
         /// The volley a stormglass loosed this step. See <c>SiegeBoard.Volley</c>.
         ///
         /// <para>
-        /// <b><see cref="SiegeBolt"/>, because that is exactly what these are</b> — a bolt from a
+        /// <b><see cref="SiegeBolt"/>, because that is exactly what these are</b> - a bolt from a
         /// named ward at a named raider, worth double against its own colour. A record of its own
         /// would have been a second way of saying the one thing the view already knows how to draw.
         /// </para>
         /// <para>
         /// <b>Its own list rather than <see cref="Bolts"/>, all the same.</b> A stormglass is drawn
         /// as one volley rather than as nine unrelated shots, so the view has to be handed it
-        /// whole — and a funnel that could not separate a free charm from a bought firepot would
+        /// whole - and a funnel that could not separate a free charm from a bought firepot would
         /// price the shelf against something the board hands out.
         /// </para>
         /// </summary>
@@ -487,7 +487,7 @@ namespace GlimmerGrove.Modes
     /// <b>Recorded rather than left for the view to work out, which is invariant 30i's rule.</b>
     /// A lance's cross and the cells an ordinary run took arrive in <see cref="SiegeBeat.Cleared"/>
     /// as one list, so a drawing handed only that could not say which of twenty gems was the one
-    /// the player aimed — and the whole of what a charm has to read as is <em>this gem did that</em>.
+    /// the player aimed - and the whole of what a charm has to read as is <em>this gem did that</em>.
     /// </para>
     /// <para>
     /// <see cref="Colour"/> is the colour it was <em>paid</em> as and not the letter it was

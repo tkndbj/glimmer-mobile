@@ -11,7 +11,7 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// <b>A reader of its own rather than <c>Loc</c>, and that is not a preference.</b> Nothing
-    /// publishes the table in a fixture — it arrives with the content at boot — so a test that
+    /// publishes the table in a fixture - it arrives with the content at boot - so a test that
     /// asked <c>Loc.Has</c> would be asking an empty table and failing for a reason that has
     /// nothing to do with what it is checking. And <c>JsonUtility</c> is a native call, so a
     /// fixture that parsed the file the shipping way would be reported as "needs the Editor" and
@@ -20,7 +20,7 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// <b>One reader, because two would drift.</b> <c>RecordWordingTests</c> wrote the first copy
     /// of this to prove a placeholder was fillable; it is here now, so a second fixture that
-    /// wants to know whether a derived key resolves does not grow a third — which is invariant
+    /// wants to know whether a derived key resolves does not grow a third - which is invariant
     /// 44d's rule about a mirror, applied to a test helper.
     /// </para>
     /// <para>

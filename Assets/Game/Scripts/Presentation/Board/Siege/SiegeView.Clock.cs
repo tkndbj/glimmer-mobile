@@ -24,7 +24,7 @@ namespace GlimmerGrove
         /// What a raider held by a stun is drawn in.
         ///
         /// <b>Darker and flatter, never brighter</b>, because <c>Image.color</c> is a multiply and
-        /// cannot do anything else (invariant 37l) — so what says "this one has been stopped" is
+        /// cannot do anything else (invariant 37l) - so what says "this one has been stopped" is
         /// the colour draining out of it rather than a light coming on.
         /// </summary>
         static readonly Color Stunned = new Color(.56f, .60f, .72f);
@@ -55,7 +55,7 @@ namespace GlimmerGrove
         {
             // **Before the gate, deliberately.** A board nobody may touch has to put the idle
             // clock back to nought rather than freeze it, and everything that stops a run being
-            // touched — a cascade, a lesson, the pause menu, a panel over the board — reads as
+            // touched - a cascade, a lesson, the pause menu, a panel over the board - reads as
             // `Playable` rather than as `Live`. See `SiegeView.Hint`.
             Idle(Time.unscaledDeltaTime);
 
@@ -97,14 +97,14 @@ namespace GlimmerGrove
 
             // How much of a death is still being watched. Counted here rather than inside
             // `Judge`, so a hold armed early in a run cannot still be standing when the run is
-            // won — see `_felling`. The run's own seconds, unscaled, like everything else here.
+            // won - see `_felling`. The run's own seconds, unscaled, like everything else here.
             Watching(Time.unscaledDeltaTime);
 
             Follow();
 
             // **And the bodies `Follow` could not have seen.** A raider mustered, walked on and
             // shot inside one `Advance` is swept out of the board's own list before this method
-            // runs, so the step has to hand the corpse over or nothing on this hill can draw it —
+            // runs, so the step has to hand the corpse over or nothing on this hill can draw it -
             // see `SiegeView.Unseen` and `SiegeReport.Felled`. Immediately after `Follow`, and
             // that position is load-bearing: everything below draws against a widget, so the
             // bolts, the volley, the burns and `Reap` all find a body where they used to find
@@ -132,7 +132,7 @@ namespace GlimmerGrove
             Foretell();
 
             // A boss is on the hill for far longer than it is casting, so something has to be
-            // happening on it in between — see `SiegeView.Storm`. It draws nothing on a hill with
+            // happening on it in between - see `SiegeView.Storm`. It draws nothing on a hill with
             // no boss on it, which is nine frames in ten.
             Ambient();
 
@@ -203,7 +203,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>Read off the board and the step's own report rather than latched where each thing is
-        /// drawn</b>, so a moment that happens while the view is mid-animation is still noticed —
+        /// drawn</b>, so a moment that happens while the view is mid-animation is still noticed -
         /// and so every one of them is asked in the same place rather than three call sites
         /// remembering to. Each fires once for the life of the screen, which is what a lesson
         /// costs: <c>RunLessons.Teach</c> refuses one already seen, but it cannot refuse one
@@ -215,12 +215,12 @@ namespace GlimmerGrove
         {
             // **Offered every time rather than once, and the latch that was here was a bug.**
             // Latching *before* knowing whether the offer landed meant one made while another tip
-            // was up was thrown away for ever — which is what happened: the overcharge's tip was
+            // was up was thrown away for ever - which is what happened: the overcharge's tip was
             // reported as never appearing. Offering again costs nothing.
             //
             // **And the other half of that fault is not here.** Every one of these three moments
-            // happens *inside* a cascade — a tube fills from a match, a cog and a bomb are left by
-            // a raider a bolt felled — and a cascade is exactly when `ProtoView.Busy` says the
+            // happens *inside* a cascade - a tube fills from a match, a cog and a bomb are left by
+            // a raider a bolt felled - and a cascade is exactly when `ProtoView.Busy` says the
             // board cannot be taught on. So the offer was refused at the only instant it was ever
             // made. `RunLessons.Teach` now takes these as moments that are *owed* and gives each
             // the first instant the board can take it, which is a beat after the cascade that
@@ -241,7 +241,7 @@ namespace GlimmerGrove
         ///
         /// <b>The board is built on the starter's art and repaints when the scope lands</b>, which
         /// is invariant 7b's second clause: loading is asynchronous, so a screen has to repaint
-        /// when a scope arrives rather than waiting for one — an <c>Image</c> with a null sprite
+        /// when a scope arrives rather than waiting for one - an <c>Image</c> with a null sprite
         /// is a white rectangle, not a blank.
         /// </summary>
         public void Redress()
@@ -266,7 +266,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>One seam, because there is one clock.</b> Everything about a siege that moves on its
-        /// own — the hill walking, the wards firing, the muster, a boss's cadence, fuel crossing —
+        /// own - the hill walking, the wards firing, the muster, a boss's cadence, fuel crossing -
         /// is a consequence of what <c>SiegeBoard.Advance</c> is handed, so scaling that one number
         /// is the whole of what "slow motion" can mean here. Anything that tried to slow the
         /// raiders alone would be a second opinion about time, and two of those disagree.
@@ -276,7 +276,7 @@ namespace GlimmerGrove
         /// The model advances by delivered seconds and by nothing else, so a run played half in
         /// slow motion is the same run over more wall-clock: the hill has walked exactly as far
         /// per second of ward fire as it always did. <b>That is not true of a hold that only stops
-        /// the drawing</b> — an earlier cut of the charms documented a hold that was never
+        /// the drawing</b> - an earlier cut of the charms documented a hold that was never
         /// implemented, and had it been, every chapter's difficulty would have become a function
         /// of an animation constant. What a player does gain is time to <em>look</em>, which is
         /// the point, and time to think, which a lesson and a panel already hand them.
@@ -284,7 +284,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Invisible to every gate, and that is a fact rather than a loophole.</b>
         /// <c>SiegeRuleTests</c> steps the board itself and never builds a view, so nothing here
-        /// reaches the hold simulation — because nothing here changes what the board is told.
+        /// reaches the hold simulation - because nothing here changes what the board is told.
         /// </para>
         /// </summary>
         float _pace = 1f;
@@ -304,7 +304,7 @@ namespace GlimmerGrove
         /// Runs the clock at <paramref name="pace"/> of real time for <paramref name="seconds"/>,
         /// then eases it back.
         ///
-        /// <b>The slower of two running dilations wins, and the longer end time wins</b> — a
+        /// <b>The slower of two running dilations wins, and the longer end time wins</b> - a
         /// cascade can spring two charms, and a stormglass's full stop must not be cut short by a
         /// lance's crawl starting a beat later. That is <see cref="Felling"/>'s rule about two
         /// deaths, said about time.
@@ -349,7 +349,7 @@ namespace GlimmerGrove
 
                 // **A dead raider is not followed, and that is what makes `Reap` safe to run
                 // before the model has swept.** `OnTheHill` is only "has it walked on"; a raider
-                // felled outside `Advance` — by a firepot or a storm — is still in the list until
+                // felled outside `Advance` - by a firepot or a storm - is still in the list until
                 // the next step tidies up, and `Widget` *hatches* a body for anything it cannot
                 // find. Without this clause, reaping a corpse and then following it would mint it
                 // back for a frame.
@@ -383,12 +383,12 @@ namespace GlimmerGrove
                         new Vector2(mob.Bar.sizeDelta.x * share - 4f, mob.Bar.sizeDelta.y - 4f);
                 }
 
-                // **White, not a coat** — the body carries its own colour now, so a hit is
+                // **White, not a coat** - the body carries its own colour now, so a hit is
                 // drawn by washing it out toward cream and letting it come back.
                 //
                 // **A stunned raider is drawn cold, and that is not decoration.** It stops where
                 // it stands while its walk cycle carries on playing, which on its own reads as the
-                // hill having jammed rather than as something the player's turret did — the class
+                // hill having jammed rather than as something the player's turret did - the class
                 // of fault invariant 20g is about, met on a purchase. The flash wins while it is
                 // running, because a hit landing is the newer piece of news.
                 //
@@ -407,8 +407,8 @@ namespace GlimmerGrove
                 // **A boss goes back to its own body the frame after a spell finishes, and which
                 // body that is depends on whether it has arrived.**
                 //
-                // There used to be nothing to choose between — an insect stands in the reel it
-                // walks in (see `Mob.Idle`) — so this only had to take the cast reel off. A boss
+                // There used to be nothing to choose between - an insect stands in the reel it
+                // walks in (see `Mob.Idle`) - so this only had to take the cast reel off. A boss
                 // rendered out of 3D has a real walk and a real stand (`Mob.Walking`), and the
                 // model already answers which one it is doing: `InPlace` is `March >= Hold`, the
                 // same predicate the rules use to decide when it may start casting, so the
@@ -443,7 +443,7 @@ namespace GlimmerGrove
         /// sibling index to the number of children, so with eight raiders on the hill every one of
         /// those numbers clamped to the last slot and the order became whichever widget was
         /// written most recently. Reported from play as a raider walking down *behind* another and
-        /// drawing on top of it. There is no way to say "put this one at depth 0.42" — the only
+        /// drawing on top of it. There is no way to say "put this one at depth 0.42" - the only
         /// thing a UI hierarchy understands is a run of positions, so the list has to be ordered
         /// and then laid out.
         /// </para>
@@ -492,7 +492,7 @@ namespace GlimmerGrove
                 // **The rank is repainted from the model, and the *edge* is what raises the
                 // fanfare.** A ward may go up while a cascade is still resolving and while this
                 // view is mid-animation, so what a ward is drawn as has to be a fact read off the
-                // board rather than a thing switched by whoever happened to see the event — and
+                // board rather than a thing switched by whoever happened to see the event - and
                 // `Post.Rank` is what turns that read into an edge exactly once.
                 if (post.Rank != ward.Rank)
                 {
@@ -571,8 +571,8 @@ namespace GlimmerGrove
                 }
 
                 // **A chained ward is drawn bright and held, which is the opposite of a doused
-                // one and has to be.** The two states look alike in the rules — a ward that is not
-                // firing — and mean opposite things to the player: a douse took the fuel and is
+                // one and has to be.** The two states look alike in the rules - a ward that is not
+                // firing - and mean opposite things to the player: a douse took the fuel and is
                 // answered by pouring more in, a bind left the fuel exactly where it was and is
                 // answered by waiting or by feeding somebody else. So the body keeps its coat and
                 // the tube keeps its reading (invariant 37m: a light goes *up*, and there is
@@ -637,7 +637,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>Drawn as an arrival rather than as a change.</b> The turret's picture has already
-        /// swapped by the time this runs, so what is left to say is that it was earned — a ring
+        /// swapped by the time this runs, so what is left to say is that it was earned - a ring
         /// out of the plinth, the badge punched, light gathered on the body, and the one sound in
         /// the set that means <em>you have got something</em>. Invariant 20m's rule: the event a
         /// player caused is the one that gets the biggest drawing in the mode.

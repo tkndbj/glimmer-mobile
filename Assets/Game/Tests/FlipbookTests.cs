@@ -11,7 +11,7 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// The grove's tiles are rebound on every event, and two events land in one frame
-    /// whenever a placement's event and the art's arrival coincide — which is what "working
+    /// whenever a placement's event and the art's arrival coincide - which is what "working
     /// rapidly" does. A flipbook attached over a running one used to be stopped with a single
     /// <c>GetComponent</c>, which finds the first and leaves the second running; that survivor
     /// went on painting its frames into an image later re-sized and re-sprited for another
@@ -36,7 +36,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// <c>Detach</c> ends a flipbook with <c>Object.Destroy</c>, which is right in a build
         /// and refused in edit mode with an error log NUnit fails the case on. Declared here
-        /// rather than taught to the shipping code — the rule <c>Flow.Dismiss</c>'s tests
+        /// rather than taught to the shipping code - the rule <c>Flow.Dismiss</c>'s tests
         /// follow, for its reason.
         /// </summary>
         static void ExpectEditModeDestroy(int count)
@@ -46,8 +46,8 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A flipbook drives its image only while enabled — <c>Detach</c> disables before it
-        /// destroys, because destruction lands at the end of the frame — so "running" is
+        /// A flipbook drives its image only while enabled - <c>Detach</c> disables before it
+        /// destroys, because destruction lands at the end of the frame - so "running" is
         /// exactly "enabled", and the test reads the component's own state rather than a
         /// counter added to the shipping code for it.
         /// </summary>
@@ -86,7 +86,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// A grove tile and a shop cell are rebound on every repaint, and a repaint is raised by
-        /// the ledger, the layout, the wallet and the art scope — three of which a sync raises a
+        /// the ledger, the layout, the wallet and the art scope - three of which a sync raises a
         /// few seconds after every placement, because adopting a merge re-reads the whole save.
         /// Restarting there snapped every animated piece on the screen back to its first frame
         /// at once. Reported from a device as the tiles reloading while the player was building,
@@ -178,8 +178,8 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// <b>A loop is a state and a one-shot is an event</b>, which is the whole of the rule.
-        /// A burst asked for a second time is a second burst — the pooled effects on the siege
-        /// board lend one widget to event after event — so nothing that does not loop is ever
+        /// A burst asked for a second time is a second burst - the pooled effects on the siege
+        /// board lend one widget to event after event - so nothing that does not loop is ever
         /// adopted.
         /// </summary>
         [Test]

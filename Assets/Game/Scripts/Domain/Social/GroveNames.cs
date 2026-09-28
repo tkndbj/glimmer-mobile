@@ -9,8 +9,8 @@ namespace GlimmerGrove.Social
     ///
     /// <para>
     /// <b>Storage and publication are different problems, and this is the second one.</b>
-    /// <c>RenameOverlay.Clean</c> asks only what a text field owes a database — bounded,
-    /// trimmed, no control characters — which is the correct bar for a string nobody but
+    /// <c>RenameOverlay.Clean</c> asks only what a text field owes a database - bounded,
+    /// trimmed, no control characters - which is the correct bar for a string nobody but
     /// its owner ever sees. A leaderboard changes what that string is: it is now shown to
     /// people the player has never met, in a row beside their own, in a list the game
     /// itself publishes. So it acquires a second rule, and this is it.
@@ -18,7 +18,7 @@ namespace GlimmerGrove.Social
     /// <para>
     /// <b>The bidirectional controls are why this is not merely a length check.</b> U+202E
     /// and its family re-order the text that <em>follows</em> them, so a name carrying one
-    /// does not misdraw itself — it misdraws the rest of the row, and on some layouts the
+    /// does not misdraw itself - it misdraws the rest of the row, and on some layouts the
     /// rows under it. That is a defect a length cap and a word list both sail straight past,
     /// it is trivially discovered, and it is the single most likely way a public list of
     /// user-supplied strings gets broken. Zero-width characters are here for the quieter
@@ -27,7 +27,7 @@ namespace GlimmerGrove.Social
     /// </para>
     /// <para>
     /// <b>This is a mirror, not the authority.</b> The server sanitises again on publish and
-    /// its answer is what appears on the board — a client's opinion about its own name is
+    /// its answer is what appears on the board - a client's opinion about its own name is
     /// exactly the kind of thing that stops being trustworthy once strangers read it. This
     /// copy exists so the rename panel can show the player what will actually be published
     /// rather than letting them discover it on the board, which is the bargain the client's
@@ -37,7 +37,7 @@ namespace GlimmerGrove.Social
     /// </para>
     /// <para>
     /// It holds no Unity types and no statics so it can be run offline against the shared
-    /// vectors, which is what keeps it and <c>functions/src/grove.ts</c> honest — invariant
+    /// vectors, which is what keeps it and <c>functions/src/grove.ts</c> honest - invariant
     /// 9a's discipline, applied to the one string in this game a stranger will read.
     /// </para>
     /// </summary>
@@ -55,8 +55,8 @@ namespace GlimmerGrove.Social
         ///
         /// Two rather than one, because a single character is not a name anybody can refer
         /// to and a board of one-character rows is what happens when it is allowed to be.
-        /// A name refused here is not rejected — the player keeps it, and their own screens
-        /// keep drawing it — it simply is not what the board shows. See
+        /// A name refused here is not rejected - the player keeps it, and their own screens
+        /// keep drawing it - it simply is not what the board shows. See
         /// <see cref="IsPublishable"/>.
         /// </summary>
         public const int MinLength = 2;
@@ -76,7 +76,7 @@ namespace GlimmerGrove.Social
         ///
         /// <list type="bullet">
         /// <item>Control and format characters, which is where every bidirectional override
-        /// and embedding lives — see the type's remarks for why that one matters most.</item>
+        /// and embedding lives - see the type's remarks for why that one matters most.</item>
         /// <item>The zero-width family, which .NET classifies as ordinary letters or
         /// punctuation but which draw as nothing.</item>
         /// <item>Surrogates, dropped rather than paired: a name made of emoji is a name no
@@ -108,7 +108,7 @@ namespace GlimmerGrove.Social
         /// <see cref="MaxLength"/>.
         ///
         /// <para>
-        /// Empty in, empty out — and empty is a real answer rather than a failure. A player
+        /// Empty in, empty out - and empty is a real answer rather than a failure. A player
         /// who has never renamed stores nothing (invariant 11c), so "no name" has to survive
         /// this rather than becoming a default here: the default is decided by whoever draws,
         /// and on the board it is decided by the server, which is the only party that can
@@ -190,14 +190,14 @@ namespace GlimmerGrove.Social
         /// <para>
         /// <b>Two whole scripts, because they are living ones.</b> Unicode gained lowercase
         /// Cherokee in 8.0 and Georgian Mtavruli in 11.0, both after Mono's tables were fixed,
-        /// so a Georgian name typed in capitals — which is how Georgian capitals are written —
+        /// so a Georgian name typed in capitals - which is how Georgian capitals are written -
         /// folded to something the server had never heard of. Both are contiguous ranges with a
         /// constant offset, so two living scripts cost four lines rather than a table.
         /// </para>
         /// <para>
         /// <b>Where this stops, and why that is not a loose end.</b> Beyond these, Mono's
         /// normalisation tables differ from ICU's across a long tail of compatibility
-        /// characters — enclosed alphanumerics, CJK compatibility ideographs, some presentation
+        /// characters - enclosed alphanumerics, CJK compatibility ideographs, some presentation
         /// forms, and about sixty scattered Latin and Cyrillic letters added to Unicode after
         /// Mono froze. Measured, not guessed: 27 of the 256 blocks of the BMP disagree
         /// somewhere. Closing all of it would mean shipping normalisation tables in the client,
@@ -206,7 +206,7 @@ namespace GlimmerGrove.Social
         /// name in that tail gets a wrong hint under the field, corrected by the claim a moment
         /// later. It can never produce a duplicate, because a reservation is decided by the
         /// server's fold and only ever by the server's fold. What the vectors pin is the set
-        /// that agrees — every script a keyboard actually produces — and a regression inside
+        /// that agrees - every script a keyboard actually produces - and a regression inside
         /// that set fails a build.
         /// </para>
         /// </summary>
@@ -266,7 +266,7 @@ namespace GlimmerGrove.Social
         ///
         /// <para>
         /// <b>This is a document id, and that is the whole design.</b> Uniqueness is held by
-        /// a Firestore document keyed on this string — <c>names/{key}</c> — so it is enforced
+        /// a Firestore document keyed on this string - <c>names/{key}</c> - so it is enforced
         /// by the database's own primary key rather than by a query. A create against an id
         /// that exists fails, at any concurrency, with no index and no scan: the cost of
         /// asking whether a name is taken is one document read at ten players and at ten
@@ -283,7 +283,7 @@ namespace GlimmerGrove.Social
         /// <para>
         /// <b>Letters and digits of <em>any</em> script.</b> Folding to ASCII would be
         /// shorter and would make every name written in Cyrillic, Greek, Arabic or kana fold
-        /// to nothing — which in a game that ships globally means those players silently stop
+        /// to nothing - which in a game that ships globally means those players silently stop
         /// having reservable names at all. That is why this asks
         /// <see cref="char.IsLetterOrDigit(char)"/> rather than matching a range.
         /// </para>
@@ -300,7 +300,7 @@ namespace GlimmerGrove.Social
         /// correctness one.</b> The client folds so it can read the right document for the
         /// "is this taken" hint; the claim is adjudicated by a transaction on the server,
         /// which folds with its own copy. So a platform whose normalisation tables differ can
-        /// at worst show an optimistic hint and then be refused — never take a name twice.
+        /// at worst show an optimistic hint and then be refused - never take a name twice.
         /// The vectors in <c>firebase/shared/grove-vectors.json</c> pin the cases that matter
         /// (invariant 9a); the <c>try</c> below is the same reasoning for a runtime that has
         /// no normalisation tables at all.
@@ -372,7 +372,7 @@ namespace GlimmerGrove.Social
         /// </para>
         /// <para>
         /// <b>The key is measured too, and that is what keeps two systems from disagreeing.</b>
-        /// A name of punctuation — <c>!!</c>, <c>···</c> — has two visible characters and folds
+        /// A name of punctuation - <c>!!</c>, <c>···</c> - has two visible characters and folds
         /// to nothing, so it could be published and could never be reserved, and two keepers
         /// would appear on one board under one name with nothing able to tell them apart.
         /// Requiring both makes "publishable" and "reservable" the same predicate, which is

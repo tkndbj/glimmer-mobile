@@ -11,7 +11,7 @@ namespace GlimmerGrove.Progression
     /// <see cref="Persistence.HintLimits"/>'s job for the Infinite lane, and its argument
     /// transfers whole: content may retune what a wave is worth, it may not redefine what the
     /// ledger is allowed to hold. Everything here is a compile-time constant precisely because
-    /// it is what a published file is checked <em>against</em> — a limit that could itself be
+    /// it is what a published file is checked <em>against</em> - a limit that could itself be
     /// published would not be a limit.
     /// </para>
     /// </summary>
@@ -22,7 +22,7 @@ namespace GlimmerGrove.Progression
         /// The most lifetime waves one row of <see cref="EndlessLedger"/> may ever hold.
         ///
         /// <para>
-        /// <b>Not the ceiling a player experiences</b> — that is
+        /// <b>Not the ceiling a player experiences</b> - that is
         /// <see cref="EndlessRewardTable.MaxWaves"/>, and it is content. This is the bound the
         /// ledger's own clamp uses, and the distinction is the most important thing in this
         /// file. <see cref="Persistence.HintLimits.HardCeiling"/> carries the full argument; the
@@ -44,7 +44,7 @@ namespace GlimmerGrove.Progression
         ///
         /// A guard against a typo rather than a design opinion: a misplaced nought here is
         /// unbounded keeper levels for every player at once, and unlike a credit figure there is
-        /// nothing downstream that would refuse it — XP is floored, so it cannot be taken back
+        /// nothing downstream that would refuse it - XP is floored, so it cannot be taken back
         /// (<see cref="ProgressionStore"/>).
         /// </summary>
         public const int MaxXpPerWave = 1000;
@@ -124,7 +124,7 @@ namespace GlimmerGrove.Progression
     }
 
     /// <summary>
-    /// What the Infinite lane pays, in XP per wave cleared — content, not code.
+    /// What the Infinite lane pays, in XP per wave cleared - content, not code.
     ///
     /// <para>
     /// <b>This is the one source of XP in the game that is not the star ledger, and everything
@@ -132,14 +132,14 @@ namespace GlimmerGrove.Progression
     /// accumulated, and a wave count is the one reading here that cannot be recomputed from the
     /// records the server already validates. So this shape is the narrowest thing that pays at
     /// all: a single monotonic count per level (<see cref="EndlessLedger"/>), a rate, and a
-    /// ceiling. Nothing is claimed, nothing is granted, and there is no per-run state anywhere —
+    /// ceiling. Nothing is claimed, nothing is granted, and there is no per-run state anywhere -
     /// the XP is a pure function of a number that only ever rises, which is invariant 14a's
     /// floor with a multiplier on it.
     /// </para>
     /// <para>
     /// <b>It changes nothing about how an ordinary glade pays.</b> <see cref="ProgressionLedger"/>
     /// is untouched and still walks the star ledger alone; this is a separate addend, folded in
-    /// once, in <see cref="PlayerProgression"/>. That separation is not tidiness — it is what
+    /// once, in <see cref="PlayerProgression"/>. That separation is not tidiness - it is what
     /// lets the shared reward vectors (invariant 9a) go on proving the star rule against the
     /// server's copy without either side learning about the Infinite lane.
     /// </para>
@@ -166,7 +166,7 @@ namespace GlimmerGrove.Progression
         }
 
         /// <summary>
-        /// XP for one wave seen off. Nought withdraws the payment without withdrawing the lane —
+        /// XP for one wave seen off. Nought withdraws the payment without withdrawing the lane -
         /// the board, the best wave, the public board and the map badge are all untouched.
         /// </summary>
         public int XpPerWave { get; }
@@ -213,7 +213,7 @@ namespace GlimmerGrove.Progression
         ///
         /// <para>
         /// The ceiling is applied to the count and not to the product, so the two sides of the
-        /// wire cannot disagree about rounding — there is none. <c>long</c> throughout because
+        /// wire cannot disagree about rounding - there is none. <c>long</c> throughout because
         /// the published maximum times the published rate overflows an <c>int</c> and a wrapped
         /// XP total is a keeper level of one for somebody who earned a hundred and forty-six.
         /// </para>
@@ -270,7 +270,7 @@ namespace GlimmerGrove.Progression
         /// <b>Absent falls back to the built-in figures rather than to nothing</b>, and that is
         /// the one place this block differs from the referral one, which fails closed. A server
         /// that has not been seeded with this block computes a <em>lower</em> keeper level than
-        /// the device does, and 19a drops — rather than clamps — whatever that level gated, in
+        /// the device does, and 19a drops - rather than clamps - whatever that level gated, in
         /// silence. Defaulting both halves to the same constants means a stale deploy agrees
         /// with the client instead of quietly publishing a smaller player. Withdrawing the
         /// payment is <c>"xpPerWave": 0</c>, which is authored and therefore visible.
@@ -289,15 +289,15 @@ namespace GlimmerGrove.Progression
 
             // **A nought in either field means the lane pays nothing, and it is not repaired.**
             // The first version of this raised a nought ceiling back to the built-in one, on the
-            // reasoning that an author writing a rate plainly meant the lane to pay — and the
+            // reasoning that an author writing a rate plainly meant the lane to pay - and the
             // shared vectors caught it at once, because the server does no such thing and simply
             // pays nought. Two halves that disagree about a published keeper level is the one
             // failure this whole file is written around (invariant 19a), and it is worth far more
             // than a guess at what a typo meant.
             //
             // Nothing is given up by refusing to repair. An *unwritten* ceiling is -1 and inherits
-            // the built-in figure a few lines up, so the dangerous shape — a rate with no bound at
-            // all — is unreachable; and nought errs toward paying less, which is the safe
+            // the built-in figure a few lines up, so the dangerous shape - a rate with no bound at
+            // all - is unreachable; and nought errs toward paying less, which is the safe
             // direction for a number that cannot be taken back once floored
             // (<see cref="ProgressionStore"/>). Both content gates print the effective figures, so
             // a lane that has quietly stopped paying is visible rather than inferred.
@@ -318,7 +318,7 @@ namespace GlimmerGrove.Progression
 
         /// <summary>
         /// One authored number: unwritten inherits, out of range is clamped and named.
-        /// <c>HintRuleTable</c>'s reader, and clamped for its reason — refusing one scalar would
+        /// <c>HintRuleTable</c>'s reader, and clamped for its reason - refusing one scalar would
         /// mean discarding the whole block.
         /// </summary>
         static int Read(int authored, int fallback, int min, int max, string name, List<string> problems)

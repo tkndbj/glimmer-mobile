@@ -17,14 +17,14 @@ namespace GlimmerGrove.Tests
     /// sharper reason. The arithmetic is nothing; what matters is that the server is asked
     /// <em>before</em> anything local is touched, and that a refusal leaves the device exactly
     /// as it was. Get that backwards and a player whose connection drops mid-tap is left with
-    /// an empty phone and a full account — the one outcome here worse than the deletion simply
+    /// an empty phone and a full account - the one outcome here worse than the deletion simply
     /// failing, and the one the panel's copy promises cannot happen. Every failure sentence on
     /// <c>DeleteAccountOverlay</c> ends with "nothing has been deleted", so these are the tests
     /// that make that sentence true rather than hopeful.
     /// </para>
     /// <para>
-    /// They run offline against an in-memory store, archive and backend — no Firebase, no
-    /// filesystem, no Editor — which is what lets the most destructive path in the game be
+    /// They run offline against an in-memory store, archive and backend - no Firebase, no
+    /// filesystem, no Editor - which is what lets the most destructive path in the game be
     /// proved on every compile rather than whenever somebody remembers to open Unity.
     /// </para>
     /// </summary>
@@ -73,7 +73,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// With no backend there is no account, so the control is not drawn at all — the
+        /// With no backend there is no account, so the control is not drawn at all - the
         /// complaint <c>GemChoice.Unavailable</c> exists to answer, applied here: a button that
         /// can never work is worse than no button.
         /// </summary>
@@ -138,7 +138,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The archive holds up to six groves and the others belong to accounts that are still
         /// playing. A deletion that cleared the folder would take a second player's local copy
-        /// off a shared phone — a loss nothing would ever explain, because it is invisible
+        /// off a shared phone - a loss nothing would ever explain, because it is invisible
         /// until they try to switch back.
         /// </summary>
         [Test]
@@ -232,7 +232,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The device does not end up holding nothing. There is no sign-in screen in this game,
-        /// so an account-less device is a state nothing else knows how to draw — a player who
+        /// so an account-less device is a state nothing else knows how to draw - a player who
         /// deletes their account is starting the game again, not leaving it.
         /// </summary>
         [Test]
@@ -259,7 +259,7 @@ namespace GlimmerGrove.Tests
 
             Assert.IsTrue(Wait(CloudSaveService.DeleteAccountAsync()).Ok);
 
-            // The session has moved to the fresh account, so a second call deletes *that* —
+            // The session has moved to the fresh account, so a second call deletes *that* -
             // which is exactly right, and must not throw, wedge, or resurrect the first grove.
             var again = Wait(CloudSaveService.DeleteAccountAsync());
 
@@ -284,7 +284,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// Apple requires the Sign in with Apple grant to be revoked when the account it signed
         /// into is deleted. The code that does it is single-use and expires in minutes, so the
-        /// only place it can be had is the re-authentication — which is why these two steps are
+        /// only place it can be had is the re-authentication - which is why these two steps are
         /// one flow rather than two features.
         /// </summary>
         [Test]
@@ -350,7 +350,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The one orphan the server's own ordering cannot prevent, because the client causes
         /// it: a sync in flight is pull → join → push, so it would put the grove back into a
-        /// document this call is in the middle of deleting — recreating <c>players/{uid}</c>
+        /// document this call is in the middle of deleting - recreating <c>players/{uid}</c>
         /// seconds after it went, under a uid nothing can ever authenticate as again.
         ///
         /// <para>
@@ -358,7 +358,7 @@ namespace GlimmerGrove.Tests
         /// this waits rather than asserting a busy answer: a sync starts on every foreground,
         /// which is exactly when somebody opens the account screen, so failing fast would turn
         /// an ordinary background sync into "something went wrong". What has to be true is that
-        /// the two never overlap — so the deletion is proved to still be waiting while the sync
+        /// the two never overlap - so the deletion is proved to still be waiting while the sync
         /// is held, and to go through once it is let go.
         /// </para>
         /// </summary>
@@ -367,7 +367,7 @@ namespace GlimmerGrove.Tests
         /// because it looks like an affectation. Every other test here drives a fake that
         /// completes synchronously, so no <c>await</c> ever really suspends and a blocking
         /// <c>Task.Wait</c> is harmless. This one is the single case where the flow genuinely
-        /// suspends — <c>ClaimAsync</c> polls the latch on a timer — and in the Editor that
+        /// suspends - <c>ClaimAsync</c> polls the latch on a timer - and in the Editor that
         /// continuation is posted back to Unity's synchronisation context, which is the thread
         /// a <c>Wait</c> would be blocking. The test deadlocks itself and the product code is
         /// fine: nothing in the game ever blocks the main thread on this task. Yielding keeps
@@ -382,7 +382,7 @@ namespace GlimmerGrove.Tests
             var syncing = CloudSaveService.SyncAsync();
             var deleting = CloudSaveService.DeleteAccountAsync();
 
-            // Long enough for the latch's poll to have come round several times — and measured
+            // Long enough for the latch's poll to have come round several times - and measured
             // on the *clock* rather than in frames. The latch polls every 50ms of wall time
             // (CloudSaveService.PollMs), so a frame count only stands in for that at a frame
             // rate nobody promises: under -batchmode -nographics frames are unthrottled and six
@@ -410,7 +410,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// Frames rather than a sleep, because the continuations being waited on are posted back
-        /// to Unity's synchronisation context and only a pumping main thread ever runs them — and
+        /// to Unity's synchronisation context and only a pumping main thread ever runs them - and
         /// real seconds rather than a frame count, because the thing being waited <em>for</em> is
         /// a wall-clock timer. Mixing the two units is the fault this replaced: the budget
         /// silently shrinks to nothing on a runner that draws no frames, and the failure it
@@ -627,7 +627,7 @@ namespace GlimmerGrove.Tests
                                     new Dictionary<Content.LevelId, Social.LevelStats>()));
 
             /// <summary>
-            /// Nothing to say about releases, and a failure rather than "nothing is required" —
+            /// Nothing to say about releases, and a failure rather than "nothing is required" -
             /// see <c>NullCloudBackend.ReadReleaseAsync</c>. A double that answered success here
             /// would clear a standing update wall on behalf of a fixture that is about something
             /// else entirely.

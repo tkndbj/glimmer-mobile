@@ -20,8 +20,8 @@ namespace GlimmerGrove.Tests
     /// behind it, could quietly stop holding.
     /// </para>
     /// <para>
-    /// Everything here runs offline. <see cref="HeartRescue.Offer"/> is pure — the table, what
-    /// the player holds and whether there is a shop are all passed in — precisely because it is
+    /// Everything here runs offline. <see cref="HeartRescue.Offer"/> is pure - the table, what
+    /// the player holds and whether there is a shop are all passed in - precisely because it is
     /// the function that decides whether somebody is asked for money.
     /// </para>
     /// </summary>
@@ -65,7 +65,7 @@ namespace GlimmerGrove.Tests
         /// <c>JsonUtility</c> instantiates a <c>[Serializable]</c> class field even when the
         /// JSON has no such key, so a file written before this pair existed arrives as an
         /// object with two zeroes in it. Read literally that says "hand over no hearts", which
-        /// would withdraw the feature on every client that had not yet taken a content push —
+        /// would withdraw the feature on every client that had not yet taken a content push -
         /// silently, with nothing anywhere saying so. Same trap as <c>ContinueDto.enabled</c>,
         /// and the same fix.
         /// </summary>
@@ -176,7 +176,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// Holding the gems means the offer stands whether or not a store is reachable — the
+        /// Holding the gems means the offer stands whether or not a store is reachable - the
         /// purchase is a gem debit, which works on a plane.
         /// </summary>
         [Test]
@@ -194,7 +194,7 @@ namespace GlimmerGrove.Tests
         /// Taking gems for hearts that evaporate on arrival is the thing a player notices
         /// exactly once. Unreachable at a defeat that emptied the bar, and reachable the
         /// moment a content push lowers the ceiling under somebody holding a surplus from
-        /// chests — which is a push documented as safe, so nothing warns about it.
+        /// chests - which is a push documented as safe, so nothing warns about it.
         /// </summary>
         [Test]
         public void HeartsThatWouldOverflowTheCeilingAreNotSold()
@@ -210,9 +210,9 @@ namespace GlimmerGrove.Tests
         /// A rescue and a continue are priced from different blocks, and this is the case that
         /// notices if one of them is ever quietly read for the other.
         ///
-        /// They ship at the same twenty on purpose — the two offers are met on one screen a
+        /// They ship at the same twenty on purpose - the two offers are met on one screen a
         /// minute apart, and a player who declined one price and is then shown a different one
-        /// for the other reads the pair as haggling — but they are separate fields, so a retune
+        /// for the other reads the pair as haggling - but they are separate fields, so a retune
         /// of either must leave the other exactly where it was.
         /// </summary>
         [Test]
@@ -240,7 +240,7 @@ namespace GlimmerGrove.Tests
         //
         // Everything above decides whether somebody is *asked* for money. Everything below is
         // the line that actually takes it, and it runs against a save that never reaches a
-        // disk — SaveService.LoadWith takes an ISaveStore, which is the seam
+        // disk - SaveService.LoadWith takes an ISaveStore, which is the seam
         // GroveStockPurchaseTests established for exactly this. A fresh account is seeded
         // Currency.SeedGems, which is deliberately less than the shipped price, so every
         // fixture below says out loud what it is holding.
@@ -254,7 +254,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// Puts a known number of gems in the wallet.
         ///
-        /// <c>GrantLocally</c> is the account seed's door and nothing else's (invariant 10a) —
+        /// <c>GrantLocally</c> is the account seed's door and nothing else's (invariant 10a) -
         /// which is exactly why it is right here and wrong everywhere else: a test needs an
         /// opening balance, not an award, and reaching for the claim path would be pretending
         /// this money came from somewhere it did not. <c>EconomyAndMergeTests</c> establishes
@@ -326,7 +326,7 @@ namespace GlimmerGrove.Tests
             int before = Hearts;
 
             // The offer is taken while the price is affordable, and the balance then moves out
-            // from under it — a sync landing, another device spending. This is the ordinary
+            // from under it - a sync landing, another device spending. This is the ordinary
             // case rather than a contrived one, which is why TryBuy re-decides at the charge.
             var offer = HeartRescue.Offer(Shipped(), before, Gems, gemsForSale: true);
             Assert.IsTrue(offer.Affordable, "the fixture must start affordable");
@@ -365,7 +365,7 @@ namespace GlimmerGrove.Tests
         /// loses twice genuinely buys twice, and an id derived from the level would make the
         /// second purchase collapse into the first and hand over free hearts. What stops a
         /// double <em>tap</em> becoming two purchases is the latch in <c>HeartRescueFlow</c>
-        /// and the panel closing behind it — a UI concern, deliberately not this one.
+        /// and the panel closing behind it - a UI concern, deliberately not this one.
         /// </para>
         /// </summary>
         [Test]
@@ -437,7 +437,7 @@ namespace GlimmerGrove.Tests
         ///
         /// The store going down while somebody is reading the panel would otherwise redraw it
         /// without its button, and a control vanishing from under a thumb is worse than one
-        /// that turns out to be refused — the purchase re-decides at the charge anyway.
+        /// that turns out to be refused - the purchase re-decides at the charge anyway.
         /// </summary>
         [Test]
         public void AnOfferThatHasGoneAwayLeavesThePanelStanding()
@@ -495,7 +495,7 @@ namespace GlimmerGrove.Tests
         // ============================================ the second panel it is offered on
         //
         // A refused restart raises the same offer over a board that is still standing
-        // (RestartGateOverlay). The price, the amount and the debit are identical there — the
+        // (RestartGateOverlay). The price, the amount and the debit are identical there - the
         // panel is what differs, and HeartRescueWhere is the only thing that knows. What is
         // worth pinning is the pair of heart counts that panel is reached at, because the
         // ceiling clause below is written for a bar the defeat emptied and this one is not
@@ -506,7 +506,7 @@ namespace GlimmerGrove.Tests
         {
             var table = Shipped();
 
-            // Nought is the empty bar. One is the count that produces the other refusal — a
+            // Nought is the empty bar. One is the count that produces the other refusal - a
             // charged restart pays for the run being left and then needs a heart for the one
             // that follows, so a player holding exactly one is stopped with a heart in hand.
             // The offer has to exist for both or the panel is a countdown and a way out.
@@ -520,7 +520,7 @@ namespace GlimmerGrove.Tests
             // The price is not a function of where it was met, and that is deliberate: the two
             // are reachable on one screen a minute apart, and a player quoted one price and then
             // another reads the pair as haggling (invariant 23a). HeartRescueWhere labels the
-            // event and never reaches Offer, which is what makes this true by construction — the
+            // event and never reaches Offer, which is what makes this true by construction - the
             // case is here so that giving it a price would fail rather than merely read oddly.
             var table = Shipped();
 
@@ -535,7 +535,7 @@ namespace GlimmerGrove.Tests
         [Test]
         public void ARescueTakenOverARunIsTheSameDebitAsOneTakenOnADefeat()
         {
-            // Same ledger, same reason string, same grant — only the funnel label differs. A
+            // Same ledger, same reason string, same grant - only the funnel label differs. A
             // second call site for a proven path is the whole claim this feature rests on: no
             // schema version, no merge rule, no server work.
             Hold(100L);

@@ -10,7 +10,7 @@ namespace GlimmerGrove
     /// <b>The canvas is not the screen, and that is the whole of it.</b> Everything here is
     /// laid out against a width-matched canvas (see <c>Boot.BuildCanvas</c>: 1080 units across
     /// on a phone, wider on a display <c>Layout.CanvasFit</c> has widened it for), while
-    /// <see cref="Screen.safeArea"/> is reported in device pixels — 141 of them across the
+    /// <see cref="Screen.safeArea"/> is reported in device pixels - 141 of them across the
     /// top of an iPhone 13 Pro Max. Dividing by the canvas's own scale factor is what turns
     /// one into the other, and it is the step a hand-tuned margin skips: a constant chosen to
     /// clear one phone's camera is wrong on every other phone, and wrong in the invisible
@@ -20,13 +20,13 @@ namespace GlimmerGrove
     /// <para>
     /// <b>An inset of zero is the ordinary answer.</b> Every device without a cutout, every
     /// Android phone with the status bar hidden, and the Editor all report a safe area that
-    /// is the whole screen — so a screen that moves its chrome into <see cref="Node"/> is
+    /// is the whole screen - so a screen that moves its chrome into <see cref="Node"/> is
     /// pixel-identical to what it was before on all of them. That property is what makes this
     /// safe to adopt one screen at a time rather than in one sweep.
     /// </para>
     /// <para>
     /// <b>Chrome moves; art does not.</b> A backdrop, a fade or a field is supposed to run
-    /// under the cutout — letterboxing the picture to avoid a camera is a worse answer than
+    /// under the cutout - letterboxing the picture to avoid a camera is a worse answer than
     /// the camera. Only the things a player has to read or press belong inside the inset, so
     /// this is a layer a screen opts controls into rather than something applied to the whole
     /// of it.
@@ -70,7 +70,7 @@ namespace GlimmerGrove
         /// a board is the largest control in the game and every canvas unit the header does not
         /// take is a unit the board grows by, so a header pushed down by a cutout costs the
         /// thing the screen exists to draw. Nothing up there is small enough for a camera to
-        /// hide — see <c>RunScreen.SafeEdges</c>.
+        /// hide - see <c>RunScreen.SafeEdges</c>.
         /// </para>
         /// </summary>
         [System.Flags]
@@ -125,7 +125,7 @@ namespace GlimmerGrove
         /// It re-applies itself rather than measuring once. iOS reports its safe area a frame
         /// or two after launch on a cold start, Android reports a different one when the
         /// gesture bar appears, and a tablet in split view is resized while the app is running
-        /// — so a value read in <c>Build</c> and never looked at again is right most of the
+        /// - so a value read in <c>Build</c> and never looked at again is right most of the
         /// time and wrong exactly when somebody is watching. The check is one rect comparison
         /// per frame per open screen.
         /// </para>
@@ -176,7 +176,7 @@ namespace GlimmerGrove
 
         // The canvas is found again on enable because a screen is built before it is
         // parented in some flows, and a fitter with no canvas would divide by a scale of 1
-        // and inset by raw device pixels — which on a 3x display is three times too much.
+        // and inset by raw device pixels - which on a 3x display is three times too much.
         void OnEnable()
         {
             if (_canvas == null) _canvas = GetComponentInParent<Canvas>();

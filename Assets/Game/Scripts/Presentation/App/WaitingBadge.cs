@@ -17,7 +17,7 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>Built last on whatever card wears it</b>, so it sits over the card's own tap area
-    /// and over any mask cut into the card — a badge inside a <c>Mask</c> is cropped by it.
+    /// and over any mask cut into the card - a badge inside a <c>Mask</c> is cropped by it.
     /// </para>
     /// <para>
     /// <b>Painted, never drawn</b> (invariant 44j's rule about readouts): a count written at

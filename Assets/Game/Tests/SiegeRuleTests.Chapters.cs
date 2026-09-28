@@ -457,12 +457,12 @@ namespace GlimmerGrove.Tests
                 swept.Bronzed += bronzed;
 
                 // **A wall is asked again, finer, and only then believed.** `held` is a *rate* and
-                // nine samples measure a rate perfectly well; `walled` is a *universal* — held at
-                // no rhythm at all — and no nine samples can establish one. This mode is chaotic
+                // nine samples measure a rate perfectly well; `walled` is a *universal* - held at
+                // no rhythm at all - and no nine samples can establish one. This mode is chaotic
                 // at a finer scale than the sweep steps in (invariant 37aq): a match changes the
                 // field and the field decides the next match, so two rhythms twenty milliseconds
                 // apart play out completely differently. Measured, `s04_deadmarch` read 0 of these
-                // nine and **10 of twenty-five** — the gate called a wall on a rung an ordinary
+                // nine and **10 of twenty-five** - the gate called a wall on a rung an ordinary
                 // player holds two times in five. It was green by luck once and red by luck here,
                 // and both are the same fault.
                 //
@@ -487,7 +487,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// <b>A second, finer sweep rather than a finer one everywhere.</b> Widening
         /// <see cref="Play"/> itself would quadruple the cost of every gate in this file to sharpen
-        /// one reading out of six — and the other five are rates, which nine samples already
+        /// one reading out of six - and the other five are rates, which nine samples already
         /// measure. This is asked only of a rung that read nought, which is a handful a run.
         /// </para>
         /// <para>
@@ -605,7 +605,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// <b>Invariant 5d asked of the grade.</b> This mode shipped three chapters where every run
-        /// that was held was also three-starred — on both lines, on every rung — so two thirds of
+        /// that was held was also three-starred - on both lines, on every rung - so two thirds of
         /// the ladder rejected nothing and "three stars" was simply what clearing was called. It
         /// was not a tuning slip: a siege's par is arithmetic rather than a search (37a) and it
         /// <em>overstates</em>, so the shared 1.20 line sat far above anything a real run spends.
@@ -614,7 +614,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// <b>So the bar is a share rather than a count.</b> A chapter where three stars is most of
         /// what happens is one whose gold factor is too loose, whatever the numbers in the body
-        /// say — and the failure is completely silent, because a level with a generous grade
+        /// say - and the failure is completely silent, because a level with a generous grade
         /// validates, plays and pays exactly like one with a tight one.
         /// </para>
         /// </summary>
@@ -741,7 +741,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// **The second chapter is hard on the starter turret and comfortable one rung up the
-        /// shelf** — which is the brief it was commissioned against, measured rather than felt.
+        /// shelf** - which is the brief it was commissioned against, measured rather than felt.
         ///
         /// <para>
         /// <b>This is the first gate in this mode that plays a <em>chosen</em> line.</b> Everything
@@ -767,7 +767,7 @@ namespace GlimmerGrove.Tests
         /// </list>
         /// </para>
         /// <para>
-        /// <b>The floors are a record of where the chapter stands, not targets</b> — the same
+        /// <b>The floors are a record of where the chapter stands, not targets</b> - the same
         /// bargain <c>AnUnhurriedPlayerHoldsThisLine</c> strikes. A change that moves them wants
         /// measuring and then moving deliberately; a change that drops them several points is a
         /// change that loses runs, whatever one rhythm says.
@@ -880,17 +880,17 @@ namespace GlimmerGrove.Tests
         /// <b>The same shape as <see cref="TheSecondChapterAsksForBetterTurrets"/> with the bar
         /// moved, and the move is the point.</b> Chapter two asks whether the shelf answers a
         /// chapter <em>at all</em>: hard on the starter, comfortable one rung up. Chapter three is
-        /// the first one authored on the assumption that a player has already used it — so the free
+        /// the first one authored on the assumption that a player has already used it - so the free
         /// bolt has to be genuinely losing runs and the first purchase has to be a large, obvious
         /// answer rather than a nudge.
         /// </para>
         /// <para>
         /// <b>Two lines rather than three, and that is a finding rather than a shortcut.</b> The
-        /// obvious third line is "two rungs up the shelf" — and it is <em>weaker</em> here than one
+        /// obvious third line is "two rungs up the shelf" - and it is <em>weaker</em> here than one
         /// rung up, measured: 47 of 90 against 72. That is not a defect, it is invariant 37ax
         /// working as written. The shelf is ordered by <b>how much of the hill an ability
         /// reaches</b>, never by how hard a turret hits, and every turret fires the same primary
-        /// bolt within a weight the roster authors per model (37bb) — <c>siphon</c> carries 1.1x
+        /// bolt within a weight the roster authors per model (37bb) - <c>siphon</c> carries 1.1x
         /// and <c>beacon</c> carries the baseline with more toughness instead. So "further up the
         /// shelf" and "stronger against this hill" are two different orderings, and a gate that
         /// asserted the first was the second would be measuring a rule this project does not have.
@@ -903,7 +903,7 @@ namespace GlimmerGrove.Tests
         /// is invariant 24's argument about the heart gate said about the shelf.</item>
         /// <item>The starter is strictly harder here than on chapter two, or the chapter did not
         /// get harder whatever its par says.</item>
-        /// <item>The first purchase is worth real runs — and a large number of them, because that
+        /// <item>The first purchase is worth real runs - and a large number of them, because that
         /// is the sentence this chapter exists to say.</item>
         /// <item>And a bought line clears it comfortably and can reach three stars, so "doable if
         /// you have been shopping" is a measurement rather than a hope.</item>
@@ -927,7 +927,7 @@ namespace GlimmerGrove.Tests
             //
             // **A tenth is a long way in this mode, which nothing had measured before.** The same
             // ten rungs read 54 on the starter unsurged, 28 at a tenth more health, and **5** at
-            // three tenths — a wall, at every rhythm, on every rung. The line's damage is roughly
+            // three tenths - a wall, at every rhythm, on every rung. The line's damage is roughly
             // fixed and the hill walks at a fixed speed, so health buys time on the hill directly
             // and the line only survives fourteen blows: the lever is a cliff rather than a slope,
             // and a chapter step of one tenth is the whole of what it can take.
@@ -940,7 +940,7 @@ namespace GlimmerGrove.Tests
             // the charms shipped. The share asked for here is higher than chapter two's, because
             // that is what this chapter is: the first one authored on the assumption that the
             // shelf has already been used.
-            // **Measured 45, and it did not move when the charms did** — which is the evidence
+            // **Measured 45, and it did not move when the charms did** - which is the evidence
             // this shape is the right one. Before the charms this chapter read 28 on the starter
             // and 57 one rung up: 29 of the 62 it was losing, or 47%. After them it reads 46 and
             // 67: 21 of 44, or 48%. The baseline moved eighteen runs and the sentence about the
@@ -1015,7 +1015,7 @@ namespace GlimmerGrove.Tests
         /// <b>Two things make it harder and only one of them is visible in the file.</b> Its
         /// raiders carry <em>two</em> tenths more health than the baseline against Barrowfell's
         /// one (<c>SiegeTuning.ToughnessFor</c>), which invariant 37bz measured as the sharpest
-        /// lever this mode has — the same ten rungs read 54 of 90 unsurged, 28 at one tenth and
+        /// lever this mode has - the same ten rungs read 54 of 90 unsurged, 28 at one tenth and
         /// <b>5</b> at three. And its composition is heavier: armour from the first rung, three
         /// shields in a wave where Barrowfell's worst carried two, and bombers standing in it.
         /// </para>
@@ -1025,7 +1025,7 @@ namespace GlimmerGrove.Tests
         /// can hold on the line they arrive with, a chapter that did not actually get harder, a
         /// shelf that buys nothing, and a chapter nobody can clear even having shopped. What moves
         /// is the floors, which are a <em>record of where this chapter stands</em> rather than
-        /// targets — a change that drops them several points is a change that loses runs, whatever
+        /// targets - a change that drops them several points is a change that loses runs, whatever
         /// one rhythm says (invariant 37aq).
         /// </para>
         /// <para>
@@ -1045,7 +1045,7 @@ namespace GlimmerGrove.Tests
             const int BoughtFloor = 42;     // measured on the workhorse, 2026-09-20
 
             // **A share of what the starter loses, and this chapter's is far under Barrowfell's
-            // 45% — which is a finding rather than a slip.** `siphon` is the cheapest four-turret
+            // 45% - which is a finding rather than a slip.** `siphon` is the cheapest four-turret
             // line in the game and its ability drains; this chapter is built out of *armour*, and
             // a bulwark halves every bolt that is not its own colour. So the cheapest purchase is
             // close to the worst possible answer to it, and it still buys twelve runs in ninety.
@@ -1055,7 +1055,7 @@ namespace GlimmerGrove.Tests
 
             // **And the line that really answers this chapter, which is the point of measuring a
             // second one at all** (invariant 37bw: the shelf is ordered by *reach*, so "further
-            // up" is not "stronger" — a chapter has to be told which purchase answers *it*).
+            // up" is not "stronger" - a chapter has to be told which purchase answers *it*).
             // `cleaver` carries `WardAbility.Rend`, and Rend is the one thing on the shelf that
             // ignores a bulwark's soak outright (`SiegeBoard.Through`). A chapter made of armour
             // that a shield-breaker did not answer would be a chapter whose difficulty is not
@@ -1153,7 +1153,7 @@ namespace GlimmerGrove.Tests
         /// <b>Invariant 5d, arriving as arithmetic.</b> A bind takes a ward out for
         /// <c>ShacklerBind</c> seconds and takes nothing else at all; if it could be re-thrown
         /// before the last one ran out, the chained colour would be off the hill for the whole
-        /// fight and there would be no play that answers it — a fail state that rejects nothing.
+        /// fight and there would be no play that answers it - a fail state that rejects nothing.
         /// The gap between the two is the entire mechanic, so it is checked rather than left to a
         /// comment on the constant.
         /// </para>
@@ -1399,20 +1399,20 @@ namespace GlimmerGrove.Tests
         /// chapter before it is a floor measuring the wrong thing.
         /// </para>
         /// <para>
-        /// <b>It draws a fourth line nothing else in this file draws</b> — four <em>different</em>
+        /// <b>It draws a fourth line nothing else in this file draws</b> - four <em>different</em>
         /// turrets, one per colour, each at one star (<see cref="Mixed"/>). Every sweep here
         /// plays four of one turret, which is what makes a reading attributable to one ability
         /// and is a line nobody builds: turrets are bought per colour (invariant 42c), so a
         /// player arriving at the seventh chapter owns a handful of different machines. It is
-        /// **printed and not gated**, deliberately — it is drawn so an author can see the shape
+        /// **printed and not gated**, deliberately - it is drawn so an author can see the shape
         /// of the curve a real player meets, and a floor on it would be this file tuning against
         /// a line whose strength is four separate purchases.
         /// </para>
         /// <para>
         /// <b>What it cannot see is either of the two new verbs.</b> The model player pours into
         /// whichever ward its rhythm sends it to and reaches for nothing on the ground, so a
-        /// harrow's real cost — the beat spent taking the cog back — and a wane's — having kept
-        /// all four posts working *before* it lands — are both invisible here. What this
+        /// harrow's real cost - the beat spent taking the cog back - and a wane's - having kept
+        /// all four posts working *before* it lands - are both invisible here. What this
         /// measures is the hill; what proves the bosses fight is
         /// <c>EveryShippedBossRungIsAFight</c>, and what proves the verbs is
         /// <c>SiegeRuleTests.Bonereach</c>.
@@ -1684,7 +1684,7 @@ namespace GlimmerGrove.Tests
         /// **An ironclad is answered by one ward and every other boss by the whole line.**
         ///
         /// <para>
-        /// <b>The aegis is not a number anywhere — it is this predicate</b>
+        /// <b>The aegis is not a number anywhere - it is this predicate</b>
         /// (<c>SiegeTuning.EveryWardReaches</c>), so the only way to state it is to ask it. A
         /// change that made bosses uniform again would delete the fourth chapter's finale without
         /// touching a single file that mentions it, and every other gate would stay green: the

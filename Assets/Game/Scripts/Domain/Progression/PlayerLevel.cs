@@ -4,7 +4,7 @@ namespace GlimmerGrove.Progression
     /// A resolved position on the XP curve: which level, and how far through it.
     ///
     /// Carries everything a HUD needs so no screen has to do curve arithmetic of its
-    /// own — a bar that computed its own fill would be a second implementation of the
+    /// own - a bar that computed its own fill would be a second implementation of the
     /// curve, and the two would disagree the first time the table was retuned.
     /// </summary>
     public readonly struct PlayerLevel

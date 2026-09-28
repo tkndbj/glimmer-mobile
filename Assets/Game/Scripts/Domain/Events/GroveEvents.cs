@@ -18,7 +18,7 @@ namespace GlimmerGrove.Events
     /// <para>
     /// Nothing is cached. Both questions are a walk over a handful of seasons and a
     /// dictionary lookup, and the alternative is a cache to invalidate on two events, a
-    /// content refresh and a clock correction — which is more moving parts than the work it
+    /// content refresh and a clock correction - which is more moving parts than the work it
     /// saves.
     /// </para>
     /// </summary>
@@ -33,7 +33,7 @@ namespace GlimmerGrove.Events
         ///
         /// <para>
         /// <b>The second half is what a repeating season made necessary.</b> A recurrence has no
-        /// list — it is a function of the clock — so a cycle that closed exists nowhere except as
+        /// list - it is a function of the clock - so a cycle that closed exists nowhere except as
         /// an id in somebody's save. Reading only the authored calendar would make a chest earned
         /// last season unreachable the instant the next one opened, which is exactly what
         /// invariant 47c promises never happens; so the save is asked which seasons it still has
@@ -74,7 +74,7 @@ namespace GlimmerGrove.Events
                     if (season != null && season.IsValid) all.Add(season);
                 }
 
-                // Start order, ties on id — `CatalogIndexBuilder.UsableEvents`' rule, restated
+                // Start order, ties on id - `CatalogIndexBuilder.UsableEvents`' rule, restated
                 // here because the rows joined in above arrive in save order rather than in
                 // calendar order and every caller reads this as a calendar.
                 all.Sort((a, b) =>
@@ -96,14 +96,14 @@ namespace GlimmerGrove.Events
         /// <para>
         /// <b>The oldest season still holding a chest nobody has taken, and failing that the
         /// live one.</b> Rewards are claimed by hand, so a window closing must not take an
-        /// earned chest with it — the marks stop growing at the deadline, the chests do not
+        /// earned chest with it - the marks stop growing at the deadline, the chests do not
         /// expire (invariant 47c), and the box is the only way back to the page holding them.
         /// </para>
         /// <para>
         /// <b>Oldest first is the streak's own rule</b> (invariant 48b: only the earliest
         /// waiting night may be taken), and a repeating season is what made it necessary here.
         /// The old rule was "the live one, or when nothing is running the most recent closed one
-        /// still owing something" — correct while seasons were authored one at a time, because a
+        /// still owing something" - correct while seasons were authored one at a time, because a
         /// closed one had nothing standing in front of it. On a calendar that never ends there is
         /// <em>always</em> something live, so that rule would have made last season's unopened
         /// chest unreachable from the moment the next one opened: no box, no page, and a badge

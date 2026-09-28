@@ -14,7 +14,7 @@ namespace GlimmerGrove
     /// One field, one key, one line of status. The fold and the shape check run on the
     /// device (<see cref="ReferralCode"/>), so a string that could never be a code is refused
     /// without a call; everything else is the server's answer, and every answer it gives has
-    /// a sentence here — including <em>too late</em>, which is the one a veteran typing a
+    /// a sentence here - including <em>too late</em>, which is the one a veteran typing a
     /// friend's code will meet, and which has to say why rather than "no".
     /// </para>
     /// <para>
@@ -25,7 +25,7 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>The field shows the code the way the friend's screen showed it, whatever was
-    /// typed</b> — upper case, the hyphen after the fourth symbol, nothing else — and it
+    /// typed</b> - upper case, the hyphen after the fourth symbol, nothing else - and it
     /// owns none of that rule: every keystroke goes through <see cref="ReferralCode.Key"/>
     /// and what is shown is <see cref="ReferralCode.Present"/> of what was typed, both pure
     /// and both tested. A code is read off another phone, said aloud or copied out of a
@@ -83,7 +83,7 @@ namespace GlimmerGrove
             _field.placeholder = hint;
             _field.lineType = InputField.LineType.SingleLine;
 
-            // Every keystroke is folded as it lands — a lower-case letter is shown upper, a
+            // Every keystroke is folded as it lands - a lower-case letter is shown upper, a
             // hyphen is kept only where the printed code has one, and anything past eight
             // symbols is refused. `Custom` is what makes `onValidateInput` the rule rather
             // than the built-in alphanumeric filter, which would have dropped the hyphen and

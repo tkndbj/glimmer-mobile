@@ -13,7 +13,7 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// <b>This is the only rule in the game that turns a save into XP with no star behind it</b>
-    /// (invariant 9's one exception — see <see cref="EndlessRewardTable"/>), and it exists twice:
+    /// (invariant 9's one exception - see <see cref="EndlessRewardTable"/>), and it exists twice:
     /// here, so a device can draw its own keeper level offline, and as <c>endlessWaves</c> /
     /// <c>endlessXp</c> in <c>functions/src/grove.ts</c>, so a published card carries the same
     /// one. <b>A drift between them is completely silent.</b> Nothing throws and nothing is
@@ -23,8 +23,8 @@ namespace GlimmerGrove.Tests
     /// <c>firebase/functions/test/grove.mjs</c> is the other half. Invariant 9a, for the lane.
     /// </para>
     /// <para>
-    /// <b>What is under contract:</b> how a save's rows become a wave count — including both
-    /// ceilings, the best-floors-the-tally rule and the row cap — and what that count is paid.
+    /// <b>What is under contract:</b> how a save's rows become a wave count - including both
+    /// ceilings, the best-floors-the-tally rule and the row cap - and what that count is paid.
     /// The <em>banking</em> below is not shared, because only a device ever adds to the tally;
     /// it is pinned here because it is where a run's waves could be double-counted or lost.
     /// </para>
@@ -34,7 +34,7 @@ namespace GlimmerGrove.Tests
         // ------------------------------------------------------------- the file
         //
         // Read through `TestJson` rather than `JsonUtility`, and located without
-        // `Application.dataPath` — both of those are engine `ECall`s, so a fixture using them is
+        // `Application.dataPath` - both of those are engine `ECall`s, so a fixture using them is
         // reported as "needs the Editor" by `Tools/verify/tests.py` and walked past. **That is
         // invariant 29e, and it is the whole reason this is written the long way**: every other
         // shared-vector fixture here is Editor-only, this project has twice shipped days with one
@@ -177,7 +177,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <b>They agree with the server's on purpose rather than failing closed.</b> A server one
         /// deploy behind would otherwise derive a lower keeper level than the device, and 19a
-        /// drops what that level gated rather than clamping it — so the failure is a profile
+        /// drops what that level gated rather than clamping it - so the failure is a profile
         /// quietly missing turrets, with nothing said anywhere. Pinned on both sides.
         /// </summary>
         [Test]
@@ -294,7 +294,7 @@ namespace GlimmerGrove.Tests
         /// <b>The ceiling is applied to the <em>count</em> and not to the product</b>, which is
         /// what lets an absurd input come back as an exact figure rather than as a wrapped one:
         /// <c>long.MaxValue</c> waves is clamped to the published ceiling first and only then
-        /// multiplied. The two published maxima multiply to a thousand million — comfortably
+        /// multiplied. The two published maxima multiply to a thousand million - comfortably
         /// inside an <c>int</c>, so this is not a case about wrapping today, it is the case that
         /// fails the day somebody raises either bound without widening what carries it.
         /// </para>
@@ -374,7 +374,7 @@ namespace GlimmerGrove.Tests
             EndlessLedger.Bank(Watch, 5000);
 
             // A tally that wrapped would *fall*, and every join downstream of this assumes it
-            // cannot — which is the one property that makes a stored count mergeable at all.
+            // cannot - which is the one property that makes a stored count mergeable at all.
             Assert.AreEqual((long)EndlessLimits.HardMaxWaves, EndlessLedger.LifetimeWaves);
         }
 
@@ -451,8 +451,8 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A row naming a level this build has never heard of is carried through untouched —
-        /// invariant 1 — so a tally set on a newer build survives a trip through an older one as
+        /// A row naming a level this build has never heard of is carried through untouched -
+        /// invariant 1 - so a tally set on a newer build survives a trip through an older one as
         /// far as this ledger is concerned.
         /// </summary>
         [Test]

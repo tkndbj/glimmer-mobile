@@ -8,7 +8,7 @@ namespace GlimmerGrove.Daily
     /// count since the epoch, so "is this a new week" is an <c>int</c> compare, the reset
     /// is lazy (the next read notices), and the cross-device merge is a <c>max</c>. It is
     /// derived from the <em>day</em> key rather than from the clock a second time, so the
-    /// two calendars cannot disagree about where a day falls — a week turns over at the
+    /// two calendars cannot disagree about where a day falls - a week turns over at the
     /// same UTC midnight a day does, never an hour either side of it.
     /// </para>
     /// <para>
@@ -16,7 +16,7 @@ namespace GlimmerGrove.Daily
     /// <c>day / 7</c> would reset every Thursday morning, which nobody on Earth reads as
     /// the start of a week. The offset is three days, which puts week 1 at Monday the 5th
     /// of January 1970; week 0 is the four-day stub before it, which no live player has a
-    /// key in and which is therefore what zero can mean — the same trick
+    /// key in and which is therefore what zero can mean - the same trick
     /// <c>DailyStateDto.dayKey</c> plays with 1970.
     /// </para>
     /// <para>

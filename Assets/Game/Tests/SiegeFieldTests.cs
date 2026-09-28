@@ -12,7 +12,7 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// <b>A file of its own rather than more of <c>SiegeRuleTests</c></b>, because this is a rule
-    /// about the <em>field</em> rather than about a chapter — nothing here plays a hill, and the
+    /// about the <em>field</em> rather than about a chapter - nothing here plays a hill, and the
     /// questions it asks are asked of every siege ever authored.
     /// </para>
     /// <para>
@@ -20,7 +20,7 @@ namespace GlimmerGrove.Tests
     /// collapse rolled the board a fresh chance of three alike: <b>48% of matches chained</b> on
     /// the field below and the deepest reached <b>x18</b>, and in play the three-colour opening
     /// rungs cleared <b>13 gems a match</b> against a par crediting 5.5. A chain nobody set up
-    /// rejects no play, so it says nothing about any (invariant 5d) — the board was playing itself
+    /// rejects no play, so it says nothing about any (invariant 5d) - the board was playing itself
     /// and taking the credit.
     /// </para>
     /// </summary>
@@ -36,8 +36,8 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// <b>A second reading of one rule is the shape invariant 5b refuses</b>, and the refill
         /// needs the cheap one forty times a collapse. So the two are not left to agree by
-        /// inspection: this walks random fields — wilds and all, at both colour counts the shipped
-        /// chapters deal — and fails on the first cell they differ about.
+        /// inspection: this walks random fields - wilds and all, at both colour counts the shipped
+        /// chapters deal - and fails on the first cell they differ about.
         /// </para>
         /// <para>
         /// <b>Wilds are dealt far thicker here than any level deals them</b>, because the prism is
@@ -109,7 +109,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// <b>A ceiling rather than a rate, and that is not laziness.</b> The dial decides how
         /// often the settle check is <em>waived</em>, and a waived draw only lands matched when
-        /// the gem it happened to pick lines up — which is a minority of waivers. So the share
+        /// the gem it happened to pick lines up - which is a minority of waivers. So the share
         /// that lands matched can be anything up to the waived share and no more. What that
         /// catches is the thing worth catching: the rule being lost altogether, or applied where
         /// it was waived.
@@ -190,8 +190,8 @@ namespace GlimmerGrove.Tests
         /// A cell where every gem in the bag lines up is a real arrangement, so the fallback that
         /// deals the drawn gem anyway is a branch that really runs.
         ///
-        /// <b>Built rather than waited for.</b> A settled field never boxes a cell in — every
-        /// neighbour pair on one is already broken up, which is what settled means — so the state
+        /// <b>Built rather than waited for.</b> A settled field never boxes a cell in - every
+        /// neighbour pair on one is already broken up, which is what settled means - so the state
         /// only arises part-way through a collapse, where nothing can hold a board still long
         /// enough to look at it. What can be held still is the arrangement itself.
         /// </summary>
@@ -229,18 +229,18 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// Over a played field a match chains <em>sometimes</em> — mostly because the field fell
+        /// Over a played field a match chains <em>sometimes</em> - mostly because the field fell
         /// into line rather than because the deal agreed with itself.
         ///
         /// <para>
         /// <b>A band, and both ends of it are the point.</b> Too high and the refill is dealing
         /// matches again, which is the fault the settle rule was written for. Too low and a chain
-        /// has stopped happening at all, which is a mode with nothing to set up — gravity dropping
+        /// has stopped happening at all, which is a mode with nothing to set up - gravity dropping
         /// a gem into line with what was already there is the payoff a player earns, and it is the
         /// one this mode is meant to pay for.
         /// </para>
         /// <para>
-        /// <b>The band is wide because the dial is meant to move inside it</b> — see
+        /// <b>The band is wide because the dial is meant to move inside it</b> - see
         /// <see cref="SiegeTuning.RefillSettlesPercent"/>. Measured on this field: 17% of matches
         /// chain at 100, 21% at 85 and 26% at 70, against <b>48%</b> with the rule absent, which
         /// is the state this refuses.

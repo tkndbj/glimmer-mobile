@@ -14,7 +14,7 @@ namespace GlimmerGrove
     /// for <c>SiegeTuning.BossTell</c> and still lands <c>BossFlight</c> after that, it still takes
     /// exactly what <c>SiegeBoard</c> says it takes, and a cast still comes round on
     /// <c>SiegeTuning.CastEveryFor</c>. What changed is what a player <em>watches</em> across that
-    /// window — reported from a device as bosses that "do their attack every 3-4 seconds with 1
+    /// window - reported from a device as bosses that "do their attack every 3-4 seconds with 1
     /// simple vfx animation", which is a complaint about the drawing and not about the fight.
     /// Invariant 37s is the reason the fix could not be "make it quicker": the schedule is a rule
     /// the player plays a mending against, so the honest answer is to spend the window rather than
@@ -23,7 +23,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>Procedural rather than baked, and that is a decision rather than a shortcut.</b> Every
     /// other effect in this mode is a sprite reel out of a bought pack
-    /// (<c>SiegeShotBake</c>) — which is right for a thing that always looks the same, and wrong
+    /// (<c>SiegeShotBake</c>) - which is right for a thing that always looks the same, and wrong
     /// for lightning: a bolt that is the <em>same</em> bolt twice reads as a stamp rather than as
     /// electricity, and a chain has to reach two points a board decides at run time. These are
     /// polylines of <see cref="Art.Capsule"/> and <see cref="Art.SoftCapsule"/>, generated at run
@@ -35,7 +35,7 @@ namespace GlimmerGrove
     /// <b>The cost is bounded by the events rather than by the board.</b> A crackle is a couple of
     /// dozen images alive for a fifth of a second and a boss makes one about twice a second; a
     /// volley is at most a few hundred over a second and a half and happens once every four to
-    /// nine. Nothing here is per-frame, and nothing here is pooled for that reason — the pool
+    /// nine. Nothing here is per-frame, and nothing here is pooled for that reason - the pool
     /// (<see cref="Lend"/>) exists for the twenty-eight bolts a second the ward line fires, which
     /// is a different order of thing entirely.
     /// </para>
@@ -54,7 +54,7 @@ namespace GlimmerGrove
         /// </summary>
         /// <b>Ten rather than fourteen, and the segments a little longer than half a cell.</b>
         /// Each one is three <c>Image</c>s and a storm is nine bolts with forks on them, so this
-        /// number is multiplied by about sixty before it reaches a frame — and a bolt with ten
+        /// number is multiplied by about sixty before it reaches a frame - and a bolt with ten
         /// bends in it is not visibly straighter than one with fourteen.
         const int ArcSegments = 10;
 
@@ -62,16 +62,16 @@ namespace GlimmerGrove
         /// A single jagged bolt from <paramref name="a"/> to <paramref name="b"/>.
         ///
         /// <para>
-        /// <b>Two bars per segment, and both are needed.</b> The core is drawn nearly white — real
+        /// <b>Two bars per segment, and both are needed.</b> The core is drawn nearly white - real
         /// lightning is white with a coloured sheath, and a bolt drawn in a flat hue reads as a
-        /// painted stick — and the halo under it is the boss's own casting colour, which is what
+        /// painted stick - and the halo under it is the boss's own casting colour, which is what
         /// carries <em>whose</em> lightning this is on a hill already carrying four ward colours
         /// (the same argument <see cref="Casting"/> makes about the orbs).
         /// </para>
         /// <para>
         /// <b>The jag is pinched at both ends.</b> A polyline whose first joint can wander is a
         /// bolt that does not leave the hand that threw it, and one whose last joint can wander is
-        /// a bolt that misses what it hit — so the offset is scaled by <c>sin(pi*t)</c>, which is
+        /// a bolt that misses what it hit - so the offset is scaled by <c>sin(pi*t)</c>, which is
         /// nought at both ends and widest in the middle. That single term is the difference
         /// between "lightning" and "a broken line".
         /// </para>
@@ -89,7 +89,7 @@ namespace GlimmerGrove
         /// nothing about the effects layer stops one: <c>_fx</c> is sized to the field and carries
         /// no mask, so a strike out of the sky and a bolt thrown off a boss's hand both draw
         /// happily over the status bar. <c>Tools/render_siege.py</c> is what said so, on the first
-        /// frame it ever drew of this — a placement, which is exactly what no numeric gate in this
+        /// frame it ever drew of this - a placement, which is exactly what no numeric gate in this
         /// project can look at (invariants 37g, 37u).
         /// </summary>
         Vector2 OnBoard(Vector2 p)
@@ -109,8 +109,8 @@ namespace GlimmerGrove
 
             // **A delayed bolt is *built* late as well as shown late, and that is the difference
             // between a storm and a hitch.** A warbringer throws nine strikes staggered across
-            // half a second; built up front that is several hundred `Image`s created — and a
-            // canvas rebuilt — inside one frame, with the stagger only deciding when they are
+            // half a second; built up front that is several hundred `Image`s created - and a
+            // canvas rebuilt - inside one frame, with the stagger only deciding when they are
             // faded up. Deferring the construction spreads the same work over the frames it is
             // spread across on screen. The delay is the only reason this branch exists: an
             // undelayed bolt is built here and now, as it always was.
@@ -345,7 +345,7 @@ namespace GlimmerGrove
         ///
         /// <b>This is the half of the complaint that is not about the spell at all.</b> A boss
         /// casts every four to nine seconds, so most of the time a player spends looking at one it
-        /// is standing still playing a two-second idle loop — which is what "I don't want to wait
+        /// is standing still playing a two-second idle loop - which is what "I don't want to wait
         /// 5 seconds" is really about. Something has to be happening on it in between, and it has
         /// to be small enough that the cast is still unmistakably the event (invariant 26f: before
         /// animating anything, ask how often it fires).
@@ -402,10 +402,10 @@ namespace GlimmerGrove
         /// the same event.
         /// </para>
         /// <para>
-        /// <b>And an aimed boss reaches for its target before it throws.</b> A tether — a thin
-        /// bolt flickering between the caster and the ward it has chosen — is drawn over the last
+        /// <b>And an aimed boss reaches for its target before it throws.</b> A tether - a thin
+        /// bolt flickering between the caster and the ward it has chosen - is drawn over the last
         /// two fifths of the tell, which says <em>who</em> as well as <em>when</em>. <b>It is the
-        /// only thing that says which ward</b> — a ring used to close over the chosen post and was
+        /// only thing that says which ward</b> - a ring used to close over the chosen post and was
         /// withdrawn, because a circle drawn around the player's own turret reads as something
         /// being done to it. This says the same thing in the boss's own colour and from the boss's
         /// own hand, which is where the threat actually is.
@@ -451,7 +451,7 @@ namespace GlimmerGrove
             if (!aimed) return;
 
             // The tether. Three flickers rather than one continuous line, because a line that
-            // stays lit is a beam — and this mode already has beams coming the other way.
+            // stays lit is a beam - and this mode already has beams coming the other way.
             for (int i = 0; i < 3; i++)
             {
                 float when = tell * (.58f + i * .13f);
@@ -492,7 +492,7 @@ namespace GlimmerGrove
         /// than it did.</b> The board books one hit; what crosses the hill is several things
         /// arriving together, which is the difference between a spell and a projectile. The last
         /// arrival is always on <c>BossFlight</c> exactly, because that is when the damage is
-        /// (invariant 37s) — everything else is early.
+        /// (invariant 37s) - everything else is early.
         /// </para>
         /// <para>
         /// <b>They are told apart by <em>shape of attack</em> and not by colour</b>, which is
@@ -515,8 +515,8 @@ namespace GlimmerGrove
             {
                 // ---------------------------------------------------------- the blightcaller
                 // **Chain lightning**, which is the only one of the four whose bolt visits the
-                // wards it is not aimed at. That is exactly what a douse is — something spreading
-                // through the line and settling on one of them — and it is the reading a player
+                // wards it is not aimed at. That is exactly what a douse is - something spreading
+                // through the line and settling on one of them - and it is the reading a player
                 // needs, because the ward it puts out is not the one nearest the caster.
                 case SiegeKind.Blightcaller:
                 {
@@ -594,7 +594,7 @@ namespace GlimmerGrove
                 // **A ring that closes, which is the entire difference between this and a roar.**
                 // A roar pushes outward off the thing casting it; a devour pulls the hill into it.
                 // Nothing crosses the board either way, so the only thing a player can read is
-                // *direction* — and for two chapters this drew the overlord's double launch, at a
+                // *direction* - and for two chapters this drew the overlord's double launch, at a
                 // boss that throws nothing, so the two orbs were built with no art behind them
                 // (`SpellArt` answers null for a grounded boss), fell back to `Art.Glow`, and
                 // were flown from the boss to the boss. Two grey blobs pulsing in place.
@@ -618,8 +618,8 @@ namespace GlimmerGrove
 
                 // ---------------------------------------------------------- the shackler
                 // **One shot, straight, and a chain paying out behind it.** Everything else on
-                // this board that is thrown at a ward is a *volley* — three orbs, a pair of
-                // rockets, a chain of lightning — because everything else is a bombardment. A
+                // this board that is thrown at a ward is a *volley* - three orbs, a pair of
+                // rockets, a chain of lightning - because everything else is a bombardment. A
                 // bind is one arrow finding one turret and holding it, so drawing it as a spread
                 // would be the picture saying the opposite of the rule. The straightness *is* the
                 // reading, which is why it takes no bow at all.
@@ -629,7 +629,7 @@ namespace GlimmerGrove
 
                     // The chain: a taut line snapping tighter behind the arrow three times over
                     // the flight, in iron rather than in fire. `Arc` with no forks is a straight
-                    // line, which is the one time in this file that is what is wanted — a bolt
+                    // line, which is the one time in this file that is what is wanted - a bolt
                     // of lightning jags and a chain does not.
                     for (int i = 0; i < 3; i++)
                         Arc(from, to, fire, Cell * .05f * (1f + i * .35f), .2f, 0, .02f,
@@ -767,7 +767,7 @@ namespace GlimmerGrove
                 // a ninth boss with no arm must draw *something*, and an overlord's launch is
                 // the most generic thing here. What stops that being the quiet answer again is
                 // `SiegeArtTests.EveryBossSpellIsItsOwnDrawing`, which fails on a boss wearing
-                // another boss's reels — the drawing half of invariant 37z, held by a fixture
+                // another boss's reels - the drawing half of invariant 37z, held by a fixture
                 // rather than by whoever next reads this file.
                 default:
                 {
@@ -788,7 +788,7 @@ namespace GlimmerGrove
         /// The instant a spell leaves its caster.
         ///
         /// <b>Loud enough to be the second-biggest thing in the cast</b>, after the landing. It is
-        /// the pack's own muzzle reel, a starburst, a ring and six bolts thrown outward — where it
+        /// the pack's own muzzle reel, a starburst, a ring and six bolts thrown outward - where it
         /// used to be a ring and a flash, which on a lit hill is very nearly nothing.
         /// </summary>
         void Leaving(Vector2 from, SiegeKind kind, Color fire)
@@ -797,16 +797,16 @@ namespace GlimmerGrove
 
             // **The three grounded bosses' muzzle reels are spoken for**, and this is the one
             // branch in the file that has to know it. Each of the three lays its own reel *flat
-            // over the ground* — a roar as pressure crossing the hill (<see cref="Roar"/>), a
+            // over the ground* - a roar as pressure crossing the hill (<see cref="Roar"/>), a
             // devour as the floor going (<see cref="Maw"/>), a raise as the ground opening at the
-            // crest (<see cref="Rise"/>) — and flat is the whole of why any of them reads as
+            // crest (<see cref="Rise"/>) - and flat is the whole of why any of them reads as
             // happening *on* the hill. Drawing the same reel upright here as well would be the
             // same picture twice, once wrong.
             //
             // **Asked of the rule rather than listed**, which is the fix `SiegeView.Cast` already
             // had to make on the line beside it: a list of the kinds that happen to be grounded
             // today is a clause that goes stale the next time one is added, and this one had
-            // already gone stale once — it named the warbringer alone, so the two bosses added
+            // already gone stale once - it named the warbringer alone, so the two bosses added
             // after it drew a flat ground wash standing upright in the air.
             if (SiegeTuning.AimsAtAWard(kind))
             {
@@ -862,7 +862,7 @@ namespace GlimmerGrove
             // **Asked once, at the top, rather than carried as two arms that break on nothing.**
             // Everything below paints a *post*; a devour and a raise land on the hill and never
             // touch the line, so there is nothing here for them to be drawn on. `Smite` already
-            // hands both off to `Feed` and `Rise` before this is reached — this is what stops
+            // hands both off to `Feed` and `Rise` before this is reached - this is what stops
             // that being the only thing standing between them and the `default` arm, which is the
             // overlord's fan and is what they really drew for two chapters (invariant 44e).
             if (!SiegeTuning.ReachesTheLine(kind)) return;
@@ -897,7 +897,7 @@ namespace GlimmerGrove
                 case SiegeKind.Warbringer:
                 {
                     // A roar arrives on every ward at once, so what it leaves is a line of
-                    // lightning running along the posts — one drawing for four records, which is
+                    // lightning running along the posts - one drawing for four records, which is
                     // why it is gated on the same latch the stampede is.
                     if (_posts == null || _posts.Length < 2) break;
 
@@ -912,8 +912,8 @@ namespace GlimmerGrove
                 case SiegeKind.Shackler:
                 {
                     // **Iron closing round the post, and it is the only aftermath here drawn as a
-                    // shape rather than as light.** A bind takes nothing — no health, no fuel, no
-                    // rank — so a burst of any weight would be the drawing overstating the rule
+                    // shape rather than as light.** A bind takes nothing - no health, no fuel, no
+                    // rank - so a burst of any weight would be the drawing overstating the rule
                     // (the same argument `Snuffed` and `Chained` already make). Four short links
                     // laid in a ring round the chassis say *held*, which is the whole verb, and
                     // the standing state `Charge` keeps on the post is what the player really
@@ -998,7 +998,7 @@ namespace GlimmerGrove
                     // **Dust along the ground, because what landed was mass.** Every other
                     // aftermath in this switch goes up or outward; a slam's goes *sideways at the
                     // foot of the post*, which is the one direction that says weight. Nothing
-                    // reaches the other turrets — an aegis is a rule about what may hurt the
+                    // reaches the other turrets - an aegis is a rule about what may hurt the
                     // ironclad and it does nothing to the line, so a fan to every ward (which is
                     // what this drew as an overlord) was the picture inventing a threat.
                     for (int i = 0; i < 2; i++)

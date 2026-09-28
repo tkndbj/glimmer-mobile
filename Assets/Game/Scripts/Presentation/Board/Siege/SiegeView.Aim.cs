@@ -66,7 +66,7 @@ namespace GlimmerGrove
         /// radius round wherever a drag ended is exact in the rule and unreadable on the board:
         /// what a player had to do was judge a distance against raiders that were walking. A box
         /// is a place. It is tapped, it is the thing that lights, and <see cref="Scorch"/> then
-        /// lights exactly what burned — invariant 33g at its strongest, because
+        /// lights exactly what burned - invariant 33g at its strongest, because
         /// <c>SiegeBoard.Blast</c> and this loop share their integers through <see cref="BoxAt"/>
         /// rather than agreeing about a mapping. For most of this mode's life they did not: see
         /// <see cref="BoxAt"/> for the two ways they disagreed.
@@ -89,7 +89,7 @@ namespace GlimmerGrove
 
                     // Boxes are laid out from the top of the hill down, which is the direction
                     // `march` runs: row 0 is where a wave walks on. `BoxAt` is the only place the
-                    // grid is worked out, and it is worked out from `MarchY` — see its remarks for
+                    // grid is worked out, and it is worked out from `MarchY` - see its remarks for
                     // the two ways this used to disagree with the rule that reads it.
                     var at = BoxAt(lane, row);
 
@@ -143,7 +143,7 @@ namespace GlimmerGrove
 
                 // **Sized to the post it is round, not to a guess.** A ward's node is 1.8 by 2.3
                 // cells with its body standing a hair above the middle of it, so a circle of 1.6
-                // sat high and covered the barrel rather than the turret — reported as exactly
+                // sat high and covered the barrel rather than the turret - reported as exactly
                 // that. This is an ellipse round the whole of it, which is also what makes it a
                 // target big enough to hit with a thumb.
                 var size = new Vector2(Cell * 2.05f, Cell * 2.6f);
@@ -258,7 +258,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>A method rather than something each door remembers, because a door forgot.</b>
         /// <c>Hurt</c> draws the damage and nothing else; what takes a dead raider's widget down
-        /// is <see cref="Reap"/>, which otherwise runs once a frame from the clock — and a
+        /// is <see cref="Reap"/>, which otherwise runs once a frame from the clock - and a
         /// killing blow ends the run in the same call, so <c>Advancing</c> goes false and that
         /// next frame never comes. Invariant 37ac fixed exactly this for a firepot and a storm
         /// and the bomb was written afterwards, so it shipped killing the last raiders of a level
@@ -289,7 +289,7 @@ namespace GlimmerGrove
         /// legible.</b> A firepot takes the box that was tapped and the four touching it
         /// (<see cref="SiegeTuning.BlastReach"/>), so an explosion drawn only in the middle would
         /// be a rule the player has to infer from which raiders fell. Lighting the plus says it
-        /// once, at the moment it happens, in the same twenty rectangles they were just aiming at —
+        /// once, at the moment it happens, in the same twenty rectangles they were just aiming at -
         /// which is invariant 33g asked of the feedback rather than of the input, and 32c is not
         /// troubled by it because this is what the item <em>did</em> rather than a preview of what
         /// it would do.
@@ -297,7 +297,7 @@ namespace GlimmerGrove
         /// </summary>
         void Firepot(SiegeAim aim)
         {
-            // The middle of the box that was tapped, from `BoxAt` — the same arithmetic the panes
+            // The middle of the box that was tapped, from `BoxAt` - the same arithmetic the panes
             // were laid out with, so the burst lands on the ring the player aimed at.
             var at = BoxAt(aim.Lane, aim.Row);
 
@@ -327,7 +327,7 @@ namespace GlimmerGrove
                 for (int lane = 0; lane < SiegeTuning.Lanes; lane++)
                 {
                     // Asked of the rule rather than worked out here, so the boxes that light and
-                    // the boxes that burn cannot come apart — including at an edge, where the plus
+                    // the boxes that burn cannot come apart - including at an edge, where the plus
                     // simply has fewer arms.
                     if (!SiegeTuning.InBlast(aim.Lane, aim.Row, lane, row)) continue;
 
@@ -413,7 +413,7 @@ namespace GlimmerGrove
             Audio.Sfx("shatter", .9f, .72f);
 
             // **Claimed before a single bolt falls.** The rules killed all of these the instant
-            // the item was used, so `Reap` — which runs every frame and takes down anything dead —
+            // the item was used, so `Reap` - which runs every frame and takes down anything dead -
             // would clear the hill one frame in and leave the rest of the storm falling on empty
             // ground. See `_striking`.
             _striking.Clear();
@@ -421,9 +421,9 @@ namespace GlimmerGrove
                 if (hits[i].Killed) _striking.Add(hits[i].Raider);
 
             // **And the ending is held for the whole storm, said once here rather than left to
-            // fall out of the per-bolt holds.** A storm very often *is* the killing blow — the
+            // fall out of the per-bolt holds.** A storm very often *is* the killing blow - the
             // rules resolve it in one instant, so the verdict is already Won while the first
-            // bolt is still in the air — and `Judge` runs every frame. Arming it from the length
+            // bolt is still in the air - and `Judge` runs every frame. Arming it from the length
             // of the reel means it cannot come apart if a strike stops being a kill or the step
             // is retuned. See `_felling`.
             Felling(hits.Count * StormStep + DyingFor);
@@ -455,8 +455,8 @@ namespace GlimmerGrove
                 // describes. Felling the one just struck is what makes the drawing match the item.
                 if (hits[i].Killed) Fell(hits[i].Raider);
 
-                // Given up as it is struck, so a raider this storm never reaches — the board was
-                // dealt again, the reel was cut short — is claimed by nothing and `Reap` has it
+                // Given up as it is struck, so a raider this storm never reaches - the board was
+                // dealt again, the reel was cut short - is claimed by nothing and `Reap` has it
                 // back on the next frame.
                 _striking.Remove(hits[i].Raider);
 
@@ -499,7 +499,7 @@ namespace GlimmerGrove
         {
             if (mob.Boss) { Die(mob); return; }
 
-            // The run may not be told until this has been watched, exactly as `Die`'s is — a
+            // The run may not be told until this has been watched, exactly as `Die`'s is - a
             // storm's last bolt is very often the killing blow. See `_felling`.
             Felling(DyingFor);
 
@@ -522,7 +522,7 @@ namespace GlimmerGrove
         void Bolt(SiegeStrike hit)
         {
             // **`MobOf`, never `Widget`.** A raider can only be struck once it is on the hill, so
-            // its widget already exists — and `Widget` *hatches* one when it does not, which on a
+            // its widget already exists - and `Widget` *hatches* one when it does not, which on a
             // raider this very call is about to kill would put a fresh body on the board to be
             // torn down again. Asking only what is already drawn cannot resurrect anything.
             var mob = MobOf(hit.Raider);
@@ -550,7 +550,7 @@ namespace GlimmerGrove
             // the room above whatever it hit was tried first and is worse than the fault it
             // fixes: a hill is about four cells deep, so a strike on a raider half way up came
             // out a cell and a half long and read as a spark. A bolt that runs off the top of the
-            // picture is what lightning looks like — it comes from somewhere above the frame —
+            // picture is what lightning looks like - it comes from somewhere above the frame -
             // and `_sky` is clipped to the board so it can.
             float tall = Cell * StormTall;
             float wide = tall * frames[0].rect.width / frames[0].rect.height;
@@ -560,7 +560,7 @@ namespace GlimmerGrove
             shaft.raycastTarget = false;
             shaft.rectTransform.localScale = new Vector3(1f, -1f, 1f);
 
-            // **Anchored by where the strike lands, never by the frame's middle** — see
+            // **Anchored by where the strike lands, never by the frame's middle** - see
             // <see cref="StrikeCentre"/>, which is where the arithmetic and the two ways it has
             // been wrong are written down.
             shaft.rectTransform.anchoredPosition =
@@ -608,7 +608,7 @@ namespace GlimmerGrove
             // else in the layer, so the bolt and its sparks are drawn over their own light.
             // **Small, and it was not.** The first cut spread an ember glow three and a half cells
             // across and rang a ring the same size; drawn on three raiders a third of a second
-            // apart, that is most of the hill under overlapping brown discs — which reads as the
+            // apart, that is most of the hill under overlapping brown discs - which reads as the
             // board being stained rather than as anything being struck. The reel already carries
             // the bright half of the burst; what this adds is only the warm rung under it.
             var scorch = UIKit.Img("Scorch", _fx, Art.Glow(128, 2.2f), Pal.A(Pal.Ember, .62f),
@@ -682,7 +682,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>A method rather than a line inside <see cref="Bolt"/>, because it has now been
         /// wrong twice in two different ways and neither was visible to anything but a player.</b>
-        /// First it was <c>targetY + tall * .5f</c> — the frame's *centre* on the raider, so the
+        /// First it was <c>targetY + tall * .5f</c> - the frame's *centre* on the raider, so the
         /// flash went off half a frame above it. Then it was the right shape with the wrong sign,
         /// which put the flash <b>3.3 cells below</b> the raider: on a board where the ward line
         /// is exactly that far down, what a player saw was lightning striking their own turrets.
@@ -690,12 +690,12 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The sign is the whole trap, and it is the one invariant 44d already records.</b>
         /// <c>Tools/render_siege.py</c> mirrors this and drew it correctly with the *same*
-        /// expression, because PIL's y runs down the picture where Unity's runs up it — so the
+        /// expression, because PIL's y runs down the picture where Unity's runs up it - so the
         /// mirror agreed with itself and disagreed with the game, and the render that exists to
         /// catch a misplaced widget confirmed a misplaced widget. **A mirror cannot check a sign
         /// it has to re-derive in the opposite axis.** What checks this one is
-        /// <c>SiegeStrikeTests</c>, which asserts the consequence — the flash lands on the target
-        /// — rather than the formula.
+        /// <c>SiegeStrikeTests</c>, which asserts the consequence - the flash lands on the target
+        /// - rather than the formula.
         /// </para>
         /// <para>
         /// The sprite is drawn from <c>centre - tall/2</c> up, and the flash sits

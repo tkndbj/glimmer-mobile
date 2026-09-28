@@ -15,8 +15,8 @@ namespace GlimmerGrove.Challenges
     /// </para>
     /// <para>
     /// <b>What the server is told</b> (invariant 56g). The seeder reads this file and publishes
-    /// only the figures a claim is priced against — the genre spellings, the allowance, the deal
-    /// rows and the two reward rates — as the <c>challenges</c> block of <c>config/progression</c>.
+    /// only the figures a claim is priced against - the genre spellings, the allowance, the deal
+    /// rows and the two reward rates - as the <c>challenges</c> block of <c>config/progression</c>.
     /// The boards never leave the device; a level is content, not a fact the server needs.
     /// </para>
     /// <para>
@@ -26,7 +26,7 @@ namespace GlimmerGrove.Challenges
     /// requires, so a Sokoban with no gems is an error at read rather than an empty board.
     /// </para>
     /// <para>
-    /// <b>Never test a class-typed field for null</b> — a <c>[Serializable]</c> field is never
+    /// <b>Never test a class-typed field for null</b> - a <c>[Serializable]</c> field is never
     /// null after <c>JsonUtility</c>. Arrays are tested for length and strings for emptiness;
     /// an unwritten number reads as nought, so every block below has a "not written" shape a
     /// real one cannot take (<c>IsAuthored</c>).
@@ -72,7 +72,7 @@ namespace GlimmerGrove.Challenges
     /// <summary>
     /// The free allowance: how many plays of <em>each</em> genre a day cost nothing.
     ///
-    /// <b>A play is an attempt, spent when the board is dealt</b> — a win moves the player to
+    /// <b>A play is an attempt, spent when the board is dealt</b> - a win moves the player to
     /// the next level of the day's sequence and a loss lets them try the same one again, and
     /// either way one play is gone. Spent at the deal rather than at the ending, or leaving a
     /// losing board before it lost would be a free retry for ever.
@@ -90,7 +90,7 @@ namespace GlimmerGrove.Challenges
     /// One deal: a window of days during which every genre allows more plays a day.
     ///
     /// <para>
-    /// <b>Bought with gems, so it is an ordinary spend</b> (invariant 18) — under a derived id
+    /// <b>Bought with gems, so it is an ordinary spend</b> (invariant 18) - under a derived id
     /// the server recognises and prices against this row (<c>SpendEntry.ChallengeTierId</c>,
     /// the season pass's shape, 47e). The <em>server's</em> copy of the entitlement is what a
     /// coin claim is bounded by; the client's copy draws the page and gates nothing that pays.
@@ -140,7 +140,7 @@ namespace GlimmerGrove.Challenges
 
         /// <summary>
         /// Whether the block was written at all. A block of three noughts is unauthored rather
-        /// than "pays nothing" — withdrawing a payment is <c>coins: 0</c> beside a written
+        /// than "pays nothing" - withdrawing a payment is <c>coins: 0</c> beside a written
         /// <c>maxClears</c>, so the intent is visible in a diff.
         /// </summary>
         public bool IsAuthored => coins > 0 || xp > 0 || maxClears > 0;

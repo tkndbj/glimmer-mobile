@@ -34,8 +34,8 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// <b>It was the shipped level, and then the chapter grew to ten.</b> What it is for now is
-        /// pinning the <em>arithmetic</em> — par over a known hill, a warlord appended as the last
-        /// wave, a bolt worth double against its own colour — which wants one board that never
+        /// pinning the <em>arithmetic</em> - par over a known hill, a warlord appended as the last
+        /// wave, a bolt worth double against its own colour - which wants one board that never
         /// moves when the content does. What the content is held to is <see cref="Chapter"/>, and
         /// <see cref="EveryRungOfThisChapterCanBeHeld"/> plays every rung of it.
         /// </para>
@@ -61,12 +61,12 @@ namespace GlimmerGrove.Tests
         /// The fixture siege, dealing cogs like every shipped rung that sends a boss.
         ///
         /// <b>It dealt none, and that made it the one configuration this game never ships.</b>
-        /// Every rung from the second on deals them, and a boss rung leans on them hardest — a
+        /// Every rung from the second on deals them, and a boss rung leans on them hardest - a
         /// ward that never ranks up gets a tenth less damage and a tenth more fuel out of every
         /// bolt it fires. That was survivable while a bolt was worth twenty; once a bolt was worth
         /// ten and a match bought twice as many (<see cref="SiegeTuning.FuelPerGemTenths"/>), a
         /// cog-free duel stopped being winnable by an ordinary player and this fixture was the
-        /// only thing in the project that noticed — because it was the only thing shaped that way.
+        /// only thing in the project that noticed - because it was the only thing shaped that way.
         /// <b>A fixture that is harder than anything shipped is not a stricter test, it is a
         /// different game.</b>
         /// </summary>
@@ -98,7 +98,7 @@ namespace GlimmerGrove.Tests
             ///
             /// <b>Carried here for <see cref="Tough"/>'s reason, and it is the same reason.</b>
             /// A chapter deals the first <em>n</em> charms of the roster, derived from its own
-            /// ordinal — and nothing in this fixture has a catalog, so a set that came from the
+            /// ordinal - and nothing in this fixture has a catalog, so a set that came from the
             /// chapter index would be empty in every run played here. Ninety runs a chapter,
             /// silently against a board nobody ships. <c>Tools/verify/rungs.py</c> compares this
             /// field against the body too.
@@ -136,7 +136,7 @@ namespace GlimmerGrove.Tests
             /// <b>Carried on the rung rather than looked up</b>, and it is the whole reason the
             /// surge lives on the board (see <c>SiegeDto.tough</c>). Nothing here has a catalog: a
             /// figure that came from the chapter index would be the plain one in every run this
-            /// fixture plays, so the sweep would report on a hill nobody ships — which is the fault
+            /// fixture plays, so the sweep would report on a hill nobody ships - which is the fault
             /// <c>Tools/verify/rungs.py</c> exists to catch, and that gate compares this field too.
             /// </summary>
             public SiegeLayout Built()
@@ -155,7 +155,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// <b>And here it is doing a job nothing else can.</b> Every other mode proves a level by
         /// searching it; a siege has no search (invariant 37a), so the only way to know a rung can
-        /// be held is to play one — which is what <see cref="EveryRungOfThisChapterCanBeHeld"/>
+        /// be held is to play one - which is what <see cref="EveryRungOfThisChapterCanBeHeld"/>
         /// does with the real rules, over all ten.
         /// </para>
         /// </summary>
@@ -188,7 +188,7 @@ namespace GlimmerGrove.Tests
         /// Every rung of the first chapter's ward line, in order.
         ///
         /// <b>Exposed rather than copied</b>, because <c>WardLoadoutTests</c> has to hold the
-        /// loadout's seat gate to the chapter that decides it — and a second copy of these ten
+        /// loadout's seat gate to the chapter that decides it - and a second copy of these ten
         /// strings is a second thing to keep in step with the shipped body. The table above is
         /// already held to <c>s01_thornwatch.json</c> by <c>Tools/verify/rungs.py</c>, so this is
         /// the one that is checked.
@@ -668,8 +668,8 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(2, SiegeTuning.WeakMultiplier);
 
             // **A bolt's weight and a bolt's cost are one scale, and this is where that is
-            // said.** They have moved together twice now — halved when the wards were asked to
-            // shoot more, doubled again when the mode came back as too fast paced — and moving
+            // said.** They have moved together twice now - halved when the wards were asked to
+            // shoot more, doubled again when the mode came back as too fast paced - and moving
             // either alone halves or doubles every par in the chapter while leaving each number
             // individually plausible.
             Assert.AreEqual(SiegeTuning.ShotDamage, SiegeTuning.FuelPerShotTenths,
@@ -680,8 +680,8 @@ namespace GlimmerGrove.Tests
 
             // **What a match delivers is counted in bolts, not gems**, and the two stopped being
             // the same thing when a gem started buying two bolts (`SiegeTuning.FuelPerGemTenths`).
-            // Written out here as the arithmetic it has to be, because the old form — gems times
-            // damage — would still have compiled, still have looked plausible, and would have
+            // Written out here as the arithmetic it has to be, because the old form - gems times
+            // damage - would still have compiled, still have looked plausible, and would have
             // doubled every par in the chapter.
             Assert.AreEqual(SiegeTuning.MatchGemsTenths * SiegeTuning.FuelPerGemTenths
                             * SiegeTuning.ShotDamage * SiegeTuning.WeakMultiplier
@@ -790,7 +790,7 @@ namespace GlimmerGrove.Tests
         public void AWarlordWalksOnBeforeItStands()
         {
             // The view wears a *walk* until this is true and an idle after it (`SiegeView.Follow`),
-            // so the moment it changes is a drawing decision as much as a rules one — it shipped
+            // so the moment it changes is a drawing decision as much as a rules one - it shipped
             // wearing the idle for the whole walk-in and came back from play as "it looks like it
             // is floating". Pinned here because the walk-in is a *duration*, and a duration nobody
             // asserts is one that drifts the next time the pacing is retuned.
@@ -924,7 +924,7 @@ namespace GlimmerGrove.Tests
         /// The four bosses take four different things, and no two of them take the same one.
         ///
         /// <b>This is the whole claim four bosses are for.</b> A chapter shipped two told apart by
-        /// their health, their cadence and their hue — every reading green, every gate green, and
+        /// their health, their cadence and their hue - every reading green, every gate green, and
         /// a player's verdict was that they looked and played exactly the same. What separates a
         /// kind from a number is that each one has a <em>different answer</em>, so what is pinned
         /// here is that the four spells are four verbs rather than one verb at four strengths.
@@ -1030,7 +1030,7 @@ namespace GlimmerGrove.Tests
         [Test]
         public void AWarbringerShakesTheWholeLineFromWhereItStands()
         {
-            // **It used to walk to the line, and that was withdrawn after play** — a boss that
+            // **It used to walk to the line, and that was withdrawn after play** - a boss that
             // takes ground spends the fight being somewhere else, and the report was that it took
             // forever to get anywhere and start doing damage. It holds the middle like the other
             // three now, and what makes it a different fight is that its roar lands on *every*
@@ -1129,8 +1129,8 @@ namespace GlimmerGrove.Tests
         /// A firepot hits the body a player is aiming at, not the point the raider stands on.
         ///
         /// <para>
-        /// <b>Reported from play twice.</b> First as "the bombs don't hit bosses" — they did, they
-        /// hit the box its node was in — and then, after that was patched with a row count, as
+        /// <b>Reported from play twice.</b> First as "the bombs don't hit bosses" - they did, they
+        /// hit the box its node was in - and then, after that was patched with a row count, as
         /// <em>"it says there is nothing there and I tapped the thing"</em>. Both are the same
         /// fault: a raider is a picture some cells wide and some cells deep and the rule was
         /// reading a point.
@@ -1147,7 +1147,7 @@ namespace GlimmerGrove.Tests
             var board = SiegeBoard.Build(Duel("warlord:r"));
 
             // Standing, which is all it takes: a boss is hurtable from the frame it plants, so a
-            // firepot is refused only on the walk in (`SiegeBoard.Wound`) — and this test is
+            // firepot is refused only on the walk in (`SiegeBoard.Wound`) - and this test is
             // about where a body is, not whether it can be hurt.
             var boss = Standing(board);
 
@@ -1229,7 +1229,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// <c>SiegeTuning.Caught</c> is asked by <c>SiegeBoard.Blast</c> and drawn by nothing, so
         /// this is the only thing that holds it to what the board looks like. It is asked at
-        /// <c>BlastReach</c> nought — the box alone — because otherwise the plus would hide
+        /// <c>BlastReach</c> nought - the box alone - because otherwise the plus would hide
         /// everything the footprint is doing.
         /// </para>
         /// </summary>
@@ -1334,16 +1334,16 @@ namespace GlimmerGrove.Tests
         /// <b>The ending was an equality on a tally of kills, and a bonecaller makes raiders that
         /// tally has never heard of.</b> <c>GoalsLeft</c> was the authored raider count less
         /// everything that had died, which is exact on every board whose raiders are all authored
-        /// — and on the one that raises twelve more, the count of the dead crossed the authored 27
+        /// - and on the one that raises twelve more, the count of the dead crossed the authored 27
         /// <em>while the boss was standing</em> and then went straight past it. Both sides of that
-        /// are bugs: the model declares a rung cleared mid-fight, and the view — which is not
-        /// allowed to ask while something is dying (<c>SiegeView.Judge</c>) — misses the crossing
+        /// are bugs: the model declares a rung cleared mid-fight, and the view - which is not
+        /// allowed to ask while something is dying (<c>SiegeView.Judge</c>) - misses the crossing
         /// and never ends the run at all. Reported from play as the second.
         /// </para>
         /// <para>
         /// <b>It was invisible to every gate in this file, and worse than invisible: it was
         /// holding one of them up.</b> Measured under the old rule at the sweep's own nine
-        /// rhythms, <c>s04_barrowheart</c> read <b>3 of 9 held — and all three ended with the boss
+        /// rhythms, <c>s04_barrowheart</c> read <b>3 of 9 held - and all three ended with the boss
         /// alive</b>. The chapter gate was therefore scoring a rung on runs that stopped when 27
         /// things had died, so the reading it published for the chapter's finale was of a fight
         /// nobody had had.
@@ -1548,7 +1548,7 @@ namespace GlimmerGrove.Tests
         /// Everywhere else a continue hands over allowance on a board that has stopped moving, so
         /// "is it enough to be worth buying" is a question about the number. Here the hill is
         /// still walking and every raider the run let through is standing at the line with its
-        /// hammer up — so the line is raised into whatever was killing it, and how long that
+        /// hammer up - so the line is raised into whatever was killing it, and how long that
         /// lasts is a fact about the level rather than about the offer.
         /// </para>
         /// <para>
@@ -1556,7 +1556,7 @@ namespace GlimmerGrove.Tests
         /// unhurried player makes a match every 2.4 seconds and a ward is firing about a second
         /// after the first of them, so the real window is longer and gets longer as it is used.
         /// Ten rungs come out between 10.4 and 13.5 seconds, which is four or five matches before
-        /// a finger is lifted. The bar is eight — well under what ships, and it fails the moment
+        /// a finger is lifted. The bar is eight - well under what ships, and it fails the moment
         /// anything makes a rallied line cheap: a partial raise, a smaller
         /// <see cref="SiegeTuning.WardHealth"/>, or a rung whose hill piles up harder than any of
         /// these.
@@ -1650,7 +1650,7 @@ namespace GlimmerGrove.Tests
 
             // Measured 2026-09-13 at 78 of 90, with the four boss cadences halved
             // (`SiegeTuning.BossCastEvery`) because the bosses played as too easy and too slow.
-            // It read 80 before that, and 81 before the bosses grew fifteen per cent — so a
+            // It read 80 before that, and 81 before the bosses grew fifteen per cent - so a
             // doubled cadence costs this chapter two runs in ninety, both of them on the finale,
             // which went from 5 of 9 to 3 of 9. That is the change being felt where it should be.
             //
@@ -2014,7 +2014,7 @@ namespace GlimmerGrove.Tests
         /// that diverges from the first match onward - see <see cref="AnUnhurriedPlayerHoldsThisLine"/>.
         /// </summary>
         /// <summary>
-        /// What this line holds when it is whole — the sum of its turrets' own, never four of the
+        /// What this line holds when it is whole - the sum of its turrets' own, never four of the
         /// mode's constant.
         ///
         /// <b>The constant was the same number while every turret was.</b> With a roster that
@@ -2028,7 +2028,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// This is the whole permission slip for letting a turret trade toughness away. Damage
         /// reaches the grade and so may never go under the baseline; health reaches nothing that
-        /// is graded, so a player may buy a turret that hits harder and falls sooner — and what
+        /// is graded, so a player may buy a turret that hits harder and falls sooner - and what
         /// that must never become is a rung nobody can clear however well they play. A fragile
         /// line taking losses is the choice working; a fragile line that cannot finish a rung is a
         /// trap sold on a shelf.
@@ -2038,7 +2038,7 @@ namespace GlimmerGrove.Tests
         /// unhurried sweep next door is a tuning instrument and needs ninety runs to say anything
         /// steady (invariant 37aq); this one asks a yes-or-no question, and a rung that can be
         /// cleared at any rhythm is a rung that can be cleared. The player it models never spends
-        /// a mending, which is the pessimistic reading on purpose — the answer has to hold for
+        /// a mending, which is the pessimistic reading on purpose - the answer has to hold for
         /// somebody who bought nothing else.
         /// </para>
         /// </summary>
@@ -2138,7 +2138,7 @@ namespace GlimmerGrove.Tests
                 // untaken is trampled (`SiegeTuning.CogLies`), so a model that never reaches for
                 // one reads every rung that drops them as pure added difficulty rather than as the
                 // reward they are. Eager rather than clever, which is the safe direction for a
-                // model to be wrong in — see invariant 40j, where this same omission moved a
+                // model to be wrong in - see invariant 40j, where this same omission moved a
                 // chapter by twenty runs in ninety.
                 for (int loot = board.Cogs.Count - 1; loot >= 0; loot--)
                     board.Take(board.Cogs[loot].Id);
@@ -2197,7 +2197,7 @@ namespace GlimmerGrove.Tests
         /// a match into an absent one still delivered; under the lock it banks, so a player who
         /// could not find the leader's colour and took any match at all would be modelled as
         /// throwing the move away. A real player glances at the hill and feeds something that is
-        /// <em>on</em> it, which is what this does — and the fallback to any swap at all is kept
+        /// <em>on</em> it, which is what this does - and the fallback to any swap at all is kept
         /// for the board that offers nothing else.
         /// </para>
         /// </summary>
@@ -2379,7 +2379,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// <b>This pins the seam a player fell through.</b> <c>SiegeBoard.Advance</c> sweeps its
         /// dead as the last thing it does, so a bolt's kill has left the list by the time anybody
-        /// looks. A utility kills from outside that method — nothing has swept — so for a moment
+        /// looks. A utility kills from outside that method - nothing has swept - so for a moment
         /// the model holds a raider with <c>Alive</c> false, and <c>GoalsLeft</c> has *already*
         /// counted it. <c>SiegeView.Reap</c> asked "has the model forgotten this one", which is
         /// the same question only on the first path: on the second it answered no, the widget was
@@ -2390,7 +2390,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// So the view asks <c>Alive</c> now, and these are the three facts that makes correct.
         /// Sweeping inside <see cref="SiegeBoard.Blast"/> would also fix it and would break the
-        /// strike reports, which name raiders by id — this is the half that says so out loud.
+        /// strike reports, which name raiders by id - this is the half that says so out loud.
         /// </para>
         /// </summary>
         [Test]
@@ -2421,7 +2421,7 @@ namespace GlimmerGrove.Tests
                     Assert.IsTrue(strikes[i].Killed, "and both were killed");
 
                 // One: the run is already over. This is why nothing gets a second chance to
-                // notice — `ProtoVerdict` reads `IsFinished` and the screen ends the run.
+                // notice - `ProtoVerdict` reads `IsFinished` and the screen ends the run.
                 Assert.IsTrue(board.IsFinished,
                               "the last raider fell, so the verdict is already Done");
 
@@ -2436,7 +2436,7 @@ namespace GlimmerGrove.Tests
                     Assert.IsFalse(board.Find(ids[i]).Alive,
                                    "dead is true one step before swept, on every path");
 
-                // The sweep does follow, one step later — so a view that waited for it is not
+                // The sweep does follow, one step later - so a view that waited for it is not
                 // wrong about the hill, only about the one frame that turns out to be the last.
                 board.Advance(1f / 60f);
                 for (int i = 0; i < ids.Count; i++)

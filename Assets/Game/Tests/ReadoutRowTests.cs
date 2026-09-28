@@ -12,7 +12,7 @@ namespace GlimmerGrove.Tests
     /// <b>The second question is new and is the one worth a fixture.</b> The row used to have a
     /// band of its own below the header bar, so the only thing its spacing could collide with was
     /// itself; it was moved up level with the bar's own keys to buy the siege board sixty-odd
-    /// units of height, and the failure that buys is one nothing on screen would report — a
+    /// units of height, and the failure that buys is one nothing on screen would report - a
     /// number drawn over a button is perfectly legible and is simply somebody's tap going
     /// somewhere else.
     /// </para>

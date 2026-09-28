@@ -13,8 +13,8 @@ namespace GlimmerGrove.Dev
     ///
     /// <para>
     /// <b>Behind <c>GLIMMER_BENCH</c>, whole file</b>, along with the one row in <c>ModeSwitch</c>
-    /// that reaches it. It has to run on a device — an effect judged in the Editor's Game view is
-    /// judged at the wrong size, brightness and frame rate — so it loads through Addressables
+    /// that reaches it. It has to run on a device - an effect judged in the Editor's Game view is
+    /// judged at the wrong size, brightness and frame rate - so it loads through Addressables
     /// like everything else, and the define is what keeps its bundle out of a store build. See
     /// <see cref="VfxBench"/> for the address convention and <c>VfxBenchGroup</c> for the switch.
     /// </para>
@@ -32,14 +32,14 @@ namespace GlimmerGrove.Dev
     /// RP in <b>Gamma</b> with no post stack, because it is a 2D game of flat sprites and changing
     /// that would re-grade every screen in it. A hand-rolled bloom was tried here to compensate
     /// and was <em>removed</em>: an 8-bit thresholded blur stamps a hard, stepped halo around
-    /// every effect, and it was reported exactly as it looks — "a weird outer shell". Rendered
+    /// every effect, and it was reported exactly as it looks - "a weird outer shell". Rendered
     /// straight, these effects are crisp and read correctly, which is what a bench is for. A real
     /// glow belongs in a real post stack (PPv2 for Built-in RP) or nowhere, and it is nowhere
     /// until something in the game actually wants it.
     /// </para>
     /// <para>
-    /// <b>Projectiles only.</b> The hits and muzzles are supporting effects — a hit is a flash
-    /// that is over in half a second — and this pack's whole subject is the thing that travels.
+    /// <b>Projectiles only.</b> The hits and muzzles are supporting effects - a hit is a flash
+    /// that is over in half a second - and this pack's whole subject is the thing that travels.
     /// They stay registered in the bundle, because showing them again is one call to
     /// <see cref="VfxBench.LabelFor"/>.
     /// </para>
@@ -56,7 +56,7 @@ namespace GlimmerGrove.Dev
         /// Orthographic was the first cut and is wrong for this art: these effects are built from
         /// meshes with fresnel and scrolling shaders, and flattening the projection takes the
         /// roundness out of a fireball and turns a cone into a lozenge. 50 degrees is not a taste
-        /// — it is read off <c>UniqueProjectiles05_Demo.unity</c>, which is the framing the pack
+        /// - it is read off <c>UniqueProjectiles05_Demo.unity</c>, which is the framing the pack
         /// was authored and marketed in.
         /// </summary>
         const float FieldOfView = 50f;
@@ -85,7 +85,7 @@ namespace GlimmerGrove.Dev
 
         /// <summary>
         /// What the authored speed is multiplied by. <b>One is the default and the honest
-        /// answer</b> — every other setting is for inspecting, because speed is not a display
+        /// answer</b> - every other setting is for inspecting, because speed is not a display
         /// preference here: the trail systems are world-space and emit per <em>second</em>, so
         /// halving the speed halves the length the trail is smeared over and the comet collapses
         /// back onto the head. That is exactly the bug this control exists to let you see.
@@ -130,7 +130,7 @@ namespace GlimmerGrove.Dev
 
             // Before anything is drawn, not on the first Update: a RawImage with no texture is a
             // solid white rectangle, which is the trap invariant 7b records for an Image with no
-            // sprite — a blank is not blank, it is white.
+            // sprite - a blank is not blank, it is white.
             FitTexture();
 
             BuildChrome();
@@ -254,7 +254,7 @@ namespace GlimmerGrove.Dev
         ///
         /// <para>
         /// <b>Read off the prefab, and that is the whole of what was wrong before.</b> The bench
-        /// used to invent a speed that made a projectile fit a small lane — about 5.7 units a
+        /// used to invent a speed that made a projectile fit a small lane - about 5.7 units a
         /// second against the 30 to 45 these are authored at. Every trail here is a world-space
         /// system emitting per <em>second</em>, so the length a trail smears over is speed times
         /// its particles' lifetime: fly one at a fifth of its speed and the flames and sparks
@@ -272,7 +272,7 @@ namespace GlimmerGrove.Dev
         /// The prefab's authored speed, found by reflection.
         ///
         /// The pack's <c>ProjectileMoveScript</c> compiles into <c>Assembly-CSharp</c>, which an
-        /// asmdef assembly may never reference — so the field is read by name. Narrow and honest:
+        /// asmdef assembly may never reference - so the field is read by name. Narrow and honest:
         /// one public float, with a sane fallback if a future pack names it something else.
         /// </summary>
         static float SpeedOf(GameObject prefab)
@@ -289,7 +289,7 @@ namespace GlimmerGrove.Dev
             return 30f;
         }
 
-        /// <summary>One of the prefab's own companion effects — its muzzle flash or its hit.</summary>
+        /// <summary>One of the prefab's own companion effects - its muzzle flash or its hit.</summary>
         static GameObject Companion(GameObject prefab, string field)
         {
             var behaviours = prefab.GetComponentsInChildren<MonoBehaviour>(true);
@@ -310,7 +310,7 @@ namespace GlimmerGrove.Dev
         /// <para>
         /// <b>Derived from the art, not from a flight time somebody liked.</b> A trail is a
         /// world-space system emitting per second, so the distance it smears over is the speed
-        /// times how long its particles live — 30 units a second for half a second is fifteen
+        /// times how long its particles live - 30 units a second for half a second is fifteen
         /// units of flame, and no more however far the thing flies. Sizing the lane off a flat
         /// 1.25 second flight made it 38 units instead, which is correct and useless: the camera
         /// goes back far enough to hold two thirds of empty black, and the head everybody wants
@@ -374,7 +374,7 @@ namespace GlimmerGrove.Dev
         /// <b>Through <c>AssetLibrary.Provider</c> rather than <c>AssetLibrary</c> itself</b>, and
         /// that is the one deliberate departure. The library caches what it loads and never lets
         /// it go, which is right for art the game draws all session and wrong for sixty particle
-        /// prefabs the bench wants to hand back. Everything invariant 7 is about still holds — the
+        /// prefabs the bench wants to hand back. Everything invariant 7 is about still holds - the
         /// address is a string, the provider is the seam, and nothing here calls
         /// <c>Resources.Load</c> or Addressables by name.
         /// </para>
@@ -435,7 +435,7 @@ namespace GlimmerGrove.Dev
             _name.text = _prefabs.Count == 0 ? "NOTHING FOUND" : _prefabs[_pick].name;
 
             // The empty case names the label rather than saying "none", because the only way to
-            // reach it is the bundle not being in this build — a thing to fix in the Editor, not
+            // reach it is the bundle not being in this build - a thing to fix in the Editor, not
             // something that went wrong on the phone.
             _counter.text = _prefabs.Count == 0
                 ? "nothing addressed " + VfxBench.LabelFor(Kind)
@@ -497,14 +497,14 @@ namespace GlimmerGrove.Dev
         /// <para>
         /// <b>All three, because that is what the pack is.</b> Every projectile prefab names a
         /// <c>muzzlePrefab</c> and a <c>hitPrefab</c>, and the vendor's own demo fires the set as
-        /// one event — a flash, a comet, an impact. Showing the middle one alone was judging a
+        /// one event - a flash, a comet, an impact. Showing the middle one alone was judging a
         /// sentence by its verb.
         /// </para>
         /// <para>
         /// Driven here rather than by the pack's <c>ProjectileMoveScript</c>, which is still
         /// switched off, and for a sharper reason than before: 45 of these 60 carry a
         /// <c>buildUpTime</c>, and the script implements it by deactivating the GameObject and
-        /// calling <c>Invoke</c> to switch it back on — but Unity does not run an <c>Invoke</c>
+        /// calling <c>Invoke</c> to switch it back on - but Unity does not run an <c>Invoke</c>
         /// queued on a behaviour that has been disabled, and deactivating the object disables it.
         /// Three quarters of the pack would simply never appear. What the script is read for is
         /// its <em>numbers</em>.
@@ -565,7 +565,7 @@ namespace GlimmerGrove.Dev
         /// <para>
         /// <b>Switched off rather than destroyed, and that is the whole of why this works.</b>
         /// <c>Destroy</c> on a component is applied at the <em>end of the frame</em>, while
-        /// <c>Start</c> runs earlier in the same frame the copy is instantiated — so destroying
+        /// <c>Start</c> runs earlier in the same frame the copy is instantiated - so destroying
         /// the script still lets it run once, which is a stray muzzle and a hidden projectile per
         /// copy. Unity never calls <c>Start</c> on a disabled behaviour, and disabling takes
         /// effect on the line that does it.

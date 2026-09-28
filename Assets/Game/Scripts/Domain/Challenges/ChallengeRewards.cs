@@ -10,7 +10,7 @@ namespace GlimmerGrove.Challenges
     /// <see cref="Progression.EndlessLimits"/>' job for the daily challenges, and its argument
     /// transfers whole: content may retune what a clear is worth and what a deal costs, it may
     /// not redefine what the ledger is allowed to hold. Everything here is a compile-time
-    /// constant precisely because it is what a published file is checked <em>against</em> — a
+    /// constant precisely because it is what a published file is checked <em>against</em> - a
     /// limit that could itself be published would not be a limit.
     /// </para>
     /// <para>
@@ -27,7 +27,7 @@ namespace GlimmerGrove.Challenges
         /// <summary>
         /// The most lifetime clears one genre's row of the ledger may ever hold.
         ///
-        /// <b>Not the ceiling a player experiences</b> — that is
+        /// <b>Not the ceiling a player experiences</b> - that is
         /// <see cref="ChallengeRewardRule.MaxClears"/>, and it is content. This is the bound the
         /// ledger's own clamp uses, chosen once and chosen wide, because a stored monotonic count
         /// clamped against a <em>published</em> number would be cut downward on whichever device
@@ -86,7 +86,7 @@ namespace GlimmerGrove.Challenges
         ///
         /// <b>The one bound here that is about the economy rather than about a typo</b>, and it
         /// is a gate rather than a runtime cap: the allowance already bounds each genre, so what
-        /// this guards is the file — a fifth genre, or a raised rate, quietly making a Gold day
+        /// this guards is the file - a fifth genre, or a raised rate, quietly making a Gold day
         /// worth more than the whole rest of the game pays. Set to the Infinite lane's daily
         /// ceiling, so no single feature out-earns the one already judged the largest. Checked
         /// by the reader, by <c>content.py</c> and by the seeder; no runtime code reads it.
@@ -101,7 +101,7 @@ namespace GlimmerGrove.Challenges
         public const int DefaultFreePlays = 2;
 
         /// <summary>
-        /// Forty credits a clear, so two free plays of four genres are worth 320 a day — a third
+        /// Forty credits a clear, so two free plays of four genres are worth 320 a day - a third
         /// of what the chests, tasks, streak and season pay together (936) and a fifth of what a
         /// player who watches every advert collects (~7,160). Half a glade's first clear, for a
         /// puzzle that takes a minute or three.
@@ -115,7 +115,7 @@ namespace GlimmerGrove.Challenges
         public const int DefaultXpPerClear = 20;
 
         /// <summary>
-        /// Twenty-five thousand lifetime clears, which is 500,000 XP at the rate above — a third
+        /// Twenty-five thousand lifetime clears, which is 500,000 XP at the rate above - a third
         /// of the Infinite lane's ceiling. Honest play is bounded by the allowance: a player on
         /// the largest deal with four genres cannot pass a hundred a day.
         /// </summary>
@@ -123,7 +123,7 @@ namespace GlimmerGrove.Challenges
     }
 
     /// <summary>
-    /// Which deal governs a day, and how many plays it allows — the one rule about deals both
+    /// Which deal governs a day, and how many plays it allows - the one rule about deals both
     /// sides compute.
     ///
     /// <b>Pinned by <c>challengeAllowanceCases</c> in the shared vectors</b>, because the client
@@ -135,7 +135,7 @@ namespace GlimmerGrove.Challenges
     {
         /// <summary>
         /// The deal with the most plays whose window covers <paramref name="nowUnix"/>, or null.
-        /// Two windows can overlap — a larger bought under a smaller shares its start — and the
+        /// Two windows can overlap - a larger bought under a smaller shares its start - and the
         /// larger governs while it runs, because an instant per tier is what is held.
         /// </summary>
         public static ChallengeTier Governing(IReadOnlyList<ChallengeTier> tiers,
@@ -169,7 +169,7 @@ namespace GlimmerGrove.Challenges
         /// <b>An upgrade is priced as the difference and inherits the running window</b>
         /// (invariant 56h): under a running deal a bigger one costs <c>target - running</c> gems
         /// and ends when the running one would have, so the player pays for exactly the plays
-        /// they gain over exactly the days they have left. Nothing is stored for it — the price
+        /// they gain over exactly the days they have left. Nothing is stored for it - the price
         /// is derived from the deal already held, here and on the server (<c>dealPrice</c>),
         /// and pinned by <c>challengeUpgradeCases</c>.
         /// </para>
@@ -223,7 +223,7 @@ namespace GlimmerGrove.Challenges
     }
 
     /// <summary>
-    /// What a cleared level pays — content, not code. See <see cref="ChallengeRewardDto"/>.
+    /// What a cleared level pays - content, not code. See <see cref="ChallengeRewardDto"/>.
     ///
     /// <para>
     /// <b>The XP half is the third source of XP in the game that is not a star</b>, and it is
@@ -287,7 +287,7 @@ namespace GlimmerGrove.Challenges
 
         /// <summary>
         /// Reads the optional <c>rewards</c> block. Never throws and never returns null; anything
-        /// wrong is named and clamped, and an unwritten block is the built-in figures — on both
+        /// wrong is named and clamped, and an unwritten block is the built-in figures - on both
         /// sides, for the reason the class comment gives.
         /// </summary>
         public static ChallengeRewardRule Resolve(ChallengeRewardDto dto, List<string> problems)
@@ -296,7 +296,7 @@ namespace GlimmerGrove.Challenges
             if (dto == null || !dto.IsAuthored) return Default;
 
             // A written block is read field by field, and a nought in a rate is a withdrawn
-            // payment rather than a typo to repair — the Infinite lane's lesson, where the first
+            // payment rather than a typo to repair - the Infinite lane's lesson, where the first
             // reader raised a nought ceiling back to the default and the shared vectors caught the
             // server paying nought against it. An unwritten `maxClears` beside a written rate
             // inherits, so a rate with no bound at all cannot be expressed.
@@ -305,7 +305,7 @@ namespace GlimmerGrove.Challenges
             // A written block with no ceiling pays no XP, exactly as the server reads the same
             // block (`challengeXp`: `maxClears <= 0` is nought). It is not inherited, because
             // the two halves must agree on a published file byte for byte; `content.py` and the
-            // seeder refuse the shape — a rate beside no ceiling — so it never ships by accident.
+            // seeder refuse the shape - a rate beside no ceiling - so it never ships by accident.
             int maxClears = Clamp(dto.maxClears, 0, ChallengeLimits.MaxMaxClears, "challenges rewards.maxClears", problems);
 
             return new ChallengeRewardRule(coins, xp, maxClears);

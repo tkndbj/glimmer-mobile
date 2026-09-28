@@ -13,8 +13,8 @@ namespace GlimmerGrove.Cloud
     /// The same arrangement <c>ResourcesAssetProvider</c> had before Addressables: the
     /// seam is live from the first build, the game is completely playable through it,
     /// and turning the real one on is one assignment in <c>Boot</c> rather than a
-    /// refactor. Everything that would otherwise be written twice — the merge, the
-    /// ledger arithmetic, the retry policy — is already exercised against this.
+    /// refactor. Everything that would otherwise be written twice - the merge, the
+    /// ledger arithmetic, the retry policy - is already exercised against this.
     /// </summary>
     public sealed class NullCloudBackend : ICloudSaveBackend, Social.IGroveBoardBackend, Referral.IReferralBackend
     {
@@ -91,7 +91,7 @@ namespace GlimmerGrove.Cloud
         ///
         /// <para>
         /// With no backend there is no deployment, so this knows nothing about what any release
-        /// requires — which is not the same as knowing that it requires nothing. Answering
+        /// requires - which is not the same as knowing that it requires nothing. Answering
         /// success here would have a build with no Firebase in it <em>clear</em> a wall that a
         /// previous build had legitimately been told about, which is a way of turning the
         /// feature off by downgrading. The gate holds what it holds, and the game is completely
@@ -120,7 +120,7 @@ namespace GlimmerGrove.Cloud
 
         /// <summary>
         /// With nothing to adjudicate against there is no such thing as a name somebody else
-        /// holds, so this is an offline failure rather than "free" — and the difference matters
+        /// holds, so this is an offline failure rather than "free" - and the difference matters
         /// at the one call site. <c>KeeperNames</c> reads a failure as "nothing was decided" and
         /// the rename goes through untouched; answering "free" would be this backend asserting
         /// a fact about a population it cannot see.
@@ -158,7 +158,7 @@ namespace GlimmerGrove.Cloud
         /// <summary>
         /// Refused, and the panel never asks: <see cref="AccountDeletion.Offered"/> reads
         /// <see cref="IsAvailable"/> and draws no control at all without a backend. With none
-        /// configured there is no account anywhere — the save has never left the handset — so
+        /// configured there is no account anywhere - the save has never left the handset - so
         /// a "delete my account" button would be offering to erase something that does not
         /// exist, which is worse than not offering it.
         /// </summary>

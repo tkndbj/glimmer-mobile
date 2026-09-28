@@ -15,7 +15,7 @@ namespace GlimmerGrove
     /// (invariant 10b), and a player deciding whether a weekly task is worth the week
     /// deserves to know what a royal chest is before they start. The numbers are read off
     /// the same <see cref="ChestDefinition"/> the roll uses, so the panel cannot drift from
-    /// the odds — a panel written from copy is the first thing to rot on a retune.
+    /// the odds - a panel written from copy is the first thing to rot on a retune.
     /// </para>
     /// </summary>
     public sealed class ChestOddsOverlay : ModalView
@@ -38,7 +38,7 @@ namespace GlimmerGrove
         // button on its own rim (`render_arrival.py`'s recorded trap).
         // The ribbon stands 22 proud of the panel's top edge and is 130 tall, so it covers
         // the first 108 units of the panel's own face. Anything drawn above that is drawn
-        // behind the title — which is what the chest was, in the first cut of this rebuild.
+        // behind the title - which is what the chest was, in the first cut of this rebuild.
         const float HeadRoom = 124f;
         const float ChestH = 250f;
         const float RankH = 54f;
@@ -52,8 +52,8 @@ namespace GlimmerGrove
         static readonly Color Odds = new Color(.78f, .42f, .10f);
 
         /// <summary>
-        /// Where the cursor is as the panel is written, so the two passes — measure, then
-        /// build — cannot disagree about the layout.
+        /// Where the cursor is as the panel is written, so the two passes - measure, then
+        /// build - cannot disagree about the layout.
         /// </summary>
         float _y;
 
@@ -99,14 +99,14 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// How tall the panel has to be for this tier. Both lists vary by tier — a wood chest
-        /// guarantees one band and a royal one three — so the height is counted rather than
+        /// How tall the panel has to be for this tier. Both lists vary by tier - a wood chest
+        /// guarantees one band and a royal one three - so the height is counted rather than
         /// reserved for the tallest, which is what stops the short panels carrying a hole.
         ///
         /// <para>
         /// Public so <c>ChestPackTests</c> can hold every shipped tier to
         /// <see cref="Layout.PanelStack.TallestPanel"/>: a panel is centred, so one that grows
-        /// past that draws its own title off the top of the shortest canvas — and the content
+        /// past that draws its own title off the top of the shortest canvas - and the content
         /// that decides this height is retunable without a build.
         /// </para>
         /// </summary>
@@ -128,7 +128,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>A prize is a picture and a sentence, not a bullet point.</b> This panel used to
         /// print a gold dot in front of a left-aligned line, which is a paragraph wearing a
-        /// list's clothes — a player reading "1 Mending" has no idea what a mending is, and the
+        /// list's clothes - a player reading "1 Mending" has no idea what a mending is, and the
         /// picture that would tell them is already in the build and already what the action bar
         /// and the chest ceremony draw (<see cref="RewardArt.Token"/>). So each line is the
         /// prize's own art in the kit's inset seat, the amount and the noun beside it, and the
@@ -175,7 +175,7 @@ namespace GlimmerGrove
             art.preserveAspect = true;
 
             // The words fill the room the seat and the odds column leave, and are centred in
-            // it — so a one-word prize and a three-word one sit under each other.
+            // it - so a one-word prize and a three-word one sit under each other.
             float left = -LineW * .5f + 92f;
             float right = LineW * .5f - 118f;
 
@@ -193,7 +193,7 @@ namespace GlimmerGrove
             _y -= LineH;
         }
 
-        /// <summary>"70–110 Coins", "1 Mending", "24h Heart Boost" — the band in the player's words.</summary>
+        /// <summary>"70–110 Coins", "1 Mending", "24h Heart Boost" - the band in the player's words.</summary>
         public static string Band(ChestBand band)
         {
             string name = RewardArt.Name(band.Kind, band.Item);

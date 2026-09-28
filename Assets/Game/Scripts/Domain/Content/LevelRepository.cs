@@ -27,8 +27,8 @@ namespace GlimmerGrove.Content
     /// touches one small file however large the game becomes, and chapter bodies are
     /// fetched by the catalog when a player actually walks into one. The previous
     /// design opened and parsed every chapter on every launch, which cost a frame per
-    /// chapter on Android — where StreamingAssets can only be reached through
-    /// UnityWebRequest — and grew forever.
+    /// chapter on Android - where StreamingAssets can only be reached through
+    /// UnityWebRequest - and grew forever.
     ///
     /// It knows nothing about where the bytes came from, which is what lets exactly the
     /// same code path serve the bundled build, the on-device cache and a future CDN.
@@ -56,7 +56,7 @@ namespace GlimmerGrove.Content
 
         /// <summary>
         /// Reads the manifest *and* every chapter body, for tooling that genuinely needs
-        /// the whole game in hand — the Editor validators, the authoring reports and the
+        /// the whole game in hand - the Editor validators, the authoring reports and the
         /// tests. The game never calls this; that separation is what stops a convenience
         /// for the Editor turning back into a cost the player pays at launch.
         /// </summary>
@@ -110,8 +110,8 @@ namespace GlimmerGrove.Content
             if (manifest.companions != null)
                 foreach (var companion in manifest.companions) builder.AddCompanion(companion);
 
-            // So does the calendar. A season is a window, a mark and a ladder of tier names —
-            // no bodies to fetch and nothing to load lazily — so it costs the boot path one
+            // So does the calendar. A season is a window, a mark and a ladder of tier names -
+            // no bodies to fetch and nothing to load lazily - so it costs the boot path one
             // pass over a handful of entries. A manifest without any simply never runs one.
             if (manifest.events != null)
                 foreach (var groveEvent in manifest.events) builder.AddEvent(groveEvent);
@@ -139,7 +139,7 @@ namespace GlimmerGrove.Content
             foreach (var level in body.Levels)
                 if (!listed.Contains(level.Id))
                     problems.Add($"chapter '{entry.Id}' contains level '{level.Id}', which the manifest " +
-                                 "does not list; it will not appear in the game — run Content ▸ Sync Manifest");
+                                 "does not list; it will not appear in the game - run Content ▸ Sync Manifest");
         }
     }
 }

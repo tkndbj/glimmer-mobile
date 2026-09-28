@@ -9,12 +9,12 @@ namespace GlimmerGrove.Persistence
     /// <para>
     /// <b>The arithmetic is not here.</b> Everything about how a regenerating pool refills,
     /// is spent, is granted and is merged lives in <see cref="RegenLedger"/>, which hints
-    /// also run — see its type docs for the merge and the proof that the join preserves it.
+    /// also run - see its type docs for the merge and the proof that the join preserves it.
     /// This type is the heart-shaped part: the numbers come from the published
     /// <see cref="HeartRuleTable"/>, the clock can be shortened by a boost, and a file
     /// written before the ledger existed carries a bare count that has to be rebased onto
     /// one. Splitting it that way is invariant 5b's rule applied before the mistake rather
-    /// than after it — the walk and the join were about to exist twice.
+    /// than after it - the walk and the join were about to exist twice.
     /// </para>
     /// <para>
     /// The count is <c>Produced - Spent</c>, derived exactly as XP and credits are
@@ -25,7 +25,7 @@ namespace GlimmerGrove.Persistence
     /// else here.</b> Every reading of "where the clock stops" goes through
     /// <see cref="HeartContainerLedger.RefillCap"/> rather than <see cref="HeartRules"/>, so a
     /// container raises the cap without touching the ledger, the ceiling, the structural bound
-    /// or the join — which is exactly what makes an entitlement safe to sell for real money
+    /// or the join - which is exactly what makes an entitlement safe to sell for real money
     /// where an amount would not be. See <see cref="HeartContainerLedger"/>.
     /// </para>
     /// <para>
@@ -35,15 +35,15 @@ namespace GlimmerGrove.Persistence
     /// bar. Nothing else had to: <see cref="At(long)"/> already asked only for the
     /// <em>count</em> before granting, so making it stop at
     /// <see cref="HeartRules.RefillCap"/> while the state is bounded above leaves the join
-    /// and its proof untouched. The alternative — a second counter separating waited-for
-    /// hearts from collected ones — was built first and buys nothing, because no rule here
+    /// and its proof untouched. The alternative - a second counter separating waited-for
+    /// hearts from collected ones - was built first and buys nothing, because no rule here
     /// ever needs to know which kind a heart was: a spend takes whichever is nearest to
     /// hand, and the timer's question is always "does this player already have enough".
     /// </para>
     /// <para>
     /// <b>The bound is <see cref="HeartLimits.HardCeiling"/> and not the ceiling players
     /// meet</b>, which is the one subtlety in the whole type. The gate is content, so the
-    /// ceiling a player experiences can be lowered from a config push — and if that number
+    /// ceiling a player experiences can be lowered from a config push - and if that number
     /// were the clamp, the push would cut <c>produced</c> <em>downward</em> on whichever
     /// devices had fetched it. <c>produced</c> only ever rises, and the whole merge proof
     /// rests on that. So the published ceiling is enforced in <see cref="Grant(int, long)"/>,
@@ -51,7 +51,7 @@ namespace GlimmerGrove.Persistence
     /// move.
     /// </para>
     /// <para>
-    /// The type is a value with no clock of its own — every method takes <c>now</c>. That is
+    /// The type is a value with no clock of its own - every method takes <c>now</c>. That is
     /// what lets the whole rule be tested at arbitrary times without waiting eight hours,
     /// and what keeps the question of <em>whose</em> time it is (see <see cref="GameClock"/>)
     /// out of the rule entirely.
@@ -70,7 +70,7 @@ namespace GlimmerGrove.Persistence
         public long Spent => _ledger.Spent;
 
         /// <summary>
-        /// When the pending refill lands. Never cleared on reaching the cap — see
+        /// When the pending refill lands. Never cleared on reaching the cap - see
         /// <see cref="RegenLedger.DueUnix"/> for why a field that is zeroed cannot be
         /// merged. What a screen should draw is <see cref="NextRefillUnix"/>.
         /// </summary>
@@ -83,11 +83,11 @@ namespace GlimmerGrove.Persistence
         static RegenBounds Bounds(long boostUntilUnix)
         {
             // Taken once. These are published numbers, so each read walks a table reference
-            // — cheap, but this is on the path every HUD tick takes.
+            // - cheap, but this is on the path every HUD tick takes.
             var rules = HeartRules.Table;
 
             // The cap this player's timer stops at, which is the published one unless they
-            // have bought a container — see HeartContainerLedger. Everything else in the
+            // have bought a container - see HeartContainerLedger. Everything else in the
             // bounds is content, and the ceiling and the structural bound are untouched by a
             // purchase, so the merge proof this whole type rests on is unmoved.
             return new RegenBounds(
@@ -100,7 +100,7 @@ namespace GlimmerGrove.Persistence
             => new Hearts(RegenLedger.Of(produced, spent, dueUnix, HeartLimits.HardCeiling));
 
         /// <summary>
-        /// A device's observation of itself — "I hold this many, next one at this time" —
+        /// A device's observation of itself - "I hold this many, next one at this time" -
         /// with nothing known about how it got there.
         ///
         /// The shape a pre-v8 save carries, and the only thing that can be recovered from
@@ -119,7 +119,7 @@ namespace GlimmerGrove.Persistence
         /// old build says 3" into a ledger entry that can be joined rather than compared:
         /// the result carries the same 3 hearts, and a plain <see cref="Join"/> against the
         /// modern side then resolves to the larger of the two counts. Generous, and
-        /// deliberately so — the observation is all the evidence that exists, it is bounded
+        /// deliberately so - the observation is all the evidence that exists, it is bounded
         /// by the ceiling, and the alternative is deleting hearts from whichever device
         /// happened to be running the older build.
         /// </para>
@@ -142,7 +142,7 @@ namespace GlimmerGrove.Persistence
         public int Count => (int)_ledger.Count;
 
         /// <summary>
-        /// Whether the clock has nothing left to do — the player holds at least
+        /// Whether the clock has nothing left to do - the player holds at least
         /// <see cref="HeartRules.RefillCap"/>, so no refill is pending.
         ///
         /// The question every timer rule asks, and deliberately not "is this player full":
@@ -153,7 +153,7 @@ namespace GlimmerGrove.Persistence
         public bool IsRefilled => _ledger.IsRefilled(HeartContainerLedger.RefillCap);
 
         /// <summary>
-        /// Whether another heart would be thrown away — the <em>published</em> ceiling, so
+        /// Whether another heart would be thrown away - the <em>published</em> ceiling, so
         /// this is the one property here that can change without the ledger changing. See
         /// <see cref="Grant(int, long)"/>.
         /// </summary>
@@ -166,7 +166,7 @@ namespace GlimmerGrove.Persistence
 
         /// <summary>
         /// When the next heart arrives, or 0 when the player is at or above the refill cap
-        /// and no timer is running — the number a HUD should draw.
+        /// and no timer is running - the number a HUD should draw.
         ///
         /// Derived rather than stored, which is the whole trick: the screen still gets its
         /// "no timer" sentinel, and the merge never sees one.
@@ -184,7 +184,7 @@ namespace GlimmerGrove.Persistence
         ///
         /// <para>
         /// The boost is passed in rather than stored on the struct because it is not a
-        /// property of the hearts — it is a fact about the account, it merges separately,
+        /// property of the hearts - it is a fact about the account, it merges separately,
         /// and a value type that carried it would have two states meaning "no boost" and a
         /// merge that had to reconcile them. Keeping it a parameter is also what lets the
         /// whole rule be exercised over arbitrary boost windows in a test.
@@ -203,7 +203,7 @@ namespace GlimmerGrove.Persistence
             => new Hearts(_ledger.Spend(amount, now, Bounds(boostUntilUnix)));
 
         /// <summary>
-        /// Grants hearts — a chest, a streak night, a watched video, a server correction.
+        /// Grants hearts - a chest, a streak night, a watched video, a server correction.
         ///
         /// <para>
         /// <b>Grants stack past <see cref="HeartRules.RefillCap"/>.</b> The clamp is
@@ -217,7 +217,7 @@ namespace GlimmerGrove.Persistence
         /// banking them would hand somebody a week of uninterrupted play. That is true of
         /// the <em>timer</em> and false of everything else: the clock still refuses to carry
         /// anyone past five, so the pace of free play is unchanged, and a surplus only ever
-        /// arrives through something the player did — which is the moment a game should be
+        /// arrives through something the player did - which is the moment a game should be
         /// paying out, not the moment it should be quietly confiscating. What remains of the
         /// old argument is the ceiling, which bounds the damage a mistyped drop table can do
         /// without punishing anybody for being engaged.
@@ -244,7 +244,7 @@ namespace GlimmerGrove.Persistence
             => _ledger.SecondsToNext(now, HeartContainerLedger.RefillCap);
 
         /// <summary>
-        /// Joins two devices' hearts. Three <c>max</c>es and no special cases — see
+        /// Joins two devices' hearts. Three <c>max</c>es and no special cases - see
         /// <see cref="RegenLedger.Join"/> for why every field is a counter of something that
         /// happened rather than a balance, and why that makes the join lossless.
         /// </summary>
@@ -256,7 +256,7 @@ namespace GlimmerGrove.Persistence
         /// Compares the ledger, not the count.
         ///
         /// Two states can show the same number of hearts and differ in what has to be
-        /// written — reaching the cap advances <see cref="DueUnix"/> without moving
+        /// written - reaching the cap advances <see cref="DueUnix"/> without moving
         /// <see cref="Count"/>, and losing that would leave a device merging against a
         /// deadline it had already passed. Callers deciding whether to save must ask this
         /// rather than comparing what is on screen.

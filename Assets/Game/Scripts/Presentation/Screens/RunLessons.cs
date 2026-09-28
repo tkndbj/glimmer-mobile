@@ -13,7 +13,7 @@ namespace GlimmerGrove
     /// A description rather than a call, for the reason <see cref="View.Ready"/> and
     /// <see cref="View.WantsMultiTouch"/> are declarations: a mode that put its own tips up
     /// would also own the order they go up in, the latch on its board and the moment its run is
-    /// allowed to start — and it would own all three again in the next mode. Here a mode says
+    /// allowed to start - and it would own all three again in the next mode. Here a mode says
     /// what it has to teach and <see cref="RunLessons"/> owns the sequence.
     /// </para>
     /// </summary>
@@ -31,7 +31,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Separate from <see cref="Trace"/> because the two say different things. A trace is a
-        /// route a hand walks and is deliberately not ringed; this is a second subject — the
+        /// route a hand walks and is deliberately not ringed; this is a second subject - the
         /// hearts a blend comes from, which are as much what "blended light" means as the
         /// critter asking for it.
         /// </para>
@@ -70,7 +70,7 @@ namespace GlimmerGrove
         /// the review key.
         ///
         /// <para>
-        /// A lesson about an <em>event</em> — a bolt forged, a sun forged — is told best over
+        /// A lesson about an <em>event</em> - a bolt forged, a sun forged - is told best over
         /// the thing the player just made (invariant 20m: the event is the reward), and told
         /// at the opening it is a rule about nothing, pointing at the ripest flower on a board
         /// where nothing has happened yet. <see cref="RunLessons.Open"/> skips these;
@@ -90,7 +90,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// A lesson that walks a coaching hand along <paramref name="trace"/> as well, from the
-        /// first step to the last — a drag, shown rather than described.
+        /// first step to the last - a drag, shown rather than described.
         /// </summary>
         public static Lesson Along(Mechanic mechanic, RectTransform target, RectTransform[] alongside,
                                    RectTransform[] trace, int cells = 1)
@@ -116,8 +116,8 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// <b>It is a collaborator rather than more of <see cref="RunScreen"/>.</b> That class
-    /// already owns two things a mode must never own — what an exit costs, and when a run may
-    /// begin — and teaching is a third that is bigger than both put together: a queue, a chain,
+    /// already owns two things a mode must never own - what an exit costs, and when a run may
+    /// begin - and teaching is a third that is bigger than both put together: a queue, a chain,
     /// a modal, a latch, a toast and a header control. Folding it in made one type that had to
     /// be read whole before any part of it could be changed, which is the shape this project
     /// keeps taking apart (<c>RippleRun</c> into four, <c>ChestOverlay</c> into
@@ -127,7 +127,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>What it takes from the run and what it leaves there.</b> It holds the screen, which
     /// is a <c>MonoBehaviour</c>, so <c>if (_run)</c> is Unity's own lifetime check and answers
-    /// correctly for a screen destroyed under a tip that is still open — the reason
+    /// correctly for a screen destroyed under a tip that is still open - the reason
     /// <see cref="RunScreen"/> is a base class rather than an interface, kept. The mode's
     /// declarations (<c>Lessons</c>, <c>Teachable</c>, <c>Latch</c>) stay on
     /// the screen where a mode overrides them; this only reads them.
@@ -152,13 +152,13 @@ namespace GlimmerGrove
         /// <b>What a lesson points at is resolved when it is shown, never when it is queued</b>,
         /// and that is the difference between a rule and a remembered one. A <see cref="Lesson"/>
         /// carries <c>RectTransform</c>s, and a queue is walked across seconds of a player's
-        /// time — a pause menu opened over the board, a restart taken from inside it, and the
+        /// time - a pause menu opened over the board, a restart taken from inside it, and the
         /// tiles the queue was pointing at have been destroyed and built again. A destroyed
         /// transform is not an error here: <c>TipOverlay</c> quietly draws no ring and no
         /// coaching hand, so the lesson still appears and is silently the wrong shape, which is
         /// the failure this project keeps writing down as the expensive kind. Holding the id and
-        /// asking the board where it is now costs one scan per lesson shown — the same scan the
-        /// review key already pays — and cannot go stale.
+        /// asking the board where it is now costs one scan per lesson shown - the same scan the
+        /// review key already pays - and cannot go stale.
         /// </para>
         /// </summary>
         readonly List<Mechanic> _queue = new List<Mechanic>(2);
@@ -180,8 +180,8 @@ namespace GlimmerGrove
         /// <para>
         /// <b>A mid-run lesson is <em>owed</em> rather than offered, and the difference is the
         /// whole of what was wrong with the three Thornwatch teaches.</b> Every one of them
-        /// hangs off a moment the board reports — a tube filling, a cog dropping, a bomb
-        /// landing — and every one of those moments happens <em>inside</em> a cascade, which is
+        /// hangs off a moment the board reports - a tube filling, a cog dropping, a bomb
+        /// landing - and every one of those moments happens <em>inside</em> a cascade, which is
         /// exactly when the board is not teachable (<c>ProtoView.Busy</c>). So the offer was
         /// refused at the only instant it was ever made and thrown away, and the tip then
         /// waited for the next occurrence: an overcharge that never came back, and a cog tip
@@ -190,14 +190,14 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// <b>So a refusal is now a wait rather than a loss.</b> The moment goes in here and is
-        /// given the first instant the board can take it — a beat after the cascade it was
+        /// given the first instant the board can take it - a beat after the cascade it was
         /// caused by, rather than at whatever unrelated moment happened to be clear next. The
         /// list is the queue's own rule said twice over: at most one panel at a time, in the
         /// order the player made them happen.
         /// </para>
         /// <para>
-        /// Nothing here is ever dropped for a reason that can change — the only two exits are
-        /// being taught and the screen being destroyed — because every other reason to refuse
+        /// Nothing here is ever dropped for a reason that can change - the only two exits are
+        /// being taught and the screen being destroyed - because every other reason to refuse
         /// (mid-chain, mid-cascade, a panel above) stops being true within seconds.
         /// </para>
         /// </summary>
@@ -222,7 +222,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Polled rather than subscribed, and the reason is lifetime. This is not a
-        /// <c>MonoBehaviour</c>, so it has no teardown of its own to unsubscribe from — an
+        /// <c>MonoBehaviour</c>, so it has no teardown of its own to unsubscribe from - an
         /// event on <see cref="Flow"/> would outlive the screen and would have to be released
         /// on every path out of a run, including the ones that fail, which is the exact shape
         /// of rule this project has paid for twice. A <c>Tween.After</c> bound to the screen
@@ -270,10 +270,10 @@ namespace GlimmerGrove
             _run.Lessons(_probe);
 
             // Before the trim. A glade that teaches something the player already knows still
-            // teaches it — that is exactly who the review key is for.
+            // teaches it - that is exactly who the review key is for.
             Offer(_probe.Count > 0);
 
-            // A deferred lesson waits for its moment — see Lesson.Deferred and Teach — and is
+            // A deferred lesson waits for its moment - see Lesson.Deferred and Teach - and is
             // deliberately left out here even when nothing else is queued, or it would be spent
             // at the opening on every first grove of a chapter and never over the thing it is
             // about.
@@ -284,7 +284,7 @@ namespace GlimmerGrove
             _probe.Clear();
 
             // Nothing new on this board: the run simply begins. There is deliberately no
-            // consolation line — a glade used to float its flavour text along the bottom of
+            // consolation line - a glade used to float its flavour text along the bottom of
             // every run that taught nothing, which is every run after the first few, and a
             // box that appears on every level of every mode is furniture rather than
             // something anybody reads. Teaching is what this class is for; flavour was a
@@ -306,13 +306,13 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The same panels, raised the same way.</b> It re-asks the mode rather than
         /// replaying a list kept from the opening, because a restart rebuilds the very tiles a
-        /// lesson rings — a cached <c>RectTransform</c> would by then be a destroyed object,
+        /// lesson rings - a cached <c>RectTransform</c> would by then be a destroyed object,
         /// and the tip would quietly lose its ring and its coaching hand and become a sentence
         /// in a box. Re-asking costs one board scan on a control pressed by hand.
         /// </para>
         /// <para>
-        /// It goes through exactly the sequence a first-timer gets — the same hold, the same
-        /// latch, the same chaining — so the run is frozen for the whole of it and there is no
+        /// It goes through exactly the sequence a first-timer gets - the same hold, the same
+        /// latch, the same chaining - so the run is frozen for the whole of it and there is no
         /// second copy of the rule about when a run is allowed to run. Refused rather than
         /// queued while one is already up or while the board is mid-animation: a lesson is a
         /// modal over the board being discussed, and both of those are states where the board
@@ -331,8 +331,8 @@ namespace GlimmerGrove
             for (int i = 0; i < _probe.Count; i++) _queue.Add(_probe[i].Mechanic);
             _probe.Clear();
 
-            // A run whose lessons have gone away — a board that could not be read, a view torn
-            // down underneath the header — takes the control with them rather than leaving a
+            // A run whose lessons have gone away - a board that could not be read, a view torn
+            // down underneath the header - takes the control with them rather than leaving a
             // key that does nothing.
             if (_queue.Count == 0) { Offer(false); return; }
 
@@ -355,7 +355,7 @@ namespace GlimmerGrove
         /// Chained on dismissal rather than shown together: a board that introduces two ideas
         /// would otherwise stack two modals and the player would meet the second before reading
         /// the first. <see cref="TipOverlay.Dismissed"/> fires exactly once however that panel
-        /// goes away, so the chain cannot stall — and therefore neither can the hold — on a tip
+        /// goes away, so the chain cannot stall - and therefore neither can the hold - on a tip
         /// that was destroyed rather than accepted.
         /// </para>
         /// </summary>
@@ -365,8 +365,8 @@ namespace GlimmerGrove
         /// the board can take it.
         ///
         /// <para>
-        /// The mode calls this at the moment a deferred lesson's subject comes to exist — a
-        /// bolt standing where five just burst — and only then, so the tip is over the thing
+        /// The mode calls this at the moment a deferred lesson's subject comes to exist - a
+        /// bolt standing where five just burst - and only then, so the tip is over the thing
         /// the player made rather than a rule recited before anything happened. It goes through
         /// the same hold, latch and queue as the opening, because a second way of putting a
         /// tip up is a second thing that can disagree about when the board is handed back.
@@ -404,8 +404,8 @@ namespace GlimmerGrove
         /// Gives the first lesson that is owed, or arranges to look again when it cannot.
         ///
         /// <para>
-        /// The three reasons a lesson cannot go up right now — a panel already being taught,
-        /// a board mid-cascade, a modal above it (which <see cref="ShowLesson"/> answers) — are
+        /// The three reasons a lesson cannot go up right now - a panel already being taught,
+        /// a board mid-cascade, a modal above it (which <see cref="ShowLesson"/> answers) - are
         /// all states that end on their own within seconds, so waiting is always the right
         /// answer and giving up never is. See <see cref="_owed"/>.
         /// </para>
@@ -417,8 +417,8 @@ namespace GlimmerGrove
             if (!_run || _owed.Count == 0) return;
             if (_teaching || !_run.Teachable) { Retry(); return; }
 
-            // Anything met in between — the review key shows every lesson this board carries and
-            // marks each seen — is no longer owed.
+            // Anything met in between - the review key shows every lesson this board carries and
+            // marks each seen - is no longer owed.
             Mechanic mechanic = default;
             bool any = false;
 
@@ -478,13 +478,13 @@ namespace GlimmerGrove
 
             // Waits for a clear screen, and this is the half of the fix that matters.
             //
-            // A lesson is the one panel in the game that raises itself on a timer — a beat
-            // after the board arrives, and a beat after each dismissal — and a player who opens
+            // A lesson is the one panel in the game that raises itself on a timer - a beat
+            // after the board arrives, and a beat after each dismissal - and a player who opens
             // the pause menu inside one of those beats had asked for their panel first. Raised
             // anyway, it used to land on top of the menu; raised anyway *underneath* it (which
             // ModalLayer now guarantees) it would be no better, because the tip would chime and
             // play its coaching hand where nobody can see either, and closing the menu over the
-            // top of it hands the board back — see RunScreen.Resume, which is why that is now
+            // top of it hands the board back - see RunScreen.Resume, which is why that is now
             // refused while a lesson is pending.
             //
             // So it simply waits. The run is already held and the board already latched, so
@@ -517,7 +517,7 @@ namespace GlimmerGrove
         /// tile that exists.
         ///
         /// <para>
-        /// A mechanic the board can no longer point at still gets taught, without a ring — the
+        /// A mechanic the board can no longer point at still gets taught, without a ring - the
         /// shape <c>PlayScreen.Lessons</c> already uses for a rule that lives in the HUD rather
         /// than in a cell. That is the safe direction of the two: a lesson is offered once in a
         /// player's life with the game, so teaching it plainly beats silently dropping it.
@@ -550,7 +550,7 @@ namespace GlimmerGrove
 
             // Whatever the board reported while this was up. Scheduled rather than given here,
             // so the board is handed back for a beat in between rather than latched twice in
-            // one frame — which is the same beat two chained lessons already get.
+            // one frame - which is the same beat two chained lessons already get.
             Retry();
         }
 
@@ -566,8 +566,8 @@ namespace GlimmerGrove
         /// in the top-right corner.
         ///
         /// <para>
-        /// <b>Built by the mode, owned here.</b> Each mode draws its own header — the glade's
-        /// carries a pause key, a mode screen's carries a restart — so there is no shared bar
+        /// <b>Built by the mode, owned here.</b> Each mode draws its own header - the glade's
+        /// carries a pause key, a mode screen's carries a restart - so there is no shared bar
         /// to hang this off, and reaching into a subclass's layout to find one would be the
         /// worse arrangement by a distance. What a mode passes is a position; everything about
         /// when the key appears, whether it is live, and what pressing it does stays here,
@@ -604,8 +604,8 @@ namespace GlimmerGrove
             _key.gameObject.SetActive(_teaches);
             Refresh();
 
-            // The board may already be readable — a glade parses its puzzle before it draws its
-            // header — in which case the answer is available now and the key never has to
+            // The board may already be readable - a glade parses its puzzle before it draws its
+            // header - in which case the answer is available now and the key never has to
             // appear in front of the player. Where it is not, Offer is called again the moment
             // the board exists, which on every mode here is still behind the iris.
             Ask();
@@ -617,8 +617,8 @@ namespace GlimmerGrove
         /// <para>
         /// Called by a mode as soon as its board can answer, and again when the screen is
         /// presented. <b>Both, rather than one or the other</b>, because the two modes build in
-        /// different orders — a glade has its puzzle parsed before its header is drawn, a mode
-        /// screen has its board only after — and a key that switches itself on after the iris
+        /// different orders - a glade has its puzzle parsed before its header is drawn, a mode
+        /// screen has its board only after - and a key that switches itself on after the iris
         /// has opened is a control appearing in front of the player for no reason they can see.
         /// Idempotent, so calling it on every path costs a board scan and changes nothing.
         /// </para>
@@ -641,7 +641,7 @@ namespace GlimmerGrove
 
             // Every path that changes whether the key is there also settles whether it is live,
             // so a mode that only ever calls one of the two cannot leave a key greyed for the
-            // rest of a run — which is what a board built after its header would have done.
+            // rest of a run - which is what a board built after its header would have done.
             Refresh();
         }
 
@@ -650,7 +650,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Called from a mode's own repaint rather than polled, because both modes already
-        /// repaint on exactly the edges that matter — a glade's latch raises
+        /// repaint on exactly the edges that matter - a glade's latch raises
         /// <c>BoardView.OnChanged</c>, and a weave repaints whenever its view reports a change.
         /// Cheap to call often and guarded against setting the same value twice, since
         /// <see cref="Btn.Interactable"/> repaints the face.

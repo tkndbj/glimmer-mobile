@@ -455,8 +455,8 @@ namespace GlimmerGrove
         /// <b>What makes a charm legible rather than merely loud.</b> A wavefront says
         /// <em>something arrived</em>; only a clock face says what the charm did to time, and for
         /// both of the two that hang one that is the entire thing the gem is bought for. Every
-        /// other charm on this board announces itself with a shape a player can name — a lance is
-        /// a line, a stormglass is a beam, a furnace is a nugget going into a turret — and these
+        /// other charm on this board announces itself with a shape a player can name - a lance is
+        /// a line, a stormglass is a beam, a furnace is a nugget going into a turret - and these
         /// two had a blue flash and a beige one.
         /// </para>
         /// <para>

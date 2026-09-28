@@ -12,7 +12,7 @@ namespace GlimmerGrove.Tests
     /// The XP curve and the reward arithmetic.
     ///
     /// These matter more than they look. XP is derived rather than stored, which is
-    /// what lets it be merged across devices and retuned after launch — but it also
+    /// what lets it be merged across devices and retuned after launch - but it also
     /// means every player's level is recomputed from this code on every launch, so a
     /// mistake here does not corrupt one save, it moves everybody at once.
     /// </summary>
@@ -242,7 +242,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// This is the opposite of what the client used to do, and the change was
         /// deliberate. Paying out for a glade the catalog cannot vouch for means a save
-        /// listing ten thousand invented level ids mints currency — so the server has to
+        /// listing ten thousand invented level ids mints currency - so the server has to
         /// refuse them, and the client has to refuse them the same way or the two
         /// disagree about what a player can afford.
         ///
@@ -303,7 +303,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// Proves the shipped chapter override is actually read. Worth a test of its own
-        /// because the failure mode is silent — a rule that does not deserialise looks
+        /// because the failure mode is silent - a rule that does not deserialise looks
         /// exactly like a rule that is working, and every chapter pays the default rate.
         /// </summary>
         [Test]
@@ -319,7 +319,7 @@ namespace GlimmerGrove.Tests
             // Read off the manifest rather than the index, for the reason
             // SaveMigrationTests.EveryManifestLevelId gives: a chapter hidden behind
             // `disabled` leaves the index entirely (invariant 38), and this check is about
-            // whether a declared override *parses* — a question about the reader, not about
+            // whether a declared override *parses* - a question about the reader, not about
             // what is playable today. Asking the index made it fail the day the only chapter
             // carrying an override was hidden, and the sentence it printed then sent the
             // reader hunting for a deserialisation bug that was not there.

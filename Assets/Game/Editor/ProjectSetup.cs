@@ -41,7 +41,7 @@ namespace GlimmerGrove.EditorTools
         /// <para>
         /// <b>Enabled, not "Enabled for Builds".</b> The build-only mode leaves sprites
         /// resolving from their source textures in the Editor, so <c>SpriteAtlas.GetSprite</c>
-        /// returns nothing in play mode — the shop would be an empty grid in the Editor and
+        /// returns nothing in play mode - the shop would be an empty grid in the Editor and
         /// correct on the device, which is the worst possible way round. It was
         /// <see cref="SpritePackerMode.Disabled"/> here, which produces no
         /// <c>SpriteAtlas</c> artifact at all: the <c>.spriteatlas</c> files import as editor
@@ -94,7 +94,7 @@ namespace GlimmerGrove.EditorTools
         /// as missing as a file that was never drawn.
         ///
         /// The list of expected assets comes from <see cref="AssetManifest"/> and the
-        /// catalog — it used to be a hand-typed array here, which meant a content drop
+        /// catalog - it used to be a hand-typed array here, which meant a content drop
         /// could add a backdrop that nothing ever checked for. It also searches by
         /// address rather than through Resources, so it keeps working after the
         /// Addressables migration moves the files.
@@ -129,7 +129,7 @@ namespace GlimmerGrove.EditorTools
 
             // The import rules as well as the addresses. An asset can be present, addressed and
             // loadable and still be three times the texture memory it should be, which no other
-            // check here can see — see ArtImportRules.Audit.
+            // check here can see - see ArtImportRules.Audit.
             var drift = ArtImportRules.Audit();
             foreach (var d in drift) Debug.LogError("[Glimmer] " + d);
             if (drift.Count == 0) Debug.Log("[Glimmer] art import rules: every texture agrees");
@@ -178,8 +178,8 @@ namespace GlimmerGrove.EditorTools
     /// memory is its dimensions, not its file size: one 2048 sprite costs about 16 MB
     /// uncompressed however few pixels of it are painted, so a catalog of a hundred props
     /// imported at the default would be a bundle nobody can ship. The grove's art draws at
-    /// most about 500 screen pixels on a 1080-wide phone — a floor tile is 220 wide and a
-    /// piece is drawn at about 1.15 art pixels per screen pixel — so 512 is the honest
+    /// most about 500 screen pixels on a 1080-wide phone - a floor tile is 220 wide and a
+    /// piece is drawn at about 1.15 art pixels per screen pixel - so 512 is the honest
     /// ceiling and anything above it is paying for detail the screen cannot show.
     /// </para>
     /// <para>
@@ -241,7 +241,7 @@ namespace GlimmerGrove.EditorTools
         /// <b>A grade is a block size, and the block is absolute rather than relative to the
         /// texture.</b> On Android with ASTC pinned (<c>DevBuild.PinTextureCompression</c>),
         /// <c>Compressed</c> is ASTC 6x6 at 3.56 bpp and <c>CompressedHQ</c> is ASTC 4x4 at 8
-        /// bpp — so a 6x6 block eats a far larger share of a 256-pixel flipbook frame than of a
+        /// bpp - so a 6x6 block eats a far larger share of a 256-pixel flipbook frame than of a
         /// 2048 backdrop. That is why the two small folders below are graded up while the large
         /// ones are not: it is the *cap* that decides, not the subject.
         /// </para>
@@ -249,32 +249,32 @@ namespace GlimmerGrove.EditorTools
         /// <b>Measured, never argued</b> (44b), with
         /// <c>Tools/compare_texture_formats.py --measure --contact</c>, source against ASTC,
         /// worst file per folder: backdrops 49.5 dB, Ui/Hud 52.2, Fx/Victory 44.3, Map 43.7, Ui
-        /// 43.0, Chests 42.3 — all at or above the 41.1 dB the turrets already ship at and were
+        /// 43.0, Chests 42.3 - all at or above the 41.1 dB the turrets already ship at and were
         /// judged clean on a phone. <c>Companions</c> came out at 39.5 and <c>Critters</c> at
         /// <b>33.8</b>, visibly blockier on the contact sheet, and both are small and
         /// soft-edged. At 4x4 they measure 48–56 dB, which is effectively lossless, and the two
-        /// folders together are 19 MB — so the grade costs about 2 MB against the alternative of
+        /// folders together are 19 MB - so the grade costs about 2 MB against the alternative of
         /// shipping the one folder anybody could fault.
         /// </para>
         /// </summary>
         static readonly (string Folder, TextureImporterCompression Grade)[] Grades =
         {
             // **A stencil is not a picture, and it is the one thing on this list that cannot
-            // be compressed at any grade.** The publisher card's wordmark is drawn twice — once
+            // be compressed at any grade.** The publisher card's wordmark is drawn twice - once
             // as a Unity `Mask` whose graphic is never painted, so the shape lives entirely in
-            // its alpha (`StudioIdent`) — and uGUI's mask clips at an alpha of 0.001, which is
+            // its alpha (`StudioIdent`) - and uGUI's mask clips at an alpha of 0.001, which is
             // to say *any* non-zero texel is a hole in the sheet. Block compression does not
             // round a transparent texel to transparent: measured through
             // `astc-encoder`, this file comes back with **3,555** lit texels outside the
-            // lettering at ASTC 6x6, 2,612 at 5x5 and still **467** at 4x4 — every one of them
+            // lettering at ASTC 6x6, 2,612 at 5x5 and still **467** at 4x4 - every one of them
             // a pinprick of the neon sweep showing through the black, inside the counters of
             // the O and the D and scattered round the word. Reported, correctly, as the mark
             // being corrupted or speckled with dots. There is no grade that fixes it, because
-            // the fault is not that the alpha is *approximate* — it is that the threshold it is
+            // the fault is not that the alpha is *approximate* - it is that the threshold it is
             // read against is zero. 1,800x161 at RGBA32 is 1.16 MB, on a scope the launch
             // screen drops when it goes (`SplashScreen._art`).
             //
-            // **A file rather than a folder, for `/Art/Siege/hill`'s reason** — the loop takes
+            // **A file rather than a folder, for `/Art/Siege/hill`'s reason** - the loop takes
             // the first match, so this must stand ahead of any rule for `/Art/Bg/`. Nothing
             // else in that folder is a mask.
             ("/Art/Bg/ident_word", TextureImporterCompression.Uncompressed),
@@ -306,7 +306,7 @@ namespace GlimmerGrove.EditorTools
         ///
         /// <para>
         /// A preprocessor fires on first import only, so a cap tightened after the art landed
-        /// changes nothing until somebody touches the file — silently, which is exactly the
+        /// changes nothing until somebody touches the file - silently, which is exactly the
         /// sort of thing nobody notices until a build is too big. This walks the folders and
         /// re-imports only what actually disagrees, so it is safe to run after any drop and
         /// costs nothing when there is nothing to do.
@@ -317,7 +317,7 @@ namespace GlimmerGrove.EditorTools
         /// round trip to Unity's import worker processes each time; three hundred of them back
         /// to back crashed both workers and left the Editor wedged in a domain reload it could
         /// never finish. <c>StartAssetEditing</c>/<c>StopAssetEditing</c> queues the whole set
-        /// and imports it once, and the <c>finally</c> is mandatory — an exception between the
+        /// and imports it once, and the <c>finally</c> is mandatory - an exception between the
         /// two leaves the asset database permanently in editing mode, which looks exactly like
         /// the freeze it is meant to prevent.
         /// </para>
@@ -383,7 +383,7 @@ namespace GlimmerGrove.EditorTools
         /// <para>
         /// <b>This is invariant 7a's second half.</b> The preprocessor makes the fault
         /// unlikely; it cannot make it impossible, because a preprocessor fires on first import
-        /// only — so art that landed before a rule changed keeps what it was given, silently,
+        /// only - so art that landed before a rule changed keeps what it was given, silently,
         /// and silence is exactly how 175 MB of uncompressed textures came to be resident on
         /// every device. Making an error unlikely is not proving it did not happen.
         /// </para>
@@ -414,7 +414,7 @@ namespace GlimmerGrove.EditorTools
 
                 // Only the first few by name. A rule change touches hundreds at once, and a
                 // console with four hundred identical errors in it is one nobody reads to the
-                // end — the count and the repair are what the reader actually needs.
+                // end - the count and the repair are what the reader actually needs.
                 if (drifted <= 5)
                     errors.Add($"art import rules: '{path}' imports at " +
                                $"{importer.maxTextureSize}/{importer.textureCompression} " +
@@ -443,11 +443,11 @@ namespace GlimmerGrove.EditorTools
 
             // **And the grade, for the same reason and a worse history.** Everything below the
             // early return is skipped for a texture Unity already calls a Sprite, which is most
-            // of them — so for as long as compression was set down there it was set on almost
+            // of them - so for as long as compression was set down there it was set on almost
             // nothing, and 382 files kept whatever their `.meta` happened to carry. What they
             // carried was `Uncompressed`: 6% of the art library holding 49% of its texture
             // memory, 175 MB where ASTC wants 20. `DevBuild.PinTextureCompression` could never
-            // have caught it either — pinning the *format family* to ASTC does nothing to a
+            // have caught it either - pinning the *format family* to ASTC does nothing to a
             // texture that has asked not to be compressed at all.
             ti.textureCompression = GradeFor(p);
 

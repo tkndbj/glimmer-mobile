@@ -10,7 +10,7 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// <b>This board goes through none of the content gates, which is the whole reason this
-    /// fixture exists.</b> <c>content.py</c> reads the manifest, and the tutorial is not in it —
+    /// fixture exists.</b> <c>content.py</c> reads the manifest, and the tutorial is not in it -
     /// so nothing else in this project would notice a field that had stopped being settled, a
     /// taught pair that had stopped lining anything up, or a hill that could no longer be
     /// cleared. Each of those is invisible until a first-time player meets it, and a first-time
@@ -19,7 +19,7 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// <b>It plays the script rather than asserting about it.</b> Every step below is the call
     /// <c>TutorialScreen</c> makes, in the order it makes it, against <c>SiegeBoard</c> stepped
-    /// at sixty frames a second — so what is proved is that the sequence terminates, not that
+    /// at sixty frames a second - so what is proved is that the sequence terminates, not that
     /// each piece of it looks right on its own.
     /// </para>
     /// </summary>
@@ -73,7 +73,7 @@ namespace GlimmerGrove.Tests
         /// The tutorial deals nothing it does not teach.
         ///
         /// A cog, a charm, a bomber, a bulwark or a boss is a second thing to learn, and a lesson
-        /// is spent once in a player's life — so anything appearing here would be met with no
+        /// is spent once in a player's life - so anything appearing here would be met with no
         /// panel at all and never explained afterwards.
         /// </summary>
         [Test]
@@ -118,7 +118,7 @@ namespace GlimmerGrove.Tests
 
         // ------------------------------------------------------------------ the script
         /// <summary>
-        /// The whole of what the screen does, in order, against the real rules — and it ends.
+        /// The whole of what the screen does, in order, against the real rules - and it ends.
         /// </summary>
         [Test]
         public void TheScriptPlayedThroughEndsInAVictoryWithTheLineIntact()
@@ -204,7 +204,7 @@ namespace GlimmerGrove.Tests
         /// And the guarantee is doing real work: without it, this same board is lost.
         ///
         /// <b>The differential matters more than the absolute.</b> A fixture that only asserted
-        /// the line survives would go on passing if the hill were ever quietly made harmless —
+        /// the line survives would go on passing if the hill were ever quietly made harmless -
         /// at which point the tutorial would be teaching a mode that does not exist.
         /// </summary>
         [Test]

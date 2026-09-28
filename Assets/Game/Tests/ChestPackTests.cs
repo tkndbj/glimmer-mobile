@@ -11,8 +11,8 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// <b>These are the only gates a drawing gets.</b> Nothing in this project opens a PNG on
-    /// the way to a build, so the questions a render answers — does the arch read, is the
-    /// grandest chest the biggest thing on the plate — are answered by eye against
+    /// the way to a build, so the questions a render answers - does the arch read, is the
+    /// grandest chest the biggest thing on the plate - are answered by eye against
     /// <c>Tools/render_tasks.py</c>. What can be pinned here is everything the picture rests
     /// on: that the crest holds the top of the ladder, that a row of any length comes out
     /// centred and packed rather than gapped, and that none of it is decided by a float's last
@@ -35,7 +35,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// The first <paramref name="count"/> shipped tiers. Deliberately not a wrapped list —
+        /// The first <paramref name="count"/> shipped tiers. Deliberately not a wrapped list -
         /// a row holding one tier twice cannot answer a question about *which* seat a tier took.
         /// </summary>
         static IReadOnlyList<ChestTier> Take(int count)
@@ -51,8 +51,8 @@ namespace GlimmerGrove.Tests
         // --------------------------------------------------------------- the crest
         /// <summary>
         /// The whole point of the arrangement: the best chest on the ladder is the biggest
-        /// thing in the row. Drawn humblest-to-grandest instead — which is how both screens
-        /// drew it — the royal chest lands on an end, at the smallest size the arch has, half
+        /// thing in the row. Drawn humblest-to-grandest instead - which is how both screens
+        /// drew it - the royal chest lands on an end, at the smallest size the arch has, half
         /// behind its neighbour, on the two cards whose job is to advertise it.
         /// </summary>
         [Test]
@@ -119,7 +119,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// Every neighbour stands exactly the fraction apart that was asked for — and the sign
+        /// Every neighbour stands exactly the fraction apart that was asked for - and the sign
         /// is the whole of what the two screens differ by. The hub's box is a picture of a pack
         /// and presses the chests together; the tasks page's ladder is four <em>buttons</em> and
         /// stands them apart, because overlapping targets have edges that belong to whichever
@@ -164,7 +164,7 @@ namespace GlimmerGrove.Tests
         /// to be read off a signed position, <c>i / (n-1) * 2 - 1</c>, which gives -.33333334
         /// and .33333337 for a row of four: the two middle seats differ by a float's last digit,
         /// the sort that hands out the crest sees a difference where the design says there is
-        /// none, and which side the grandest chest stands on is decided by rounding noise — on
+        /// none, and which side the grandest chest stands on is decided by rounding noise - on
         /// two screens, and differently on two runtimes (a phone runs IL2CPP).
         /// </summary>
         [Test]
@@ -186,7 +186,7 @@ namespace GlimmerGrove.Tests
         // --------------------------------------------------------------- the sprite
         /// <summary>
         /// The drawn chest and the sprite that holds it. The closed icon is frame nought of the
-        /// opening reel, so it carries the lid's headroom and cannot be trimmed — and every
+        /// opening reel, so it carries the lid's headroom and cannot be trimmed - and every
         /// screen that draws a pack has to convert, or the row stands a quarter of a chest apart
         /// and floats a quarter of a chest high.
         /// </summary>
@@ -222,7 +222,7 @@ namespace GlimmerGrove.Tests
         /// Every chest's odds panel fits the shortest canvas this game is drawn on, title and
         /// all. A modal is centred, so a panel that outgrows
         /// <see cref="Layout.PanelStack.TallestPanel"/> draws its own ribbon off the top of the
-        /// screen — and <b>the thing that decides this height is content</b>: the panel grew a
+        /// screen - and <b>the thing that decides this height is content</b>: the panel grew a
         /// row per band, and how many bands a chest holds is a line in <c>progression.json</c>
         /// that ships without a build.
         /// </summary>

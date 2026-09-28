@@ -8,7 +8,7 @@ namespace GlimmerGrove.Modes
     /// and whatever reached the line swinging.
     ///
     /// <para>
-    /// <b>The order in <see cref="Advance"/> is the contract</b> — a ward fed on a frame fires on
+    /// <b>The order in <see cref="Advance"/> is the contract</b> - a ward fed on a frame fires on
     /// it, a raider killed by that bolt never lands the blow it was about to, and a boss killed
     /// mid-wind-up never finishes its spell. Every one of those is a decision rather than a
     /// consequence of where a call happened to sit.
@@ -26,7 +26,7 @@ namespace GlimmerGrove.Modes
         /// boss's fight is brought up to date, then the warlord casts, then whatever reached the
         /// line swings. A ward that has just been fuelled therefore gets its bolt away in the same
         /// step, a stand finished by that bolt turns before the boss decides what to throw, and a
-        /// raider killed by it never lands the blow it was about to — nor does a warlord killed by
+        /// raider killed by it never lands the blow it was about to - nor does a warlord killed by
         /// it ever start the spell it was about to.
         /// </para>
         /// </summary>
@@ -99,7 +99,7 @@ namespace GlimmerGrove.Modes
 
             // **After the fuel and never before it.** A stormglass and the motes of the match that
             // sprang it are booked to land on the same beat, and a ward that is about to be fed
-            // should have its fuel before the hill is thinned — otherwise a run that kills the
+            // should have its fuel before the hill is thinned - otherwise a run that kills the
             // last raider of a wave leaves the fuel arriving at a line with nothing to shoot at,
             // which is a different run from the one the player played.
             Break(dt);
@@ -112,7 +112,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>A spell whose caster has been destroyed fizzles</b>, and that is a decision rather
-        /// than tidiness. The alternative is a ward coming down — and a run being lost — to
+        /// than tidiness. The alternative is a ward coming down - and a run being lost - to
         /// something thrown by a warlord the player had already beaten, which reads as the game
         /// getting the last word. It also makes killing a warlord mid-wind-up worth something,
         /// which the tell is long enough to make possible.
@@ -276,18 +276,18 @@ namespace GlimmerGrove.Modes
         /// <b>What it takes is what the hill owes the player</b>, which is the one thing on this
         /// board that is neither the line nor the field. A cog is a rank somebody earned and a
         /// bomb is a firepot they were given (invariant 40i), and both lie there until a finger
-        /// reaches for them — so a gravemaw is a clock on the decision invariant 40i says is the
+        /// reaches for them - so a gravemaw is a clock on the decision invariant 40i says is the
         /// whole of that raider: <em>when</em>.
         /// </para>
         /// <para>
         /// <b>It never touches a ward</b>, so a rung whose only threat were one could not be lost
-        /// — which is why one rides the last authored wave rather than walking on alone, and why
+        /// - which is why one rides the last authored wave rather than walking on alone, and why
         /// <c>SiegeValidator</c> refuses a rung that sends one with nothing to eat.
         /// </para>
         /// <para>
         /// <b>The ids go into the report</b> rather than being left to the view's poll to notice.
         /// Both lists are polled against the board every frame, so the widgets would come down
-        /// either way — what the report buys is that they come down <em>toward the thing that ate
+        /// either way - what the report buys is that they come down <em>toward the thing that ate
         /// them</em>, which is the difference between a mechanic and a player's cogs quietly
         /// disappearing.
         /// </para>
@@ -313,7 +313,7 @@ namespace GlimmerGrove.Modes
         /// Puts a fresh group of creepers at the top of the hill, in the caster's own colour.
         ///
         /// <para>
-        /// <b>Capped, and the cap is what lets this mode keep a par at all</b> — see
+        /// <b>Capped, and the cap is what lets this mode keep a par at all</b> - see
         /// <see cref="SiegeTuning.RaiseSize"/>. The counter is on the caster so two bonecallers on
         /// one hill each get their own allowance, which is what the level's par priced.
         /// </para>
@@ -348,7 +348,7 @@ namespace GlimmerGrove.Modes
         }
 
         /// <summary>
-        /// Whether a boss is standing on this hill right now — walking on, in place, or mid-fall.
+        /// Whether a boss is standing on this hill right now - walking on, in place, or mid-fall.
         ///
         /// <b>The one reading behind "a boss is alone"</b> (invariant 37dn), asked by
         /// <see cref="Muster"/> on both sides of a duel: nothing musters onto a hill a boss is
@@ -389,8 +389,8 @@ namespace GlimmerGrove.Modes
             // A duel is the one wave this mode does not stack on the last, and it has two sides:
             // the boss must not arrive over a wave still swinging, and a wave must not arrive over
             // a boss still standing. Only the first was ever written down, which was enough for an
-            // authored ladder — a chapter's boss rides its last wave, so nothing was ever coming
-            // behind it — and was no rule at all on the Infinite lane, where the schedule carries
+            // authored ladder - a chapter's boss rides its last wave, so nothing was ever coming
+            // behind it - and was no rule at all on the Infinite lane, where the schedule carries
             // on regardless and a warbringer spent the back half of its fight inside the next
             // wave's escort.
             //
@@ -401,13 +401,13 @@ namespace GlimmerGrove.Modes
             // the quiet after a duel is a whole quiet and not whatever was left of one.
             if (BossStanding) return;
 
-            // **On a clock, or the moment the hill is empty — whichever comes first.**
+            // **On a clock, or the moment the hill is empty - whichever comes first.**
             //
             // The clock alone was the fix for waiting-on-a-clear, which let a winning player
             // stroll; a clear alone is what it replaced. Both together are what the mode actually
             // wants: the clock is the pressure and never lets up, and the shortcut means a player
             // who is *ahead* of it is rewarded with the next wave rather than made to stand and
-            // watch an empty field. Note the guard — the shortcut cannot fire before the first
+            // watch an empty field. Note the guard - the shortcut cannot fire before the first
             // wave, because the hill is legitimately empty at the start of every run.
             // **A boss comes in alone, and it waits for the hill to be cleared (37dn).** The
             // clock does not run for a boss wave while anything is still walking: this is the
@@ -469,7 +469,7 @@ namespace GlimmerGrove.Modes
                 // **Off the field's stream, and that is a decision rather than an oversight.**
                 // A lane is drawn once per raider in a sequence fixed by play rather than by
                 // frame rate, so sharing the field's stream is deterministic across devices,
-                // which is all invariant 37e asks — and ten shipped rungs are tuned against the
+                // which is all invariant 37e asks - and ten shipped rungs are tuned against the
                 // field this interleaving deals. What genuinely needs a stream of its own is a
                 // draw that happens on a *timer* nobody's taps order, which is where a weaver and
                 // a thief reach for a cell; see `_hill`.
@@ -642,14 +642,14 @@ namespace GlimmerGrove.Modes
 
                 // **And a chained one burns its seconds in the same place, for the same reason.**
                 // `Fuelled` is false while either is running, so the frame that clears one is the
-                // frame the ward may fire again — and the two are ticked together so neither can
+                // frame the ward may fire again - and the two are ticked together so neither can
                 // ever be a frame ahead of the other.
                 if (ward.Bound > 0f) ward.Bound = Math.Max(0f, ward.Bound - dt);
 
                 // **And a buried one weathers here too, for the third time for the same reason.**
                 // A boulder holds a post for `SiegeTuning.ColossusBury` seconds at the outside;
                 // `Fuelled` is false while a piece still stands, so the frame the last one slips
-                // is the frame the ward may fire again — whether the clock took it or the player
+                // is the frame the ward may fire again - whether the clock took it or the player
                 // did (`SiegeWard.Dig`).
                 ward.Weather(dt);
 
@@ -719,7 +719,7 @@ namespace GlimmerGrove.Modes
                 //
                 // **`weak` is the double and nothing else.** Under the lock every primary bolt at
                 // an ordinary raider lands in full, so it is true on every ordinary shot and
-                // `SiegeTuning.PerfectMatch` — which has always assumed exactly that — stops being
+                // `SiegeTuning.PerfectMatch` - which has always assumed exactly that - stops being
                 // an optimistic reading and becomes an identity. A duel answered with the wrong
                 // colour is the one place it is false, which is exactly what the view draws in
                 // white rather than gold.
@@ -736,7 +736,7 @@ namespace GlimmerGrove.Modes
                 //
                 // **And a part-weight bolt costs a part of the fuel**, which is what makes a shot
                 // this ward would not otherwise have fired genuinely free rather than the player's
-                // fuel converted at half rate on their behalf — see `SiegeTuning.FuelShot`. It is
+                // fuel converted at half rate on their behalf - see `SiegeTuning.FuelShot`. It is
                 // spent after the share is known and before anything is reported, so the two can
                 // never be read from different answers.
                 ward.Fuel = Math.Max(0f, ward.Fuel - SiegeTuning.FuelShot(ward.Rank, share));
@@ -780,13 +780,13 @@ namespace GlimmerGrove.Modes
         /// <b>A boss is the one thing the lock does not hold, and the reason is that a duel offers
         /// no choice for it to protect.</b> One raider wearing one colour means three of the four
         /// turrets a player chose have nothing to fire at, so the finale was answered by a quarter
-        /// of the line at a quarter of what a match delivers — see
+        /// of the line at a quarter of what a match delivers - see
         /// <see cref="SiegeTuning.EveryWardReaches"/>, which owns the rule.
         /// </para>
         /// <para>
         /// <b>And it is what makes fuel a resource rather than a pass-through.</b> A ward with
         /// nothing to fire at holds what it is given, so a colour matched while its raiders are
-        /// off the hill <em>banks</em> — which is the half of the loop this mode never had, and
+        /// off the hill <em>banks</em> - which is the half of the loop this mode never had, and
         /// the half a breather is worth having for. The caller arranges none of that: it simply
         /// gets no target and leaves the tube alone.
         /// </para>
@@ -801,7 +801,7 @@ namespace GlimmerGrove.Modes
         /// <b>And a boss last, for the same reason and it is the stronger half of it.</b> Every
         /// ward answers a boss whatever colour it wears
         /// (<see cref="SiegeTuning.EveryWardReaches"/>), so a duel is fought by the whole line
-        /// rather than by the one turret that happened to match — but a boss holds the middle of
+        /// rather than by the one turret that happened to match - but a boss holds the middle of
         /// the hill while its escort walks to the wards, and a line that turned to face the boss
         /// would be a line taken apart by the wave standing in front of it. So a boss is what a
         /// ward shoots when it has nothing of its own left to shoot: strictly a bolt it would
@@ -861,7 +861,7 @@ namespace GlimmerGrove.Modes
                 var boss = _raiders[i];
 
                 // Bosses only. A weaver and a thief cast too, on their own timer and at the field
-                // rather than at the line — see `Meddle`.
+                // rather than at the line - see `Meddle`.
                 if (!boss.Boss || !boss.Alive || !boss.InPlace) continue;
 
                 boss.Stood += dt;
@@ -903,8 +903,8 @@ namespace GlimmerGrove.Modes
                 // freshest ward, which is where its smite lands. The view still asks
                 // `AimsAtAWard` to decide what to draw crossing the hill. Asked of the rule rather
                 // than of the rally by name: this line named the rally alone, so a wane was
-                // handed the freshest ward by `Wanted`'s default arm — an index its landing never
-                // reads, and a retry it could never hit — while the rule beside it said `Wanted`
+                // handed the freshest ward by `Wanted`'s default arm - an index its landing never
+                // reads, and a retry it could never hit - while the rule beside it said `Wanted`
                 // was never asked about a wane at all.
                 int ward = SiegeTuning.CarriesAWard(craft) ? Wanted(craft, boss, opens) : -1;
 
@@ -927,7 +927,7 @@ namespace GlimmerGrove.Modes
 
                 // **A bonecaller that has spent its raises stops casting**, and that is invariant
                 // 5d rather than tidiness: par counts exactly `RaisesInAll` bodies, so a fourth
-                // raise would put raiders on a hill nothing priced — and a cast that went through
+                // raise would put raiders on a hill nothing priced - and a cast that went through
                 // the tell, the flight and the ring and then raised nothing would be a boss
                 // visibly doing nothing, which is the reading `CastRetry`'s note is about.
                 if (SiegeTuning.Summons(boss.Kind) && boss.Raised >= SiegeTuning.Raises)
@@ -961,7 +961,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>The freshest rather than the weakest, for a smite, and that is what keeps the fight
         /// winnable.</b> A warlord that finished off whatever was nearly down would take the line
-        /// apart one ward at a time — and the ward it would reach first is the one whose colour the
+        /// apart one ward at a time - and the ward it would reach first is the one whose colour the
         /// player has to feed to answer it, so the mode's own answer would be the thing it
         /// destroyed. Picking the freshest spreads the damage instead: the line comes down evenly,
         /// no colour is ever locked out, and a run that is losing is losing to arithmetic rather
@@ -971,17 +971,17 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>A douse wants the ward the player is filling</b>, because that is what makes it a
         /// decision rather than a tax: the fuel it takes is fuel somebody just earned, and the
-        /// answer — feed a different colour, or spend a surge — is one they choose every few
+        /// answer - feed a different colour, or spend a surge - is one they choose every few
         /// seconds. An already-dark ward is never chosen twice; there is nothing left to take and
         /// a second one would read as the boss doing nothing. An <em>empty</em> one still is
-        /// chosen, and that was measured rather than assumed — see the clause itself. When every
+        /// chosen, and that was measured rather than assumed - see the clause itself. When every
         /// standing ward is already out there is nothing to throw at, and the boss holds its cast
         /// rather than spending it (<see cref="SiegeTuning.CastRetry"/>).
         /// </para>
         /// <para>
         /// <b>A sunder wants the best turret on the line</b>, which is the one thing in this
         /// chapter a player <em>earned</em> (invariant 37w). That makes where the cogs went a
-        /// question the finale asks and a player can get wrong in both directions — pile them into
+        /// question the finale asks and a player can get wrong in both directions - pile them into
         /// one ward and the overlord can take the pile; spread them and nothing on the line is
         /// strong. Ties go to the freshest, so once the ranks are level it spreads exactly as a
         /// smite does and cannot dismantle the line one ward at a time.
@@ -996,7 +996,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <b>The hill rather than the whole list</b>, because a raider that has reached the line
         /// is one the ward is already failing to answer and one still mustering is not yet the
-        /// player's problem — <c>OnTheHill</c> is the same window <see cref="Aim"/> shoots into,
+        /// player's problem - <c>OnTheHill</c> is the same window <see cref="Aim"/> shoots into,
         /// so what a shackler reads and what a ward can act on are the same set.
         /// </summary>
         int Pressing(int colour)
@@ -1022,7 +1022,7 @@ namespace GlimmerGrove.Modes
                 var ward = _wards[w];
                 if (!ward.Alive) continue;
 
-                // Ranked so a single comparison decides, with health as the low half of the key —
+                // Ranked so a single comparison decides, with health as the low half of the key -
                 // written this way rather than as three loops because three loops is three places
                 // that can come to disagree about what "standing" means.
                 long rank;
@@ -1052,7 +1052,7 @@ namespace GlimmerGrove.Modes
                     // piece of information no other spell here reads: a smite reads the line, a
                     // douse reads a tube and a sunder reads a badge, and all three are facts about
                     // the player's own side. A chain is only a decision if it takes the colour
-                    // that was about to matter — chaining a ward with nothing to shoot at costs
+                    // that was about to matter - chaining a ward with nothing to shoot at costs
                     // the player exactly nothing, which is invariant 5d wearing six seconds.
                     //
                     // **An already-chained ward is never chosen twice**, for the douse's reason:
@@ -1158,8 +1158,8 @@ namespace GlimmerGrove.Modes
         /// What a ward bears, and the only place its health is taken. Answers whether it fell.
         ///
         /// <para>
-        /// <b>Three things take a ward's health and every one of them used to do it in full</b> —
-        /// a raider's blow, a boss's cast and a warbringer's roar — with the clamp, the flag and
+        /// <b>Three things take a ward's health and every one of them used to do it in full</b> -
+        /// a raider's blow, a boss's cast and a warbringer's roar - with the clamp, the flag and
         /// the emptied tube written out three times. They agreed, which is luck rather than
         /// design: it is one operation, so it is one method, and a fourth thing that hurts the
         /// line now inherits the whole of what falling means.
@@ -1183,7 +1183,7 @@ namespace GlimmerGrove.Modes
         /// <see cref="Sheltered"/> refuses.
         ///
         /// Separate from <see cref="Bear"/> because a sunlord's seal takes a ward without
-        /// hurting it — the clock runs out and the ward is simply gone — so "fell by damage" and
+        /// hurting it - the clock runs out and the ward is simply gone - so "fell by damage" and
         /// "fell" are two different sentences with one consequence.
         /// </summary>
         bool Topple(SiegeWard ward)
@@ -1205,7 +1205,7 @@ namespace GlimmerGrove.Modes
 
                 // **A stunned raider does not swing, and its wind-up is held rather than lost.**
                 // Stopping the march alone would be a stun that costs a raider already at the line
-                // nothing at all — which is the half of the hill it is worth most against, because
+                // nothing at all - which is the half of the hill it is worth most against, because
                 // that is where a second of quiet is a blow the line did not take.
                 // **And it does not swing while the hill stands still**, for the stun's reason one
                 // line up: a stop that held the march and left the blows running would cost a

@@ -16,14 +16,14 @@ namespace GlimmerGrove
     /// the game is a cutscene, and a cutscene is something a player learns to tap through; this
     /// sits in the strip of screen under the board that every mode already leaves empty, so a
     /// line can arrive <em>while</em> a board is being played on and cost nobody a beat. The one
-    /// exception is the opening, which the screen holds the board for — three lines before the
+    /// exception is the opening, which the screen holds the board for - three lines before the
     /// first move is a scene, and it is worth the pause exactly once.
     /// </para>
     /// <para>
     /// <b>Every line is a loc key and none of them is built by concatenation</b> (invariant 6).
     /// The keys are authored in the chapter body and the build gate resolves each one against
     /// <c>loc/en.json</c>; the only strings this file names itself are the five speaker names,
-    /// and those are a literal table for the same reason — a key assembled from a speaker id at
+    /// and those are a literal table for the same reason - a key assembled from a speaker id at
     /// runtime is a key the gate cannot see.
     /// </para>
     /// <para>
@@ -67,8 +67,8 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>A property rather than a constant, because the cast is vocabulary and the pixels
-        /// are not.</b> <see cref="StoryCast"/> names who may speak — Bolt, the Collector, the
-        /// three taken critters — and two modes set in the same raid share every one of those
+        /// are not.</b> <see cref="StoryCast"/> names who may speak - Bolt, the Collector, the
+        /// three taken critters - and two modes set in the same raid share every one of those
         /// ids while drawing them from their own scoped folder (invariant 7b: an address owned
         /// by one chapter's scope is never re-claimed by another). It was a literal <c>"March/"</c>
         /// until a second mode wanted the band, which is the point at which a shared thing has
@@ -164,7 +164,7 @@ namespace GlimmerGrove
 
         // ------------------------------------------------------------------ speaking
         /// <summary>
-        /// Says a beat. Anything already queued is kept — a critter coming out while the Warden
+        /// Says a beat. Anything already queued is kept - a critter coming out while the Warden
         /// is still talking is two things that both happened.
         /// </summary>
         public void Speak(StoryBeat beat, Action done = null)
@@ -179,7 +179,7 @@ namespace GlimmerGrove
             // **Nothing here may be able to strand its caller.** A coroutine will not start on a
             // component that is disabled or on a destroyed object, and a screen waiting on
             // `done` to hand a board back would then wait for the life of the run. That is not
-            // hypothetical — it is the fault this class shipped with. So a `Speak` that could not
+            // hypothetical - it is the fault this class shipped with. So a `Speak` that could not
             // start says so immediately rather than silently promising to answer later.
             if (_running != null) return;
 
@@ -338,8 +338,8 @@ namespace GlimmerGrove
         /// <summary>
         /// Which folder of frames a speaker's portrait comes from.
         ///
-        /// The speaker ids and the art folders are the same words on purpose — the cast is the
-        /// board's cast — so this is one line rather than a second table to keep in step. The
+        /// The speaker ids and the art folders are the same words on purpose - the cast is the
+        /// board's cast - so this is one line rather than a second table to keep in step. The
         /// build gate refuses a speaker <c>StoryCast</c> does not know, which is what makes the
         /// identity safe to rely on.
         /// </summary>
@@ -351,13 +351,13 @@ namespace GlimmerGrove
 
         /// <summary>
         /// **This band is hidden by going transparent, never by being deactivated**, and that is
-        /// not a style choice — it is the whole reason the first cut said nothing at all.
+        /// not a style choice - it is the whole reason the first cut said nothing at all.
         ///
         /// <para>
         /// The component lives on the node it draws, so <c>SetActive(false)</c> switched off the
         /// very object <see cref="Speak"/> then tried to <c>StartCoroutine</c> on. Unity refuses
-        /// that and returns null, so the queue never drained, the band never appeared, and — far
-        /// worse — the <c>done</c> callback the screen was waiting on to hand the board back
+        /// that and returns null, so the queue never drained, the band never appeared, and - far
+        /// worse - the <c>done</c> callback the screen was waiting on to hand the board back
         /// never fired, so the screen's opening scene left the board **latched for the life of the
         /// screen**. One line, no exception, and it read as two unrelated faults: no dialogue,
         /// and a board that ignores every tap.

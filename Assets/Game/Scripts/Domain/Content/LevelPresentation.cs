@@ -17,7 +17,7 @@ namespace GlimmerGrove.Content
 
         /// <summary>
         /// Whether the node is moored on a floating tile instead of standing on the painting.
-        /// True only where a map draws water under the chain — see <c>LevelDto.afloat</c>.
+        /// True only where a map draws water under the chain - see <c>LevelDto.afloat</c>.
         /// </summary>
         public readonly bool Afloat;
 
@@ -31,7 +31,7 @@ namespace GlimmerGrove.Content
         public readonly string Backdrop;
 
         /// <summary>
-        /// What this level has to say while it is played. Never null — <c>StoryScript.Silent</c>
+        /// What this level has to say while it is played. Never null - <c>StoryScript.Silent</c>
         /// for the ninety-one levels that say nothing, so no caller tests it.
         /// </summary>
         public readonly StoryScript Story;

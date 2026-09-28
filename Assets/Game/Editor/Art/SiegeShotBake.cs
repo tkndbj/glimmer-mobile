@@ -10,24 +10,24 @@ namespace GlimmerGrove.EditorTools
 {
     /// <summary>
     /// Bakes the bought projectile pack's own effects into the 2D flipbooks Thornwatch's ward line
-    /// fires — one projectile, one muzzle flash and one impact per ward colour.
+    /// fires - one projectile, one muzzle flash and one impact per ward colour.
     ///
     /// <para>
     /// <b>Why a bake and not the prefabs.</b> This game has no world: the canvas is
     /// <c>ScreenSpaceOverlay</c> and <c>Boot.EnsureCamera</c> gives the only camera in it
     /// <c>cullingMask = 0</c>, so a particle system dropped into the scene is not merely covered,
     /// it is never drawn at all. The one route that does draw is a stage of its own with its own
-    /// camera and a <see cref="RenderTexture"/> — which is exactly what <c>VfxDemoScreen</c> is,
+    /// camera and a <see cref="RenderTexture"/> - which is exactly what <c>VfxDemoScreen</c> is,
     /// and what its own note says never to couple a mode to: it costs a camera, a render texture
     /// and a resize path <em>per screen</em>, for art that is identical every time it is drawn. So
     /// the render happens once, here, and what ships is sprites. A ward fires every
     /// <c>SiegeTuning.FireEvery</c>, which is a bit over two bolts a second each and nine across a
-    /// lit line — and was four times that when this was written; a board doing either cannot
+    /// lit line - and was four times that when this was written; a board doing either cannot
     /// afford anything else.
     /// </para>
     /// <para>
-    /// <b>It is the pack's real animation and not an impression of one.</b> The alternative — the
-    /// route Budburst's explosions took — is to cut the pack's flat textures and compose our own
+    /// <b>It is the pack's real animation and not an impression of one.</b> The alternative - the
+    /// route Budburst's explosions took - is to cut the pack's flat textures and compose our own
     /// effect out of them. That is right when the pack has the picture you want lying in its
     /// <c>Textures/</c> folder; it is wrong here, because what was bought is sixty <em>motions</em>
     /// and the textures are only their raw material. Unity rasterises the motion; this freezes it.
@@ -36,8 +36,8 @@ namespace GlimmerGrove.EditorTools
     /// <b>The colour is read off <see cref="Pal"/> here rather than matched by eye</b>, which is
     /// what makes invariant 37f hold by construction: a ward, its bolts, its muzzle flash, its
     /// impact and the gems that feed it all take one <c>Pal</c> entry, so a palette retune moves
-    /// every one of them and none of them can drift. The grade keeps a hot core white — a fireball
-    /// whose middle is pure red is a fireball nobody has seen — and pulls everything round it onto
+    /// every one of them and none of them can drift. The grade keeps a hot core white - a fireball
+    /// whose middle is pure red is a fireball nobody has seen - and pulls everything round it onto
     /// the ward's hue.
     /// </para>
     /// <para>
@@ -46,7 +46,7 @@ namespace GlimmerGrove.EditorTools
     /// <see cref="Verify"/> is the check that is available: it re-bakes into memory and holds the
     /// result to what is on disk, within a tolerance, because two GPUs are not obliged to
     /// rasterise the same triangle identically. <c>Tools/render_siege.py</c> is the other half and
-    /// the more important one — it draws the shipped frames on the real board at the size a phone
+    /// the more important one - it draws the shipped frames on the real board at the size a phone
     /// draws them, and looking at that is the only check in this project that has ever caught a
     /// picture being wrong (invariant 37g).
     /// </para>
@@ -58,8 +58,8 @@ namespace GlimmerGrove.EditorTools
         /// One ward's projectile: the pack prefab it is rendered from and the colour it burns.
         ///
         /// <para>
-        /// <b>Four elements rather than four tints of one shape</b> — fire, venom, ice and
-        /// lightning — which is CRAFT.md's rule about the board's vocabulary applied to the thing
+        /// <b>Four elements rather than four tints of one shape</b> - fire, venom, ice and
+        /// lightning - which is CRAFT.md's rule about the board's vocabulary applied to the thing
         /// crossing the hill. A player who cannot separate red from green has to be able to
         /// separate a comet from a shard, and at the size a bolt is drawn a silhouette is the only
         /// difference that survives. It is also why three of the four already wear roughly the hue
@@ -74,7 +74,7 @@ namespace GlimmerGrove.EditorTools
         /// </summary>
         struct Shot
         {
-            public string Key;      // r, g, b, y — the order SiegeView.Tints is in
+            public string Key;      // r, g, b, y - the order SiegeView.Tints is in
             public string Prefab;   // under VfxBench.PackRoot/Projectiles
             public Color Hue;
 
@@ -123,8 +123,8 @@ namespace GlimmerGrove.EditorTools
             /// Whether this spell is thrown at <b>nothing</b>, so it has no flight to bake.
             ///
             /// <para>
-            /// <b>Two of the eight bosses aim at the hill rather than at a ward</b> — a roar goes
-            /// out over the whole line and a devour takes what is lying on the ground — so what
+            /// <b>Two of the eight bosses aim at the hill rather than at a ward</b> - a roar goes
+            /// out over the whole line and a devour takes what is lying on the ground - so what
             /// the view draws is a ring opening and a flat wash over the floor, and nothing ever
             /// crosses the board (<c>SiegeView.Roar</c>). Their muzzle and impact are the whole
             /// drawing; the projectile in between is a reel nobody can ask for.
@@ -141,7 +141,7 @@ namespace GlimmerGrove.EditorTools
             public bool Grounded;
 
             /// <summary>
-            /// Whether this spell's source is a <b>comet</b> — a head with a tail behind it —
+            /// Whether this spell's source is a <b>comet</b> - a head with a tail behind it -
             /// rather than an orb, and therefore framed round the head instead of square.
             ///
             /// <para>
@@ -150,7 +150,7 @@ namespace GlimmerGrove.EditorTools
             /// it was written for is a sun, and the note on it says so in as many words. Two rows
             /// added later are not suns: a shackler looses an <em>arrow</em> and an ironclad
             /// brings a <em>blade</em> down, and both came out of a 384-square frame as a thread
-            /// down the middle of nothing —
+            /// down the middle of nothing -
             /// <c>snare</c> at <b>2.1 %</b> of its own frame across and <c>quake</c> at
             /// <b>5.2 %</b>, against a median of 17 % for the 266 reels on disk. On the board
             /// that is an arrow two hundredths of a cell wide. Both shipped.
@@ -160,13 +160,13 @@ namespace GlimmerGrove.EditorTools
             /// has to be framed is a fact about <em>that source</em>, not about which table it
             /// sits in. The same square framing that is right for <c>Sun01</c> is wrong for
             /// <c>MagicArrow02</c>, and there is nothing a bake can read off a prefab that
-            /// answers it — the survey sheet renders both perfectly well as comets, which is
+            /// answers it - the survey sheet renders both perfectly well as comets, which is
             /// exactly why looking at the pack never caught this.
             /// </para>
             /// <para>
             /// <b>The view needs no matching flag, and deliberately.</b> <c>SiegeView.Hurl</c>
             /// anchors a square reel at its middle and a comet at <c>HeadAt</c>, and it decides
-            /// which by reading the <em>aspect off the sprite</em> — so this table stays the one
+            /// which by reading the <em>aspect off the sprite</em> - so this table stays the one
             /// place the decision is made and a re-bake cannot leave the drawing holding the old
             /// answer. <c>Tools/verify/fxreels.py</c> is what proves the result is a picture.
             /// </para>
@@ -181,14 +181,14 @@ namespace GlimmerGrove.EditorTools
             /// <b>The one exception to invariant 37f, and it is the owner's decision about what
             /// frost looks like.</b> Every other bolt wears the colour of the ward that threw it,
             /// which is what keeps a turret, its bullets and the gems that feed it from ever
-            /// disagreeing about what red is. Frost is white — a snowball thrown by a red turret
-            /// is still a snowball — so both rungs of that ability are baked once and worn by all
+            /// disagreeing about what red is. Frost is white - a snowball thrown by a red turret
+            /// is still a snowball - so both rungs of that ability are baked once and worn by all
             /// four.
             /// </para>
             /// <para>
             /// <b>It costs the mode nothing, because the double is not said in the bolt.</b> What
             /// tells a player a hit was worth double is the gold figure, the ring and the sparks
-            /// at the impact (<c>SiegeView.Land</c>), never the colour of the thing in the air —
+            /// at the impact (<c>SiegeView.Land</c>), never the colour of the thing in the air -
             /// so a colourless bolt says "this is the frost turret" and takes nothing away.
             /// </para>
             /// <para>
@@ -210,7 +210,7 @@ namespace GlimmerGrove.EditorTools
             /// <em>chosen</em> for already wearing roughly the hue they are graded to, where a
             /// roster effect arrives teal or magenta and has to be carried the whole way. The
             /// moment those four stopped being four differently-coloured sources they stopped
-            /// qualifying for the lean — see <see cref="Shots"/> — so the pair moved to where the
+            /// qualifying for the lean - see <see cref="Shots"/> - so the pair moved to where the
             /// source is named.
             /// </para>
             /// <para>
@@ -297,7 +297,7 @@ namespace GlimmerGrove.EditorTools
         };
 
         /// <summary>
-        /// What each turret in the roster throws — one effect per model, chosen to say what that
+        /// What each turret in the roster throws - one effect per model, chosen to say what that
         /// model's <em>ability</em> does.
         ///
         /// <para>
@@ -305,7 +305,7 @@ namespace GlimmerGrove.EditorTools
         /// has to be visibly the thing they bought.</b> The shared elemental reels are
         /// <see cref="Shots"/>' business and are untouched here; every model with an ability throws something of its own,
         /// worn in whichever colour its ward burns. The pack holds exactly twenty families and the
-        /// three files in each are the same shape in three colours — so the shapes are the scarce
+        /// three files in each are the same shape in three colours - so the shapes are the scarce
         /// thing, and every one of these is a different one.
         /// </para>
         /// <para>
@@ -319,7 +319,7 @@ namespace GlimmerGrove.EditorTools
         /// <para>
         /// <b>The pairing rule is that the silhouette says the ability, not the tier.</b> Two
         /// models sharing an ability are the same answer at two strengths, so making them two
-        /// tints of one shape would be invariant 37z's fault exactly — two things told apart by a
+        /// tints of one shape would be invariant 37z's fault exactly - two things told apart by a
         /// hue are not told apart. They are instead two different readings of the same idea: a
         /// crescent and a shockwave both cut through armour, an arrow and a lance both run a lane.
         /// </para>
@@ -355,8 +355,8 @@ namespace GlimmerGrove.EditorTools
             },
 
             // ---- Splash: it strikes everything within a band of what it hit -------------------
-            // Ordnance. A finned shell that is unmistakably fired, and — since the owner exchanged
-            // it with the beacon's — a heavy orb of light. Both are read as "this one goes off"
+            // Ordnance. A finned shell that is unmistakably fired, and - since the owner exchanged
+            // it with the beacon's - a heavy orb of light. Both are read as "this one goes off"
             // before they land, which is what a splash owes the player.
             new Shot { Key = "mortar",     Prefab = "vfx_Projectile_Rocket01" },
             new Shot { Key = "howitzer",   Prefab = "vfx_Projectile_Orb17_blue" },
@@ -409,7 +409,7 @@ namespace GlimmerGrove.EditorTools
             new Shot { Key = "bolt",       Prefab = "vfx_Projectile_Icicle02" },
 
             // ---- Pierce: every so often it runs the whole lane --------------------------------
-            // Both are *linear* — an arrow with a shaft behind it and a straight lance of light —
+            // Both are *linear* - an arrow with a shaft behind it and a straight lance of light -
             // because what this ability does is a line, and a round thing cannot say that.
             new Shot { Key = "lance",      Prefab = "vfx_Projectile_MagicArrow01" },
             // A lance of light with a crystal head on it. `Bullet` alone came back from play as
@@ -503,7 +503,7 @@ namespace GlimmerGrove.EditorTools
         /// <para>
         /// <b>And it is a different <em>kind</em> of thing rather than a bigger bolt</b>, which is
         /// invariant 33e's test asked of the boss: a sun rather than a comet, a dart, a shard or a
-        /// bolt of lightning. At the size it is drawn — half again a ward's bolt — silhouette is
+        /// bolt of lightning. At the size it is drawn - half again a ward's bolt - silhouette is
         /// what tells a player this one is not a turret shooting.
         /// </para>
         /// </summary>
@@ -517,7 +517,7 @@ namespace GlimmerGrove.EditorTools
         /// <b>The pack's third lightning rather than the one the yellow ward fires</b>, and that
         /// is the whole reason it is its own entry. A ward's bolt goes off four or five times a
         /// second, so it is cut small and short; a storm happens once a run and costs forty gems,
-        /// so it is baked on the <em>spell</em> path — bigger, longer, framed square with its own
+        /// so it is baked on the <em>spell</em> path - bigger, longer, framed square with its own
         /// tail. Sharing <c>shot_y</c> would have meant tuning the biggest moment in the mode by
         /// the smallest, which is the mistake the firepot's sound already made once.
         /// </para>
@@ -543,7 +543,7 @@ namespace GlimmerGrove.EditorTools
         ///
         /// <para>
         /// <b>Magenta rather than violet</b>, which is the other <c>Pal</c> entry that is none of
-        /// the board's four colours — so it can no more be read as a colour rule than the
+        /// the board's four colours - so it can no more be read as a colour rule than the
         /// warlord's violet can, and the two cannot be confused with each other either. The
         /// overlord is the last thing in the chapter and it stands on the same hill a warlord did
         /// five levels earlier, so its spell has to be told apart at a glance.
@@ -551,12 +551,12 @@ namespace GlimmerGrove.EditorTools
         /// <para>
         /// <b>And it is a sun rather than the two things tried first, which is a framing fact
         /// rather than a taste.</b> A spiral and a spinning disc were both baked and both looked
-        /// at: the spiral came out as invariant 37k's sliver again — a thin ribbon framed square,
-        /// eighty per cent empty, drawn on the board as a magenta thread — and the disc is drawn
+        /// at: the spiral came out as invariant 37k's sliver again - a thin ribbon framed square,
+        /// eighty per cent empty, drawn on the board as a magenta thread - and the disc is drawn
         /// nearly black by the pack, so a hue rotation toward magenta had nothing to work on and it
         /// arrived as a dot. What frames well here is what already framed well for the warlord: a
         /// round, bright, self-lit thing. The difference between the two is carried by the colour,
-        /// by the size the view draws it at, and by the impact — which is where a player is looking
+        /// by the size the view draws it at, and by the impact - which is where a player is looking
         /// when it lands.
         /// </para>
         /// </summary>
@@ -567,7 +567,7 @@ namespace GlimmerGrove.EditorTools
         /// What the <em>blightcaller</em> throws: a spectral wisp that puts a ward out.
         ///
         /// <para>
-        /// <b>Teal, which is the third <c>Pal</c> entry that is none of the board's four</b> — and
+        /// <b>Teal, which is the third <c>Pal</c> entry that is none of the board's four</b> - and
         /// it is the closest of the four spell colours to a gem (the blue one), which is exactly
         /// why this is the one drawn as something <em>trailing</em> rather than as anything round.
         /// A player never has to tell a teal orb from a blue one, because there is no teal orb:
@@ -575,12 +575,12 @@ namespace GlimmerGrove.EditorTools
         /// </para>
         /// <para>
         /// <b>An electric orb rather than the wisp it was first baked as</b>, and that is invariant
-        /// 37k's sliver for the third time in this file. A hex <em>ought</em> to trail — it
-        /// smothers rather than detonating, and a drifting shape says that — so the first cut was
+        /// 37k's sliver for the third time in this file. A hex <em>ought</em> to trail - it
+        /// smothers rather than detonating, and a drifting shape says that - so the first cut was
         /// a ghostly comet, and it came out of the bake as a hairline: eight pixels of thread in a
         /// 384-pixel square, drawn on the hill as a scratch. What frames well here is what framed
         /// well for the warlord and the overlord, and what carries the "not an impact" reading
-        /// instead is the <em>path</em> — <c>SiegeView.Hurl</c> wafts a douse across the hill where
+        /// instead is the <em>path</em> - <c>SiegeView.Hurl</c> wafts a douse across the hill where
         /// a smite and an omen go straight. The drawing says it, and the framing does not have to.
         /// </para>
         /// <para>
@@ -594,7 +594,7 @@ namespace GlimmerGrove.EditorTools
             new Shot { Key = "hex", Prefab = "vfx_Projectile_Orb18_blue", Hue = Pal.Aqua };
 
         /// <summary>
-        /// What the <em>warbringer</em> roars with — and it is the one of the four that is not
+        /// What the <em>warbringer</em> roars with - and it is the one of the four that is not
         /// thrown at anything.
         ///
         /// <para>
@@ -607,7 +607,7 @@ namespace GlimmerGrove.EditorTools
         /// <b>Wind rather than a projectile, and only two of its three reels are ever drawn.</b>
         /// Its <em>impact</em> is a white ring that opens outward with shards in it, which is
         /// exactly what a roar looks like, and its <em>muzzle</em> is a flat horizontal ellipse
-        /// spreading — which over a hill drawn in perspective reads as the same pressure crossing
+        /// spreading - which over a hill drawn in perspective reads as the same pressure crossing
         /// the ground. <c>SiegeView.Roar</c> draws both, one upright and one flat, and the flight
         /// reel is baked because <see cref="BakeSpell"/> bakes a set and is never asked for
         /// (<c>SiegeMode.Bosses</c> does not load it). A roar is thrown at nothing, so it has no
@@ -625,14 +625,14 @@ namespace GlimmerGrove.EditorTools
         /// <para>
         /// <b>Iron rather than a hue</b>, and that is a decision the four before it could not
         /// make. Every boss colour here has to be one no ward and no gem wears, or the drawing
-        /// says a colour rule the game does not have — and between them the first four take every
+        /// says a colour rule the game does not have - and between them the first four take every
         /// entry in <c>Pal</c>'s board set that qualifies. <see cref="Pal.Dormant"/> is the
         /// unpowered slate, which is the one thing in this palette that reads as <em>metal</em>:
         /// it is the colour of a chain, it cannot be mistaken for any of the four, and it is the
         /// right answer rather than the last one left.
         /// </para>
         /// <para>
-        /// <b>A bolt rather than a sun or an orb, because what it throws is a chain</b> — a
+        /// <b>A bolt rather than a sun or an orb, because what it throws is a chain</b> - a
         /// shackler takes no health at all and simply stops a ward firing, so the one thing the
         /// flight must not read as is magic landing on a turret (invariant 33e asked of the boss
         /// and its spell together rather than of the effect alone).
@@ -641,7 +641,7 @@ namespace GlimmerGrove.EditorTools
         /// <b>It was picked when the body loosing it was a drawn bow, and that body is gone.</b>
         /// A shackler was rendered out of rigged 3D as an archer; the bake was withdrawn and it
         /// is a flat cut now (<c>make_siege_art.BOSS_SET</c>) whose attack lashes rather than
-        /// looses. Iron still reads — a bolt on a chain is what the mechanic is — but <b>this is
+        /// looses. Iron still reads - a bolt on a chain is what the mechanic is - but <b>this is
         /// the one prefab in this file whose body changed underneath it</b>, so it is owed a look
         /// on <c>Siege Projectile Contact Sheet</c> beside the new stand. No gate here opens a
         /// PNG (32b).
@@ -650,7 +650,7 @@ namespace GlimmerGrove.EditorTools
         /// <para>
         /// <b>A comet, and it took a gate to notice.</b> An arrow is a head with a shaft behind
         /// it, and framed square by <see cref="BakeSpell"/> it baked at <b>2.1 %</b> of its own
-        /// frame across — the thinnest reel in the game by a factor of fifteen, drawn on the hill
+        /// frame across - the thinnest reel in the game by a factor of fifteen, drawn on the hill
         /// as a thread two hundredths of a cell wide, shipped, and green on every check this
         /// project had. See <see cref="Shot.Comet"/> and <c>Tools/verify/fxreels.py</c>.
         /// </para>
@@ -666,8 +666,8 @@ namespace GlimmerGrove.EditorTools
         /// <em>shape</em> would not be.</b> The constraint on a boss colour is that it must not
         /// read as one of the board's four (see <see cref="Spell"/>); pressure and dust are both
         /// colourless, and the two bosses are four rungs and two chapters apart. What must differ
-        /// is the thing invariant 37z is actually about — a roar opens a ring over the whole hill
-        /// and a slam is one heavy arc coming down on one ward — and that is the prefab, not the
+        /// is the thing invariant 37z is actually about - a roar opens a ring over the whole hill
+        /// and a slam is one heavy arc coming down on one ward - and that is the prefab, not the
         /// grade.
         /// </para>
         /// <para>
@@ -677,11 +677,11 @@ namespace GlimmerGrove.EditorTools
         /// <para>
         /// <b>A comet for the snare's reason, and the one row here that also had to replace its
         /// impact.</b> <c>Slash03</c>'s flight is a crescent blade with the streaks of the swing
-        /// behind it — right, and 8 : 1, so framed square it baked at <b>5.2 %</b> across. Its
+        /// behind it - right, and 8 : 1, so framed square it baked at <b>5.2 %</b> across. Its
         /// impact is worse and cannot be framed out of it: all three of the pack's slash impacts
         /// are a <em>vertical line</em>, which baked to <b>3.1 %</b> across and drew on the board
         /// as a hairline down the turret. <b>That is the cleaver's fault a second time</b>, in the
-        /// same file, under the same comment that records fixing it — and the cleaver's fix was
+        /// same file, under the same comment that records fixing it - and the cleaver's fix was
         /// exactly this: keep the flight, name a different impact.
         /// </para>
         /// <para>
@@ -689,13 +689,13 @@ namespace GlimmerGrove.EditorTools
         /// <c>Hit_Capsule01</c> is a smoke ring with embers in it and hard chips flung outward;
         /// graded to <see cref="Pal.Radiance"/> it is stone and dust, and it is the only impact in
         /// this pack that has <em>weight</em> rather than light. Nothing else in the mode uses it,
-        /// so an ironclad cannot be confused with anything — which is invariant 37z's requirement
+        /// so an ironclad cannot be confused with anything - which is invariant 37z's requirement
         /// that the difference be a shape and not a tint, and the reason it can go on sharing a
         /// hue with the roar two chapters away.
         /// </para>
         /// <para>
         /// <b><c>Hit_Cube02</c> was baked first and looked at, which is the only reason it is not
-        /// in this game.</b> Its name says rubble and its picture is a stack of white boxes — the
+        /// in this game.</b> Its name says rubble and its picture is a stack of white boxes - the
         /// pack's low-poly debris mesh, drawn large, reading as geometry rather than as stone.
         /// Every number was healthy: 26 % ink, two thirds of its frame, straight through the gate
         /// that had just caught the hairline it replaced. <b>A gate proves a reel is a picture and
@@ -712,8 +712,8 @@ namespace GlimmerGrove.EditorTools
         ///
         /// <para>
         /// <b>Three of the eight wore the warbringer's reels, separated by a run-time hue.</b>
-        /// That is invariant 37z's fault in its purest form — the rule is written about bosses
-        /// and this is the drawing half of it — and the code that did it said so out loud: the
+        /// That is invariant 37z's fault in its purest form - the rule is written about bosses
+        /// and this is the drawing half of it - and the code that did it said so out loud: the
         /// gravemaw and the bonecaller were scoped to <c>roar_muzzle</c> and <c>roar_hit</c>
         /// because both are <see cref="Shot.Grounded"/> and the roar was the grounded row that
         /// already existed. Grounded is what they have in common with a roar. It is not what they
@@ -721,14 +721,14 @@ namespace GlimmerGrove.EditorTools
         /// </para>
         /// <para>
         /// <b>A ring that closes, because a devour is a pull.</b> The whole difference between
-        /// this and a roar is direction — a roar pushes outward off the thing casting it and this
-        /// draws inward onto it (<c>SiegeView.Feed</c>) — so what it wants is a ring with a
+        /// this and a roar is direction - a roar pushes outward off the thing casting it and this
+        /// draws inward onto it (<c>SiegeView.Feed</c>) - so what it wants is a ring with a
         /// current in it rather than a shockwave with shards. <c>Spiral02</c>'s impact is that,
         /// and <see cref="Pal.Verdant"/> is the sicklier green on the wheel, which is the colour
         /// a mouth should be.
         /// </para>
         /// <para>
-        /// <b>Grounded, so only two of its three reels are baked</b> — nothing crosses the hill,
+        /// <b>Grounded, so only two of its three reels are baked</b> - nothing crosses the hill,
         /// and a flight reel nothing can ask for is a bundle entry for the life of the game.
         /// </para>
         /// </summary>
@@ -744,8 +744,8 @@ namespace GlimmerGrove.EditorTools
         /// <b>Spectral rather than pressure, which is the whole point of not being a roar.</b>
         /// <c>Ghostly02</c>'s impact is a soft burst that blooms and hangs rather than snapping
         /// outward, and it is the only thing in this pack that looks like something arriving from
-        /// somewhere else. Graded to <see cref="Pal.Glass"/> — the field's own ice white against
-        /// the roar's warm <see cref="Pal.Radiance"/> — it is the light the dead come up in.
+        /// somewhere else. Graded to <see cref="Pal.Glass"/> - the field's own ice white against
+        /// the roar's warm <see cref="Pal.Radiance"/> - it is the light the dead come up in.
         /// </para>
         /// <para>
         /// <b>`crypt` rather than `bone`, because the cast is already called that.</b> The
@@ -767,7 +767,7 @@ namespace GlimmerGrove.EditorTools
         /// <b>The pack's second lightning, because the first is spoken for and the third is the
         /// stormcall's neighbour.</b> Nothing on the line fires a lightning projectile (the
         /// starter's four are fireballs graded four ways), so a thunderbolt crossing the hill
-        /// is told apart from every bolt by shape alone — invariant 33e's test, a different
+        /// is told apart from every bolt by shape alone - invariant 33e's test, a different
         /// <em>kind</em> of object. Graded to <see cref="Pal.Sun"/>, the storm's own yellow and
         /// deliberately not the amber ward's: lightning is not a colour rule, and this one lands
         /// on whichever ward banked the most whatever it wears.
@@ -794,8 +794,8 @@ namespace GlimmerGrove.EditorTools
         /// <para>
         /// <b>A fireball graded to stone</b>, which is not the contradiction it sounds. What the
         /// pack draws as a fireball is a dense bright head with a trail of embers and smoke
-        /// behind it; pulled the whole way onto <see cref="Pal.Thorn"/> — the dusty brown
-        /// nothing else on this board wears — the head reads as a rock and the trail as the dust
+        /// behind it; pulled the whole way onto <see cref="Pal.Thorn"/> - the dusty brown
+        /// nothing else on this board wears - the head reads as a rock and the trail as the dust
         /// it sheds, and the second fireball is the heaviest-headed of the three. The ward's own
         /// bolts are the <em>first</em> fireball graded four ways, so this shares a family with
         /// them and a shape with none: a boulder is round where a bolt is a streak.
@@ -804,7 +804,7 @@ namespace GlimmerGrove.EditorTools
         /// <b>Its impact is dust rather than fire, and it is the cleaver's fix a third time.</b>
         /// A fireball's own impact is a fireball bursting, which on a ward under a boulder would
         /// say the wrong thing entirely; <c>Hit_Capsule03</c> is a ring of grit and chips, and
-        /// the ironclad's <c>Capsule01</c> is deliberately not reused — two bosses two chapters
+        /// the ironclad's <c>Capsule01</c> is deliberately not reused - two bosses two chapters
         /// apart may share a hue and must not share a drawing (invariant 37dc).
         /// </para>
         /// <para><b>A candidate until it has been looked at</b>, for <see cref="Levin"/>'s reason.</para>
@@ -820,8 +820,8 @@ namespace GlimmerGrove.EditorTools
         /// <para>
         /// <b>Its own reel because the one it was borrowing is cut for something a hundred times
         /// more frequent, and that is the whole fault.</b> A charm used to detonate in
-        /// <c>hit_{c}</c> — a ward's *impact*, framed at <see cref="BurstSide"/> because a lit line
-        /// lands about eighteen of them a second — drawn by the view at four and a half cells. So
+        /// <c>hit_{c}</c> - a ward's *impact*, framed at <see cref="BurstSide"/> because a lit line
+        /// lands about eighteen of them a second - drawn by the view at four and a half cells. So
         /// the biggest moment on the field was a small reel blown up two and a half times, which is
         /// exactly what "the animations are horrendous" is when it is measured rather than argued
         /// about. It is the <see cref="Storm"/> argument arriving a second time: <em>sharing a reel
@@ -832,8 +832,8 @@ namespace GlimmerGrove.EditorTools
         /// <b>A sun rather than a firework</b>, which is what the survey said
         /// (<c>Tools/charm_candidates.png</c>): the pack's three fireworks are small sparse rings
         /// that read at a cell and vanish at four, and the only things in it that hold a *body* at
-        /// that size are the three suns. <c>Sun02</c> is the one none of the bosses took — the
-        /// warlord throws <c>Sun01</c> and the overlord <c>Sun03</c> — and what keeps the three
+        /// that size are the three suns. <c>Sun02</c> is the one none of the bosses took - the
+        /// warlord throws <c>Sun01</c> and the overlord <c>Sun03</c> - and what keeps the three
         /// apart on a board is the colour rather than the mesh: a boss's spell is graded to one of
         /// the four <c>Pal</c> entries that is <em>not</em> a gem colour, and a charm is graded to
         /// the gem colour it was paid. Nothing else on this field wears a board colour at that
@@ -842,7 +842,7 @@ namespace GlimmerGrove.EditorTools
         /// <para>
         /// <b>Graded with the roster's constants and not the elemental pair.</b> <c>Sun02</c> is
         /// painted violet, so it is a source being carried the whole way onto a hue it does not
-        /// have — which is the case <see cref="RosterToward"/> exists for, and the case
+        /// have - which is the case <see cref="RosterToward"/> exists for, and the case
         /// <see cref="Toward"/>'s third-of-the-way lean is explicitly not (see <see cref="Shots"/>).
         /// </para>
         /// </summary>
@@ -867,8 +867,8 @@ namespace GlimmerGrove.EditorTools
         /// <para>
         /// <b>Fourteen frames, which is two more than an impact and six fewer than a storm.</b> A
         /// charm holds the fall and slows the run's own clock while it plays
-        /// (<c>SiegeView.Dilate</c>) — long enough to be watched, which is the whole of what was
-        /// asked for — so a twelve-frame reel at 30fps would be over in four tenths of a second
+        /// (<c>SiegeView.Dilate</c>) - long enough to be watched, which is the whole of what was
+        /// asked for - so a twelve-frame reel at 30fps would be over in four tenths of a second
         /// with two thirds of the window still to run.
         /// </para>
         /// </summary>
@@ -879,7 +879,7 @@ namespace GlimmerGrove.EditorTools
         /// How much bigger the warlord's three reels are than a ward's.
         ///
         /// <b>A boss's spell is on screen about twice a minute against a bolt's twenty-eight a
-        /// second</b>, so it can afford the frames — and it has to be worth stopping for, which is
+        /// second</b>, so it can afford the frames - and it has to be worth stopping for, which is
         /// the whole of invariant 26f's rule about price and spectacle read from the other end:
         /// this one is rare, so it is allowed to be loud.
         /// </summary>
@@ -890,7 +890,7 @@ namespace GlimmerGrove.EditorTools
         /// Where a named prefab lives in the pack.
         ///
         /// <b>Three folders tried in turn, because a muzzle and an impact are prefabs of their own
-        /// here.</b> Every projectile names its own pair, which is what the bake normally follows —
+        /// here.</b> Every projectile names its own pair, which is what the bake normally follows -
         /// but a projectile whose flight is right and whose flash is wrong is a real case (a
         /// crescent blade that opens with an expanding ring), and the answer to it is to take the
         /// two from somewhere else rather than to give up the flight.
@@ -929,7 +929,7 @@ namespace GlimmerGrove.EditorTools
         ///
         /// <para>
         /// <b>Two different questions, and answering them with one number cost two of the four
-        /// muzzle flashes.</b> How long the reel is on screen is a board decision — twenty-eight
+        /// muzzle flashes.</b> How long the reel is on screen is a board decision - twenty-eight
         /// of these a second means each has to be over quickly. How long the effect *takes* is the
         /// pack's decision, and several of these open with a wind-up: the fireball's muzzle draws a
         /// ring inward before it goes off, and the lightning's builds for a third of a second
@@ -963,13 +963,13 @@ namespace GlimmerGrove.EditorTools
         /// <b>A square would either shrink the head to nothing or cut the tail off.</b> Measured on
         /// the pack: a fireball's head is about 3.3 units across and the flame it leaves behind
         /// runs 21; a poison dart is 1.4 against 20. Framing a square that holds the trail puts a
-        /// head four pixels wide in the middle of it — which is exactly how the first bake came out
+        /// head four pixels wide in the middle of it - which is exactly how the first bake came out
         /// and what the contact sheet showed.
         /// </para>
         /// <para>
         /// <b>But the shape is measured rather than fixed, and fixing it was the second version of
         /// the same mistake.</b> Forced to three-to-one, a comet whose real proportions are eight
-        /// to one is padded sideways until it is a quarter the width of its own frame — and since
+        /// to one is padded sideways until it is a quarter the width of its own frame - and since
         /// the view sizes a bolt by its frame's <em>width</em>, that padding came off the thing on
         /// the board: on the render the fireball crossed the hill as a twelve-pixel sliver. So the
         /// frame is as tall as its own trail wants and no wider than its own head, clamped only to
@@ -990,7 +990,7 @@ namespace GlimmerGrove.EditorTools
         /// The shape the bake aims a comet's <em>flight</em> at, before measuring what it got.
         ///
         /// Only <see cref="SlowestBake"/> and <see cref="FastestBake"/> of it are available, so
-        /// this is a target rather than a promise — and it is deliberately near the middle of the
+        /// this is a target rather than a promise - and it is deliberately near the middle of the
         /// band above, so a reel that misses it lands somewhere still comet-shaped.
         /// </summary>
         const float WantedShot = 2.6f;
@@ -1001,14 +1001,14 @@ namespace GlimmerGrove.EditorTools
         /// <para>
         /// <b>This pack's trails are about six times the head, and that cannot all be shown.</b>
         /// The view sizes a bolt by its frame's <em>width</em>, so a head worth looking at means a
-        /// frame roughly a head wide — and at six to one the sprite is then longer than the flight
+        /// frame roughly a head wide - and at six to one the sprite is then longer than the flight
         /// it has to cross, which reads as a static ribbon rather than as something travelling.
         /// Flying it slower to shorten the trail only goes so far before the flames pile onto the
         /// head and the comet becomes an oval with debris round it, which is a bug this project
         /// has shipped once already.
         /// </para>
         /// <para>
-        /// So the far tail is left out of the frame instead — and <b>dissolved rather than cut</b>
+        /// So the far tail is left out of the frame instead - and <b>dissolved rather than cut</b>
         /// (<see cref="TailFade"/>), because the end of one of these is faint and thinning anyway,
         /// so a ramp over the last of it is invisible where a straight edge would be a line drawn
         /// across the sky.
@@ -1023,7 +1023,7 @@ namespace GlimmerGrove.EditorTools
         /// An impact is radial, so it is square, and 192 as every other reel in <c>Fx/Siege</c>.
         ///
         /// <b>A muzzle flash is not radial and was framed as though it were.</b> It comes *out* of
-        /// a barrel, so all of it is in front of the point it is drawn on — and a square centred on
+        /// a barrel, so all of it is in front of the point it is drawn on - and a square centred on
         /// that point spends half its picture on the empty air behind the turret. Measured: the
         /// venom flash filled 42% of its own frame and the fireball's 60%. So a muzzle is anchored
         /// near its own bottom edge (<c>SiegeView.MuzzleAt</c>) and allowed to come out taller than
@@ -1065,7 +1065,7 @@ namespace GlimmerGrove.EditorTools
         /// <para>
         /// <b>Bounded rather than free, because speed is not a display preference here.</b> These
         /// trails are world-space systems emitting per second, so the length a trail smears over is
-        /// speed times particle lifetime — fly one at a fifth of its speed and the flames that
+        /// speed times particle lifetime - fly one at a fifth of its speed and the flames that
         /// should stream out behind it pile onto the head, and the comet becomes an oval with
         /// debris round it. That is a bug the bench shipped once and it is worth not shipping
         /// twice. Inside this band the tail shortens and stays a tail; outside it, the frame grows
@@ -1105,27 +1105,27 @@ namespace GlimmerGrove.EditorTools
         public static void Contact() => Run(write: false, contact: true, parts: Parts.Elemental);
 
         /// <summary>
-        /// Bakes only the four elemental bolts and the eight boss spells — see <see cref="Parts"/>.
+        /// Bakes only the four elemental bolts and the eight boss spells - see <see cref="Parts"/>.
         ///
         /// <b>Narrow because the roster is 228 reels and these are twelve.</b> The other two parts
         /// already had an entry of their own and this did not, so the only way to re-bake a
-        /// <see cref="Shots"/> row was to re-bake everything — twenty minutes to rewrite 240 files
+        /// <see cref="Shots"/> row was to re-bake everything - twenty minutes to rewrite 240 files
         /// that had not changed, which is how a bake comes to be avoided and a table comes to
         /// disagree with the pictures on disk.
         /// </summary>
         [MenuItem("Glimmer Grove/Art/Bake Elemental Projectiles", false, 33)]
         public static void BakeElemental() => Run(write: true, contact: false, parts: Parts.Elemental);
 
-        /// <summary>Bakes only the turret roster — see <see cref="Parts"/>.</summary>
+        /// <summary>Bakes only the turret roster - see <see cref="Parts"/>.</summary>
         [MenuItem("Glimmer Grove/Art/Bake Turret Projectiles", false, 34)]
         public static void BakeRoster() => Run(write: true, contact: false, parts: Parts.Roster);
 
         /// <summary>
-        /// Bakes only the stormcall's strike — see <see cref="Parts"/>.
+        /// Bakes only the stormcall's strike - see <see cref="Parts"/>.
         ///
         /// <b>Its own item for the same reason the roster has one.</b> It comes out of a different
         /// bought pack, it is framed round a ground burst rather than round a flying head, and it
-        /// is graded and lit by numbers nothing else uses — so it is the one reel that gets tuned
+        /// is graded and lit by numbers nothing else uses - so it is the one reel that gets tuned
         /// on its own, and re-baking thirty others to look at it would rewrite art nobody asked to
         /// change and leave <see cref="Verify"/> comparing a fresh bake against a fresh bake.
         /// </summary>
@@ -1133,7 +1133,7 @@ namespace GlimmerGrove.EditorTools
         public static void BakeStrikeOnly() => Run(write: true, contact: false, parts: Parts.Strike);
 
         /// <summary>
-        /// Bakes only the four charm detonations — see <see cref="Charms"/>.
+        /// Bakes only the four charm detonations - see <see cref="Charms"/>.
         ///
         /// <b>Its own item for <see cref="BakeStrikeOnly"/>'s reason.</b> These are four reels cut
         /// bigger and longer than anything else on the field and they are the ones being looked at;
@@ -1169,7 +1169,7 @@ namespace GlimmerGrove.EditorTools
                 {
                     var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath(thrown.Prefab));
                     if (prefab == null)
-                        Debug.LogWarning($"[siege shots] {thrown.Prefab} is not in this project — skipped.");
+                        Debug.LogWarning($"[siege shots] {thrown.Prefab} is not in this project - skipped.");
                     else
                         BakeSpell(stage.transform, cam, prefab, thrown, made);
                 }
@@ -1198,8 +1198,8 @@ namespace GlimmerGrove.EditorTools
         ///
         /// <para>
         /// <b>Its own entry for <see cref="BakeStrikeOnly"/>'s reason, one step finer.</b> A
-        /// turret's effect is tuned on its own — a prefab swapped, a companion overridden, a slim
-        /// applied — and re-baking the other eighteen to look at one rewrites 216 reels nobody
+        /// turret's effect is tuned on its own - a prefab swapped, a companion overridden, a slim
+        /// applied - and re-baking the other eighteen to look at one rewrites 216 reels nobody
         /// asked to change. It also leaves <see cref="Verify"/> comparing a fresh bake against a
         /// fresh bake, which is the one thing that check must not be reduced to.
         /// </para>
@@ -1271,7 +1271,7 @@ namespace GlimmerGrove.EditorTools
                     // The pack is a bought asset and a checkout may not have it. Say which one
                     // is missing and carry on, exactly as the Python art tools pass when the
                     // licensed zips are absent.
-                    Debug.LogWarning($"[siege shots] {shot.Prefab} is not in this project — skipped.");
+                    Debug.LogWarning($"[siege shots] {shot.Prefab} is not in this project - skipped.");
                     continue;
                 }
 
@@ -1280,7 +1280,7 @@ namespace GlimmerGrove.EditorTools
 
             // **One row per boss, and eight rather than four.** A chapter shipped two bosses
             // sharing a body reel and separated by a run-time hue; this is the same fault's
-            // other half — two spells that were one prefab at two colours. Each of the eight
+            // other half - two spells that were one prefab at two colours. Each of the eight
             // now throws a different *kind* of object, which is invariant 33e's test asked of
             // the thing the author places rather than of the thing the player makes.
             //
@@ -1289,7 +1289,7 @@ namespace GlimmerGrove.EditorTools
             // which had been wearing the warbringer's two reels under their own colours for two
             // chapters. `SiegeArtTests.EveryBossSpellIsItsOwnDrawing` is what keeps the count
             // honest now, because a ninth boss sharing an eighth's reels is green everywhere
-            // else — it loads, it draws, and it is the wrong picture.
+            // else - it loads, it draws, and it is the wrong picture.
             // **Ten now**: the fifth chapter's two rows, `Levin` and `Boulder`, were added with
             // their bosses (`SiegeKind.Thunderer`, `.Colossus`), and the same fixture that counted
             // the eight holds these to their own drawings.
@@ -1299,7 +1299,7 @@ namespace GlimmerGrove.EditorTools
                 var warlord = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath(thrown.Prefab));
 
                 if (warlord == null)
-                    Debug.LogWarning($"[siege shots] {thrown.Prefab} is not in this project — skipped.");
+                    Debug.LogWarning($"[siege shots] {thrown.Prefab} is not in this project - skipped.");
                 else
                     BakeSpell(stage, cam, warlord, thrown, made);
             }
@@ -1312,7 +1312,7 @@ namespace GlimmerGrove.EditorTools
         /// <b>It is baked on the *comet* path rather than the spell one, and the first cut proved
         /// why.</b> <see cref="BakeSpell"/> frames square because the thing it was written for is
         /// an orb; a bolt of lightning is eight to one, so framed square it came out as a thread
-        /// down the middle of a 384-square texture with ninety per cent of the frame empty —
+        /// down the middle of a 384-square texture with ninety per cent of the frame empty -
         /// invariant 37k's sliver exactly, and the second time this pack has produced it. What a
         /// bolt wants is a tall narrow frame measured off its own picture.
         /// </para>
@@ -1328,13 +1328,13 @@ namespace GlimmerGrove.EditorTools
             var storm = AssetDatabase.LoadAssetAtPath<GameObject>(PathOf(Storm));
 
             if (storm == null)
-                Debug.LogWarning($"[siege shots] {PathOf(Storm)} is not in this project — skipped.");
+                Debug.LogWarning($"[siege shots] {PathOf(Storm)} is not in this project - skipped.");
             else
                 BakeStorm(stage, cam, storm, made);
         }
 
         /// <summary>
-        /// The four charm detonations — see <see cref="Charms"/>.
+        /// The four charm detonations - see <see cref="Charms"/>.
         ///
         /// <b>Captured standing still, like a strike and unlike a bolt.</b> There is nothing to
         /// fly: a charm goes off in the cell it stood in, so what is wanted is the burst fully
@@ -1353,7 +1353,7 @@ namespace GlimmerGrove.EditorTools
                 {
                     // The pack is a bought asset and a checkout may not have it: say which one is
                     // missing and carry on, exactly as every other part of this bake does.
-                    Debug.LogWarning($"[siege shots] {shot.Prefab} is not in this project — " +
+                    Debug.LogWarning($"[siege shots] {shot.Prefab} is not in this project - " +
                                      $"charm_blast_{shot.Key} skipped.");
                     continue;
                 }
@@ -1371,7 +1371,7 @@ namespace GlimmerGrove.EditorTools
         {
             if (made.Count == 0)
             {
-                Debug.LogWarning("[siege shots] nothing baked — is the projectile pack imported?");
+                Debug.LogWarning("[siege shots] nothing baked - is the projectile pack imported?");
                 return;
             }
 
@@ -1381,7 +1381,7 @@ namespace GlimmerGrove.EditorTools
         }
 
         /// <summary>
-        /// Bakes one effect per bought turret — see <see cref="Roster"/>.
+        /// Bakes one effect per bought turret - see <see cref="Roster"/>.
         ///
         /// <b>A missing prefab is a warning and never a throw</b>, exactly as the elemental four
         /// are: the pack is a bought asset and a checkout may not have it, and the whole of the
@@ -1395,13 +1395,13 @@ namespace GlimmerGrove.EditorTools
                 var shot = Roster[i];
 
                 // Named rather than indexed, so a re-rung shelf cannot point this at the wrong
-                // turret — the shelf has already been re-rung twice (invariants 37ax, 37ay).
+                // turret - the shelf has already been re-rung twice (invariants 37ax, 37ay).
                 if (!string.IsNullOrEmpty(only) && shot.Key != only) continue;
                 var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PathOf(shot));
 
                 if (prefab == null)
                 {
-                    Debug.LogWarning($"[siege shots] {shot.Prefab} is not in this project — " +
+                    Debug.LogWarning($"[siege shots] {shot.Prefab} is not in this project - " +
                                      $"{shot.Key} skipped.");
                     continue;
                 }
@@ -1437,14 +1437,14 @@ namespace GlimmerGrove.EditorTools
         /// <b>Nearly all the way, where the elemental four are pulled about a third.</b> Those
         /// four were <em>chosen</em> in invariant 37k because the pack already paints them roughly
         /// the colours the wards burn, so a lean is enough and more would flatten a fireball's
-        /// yellow-hot head into one red. Nothing in the roster was chosen that way — a turret's
+        /// yellow-hot head into one red. Nothing in the roster was chosen that way - a turret's
         /// effect is picked for its silhouette, so it arrives teal, magenta or gold and has to be
         /// carried the whole way. Left at a lean, a red ward fires a teal arrow.
         /// </para>
         /// <para>
         /// <b>Not the whole way, and the remainder is the point.</b> <see cref="Grade"/> keeps a
-        /// pixel's own saturation and value — a near-white glint stays near-white, a deep body
-        /// stays deep — so a full pull still leaves the effect's internal structure intact, and
+        /// pixel's own saturation and value - a near-white glint stays near-white, a deep body
+        /// stays deep - so a full pull still leaves the effect's internal structure intact, and
         /// the last sixth keeps a little of whatever the pack drew so the four do not come out as
         /// four flat stencils.
         /// </para>
@@ -1459,7 +1459,7 @@ namespace GlimmerGrove.EditorTools
         /// <see cref="MostWhite"/> exists so a fireball's glint and the flash inside a lightning
         /// bolt stay light rather than being painted a flat colour, and at 0.62 it is right for
         /// four effects the pack already draws in roughly the right hue. Half this roster is drawn
-        /// pale — an icicle, a crystal, a plasma core, a spark — so under the same rule the grade
+        /// pale - an icicle, a crystal, a plasma core, a spark - so under the same rule the grade
         /// had almost nothing to bite on and they came out of the bake white with a tinge: a blue
         /// ward firing a white shard, which is the one thing invariant 37f is about. It is the same
         /// measurement 37k already records (0.18 median saturation on a bolt fired by a blue
@@ -1502,11 +1502,11 @@ namespace GlimmerGrove.EditorTools
         ///
         /// <para>
         /// <b>Baked in four colours rather than bleached and tinted at run time, and that was
-        /// settled by looking.</b> A bleached reel — white, with all its brightness in coverage —
+        /// settled by looking.</b> A bleached reel - white, with all its brightness in coverage -
         /// costs a quarter as much and can be worn in any colour by one multiply, which is what
         /// this shipped as first. Held up beside the elemental fireball it was a flat pink smear:
         /// a multiply can only vary <em>value</em>, and what makes these effects read is variation
-        /// in <em>hue</em> — a yellow-hot head inside an orange body inside a red trail. Neither a
+        /// in <em>hue</em> - a yellow-hot head inside an orange body inside a red trail. Neither a
         /// white-core overlay nor a saturation ramp recovered it, because this pack's hot cores are
         /// saturated yellow rather than white and there is nothing for a white-core rule to catch.
         /// That is invariant 37l met from a third direction, and the cost of ignoring it is the one
@@ -1602,7 +1602,7 @@ namespace GlimmerGrove.EditorTools
 
             // **Two passes, because the framing and the flight decide each other.** How long a
             // trail is depends on how fast the thing is flying, and how fast it should fly depends
-            // on how much room its trail has — so the first pass flies it as authored purely to
+            // on how much room its trail has - so the first pass flies it as authored purely to
             // find out how big the head reads and how far the tail runs, and the second one flies
             // it at whatever makes that tail fit a comet-shaped frame. See `Trailing`, which is
             // this and is shared with the two spells that are comets.
@@ -1620,7 +1620,7 @@ namespace GlimmerGrove.EditorTools
             // The pack fires as three parts and the vendor's own demo plays all three. Showing the
             // middle one alone was judging a sentence by its verb.
             //
-            // The impact stays square — it is radial and it is drawn where something happened —
+            // The impact stays square - it is radial and it is drawn where something happened -
             // while the flash is anchored at the barrel and free to be taller than it is wide.
             var muzzle = Companion(prefab, "muzzlePrefab");
             if (muzzle != null)
@@ -1672,7 +1672,7 @@ namespace GlimmerGrove.EditorTools
         /// A stormcall's bolt and the burst it leaves, cut bigger than a ward's.
         ///
         /// <para>
-        /// <b>The comet path with a bigger frame</b> — a ward's bolt and this are the same shape
+        /// <b>The comet path with a bigger frame</b> - a ward's bolt and this are the same shape
         /// and differ only in how often they happen, so they want the same framing and a different
         /// size. A ward fires four or five a second and is cut to read at that rate; this goes off
         /// once a run and is what forty gems bought, so it is taller, kept longer and framed with
@@ -1709,8 +1709,8 @@ namespace GlimmerGrove.EditorTools
         /// <para>
         /// <b>Because a sprite whose frame is bigger than its content cannot be reasoned about
         /// from outside.</b> <see cref="Frame"/> sizes the world frame from the widest thing in
-        /// shot, so an effect that is wide and short — which a strike is, once its ground burst is
-        /// rendered at all — comes out in a frame a third taller than anything drawn in it. That
+        /// shot, so an effect that is wide and short - which a strike is, once its ground burst is
+        /// rendered at all - comes out in a frame a third taller than anything drawn in it. That
         /// is invisible while a reel is only ever *drawn*: transparent padding costs nothing to
         /// look at. It stops being invisible the moment the board has to know **where the bolt
         /// ends**, which is what keeps a strike on the plate rather than over the status bar
@@ -1811,14 +1811,14 @@ namespace GlimmerGrove.EditorTools
         const float LeanestStorm = 0.55f, LongestStorm = 3.0f;
 
         /// <summary>
-        /// How far the rig is pitched down to bake a strike — see <see cref="Roll"/>'s tilt.
+        /// How far the rig is pitched down to bake a strike - see <see cref="Roll"/>'s tilt.
         ///
         /// <para>
         /// <b>Enough that a ring on the floor is an ellipse, and not so much that the bolt is
         /// foreshortened.</b> At nought the pack's ground crack, splat, shockwave and rings are
         /// all edge-on hairlines and the reel is a bolt with a small star at the end of it; every
         /// one of them is a flat quad, so what shows them is the only thing that ever could. A
-        /// strike is also the one effect here whose *ground* is part of the picture — the board
+        /// strike is also the one effect here whose *ground* is part of the picture - the board
         /// draws raiders standing on a hill, so a burst spreading around their feet is what says
         /// the lightning arrived somewhere rather than merely existed.
         /// </para>
@@ -1826,7 +1826,7 @@ namespace GlimmerGrove.EditorTools
         const float StormTilt = 26f;
 
         /// <summary>
-        /// How a strike is graded and lit — see <see cref="Strike"/>.
+        /// How a strike is graded and lit - see <see cref="Strike"/>.
         ///
         /// <para>
         /// <b><c>Toward</c> is high where a ward's is a third, and the pack is why.</b>
@@ -1834,7 +1834,7 @@ namespace GlimmerGrove.EditorTools
         /// already wearing roughly the colour the ward burns, so agreeing with <c>Pal</c> is a
         /// lean. Nothing about this pack was chosen that way: its bolt is white with cyan through
         /// the core and a gold flare at the end, so a .38 lean left the cyan exactly where it was
-        /// — which on a device read as lightning with a green tinge in it, in an item whose own
+        /// - which on a device read as lightning with a green tinge in it, in an item whose own
         /// icon draws its bolts in <c>Pal.Sun</c>.
         /// </para>
         /// <para>
@@ -1845,7 +1845,7 @@ namespace GlimmerGrove.EditorTools
         /// </para>
         /// <para>
         /// <b><c>White</c> is the highest here of anywhere</b>, because a white-hot core inside a
-        /// coloured halo is not a nicety of lightning, it is what lightning <em>is</em> — and it
+        /// coloured halo is not a nicety of lightning, it is what lightning <em>is</em> - and it
         /// is the difference between the vendor's picture and a gold streak. It is safe here in a
         /// way invariant 37f says it would not be on a ward: a strike answers to no colour rule,
         /// so a white core cannot be read as the wrong element.
@@ -1854,7 +1854,7 @@ namespace GlimmerGrove.EditorTools
         const float StrikeToward = .80f, StrikeWhite = .76f, StrikeFloor = .72f;
 
         /// <summary>
-        /// How thick a strike is drawn and how much light it spills — invariant 37af's two
+        /// How thick a strike is drawn and how much light it spills - invariant 37af's two
         /// numbers, which this reel was never given.
         ///
         /// <b>Both further than a ward's</b> (.62 and .85): a bolt is thin geometry, so the curve
@@ -1864,7 +1864,7 @@ namespace GlimmerGrove.EditorTools
         const float StrikeLift = .50f, StrikeBloom = 1.85f;
 
         /// <summary>
-        /// The colour the wide half of a strike's halo is lit in — see <see cref="Recipe.Halo"/>.
+        /// The colour the wide half of a strike's halo is lit in - see <see cref="Recipe.Halo"/>.
         ///
         /// <para>
         /// <b><c>Pal.Ember</c>, so the light goes gold at the bolt and warm in the air.</b> The
@@ -1882,7 +1882,7 @@ namespace GlimmerGrove.EditorTools
         static Color StrikeHalo => Pal.Ember;
 
         /// <summary>
-        /// How hard a strike's core is blown out, and from what coverage — see
+        /// How hard a strike's core is blown out, and from what coverage - see
         /// <see cref="Recipe.Hot"/>.
         ///
         /// <para>
@@ -1899,7 +1899,7 @@ namespace GlimmerGrove.EditorTools
         /// The warlord's spell, as the same three parts a ward's bolt is.
         ///
         /// <b>Its own method rather than a flag on <see cref="BakeOne"/></b>, because almost every
-        /// number differs — it is baked bigger, kept longer, and framed with more of its own tail,
+        /// number differs - it is baked bigger, kept longer, and framed with more of its own tail,
         /// and a <c>BakeOne</c> with six extra parameters would be the same method twice with the
         /// two versions interleaved.
         /// </summary>
@@ -1910,7 +1910,7 @@ namespace GlimmerGrove.EditorTools
             float seconds = SiegeTuning.BossFlight * 2f;
 
             // **Framed square and flown at the speed it was authored at, unlike every bolt.**
-            // The wards' four are comets — nearly all trail — so their frames are tall and their
+            // The wards' four are comets - nearly all trail - so their frames are tall and their
             // speed is bent until the tail fits one. This is an orb: baked as a comet it came out
             // 112 x 512 with the whole effect inside the top ninety rows and *eighty per cent of
             // the frame empty*, which the view then draws as a violet sliver seven cells long
@@ -1932,7 +1932,7 @@ namespace GlimmerGrove.EditorTools
             if (!thrown.Grounded)
                 made[thrown.Key] = thrown.Comet
 
-                    // **Framed round its head, and flown at whatever makes its tail fit** — the
+                    // **Framed round its head, and flown at whatever makes its tail fit** - the
                     // two decide each other, so the speed is found the way `BakeOne` finds it
                     // rather than taken as authored. A comet flown at its authored speed into a
                     // frame sized for an orb is how both of these came out as threads.
@@ -1968,7 +1968,7 @@ namespace GlimmerGrove.EditorTools
         /// <b>The boss rows could not say this and the roster rows always could</b>, which is the
         /// whole of why an ironclad's axe landed as a two-pixel line. <see cref="Shot.Muzzle"/>
         /// and <see cref="Shot.Hit"/> exist precisely for "the flight is right and its companions
-        /// are not" — the cleaver's note records the case being met and fixed — and
+        /// are not" - the cleaver's note records the case being met and fixed - and
         /// <see cref="BakeSpell"/> simply never read them, so the one table that most needed the
         /// escape hatch was the one table without it.
         /// </summary>
@@ -1984,7 +1984,7 @@ namespace GlimmerGrove.EditorTools
                 // absent is reported once by the caller and every prefab in it goes missing
                 // together. Falling back silently would bake the wrong picture under the right
                 // name, which is the one outcome no gate here can see.
-                Debug.LogWarning($"[siege shots] {named} is not in this project — " +
+                Debug.LogWarning($"[siege shots] {named} is not in this project - " +
                                  $"falling back to the prefab's own {field}.");
             }
 
@@ -1996,7 +1996,7 @@ namespace GlimmerGrove.EditorTools
         ///
         /// <b>Lifted out of <see cref="BakeOne"/> the day a second path needed it.</b> Every trail
         /// in this pack is a world-space system emitting per second, so the length one smears over
-        /// is speed times particle lifetime — which makes framing and flight two halves of one
+        /// is speed times particle lifetime - which makes framing and flight two halves of one
         /// decision, and makes a comet flown at its authored speed into a frame chosen for
         /// something else the bug the bench shipped once already. The band is
         /// <see cref="SlowestBake"/>..<see cref="FastestBake"/> for that reason: outside it the
@@ -2014,18 +2014,18 @@ namespace GlimmerGrove.EditorTools
             // **Rounded to hundredths, because this number multiplies every frame's position and
             // the measurement behind it is not bit-stable.** `Sample` reads `Renderer.bounds`
             // after simulating, and a GPU is not obliged to land a bounds query on the same last
-            // bit twice — normally invisible, because <see cref="CompareAll"/> allows six levels
+            // bit twice - normally invisible, because <see cref="CompareAll"/> allows six levels
             // of drift. Here it is not invisible: the factor scales *distance travelled*, so a
             // difference in its last digit puts the head a fraction further along on frame one
             // and a multiple of that fraction further along on frame seventeen. Measured on the
-            // ironclad's blade, which drifted 6.2 levels at frame 3 and 8.5 by frame 17 —
+            // ironclad's blade, which drifted 6.2 levels at frame 3 and 8.5 by frame 17 -
             // monotonically, which is the signature of a speed and never of a rasteriser.
             //
-            // **Thousandths, which is the finest grid that still absorbs the wobble** — and the
+            // **Thousandths, which is the finest grid that still absorbs the wobble** - and the
             // fineness is the point rather than a detail. The noise being removed is a last-bit
             // difference, parts per million; a grid a thousand times coarser than that is ample.
             // The first cut used *hundredths*, which is also ample and perturbs the value ten
-            // times as far — far enough to push a reel sitting near a quantisation boundary in
+            // times as far - far enough to push a reel sitting near a quantisation boundary in
             // `Pixels` across it. That is not theoretical: it re-framed eight shipped frost
             // turret reels from 128 to 112 pixels wide, drawing every one of them 14 % longer,
             // as a side effect of a change whose whole purpose was to stop framing moving.
@@ -2120,7 +2120,7 @@ namespace GlimmerGrove.EditorTools
         /// <b><see cref="Shot"/> has carried <see cref="Shot.Toward"/>, <see cref="Shot.Keep"/>
         /// and <see cref="Shot.Floor"/> since the day their note was written, and
         /// <see cref="BakeSpell"/> has never read one of them.</b> That note says, in as many
-        /// words, that how far a source must be carried is a fact about <em>that source</em> — and
+        /// words, that how far a source must be carried is a fact about <em>that source</em> - and
         /// then the boss table, which is the one table whose eight rows come from eight unrelated
         /// families, was wired to a single constant. It is the third field on this row to turn out
         /// to be decorative (see <see cref="Companion"/> for the muzzle and the impact), and all
@@ -2131,7 +2131,7 @@ namespace GlimmerGrove.EditorTools
         /// is a 38 % lean, which is right only where the pack already draws roughly the hue being
         /// graded to; <see cref="RosterToward"/> is 84 % and exists for a source that arrives in
         /// the wrong colour entirely. Today every boss row wants the lean and every boss row gets
-        /// it — <see cref="Verify"/> proves that, because a changed number would rewrite every
+        /// it - <see cref="Verify"/> proves that, because a changed number would rewrite every
         /// reel it touches. What has changed is that the next one can say otherwise.
         /// </para>
         /// </summary>
@@ -2152,8 +2152,8 @@ namespace GlimmerGrove.EditorTools
         /// <b>Its own recipe because it was on nobody's.</b> Invariant 37af gave every ward
         /// projectile a bloom and an alpha curve that thickens rather than thins, on the finding
         /// that these packs are authored to be seen through a post-processing stack and a bare
-        /// camera bakes the geometry with the light left out. <see cref="Capture"/> — which is
-        /// what the storm and the four boss spells are baked through — was never moved, so this
+        /// camera bakes the geometry with the light left out. <see cref="Capture"/> - which is
+        /// what the storm and the four boss spells are baked through - was never moved, so this
         /// reel shipped with <c>Bloom = 0</c> and an exponent of <see cref="Lift"/> thinning it on
         /// top. That is the whole of "it looks nothing like the store page": the vendor's own
         /// demo scene carries a bloom profile, and ours rendered without one.
@@ -2181,7 +2181,7 @@ namespace GlimmerGrove.EditorTools
         /// first roster bake unusable.</b> The elemental four were chosen in invariant 37k
         /// <em>because</em> the pack already paints them roughly the colours the wards burn, so
         /// agreeing with <c>Pal</c> is a lean of about a third and anything more flattens a
-        /// fireball's yellow-hot head into one red. Nothing else in the pack was chosen that way —
+        /// fireball's yellow-hot head into one red. Nothing else in the pack was chosen that way -
         /// a turret's effect is picked for its silhouette, so it arrives teal or magenta or gold
         /// and has to be carried the whole way, or a red ward fires a teal arrow.
         /// </para>
@@ -2217,7 +2217,7 @@ namespace GlimmerGrove.EditorTools
             /// <b>A floor rather than a scale, because the source's own saturation is the thing
             /// that cannot be trusted here.</b> <see cref="Grade"/> keeps a pixel's saturation so
             /// that grey smoke stays grey and a strongly coloured pixel becomes strongly the
-            /// ward's colour — which is right for four effects the pack draws saturated already.
+            /// ward's colour - which is right for four effects the pack draws saturated already.
             /// Half the turret roster is drawn pale, so under the same rule every one of them
             /// graded to a wash: a pink icicle, a pink crystal, a pink plasma core. Raising the
             /// floor makes the colour the bake's decision instead of the pack's, which is what it
@@ -2231,8 +2231,8 @@ namespace GlimmerGrove.EditorTools
             ///
             /// <para>
             /// <b>Above one thins a reel and below one thickens it, and the shipped 1.25 was the
-            /// wrong side of that.</b> Coverage is nearly all mid-tones on a trail — a wisp is a
-            /// tenth of an alpha and a flame's body about a half — so an exponent of 1.25 takes a
+            /// wrong side of that.</b> Coverage is nearly all mid-tones on a trail - a wisp is a
+            /// tenth of an alpha and a flame's body about a half - so an exponent of 1.25 takes a
             /// half to 0.42 and a tenth to 0.06, which is what "they all look shallow and
             /// transparent" was. It is not the haze problem that number was chosen for:
             /// <see cref="Haze"/> now drops the near-black wash outright, so what an exponent
@@ -2246,15 +2246,15 @@ namespace GlimmerGrove.EditorTools
             ///
             /// <para>
             /// <b>These effects are authored to be seen through bloom, and this bake had none.</b>
-            /// The pack's own demos run a post-processing stack — the lightning pack in this
-            /// project ships one — so what a plain camera renders is the raw geometry of an effect
+            /// The pack's own demos run a post-processing stack - the lightning pack in this
+            /// project ships one - so what a plain camera renders is the raw geometry of an effect
             /// with the glow that makes it read as *light* missing. Adding it here is restoring the
             /// intended picture rather than decorating one: a bright-pass, blurred at two scales
             /// and added back, which is what a renderer's bloom is.
             /// </para>
             /// <para>
             /// <b>It raises alpha as well as colour</b>, because a halo nothing can see through is
-            /// not a halo — the glow has to be *drawn* over the hill, and a reel is composited with
+            /// not a halo - the glow has to be *drawn* over the hill, and a reel is composited with
             /// ordinary alpha blending.
             /// </para>
             /// </summary>
@@ -2268,8 +2268,8 @@ namespace GlimmerGrove.EditorTools
             /// <para>
             /// <b>Light reddens as it spreads, and a bloom that does not is the difference between
             /// a shape painted a colour and a thing that is burning.</b> Every photograph of
-            /// something incandescent is a white middle inside a warm haze — it is what the eye
-            /// reads as heat — and it is most of why the vendor's own picture of this pack looks
+            /// something incandescent is a white middle inside a warm haze - it is what the eye
+            /// reads as heat - and it is most of why the vendor's own picture of this pack looks
             /// the way it does. A single-colour halo can only make the gold larger.
             /// </para>
             /// </summary>
@@ -2281,7 +2281,7 @@ namespace GlimmerGrove.EditorTools
             /// <para>
             /// <b>The exposure a bare camera never applied.</b> <see cref="Reel"/> divides every
             /// pixel by its own largest channel, which is what puts all of an effect's brightness
-            /// into the alpha and lets one render be graded four ways — and the cost of it is that
+            /// into the alpha and lets one render be graded four ways - and the cost of it is that
             /// the *colour* left behind carries no brightness at all. A pixel with a tenth of the
             /// light and a pixel with all of it come out the same gold, so a thick bolt is not a
             /// hot bolt, it is a wide one.
@@ -2291,7 +2291,7 @@ namespace GlimmerGrove.EditorTools
             /// full coverage is over one in linear light, and a tonemap brings it back as *white*;
             /// the pack is authored against a stack that does exactly that, and the camera here
             /// runs with <c>allowHDR</c> off and nothing after it. So the ladder a hot thing is
-            /// read by — white core, saturated body, warm haze — had its top rung missing, and
+            /// read by - white core, saturated body, warm haze - had its top rung missing, and
             /// what shipped was the middle rung painted over all three.
             /// </para>
             /// <para>
@@ -2310,8 +2310,8 @@ namespace GlimmerGrove.EditorTools
         ///
         /// <para>
         /// <b>One render, many colours, and that is not merely an optimisation.</b> The four
-        /// colours of a turret's bolt have to be the same *picture* — the same trail, the same
-        /// sparks, the same frame — or a player who re-stands a turret on another slot is looking
+        /// colours of a turret's bolt have to be the same *picture* - the same trail, the same
+        /// sparks, the same frame - or a player who re-stands a turret on another slot is looking
         /// at a different effect. Rendering four times would give four, because a particle system
         /// reseeded is a different comet however carefully it is seeded, and the framing is
         /// measured off what was drawn. It also happens to make the bake four times cheaper.
@@ -2327,8 +2327,8 @@ namespace GlimmerGrove.EditorTools
             // drawn and is systematically too generous: this pack's prefabs carry lights, empty
             // emitters and quads whose bounds are far bigger than anything they put on screen, so a
             // poison dart's impact came out as a speck in the middle of an empty square. What is
-            // drawn is the honest measurement, so the second pass — and the shape of the texture
-            // itself — is decided by the *first pass's own alpha*, and a frame measured from the
+            // drawn is the honest measurement, so the second pass - and the shape of the texture
+            // itself - is decided by the *first pass's own alpha*, and a frame measured from the
             // picture cannot be wrong about the picture.
             var seen = Sample(stage, prefab, speed, warm, seconds, head);
 
@@ -2352,7 +2352,7 @@ namespace GlimmerGrove.EditorTools
 
                 // Measured over the frames the window trim keeps, and only those. Sized over all
                 // of them instead, a burst whose last drifting smoke is its widest moment reserves
-                // room for a frame the reel is about to stop carrying — which is how three of these
+                // room for a frame the reel is about to stop carrying - which is how three of these
                 // came out filling a third of their own picture, and it is invisible in every
                 // number except the fill.
                 var live = Alive(raw, seconds);
@@ -2365,7 +2365,7 @@ namespace GlimmerGrove.EditorTools
                 // the first pass's. "Only ever tighter" is a rule about the world frame, and
                 // applying it to the pixel width means the opposite of what it says: a narrower
                 // frame is a taller aspect, not a smaller one, so clamping the width down forced a
-                // shape the content did not want and `Frame` padded the height back out — which is
+                // shape the content did not want and `Frame` padded the height back out - which is
                 // how a flash came to fill three tenths of its own picture.
                 if (shown.HasValue)
                     wide = Pixels(tallPx, Shape(shown.Value, head, leanest, longest),
@@ -2492,7 +2492,7 @@ namespace GlimmerGrove.EditorTools
 
             // **Rounded for <see cref="Trailing"/>'s reason, one step further downstream.** This
             // aspect is handed to <see cref="Pixels"/>, which quantises it to a multiple of
-            // sixteen — so almost every value maps to the same width and a few sit exactly on a
+            // sixteen - so almost every value maps to the same width and a few sit exactly on a
             // boundary. For those, a last-bit difference in a bounds query is not a fraction of a
             // level of drift: it is a **different texture size**, which `CompareAll` can only
             // report as 255/255 and which reads as the art having been replaced. Measured on the
@@ -2546,7 +2546,7 @@ namespace GlimmerGrove.EditorTools
         /// <para>
         /// <b>Nought for everything that flies, and the one thing that does not needs it.</b> A
         /// projectile is billboards and trails: it looks the same from any angle, so the rig has
-        /// always looked straight along Z and there was never a reason to ask. A *strike* is not —
+        /// always looked straight along Z and there was never a reason to ask. A *strike* is not -
         /// this pack draws its ground crack, its splat, its shockwave and its rings as horizontal
         /// quads lying on the floor, so a camera level with them sees every one of them edge-on
         /// and each collapses to a hairline. That is most of what the vendor's own picture is, and
@@ -2580,7 +2580,7 @@ namespace GlimmerGrove.EditorTools
                 for (int f = 0; f < frames; f++)
                 {
                     // The camera rides with the head, and the head sits `head` of the way up the
-                    // frame — so the trail has the whole rest of the frame to lie in.
+                    // frame - so the trail has the whole rest of the frame to lie in.
                     //
                     // **It orbits what it is aimed at rather than being rotated where it stands**,
                     // so a tilt changes the angle the effect is seen from and never what is in
@@ -2612,7 +2612,7 @@ namespace GlimmerGrove.EditorTools
         /// <b>Fixing every particle seed was necessary and was not sufficient</b>, and the gap
         /// between those two is why <see cref="Verify"/> had quietly stopped meaning anything.
         /// <see cref="Spawn"/> sets <c>useAutoRandomSeed = false</c> on every system, so the
-        /// particles are identical run to run — but four of this pack's seven shader graphs
+        /// particles are identical run to run - but four of this pack's seven shader graphs
         /// (<c>MasterScroll01/02/03</c> and <c>MasterScrollManual</c>) scroll their textures off a
         /// <b>Time</b> node, and in the Editor that is the wall clock since the Editor started.
         /// So every bake rendered the same particles through a texture at a different scroll
@@ -2620,7 +2620,7 @@ namespace GlimmerGrove.EditorTools
         /// by a mean of <b>12.8 levels</b> on a ward's bolt, against <see cref="CompareAll"/>'s
         /// tolerance of six. The check was reporting correct art as drifted, and there is no
         /// tolerance that separates "the scroll is at a different phase" from "somebody changed
-        /// the prefab" — they are the same picture-wide difference.
+        /// the prefab" - they are the same picture-wide difference.
         /// </para>
         /// <para>
         /// <b>Driven by the simulated clock rather than frozen at nought</b>, which is the whole
@@ -2632,7 +2632,7 @@ namespace GlimmerGrove.EditorTools
         /// <para>
         /// <b>A negative time hands the clock back</b>, and the <c>finally</c> is not tidiness:
         /// <c>_Time</c> is a global, so a bake that threw with it pinned would leave every
-        /// scrolling material in the Editor frozen at whatever instant it died on — a Scene view
+        /// scrolling material in the Editor frozen at whatever instant it died on - a Scene view
         /// that has stopped animating with no error to explain it.
         /// </para>
         /// </summary>
@@ -2663,7 +2663,7 @@ namespace GlimmerGrove.EditorTools
         /// setting `_Time` to a sentinel and reading it back <b>on a later frame</b> returns the
         /// sentinel. Unity does not put that global back. So the bake was not releasing the clock,
         /// it was pinning every scrolling material in the project at time nought and walking away
-        /// — which is a Scene view that has quietly stopped animating, with no error, exactly the
+        /// - which is a Scene view that has quietly stopped animating, with no error, exactly the
         /// failure the old comment described in the course of dismissing it.
         /// </para>
         /// <para>
@@ -2709,7 +2709,7 @@ namespace GlimmerGrove.EditorTools
         /// light is over in the first third and the last of its smoke drifts for another half a
         /// second; a lightning muzzle does the opposite and builds for a third of its life before
         /// there is anything to see. Sampled across the whole thing, one reel spends nine of its
-        /// twelve frames on a stain and the other spends three on nothing at all — frames not
+        /// twelve frames on a stain and the other spends three on nothing at all - frames not
         /// spent on the part anybody sees, which is a hit that reads as a fizzle and a muzzle
         /// flash that starts late.
         /// </para>
@@ -2762,7 +2762,7 @@ namespace GlimmerGrove.EditorTools
         }
 
         /// <summary>
-        /// What a pass actually drew, in world units from the head — the box every frame's visible
+        /// What a pass actually drew, in world units from the head - the box every frame's visible
         /// pixels fit inside.
         ///
         /// <b>Judged against a floor rather than against nothing</b>, because these renders have a
@@ -2841,7 +2841,7 @@ namespace GlimmerGrove.EditorTools
         ///
         /// <para>
         /// <b>Its own step, and leaving it out is a bake of nothing.</b> <c>Simulate</c> with
-        /// <c>restart: false</c> continues from where a system is — and a system that has been
+        /// <c>restart: false</c> continues from where a system is - and a system that has been
         /// stopped and cleared so its seed could be set is <em>stopped</em>, so it goes on emitting
         /// nothing however long it is advanced. The first bake ran to completion, wrote twelve
         /// reels and reported success, and every one of them held only the two mesh renderers that
@@ -2864,7 +2864,7 @@ namespace GlimmerGrove.EditorTools
         /// </para>
         /// <para>
         /// <b>And never on a fixed time step.</b> <c>Simulate</c>'s last argument quantises to
-        /// <c>Time.fixedDeltaTime</c>, which is a fiftieth of a second here — four times coarser
+        /// <c>Time.fixedDeltaTime</c>, which is a fiftieth of a second here - four times coarser
         /// than the substep, so asking for one would round every step to nothing or to four of
         /// them.
         /// </para>
@@ -2889,8 +2889,8 @@ namespace GlimmerGrove.EditorTools
         /// How far what is drawn gets from the head: sideways, behind it and in front of it.
         ///
         /// <para>
-        /// <b>Off the renderers' bounds and never off the particles.</b> The obvious reading —
-        /// walk <c>GetParticles</c> and take position plus <c>GetCurrentSize</c> — is wrong for
+        /// <b>Off the renderers' bounds and never off the particles.</b> The obvious reading -
+        /// walk <c>GetParticles</c> and take position plus <c>GetCurrentSize</c> - is wrong for
         /// exactly the systems that matter: a system rendering a <em>mesh</em> reports its size as
         /// the scale it multiplies that mesh by, and this pack's fireball heads answer 120. Every
         /// measurement came back as the same number in all three directions, which is a fault
@@ -2938,7 +2938,7 @@ namespace GlimmerGrove.EditorTools
         /// <b>Every behaviour is disabled rather than destroyed</b>, which is the pack's own trap:
         /// <c>ProjectileMoveScript</c> spawns a muzzle of its own, hides the object for a build-up
         /// delay and waits on a physics collision that never comes, and <c>Destroy</c> on a
-        /// component lands at the end of the frame — too late to stop it.
+        /// component lands at the end of the frame - too late to stop it.
         /// </para>
         /// <para>
         /// <b>And every seed is fixed</b>, which is what makes <see cref="Verify"/> mean anything:
@@ -2954,7 +2954,7 @@ namespace GlimmerGrove.EditorTools
 
             // **Pointed along travel and rolled to face the camera.** These prefabs fly along their
             // own forward axis, not along world up, so an identity rotation would fly a comet
-            // sideways out of its own trail — and several of the meshes are flat on one axis, so
+            // sideways out of its own trail - and several of the meshes are flat on one axis, so
             // one left edge-on to the camera is a line. This is the pack's own demo framing.
             go.transform.rotation = Quaternion.LookRotation(Vector3.up, Vector3.back);
 
@@ -3012,7 +3012,7 @@ namespace GlimmerGrove.EditorTools
         /// A number off the pack's own driver script, by name.
         ///
         /// The pack compiles into <c>Assembly-CSharp</c>, which an asmdef assembly may never
-        /// reference, so the field is read by reflection — the same narrow lookup
+        /// reference, so the field is read by reflection - the same narrow lookup
         /// <c>VfxDemoScreen</c> makes, for the same reason.
         /// </summary>
         static float Reflected(GameObject prefab, string field, float fallback)
@@ -3101,14 +3101,14 @@ namespace GlimmerGrove.EditorTools
         /// <b>The key is exact rather than a threshold, because the background was black.</b> These
         /// effects draw additively, so a rendered pixel is the light they put there and nothing
         /// else. The brightest channel is therefore how much of that pixel the effect covers, and
-        /// dividing the colour by it recovers the colour the effect meant — which is what lets a
+        /// dividing the colour by it recovers the colour the effect meant - which is what lets a
         /// bolt be composited over a bright green hill and still look like the thing that was
         /// rendered on black. Keying by a threshold instead would eat every wisp in the trail,
         /// which is most of what makes these read as motion.
         /// </para>
         /// <para>
         /// <b>Normalised across the whole reel and never per frame.</b> Several of this pack's
-        /// systems peak well under full brightness, so the set is scaled up to reach it — but a
+        /// systems peak well under full brightness, so the set is scaled up to reach it - but a
         /// frame at a time would make the last dying spark as bright as the muzzle flash, which is
         /// the animation inverted.
         /// </para>
@@ -3117,8 +3117,8 @@ namespace GlimmerGrove.EditorTools
         /// difference between a fireball and a red smudge.</b> The first cut lifted faint coverage
         /// (an exponent below one) on the argument that a trail at a tenth of an alpha disappears
         /// into grass. What that actually did was promote the near-black haze every one of these
-        /// effects sits in — invisible in the pack's own render, because it is additive over black
-        /// and adds nothing — into a translucent cloud twice the size of the flame. Held up beside
+        /// effects sits in - invisible in the pack's own render, because it is additive over black
+        /// and adds nothing - into a translucent cloud twice the size of the flame. Held up beside
         /// a straight render of the same prefab the difference was not subtle: a small crisp
         /// yellow head with sparks, against a blurred column. So haze below <see cref="Haze"/> is
         /// dropped outright and what survives is bent <em>down</em>, which keeps a core solid and
@@ -3234,7 +3234,7 @@ namespace GlimmerGrove.EditorTools
                         float alpha = Mathf.Pow(flatA[at], lift);
                         float cr = flatR[at], cg = flatG[at], cb = flatB[at];
 
-                        // **Blown out where the light is densest** — the exposure the bare camera
+                        // **Blown out where the light is densest** - the exposure the bare camera
                         // never applied. Before the halo, so the glow is added on top of a core
                         // that is already white rather than mixed into one that never gets there.
                         if (recipe.Hot > 0f)
@@ -3306,8 +3306,8 @@ namespace GlimmerGrove.EditorTools
         /// <summary>
         /// The faintest glow that is kept at all.
         ///
-        /// <b>A halo has to end somewhere.</b> A blur has no zero — it puts a thousandth of an
-        /// alpha over the whole frame — and a thousandth of an alpha across a rectangle is still a
+        /// <b>A halo has to end somewhere.</b> A blur has no zero - it puts a thousandth of an
+        /// alpha over the whole frame - and a thousandth of an alpha across a rectangle is still a
         /// rectangle. Subtracting a floor is what gives the light an edge to fade to.
         /// </summary>
         const float GlowCut = .035f;
@@ -3329,7 +3329,7 @@ namespace GlimmerGrove.EditorTools
         /// </para>
         /// <para>
         /// <b>And they are handed back separately, because they are allowed to be different
-        /// colours.</b> Light spreading through air reddens as it goes — which is why every
+        /// colours.</b> Light spreading through air reddens as it goes - which is why every
         /// photograph of something incandescent has a white middle inside a warm haze, and why a
         /// bloom drawn in one colour reads as a coloured shape rather than as something burning.
         /// A caller that does not care adds them and gets exactly what a single array gave it;
@@ -3347,7 +3347,7 @@ namespace GlimmerGrove.EditorTools
             int nw, nh, fw, fh;
 
             // **The wide scale is shrunk by a factor the frame can afford.** A muzzle flash is 128
-            // by 192, so an eighth of it is sixteen across — and three box passes of radius three
+            // by 192, so an eighth of it is sixteen across - and three box passes of radius three
             // on a buffer that size reach right across the picture, which is a wash rather than a
             // halo. The divisor is held so the small buffer never falls under about forty across.
             int far8 = Mathf.Clamp(Mathf.Min(wide, tall) / 40, 2, 8);
@@ -3416,7 +3416,7 @@ namespace GlimmerGrove.EditorTools
         /// difference between a bloom and a box.</b> Averaging only the samples that exist treats
         /// the edge of the frame as a mirror: a pixel one step in is divided by half the kernel, so
         /// its light is doubled, and three passes of that pile a bright rim against all four
-        /// edges. Baked into a reel that reads as a faintly glowing rectangle around the effect —
+        /// edges. Baked into a reel that reads as a faintly glowing rectangle around the effect -
         /// which is exactly what it did, most visibly on the small frames where the kernel is a
         /// large part of the picture. Treating everything outside as dark is both the physically
         /// honest answer and the one that lets a halo fade out.
@@ -3482,7 +3482,7 @@ namespace GlimmerGrove.EditorTools
         ///
         /// <para>
         /// Saturation is raised rather than replaced, so a pixel that was nearly grey smoke stays
-        /// nearly grey and a pixel that was strongly coloured becomes strongly the ward's colour —
+        /// nearly grey and a pixel that was strongly coloured becomes strongly the ward's colour -
         /// the rule <c>make_siege_art.hued</c> already follows for the turrets. What is added here
         /// is the core: the middle of a fireball, the flash inside a lightning bolt and the glint
         /// off an icicle are all near-white, and grading those onto a saturated hue is what makes a
@@ -3492,12 +3492,12 @@ namespace GlimmerGrove.EditorTools
         /// </para>
         /// <para>
         /// <b>The protection is capped, and the first cut without a cap was wrong for half the
-        /// pack.</b> An icicle and a lightning bolt are near-white nearly all over — that is what
-        /// they are — so a rule that leaves white alone left both of them white, and a ward
+        /// pack.</b> An icicle and a lightning bolt are near-white nearly all over - that is what
+        /// they are - so a rule that leaves white alone left both of them white, and a ward
         /// firing something colourless is the one thing invariant 37f is about. So it takes a
         /// glint back to almost no colour and never takes a *body* past
         /// <see cref="MostWhite"/>: the shard stays blue with white edges, which is what an
-        /// icicle looks like. The cap is measured rather than chosen — the saturation of a
+        /// icicle looks like. The cap is measured rather than chosen - the saturation of a
         /// bolt's lit pixels, where a fireball and a venom dart come out near one and the icicle
         /// came out at <b>0.18</b>, which on the board is a white streak fired by a blue turret.
         /// </para>
@@ -3508,7 +3508,7 @@ namespace GlimmerGrove.EditorTools
         /// How far a pixel is pulled toward the ward's hue.
         ///
         /// <b>A nudge, because a re-hue is what made these look like stickers.</b> Replacing the
-        /// hue outright turns a fireball's yellow-hot head and orange body into one flat red — and
+        /// hue outright turns a fireball's yellow-hot head and orange body into one flat red - and
         /// the white-core rule does not save it, because a flame's core is *saturated yellow*
         /// rather than white, so it is graded like everything else. What is actually wanted is
         /// small: these four were chosen because the pack already draws them roughly the colours
@@ -3519,7 +3519,7 @@ namespace GlimmerGrove.EditorTools
         const float Toward = .38f;
 
         /// <summary>
-        /// The saturation floor the elemental four are graded with — see <c>Recipe.Floor</c>.
+        /// The saturation floor the elemental four are graded with - see <c>Recipe.Floor</c>.
         ///
         /// <b>Named and kept exactly where it was</b>, because these four have shipped for
         /// chapters and <see cref="Verify"/> holds what is on disk to what this tool bakes: the
@@ -3548,7 +3548,7 @@ namespace GlimmerGrove.EditorTools
         /// A reel's frames as PNGs under <c>Art/Fx/Siege/&lt;key&gt;/fNN.png</c>.
         ///
         /// <b>A folder of frames rather than a sheet</b>, because that is what
-        /// <c>AssetLibrary.Frames</c> asks Addressables for — a label, one sprite per file — and
+        /// <c>AssetLibrary.Frames</c> asks Addressables for - a label, one sprite per file - and
         /// what <c>AddressableAutoRegister</c> files on import.
         /// </summary>
         static string FolderOf(string key) => "Assets/Game/" + AssetManifest.SiegeFx(key);
@@ -3580,7 +3580,7 @@ namespace GlimmerGrove.EditorTools
 
             // Through the asset database rather than the file system: deleting a folder from under
             // Unity leaves its .meta files behind, and a stale .meta is an Addressables entry
-            // pointing at nothing — which does not break the game, it breaks the *build*
+            // pointing at nothing - which does not break the game, it breaks the *build*
             // (`BundleBuildContent` refuses an entry whose asset has gone).
             foreach (var pair in made)
             {
@@ -3648,7 +3648,7 @@ namespace GlimmerGrove.EditorTools
 
             foreach (var m in missing) Debug.LogError("[siege shots] missing: " + m);
             foreach (var d in differ) Debug.LogError("[siege shots] differs: " + d);
-            Debug.LogError($"[siege shots] {missing.Count} missing, {differ.Count} differ — " +
+            Debug.LogError($"[siege shots] {missing.Count} missing, {differ.Count} differ - " +
                            "re-run Bake Siege Projectiles.");
         }
 
@@ -3666,7 +3666,7 @@ namespace GlimmerGrove.EditorTools
                 var q = right.GetPixels32();
 
                 // Summed scaled by 255 so the colour term can stay integer, and divided by that
-                // again at the end — the answer is a mean difference in ordinary 0-255 levels, so
+                // again at the end - the answer is a mean difference in ordinary 0-255 levels, so
                 // two identical files are nought and two files sharing no pixel are 255.
                 long sum = 0;
                 for (int i = 0; i < p.Length; i++)
@@ -3690,7 +3690,7 @@ namespace GlimmerGrove.EditorTools
         /// <summary>
         /// Every reel laid out as one sheet, on the ground colour the board draws them over.
         ///
-        /// <b>This is the check that matters</b> — no number in this project can see that a bolt
+        /// <b>This is the check that matters</b> - no number in this project can see that a bolt
         /// reads as a smudge, and looking at a sheet is what caught a lantern shaped like a
         /// crosshair, a road that read as a row of sockets and a fuel tube behind a plate. It
         /// caught this tool baking twelve reels of nothing, too.
@@ -3751,7 +3751,7 @@ namespace GlimmerGrove.EditorTools
             File.WriteAllBytes(path, sheet.EncodeToPNG());
             Object.DestroyImmediate(sheet);
 
-            Debug.Log("[siege shots] contact sheet at " + path + " — rows, top down: " +
+            Debug.Log("[siege shots] contact sheet at " + path + " - rows, top down: " +
                       string.Join(", ", keys));
         }
     }

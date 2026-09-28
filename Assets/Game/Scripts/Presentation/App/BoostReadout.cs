@@ -9,7 +9,7 @@ namespace GlimmerGrove
     /// The XP boost's clock, on the map: a green arrow, the letters XP, and how long is left.
     ///
     /// <para>
-    /// <b>A readout, which is to say watched rather than drawn</b> — invariant 44j's rule, and it
+    /// <b>A readout, which is to say watched rather than drawn</b> - invariant 44j's rule, and it
     /// bites twice here. A boost window opens and closes while this screen is standing (a video
     /// watched from the shop, a purchase syncing in from another device), and the number itself
     /// moves every second whether anything happens or not. Built as a snapshot it would be a
@@ -18,7 +18,7 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// So it does both: it subscribes to <see cref="XpBoost.Changed"/> for the state, and ticks
-    /// its own caption for the clock. The two are separate on purpose — a tick that also
+    /// its own caption for the clock. The two are separate on purpose - a tick that also
     /// re-read the state would make the subscription pointless, and a subscription without a
     /// tick would freeze the countdown at whatever it said when the window opened.
     /// </para>
@@ -132,7 +132,7 @@ namespace GlimmerGrove
             if (left == _shownAt) return;
 
             // The window closing is a state change rather than a tick, and the subscription does
-            // not fire for it — nothing *happened*, time merely passed. So the tick has to be
+            // not fire for it - nothing *happened*, time merely passed. So the tick has to be
             // the thing that takes the readout down.
             if (left <= 0L) { Repaint(); return; }
 
@@ -144,7 +144,7 @@ namespace GlimmerGrove
         /// Draws the state: whether there is a boost at all, and what its clock says.
         ///
         /// Raised by the subscription, so it must be cheap and must never assume it is being
-        /// called because something changed — a merge landing repaints every readout in the game.
+        /// called because something changed - a merge landing repaints every readout in the game.
         /// </summary>
         void Repaint()
         {
@@ -180,7 +180,7 @@ namespace GlimmerGrove
         ///
         /// Taken from the cut art rather than from <c>Pal</c>, because the arrow is a hue turn of
         /// a bought sprite (<c>Tools/make_boost_icon.py</c>) and the palette's mint is a different
-        /// green — two greens an inch apart read as a mistake where one reads as a decision.
+        /// green - two greens an inch apart read as a mistake where one reads as a decision.
         /// </summary>
         static readonly Color Green = new Color(.57f, .89f, .48f);
     }

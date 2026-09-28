@@ -10,7 +10,7 @@ namespace GlimmerGrove.Ads
     /// Every member here is a state the player can reach on a bad train, and each one has
     /// to produce a different sentence on screen. That is why this is not a bool: "it
     /// didn't work" covers a network with nothing to serve, a video the player skipped and
-    /// an SDK that never initialised, and those deserve three different answers — one is
+    /// an SDK that never initialised, and those deserve three different answers - one is
     /// "try later", one is "you have to watch it all", one is our fault.
     /// </summary>
     public enum AdOutcome
@@ -18,7 +18,7 @@ namespace GlimmerGrove.Ads
         /// <summary>The video was watched to the end. The only outcome that pays.</summary>
         Rewarded = 0,
 
-        /// <summary>Closed early. No reward, and not an error — the player chose this.</summary>
+        /// <summary>Closed early. No reward, and not an error - the player chose this.</summary>
         Dismissed,
 
         /// <summary>
@@ -65,7 +65,7 @@ namespace GlimmerGrove.Ads
     ///
     /// <para>
     /// Lives in Domain and names no SDK type, which is what lets the whole rewarded-ad
-    /// feature — the caps, the content-driven amounts, the award path, the UI, the tests —
+    /// feature - the caps, the content-driven amounts, the award path, the UI, the tests -
     /// be written, run and tested with no ad SDK in the project at all. The same bargain
     /// <c>ICloudSaveBackend</c> makes, and it paid for itself there: the cloud save client
     /// was complete and correct months before the Firebase packages resolved.
@@ -73,8 +73,8 @@ namespace GlimmerGrove.Ads
     /// <para>
     /// The interface is deliberately thin. Mediation SDKs want to own initialisation,
     /// preloading, waterfalls, per-network adapters and a dozen callbacks; none of that is
-    /// the game's business. The game asks two questions — <em>can I offer this?</em> and
-    /// <em>show it and tell me how it went</em> — and everything else belongs behind the
+    /// the game's business. The game asks two questions - <em>can I offer this?</em> and
+    /// <em>show it and tell me how it went</em> - and everything else belongs behind the
     /// implementation.
     /// </para>
     /// </summary>
@@ -92,7 +92,7 @@ namespace GlimmerGrove.Ads
         /// <para>
         /// Asked before the offer is drawn, not after it is tapped. An offer that appears
         /// and then fails is worse than one that never appeared, because the player has
-        /// already decided they want it — and this is the resource they were short of.
+        /// already decided they want it - and this is the resource they were short of.
         /// </para>
         /// </summary>
         bool IsReady(string placementId);
@@ -135,7 +135,7 @@ namespace GlimmerGrove.Ads
         /// because the server will never see a callback it can match to a claim.
         /// </para>
         /// <para>
-        /// Never throws for an ordinary failure — a network with no fill is a normal
+        /// Never throws for an ordinary failure - a network with no fill is a normal
         /// Tuesday, not an exception. Everything the caller must handle arrives as an
         /// <see cref="AdOutcome"/>.
         /// </para>
@@ -155,8 +155,8 @@ namespace GlimmerGrove.Ads
     /// </para>
     /// <para>
     /// It is also what keeps the offer buttons off the screen entirely in an SDK-less
-    /// build — <see cref="RewardedAds.CanOffer"/> asks <see cref="IsReady"/>, and this
-    /// says no — so the feature ships dark rather than broken.
+    /// build - <see cref="RewardedAds.CanOffer"/> asks <see cref="IsReady"/>, and this
+    /// says no - so the feature ships dark rather than broken.
     /// </para>
     /// </summary>
     public sealed class NullAdProvider : IAdProvider

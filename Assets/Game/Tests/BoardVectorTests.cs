@@ -13,9 +13,9 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// A crossing and a briar mate every neighbour at every angle, so nothing about the
     /// pipe-fitting settles either one: the rule is that turning one a step off its solution
-    /// has to stop the glade finishing. It exists in three places — this assembly's
+    /// has to stop the glade finishing. It exists in three places - this assembly's
     /// <c>LevelValidator.CheckDecidableTiles</c>, <c>Tools/verify/content.py</c>'s
-    /// <c>decidable</c> and <c>Tools/verify/author.py</c>'s <c>Board.decides</c> — because the
+    /// <c>decidable</c> and <c>Tools/verify/author.py</c>'s <c>Board.decides</c> - because the
     /// Editor, the offline gate and the authoring aid each need it and none of them can call
     /// the others.
     /// </para>
@@ -24,7 +24,7 @@ namespace GlimmerGrove.Tests
     /// going to survive a year of content drops. So all three run
     /// <c>Tools/verify/board-vectors.json</c>: this file proves the C# copy matches it, and
     /// <c>content.py</c> proves both Python copies do on every offline run. Invariant 9a's
-    /// shape, for a board rule rather than for money — the first time this project has drifted
+    /// shape, for a board rule rather than for money - the first time this project has drifted
     /// a board rule was the check this replaced, which two tools disagreed about for a whole
     /// chapter without anything noticing.
     /// </para>
@@ -99,7 +99,7 @@ namespace GlimmerGrove.Tests
 
                 foreach (var issue in report.Issues)
                     if (issue.Severity == LevelIssueSeverity.Error)
-                        failures.Add($"{c.name}: the board itself is invalid — {issue.Message}");
+                        failures.Add($"{c.name}: the board itself is invalid - {issue.Message}");
 
                 var said = new List<string>();
                 foreach (var issue in report.Issues)
@@ -110,7 +110,7 @@ namespace GlimmerGrove.Tests
 
                 if (said.Count != want.Length)
                     failures.Add($"{c.name}: expected {want.Length} undecided tile(s), " +
-                                 $"got {said.Count} — {string.Join(" | ", said)}");
+                                 $"got {said.Count} - {string.Join(" | ", said)}");
 
                 foreach (var at in want)
                 {

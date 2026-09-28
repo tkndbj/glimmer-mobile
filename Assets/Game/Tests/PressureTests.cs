@@ -8,7 +8,7 @@ namespace GlimmerGrove.Tests
     /// The move budget and fragile conduits exist for one reason: a player with
     /// unlimited, freely reversible turns has nothing at stake, so no hazard can bite.
     ///
-    /// These two put a price on turns — the budget on how many, fragility on which.
+    /// These two put a price on turns - the budget on how many, fragility on which.
     /// What follows pins the rules that keep that pressure fair: a budget that never
     /// ends a run the player was still winning, and a fragile board that can always,
     /// provably, still be solved.
@@ -46,13 +46,13 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// <b>This replaces two earlier rules, and the history is the point.</b> It first said
-        /// the budget must sit above the two-star line — right while the clock was the fail
+        /// the budget must sit above the two-star line - right while the clock was the fail
         /// state and the budget was a backstop under somebody drumming, because ending a run
         /// that was still earning stars read as the game cheating. The clock went, the budget
         /// became the only way to lose, and that floor put the fail line past the point where
         /// the player had already stopped earning anything, so it was removed and the default
         /// dropped to 1.60. The rule was then rewritten to say the budget sits *inside* the
-        /// two-star band — and that version was wrong in a way nothing caught: it made one star
+        /// two-star band - and that version was wrong in a way nothing caught: it made one star
         /// arithmetically unscorable, because a run still alive has spent fewer turns than the
         /// budget.
         /// </para>
@@ -99,12 +99,12 @@ namespace GlimmerGrove.Tests
                 Assert.AreEqual(3, t.StarsFor(t.GoldThreshold), $"par {par}: three is landable");
                 Assert.AreEqual(2, t.StarsFor(t.SilverThreshold), $"par {par}: two is landable");
                 Assert.AreEqual(1, t.StarsFor(t.MoveBudget - 1),
-                    $"par {par}: one is landable — the slowest surviving run scores it");
+                    $"par {par}: one is landable - the slowest surviving run scores it");
             }
         }
 
         /// <summary>
-        /// An authored factor is honoured exactly — there is no floor under it any more.
+        /// An authored factor is honoured exactly - there is no floor under it any more.
         /// If the clamp <c>MoveBudget</c> used to apply ever comes back, this says so.
         /// </summary>
         [Test]
@@ -123,7 +123,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// <c>1.20f</c> is 1.20000004768…, so <c>Mathf.CeilToInt(45 * 1.20f)</c> is 55 where
-        /// <c>par × 1.20</c> is exactly 54 — and 61 against 60 at par 50. Both shipped: four
+        /// <c>par × 1.20</c> is exactly 54 - and 61 against 60 at par 50. Both shipped: four
         /// glades granted a turn more for three stars than the design says, with the offline
         /// mirror printing the design's number and nothing comparing the two. Every par whose
         /// product lands exactly on an integer is a candidate, so the fix is hundredths in
@@ -159,15 +159,15 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// The validator's own check on the three lines actually fires — on the exact
+        /// The validator's own check on the three lines actually fires - on the exact
         /// configuration that shipped, and on the two either side of it.
         ///
         /// <para>
         /// <b>This is the test the change needed and did not have.</b> The bands were left
         /// stranded by a budget retune, every number involved stayed individually plausible,
         /// the boards validated green, and nothing said that one star had become unscorable.
-        /// A rule with no failing case is not a rule — the same lesson <c>names.py</c> learned
-        /// when it ran the fold on a runtime that could not disagree with it — so each branch
+        /// A rule with no failing case is not a rule - the same lesson <c>names.py</c> learned
+        /// when it ran the fold on a runtime that could not disagree with it - so each branch
         /// of <see cref="LevelValidator"/>'s star-band check is driven here with a tuning that
         /// must trip it.
         /// </para>
@@ -235,7 +235,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// Zero means "not authored" everywhere else in the DTOs, and it has to mean it
-        /// here too — otherwise every existing level silently loses its fail state the
+        /// here too - otherwise every existing level silently loses its fail state the
         /// moment the field is added.
         /// </summary>
         [Test]
@@ -314,7 +314,7 @@ namespace GlimmerGrove.Tests
         /// The count is how many turns the conduit <em>survives</em>, so "~2" takes two
         /// turns safely and gives way on the third. That distinction is load-bearing:
         /// a crumble now loses the glade, and validation lets a conduit be owed exactly
-        /// its whole allowance — with the count meaning anything else, the last turn of
+        /// its whole allowance - with the count meaning anything else, the last turn of
         /// a legitimate solution would kill the run.
         /// </summary>
         [Test]
@@ -416,7 +416,7 @@ namespace GlimmerGrove.Tests
         public void AFragileConduitThatCannotReachItsSolutionIsAnError()
         {
             // The elbow starts a quarter turn past its solution, so it owes three turns
-            // clockwise — and it can only survive one.
+            // clockwise - and it can only survive one.
             var doomed = LevelValidator.Validate(Level(2, 2, new[]
             {
                 "*ES#R/0 -SW/1~1",

@@ -9,8 +9,8 @@ namespace GlimmerGrove.Tests
     /// light.
     ///
     /// <para>
-    /// <b>Glass fills up and then it fires.</b> It takes a channel at a time — free from any
-    /// burst beside it, and a drop at a time by hand — and when it holds all three it throws its
+    /// <b>Glass fills up and then it fires.</b> It takes a channel at a time - free from any
+    /// burst beside it, and a drop at a time by hand - and when it holds all three it throws its
     /// beams. That is the mote rule said twice, which is why the mechanic needed no new threshold
     /// taught, and why <see cref="OneDropCanOnlyEverAddOneChannelToGlass"/> is the most important
     /// case here: it is the whole of what makes a shot cost three drops rather than one.
@@ -18,7 +18,7 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// <b>What it throws is white, and how far round it throws says where its own light came
     /// from.</b> Glass holds all three by the time it goes off, so every mote a beam lands on is
-    /// completed and pops whatever colour it was — bought rather than given, because the charge
+    /// completed and pops whatever colour it was - bought rather than given, because the charge
     /// costs three drops of three colours. A lens filled the ordinary way fires <em>sideways</em>,
     /// which on a board with gravity is the only pair worth anything; a lens <em>struck by
     /// another lens's beam</em> fires along all four axes. Those two rules are
@@ -30,13 +30,13 @@ namespace GlimmerGrove.Tests
     /// <b>Feeding it by hand is a valve, not a shortcut.</b> A burst beside a lens is usually
     /// free, because it was clearing a blob anyway; a drop is one of the five a well is dealt
     /// above par. The search prefers the burst, so par is unmoved on eight of the ten shipped
-    /// boards — what the drop buys is that a player who cleared every mote first is one drop
+    /// boards - what the drop buys is that a player who cleared every mote first is one drop
     /// from a win instead of stranded, which is how the mode shipped and was reported.
     /// </para>
     /// <para>
     /// <b>This file exists because <c>FallVectorTests</c> needs the Editor and this does not.</b>
     /// The vector file is the contract between the shipping rule and <c>Tools/verify/fall.py</c>,
-    /// and it is loaded through <c>JsonUtility</c> — a native call — so the offline runner reports
+    /// and it is loaded through <c>JsonUtility</c> - a native call - so the offline runner reports
     /// the whole fixture as "needs the Editor" and it is the one gate nobody runs on the way past.
     /// Budburst's wash rule drifted from its mirror with every offline gate green, because the
     /// mirror happened to be the correct copy; what noticed was an Android build twenty minutes
@@ -86,7 +86,7 @@ namespace GlimmerGrove.Tests
         /// separate drops of three separate colours, each engineered to burst beside it.
         ///
         /// <para>
-        /// The board below bursts twice next to the glass on one blue drop — the first mote goes,
+        /// The board below bursts twice next to the glass on one blue drop - the first mote goes,
         /// washes the second, and that bursts in the wave after, right beside the lens. The lens
         /// ends holding blue and nothing else.
         /// </para>
@@ -158,7 +158,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// Two boards of the shipped chapter had been authored under the four-way rule and both
-        /// leaned on the downward shot — the search answered par 3 and par 4 while it existed and
+        /// leaned on the downward shot - the search answered par 3 and par 4 while it existed and
         /// par 6 with fifty-odd winning lines once it did not, which is a board that has stopped
         /// deciding anything. Both stand their glass on the floor now.
         /// </para>
@@ -191,7 +191,7 @@ namespace GlimmerGrove.Tests
 
             Assert.AreEqual(Energy.G | Energy.B, board.At(1, 5),
                             "and the cyan that was standing directly over the glass is untouched, " +
-                            "having merely fallen into the gap the lens left — an upward beam " +
+                            "having merely fallen into the gap the lens left - an upward beam " +
                             "would have popped it");
 
             Assert.AreEqual(Energy.R | Energy.B, board.At(5, 5),
@@ -206,7 +206,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// The magenta across the gap already holds the blue that was dropped, so a <em>wash</em>
-        /// would have been absorbed by it and taken nothing — that clause is untouched and is
+        /// would have been absorbed by it and taken nothing - that clause is untouched and is
         /// still what makes colour a decision. A shot is what buys past it, and it is bought
         /// dearly: three separate drops of three separate colours, and it still only reaches the
         /// first thing in its line.
@@ -230,7 +230,7 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(1, shot.Washed.Count, "the magenta two cells across took it");
             Assert.AreEqual(Energy.G, shot.WashedWith[0],
                             "and took exactly the channel it lacked, out of the three the beam " +
-                            "carried — a beam hands over white, not a colour");
+                            "carried - a beam hands over white, not a colour");
 
             Assert.AreEqual(3, steps.Count, "so it reached white and popped on the next wave");
             Assert.IsTrue(board.IsEmpty, "one drop, and the well is gone");
@@ -239,7 +239,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// <b>A lens another lens strikes fires along all four axes, and that is the chain.</b>
         /// One well-aimed shot down a row of glass opens every pane in it, and each of those then
-        /// opens its own column — which is the one thing in this mode that reaches upward.
+        /// opens its own column - which is the one thing in this mode that reaches upward.
         ///
         /// <para>
         /// The board below takes one drop. The burst fills the two-thirds pane; it fires sideways
@@ -320,7 +320,7 @@ namespace GlimmerGrove.Tests
             foreach (var beam in steps[1].Beams) if (!beam.Landed) missed++;
             Assert.AreEqual(1, missed,
                             "the first pane's leftward shot goes out through the wall it was " +
-                            "lit through, and it is still reported — three drops of charge " +
+                            "lit through, and it is still reported - three drops of charge " +
                             "spent on nothing is a decision that went wrong, and the player is " +
                             "entitled to watch it happen");
 
@@ -331,7 +331,7 @@ namespace GlimmerGrove.Tests
 
         // ------------------------------------------------------------------ glass is not light
         /// <summary>
-        /// A drop is taken <em>in</em> by glass rather than stacking on it — the valve that stops
+        /// A drop is taken <em>in</em> by glass rather than stacking on it - the valve that stops
         /// a well ever becoming unwinnable. It costs a drop and gives nothing back, so it is a
         /// price rather than a shortcut.
         /// </summary>
@@ -348,7 +348,7 @@ namespace GlimmerGrove.Tests
             Assert.IsTrue(board.Charges(Energy.B, 1), "the glass will take blue");
             Assert.IsFalse(board.Enriches(Energy.B, 1), "which is not the same as enriching a mote");
             Assert.AreEqual(5, board.Landing(Energy.B, 1),
-                            "so it lands on the glass, not above it — a row, not an index");
+                            "so it lands on the glass, not above it - a row, not an index");
 
             board.Drop(Energy.B, 1);
 
@@ -365,14 +365,14 @@ namespace GlimmerGrove.Tests
         /// <b>"Does the thing on top take this drop" is one question, and it has to be asked as
         /// one.</b> A mote lacking the colour is enriched and a lens lacking it is charged; both
         /// are absorbed and neither makes the well taller. <c>Enriches</c> answers only the first
-        /// half — it is <c>IsMote(...) &amp;&amp; ...</c> — which is right for what it asks and
+        /// half - it is <c>IsMote(...) &amp;&amp; ...</c> - which is right for what it asks and
         /// was wrong everywhere it stood in for the whole question.
         ///
         /// <para>
         /// What that cost: <c>FallView</c> used <c>Enriches</c> to decide whether the falling
         /// widget was handed back or left standing in the cell, so every drop taken in by glass
         /// was drawn as one that had come to rest on top. The falling mote took the lens's place
-        /// in the view's index and the lens's own widget fell out of it — still on screen, owned
+        /// in the view's index and the lens's own widget fell out of it - still on screen, owned
         /// by nothing, so it never repainted, never fell and never left. Reported from play as a
         /// pane hanging in the air over an emptied column, showing the charge it held before the
         /// drop.
@@ -397,10 +397,10 @@ namespace GlimmerGrove.Tests
 
             Assert.IsFalse(board.Takes(Energy.B, 0),
                            "magenta already holds blue, so that drop comes to rest above it and " +
-                           "the well grows a row — which is the one case the falling mote stays");
+                           "the well grows a row - which is the one case the falling mote stays");
 
             Assert.IsFalse(board.Takes(Energy.R, 1),
-                           "and the lens already holds red, so that drop stacks above it too — " +
+                           "and the lens already holds red, so that drop stacks above it too - " +
                            "glass is a wall to a colour it holds exactly as a mote is");
 
             Assert.AreEqual(board.TopOf(1), board.Landing(Energy.B, 1),
@@ -456,7 +456,7 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(Energy.B | Energy.All & ~(Energy.R | Energy.G), Energy.B);
             Assert.AreEqual(Energy.All, board.Wanted,
                             "one lens wants blue and one wants everything, so the well wants all " +
-                            "three — read through the raw mask a lens answers nonsense");
+                            "three - read through the raw mask a lens answers nonsense");
 
             Assert.AreEqual(2, board.Lenses);
             Assert.AreEqual(2, board.Motes, "glass still has to be got rid of, so it still counts");
@@ -472,7 +472,7 @@ namespace GlimmerGrove.Tests
         /// This case asserted the opposite until play found the reason. Glass used to be fed
         /// only by light from a burst, so a player who cleared every mote first had destroyed
         /// the one thing that could ever fill it and was left tapping at a board that could not
-        /// be finished and would not end — reported as <em>"I have destroyed all the motes, only
+        /// be finished and would not end - reported as <em>"I have destroyed all the motes, only
         /// this prism ball left, but I cannot finish the level"</em>, and measured afterwards at
         /// three drops away on the fifth board. A drop now feeds glass it lands on, so the
         /// state is a drop from a win rather than a dead end, and refusing the offer here would
@@ -548,7 +548,7 @@ namespace GlimmerGrove.Tests
 
         // ------------------------------------------------------------------ the pacing
         /// <summary>
-        /// The board is latched while a shot plays, so it has to be bounded — and bounded over
+        /// The board is latched while a shot plays, so it has to be bounded - and bounded over
         /// the whole cascade rather than per lens, or a well where four go off would freeze for
         /// four times as long.
         /// </summary>

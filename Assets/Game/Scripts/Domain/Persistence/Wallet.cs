@@ -9,14 +9,14 @@ namespace GlimmerGrove.Persistence
     ///
     /// It deliberately does not know what a balance is. A balance needs the derived
     /// earnings, those come from the star ledger, and deriving them belongs to
-    /// <c>GlimmerGrove.Progression</c> — so persistence stays a description of a file
+    /// <c>GlimmerGrove.Progression</c> - so persistence stays a description of a file
     /// and never grows an opinion about how the game rewards people. Ask
     /// <c>PlayerProgression.Balance</c> for a number; ask this for the ledger behind it.
     /// </summary>
     public static class Wallet
     {
         /// <summary>
-        /// Where the refill timer stops — the denominator a HUD draws, and not a maximum.
+        /// Where the refill timer stops - the denominator a HUD draws, and not a maximum.
         /// Kept as an alias so callers need not learn a second name for it.
         ///
         /// A property rather than a constant since the gate became content: a <c>const</c>
@@ -25,7 +25,7 @@ namespace GlimmerGrove.Persistence
         ///
         /// <para>
         /// It is also per <em>player</em> rather than merely per build, because a heart
-        /// container raises it permanently — so this is the published cap or the largest
+        /// container raises it permanently - so this is the published cap or the largest
         /// container the account holds, whichever is higher. Every screen that draws
         /// "3 / 5" asks here, which is what made "3 / 20" cost no screen a change.
         /// See <see cref="HeartContainerLedger"/>.
@@ -37,7 +37,7 @@ namespace GlimmerGrove.Persistence
         public static int HeartCeiling => HeartRules.Ceiling;
 
         /// <summary>
-        /// Where the hint timer stops — the denominator a HUD draws. A property rather than
+        /// Where the hint timer stops - the denominator a HUD draws. A property rather than
         /// a constant for <see cref="MaxHearts"/>'s reason: it is content.
         /// </summary>
         public static int MaxHints => HintRules.RefillCap;
@@ -64,7 +64,7 @@ namespace GlimmerGrove.Persistence
 
         static Hints _hints = Hints.Full;
 
-        // Empty until the player chooses, never DefaultName — see WalletDto.displayName.
+        // Empty until the player chooses, never DefaultName - see WalletDto.displayName.
         static string _name = string.Empty;
         static long _nameSetUnix;
         static string _avatarId = string.Empty;
@@ -93,7 +93,7 @@ namespace GlimmerGrove.Persistence
         /// directly rather than earns. They are worth announcing because they want a push
         /// of their own: everything else here reaches the server on the next background
         /// sync and nobody notices the delay, whereas a rename is a change the player made
-        /// deliberately and expects to survive the next thing they do — which, on a phone,
+        /// deliberately and expects to survive the next thing they do - which, on a phone,
         /// is quite often uninstalling the game. <c>Boot</c> hangs
         /// <c>CloudSaveService.RequestSync</c> on this, so no call site has to remember.
         /// </para>
@@ -159,8 +159,8 @@ namespace GlimmerGrove.Persistence
         /// <summary>
         /// Starts, or extends, the watched XP boost.
         ///
-        /// <see cref="GrantHeartBoost"/>'s rule and its reason — extends rather than replaces, so
-        /// a window won while one runs never takes time away — with the ceiling expressed in the
+        /// <see cref="GrantHeartBoost"/>'s rule and its reason - extends rather than replaces, so
+        /// a window won while one runs never takes time away - with the ceiling expressed in the
         /// same shape. <b>Only this writes the watched deadline</b>, which is what keeps
         /// <c>XpBoost.WatchedReadyAt</c>'s derived cooldown exact.
         /// </summary>
@@ -197,7 +197,7 @@ namespace GlimmerGrove.Persistence
         ///
         /// <b>A floor and never an assignment</b>, for every other monotonic number in this file's
         /// reason: a device handed a larger total by a merge must not push its own smaller one
-        /// back over it. Saturates at <c>XpBoostLimits.HardMaxBonusXp</c> rather than wrapping — a
+        /// back over it. Saturates at <c>XpBoostLimits.HardMaxBonusXp</c> rather than wrapping - a
         /// total that wrapped would <em>fall</em>, and the merge below assumes it cannot.
         /// </summary>
         public static bool RaiseXpBoostEarned(long total)
@@ -226,8 +226,8 @@ namespace GlimmerGrove.Persistence
         /// Starts, or extends, faster heart regeneration.
         ///
         /// Extends rather than replaces: a boost won while one is already running adds to
-        /// it, because the alternative — the new one overwriting a longer remaining
-        /// window — takes something away from a player for the crime of doing well twice.
+        /// it, because the alternative - the new one overwriting a longer remaining
+        /// window - takes something away from a player for the crime of doing well twice.
         /// Capped at <see cref="HeartRules.MaxBoostHours"/> past now so no sequence of
         /// awards can stack into a permanent one.
         /// </summary>
@@ -268,7 +268,7 @@ namespace GlimmerGrove.Persistence
         /// </para>
         /// <para>
         /// It reads through <see cref="Hearts"/> rather than the field, so the announced
-        /// state is caught up — and deliberately raises even when nothing about the ledger
+        /// state is caught up - and deliberately raises even when nothing about the ledger
         /// moved, which is the whole point of it.
         /// </para>
         /// </summary>
@@ -298,7 +298,7 @@ namespace GlimmerGrove.Persistence
         /// HUD update loop does not spin the save file.
         ///
         /// There is deliberately no setter. Assigning a heart count is the same
-        /// mistake as assigning a balance — hearts are spent by losing a run, granted
+        /// mistake as assigning a balance - hearts are spent by losing a run, granted
         /// by the server, or returned by the clock, and none of those is an assignment.
         /// </summary>
         public static Hearts Hearts
@@ -325,7 +325,7 @@ namespace GlimmerGrove.Persistence
         /// take, which the caller must treat as "already out" rather than as a refusal.
         /// </summary>
         /// <summary>
-        /// Charges the player what a lost run costs, which is content now — so this is an
+        /// Charges the player what a lost run costs, which is content now - so this is an
         /// overload rather than a default argument. A default is baked in at the call site
         /// at compile time and would have quietly gone on charging one heart forever after
         /// the published cost changed.
@@ -348,7 +348,7 @@ namespace GlimmerGrove.Persistence
         /// video, a gift, or a server correction. Kept separate from spending so the two
         /// can be audited apart once hearts cost money.
         ///
-        /// These stack past <see cref="MaxHearts"/> up to <see cref="HeartCeiling"/> —
+        /// These stack past <see cref="MaxHearts"/> up to <see cref="HeartCeiling"/> -
         /// see <see cref="Hearts.Grant"/> for why the timer's cap and the holding ceiling
         /// are two different numbers.
         /// </summary>
@@ -408,7 +408,7 @@ namespace GlimmerGrove.Persistence
         }
 
         /// <summary>
-        /// Adds hints the player did not wait for — a watched video today, whatever earns
+        /// Adds hints the player did not wait for - a watched video today, whatever earns
         /// one later.
         ///
         /// Refused outright at the ceiling rather than partly paid, because the shipped
@@ -438,7 +438,7 @@ namespace GlimmerGrove.Persistence
         /// <para>
         /// The fallback happens on the way out and never on the way in. A device that has
         /// not been renamed stores nothing, so the merge can tell it apart from one that
-        /// has — which is the whole of why a rename now survives a second device. Setting
+        /// has - which is the whole of why a rename now survives a second device. Setting
         /// this stamps <see cref="NameSetUnix"/>, because the stamp is what decides the
         /// merge and a value written without one is a choice nothing can date.
         /// </para>
@@ -481,7 +481,7 @@ namespace GlimmerGrove.Persistence
         /// Returned raw on purpose. Which companions exist, which is the default and
         /// what an unknown id should fall back to are all questions about the roster,
         /// and this type does not have an opinion about the roster any more than it has
-        /// one about how credits are earned — ask <c>AvatarCatalog.Resolve</c>.
+        /// one about how credits are earned - ask <c>AvatarCatalog.Resolve</c>.
         /// </summary>
         public static string AvatarId
         {
@@ -504,7 +504,7 @@ namespace GlimmerGrove.Persistence
 
         /// <summary>
         /// Records the balance a currency currently shows, purely so the retired v1
-        /// fields stay meaningful. Nothing reads it back in this build — it exists so
+        /// fields stay meaningful. Nothing reads it back in this build - it exists so
         /// that a player rolled back to a pre-ledger client sees their real balance
         /// rather than the starting seed.
         /// </summary>
@@ -541,7 +541,7 @@ namespace GlimmerGrove.Persistence
             _heartBoostUntil = w.heartBoostUntilUnix < 0 ? 0L : w.heartBoostUntilUnix;
 
             // Negative or absent is nought, which is what every file written before the XP boost
-            // shipped means and what a rolled-back client writes — so no migration and no
+            // shipped means and what a rolled-back client writes - so no migration and no
             // sentinel. See `XpBoost` for why a boost has to bank rather than multiply.
             _xpBoostWatchedUntil = w.xpBoostWatchedUntilUnix < 0 ? 0L : w.xpBoostWatchedUntilUnix;
             _xpBoostBoughtUntil = w.xpBoostBoughtUntilUnix < 0 ? 0L : w.xpBoostBoughtUntilUnix;
@@ -569,7 +569,7 @@ namespace GlimmerGrove.Persistence
         /// "chosen, and it happened to be the default". They cannot be told apart, and
         /// reading it as never-chosen is the safe half: the player still sees Grovekeeper,
         /// and the merge stops treating a device that has never been renamed as one with
-        /// an opinion — which is the bug the version exists to end. A stamped file is
+        /// an opinion - which is the bug the version exists to end. A stamped file is
         /// believed exactly as written, default or not.
         /// </para>
         /// </summary>
@@ -593,7 +593,7 @@ namespace GlimmerGrove.Persistence
         /// only reading available and it is the right one: it preserves exactly what the
         /// player was holding, and the invariants hold trivially because a count is never
         /// above the cap. Every heart spent before the upgrade is simply forgotten, which
-        /// costs nothing — only the difference between the two counters is ever read.
+        /// costs nothing - only the difference between the two counters is ever read.
         /// </para>
         /// </summary>
         static Hearts ReadHearts(WalletDto w)
@@ -615,7 +615,7 @@ namespace GlimmerGrove.Persistence
         /// <para>
         /// Simpler than <see cref="ReadHearts"/> by exactly one branch, and the missing
         /// branch is the whole migration: hints were never stored, so there is no older
-        /// shape to recover — a pre-v19 file holds no opinion about hints rather than a
+        /// shape to recover - a pre-v19 file holds no opinion about hints rather than a
         /// stale one, and the answer is a fresh full pool.
         /// </para>
         /// <para>
@@ -636,7 +636,7 @@ namespace GlimmerGrove.Persistence
         /// which is the only reading that preserves the number while moving it into a
         /// model where balances are otherwise derived. A file that already has a
         /// ledger is left alone, so this cannot run twice and cannot double a balance
-        /// — and because "no ledger yet" is also true of a brand-new save, a new
+        /// - and because "no ledger yet" is also true of a brand-new save, a new
         /// account picks up its seed through the same path with no version check to
         /// get wrong.
         /// </summary>

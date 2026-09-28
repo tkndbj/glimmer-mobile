@@ -7,7 +7,7 @@ namespace GlimmerGrove.Content
     ///
     /// This is the one part of a level that is frozen once it ships. Players hold
     /// best-move records against it, so changing a layout silently invalidates
-    /// their history — publish a new level id instead. Everything mutable about a
+    /// their history - publish a new level id instead. Everything mutable about a
     /// level lives in <see cref="LevelTuning"/> or <see cref="LevelPresentation"/>.
     /// </summary>
     public sealed class LevelLayout

@@ -8,7 +8,7 @@ namespace GlimmerGrove.Modes
     ///
     /// <b>An enum rather than a second bool, and the third member is why.</b> It was
     /// <c>bool Brute</c>, which is exactly right for two kinds and becomes a pair of flags that
-    /// can both be true the moment there is a third — and every table keyed on it (health, march,
+    /// can both be true the moment there is a third - and every table keyed on it (health, march,
     /// blow, how far it comes) would then have had to agree about which flag wins.
     /// </summary>
     public enum SiegeKind
@@ -23,7 +23,7 @@ namespace GlimmerGrove.Modes
         /// The overlord: what the last rung of a chapter ends on.
         ///
         /// <b>Appended rather than inserted</b>, because these ordinals reach analytics on every
-        /// run this mode has ever recorded — the same rule <c>DefeatReason</c> keeps its retired
+        /// run this mode has ever recorded - the same rule <c>DefeatReason</c> keeps its retired
         /// members for.
         /// </summary>
         Overlord,
@@ -44,8 +44,8 @@ namespace GlimmerGrove.Modes
         /// </para>
         /// <para>
         /// <b>It is the first raider whose answer is a colour rather than a quantity.</b> A
-        /// creeper and a brute differ only in how much of the same thing they need — health,
-        /// speed, blow — so a player beats both by matching more. A bulwark halves every bolt
+        /// creeper and a brute differ only in how much of the same thing they need - health,
+        /// speed, blow - so a player beats both by matching more. A bulwark halves every bolt
         /// that is not its own colour and takes its own colour in full (<see
         /// cref="SiegeTuning.ShieldSoakTenths"/>), which puts a <b>fourfold</b> spread between
         /// feeding the right ward and feeding any other: the elemental double is already 2x, and
@@ -60,8 +60,8 @@ namespace GlimmerGrove.Modes
         /// <b>Retired: nothing sends one and these two ids must never be reused.</b>
         ///
         /// The weaver spun webs over the field and the thief took gems off it. Neither was ever
-        /// authored into a shipped wave — the mechanic was built, validated, arted and never sent
-        /// (invariant 40a) — and both were withdrawn whole by the owner. Kept as members rather
+        /// authored into a shipped wave - the mechanic was built, validated, arted and never sent
+        /// (invariant 40a) - and both were withdrawn whole by the owner. Kept as members rather
         /// than deleted because these ordinals reach analytics on every run the endless lane ever
         /// recorded, which is the rule <c>DefeatReason</c> keeps its retired members for.
         /// </summary>
@@ -76,7 +76,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>It walks the hill like anything else, and everything about it happens after it is
         /// dead.</b> That is the whole design: the player does not fight a bomber differently, they
-        /// deal with what it leaves — a bomb sitting on the hill at the spot it fell, which goes
+        /// deal with what it leaves - a bomb sitting on the hill at the spot it fell, which goes
         /// off the instant it is tapped and takes a firepot's worth of everything around it.
         /// </para>
         /// <para>
@@ -88,7 +88,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>What stops it being free damage is invariant 39</b>: the blast is charged against
         /// the graded count exactly as a firepot's is, so a player who leans on bombs pays for
-        /// every point of it in the one currency this mode grades — and cannot buy a star with
+        /// every point of it in the one currency this mode grades - and cannot buy a star with
         /// something a grade reaching a public board (19a) was not earned by.
         /// </para>
         /// <para><b>Appended</b>, for the reason every member of this enum is.</para>
@@ -101,7 +101,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>The first boss whose spell is answered by a tap on the hill rather than by the gem
         /// field.</b> A felled raider leaves a cog and a felled bomber leaves a live bomb, and both
-        /// lie where they fell until somebody reaches for them — which invariant 40i made the whole
+        /// lie where they fell until somebody reaches for them - which invariant 40i made the whole
         /// point of the bomber ("the decision is <em>when</em>"). A gravemaw puts a clock on that
         /// decision: every loose thing still lying on the hill when it casts is gone.
         /// </para>
@@ -120,7 +120,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>The one boss in this mode that puts raiders <em>on</em> the board.</b> Everything
-        /// else a boss does is subtraction — health, fire, rank, a clock, and now the loose things
+        /// else a boss does is subtraction - health, fire, rank, a clock, and now the loose things
         /// on the ground. A raise is addition, and it is the only verb left that a player answers
         /// by having got <em>ahead</em>: a hill somebody has cleared is a hill that gets refilled,
         /// and a hill they are behind on is one the raise makes very much worse.
@@ -130,13 +130,13 @@ namespace GlimmerGrove.Modes
         /// health over the most one match could deliver (invariant 37a), so a boss that could add
         /// bodies for as long as it lived would make par a number nothing could compute. It raises
         /// <see cref="SiegeTuning.RaiseSize"/> creepers at most <see cref="SiegeTuning.Raises"/>
-        /// times, and par counts every one of them whether they are ever raised or not — which
+        /// times, and par counts every one of them whether they are ever raised or not - which
         /// overstates a run that kills it early, and invariant 22 says that is the direction to err
         /// in.
         /// </para>
         /// <para>
         /// <b>It does endanger the line, and not by swinging.</b> What it raises walks and swings,
-        /// so a run can be lost to a bonecaller that never touches a ward itself — which is why
+        /// so a run can be lost to a bonecaller that never touches a ward itself - which is why
         /// <see cref="SiegeTuning.EndangersTheLine"/> stopped being "does its spell take health".
         /// </para>
         /// <para><b>Appended</b>, for the reason every member of this enum is.</para>
@@ -148,7 +148,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>The one axis the first six leave open.</b> Between them they take health, fire, a
-        /// rank, the player's clock, what is lying on the ground and the emptiness of the hill —
+        /// rank, the player's clock, what is lying on the ground and the emptiness of the hill -
         /// every one of which is a <em>resource</em>, and every one of which has an answer that is
         /// also a resource. A shackled ward keeps all of them: its fuel, its rank, its health and
         /// its charges are exactly where they were, and for
@@ -158,10 +158,10 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>It is the deliberate opposite of a douse and the two must not be read as one.</b> A
         /// blightcaller takes a ward's fuel and its seconds together, and its answer is to pour
-        /// more in — <c>SiegeBoard.Surge</c> lifts a douse for exactly that reason. A shackle takes
+        /// more in - <c>SiegeBoard.Surge</c> lifts a douse for exactly that reason. A shackle takes
         /// the seconds and leaves the fuel, so pouring is not an answer and is not refused either:
         /// a ward filled while it is chained <em>banks</em>, and lets go the moment the chain does.
-        /// So the decision it asks is the mirror of the blightcaller's — feed the ward that cannot
+        /// So the decision it asks is the mirror of the blightcaller's - feed the ward that cannot
         /// use it yet, or feed the three that can (invariant 26h: the player decides, and can be
         /// wrong).
         /// </para>
@@ -189,7 +189,7 @@ namespace GlimmerGrove.Modes
         /// <b>What makes that a fight rather than a wall is that the fuel is not lost.</b> A ward
         /// with nothing it may shoot banks (<c>SiegeBoard.Aim</c> simply gives it no target), a
         /// full tube converts to an overcharge, and an overcharge is thrown at whatever is
-        /// furthest down the hill at this ward's own full weight —
+        /// furthest down the hill at this ward's own full weight -
         /// <c>SiegeBoard.Through</c> blunts a bulwark and nothing else. So the answer to an
         /// ironclad is the one mechanic in the mode that has never been the answer to anything:
         /// feed its colour to kill it, and let the other three fill and dump.

@@ -9,7 +9,7 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// <see cref="ModeChoice"/>, <see cref="TrackChoice"/> and <see cref="ChapterChoice"/> are
-    /// device-local view preferences (invariant 8b) — and the device is not the player. A phone
+    /// device-local view preferences (invariant 8b) - and the device is not the player. A phone
     /// that switches account used to open the map on the chapter the <em>previous</em> account
     /// was looking at, which on a fresh account is a chapter three walls away, and on the
     /// owner's own second account read as "the map did not reset". The preference is right for
@@ -20,7 +20,7 @@ namespace GlimmerGrove
     /// <b>The stamp rides in the value rather than in a key of its own</b>, so there is no
     /// moment at which a fresh owner stamp vouches for a stale chapter under a key nobody has
     /// rewritten yet. A value written before this existed carries no stamp, reads as nothing
-    /// remembered, and is replaced on the next arrival — one map opened on the default once.
+    /// remembered, and is replaced on the next arrival - one map opened on the default once.
     /// </para>
     /// <para>
     /// Keyed on <see cref="CloudState.UserId"/>: empty until the first sign-in, so a first

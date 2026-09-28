@@ -9,7 +9,7 @@ namespace GlimmerGrove.Wards
     /// Which turret the player has put on each colour, and the one place that choice is stored.
     ///
     /// <para>
-    /// <b>An instruction, not an achievement, so it is merged by recency and not by value</b> —
+    /// <b>An instruction, not an achievement, so it is merged by recency and not by value</b> -
     /// invariant 16's split, where a purchase is an entitlement joined by union
     /// (<see cref="WardLedger"/>) and an arrangement is an instruction stamped with its own date.
     /// It is the one part of this feature a merge can lose something from, which is exactly why
@@ -17,20 +17,20 @@ namespace GlimmerGrove.Wards
     /// <em>choice's</em> own (never the file's <c>updatedUnix</c>, which
     /// <c>SaveService.Snapshot</c> sets to now and which therefore made the local side newer in
     /// every comparison it ever took part in), and a player who has never chosen writes
-    /// <b>nothing at all</b> rather than storing the default — or a device with no opinion would
+    /// <b>nothing at all</b> rather than storing the default - or a device with no opinion would
     /// be indistinguishable from one that had made a choice.
     /// </para>
     /// <para>
     /// <b>One stamp for the whole line rather than one per colour.</b> A loadout is one
     /// arrangement made in one sitting on one screen, so the thing a player would be surprised to
-    /// lose is the arrangement — and per-colour stamps would let two devices interleave into a
+    /// lose is the arrangement - and per-colour stamps would let two devices interleave into a
     /// line neither of them ever chose, which is worse than losing the older of two lines.
     /// </para>
     /// <para>
     /// <b>Set once and used everywhere.</b> Nothing about a level, a chapter or a mode reaches
     /// this: the line is a fact about the account, so a player arranges it once and walks into any
     /// rung with it. That is the same argument invariant 39a makes for holding utility stock
-    /// account-wide — a loadout kept per level would make the turrets part of a board's
+    /// account-wide - a loadout kept per level would make the turrets part of a board's
     /// difficulty, which is what invariant 29c refuses a companion's ability.
     /// </para>
     /// </summary>
@@ -59,8 +59,8 @@ namespace GlimmerGrove.Wards
         ///
         /// <para>
         /// <b>One half again, because a purchase is a seat again.</b> This carried a second
-        /// clause for three days — a count of copies against how many seats were already standing
-        /// the turret — which is what the legendary band cost while it was bought outright
+        /// clause for three days - a count of copies against how many seats were already standing
+        /// the turret - which is what the legendary band cost while it was bought outright
         /// (invariant 42k). A legendary is bought per colour now, so <c>WardLedger.IsHeld</c>
         /// answers the seat exactly as it does for the twenty under it, and a second gate over
         /// that would be a rule with nothing left to catch.
@@ -84,7 +84,7 @@ namespace GlimmerGrove.Wards
         /// player no longer holds filled in with the roster's starter.
         ///
         /// <b>Resolved on every ask rather than cached</b>, because the three things it depends on
-        /// — the roster, what is owned and what was chosen — all change while the game is running,
+        /// - the roster, what is owned and what was chosen - all change while the game is running,
         /// and a cache is a fourth thing that can disagree with them. It is four dictionary
         /// lookups.
         /// </summary>
@@ -116,7 +116,7 @@ namespace GlimmerGrove.Wards
         /// </para>
         /// <para>
         /// Answers false when nothing changed, so a screen redrawing itself does not stamp a
-        /// choice nobody made — which would push the line over a real arrangement made on another
+        /// choice nobody made - which would push the line over a real arrangement made on another
         /// device.
         /// </para>
         /// </summary>
@@ -184,7 +184,7 @@ namespace GlimmerGrove.Wards
         ///
         /// <b>Ordered rather than however the dictionary walks</b>, because <c>SaveDelta</c>
         /// compares these to decide whether anything has to be pushed: an unstable order would
-        /// read as changed on every launch and push a write for nothing, for ever — which is the
+        /// read as changed on every launch and push a write for nothing, for ever - which is the
         /// trap <c>CompanionLedger.Join</c>'s own note is about.
         /// </summary>
         static WardSlotDto[] Rows(Dictionary<char, string> chosen)
@@ -208,8 +208,8 @@ namespace GlimmerGrove.Wards
         ///
         /// <para>
         /// <b>Still a join</b>, in <c>SaveMerge.Chosen</c>'s sense: it is a maximum over a total
-        /// order — a real arrangement beats an absent one, then the later stamp wins, then a
-        /// stable ordinal comparison of the canonical text settles a tie — so it is idempotent and
+        /// order - a real arrangement beats an absent one, then the later stamp wins, then a
+        /// stable ordinal comparison of the canonical text settles a tie - so it is idempotent and
         /// gives the same answer whichever device runs it, which is what a merge promises. The
         /// empty test comes first and outranks the stamps because empty is never something a
         /// player asked for: <see cref="Choose"/> cannot store it, so it only ever means "this

@@ -8,13 +8,13 @@ namespace GlimmerGrove
 {
     /// <summary>
     /// What a turret hits for and what it can take, drawn as two labelled bars with the figures
-    /// beside them — and able to <em>move</em>, because an upgrade's whole payoff is these two
+    /// beside them - and able to <em>move</em>, because an upgrade's whole payoff is these two
     /// numbers going up.
     ///
     /// <para>
     /// <b>A live component rather than a draw call, and it had to become one.</b> It shipped as a
     /// static builder reading a <c>WardModel</c>: the bars were laid out once when a panel opened,
-    /// so they never carried a turret's stars and never moved when one was bought — a player
+    /// so they never carried a turret's stars and never moved when one was bought - a player
     /// upgraded a turret and watched nothing happen, which is the worst possible answer on the one
     /// screen that exists to say what an upgrade is worth.
     /// </para>
@@ -24,8 +24,8 @@ namespace GlimmerGrove
     /// card showing a model's numbers on an upgraded turret is a card that is confidently wrong.
     /// </para>
     /// <para>
-    /// <b>Three screens draw it and none of them owns it</b> — the preview panel, the upgrade panel
-    /// and the celebration — so the design lives here and what each screen adds goes on top
+    /// <b>Three screens draw it and none of them owns it</b> - the preview panel, the upgrade panel
+    /// and the celebration - so the design lives here and what each screen adds goes on top
     /// (<c>PieceCard</c>'s rule, invariant 16l). The numbers themselves are read back through
     /// <see cref="SiegeTuning"/> rather than derived, because a card that applied the power curve
     /// its own way would be a second opinion about what a turret does.
@@ -65,7 +65,7 @@ namespace GlimmerGrove
         ///
         /// <b>Told apart by hue and by what they mean</b>, not by length alone: damage is the warm
         /// one because it is what a turret does to the hill, and health the cool one because it is
-        /// what the hill does to it. Neither is one of the board's four gem colours — a bar wearing
+        /// what the hill does to it. Neither is one of the board's four gem colours - a bar wearing
         /// one of those would read as a claim about which colour the turret is for.
         /// </summary>
         static readonly Color Hurt = new Color(.85f, .35f, .22f);
@@ -125,7 +125,7 @@ namespace GlimmerGrove
         /// top, and hands back the handle that moves them.
         ///
         /// <b>Stated as a middle</b>, because <c>UIKit.Box</c> pivots at centre whatever it is
-        /// anchored to — the trap <c>WardPreviewOverlay</c>'s own bands record.
+        /// anchored to - the trap <c>WardPreviewOverlay</c>'s own bands record.
         ///
         /// <paramref name="gains"/> leaves room beside each figure for a "+12", which is what the
         /// upgrade panel needs and what the other two do not.
@@ -168,7 +168,7 @@ namespace GlimmerGrove
         ///
         /// <b>The bar is drawn at the <em>current</em> length with the gain marked beside it</b>
         /// rather than at the new one, so a player reads "here is where you are, here is what this
-        /// buys" — a bar already drawn at the upgraded length would be showing them something they
+        /// buys" - a bar already drawn at the upgraded length would be showing them something they
         /// have not paid for.
         /// </summary>
         public void Offer(WardBuild from, WardBuild to, WardCatalog catalog)

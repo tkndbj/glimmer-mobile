@@ -10,7 +10,7 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// <b>This exists because nothing else in the project can look at that screen.</b> There is
     /// a render for the hub, the shop, the siege and Prismvale, and each of them has caught
-    /// faults every numeric gate was green through — a widget hanging off a plate, a readout
+    /// faults every numeric gate was green through - a widget hanging off a plate, a readout
     /// behind another one, a band collapsing on a shape nobody drew. There is no render for a
     /// modal ceremony, so the one fault that would ship unseen here is a caption drawn through
     /// the keyline above it. Checking the edges is a poor substitute for a picture and it is
@@ -89,7 +89,7 @@ namespace GlimmerGrove.Tests
         public void TheLadderClimbsInsideEachCurrencyAndNeverAcrossThem()
         {
             // **The half that matters is the second one.** A gem price and a credit price do not
-            // compare in either direction — 600 gems is not 9,000 credits — so a tier derived
+            // compare in either direction - 600 gems is not 9,000 credits - so a tier derived
             // from a price would stand the dearest turrets in the game on the bottom rung looking
             // cheap, which is invariant 16j's trap exactly. The rung is read inside one currency,
             // so each ladder climbs on its own.
@@ -97,8 +97,8 @@ namespace GlimmerGrove.Tests
             // **Which currencies the shelf actually sells in is read off the roster rather than
             // typed**, and that is what kept this a real check when the legendary band moved to
             // credits on 2026-09-18. A hard-coded `AssertClimbs(forGems: true)` fails outright
-            // once nothing is priced in gems — correctly, it is asserting a ladder that no longer
-            // exists — and the tempting repair is to delete the line, which leaves a rule that
+            // once nothing is priced in gems - correctly, it is asserting a ladder that no longer
+            // exists - and the tempting repair is to delete the line, which leaves a rule that
             // can never fail again if the shelf ever sells for gems a second time.
             var currencies = new HashSet<bool>();
 

@@ -21,7 +21,7 @@ namespace GlimmerGrove.Tests
     /// <b>Pinned twice over, exactly as the Deep Well's is.</b>
     /// <see cref="TheLadderStillMeasuresWhatItWasAuthoredFor"/> runs the shipped solver against
     /// the numbers the sweep measured, and <see cref="TheShippedChapterAuthorsExactlyThisLadder"/>
-    /// proves the content file still holds those boards. Either half alone is half a guard — the
+    /// proves the content file still holds those boards. Either half alone is half a guard - the
     /// first would pass while the chapter authored something else entirely, and the second would
     /// pass while the solver measured something else entirely.
     /// </para>
@@ -178,7 +178,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// <b>The ramp, and it is the whole of how this chapter gets harder.</b> A lens fires only
-        /// when it holds all three, and a drop's entire chain carries one colour — so an empty one
+        /// when it holds all three, and a drop's entire chain carries one colour - so an empty one
         /// costs three separate drops of three separate colours, each engineered to burst beside
         /// it. Measured, that leaves 7 boards in 90 solvable where two-thirds-full glass leaves
         /// 50, which is why the dial is how full the glass starts rather than anything else.
@@ -207,7 +207,7 @@ namespace GlimmerGrove.Tests
                         "second for " + late + ", so it is not ramping on the one dial it has");
 
             Assert.AreEqual(1, Ladder[0].Lenses * 3 - Ladder[0].Given,
-                            "the opening board should ask for exactly one channel of one lens — " +
+                            "the opening board should ask for exactly one channel of one lens - " +
                             "one well-aimed burst, which is the whole of the lesson");
 
             bool fromEmpty = false;
@@ -222,7 +222,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// A lens leaves the well only by being struck, so a board proved emptiable is a board
         /// where every pane on it is reached. Stated out loud because it is the reason no
-        /// separate reachability check exists — and because it stops being true the moment
+        /// separate reachability check exists - and because it stops being true the moment
         /// somebody gives glass a second way out.
         /// </summary>
         [Test]
@@ -305,7 +305,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// Thoughtlessness clears the opening wells and stops working. Unlike the Deep Well this
-        /// chapter is not teaching the verb, so the greedy line may bite earlier — what is
+        /// chapter is not teaching the verb, so the greedy line may bite earlier - what is
         /// checked is that it bites at all.
         /// </summary>
         [Test]
@@ -332,7 +332,7 @@ namespace GlimmerGrove.Tests
                 var tuning = new LevelTuning(() => rung.Par, 0f, 0f, 0f, FallRules.DefaultSpare);
 
                 Assert.IsTrue(tuning.HasBudget,
-                              rung.Id + " cannot be lost — that is the first chapter's opening " +
+                              rung.Id + " cannot be lost - that is the first chapter's opening " +
                               "board's privilege and no other board's");
             }
         }

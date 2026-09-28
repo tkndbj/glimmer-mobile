@@ -14,7 +14,7 @@ namespace GlimmerGrove
     /// anywhere (<c>ContinueOverlay</c>), and the second caller wants exactly the first
     /// caller's behaviour: open the store's own sheet when it can, and otherwise say which of
     /// the six things went wrong. Copying that would have been six sentences maintained twice,
-    /// on the one screen in the game where real money changes hands — invariant 9a's argument,
+    /// on the one screen in the game where real money changes hands - invariant 9a's argument,
     /// at the smallest scale it applies at.
     /// </para>
     /// <para>
@@ -24,7 +24,7 @@ namespace GlimmerGrove
     /// panel of ours in front of it is a tap for a question about to be asked properly.
     /// </para>
     /// <para>
-    /// Every refusal is a toast rather than a panel, because none of them is a decision — they
+    /// Every refusal is a toast rather than a panel, because none of them is a decision - they
     /// are all statements about the store, and three of the four resolve by waiting.
     /// </para>
     /// </summary>
@@ -99,7 +99,7 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// Separate from <see cref="StoreTap"/> because the shop screen needs the wording without
-    /// the tapping — it hears failures asynchronously, from <c>StoreService.Failed</c>, long
+    /// the tapping - it hears failures asynchronously, from <c>StoreService.Failed</c>, long
     /// after whatever tap caused them.
     /// </para>
     /// </summary>

@@ -9,7 +9,7 @@ namespace GlimmerGrove.Content
     ///
     /// <para>
     /// <b>A mode is code, and a chapter names one.</b> That split is the whole design. A mode
-    /// brings an interaction, a fail state and a par rule, so content can never add one — but
+    /// brings an interaction, a fail state and a par rule, so content can never add one - but
     /// content decides which glades are played that way, which is what lets a drop ship ten
     /// wisp runs with no app update. The manifest carries the name; this build carries the
     /// list of names it can honour, and a chapter naming a mode it has never heard of is
@@ -27,7 +27,7 @@ namespace GlimmerGrove.Content
     /// <para>
     /// Note what is deliberately absent: nothing here reaches the save file. A mode-two glade
     /// is an ordinary glade with its own permanent <see cref="LevelId"/>, so its record,
-    /// its stars, its rewards and its merge are the ones every other glade already has — see
+    /// its stars, its rewards and its merge are the ones every other glade already has - see
     /// <c>ProgressionLedger</c>. That is why a second mode cost no schema version and no
     /// server work.
     /// </para>
@@ -46,7 +46,7 @@ namespace GlimmerGrove.Content
 
         /// <summary>
         /// Turn the conduits until every critter wakes. The mode the game shipped with, and
-        /// the one a chapter that names none is read as — so every chapter authored before
+        /// the one a chapter that names none is read as - so every chapter authored before
         /// modes existed keeps working with its file untouched.
         /// </summary>
         public static readonly GameMode Glade = new GameMode("glade");
@@ -97,7 +97,7 @@ namespace GlimmerGrove.Content
         ///
         /// <para>
         /// <b>The first mode here that runs on a clock, and the first whose par is not a proof.</b>
-        /// Everything else in this game is turn-based and searchable — a move is a layer of a
+        /// Everything else in this game is turn-based and searchable - a move is a layer of a
         /// breadth-first walk and par is the depth of the first layer that wins. Raiders that walk
         /// while nobody is touching the board have no such graph, so par is arithmetic over what
         /// the level sends: the fewest matches that could possibly have destroyed it. Everything
@@ -199,8 +199,8 @@ namespace GlimmerGrove.Content
 
         // "weave" is a **retired mode id and must never be reused.** Lightweave shipped three
         // chapters and was removed: dragging a channel from a crystal to its critter turned out
-        // to reject almost nothing (invariant 5d), and the two rules that did bite — the ring and
-        // the hedge — were bought by making the *route* longer rather than by making the decision
+        // to reject almost nothing (invariant 5d), and the two rules that did bite - the ring and
+        // the hedge - were bought by making the *route* longer rather than by making the decision
         // harder. An id travels into the manifest, analytics and loc keys exactly as a level id
         // does, so re-pointing it at a different way of playing would silently relabel three
         // chapters' worth of history. A chapter file still naming it is simply skipped, which is

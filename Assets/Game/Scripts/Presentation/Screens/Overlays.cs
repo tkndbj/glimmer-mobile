@@ -23,14 +23,14 @@ namespace GlimmerGrove
     /// It appears after a defeat as well as after a win, and that is the whole reason it
     /// exists as a shared thing rather than as another beat in the victory sequence. A
     /// player who has just lost is being told, in the same breath, that the run still
-    /// counted — which is true (the streak counts finished runs, not won ones) and is the
+    /// counted - which is true (the streak counts finished runs, not won ones) and is the
     /// single most useful thing a defeat screen can say. A streak that only survived wins
     /// would make the hardest glade in a chapter the place streaks go to die.
     /// </para>
     /// <para>
     /// A toast rather than a panel element, so it can be dropped into either sequence
     /// without either panel having to make room for it, and so it costs nothing on the
-    /// runs — most of them — where the streak did not move.
+    /// runs - most of them - where the streak did not move.
     /// </para>
     /// </summary>
     static class StreakToast
@@ -48,7 +48,7 @@ namespace GlimmerGrove
 
                 // Says so when the night put something aside. Rungs are collected by hand
                 // now, so a player who is only told "six days running" has no way to know
-                // there is a reward sitting on the streak page — and a reward nobody is
+                // there is a reward sitting on the streak page - and a reward nobody is
                 // told about is a reward that is never taken.
                 string line = Daily.DailyStreak.AnyPending
                     ? Loc.Format("ui.streak.kept_waiting", streak.Days)
@@ -69,7 +69,7 @@ namespace GlimmerGrove
         /// The dimmed sheet behind the panel.
         ///
         /// Kept rather than discarded because a panel that pays a reward into the screen
-        /// underneath has to take it away — a token cannot be seen landing on a readout the
+        /// underneath has to take it away - a token cannot be seen landing on a readout the
         /// player cannot see, and a scrim faded to nothing still swallows the taps aimed at
         /// what is now visible through it. See <c>AdOfferOverlay</c>'s collect.
         /// </summary>
@@ -106,9 +106,9 @@ namespace GlimmerGrove
             // rather than off a constant.
             //
             // Attached here rather than by the two panels that hold a field, because the room a
-            // keyboard takes is nought on every display where there is no keyboard up — the
+            // keyboard takes is nought on every display where there is no keyboard up - the
             // Editor, every desktop build, every panel in the game that is not being typed into
-            // — so the fitter is free where it is not needed, and a rule that call sites have to
+            // - so the fitter is free where it is not needed, and a rule that call sites have to
             // remember is a rule they forget (View.ClearContent's lesson, one layer up).
             _lift = SoftKeyboard.Lift(Panel);
 
@@ -132,7 +132,7 @@ namespace GlimmerGrove
 
                 // One sound for one tap. The button that opened this panel spoke on pointer
                 // down and this fires on pointer up, so without the hush a menu arrives as
-                // two noises a tenth of a second apart — reported as exactly that. See
+                // two noises a tenth of a second apart - reported as exactly that. See
                 // Audio.Hush for why the rule lives here rather than on every button.
                 Audio.Hush("click");
                 Audio.Sfx("menu", .55f);
@@ -148,7 +148,7 @@ namespace GlimmerGrove
         /// Throws the panel away and builds it again for whatever state the overlay is now in.
         ///
         /// <para>
-        /// For a panel whose height depends on what it is saying — an account screen that grows
+        /// For a panel whose height depends on what it is saying - an account screen that grows
         /// two provider buttons, say. The alternative is reserving room for the tallest state
         /// and living with a hole in the others, or writing a second set of coordinates for the
         /// expanded layout, and this file has already recorded what the second one costs: the
@@ -156,8 +156,8 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// Emptying the panel is <see cref="View.ClearContent"/>'s, which hides each child
-        /// before destroying it — <c>Destroy</c> lands at the end of the frame, so without that
-        /// the outgoing panel is drawn over its replacement for one frame — and drops the
+        /// before destroying it - <c>Destroy</c> lands at the end of the frame, so without that
+        /// the outgoing panel is drawn over its replacement for one frame - and drops the
         /// cached safe-area layer, which is the half four hand-written copies of this loop all
         /// forgot.
         /// </para>
@@ -185,7 +185,7 @@ namespace GlimmerGrove
         /// <paramref name="quiet"/> suppresses the dismissal sound, and it is for exactly one
         /// case: a panel that is closing because the player <em>bought</em> something, where
         /// the next thing they hear is the celebration and a backing-out whoosh underneath it
-        /// is one sound too many. It is not a general volume control — an ordinary close makes
+        /// is one sound too many. It is not a general volume control - an ordinary close makes
         /// a noise because an ordinary close is the player leaving.
         /// </para>
         /// </summary>
@@ -195,7 +195,7 @@ namespace GlimmerGrove
             _closing = true;
 
             // The keyboard goes down when this panel does, so without this the panel would slide
-            // back to its resting place while it faded — a drop underneath the exit, which reads
+            // back to its resting place while it faded - a drop underneath the exit, which reads
             // as the panel falling rather than as the panel leaving. Held where it is instead.
             if (_lift) _lift.enabled = false;
 
@@ -248,20 +248,20 @@ namespace GlimmerGrove
         /// <summary>The run that was lost, decided by the screen. See <see cref="RunOutcome"/>.</summary>
         public RunOutcome Run { get; set; }
 
-        /// <summary>What the streak did. Shown here too — see <see cref="StreakToast.Show"/>.</summary>
+        /// <summary>What the streak did. Shown here too - see <see cref="StreakToast.Show"/>.</summary>
         public StreakNote Streak { get; set; }
 
-        /// <summary>False when the player was already at zero — then nothing was taken.</summary>
+        /// <summary>False when the player was already at zero - then nothing was taken.</summary>
         public bool HeartWasCharged;
 
         /// <summary>
-        /// What the run was priced at, and if it cost nothing, why — one of a mode's free
+        /// What the run was priced at, and if it cost nothing, why - one of a mode's free
         /// openings, or a glade this player had already finished.
         ///
         /// <para>
         /// Distinct from <see cref="HeartWasCharged"/> being false, which is the opposite
         /// news: that one means there was nothing left to take. Told apart because the panel
-        /// says opposite things about them — a free run always offers another go, and an empty
+        /// says opposite things about them - a free run always offers another go, and an empty
         /// wallet cannot. See <c>HeartStake</c>.
         /// </para>
         /// <para>
@@ -278,7 +278,7 @@ namespace GlimmerGrove
         ///
         /// <b>Not whether the run was free.</b> A watch on a lane with no ladder was bought at
         /// the gate (<c>HeartPrice.Entry</c>) and its defeat takes nothing, so it answers true
-        /// here and cost a heart all the same — which is exactly why the row of hearts is
+        /// here and cost a heart all the same - which is exactly why the row of hearts is
         /// replaced by a sentence rather than drawn: nothing in the icons went out just now, and
         /// a row that drained one would be reporting a charge that did not happen.
         /// </summary>
@@ -301,7 +301,7 @@ namespace GlimmerGrove
         /// Hearts for a video: the free way out, and always drawn above the paid one.
         ///
         /// <para>
-        /// A collaborator for <see cref="_rescue"/>'s reason and beside it — see
+        /// A collaborator for <see cref="_rescue"/>'s reason and beside it - see
         /// <see cref="HeartVideoFlow"/>, which is also where the argument lives for why tapping
         /// it shows the video rather than an explanatory panel. What stays here is what only a
         /// panel can answer: where the button goes, and what "back onto the board" means.
@@ -321,7 +321,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// A collaborator rather than more of this panel, which had already reached five
-        /// responsibilities — <see cref="HeartRescueFlow"/> says why, and <c>RunContinueFlow</c>
+        /// responsibilities - <see cref="HeartRescueFlow"/> says why, and <c>RunContinueFlow</c>
         /// is the precedent. What is left here is what only a panel can answer: whether there is
         /// still a heart to spend, where the button goes, and what "back onto the board" means.
         /// </para>
@@ -374,7 +374,7 @@ namespace GlimmerGrove
         /// Written out rather than built from the enum name, for <see cref="TitleKey"/>'s
         /// reason: a concatenated key is invisible to the build's string scanner and ships
         /// missing in whichever language nobody tested. <see cref="HeartPrice.Charged"/> cannot
-        /// reach here — the caller asks only when the ending took nothing — but it answers the
+        /// reach here - the caller asks only when the ending took nothing - but it answers the
         /// free opening rather than throwing, because the worst a wrong sentence does on this
         /// panel is read oddly, and the worst an exception does is eat the defeat screen.
         ///
@@ -397,7 +397,7 @@ namespace GlimmerGrove
         /// nobody tested.
         ///
         /// Indexed by turns short, minus one. The array's length is therefore the honest
-        /// statement of how far "near" reaches — widen <see cref="RunOutcome.NearMissTurns"/>
+        /// statement of how far "near" reaches - widen <see cref="RunOutcome.NearMissTurns"/>
         /// and the compiler does not care, but the sentence has to be written before a
         /// player can be told it.
         /// </summary>
@@ -409,7 +409,7 @@ namespace GlimmerGrove
             // whole point of it, and it is why this is not simply a heart count.
             //
             // The one predicate every door into a run asks (HeartStake.CanBegin), rather than a
-            // fourth spelling of it — this panel is one of five, and the reason the others were
+            // fourth spelling of it - this panel is one of five, and the reason the others were
             // gathered onto it is that three of them had quietly stopped asking at all. Read
             // live rather than off HeartsLeft, which is the snapshot the defeat left behind: a
             // rebuild after a rescue or a watched video recomputes this, and a stale nought
@@ -432,7 +432,7 @@ namespace GlimmerGrove
                                             HeartRescueWhere.Defeat, Rebuild, BackToTheBoard);
 
             // Derived rather than typed, so the five shapes this panel can take cannot come to
-            // disagree with the buttons drawn into them. See DefeatPanel — the two constants
+            // disagree with the buttons drawn into them. See DefeatPanel - the two constants
             // this replaced were 880 and 1010, written before there was a third way out.
             var stack = DefeatPanel.Of(canRetry, offering, _rescue.Exists);
 
@@ -440,8 +440,8 @@ namespace GlimmerGrove
                       Loc.Get(TitleKey(Run.Reason)), dismissOnScrim: false);
 
             // The sentence explaining the defeat used to sit here and no longer does. It
-            // restated the title directly above it — "OUT OF TURNS" over "the groove grew tired
-            // before the glade woke" — and was reported from play as noise at the one moment
+            // restated the title directly above it - "OUT OF TURNS" over "the groove grew tired
+            // before the glade woke" - and was reported from play as noise at the one moment
             // nobody is reading prose. What is left is the title, how close it was, and what to
             // do about it. The offer panel that comes first already says why, as a subtitle
             // under DEFEAT, where it reads as a reason rather than as the subject.
@@ -449,12 +449,12 @@ namespace GlimmerGrove
 
             // Five empty hearts under a run that cost none of them is a picture of a charge
             // that did not happen, and directly above a retry button it reads as the panel
-            // contradicting itself. The row is replaced by the reason instead — the reason,
+            // contradicting itself. The row is replaced by the reason instead - the reason,
             // not a reason: which of the two clauses spared this run is what the player needs
             // to know, since one of them runs out after three boards and the other never does.
             //
             // Centred in the room it actually has rather than at a typed offset, because the
-            // near-miss slot above it is reserved on every defeat and filled on few — and in
+            // near-miss slot above it is reserved on every defeat and filled on few - and in
             // Pal.Moss rather than Pal.Mint, which is a board colour and was being asked to
             // carry a whole sentence of unoutlined body copy across cream paper. See
             // DefeatPanel.FreeCentre and Pal.Moss; both were reported from play.
@@ -477,7 +477,7 @@ namespace GlimmerGrove
             // is how a panel reads as a trick.
             //
             // Drawn in the panel's own body colour rather than in red. Red is an alarm, and this
-            // is an instruction sitting directly above the two buttons that carry it out — the
+            // is an instruction sitting directly above the two buttons that carry it out - the
             // colour was saying "something is wrong" about the one part of the panel that is
             // actually a way forward.
             if (stack.HasNote)
@@ -490,7 +490,7 @@ namespace GlimmerGrove
             if (stack.HasWatch)
             {
                 // Straight back onto the board once the prize is taken, exactly as the rescue's
-                // purchase is — and through the same method, so the two ways back cannot come to
+                // purchase is - and through the same method, so the two ways back cannot come to
                 // mean different things. Guarded for its own lifetime because the celebration
                 // outlives this panel: a player who backgrounds the app during the video can come
                 // back somewhere else entirely, and the hearts are theirs either way.
@@ -511,7 +511,7 @@ namespace GlimmerGrove
 
             // Last, and after the near-miss line has had its moment: a lost run still fed
             // the streak, which is the one piece of good news this panel has. Not replayed on
-            // a repaint — the house rule is that Show animates and Refresh does not, and a
+            // a repaint - the house rule is that Show animates and Refresh does not, and a
             // streak toast that flew past again because gems landed would read as a second
             // night collected.
             if (!Rebuilding) StreakToast.Show(this, Streak, 1.05f);
@@ -539,15 +539,15 @@ namespace GlimmerGrove
         /// One case now, and whether it appears is decided entirely by
         /// <see cref="RunOutcome"/> rather than by anything read off a board that has since
         /// been restarted. When the run ended within one or two turns of finishing, the panel
-        /// says so in words and arrives with a flourish — the board has just pulsed the
+        /// says so in words and arrives with a flourish - the board has just pulsed the
         /// conduits in question, so this is the caption to a thing the player watched, not a
         /// claim they have to take on trust. Otherwise nothing is drawn.
         /// </para>
         /// <para>
         /// There used to be a fallback: a bare <c>lit/total</c> critter count when the run was
         /// not close. It is gone. It was honest but flat, and sitting directly above a row of
-        /// five hearts it read as a <em>heart</em> count — "0/5" on a five-critter glade
-        /// against a five-heart cap — which is the one misreading a defeat panel cannot
+        /// five hearts it read as a <em>heart</em> count - "0/5" on a five-critter glade
+        /// against a five-heart cap - which is the one misreading a defeat panel cannot
         /// afford, because a player who believes they are out of hearts stops playing. The
         /// timeout ending did not introduce that, it made it common: a run that runs out of
         /// clock has usually lit nothing, so the flat case became the usual one and it almost
@@ -557,7 +557,7 @@ namespace GlimmerGrove
         /// The near-miss line is the single highest-value sentence on this panel. A defeat
         /// that reads as nearly a win is retried; one that reads as a wall is not. It earns
         /// that only by being true, which is why it is gated on an upper bound the player
-        /// could check by restarting — see <see cref="Puzzle.TurnsToSolution"/>.
+        /// could check by restarting - see <see cref="Puzzle.TurnsToSolution"/>.
         /// </para>
         /// </summary>
         void BuildHowClose()
@@ -565,7 +565,7 @@ namespace GlimmerGrove
             if (Run.NearMiss)
             {
                 // A repaint is not news. The line still belongs on the panel, so it is drawn
-                // at rest rather than skipped — what must not happen twice is the arrival.
+                // at rest rather than skipped - what must not happen twice is the arrival.
                 if (Rebuilding)
                 {
                     int at = Mathf.Clamp(Run.TurnsShort - 1, 0, NearMissKeys.Length - 1);
@@ -613,7 +613,7 @@ namespace GlimmerGrove
         /// <b>Middle-aligned, because <paramref name="y"/> is a centre.</b> Every number
         /// <c>DefeatPanel</c> hands out is the centre of the room reserved for a row, and a
         /// paragraph anchored to the top of that room sits high in it by however much shorter
-        /// than the room it happens to be — so the air above it and the air below it are never
+        /// than the room it happens to be - so the air above it and the air below it are never
         /// the two halves of one gap, and both rows drawn through here were visibly closer to
         /// what follows them than to what precedes them. Centring makes the reserved room mean
         /// what it says whatever the line count and whatever the translation.
@@ -627,12 +627,12 @@ namespace GlimmerGrove
 
         /// <summary>
         /// The heart row, with the one just lost drawn empty and struck through by a
-        /// short animation. Showing the cost is the point — a resource that quietly
+        /// short animation. Showing the cost is the point - a resource that quietly
         /// decrements is a resource players feel cheated by later.
         ///
         /// <para>
         /// The row is a fixed handful of icons wide and stays that width however many hearts
-        /// are held, because it is a picture of the gate rather than of the balance — twenty
+        /// are held, because it is a picture of the gate rather than of the balance - twenty
         /// icons would be a wall, and the row is 600 units across. A surplus, whether it came
         /// from a chest, a streak, a video or a bought container, is drawn as a "+n" beside
         /// the row: still visible, still honest, and it does not turn a panel about a lost run
@@ -700,13 +700,13 @@ namespace GlimmerGrove
     ///
     /// It counts down live rather than showing a static number, because a wait you can
     /// watch shrink is a wait; a wait you have to re-open a screen to measure is a
-    /// wall. The countdown reads <see cref="Profile.SecondsToNextHeart"/> each frame —
+    /// wall. The countdown reads <see cref="Profile.SecondsToNextHeart"/> each frame -
     /// the heart state catches itself up on read, so this stays correct across a
     /// backgrounded app without any resume plumbing.
     ///
     /// Three ways out, in the order they cost the player: a video, the shop, and away. The
     /// video is shown only when one is actually loaded and the day's allowance has room, so
-    /// it is the shop that is always there — hearts sell for <em>gems</em>, which need no
+    /// it is the shop that is always there - hearts sell for <em>gems</em>, which need no
     /// store connection and may already be in hand, so that button works in a build with no
     /// IAP and on a plane. Free above paid, for <c>DefeatPanel</c>'s reason.
     ///
@@ -722,7 +722,7 @@ namespace GlimmerGrove
         bool _offering;
 
         /// <summary>
-        /// The video, and what it pays into. See <see cref="HeartVideoFlow"/> — the same free
+        /// The video, and what it pays into. See <see cref="HeartVideoFlow"/> - the same free
         /// way back the defeat panel draws, because a player who meets the explanatory panel in
         /// one of the two places hearts are asked for and the celebration in the other has met
         /// two features rather than one.
@@ -732,12 +732,12 @@ namespace GlimmerGrove
         protected override void Build()
         {
             // Resolved once, at the top, because it decides the panel's height as well as
-            // its buttons — and asking twice risks the two disagreeing if fill arrives in
+            // its buttons - and asking twice risks the two disagreeing if fill arrives in
             // between, leaving a button drawn outside the panel it belongs to.
             _offering = RewardedAds.ShouldOffer(AdPlacement.HeartRefill);
 
             // Derived rather than typed, so the panel cannot come to disagree with the buttons
-            // drawn into it. See HeartGatePanel — the two constants this replaced were 900 and
+            // drawn into it. See HeartGatePanel - the two constants this replaced were 900 and
             // 780, written when there were two ways out rather than three.
             var stack = HeartGatePanel.Of(_offering, buying: true);
 
@@ -755,7 +755,7 @@ namespace GlimmerGrove
             empty.preserveAspect = true;
             Tween.Breathe(empty.transform, .05f, 2.2f);
 
-            // The countdown is a heading, not prose, so it keeps its outline — it is
+            // The countdown is a heading, not prose, so it keeps its outline - it is
             // the one number on this panel the player actually came to read.
             _countdown = UIKit.Titled("Clock", Panel, string.Empty, 52, Pal.Rose,
                                       TextAnchor.MiddleCenter, new Vector2(640f, 84f),
@@ -767,7 +767,7 @@ namespace GlimmerGrove
             {
                 // Closing once the prize has been taken rather than repainting: this panel
                 // exists to explain an empty heart bar, and once it is no longer empty it has
-                // nothing left to say. Guarded because the celebration outlives it — and it
+                // nothing left to say. Guarded because the celebration outlives it - and it
                 // usually does, since Paint below closes this the moment the hearts land.
                 _video = new HeartVideoFlow(this, () => { if (this) Close(); });
 
@@ -802,7 +802,7 @@ namespace GlimmerGrove
 
             long seconds = Profile.SecondsToNextHeart;
 
-            // The clock ran out while they were looking at it — let them straight in.
+            // The clock ran out while they were looking at it - let them straight in.
             if (Profile.CanPlay) { Close(); return; }
 
             _countdown.text = seconds <= 0
@@ -818,7 +818,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Set by the three exits that hand the run straight to something which latches the
-        /// board again — restarting it and the two ways of walking away from it, all of which
+        /// board again - restarting it and the two ways of walking away from it, all of which
         /// go through <c>PlayScreen.ConfirmForfeit</c> and want it kept frozen behind the
         /// question that follows.
         ///
@@ -827,7 +827,7 @@ namespace GlimmerGrove
         /// <see cref="OnDestroy"/> that does the letting go rather than the buttons, because
         /// this panel has five ways out and only four of them are buttons. The fifth is the
         /// scrim, which closes through <see cref="ModalView.Close"/> with no continuation of
-        /// its own — so a tap outside the panel dismissed the pause menu and left the board
+        /// its own - so a tap outside the panel dismissed the pause menu and left the board
         /// latched, the clock stopped and nothing on screen able to release either. Exactly
         /// the lesson <c>AdOfferOverlay.Dismissed</c> is written from: a panel with five exits
         /// reports through none of them reliably, so the safe outcome has to be the default
@@ -849,7 +849,7 @@ namespace GlimmerGrove
             // Both exits go through the screen rather than straight at Flow, because leaving a
             // run that has begun costs a heart and the screen is what knows whether this one
             // has. Navigating from here directly was the third of five ways to walk away from a
-            // countdown for free — see RunGuard.
+            // countdown for free - see RunGuard.
             UIKit.TextButton("Glades", Panel, "btn_blue", Loc.Get("ui.pause.glades"), 48, new Vector2(600f, 130f),
                              new Vector2(.5f, 1f), new Vector2(0f, -535f),
                              () =>
@@ -874,7 +874,7 @@ namespace GlimmerGrove
                              });
 
             var row = UIKit.Box("Toggles", Panel, new Vector2(600f, 150f), new Vector2(.5f, 0f), new Vector2(0f, 128f));
-            // Two, straddling the middle rather than taking the outer thirds — ReadoutRow's
+            // Two, straddling the middle rather than taking the outer thirds - ReadoutRow's
             // rule, because a gap in the centre of a row of two reads as a third control that
             // failed to draw. The buzz used to be the third and is gone: see Haptic's removal.
             Toggle(row, "ic_music", new Vector2(-110f, 0f), () => GameSettings.MusicOn, GameSettings.SetMusic);
@@ -889,7 +889,7 @@ namespace GlimmerGrove
         void Resume() => Close();
 
         /// <summary>
-        /// The board comes off its latch however this panel went away — the resume button, the
+        /// The board comes off its latch however this panel went away - the resume button, the
         /// hardware back key, a tap on the scrim, or the screen underneath being torn down with
         /// the menu still open.
         ///
@@ -954,10 +954,10 @@ namespace GlimmerGrove
         {
             // 700 rather than 800: the reset button and the gap above it were 146px of the
             // old height. Everything else here hangs off the top edge and only Close hangs
-            // off the bottom, so shrinking the panel is what closes the hole — moving Close
+            // off the bottom, so shrinking the panel is what closes the hole - moving Close
             // up instead would have left the panel the same size with dead space in it.
             // Only players whose jurisdiction requires an ongoing privacy control get the
-            // row, and the CMP is what decides that — not a locale, not a guess. Drawing it
+            // row, and the CMP is what decides that - not a locale, not a guess. Drawing it
             // for everybody would put a button in front of people it does nothing for;
             // hiding it from somebody in the EEA who consented is a compliance failure,
             // because withdrawing has to be as easy as agreeing. So the panel is measured
@@ -995,13 +995,13 @@ namespace GlimmerGrove
             // many words ("no attribution or link back to this site is required"), and the
             // Envato/GraphicRiver and Unity Asset Store licences the rest come under say
             // nothing about credit at all. The one vendor that *did* compel an in-app line
-            // was Freepik — whose free licence wants the credit in the app or the store
-            // listing specifically, so a website would not have discharged it — and no
+            // was Freepik - whose free licence wants the credit in the app or the store
+            // listing specifically, so a website would not have discharged it - and no
             // Freepik pixel has shipped since the shop's money art was re-cut from the Layer
             // Lab pack (`Tools/make_shop_art.py --check` proves every shipped sprite is that
             // pack's). So the courtesy credit moved to the publisher's site, at
             // tekoworld.com/credits, which is where a list that grows with the packs can be
-            // corrected without an app update — this line having been wrong for five days
+            // corrected without an app update - this line having been wrong for five days
             // because it could not be.
             //
             // If a pack whose licence *requires* attribution is ever cut into this game, the
@@ -1009,7 +1009,7 @@ namespace GlimmerGrove
             // store description is the only other place that is.
 
             // The two optional rows hang from the top, so they are laid out by a cursor rather
-            // than by two typed offsets — invariant 37bc's argument said about a column. With
+            // than by two typed offsets - invariant 37bc's argument said about a column. With
             // constants, the arrangement that has both would draw one through the other, and
             // it is the arrangement nobody has on their own device.
             float y = -520f;
@@ -1036,7 +1036,7 @@ namespace GlimmerGrove
             //
             // There is deliberately no "reset progress" here, and the reason is stronger
             // than distaste for the button. It called SaveService.Wipe, which keeps the
-            // cloud identity on purpose — so on a signed-in device the next sync pulled the
+            // cloud identity on purpose - so on a signed-in device the next sync pulled the
             // old save straight back, because SaveMerge.Join is monotonic and the cloud copy
             // knows more than a freshly zeroed one about every field it joins. The control
             // therefore promised something it could no longer deliver: the grove vanished,
@@ -1051,10 +1051,10 @@ namespace GlimmerGrove
             // Required in the app rather than only on the store listing: App Store Review
             // 5.1.1(i) wants the privacy policy reachable from inside the app, and a link only
             // in App Store Connect is a documented rejection. Support is here for Guideline
-            // 1.2's other half — this game publishes keeper names to a public board, and a way
+            // 1.2's other half - this game publishes keeper names to a public board, and a way
             // to report somebody is not a way to reach us.
             //
-            // Blue, which is this UI's colour for a secondary action — the undo key, the map
+            // Blue, which is this UI's colour for a secondary action - the undo key, the map
             // key, an overlay's dismiss. They were the shop's grey Restore skin first and read
             // as disabled, which on the one control a reviewer is told to look for is the worst
             // possible reading. Small rather than grey is how they stay quieter than Close
@@ -1079,13 +1079,13 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Internal so <c>LegalLinkTests</c> can prove the tallest arrangement still fits inside
-        /// <see cref="PanelStack.TallestPanel"/> — a modal is centred and its ribbon stands proud
+        /// <see cref="PanelStack.TallestPanel"/> - a modal is centred and its ribbon stands proud
         /// of the top edge, so a panel that grows past that is drawn off the top of a 4:3 tablet
         /// and off nothing else. That is the failure this file has already had once.
         /// </para>
         /// <para>
         /// 660 rather than 700: the art-credit row and the gap above it were 40 units of the
-        /// old height, and taking a row out has to take its height out with it — leaving the
+        /// old height, and taking a row out has to take its height out with it - leaving the
         /// panel at 700 would have drawn the consent button through the legal row on the one
         /// arrangement that has both, because everything below the toggles hangs from the
         /// foot and only the things above it hang from the top.
@@ -1108,8 +1108,8 @@ namespace GlimmerGrove
         /// <para>
         /// <b>A worded row rather than an icon toggle, because there are three answers and an
         /// icon can only draw two.</b> On and off are the player's switch; <em>blocked</em> is
-        /// the OS's, and it cannot be undone from inside this app — neither platform shows its
-        /// permission dialog twice — so the only honest control for it is one that hands the
+        /// the OS's, and it cannot be undone from inside this app - neither platform shows its
+        /// permission dialog twice - so the only honest control for it is one that hands the
         /// player to the system settings. A switch that flipped and changed nothing is exactly
         /// the broken button invariant 16o refuses.
         /// </para>
@@ -1143,7 +1143,7 @@ namespace GlimmerGrove
                 }
 
                 // Unasked is the one state where saying yes has to become a system prompt as
-                // well as a preference — and it is the right moment for one, because the
+                // well as a preference - and it is the right moment for one, because the
                 // player has just reached for the control themselves. `Notify.Ask` is a no-op
                 // once the OS has answered, so this cannot become a second dialog.
                 NotificationOptIn.SetWanted(!NotificationOptIn.Wanted);
@@ -1159,7 +1159,7 @@ namespace GlimmerGrove
         /// One link out to the public site.
         ///
         /// <para>
-        /// <see cref="Application.OpenURL"/> leaves the game, so the panel is closed first — on
+        /// <see cref="Application.OpenURL"/> leaves the game, so the panel is closed first - on
         /// iOS the browser is a separate app and coming back to a modal that was never dismissed
         /// is how a player ends up tapping Close twice. A malformed URL is refused rather than
         /// handed over, because the platform's answer to one is to do nothing at all, which on a

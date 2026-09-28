@@ -7,7 +7,7 @@ namespace GlimmerGrove.Modes
     /// <b>Both of these exist because reading the hill was too expensive to be worth doing.</b>
     /// The colour lock gives the question stakes; it does not make it cheap to answer. "Which
     /// colour is coming" meant parsing a dozen small moving bodies four hundred points away, in
-    /// four colours, mixed — two seconds of work under a clock that gives none, so the eye
+    /// four colours, mixed - two seconds of work under a clock that gives none, so the eye
     /// correctly refused and the mode played as "take the biggest match on the field". These are
     /// the two readings that turn a parse into a glance: what is on the hill <em>now</em>, and
     /// what is coming <em>next</em>.
@@ -25,21 +25,21 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>Health rather than a head count</b>, because a brute is two matches and a creeper is
-        /// one — a count would tell a player that four creepers matter more than two brutes, which
+        /// one - a count would tell a player that four creepers matter more than two brutes, which
         /// is the opposite of true. What the view does with it is light the loudest of the four,
         /// so what has to be honest is the ordering.
         /// </para>
         /// <para>
         /// <b>Everything this ward would fire at, at what a bolt from it is really worth.</b> The
         /// question is "is this turret worth feeding", and the honest answer is not a head of
-        /// health — it is the share of that health this ward can take. A prism's partner is folded
+        /// health - it is the share of that health this ward can take. A prism's partner is folded
         /// in at its share, and a boss at every ward's, because every ward answers one
         /// (<see cref="SiegeTuning.EveryWardReaches"/>).
         /// </para>
         /// <para>
         /// <b>Which is what makes the readout teach the duel rather than flatten it.</b> Counted
         /// as whole health, a boss would light all four wards identically and say the thing that
-        /// is not true — that it does not matter which one is fed. Counted at the share, the
+        /// is not true - that it does not matter which one is fed. Counted at the share, the
         /// boss's own colour reads twice as loud as the other three and the player is told, in the
         /// one place they are already looking, exactly what the gold numbers will confirm.
         /// </para>
@@ -92,7 +92,7 @@ namespace GlimmerGrove.Modes
         public float Rest => _rest > 0f ? _rest : 0f;
 
         /// <summary>
-        /// Whether the hill is clear and something is still to come — the breather.
+        /// Whether the hill is clear and something is still to come - the breather.
         ///
         /// <b>This is the moment the whole rhythm is built around.</b> It is when a ward banks
         /// rather than fires (see <c>SiegeBoard.Aim</c>), and so the only moment in a run where a
@@ -117,7 +117,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>The forecast is what makes a breather worth having.</b> A gap with no information in
-        /// it is a pause; a gap that says <em>six blue, three red</em> is a decision — and it is
+        /// it is a pause; a gap that says <em>six blue, three red</em> is a decision - and it is
         /// the one place in this mode a player is ever told something before it happens rather
         /// than after.
         /// </para>

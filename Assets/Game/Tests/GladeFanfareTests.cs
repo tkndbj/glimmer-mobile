@@ -5,13 +5,13 @@ namespace GlimmerGrove.Tests
 {
     /// <summary>
     /// How long a solved glade celebrates for, which is the one subsystem whose failures only
-    /// show up in play — so the arithmetic lives in Domain and is proved without an Editor.
+    /// show up in play - so the arithmetic lives in Domain and is proved without an Editor.
     ///
     /// <para>
     /// The property every one of these defends is <c>BudMotionTests</c>' property: <b>the rate
     /// gives way, but never past the point where the eye can follow it.</b> A glade is the mode
     /// where that bites hardest, because the celebration walks the network the player just
-    /// finished — so its length is a fact about the <em>board</em>, and nothing but a bound
+    /// finished - so its length is a fact about the <em>board</em>, and nothing but a bound
     /// stops a deep grove turning the payoff into a wait.
     /// </para>
     /// </summary>
@@ -33,8 +33,8 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// And past that the floor governs, which is the design rather than a leak.
         ///
-        /// Two bounds pull opposite ways — the light may not take for ever, and a ring may not
-        /// be too fast to read — and where they meet the floor wins, because a payoff nobody can
+        /// Two bounds pull opposite ways - the light may not take for ever, and a ring may not
+        /// be too fast to read - and where they meet the floor wins, because a payoff nobody can
         /// follow pays out nothing.
         /// </summary>
         [Test]
@@ -178,7 +178,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// And it is long enough to be one. The failure in the other direction is silent — a
+        /// And it is long enough to be one. The failure in the other direction is silent - a
         /// sequence that has quietly compressed to a second still plays, still sounds and still
         /// reaches the panel, and only reads as the game skipping the payoff.
         /// </summary>
@@ -222,7 +222,7 @@ namespace GlimmerGrove.Tests
         /// The two shockwave rings both cross the grove and fade before the panel covers it.
         ///
         /// They leave the middle during the bloom, so what has to hold is that the second one's
-        /// whole life fits inside what is left of the sequence — a ring still expanding under a
+        /// whole life fits inside what is left of the sequence - a ring still expanding under a
         /// scrim is a ring nobody sees the end of.
         /// </summary>
         [Test]

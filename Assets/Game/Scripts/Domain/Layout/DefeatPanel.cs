@@ -5,7 +5,7 @@ namespace GlimmerGrove.Layout
     ///
     /// <para>
     /// Every number is a centre, in canvas reference units measured <em>down</em> from the
-    /// panel's top edge — the direction a panel is read in and the opposite of the sign
+    /// panel's top edge - the direction a panel is read in and the opposite of the sign
     /// <c>UIKit.Box</c> takes, so a caller negates once at the point of placement. A row that
     /// is not being drawn reads <see cref="Absent"/>; ask the matching <c>Has</c> flag rather
     /// than testing the number.
@@ -39,7 +39,7 @@ namespace GlimmerGrove.Layout
         /// <summary>Hearts for gems. See <c>HeartRescue</c>.</summary>
         public readonly float Rescue;
 
-        /// <summary>Back to the map. Always drawn — it is the exit that always works.</summary>
+        /// <summary>Back to the map. Always drawn - it is the exit that always works.</summary>
         public readonly float Glades;
 
         /// <summary>How tall the panel has to be.</summary>
@@ -60,7 +60,7 @@ namespace GlimmerGrove.Layout
     /// which <c>ReadoutRow</c>, <c>RippleBand</c> and <c>PanelStack</c> have already earned three
     /// times: whether two things on a screen overlap is arithmetic, and arithmetic inside a
     /// <c>MonoBehaviour</c> is arithmetic nothing can check. It became worth separating when the
-    /// panel grew a third way out — hearts for gems — because that took the number of shapes it
+    /// panel grew a third way out - hearts for gems - because that took the number of shapes it
     /// can take from three to five, and the height had been a pair of hand-written constants
     /// (880 and 1010) with the button offsets under them written out one at a time. That is the
     /// arrangement <c>PanelStack</c> was lifted out of a panel that had been drawing its last
@@ -96,7 +96,7 @@ namespace GlimmerGrove.Layout
         ///
         /// <para>
         /// <b>They moved up when the reason line went.</b> The panel used to open with a
-        /// sentence explaining the defeat — "the groove grew tired before the glade woke" — which
+        /// sentence explaining the defeat - "the groove grew tired before the glade woke" - which
         /// restated the title underneath it and was reported from play as noise at the one moment
         /// nobody is reading prose. Taking it out left a hundred and fifty units of nothing, so
         /// everything below it came up by exactly that, and the numbers are named here rather
@@ -128,8 +128,8 @@ namespace GlimmerGrove.Layout
         /// <para>
         /// <b>Derived rather than typed, because the room it has is not a constant.</b> The
         /// near-miss line's slot is always reserved and only sometimes filled, so on the runs
-        /// that were not close — which is most of them, and all of the early ones this line is
-        /// written for — there are seventy-four units of empty paper above it that nothing was
+        /// that were not close - which is most of them, and all of the early ones this line is
+        /// written for - there are seventy-four units of empty paper above it that nothing was
         /// using. A typed centre spent that void above the sentence and left the sentence
         /// sitting on the try-again button, which is how it was reported: too close to the
         /// button, with a hole over it.
@@ -189,7 +189,7 @@ namespace GlimmerGrove.Layout
                 note = y + NoteHeight * .5f;
                 y += NoteHeight + Gap;
 
-                // Free before paid. See the class remarks — this ordering is the reason the
+                // Free before paid. See the class remarks - this ordering is the reason the
                 // rule is here rather than in the two `if` arms it used to be spread across.
                 if (watching)
                 {

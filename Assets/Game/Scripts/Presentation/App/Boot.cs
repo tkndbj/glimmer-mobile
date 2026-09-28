@@ -36,13 +36,13 @@ namespace GlimmerGrove
         /// compile-time contract shared with the map validator; this is the width it is
         /// <em>drawn</em> at, and on a tablet the two differ. Anything converting between
         /// device pixels and canvas units, or assuming it knows how much canvas there is
-        /// across, wants this one — see <see cref="Layout.CanvasFit"/> for why they part.
+        /// across, wants this one - see <see cref="Layout.CanvasFit"/> for why they part.
         /// </para>
         /// <para>
         /// A pure function of <see cref="UnityEngine.Screen"/>, deliberately, so it is correct
         /// in the frame the canvas is created in. <c>CanvasScaler</c> does not apply until
         /// <c>Canvas.willRenderCanvases</c>, which runs after every <c>Update</c> in the frame,
-        /// so a caller that measured a rect instead would be a frame behind — which is the trap
+        /// so a caller that measured a rect instead would be a frame behind - which is the trap
         /// <c>SplashScreen.Fit</c> exists to document.
         /// </para>
         /// </summary>
@@ -52,18 +52,18 @@ namespace GlimmerGrove
         public static float CanvasHeight => Layout.CanvasFit.HeightFor(UnityEngine.Screen.width, UnityEngine.Screen.height);
 
         /// <summary>
-        /// Whether this display is squarer than a phone — a tablet, a foldable, a window in
-        /// split view — and so one the canvas has been widened for.
+        /// Whether this display is squarer than a phone - a tablet, a foldable, a window in
+        /// split view - and so one the canvas has been widened for.
         ///
         /// <para>
         /// Very little should ask. The widening is what makes a tablet need no second layout,
         /// and a screen reaching for this is a screen about to grow a case. There are two
         /// callers, and they are the two shapes that can legitimately need one. Lightfall's well
         /// is the only board in the game bound by <em>height</em>: a short display leaves it a
-        /// sixth of the room a phone does, so its band and its tray give some back — see
+        /// sixth of the room a phone does, so its band and its tray give some back - see
         /// <c>FallBand</c>. The loadout shelf is bound by <em>width</em> in the other direction:
         /// it is a scrolling grid, so what a wider canvas buys it is columns rather than a
-        /// bigger cell — and because this is a threshold rather than a ramp, every tablet draws
+        /// bigger cell - and because this is a threshold rather than a ramp, every tablet draws
         /// the same shelf. See <c>LoadoutScreen.Columns</c>.
         /// </para>
         /// <para>
@@ -98,7 +98,7 @@ namespace GlimmerGrove
 
             // Made to apply itself before anything is built on it, and this is not tidiness.
             // `CanvasScaler` sets the canvas's scale factor from `Canvas.willRenderCanvases`,
-            // which runs *after* every `Update` in the frame — and the splash screen is raised
+            // which runs *after* every `Update` in the frame - and the splash screen is raised
             // further down this same method. Left alone, the first frame the player ever sees
             // is drawn at a scale factor of 1 and the second at the real one, so the whole
             // interface arrives oversized and settles: a launch that visibly lurches, on every
@@ -111,7 +111,7 @@ namespace GlimmerGrove
             // it is cheap enough to be worth having ready before anything draws.
             SaveService.Load();
 
-            // Then settle any run the last launch never finished — a force-quit, a crash, a
+            // Then settle any run the last launch never finished - a force-quit, a crash, a
             // flat battery. Immediately after the save loads, because the heart has to come
             // out of a wallet that exists, and before anything can start a new run, because
             // one marker can only describe one run. See RunGuard.
@@ -140,8 +140,13 @@ namespace GlimmerGrove
             CloudSaveService.UseBackend(new FirebaseCloudSaveBackend());
 #endif
 
+            // And the time a departure is given to finish once the app has gone to the
+            // background. iOS suspends a backgrounded app within seconds unless it asks; the
+            // other platforms answer null and keep running long enough without being asked.
+            CloudSaveService.UseBackgroundGrace(new BackgroundGrace());
+
             // A name, a companion, a purchase or a piece put down is worth a sync of its own
-            // rather than waiting for the app to be backgrounded — which is the least reliable
+            // rather than waiting for the app to be backgrounded - which is the least reliable
             // moment there is to start a network call, since the process is being frozen as
             // it goes out. Hung on the events rather than called from the panels so a second
             // way to do any of them cannot forget it; the request is debounced and retried, so
@@ -149,7 +154,7 @@ namespace GlimmerGrove
             SyncTriggers.Attach();
 
             // The public boards rebuild this account's card after a sync has put the grove on
-            // the server — never before, because the server builds the card from the pushed
+            // the server - never before, because the server builds the card from the pushed
             // save. Wired once, here, for the reason above; a no-op in a build with no
             // backend, because everything behind it checks IsAvailable.
             Social.GroveBoard.Attach();
@@ -158,11 +163,11 @@ namespace GlimmerGrove
             // Rewarded ads, chosen the same way and inert by the same default. Two gates,
             // not one: the SDK has to be compiled in *and* a real app key has to exist.
             // Without the second, LevelPlay would start, fail, and leave the game showing
-            // offers that can never fill — which is worse than showing none.
+            // offers that can never fill - which is worse than showing none.
             // The consent platform and Apple's tracking prompt, installed before anything can
             // ask what the player agreed to. Installed, not resolved: asking is a network
             // round trip and possibly a native dialog, neither of which belongs before the
-            // first scene has loaded — the splash starts that, through RewardedAds.StartAsync.
+            // first scene has loaded - the splash starts that, through RewardedAds.StartAsync.
             Privacy.PrivacySetup.Install();
 
             // Measurement, installed immediately after the consent platform and before
@@ -179,7 +184,7 @@ namespace GlimmerGrove
 
                 // Deliberately *not* started here, which is the one thing about this block
                 // worth reading twice. Mediation may not be initialised until the player's
-                // consent is known — an SDK that starts first has already decided what it may
+                // consent is known - an SDK that starts first has already decided what it may
                 // collect and has already auctioned on that decision, and telling it
                 // afterwards changes only the next request. RewardedAds.StartAsync owns that
                 // ordering and the splash calls it.
@@ -190,7 +195,7 @@ namespace GlimmerGrove
             // rather than two, unlike the ads above: a store product costs nothing to ask
             // about and a store that has never heard of one simply leaves its card out, so
             // there is no equivalent of an ad unit that fails silently for ever. The
-            // connection itself is started from the splash, not here — see SplashScreen —
+            // connection itself is started from the splash, not here - see SplashScreen -
             // because it is a network round trip and the boot path may not wait on one.
 #if GLIMMER_IAP
             StoreService.UseBackend(new Iap.UnityIapBackend());
@@ -200,29 +205,29 @@ namespace GlimmerGrove
             //
             // Hung on the event here rather than raised by the shop, for the reason the
             // rename sync is: a grant does not arrive while somebody is looking at the shop.
-            // The payment sheet outlives the screen that opened it — on Android it outlives
-            // the process — and a purchase interrupted by a crash is credited on the *next*
+            // The payment sheet outlives the screen that opened it - on Android it outlives
+            // the process - and a purchase interrupted by a crash is credited on the *next*
             // launch, from the splash, with the hub on screen. Both of those are the moments
             // a player most needs telling, and a shop screen listening for itself would miss
             // exactly them.
             //
             // Through the queue rather than straight to a panel, because two grants can land
-            // seconds apart — a purchase interrupted by a crash is redeemed on the next launch
-            // beside a fresh one — and two receipts must be shown one after another rather than
+            // seconds apart - a purchase interrupted by a crash is redeemed on the next launch
+            // beside a fresh one - and two receipts must be shown one after another rather than
             // on top of each other or, worse, one instead of the other. See ReceiptQueue.
             //
             // The prompt is chained behind the last of them rather than raised beside it, and
             // the ordering is the whole reason this is the right moment to ask. The sale is
             // banked, the goods are on screen, and "keep what you just bought" is the easiest
-            // sentence in the game to agree with — where the same words in front of the payment
+            // sentence in the game to agree with - where the same words in front of the payment
             // sheet would be a dialog talking somebody out of the purchase it exists to protect.
             ReceiptQueue.WhenSettled = () => AccountPrompts.Offer(AccountPromptTrigger.Purchase);
             StoreService.Granted += ReceiptQueue.Show;
 
             // And the beat before that one: a transaction has landed, the money has moved, and
             // the server has not finished honouring it yet. Hung here rather than on the shop
-            // for the very reason the receipt is — the sheet outlives the screen that opened it
-            // — and scoped by StoreService to a checkout this process opened, so a re-delivery
+            // for the very reason the receipt is - the sheet outlives the screen that opened it
+            // - and scoped by StoreService to a checkout this process opened, so a re-delivery
             // arriving out of the store's own queue at launch says nothing. See
             // ShopArrivalOverlay, which owes the player a way out rather than a wait.
             StoreService.CheckoutLanded += ShopArrivalOverlay.Show;
@@ -278,7 +283,7 @@ namespace GlimmerGrove
             // about the game. See Layout.CanvasFit: a phone gets RefWidth, and anything
             // squarer than a phone gets a wider canvas so that the vertical stack every
             // screen here is made of has the room it was laid out against. The fitter is
-            // what keeps that answer current — a tablet in split view is resized while the
+            // what keeps that answer current - a tablet in split view is resized while the
             // app is running, and `Expand` would have covered that for free where a typed
             // reference width does not. SafeAreaFitter is the same bargain one layer down.
             go.AddComponent<CanvasFitter>().Bind(scaler);
@@ -290,8 +295,8 @@ namespace GlimmerGrove
         /// Routes the hardware back button, and makes sure progress reaches disk.
         ///
         /// Being backgrounded is the last moment a mobile app is reliably told
-        /// anything — Android may kill the process afterwards without another
-        /// callback — so the save is flushed there rather than only on quit.
+        /// anything - Android may kill the process afterwards without another
+        /// callback - so the save is flushed there rather than only on quit.
         /// </summary>
         sealed class Pump : MonoBehaviour
         {
@@ -315,7 +320,7 @@ namespace GlimmerGrove
 
                 // Art nobody holds any more is freed a few seconds later rather than on the
                 // frame the last screen let go, so a player who leaves a screen and comes
-                // straight back does not pay for the round trip — see AssetLibrary.GraceSeconds.
+                // straight back does not pay for the round trip - see AssetLibrary.GraceSeconds.
                 // Nothing else drives that clock, so without this line the game would never free
                 // a texture at all.
                 AssetLibrary.Tick(Time.unscaledDeltaTime);
@@ -367,7 +372,7 @@ namespace GlimmerGrove
 
                     // And the shade is stale the moment they are here: every reminder this
                     // game sends says "come and look", and they are looking. The schedule
-                    // itself is left exactly as it is — it is rewritten on the way out, which
+                    // itself is left exactly as it is - it is rewritten on the way out, which
                     // is the only moment the state it is built from is final.
                     Notifications.Notify.Resumed();
                 }
@@ -380,7 +385,7 @@ namespace GlimmerGrove
             /// <b>It used to call <see cref="Persist"/>, and that ran the whole of it twice on
             /// every single backgrounding.</b> Android raises <c>OnApplicationFocus(false)</c>
             /// and <c>OnApplicationPause(true)</c> together on the way out, so a rewarded video
-            /// — which is a fullscreen Activity taking the foreground — armed the reminder
+            /// - which is a fullscreen Activity taking the foreground - armed the reminder
             /// schedule twice: two <c>CancelAllScheduledNotifications</c> and twice the plan's
             /// alarms handed to <c>AlarmManager</c>, 28 of them on a shipped schedule, on the
             /// main thread during <c>onPause</c>.
@@ -388,7 +393,7 @@ namespace GlimmerGrove
             /// <para>
             /// <b>What that cost is not the work, it is the window.</b> <c>Arm</c> cancels the
             /// whole schedule and then writes it again, so between those two calls the device
-            /// has <em>no</em> reminders pending — and nothing else in the game ever arms one
+            /// has <em>no</em> reminders pending - and nothing else in the game ever arms one
             /// (invariant 50d: this is the only caller). A process killed inside that gap loses
             /// the player's entire schedule silently, and it does not come back until they open
             /// the game again and background it again, which is precisely the player a reminder
@@ -399,8 +404,8 @@ namespace GlimmerGrove
             /// the first one had already written.
             /// </para>
             /// <para>
-            /// Splitting them is what invariant 50d already says — <b>armed when the app is
-            /// backgrounded and at no other time</b> — and focus is the wrong question for it,
+            /// Splitting them is what invariant 50d already says - <b>armed when the app is
+            /// backgrounded and at no other time</b> - and focus is the wrong question for it,
             /// because plenty of things take focus without the app going anywhere: the
             /// notification shade, a runtime permission dialog, the UMP consent form and the
             /// store's own payment sheet all raise this and never raise a pause. Re-arming three
@@ -411,7 +416,7 @@ namespace GlimmerGrove
             /// The flush stays, and it is the half worth keeping here: it is the cheapest
             /// insurance in the app, it is dirty-gated so it costs nothing when nothing changed,
             /// and a focus loss really can be the last callback before the process is killed.
-            /// Which of the two callbacks lands first does not matter — the first one to write
+            /// Which of the two callbacks lands first does not matter - the first one to write
             /// clears <c>_dirty</c> and the second returns immediately.
             /// </para>
             /// </summary>
@@ -430,14 +435,20 @@ namespace GlimmerGrove
             static void Persist()
             {
                 SaveService.Flush();
-                CloudSaveService.BeginSync();
+
+                // Not BeginSync. A sync resumes on this thread after every await, and Unity stops
+                // pumping it from this callback onward - so the sync started here sent its read
+                // and pushed nothing until the player came back, and a purchase made on this
+                // phone was missing on the other (2026-09-28). A departure is decided here and
+                // carried on the thread pool; it sends nothing when nothing is owed.
+                _ = CloudSaveService.Depart();
 
                 // And what the phone will say while nobody is playing, written from the state
                 // the player is leaving behind.
                 //
                 // Last, and after the flush rather than before it, for two reasons that pull
-                // the same way. This is the only moment the state is final — a plan built
-                // earlier would be a plan about a run that had not finished — and a reminder
+                // the same way. This is the only moment the state is final - a plan built
+                // earlier would be a plan about a run that had not finished - and a reminder
                 // nobody will read for ten hours must never be what the save is queued behind.
                 // Notify.Rearm swallows its own exceptions for the same reason.
                 //

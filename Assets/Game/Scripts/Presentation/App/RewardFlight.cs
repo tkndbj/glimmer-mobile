@@ -12,11 +12,11 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// <b>Why this is a class and not forty lines in an overlay.</b> It was forty lines in
-    /// <c>ChestOverlay</c>, and then a second panel needed the same thing — the rewarded ad,
+    /// <c>ChestOverlay</c>, and then a second panel needed the same thing - the rewarded ad,
     /// which pays the same three currencies into the same three pills and had been closing
     /// with nothing but a card pop to show for it. That is the argument
     /// <see cref="TokenFlight"/> already makes one level down, and it applies harder here:
-    /// the cascade is not a bezier, it is a <em>promise</em> — that the pills are rewound
+    /// the cascade is not a bezier, it is a <em>promise</em> - that the pills are rewound
     /// before the first token leaves, that the last token of a pill writes the true figure,
     /// and that the caller is told exactly once even if every landing callback is lost. Two
     /// copies of that would be two chances to leave a player looking at a hub whose numbers
@@ -24,7 +24,7 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>The snapshot is why this is instantiated rather than static.</b> <see cref="Begin"/>
-    /// has to run <em>before</em> the reward is granted and <see cref="Play"/> long after —
+    /// has to run <em>before</em> the reward is granted and <see cref="Play"/> long after -
     /// the chest snapshots as it is built and pays when the button is pressed, the ad
     /// snapshots before <c>RewardedAds.Redeem</c> and pays when the player taps COLLECT.
     /// Deriving "what the pill said before" at collect time by subtracting the prize is wrong
@@ -35,12 +35,12 @@ namespace GlimmerGrove
     /// <para>
     /// <b>The target is read live, at every landing, and that is what makes it safe for
     /// currency.</b> A chest's credits are in the local ledger before the animation starts;
-    /// an ad's are not and must not be — invariant 10d, the client credits hearts only and
+    /// an ad's are not and must not be - invariant 10d, the client credits hearts only and
     /// asks the server for the rest. So the number is never walked towards a figure this code
     /// invented. It is walked towards whatever the balance says at the instant a token
-    /// arrives: hearts climb immediately, credits climb the moment the sync lands — usually
+    /// arrives: hearts climb immediately, credits climb the moment the sync lands - usually
     /// mid-cascade, because <c>Redeem</c> starts that sync a beat before the player finds the
-    /// COLLECT button — and if the server has not answered yet the tokens still arrive, still
+    /// COLLECT button - and if the server has not answered yet the tokens still arrive, still
     /// flash, and the figure catches up when it does. Nothing here can tell a player they
     /// were paid something they were not.
     /// </para>
@@ -51,14 +51,14 @@ namespace GlimmerGrove
         public const int TokensPerDrop = 7;
 
         /// <summary>
-        /// The rhythm, and it is the design — lifted unchanged from the chest, which is where
+        /// The rhythm, and it is the design - lifted unchanged from the chest, which is where
         /// the numbers were tuned.
         ///
         /// <para>
         /// <see cref="ClearAt"/> is how long the caller has to get its chrome out of the way
         /// before the first token leaves, and it is public because the chrome is the caller's:
         /// a token cannot be seen landing on a pill that is still behind a scrim.
-        /// <see cref="TokenGap"/> spaces one prize's tokens at about fourteen a second —
+        /// <see cref="TokenGap"/> spaces one prize's tokens at about fourteen a second -
         /// tighter and the landings stop being separable and the rising run of notes turns
         /// into a rattle, thinner and a five-token prize outlasts the player's interest. The
         /// cards overlap on purpose, so the screen is never empty and the run never breaks.
@@ -73,8 +73,8 @@ namespace GlimmerGrove
         /// <summary>
         /// How long past the scheduled end the safety net waits before finishing anyway.
         ///
-        /// A landing callback that never arrives — a token whose tween was interrupted, a
-        /// pill destroyed at the wrong instant — would otherwise leave the player looking at
+        /// A landing callback that never arrives - a token whose tween was interrupted, a
+        /// pill destroyed at the wrong instant - would otherwise leave the player looking at
         /// a panel with no button on it. The reward is already banked, so there is never a
         /// reason to keep them there.
         /// </summary>
@@ -107,7 +107,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Snapshots what every pill reads right now. Call this <em>before</em> granting the
-        /// reward — see the class remarks.
+        /// reward - see the class remarks.
         /// </summary>
         public static RewardFlight Begin()
         {
@@ -125,7 +125,7 @@ namespace GlimmerGrove
         /// This exists for the shop, and only for the shop. Every other payout here is opened
         /// before its grant, which is the shape <see cref="Begin"/> insists on because a
         /// snapshot taken afterwards has to be <em>derived</em>, and deriving it is wrong the
-        /// moment a rule can clamp what was granted — a heart drop landing at the ceiling
+        /// moment a rule can clamp what was granted - a heart drop landing at the ceiling
         /// grants nothing, so subtracting its amount would rewind the pill below where it ever
         /// stood and count it up to a gain nobody received. A real-money purchase cannot be
         /// opened before its grant: <c>StoreService.Granted</c> is raised <em>by</em> the
@@ -135,8 +135,8 @@ namespace GlimmerGrove
         /// <para>
         /// So the parameters are two currency amounts rather than a set of drops, and that is
         /// the constraint expressed as a type. Credits and gems are the only two things in
-        /// this game that nothing clamps — no ceiling, no cap, no rule between the server's
-        /// figure and the balance — so subtracting them is exact. Hearts are not, which is why
+        /// this game that nothing clamps - no ceiling, no cap, no rule between the server's
+        /// figure and the balance - so subtracting them is exact. Hearts are not, which is why
         /// there is no way to pass one in here.
         /// </para>
         /// </summary>
@@ -147,7 +147,7 @@ namespace GlimmerGrove
             int c = (int)ResourceSlots.Kind.Credits, g = (int)ResourceSlots.Kind.Gems;
 
             // Clamped, because the balance is read now and the grant was applied a moment ago
-            // — a spend landing in between would make the subtraction overshoot, and a pill
+            // - a spend landing in between would make the subtraction overshoot, and a pill
             // rewound below zero would count up from a figure that has never been true.
             flight._before[c] = Math.Max(0L, flight._before[c] - Math.Max(0L, credits));
             flight._before[g] = Math.Max(0L, flight._before[g] - Math.Max(0L, gems));
@@ -167,7 +167,7 @@ namespace GlimmerGrove
         /// <summary>
         /// Adds one prize, thrown from <paramref name="source"/>.
         ///
-        /// Returns false — and adds nothing — for a prize with no readout on the hub (seconds
+        /// Returns false - and adds nothing - for a prize with no readout on the hub (seconds
         /// on a run, a hint) or when the hub is not the screen underneath. Both are ordinary,
         /// and the caller falls back to simply closing, which is what it did before this
         /// existed: a reward that has already been banked must never depend on an animation
@@ -185,7 +185,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// The budget, or the prize itself when the prize is smaller. Three hearts throw
-        /// three hearts — throwing seven and landing them in fractions is the one case where
+        /// three hearts - throwing seven and landing them in fractions is the one case where
         /// the count in the air and the count on the pill visibly disagree. A boost is one
         /// token because it is one thing, however many hours it runs for.
         /// </summary>
@@ -202,7 +202,7 @@ namespace GlimmerGrove
         /// <para>
         /// The last token writes <paramref name="live"/> itself rather than the
         /// interpolation, so a rounding error can never leave a pill reading one short of the
-        /// balance — the same guarantee <c>Roll.Number</c> and <c>Payout.Land</c> make. The
+        /// balance - the same guarantee <c>Roll.Number</c> and <c>Payout.Land</c> make. The
         /// clamp under it is for the currency case: <paramref name="live"/> can rise
         /// <em>during</em> the cascade when a sync lands, and a reading that went backwards on
         /// the next token would be the one thing worse than a reading that had not moved.
@@ -241,8 +241,8 @@ namespace GlimmerGrove
         /// exactly once when it is over.
         ///
         /// <para>
-        /// <paramref name="space"/> is what the tokens are drawn in — the caller's own content
-        /// node, so they sit above the panel they came from — and it is also the owner every
+        /// <paramref name="space"/> is what the tokens are drawn in - the caller's own content
+        /// node, so they sit above the panel they came from - and it is also the owner every
         /// tween here is scheduled against, so the cascade dies with the panel rather than
         /// outliving it.
         /// </para>
@@ -259,16 +259,16 @@ namespace GlimmerGrove
                 _tokens[(int)_items[i].Kind] += TokenCount(_items[i].Drop);
 
             // Rewound to what the pills said before the grant, and claimed while they are
-            // there. The grant already happened — deliberately, so a player who kills the app
-            // has still opened the chest and has still been paid for the video — and the hub
+            // there. The grant already happened - deliberately, so a player who kills the app
+            // has still opened the chest and has still been paid for the video - and the hub
             // repaints the instant the wallet moves, so by now the pills already read the new
             // totals. The player has been looking at a scrim this whole time and has seen
             // neither figure, so nothing is being faked: the report simply arrives in the
             // order the events were experienced.
             //
             // The claim is what stops the hub writing over the rewind from underneath. A
-            // wallet change landing mid-cascade — an ad's credits arriving from the server is
-            // exactly that — would otherwise jump the pill to the true figure, and the next
+            // wallet change landing mid-cascade - an ad's credits arriving from the server is
+            // exactly that - would otherwise jump the pill to the true figure, and the next
             // token would drag it back down.
             for (int k = 0; k < 3; k++)
             {
@@ -282,7 +282,7 @@ namespace GlimmerGrove
             if (_thrown == 0) { Finish(0f); return; }
 
             // Nothing is played here. The button that was pressed has already made its one
-            // sound, and the cascade starts a quarter-second later as its own event — see
+            // sound, and the cascade starts a quarter-second later as its own event - see
             // Btn.ClickSfx for why a tap does not get to make two noises.
             Tween.After(Duration + Safety, () => Finish(0f), space);
         }
@@ -313,7 +313,7 @@ namespace GlimmerGrove
                 Burst.Sparks(card, Vector2.zero, tone, 12, 240f, 22f, .55f);
 
                 // Delayed past the punch rather than overlapping it. Both write localScale,
-                // and two tweens writing one value fight for it every frame they share — the
+                // and two tweens writing one value fight for it every frame they share - the
                 // card would jitter as it left. The overlap is not wasted time either: the
                 // first tokens leave while the card is still there, which is what makes it
                 // read as being emptied rather than as being deleted.
@@ -392,7 +392,7 @@ namespace GlimmerGrove
             // No haptic anywhere in here, and it is a decision rather than an omission.
             // Handheld.Vibrate is a single fixed-length pulse on Android that cannot be
             // shortened or softened, so several inside a few seconds do not read as several
-            // taps — they overlap into one continuous rumble. Payout.Land refused one for a
+            // taps - they overlap into one continuous rumble. Payout.Land refused one for a
             // milder version of the same reason.
             // No capstone. The token run is already an ascending phrase and it lands on its
             // own highest note, so a chime on top of the last one was a second ending for a
@@ -412,7 +412,7 @@ namespace GlimmerGrove
 
             // Settled before letting go. The pills stand at rewound figures until the tokens
             // walk them forward, so a cascade that did not finish would leave the hub reading
-            // less than the truth until something happened to repaint it — which, on a screen
+            // less than the truth until something happened to repaint it - which, on a screen
             // the player may now just sit on, could be a long time.
             for (int k = 0; k < 3; k++)
             {

@@ -8,7 +8,7 @@ namespace GlimmerGrove.Modes
     /// <para>
     /// <b>The whole point of moving them here is that greed is the only reliable way to make
     /// somebody look somewhere.</b> A cog used to be dealt into the gem field and taken by a match
-    /// beside it — a good mechanic in the wrong place, because it put one more thing to solve in
+    /// beside it - a good mechanic in the wrong place, because it put one more thing to solve in
     /// the half of the screen the player was already staring at. On the hill it is treasure in the
     /// enemy's half with a clock on it, so the mode's own reward lands where the mode's own
     /// subject is. It is the genre's oldest answer to a two-halved screen and it is the same one
@@ -30,7 +30,7 @@ namespace GlimmerGrove.Modes
         /// <b>It draws from the hill's own stream and never the field's</b>, which is invariant
         /// 41 read the right way round. A kill happens when the player makes it happen, so a cog
         /// rolled out of <c>_rng</c> would make <em>which gems the field deals</em> depend on when
-        /// somebody killed something — two players on the same level would be dealt different
+        /// somebody killed something - two players on the same level would be dealt different
         /// boards for reasons that have nothing to do with the board. <c>_hill</c> exists for
         /// exactly the draws a player's taps order in time but not in number, and it has been
         /// without a job since the weaver was withdrawn.
@@ -38,7 +38,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>Nothing is dropped for a ward that cannot use it</b>, which is the one case worth
         /// stating: a cog that pays nothing is a thing the player reaches for and is not thanked
-        /// for, and there is no honest second prize to hand out instead — fuel from a kill would
+        /// for, and there is no honest second prize to hand out instead - fuel from a kill would
         /// be damage the player never matched for, which is exactly what invariant 39 prices and
         /// nothing here could price.
         /// </para>
@@ -118,7 +118,7 @@ namespace GlimmerGrove.Modes
         /// Counts every cog on the hill down, and takes away the ones that ran out.
         ///
         /// <b>Trampled rather than kept</b>, because the deadline is what makes reaching for one a
-        /// decision — see <see cref="SiegeTuning.CogLies"/>. Walked backwards so a removal cannot
+        /// decision - see <see cref="SiegeTuning.CogLies"/>. Walked backwards so a removal cannot
         /// skip the entry behind it.
         /// </summary>
         void Age(float dt)
@@ -143,7 +143,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>The ladder is re-asked here rather than trusted from the drop</b>, because a cog can
         /// be dropped for a ward that is one rung short and lie there while a second cog rises the
-        /// same turret to the top. Refusing is the honest answer and the view says it out loud —
+        /// same turret to the top. Refusing is the honest answer and the view says it out loud -
         /// a tap that quietly did nothing would read as a broken control.
         /// </para>
         /// </summary>
@@ -188,7 +188,7 @@ namespace GlimmerGrove.Modes
         /// The hill's own stream: xorshift32, all 32-bit, exactly as <c>Next</c> is.
         ///
         /// <b>Separate from the field's, and narrow on purpose.</b> It carries only the draws that
-        /// are ordered by the clock rather than counted by the player — see <see cref="Cog"/>.
+        /// are ordered by the clock rather than counted by the player - see <see cref="Cog"/>.
         /// </summary>
         uint Hill()
         {

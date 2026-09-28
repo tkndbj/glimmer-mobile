@@ -14,11 +14,11 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// <b>This fixture exists because of a bug that got as far as compiling, validating and
     /// passing 1,272 tests.</b> The stake was first latched at <c>Commit</c> and cleared by
-    /// <c>Resolve</c>, which reads as obviously right — a run is owed for between those two
+    /// <c>Resolve</c>, which reads as obviously right - a run is owed for between those two
     /// calls and not otherwise. It is wrong, and nothing structural says so: <b>both modes call
     /// <c>Resolve</c> a few lines before <c>RunLedger.Loss</c></b>, deliberately, so that a
     /// crash in the middle of a defeat cannot charge twice. A stake cleared by <c>Resolve</c>
-    /// therefore reads "free" at the exact instant the heart is taken — and every lost glade in
+    /// therefore reads "free" at the exact instant the heart is taken - and every lost glade in
     /// the game becomes free, silently, with the heart gate still drawn on every screen.
     /// </para>
     /// <para>
@@ -36,7 +36,7 @@ namespace GlimmerGrove.Tests
     public sealed class RunStakeLifecycleTests
     {
         /// <summary>
-        /// A <c>RunScreen</c> with no board, no panels and no opinions — just enough to answer
+        /// A <c>RunScreen</c> with no board, no panels and no opinions - just enough to answer
         /// the base class's questions and to let a test drive the two lifecycle calls.
         ///
         /// <para>
@@ -64,7 +64,7 @@ namespace GlimmerGrove.Tests
             // are abstract precisely so that nothing which is a run screen can decline to.
             // `protected internal`, matching the base exactly. It was plain `protected` and
             // compiled, because a `protected internal` member is seen as merely `protected`
-            // from an assembly the internals are not visible to — and Presentation's
+            // from an assembly the internals are not visible to - and Presentation's
             // InternalsVisibleTo (added so a panel's own layout constants could be checked
             // against what it draws) makes them visible, at which point an override must match
             // the base's accessibility exactly.
@@ -120,7 +120,7 @@ namespace GlimmerGrove.Tests
             RunGuard.Resolve();
             RunGuard.NoteReported();
 
-            // The restart's gate reads the live wallet, so these cases drive it — and a wallet
+            // The restart's gate reads the live wallet, so these cases drive it - and a wallet
             // is process-wide. Taken and handed back rather than assumed, exactly as the table
             // and the save above are: the offline runner promises no order.
             _heartsBefore = Wallet.Hearts.Count;
@@ -166,7 +166,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// One five-glade chapter, so the window covers the first three of it — and a lane with
+        /// One five-glade chapter, so the window covers the first three of it - and a lane with
         /// no ladder beside it, whose one level is bought at the gate (<c>HeartPrice.Entry</c>).
         /// </summary>
         static CatalogIndex Catalog()
@@ -220,7 +220,7 @@ namespace GlimmerGrove.Tests
         [Test]
         public void AGladeAlreadyFinishedIsNotStakedEitherAndSaysWhy()
         {
-            // The second clause, at the screen. Same catalog, same window — the only thing that
+            // The second clause, at the screen. Same catalog, same window - the only thing that
             // moved is what the player has beaten.
             Finished(Beaten);
 
@@ -237,7 +237,7 @@ namespace GlimmerGrove.Tests
         {
             // What the player actually reported feeling: a warning panel about a heart nobody
             // is taking. ConfirmForfeit asks only when there is something to charge, so the
-            // exit has to complete on its own with no modal raised — which is what Left being
+            // exit has to complete on its own with no modal raised - which is what Left being
             // true synchronously proves, since the confirmation would leave it false until
             // somebody tapped it.
             Finished(Beaten);
@@ -257,7 +257,7 @@ namespace GlimmerGrove.Tests
         {
             // The latch, in the direction that matters. A price the player has been told is
             // free is kept for the life of the screen however the rules move underneath it;
-            // the opposite direction — a first clear making a restart free — costs nobody
+            // the opposite direction - a first clear making a restart free - costs nobody
             // anything and is the honest reading of a rule that just changed in their favour.
             var probe = On(Free);
             Assert.IsFalse(probe.Priced);
@@ -331,7 +331,7 @@ namespace GlimmerGrove.Tests
 
             Assert.IsFalse(RunGuard.Claim(),
                            "a free run that the process never finished owes nothing, and Boot "
-                           + "cannot ask whether it did — no content is loaded there");
+                           + "cannot ask whether it did - no content is loaded there");
         }
 
         [Test]
@@ -366,7 +366,7 @@ namespace GlimmerGrove.Tests
         // ever with no hearts left. It is the whole heart gate walked past by one key, and the
         // mechanism is worth stating because nothing in the code looked wrong. A restart is
         // priced as an abandonment (RunScreen.RestartLevel), the abandonment charges through
-        // Wallet.TrySpendHeart — and at nought hearts that reports "already out" rather than
+        // Wallet.TrySpendHeart - and at nought hearts that reports "already out" rather than
         // refusing. So every restart after the first was free, and the run it dealt was never
         // paid for at all.
         //
@@ -398,7 +398,7 @@ namespace GlimmerGrove.Tests
             probe.Begin();
             Assert.AreEqual(2, Wallet.Hearts.Count, "the watch was not bought at the gate");
 
-            // Every ending, and all three take nothing. `End` is the win and the defeat both —
+            // Every ending, and all three take nothing. `End` is the win and the defeat both -
             // RunLedger.Loss is told the price and asks HeartStake.PaidAtEnding, which is the same
             // answer this screen gives.
             probe.End();
@@ -423,7 +423,7 @@ namespace GlimmerGrove.Tests
         [Test]
         public void WalkingOutOfAWatchIsFreeAndIsNotAskedAbout()
         {
-            // Leaving takes nothing, so it is walked out of without a panel — the same rule a
+            // Leaving takes nothing, so it is walked out of without a panel - the same rule a
             // glade you have already beaten is walked out of by, and for the same reason: a
             // confirmation over a free action teaches players to dismiss the one that is not.
             Holding(3);
@@ -459,7 +459,7 @@ namespace GlimmerGrove.Tests
         {
             // A restart abandons one watch and begins another, and the fresh one is bought at the
             // gate like every other. The outgoing one owes nothing, so the gate is the bare
-            // wallet rather than the wallet less a defeat — which is what stops it being charged
+            // wallet rather than the wallet less a defeat - which is what stops it being charged
             // twice for one run.
             Holding(2);
 
@@ -480,7 +480,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// Puts the wallet at exactly this many hearts, whatever it held before — spent down to
+        /// Puts the wallet at exactly this many hearts, whatever it held before - spent down to
         /// nothing and granted back up, which is <c>RunGuardTests</c>' idiom next door and is
         /// the only pair of doors the wallet offers. There is deliberately no setter on a heart
         /// count, for the reason there is none on a balance.
@@ -512,7 +512,7 @@ namespace GlimmerGrove.Tests
         {
             // The step that produced the empty bar in the first place. A player with one heart
             // restarts, the forfeit takes it, and the fresh board is dealt to somebody who can
-            // no longer afford to lose it — which is precisely what the map refuses at its door.
+            // no longer afford to lose it - which is precisely what the map refuses at its door.
             Holding(1);
 
             var probe = On(Paid);
@@ -542,7 +542,7 @@ namespace GlimmerGrove.Tests
         public void AFreeRunIsAlwaysRestartableHoweverEmptyTheBarIs()
         {
             // Both clauses. A run that costs nothing to lose cannot coherently be refused for
-            // lack of something to lose — which is the same sentence the map's door is built on.
+            // lack of something to lose - which is the same sentence the map's door is built on.
             Holding(0);
             Finished(Beaten);
 

@@ -16,7 +16,7 @@ namespace GlimmerGrove.Cloud
         Adopt,
 
         /// <summary>
-        /// Neither side knows anything. Sign in — anonymously if need be — and decide again
+        /// Neither side knows anything. Sign in - anonymously if need be - and decide again
         /// with the answer. Reachable only from a save that names no account, so a session
         /// minted here can never collide with one.
         /// </summary>
@@ -41,32 +41,32 @@ namespace GlimmerGrove.Cloud
     ///
     /// <para>
     /// <b>Why this is not paranoia.</b> A sync is pull, join, push, and <c>SaveMerge.Join</c>
-    /// is monotonic — it takes the larger of everything. Join two <em>different people's</em>
+    /// is monotonic - it takes the larger of everything. Join two <em>different people's</em>
     /// saves and the result is a grove holding the better half of each, pushed over one of
     /// them. There is no undo for that and no support answer for it. The window where it
     /// becomes possible is short but entirely ordinary: switching accounts signs the session
     /// out of one and into another while the file on disk still describes the first, and the
-    /// OAuth consent screen backgrounds the app in the middle of it — so a process death, a
+    /// OAuth consent screen backgrounds the app in the middle of it - so a process death, a
     /// cancelled sheet or a dropped network lands squarely inside it.
     /// </para>
     /// <para>
     /// <b>Why it also protects the economy.</b> Earned credits are derived from the star
     /// ledger (invariant 9) and a glade's golden multiplier is a function of the account id,
     /// so the same ledger under a fresh uid is a fresh, differently-rolled, fully funded
-    /// wallet — and chests and the grant log are keyed per uid too. Copying a save into any
+    /// wallet - and chests and the grant log are keyed per uid too. Copying a save into any
     /// account that did not earn it is therefore a faucet, not merely a mix-up. The rule
     /// below is what makes that unreachable rather than merely unlikely.
     /// </para>
     /// <para>
     /// <b>Why <see cref="AccountGateVerdict.Resume"/> is a separate answer from
-    /// <see cref="AccountGateVerdict.SignIn"/>.</b> They look like the same question — "there
-    /// is no session, get one" — and answering them the same way is how a cancelled sign-in
+    /// <see cref="AccountGateVerdict.SignIn"/>.</b> They look like the same question - "there
+    /// is no session, get one" - and answering them the same way is how a cancelled sign-in
     /// sheet used to cost a player their sync. Signing in with no session <em>creates an
     /// anonymous account</em>. That is right for a save nobody owns, and catastrophic for a
     /// save that names one: the new account would never match, so the device would sit in
     /// <see cref="AccountGateVerdict.Refuse"/> for ever, having quietly abandoned a grove the
     /// player believes is backed up. A save that names an account must have that account
-    /// restored or nothing at all — the failure is then a retry, which the next launch or the
+    /// restored or nothing at all - the failure is then a retry, which the next launch or the
     /// next tap of a provider button fixes.
     /// </para>
     /// <para>
@@ -83,7 +83,7 @@ namespace GlimmerGrove.Cloud
         /// </summary>
         /// <param name="saveOwnerId">The account the local save names, empty if none.</param>
         /// <param name="sessionUserId">The account the backend is authenticated as, empty if
-        /// none — which includes an SDK that has not finished starting up.</param>
+        /// none - which includes an SDK that has not finished starting up.</param>
         public static AccountGateVerdict Decide(string saveOwnerId, string sessionUserId)
         {
             bool owned = !string.IsNullOrEmpty(saveOwnerId);

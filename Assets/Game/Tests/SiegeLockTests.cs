@@ -67,7 +67,7 @@ namespace GlimmerGrove.Tests
         /// mode.</b>
         ///
         /// It used to prefer its own colour and fall back to whatever was nearest, which meant the
-        /// double was a bonus the player received for free — four wards firing at once landed
+        /// double was a bonus the player received for free - four wards firing at once landed
         /// everything on its own kind whatever anybody matched, so which colour to feed decided
         /// nothing and "take the biggest match" was correctly the optimal play.
         /// </summary>
@@ -111,12 +111,12 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// Every bolt an ordinary turret lands is an own-colour hit, so <c>PerfectMatch</c> — which
-        /// has always assumed exactly that of every gem — stops being an optimistic reading and
+        /// Every bolt an ordinary turret lands is an own-colour hit, so <c>PerfectMatch</c> - which
+        /// has always assumed exactly that of every gem - stops being an optimistic reading and
         /// becomes an identity.
         ///
         /// <b>A boss is the one thing on the hill this is not true of</b>, which is why there is no
-        /// boss in this fixture: every ward answers one and only its own colour doubles — see
+        /// boss in this fixture: every ward answers one and only its own colour doubles - see
         /// <see cref="EveryWardOnTheLineAnswersABossWhateverColourItWears"/>. The identity survives
         /// it, because a part-weight bolt costs a part of the fuel.
         /// </summary>
@@ -145,11 +145,11 @@ namespace GlimmerGrove.Tests
 
         // ------------------------------------------------------------------ the stun
         /// <summary>
-        /// <b>No turret on the shelf reaches a colour that is not its own — unless it is a
+        /// <b>No turret on the shelf reaches a colour that is not its own - unless it is a
         /// legendary, in which case it reaches every one of them.</b>
         ///
         /// <para>
-        /// The roster carried an ability that widened the lock — a prism, on both its rungs — and
+        /// The roster carried an ability that widened the lock - a prism, on both its rungs - and
         /// under the lock what it bought was the moments its own colour happened to be clear,
         /// which the seat beside it was already answering at full weight. Withdrawn on the
         /// owner's reading (invariant 5d, asked of a purchase), and this is what stops it coming
@@ -202,7 +202,7 @@ namespace GlimmerGrove.Tests
         /// </para>
         /// <para>
         /// The line stands the legendary on the <em>red</em> seat and the hill sends nothing red,
-        /// so every bolt it lands is one an ordinary turret on that seat could not have fired —
+        /// so every bolt it lands is one an ordinary turret on that seat could not have fired -
         /// which is also the arithmetic that keeps the band out of par's way (invariant 22).
         /// </para>
         /// </summary>
@@ -239,10 +239,10 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// <b>A stun takes a raider out of the raid: it does not walk, it does not swing and it
-        /// does not cast — and then it walks again.</b>
+        /// does not cast - and then it walks again.</b>
         ///
         /// Stopping the march alone would be a stun worth nothing against the half of the hill it
-        /// matters most against — a raider already at the line, where a second of quiet is a blow
+        /// matters most against - a raider already at the line, where a second of quiet is a blow
         /// the line did not take. <b>The second half is driven through the board</b>, because the
         /// countdown lives in <c>SiegeBoard.Smoulder</c> with the chill and the burn, and a stun
         /// that was applied and never aged would read exactly like one that worked.
@@ -292,7 +292,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// A fuelled ward gets a bolt away every <c>SiegeTuning.FireEvery</c> seconds, which is
-        /// shorter than either stun on the shelf — so a stun that refreshed the way a chill and a
+        /// shorter than either stun on the shelf - so a stun that refreshed the way a chill and a
         /// burn do would stop its own colour for the whole run, and a raid that cannot reach the
         /// line is a fail state that rejects nothing (invariant 5d, from the other side).
         /// </para>
@@ -357,7 +357,7 @@ namespace GlimmerGrove.Tests
         /// <b>The two stun rungs differ in the number the ability actually reads.</b>
         ///
         /// A magnitude nobody reads is what made a thousand-gem breaker exactly a
-        /// four-thousand-credit cleaver, and a stun reads its <c>Extent</c> alone — so a shelf
+        /// four-thousand-credit cleaver, and a stun reads its <c>Extent</c> alone - so a shelf
         /// whose two stun rungs differed in magnitude would pass every gate and sell one turret at
         /// two prices (invariant 5d, on the one thing a player pays for).
         /// </summary>
@@ -471,7 +471,7 @@ namespace GlimmerGrove.Tests
         // ------------------------------------------------------------------ demand
         /// <summary>
         /// Demand is counted in health rather than heads, because a brute is two matches and a
-        /// creeper is one — a head count would say four creepers matter more than two brutes.
+        /// creeper is one - a head count would say four creepers matter more than two brutes.
         /// </summary>
         [Test]
         public void DemandIsWhatThisWardIsTheAnswerTo()
@@ -581,7 +581,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// It shipped as "the tube is full" and was <em>unusable</em>: a ward fires the instant it
         /// has fuel and a target, so the only way to reach the brim was for its colour to be off
-        /// the hill — and an overcharge over an empty hill has nothing to throw at. Reported after
+        /// the hill - and an overcharge over an empty hill has nothing to throw at. Reported after
         /// one session as exactly that. A full tube converts into a charge now, the tube carries on
         /// filling for ordinary bolts, and the charge waits until it is thrown.
         /// </para>
@@ -613,7 +613,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The fuel that becomes a charge leaves the tube, so it can never be fired twice.
         ///
-        /// <b>That is what keeps the overcharge free of par</b> — the player has moved damage they
+        /// <b>That is what keeps the overcharge free of par</b> - the player has moved damage they
         /// already matched for rather than conjured any (invariant 39).
         /// </summary>
         [Test]
@@ -652,7 +652,7 @@ namespace GlimmerGrove.Tests
         // ------------------------------------------------------------------ plating
         /// <summary>
         /// <b>A bulwark's shield is armour against area damage now</b>, and it had to move: its
-        /// rule was "only your own colour cuts me", which the lock made true of every raider — so
+        /// rule was "only your own colour cuts me", which the lock made true of every raider - so
         /// the soak stopped being reachable on a primary hit at all and the shield was decoration
         /// on the one raider whose whole identity it was.
         /// </summary>
@@ -769,7 +769,7 @@ namespace GlimmerGrove.Tests
 
         // ------------------------------------------------------------------ the field is gems
         /// <summary>
-        /// A field deals exactly the colours its line stands — both ways round, and the second
+        /// A field deals exactly the colours its line stands - both ways round, and the second
         /// half only became a rule when the lock arrived.
         /// </summary>
         [Test]
@@ -814,7 +814,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// The one shape the lock cannot hold. A boss is one raider wearing one colour standing
         /// alone on the hill, so under the lock exactly one of the four turrets a player chose
-        /// could fire at the finale and the other three banked fuel they would never spend — a
+        /// could fire at the finale and the other three banked fuel they would never spend - a
         /// duel fought by a quarter of the loadout, against the biggest number in the mode.
         /// </para>
         /// </summary>
@@ -848,7 +848,7 @@ namespace GlimmerGrove.Tests
         /// <b>And its colour still decides the double, which is what keeps it a decision.</b>
         ///
         /// A boss answered by the colour it wears comes down twice as fast as one answered with
-        /// anything else — so which colour to feed a duel has a right answer and a wrong one
+        /// anything else - so which colour to feed a duel has a right answer and a wrong one
         /// (invariant 26h), and the player reads it off the board rather than out of a panel: the
         /// right colour's numbers come up gold and everybody else's come up white.
         /// </summary>
@@ -896,7 +896,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// A ward with nothing of its own on the hill <em>banks</em> what it is holding, so a
-        /// half-weight shot at full price is not a free extra hit — it is the player's fuel
+        /// half-weight shot at full price is not a free extra hit - it is the player's fuel
         /// converted at half the rate it would have been worth a few seconds later, spent on their
         /// behalf. Measured when it was: firing at a boss for half a hit at full price took
         /// Thornwatch from 81 held runs of 90 to 78, on a change meant to help.
@@ -1004,7 +1004,7 @@ namespace GlimmerGrove.Tests
         /// <b>The demand light says a boss is everybody's, and loudest on the colour it wears.</b>
         ///
         /// Counted as whole health it would light all four wards identically and say the thing
-        /// that is not true — that it does not matter which one is fed. Counted at the share a
+        /// that is not true - that it does not matter which one is fed. Counted at the share a
         /// bolt from that ward is really worth, it says both halves of the rule at once.
         /// </summary>
         [Test]

@@ -91,12 +91,12 @@ namespace GlimmerGrove.Challenges
     /// <b>A colour lock, as the live mode has one.</b> A ward fires only at raiders of its
     /// colour and a raider at the line strikes the ward of its colour (or the nearest standing
     /// one once that has fallen). That is what makes <em>which</em> colour a puzzle move feeds
-    /// a decision rather than decoration — the count 5d asks for is "how many moves feed the
+    /// a decision rather than decoration - the count 5d asks for is "how many moves feed the
     /// colour that is closest", and it is never every move.
     /// </para>
     /// <para>
     /// <b>Fuel banks.</b> A bolt fed with nothing of its colour on the hill waits on the ward
-    /// and fires the turn a target appears, so a move made early is never wasted — and so a
+    /// and fires the turn a target appears, so a move made early is never wasted - and so a
     /// puzzle that fires in bursts (a flood-filled corner, a cleared line) is paid in full.
     /// </para>
     /// <para>

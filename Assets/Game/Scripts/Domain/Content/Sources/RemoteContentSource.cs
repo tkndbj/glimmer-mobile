@@ -6,7 +6,7 @@ namespace GlimmerGrove.Content.Sources
     /// <summary>
     /// Content served from a CDN.
     ///
-    /// Nothing on the boot path ever reads from here — the refresher pulls into the
+    /// Nothing on the boot path ever reads from here - the refresher pulls into the
     /// cache in the background and the next launch picks it up. Keeping the network
     /// off the critical path is what stops a slow connection in a weak-network market
     /// from turning into a slow launch, and it means the CDN being down is invisible.

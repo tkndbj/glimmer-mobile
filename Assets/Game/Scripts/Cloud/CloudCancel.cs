@@ -11,13 +11,13 @@ namespace GlimmerGrove.Cloud
     /// <b>The Firebase Unity SDK takes no <see cref="CancellationToken"/> anywhere.</b>
     /// <c>GetSnapshotAsync</c>, <c>SetAsync</c> and every callable have no overload that accepts
     /// one, so a token threaded carefully down from a screen used to arrive here and simply stop
-    /// — which is worse than not having one, because every layer above looked cancellable and
+    /// - which is worse than not having one, because every layer above looked cancellable and
     /// none of it was. That is not a reason to drop the parameter; it is a reason to say exactly
     /// what it buys.
     /// </para>
     /// <para>
     /// <b>Two things, and honestly only two.</b> A call that is <em>already</em> unwanted is
-    /// never issued, which is the one that matters on a list somebody is scrolling — a
+    /// never issued, which is the one that matters on a list somebody is scrolling - a
     /// leaderboard row tapped and left behind costs a document read per row otherwise. And a
     /// caller that has given up stops waiting, so its continuation runs now rather than whenever
     /// the network gets round to answering. What it cannot do is stop work the server has
@@ -31,7 +31,7 @@ namespace GlimmerGrove.Cloud
         /// Waits for <paramref name="work"/>, giving up as soon as the token trips.
         ///
         /// <para>
-        /// The task is not abandoned — nothing here can abandon it — it is simply no longer
+        /// The task is not abandoned - nothing here can abandon it - it is simply no longer
         /// awaited, so whatever it eventually returns falls on the floor. Any exception it
         /// throws afterwards is observed by the continuation below rather than left to surface
         /// as an unobserved task fault.
@@ -92,11 +92,11 @@ namespace GlimmerGrove.Cloud
         ///
         /// <para>
         /// <b>Why a deadline exists at all.</b> A Firestore write completes when the backend
-        /// acknowledges it and not before — offline, or on a connection that drops after the
+        /// acknowledges it and not before - offline, or on a connection that drops after the
         /// request went out, the task simply never finishes. Every sync runs under one latch,
         /// so one write that never finishes is a latch that is never released: every later
         /// sync answers <c>Busy</c>, a switch waits its ten seconds and reports that the grove
-        /// could not be saved, and linking reports that a sync is running — for the life of the
+        /// could not be saved, and linking reports that a sync is running - for the life of the
         /// process. A callable has a client timeout of its own, an auth exchange does not, and
         /// nothing here should have to know which is which.
         /// </para>
@@ -104,7 +104,7 @@ namespace GlimmerGrove.Cloud
         /// A deadline throws <see cref="TimeoutException"/>, which <c>Classify</c> reports as
         /// <c>Offline</c>: retryable and expected, because that is what it is. The caller's own
         /// token still throws <see cref="OperationCanceledException"/>, which stays
-        /// <c>Cancelled</c>. The work is not abandoned — nothing here can abandon it — so a
+        /// <c>Cancelled</c>. The work is not abandoned - nothing here can abandon it - so a
         /// write that lands late lands with a stale revision, and the security rules refuse
         /// it, which is the correct ending for a write nobody is waiting for.
         /// </para>

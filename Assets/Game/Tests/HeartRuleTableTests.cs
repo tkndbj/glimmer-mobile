@@ -60,7 +60,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// Every field is independently optional, which is what lets a live push change one
-        /// number without restating the other five — and restating five numbers to change
+        /// number without restating the other five - and restating five numbers to change
         /// one is how the other five drift away from what anybody intended.
         /// </summary>
         [Test]
@@ -150,7 +150,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A ceiling under the refill cap is a contradiction rather than a small ceiling —
+        /// A ceiling under the refill cap is a contradiction rather than a small ceiling -
         /// the clock would carry a player past what they are allowed to hold, so the timer
         /// would keep paying while every grant was refused.
         /// </summary>
@@ -177,7 +177,7 @@ namespace GlimmerGrove.Tests
 
             // and the ledger follows it without being told. Spent down rather than built at
             // zero, because a ledger with no deadline has a timer that has never started and
-            // deliberately refuses to back-pay for the wait nobody did — see
+            // deliberately refuses to back-pay for the wait nobody did - see
             // AStateWithNoDeadlineStartsTheClockRatherThanBackPaying.
             var empty = Hearts.Full.Spend(3, T0);
             Assert.AreEqual(0, empty.Count);
@@ -204,7 +204,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// A player collects thirty hearts. A config push then lowers the ceiling to ten.
         /// If the ledger's own clamp used the published number, <c>produced</c> would be cut
-        /// downward on the next read — and <c>produced</c> is the counter the entire merge
+        /// downward on the next read - and <c>produced</c> is the counter the entire merge
         /// proof rests on only ever rising. The player would lose twenty hearts they had
         /// earned, and worse, a second device that had not fetched the new table would keep
         /// restoring them, so the two would never converge.
@@ -254,7 +254,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// The structural bound is a constant, so no file — however hostile — can widen the
+        /// The structural bound is a constant, so no file - however hostile - can widen the
         /// range the ledger has to represent. A published ceiling is clamped to it on the
         /// way in, which is what keeps the merge's upper invariant a fact about the code
         /// rather than a fact about whatever was last downloaded.
@@ -270,7 +270,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// A file that cannot be read at all costs the live tuning and nothing else. The
-        /// curve, the chests, the ads and the streak ladder all have to survive it — an
+        /// curve, the chests, the ads and the streak ladder all have to survive it - an
         /// unreadable gate must never be able to take the rest of the economy down with it.
         /// </summary>
         [Test]

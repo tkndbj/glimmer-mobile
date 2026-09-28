@@ -40,7 +40,7 @@ namespace GlimmerGrove.Content
         }
 
         /// <summary>
-        /// Par is derivable from the board, so an omitted par is not an error — it is the
+        /// Par is derivable from the board, so an omitted par is not an error - it is the
         /// recommended way to author, since a hand-typed one can drift.
         /// </summary>
         public override LevelTuning Tune(LevelDto dto, ILevelRules rules)

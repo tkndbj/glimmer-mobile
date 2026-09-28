@@ -1,8 +1,8 @@
 // Sign in with Apple, bound for AppleSignIn.cs.
 //
-// This exists because Firebase refuses to do it. FirebaseAuth's generic IDP path — the one
+// This exists because Firebase refuses to do it. FirebaseAuth's generic IDP path - the one
 // FederatedOAuthProvider drives, and the one this game uses for Google on both platforms and
-// for Apple on Android — calls fatalError on iOS the moment the provider is apple.com:
+// for Apple on Android - calls fatalError on iOS the moment the provider is apple.com:
 //
 //     FirebaseAuth/OAuthProvider.swift:83: Fatal error: Sign in with Apple is not supported
 //     via generic IDP; You must use the Apple SDK for Sign in with Apple.
@@ -39,7 +39,7 @@ API_AVAILABLE(ios(13.0))
 
 // Retained for the life of the request. ASAuthorizationController holds its delegate weakly,
 // so a local would be released the instant the calling function returned and the sheet would
-// answer nobody — a hang rather than a crash, which is worse to diagnose.
+// answer nobody - a hang rather than a crash, which is worse to diagnose.
 static id gGlimmerAppleDelegate = nil;
 
 @implementation GlimmerAppleSignInDelegate
@@ -74,7 +74,7 @@ static id gGlimmerAppleDelegate = nil;
     NSData *identityToken = credential.identityToken;
     if (identityToken == nil) {
         // Documented as possible, and it is the one failure that looks like success from the
-        // player's side — they tapped through the sheet and there is simply nothing to send.
+        // player's side - they tapped through the sheet and there is simply nothing to send.
         gGlimmerAppleError = @"Apple returned no identity token";
         gGlimmerAppleState = 3;
         return;
@@ -90,7 +90,7 @@ static id gGlimmerAppleDelegate = nil;
     // Firebase needs the authorization code as well as the identity token, and it is not
     // optional however much the parameter is named "accessToken". A credential carrying a
     // perfectly valid, correctly-nonced identity token and no code is refused with
-    // "Invalid OAuth response from apple.com" — the same sentence Firebase uses for a
+    // "Invalid OAuth response from apple.com" - the same sentence Firebase uses for a
     // malformed token, which is what makes this so hard to tell apart from a broken nonce.
     NSData *authorizationCode = credential.authorizationCode;
     if (authorizationCode != nil) {

@@ -10,7 +10,7 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// Every assertion here is about somebody's hearts, and the two failure directions are not
     /// equally bad. Charging twice, or charging a player who won, takes something real from
-    /// somebody who did nothing wrong — so <see cref="RunGuard.Resolve"/> is idempotent and
+    /// somebody who did nothing wrong - so <see cref="RunGuard.Resolve"/> is idempotent and
     /// every ending clears the marker before anything else happens. Charging never is merely a
     /// gate that does not bind. The tests are written in that order of severity.
     /// </para>
@@ -98,7 +98,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The one that would be a support ticket. A second launch, a navigation back to the
-        /// hub, a re-read of the marker — none of them may charge again for the same run.
+        /// hub, a re-read of the marker - none of them may charge again for the same run.
         /// </summary>
         [Test]
         public void TheSameRunIsNeverChargedTwice()
@@ -118,7 +118,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A player already at zero owes nothing — and the marker still has to go, or some
+        /// A player already at zero owes nothing - and the marker still has to go, or some
         /// later launch that finds them solvent would charge them for a run they abandoned
         /// weeks ago.
         /// </summary>

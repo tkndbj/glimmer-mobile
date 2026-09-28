@@ -8,7 +8,7 @@ namespace GlimmerGrove.Ads
     ///
     /// <para>
     /// Deliberately separate from <see cref="AdRewardTable"/>, which is content. These are
-    /// not tuning — they are the address of the account the money arrives in, they differ
+    /// not tuning - they are the address of the account the money arrives in, they differ
     /// per platform, and they change roughly never. Putting them in <c>progression.json</c>
     /// would mean a content push could redirect this game's ad revenue to somebody else's
     /// account, which is a considerably worse failure than a mistuned payout.
@@ -23,12 +23,12 @@ namespace GlimmerGrove.Ads
     /// <b>An ad unit id belongs to one app, and nothing tells you when you have crossed
     /// them.</b> The dashboard lists ad units per app, so a unit created while the iOS app
     /// is selected cannot be loaded by an Android build however correctly it is pasted in
-    /// here. The SDK does not error on it — it reports no fill, exactly as it does for a
+    /// here. The SDK does not error on it - it reports no fill, exactly as it does for a
     /// market with no demand, so the offer sits at "finding a video" for ever and the only
     /// visible symptom is a button that never lights. That shipped here: <c>run_continue</c>
     /// and <c>win_bonus</c> were both created under the iOS app and both were dead on
-    /// Android for a day, while <c>heart_refill</c> and <c>coin_bonus</c> — created earlier,
-    /// under the right app — worked throughout and made it look like a code fault. When a
+    /// Android for a day, while <c>heart_refill</c> and <c>coin_bonus</c> - created earlier,
+    /// under the right app - worked throughout and made it look like a code fault. When a
     /// single placement never fills, check which app owns its ad unit before anything else.
     /// </para>
     /// </summary>
@@ -42,7 +42,7 @@ namespace GlimmerGrove.Ads
         ///
         /// <para>
         /// <b>One per platform, not one per game.</b> LevelPlay registers an Android app and
-        /// an iOS app separately — they may sit in the same project, but each gets its own
+        /// an iOS app separately - they may sit in the same project, but each gets its own
         /// key. Sharing one across both is the same trap as sharing an ad unit id: nothing
         /// errors, the SDK simply never fills, and it reads as a market with no demand
         /// rather than as a misconfiguration.
@@ -88,7 +88,7 @@ namespace GlimmerGrove.Ads
         /// Added 2026-09-19, and the reason this comment exists: the XP boost placement
         /// shipped with no ad unit <em>at all</em>. It was absent from <see cref="AdUnits"/>,
         /// so the provider created no rewarded unit for it, <c>IsReady</c> answered false for
-        /// ever and <c>ShowAsync</c> answered "no such placement" — with <b>nothing logged</b>,
+        /// ever and <c>ShowAsync</c> answered "no such placement" - with <b>nothing logged</b>,
         /// because the provider's "no ad unit id for this platform" warning only fires for a
         /// placement that is in the dictionary with an empty id. On screen that is
         /// indistinguishable from a market with no demand, which is how it survived a ship.
@@ -96,7 +96,7 @@ namespace GlimmerGrove.Ads
         ///
         /// <para>
         /// Both dashboard units carry the reward item name <c>xp_boost</c>, which reaches
-        /// <c>verifyAdCallback</c> as <c>itemName</c> — one of the three fields
+        /// <c>verifyAdCallback</c> as <c>itemName</c> - one of the three fields
         /// <c>namedPlacement</c> accepts. Nothing is granted for this placement regardless
         /// (<c>adCurrencyOf</c> answers null: a window is not currency), so the callback is
         /// identification only.
@@ -115,7 +115,7 @@ namespace GlimmerGrove.Ads
         ///
         /// <para>
         /// Because the key is resolved per platform, this is false on an iOS build until the
-        /// iOS app is registered — so that build ships with ads dark rather than starting a
+        /// iOS app is registered - so that build ships with ads dark rather than starting a
         /// mediation SDK against Android's key, which would never fill and would look like a
         /// dead market rather than a missing line of configuration.
         /// </para>
@@ -126,7 +126,7 @@ namespace GlimmerGrove.Ads
         /// The ad unit for each placement on the platform this build is for.
         ///
         /// Built by <c>Boot</c> and handed to the provider, so the provider never has to
-        /// know which platform it is on — one more thing kept out of the SDK-facing half.
+        /// know which platform it is on - one more thing kept out of the SDK-facing half.
         ///
         /// <para>
         /// <b>Every id in <see cref="AdPlacement.All"/> must appear here</b>, whether or not the

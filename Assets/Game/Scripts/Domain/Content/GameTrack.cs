@@ -12,7 +12,7 @@ namespace GlimmerGrove.Content
     /// mode.</b> Thornwatch's Infinite is the same board, the same wards, the same raiders and the
     /// same verb; what differs is that its waves never stop and it is graded on how far you got
     /// rather than on what you spent. Filing it as a mode would put it in the switcher as a
-    /// stranger, give it its own art, its own validator and its own registry row, and — worst —
+    /// stranger, give it its own art, its own validator and its own registry row, and - worst -
     /// its own chapter ladder, so finishing the ordinary game would be the price of opening it.
     /// Filing it as an ordinary chapter of the same mode is worse still: <c>LevelUnlock.GateFor</c>
     /// looks for the chapter <em>before this one in the same mode</em>, so an endless chapter
@@ -29,13 +29,13 @@ namespace GlimmerGrove.Content
     /// <b>A permanent string, not an enum</b>, for <see cref="GameMode"/>'s reason: the value
     /// reaches the manifest, analytics and loc keys, so an ordinal would be a second identity
     /// nobody authored. A chapter naming a track this build has never heard of is <b>skipped
-    /// whole</b>, exactly as one naming an unknown mode is (invariant 20) — content from the
+    /// whole</b>, exactly as one naming an unknown mode is (invariant 20) - content from the
     /// future is lost rather than filed under a lane it does not belong in.
     /// </para>
     /// <para>
     /// Note what is deliberately absent: nothing here reaches the save file. An endless level is
     /// an ordinary level with its own permanent <see cref="LevelId"/>, so its record, its stars,
-    /// its rewards and its merge are the ones every glade already has — invariant 20a's bargain,
+    /// its rewards and its merge are the ones every glade already has - invariant 20a's bargain,
     /// collected once more.
     /// </para>
     /// </summary>
@@ -53,7 +53,7 @@ namespace GlimmerGrove.Content
         /// The ordinary ladder: chapter one, then two, gated on stars.
         ///
         /// <b>What a chapter naming no track is read as</b>, so every chapter authored before
-        /// tracks existed keeps working with its file untouched — <see cref="GameMode.Glade"/>'s
+        /// tracks existed keeps working with its file untouched - <see cref="GameMode.Glade"/>'s
         /// rule, one level down.
         /// </summary>
         public static readonly GameTrack Main = new GameTrack("main");
@@ -83,14 +83,14 @@ namespace GlimmerGrove.Content
         ///
         /// <para>
         /// <b>The one fact the map needs and could not derive.</b> A map is a painting of a
-        /// chapter's island chain — strips, trails, a disc per level and a teaser capping it —
+        /// chapter's island chain - strips, trails, a disc per level and a teaser capping it -
         /// and the Infinite lane has one level, no chain and nothing after it, so all of that
         /// machinery drew a column of scenery with a single node loose on it. What that lane
         /// wants instead is a <em>hub</em>: what the mode is, what it is worth, and a way in.
         /// </para>
         /// <para>
-        /// <b>Declared rather than counted, and that is deliberate.</b> The obvious derivation —
-        /// "a lane holding one chapter of one level" — is true of this lane today and is also
+        /// <b>Declared rather than counted, and that is deliberate.</b> The obvious derivation -
+        /// "a lane holding one chapter of one level" - is true of this lane today and is also
         /// true of the first chapter of a mode whose second has not shipped yet, which would
         /// swap a real map for a hub on the day a drop was being prepared. What decides this is
         /// what the lane <em>is</em>, so the lane says so.
@@ -102,7 +102,7 @@ namespace GlimmerGrove.Content
         /// The loc key for one of the short lines a hub says about this lane, counting from one.
         ///
         /// <b>Derived from the id like every other key here</b> (invariant 5a), so a lane names
-        /// its own copy without anything reading a chapter body — and so adding a lane is a
+        /// its own copy without anything reading a chapter body - and so adding a lane is a
         /// content change rather than a call site. Out-of-range indices answer the first key
         /// rather than building a name nothing can resolve, because a key built out of a bad
         /// number is a missing string on a screen rather than a fault anybody can see.
@@ -114,7 +114,7 @@ namespace GlimmerGrove.Content
         /// Reads an authored track name.
         ///
         /// <para>
-        /// <b>An empty field is the main track and is never an error</b> — that is what lets every
+        /// <b>An empty field is the main track and is never an error</b> - that is what lets every
         /// chapter that shipped before this existed keep working. Anything else that is not on
         /// <see cref="Shipped"/> is refused by name, so a chapter written for a newer build is
         /// lost rather than quietly filed on the ordinary ladder where it would gate a real
@@ -170,7 +170,7 @@ namespace GlimmerGrove.Content
     /// One lane of the catalog: a mode and a track.
     ///
     /// <b>A pair rather than two dictionaries</b>, because everything that walks a ladder needs
-    /// both at once — a chapter's neighbours, its gate, its place in the order — and two lookups
+    /// both at once - a chapter's neighbours, its gate, its place in the order - and two lookups
     /// keyed separately is two places for one of them to be forgotten.
     /// </summary>
     public readonly struct ModeLane : IEquatable<ModeLane>

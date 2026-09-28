@@ -6,7 +6,7 @@ namespace GlimmerGrove.Ads
     /// The permanent ids of the game's rewarded ad placements.
     ///
     /// <para>
-    /// Ids, not an enum, and never renamed or reused — the same rule a
+    /// Ids, not an enum, and never renamed or reused - the same rule a
     /// <see cref="Content.LevelId"/> and a <see cref="Persistence.Currency"/> follow, for
     /// the same reason. A placement id is written into every award id the server
     /// adjudicates, into the daily cap counters in the save file, into the mediation
@@ -15,8 +15,8 @@ namespace GlimmerGrove.Ads
     /// business reaching any of them.
     /// </para>
     /// <para>
-    /// What a placement <em>pays</em> is not here. That is content — see
-    /// <see cref="AdRewardTable"/> — because a reward amount is the single most retuned
+    /// What a placement <em>pays</em> is not here. That is content - see
+    /// <see cref="AdRewardTable"/> - because a reward amount is the single most retuned
     /// number in an ad-supported game and must never need a store review. This type is
     /// only the list of doors; the table says what is behind each one.
     /// </para>
@@ -33,7 +33,7 @@ namespace GlimmerGrove.Ads
         public const string CoinBonus = "coin_bonus";
 
         // `run_continue` is a **retired** placement id and must never be reused. It bought
-        // seconds on a glade's countdown, and the countdown is gone — a run is graded and
+        // seconds on a glade's countdown, and the countdown is gone - a run is graded and
         // ended on turns alone. An id travels the same way a level id does (invariant 1): it
         // reaches the LevelPlay dashboard, the published ad table, `grantLog` on the server
         // and every analytics row ever written, so pointing it at some other offer would
@@ -48,7 +48,7 @@ namespace GlimmerGrove.Ads
         /// earned, and that is a constraint rather than a preference. Earned credits are
         /// <em>derived</em> from the star ledger (invariant 9), so there is no accumulated
         /// figure to multiply; doubling one run would mean storing which runs had been
-        /// doubled, which is a forgeable per-level set that <em>pays</em> — invariant 15
+        /// doubled, which is a forgeable per-level set that <em>pays</em> - invariant 15
         /// sends that straight back to 13, and the honest answer there is that a signed
         /// callback naming a placement is the only ad evidence this game can get. So the
         /// amount is content, the server grants its own figure exactly as it does for
@@ -65,7 +65,7 @@ namespace GlimmerGrove.Ads
         /// The one placement with a natural trigger rather than a button somebody went
         /// looking for: the player has decided they want something and found that they
         /// cannot have it. That is the best moment in the game to offer
-        /// a video and the worst to teach somebody a control is dead — the argument
+        /// a video and the worst to teach somebody a control is dead - the argument
         /// <c>CompanionUnlockOverlay</c> already makes about a short balance.
         /// </para>
         /// <para>
@@ -83,7 +83,7 @@ namespace GlimmerGrove.Ads
         /// <para>
         /// <b>Read <see cref="WinBonus"/> above before changing this.</b> That comment refuses to
         /// multiply what one run earned, because doing it in <em>credits</em> means storing which
-        /// runs were doubled — a forgeable per-level set that pays money. This does multiply, and
+        /// runs were doubled - a forgeable per-level set that pays money. This does multiply, and
         /// the three things that make it a different question are worth naming: it stores no set
         /// but a single lifetime total; it pays <b>XP and never currency</b>, so credits still
         /// derive from the star ledger alone; and the total is clamped to a fraction of XP the
@@ -94,8 +94,8 @@ namespace GlimmerGrove.Ads
         /// <b>Nothing about it reaches the server as a grant</b>, exactly as
         /// <see cref="HintRefill"/> does not: a window is not currency, so <c>adCurrencyOf</c>
         /// answers null for this placement and the signed callback grants nothing. What meters it
-        /// is a cooldown derived from the window's own deadline — see <c>XpBoost.WatchedReadyAt</c>
-        /// — rather than a daily cap alone, because "every four hours" is the offer.
+        /// is a cooldown derived from the window's own deadline - see <c>XpBoost.WatchedReadyAt</c>
+        /// - rather than a daily cap alone, because "every four hours" is the offer.
         /// </para>
         /// </summary>
         public const string XpBoost = "xp_boost";
@@ -126,14 +126,14 @@ namespace GlimmerGrove.Ads
     ///
     /// <para>
     /// A local handle and nothing more. It carries which placement was asked for and a
-    /// throwaway id used to correlate the show call with its result in logs — it is
+    /// throwaway id used to correlate the show call with its result in logs - it is
     /// <b>not</b> a claim, not a key, and the server never sees it.
     /// </para>
     /// <para>
     /// That is worth stating plainly because the obvious design is the opposite one, and
     /// it was tried here first. The tempting shape is a client-generated nonce handed to
     /// the SDK as a custom parameter, echoed back by the network's verification callback,
-    /// and used as a derived award id exactly like a daily chest's — which would let an ad
+    /// and used as a derived award id exactly like a daily chest's - which would let an ad
     /// reward ride the existing <see cref="Persistence.CurrencyLedger.TryAward"/> path and
     /// be spendable the instant the video ends.
     /// </para>
@@ -143,7 +143,7 @@ namespace GlimmerGrove.Ads
     /// data; what remains is <c>LevelPlaySegment</c>, which is documented as user
     /// segmentation and says nothing about reaching the server-to-server callback. Building
     /// the one security-critical link in the economy on an undocumented hope is precisely
-    /// the thing this project refuses to do — and the failure would be silent, in the worst
+    /// the thing this project refuses to do - and the failure would be silent, in the worst
     /// possible way: ads that play, players who are told they earned coins, and a server
     /// that never grants them.
     /// </para>
@@ -151,7 +151,7 @@ namespace GlimmerGrove.Ads
     /// So the design uses only what the callback contract actually guarantees:
     /// <c>[USER_ID]</c>, which we set to the account id when the SDK starts, and
     /// <c>[EVENT_ID]</c>, which the network generates per view. Between them the server
-    /// knows who watched what, and it grants on its own authority — see
+    /// knows who watched what, and it grants on its own authority - see
     /// <see cref="RewardedAds"/> and <c>firebase/functions/src/ads.ts</c>. The cost is one
     /// sync round trip before coins appear, which is affordable because watching an ad
     /// already required a network connection.

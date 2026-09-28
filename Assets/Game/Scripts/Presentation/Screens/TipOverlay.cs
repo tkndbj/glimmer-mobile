@@ -18,14 +18,14 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// It never dismisses itself. A tip that fades is a tip the player was still reading,
-    /// and this one is only ever shown once in their whole life with the game — there is
+    /// and this one is only ever shown once in their whole life with the game - there is
     /// no second chance to catch it. The OK button is the only way out, and the board
     /// underneath stays locked until it is pressed.
     /// </para>
     /// <para>
     /// The hole is four dark quads rather than a masked cutout. That needs no shader, no
     /// render texture and no extra material, and it behaves identically on every device
-    /// — which for one overlay is worth more than elegance.
+    /// - which for one overlay is worth more than elegance.
     /// </para>
     /// </summary>
     public sealed class TipOverlay : ModalView
@@ -34,7 +34,7 @@ namespace GlimmerGrove
         /// What is being taught. Its strings come from its id.
         ///
         /// A property rather than a field because it is handed over in code when the
-        /// overlay is opened and never set in the inspector — as a public field Unity
+        /// overlay is opened and never set in the inspector - as a public field Unity
         /// tries to serialise it, finds a struct it cannot, and warns on every compile.
         /// </summary>
         public Mechanic Mechanic { get; set; }
@@ -51,8 +51,8 @@ namespace GlimmerGrove
         /// <para>
         /// <b>It exists so that a number in a lesson can be derived rather than typed.</b> The
         /// chapter-gate lesson says how many stars open the next chapter, and that figure is
-        /// content — <c>ChapterGateTable</c> is retunable from a config push and a chapter is not
-        /// a fixed size — so writing it into the string would put a number nothing can check in
+        /// content - <c>ChapterGateTable</c> is retunable from a config push and a chapter is not
+        /// a fixed size - so writing it into the string would put a number nothing can check in
         /// the one place nothing ever reads again. It is the same bargain
         /// <c>ui.levels.chapter_gate</c> already strikes at the end of the chain, and it is why
         /// invariant 21 made every screen print the count instead of the old sentence.
@@ -72,7 +72,7 @@ namespace GlimmerGrove
         /// the sentence says two hearts join and their light mixes, and a ring round the gold
         /// critter alone leaves the player hunting the board for the two hearts it is talking
         /// about. Ringing each of them says which, and the hole widens to keep all three lit
-        /// at once — which is the same bargain a demonstration already makes with
+        /// at once - which is the same bargain a demonstration already makes with
         /// <see cref="Trace"/>: the hole covers everything, and a ring stays on a subject.
         /// </para>
         /// </summary>
@@ -89,7 +89,7 @@ namespace GlimmerGrove
         /// four chapters of tapping tiles the first thing a player has to know is that this mode
         /// is <em>dragged</em>, and a sentence describing a movement has to be turned back into
         /// the movement by whoever reads it. So the hand does that half and the sentence is cut
-        /// down to what it is actually good at — the rule the movement does not show.
+        /// down to what it is actually good at - the rule the movement does not show.
         /// </para>
         /// <para>
         /// Every point of the route stays out of the dim, so the demonstration happens on the
@@ -101,7 +101,7 @@ namespace GlimmerGrove
         /// </summary>
         public RectTransform[] Trace;
 
-        /// <summary>The colour the demonstration is drawn in — normally the pair's own.</summary>
+        /// <summary>The colour the demonstration is drawn in - normally the pair's own.</summary>
         public Color TraceTint = Pal.Cream;
 
         /// <summary>How far the route reaches in board cells, which decides its pace.</summary>
@@ -111,7 +111,7 @@ namespace GlimmerGrove
         /// Raised once this tip is done with, so the run can be handed back.
         ///
         /// <para>
-        /// <b>Exactly once, whatever the exit</b> — the OK button, the back gesture, or the
+        /// <b>Exactly once, whatever the exit</b> - the OK button, the back gesture, or the
         /// panel simply being destroyed underneath itself. That is the house rule about panels
         /// with several exits, and here it is load-bearing rather than tidy: whoever is showing
         /// this holds the run's clock until it fires, so a tip that went away without reporting
@@ -127,12 +127,12 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// The default is the bottom of it, so a lesson can never cover a panel the player asked
-        /// for. See <see cref="ModalLayer"/> — this is the only overlay in the game that raises
+        /// for. See <see cref="ModalLayer"/> - this is the only overlay in the game that raises
         /// itself on a timer, and therefore the only one whose arrival order means nothing.
         /// </para>
         /// <para>
         /// The one exception is a lesson about a control that lives on a <em>panel</em> rather
-        /// than on the board, which has to be told <see cref="ModalLayer.Coaching"/> — there the
+        /// than on the board, which has to be told <see cref="ModalLayer.Coaching"/> - there the
         /// default hides the tip and the thing it is pointing at behind the same panel. It is a
         /// declaration rather than something worked out from <see cref="Target"/> because this
         /// overlay is handed a rectangle and nothing else: whose rectangle it is, and whether
@@ -153,7 +153,7 @@ namespace GlimmerGrove
         /// <see cref="_repeat"/> has to be read before <see cref="Accept"/> writes the ledger,
         /// or every lesson reports itself as one the player had already met. <see cref="_shownAt"/>
         /// is on the unscaled clock because a modal sets <c>Time.timeScale</c> to nought
-        /// (invariant 30h) — the scaled one would report nought seconds on every tip in the game
+        /// (invariant 30h) - the scaled one would report nought seconds on every tip in the game
         /// and nothing about the figure would look wrong.
         /// </para>
         /// <para>
@@ -185,8 +185,8 @@ namespace GlimmerGrove
             _repeat = TipLedger.HasSeen(Mechanic);
             _shownAt = Time.unscaledTime;
 
-            // Flow.Current names the screen underneath rather than this panel — a modal is
-            // never assigned to it — so this is who is doing the teaching. Domain cannot see
+            // Flow.Current names the screen underneath rather than this panel - a modal is
+            // never assigned to it - so this is who is doing the teaching. Domain cannot see
             // Flow, which is why the name is passed rather than looked up there.
             _screen = Flow.Current != null ? Flow.Current.GetType().Name : null;
 
@@ -224,7 +224,7 @@ namespace GlimmerGrove
         /// <summary>
         /// What has to stay lit: everything being pointed at, and every point the hand visits.
         ///
-        /// Null when there is nothing on the board at all — a move budget lives in the HUD, not
+        /// Null when there is nothing on the board at all - a move budget lives in the HUD, not
         /// in a cell.
         /// </summary>
         Rect? SpotlightRect(System.Collections.Generic.List<Rect> rings)
@@ -319,7 +319,7 @@ namespace GlimmerGrove
 
             // A ring goes round each thing being named, never round the hole. For a tip naming
             // one tile those are the same rectangle, and they are deliberately not the same as
-            // soon as a lesson names two — or demonstrates a route: the hole is widened to keep
+            // soon as a lesson names two - or demonstrates a route: the hole is widened to keep
             // every subject lit, and an outline stretched to that would be pointing at a region
             // of the board rather than at the things the sentence is about.
             foreach (var ring in rings) Outline(ring);
@@ -329,7 +329,7 @@ namespace GlimmerGrove
         /// A border traced around one thing being named, not a halo floating over it.
         ///
         /// RoundOutline is a sliced sprite, so it takes the target's proportions instead of
-        /// forcing everything into the same oval — a wide HUD pill and a square tile each get
+        /// forcing everything into the same oval - a wide HUD pill and a square tile each get
         /// an outline that actually fits them.
         /// </summary>
         void Outline(Rect box)
@@ -369,7 +369,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Its height is measured, never declared.</b> It used to be a constant, with the
         /// body given a fixed box and <c>resizeTextForBestFit</c> between 22 and 32 to keep
-        /// it inside — and it did not shrink. At 22 the crossing's 231 characters fit that
+        /// it inside - and it did not shrink. At 22 the crossing's 231 characters fit that
         /// box with room to spare, so best fit plainly was not testing the height: a wrapped
         /// label never fails the width test, and <see cref="UIKit.Label"/> sets
         /// <c>verticalOverflow = Overflow</c>, which <c>Text.GetGenerationSettings</c> hands
@@ -381,7 +381,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// Measuring is the bargain the win panel's route bubble already makes, for the same
-        /// reason — sizing the paper first means guessing at a wrapped translation. The body
+        /// reason - sizing the paper first means guessing at a wrapped translation. The body
         /// is built before the bubble exists so its height can be read, then reparented into
         /// it; nothing is drawn in between, because this is all one pass of <see cref="Build"/>.
         /// Every row is then placed against a cursor, so the gap above the button is a gap
@@ -410,7 +410,7 @@ namespace GlimmerGrove
             float Chrome = TitleTop + TitleHeight + Gap + iconRow
                          + BodyGap + ButtonHeight + ButtonBottom;
 
-            // Near-black on white, not the warm brown the wooden panels use — on a plain
+            // Near-black on white, not the warm brown the wooden panels use - on a plain
             // white bubble that brown reads as washed out rather than as ink.
             string words = BodyArgs == null || BodyArgs.Length == 0
                 ? Loc.Get(Mechanic.BodyKey)
@@ -444,7 +444,7 @@ namespace GlimmerGrove
                 // It used to be hard-centred, which was invisible for as long as every tip
                 // pointed at a board tile: a board is centred too, so the subject was always
                 // within the beak's own clamp and the beak reached it. The first tip aimed at
-                // a *corner* control breaks that — the mode switcher's centre is 356 from the
+                // a *corner* control breaks that - the mode switcher's centre is 356 from the
                 // middle of a 1080 canvas, the beak clamps at 273, and the result is a pointer
                 // aimed 83px to the left of the pill it is talking about, on a bubble whose
                 // right edge stops 134px short of the thing under discussion.
@@ -470,7 +470,7 @@ namespace GlimmerGrove
 
             // This overlay builds its own bubble instead of calling MakePanel, because
             // the cutout has to be drawn under it. ModalView.Close still animates
-            // Panel on the way out, so it has to be told which transform that is —
+            // Panel on the way out, so it has to be told which transform that is -
             // without this the OK button throws and the board never unlocks.
             Backing = panel;
             Panel = rt;
@@ -478,7 +478,7 @@ namespace GlimmerGrove
             if (spot.HasValue)
             {
                 // A little pointer, so the bubble reads as belonging to the ring.
-                // Relative to the bubble, which has just been slid — an absolute position here
+                // Relative to the bubble, which has just been slid - an absolute position here
                 // would put the beak back where the subject is *not*. Still clamped, so it
                 // stays on the straight part of the paper rather than climbing a rounded
                 // corner, for the case where even a fully slid bubble cannot reach.
@@ -490,7 +490,7 @@ namespace GlimmerGrove
             }
 
             // Stacked from the top edge downwards. UIKit.Box pivots every box at its centre
-            // whatever the anchor, so a position is the middle of the box and not its top —
+            // whatever the anchor, so a position is the middle of the box and not its top -
             // getting that backwards is what had the body starting level with the title and
             // printing straight through it. The cursor therefore always names an *edge*, and
             // half a row's height is added where it is turned into a position.
@@ -503,7 +503,7 @@ namespace GlimmerGrove
                                      outline: 0f, shadow: 0f);
 
             // Shrunk to fit rather than trusted to be short enough. Every one of these is
-            // translated, and German or Turkish will run half as long again — a tip that
+            // translated, and German or Turkish will run half as long again - a tip that
             // overflows its bubble in one market and not another is the kind of bug nobody
             // sees until a review mentions it. Measured rather than left to best fit for
             // the reason in the remarks above: this is the axis best fit is *supposed* to
@@ -542,7 +542,7 @@ namespace GlimmerGrove
             Tween.Scale(rt, 1f, .5f, Ease.OutBack).Delay(.12f);
 
             // Its own sound rather than the panel one, because this builds its own bubble
-            // rather than calling MakePanel — so nothing else would speak for it. The hush is
+            // rather than calling MakePanel - so nothing else would speak for it. The hush is
             // for the lessons key in a run's header, which is a button like any other.
             Audio.Hush("click");
             Audio.Sfx("tip", .5f);
@@ -554,7 +554,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// How tall the bubble may grow before the body is shrunk instead. Read off the
-        /// canvas rather than fixed, because it is width-matched at 1080 — its height is
+        /// canvas rather than fixed, because it is width-matched at 1080 - its height is
         /// 1920 on a 16:9 phone and 1440 on a 4:3 tablet, and what is left over has to
         /// keep the ring this is pointing at visible on both.
         /// </summary>
@@ -568,7 +568,7 @@ namespace GlimmerGrove
         /// A step at a time rather than a search: eleven sizes at most, each one a
         /// measurement uGUI answers from cached glyph metrics in the same frame, run once
         /// in the life of a tip. If even the smallest does not fit, the bubble grows rather
-        /// than the text overlapping — which is the whole point of measuring, and needs a
+        /// than the text overlapping - which is the whole point of measuring, and needs a
         /// tip several times longer than any that exists.
         /// </remarks>
         static float FitBody(Text body, float room, int min)
@@ -588,7 +588,7 @@ namespace GlimmerGrove
 
         /// <param name="how">
         /// Which way out was taken. The game treats the back gesture as the OK button on
-        /// purpose — a lesson shown once in a life must not be skippable in silence — so the
+        /// purpose - a lesson shown once in a life must not be skippable in silence - so the
         /// two are one outcome here and deliberately two in a report: a player who backs out
         /// of every tip has read none of them, and counted together that is indistinguishable
         /// from a player who read them all.
@@ -598,7 +598,7 @@ namespace GlimmerGrove
             _exit = how;
 
             // Marked here rather than on show, so a player who is interrupted mid-tip
-            // — a call, a crash, the app swapped out — still gets taught next time.
+            // - a call, a crash, the app swapped out - still gets taught next time.
             TipLedger.MarkSeen(Mechanic);
 
             Close(Report);
@@ -619,8 +619,8 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The backstop. A tip torn down without being accepted — the screen navigating away
-        /// underneath it, say — still reports, because the thing waiting on it is a run's
+        /// The backstop. A tip torn down without being accepted - the screen navigating away
+        /// underneath it, say - still reports, because the thing waiting on it is a run's
         /// clock and nothing else will ever come along to release it.
         /// </summary>
         void OnDestroy() => Report();

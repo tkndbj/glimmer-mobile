@@ -17,7 +17,7 @@ namespace GlimmerGrove.Privacy
     /// hand back a consent string. A CMP writes the IAB TCF string into the platform's own
     /// preference store, where every mediation adapter reads it directly. Carrying a copy
     /// through our code would make us a second source of truth for a value we neither own nor
-    /// parse — and the copy would be the one that goes stale.
+    /// parse - and the copy would be the one that goes stale.
     /// </para>
     /// </summary>
     public interface IConsentGateway
@@ -26,7 +26,7 @@ namespace GlimmerGrove.Privacy
         /// Brings the consent state up to date, prompting if the CMP says a prompt is owed.
         ///
         /// <para>
-        /// Called once on the boot path and awaited, which is the whole point of it — see
+        /// Called once on the boot path and awaited, which is the whole point of it - see
         /// <see cref="AdPrivacy.ResolveAsync"/> for why the ad SDK must not start before this
         /// completes. It must never throw: a CMP that cannot reach its own servers is an
         /// ordinary Tuesday on a train, and the answer then is the restrictive default rather
@@ -59,14 +59,14 @@ namespace GlimmerGrove.Privacy
     /// The gateway used when no CMP is installed.
     ///
     /// <para>
-    /// Answers <see cref="AdPrivacySignals.Restricted"/> — no consent, GDPR assumed to apply —
+    /// Answers <see cref="AdPrivacySignals.Restricted"/> - no consent, GDPR assumed to apply -
     /// rather than pretending everyone agreed. That is the honest reading and it is also the
     /// safe one: the cost is unpersonalised ads and lower revenue, where the cost of guessing
     /// the other way is personalised ads served to people who never agreed to them.
     /// </para>
     /// <para>
-    /// It is <b>not</b> a placeholder to be replaced later. A build with no ad SDK at all — the
-    /// Editor, a CI build, a platform without mediation — needs exactly this behaviour for ever,
+    /// It is <b>not</b> a placeholder to be replaced later. A build with no ad SDK at all - the
+    /// Editor, a CI build, a platform without mediation - needs exactly this behaviour for ever,
     /// which is why it reports <see cref="CanRevisit"/> false rather than offering a form it
     /// cannot show.
     /// </para>

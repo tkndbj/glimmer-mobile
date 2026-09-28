@@ -8,7 +8,7 @@ namespace GlimmerGrove.Content
     /// These types mirror the JSON exactly and nothing else depends on them, so the
     /// file format can gain fields, rename things or grow a v2 without any of the
     /// game's logic changing shape. They are written for Unity's JsonUtility, which
-    /// means public fields, no dictionaries and no properties — and, usefully, it
+    /// means public fields, no dictionaries and no properties - and, usefully, it
     /// silently ignores unknown fields, which is precisely the forward compatibility
     /// an old client needs when it meets newer content.
     ///
@@ -33,7 +33,7 @@ namespace GlimmerGrove.Content
         /// The companion roster, in display order.
         ///
         /// Lives in the manifest rather than a body of its own because the whole roster
-        /// is wanted at once — the picker draws the locked ones too — and an entry is a
+        /// is wanted at once - the picker draws the locked ones too - and an entry is a
         /// few dozen bytes, so a hundred companions is a few kilobytes on a file the
         /// boot path already reads. A lazily-loaded companion file would add a read to
         /// a screen and save nothing.
@@ -48,9 +48,9 @@ namespace GlimmerGrove.Content
         /// <summary>
         /// The event calendar, in no particular order.
         ///
-        /// Lives in the manifest for the same reason the companion roster does — the whole
+        /// Lives in the manifest for the same reason the companion roster does - the whole
         /// calendar is wanted at once, an entry is a few dozen bytes, and the boot path
-        /// already reads this file — and for one more besides: an event's reward is derived
+        /// already reads this file - and for one more besides: an event's reward is derived
         /// from the star ledger, so the definitions have to be resident wherever credits
         /// are computed, which is everywhere.
         ///
@@ -68,7 +68,7 @@ namespace GlimmerGrove.Content
     ///
     /// <see cref="id"/> is permanent: it names the season's loc keys, its save row, its
     /// analytics and every claim id its chests produce. Renaming one is the same class of
-    /// mistake as renaming a level id — it does not break anything visibly, it silently
+    /// mistake as renaming a level id - it does not break anything visibly, it silently
     /// resets everybody's track and orphans every claim already in flight.
     /// </summary>
     [Serializable]
@@ -92,13 +92,13 @@ namespace GlimmerGrove.Content
         /// <c>startUnix</c> and <c>endUnix</c> then describe <b>cycle nought</b> and the gap
         /// between them is the period; cycle <c>n</c> runs <c>[start + n·period, …)</c>, and its
         /// id is this entry's <c>id</c> with the cycle number on the end. See
-        /// <see cref="Events.SeasonCycle"/> for what that costs and what it buys — in short,
+        /// <see cref="Events.SeasonCycle"/> for what that costs and what it buys - in short,
         /// nothing and everything: no content push a season, no re-seed a season, and no
         /// calendar for anybody to forget to extend.
         /// </para>
         /// <para>
         /// <b>Absent is a one-off season, which is what shipped before this field existed</b>,
-        /// so an entry written against the old shape still reads exactly as it did — and a
+        /// so an entry written against the old shape still reads exactly as it did - and a
         /// client too old to know the field reads a repeating season as its first window and
         /// then shows no season at all. That is the honest degradation rather than a wrong one,
         /// and it is only reachable through remote content delivery, which is off.
@@ -115,7 +115,7 @@ namespace GlimmerGrove.Content
         /// invariant 7 routes every sprite through <c>AssetLibrary</c> and <c>AssetManifest</c>
         /// decides what is registered, so a filename invented in a content push would resolve
         /// to nothing and the box would draw a white rectangle. A named mark degrades the
-        /// other way — an unknown one falls back to the default, which is a working screen.
+        /// other way - an unknown one falls back to the default, which is a working screen.
         /// </para>
         /// <para>
         /// So this buys a real content lever without lying about its reach: an event can pick
@@ -136,7 +136,7 @@ namespace GlimmerGrove.Content
         /// <b>Gems rather than money, and that is a simplification rather than a discount.</b>
         /// A real-money product would have to be a non-consumable with a receipt, a
         /// server-written entitlement, a refund sweep and a store registration that can never
-        /// be renamed — the shape invariant 18d describes and every line of which has to work
+        /// be renamed - the shape invariant 18d describes and every line of which has to work
         /// before a single rung pays. A gem price is an <em>ordinary spend</em> (invariant 18),
         /// so the pass becomes what every other permanent thing in this game already is: an
         /// entitlement bought with a currency the player already holds.
@@ -150,7 +150,7 @@ namespace GlimmerGrove.Content
     /// track and <c>premiumTier</c> on the pass track.
     ///
     /// <para>
-    /// <b>Tier names rather than amounts</b> — see <c>EventMilestone</c>. A rung that
+    /// <b>Tier names rather than amounts</b> - see <c>EventMilestone</c>. A rung that
     /// authored its own credits would be one of eighty numbers whose odds nobody can
     /// disclose and which no retune can reach; naming a <c>TaskTierDto.id</c> makes one
     /// disclosure per tier the odds for every rung that pays it.
@@ -172,7 +172,7 @@ namespace GlimmerGrove.Content
     /// <summary>
     /// One companion a player can wear on their profile.
     ///
-    /// <see cref="id"/> is permanent — it is written into save files and will key
+    /// <see cref="id"/> is permanent - it is written into save files and will key
     /// analytics and, once the shop exists, purchases. Renaming one is the same class
     /// of mistake as renaming a level id.
     /// </summary>
@@ -200,12 +200,12 @@ namespace GlimmerGrove.Content
 
         /// <summary>
         /// Credits that buy this companion outright, ignoring <see cref="unlockLevel"/>.
-        /// <b>Zero or absent means it cannot be bought at all</b> — level only.
+        /// <b>Zero or absent means it cannot be bought at all</b> - level only.
         ///
         /// <para>
         /// That sentinel is the safe direction, and it is chosen rather than inherited.
         /// <c>JsonUtility</c> writes a zero into every field an older manifest never had, so
-        /// "absent" and "free" would be the same value if free were the meaning — and a
+        /// "absent" and "free" would be the same value if free were the meaning - and a
         /// manifest from before this field existed would put the entire roster on sale for
         /// nothing. Reading zero as "not for sale" makes a forgotten price cost a purchase
         /// nobody could make instead of giving away thirty companions, and it leaves
@@ -238,7 +238,7 @@ namespace GlimmerGrove.Content
         ///
         /// The manifest is the only place order is written. That is what lets a chapter
         /// be reordered, or a new one slotted between two shipped ones, by pushing this
-        /// one small file — without reshipping a single chapter body.
+        /// one small file - without reshipping a single chapter body.
         /// </summary>
         public int order;
 
@@ -250,12 +250,12 @@ namespace GlimmerGrove.Content
 
         /// <summary>
         /// This chapter's level ids, in play order. Present in the manifest so the boot
-        /// path can know the whole game's shape — which glades exist, in what order,
-        /// belonging to which chapter — after reading one small file, instead of opening
+        /// path can know the whole game's shape - which glades exist, in what order,
+        /// belonging to which chapter - after reading one small file, instead of opening
         /// and parsing every chapter body on every launch.
         ///
         /// It is the authority on membership and order; the chapter body is the
-        /// authority on what each level actually is. Nobody writes this list by hand —
+        /// authority on what each level actually is. Nobody writes this list by hand -
         /// <c>Content ▸ Sync Manifest</c> derives it from the bodies, so the two cannot
         /// drift, and the build gate proves they have not.
         /// </summary>
@@ -284,7 +284,7 @@ namespace GlimmerGrove.Content
         /// Absent is the main track and is never an error, which is what lets every chapter
         /// authored before tracks existed keep working with its file untouched. A track this
         /// build has never heard of is skipped whole, exactly as an unknown mode is (invariant
-        /// 20) — see <c>GameTrack</c>.
+        /// 20) - see <c>GameTrack</c>.
         /// </para>
         /// </summary>
         public string track;
@@ -304,7 +304,7 @@ namespace GlimmerGrove.Content
         /// <para>
         /// <b>Content rather than code, and per chapter rather than per lane.</b> A wall in
         /// front of a way of playing is the one kind of tuning whose damage is players who stop
-        /// playing rather than an economy that drifts — <c>ChapterGateTable</c>'s argument — so
+        /// playing rather than an economy that drifts - <c>ChapterGateTable</c>'s argument - so
         /// it has to be movable by pushing one small file rather than by a store review. Per
         /// chapter because a chapter is the catalog's unit and the star gate already lives
         /// there: a lane-wide field would be a second place a gate is written down, and the two
@@ -312,7 +312,7 @@ namespace GlimmerGrove.Content
         /// </para>
         /// <para>
         /// <b>It is a wall, never a skip.</b> Unlike <see cref="minAppVersion"/> a chapter
-        /// behind this is still listed, still drawn and still named — the player is meant to see
+        /// behind this is still listed, still drawn and still named - the player is meant to see
         /// what they are working towards. See <c>ChapterGate</c>.
         /// </para>
         /// </summary>
@@ -327,8 +327,8 @@ namespace GlimmerGrove.Content
         public string nameKey;
 
         /// <summary>
-        /// A tripwire, not a setting. Order lives in the manifest — see
-        /// <see cref="ManifestChapterDto.order"/> — and a chapter that tried to state
+        /// A tripwire, not a setting. Order lives in the manifest - see
+        /// <see cref="ManifestChapterDto.order"/> - and a chapter that tried to state
         /// its own would be a second source of truth for where the game goes next.
         ///
         /// The field is kept only so validation can see a stale one and fail the build
@@ -352,7 +352,7 @@ namespace GlimmerGrove.Content
         ///
         /// Only the across-axis is authorable: how far *up* the marker floats is derived
         /// from the highest glade and the header's clearance, and a typed one could drift
-        /// off the top of a chapter that later gained a strip. The across-axis cannot —
+        /// off the top of a chapter that later gained a strip. The across-axis cannot -
         /// the map is one canvas width whatever the chapter's length.
         /// </summary>
         public float teaserX;
@@ -436,7 +436,7 @@ namespace GlimmerGrove.Content
         /// <para>
         /// <b>False is the honest default</b>, which is what makes this safe to add: every
         /// chapter body written before it said nothing, <c>JsonUtility</c> writes <c>false</c>
-        /// into a field a file never had, and false means "stands on the map" — which is what
+        /// into a field a file never had, and false means "stands on the map" - which is what
         /// all three road maps do and what every one of those files meant.
         /// </para>
         /// </summary>
@@ -449,7 +449,7 @@ namespace GlimmerGrove.Content
         /// What this level has to say for itself while it is being played.
         ///
         /// <b>Presentation, and deliberately not part of any mode's block.</b> A mode's block is
-        /// the board, and every graded number in this game derives from the board — so a field
+        /// the board, and every graded number in this game derives from the board - so a field
         /// that could move par has to live there and a field that provably cannot must not. A
         /// story cannot move par, a star line, an allowance or a fail state; it is read by one
         /// screen and by nothing that grades a run. It sits here beside `backdrop` for the same
@@ -458,8 +458,8 @@ namespace GlimmerGrove.Content
         public StoryDto story;
 
         // ---- text ------------------------------------------------------------
-        // Deliberately absent. A level's loc keys are derived from its id — see
-        // LevelDefinition.DefaultNameKey — so that anything holding a LevelId can name
+        // Deliberately absent. A level's loc keys are derived from its id - see
+        // LevelDefinition.DefaultNameKey - so that anything holding a LevelId can name
         // a glade without reading this file. Overridable keys would have made the
         // manifest index insufficient for the map and the home screen.
     }
@@ -485,7 +485,7 @@ namespace GlimmerGrove.Content
     /// </para>
     /// <para>
     /// <b><c>seed</c> is retired.</b> The mode used to deal random colours from it, which is
-    /// what made it a score attack rather than a level — a board with no fixed future cannot be
+    /// what made it a score attack rather than a level - a board with no fixed future cannot be
     /// searched, so it could author no goal, no budget and no star line, and two players on the
     /// same level were not playing the same level. The field is not re-pointed at anything: a
     /// chapter body carrying one is content written for a build that no longer exists, and
@@ -499,7 +499,7 @@ namespace GlimmerGrove.Content
         public int height;
 
         /// <summary>
-        /// What is standing in the well, top row first — one letter per column, with '.' for
+        /// What is standing in the well, top row first - one letter per column, with '.' for
         /// empty ground. Spaces are ignored, so a row may be spaced out for reading.
         ///
         /// <para>
@@ -511,7 +511,7 @@ namespace GlimmerGrove.Content
         /// <para>
         /// The two slashes are a <b>mirror</b>, leaning the way it turns light. It is the one
         /// cell here light passes through rather than stopping at, it takes no drop and no wash,
-        /// and it shatters the first time it turns a shot — so a mirror nothing is ever aimed at
+        /// and it shatters the first time it turns a shot - so a mirror nothing is ever aimed at
         /// makes a level unwinnable rather than merely dull.
         /// </para>
         /// <para>
@@ -523,7 +523,7 @@ namespace GlimmerGrove.Content
 
         /// <summary>
         /// The procession, in order, written in R, G and B. It repeats, so it never needs to be
-        /// longer than one lap — and it must carry all three channels, or a mote missing one of
+        /// longer than one lap - and it must carry all three channels, or a mote missing one of
         /// them could never be finished however many drops were bought.
         ///
         /// Never a blend: the whole mode is that a blend has to be made.
@@ -535,7 +535,7 @@ namespace GlimmerGrove.Content
         /// which is what every level ships with.
         ///
         /// A count rather than a factor, because a wrong drop costs about the same wherever it
-        /// happens — it is gone, and the mote it left behind has to be cooked like any other —
+        /// happens - it is gone, and the mote it left behind has to be cooked like any other -
         /// while a fraction of par gives a short well almost no room at all. See
         /// <c>LevelTuning.Slack</c>.
         /// </summary>
@@ -544,7 +544,7 @@ namespace GlimmerGrove.Content
         /// <summary>
         /// <b>Retired.</b> See the remarks above. Kept only so validation can name a stale one
         /// rather than JsonUtility silently discarding it and the author believing a number that
-        /// does nothing — the same tripwire <see cref="ChapterDto.order"/> is.
+        /// does nothing - the same tripwire <see cref="ChapterDto.order"/> is.
         /// </summary>
         public int seed;
 
@@ -583,7 +583,7 @@ namespace GlimmerGrove.Content
     /// <para>
     /// <b>No numbers at all</b>, which is invariant 20d's rule. How much fuel a match is worth,
     /// how hard a bolt lands, how fast a ward's fuel fades, how long a raider takes to cross the
-    /// hill and what a blow costs a ward are all <c>SiegeRules</c> — constants in code, retuned
+    /// hill and what a blow costs a ward are all <c>SiegeRules</c> - constants in code, retuned
     /// for the whole mode at once. Par is derived from those and from what is written here, so a
     /// typed one could only ever drift from the level it claims to describe (invariant 5).
     /// </para>
@@ -591,7 +591,7 @@ namespace GlimmerGrove.Content
     /// <b>And no <c>spare</c>, deliberately.</b> Every other mode on this shape is lost by running
     /// out of moves; this one is lost when the last ward falls, so a move allowance would be a
     /// second fail state nobody asked for and the readout of it would count down to an ending
-    /// that never happens. What is left of that idea is the ward line itself — the mode's
+    /// that never happens. What is left of that idea is the ward line itself - the mode's
     /// allowance, drawn on the board rather than in a corner, which is the thing Hollowmarch
     /// found and this one inherits.
     /// </para>
@@ -605,7 +605,7 @@ namespace GlimmerGrove.Content
         /// <summary>
         /// The field as it is dealt, one string per row, top first. Spaces are ignored.
         ///
-        /// <c>r</c>, <c>g</c>, <c>b</c> and <c>y</c>, and it must be authored <b>settled</b> — no
+        /// <c>r</c>, <c>g</c>, <c>b</c> and <c>y</c>, and it must be authored <b>settled</b> - no
         /// three alike already touching, or the field would go off before anybody had moved a gem
         /// and the count the run is graded against would have moved with it.
         /// </summary>
@@ -628,7 +628,7 @@ namespace GlimmerGrove.Content
         /// ordinarily has. Absent or nought means ten, which is the plain figure.
         ///
         /// <para>
-        /// <b>Derived and written down, never invented</b> — the same bargain <c>backdrop</c> and
+        /// <b>Derived and written down, never invented</b> - the same bargain <c>backdrop</c> and
         /// <c>mapStrips</c> strike (invariant 7c): a chapter's raiders are a step tougher than the
         /// one before it (<c>SiegeTuning.ToughnessFor</c>), the chapter tool computes that from its
         /// ordinal, and the number lands in the body so the board <em>says</em> what it is. A level
@@ -636,7 +636,7 @@ namespace GlimmerGrove.Content
         /// </para>
         /// <para>
         /// <b>In the body rather than looked up at run time, and that is the load-bearing part.</b>
-        /// The hold simulation — this mode's only instrument (37j) — builds its layouts from an
+        /// The hold simulation - this mode's only instrument (37j) - builds its layouts from an
         /// inline table with no catalog anywhere near it, so a surge that came from the chapter
         /// index would be <c>None</c> in every measurement this mode has: ninety runs a chapter,
         /// silently against a hill nobody ships. Carried on the board, it travels into every gate
@@ -646,8 +646,8 @@ namespace GlimmerGrove.Content
         public int tough;
 
         /// <summary>
-        /// The waves, in the order they come. One letter per raider — lower case a creeper, upper
-        /// case a brute — so a wave's shape is visible in the file. A wave steps out on a clock, or
+        /// The waves, in the order they come. One letter per raider - lower case a creeper, upper
+        /// case a brute - so a wave's shape is visible in the file. A wave steps out on a clock, or
         /// the moment the hill is empty, whichever comes first.
         /// </summary>
         public string[] waves;
@@ -658,7 +658,7 @@ namespace GlimmerGrove.Content
         ///
         /// <para>
         /// <b>Which wave it is in is a rule and not an authoring decision.</b> A warlord is always
-        /// the <em>last</em> wave — <c>SiegeLayout</c> appends it — so this field says only whether
+        /// the <em>last</em> wave - <c>SiegeLayout</c> appends it - so this field says only whether
         /// there is one and what colour it wears. Anything else would be two places that can
         /// disagree about which wave is the finale, and the finale is the one wave a player
         /// remembers.
@@ -677,13 +677,13 @@ namespace GlimmerGrove.Content
         ///
         /// <para>
         /// A cog never matches and is never worth fuel. It is destroyed by a run of gems
-        /// <em>beside</em> it, and the colour of that run decides which ward goes up a rank — ten
+        /// <em>beside</em> it, and the colour of that run decides which ward goes up a rank - ten
         /// per cent more damage and ten per cent less fuel a bolt, up to four ranks. So what it
         /// asks the player is the mode's own question about the line instead of about the hill,
         /// and answering carelessly upgrades the wrong turret.
         /// </para>
         /// <para>
-        /// <b>A rate rather than a count</b>, because the field refills — see
+        /// <b>A rate rather than a count</b>, because the field refills - see
         /// <c>SiegeLayout.Cogs</c>. A level may also stand cogs on its authored field by writing
         /// <c>*</c> in <see cref="rows"/>, which is how the rung that teaches them puts one where
         /// it will be met.
@@ -692,8 +692,8 @@ namespace GlimmerGrove.Content
         public int cogs;
 
         /// <summary>
-        /// Which charms this field's refill may deal, as letters — <c>"p"</c>, <c>"pl"</c>,
-        /// <c>"pls"</c> — or absent for a level that deals none.
+        /// Which charms this field's refill may deal, as letters - <c>"p"</c>, <c>"pl"</c>,
+        /// <c>"pls"</c> - or absent for a level that deals none.
         ///
         /// <para>
         /// <b>A charm is a power riding on an ordinary gem</b> (<c>SiegeCharm</c>): the cell is
@@ -707,11 +707,11 @@ namespace GlimmerGrove.Content
         /// (<c>SiegeTuning.CharmWithin</c>), because a level that could tune its own rarity
         /// would be a second place this mode's difficulty is decided and the two would drift the
         /// first time either was retuned. What a level says is whether its board has met this
-        /// mechanic yet — which is content, and is why the opening rung of the first chapter
+        /// mechanic yet - which is content, and is why the opening rung of the first chapter
         /// authors none at all (invariant 24).
         /// </para>
         /// <para>
-        /// <b>Derived from the chapter's ordinal and written down, never invented</b> — the same
+        /// <b>Derived from the chapter's ordinal and written down, never invented</b> - the same
         /// bargain <c>tough</c> and <c>backdrop</c> strike (invariants 37by, 7c). A chapter at
         /// ordinal <em>n</em> deals the first <em>n</em> charms of the roster, so a player meets
         /// one new one a chapter; the chapter tool computes that and the body carries the answer,
@@ -733,14 +733,14 @@ namespace GlimmerGrove.Content
         /// <para>
         /// <b>A level on an endless track authors no waves and no boss at all.</b> What is coming
         /// at wave <em>n</em> is a rule (<c>SiegeEndless</c>) rather than a list, so the two ways
-        /// of saying it are mutually exclusive — a file carrying both would be a file with two
+        /// of saying it are mutually exclusive - a file carrying both would be a file with two
         /// answers to what the second wave is, and the reader refuses it rather than picking one.
         /// </para>
         /// </summary>
         public SiegeEndlessDto endless;
 
         /// <summary>
-        /// Whether this block was authored. <b>Never test the block itself for null</b> —
+        /// Whether this block was authored. <b>Never test the block itself for null</b> -
         /// JsonUtility instantiates a [Serializable] class field on every level in the game, so
         /// absence has to be a value a real block cannot hold.
         /// </summary>
@@ -750,8 +750,8 @@ namespace GlimmerGrove.Content
     /// <summary>
     /// The ramp of a siege whose waves never stop.
     ///
-    /// <b>Four numbers and nothing else.</b> Everything about <em>what</em> arrives — how often a
-    /// boss comes, which one, how many raiders, how much tougher each wave is — is a rule in
+    /// <b>Four numbers and nothing else.</b> Everything about <em>what</em> arrives - how often a
+    /// boss comes, which one, how many raiders, how much tougher each wave is - is a rule in
     /// <c>SiegeEndless</c>, for invariant 20d's reason: a lane that authored its own ramp would be
     /// a second place this mode's difficulty is decided, and the two would drift the first time
     /// either was retuned.
@@ -764,7 +764,7 @@ namespace GlimmerGrove.Content
         ///
         /// <b>Authored, because nothing can derive it.</b> Par everywhere else in this game is a
         /// search or an arithmetic floor over what a level sends; an endless lane sends
-        /// everything, so how far is far is the one number a designer has to decide — and it is
+        /// everything, so how far is far is the one number a designer has to decide - and it is
         /// decided by playing.
         /// </summary>
         public int goldWave;
@@ -772,14 +772,14 @@ namespace GlimmerGrove.Content
         /// <summary>
         /// The fraction of <see cref="goldWave"/> a two-star run reaches. Between 0 and 1.
         ///
-        /// <b>Below one, and the ordering inverts with it</b> — on a climbing level three stars
+        /// <b>Below one, and the ordering inverts with it</b> - on a climbing level three stars
         /// asks for <em>more</em> than two (<c>LevelTuning.Climbs</c>). Absent takes the built-in
         /// fraction rather than nought, which would make two stars free.
         /// </summary>
         public float silverFactor;
 
         /// <summary>
-        /// Whether this block was authored. <b>Never test the block itself for null</b> —
+        /// Whether this block was authored. <b>Never test the block itself for null</b> -
         /// JsonUtility instantiates it on every siege in the game (this project's own hard-won
         /// note), so absence has to be a value a real block cannot hold.
         /// </summary>
@@ -796,7 +796,7 @@ namespace GlimmerGrove.Content
         /// The board, one string per row, top first. Spaces are ignored so a row may be spaced
         /// out for reading.
         ///
-        /// Which letters mean what is the mode's business — see each mode's <c>Layout</c>, which
+        /// Which letters mean what is the mode's business - see each mode's <c>Layout</c>, which
         /// is the one place its vocabulary is written down. A letter the mode does not know is
         /// refused by row and column rather than read as bare ground: a mistyped board that
         /// quietly loses a critter validates, derives a plausible par and ships.
@@ -807,7 +807,7 @@ namespace GlimmerGrove.Content
         /// The deal: what the board hands the player, in order, repeating.
         ///
         /// <para>
-        /// The third of the three things this block has always claimed to carry — a grid, a deal
+        /// The third of the three things this block has always claimed to carry - a grid, a deal
         /// and a slack. No mode on this block wants one today: the retired Hollowmarch wrote its
         /// magazine here, and Prismvale leaves it empty, because a board with anything dealt into
         /// it has a future nothing can search. A deal repeats, so one lap is enough, exactly as
@@ -832,7 +832,7 @@ namespace GlimmerGrove.Content
         public int spare;
 
         /// <summary>
-        /// Whether this block was authored. <b>Never test the block itself for null</b> —
+        /// Whether this block was authored. <b>Never test the block itself for null</b> -
         /// JsonUtility instantiates a [Serializable] class field on every level in the game, so
         /// absence has to be a value a real block cannot hold.
         /// </summary>
@@ -865,8 +865,8 @@ namespace GlimmerGrove.Content
         /// The daily chest table. Optional: absent means the built-in one stands.
         ///
         /// It rides here rather than in a file of its own because it is tuned in the same
-        /// sitting as the reward rates — pulling one lever without seeing the other is how
-        /// an economy ends up paying twice — and because a second file would be a second
+        /// sitting as the reward rates - pulling one lever without seeing the other is how
+        /// an economy ends up paying twice - and because a second file would be a second
         /// fetch on a phone for a few hundred bytes.
         /// </summary>
         public DailyChestDto daily;
@@ -874,7 +874,7 @@ namespace GlimmerGrove.Content
         /// <summary>
         /// What rewarded ads pay. Optional: absent means the built-in table stands.
         ///
-        /// Rides here for the same two reasons the daily block does — it is tuned in the
+        /// Rides here for the same two reasons the daily block does - it is tuned in the
         /// same sitting as the chest rates and the reward curve, and a second file would
         /// be a second fetch on a phone for a few hundred bytes. It is also the block most
         /// likely to be changed alone, because the numbers that justify it (fill rate,
@@ -897,7 +897,7 @@ namespace GlimmerGrove.Content
         /// The golden bonus bands. Optional: absent means the built-in table stands.
         ///
         /// This is the one block that changes what an ordinary glade is worth, so it is
-        /// tuned against the reward rule directly above it and never in isolation — the
+        /// tuned against the reward rule directly above it and never in isolation - the
         /// average multiplier and the credits-per-star are one number seen from two sides.
         /// </summary>
         public GoldenDto golden;
@@ -930,7 +930,7 @@ namespace GlimmerGrove.Content
         /// built-in gate stands.
         ///
         /// Rides here rather than in the manifest for two reasons. It is a <em>rule</em> and
-        /// not a fact about any one chapter — the manifest owns membership and order
+        /// not a fact about any one chapter - the manifest owns membership and order
         /// (invariant 4a) and a per-chapter number there would be one more thing
         /// <c>Sync Manifest</c> has to carry through a rewrite. And it is the pacing lever
         /// with the widest reach in the file: it decides how much of a chapter a player has
@@ -945,7 +945,7 @@ namespace GlimmerGrove.Content
         /// <para>
         /// Rides here rather than in the store block, which is the distinction worth keeping:
         /// a continue is not a <em>good</em>. It grants no currency, it is not adjudicated,
-        /// the seeder does not read it, and nothing about it reaches a receipt — it is a gem
+        /// the seeder does not read it, and nothing about it reaches a receipt - it is a gem
         /// price on a rule the phone enforces, which is the same shape the heart gate has.
         /// The block it is tuned against is <c>hearts</c>, not <c>store</c>: what a continue is
         /// worth is entirely a question of what losing costs.
@@ -960,7 +960,7 @@ namespace GlimmerGrove.Content
         /// Rides here for the reasons every block above it does, and one that is sharper
         /// than any of them: this is the block the <em>server</em> also reads. The seeder
         /// derives <c>config/products</c> from it, so what a card promises and what a
-        /// receipt is honoured for are one authored list rather than two — invariant 9a
+        /// receipt is honoured for are one authored list rather than two - invariant 9a
         /// applied to money. A shop tuned in a file the seeder does not read would show one
         /// number and pay another, against a real payment, which is the one class of
         /// mistake in this project that cannot be quietly fixed later.
@@ -997,7 +997,7 @@ namespace GlimmerGrove.Content
         /// The turret roster: which ones exist, what each does beyond firing, and what it costs.
         ///
         /// <para>
-        /// Optional, and absent is not an error — a client that predates it keeps its built-in
+        /// Optional, and absent is not an error - a client that predates it keeps its built-in
         /// roster, and a client that has it reads a file written before it existed and does the
         /// same (invariant 9b).
         /// </para>
@@ -1005,7 +1005,7 @@ namespace GlimmerGrove.Content
         /// What it may <em>not</em> do is invent an <c>ability</c>: an ability is a rule the board
         /// runs, so an entry naming one this build has never heard of still stands and simply
         /// fires a plain bolt (invariant 20, one level down). And no entry may make a bolt
-        /// <em>weaker</em> — there is no field that could, deliberately, because par is computed
+        /// <em>weaker</em> - there is no field that could, deliberately, because par is computed
         /// against the baseline bolt and a turret that hit softer would put three stars out of
         /// reach of whoever chose it. See <c>WardCatalog</c>.
         /// </para>
@@ -1025,8 +1025,8 @@ namespace GlimmerGrove.Content
         /// Which reminders the phone sends and when. Optional; see <see cref="NotificationsDto"/>.
         ///
         /// <b>The one block in this file that reaches no server.</b> Nothing here is
-        /// adjudicated, claimed or paid — a notification is a thing a device says to its own
-        /// owner — so <c>seed-config.mjs</c> does not publish it and <c>firestore.rules</c>
+        /// adjudicated, claimed or paid - a notification is a thing a device says to its own
+        /// owner - so <c>seed-config.mjs</c> does not publish it and <c>firestore.rules</c>
         /// has nothing to learn about it. Its push path is the remote-content one, the same
         /// path a chapter body takes.
         /// </summary>
@@ -1061,7 +1061,7 @@ namespace GlimmerGrove.Content
         /// <para>
         /// The one block here that turns currency into a keeper level (invariant 57), so it
         /// carries the season pass's obligation: <c>seed-config.mjs</c> publishes it, because a
-        /// level is a spend the server prices — a client that sold a level for one coin against
+        /// level is a spend the server prices - a client that sold a level for one coin against
         /// a server that had never heard of the ladder would have that debit refused and the
         /// level taken back, and a server that priced it differently from the device would
         /// refuse an honest purchase. <b>Absent sells nothing</b>, on both sides.
@@ -1088,7 +1088,7 @@ namespace GlimmerGrove.Content
     ///
     /// <para>
     /// <b>Authored order is the ladder</b>, exactly as it is for <see cref="TaskTableDto.tiers"/>
-    /// — a rung carries no number of its own, so reordering the array reorders the ladder and
+    /// - a rung carries no number of its own, so reordering the array reorders the ladder and
     /// there is no second place for a position to be written down and disagree.
     /// </para>
     /// </summary>
@@ -1102,9 +1102,9 @@ namespace GlimmerGrove.Content
     }
 
     /// <summary>
-    /// One rung. <c>id</c> is permanent in the way a chest tier's is — it names the badge on disk
+    /// One rung. <c>id</c> is permanent in the way a chest tier's is - it names the badge on disk
     /// (<c>Ui/Rank/{id}</c>) and the loc keys (<c>rank.{id}.name</c>, <c>.blurb</c>), all derived
-    /// — and <c>requires</c> is every line that has to be met, all of them.
+    /// - and <c>requires</c> is every line that has to be met, all of them.
     /// </summary>
     [Serializable]
     public sealed class RankRungDto
@@ -1119,7 +1119,7 @@ namespace GlimmerGrove.Content
     /// <para>
     /// <c>measure</c> is either one of the derived readings (<c>levels_cleared</c>, <c>stars</c>,
     /// <c>three_stars</c>, <c>keeper_level</c>, <c>best_wave</c>) or any <c>TaskGoals</c> id
-    /// counted for ever — so a verb added for a task slate is a rank requirement the same day,
+    /// counted for ever - so a verb added for a task slate is a rank requirement the same day,
     /// with no code. <c>scope</c> names a chapter for the first three, a level for
     /// <c>best_wave</c>, and must be absent for everything else; empty means the whole account.
     /// </para>
@@ -1136,7 +1136,7 @@ namespace GlimmerGrove.Content
     /// The XP boost's windows and what they pay.
     ///
     /// <para>
-    /// Every field is unwritten as -1 so a partial block inherits rather than zeroing —
+    /// Every field is unwritten as -1 so a partial block inherits rather than zeroing -
     /// <c>HintsDto</c>'s convention, and load-bearing here because nought is a real decision for
     /// all of them: a nought percentage withdraws a window, and a nought cooldown makes one
     /// unmetered. The default has to be distinguishable from the author's choice.
@@ -1193,7 +1193,7 @@ namespace GlimmerGrove.Content
     /// few corners. Each anchor names a level, a currency and the price at exactly that level;
     /// the price of a level between two anchors of the <em>same</em> currency is drawn on the
     /// straight line between them, and a level between two anchors of <em>different</em>
-    /// currencies costs what the lower anchor says — which is how a coin band hands over to a
+    /// currencies costs what the lower anchor says - which is how a coin band hands over to a
     /// gem band without a rule of its own. Nothing below the first anchor is sold, nothing
     /// above <see cref="top"/> is sold, and the last anchor has to <em>be</em> the top so the
     /// ladder never has to guess past its own last figure.
@@ -1201,7 +1201,7 @@ namespace GlimmerGrove.Content
     /// <para>
     /// The arithmetic is integer throughout and rounds half up, on both sides of the wire
     /// (<c>KeeperLadder.PriceFor</c>, <c>keeperPrice</c> in <c>keeper.ts</c>), because nothing
-    /// that decides a payment may be a float — the runtimes disagree about them.
+    /// that decides a payment may be a float - the runtimes disagree about them.
     /// </para>
     /// </summary>
     [Serializable]
@@ -1221,7 +1221,7 @@ namespace GlimmerGrove.Content
     [Serializable]
     public sealed class KeeperAnchorDto
     {
-        /// <summary>The keeper level this anchor prices — the level a purchase <em>reaches</em>.</summary>
+        /// <summary>The keeper level this anchor prices - the level a purchase <em>reaches</em>.</summary>
         public int level;
 
         /// <summary><c>credits</c> or <c>gems</c>. Anything else refuses the block.</summary>
@@ -1235,7 +1235,7 @@ namespace GlimmerGrove.Content
     /// What a wave seen off on the Infinite lane is worth, and the most that is ever paid.
     ///
     /// <para>
-    /// Two numbers, both unwritten as -1 so a partial block inherits rather than zeroing —
+    /// Two numbers, both unwritten as -1 so a partial block inherits rather than zeroing -
     /// <c>HintsDto</c>'s convention, and important here for the same reason it is there: a field
     /// <c>JsonUtility</c> never saw reads as nought, and nought is a meaningful value for both
     /// of these (it withdraws the payment). The default has to be distinguishable from an
@@ -1251,7 +1251,7 @@ namespace GlimmerGrove.Content
         /// <summary>
         /// The most lifetime waves ever paid for, across every endless level. Unwritten inherits.
         ///
-        /// Applied when the XP is derived and never when the count is stored — see
+        /// Applied when the XP is derived and never when the count is stored - see
         /// <c>EndlessLimits.HardMaxWaves</c> for why that distinction is the whole safety of a
         /// mergeable count.
         /// </summary>
@@ -1281,7 +1281,7 @@ namespace GlimmerGrove.Content
     /// <para>
     /// There is deliberately no text here. A notification's copy is derived from its kind's
     /// permanent id (<c>NotificationKinds.TitleKey</c>) and resolved through the string table,
-    /// so a content push can switch a reminder off, reorder the ladder or move the hours — and
+    /// so a content push can switch a reminder off, reorder the ladder or move the hours - and
     /// cannot write a sentence, because a sentence has to be translated and translations ship
     /// in the build. Invariant 39c's split, said about words instead of pictures.
     /// </para>
@@ -1339,9 +1339,9 @@ namespace GlimmerGrove.Content
     }
 
     /// <summary>
-    /// One reminder. <c>kind</c> is a <c>NotificationKinds.Id</c> and is permanent — it names
+    /// One reminder. <c>kind</c> is a <c>NotificationKinds.Id</c> and is permanent - it names
     /// the loc keys the copy is drawn from and the analytics series an open is recorded
-    /// against — <c>slot</c> is one of <c>any</c>/<c>morning</c>/<c>afternoon</c>/<c>evening</c>,
+    /// against - <c>slot</c> is one of <c>any</c>/<c>morning</c>/<c>afternoon</c>/<c>evening</c>,
     /// <c>priority</c> decides a contested slot, and <c>minDaysBetween</c> is what stops the
     /// same sentence arriving every day for a week.
     /// </summary>
@@ -1369,7 +1369,7 @@ namespace GlimmerGrove.Content
     /// A wrapper around one array rather than a bare array, for the reason every other block in
     /// <see cref="ProgressionDto"/> is an object: <c>JsonUtility</c> gives a class-typed field an
     /// instance even when the JSON has no such key, so a block has to carry a value a real one
-    /// cannot hold to be distinguishable from an absent one — here, an empty <see cref="items"/>.
+    /// cannot hold to be distinguishable from an absent one - here, an empty <see cref="items"/>.
     /// </summary>
     [Serializable]
     public sealed class UtilitiesDto
@@ -1379,7 +1379,7 @@ namespace GlimmerGrove.Content
     }
 
     /// <summary>
-    /// One utility. <c>kind</c> is a permanent id — <c>blast</c>, <c>mend</c>, <c>surge</c> —
+    /// One utility. <c>kind</c> is a permanent id - <c>blast</c>, <c>mend</c>, <c>surge</c> -
     /// and what <c>magnitude</c> measures depends on it: damage, health, or fuel in tenths.
     /// </summary>
     [Serializable]
@@ -1412,7 +1412,7 @@ namespace GlimmerGrove.Content
 
         /// <summary>
         /// Whole seconds before another may be used. Absent or nought means no cooldown, which
-        /// is exactly how the bar behaved before the field existed — the shape every optional
+        /// is exactly how the bar behaved before the field existed - the shape every optional
         /// number here takes, because <c>JsonUtility</c> writes a nought into a field an older
         /// file never had.
         /// </summary>
@@ -1429,7 +1429,7 @@ namespace GlimmerGrove.Content
         /// What each upgrade costs, by band. Absent leaves the built-in ladder standing.
         ///
         /// <b>Named for the upgrades rather than for the stars</b>, because <c>GroveScoreDto</c>
-        /// already has a <c>stars</c> that is an <em>array</em> and may legitimately be null —
+        /// already has a <c>stars</c> that is an <em>array</em> and may legitimately be null -
         /// and <c>compile.py</c>'s DTO check is name-based, so one class-typed <c>stars</c>
         /// anywhere makes every <c>.stars == null</c> test in the project read as the trap
         /// invariant <c>HollowDto.IsAuthored</c> records.
@@ -1441,7 +1441,7 @@ namespace GlimmerGrove.Content
     /// The upgrade ladder: one row of prices per <c>WardTier</c>.
     ///
     /// <b>A row type rather than a jagged array</b>, because <c>JsonUtility</c> cannot serialise
-    /// one at all — it reads <c>int[][]</c> as nothing and says so nowhere, which is the class of
+    /// one at all - it reads <c>int[][]</c> as nothing and says so nowhere, which is the class of
     /// silence this project has already paid for twice (a <c>[Serializable]</c> field that is
     /// never null, and an unknown block dropped without a word).
     /// </summary>
@@ -1485,7 +1485,7 @@ namespace GlimmerGrove.Content
 
         /// <summary>
         /// What it can take before it falls, in tenths of the baseline. Nought means ten, and
-        /// below ten is legal — that is the trade. See <c>WardModel.GuardTenths</c>.
+        /// below ten is legal - that is the trade. See <c>WardModel.GuardTenths</c>.
         /// </summary>
         public int guard;
 
@@ -1526,7 +1526,7 @@ namespace GlimmerGrove.Content
     /// The shop: products bought with money, goods bought with gems.
     ///
     /// <para>
-    /// Note what is deliberately absent. There is <b>no price field</b> on a product — a
+    /// Note what is deliberately absent. There is <b>no price field</b> on a product - a
     /// price lives in App Store Connect and the Play Console and is read back from the
     /// store SDK at runtime, because it differs per storefront and per tax regime, and
     /// drawing a hardcoded one is a review rejection on both stores. And there is <b>no
@@ -1554,7 +1554,7 @@ namespace GlimmerGrove.Content
     /// "unwritten" has to be distinguishable from zero; a product does not inherit from
     /// anything, so an unwritten grant is simply a product that grants nothing, and the
     /// reader drops it by name instead of guessing what was meant. Guessing is exactly the
-    /// wrong instinct here — this is the one table in the project where a wrong number is
+    /// wrong instinct here - this is the one table in the project where a wrong number is
     /// charged to somebody's card.
     /// </para>
     /// </summary>
@@ -1635,7 +1635,7 @@ namespace GlimmerGrove.Content
     ///
     /// <para>
     /// Every field is -1 for "not written, inherit", the same tri-state the reward rules and
-    /// the heart gate use — and here the distinction genuinely carries weight, because
+    /// the heart gate use - and here the distinction genuinely carries weight, because
     /// <b>zero is a meaningful budget</b>: it is how a trigger is switched off from a config
     /// push without an app update. See <c>AccountPromptLimits.MinBudget</c>.
     /// </para>
@@ -1685,7 +1685,7 @@ namespace GlimmerGrove.Content
 
         /// <summary>
         /// Seconds between refills while a heart boost runs. The reader holds this at
-        /// <see cref="refillSeconds"/> if it is authored longer — a boost that slows hearts
+        /// <see cref="refillSeconds"/> if it is authored longer - a boost that slows hearts
         /// down is the feature working backwards.
         /// </summary>
         public int boostedRefillSeconds = -1;
@@ -1699,7 +1699,7 @@ namespace GlimmerGrove.Content
         /// <summary>
         /// What buying a way back onto a lost board costs, in gems. See <c>HeartRescue</c>.
         ///
-        /// Zero is refused rather than obeyed — a free heart is a gate that no longer gates,
+        /// Zero is refused rather than obeyed - a free heart is a gate that no longer gates,
         /// and there is a field next door that says "no offer" properly.
         /// </summary>
         public long rescueGems = -1L;
@@ -1719,13 +1719,13 @@ namespace GlimmerGrove.Content
         public int rescueHearts = -1;
 
         /// <summary>
-        /// How many glades at the start of a mode cost no heart at all — the window in which
+        /// How many glades at the start of a mode cost no heart at all - the window in which
         /// a player is still working out what the mode <em>is</em>.
         ///
         /// <para>
         /// Zero is legal and switches the window off, which is why the tri-state matters here
         /// more than anywhere else in this block: "not written" has to mean the built-in three
-        /// rather than none. See <c>HeartStake</c> for what the number is counted over — it is
+        /// rather than none. See <c>HeartStake</c> for what the number is counted over - it is
         /// the first chapter of <em>each</em> mode, so a mode shipped later opens as gently as
         /// the first one did.
         /// </para>
@@ -1742,7 +1742,7 @@ namespace GlimmerGrove.Content
     /// </para>
     /// <para>
     /// Note what is deliberately absent, twice over. There is no per-level allowance any
-    /// more — a hint is spent from the account, so a glade has no opinion about how many of
+    /// more - a hint is spent from the account, so a glade has no opinion about how many of
     /// them a player may use on it. And there is nothing about <em>buying</em> hints: the
     /// refill timer and a watched video are the only two ways one arrives, and a price
     /// authored here would make the pool a storefront without anybody having designed one.
@@ -1757,7 +1757,7 @@ namespace GlimmerGrove.Content
         /// <summary>
         /// The most a player may hold once granted hints stack on top. Equal to
         /// <see cref="refillCap"/> as shipped, which means a hint granted at a full pool is
-        /// refused — safe only because nothing offers one without checking first. Safe to
+        /// refused - safe only because nothing offers one without checking first. Safe to
         /// lower: it refuses new grants and never confiscates.
         /// </summary>
         public int ceiling = -1;
@@ -1771,8 +1771,8 @@ namespace GlimmerGrove.Content
     ///
     /// <para>
     /// One number, and it is written <em>per level</em> rather than as a total on purpose.
-    /// A chapter is not a fixed size — chapters ship every two to four weeks and nothing
-    /// says the next one holds ten glades — so a total of 20 would be two thirds of one
+    /// A chapter is not a fixed size - chapters ship every two to four weeks and nothing
+    /// says the next one holds ten glades - so a total of 20 would be two thirds of one
     /// chapter and a fifth of another, and the rule a player learned on the first would
     /// quietly stop being the rule. Two stars a level is a sentence that survives a chapter
     /// of any length, and it is what the panel that explains the gate says.
@@ -1795,7 +1795,7 @@ namespace GlimmerGrove.Content
         /// per-level figure decides instead; 0 opens every chapter at once.
         ///
         /// <b>It wins over <see cref="starsPerLevel"/> when both are written</b>, because a
-        /// total is the more specific statement — and it is clamped to the stars the chapter
+        /// total is the more specific statement - and it is clamped to the stars the chapter
         /// behind actually pays, so a flat figure can never be a gate no play could open.
         /// </summary>
         public int stars = -1;
@@ -1807,7 +1807,7 @@ namespace GlimmerGrove.Content
     /// <para>
     /// Every field is the tri-state this file uses throughout: <b>-1 is "not written,
     /// inherit"</b>, and it has to be, because <c>JsonUtility</c> instantiates a
-    /// <c>[Serializable]</c> class field even when the JSON carries no such key — so "the
+    /// <c>[Serializable]</c> class field even when the JSON carries no such key - so "the
     /// block is absent" and "the block is present and empty" arrive here as the same object,
     /// and only a value a real setting cannot hold can tell them apart. The same rule
     /// invariant 11b states for the save file, in the other direction.
@@ -1815,7 +1815,7 @@ namespace GlimmerGrove.Content
     /// <para>
     /// That is also why <see cref="enabled"/> is an integer rather than a <c>bool</c>. A bool
     /// would read <c>false</c> for a file written before this block existed, which would
-    /// withdraw the offer from every client that had not taken a content push — the exact
+    /// withdraw the offer from every client that had not taken a content push - the exact
     /// failure the tri-state exists to prevent, on the one field where it would be silent.
     /// Zero switches it off; anything below zero inherits, which is on.
     /// </para>
@@ -1849,7 +1849,7 @@ namespace GlimmerGrove.Content
         /// <para>
         /// -1 inherits, which is the doubling. A published table written before this key
         /// existed therefore starts doubling the moment a client that knows about it reads it
-        /// — deliberate, because the alternative is a live document silently holding the price
+        /// - deliberate, because the alternative is a live document silently holding the price
         /// flat on every device until somebody remembers to re-push it.
         /// </para>
         /// </summary>
@@ -1861,7 +1861,7 @@ namespace GlimmerGrove.Content
         /// <summary>
         /// <b>Retired.</b> Cells of light a Lightweave continue handed over. The mode is gone;
         /// the field stays because <c>progression.json</c> is content that ships on its own
-        /// cadence and a live document still carries this key — deleting it would make every
+        /// cadence and a live document still carries this key - deleting it would make every
         /// published table read as malformed for no gain. See <c>ContinueUnit.Ink</c>.
         /// </summary>
         public int ink = -1;
@@ -1910,7 +1910,7 @@ namespace GlimmerGrove.Content
     ///
     /// JsonUtility does read inherited fields, but relying on it here would mean the
     /// whole reward-override feature rested on a serialiser behaviour whose failure is
-    /// silent — every chapter would quietly pay the default rate, and nothing in the
+    /// silent - every chapter would quietly pay the default rate, and nothing in the
     /// file or the console would say so. Four repeated lines buy certainty.
     /// </summary>
     [Serializable]
@@ -1980,7 +1980,7 @@ namespace GlimmerGrove.Content
     /// time. See <c>TaskTable</c>.
     ///
     /// <para>
-    /// Every reward here is a chest, and a chest is a <see cref="TaskTierDto"/> — so a task
+    /// Every reward here is a chest, and a chest is a <see cref="TaskTierDto"/> - so a task
     /// authors no amounts, only which rung of the ladder it pays. Optional and not its own
     /// schema version, for <see cref="DailyChestDto"/>'s reason: a client that predates it
     /// keeps its built-in slate.
@@ -2016,13 +2016,13 @@ namespace GlimmerGrove.Content
 
         /// <summary>
         /// What claiming one earns toward a season. Absent is nought, which is a legal
-        /// answer — see <c>ChestTier.Marks</c>.
+        /// answer - see <c>ChestTier.Marks</c>.
         /// </summary>
         public int marks;
     }
 
     /// <summary>
-    /// One task. <c>id</c> is permanent — it is written into save files and claim ids —
+    /// One task. <c>id</c> is permanent - it is written into save files and claim ids -
     /// <c>goal</c> is a <c>TaskGoals</c> id, <c>target</c> how many, <c>tier</c> a
     /// <see cref="TaskTierDto.id"/>, and <c>retired</c> takes it out of the rotation while
     /// keeping it priced, so a claim already in flight still resolves.
@@ -2045,7 +2045,7 @@ namespace GlimmerGrove.Content
     /// <para>
     /// <c>milestoneChapter</c> is the chapter an invitee has to clear before either side is
     /// paid, named rather than derived so a content push can move it. <c>maxBound</c> is how
-    /// many invitees may ever bind to one code — bound, not finished, because a list that
+    /// many invitees may ever bind to one code - bound, not finished, because a list that
     /// only grows on the invitee's play would be a list with no ceiling. <c>perInvitee</c> is
     /// what the referrer opens for each invitee who clears it; <c>invitee</c> what the
     /// invitee opens on clearing it. Each names a tier of the <c>tasks</c> block (invariant 45)
@@ -2077,8 +2077,8 @@ namespace GlimmerGrove.Content
     }
 
     /// <summary>
-    /// One reward band. <c>kind</c> is a permanent id — <c>credits</c>, <c>gems</c>,
-    /// <c>hearts</c>, <c>heart_boost</c> — and <c>heart_boost</c> is measured in hours.
+    /// One reward band. <c>kind</c> is a permanent id - <c>credits</c>, <c>gems</c>,
+    /// <c>hearts</c>, <c>heart_boost</c> - and <c>heart_boost</c> is measured in hours.
     /// </summary>
     [Serializable]
     public sealed class DailyDropDto
@@ -2088,7 +2088,7 @@ namespace GlimmerGrove.Content
         public int max;
 
         /// <summary>
-        /// Which thing, for a kind that names one — today, the utility a <c>utility</c> band
+        /// Which thing, for a kind that names one - today, the utility a <c>utility</c> band
         /// pays. Ignored by every other kind, and required by the ones that need it.
         ///
         /// It does not reach the generator, so adding one to a shipped table cannot reroll an
@@ -2126,7 +2126,7 @@ namespace GlimmerGrove.Content
     /// how much.
     ///
     /// <para>
-    /// Order does not matter here — unlike the streak ladder, where position is the day —
+    /// Order does not matter here - unlike the streak ladder, where position is the day -
     /// because a band is identified by its own percentage rather than by where it sits.
     /// The odds are the weights normalised, which is what lets them be printed as a list
     /// that sums to a hundred.
@@ -2140,7 +2140,7 @@ namespace GlimmerGrove.Content
 
     /// <summary>
     /// One outcome. <c>percent</c> is a multiplier on the glade's ordinary credit reward
-    /// and <b>may never be below 100</b> — the bonus only ever adds. See <c>GoldenRules</c>.
+    /// and <b>may never be below 100</b> - the bonus only ever adds. See <c>GoldenRules</c>.
     /// </summary>
     [Serializable]
     public sealed class GoldenBandDto
@@ -2153,7 +2153,7 @@ namespace GlimmerGrove.Content
     /// The streak ladder: one entry per consecutive day, in order.
     ///
     /// Position <em>is</em> the day, which is why <c>StreakTable</c> refuses the whole
-    /// block on a bad entry rather than skipping it the way the ads table does — dropping
+    /// block on a bad entry rather than skipping it the way the ads table does - dropping
     /// one rung renumbers every day above it and quietly changes what the player is owed.
     /// </summary>
     [Serializable]
@@ -2184,7 +2184,7 @@ namespace GlimmerGrove.Content
         /// must not be able to do by accident.
         ///
         /// It is an ordinary gem debit (invariant 18) rather than anything the server
-        /// adjudicates, so this price is not published and is not part of any wire contract —
+        /// adjudicates, so this price is not published and is not part of any wire contract -
         /// the shield grants no currency and keeps a streak inside the same one-night-a-day
         /// bound an unprotected one is already held to.
         /// </summary>
@@ -2197,13 +2197,13 @@ namespace GlimmerGrove.Content
     /// <para>
     /// <b>A rung names a <c>kind</c> and an <c>amount</c>, or a <c>tier</c>, never both.</b>
     /// The tier is an id out of the <c>tasks</c> block's chest ladder, so a streak night that
-    /// pays a royal chest is the <em>same</em> authored chest a weekly task pays — one
+    /// pays a royal chest is the <em>same</em> authored chest a weekly task pays - one
     /// published disclosure, one retune (invariant 45).
     /// </para>
     /// <para>
     /// <b>Currency is adjudicated.</b> A rung is claimed as
     /// <c>streak:{day}:{night}:{currency}</c> and paid from the server's own copy of this
-    /// ladder — a chest rung out of the same id, re-rolled rather than believed — so retuning
+    /// ladder - a chest rung out of the same id, re-rolled rather than believed - so retuning
     /// it here and forgetting to re-seed means the server pays the old figure. See
     /// <c>StreakTable</c> for the whole path, and run the seeder after any change. The
     /// per-kind ceilings in <c>StreakRules</c> apply on both sides.
@@ -2234,7 +2234,7 @@ namespace GlimmerGrove.Content
     /// </para>
     /// <para>
     /// Note what is deliberately absent: a price. These are <b>earned by watching and
-    /// cannot be bought</b>, exactly like the daily chests, and for the same reason —
+    /// cannot be bought</b>, exactly like the daily chests, and for the same reason -
     /// nothing here should ever gain a cost in currency, because that would turn a
     /// rewarded ad into a purchase of a randomised outcome.
     /// </para>
@@ -2262,7 +2262,7 @@ namespace GlimmerGrove.Content
         ///
         /// <para>
         /// Optional, and its absence means the <em>flat</em> offer rather than a built-in
-        /// ladder — the one table here that does not fall back to a default. A published file
+        /// ladder - the one table here that does not fall back to a default. A published file
         /// that has never heard of the wheel must keep paying exactly the amount it authored,
         /// or a client taking a content push would start drawing multipliers that the server
         /// reading the same file would never grant. See <c>BonusWheel.None</c>.
@@ -2293,7 +2293,7 @@ namespace GlimmerGrove.Content
 
     /// <summary>
     /// One wedge. <c>percent</c> is a multiplier on the placement's ordinary payout and
-    /// <b>may never be below 100</b> — the wheel only ever adds. See <c>WheelRules</c>.
+    /// <b>may never be below 100</b> - the wheel only ever adds. See <c>WheelRules</c>.
     /// </summary>
     [Serializable]
     public sealed class AdWheelSliceDto
@@ -2302,8 +2302,8 @@ namespace GlimmerGrove.Content
     }
 
     /// <summary>
-    /// One rewarded placement. <c>id</c> is a permanent placement id — <c>heart_refill</c>,
-    /// <c>coin_bonus</c> — and <c>kind</c> reuses the drop vocabulary of the chest table,
+    /// One rewarded placement. <c>id</c> is a permanent placement id - <c>heart_refill</c>,
+    /// <c>coin_bonus</c> - and <c>kind</c> reuses the drop vocabulary of the chest table,
     /// so <c>heart_boost</c> is measured in hours here too.
     /// </summary>
     [Serializable]
@@ -2316,7 +2316,7 @@ namespace GlimmerGrove.Content
         public int amount;
 
         /// <summary>
-        /// Views that pay, per UTC day. The reader rejects anything below 1 — to switch a
+        /// Views that pay, per UTC day. The reader rejects anything below 1 - to switch a
         /// placement off, remove it, rather than leaving an entry that pays nothing.
         /// </summary>
         public int dailyCap;

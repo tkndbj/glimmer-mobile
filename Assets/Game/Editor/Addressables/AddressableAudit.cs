@@ -75,7 +75,7 @@ namespace GlimmerGrove.EditorTools
                 if (group == null) continue;
 
                 // The VFX bench is asked for by a developer tool rather than by AssetManifest,
-                // so every one of its entries would be counted "never requested by the game" —
+                // so every one of its entries would be counted "never requested by the game" -
                 // 175 of them, drowning the one real one that warning exists to surface. Skipped
                 // whole rather than filtered later, because it is not the game's art in any
                 // sense: its own root, its own bundle, and switched off for every build that
@@ -104,7 +104,7 @@ namespace GlimmerGrove.EditorTools
 
             // Companion portraits are requested by a scope rather than at boot, which
             // makes them exactly the kind of asset an audit built only from the global
-            // and chapter sets would call unused — and then fail to notice when one went
+            // and chapter sets would call unused - and then fail to notice when one went
             // missing. Read from the roster, so a companion added by a content drop is
             // audited without anyone editing this.
             expected.AddRange(AssetManifest.CompanionAssets(content.Index.Companions));
@@ -118,7 +118,7 @@ namespace GlimmerGrove.EditorTools
 
             // The chest reels, requested by the screens that open one and by nothing at boot,
             // so an audit built without them would call sixty-eight frames unused and then say
-            // nothing when a tier's reel went missing — which is a white rectangle over the
+            // nothing when a tier's reel went missing - which is a white rectangle over the
             // one ceremony in the game that is entirely a picture.
             expected.AddRange(AssetManifest.ChestAssets(ProgressionRules.Table.Tasks));
 
@@ -152,7 +152,7 @@ namespace GlimmerGrove.EditorTools
         ///
         /// <para>
         /// <b>This is the half the audit was missing, and it cost an Android build.</b>
-        /// Everything above proves that what the game <em>requests</em> resolves — which says
+        /// Everything above proves that what the game <em>requests</em> resolves - which says
         /// nothing whatever about an entry pointing at a file that has been deleted, because
         /// nothing requests it any more. The game does not care. The bundle builder does:
         /// <c>BundleBuildContent</c> throws <c>Asset '…' is not a valid Asset or Scene</c> the
@@ -162,8 +162,8 @@ namespace GlimmerGrove.EditorTools
         /// </para>
         /// <para>
         /// It happened by deleting a folder of art the game had stopped drawing. Every other
-        /// gate in this repository stayed green — the compile, the tests, <c>Validate Content</c>,
-        /// <c>Validate Art</c> and this audit's own 484 resolving addresses — because all of them
+        /// gate in this repository stayed green - the compile, the tests, <c>Validate Content</c>,
+        /// <c>Validate Art</c> and this audit's own 484 resolving addresses - because all of them
         /// look outward from what the game asks for, and this is the one question that has to be
         /// asked from the other end. An <b>error</b> rather than a warning, for
         /// <c>ManifestSync.SurvivesRoundTrip</c>'s reason: a warning printed beside a green tick
@@ -220,7 +220,7 @@ namespace GlimmerGrove.EditorTools
         /// <para>
         /// <b>This asks about what is <em>registered</em> rather than about what is requested, and
         /// that is the whole point of it.</b> Everything else here walks the manifest and proves
-        /// the game's own requests resolve — which is exactly blind to a reel the manifest does not
+        /// the game's own requests resolve - which is exactly blind to a reel the manifest does not
         /// happen to ask for in the Editor. A sprite set has no notion of a folder: it is loaded by
         /// the <em>label</em> its frames share, so frames addressed with no label are addressed,
         /// grouped, built into a bundle and completely unloadable.
@@ -229,7 +229,7 @@ namespace GlimmerGrove.EditorTools
         /// Measured: the second siege cast came back labelless because the mode hands out a
         /// different cast depending on which chapter asks and the Editor's catalog index had no
         /// answer, so twelve reels shipped addressed, audited <b>green</b>, and reached a device as
-        /// raiders with no body and a health bar floating where each should have been —
+        /// raiders with no body and a health bar floating where each should have been -
         /// <c>No Location found for Key=Art/Siege/boneBrute_b</c>, twelve times. The root was fixed
         /// in <c>AddressableAddresses.FrameFolders</c>; this is what says so if it happens again.
         /// </para>
@@ -261,7 +261,7 @@ namespace GlimmerGrove.EditorTools
 
             // **An error when the game asks for it and a warning when it does not**, which is the
             // difference between a feature that cannot draw and a reel nobody deletes. The second
-            // is real and worth saying — an unloadable folder is still built into a bundle — but
+            // is real and worth saying - an unloadable folder is still built into a bundle - but
             // failing a build over art nothing requests would be obstructive.
             foreach (var folder in bare)
             {

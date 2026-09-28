@@ -14,7 +14,7 @@ namespace GlimmerGrove.Analytics
     ///
     /// <see cref="Defeated"/> is the one that decides whether the difficulty is tuned
     /// correctly. A glade players lose repeatedly is not "hard" once hearts gate
-    /// play — it is a wall they pay to hit, and it needs to be visible from day one
+    /// play - it is a wall they pay to hit, and it needs to be visible from day one
     /// rather than inferred from a drop in <see cref="Completed"/>.
     /// </summary>
     public static class LevelAnalytics
@@ -31,8 +31,8 @@ namespace GlimmerGrove.Analytics
         ///
         /// <para>
         /// Two events rather than one with a flag, because the number that decides whether the
-        /// price is right is a <em>ratio</em> — how many of the players shown an offer took it
-        /// — and a ratio needs both a numerator and a denominator that can be counted
+        /// price is right is a <em>ratio</em> - how many of the players shown an offer took it
+        /// - and a ratio needs both a numerator and a denominator that can be counted
         /// independently. One event carrying <c>accepted: false</c> would be the same data
         /// only for as long as nobody ever fails to emit it, and the panel has more ways to
         /// close than any other in the game.
@@ -57,7 +57,7 @@ namespace GlimmerGrove.Analytics
         /// A continue is declined by somebody who <em>can</em> still play; a rescue is taken by
         /// somebody who cannot, so the ratio that matters here is against an empty heart bar
         /// rather than against a lost run. Reading one as the other would price the wrong
-        /// number — and both prices are content, so the retune is cheap and the measurement is
+        /// number - and both prices are content, so the retune is cheap and the measurement is
         /// the whole cost.
         /// </para>
         /// </summary>
@@ -69,8 +69,8 @@ namespace GlimmerGrove.Analytics
         ///
         /// <para>
         /// <b>One event a run, not one an incident.</b> The question it answers is an attention
-        /// one — a mode with two things competing for one pair of eyes came back as "I barely
-        /// look up" (invariant 37bl) — and every other instrument this project owns reads the
+        /// one - a mode with two things competing for one pair of eyes came back as "I barely
+        /// look up" (invariant 37bl) - and every other instrument this project owns reads the
         /// model, which cannot see where a person is looking. What is wanted is a figure per
         /// run; a row per bomb would be a stream nobody reads whose cost grows with play.
         /// </para>
@@ -140,7 +140,7 @@ namespace GlimmerGrove.Analytics
         /// A hint was spent on this glade.
         ///
         /// <paramref name="hintsRemaining"/> is what the <em>account</em> holds afterwards,
-        /// not what is left on this board — the per-glade allowance is gone, and the pool
+        /// not what is left on this board - the per-glade allowance is gone, and the pool
         /// refills on a clock and is spent across every glade. Worth knowing before reading
         /// a chart: a zero here means the player is now waiting, which is a fact about their
         /// session rather than about this level.
@@ -161,14 +161,14 @@ namespace GlimmerGrove.Analytics
         /// <para>
         /// <paramref name="matches"/> is the half worth watching, and it is not the same
         /// question as how often one is used. It is what the utility cost the <em>grade</em>
-        /// (invariant 39) — the fewest matches that could have done the same work — so the
+        /// (invariant 39) - the fewest matches that could have done the same work - so the
         /// distribution says whether players are spending them on things worth spending them on.
         /// A firepot that repeatedly costs one match is a firepot being thrown at stragglers,
         /// which is a board problem rather than a price problem.
         /// </para>
         /// <para>
-        /// <paramref name="delivered"/> is the same event in the utility's own unit — damage,
-        /// health or fuel-tenths — and it is the one that says whether the *magnitude* is right.
+        /// <paramref name="delivered"/> is the same event in the utility's own unit - damage,
+        /// health or fuel-tenths - and it is the one that says whether the *magnitude* is right.
         /// A mending that always restores less than it is worth is a mending whose number is
         /// larger than a ward's remaining room ever is, which the charge cannot show because a
         /// mending is charged nothing.
@@ -198,7 +198,7 @@ namespace GlimmerGrove.Analytics
         ///
         /// <para>
         /// <paramref name="offer"/> carries what it cost, what it would have handed over and
-        /// how many the player had already bought on this run — so a chart can separate "the
+        /// how many the player had already bought on this run - so a chart can separate "the
         /// price is too high" from "the second one is too high", which are different retunes
         /// of different fields. <c>choice</c> is what the player was actually in a position to
         /// do, because an offer to somebody with no gems is a different funnel entirely.
@@ -238,7 +238,7 @@ namespace GlimmerGrove.Analytics
         ///
         /// <paramref name="offer"/> carries the price and the amount, so a retune of either
         /// can be read against the take-up it produced, and <c>choice</c> separates the two
-        /// funnels that share this panel — somebody holding the gems is one tap from playing,
+        /// funnels that share this panel - somebody holding the gems is one tap from playing,
         /// somebody who is not has a shop to visit first and a much longer way to fall out.
         /// </summary>
         public static void TrackHeartRescueOffered(LevelId level, HeartRescueOffer offer,
@@ -274,7 +274,7 @@ namespace GlimmerGrove.Analytics
         /// <param name="won">
         /// Which ending this was. Carried as a parameter rather than split into two events,
         /// because unlike the continue funnel there is no ratio here that needs both halves
-        /// counted independently — every run raises exactly one of these, so a filter answers
+        /// counted independently - every run raises exactly one of these, so a filter answers
         /// it and a second event name would only divide the rows.
         /// </param>
         public static void TrackSiegeAttention(LevelDefinition level, Modes.SiegeAttention seen,
@@ -304,7 +304,7 @@ namespace GlimmerGrove.Analytics
 
                 // **The charms, and the one figure that says whether the stormglass was
                 // understood.** A stormglass is worth what is standing on the hill when it goes,
-                // so *when* to match it is the whole decision — and a run where they are sprung
+                // so *when* to match it is the whole decision - and a run where they are sprung
                 // the instant they land is a run by somebody who has not met the mechanic. It is
                 // the bomb's own question asked on the player's own board, which is why it is
                 // reported in the same event and in the same unit.

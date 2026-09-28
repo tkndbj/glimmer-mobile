@@ -14,7 +14,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>What makes this a rank's ceremony rather than a second turret reveal is that a rank
     /// has a below and an above.</b> Everything else this game celebrates is a <em>thing</em>
-    /// — a turret, a chest, a companion — and the shape those reveals share is right for a
+    /// - a turret, a chest, a companion - and the shape those reveals share is right for a
     /// thing: the room gathers, it breaks, and the object is standing there. A rung is not an
     /// object. It is a <em>position</em>, and the two facts a player wants out of it are how
     /// they got here and how far up the ladder here is. So this is built as a climb: a shaft of
@@ -26,7 +26,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>The gathering is made out of the rung's own requirements, and that is why it works for
     /// a ladder nobody has authored yet.</b> One mote of light flies in per line of the rung
-    /// (<c>RankDefinition.Requirements</c>) — so a rung asking one thing is met by a single
+    /// (<c>RankDefinition.Requirements</c>) - so a rung asking one thing is met by a single
     /// comet and a rung asking eight by a swarm, and a content push that retunes the ladder
     /// redraws this without a build (invariant 52a). Nothing here is keyed on a rung id, a
     /// count of rungs or a measure: the badge, the name and the blurb are derived from the id
@@ -42,14 +42,14 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>No new art and no new address.</b> Every sprite here is either procedural
-    /// (<see cref="Art"/>) or already in the global preload set — the badges are
+    /// (<see cref="Art"/>) or already in the global preload set - the badges are
     /// <c>AssetManifest.RankAssets</c> and the key is the interface kit's. That is deliberate
     /// rather than lucky: art written with the Editor closed is unaddressed, and an unaddressed
     /// sprite two cells wide over the loudest moment in the game is the fault this project has
     /// paid for more than any other.
     /// </para>
     /// <para>
-    /// <b>Everything is built hidden and then revealed</b>, never built by the beats —
+    /// <b>Everything is built hidden and then revealed</b>, never built by the beats -
     /// <c>WinOverlay</c>'s rule, and what makes <see cref="Skip"/> one pass of assignments
     /// rather than a second choreography that can disagree with the first.
     /// </para>
@@ -58,7 +58,7 @@ namespace GlimmerGrove
     {
         /// <summary>
         /// The rung reached. A property rather than a field because <see cref="RankDefinition"/>
-        /// is not <c>[Serializable]</c> — <c>WardRevealOverlay.Model</c>'s note.
+        /// is not <c>[Serializable]</c> - <c>WardRevealOverlay.Model</c>'s note.
         /// </summary>
         public RankDefinition Rung { get; set; }
 
@@ -72,7 +72,7 @@ namespace GlimmerGrove
         public RankDefinition From { get; set; }
 
         /// <summary>
-        /// What happens when this is done with — the run's own panel, normally.
+        /// What happens when this is done with - the run's own panel, normally.
         ///
         /// <para>
         /// <b>Fired on close and again on destroy, and <see cref="RankCeremony"/> holds the latch
@@ -86,14 +86,14 @@ namespace GlimmerGrove
 
         // ------------------------------------------------------------------ geometry
         /// <summary>
-        /// Where each band sits, as a <em>middle</em> — <c>UIKit.Box</c> pivots at centre
+        /// Where each band sits, as a <em>middle</em> - <c>UIKit.Box</c> pivots at centre
         /// whatever it is anchored to, which is the arithmetic two screens in this project have
         /// already recorded getting wrong and drawing one caption through another.
         ///
         /// <para>
-        /// The canvas is 1920 tall in reference units on every device — the scaler matches on
+        /// The canvas is 1920 tall in reference units on every device - the scaler matches on
         /// width, so a squarer screen grows <em>wider</em> and never shorter (<c>CanvasFit</c>)
-        /// — so this runs from +960 to -960 and each band below has been checked against its
+        /// - so this runs from +960 to -960 and each band below has been checked against its
         /// neighbours' <em>edges</em> rather than their centres: the eyebrow +662..+718, the
         /// badge +520..+80, the name -10..-150, the rule -175..-185, the blurb -210..-350, the
         /// rail -453..-487, its caption -528..-572 and the key -655..-805.
@@ -109,7 +109,7 @@ namespace GlimmerGrove
         /// <b>A shrinkable label needs a box taller than its own type</b>, and the eyebrow's was
         /// not: <c>UIKit.Shrinkable</c> is uGUI's Best Fit over a <em>wrapped</em>, truncating
         /// label, so it measures a line box of 1.2x the size and refuses any size whose line box
-        /// is taller than the plate. At 44 in a 44-unit band it settled on 36 — a caption a fifth
+        /// is taller than the plate. At 44 in a 44-unit band it settled on 36 - a caption a fifth
         /// smaller than the one written down, on every device, for ever, with nothing to say so.
         /// <c>render_rank_ceremony.py --captions</c> found it before this screen was ever drawn;
         /// the rule it buys is that every band here is at least 1.2x the type it carries.
@@ -231,7 +231,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b><see cref="Chroma.Of"/> answers a rarity and this is answering a position</b>, so
-        /// the struct is right and only the way in differs — <c>WardRevealOverlay.SchemeFor</c>
+        /// the struct is right and only the way in differs - <c>WardRevealOverlay.SchemeFor</c>
         /// makes the same move around a seat's colour and says why. The deep is the metal taken
         /// almost to black, which is what keeps a copper room copper in its corners instead of
         /// grey.
@@ -241,7 +241,7 @@ namespace GlimmerGrove
         /// turn from it, and the contact sheet is what decided that.</b> The turret reveal is
         /// built around one of the line's four <em>primaries</em>, where a wide shift lands on
         /// another primary and reads as a second light. A metal is not a primary: gold's hue is
-        /// .105, so a fifth of a turn from it is .295, which is <em>green</em> — and the sheet
+        /// .105, so a fifth of a turn from it is .295, which is <em>green</em> - and the sheet
         /// drew Goldbrand's arrival in a green room with a gold badge sitting in it, looking
         /// like art that had been filed under the wrong colour (the fault
         /// <c>make_charm_gems.py --check</c> exists to catch on a gem). Narrow and symmetric,
@@ -266,7 +266,7 @@ namespace GlimmerGrove
         void BuildRoom()
         {
             // The bottom layer, covering the screen, so a tap anywhere that is not a control
-            // lands here and skips. It is also what `Scrim` would normally be — there is no
+            // lands here and skips. It is also what `Scrim` would normally be - there is no
             // panel here to dim behind, so the room is the scrim.
             //
             // Shared with the two turret ceremonies (`CeremonySky`), which is why it is not the
@@ -287,7 +287,7 @@ namespace GlimmerGrove
 
             // Last, so it holds the aurora and the fireflies in too. Tinted with the room
             // rather than with ink, or the corners end up the one grey thing on a coloured
-            // screen — see `CeremonySky.VignetteInk`, which is where that now lives.
+            // screen - see `CeremonySky.VignetteInk`, which is where that now lives.
             _vignette = CeremonySky.Veil(Content);
         }
 
@@ -296,8 +296,8 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>The streaks fall and that is what makes the screen rise.</b> Nothing in this
-        /// composition actually moves upward by more than <see cref="Climb"/> — a badge that
-        /// travelled far enough up to read as climbing would leave the screen — so the ascent is
+        /// composition actually moves upward by more than <see cref="Climb"/> - a badge that
+        /// travelled far enough up to read as climbing would leave the screen - so the ascent is
         /// carried by the ground going the other way, which is how every lift in every film is
         /// shot. It is also why the streaks start before the badge exists and never stop: motion
         /// that begins at the moment of the reveal reads as an effect fired at the badge, and
@@ -352,13 +352,13 @@ namespace GlimmerGrove
                 rt.anchoredPosition = new Vector2(x, Mathf.Lerp(1180f, -1180f, k));
 
                 // Brightest through the middle of the run, so a streak is never seen to appear
-                // or to stop — the wrap is the one frame a looping thing can give itself away on.
+                // or to stop - the wrap is the one frame a looping thing can give itself away on.
                 streak.color = Pal.A(Pal.Lift(_metal, .5f), Mathf.Sin(k * Mathf.PI) * .55f);
             }, streak, "fall").Loop(-1, false);
         }
 
-        // Where the three masses of light sit. A composition rather than a scatter — one high
-        // and left, one across the middle, one low — so the frame is lit unevenly, the way a
+        // Where the three masses of light sit. A composition rather than a scatter - one high
+        // and left, one across the middle, one low - so the frame is lit unevenly, the way a
         // place is. `CompanionRevealOverlay`'s table, and its reasoning.
         static readonly Vector2[] AuroraHome =
             { new Vector2(-380f, 660f), new Vector2(420f, 140f), new Vector2(-260f, -640f) };
@@ -367,7 +367,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// One blob's endless wander. Both axes are whole multiples of the loop, or the drift
-        /// snaps back every time the tween wraps — which on something this large is the most
+        /// snaps back every time the tween wraps - which on something this large is the most
         /// visible thing on screen.
         /// </summary>
         void Drift(int index)
@@ -419,8 +419,8 @@ namespace GlimmerGrove
                               Vector2.one * HaloSize, new Vector2(.5f, .5f), new Vector2(0f, BadgeY));
             _halo.raycastTarget = false;
 
-            // The gathering point. It is the whole of the first movement — the motes fly into
-            // it, it draws breath, and the strike is it bursting — so it exists from the first
+            // The gathering point. It is the whole of the first movement - the motes fly into
+            // it, it draws breath, and the strike is it bursting - so it exists from the first
             // frame and the badge is what replaces it.
             _core = UIKit.Img("Core", _stage, Art.Glow(128, 2.4f), Pal.A(Pal.Lift(_metal, .55f), 0f),
                               Vector2.one * 260f, new Vector2(.5f, .5f), new Vector2(0f, BadgeY));
@@ -428,7 +428,7 @@ namespace GlimmerGrove
 
             // The rung below, rising into the light that becomes the rung above. Absent at the
             // bottom of the ladder, and absent for a rung whose badge this build does not carry
-            // — `RankArt.Paint` switches the node off rather than handing an `Image` a null
+            // - `RankArt.Paint` switches the node off rather than handing an `Image` a null
             // sprite, which is a white rectangle at the graphic's own colour (invariant 7b).
             _ghost = UIKit.Img("Ghost", _stage, null, RankLook.Ghost,
                                Vector2.one * (BadgeSize * .42f), new Vector2(.5f, .5f),
@@ -448,7 +448,7 @@ namespace GlimmerGrove
             _badgeRt = (RectTransform)_badge.transform;
             _badgeRt.localScale = Vector3.zero;
 
-            // False is an ordinary answer — see the class remarks — and leaves the strike
+            // False is an ordinary answer - see the class remarks - and leaves the strike
             // landing on light alone, which is still a strike.
             RankArt.Paint(_badge, Rung.Id);
         }
@@ -459,7 +459,7 @@ namespace GlimmerGrove
             // **Cream with the dark outline every caption here carries, and not the rung's
             // metal.** Over a near-black room the metal lifted toward white was the obvious
             // choice; over this one it is gold on peach. Driving it dark instead was worse
-            // still — the outline is dark too, so at 44pt the letterforms filled in and the
+            // still - the outline is dark too, so at 44pt the letterforms filled in and the
             // line became a smudge. The name below it is cream on this same ground and reads at
             // every rung, which is the answer; and this line says RANK EARNED rather than
             // naming the rank, so it is the one caption here with no colour to carry.
@@ -472,7 +472,7 @@ namespace GlimmerGrove
             SetAlpha(_eyebrow, 0f);
 
             // The name is the one thing on this screen a player repeats afterwards, so it is the
-            // largest type in the game and is shrunk rather than allowed to spill — a rank name
+            // largest type in the game and is shrunk rather than allowed to spill - a rank name
             // is content and a translation is routinely half again as long (invariant 19n).
             _name = UIKit.Shrinkable(
                 UIKit.Titled("Name", Content, NameOf(Rung), 100, Pal.Cream,
@@ -501,7 +501,7 @@ namespace GlimmerGrove
         /// of, which on a screen this size would be <c>rank.foo.name</c> in ninety-point type.
         /// A rung is content and the ladder is published separately from the strings
         /// (<c>seed-config.mjs</c>), so a client meeting a rung whose copy it has not got is
-        /// reachable rather than hypothetical — and the honest drawing of it is the badge with
+        /// reachable rather than hypothetical - and the honest drawing of it is the badge with
         /// no name under it.
         /// </summary>
         static string NameOf(RankDefinition rung)
@@ -550,7 +550,7 @@ namespace GlimmerGrove
 
             // <b>The one pivot on this screen that is not centre, and it has to be set by hand.</b>
             // `UIKit.Box` always pivots at centre whatever it is anchored to, so a bar widened by
-            // its `sizeDelta` grows in <em>both</em> directions — the light would run left out of
+            // its `sizeDelta` grows in <em>both</em> directions - the light would run left out of
             // the rail as far as it ran right along it. Left-pivoted, widening is travel.
             _railFill.rectTransform.pivot = new Vector2(0f, .5f);
             _railFill.rectTransform.anchoredPosition = Vector2.zero;
@@ -568,7 +568,7 @@ namespace GlimmerGrove
 
                 // <b>Every pip is built dark, including the ones the player already held.</b>
                 // The rail stands there unlit through the whole gathering, which is where its
-                // anticipation comes from — and the climb then lights it from the bottom, so
+                // anticipation comes from - and the climb then lights it from the bottom, so
                 // what a player watches is this rung being stood on top of every rung below it.
                 // Built pre-lit, the ascent would have had nothing left to say and the rail
                 // would have been a static readout with a bar sliding along it.
@@ -622,14 +622,14 @@ namespace GlimmerGrove
 
         // ---------------------------------------------------------------------- playing
         /// <summary>
-        /// The sequence, in the order it is seen. Gaps, never absolute times — see
+        /// The sequence, in the order it is seen. Gaps, never absolute times - see
         /// <see cref="Cue"/>, which exists because this project has already shipped a
         /// celebration whose beats collided at one star count and not at another.
         ///
         /// <para>
         /// Four movements. The shaft opens and the rung below rises into it; the lines that were
         /// met arrive as motes and are gathered; the gathering draws breath and breaks; and the
-        /// climb settles — the rail lights, the name strikes, and the way out appears. The
+        /// climb settles - the rail lights, the name strikes, and the way out appears. The
         /// breath before the break is the whole trick: take it out and a ceremony becomes an
         /// announcement.
         /// </para>
@@ -742,7 +742,7 @@ namespace GlimmerGrove
         /// the middle reads as a projectile and the thing being drawn is a gathering. The
         /// starting angle is spread evenly so a rung of eight lines arrives as a ring closing
         /// rather than as a stream from one side, and the size runs down with the count so a
-        /// rung asking one thing is a comet and a rung asking eight is a swarm — the loudness of
+        /// rung asking one thing is a comet and a rung asking eight is a swarm - the loudness of
         /// the gathering then says something true about the rung rather than being a constant.
         /// </para>
         /// </summary>
@@ -796,7 +796,7 @@ namespace GlimmerGrove
 
             // <b>Grown on the core's own channel rather than punched, and that is not a style
             // choice.</b> `Tween.Punch` borrows the scale on a channel of its own and hands it
-            // back at the end — so the last line's punch is still running when the breath begins
+            // back at the end - so the last line's punch is still running when the breath begins
             // a fifth of a second later, the two write `localScale` from different channels, and
             // the punch's restore then puts back the scale the breath had spent its whole
             // duration taking away. The core would simply never contract, which is the beat the
@@ -822,7 +822,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>It lands rather than blooms.</b> The badge falls the last of its travel on
-        /// <see cref="Ease.InCubic"/> from three times its size and is punched at the bottom —
+        /// <see cref="Ease.InCubic"/> from three times its size and is punched at the bottom -
         /// which is a forging, where an <c>OutBack</c> bloom would be a flower opening. The
         /// difference is the one thing a player feels about a rank.
         /// </para>
@@ -868,7 +868,7 @@ namespace GlimmerGrove
             Burst.Sparks(_stage, new Vector2(0f, BadgeY), Pal.Lift(_metal, .35f), 22, 340f, 34f, .78f);
             Burst.Confetti(Content, 54);
 
-            // The landing. Scale only — the badge is already where it belongs, so a drop would
+            // The landing. Scale only - the badge is already where it belongs, so a drop would
             // have to be undone and the ascent below starts from its resting place.
             _badgeRt.localScale = Vector3.one * 3f;
             Tween.Scale(_badgeRt, 1f, .17f, Ease.InCubic)
@@ -884,7 +884,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The rail is lit by a light running along it rather than by the pip simply coming
         /// on</b>, because a pip that changes colour is a state and a light that travels is a
-        /// journey — and the pips below the new one light as it passes them, which is the whole
+        /// journey - and the pips below the new one light as it passes them, which is the whole
         /// ladder saying that this rung stands on those.
         /// </para>
         /// </summary>
@@ -1042,7 +1042,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// One pass of assignments rather than a second choreography, which is only possible
-        /// because every element already exists — the beats reveal things rather than build
+        /// because every element already exists - the beats reveal things rather than build
         /// them. That agreement is exactly what a skip path normally gets wrong. Pending beats
         /// are killed by owner, which <see cref="Cue"/> makes possible by scheduling every one
         /// of them against this component.
@@ -1080,7 +1080,7 @@ namespace GlimmerGrove
 
             // And the rail's, whose *ending* is the thing that has to be stopped rather than its
             // value: it converges on the width assigned below, but its `OnDone` then re-plays the
-            // held pip's arrival from a fifth of its size — a pip snapping small and growing back
+            // held pip's arrival from a fifth of its size - a pip snapping small and growing back
             // after the skip has already settled the page.
             if (_railFill) Tween.KillChannel(_railFill, "rail");
 
@@ -1159,7 +1159,7 @@ namespace GlimmerGrove
         /// Takes it away and lets the run's own panel through.
         ///
         /// Quiet, because what follows is the victory or defeat panel's own entrance and a
-        /// backing-out whoosh underneath it is one sound too many — <c>ModalView.Close</c>'s
+        /// backing-out whoosh underneath it is one sound too many - <c>ModalView.Close</c>'s
         /// own note about the case it was written for.
         /// </summary>
         void Act()

@@ -10,7 +10,7 @@ namespace GlimmerGrove
     /// The glade under the hill: the mode's own board, standing over the challenge's puzzle.
     ///
     /// <para>
-    /// <b>It is a real <see cref="BoardView"/> over the real <see cref="Puzzle"/></b> — the
+    /// <b>It is a real <see cref="BoardView"/> over the real <see cref="Puzzle"/></b> - the
     /// tutorial's shape (invariant 53: a real <c>SiegeView</c> over a real <c>SiegeBoard</c>),
     /// asked of the other mode. The conduits, the heart-crystals, the sleeping critters and
     /// their halos, the light walking the network on every turn and the fanfare when the last
@@ -18,14 +18,14 @@ namespace GlimmerGrove
     /// learns here has to be translated onto a different-looking board if the mode ever
     /// returns to the map. The owner's verdict on the first cut (2026-09-23), which redrew
     /// the board in the challenge's procedural pieces, was that it "doesn't look like my
-    /// glade game mode at all" — and that was the whole of what was wrong with it.
+    /// glade game mode at all" - and that was the whole of what was wrong with it.
     /// </para>
     /// <para>
     /// <b>The one seam is the tap.</b> <see cref="BoardView.Referee"/> hands each tap on a
     /// turnable tile here instead of applying it; it goes through the screen's one door
     /// (<see cref="PuzzleView.Send"/>), the run turns the tile through
     /// <see cref="GladePuzzle.Apply"/>, feeds the line and walks the hill, and the board is
-    /// then told to <see cref="BoardView.Follow"/> what the model did — the spin, the light,
+    /// then told to <see cref="BoardView.Follow"/> what the model did - the spin, the light,
     /// the wake sounds, all its own. A latched screen simply does not send, so a tap while
     /// the hill is walking costs nothing and draws nothing.
     /// </para>
@@ -143,7 +143,7 @@ namespace GlimmerGrove
             }
 
             // Nothing else is waited on. The spin and the light walk are the board's own
-            // tweens and run whether or not the next tap has landed — a tap held back until
+            // tweens and run whether or not the next tap has landed - a tap held back until
             // they finished was the "sometimes it doesn't rotate" the owner reported
             // (2026-09-26): the screen was latched for the spin and then for the hill, and
             // every tap inside that second was thrown away.

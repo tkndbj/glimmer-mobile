@@ -20,7 +20,7 @@ namespace GlimmerGrove
     /// <para>
     /// The second nav tab, and the one screen in the game where a mistake is charged to
     /// somebody's card. That shapes every decision on it. <b>Nothing here ever draws a
-    /// price it made up</b> — every figure with a currency symbol comes from the store SDK
+    /// price it made up</b> - every figure with a currency symbol comes from the store SDK
     /// already formatted for the player's own storefront, and a card whose price has not
     /// arrived says so rather than guessing. <b>Nothing here is greyed out without a
     /// sentence</b>, which is <c>AdOfferState</c>'s rule: six of the states a card can be
@@ -29,15 +29,15 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>Five shelves, and the last two are a different kind of thing.</b> Gems, coins and
-    /// bundles are bought with money and adjudicated by the server; supplies — hearts and
-    /// boosts — are bought with gems and applied on the phone. They share a screen because
+    /// bundles are bought with money and adjudicated by the server; supplies - hearts and
+    /// boosts - are bought with gems and applied on the phone. They share a screen because
     /// they are one decision from the player's side, and they share nothing else: see
     /// <c>StoreProduct</c> for why a real-money product may only ever grant currency.
     /// </para>
     /// <para>
     /// <b>The kit shelf lists neither a product nor a good.</b> It draws
-    /// <c>UtilityCatalog</c> — the same roster the action bar draws from, with the same
-    /// prices, the same ceiling and the same stock behind it — because the utilities were
+    /// <c>UtilityCatalog</c> - the same roster the action bar draws from, with the same
+    /// prices, the same ceiling and the same stock behind it - because the utilities were
     /// already written down once and a second copy in the store block would be two records
     /// of one thing (<c>StoreShelf.Utilities</c>). Nothing on it can be bought with money,
     /// and nothing on it needs the store to have answered, so it is the one shelf that
@@ -45,7 +45,7 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>It pages by shelf</b>, exactly as the Grovement's shop does, for the reason
-    /// <c>GridView</c> exists — and here the bound is on the *store* rather than on memory:
+    /// <c>GridView</c> exists - and here the bound is on the *store* rather than on memory:
     /// every product id has to be fetched from Apple or Google at launch, and that call
     /// slows as the list grows. A catalog is the one thing in a live game that only ever
     /// gets longer.
@@ -55,7 +55,7 @@ namespace GlimmerGrove
     {
         // "hub" was not a clip. Every other screen off the map and the board names
         // mus_menu, and an address nothing can resolve throws InvalidKeyException on the
-        // frame the shop opens and then plays nothing — on the one screen in the game
+        // frame the shop opens and then plays nothing - on the one screen in the game
         // that takes money. Nothing catches a track name: Validate Art walks the assets
         // the *catalog* asks for, and a track is named by a screen.
         public override string Track => "mus_menu";
@@ -83,7 +83,7 @@ namespace GlimmerGrove
         /// <b>It was 44 with the line sitting 21 units inside the tabs.</b> The tab row is
         /// anchored to the top of the safe area with a <em>top</em> pivot, so it runs from
         /// <c>-HeaderHeight</c> down to <c>-(HeaderHeight + TabRow)</c> and its cells are the
-        /// full height of it — while the sentence was placed at <c>-HeaderHeight - TabRow + 4</c>,
+        /// full height of it - while the sentence was placed at <c>-HeaderHeight - TabRow + 4</c>,
         /// which is four units <em>above</em> that lower edge before its own box is counted.
         /// It drew through the bottom of five buttons, on every shelf that had anything to
         /// say, for as long as the line has existed.
@@ -106,7 +106,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>Reserved-always was wrong and the owner caught it by playing.</b> A band is the
-        /// right shape for a sentence that <em>is</em> there — it is what stops the line being
+        /// right shape for a sentence that <em>is</em> there - it is what stops the line being
         /// drawn through the buttons above or the cards below, which is the fault
         /// <see cref="SummaryH"/> records. But this screen is silent on almost every visit: the
         /// store answers, every card has a price, and there is no news. So the common case was
@@ -123,7 +123,7 @@ namespace GlimmerGrove
         const float QuietRow = 20f;
 
         /// <summary>
-        /// Whether the line under the tabs is saying anything right now — set by
+        /// Whether the line under the tabs is saying anything right now - set by
         /// <see cref="PaintNews"/>, which is the one place that decides it, and read by
         /// <see cref="SummaryRow"/>.
         /// </summary>
@@ -132,7 +132,7 @@ namespace GlimmerGrove
         /// <summary>
         /// The band under the tabs as it stands this frame.
         ///
-        /// <b>An instance property rather than a constant</b>, because it moves — everything
+        /// <b>An instance property rather than a constant</b>, because it moves - everything
         /// measured from it (the guest bar, the shelf's top edge, the empty plate) is therefore
         /// re-read on every repaint rather than written down once. <see cref="PaintNotice"/> is
         /// where that happens, for the reason the sum lives in <see cref="ShelfTop"/>: one
@@ -148,11 +148,11 @@ namespace GlimmerGrove
         /// store's one sentence used to be squeezed into the gap that happened to be under the
         /// tabs, and it drew through the bottom of five buttons for as long as the line existed.
         /// The owner's instruction here was "under the tab buttons, and make sure it never
-        /// overlaps with the texts" — so this is a band that everything below is measured from,
+        /// overlaps with the texts" - so this is a band that everything below is measured from,
         /// rather than a card placed at a number that happens to clear things today.
         /// </para>
         /// <para>
-        /// As wide as the grid it sits over — <c>CellW * Columns</c> rather than a figure — so a
+        /// As wide as the grid it sits over - <c>CellW * Columns</c> rather than a figure - so a
         /// shelf retuned to three columns takes the banner with it.
         /// </para>
         /// <para>
@@ -162,12 +162,12 @@ namespace GlimmerGrove
         /// off the height is a unit cropped off the top and bottom of the art: at 308 the crop
         /// was a ninth at each end, at 256 it is a sixth, and below about 240 it starts eating
         /// the megaphone's cone and the chests' feet. Measured against the source rather than
-        /// argued — <c>Tools/render_shop.py</c> draws the crop this number produces.
+        /// argued - <c>Tools/render_shop.py</c> draws the crop this number produces.
         /// </para>
         /// </summary>
         // **The height is a crop, not a scale.** The banner is fitted to the window's
         // *width* and masked, so shortening this shows less of the picture rather than a
-        // smaller one — the width is untouched. At 200 the window keeps about half the
+        // smaller one - the width is untouched. At 200 the window keeps about half the
         // art's height, which still holds the whole wordmark and the chests beside it;
         // measured with `render_shop.py`, which is the only thing that can answer whether
         // a crop has eaten the lettering.
@@ -222,14 +222,14 @@ namespace GlimmerGrove
         /// <b>Two shelves have one</b>, and they are the two the hub already offers a video for:
         /// coins and hearts (<see cref="ShopAdShelf"/>). It was reachable only from the
         /// <c>+</c> on the hub's own pills, which is the one place in the game a player is
-        /// <em>not</em> thinking about buying anything — somebody who has come to the shop for
+        /// <em>not</em> thinking about buying anything - somebody who has come to the shop for
         /// coins has already decided they want coins, and the free way to get some was on
         /// another screen.
         /// </para>
         /// <para>
         /// <b>First, not last.</b> Every other card on these shelves is sorted cheapest first
         /// and this one costs nothing, so the top-left cell is where the ladder already says it
-        /// goes — and a free offer buried under six prices is an offer nobody scrolls to.
+        /// goes - and a free offer buried under six prices is an offer nobody scrolls to.
         /// </para>
         /// <para>
         /// Resolved in <see cref="Reload"/> rather than asked for on every bind, because
@@ -242,7 +242,7 @@ namespace GlimmerGrove
         /// The free spots at the head of this shelf, in the order they are drawn.
         ///
         /// <b>A list because a shelf may stand more than one</b> (see <c>ShopAdShelf.All</c>), and
-        /// every row below them is shifted by however many are *valid* — a placement the
+        /// every row below them is shifted by however many are *valid* - a placement the
         /// published table does not carry is not a hole, it is simply absent, so switching one
         /// off stays a content push.
         /// </summary>
@@ -255,7 +255,7 @@ namespace GlimmerGrove
         ///
         /// Gems lead, and that is a merchandising decision worth stating: gems are what
         /// hearts and boosts are bought with, so they are the shelf every other shelf
-        /// eventually points back at. Reset on every visit, deliberately — a shop that
+        /// eventually points back at. Reset on every visit, deliberately - a shop that
         /// opens where you left it opens somewhere you have to notice.
         /// </summary>
         StoreShelf _shelf = StoreShelf.Gems;
@@ -266,7 +266,7 @@ namespace GlimmerGrove
         /// The kit shelf, which is drawn from the utility catalog rather than from the store.
         ///
         /// Asked in every place <see cref="OnSupplies"/> is, because it is the other shelf whose
-        /// rows are not <see cref="_products"/> — and it is asked <em>first</em> everywhere, since
+        /// rows are not <see cref="_products"/> - and it is asked <em>first</em> everywhere, since
         /// a shelf carrying no products at all must never reach a path that measures itself
         /// against the store's answer.
         /// </summary>
@@ -275,7 +275,7 @@ namespace GlimmerGrove
         // Money first, then the two shelves priced in gems, and the kit last. That is the
         // order somebody arrives in rather than a ranking: a player on this screen at all is
         // usually there for gems, and the kit is what gems are *for* on the one mode that
-        // ships — so it sits at the far end of the row where a player who came looking for it
+        // ships - so it sits at the far end of the row where a player who came looking for it
         // will still find it, and where nobody is asked to step over it on the way to a price.
         static readonly StoreShelf[] Shelves =
         {
@@ -304,48 +304,48 @@ namespace GlimmerGrove
 
             Reload();
 
-            // Every one of these is a repaint rather than a rebuild — see GridView.Refresh.
+            // Every one of these is a repaint rather than a rebuild - see GridView.Refresh.
             //
             // Note what is *not* here: the thank-you panel. A grant can land while the player
-            // is anywhere — the payment sheet outlives the screen that opened it, and an
-            // interrupted purchase is credited on the next launch, from the splash — so the
+            // is anywhere - the payment sheet outlives the screen that opened it, and an
+            // interrupted purchase is credited on the next launch, from the splash - so the
             // panel is raised by `Boot` for every screen at once. A screen that raised its
             // own would be a celebration nobody sees on the two occasions it matters most.
             StoreService.Changed += OnStoreChanged;
             StoreService.Granted += OnGranted;
             StoreService.Failed += OnFailed;
 
-            // The supplies shelf is priced in gems and gated on hearts, so both move it — the
+            // The supplies shelf is priced in gems and gated on hearts, so both move it - the
             // *cards*, that is. The three balance pills above them are watched by the
             // `WalletWatch` that `BuildBalances` attaches, which is the one place in the game
             // that subscribes to the wallet's own two cues.
             PlayerProgression.Changed += Repaint;
             Wallet.HeartsChanged += OnHeartsChanged;
 
-            // And a container bought — or refunded by a sync — moves what the shelf says the
+            // And a container bought - or refunded by a sync - moves what the shelf says the
             // player's limit is, and turns the card that sold it into YOURS. A repaint rather
             // than a reload: the same cards, redrawn, at the moment the player is watching
             // one of them land. See the house rule about Show and Refresh.
             HeartContainerLedger.Changed += Repaint;
 
-            // A content push can retune the whole shop, including which products exist —
+            // A content push can retune the whole shop, including which products exist -
             // and which utilities do, since the kit shelf is the catalog itself.
             ProgressionRules.Changed += Reload;
 
             // What the player is carrying is on every kit card, and it moves from three places
             // this screen cannot see: a chest opened on the hub, a run that spent one, and a
-            // sync landing another device's pack. A repaint rather than a reload — the same
+            // sync landing another device's pack. A repaint rather than a reload - the same
             // cards, redrawn (invariant 16d).
             UtilityLedger.Changed += Repaint;
 
             // The notice is a claim about the account, so it has to follow the account. A
             // player taps it, links, and comes back to a shelf that would otherwise still be
-            // telling them their purchases are stranded on this phone — and the panel they
+            // telling them their purchases are stranded on this phone - and the panel they
             // linked from has four exits, so an event is the only thing that catches all of
             // them. See CloudSaveService.IdentityChanged.
             CloudSaveService.IdentityChanged += Repaint;
 
-            // The invite band's badge counts chests the server has agreed to pay — other
+            // The invite band's badge counts chests the server has agreed to pay - other
             // people's play (invariant 51), which no local event announces. `BuildInvite`
             // attaches the watch that asks; this is where its answers land.
             ReferralLedger.Changed += PaintInvite;
@@ -386,13 +386,13 @@ namespace GlimmerGrove
         void OnStoreChanged()
         {
             // The kit shelf lists nothing the store has ever heard of, so a connection landing
-            // cannot change what is on it — and ShelfCount would answer nought against a page
+            // cannot change what is on it - and ShelfCount would answer nought against a page
             // of cards and reload the shelf out from under a player mid-scroll.
             if (OnUtilities) return;
 
             // Supplies is included now, and it has to be: since heart containers went on that
             // shelf it carries real-money products too, so its cards genuinely appear when the
-            // store first answers — which is the exact case this comparison exists for. Its
+            // store first answers - which is the exact case this comparison exists for. Its
             // gem-priced half never moves, so the count still only changes for the reason
             // described above.
             Restock();
@@ -405,7 +405,7 @@ namespace GlimmerGrove
         /// <para>
         /// The distinction is invariant 16d's, said about a storefront: <c>Reload</c> is a new
         /// list and animates, <c>Repaint</c> is the same list redrawn and does not. A purchase
-        /// settling is usually the second — a price arriving, a card going grey — and was
+        /// settling is usually the second - a price arriving, a card going grey - and was
         /// handled as the second unconditionally, which was right until a card could leave the
         /// shelf. It cannot be the second then: the grid is still sized to the cell that has
         /// gone, so the bundle stayed on screen marked YOURS until the player left the shop and
@@ -425,8 +425,8 @@ namespace GlimmerGrove
         /// <summary>
         /// How many products the store would show on this shelf right now.
         ///
-        /// Counted rather than rebuilt, so the common case — a price arriving, a purchase
-        /// settling — costs a walk of the catalog and no allocation, and never disturbs the
+        /// Counted rather than rebuilt, so the common case - a price arriving, a purchase
+        /// settling - costs a walk of the catalog and no allocation, and never disturbs the
         /// cells a player is looking at.
         /// </summary>
         int ShelfCount()
@@ -454,7 +454,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>A one-time product that has been bought leaves the shelf.</b> The welcome bundle
         /// is sold once per account and can never be sold again, so a card marked YOURS is a
-        /// cell that answers a tap with a refusal for the life of the account — the same thing
+        /// cell that answers a tap with a refusal for the life of the account - the same thing
         /// the Missing guard above exists to prevent, arrived at from the other direction. It
         /// is derived from <c>OfferFor</c> on every ask rather than remembered, so a refund
         /// puts it straight back (<c>HeartContainerLedger.WasRevoked</c> is what flips that
@@ -465,7 +465,7 @@ namespace GlimmerGrove
         /// different shape.</b> The three vessels are a ladder a player reads as one: owning
         /// the 10 is what makes the 20 legible, and <c>Included</c> is a sentence about the
         /// rung above. Hiding a held rung would leave a two-card ladder whose remaining prices
-        /// mean nothing — so a container stays and says what it is, which is why this asks
+        /// mean nothing - so a container stays and says what it is, which is why this asks
         /// <c>IsContainer</c> and not <c>IsOneTime</c>.
         /// </para>
         /// </summary>
@@ -490,7 +490,7 @@ namespace GlimmerGrove
             // Under the last kit what was behind this band was a flat near-black ground, so an
             // almost-opaque wash cost nothing and bought contrast for free. Over an illustrated
             // world it is the difference between a header that sits *in* the picture and a
-            // black bar laid across the top of it — and the pieces standing on it are opaque
+            // black bar laid across the top of it - and the pieces standing on it are opaque
             // navy plates with their own keylines now, so most of the contrast it used to buy
             // is already paid for.
             var fade = UIKit.Img("TopFade", Content, Art.FadeUp(64), new Color(.02f, .05f, .09f, .62f));
@@ -517,7 +517,7 @@ namespace GlimmerGrove
             // thing. 620 is the radius the plate's own arc is drawn at; see `UIKit.Arced`.
             //
             // Not `Shrinkable`, because best-fit works on one label's box and this is one label
-            // per character — a translated title that outgrew the plate would need a smaller
+            // per character - a translated title that outgrew the plate would need a smaller
             // `size` here, which is a decision rather than something to leave to a fitter.
             UIKit.Arced("Title", banner.transform, Loc.Get("ui.nav.shop").ToUpperInvariant(), 40,
                         Pal.Sun, 620f, new Vector2(.5f, .5f), new Vector2(0f, 104f * Skins.RibbonLift), 3f, 3f, 2f);
@@ -532,7 +532,7 @@ namespace GlimmerGrove
         /// The invite banner, directly under the tabs: the profile's card, on the storefront.
         ///
         /// <para>
-        /// <b>The same control twice rather than a second drawing of one idea</b> — the same
+        /// <b>The same control twice rather than a second drawing of one idea</b> - the same
         /// painted banner, the same plate, the same window cut with a <c>Mask</c>, the same
         /// slow swell, the same destination. A shop is where somebody is already thinking about
         /// what things cost, which is the one place a free source of chests is worth saying out
@@ -575,7 +575,7 @@ namespace GlimmerGrove
             if (drawnH < windowH) { drawnH = windowH; drawnW = drawnH * aspect; }
 
             // `seated` cuts the picture so the *crest* of its breath is the cover fit exactly
-            // — at the top of the swell the banner is the window and never a pixel past it, which
+            // - at the top of the swell the banner is the window and never a pixel past it, which
             // is the whole reason the swell is safe inside a mask. `BannerFill` is the separate
             // decision on top: how much of that fit the picture actually draws at.
             float seated = BannerFill / (1f + BannerSwell);
@@ -616,7 +616,7 @@ namespace GlimmerGrove
         /// How much of the cover fit the picture draws at.
         ///
         /// <para>
-        /// <b>1 is the fit exactly</b> — the banner is the window and never a pixel past it —
+        /// <b>1 is the fit exactly</b> - the banner is the window and never a pixel past it -
         /// and anything under it does two things at once, which is worth knowing before reaching
         /// for it: the picture pulls in from the window's edges, *and* it un-crops, because a
         /// cover fit is only cropped in the first place by being larger than what shows. At .9
@@ -632,15 +632,15 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>Why a bar and not a dialog.</b> Everything else about a purchase on this screen
-        /// is deliberately un-interrupted — the payment sheet is the confirmation and nothing
-        /// stands in front of it — so the honest way to warn somebody is to have the warning
+        /// is deliberately un-interrupted - the payment sheet is the confirmation and nothing
+        /// stands in front of it - so the honest way to warn somebody is to have the warning
         /// already there when they arrive, rather than to stop them once they have decided. It
         /// costs no tap, it is true every time it is drawn, and it is what allows the panel
         /// that <em>does</em> interrupt to be as rare as <c>AccountPromptPolicy</c> makes it.
         /// </para>
         /// <para>
         /// <b>Only the money shelves.</b> Supplies are priced in gems, and hearts and boosts
-        /// live in the save, which merges into whatever account this device eventually links —
+        /// live in the save, which merges into whatever account this device eventually links -
         /// nothing bought there can be lost. Warning about it anyway would put the sentence on
         /// a shelf where it is false, and a warning that is sometimes false is the fastest way
         /// to teach somebody to read past it.
@@ -668,7 +668,7 @@ namespace GlimmerGrove
                                   new Vector2(42f, 42f), new Vector2(0f, .5f), new Vector2(46f, 0f));
             glyph.preserveAspect = true;
 
-            // Wrapped and shrinkable, because it is a translated sentence on a fixed bar — the
+            // Wrapped and shrinkable, because it is a translated sentence on a fixed bar - the
             // lesson the victory panel's two lines cost twice. UIKit.Label overflows rather
             // than clipping, so an over-long line is not truncated, it simply keeps drawing.
             UIKit.Shrinkable(
@@ -686,7 +686,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The bar was tapped, which is a player asking rather than the game asking — so it
+        /// The bar was tapped, which is a player asking rather than the game asking - so it
         /// spends no budget and starts no quiet period, and it is counted separately from
         /// <c>account_prompt_shown</c> for exactly that reason. Telling the two apart is what
         /// answers whether the standing notice does the work on its own.
@@ -706,7 +706,7 @@ namespace GlimmerGrove
         /// viewport to decide how many rows it needs. The return value matters for the same
         /// reason: <c>Refresh</c> rebinds the cells that are already live and deliberately does
         /// <em>not</em> re-measure, so a repaint that changes the viewport's height has to ask
-        /// for a full relayout or the grid is left sized for the height it used to have — a
+        /// for a full relayout or the grid is left sized for the height it used to have - a
         /// content rect shorter than its window makes a <c>ScrollRect</c> bounce against
         /// nothing. There is exactly one way to reach that: linking an account while standing
         /// on a money shelf, which is the whole flow this notice exists to start.
@@ -722,7 +722,7 @@ namespace GlimmerGrove
             // boosts live in the save, which merges into whatever account this device links,
             // so nothing bought on this shelf could be lost and warning about it would have
             // put a false sentence on the one page where it was false. A container is also in
-            // the save and also merges — but it is bought with real money, and "anything you
+            // the save and also merges - but it is bought with real money, and "anything you
             // buy stays on this phone only" is a sentence that has to be true wherever money
             // changes hands. What makes it true rather than merely cautious: the receipt is
             // redeemed against *this* account, so a guest who reinstalls without linking gets
@@ -739,7 +739,7 @@ namespace GlimmerGrove
             // **<see cref="ShelfTop"/>, not the two terms it is made of.** This sum used to be
             // spelled out here and left the invite band out of it, so the first repaint after
             // the page was built pulled the shelf up over the banner and the top row of cards
-            // was drawn through it — the exact failure the "written once" note on `ShelfTop`
+            // was drawn through it - the exact failure the "written once" note on `ShelfTop`
             // exists to prevent, committed in the one place that did not read it. The mirror
             // could not see it either, because `render_shop.py` draws no guest notice and so
             // never walks this path.
@@ -755,13 +755,13 @@ namespace GlimmerGrove
             // **The empty sentence follows the shelf's top edge from here, because here is the
             // one place that edge is decided.** Written anywhere else it would be a second copy
             // of this sum, and the two would agree right up until the day somebody sees the
-            // guest notice over an unreachable shelf — at which point the message explaining
+            // guest notice over an unreachable shelf - at which point the message explaining
             // why the page is blank would be drawn straight through the bar above it. Set
             // before the early return, so it is right even on the call where nothing moved.
             //
             // **The plate, not the label on it.** This moved `_empty` for as long as the plate
             // has existed: the sentence used to be a sibling of the viewport and was given a
-            // plate to stand on, which made it a *child* — and `EmptyY` is an absolute y under
+            // plate to stand on, which made it a *child* - and `EmptyY` is an absolute y under
             // the safe area, so writing it onto a child wrote about nine hundred units of local
             // offset and threw the sentence off the bottom of the plate it was standing on.
             // Every repaint did it, so the one state this label exists for never drew right.
@@ -780,7 +780,7 @@ namespace GlimmerGrove
         /// Whether the shelf being shown has anything on it priced in real money.
         ///
         /// Only ever false on a supplies shelf whose containers the store has not answered
-        /// for — which is a shelf of gem-priced goods and nothing else, exactly what it was
+        /// for - which is a shelf of gem-priced goods and nothing else, exactly what it was
         /// before containers existed.
         /// </summary>
         bool HasMoneyOnShelf() => _products.Count > 0;
@@ -806,7 +806,7 @@ namespace GlimmerGrove
         void BuildBalances()
         {
             // -228 rather than -214: the banner is 140 tall about y=-116, so its lower edge
-            // sits at -186 and a 76-tall row centred at -214 climbs to -176 — ten units
+            // sits at -186 and a 76-tall row centred at -214 climbs to -176 - ten units
             // *inside* the ribbon. Nothing else moves; the row still clears the tab strip
             // at -300 by 34.
             var row = UIKit.Row("Balances", Safe, new Vector2(1000f, 76f), new Vector2(.5f, 1f),
@@ -827,7 +827,7 @@ namespace GlimmerGrove
         /// Each pill registers itself with <see cref="ResourceSlots"/> as it is built, for the
         /// reason the hub's do: it is what lets a panel drawn on top of this screen fly what it
         /// paid into this row. The shop is the second row to register and the reason
-        /// <c>ResourceSlots.Slot.Rest</c> exists — the halo here is narrower and dimmer than the
+        /// <c>ResourceSlots.Slot.Rest</c> exists - the halo here is narrower and dimmer than the
         /// hub's, and a flare that returned to a figure the registry had assumed would leave one
         /// of the two rows permanently the wrong brightness.
         /// </remarks>
@@ -866,7 +866,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// One tab per shelf, built once and restyled — <c>HomesteadShopScreen</c>'s rule,
+        /// One tab per shelf, built once and restyled - <c>HomesteadShopScreen</c>'s rule,
         /// for its reason: a row rebuilt on every repaint flashes every time a price
         /// arrives, and nothing about a tab depends on what the store said.
         /// </summary>
@@ -891,7 +891,7 @@ namespace GlimmerGrove
 
             // Centred in its own reserved band, so the only way it can touch the buttons above
             // or the cards below is if `SummaryRow` stops being the sum of its own parts.
-            // Written as that sum rather than as a figure for exactly that reason — a position
+            // Written as that sum rather than as a figure for exactly that reason - a position
             // typed as a number is a position that survives the band being retuned.
             //
             // The box is centre-pivoted (`UIKit.Box` always is, 44d), so this is the middle of
@@ -938,14 +938,14 @@ namespace GlimmerGrove
             // **On a plate, because a sentence this screen is *about* is not a caption.** The
             // boards draw their empty line straight onto the ground and get away with it: it
             // is one of five states a list can be in and it is read in passing. This one is
-            // the entire content of the page — a shelf with nothing on it and no explanation
-            // is the blank screen invariant 18f and `AdOfferState` both exist to prevent — so
+            // the entire content of the page - a shelf with nothing on it and no explanation
+            // is the blank screen invariant 18f and `AdOfferState` both exist to prevent - so
             // it is given the furniture every other sentence in this game stands on.
             //
             // The ground underneath is `Scenery.Plain` (see `Build`), which is quiet enough
             // that the plate is a choice rather than a rescue. That is worth writing down,
-            // because the render mirror drew this screen on `Scenery.Room` — a painted forest
-            // the shop has not stood on — for as long as it has existed, and a plate argued
+            // because the render mirror drew this screen on `Scenery.Room` - a painted forest
+            // the shop has not stood on - for as long as it has existed, and a plate argued
             // for against *that* picture would have been an argument about a screen the game
             // does not draw. Fixed in `render_shop.py` in the same change (44d).
             _emptyPlate = UIKit.Img("EmptyPlate", Safe, Art.Round(24),
@@ -961,7 +961,7 @@ namespace GlimmerGrove
             // it at all: `UIKit.Box` always pivots at centre (44d), so a `MiddleCenter` label
             // filling a centre-pivoted plate lands where the plate is and nowhere else. The
             // same sentence anchored `UpperCenter` against a drop would start half a box high
-            // — the sign error that put the update wall's line through its own mark (49h).
+            // - the sign error that put the update wall's line through its own mark (49h).
             _empty = UIKit.Shrinkable(
                 UIKit.Titled("Empty", _emptyPlate.transform, string.Empty, 30,
                              Pal.A(Pal.Cream, .94f), TextAnchor.MiddleCenter,
@@ -976,7 +976,7 @@ namespace GlimmerGrove
         /// <summary>
         /// How far under the top of the shelf the empty sentence's plate begins. Far enough
         /// not to read as a caption hanging off the tab row, and nowhere near far enough to be
-        /// mistaken for centred in the page — a message a player has to hunt for is the fault
+        /// mistaken for centred in the page - a message a player has to hunt for is the fault
         /// it exists to fix.
         /// </summary>
         const float EmptyDrop = 120f;
@@ -1002,7 +1002,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Apple requires a control for this in any app selling a non-consumable, and the
-        /// starter bundle is one — so this is not optional furniture, it is a review item.
+        /// starter bundle is one - so this is not optional furniture, it is a review item.
         /// It is also the manual form of what the game already does by itself on every
         /// launch, which is why it is a quiet line rather than a button: the honest thing to
         /// tell somebody whose purchase has not landed is "it will", and this is for the
@@ -1036,7 +1036,7 @@ namespace GlimmerGrove
         /// <summary>
         /// Rebuilds the list this shelf shows and hands it to the grid as a new page.
         ///
-        /// Called when the shelf changes and when a content push replaces the catalog — the
+        /// Called when the shelf changes and when a content push replaces the catalog - the
         /// two moments the <em>contents</em> of the page differ. Everything else, including
         /// prices arriving, is a <see cref="Repaint"/>.
         /// </summary>
@@ -1052,7 +1052,7 @@ namespace GlimmerGrove
 
             // The free spot, resolved before anything else because it shifts every row under
             // it. `Offer` answers `None` for a placement the published table does not carry,
-            // and `AdOffer.IsValid` is what the card and the row count both ask — so switching
+            // and `AdOffer.IsValid` is what the card and the row count both ask - so switching
             // the offer off is a content push and not a build, and nothing here has to know
             // that it happened.
             _ads.Clear();
@@ -1071,14 +1071,14 @@ namespace GlimmerGrove
             if (OnUtilities)
             {
                 // In the catalog's own authored order, which is the order the action bar draws
-                // them in (`UtilityItem.Order`) — so the shelf and the bar are one row of the
+                // them in (`UtilityItem.Order`) - so the shelf and the bar are one row of the
                 // same four things and nobody has to learn a second arrangement. Deliberately
                 // not sorted by price: the money shelves sort that way because a rung's picture
                 // is derived from its price, and these are four different objects rather than
                 // four sizes of one.
                 //
                 // A chest-only utility is *listed*, not hidden. It has a picture, a sentence and
-                // a stock, and the card says where it comes from — where leaving it out would be
+                // a stock, and the card says where it comes from - where leaving it out would be
                 // a player wondering why the thing in their pack is not in the shop.
                 foreach (var item in UtilityLedger.Catalog.Items) _kit.Add(item);
             }
@@ -1112,7 +1112,7 @@ namespace GlimmerGrove
                 // A product the store has never heard of is left out of the list entirely
                 // rather than added and then hidden by its own cell. Hiding it kept the slot:
                 // the grid was still sized to it, so the shelf drew a hole, and the hole still
-                // answered taps — which is how an unreleased product came to look like a
+                // answered taps - which is how an unreleased product came to look like a
                 // broken screen. Products not yet created in a console, and products not sold
                 // in this storefront, both land here and neither is anything a player can act
                 // on. The cell keeps its own Missing guard as a backstop for the race between
@@ -1154,7 +1154,7 @@ namespace GlimmerGrove
 
             bool reflowed = PaintNotice();
 
-            // Same list either way, and no entrance either way — Show(animate: false) is the
+            // Same list either way, and no entrance either way - Show(animate: false) is the
             // re-measuring form of Refresh, not a rebuild. See PaintNotice for when this is
             // reachable at all.
             if (reflowed) _grid.Show(ShelfRows(), animate: false);
@@ -1163,7 +1163,7 @@ namespace GlimmerGrove
             PaintTabs();
 
             // The three balance pills are deliberately not written here. They are watched by
-            // `WalletWatch`, which repaints through the registry rather than onto the labels —
+            // `WalletWatch`, which repaints through the registry rather than onto the labels -
             // which is what lets the receipt panel own a pill while it walks it forward, since
             // a wallet change landing mid-flight would otherwise jump the number to the truth
             // and have the next token drag it back down. See ResourceSlots.Claim.
@@ -1182,8 +1182,8 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// **Silent unless it has news, which is what "remove the captions" means without also
-        /// removing the reporting.** It used to name the shelf on every shelf — a caption
-        /// repeating the word already written on the tab above it — and the tabs now carry
+        /// removing the reporting.** It used to name the shelf on every shelf - a caption
+        /// repeating the word already written on the tab above it - and the tabs now carry
         /// their own names, so the routine cases have nothing to say. What is left are the
         /// states a player genuinely cannot work out from the cards: the ways the store itself
         /// can be unreachable. A shop that cannot say "we cannot reach the store" is a shop
@@ -1199,7 +1199,7 @@ namespace GlimmerGrove
             // The supplies shelf used to answer with the refill its containers are measured
             // against. It says nothing now: it was the last of the captions and the cards do
             // carry their own numbers. Its money half is the heart containers, and when the
-            // store has not answered they are simply not on the shelf — so there is never a
+            // store has not answered they are simply not on the shelf - so there is never a
             // dead card here for a sentence to have to explain.
             if (OnSupplies) return (string.Empty, Pal.Cream);
 
@@ -1220,7 +1220,7 @@ namespace GlimmerGrove
                 case StoreStatus.Offline:
                     // **Two sentences, because the player can do something about one of them.**
                     // The store refuses to connect for a phone in a tunnel and for a store
-                    // having a bad afternoon, and `StoreStatus` cannot tell them apart — the
+                    // having a bad afternoon, and `StoreStatus` cannot tell them apart - the
                     // SDK reports one failure either way. "The store cannot be reached right
                     // now" is true of both and actionable for neither; a player with no signal
                     // is owed the half they can fix. The radio is read only *after* the connect
@@ -1241,7 +1241,7 @@ namespace GlimmerGrove
         /// the other.
         ///
         /// <para>
-        /// <b>One sentence, two places, one rule — never both.</b> A shelf with cards on it
+        /// <b>One sentence, two places, one rule - never both.</b> A shelf with cards on it
         /// carries the news in the thin line under the tabs, where it is a footnote to a page
         /// that is working. A shelf with <em>nothing</em> on it is a blank page, and a blank
         /// page is itself the question the player is asking, so the answer belongs in the
@@ -1251,7 +1251,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Nothing on it means nothing, including the free card.</b> The coins and hearts
         /// shelves each stand a rewarded video in their first spot and it is drawn live
-        /// whatever the network is doing (invariant 18g) — so those shelves are not empty when
+        /// whatever the network is doing (invariant 18g) - so those shelves are not empty when
         /// the store is unreachable, they are a shelf with one card on it, and a banner across
         /// the middle of them would be drawn straight over it. <see cref="ShelfRows"/> counts
         /// that card, which is exactly why this asks it rather than counting products.
@@ -1266,7 +1266,7 @@ namespace GlimmerGrove
             // <see cref="PaintNotice"/>.** The line under the tabs is reserved space only while
             // it is drawn; the sentence in the middle of an empty shelf is not under the tabs at
             // all, so it collapses the band exactly as silence does. Both callers order the two
-            // this way round deliberately — the other order paints the shelf's top edge from
+            // this way round deliberately - the other order paints the shelf's top edge from
             // last frame's answer, which is a band that lags one repaint behind its own line.
             _saying = !centre && text.Length > 0;
 
@@ -1319,7 +1319,7 @@ namespace GlimmerGrove
             if (failure == StoreFailure.Cancelled) return;
 
             // Shared with the panel a lost run raises, which offers the same products without
-            // navigating anywhere — see StoreWording.
+            // navigating anywhere - see StoreWording.
             var (key, tint) = StoreWording.Failure(failure);
             Scenery.Toast(Content, Loc.Get(key), tint, 2.6f);
         }
@@ -1328,7 +1328,7 @@ namespace GlimmerGrove
         /// The one word on a tab.
         ///
         /// <para>
-        /// Separate from <see cref="ShelfNameKey"/>, which answers with a whole sentence —
+        /// Separate from <see cref="ShelfNameKey"/>, which answers with a whole sentence -
         /// "Gems buy hearts, boosts and time". That is a caption and this is a name, and the
         /// tabs briefly wore the sentence, shrunk to fit, which is how five buttons came to
         /// carry five lines of small print.
@@ -1364,7 +1364,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>There is deliberately no confirmation panel.</b> The sheet <em>is</em> the
-        /// confirmation — it names the product, states the price in the player's own
+        /// confirmation - it names the product, states the price in the player's own
         /// currency, and on both platforms asks for a password, a fingerprint or a face
         /// before a penny moves. A panel of ours in front of it would be a tap for a
         /// question already being asked a second later, and this project has recorded twice
@@ -1373,14 +1373,14 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// Every refusal is a toast rather than a panel, because none of them is a decision
-        /// — they are all statements about the store, and three of the four resolve by
+        /// - they are all statements about the store, and three of the four resolve by
         /// waiting.
         /// </para>
         /// </summary>
         void Tap(StoreProduct product)
         {
             // The sheet, the six refusals and the reasoning behind having no confirmation all
-            // live in StoreTap now — the panel a lost run raises has to do exactly this, and
+            // live in StoreTap now - the panel a lost run raises has to do exactly this, and
             // six sentences maintained twice on the screen where money changes hands is
             // invariant 9a's argument at its smallest scale. Repainting afterwards is this
             // screen's own business: it draws cards whose state the tap may have moved.
@@ -1393,7 +1393,7 @@ namespace GlimmerGrove
         /// else happens here.
         ///
         /// <para>
-        /// <b>The same panel, deliberately</b> — the argument the kit shelf already makes about
+        /// <b>The same panel, deliberately</b> - the argument the kit shelf already makes about
         /// <c>UtilityBuyOverlay</c>. It knows how to say all five ways a rewarded ad can fail to
         /// happen, how to count the day's allowance down, how to hand the reward over and how to
         /// fly it into the pills above. A second route that showed a video itself would be a
@@ -1428,7 +1428,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Short of gems opens the gem shelf rather than greying the cell out, which is
-        /// this project's rule everywhere a price is short — see <c>CompanionUnlockOverlay</c>.
+        /// this project's rule everywhere a price is short - see <c>CompanionUnlockOverlay</c>.
         /// That is the moment a player has decided they want something, which is the best
         /// moment in the game to show them how to get it and the worst to teach them a
         /// control is dead.
@@ -1461,7 +1461,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>The same panel, deliberately.</b> Two would be two prices, two ceilings and two
-        /// chances to disagree about what a player is carrying — <c>RunContinueFlow</c>'s
+        /// chances to disagree about what a player is carrying - <c>RunContinueFlow</c>'s
         /// argument, on the screen where the price is actually charged. It already knows how to
         /// stack the gem shelf on a short balance and how to say the three refusals, so a shelf
         /// that navigated to the gem tab instead would be the one route to buying gems behaving
@@ -1543,7 +1543,7 @@ namespace GlimmerGrove
                     case StoreShelf.Bundles: return Art.S("Ui/ic_gift");
                     // **A satchel holding an XP mark, a bomb and a potion**, which is the one
                     // glyph on this row that says what the whole tab is rather than what one
-                    // thing on it is. It used to be the firepot — a fair choice while the shelf
+                    // thing on it is. It used to be the firepot - a fair choice while the shelf
                     // was four combat consumables and the tab was called KIT, and the wrong one
                     // the moment an XP boost moved to the front of it: a bomb described the
                     // least representative card on the shelf.
@@ -1567,7 +1567,7 @@ namespace GlimmerGrove
 
                 // **No pop and no scale.** The live tab used to spring from .86, which left the
                 // one you were standing on visibly smaller than its neighbours for the length of
-                // the tween — and on the shelf the screen opens on, for as long as nothing had
+                // the tween - and on the shelf the screen opens on, for as long as nothing had
                 // restyled it since. Selection is the plate's colour and its gold frame; a row
                 // of tabs that changes size as you cross it is a row that never sits still.
             }
@@ -1578,8 +1578,8 @@ namespace GlimmerGrove
         /// One product card, built once and rebound as it is recycled.
         ///
         /// <para>
-        /// Every part that can change with the row is a field, because the alternative —
-        /// destroying and rebuilding — is what made the Grovement's shop flicker and what
+        /// Every part that can change with the row is a field, because the alternative -
+        /// destroying and rebuilding - is what made the Grovement's shop flicker and what
         /// would make a growing catalog stutter on every tap. See <c>GridView</c>.
         /// </para>
         /// <para>
@@ -1624,14 +1624,14 @@ namespace GlimmerGrove
             /// The card knows how a sellable thing looks; this knows which one row
             /// <paramref name="index"/> is and what tapping it does. That split is why the same
             /// face can be drawn by a panel raised over a run that must not be navigated away
-            /// from — see <see cref="ProductCard"/>.
+            /// from - see <see cref="ProductCard"/>.
             /// </para>
             /// </summary>
             public void Bind(int index)
             {
                 // The free spot, and everything else on the shelf shifted down by it. Taken
                 // first so no other branch has to know it exists, and the flag is cleared on
-                // every other bind rather than only set on this one — a cell is rebound as the
+                // every other bind rather than only set on this one - a cell is rebound as the
                 // grid scrolls (invariant 16d), so a latch left standing is a coin pack that
                 // opens a video panel.
                 _adSlot = index < _screen._ads.Count ? index : -1;

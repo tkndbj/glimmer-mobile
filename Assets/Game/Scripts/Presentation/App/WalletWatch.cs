@@ -20,7 +20,7 @@ namespace GlimmerGrove
     /// came back; the tasks page registered all three pills and repainted none; and the streak
     /// and season pages repainted credits and gems while drawing a hearts pill neither of them
     /// ever touched. <b>Nothing was wrong with any of the four drawings</b>, which is why none of
-    /// it showed up in a render, a validator or a test — a stale number is a correct number that
+    /// it showed up in a render, a validator or a test - a stale number is a correct number that
     /// has stopped being true.
     /// </para>
     /// <para>
@@ -32,8 +32,8 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>Two events rather than one, and that is not tidiness.</b> Credits and gems move through
-    /// <see cref="PlayerProgression.Changed"/> — every debit in the game goes through
-    /// <c>TrySpend</c>, which invalidates — while hearts are a produced/spent ledger that moves on
+    /// <see cref="PlayerProgression.Changed"/> - every debit in the game goes through
+    /// <c>TrySpend</c>, which invalidates - while hearts are a produced/spent ledger that moves on
     /// its own clock and raises <see cref="Wallet.HeartsChanged"/>. A screen subscribing to one of
     /// the two draws a pill that is live for two currencies and frozen for the third, which is
     /// exactly what the streak and season pages shipped.
@@ -41,8 +41,8 @@ namespace GlimmerGrove
     /// <para>
     /// <b>It writes through <see cref="ResourceSlots.Repaint"/> and never onto a label</b>, which
     /// keeps the registry the one writer of these readouts. A payout owns a pill while its tokens
-    /// are in the air — it rewinds the number to what it read before the grant and walks it
-    /// forward one token at a time — so a wallet change landing mid-cascade (an ad's credits
+    /// are in the air - it rewinds the number to what it read before the grant and walks it
+    /// forward one token at a time - so a wallet change landing mid-cascade (an ad's credits
     /// confirmed by the server is exactly one) would jump the pill to the truth and have the next
     /// token drag it back down. <see cref="ResourceSlots.Claim"/> is what refuses that, and it can
     /// only refuse a write that comes through the registry.
@@ -50,13 +50,13 @@ namespace GlimmerGrove
     /// <para>
     /// <b>And the figure comes from <see cref="ResourceSlots.Balance"/> rather than from the call
     /// site</b>, for that method's own reason: "which balance does the heart pill show" is a fact
-    /// about the row, and two answers to it could disagree — which is how a reward counts up to
+    /// about the row, and two answers to it could disagree - which is how a reward counts up to
     /// the wrong number.
     /// </para>
     /// <para>
     /// <b>Registration is what it follows, not a list of objects.</b> It holds no pills, so a
-    /// screen that rebuilds its chrome — the loadout swapping shelves, the streak page redrawing a
-    /// lap — re-registers and this keeps working with nothing to re-attach. A kind nothing has
+    /// screen that rebuilds its chrome - the loadout swapping shelves, the streak page redrawing a
+    /// lap - re-registers and this keeps working with nothing to re-attach. A kind nothing has
     /// registered repaints nothing at all, which is <see cref="ResourceSlots"/>'s own rule about
     /// stale entries: if the pill is not on screen there is nowhere to write.
     /// </para>
@@ -128,7 +128,7 @@ namespace GlimmerGrove
         }
 
         /// <remarks>
-        /// A heart's capacity moves through this event too — <c>Wallet.AnnounceCapacity</c>
+        /// A heart's capacity moves through this event too - <c>Wallet.AnnounceCapacity</c>
         /// re-raises it rather than adding a second one, which is what makes "3 / 20" appear
         /// everywhere the moment a container is bought.
         /// </remarks>

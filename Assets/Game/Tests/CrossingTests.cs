@@ -10,7 +10,7 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// It is the first rule in this game to touch the light graph itself, and it does so by
-    /// splitting a cell rather than by changing what a join means — the traversal walks
+    /// splitting a cell rather than by changing what a join means - the traversal walks
     /// <em>strands</em>, of which every other tile has one. Everything above that walk is
     /// untouched, which is what these tests are mostly here to pin: colour, winning, par, the
     /// near-miss reading and the win rule all still behave exactly as they did, and the
@@ -19,7 +19,7 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// Two failure modes are worth naming because both look perfectly authored. A crossing
     /// wears all four arms at <em>every</em> angle, so the mask comparison that used to serve
-    /// as "is this tile solved" calls every crossing solved — which derives a par short by
+    /// as "is this tile solved" calls every crossing solved - which derives a par short by
     /// however many crossings a board carries, and lets a twisted one that must be turned
     /// count as free. And a crossing whose two strands are joined elsewhere on the board is a
     /// tile telling the player a lie in the one place the game asks them to trust their eyes.
@@ -135,7 +135,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// Light travel distance is measured along a strand, not through a tile. Without that
-        /// the ripple would leap between two networks that never touch — and <c>Depth</c> is
+        /// the ripple would leap between two networks that never touch - and <c>Depth</c> is
         /// what staggers every animation on the board.
         /// </summary>
         [Test]
@@ -176,7 +176,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// A twisted crossing has two readings rather than four: turning it twice swaps which
         /// strand is called which, and nothing on the board can tell. So it is worth exactly
-        /// one tap however far out it is authored — the fact every derived number depends on.
+        /// one tap however far out it is authored - the fact every derived number depends on.
         /// </summary>
         [Test]
         public void ATwistedCrossingIsWorthExactlyOneTapHoweverItIsAuthored()
@@ -227,7 +227,7 @@ namespace GlimmerGrove.Tests
         ///
         /// This is the regression that matters most. A crossing wears all four arms at every
         /// angle, so the mask comparison every owed-turn count used to make reads "already
-        /// solved" for all of them — deriving a par short by one per twisted crossing, and with
+        /// solved" for all of them - deriving a par short by one per twisted crossing, and with
         /// it a move budget and a clock the board cannot honour. Both are multiples of par.
         /// </summary>
         [Test]
@@ -269,7 +269,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// A crossing sits on a taproot like any other conduit, and the root's agreement check
-        /// asks the same predicate — so a twisted crossing and an elbow can share a root only
+        /// asks the same predicate - so a twisted crossing and an elbow can share a root only
         /// when one number of turns solves both.
         /// </summary>
         [Test]
@@ -293,7 +293,7 @@ namespace GlimmerGrove.Tests
         /// The board shape chapter one could not author: a second network running
         /// <em>through</em> a live one rather than beside it.
         ///
-        /// Every arm mates in the solution, so a lit cell's neighbours are lit — which is why
+        /// Every arm mates in the solution, so a lit cell's neighbours are lit - which is why
         /// two networks that must stay apart used to have to be separate islands with a gap
         /// between them. A crossing is the exception, and the whole reason the rule was worth
         /// revisiting: green passes north to south through the same tile red passes east to

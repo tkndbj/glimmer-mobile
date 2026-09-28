@@ -16,7 +16,7 @@ namespace GlimmerGrove.Progression
         /// <summary>The level a purchase would reach.</summary>
         public readonly int Level;
 
-        /// <summary>The ordinal this purchase would be — the first bought level is 1.</summary>
+        /// <summary>The ordinal this purchase would be - the first bought level is 1.</summary>
         public readonly int Ordinal;
 
         public readonly string Currency;
@@ -48,7 +48,7 @@ namespace GlimmerGrove.Progression
     }
 
     /// <summary>
-    /// The keeper levels this account has bought — the client half of invariant 57.
+    /// The keeper levels this account has bought - the client half of invariant 57.
     ///
     /// <para>
     /// <b>The count is what is stored; the level is derived from it.</b> A purchase is the
@@ -62,7 +62,7 @@ namespace GlimmerGrove.Progression
     /// <para>
     /// <b>A refused debit takes the level back</b>, and every level bought on top of it: the
     /// ordinals above a refused one were priced against a level that was never reached. The
-    /// money is already back — the ledger drops a refused entry before announcing it (47o) — so
+    /// money is already back - the ledger drops a refused entry before announcing it (47o) - so
     /// what this undoes is the count beside it.
     /// </para>
     /// </summary>
@@ -90,12 +90,12 @@ namespace GlimmerGrove.Progression
         /// <summary>How many levels this account has bought. Never negative.</summary>
         public static int Bought => Wallet.KeeperLevelsBought;
 
-        /// <summary>The ladder this build sells from — content, so retunable without a build.</summary>
+        /// <summary>The ladder this build sells from - content, so retunable without a build.</summary>
         public static KeeperLadder Ladder => ProgressionRules.Table.KeeperLevels;
 
         /// <summary>
         /// The next level on offer: the one above where the player stands now, priced off the
-        /// ladder. Reads the <em>effective</em> level — earned plus bought — because that is the
+        /// ladder. Reads the <em>effective</em> level - earned plus bought - because that is the
         /// rung the purchase reaches and the one the server prices.
         /// </summary>
         public static KeeperOffer Next()
@@ -149,8 +149,8 @@ namespace GlimmerGrove.Progression
         /// <b>Upward always, downward only when nothing is in flight.</b> The wallet document is
         /// the entitlement, so a count it holds that this device does not is a purchase made on
         /// another phone, taken at once. A count <em>below</em> this device's is either a
-        /// purchase this device made that the server has not yet seen — in which case the debit
-        /// is still pending here and the count stands until the server answers it — or a level
+        /// purchase this device made that the server has not yet seen - in which case the debit
+        /// is still pending here and the count stands until the server answers it - or a level
         /// this device believes in that the server never recorded, which a refused debit would
         /// ordinarily have taken back and a lost reply did not. The pending test tells the two
         /// apart: with no keeper debit outstanding, the server's lower figure is the truth.
@@ -197,7 +197,7 @@ namespace GlimmerGrove.Progression
 
         /// <summary>
         /// A keeper debit the server refused takes its level back, and every level bought above
-        /// it. Only a refusal at or below the held count moves anything — a refusal for an
+        /// it. Only a refusal at or below the held count moves anything - a refusal for an
         /// ordinal this device never reached is a stale device's business.
         /// </summary>
         internal static void OnSpendRejected(string currency, string spendId)

@@ -11,7 +11,7 @@ namespace GlimmerGrove.Social
     /// Deciles: the move counts at the tenth, twentieth … ninetieth percentile of every
     /// keeper's best result, ascending. Nine shorts per glade is a few hundred bytes for
     /// the whole catalog, which is what lets this be one small document the client reads
-    /// once rather than a query per level — and it is enough to answer the only question
+    /// once rather than a query per level - and it is enough to answer the only question
     /// ever asked of it to within a percentage point.
     /// </para>
     /// <para>
@@ -43,7 +43,7 @@ namespace GlimmerGrove.Social
         /// <para>
         /// Two hundred, and the number is doing real work. A percentile computed over a
         /// dozen players is noise presented as a fact, and the first players to reach a new
-        /// chapter are exactly the ones who would see it — the most engaged players in the
+        /// chapter are exactly the ones who would see it - the most engaged players in the
         /// game, told something false about themselves. Silence is the correct output of a
         /// sample too small to speak from.
         /// </para>
@@ -57,8 +57,8 @@ namespace GlimmerGrove.Social
         /// Deliberately short of 0 and 100: a line claiming a player beat everybody is a
         /// line somebody will find a counterexample to. They are consts rather than
         /// literals inside <see cref="PercentSlower"/> because a stored standing has to be
-        /// clamped to the same range on the way back in — see
-        /// <see cref="Persistence.LevelRecord.TryFromDto"/> — and two copies of a bound
+        /// clamped to the same range on the way back in - see
+        /// <see cref="Persistence.LevelRecord.TryFromDto"/> - and two copies of a bound
         /// are how a forged save ends up wearing a band nothing can produce.
         /// </para>
         /// <para>
@@ -75,7 +75,7 @@ namespace GlimmerGrove.Social
         ///
         /// <para>
         /// The null check guards <c>default(LevelStats)</c>, which no constructor can
-        /// produce — the ctor substitutes an empty list — but which a caller can conjure
+        /// produce - the ctor substitutes an empty list - but which a caller can conjure
         /// with <c>default</c> or an uninitialised field. It costs nothing and it keeps
         /// this readable as a struct that is safe at rest.
         /// </para>
@@ -91,7 +91,7 @@ namespace GlimmerGrove.Social
         /// decile table knows: it says where the boundaries are and nothing about the shape
         /// in between, so a straight line is the least invented answer. The result is
         /// deliberately never 0 or 100 unless the player is genuinely outside the whole
-        /// table — a line saying "you beat 100% of keepers" is a line somebody will find a
+        /// table - a line saying "you beat 100% of keepers" is a line somebody will find a
         /// counterexample to.
         /// </para>
         /// </summary>
@@ -124,14 +124,14 @@ namespace GlimmerGrove.Social
         }
 
         /// <summary>
-        /// True when the player is comfortably ahead of the pack — the only case worth
+        /// True when the player is comfortably ahead of the pack - the only case worth
         /// putting on a victory screen.
         ///
         /// <para>
         /// Social comparison is a strong motivator and a sharp one. Told they are ahead, a
         /// player plays more; told they are behind, a good share of them stop, and the ones
         /// who stop are disproportionately the ones who were struggling anyway. So the line
-        /// is drawn upward only. It is not flattery — every word of it is true — it is a
+        /// is drawn upward only. It is not flattery - every word of it is true - it is a
         /// decision about which true things are worth saying to somebody who has just won.
         /// </para>
         /// </summary>
@@ -145,7 +145,7 @@ namespace GlimmerGrove.Social
     }
 
     /// <summary>
-    /// Everybody's results, by glade — read from the server, never computed here.
+    /// Everybody's results, by glade - read from the server, never computed here.
     ///
     /// <para>
     /// Published by a scheduled job that samples player saves and writes one small
@@ -155,7 +155,7 @@ namespace GlimmerGrove.Social
     /// of it would be quoting last quarter's population forever.
     /// </para>
     /// <para>
-    /// Absent is the normal state and costs nothing — no backend, no network, a brand new
+    /// Absent is the normal state and costs nothing - no backend, no network, a brand new
     /// glade nobody has played. Every reader gets <see cref="LevelStats.None"/> and draws
     /// nothing, which is why no screen has to know whether this ever arrived.
     /// </para>
@@ -175,8 +175,8 @@ namespace GlimmerGrove.Social
             => _byLevel.TryGetValue(level, out var stats) ? stats : LevelStats.None;
 
         /// <summary>
-        /// Adopts a table. Replaces wholesale rather than merging, so a shrinking sample —
-        /// a glade retired, a job that read fewer players — cannot leave a stale figure
+        /// Adopts a table. Replaces wholesale rather than merging, so a shrinking sample -
+        /// a glade retired, a job that read fewer players - cannot leave a stale figure
         /// behind claiming to be current.
         /// </summary>
         public static void Publish(IReadOnlyDictionary<LevelId, LevelStats> table)

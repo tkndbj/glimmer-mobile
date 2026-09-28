@@ -15,7 +15,7 @@ namespace GlimmerGrove
     /// <b>It exists because one screen in the game cannot be left.</b> Everywhere else a short
     /// gem balance opens the shop, which is right: that is the moment somebody has decided
     /// they want something, and it is the best moment in the game to show them how to get it.
-    /// Over a run it is the worst — the board behind the panel is frozen at its fail state
+    /// Over a run it is the worst - the board behind the panel is frozen at its fail state
     /// with its heart uncharged, and navigating away forfeits it. So a player who tapped "get
     /// gems" to <em>save</em> their run would lose it on the way to paying for it, which is
     /// the shape of mistake that gets refunds asked for.
@@ -26,28 +26,28 @@ namespace GlimmerGrove
     /// fresh one. Both need the same shelf brought to the same frozen screen, and the second
     /// caller is what turned a private detail of the first into a thing: nothing here knows
     /// what the gems are <em>for</em>, which is exactly what makes a third caller free. What a
-    /// caller supplies is one callback — <see cref="Bought"/>, raised only when gems have
-    /// actually been granted — and what it gets back is a panel that steps out from under the
+    /// caller supplies is one callback - <see cref="Bought"/>, raised only when gems have
+    /// actually been granted - and what it gets back is a panel that steps out from under the
     /// receipt so its own offer is standing again with the price now affordable.
     /// </para>
     /// <para>
     /// <b>It is a top-up, not a second shop.</b> No tabs, no supplies, no restore line, no
-    /// bundles shelf — one list of everything that grants gems, ordered by size, and a way
+    /// bundles shelf - one list of everything that grants gems, ordered by size, and a way
     /// back. Those omissions are the design: this panel exists to answer one question that was
     /// asked one screen ago, and every control that answers a different one is a way to lose
     /// the thread. <c>ShopScreen</c> remains the place to browse.
     /// </para>
     /// <para>
     /// <b>It closes itself when the gems land.</b> A purchase is reported by
-    /// <c>StoreService.Granted</c> — after the server has granted, never when the payment
-    /// sheet closes — and <c>Boot</c> raises the receipt panel over the top wherever the
+    /// <c>StoreService.Granted</c> - after the server has granted, never when the payment
+    /// sheet closes - and <c>Boot</c> raises the receipt panel over the top wherever the
     /// player happens to be. This one steps out from under it, so dismissing the receipt
     /// leaves the offer that started all of this standing with its price now affordable. That
     /// is the whole flow: tap, pay, receipt, one tap to continue.
     /// </para>
     /// <para>
     /// <b>The list virtualises</b> (<see cref="GridView"/>) for the reason every list here
-    /// does — the shop catalog is content and grows every drop, and a panel that built a
+    /// does - the shop catalog is content and grows every drop, and a panel that built a
     /// subtree per product would cost the catalog's size on a screen showing four of them.
     /// </para>
     /// </summary>
@@ -119,7 +119,7 @@ namespace GlimmerGrove
             // whenever it was raised.
             PlayerProgression.Changed += Repaint;
 
-            // The store may not have connected yet — the splash starts it, and a player can
+            // The store may not have connected yet - the splash starts it, and a player can
             // reach a fail state before it answers. Asking again costs nothing when it has.
             StoreService.BeginConnect();
 
@@ -155,7 +155,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Every product that grants gems, not the gem shelf.</b> A bundle is a perfectly
         /// good answer to "I need gems", and this list has to agree exactly with
-        /// <c>StoreCatalog.HasGems</c> — which is what decided the offer one panel back would
+        /// <c>StoreCatalog.HasGems</c> - which is what decided the offer one panel back would
         /// have a way to be met. A shelf filter here and a grant test there is two answers to
         /// one question, and the day they disagree is the day somebody is shown a "get gems"
         /// button that opens an empty panel.
@@ -195,7 +195,7 @@ namespace GlimmerGrove
         /// <summary>
         /// Redraws what is on screen: same cells, same place, no entrance.
         ///
-        /// The house rule <c>GridView</c> exists to make cheap — <c>Show</c> animates and
+        /// The house rule <c>GridView</c> exists to make cheap - <c>Show</c> animates and
         /// <c>Refresh</c> does not, and anything raised by an event is a redraw. Prices
         /// arriving from the store is exactly such an event, and it lands a second or two
         /// after this panel opens.
@@ -224,7 +224,7 @@ namespace GlimmerGrove
         /// sentence.
         ///
         /// A shop that cannot reach the store and one that is still loading look identical
-        /// from an empty list, and only one of them is worth waiting for — <c>ShopScreen</c>'s
+        /// from an empty list, and only one of them is worth waiting for - <c>ShopScreen</c>'s
         /// summary line, cut to the states a run's fail state can actually meet.
         /// </summary>
         void PaintNote()
@@ -263,7 +263,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>The order is the point.</b> <c>Boot</c> raises the receipt panel from this same
-        /// event, and modals stack in the order they are added — so the receipt is already
+        /// event, and modals stack in the order they are added - so the receipt is already
         /// above this one by the time this runs. Closing quietly leaves it drawn over the
         /// panel that raised this one, and dismissing it lands the player back exactly where
         /// they were, one tap from carrying on.
@@ -291,7 +291,7 @@ namespace GlimmerGrove
         /// <summary>
         /// A purchase attempt ended without a transaction.
         ///
-        /// A toast rather than a panel, and cancelling says nothing at all — <c>ShopScreen</c>'s
+        /// A toast rather than a panel, and cancelling says nothing at all - <c>ShopScreen</c>'s
         /// judgement, and it matters more here: this panel is already the second modal on a
         /// frozen run, and a third one apologising for a dismissed payment sheet is how a
         /// player loses track of what they were doing.
@@ -317,7 +317,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <c>View.OnBack</c> returns false by default and <c>Flow.HandleBack</c> walks the
-        /// modal stack downwards until something says it dealt with the key — so a panel that
+        /// modal stack downwards until something says it dealt with the key - so a panel that
         /// does not answer hands the press to whatever is <em>underneath</em> it. Under this one
         /// is the continue offer, whose back key declines and ends the run. Without this line a
         /// player who pressed back to leave the gem list would lose the glade they opened it to

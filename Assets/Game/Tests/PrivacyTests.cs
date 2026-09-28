@@ -12,7 +12,7 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// Two properties matter more than the rest and are pinned hardest. The mediation SDK must
-    /// never be initialised before the consent answer has been applied to it — an SDK that
+    /// never be initialised before the consent answer has been applied to it - an SDK that
     /// starts first has already decided what it may collect and has already auctioned on that
     /// decision, and no later call undoes the first request. And an unanswered question must
     /// never read as a yes: every path that fails, times out or is never asked has to land on
@@ -20,7 +20,7 @@ namespace GlimmerGrove.Tests
     /// </para>
     /// <para>
     /// Both are invisible in a screenshot and invisible in the Editor, which never resolves
-    /// consent and never shows an ad — the same argument that put <c>TweenCycle</c> and
+    /// consent and never shows an ad - the same argument that put <c>TweenCycle</c> and
     /// <c>AccountGate</c> in Domain as pure functions. So the gateway is a seam and the whole
     /// flow runs offline against a fake.
     /// </para>
@@ -48,7 +48,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// Inside it, nothing but an explicit yes will do — and silence is the commonest
+        /// Inside it, nothing but an explicit yes will do - and silence is the commonest
         /// state, because it is what a failed or dismissed form leaves behind.
         /// </summary>
         [Test]
@@ -99,7 +99,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// Android and old iOS have no prompt to answer, and that must read as permission
-        /// rather than as a refusal — otherwise every Android player would be treated as
+        /// rather than as a refusal - otherwise every Android player would be treated as
         /// having declined a question their platform never asks.
         /// </summary>
         [Test]
@@ -174,7 +174,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A withdrawal reaches the SDK without an app restart — which is the whole point of
+        /// A withdrawal reaches the SDK without an app restart - which is the whole point of
         /// <c>ApplyPrivacy</c> being separate from initialisation rather than a parameter of it.
         /// </summary>
         [Test]
@@ -213,7 +213,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// A build with no ad SDK asks nobody anything. Consent exists to be handed to
         /// mediation, so a form shown where no ad can ever appear collects an answer nothing
-        /// will use — and spends the one chance to ask on it.
+        /// will use - and spends the one chance to ask on it.
         /// </summary>
         [Test]
         public async Task ABuildWithNoAdProviderNeverPromptsForConsent()
@@ -257,7 +257,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A consent question left open — the CMP unreachable, the form unloadable — does not
+        /// A consent question left open - the CMP unreachable, the form unloadable - does not
         /// spend Apple's one question on this launch. If it did, the form would come *after*
         /// the tracking dialog on the next launch, which is the order Apple refuses. The
         /// status is still read, so a device that answered on an earlier launch carries it.
@@ -297,7 +297,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// Where no form is owed the question is closed without one, and Apple is asked on the
-        /// first launch as before — a player outside the EEA must not lose the prompt to a
+        /// first launch as before - a player outside the EEA must not lose the prompt to a
         /// gate written for the EEA. Both spellings a CMP can answer with: "does not apply",
         /// and "applies and answered".
         /// </summary>
@@ -355,7 +355,7 @@ namespace GlimmerGrove.Tests
         /// called again, because consent is answered once.
         /// </para>
         /// <para>
-        /// That is not a bug to be fixed here — moving the assignment would make <c>Commit</c>'s
+        /// That is not a bug to be fixed here - moving the assignment would make <c>Commit</c>'s
         /// own early-out swallow the event whenever a player's real answer happens to equal the
         /// restrictive default, which is exactly the answer that matters most. So the ordering
         /// is pinned instead, and this test is the warning: both measurement SDKs were wired

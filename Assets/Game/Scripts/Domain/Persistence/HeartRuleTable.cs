@@ -11,7 +11,7 @@ namespace GlimmerGrove.Persistence
     /// Same job <c>AdRules</c> does for the ad table: content is allowed to retune the
     /// gate, it is not allowed to redefine what the gate is. Everything here is a
     /// compile-time constant precisely because it is what a published file is checked
-    /// <em>against</em> — a limit that could itself be published would not be a limit.
+    /// <em>against</em> - a limit that could itself be published would not be a limit.
     /// </para>
     /// </summary>
     public static class HeartLimits
@@ -21,7 +21,7 @@ namespace GlimmerGrove.Persistence
         /// The most hearts a <see cref="Hearts"/> ledger can represent, ever.
         ///
         /// <para>
-        /// <b>This is not the ceiling a player experiences</b> — that is
+        /// <b>This is not the ceiling a player experiences</b> - that is
         /// <see cref="HeartRuleTable.Ceiling"/>, and it is content. This one is the bound
         /// the ledger's own clamp uses, and the distinction is the single most important
         /// thing in this file.
@@ -30,7 +30,7 @@ namespace GlimmerGrove.Persistence
         /// The merge proof needs <c>produced ≤ spent + something finite</c> to hold on
         /// every device at every moment. If that "something" were the tunable ceiling, then
         /// lowering it from a config push would clamp <c>produced</c> <em>downward</em> on
-        /// the next read — and <c>produced</c> is a counter that only ever rises. Breaking
+        /// the next read - and <c>produced</c> is a counter that only ever rises. Breaking
         /// that breaks everything built on it: the value would fall on one device and not
         /// on another that had not fetched the new table yet, the join would restore it,
         /// the clamp would cut it again, and two devices would never agree. It would also
@@ -39,7 +39,7 @@ namespace GlimmerGrove.Persistence
         /// </para>
         /// <para>
         /// So the structural bound is fixed in code and generous, and the ceiling players
-        /// meet is enforced where it belongs — at the moment of a <see cref="Hearts.Grant"/>,
+        /// meet is enforced where it belongs - at the moment of a <see cref="Hearts.Grant"/>,
         /// which is a decision rather than a re-reading. Lowering the published ceiling
         /// therefore stops new grants and never takes a heart away from anybody.
         /// </para>
@@ -87,7 +87,7 @@ namespace GlimmerGrove.Persistence
         ///
         /// <para>
         /// Twenty rather than something tighter because the window is bounded again by the
-        /// content itself — <c>HeartStake</c> counts it inside the first chapter of a mode and
+        /// content itself - <c>HeartStake</c> counts it inside the first chapter of a mode and
         /// stops at the chapter's end, so a published twenty on a ten-glade chapter is ten. The
         /// limit is here to catch the typo that drops a zero, not to express a design view: a
         /// whole free first chapter is a decision somebody may legitimately want to make from a
@@ -122,14 +122,14 @@ namespace GlimmerGrove.Persistence
         ///
         /// <para>
         /// Two rather than one, because one is a purchase that has to be made again the moment
-        /// it fails — and the board it buys is a board the player has just lost, so a second
+        /// it fails - and the board it buys is a board the player has just lost, so a second
         /// loss is the likely outcome rather than a rare one. Two is one attempt and one
         /// recovery; a full bar of five is <c>hearts_five</c> in the shop and belongs there,
         /// where somebody is choosing rather than reacting.
         /// </para>
         /// <para>
         /// Nought is legal and withdraws the offer entirely. That is the lever that turns the
-        /// whole feature off from a config push — a store review objection, a market where
+        /// whole feature off from a config push - a store review objection, a market where
         /// paying past a play gate is regulated, a price that turned out to read as a trap.
         /// </para>
         /// </summary>
@@ -139,7 +139,7 @@ namespace GlimmerGrove.Persistence
         /// The first three glades of a mode are free to fail.
         ///
         /// Three because that is the shortest run of boards that can teach a verb, let the
-        /// player use it badly, and let them use it again — one is a demonstration and two is a
+        /// player use it badly, and let them use it again - one is a demonstration and two is a
         /// coincidence. The cost of getting this wrong is asymmetric in a way worth stating:
         /// too generous and a player spends three glades' worth of nothing, too mean and the
         /// heart gate meets somebody who has not yet decided they like the game.
@@ -148,7 +148,7 @@ namespace GlimmerGrove.Persistence
     }
 
     /// <summary>
-    /// How many hearts a player may hold and how fast they come back — content, not code.
+    /// How many hearts a player may hold and how fast they come back - content, not code.
     ///
     /// <para>
     /// This is the gate that sits between a player and the game, so it is the single
@@ -169,7 +169,7 @@ namespace GlimmerGrove.Persistence
     /// <b>Every number here is safe to lower.</b> That is a property worth stating, because
     /// it is what makes the block safe to push at all. Lowering the refill cap stops the
     /// clock earlier and leaves anybody above it holding what they had; lowering the
-    /// ceiling stops new grants and confiscates nothing — see
+    /// ceiling stops new grants and confiscates nothing - see
     /// <see cref="HeartLimits.HardCeiling"/>. Nothing published here can reach into a save
     /// file and take something out of it.
     /// </para>
@@ -192,8 +192,8 @@ namespace GlimmerGrove.Persistence
         }
 
         /// <summary>
-        /// Where the clock stops. The timer refills to this and no further, so this — not
-        /// <see cref="Ceiling"/> — is the number that sets the pace of free play.
+        /// Where the clock stops. The timer refills to this and no further, so this - not
+        /// <see cref="Ceiling"/> - is the number that sets the pace of free play.
         /// </summary>
         public int RefillCap { get; }
 
@@ -231,7 +231,7 @@ namespace GlimmerGrove.Persistence
         ///
         /// The number alone; <see cref="Progression.HeartRescue"/> owns when it may be shown,
         /// because that needs a balance and a store and this table must stay readable without
-        /// either — the same split <see cref="GraceLevels"/> makes with <c>HeartStake</c>.
+        /// either - the same split <see cref="GraceLevels"/> makes with <c>HeartStake</c>.
         /// </summary>
         public int RescueHearts { get; }
 
@@ -249,7 +249,7 @@ namespace GlimmerGrove.Persistence
         /// <summary>
         /// The numbers that ship inside the build, and the floor under any content mistake.
         ///
-        /// Five hearts at eight hours apart is a full set in a day and a half — long enough
+        /// Five hearts at eight hours apart is a full set in a day and a half - long enough
         /// that the gate is real rather than decorative, which is what makes it worth
         /// building a server clock for. At twenty-five minutes nobody bothers cheating; at
         /// eight hours they will.
@@ -308,7 +308,7 @@ namespace GlimmerGrove.Persistence
                                     HeartLimits.MaxRescueHearts, "hearts rescueHearts", problems);
 
             // The price refuses nought rather than obeying it. A rescue that costs nothing is
-            // not a cheap rescue, it is a heart gate that has stopped gating — invariant 5d's
+            // not a cheap rescue, it is a heart gate that has stopped gating - invariant 5d's
             // complaint about a rule that rejects nothing, applied to the one thing in this
             // game that can stop somebody playing. The field above says "no offer" properly,
             // so there is no reading of a zero here that is a design decision.
@@ -384,7 +384,7 @@ namespace GlimmerGrove.Persistence
         /// One authored number: unwritten inherits, out of range is clamped and named.
         ///
         /// Clamped rather than rejected because these are scalars with no sensible partial
-        /// state — refusing one would mean discarding the whole block, and a gate running on
+        /// state - refusing one would mean discarding the whole block, and a gate running on
         /// five of six published numbers is closer to what the author meant than one running
         /// on none of them.
         /// </summary>
@@ -420,7 +420,7 @@ namespace GlimmerGrove.Persistence
     /// than a session.
     /// </para>
     /// <para>
-    /// The names are unchanged from when these were constants, which is deliberate — every
+    /// The names are unchanged from when these were constants, which is deliberate - every
     /// call site reads identically and the diff that made the gate tunable is confined to
     /// this file. Note that they are properties now, so a hot loop should take a local
     /// copy rather than re-reading through three dereferences per iteration.

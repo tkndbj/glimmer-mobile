@@ -15,15 +15,15 @@ namespace GlimmerGrove.Tests
     /// assert cascades that could not happen: nothing changed a mote's colour except a drop, so
     /// the first wave took every white on the board and the second could never find one. The
     /// wave counter and the chain multiplier were dead code against a rule that rejects them.
-    /// The claim that matters now is the one at the bottom — that a mote completed by a wash
-    /// bursts in the wave after it — because that is the only thing in this mode that makes one
+    /// The claim that matters now is the one at the bottom - that a mote completed by a wash
+    /// bursts in the wave after it - because that is the only thing in this mode that makes one
     /// drop worth more than one mote.
     /// </para>
     /// <para>
     /// <b>Boards are written out rather than dealt.</b> The mode used to roll its own colours,
     /// so these tests had to ask the board what it was holding and pick a column accordingly.
     /// A level now authors both the well and the procession, which is what makes par derivable
-    /// — and it means a case here can state the exact position it is about.
+    /// - and it means a case here can state the exact position it is about.
     /// </para>
     /// </summary>
     public sealed class FallBoardTests

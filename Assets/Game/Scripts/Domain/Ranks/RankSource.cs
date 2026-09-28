@@ -13,19 +13,19 @@ namespace GlimmerGrove.Ranks
     /// <b>This exists because a rank went public.</b> While a badge was only ever drawn on the
     /// player's own map it could be read straight off the live ledgers, which is what
     /// <see cref="RankMeasures"/> did. A rank on a board row is a different thing: it has to be
-    /// derived from the <em>save file</em> the server holds, on both sides of the wire — by the
+    /// derived from the <em>save file</em> the server holds, on both sides of the wire - by the
     /// client because the publish fingerprint is built from the pushed file and never from the
     /// device (<c>GroveCard.OfSave</c>), and by the server because a number that goes public
     /// stops being derived-and-trusted and becomes adjudicated (invariant 19a).
     /// </para>
     /// <para>
-    /// <b>One rule, two sources.</b> Everything above this — which lines a rung asks for, what
-    /// "met" means, and the walk up from the bottom that decides which rung is held — is written
+    /// <b>One rule, two sources.</b> Everything above this - which lines a rung asks for, what
+    /// "met" means, and the walk up from the bottom that decides which rung is held - is written
     /// exactly once and takes a source. Only the six readings below are implemented twice, and
     /// the pair is held together by <see cref="LedgerRankSource"/> and
     /// <see cref="SaveRankSource"/> answering identically for a loaded save, which
     /// <c>RankLadderTests</c> asserts. Without this the ladder itself would have been copied,
-    /// and a ladder that disagrees with itself is a badge handed out for less than it asks for —
+    /// and a ladder that disagrees with itself is a badge handed out for less than it asks for -
     /// which nobody would ever notice.
     /// </para>
     /// <para>
@@ -62,7 +62,7 @@ namespace GlimmerGrove.Ranks
     /// <para>
     /// What the map's badge and the ranks page are drawn from, because those two have to answer
     /// the instant a run lands and must never wait on a sync. It is a class rather than a struct
-    /// so a null index — a game whose content has not finished loading — is expressible and
+    /// so a null index - a game whose content has not finished loading - is expressible and
     /// answers nought rather than throwing: the map draws before the splash is finished on a
     /// slow device, and a readout that crashes there is worse than one that says "not yet".
     /// </para>
@@ -156,7 +156,7 @@ namespace GlimmerGrove.Ranks
     /// </para>
     /// <para>
     /// <b>The keeper level is handed in rather than derived.</b> It is the one reading whose
-    /// answer is already computed by whoever is building the card — the server derives it from
+    /// answer is already computed by whoever is building the card - the server derives it from
     /// XP it recomputes and refuses the save's own claim, and the client passes the level the
     /// progression ledger holds. Deriving it a second time here would be a third copy of the
     /// curve, and the two that exist are already held together by the shared vectors.
@@ -265,7 +265,7 @@ namespace GlimmerGrove.Ranks
 
             // The walk is bounded by the rules' own cap rather than by the array's length,
             // which is the reading `bestWave` takes on the server and the one
-            // `EndlessLedger.LifetimeWavesIn` takes here — see its remarks for why a refused
+            // `EndlessLedger.LifetimeWavesIn` takes here - see its remarks for why a refused
             // row near the top would otherwise let the two sides disagree about a sixty-fifth.
             int walk = rows.Length < EndlessLedger.MaxRows ? rows.Length : EndlessLedger.MaxRows;
 
@@ -277,7 +277,7 @@ namespace GlimmerGrove.Ranks
                 // The length bound the server applies to the same row (`MAX_LEVEL_ID_LENGTH`,
                 // which is this constant). Asked here rather than left out, because a row this
                 // side accepted and the server refused is a wave one of them counts and the
-                // other does not — which is a rung held on one screen and not on the other.
+                // other does not - which is a rung held on one screen and not on the other.
                 if (row.level.Length > LevelId.MaxLength) continue;
 
                 if (any && !string.Equals(row.level, scope, StringComparison.Ordinal)) continue;
@@ -311,7 +311,7 @@ namespace GlimmerGrove.Ranks
         }
 
         /// <summary>
-        /// What this save already proves about a verb — <see cref="LifetimeTally"/>'s floor,
+        /// What this save already proves about a verb - <see cref="LifetimeTally"/>'s floor,
         /// read off the file instead of off the ledgers. The two must agree entry for entry, or
         /// a published rank sits below the one the player's own map draws.
         /// </summary>

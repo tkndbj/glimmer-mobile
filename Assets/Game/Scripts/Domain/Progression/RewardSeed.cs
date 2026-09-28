@@ -7,8 +7,8 @@ namespace GlimmerGrove.Progression
     /// What every reproducible reward is seeded from.
     ///
     /// <para>
-    /// The game now has two rewards that are computed rather than stored — a daily chest's
-    /// contents and a glade's golden bonus — and both rest on the same requirement: the
+    /// The game now has two rewards that are computed rather than stored - a daily chest's
+    /// contents and a glade's golden bonus - and both rest on the same requirement: the
     /// server must arrive at the same answer from the same inputs, or the client is showing
     /// a player a reward the server will overrule. That makes the identity used to seed
     /// them a piece of the wire contract, not an implementation detail, and it is the sort
@@ -17,14 +17,14 @@ namespace GlimmerGrove.Progression
     /// <para>
     /// So it is written once, here. The account id, because it is the only identifier the
     /// server can also compute from. The device id only when there is no backend
-    /// configured at all — where nothing is adjudicated and the seed simply has to be
+    /// configured at all - where nothing is adjudicated and the seed simply has to be
     /// stable for this installation.
     /// </para>
     /// <para>
     /// Empty before the first sign-in on a build that does have a backend. Callers must
     /// treat that as "no reward yet" rather than substituting something: a chest waits
     /// (see <c>DailyChests.CanOpen</c>) and a golden pays its base. Both are the
-    /// conservative direction, which is the only safe one — the client cannot know the
+    /// conservative direction, which is the only safe one - the client cannot know the
     /// server's seed before it has spoken to the server, and no scheme can invent one.
     /// </para>
     /// </summary>
@@ -55,7 +55,7 @@ namespace GlimmerGrove.Progression
         /// A chest's contents are seeded from the account id, because that is the one
         /// identifier the server can also compute from. Before the first sign-in there is no
         /// account id, so the client would roll against the device id while the server
-        /// re-rolled against the uid — and the player would be shown one reward and given
+        /// re-rolled against the uid - and the player would be shown one reward and given
         /// another. So the chest waits instead of lying. In practice this is invisible:
         /// anonymous sign-in fires from the splash screen, so an account id exists within
         /// seconds of a first launch that has any connection at all, and it is stored in the

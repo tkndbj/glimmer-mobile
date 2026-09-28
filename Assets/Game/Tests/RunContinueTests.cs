@@ -15,15 +15,15 @@ namespace GlimmerGrove.Tests
     /// <see cref="ContinuingAThicketHandsOverTheAuthoredTapsAndNothingElse"/>.</b> A glade is lost when
     /// its counter reaches the budget and any turn at all makes it playable again, so selling
     /// fifteen of them cannot go wrong. A weave is lost when the light left cannot cover the
-    /// cheapest possible finish — which usually leaves cells in the pot that cannot be spent —
+    /// cheapest possible finish - which usually leaves cells in the pot that cannot be spent -
     /// so selling the authored twenty alone would put the player back on a board that is still
     /// provably unwinnable and end the run again in the same frame, <em>having taken their
     /// gems</em>. Nothing in a compile, a validator or a screenshot could see that: the price
     /// is right, the grant lands, the meter goes up, and the run dies anyway.
     /// </para>
     /// <para>
-    /// Everything here runs offline. <c>RunContinue.Offer</c> is pure — what the player holds,
-    /// what it costs and whether there is a shop are all passed in — precisely because it is
+    /// Everything here runs offline. <c>RunContinue.Offer</c> is pure - what the player holds,
+    /// what it costs and whether there is a shop are all passed in - precisely because it is
     /// the function that decides whether somebody is asked for money.
     /// </para>
     /// </summary>
@@ -73,7 +73,7 @@ namespace GlimmerGrove.Tests
         /// JSON carries no such key, so a file written before this block existed arrives here
         /// as an object with every field at its default. A <c>bool</c> would default to
         /// <c>false</c> and withdraw the offer from every client that had not taken a content
-        /// push — silently, on the one field where silence costs the most.
+        /// push - silently, on the one field where silence costs the most.
         /// </summary>
         [Test]
         public void ABlockPresentButUnwrittenStillLeavesTheOfferStanding()
@@ -375,8 +375,8 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A mode saying "no amount of allowance would help" — a weave with every pair walled
-        /// in — must never be sold one. Charging for that would be charging for nothing.
+        /// A mode saying "no amount of allowance would help" - a weave with every pair walled
+        /// in - must never be sold one. Charging for that would be charging for nothing.
         /// </summary>
         [Test]
         public void ARunThatCannotBeRescuedIsNeverSoldAContinue()
@@ -456,7 +456,7 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(tuning.MoveBudget + 15, board.MoveBudget);
 
             // The half that must not move. Stars are held against par, never against the
-            // budget (invariant 22), so a continued run is still graded on what it spent —
+            // budget (invariant 22), so a continued run is still graded on what it spent -
             // which is why it can only ever score one.
             Assert.AreEqual(tuning.GoldThreshold, board.Gold);
             Assert.AreEqual(tuning.SilverThreshold, board.Silver);
@@ -464,7 +464,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A restart abandons the run and begins another, at the price of a heart — so a
+        /// A restart abandons the run and begins another, at the price of a heart - so a
         /// continue buys <em>this</em> run and not this glade. The alternative would make a
         /// bought budget cheaper to keep than to use.
         /// </summary>
@@ -485,7 +485,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// Nothing on an unbudgeted board can run out, so a continue could never have been
-        /// offered for one — and quietly accepting the grant would leave a player's gem
+        /// offered for one - and quietly accepting the grant would leave a player's gem
         /// balance as the only witness to that bug.
         /// </summary>
         [Test]

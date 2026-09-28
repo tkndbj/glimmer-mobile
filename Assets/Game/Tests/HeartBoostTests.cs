@@ -147,7 +147,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The boost is generous where the ledger is exact, and the two do not interfere.
         /// Both devices produced five hearts; the tablet has played two more runs, so the
-        /// merged count is the tablet's — not because it is smaller, but because its spend
+        /// merged count is the tablet's - not because it is smaller, but because its spend
         /// is a thing that happened and the join keeps it.
         /// </summary>
         [Test]

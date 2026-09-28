@@ -9,16 +9,16 @@ namespace GlimmerGrove.Wards
     /// than in the screen that draws the headers.</b> The shelf has already been re-rung twice
     /// (invariants 37ax, 37ay) and a table of ids inside a view would have gone stale both times;
     /// read off the order, the bands follow whatever the shelf is today. It is also why
-    /// <c>SiegeView.Barrels</c> is keyed the same way — the two are the same kind of question.
+    /// <c>SiegeView.Barrels</c> is keyed the same way - the two are the same kind of question.
     /// </para>
     /// <para>
     /// <b>A band is a wall now, and it was a caption before.</b> The shelf used to be one ladder
-    /// climbed a rung at a time — a turret sealed until the one below it was held — so the three
+    /// climbed a rung at a time - a turret sealed until the one below it was held - so the three
     /// headers were punctuation over an order that was already forced, and this file said in as
     /// many words that nothing else might key on it. The seal is gone at the owner's decision: a
     /// keeper level is the whole of what opens a rung, and a player buys whatever they have
     /// reached in whatever order they like. What that leaves is three bands and three walls, so
-    /// the band is what the walls are authored against — <see cref="OpensAtLevel"/>.
+    /// the band is what the walls are authored against - <see cref="OpensAtLevel"/>.
     /// </para>
     /// <para>
     /// <b>Still not a price and still not a stat.</b> What a turret does is its ability and its
@@ -30,10 +30,10 @@ namespace GlimmerGrove.Wards
     /// <b>The boundaries are authored here and the first is not a coincidence.</b> Tier one is
     /// exactly the free turret and the credit ladder; tier two and three split the gem half where
     /// the owner asked. It would be tempting to <em>derive</em> the first from the currency and
-    /// leave the second typed — one rule, two spellings, which is worse than two of the same.
+    /// leave the second typed - one rule, two spellings, which is worse than two of the same.
     /// </para>
     /// <para>
-    /// <b>The fourth band is LEGENDARY, and it is the one band that is also a <em>rule</em> — but
+    /// <b>The fourth band is LEGENDARY, and it is the one band that is also a <em>rule</em> - but
     /// the rule is not read off here.</b> A legendary turret wears no colour, stands on any seat
     /// and fires at anything on the hill (<c>WardModel.Legendary</c>), and that is an authored
     /// flag on the model rather than a reading of its rung: this type has said since it was
@@ -53,7 +53,7 @@ namespace GlimmerGrove.Wards
         /// The shelf rung each band <em>starts</em> at, lowest first.
         ///
         /// <b>Starts rather than sizes</b>, so a drop that adds a turret to the middle of a band
-        /// widens that band instead of shifting every boundary after it — which is the same reason
+        /// widens that band instead of shifting every boundary after it - which is the same reason
         /// a chapter's levels are a list and its gate is a rule.
         /// </summary>
         static readonly int[] Opens = { 1, 11, 18, 21 };
@@ -65,7 +65,7 @@ namespace GlimmerGrove.Wards
         /// <b>The owner's four stretches: under twenty, twenty to thirty, thirty to forty, and
         /// forty-five up.</b>
         /// A band's rungs may ask for anything from its own opening level up to the level the
-        /// band above it opens at, exclusive — and the top band up to <see cref="TopLevel"/>.
+        /// band above it opens at, exclusive - and the top band up to <see cref="TopLevel"/>.
         /// </para>
         /// <para>
         /// <b>Written here rather than in the roster, which is the point of it.</b> Every
@@ -88,7 +88,7 @@ namespace GlimmerGrove.Wards
         /// shipping a padlock nobody alive can open.
         ///
         /// <b>It moved from forty to sixty when the legendary band opened</b>, which is the one
-        /// edit a new band costs beyond two array entries — and it is worth saying that the
+        /// edit a new band costs beyond two array entries - and it is worth saying that the
         /// number has stopped meaning "the top of tier three": band three's ceiling is now one
         /// under band four's gate, exactly as every other boundary already was.
         /// </summary>
@@ -97,8 +97,8 @@ namespace GlimmerGrove.Wards
         /// <summary>
         /// Which band <paramref name="model"/> stands in, one to <see cref="Count"/>.
         ///
-        /// <b>Never nought</b>: an order below the first boundary — which content cannot author,
-        /// since orders run from one — still reads as the first band rather than as a turret with
+        /// <b>Never nought</b>: an order below the first boundary - which content cannot author,
+        /// since orders run from one - still reads as the first band rather than as a turret with
         /// no home, because a shelf with an unlabelled cell on it is worse than one whose label is
         /// generous.
         /// </summary>

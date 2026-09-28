@@ -51,7 +51,7 @@ namespace GlimmerGrove.Persistence
         ///
         /// <para>
         /// <b>The revision and the sync mark go with the user id, and that is the point.</b>
-        /// Both describe a conversation with one account's document — how many times this save
+        /// Both describe a conversation with one account's document - how many times this save
         /// has been written since that document was last seen, and when. Carried into a
         /// different account they are worse than meaningless: a revision invented against
         /// somebody else's history is exactly the input a backend using it for optimistic

@@ -1,7 +1,7 @@
 // App Tracking Transparency, bound for AppTrackingPrompt.cs.
 //
 // Two functions and no state. The status is read from the framework every time rather than
-// cached here, because iOS owns the answer and can change it while the app is running — a
+// cached here, because iOS owns the answer and can change it while the app is running - a
 // player who revokes tracking in Settings comes back to a process whose cached copy would be
 // wrong for the rest of its life.
 //

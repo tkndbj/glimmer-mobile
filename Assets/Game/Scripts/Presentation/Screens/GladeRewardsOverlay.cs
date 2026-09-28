@@ -20,12 +20,12 @@ namespace GlimmerGrove
     /// first glade prints coins" and "replaying is pointless", and both are wrong.
     /// </para>
     /// <para>
-    /// Every number in it is read from the tables — the chapter's own reward rule, the
-    /// golden bands, the chest cadence, the free opening — rather than written into the
+    /// Every number in it is read from the tables - the chapter's own reward rule, the
+    /// golden bands, the chest cadence, the free opening - rather than written into the
     /// copy, for <see cref="StreakInfoOverlay"/>'s reason: a panel explaining the game is the
     /// first thing to go stale when the game is retuned, and the only defence is for it to
-    /// have no numbers of its own to get wrong. The chapter matters here — <c>chapterRewards</c>
-    /// already overrides the opening one — so the panel is told which map raised it and
+    /// have no numbers of its own to get wrong. The chapter matters here - <c>chapterRewards</c>
+    /// already overrides the opening one - so the panel is told which map raised it and
     /// quotes that chapter's figures rather than the default curve's.
     /// </para>
     /// <para>
@@ -38,14 +38,14 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>The panel's height is derived, and the sections it holds vary.</b> The panel is
-    /// measured to what it is actually saying rather than to a typed number — the same
+    /// measured to what it is actually saying rather than to a typed number - the same
     /// judgement <c>SettingsOverlay</c> and <c>AccountOverlay</c> make. The arithmetic is
     /// <see cref="PanelStack"/>'s, in Domain, because a hand-written height is how the four
     /// sections that shipped came to be overlapping the button under them. Five is what the
     /// shortest canvas holds and five is what this panel now draws everywhere: the cost section
     /// stopped being conditional when the heart gate grew its second clause, and the two
     /// sentences it can carry are the same shape, so the count no longer varies. That is a fact
-    /// about today's content rather than a licence to add a sixth — <c>PanelStackTests</c> is
+    /// about today's content rather than a licence to add a sixth - <c>PanelStackTests</c> is
     /// what says how many fit.
     /// </para>
     /// </summary>
@@ -92,14 +92,14 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Gathered before anything is drawn because the count decides the panel's height, and
-        /// asking twice — once to measure and once to fill — is how two layouts drift apart.
+        /// asking twice - once to measure and once to fill - is how two layouts drift apart.
         /// </para>
         /// <para>
         /// What a glade costs leads, and it is always said. It is the only answer on the panel
         /// about the glade the player is looking at <em>right now</em> rather than about the
         /// rules behind it. Which sentence depends on where they are standing: in a mode's first
         /// chapter it is the opening window, and everywhere else it is the rule that a glade
-        /// already finished is free to play again — which is the half of the heart gate a player
+        /// already finished is free to play again - which is the half of the heart gate a player
         /// otherwise has no way at all of discovering, since the only evidence of it is a panel
         /// that does <em>not</em> appear when they leave.
         /// </para>
@@ -177,7 +177,7 @@ namespace GlimmerGrove
         /// <para>
         /// Read from the index rather than assumed to be ten: chapters ship every two to four
         /// weeks and nothing promises the next one is the size of the last. Falls back to the
-        /// chapter the map is showing, and then to the rule alone — a panel that cannot name a
+        /// chapter the map is showing, and then to the rule alone - a panel that cannot name a
         /// chapter still states the rule correctly, because the rule is per level.
         /// </para>
         /// </summary>
@@ -193,7 +193,7 @@ namespace GlimmerGrove
         ///
         /// Asked of the published bands rather than of <see cref="GoldenRules.MaxPercent"/>,
         /// which is the ceiling a content file may not exceed and not a promise anybody is
-        /// paid — quoting it would advertise ten times the coins on a table whose best band
+        /// paid - quoting it would advertise ten times the coins on a table whose best band
         /// is five.
         /// </summary>
         static int BestGoldenPercent(ProgressionTable table)
@@ -210,7 +210,7 @@ namespace GlimmerGrove
         ///
         /// The glyph is the one the game already uses for the thing being explained, so
         /// reading the panel also teaches what the marks on the map and the victory screen
-        /// mean — half of what somebody opened it to find out.
+        /// mean - half of what somebody opened it to find out.
         ///
         /// Every coordinate comes from <see cref="PanelStack"/>, which measures downward from
         /// the panel's top edge; <c>UIKit</c> takes the opposite sign, so it is negated here,
@@ -245,7 +245,7 @@ namespace GlimmerGrove
             // Shrinkable as well as wrapped, for the reason the streak's panel is: these are
             // the longest strings in the game and a translation half again the length of the
             // English would otherwise run out of its paragraph and into the row below it. It
-            // is also what makes PanelStack's arithmetic true rather than hopeful — the box is
+            // is also what makes PanelStack's arithmetic true rather than hopeful - the box is
             // a fixed depth because the text shrinks into it instead of growing.
             UIKit.Shrinkable(
                 UIKit.Titled("B", host, answer.Text, 27, Body, TextAnchor.UpperLeft,

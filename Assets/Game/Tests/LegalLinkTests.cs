@@ -9,8 +9,8 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// <b>Every failure here is silent on a device.</b> A malformed URL makes
-    /// <c>Application.OpenURL</c> do nothing at all — no exception, no log, a button that simply
-    /// does not work — and a panel that has grown past the canvas draws its title off the top of
+    /// <c>Application.OpenURL</c> do nothing at all - no exception, no log, a button that simply
+    /// does not work - and a panel that has grown past the canvas draws its title off the top of
     /// a 4:3 tablet and of nothing else. Neither shows up in a compile, a validator, or a
     /// screenshot taken on the phone the developer happens to hold.
     /// </para>
@@ -31,7 +31,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// The guard has to reject something, or it is decoration — invariant 5d's complaint
+        /// The guard has to reject something, or it is decoration - invariant 5d's complaint
         /// applied to a predicate rather than to a mechanic.
         /// </summary>
         [Test]
@@ -52,7 +52,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// All three on one host, and the host is the <c>www</c> one the site actually serves.
-        /// The apex 308-redirects to it, so a link to the apex works and spends a redirect —
+        /// The apex 308-redirects to it, so a link to the apex works and spends a redirect -
         /// and the same spelling belongs in the Developer website field of both store listings,
         /// because that is the domain ad crawlers fetch <c>app-ads.txt</c> from.
         /// </summary>
@@ -75,7 +75,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// The settings panel in its tallest arrangement — the consent row *and* the legal row —
+        /// The settings panel in its tallest arrangement - the consent row *and* the legal row -
         /// still fits the shortest canvas this game is drawn on.
         ///
         /// <para>

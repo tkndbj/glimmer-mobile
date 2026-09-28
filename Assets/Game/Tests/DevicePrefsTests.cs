@@ -10,7 +10,7 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// Both halves of its contract are the kind that rot silently. Drop the flush and the
     /// preference stops sticking for every player whose app is killed while backgrounded
-    /// rather than quit cleanly — which on a phone is most of them, and it looks like the
+    /// rather than quit cleanly - which on a phone is most of them, and it looks like the
     /// feature never worked rather than like a bug. Drop the comparison and a screen
     /// transition serialises the whole store to disk twice for no reason, which nothing
     /// anywhere would ever report.

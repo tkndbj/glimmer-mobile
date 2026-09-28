@@ -9,7 +9,7 @@ namespace GlimmerGrove.Persistence
     ///
     /// <para>
     /// <b>The problem it solves.</b> A heart is charged when a run is lost. Every way of
-    /// ending a run <em>without</em> losing it was therefore free — the restart button, the
+    /// ending a run <em>without</em> losing it was therefore free - the restart button, the
     /// back arrow, the pause menu's exits, and killing the app. That barely mattered while
     /// only the move budget could end a run, because running out of turns creeps up on a
     /// player. A countdown does not: it is a visible, reliable cue to tap restart one second
@@ -19,7 +19,7 @@ namespace GlimmerGrove.Persistence
     /// <b>Why a marker on disk rather than a flag in memory.</b> The deliberate exits can be
     /// handled in the screen that owns them, and are. This exists for the ending no screen
     /// ever sees: the process dying. A force-quit, an out-of-memory kill, a flat battery and
-    /// a crash are indistinguishable from each other and from each other's intent — no client
+    /// a crash are indistinguishable from each other and from each other's intent - no client
     /// can tell them apart, and neither could a server. So the run is written down when it
     /// begins and rubbed out when it resolves; anything still written down at the next launch
     /// was a run that never finished, and is charged then.
@@ -27,15 +27,15 @@ namespace GlimmerGrove.Persistence
     /// <para>
     /// <b>Local, and deliberately not in the save file.</b> "A run is in flight" is a fact
     /// about <em>this device</em>, not about the account. In <c>SaveFileDto</c> it would be
-    /// merged across devices — so a player mid-run on their phone would be charged on their
-    /// tablet — and it would break invariant 11b outright, because it goes up and down and
+    /// merged across devices - so a player mid-run on their phone would be charged on their
+    /// tablet - and it would break invariant 11b outright, because it goes up and down and
     /// therefore cannot be joined. <see cref="PlayerPrefs"/> is the right home for it, the
     /// same as the legacy import keys.
     /// </para>
     /// <para>
     /// <b>None of it needs the network.</b> The marker is local, the charge is local, and the
     /// charge survives to the cloud because hearts are a ledger of what was produced and what
-    /// was spent, merged by <c>max</c> — a spend made in airplane mode only ever raises
+    /// was spent, merged by <c>max</c> - a spend made in airplane mode only ever raises
     /// <c>spent</c>, so it cannot be undone by a device that was not there when it happened.
     /// Going offline is not a way out of this.
     /// </para>
@@ -54,7 +54,7 @@ namespace GlimmerGrove.Persistence
         /// the heart for it. <see cref="LevelId.None"/> when the last launch ended cleanly.
         ///
         /// Held so the first screen can say so out loud. A resource that quietly decrements
-        /// is a resource players feel cheated by later — the same rule the defeat panel's
+        /// is a resource players feel cheated by later - the same rule the defeat panel's
         /// heart row is built on.
         /// </summary>
         public static LevelId Unfinished { get; private set; }
@@ -75,7 +75,7 @@ namespace GlimmerGrove.Persistence
         ///
         /// The flush is the entire point and is not an optimisation to remove:
         /// <c>PlayerPrefs.SetString</c> writes to memory, and Unity persists that on a clean
-        /// quit — which is exactly the exit this type does not care about. Without
+        /// quit - which is exactly the exit this type does not care about. Without
         /// <c>PlayerPrefs.Save</c> the marker would be lost by the very crash it exists to
         /// catch.
         /// </summary>
@@ -88,8 +88,8 @@ namespace GlimmerGrove.Persistence
         }
 
         /// <summary>
-        /// Rubs the marker out. Called wherever a run reaches an ending — won, lost, or
-        /// abandoned on purpose — because all three have already been paid for by then.
+        /// Rubs the marker out. Called wherever a run reaches an ending - won, lost, or
+        /// abandoned on purpose - because all three have already been paid for by then.
         ///
         /// Idempotent and cheap enough to call on every such path, which is what it should
         /// be: the failure mode of calling it twice is nothing, and the failure mode of
@@ -109,8 +109,8 @@ namespace GlimmerGrove.Persistence
         ///
         /// <para>
         /// The marker is cleared whether or not a heart was there to take. A player who was
-        /// already at zero owes nothing — <c>TrySpendHeart</c> reports that as "already out"
-        /// rather than as a refusal — and leaving the marker behind would charge them for the
+        /// already at zero owes nothing - <c>TrySpendHeart</c> reports that as "already out"
+        /// rather than as a refusal - and leaving the marker behind would charge them for the
         /// same run on some later launch that happened to find them solvent.
         /// </para>
         /// </summary>

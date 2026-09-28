@@ -30,7 +30,7 @@ namespace GlimmerGrove.Social
     {
         /// <summary>
         /// The call did not reach the server. Nothing was recorded and it is worth trying
-        /// again — the same reading every other best-effort board call gives a failure.
+        /// again - the same reading every other best-effort board call gives a failure.
         /// </summary>
         Unavailable = 0,
 
@@ -50,19 +50,19 @@ namespace GlimmerGrove.Social
     /// <para>
     /// <b>Purely so the button can say the right thing, and deliberately not authoritative.</b>
     /// The server is idempotent on the (reporter, subject, target) triple, so a second report
-    /// costs one refused write and changes nothing — this exists to avoid asking at all, and to
+    /// costs one refused write and changes nothing - this exists to avoid asking at all, and to
     /// grey a control the player has already used.
     /// </para>
     /// <para>
     /// <b>Remembered per subject, because the two are two judgements.</b> Somebody who reported
     /// a keeper's name has not reported their grovement, and a single set would tell them they
-    /// had — which is the one thing this record can get wrong that a player would notice, and it
+    /// had - which is the one thing this record can get wrong that a player would notice, and it
     /// would read as the game refusing to take a report it had never been given.
     /// </para>
     /// <para>
     /// <b>It must never enter the save file.</b> "Who this device reported" goes up and down
     /// with a reinstall and is a fact about a device rather than about an account, so it could
-    /// never be joined (invariant 11b) — and merged it would arrive on a second device as a
+    /// never be joined (invariant 11b) - and merged it would arrive on a second device as a
     /// reason to stay quiet, which is backwards. It is held in memory for the session and
     /// nowhere else: the cost of forgetting is one refused write, and the cost of getting
     /// persistence wrong here is a save field that can never be removed.
@@ -75,7 +75,7 @@ namespace GlimmerGrove.Social
         /// by tapping is a set that grows for the life of the session.
         ///
         /// It counts <em>rows</em> rather than keepers, so a player who reports both halves of
-        /// one account spends two — which is the conservative reading: the bound is about memory
+        /// one account spends two - which is the conservative reading: the bound is about memory
         /// and a row is what is held.
         /// </summary>
         public const int MaxRemembered = 256;
@@ -109,7 +109,7 @@ namespace GlimmerGrove.Social
 
         /// <summary>
         /// Remembers a report. Called for <see cref="NameReportOutcome.Reported"/> and for
-        /// <see cref="NameReportOutcome.Duplicate"/> alike — the server has told us in both
+        /// <see cref="NameReportOutcome.Duplicate"/> alike - the server has told us in both
         /// cases that this pair is on record, and treating only the first as a report would
         /// leave a device that lost a reply asking for ever.
         /// </summary>
@@ -131,7 +131,7 @@ namespace GlimmerGrove.Social
 
         /// <summary>
         /// Drops everything. Called when the account changes, because "who I reported" belongs
-        /// to the player rather than to the handset — carrying it across a switch would grey a
+        /// to the player rather than to the handset - carrying it across a switch would grey a
         /// control for somebody who has never used it.
         /// </summary>
         public static void Forget()

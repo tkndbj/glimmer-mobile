@@ -27,7 +27,7 @@ namespace GlimmerGrove.Challenges
     /// <b>Undo is a move.</b> It takes the last slide back and the hill still walks, so a
     /// stranded gem costs time rather than the run. <b>A merge pays once</b>: the k-th merge
     /// into a size pays only the first time the board has held k of them, so merge, undo,
-    /// merge again buys nothing — the total a run can be fed is exactly what one solution
+    /// merge again buys nothing - the total a run can be fed is exactly what one solution
     /// feeds (invariant 5d's bound, said of a take-back).
     /// </para>
     /// <para>

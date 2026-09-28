@@ -5,13 +5,13 @@ namespace GlimmerGrove.Tests
 {
     /// <summary>
     /// The bounded "have I already acted on this payment" set that keeps one purchase to one
-    /// thank-you — see <c>StoreService.Announce</c> and <c>ReceiptQueue</c>.
+    /// thank-you - see <c>StoreService.Announce</c> and <c>ReceiptQueue</c>.
     ///
     /// <para>
     /// <b>It is here and not inside the store fixtures because those need the Editor.</b>
     /// <c>StoreReceiptTests</c> drives the whole redemption path and therefore touches an engine
     /// API the offline runner cannot reach, so the rule's proof would run only when somebody
-    /// opened Unity — which for the one rule standing between a player and being congratulated
+    /// opened Unity - which for the one rule standing between a player and being congratulated
     /// twice for one charge is not good enough. This is plain arithmetic over strings and runs
     /// on every offline sweep.
     /// </para>

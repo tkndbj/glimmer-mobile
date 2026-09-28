@@ -57,7 +57,7 @@ namespace GlimmerGrove.Wards
     /// and upgrading one are two purchases with two prices, two refusals and two telemetry lines;
     /// folded into one method they would be one method with a flag, and the flag would be the
     /// thing every caller has to get right. It is the split <c>HeartRescue</c> and
-    /// <c>RunContinue</c> already make — two panels, two prices, one fixed order.
+    /// <c>RunContinue</c> already make - two panels, two prices, one fixed order.
     /// </para>
     /// <para>
     /// <b>The money leaves through <c>PlayerProgression.TrySpend</c> and nowhere else</b>, and the

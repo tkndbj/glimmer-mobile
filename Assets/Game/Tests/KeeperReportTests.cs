@@ -7,8 +7,8 @@ namespace GlimmerGrove.Tests
     /// The client's half of reporting a keeper.
     ///
     /// <para>
-    /// There is deliberately very little of it. Everything that decides anything — the fold,
-    /// the word classes, the threshold, the takedown — is on the server, where a modified
+    /// There is deliberately very little of it. Everything that decides anything - the fold,
+    /// the word classes, the threshold, the takedown - is on the server, where a modified
     /// client cannot reach it, and is proved by <c>firebase/functions/test/names.mjs</c> and
     /// <c>reports.mjs</c>. What is left here is a session note that makes a button say the right
     /// thing, and the reason it is worth testing at all is that its failure modes are all
@@ -44,14 +44,14 @@ namespace GlimmerGrove.Tests
         /// The two judgements are separate, which is the whole reason the row carries a subject.
         ///
         /// Folded into one set, a player who reported a name would open that keeper's grovement
-        /// to a dead control — and the obvious reading of a dead control they never used is that
+        /// to a dead control - and the obvious reading of a dead control they never used is that
         /// the game is broken.
         ///
         /// <b>It asks the store and not the panel</b>, which is what lets it keep asking while
         /// the grovement subject is held (<see cref="ReportSubjects.Held"/>): what is being
         /// pinned is that a row is keyed on the pair and not on the keeper, and that is true
         /// whether or not anything currently offers the second subject. <c>AllSent</c> is
-        /// deliberately not asserted here — it walks <see cref="ReportSubjects.All"/>, so it is
+        /// deliberately not asserted here - it walks <see cref="ReportSubjects.All"/>, so it is
         /// a reading of the panel rather than of the store, and
         /// <see cref="AllSentIsTrueOnlyWhenEverySubjectHasBeenReported"/> is where it belongs.
         /// </summary>
@@ -66,7 +66,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// And the control is only spent once there is nothing left to offer, which is what
-        /// <c>AllSent</c> is for — the one question both screens ask before greying it.
+        /// <c>AllSent</c> is for - the one question both screens ask before greying it.
         /// </summary>
         [Test]
         public void AllSentIsTrueOnlyWhenEverySubjectHasBeenReported()
@@ -89,7 +89,7 @@ namespace GlimmerGrove.Tests
             Assert.IsTrue(KeeperReports.AlreadySent(ReportSubject.Grove, "keeper-a"));
 
             // Filling the rest of the bound must not evict the first entry, because a duplicate
-            // added no row — if it had, a player who double-tapped would lose the oldest thing
+            // added no row - if it had, a player who double-tapped would lose the oldest thing
             // they reported for every extra tap.
             for (int i = 0; i < KeeperReports.MaxRemembered - 1; i++)
                 KeeperReports.Remember(ReportSubject.Name, "filler-" + i);
@@ -130,7 +130,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// "Who I reported" belongs to the player rather than to the handset, so it goes with the
-        /// account — carrying it across a switch would grey a control for somebody who has never
+        /// account - carrying it across a switch would grey a control for somebody who has never
         /// used it, on a keeper they have never seen.
         /// </summary>
         [Test]
@@ -149,7 +149,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The wire spellings are permanent ids, for invariant 1's reason: the server keys a
         /// Firestore collection on this exact string, so a rename that looked like a tidy-up
-        /// would file every later report into a collection nothing reads — silently, with a
+        /// would file every later report into a collection nothing reads - silently, with a
         /// green build and a green suite.
         /// </summary>
         [Test]
@@ -181,7 +181,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// And every member of the enum is either offered or named as held. A member in neither
         /// list is a subject the server will take reports about and no player can ever file one
-        /// for — the shape invariant 40a describes for a raider kind nothing sends.
+        /// for - the shape invariant 40a describes for a raider kind nothing sends.
         ///
         /// <b>Two lists rather than one because a hold is a decision and an omission is a bug</b>,
         /// and from the enum alone they look identical. This is <c>TipTests</c>' rule for a

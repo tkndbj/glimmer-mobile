@@ -15,15 +15,15 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// <b>It is the real mode with a script beside it.</b> The board is <c>SiegeView</c> over
-    /// <c>SiegeBoard</c> — the same gems, the same turrets, the same clock and the same raiders
-    /// the first rung runs — dealt from <see cref="SiegeTutorial"/> rather than from a chapter.
+    /// <c>SiegeBoard</c> - the same gems, the same turrets, the same clock and the same raiders
+    /// the first rung runs - dealt from <see cref="SiegeTutorial"/> rather than from a chapter.
     /// Nothing here re-implements a rule, and nothing the player learns has to be translated onto
     /// a different-looking board afterwards.
     /// </para>
     /// <para>
     /// <b>Two panels and no more.</b> A match feeds the turret of its colour, and a full turret
     /// is a button. Those are the only two things in this mode a player cannot find by looking,
-    /// and they are the two the first rung used to teach on its own — see
+    /// and they are the two the first rung used to teach on its own - see
     /// <see cref="TutorialGate"/> for why teaching them here takes them off the level rather than
     /// duplicating them. Everything else the board demonstrates: the hill walks, the tubes fill,
     /// the bolts fly, the raiders fall.
@@ -37,14 +37,14 @@ namespace GlimmerGrove
     /// rather than on a count this screen keeps, and the two that could in principle wait on the
     /// hill carry a ceiling. The ending is the mode's own victory, reached because the last beat
     /// keeps the whole line burning (<c>SiegeBoard.Kindle</c>) rather than because a timer said
-    /// so — and it is also wired to the defeat hook, so even a state this screen believes
+    /// so - and it is also wired to the defeat hook, so even a state this screen believes
     /// impossible ends in the same place. Every wait is a coroutine on this screen, so leaving
     /// takes the script with it, and the art is held by this screen and released with it.
     /// </para>
     /// <para>
     /// <b>The way out is always drawn.</b> Skip is a real control in the corner, it closes the
     /// gate exactly as finishing does, and the hardware key points at it rather than acting on
-    /// its own — a first-timer must never be dropped out of the game's opening by a gesture they
+    /// its own - a first-timer must never be dropped out of the game's opening by a gesture they
     /// did not mean.
     /// </para>
     /// </summary>
@@ -66,7 +66,7 @@ namespace GlimmerGrove
         /// <b>Because this heading is the least important thing on the screen.</b> Elsewhere a
         /// ribbon names a page somebody navigated to and has to be found; here it is a greeting
         /// over a board that is already doing the teaching, and at the page-standard 720x138 it
-        /// was the loudest thing in the frame — reported as simply too big. Sized down to the
+        /// was the loudest thing in the frame - reported as simply too big. Sized down to the
         /// point where it reads as a welcome rather than as a banner, and the caption drops with
         /// it so the cloth is not just cropped tighter round the same lettering.
         /// </summary>
@@ -93,7 +93,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Measured against the worst case rather than the usual one, and the worst case is a
         /// <em>fast</em> player.</b> The sweep cannot end before the last raider has walked on,
-        /// and a wave musters one body at a time (<c>SiegeTuning.RaiderSpacing</c>) — so somebody
+        /// and a wave musters one body at a time (<c>SiegeTuning.RaiderSpacing</c>) - so somebody
         /// who arms the tube in five seconds waits out the whole muster and sweeps for 15.3s,
         /// where an ordinary player sweeps for 11.9s. At 20 that left under five seconds of
         /// headroom on a ceiling whose whole job is never to fire: reached, it would draw the
@@ -107,8 +107,8 @@ namespace GlimmerGrove
         /// Where the closing line and its key stand, measured up from the middle of the display.
         ///
         /// <b>Both are well above centre, and a render is why.</b> The middle of this screen is
-        /// exactly where the ward line stands — three turrets, their health bars and their rank
-        /// crests — so a panel centred the ordinary way lands its sentence across the turrets and
+        /// exactly where the ward line stands - three turrets, their health bars and their rank
+        /// crests - so a panel centred the ordinary way lands its sentence across the turrets and
         /// puts its one key on top of them, which reads as something dropped on the board rather
         /// than as the board being finished with. Seated over the hill instead, which is the
         /// ground the player has just cleared and the only part of this screen that is empty by
@@ -122,7 +122,7 @@ namespace GlimmerGrove
         ///
         /// <b>The other half of <c>SiegeTutorial.Crowd</c>, and it lives here because it is a
         /// clock.</b> The shipped wave reaches two bodies about a second and a half after the
-        /// first, so this is never spent — it is here because a wave somebody later shortens to
+        /// first, so this is never spent - it is here because a wave somebody later shortens to
         /// one raider would otherwise leave the script waiting for a second one for ever.
         /// </summary>
         const float CrowdCeiling = 6f;
@@ -161,13 +161,13 @@ namespace GlimmerGrove
             if (task.IsFaulted) Debug.LogException(task.Exception);
             if (!this) yield break;
 
-            // **The blue wall, not a chapter's sky.** This screen used to stand on `sky_00` —
+            // **The blue wall, not a chapter's sky.** This screen used to stand on `sky_00` -
             // the first chapter's backdrop, on the argument that the tutorial should look like
             // the game rather than like a menu. That backdrop is a *salmon* dawn, which behind
             // a grey hill and a dark gem plate reads as neither; the owner's call was blue.
             // `Scenery.Plain` is the wall every list screen in the game already stands on, it
             // is in the global set so it can never be missing or late (invariant 7b), and it
-            // carries no shade, no vignette and no parallax — which is right behind a board
+            // carries no shade, no vignette and no parallax - which is right behind a board
             // that is already the busiest thing on the display.
             Scenery.Plain(Content);
             Fireflies.Spawn(Content, 10, Pal.A(Pal.Gold, .9f), 4f, 14f);
@@ -196,7 +196,7 @@ namespace GlimmerGrove
         /// <summary>
         /// The art this screen holds: the mode's own cast and its starter line.
         ///
-        /// <b><c>ArtFor(null)</c> rather than a list written out here</b> — that overload answers
+        /// <b><c>ArtFor(null)</c> rather than a list written out here</b> - that overload answers
         /// exactly "a siege with no chapter behind it", which is what this is, and it already
         /// names the insects and the starter turrets. A list typed here would be a second opinion
         /// about what a siege needs, and the kind that goes stale in silence.
@@ -228,7 +228,7 @@ namespace GlimmerGrove
 
             // **A worded key rather than a glyph.** Every other corner key in this game is an
             // arrow or a gear, and a player who has been in the app for four seconds has no
-            // vocabulary for either — the one control on this screen that has to be understood
+            // vocabulary for either - the one control on this screen that has to be understood
             // without being explained is the one that gets you out of it.
             _skip = UIKit.TextButton("Skip", Safe, Skins.Shut,
                                      Loc.Get("ui.tutorial.skip").ToUpperInvariant(), 26,
@@ -265,7 +265,7 @@ namespace GlimmerGrove
             _siege.Begin(_host, SiegeTutorial.Rules(), ProtoBudget.Unlimited);
 
             // **The tutorial cannot be lost, and it is the board that knows it.** Set once, on
-            // the board, and read where a ward is hurt — see `SiegeBoard.Sheltered`. It was a
+            // the board, and read where a ward is hurt - see `SiegeBoard.Sheltered`. It was a
             // repair this screen applied sixty times a second, which worked and put the model
             // in a state it should never have been in first.
             var board = _siege.Siege;
@@ -308,7 +308,7 @@ namespace GlimmerGrove
             // `SiegeTutorial.MatchesToArm`.
             // **Ended on a banked charge rather than on a count of feeds**, which is what stops
             // it hanging: a match's own fuel lands beside the tutorial's share, so the tube can
-            // brim a feed early — and a loop still owed one would wait on `Fed`, which skips a
+            // brim a feed early - and a loop still owed one would wait on `Fed`, which skips a
             // ward that has already banked. See `SiegeTutorial.Charged`.
             int match = 0;
 
@@ -371,7 +371,7 @@ namespace GlimmerGrove
             // ---- the sweep ------------------------------------------------------------
             // **A beat for the throw to be seen on its own, before the line joins in.** The
             // blast takes the raider it was aimed at and the box around it, and the sweep below
-            // opens up a moment later — run together, the player cannot tell which of the two
+            // opens up a moment later - run together, the player cannot tell which of the two
             // was theirs, which is the whole thing this panel just taught them.
             yield return new WaitForSecondsRealtime(Applause);
             if (!this || _ended) yield break;
@@ -393,14 +393,14 @@ namespace GlimmerGrove
         /// One match's worth of fuel, climbing the tube over <c>SiegeTutorial.PourSeconds</c>.
         ///
         /// <para>
-        /// <b>Dripped rather than set, and every drop goes through <c>SiegeBoard.Pour</c></b> —
+        /// <b>Dripped rather than set, and every drop goes through <c>SiegeBoard.Pour</c></b> -
         /// which is <c>SiegeWard.Fill</c>'s own door, so a tube filled by this script is filled
         /// the way a match fills it: the charge cap, the carried overflow and a sunlord's toll
         /// are all that method's business and none of them is reimplemented here.
         /// </para>
         /// <para>
-        /// <b>How much is asked once, at the top.</b> The ward goes on firing while this runs —
-        /// it is <c>Fuelled</c> the moment the first drop lands — so a target recomputed each
+        /// <b>How much is asked once, at the top.</b> The ward goes on firing while this runs -
+        /// it is <c>Fuelled</c> the moment the first drop lands - so a target recomputed each
         /// frame would chase its own tail on a turret that is spending what it is given.
         /// </para>
         /// </summary>
@@ -418,7 +418,7 @@ namespace GlimmerGrove
 
                 given += step;
 
-                // A charge banked early — the player fed this turret twice over — is this feed
+                // A charge banked early - the player fed this turret twice over - is this feed
                 // finished with, whatever is left of it.
                 if (board.Pour(ward, step)) yield break;
 
@@ -432,8 +432,8 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>Raised through <c>Flow.Modal</c> and waited on through <c>Dismissed</c></b>, which
-        /// fires exactly once however the panel goes away — accepted, backed out of, or destroyed
-        /// under a navigation — so this can never wait for ever. The latch is <c>Locked</c>
+        /// fires exactly once however the panel goes away - accepted, backed out of, or destroyed
+        /// under a navigation - so this can never wait for ever. The latch is <c>Locked</c>
         /// rather than <c>Held</c>: both stop the hill, and <c>Locked</c> is the one every other
         /// panel in the game already uses for "something is over the board".
         /// </para>
@@ -473,7 +473,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>A panel says what, and this says which and how.</b> <c>TipOverlay</c> already rings
-        /// its subject and can already trace a route, and both go away with the panel — which is
+        /// its subject and can already trace a route, and both go away with the panel - which is
         /// right for a tip over a run somebody is already playing, and wrong for the first thing
         /// they ever touch: the sentence has to be dismissed before the board can be reached, so
         /// the only moment the demonstration is worth anything is the moment it is gone. So it is
@@ -560,8 +560,8 @@ namespace GlimmerGrove
         /// <summary>
         /// The hill is clear. One panel, one key, and the game.
         ///
-        /// <b>Latched, because there are three ways in</b> — the board's victory, the board's
-        /// defeat, and the ceiling on the last beat — and a celebration drawn twice is a
+        /// <b>Latched, because there are three ways in</b> - the board's victory, the board's
+        /// defeat, and the ceiling on the last beat - and a celebration drawn twice is a
         /// celebration drawn over itself.
         /// </summary>
         void Finish()
@@ -620,7 +620,7 @@ namespace GlimmerGrove
 
             // **A sheen rather than a breath, and it is not a taste.** A breathing key writes
             // `localScale` every frame for as long as it stands, and `Btn`'s own press does the
-            // same — so the two fight and the breath wins, which is a button that does not
+            // same - so the two fight and the breath wins, which is a button that does not
             // depress under a thumb. A sheen is the house cue for the one key on a screen
             // (the chest's COLLECT, the hub's PLAY) and it touches nothing the press wants.
             Tween.Move(rt, seat, .42f, Ease.OutBack).Delay(.26f)
@@ -681,7 +681,7 @@ namespace GlimmerGrove
         ///
         /// <b>An accidental back gesture must not be how somebody leaves the opening of the
         /// game.</b> The control that does it is already on the screen and already says what it
-        /// is, so the honest answer to the key is to make it obvious — and to swallow the press,
+        /// is, so the honest answer to the key is to make it obvious - and to swallow the press,
         /// because the alternative (<c>Flow</c>'s default) is no navigation at all from here.
         /// </b>
         /// </summary>

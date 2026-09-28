@@ -16,13 +16,13 @@ namespace GlimmerGrove.Progression
     /// XP beside it.</b> Endless XP is a pure function of a monotonic lifetime tally
     /// (<see cref="EndlessRewardTable.XpFor"/>, invariant 9d) and needs no claim, no counter and
     /// no merge rule, which is why invariant 14 prefers that shape. Credits cannot copy it. A
-    /// lifetime tally times a credit rate is a number a forged save mints once and keeps — at
+    /// lifetime tally times a credit rate is a number a forged save mints once and keeps - at
     /// the XP ceiling that is three million credits, which is the colour shelf and the legendary
     /// band together. Invariant 19l says it plainly: the day the endless board pays anything,
     /// the old argument stops being defensible.
     /// </para>
     /// <para>
-    /// <b>So the payment falls to invariant 13's fourth clause — bound it so tightly that
+    /// <b>So the payment falls to invariant 13's fourth clause - bound it so tightly that
     /// forging buys nothing.</b> The bound is a day: however many waves a save claims, the lane
     /// pays at most <see cref="EndlessRewardTable.DailyCreditCap"/> between one midnight and the
     /// next, so a cheater is paid exactly what somebody who played a full evening is paid. That
@@ -32,7 +32,7 @@ namespace GlimmerGrove.Progression
     /// <para>
     /// <b>The ceiling that counts is the server's.</b> This class keeps a device-local tally so
     /// the hub can stop offering money the server would refuse and so a player is never shown a
-    /// payment they do not receive — it is a hint in exactly the sense invariant 8b means one,
+    /// payment they do not receive - it is a hint in exactly the sense invariant 8b means one,
     /// and it is deliberately <em>not</em> in the save. A per-day figure resets, and anything a
     /// merge touches has to be monotonic (invariant 11b), so a daily counter on the wire would
     /// be the one shape that cannot be joined. Keeping it off the wire also costs no schema
@@ -126,7 +126,7 @@ namespace GlimmerGrove.Progression
         /// <para>
         /// <b>This is what makes the ceiling cross-device, and without it the lane had a way to
         /// show money and then take it back.</b> The bound was always enforced on the server, but
-        /// each device counted the day for itself — so a second phone, or a reinstall, would
+        /// each device counted the day for itself - so a second phone, or a reinstall, would
         /// offer credits the ceiling had already paid out, and a claim refused for that reason
         /// is dropped by the client <em>together with the balance it inflated</em> (invariant
         /// 45d). The player saw six hundred credits arrive and vanish, having done nothing wrong.
@@ -144,7 +144,7 @@ namespace GlimmerGrove.Progression
         /// </para>
         /// <para>
         /// <b>Carried is asked separately from the number</b>, because a fresh account honestly
-        /// answers nought and a deployment that predates the field also sends nothing — and only
+        /// answers nought and a deployment that predates the field also sends nothing - and only
         /// one of those two is something to believe.
         /// </para>
         /// </summary>
@@ -177,7 +177,7 @@ namespace GlimmerGrove.Progression
         /// <b>A seam, for the reason <see cref="ISaveStore"/> is one.</b> <see cref="Forget"/>
         /// sits on the save's load path (<c>SaveService.LoadWith</c> and <c>Adopt</c>), so from
         /// the day it arrived (2026-09-20) every fixture that loads a save reached a native call
-        /// and the offline runner marked all of them "needs the Editor" rather than failed —
+        /// and the offline runner marked all of them "needs the Editor" rather than failed -
         /// twenty-three account-switch cases, the deletion, the heart rescue, the store arrivals
         /// and receipts, the utility purchases. Nothing was red, and nothing had run. Found on
         /// 2026-09-22 by a new fixture that inherited the same fate. A green run that has not
@@ -192,7 +192,7 @@ namespace GlimmerGrove.Progression
             void Delete(string key);
         }
 
-        /// <summary>The game's store. Nothing here flushes — see <c>DevicePrefs</c> for why a hint need not.</summary>
+        /// <summary>The game's store. Nothing here flushes - see <c>DevicePrefs</c> for why a hint need not.</summary>
         sealed class PrefsStore : ITallyStore
         {
             public string Read(string key) => PlayerPrefs.GetString(key, string.Empty);
@@ -229,7 +229,7 @@ namespace GlimmerGrove.Progression
         /// <c>{dayKey}:{paid}</c>, and an unreadable value reads as a fresh day.
         ///
         /// <b>Never throws and never fails closed.</b> A hint that cannot be parsed must not stop
-        /// the lane paying — the server is the ceiling, so the worst a lost tally does is let a
+        /// the lane paying - the server is the ceiling, so the worst a lost tally does is let a
         /// device ask for money it will not be given, which the wallet then declines.
         /// </summary>
         static void Read(out int day, out int paid)

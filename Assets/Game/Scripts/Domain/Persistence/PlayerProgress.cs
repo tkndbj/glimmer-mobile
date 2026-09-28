@@ -21,7 +21,7 @@ namespace GlimmerGrove.Persistence
         public static event Action<LevelRecord> RecordChanged;
 
         /// <summary>
-        /// Raised when the whole record set is replaced rather than added to — a load,
+        /// Raised when the whole record set is replaced rather than added to - a load,
         /// a wipe, or a merge with another device. Anything caching a total derived
         /// from these records has to recompute, and no per-record event fires to tell
         /// it so.
@@ -34,7 +34,7 @@ namespace GlimmerGrove.Persistence
         ///
         /// <para>
         /// Separate from <see cref="Reloaded"/> because nothing about the player's own play
-        /// changed — no stars, no move counts, no totals — and separate from
+        /// changed - no stars, no move counts, no totals - and separate from
         /// <see cref="RecordChanged"/> because a sweep can touch a whole catalog at once and
         /// a per-record event would be thousands of callbacks to redraw one screen.
         /// </para>
@@ -49,7 +49,7 @@ namespace GlimmerGrove.Persistence
         /// Subscribed here rather than from a screen because the sweep has to happen whatever
         /// the player is looking at: the table lands while the splash is up, and a map opened
         /// two minutes later reads the save, not the event. <see cref="LoadFrom"/> sweeps too,
-        /// which covers the other order — a save adopted from the cloud after the table was
+        /// which covers the other order - a save adopted from the cloud after the table was
         /// already published. Both are safe to run any number of times because a standing only
         /// ever climbs.
         /// </para>
@@ -73,8 +73,8 @@ namespace GlimmerGrove.Persistence
         /// <summary>
         /// The same records, keyed by level id.
         ///
-        /// For readers that ask about a named set of glades rather than about all of them —
-        /// an event's track is the first — where walking the whole collection once per
+        /// For readers that ask about a named set of glades rather than about all of them -
+        /// an event's track is the first - where walking the whole collection once per
         /// question is the same work multiplied by however many questions there are.
         /// </summary>
         public static IReadOnlyDictionary<LevelId, LevelRecord> RecordsById => _records;
@@ -85,7 +85,7 @@ namespace GlimmerGrove.Persistence
         /// <para>
         /// Deliberately <em>not</em> <c>PlayerProgression.ClearedGlades</c>, which is the same
         /// question asked of the reward arithmetic and so drops any record the catalog has
-        /// never heard of — right there, because an unrecognised level must never mint credits,
+        /// never heard of - right there, because an unrecognised level must never mint credits,
         /// and wrong for a screen. The account panel asks this after a switch to say "welcome
         /// back · 26 finished levels", and that sentence must not depend on whether the content
         /// index happens to have loaded yet: a player who is told they arrived at an empty
@@ -119,7 +119,7 @@ namespace GlimmerGrove.Persistence
         // that is the point: totalling stars, checking completion and finding where the
         // player is up to need only to know which glades exist and in what order. None
         // of them needs a grid or a backdrop, so none of them should be able to cause a
-        // chapter body to be read — least of all on the boot path, where all three run.
+        // chapter body to be read - least of all on the boot path, where all three run.
 
         /// <summary>Stars earned across the levels currently in the catalog.</summary>
         public static int TotalStars(CatalogIndex index)
@@ -136,8 +136,8 @@ namespace GlimmerGrove.Persistence
         /// <summary>Stars earned in one chapter, and the most that chapter can hold.</summary>
         /// <remarks>
         /// The chapter overloads, not a second reading of the whole catalog filtered down.
-        /// A chapter entry already carries its level ids in play order — that is the whole
-        /// of what the manifest is for — so this is the same walk over a shorter list, and
+        /// A chapter entry already carries its level ids in play order - that is the whole
+        /// of what the manifest is for - so this is the same walk over a shorter list, and
         /// it stays index knowledge: no body is read and no grid is parsed to total a
         /// chapter's stars.
         /// </remarks>
@@ -193,8 +193,8 @@ namespace GlimmerGrove.Persistence
             bool improved = before.Improves(stars, moves, climbs);
 
             // Ranked here because this is where the new best is decided. If the table has
-            // not arrived — no backend, offline, a launch that has not reached the fetch yet
-            // — nothing is captured and nothing is lost: the move count is stored either
+            // not arrived - no backend, offline, a launch that has not reached the fetch yet
+            // - nothing is captured and nothing is lost: the move count is stored either
             // way, and RefreshRanks works the standing out from it later.
             var after = before.WithRun(stars, moves, SaveSchema.NowUnix(),
                                        Social.GroveStats.For(id), climbs);
@@ -231,7 +231,7 @@ namespace GlimmerGrove.Persistence
         /// Idempotent, and cheap enough not to need scheduling: a dictionary walk with one
         /// interpolation each, once a session. Marks the file dirty rather than saving, so a
         /// sweep during boot does not force a write on a player who is about to get one
-        /// anyway — and does neither when nothing moved, which is the common case from the
+        /// anyway - and does neither when nothing moved, which is the common case from the
         /// second session on.
         /// </para>
         /// </summary>
@@ -246,7 +246,7 @@ namespace GlimmerGrove.Persistence
         }
 
         /// <summary>
-        /// The sweep itself. Returns whether anything moved, and raises nothing — so a load
+        /// The sweep itself. Returns whether anything moved, and raises nothing - so a load
         /// can promote quietly under cover of <see cref="Reloaded"/> instead of firing two
         /// events that mean "redraw" back to back.
         /// </summary>
@@ -290,8 +290,8 @@ namespace GlimmerGrove.Persistence
             if (LevelId.TryParse(dto.lastPlayedLevelId, out var last, out _)) LastPlayed = last;
 
             // Covers the other order: a save adopted after the day's table had already been
-            // published — a cloud pull, a linked account, the boot sequence on a fast network
-            // — would otherwise wait for tomorrow's fetch to earn its bands. Quiet, because
+            // published - a cloud pull, a linked account, the boot sequence on a fast network
+            // - would otherwise wait for tomorrow's fetch to earn its bands. Quiet, because
             // Reloaded below already tells every listener to recompute.
             if (PromoteRanks()) SaveService.MarkDirty();
 

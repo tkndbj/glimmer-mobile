@@ -6,8 +6,8 @@ namespace GlimmerGrove.Modes
     ///
     /// <para>
     /// <b>A class rather than a struct, because a cog has a clock.</b> Everything else this hill
-    /// carries is a fact that does not change once it exists — a bomb sits where it fell for ever
-    /// — and a cog is trampled if it is not taken (<see cref="SiegeTuning.CogLies"/>). A struct in
+    /// carries is a fact that does not change once it exists - a bomb sits where it fell for ever
+    /// - and a cog is trampled if it is not taken (<see cref="SiegeTuning.CogLies"/>). A struct in
     /// a list would have to be read out, edited and written back on every step, which is three
     /// places for the copy to be the thing that ages.
     /// </para>
@@ -15,7 +15,7 @@ namespace GlimmerGrove.Modes
     /// <b>It names the ward it pays rather than the ward that killed it</b>, and the two are the
     /// same thing said once instead of threaded through four call sites. Under the colour lock a
     /// raider can only ever be brought down by the ward its own colour feeds, so the killer is
-    /// derivable from the corpse — which also gives the right answer for the kills no ward made
+    /// derivable from the corpse - which also gives the right answer for the kills no ward made
     /// at all (a firepot, a storm, a bomb). What it says to the player is the loop this whole
     /// mode is about: <em>the colour you fed is the colour that pays you</em>.
     /// </para>
@@ -56,7 +56,7 @@ namespace GlimmerGrove.Modes
     /// What taking a cog was worth: the ward it ranked, and the rank it reached.
     ///
     /// <b>A reading rather than a bool</b>, because the view has to say which turret went up and
-    /// to what — and a caller handed only "it worked" would go back to the board to find out,
+    /// to what - and a caller handed only "it worked" would go back to the board to find out,
     /// which is a second read of a thing that has already changed.
     /// </summary>
     public readonly struct SiegeTaken

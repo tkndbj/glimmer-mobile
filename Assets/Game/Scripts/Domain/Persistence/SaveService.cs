@@ -6,8 +6,8 @@ namespace GlimmerGrove.Persistence
     /// <summary>
     /// Owns the save file and the moment it is written.
     ///
-    /// The three facades over it — <see cref="PlayerProgress"/>, <see cref="GameSettings"/>
-    /// and <see cref="Wallet"/> — each own one section and know nothing about the file.
+    /// The three facades over it - <see cref="PlayerProgress"/>, <see cref="GameSettings"/>
+    /// and <see cref="Wallet"/> - each own one section and know nothing about the file.
     /// This type is the only place that knows the whole layout, so adding a section
     /// later touches one method rather than every caller.
     ///
@@ -22,7 +22,29 @@ namespace GlimmerGrove.Persistence
         static bool _loaded;
         static bool _dirty;
 
+        // True while Adopt is replacing memory. A ledger may write while it loads (a day that
+        // turned over, a repair), and a file snapshotted then is half the merge and half what
+        // it replaced - so nothing is announced until the adopt's own write, which is not local.
+        static bool _adopting;
+
         public static bool IsLoaded => _loaded;
+
+        /// <summary>
+        /// Raised after the device's own state reached the disk - a player's act, a timer, a
+        /// repair - carrying the file that was written. <b>Never</b> raised for
+        /// <see cref="Adopt"/>, which is a merge arriving rather than anything happening here:
+        /// a listener that asked the server for a sync on that would schedule one after every
+        /// sync for the life of the process (<c>SyncTriggers</c>' warning about <c>Changed</c>).
+        ///
+        /// <para>
+        /// It is the one door every persistent change passes through, so it is what makes the
+        /// cloud's picture of "what this device owes the server" complete by construction
+        /// rather than by a list somebody has to remember to extend
+        /// (<c>CloudSaveService.Owes</c>). The file is a fresh snapshot and nobody else holds
+        /// it, so a listener may keep it.
+        /// </para>
+        /// </summary>
+        public static event Action<SaveFileDto> Written;
 
         public static void Load() => LoadWith(new SaveStore(), new AccountArchiveStore());
 
@@ -30,7 +52,7 @@ namespace GlimmerGrove.Persistence
         /// Loads through a store the caller supplies.
         ///
         /// <para>
-        /// Internal, and for the tests around the cloud sync — which have to prove things about
+        /// Internal, and for the tests around the cloud sync - which have to prove things about
         /// a save being replaced and could not do it against the live one without erasing
         /// whoever ran them. The production path is <see cref="Load"/> and there is no second
         /// way in: this is the same method with the store named, so a test exercises the code
@@ -54,7 +76,7 @@ namespace GlimmerGrove.Persistence
             GameSettings.LoadFrom(dto);
             // Before the wallet, and that is the one ordering in this list that is not free.
             // Wallet.LoadFrom brings the heart ledger up to date at once, and how far the
-            // clock is allowed to carry it is the container cap — so a wallet loaded first
+            // clock is allowed to carry it is the container cap - so a wallet loaded first
             // would refill to five on a phone that had paid for twenty, until the next HUD
             // tick quietly corrected it.
             HeartContainerLedger.LoadFrom(dto);
@@ -73,7 +95,7 @@ namespace GlimmerGrove.Persistence
             Ads.RewardedAds.LoadFrom(dto);
             Challenges.ChallengeLedger.LoadFrom(dto);
 
-            // Not loaded from anything — dropped. The bonus wheel's position is the *server's*
+            // Not loaded from anything - dropped. The bonus wheel's position is the *server's*
             // count of this account's paid spins today, cached for the session and never stored
             // (invariant 11b: a count that two devices can both hold is not mergeable). Carrying
             // one across a replacement would seed the incoming player's first spin from the
@@ -114,7 +136,7 @@ namespace GlimmerGrove.Persistence
         /// Whether a grove for this account is already on this device.
         ///
         /// Asked by the account screen so it can say "welcome back" rather than "please wait"
-        /// before a single byte moves, and by nothing that decides anything — a switch works
+        /// before a single byte moves, and by nothing that decides anything - a switch works
         /// the same whether the answer is yes or no.
         /// </summary>
         public static bool HasLocalGroveFor(string userId) => _archive.Has(userId);
@@ -135,20 +157,30 @@ namespace GlimmerGrove.Persistence
             Write();
         }
 
-        static bool Write()
+        static bool Write(bool local = true)
         {
             var dto = Snapshot();
 
             bool ok = _store.Save(dto);
             if (ok) _dirty = false;
+
+            // After the disk, so nothing a listener does can stand between a change and its
+            // persistence - and guarded, because a listener's fault must never read to a caller
+            // as a failed save.
+            if (ok && local && !_adopting)
+            {
+                try { Written?.Invoke(dto); }
+                catch (Exception e) { Debug.LogException(e); }
+            }
+
             return ok;
         }
 
         /// <summary>
         /// The current state as a file, without writing it.
         ///
-        /// The cloud sync needs exactly this — a snapshot it can merge against what the
-        /// server holds — and building it here rather than in the sync keeps one place
+        /// The cloud sync needs exactly this - a snapshot it can merge against what the
+        /// server holds - and building it here rather than in the sync keeps one place
         /// that knows the whole layout, which is the point of this type.
         /// </summary>
         public static SaveFileDto Snapshot()
@@ -161,7 +193,7 @@ namespace GlimmerGrove.Persistence
 
                 // Stamped here, not only in SaveStore.Save. The cloud sync takes a
                 // snapshot without writing it to disk, and SaveMerge decides which side
-                // holds the newer preferences by comparing this — a snapshot claiming
+                // holds the newer preferences by comparing this - a snapshot claiming
                 // the epoch would lose every one of those comparisons.
                 updatedUnix = SaveSchema.NowUnix(),
                 settings = new SettingsDto(),
@@ -203,11 +235,21 @@ namespace GlimmerGrove.Persistence
         {
             if (dto == null || !_loaded) return false;
 
+            _adopting = true;
+            try { LoadAll(dto); }
+            finally { _adopting = false; }
+
+            _dirty = true;
+            return Write(local: false);
+        }
+
+        static void LoadAll(SaveFileDto dto)
+        {
             PlayerProgress.LoadFrom(dto);
             GameSettings.LoadFrom(dto);
             // Before the wallet, and that is the one ordering in this list that is not free.
             // Wallet.LoadFrom brings the heart ledger up to date at once, and how far the
-            // clock is allowed to carry it is the container cap — so a wallet loaded first
+            // clock is allowed to carry it is the container cap - so a wallet loaded first
             // would refill to five on a phone that had paid for twenty, until the next HUD
             // tick quietly corrected it.
             HeartContainerLedger.LoadFrom(dto);
@@ -226,7 +268,7 @@ namespace GlimmerGrove.Persistence
             Ads.RewardedAds.LoadFrom(dto);
             Challenges.ChallengeLedger.LoadFrom(dto);
 
-            // Not loaded from anything — dropped. The bonus wheel's position is the *server's*
+            // Not loaded from anything - dropped. The bonus wheel's position is the *server's*
             // count of this account's paid spins today, cached for the session and never stored
             // (invariant 11b: a count that two devices can both hold is not mergeable). Carrying
             // one across a replacement would seed the incoming player's first spin from the
@@ -242,9 +284,6 @@ namespace GlimmerGrove.Persistence
 
             ProgressionStore.LoadFrom(dto);
             CloudState.LoadFrom(dto);
-
-            _dirty = true;
-            return Write();
         }
 
         /// <summary>What a local account swap found waiting for it.</summary>
@@ -271,7 +310,7 @@ namespace GlimmerGrove.Persistence
         /// grove being left is copied into <see cref="IAccountArchive"/> under the account it
         /// belongs to, and the grove being joined is restored from there if this device has
         /// seen it before. Whatever the server holds is folded in afterwards by an ordinary
-        /// sync — a pull, a monotonic join and a push — which is retried with a backoff like
+        /// sync - a pull, a monotonic join and a push - which is retried with a backoff like
         /// every other sync in the game. That ordering is the whole point: the previous design
         /// made the download part of the switch, so a dropped connection in the seconds after
         /// an OAuth consent screen left the device authenticated as one player and holding
@@ -286,7 +325,7 @@ namespace GlimmerGrove.Persistence
         /// </para>
         /// <para>
         /// <paramref name="outgoingIsSafe"/> is the caller saying it already knows the grove
-        /// being left cannot be lost — because it was just pushed to the server, or because the
+        /// being left cannot be lost - because it was just pushed to the server, or because the
         /// player was told it is being abandoned and agreed. When it is false and the archive
         /// cannot take a copy, nothing happens at all: this is the only line in the file that
         /// would destroy local data it had failed to duplicate, and a full disk is not a reason
@@ -300,7 +339,7 @@ namespace GlimmerGrove.Persistence
             if (string.Equals(CloudState.UserId, userId, StringComparison.Ordinal)) return SwapResult.Same;
 
             // Out first. An account this file does not name has nowhere to be filed, which is
-            // an anonymous grove that has never reached a server — there is nothing to come
+            // an anonymous grove that has never reached a server - there is nothing to come
             // back to, so there is nothing to keep.
             string outgoing = CloudState.UserId;
             if (!string.IsNullOrEmpty(outgoing) && !_archive.Stash(outgoing, Snapshot())
@@ -323,21 +362,21 @@ namespace GlimmerGrove.Persistence
                 //
                 // The copy is dropped only once that write lands, though. Until then it is the
                 // only thing on the device that says what this account had, and a stale copy
-                // costs nothing — the sync joins it with the server and the join is monotonic.
+                // costs nothing - the sync joins it with the server and the join is monotonic.
                 if (Adopt(incoming)) _archive.Forget(userId);
 
                 Debug.Log("[Save] switched to a grove already on this device");
                 return SwapResult.Restored;
             }
 
-            // Nothing of theirs here, so a fresh grove — owned by them from the first byte.
+            // Nothing of theirs here, so a fresh grove - owned by them from the first byte.
             //
             // Adopted rather than routed through Wipe, and the difference is not tidiness.
             // Wipe means "erase this player's progress": it deletes the file, clears the
             // pre-1.0 PlayerPrefs keys so an erasure cannot be undone by the legacy importer,
             // and says so in the log. None of that describes arriving at an account, the
-            // middle one is actively wrong — those keys belong to whoever installed the game
-            // on this handset, not to whichever account is signed in this minute — and it is
+            // middle one is actively wrong - those keys belong to whoever installed the game
+            // on this handset, not to whichever account is signed in this minute - and it is
             // what kept this whole path out of the offline test suite. A fresh file carries
             // legacyImportDone, so nothing re-imports.
             var fresh = FreshFile();
@@ -347,14 +386,14 @@ namespace GlimmerGrove.Persistence
             // language describe the handset and the person holding it, so resetting them
             // because somebody signed in to their other account would be a bug they would
             // report as one. The board opt-out travels with them for one moment longer than
-            // it should — it belongs to the account rather than the phone — and the sync a
+            // it should - it belongs to the account rather than the phone - and the sync a
             // few lines later replaces it with the incoming account's own answer. Carrying
             // it is the safe direction of that error: an opt-out held a second too long
             // publishes nothing, and the reverse would publish a card for somebody who had
             // asked not to be on the boards.
             GameSettings.WriteInto(fresh);
 
-            Adopt(fresh);   // the swap is the memory replacement; the write retries — see above
+            Adopt(fresh);   // the swap is the memory replacement; the write retries - see above
 
             Debug.Log("[Save] switched to an account with no grove on this device");
             return SwapResult.Started;
@@ -369,7 +408,7 @@ namespace GlimmerGrove.Persistence
         /// Every other route archives what it leaves, and that is the whole difference between
         /// a switch and this: a switch means "play as somebody else, and let me come back",
         /// where this means "there is nothing to come back to". Keeping a copy would be worse
-        /// than useless — it would leave the grove a player asked to be rid of sitting on the
+        /// than useless - it would leave the grove a player asked to be rid of sitting on the
         /// handset, and <see cref="SwitchTo"/> would cheerfully restore it if that uid ever
         /// came round again.
         /// </para>
@@ -390,7 +429,7 @@ namespace GlimmerGrove.Persistence
         /// <para>
         /// <b>The handset's own preferences survive</b>, exactly as they do across a switch.
         /// Music, sound, haptics and language describe the phone and the person holding it, not
-        /// the account — resetting them because somebody deleted an account would be a bug they
+        /// the account - resetting them because somebody deleted an account would be a bug they
         /// would report as one. The pre-1.0 <c>PlayerPrefs</c> keys are deliberately left alone
         /// for the same reason and a stronger one: they belong to whoever installed the game on
         /// this handset, and the fresh file carries <c>legacyImportDone</c> so nothing
@@ -407,7 +446,7 @@ namespace GlimmerGrove.Persistence
             if (!_loaded || string.IsNullOrEmpty(userId)) return false;
 
             // Not this device's account any more, or never was. Refused rather than erasing
-            // whatever happens to be loaded — see the parameter's note.
+            // whatever happens to be loaded - see the parameter's note.
             if (!string.Equals(CloudState.UserId, userId, StringComparison.Ordinal))
             {
                 Debug.LogWarning("[Save] refused to erase '" + userId + "': this device is holding " +
@@ -430,7 +469,7 @@ namespace GlimmerGrove.Persistence
             GameSettings.WriteInto(fresh);
 
             // Adopt's answer is about the disk write. A failed one leaves the file dirty and
-            // the next Flush retries it, and what is in memory is already the empty grove —
+            // the next Flush retries it, and what is in memory is already the empty grove -
             // so the erasure has happened either way, which is why this reports true.
             Adopt(fresh);
             Flush();
@@ -443,7 +482,7 @@ namespace GlimmerGrove.Persistence
         /// An empty save, as this build writes one.
         ///
         /// One place, because "what a grove with nothing in it looks like" is one fact and a
-        /// second copy is a section somebody adds to one and not the other — which reads as a
+        /// second copy is a section somebody adds to one and not the other - which reads as a
         /// migration bug on whichever path missed it. It replaced <c>Wipe</c>, which had no
         /// caller left once a switch stopped meaning "erase what is here": erasing cleared the
         /// pre-1.0 PlayerPrefs keys, which belong to whoever installed the game on this handset

@@ -10,8 +10,8 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// This fixture exists because of one afternoon: the ledger keeps every id it has ever
-    /// seen, the rules capped the list at 64, and the owner's own account — the longest-played
-    /// one, carrying the lessons of every withdrawn mode — crossed the cap on 2026-09-16. From
+    /// seen, the rules capped the list at 64, and the owner's own account - the longest-played
+    /// one, carrying the lessons of every withdrawn mode - crossed the cap on 2026-09-16. From
     /// that write on the rules refused every save for the account (invariant 12a), and the only
     /// thing any screen said was that an account switch could not save the grove. Nothing here
     /// could have seen it, because nothing held the ledger's size to the rules' bound.
@@ -79,7 +79,7 @@ namespace GlimmerGrove.Tests
         public void RetiredLessonsGoFirstWhenTheLedgerIsFull()
         {
             // Exactly one over the cap, with one retired id in it: the retired id is what goes,
-            // and every unknown id — which might be a newer build's lesson — stays.
+            // and every unknown id - which might be a newer build's lesson - stays.
             var ids = new List<string>(Unknown(TipLedger.MaxIds));
             ids.Add(Mechanic.Retired[0].Id);
 

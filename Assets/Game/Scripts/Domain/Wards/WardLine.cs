@@ -12,7 +12,7 @@ namespace GlimmerGrove.Wards
     /// static while a siege is running. That is what keeps the rules testable: a fixture can play
     /// a hill against the starter line and against a decked-out one without touching a save, and
     /// <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c> can prove every rung is holdable with
-    /// the <em>weakest</em> line a player could bring — which is the only version of that proof
+    /// the <em>weakest</em> line a player could bring - which is the only version of that proof
     /// worth having.
     /// </para>
     /// <para>
@@ -64,7 +64,7 @@ namespace GlimmerGrove.Wards
         public IReadOnlyList<WardModel> Models => _byColour;
 
         /// <summary>
-        /// The turret on this colour index <em>and how far it has been taken</em> — what the board
+        /// The turret on this colour index <em>and how far it has been taken</em> - what the board
         /// actually stands.
         ///
         /// <b>One value rather than a model and a number</b>, for <see cref="WardBuild"/>'s reason:
@@ -81,7 +81,7 @@ namespace GlimmerGrove.Wards
         /// The line every player starts on, and the one a run falls back to.
         ///
         /// <b>Four of the roster's starter</b>, which is what a save that has never been written
-        /// resolves to — and what every content gate and every rule test plays against.
+        /// resolves to - and what every content gate and every rule test plays against.
         /// </summary>
         public static WardLine Starter(WardCatalog catalog)
         {
@@ -114,7 +114,7 @@ namespace GlimmerGrove.Wards
         /// than on an empty slot, so the answer is always four turrets.
         /// </para>
         /// <para>
-        /// <b>And ownership is re-checked here rather than trusted from the save</b> — the same
+        /// <b>And ownership is re-checked here rather than trusted from the save</b> - the same
         /// clause for the same reason. A save says which turret was chosen; whether it may be
         /// stood on the line is a question about what the player holds <em>now</em>, and a device
         /// that lost a purchase to a failed sync must fall back rather than play a turret it
@@ -124,7 +124,7 @@ namespace GlimmerGrove.Wards
         /// <b>The ownership question takes the <em>seat's</em> colour</b>, because a turret is
         /// bought for one colour rather than for the line (<see cref="WardHolding"/>). Asked
         /// without it, a turret bought for red would stand on blue the moment somebody chose it
-        /// there — which is the rule this feature exists to have, undone at the one place that
+        /// there - which is the rule this feature exists to have, undone at the one place that
         /// decides what a board plays.
         /// </para>
         /// </summary>
@@ -135,7 +135,7 @@ namespace GlimmerGrove.Wards
         /// <summary>
         /// The same, told how far each seat's turret has been upgraded.
         ///
-        /// <b><paramref name="stars"/> may be null</b>, which is every turret at the first star —
+        /// <b><paramref name="stars"/> may be null</b>, which is every turret at the first star -
         /// what a content gate, an offline mirror and every rule test play against, and what a
         /// save written before the ladder shipped means.
         /// </summary>
@@ -202,7 +202,7 @@ namespace GlimmerGrove.Wards
             var list = new List<AssetPipeline.AssetRequest>(Colours.Length * 5);
 
             // **Four seats and never four of anything else.** A line may stand the same turret
-            // twice — on two seats it was bought for — and, since the legendary band, may stand
+            // twice - on two seats it was bought for - and, since the legendary band, may stand
             // one whose four colours are one address (`WardModel.Colourless`), so the same
             // request can arrive up to four times.
             // That is a duplicate claim on a scope rather than four things loading, and it is
@@ -226,7 +226,7 @@ namespace GlimmerGrove.Wards
 
                 // **The flame, and only for a seat that can actually light one.** A burn is drawn
                 // in the colour of the ward that lit it (`WardModel.BurnFor`), so the reel a line
-                // needs is decided by *which seats hold an ember* rather than by the mode — a
+                // needs is decided by *which seats hold an ember* rather than by the mode - a
                 // line with none asks for nothing, which is most lines, and one built entirely of
                 // them asks for four. That is invariant 7b's own bargain said about a lasting
                 // state: memory bounded by what can appear on the screen rather than by how much
@@ -242,7 +242,7 @@ namespace GlimmerGrove.Wards
 
                 // **The three reels a turret throws, and only for the ones that own a set.** The
                 // one model that draws the shared elemental reels instead (`WardModel.Elemental`)
-                // takes them from the mode's own cast, where they are resident — asking for them
+                // takes them from the mode's own cast, where they are resident - asking for them
                 // here would be a second claim on an address the global set already owns, which
                 // invariant 7b refuses. The two have to stay in step: drop them from `SiegeMode`
                 // and that turret draws nothing at all.

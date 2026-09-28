@@ -9,8 +9,8 @@ namespace GlimmerGrove.Cloud
     ///
     /// Written out by hand rather than serialised as one opaque JSON string, and the
     /// reason is worth stating because the shortcut is tempting. If the ledger were a
-    /// string, the security rules could not check anything about it, and — far more
-    /// importantly — the server could not re-derive earned currency from it. That
+    /// string, the security rules could not check anything about it, and - far more
+    /// importantly - the server could not re-derive earned currency from it. That
     /// derivation is the thing that stops a forged save minting money. A blob would
     /// have quietly given that up in exchange for thirty fewer lines.
     ///
@@ -41,7 +41,7 @@ namespace GlimmerGrove.Cloud
                 // The standing travels because it is the only field here the device cannot
                 // rebuild on its own: it needs the population that was published when the
                 // record was set, and that table is gone by the time a reinstall happens.
-                // The server neither reads nor adjudicates it — a band buys nothing, and the
+                // The server neither reads nor adjudicates it - a band buys nothing, and the
                 // rules validate the document's top-level keys rather than a glade's, so this
                 // needed no rules change. See LevelRecord.BestRank.
                 { "bestRank", (long)record.bestRank },
@@ -105,7 +105,7 @@ namespace GlimmerGrove.Cloud
                 // reason than the tip set: it is the only thing in the save that cannot be
                 // re-derived from anything else, so a set that never left the phone is a
                 // companion somebody paid real progress for and loses on reinstall. The
-                // server neither reads nor adjudicates it — a purchase is a cosmetic, and the
+                // server neither reads nor adjudicates it - a purchase is a cosmetic, and the
                 // money half was already defended by submitSpends refusing a debit the
                 // balance cannot cover. See CompanionLedger.
                 { "companionsOwned", new List<object>(dto.companionsOwned ?? new string[0]) },
@@ -115,7 +115,7 @@ namespace GlimmerGrove.Cloud
                 // phone is a payment the player made and cannot see on their other device.
                 // The revocations travel beside them, or a refund honoured on one device
                 // would be undone by the next sync from another. Both are forgeable and both
-                // are accounted for — a forged container buys faster hearts and no currency,
+                // are accounted for - a forged container buys faster hearts and no currency,
                 // no progression and nothing that reaches a board, and the refund path is
                 // owned by the server, which writes the revocations this field only caches.
                 // See HeartContainerLedger and invariant 12a for why a field has to reach all
@@ -126,7 +126,7 @@ namespace GlimmerGrove.Cloud
                 // The utilities, both counters per row. They travel for the companions'
                 // reason with one addition: a utility can be bought with gems, so a row that
                 // stayed on one phone is a purchase the player cannot see on their other
-                // device. Nothing here is adjudicated and invariant 39 is why that is safe —
+                // device. Nothing here is adjudicated and invariant 39 is why that is safe -
                 // a utility that delivers damage is charged against the graded count at the
                 // most a match could ever have delivered, so a forged row buys an easier run
                 // and never a better one.
@@ -182,7 +182,7 @@ namespace GlimmerGrove.Cloud
                         { "heartBoostUntilUnix", dto.wallet?.heartBoostUntilUnix ?? 0L },
 
                         // The XP boost. Inside the `wallet` map, which `firestore.rules` bounds
-                        // without naming its fields — so three new numbers on the wire cost no
+                        // without naming its fields - so three new numbers on the wire cost no
                         // rules release (invariant 12a's cheap half).
                         { "xpBoostWatchedUntilUnix", dto.wallet?.xpBoostWatchedUntilUnix ?? 0L },
                         { "xpBoostBoughtUntilUnix", dto.wallet?.xpBoostBoughtUntilUnix ?? 0L },
@@ -204,7 +204,7 @@ namespace GlimmerGrove.Cloud
                         // The two preferences, each with the moment it was chosen. The
                         // stamps are not decoration: they are the whole of how the merge
                         // decides between two devices, and a name that travelled without
-                        // one would be dated by whichever device asked last — which is the
+                        // one would be dated by whichever device asked last - which is the
                         // bug schema v15 exists to end. See SaveMerge.Chosen.
                         { "displayName", dto.wallet?.displayName ?? string.Empty },
                         { "displayNameSetUnix", dto.wallet?.displayNameSetUnix ?? 0L },
@@ -228,7 +228,7 @@ namespace GlimmerGrove.Cloud
                 // counters do, and for a sharper one: the cap is the only thing between a
                 // second device and a second set of ads, so a count that stays on one
                 // phone is a cap that does not exist. Its absence here also made every
-                // single sync a write — SaveDelta compares this section, and a field that
+                // single sync a write - SaveDelta compares this section, and a field that
                 // never comes back always differs from the one about to be sent.
                 { "ads", new Dictionary<string, object>
                     {
@@ -238,19 +238,19 @@ namespace GlimmerGrove.Cloud
                     }
                 },
 
-                // The streak's four dates, which until v9 never left the phone — so a
+                // The streak's four dates, which until v9 never left the phone - so a
                 // player's streak silently restarted on their second device, and
                 // DailyStreak.Join had nothing to join against. Every field is monotonic,
                 // which is what makes sending them safe: the merge is four maxes and the
                 // larger value is always the one that knows more.
                 //
-                // The server reads the first two too, but only to log a disagreement — see
+                // The server reads the first two too, but only to log a disagreement - see
                 // `saveSupports` in functions/src/streak.ts. Nothing it pays depends on
                 // them, which is deliberate: they are client-written, and a payment rule
                 // resting on a forgeable number is not a rule. `shieldFromDay` it does not
                 // read at all: a shield keeps a streak alive across days nobody played and
                 // never advances the night count, so a forged one still collects at most one
-                // night per calendar day — exactly what an honest daily player collects.
+                // night per calendar day - exactly what an honest daily player collects.
                 //
                 // No `firestore.rules` release was owed for the fourth field, and that was
                 // checked rather than assumed: the rules bound `streak` as a map without
@@ -268,18 +268,18 @@ namespace GlimmerGrove.Cloud
                 // dates above, the server *pays* on these: `eventCredits` counts a milestone
                 // only once its floor has reached it, so a floor that stayed on the phone
                 // would be a collect the wallet never heard about. Safe to send for the
-                // usual reason — it is clamped there to the glades the star ledger actually
+                // usual reason - it is clamped there to the glades the star ledger actually
                 // supports, so an edited one takes early what play had already earned and
                 // nothing more.
-                // The tasks: both periods' counters and claims. The server never reads them —
+                // The tasks: both periods' counters and claims. The server never reads them -
                 // a task chest is bounded by the wallet's own per-period allowance and re-rolled
-                // from the claim id — but a second device needs them, or a task done on one
+                // from the claim id - but a second device needs them, or a task done on one
                 // phone reads half done on the other and a chest paid on one is paid again.
                 { "tasks", Tasks(dto.tasks) },
 
                 // The daily challenges: today's plays, the lifetime tally and the deals. The
-                // server reads the tally (`challengeXp`) and never the rows — a coin claim is
-                // bounded by the deal the wallet document recorded, not by anything here — but a
+                // server reads the tally (`challengeXp`) and never the rows - a coin claim is
+                // bounded by the deal the wallet document recorded, not by anything here - but a
                 // second device needs all three, or a play spent on one phone is a fresh play on
                 // the other, a tally that stayed is a keeper level that fell, and a deal bought
                 // here is a page drawn as free there.
@@ -371,7 +371,7 @@ namespace GlimmerGrove.Cloud
         /// The utility ledgers, dropping any row that says nothing.
         ///
         /// A row with both counters at nought is the same fact as no row at all, so writing one
-        /// would make the round trip return something it did not receive — which
+        /// would make the round trip return something it did not receive - which
         /// <see cref="SaveDelta"/> would then read as a change on every launch, for ever. The
         /// rule <see cref="Stock"/> already follows.
         /// </summary>
@@ -533,7 +533,7 @@ namespace GlimmerGrove.Cloud
                 dto.wallet.displayName = Str(wallet, "displayName");
                 dto.wallet.avatarId = Str(wallet, "avatarId");
 
-                // Absent on a document last written before v15, which reads back as zero —
+                // Absent on a document last written before v15, which reads back as zero -
                 // "chosen, but nobody recorded when". That is exactly what the merge treats
                 // as the oldest possible choice, so a stamped rename from any updated device
                 // wins immediately and nothing has to detect the upgrade.
@@ -556,7 +556,7 @@ namespace GlimmerGrove.Cloud
             }
 
             // Absent on a document last written by a build that predates currency rungs,
-            // which reads back as three zeros — and zero is what the join treats as "knows
+            // which reads back as three zeros - and zero is what the join treats as "knows
             // nothing", so the local streak simply wins. Nothing has to detect the upgrade.
             if (Map(doc, "streak") is IDictionary<string, object> streak)
             {
@@ -567,32 +567,32 @@ namespace GlimmerGrove.Cloud
             }
 
             // Absent on a document written before rungs were collected by hand, which reads
-            // back as no floors and an unseeded flag — and both are what the join treats as
+            // back as no floors and an unseeded flag - and both are what the join treats as
             // "knows nothing", so the local side wins. Nothing has to detect the upgrade.
             dto.eventsSeeded = Bool(doc, "eventsSeeded");
             dto.events = ReadEventFloors(doc);
 
             // Absent on a document written before tasks existed, which reads back as two
-            // periods with key zero — what the join treats as "knows nothing", so the local
+            // periods with key zero - what the join treats as "knows nothing", so the local
             // side wins. Nothing has to detect the upgrade.
             dto.tasks = ReadTasks(doc);
 
             // Absent on a document written before the daily challenges existed, which reads back
-            // as no day, no rows, no tally and no deal — what the join treats as "knows nothing",
+            // as no day, no rows, no tally and no deal - what the join treats as "knows nothing",
             // so the local side wins. Nothing has to detect the upgrade.
             dto.challenges = ReadChallenges(doc);
 
             // Absent on a document written before the grove existed, which reads back as no
-            // rows — and no rows is "this device has no opinion about any slot", so the join
+            // rows - and no rows is "this device has no opinion about any slot", so the join
             // takes the local side whole. Nothing has to detect the upgrade.
 
             // Absent on a document written before utilities existed, which reads back as no
-            // rows — the same fact as "granted none", so the join takes the local side whole
+            // rows - the same fact as "granted none", so the join takes the local side whole
             // and nothing has to detect the upgrade.
             dto.utilityStock = ReadUtilities(doc);
 
             // Absent on a document written before the line existed, which reads back as nothing
-            // bought and nothing arranged — the same fact as a fresh account, so the join takes
+            // bought and nothing arranged - the same fact as a fresh account, so the join takes
             // the local side whole and nothing has to detect the upgrade.
             dto.wardsOwned = StrList(doc, "wardsOwned");
             dto.wardLoadout = ReadLoadout(doc);
@@ -619,7 +619,7 @@ namespace GlimmerGrove.Cloud
         }
 
         /// <summary>
-        /// Per-placement view counts, tolerating anything that is not one — the same
+        /// Per-placement view counts, tolerating anything that is not one - the same
         /// rule <see cref="StrList"/> follows, for the same reason: this runs on a
         /// background thread during a sync, where an exception costs the whole save.
         /// </summary>
@@ -644,7 +644,7 @@ namespace GlimmerGrove.Cloud
         }
 
         /// <summary>
-        /// Each event's collected floor, tolerating anything that is not one — the same
+        /// Each event's collected floor, tolerating anything that is not one - the same
         /// rule <see cref="ReadAdCounts"/> follows and for the same reason.
         /// </summary>
         static EventStateDto[] ReadEventFloors(IDictionary<string, object> doc)
@@ -736,7 +736,7 @@ namespace GlimmerGrove.Cloud
         /// A wire integer narrowed to an <c>int</c>, saturating rather than wrapping.
         ///
         /// Every number it is used on is a monotonic floor, and a floor that wrapped would
-        /// <em>fall</em> — which is the one thing the merge below it assumes cannot happen.
+        /// <em>fall</em> - which is the one thing the merge below it assumes cannot happen.
         /// </summary>
         static int Cap(long value)
             => value <= 0L ? 0 : value > int.MaxValue ? int.MaxValue : (int)value;
@@ -784,7 +784,7 @@ namespace GlimmerGrove.Cloud
                 { "weekly", Period(tasks?.weekly) },
 
                 // The lifetime tally, in the same rows-of-maps shape and with no period key
-                // around it — the window never ends, so there is nothing to date it by. It
+                // around it - the window never ends, so there is nothing to date it by. It
                 // rides inside this map deliberately (invariant 12a): `hasOnly` is an
                 // allow-list over the document's own keys, so a sub-key costs no rules release
                 // and has no deploy ordering. A rank is derived from it, so it has to travel or
@@ -1127,7 +1127,7 @@ namespace GlimmerGrove.Cloud
         ///
         /// Firestore hands arrays back as <c>List&lt;object&gt;</c>, and a document may
         /// have been written by a newer build or a support tool. Entries that are not
-        /// strings are dropped rather than thrown over — this runs on a background
+        /// strings are dropped rather than thrown over - this runs on a background
         /// thread during a sync, where an exception costs the whole save.
         /// </summary>
         static string[] StrList(IDictionary<string, object> map, string key)

@@ -11,7 +11,7 @@ namespace GlimmerGrove.Utilities
     /// <b>Two counters per id and never one</b>, which is invariant 11b for the fourth time in
     /// this file after hearts, hints and grove decor. A count of utilities <em>remaining</em>
     /// cannot be merged: two devices showing 3 and 1 are equally consistent with "one opened a
-    /// chest" and "one spent two on a siege", so every rule over the pair is wrong somewhere —
+    /// chest" and "one spent two on a siege", so every rule over the pair is wrong somewhere -
     /// taking the larger hands back what was spent, taking the smaller destroys what was earned.
     /// Both halves of a double-entry ledger only ever rise, so the join is a per-id <c>max</c> on
     /// each and the larger value is always the one that knows more.
@@ -34,7 +34,7 @@ namespace GlimmerGrove.Utilities
     /// </para>
     /// <para>
     /// <b>A forged row buys an easier run and never a better one.</b> Utilities are not currency,
-    /// so nothing here is adjudicated (invariant 13) — and the reason that is safe rather than
+    /// so nothing here is adjudicated (invariant 13) - and the reason that is safe rather than
     /// merely cheap is invariant 39: a utility that delivers damage is charged against the graded
     /// count at the most a match could ever have delivered, so no number written here can improve
     /// a star, a credit or a grove's worth on a public board.
@@ -47,9 +47,9 @@ namespace GlimmerGrove.Utilities
         /// anything a content push can move.
         ///
         /// <para>
-        /// <c>GroveStock.MaxCopies</c>' argument exactly. The clamp is <em>structural</em> — it
+        /// <c>GroveStock.MaxCopies</c>' argument exactly. The clamp is <em>structural</em> - it
         /// exists so a corrupt or hostile file cannot put a number here that overflows the
-        /// subtraction or the wire's size guard — and a structural clamp may never be a published
+        /// subtraction or the wire's size guard - and a structural clamp may never be a published
         /// number, because lowering a published one would cut a counter the merge proof requires
         /// to be monotonic. How many a player may <em>hold</em> is an economy question and lives
         /// on <see cref="UtilityItem.MaxHeld"/>.
@@ -87,7 +87,7 @@ namespace GlimmerGrove.Utilities
         ///
         /// <b>The clamp is not decoration.</b> Two devices can each spend the last one before
         /// either has synced, so the merged file can legitimately hold more spent than earned for
-        /// as long as it takes the next grant to land — exactly the state <c>GroveStock</c>
+        /// as long as it takes the next grant to land - exactly the state <c>GroveStock</c>
         /// documents for a fence placed twice. Answering "none left" costs nothing; reaching back
         /// into either counter to balance the identity would break the monotonicity the join
         /// rests on.
@@ -104,7 +104,7 @@ namespace GlimmerGrove.Utilities
         /// <b>No ceiling is applied here</b>, deliberately: the published ceiling is a decision
         /// taken at the moment of a grant and belongs to <see cref="UtilityLedger"/>, which has
         /// the catalog. All that happens here is the structural clamp, so a caller that has
-        /// already charged a player for something can never be refused after the fact — the trap
+        /// already charged a player for something can never be refused after the fact - the trap
         /// <c>GroveStock.Add</c> names.
         /// </summary>
         public int Earn(string id, int count)
@@ -150,7 +150,7 @@ namespace GlimmerGrove.Utilities
         /// Reads the rows of a save file, ignoring anything malformed rather than throwing.
         ///
         /// A duplicated id takes the larger of each counter, which is the rule <see cref="Join"/>
-        /// uses — so a file that should have been impossible (invariant 11a) is read the way two
+        /// uses - so a file that should have been impossible (invariant 11a) is read the way two
         /// devices holding it would have been merged, rather than by whichever row came last.
         /// </summary>
         public void LoadFrom(UtilityStockDto[] rows)
@@ -167,7 +167,7 @@ namespace GlimmerGrove.Utilities
         /// launch and push a write for nothing, for ever.
         ///
         /// <b>A row whose counters are both nought is dropped</b>, so "granted nothing" and
-        /// "written before utilities existed" stay the same fact and no sentinel is needed — the
+        /// "written before utilities existed" stay the same fact and no sentinel is needed - the
         /// property that makes every other id-keyed section here mergeable.
         /// </summary>
         public UtilityStockDto[] Write()
@@ -205,16 +205,16 @@ namespace GlimmerGrove.Utilities
         /// <para>
         /// <b>What it is not is exact, and the inexactness is deliberate and in the player's
         /// favour.</b> Two devices that both go offline holding five and spend two and three
-        /// merge to <c>spent = 3</c>, not five — so two of those uses were free. The alternative
+        /// merge to <c>spent = 3</c>, not five - so two of those uses were free. The alternative
         /// is adding the two, and adding is not idempotent: a device that re-uploads the same
         /// save, or a sync retried after a dropped reply, would charge those spends again, which
         /// is the failure mode that actually loses a player something they paid gems for.
         /// <see cref="RegenLedger"/> makes the same trade for hearts and hints and has since v8;
         /// this is that decision inherited rather than re-taken, and the reason it is safe is
-        /// invariant 39 — a forgiven use buys an easier run and never a better one.
+        /// invariant 39 - a forgiven use buys an easier run and never a better one.
         /// </para>
         /// <para>
-        /// No early return for an empty side, deliberately — the trap <c>GroveStock.Join</c>
+        /// No early return for an empty side, deliberately - the trap <c>GroveStock.Join</c>
         /// documents. Handing one array straight back would skip the sort, so an unsorted file
         /// joined against nothing would come out still unsorted and <c>SaveDelta</c> would read
         /// every launch as changed.
@@ -222,7 +222,7 @@ namespace GlimmerGrove.Utilities
         /// <para>
         /// Unknown ids are kept, exactly as <c>tipsSeen</c> and <c>companionsOwned</c> keep theirs:
         /// a utility granted on a newer build must not be confiscated by a trip through an older
-        /// one — and here that would be taking back something a player may have paid gems for.
+        /// one - and here that would be taking back something a player may have paid gems for.
         /// </para>
         /// </summary>
         public static UtilityStockDto[] Join(UtilityStockDto[] mine, UtilityStockDto[] other)
@@ -238,7 +238,7 @@ namespace GlimmerGrove.Utilities
         /// Folds rows into what is already held, keeping the larger of each counter.
         ///
         /// The one place a row is judged, so <see cref="LoadFrom"/> and <see cref="Join"/> cannot
-        /// come to disagree about what a malformed row means — invariant 5b's rule in a file with
+        /// come to disagree about what a malformed row means - invariant 5b's rule in a file with
         /// no reason to have two copies of it.
         /// </summary>
         void Absorb(UtilityStockDto[] rows)

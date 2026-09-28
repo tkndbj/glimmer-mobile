@@ -19,8 +19,8 @@ namespace GlimmerGrove
     /// <para>
     /// <b>A second screen rather than a mode on <see cref="ProfileScreen"/>, for
     /// <see cref="GroveVisitScreen"/>'s reason.</b> That screen is identity <em>and</em> the
-    /// controls that change it — a rename pencil, a companion you tap to wear, a boards toggle,
-    /// an account card with a delete in it — and every one of those would need a branch saying
+    /// controls that change it - a rename pencil, a companion you tap to wear, a boards toggle,
+    /// an account card with a delete in it - and every one of those would need a branch saying
     /// "not while visiting". A mode toggle that changes what every control on a screen does is
     /// what invariant 16 refused for the grove's own editing, and refusing it here costs one file
     /// that can only read.
@@ -40,11 +40,11 @@ namespace GlimmerGrove
     /// plainer profile is what arrives rather than a refusal.
     /// </para>
     /// <para>
-    /// <b>One scope, released with the screen:</b> the four turret bodies this keeper stands —
+    /// <b>One scope, released with the screen:</b> the four turret bodies this keeper stands -
     /// never the roster's thirty, which is what the shelf's atlas is for (invariants 7b and
     /// 16c). It arrives asynchronously, so every cell it fills is repainted when it lands and
     /// every <c>Image</c> begins with no sprite and disabled: an <c>Image</c> with no sprite is
-    /// a white rectangle, not a blank. <b>The badge needs no scope at all</b> — the seven are
+    /// a white rectangle, not a blank. <b>The badge needs no scope at all</b> - the seven are
     /// small and global, and already resident for the map's own readout.
     /// </para>
     /// </summary>
@@ -56,7 +56,7 @@ namespace GlimmerGrove
         const float Gap = 28f;
         const float HeaderHeight = 250f;
 
-        /// <summary>Its own scope, never a run's or the map bar's — see <see cref="LoadoutBar"/>.</summary>
+        /// <summary>Its own scope, never a run's or the map bar's - see <see cref="LoadoutBar"/>.</summary>
         const string TurretScope = "public_profile_line";
 
         string _ownerId = string.Empty;
@@ -82,7 +82,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Opens on a keeper. The row's own figures are kept so the screen can say <em>whose</em>
-        /// profile is being fetched while it is still in flight — the same bargain
+        /// profile is being fetched while it is still in flight - the same bargain
         /// <see cref="GroveVisitScreen.Visit"/> strikes with a name, and it matters more here,
         /// because a visit at least draws a floor and this draws nothing at all until the card
         /// lands.
@@ -103,7 +103,7 @@ namespace GlimmerGrove
 
             // Built last so it draws over everything and both of the states it describes are
             // already on screen underneath it.
-            // Named when the board knew a name, generic when it did not — a caller with no row
+            // Named when the board knew a name, generic when it did not - a caller with no row
             // in hand (a deep link, a later drop) gets a sentence rather than a gap.
             string looking = string.IsNullOrEmpty(_known.Name)
                 ? Loc.Get("ui.profile.public_looking")
@@ -150,7 +150,7 @@ namespace GlimmerGrove
         /// The four turret bodies this keeper stands, and only those.
         ///
         /// <b>The line and never the roster</b> (invariant 7b): four turrets are on the screen
-        /// and twenty are in the shop, so a profile pays for four — the same bargain
+        /// and twenty are in the shop, so a profile pays for four - the same bargain
         /// <see cref="WardLine.Art"/> exists to make, narrowed to the one picture this screen
         /// draws per seat.
         /// </summary>
@@ -175,7 +175,7 @@ namespace GlimmerGrove
         ///
         /// <b>Rebuilt rather than patched</b>, which is <see cref="ProfileScreen.BuildBody"/>'s
         /// call for its reason: a card's position is a running cursor rather than a number
-        /// written down, so a card that changes height moves every card below it — and this one
+        /// written down, so a card that changes height moves every card below it - and this one
         /// genuinely does, because a keeper who has never played the Infinite lane draws a
         /// shorter card than one who has. Redrawing five cards is far cheaper than the bugs of
         /// keeping their offsets in step by hand.
@@ -189,7 +189,7 @@ namespace GlimmerGrove
             if (_viewport)
             {
                 // Hidden before it is destroyed: `Destroy` lands at the end of the frame, so a
-                // region replaced in place is drawn over its replacement until then — and the
+                // region replaced in place is drawn over its replacement until then - and the
                 // outgoing viewport still carries its invisible drag catcher.
                 _viewport.gameObject.SetActive(false);
                 Destroy(_viewport.gameObject);
@@ -225,7 +225,7 @@ namespace GlimmerGrove
                 // grovement, and all three are about a thing this build does not draw. The
                 // stack is a cursor rather than a table of positions, so a card being absent
                 // costs nothing and adding it back is one call (`BuildGroveCard`, deleted with
-                // it — the history is the copy).
+                // it - the history is the copy).
             }
 
             _stack.sizeDelta = new Vector2(0f, -_cursor + Gap);
@@ -279,7 +279,7 @@ namespace GlimmerGrove
         void BuildKeeperCard()
         {
             // **Sized to the medallion rather than typed.** It was 400, which is the
-            // portrait plus 34 of air at the top and 114 at the bottom — the whole card reading
+            // portrait plus 34 of air at the top and 114 at the bottom - the whole card reading
             // as bottom-heavy because the number was a guess and the column beside the portrait
             // is what actually fills it. `Disc + 2 * Margin` is the one measurement that cannot
             // drift from the thing it is measuring.
@@ -297,7 +297,7 @@ namespace GlimmerGrove
             UIKit.StretchTo((RectTransform)ring.transform, 0, 0, 0, 0);
 
             // **The badge the server derived for them, and nothing if it derived none.** A
-            // rung this build has never heard of draws nothing rather than a rectangle — that
+            // rung this build has never heard of draws nothing rather than a rectangle - that
             // is `RankArt`'s whole reason, and it matters more here than on a board row: a
             // visitor may be a content drop behind the keeper they are looking at.
             //
@@ -322,8 +322,8 @@ namespace GlimmerGrove
             // The two lines beside it, stacked from the card's own top edge so the column
             // and the portrait are measured against one thing rather than against each other.
             //
-            // **It was four and the bottom two were the grove's** — what it is worth and the
-            // stars that buys — so they are held with it. The remaining pair is re-centred
+            // **It was four and the bottom two were the grove's** - what it is worth and the
+            // stars that buys - so they are held with it. The remaining pair is re-centred
             // rather than left where it was: a column that keeps its old coordinates after
             // losing its lower half is a card whose contents have quietly climbed into its top
             // third, beside a portrait that still fills the whole of it.
@@ -353,12 +353,12 @@ namespace GlimmerGrove
         /// position, which is invariant 19c: nothing in this game maintains a global ordering, so
         /// "top 12%" is one document read shared by everybody and "rank 4,182" is a query that
         /// grows with the population for ever. An account with no run has no standing and no
-        /// nought either — a bad score and no score are different things (invariant 43b).
+        /// nought either - a bad score and no score are different things (invariant 43b).
         /// </summary>
         void BuildWatchCard()
         {
             // **A left-aligned label anchored to a card's left edge is positioned at its own
-            // centre**, because `UIKit.Box` always pivots there (invariant 44d) — so the column
+            // centre**, because `UIKit.Box` always pivots there (invariant 44d) - so the column
             // these two lines share is `left + width / 2` and not `left`. Written down once
             // rather than twice, because the second copy is the one that drifts.
             const float WatchTextLeft = 190f, WatchTextW = 560f;
@@ -398,7 +398,7 @@ namespace GlimmerGrove
         /// The turrets this keeper takes into a siege, one per colour.
         ///
         /// <b>Resolved through <see cref="GroveCard.Line"/></b>, so a seat the card does not name
-        /// and a turret this build has never heard of both draw the roster's starter — which is
+        /// and a turret this build has never heard of both draw the roster's starter - which is
         /// exactly what their own game draws. The seat's colour is the one thing a turret's
         /// silhouette cannot say, so it is the rim, which is how the map's own readout says it
         /// (<see cref="LoadoutBar"/>).
@@ -407,7 +407,7 @@ namespace GlimmerGrove
         {
             // 350 rather than 330, and every number under it is measured from the title
             // rather than from the middle: the row is a cell, a caption and a five-rung ladder,
-            // which is 196 + 34 + 26 of content plus the title's own 76 — at 330 the cell's top
+            // which is 196 + 34 + 26 of content plus the title's own 76 - at 330 the cell's top
             // edge stood 11 units under the title and the ladder ran out of the plate.
             const float Cell = 196f, StepX = 212f;
             const float TitleRoom = 84f, CaptionH = 34f, LadderH = 30f, Foot = 16f;
@@ -509,8 +509,8 @@ namespace GlimmerGrove
                              () => Flow.Go<LeaderboardScreen>());
 
             // Small, quiet, and in the corner opposite Back. A report control is not something a
-            // screen should invite — it is something a player has to be able to find once they
-            // have already decided — so it is sized and coloured like chrome rather than like an
+            // screen should invite - it is something a player has to be able to find once they
+            // have already decided - so it is sized and coloured like chrome rather than like an
             // action. `GroveVisitScreen` draws the same control in the same corner on purpose:
             // the two screens are one keeper, and a control that moves between them is a control
             // somebody has to look for twice.
@@ -537,7 +537,7 @@ namespace GlimmerGrove
         ///
         /// Four states and each renders its own sentence, which is <c>AdOfferState</c>'s rule: a
         /// blank page with no explanation is how a player concludes a feature is broken, and
-        /// three of these four are perfectly ordinary — a keeper who opted out after the board
+        /// three of these four are perfectly ordinary - a keeper who opted out after the board
         /// was built, a fetch that has not landed, and a network that is not there.
         /// </summary>
         void PaintStatus()
@@ -549,8 +549,8 @@ namespace GlimmerGrove
             else if (!GroveBoard.IsAvailable) _status.text = Loc.Get("ui.board.offline");
 
             // **The fourth state this method's own summary claimed to have, and did not.** A
-            // card that could not be fetched was reported as `ui.visit.gone` — "this keeper is
-            // no longer on the boards" — whichever way the request had failed, so a player who
+            // card that could not be fetched was reported as `ui.visit.gone` - "this keeper is
+            // no longer on the boards" - whichever way the request had failed, so a player who
             // opened a row in a tunnel was told something false about another person, in a
             // sentence with no hint that the phone was the problem. The failure is the same
             // `CloudResult` either way and nothing in it distinguishes them, which is why the
@@ -580,7 +580,7 @@ namespace GlimmerGrove
 
             // Dead only once *every* subject has been reported. A control greyed after one of
             // two would tell somebody they had already reported a grovement they have never
-            // looked at — see `KeeperReports`.
+            // looked at - see `KeeperReports`.
             bool spent = KeeperReports.AllSent(_ownerId);
 
             _report.Interactable = !spent && !_reporting;

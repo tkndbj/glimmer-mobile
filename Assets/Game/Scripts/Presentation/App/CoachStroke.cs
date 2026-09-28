@@ -18,7 +18,7 @@ namespace GlimmerGrove
         /// <summary>0 hovering, 1 pressed onto the board. Drives the dip on the tap.</summary>
         public readonly float Press;
 
-        /// <summary>0 on the board, 1 fully raised — the reach in and the lift away.</summary>
+        /// <summary>0 on the board, 1 fully raised - the reach in and the lift away.</summary>
         public readonly float Lift;
 
         /// <summary>How much of the route has been drawn behind the fingertip, 0..1.</summary>
@@ -48,7 +48,7 @@ namespace GlimmerGrove
     /// sentence with a ring around the tile it is talking about is the right shape for a
     /// rule. Lightweave's first lesson is not a rule, it is a <em>verb</em>: after four
     /// chapters of tapping tiles, the one thing a player must know before anything else is
-    /// that this mode is dragged. Words are a poor way to teach a gesture — the reader has to
+    /// that this mode is dragged. Words are a poor way to teach a gesture - the reader has to
     /// turn "drag from a crystal to the critter wearing its colour" back into a movement, and
     /// a picture of the movement skips that step entirely. The bead lesson is the same
     /// argument one notch weaker: the sentence says a ring must be passed through, and the
@@ -57,7 +57,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>In its own type and tested, for <c>TweenCycle</c>'s reason.</b> This is animation
     /// arithmetic, which is the one kind of failure invisible in a screenshot and obvious only
-    /// in motion — a hand that arrives before it has faded in, a trail still standing from the
+    /// in motion - a hand that arrives before it has faded in, a trail still standing from the
     /// previous repeat, a five-cell demonstration that takes as long as a fifteen-cell one, a
     /// loop whose end does not meet its beginning. None of that can be caught by compiling and
     /// the Editor is usually not running, so the whole cycle is plain floats and
@@ -66,7 +66,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>The total is bounded and the rate is what gives way</b>, which is
     /// <c>GroveGrowth.MaxSpread</c>'s rule for the fourth time. A demonstration is time the
-    /// player is not playing, and it repeats for as long as they leave the panel up — so a
+    /// player is not playing, and it repeats for as long as they leave the panel up - so a
     /// drop that ships a wider grove must not silently ship a longer wait before the sentence
     /// can be read a second time.
     /// </para>
@@ -86,7 +86,7 @@ namespace GlimmerGrove
         /// The beat before it happens again.
         ///
         /// Long enough that a repeat reads as a repeat rather than as a loop the player is
-        /// trapped in, and it is where the ink is cleared — a stroke that began on top of the
+        /// trapped in, and it is where the ink is cleared - a stroke that began on top of the
         /// last one would say the route may be drawn twice.
         /// </summary>
         public const float RestSeconds = .95f;
@@ -99,7 +99,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// The shortest a stroke may take. A two-cell demonstration at the raw rate is a fifth
-        /// of a second, which is not a hand travelling — it is the hand being somewhere else.
+        /// of a second, which is not a hand travelling - it is the hand being somewhere else.
         /// </summary>
         public const float MinDraw = .70f;
 
@@ -108,18 +108,18 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>Derived from the loop, not from the stroke.</b> What a player actually waits for is
-        /// <see cref="Cycle"/> — reach, press, draw, lift, rest — because that is how long until
+        /// <see cref="Cycle"/> - reach, press, draw, lift, rest - because that is how long until
         /// the sentence beside the hand can be read a second time. Holding that under
         /// <see cref="LongestCycle"/> seconds is the bar, and it leaves this as the remainder:
         /// 4.0 less the .38 + .20 + .28 + .95 of fixed beats is 2.19, and this sits just inside
         /// it. <c>ARepeatNeverOutstaysTheLoopBar</c> is what makes that subtraction a fact rather
-        /// than a comment — it caught this constant a hundredth of a second over the first time.
+        /// than a comment - it caught this constant a hundredth of a second over the first time.
         /// </para>
         /// <para>
         /// It is rarely reached now that the route is an elbow. An elbow spans at most
         /// width + height - 2 cells, so the widest shipped grove (7x9) asks for 14 × .19 = 2.66s
         /// and is trimmed slightly; an ordinary one is four to eight cells and never comes near.
-        /// That is the ceiling doing what it is for — a bigger board must not be a longer wait.
+        /// That is the ceiling doing what it is for - a bigger board must not be a longer wait.
         /// </para>
         /// </summary>
         public const float MaxDraw = 2.15f;
@@ -129,7 +129,7 @@ namespace GlimmerGrove
         ///
         /// A demonstration repeats for as long as the panel is up, so this is a loop period
         /// rather than a duration. Past about four seconds a loop stops reading as "again" and
-        /// starts reading as waiting — which is the point at which a player dismisses the panel
+        /// starts reading as waiting - which is the point at which a player dismisses the panel
         /// before the lesson has landed.
         /// </summary>
         public const float LongestCycle = 4.0f;
@@ -153,7 +153,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Read rather than scheduled, so the whole demonstration is one looping tween with no
-        /// state of its own — a sequence of nested callbacks would have to be cancelled
+        /// state of its own - a sequence of nested callbacks would have to be cancelled
         /// correctly on every way the panel can close, and this project has already recorded
         /// what a panel with several exits costs.
         /// </para>

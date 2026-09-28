@@ -13,7 +13,7 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// <b>A collaborator rather than more of the panel that draws it</b>, for
-    /// <see cref="HeartRescueFlow"/>'s reason and directly beside it — that one sells hearts
+    /// <see cref="HeartRescueFlow"/>'s reason and directly beside it - that one sells hearts
     /// for gems, this one sells them for thirty seconds, and a defeat panel that owned both
     /// would be back to the six responsibilities the rescue was lifted out of. The split is the
     /// same: this owns what is being offered and what happens when it pays, and the panel owns
@@ -21,26 +21,26 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>There is no explanatory panel in front of the video any more, and that is the point of
-    /// this class.</b> Both entry points used to raise <see cref="AdOfferOverlay"/> — a panel
+    /// this class.</b> Both entry points used to raise <see cref="AdOfferOverlay"/> - a panel
     /// listing how hearts regenerate, when the next one lands and how many videos the day has
-    /// left — and then pay out by turning its watch button into a COLLECT. Two things were wrong
+    /// left - and then pay out by turning its watch button into a COLLECT. Two things were wrong
     /// with that and they compound. The panel answers a question nobody asked here: a player
     /// stopped mid-session has already decided, and the button they just tapped said what it
-    /// did. And the payoff was drawn as the smallest change on the screen — a caption swap on
-    /// the control that had asked for the ad — which is the fault <see cref="PrizeOverlay"/> was
+    /// did. And the payoff was drawn as the smallest change on the screen - a caption swap on
+    /// the control that had asked for the ad - which is the fault <see cref="PrizeOverlay"/> was
     /// built to fix for the bonus wheel and is worse here, because this is the moment the game
     /// is handed back. So the tap shows the video, and what returns is the celebration.
     /// </para>
     /// <para>
     /// <b><see cref="AdOfferOverlay"/> is not retired by this and must not be.</b> It is still
     /// what the <c>+</c> beside the heart pill opens, and there the panel <em>is</em> the
-    /// answer — that control means "tell me about this resource", and the house rule is that it
+    /// answer - that control means "tell me about this resource", and the house rule is that it
     /// always opens that resource's panel whatever state the offer is in. The distinction is
     /// whether the player asked a question or asked to play.
     /// </para>
     /// <para>
     /// It holds a <c>View</c>, which is a <c>MonoBehaviour</c>, so <c>if (_host)</c> is Unity's
-    /// own lifetime check — the same bargain <see cref="RunContinueFlow"/> makes with its screen.
+    /// own lifetime check - the same bargain <see cref="RunContinueFlow"/> makes with its screen.
     /// </para>
     /// </summary>
     public sealed class HeartVideoFlow
@@ -55,8 +55,8 @@ namespace GlimmerGrove
         /// Called through <see cref="PrizeOverlay.Collected"/>, so it runs however the
         /// celebration ended rather than only when COLLECT was pressed. That is not tidiness:
         /// the hearts are banked the instant the video finishes, so the panel underneath is
-        /// already stale — a defeat screen reading "you are out of hearts" over a wallet holding
-        /// two — and a player who dismisses with the back key has to be led out of it just as a
+        /// already stale - a defeat screen reading "you are out of hearts" over a wallet holding
+        /// two - and a player who dismisses with the back key has to be led out of it just as a
         /// player who collects is.
         /// </para>
         /// <para>
@@ -72,8 +72,8 @@ namespace GlimmerGrove
         /// <summary>
         /// True from the tap until either the celebration is raised or a refusal is spoken.
         ///
-        /// It is what stops <see cref="Paint"/> — which runs every frame off the host's
-        /// <c>Update</c> — from writing WATCH FOR HEARTS back over the opening caption and
+        /// It is what stops <see cref="Paint"/> - which runs every frame off the host's
+        /// <c>Update</c> - from writing WATCH FOR HEARTS back over the opening caption and
         /// re-enabling a button whose video is already on its way up.
         /// </summary>
         bool _watching;
@@ -94,7 +94,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Through <see cref="AdOfferButton"/> rather than a plain caption, because a rewarded
-        /// ad has five ways of not happening and the button is now the only thing that says so —
+        /// ad has five ways of not happening and the button is now the only thing that says so -
         /// there is no panel behind it carrying the sentence any more. A cooldown reads as a
         /// countdown, a spent allowance says so, and an unloaded video greys itself out rather
         /// than opening onto a video that is not there.
@@ -102,14 +102,14 @@ namespace GlimmerGrove
         /// <para>
         /// Pinned to one line, which the defeat panel's copy of this button never was. The
         /// captions that replace the resting one are phrases rather than words, and
-        /// <c>UIKit.TextButton</c> switches Unity's best-fit on for any button carrying a glyph —
+        /// <c>UIKit.TextButton</c> switches Unity's best-fit on for any button carrying a glyph -
         /// best-fit concedes the <em>line</em> before it concedes the size, so a caption that
         /// long folds in half instead of shrinking. See <c>UIKit.OneLine</c>.
         /// </para>
         /// <para>
         /// <b>Callable again, and it has to be.</b> A panel that rebuilds throws its buttons
         /// away, and the defeat panel rebuilds whenever the gem balance changes what the
-        /// <em>rescue</em> beside this is offering — which a cloud sync can do at any moment,
+        /// <em>rescue</em> beside this is offering - which a cloud sync can do at any moment,
         /// including while a video is up. So the flow outlives the button it drew, and a
         /// redrawn button is put back into whatever state this is already in rather than into
         /// its resting one. Without that, a rebuild mid-video would hand back an armed WATCH
@@ -184,7 +184,7 @@ namespace GlimmerGrove
         /// Shows it, and turns what came back into either a celebration or a sentence.
         ///
         /// <para>
-        /// The show itself is <see cref="RewardedVideo.Watch"/> — one copy of the five steps and
+        /// The show itself is <see cref="RewardedVideo.Watch"/> - one copy of the five steps and
         /// the two orderings inside them that matter. What is here is the half only this flow
         /// can answer, and the asymmetry in it is deliberate: <b>a prize is raised before the
         /// host is checked for life, and a refusal after it.</b> The hearts are banked by the
@@ -229,7 +229,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// Raised through <c>Flow.Modal</c>, which hands back a celebration that is already
-        /// standing rather than building a second one — so even an impossible double redeem is
+        /// standing rather than building a second one - so even an impossible double redeem is
         /// one panel with one way onward.
         /// </para>
         /// </summary>

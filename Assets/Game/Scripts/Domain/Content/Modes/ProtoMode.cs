@@ -13,7 +13,7 @@ namespace GlimmerGrove.Content
     /// <c>ProtoScreen</c> drives a mode through <see cref="Fresh"/> and <see cref="Opening"/> and
     /// never learns which one it is holding; each mode's own screen casts back down to reach its
     /// layout, which is the one thing that genuinely differs. That split is what let five modes
-    /// ship for the price of a little over one — and then what let four of them be taken out
+    /// ship for the price of a little over one - and then what let four of them be taken out
     /// again without Toppleglen noticing, and Toppleglen and Nova Raid after them without the
     /// Iron Quarry noticing. The same seam earning its keep four times.
     /// </para>
@@ -26,13 +26,13 @@ namespace GlimmerGrove.Content
         /// <para>
         /// <b>Five, and the fifth is the two-star line rather than generosity.</b> A budget of
         /// <c>par + spare</c> has to clear <c>ceil(par × 1.40)</c> or the bottom band is stranded
-        /// and every clear is worth two stars or three — invariant 22's fault arrived at from the
+        /// and every clear is worth two stars or three - invariant 22's fault arrived at from the
         /// budget's side, which is how Groovekeeper found it. Five holds to par twelve, which is
         /// twice as deep as any of these boards goes.
         /// </para>
         /// <para>
         /// <b>A count rather than a multiple of par</b>, for invariant 26e's reason: a wrong move
-        /// in every one of these modes is permanent <em>and</em> makes the board worse — a pulled
+        /// in every one of these modes is permanent <em>and</em> makes the board worse - a pulled
         /// stone is gone, a stopper cannot go back, three marks have left the grove, a pod is
         /// burst, a bramble is cut, and a charge cut loose in the wrong direction is a charge
         /// that has already gone off. So the room a board needs is a count, and it is the same on
@@ -55,11 +55,11 @@ namespace GlimmerGrove.Content
         /// tidiness: <c>compile.py</c> refuses a file that writes <c>.Layout.</c> without saying
         /// it knows a level's board can be absent (a glade's <c>LevelDefinition.Layout</c> is null
         /// on every level of every other mode). The guard is coarse on purpose and this is the
-        /// idiom that satisfies it — ask the thing that knows.
+        /// idiom that satisfies it - ask the thing that knows.
         /// </summary>
         public abstract ProtoGrid Grid { get; }
 
-        /// <summary>A board as authored, for a run. Never shared — a run mutates what it is given.</summary>
+        /// <summary>A board as authored, for a run. Never shared - a run mutates what it is given.</summary>
         public abstract IProtoBoard Fresh();
 
         /// <summary>The same board as the solver sees it.</summary>
@@ -74,8 +74,8 @@ namespace GlimmerGrove.Content
     /// and what tuning that level gets.
     ///
     /// <para>
-    /// <b>One reader, however many modes.</b> Each of them authors the same block — a grid, a
-    /// deal, a slack — so what a subclass supplies is three things: which field on the level
+    /// <b>One reader, however many modes.</b> Each of them authors the same block - a grid, a
+    /// deal, a slack - so what a subclass supplies is three things: which field on the level
     /// claims it, which letters its grid may hold, and how to turn a parsed grid into its own
     /// rules. Nothing about parsing rows, counting them, reporting a bad character or resolving
     /// par is written per mode, which is one place per mode it cannot come to differ. It has
@@ -93,8 +93,8 @@ namespace GlimmerGrove.Content
         /// <summary>
         /// Turns a parsed grid into this mode's rules, or reports what is wrong with it.
         ///
-        /// Everything refused here is a fact about the mode rather than about the file format —
-        /// a quarry with nothing to cut loose, a floor where no flick strikes anything — so the
+        /// Everything refused here is a fact about the mode rather than about the file format -
+        /// a quarry with nothing to cut loose, a floor where no flick strikes anything - so the
         /// message says what the board is missing rather than where a character is.
         /// </summary>
         protected abstract bool Compose(ProtoGrid grid, ProtoDto block, LevelId id,
@@ -302,7 +302,7 @@ namespace GlimmerGrove.Content
     ///
     /// <para>
     /// <b>Why the search runs on the phone at all.</b> Par decides both star lines and the
-    /// allowance a run is dealt, so it has to be known before the first move — and it may not be
+    /// allowance a run is dealt, so it has to be known before the first move - and it may not be
     /// authored, because a typed par drifts from the board it claims to describe and the drift has
     /// no symptom. Writing the number into the chapter body at authoring time is the same typed
     /// par with an extra step in front of it (invariant 5).
@@ -351,7 +351,7 @@ namespace GlimmerGrove.Content
 
         /// <summary>
         /// Forgets everything. For the test suite and for the Editor's content refresh, which
-        /// rebuilds the catalog inside one process — the only two places a level id can come to
+        /// rebuilds the catalog inside one process - the only two places a level id can come to
         /// name a different board.
         /// </summary>
         public static void Forget() => _par.Clear();

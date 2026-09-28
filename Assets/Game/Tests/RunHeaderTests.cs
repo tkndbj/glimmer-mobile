@@ -12,7 +12,7 @@ namespace GlimmerGrove.Tests
     /// <b>The tag has no horizontal room at all, which is why this is a fixture rather than a
     /// remark.</b> A header's middle is where the readouts live now (invariant 37an), and a row
     /// of two reaches within forty-odd units of where the tag ends while a row of three runs
-    /// straight through it — so nothing about their x separates them and the whole arrangement
+    /// straight through it - so nothing about their x separates them and the whole arrangement
     /// rests on the tag being <em>short</em> and hanging from the corner key's own centre. That
     /// is arithmetic over four constants in two screens, which is exactly the shape
     /// <c>ReadoutRow</c> and <c>ChapterMap</c> exist for: a <c>MonoBehaviour</c> cannot be asked
@@ -23,8 +23,8 @@ namespace GlimmerGrove.Tests
     public sealed class RunHeaderTests
     {
         /// <summary>
-        /// The two headers are built by two different classes — the glade draws its own and the
-        /// other four share <c>ModeScreen</c>'s — so each is asked separately about the first
+        /// The two headers are built by two different classes - the glade draws its own and the
+        /// other four share <c>ModeScreen</c>'s - so each is asked separately about the first
         /// thing it draws under the bar.
         /// </summary>
         [Test]
@@ -44,7 +44,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// It starts clear of the key it sits beside and finishes clear of the one in the other
-        /// corner — the second half only binds on the narrowest canvas, for
+        /// corner - the second half only binds on the narrowest canvas, for
         /// <c>ReadoutRow.ClearsTheKeys</c>' reason: the tag is placed from the left edge and the
         /// far key from the right, so the air between them is the only thing here that shrinks
         /// with the display.

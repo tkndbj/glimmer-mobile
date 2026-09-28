@@ -11,27 +11,27 @@ namespace GlimmerGrove
     /// <para>
     /// <b>Separate from <see cref="LevelMode"/> because of the layering line.</b> Domain must
     /// never reference Presentation, and a mode's rules are Domain while its screen and its
-    /// colours are not. So a mode is declared twice — once for what it <em>is</em> and once for
-    /// what it <em>looks like</em> — and that split is honest rather than a compromise: a
+    /// colours are not. So a mode is declared twice - once for what it <em>is</em> and once for
+    /// what it <em>looks like</em> - and that split is honest rather than a compromise: a
     /// re-grade is a client change with no content edit, and a rules change is a content change
     /// with no re-grade.
     /// </para>
     /// <para>
     /// <b>Every mode shares the map's art, and since the nodes came down onto the ground it
-    /// shares the nodes too.</b> The one difference used to be the <b>perch</b> — the floating
-    /// tile a level node stood on — which was a silhouette and so a difference somebody who
+    /// shares the nodes too.</b> The one difference used to be the <b>perch</b> - the floating
+    /// tile a level node stood on - which was a silhouette and so a difference somebody who
     /// cannot see colour could still read. A node standing on the painting has no tile, so what
     /// is left is nothing at all: with the trail gone too, <see cref="Accent"/> reaches the
     /// switcher and the mode's own screen, and never the map.
     /// </para>
     /// <para>
     /// <b>That is a real cost and it is deliberately unpaid today</b>, because one mode ships
-    /// and the map draws no mode switcher at all — there is nothing on any screen in the game
+    /// and the map draws no mode switcher at all - there is nothing on any screen in the game
     /// for a perch to tell apart. The day a second mode ships, the tell has to come back as
     /// something other than a colour, and the cheap answer is the one thing a node on the
     /// ground still has that a floating tile did not: the ground. A mode could name its own
     /// <c>GROUND</c> row in <c>Tools/make_map_seats.py</c> and stand on a different part of the
-    /// same painting — the road for one, the meadow beside it for another — which costs a
+    /// same painting - the road for one, the meadow beside it for another - which costs a
     /// table entry and no art.
     /// </para>
     /// </summary>
@@ -64,7 +64,7 @@ namespace GlimmerGrove
     /// same reason, so the two cannot come to disagree about which mode is the front door.
     /// </para>
     /// <para>
-    /// A mode missing from here draws as the classic one rather than crashing — a map with an
+    /// A mode missing from here draws as the classic one rather than crashing - a map with an
     /// odd-looking node is a far better failure than a map that will not open. That is looked up
     /// by name rather than taken from index nought, because index nought is now whichever mode
     /// the game leads with and the fallback is meant to be the <em>baseline</em> look, which is

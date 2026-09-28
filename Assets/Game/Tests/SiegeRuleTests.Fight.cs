@@ -11,7 +11,7 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// <b>This file exists because nothing measured a boss's life.</b> Four chapters shipped
     /// eight bosses that died on the walk in or on their ground before their first spell had
-    /// left their hand, and every gate was green — the hold simulation scored a run
+    /// left their hand, and every gate was green - the hold simulation scored a run
     /// <em>better</em> for killing one faster. What a boss has to be is written in
     /// <see cref="SiegeTuning.BossPhases"/>; what is held here is that it <em>is</em> that, on
     /// the rules alone and on every shipped rung under a played line that dumps every charge it
@@ -29,15 +29,15 @@ namespace GlimmerGrove.Tests
     /// about.</b> A guard in front of every stand bought the same seconds out of the player's own
     /// turrets: fed, lit, and refusing to fire for three to four seconds at every stand, which is
     /// a game that looks broken rather than a boss that is tough. The floor buys them out of the
-    /// boss's health bar instead. <b>The fight's arithmetic is unchanged</b> —
+    /// boss's health bar instead. <b>The fight's arithmetic is unchanged</b> -
     /// <see cref="SiegeTuning.BossPhases"/> × <see cref="SiegeTuning.PhaseLeast"/> is still the
-    /// shortest a fight can be — and for any line that cannot chew a third of a boss inside
+    /// shortest a fight can be - and for any line that cannot chew a third of a boss inside
     /// <see cref="SiegeTuning.PhaseLeast"/> the two are identical to the frame.
     /// </para>
     /// <para>
     /// <b>A new chapter passes through <see cref="EveryShippedBossRungIsAFight"/> by being added
     /// to the rung tables</b>, which <c>Tools/verify/rungs.py</c> already holds to the shipped
-    /// bodies — so a boss that cannot fight on its rung is a red build, not a verdict from play.
+    /// bodies - so a boss that cannot fight on its rung is a red build, not a verdict from play.
     /// </para>
     /// </summary>
     public sealed partial class SiegeRuleTests
@@ -58,7 +58,7 @@ namespace GlimmerGrove.Tests
         /// on <c>SiegeEndless</c>'s own schedule.
         ///
         /// <b>Built here rather than borrowed from <c>SiegeEndlessTests</c></b>, because what this
-        /// file asks of it is a <em>played</em> question — the schedule fixture never stands a
+        /// file asks of it is a <em>played</em> question - the schedule fixture never stands a
         /// board up at all.
         /// </summary>
         static SiegeLayout EndlessLane()
@@ -240,7 +240,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// A boss used to plant and then stand behind a guard for
         /// <see cref="SiegeTuning.PhaseLeast"/> seconds, which a player meets as four fed,
-        /// pulsing turrets pointed at a boss and doing nothing — reported, repeatedly, as
+        /// pulsing turrets pointed at a boss and doing nothing - reported, repeatedly, as
         /// <em>the turrets start attacking too late</em>. There is no such window now: the only
         /// thing between a fed ward and a standing boss is <c>SiegeTuning.FireEvery</c>, the
         /// cadence every ward fires everything on.
@@ -300,15 +300,15 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// Reported as <em>sometimes I can use it and sometimes I cannot</em>, which was the
         /// truth: the control was drawn from the tube's own readiness
-        /// (<c>SiegeWard.Armed</c>) and the throw was refused by the <em>hill</em> — nothing on
-        /// it this ward could hurt — so against a boss, which is the whole hill, a lit and
+        /// (<c>SiegeWard.Armed</c>) and the throw was refused by the <em>hill</em> - nothing on
+        /// it this ward could hurt - so against a boss, which is the whole hill, a lit and
         /// pulsing button refused a tap for every second the boss could not be hurt. Under the
         /// guard that was three to four seconds out of every stand.
         /// </para>
         /// <para>
         /// Both halves are <c>SiegeBoard.CanOvercharge</c> now. What is held here is that the two
-        /// are the same answer on every frame of a whole duel — offered and it lands, not offered
-        /// and the charge is still there — so the control can never lie in either direction.
+        /// are the same answer on every frame of a whole duel - offered and it lands, not offered
+        /// and the charge is still there - so the control can never lie in either direction.
         /// </para>
         /// </summary>
         [Test]
@@ -364,7 +364,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// A stand holds its floor until its opening spell has landed and
-        /// <see cref="SiegeTuning.PhaseLeast"/> has passed — and never past
+        /// <see cref="SiegeTuning.PhaseLeast"/> has passed - and never past
         /// <see cref="SiegeTuning.PhaseMost"/>.
         ///
         /// <b>What is under test is the floor and not a silence</b>: the line fires at the boss
@@ -847,7 +847,7 @@ namespace GlimmerGrove.Tests
         /// chapter.
         ///
         /// <b>A chapter is added here in the same change that ships it</b>, which is the whole of
-        /// what a new chapter costs this gate — and Dustcrown proved the cost of forgetting, by
+        /// what a new chapter costs this gate - and Dustcrown proved the cost of forgetting, by
         /// shipping six rungs with two bosses on them that no fixture in the mode ever fought.
         /// </summary>
         static IEnumerable<(string Name, Rung[] Rungs)> ShippedChapters()

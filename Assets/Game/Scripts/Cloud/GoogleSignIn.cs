@@ -19,7 +19,7 @@ namespace GlimmerGrove.Cloud
     ///
     /// <para>
     /// <b>Why this exists.</b> Firebase's generic IDP path works for Google on Android and
-    /// fails on iOS — not loudly, the way <c>apple.com</c> does with a <c>fatalError</c>, but
+    /// fails on iOS - not loudly, the way <c>apple.com</c> does with a <c>fatalError</c>, but
     /// by never returning at all. The consent screen appears, an account is chosen, and the
     /// app is left holding a blank web view with no error on either side. The same weakness
     /// as Apple's, failing quietly rather than crashing, which took longer to recognise
@@ -29,13 +29,13 @@ namespace GlimmerGrove.Cloud
     /// <b>PKCE, and therefore no client secret in the app.</b> The flow is the authorisation
     /// code flow with a proof key: a random verifier is generated here, its SHA-256 goes to
     /// Google with the authorisation request, and the verifier itself is presented when the
-    /// code is exchanged. That is what makes a public client safe — an attacker who
+    /// code is exchanged. That is what makes a public client safe - an attacker who
     /// intercepts the redirect holds a code they cannot spend. A secret shipped in a binary
     /// is not a secret, which is why iOS OAuth clients are not issued one.
     /// </para>
     /// <para>
     /// The redirect comes back on the reversed client id, which is already registered in
-    /// <c>Info.plist</c> by the Firebase build step — the same scheme the web flow used, so
+    /// <c>Info.plist</c> by the Firebase build step - the same scheme the web flow used, so
     /// nothing about the project's configuration changes.
     /// </para>
     /// </summary>
@@ -102,7 +102,7 @@ namespace GlimmerGrove.Cloud
         /// Presents Google's consent sheet and exchanges the result for an id token.
         ///
         /// <paramref name="clientId"/> is the <em>iOS</em> OAuth client, which is the
-        /// <c>CLIENT_ID</c> in <c>GoogleService-Info.plist</c> — not the web client the
+        /// <c>CLIENT_ID</c> in <c>GoogleService-Info.plist</c> - not the web client the
         /// hosted handler used.
         /// </summary>
         public static async Task<Result> RequestAsync(string clientId,
@@ -271,8 +271,8 @@ namespace GlimmerGrove.Cloud
         /// One string field out of a flat JSON reply, without pulling in a parser.
         ///
         /// Deliberately crude, and safe because of where it is used: every field read here is
-        /// a flat string from Google's token endpoint, and the one that matters — the id
-        /// token — is verified by Firebase against Google's public keys, which is the only
+        /// a flat string from Google's token endpoint, and the one that matters - the id
+        /// token - is verified by Firebase against Google's public keys, which is the only
         /// place that check belongs.
         /// </summary>
         static string Json(string body, string name)

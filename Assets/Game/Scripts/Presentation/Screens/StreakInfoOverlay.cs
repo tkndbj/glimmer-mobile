@@ -10,7 +10,7 @@ namespace GlimmerGrove
     /// <para>
     /// A board of nights shows <em>what</em> is on offer perfectly well and says nothing
     /// about the rules behind it. Three things were being guessed at. That a night is
-    /// earned by finishing a glade — not by opening the app, and not only by winning. That
+    /// earned by finishing a glade - not by opening the app, and not only by winning. That
     /// the count never stops and the board simply begins the same nights over, which is the
     /// one place a player could reasonably fear the reward runs out. And what the shield
     /// actually buys, which is the one thing on the page that costs money and the one whose
@@ -18,7 +18,7 @@ namespace GlimmerGrove
     /// does not extend.
     /// </para>
     /// <para>
-    /// Every number in it is read from the rules rather than written into the copy — the
+    /// Every number in it is read from the rules rather than written into the copy - the
     /// length of the ladder, the length of the shield, what the tail pays. A panel that
     /// explains the game is the easiest thing in a project to leave behind when the content
     /// is retuned, and the only defence is for it to have no numbers of its own to get
@@ -26,7 +26,7 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>The heart-boost section went with the boost.</b> The ladder pays credits, gems and
-    /// chests now, so the one reward on it that needed a paragraph is no longer on it — and
+    /// chests now, so the one reward on it that needed a paragraph is no longer on it - and
     /// what a chest holds is explained where every other chest is, by tapping it.
     /// </para>
     /// </summary>
@@ -46,7 +46,7 @@ namespace GlimmerGrove
             int rungs = Mathf.Max(1, ladder.Length);
 
             // What the night after the last one pays, asked of the table rather than
-            // assumed. The ladder laps, so this is night one's rung — but that is the
+            // assumed. The ladder laps, so this is night one's rung - but that is the
             // table's rule to state, not this panel's to remember, and asking is what keeps
             // the sentence true if the lap is ever retuned.
             var beyond = ladder.Rung(rungs + 1);
@@ -70,8 +70,8 @@ namespace GlimmerGrove
         /// <summary>
         /// What a rung pays, in words, whichever shape it is.
         ///
-        /// A chest names itself — "a Royal Chest" is the whole answer, and it is the same
-        /// name the tile draws — where a figure needs its amount and its unit.
+        /// A chest names itself - "a Royal Chest" is the whole answer, and it is the same
+        /// name the tile draws - where a figure needs its amount and its unit.
         /// </summary>
         static string Describe(StreakRung rung)
         {
@@ -87,7 +87,7 @@ namespace GlimmerGrove
         /// One answer: a glyph, a heading and a paragraph.
         ///
         /// The glyph on each row is the one the game already uses for the thing being
-        /// explained — the shield row wears the shield the offer row wears — so reading this
+        /// explained - the shield row wears the shield the offer row wears - so reading this
         /// panel also teaches what the marks on the page mean, which is half of what a
         /// player came here to find out.
         /// </summary>

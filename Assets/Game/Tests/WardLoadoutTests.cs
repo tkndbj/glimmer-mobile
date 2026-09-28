@@ -15,7 +15,7 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// <b>The first fixture here is the load-bearing one.</b> A siege's par is the hill's health
     /// over the <em>baseline</em> bolt, so a turret that hit softer would push three stars out of
-    /// reach of whoever chose it — a grade decided by a purchase, which is the one thing invariant
+    /// reach of whoever chose it - a grade decided by a purchase, which is the one thing invariant
     /// 39 refuses outright. Nothing else in this project can see that: a level whose player
     /// brought a weak turret still parses, still validates and still ships.
     /// </para>
@@ -56,7 +56,7 @@ namespace GlimmerGrove.Tests
         /// <b>No turret in the roster ever makes a bolt weaker than the starter's.</b>
         ///
         /// Asked of every model, every rank and both halves of the shield rule, because the
-        /// primary hit is what par is computed against — and the one direction that is unsafe is
+        /// primary hit is what par is computed against - and the one direction that is unsafe is
         /// down. It is asked of the <em>table</em> rather than of a played board so a model added
         /// by a content drop is covered without anybody writing a case for it.
         /// </summary>
@@ -71,7 +71,7 @@ namespace GlimmerGrove.Tests
 
             // **Against the free turret's whole model, not against "no ability".** A turret's bolt
             // now carries a weight of its own as well as a trick, and the thing that must never
-            // happen is a *purchase* hitting softer than what every player already holds — so the
+            // happen is a *purchase* hitting softer than what every player already holds - so the
             // yardstick is the starter rather than a hypothetical plain shot.
             var starter = WardCatalog.Default.Starter;
 
@@ -140,7 +140,7 @@ namespace GlimmerGrove.Tests
         /// only ever a file from the past.</b>
         ///
         /// <para>
-        /// A turret is bought per colour, so its row is <c>{id}:{colour}</c> — the legendary band
+        /// A turret is bought per colour, so its row is <c>{id}:{colour}</c> - the legendary band
         /// included since invariant 42k. Its row was the bare id for three days, which has meant
         /// <em>every colour</em> in this file since colours shipped, because that is what a build
         /// that owned turrets outright wrote and the only reading a union merge could safely give
@@ -167,7 +167,7 @@ namespace GlimmerGrove.Tests
                             "a legendary is bought for a seat like everything else");
             Assert.AreEqual("cleaver:r", WardHolding.Row(ordinary, 'r'));
 
-            // One purchase, one seat — on the band and off it alike.
+            // One purchase, one seat - on the band and off it alike.
             var bought = new HashSet<string>(StringComparer.Ordinal)
             {
                 WardHolding.Row(legend, 'r'),
@@ -193,7 +193,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// <b>A legendary carries a star ladder per seat, like every other turret — and a bare
+        /// <b>A legendary carries a star ladder per seat, like every other turret - and a bare
         /// ladder is still read by every seat.</b>
         ///
         /// <para>
@@ -203,7 +203,7 @@ namespace GlimmerGrove.Tests
         /// shared one ladder, so upgrading the one on red upgraded the one on blue.
         /// </para>
         /// <para>
-        /// The legacy clause is the half that could fail <em>silently</em> — a reader that missed
+        /// The legacy clause is the half that could fail <em>silently</em> - a reader that missed
         /// the bare row would show a five-star legendary at one star on all four seats with
         /// nothing saying so.
         /// </para>
@@ -227,7 +227,7 @@ namespace GlimmerGrove.Tests
                                 $"seat '{WardLine.Colours[i]}' was handed red's upgrades");
 
             // **A bare ladder is read by every seat**, which is a legendary upgraded while the
-            // band was bought outright — confiscating it is the one thing this may not do.
+            // band was bought outright - confiscating it is the one thing this may not do.
             WardStarLedger.LoadFrom(new[]
             {
                 new WardStarDto { ward = legend.Id, stars = 5 },
@@ -256,7 +256,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// <c>WardModel.Legendary</c> is authored rather than read off the rung, for
-        /// <c>WardTier</c>'s own reason — a band is punctuation over the shelf's order and may not
+        /// <c>WardTier</c>'s own reason - a band is punctuation over the shelf's order and may not
         /// decide what a turret <em>does</em>. So something has to hold the two together, and it
         /// is <c>WardCatalog.LadderProblem</c>: a turret that ignored the colour lock under a
         /// TIER II header would be the mode's central rule suspended where nothing says so, and a
@@ -300,13 +300,13 @@ namespace GlimmerGrove.Tests
 
         /// <summary>The first legendary on the shelf, and an assertion that there is one.</summary>
         /// <summary>
-        /// <b>A legendary is bought for one seat, and a line of four of them is four purchases —
+        /// <b>A legendary is bought for one seat, and a line of four of them is four purchases -
         /// which is the rule every other turret on this shelf has always obeyed.</b>
         ///
         /// <para>
         /// This seat is the hole, and it has been closed twice. A colourless turret was written
         /// into <c>wardsOwned</c> as a bare id, which has meant <em>every colour</em> since
-        /// colours shipped — so one payment furnished a whole line, and every gate was green
+        /// colours shipped - so one payment furnished a whole line, and every gate was green
         /// because the ledger, the holding and the line are each right and nothing asked how many
         /// of one turret a line may stand. The first answer was a second row per copy; the second
         /// and current one is that a legendary is bought per seat like everything else (invariant
@@ -363,7 +363,7 @@ namespace GlimmerGrove.Tests
         /// The band was bought outright for three days, so a real file can hold a bare
         /// <c>eclipse</c> row with copy rows beside it (<c>WardHolding.CopyMark</c>). A bare row
         /// has meant every colour since colours shipped and is read that way still, so the
-        /// retirement hands back <em>more</em> than it takes — which is the only direction a rule
+        /// retirement hands back <em>more</em> than it takes - which is the only direction a rule
         /// about somebody's purchases may move. A copy row covers nothing by itself, exactly as
         /// it never did.
         /// </para>
@@ -413,7 +413,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// <c>WardLoadout.Choose</c> will not store a seat that is not held, so an honest file
-        /// never reaches this — but a merge that dropped a row, a roster that retired a turret and
+        /// never reaches this - but a merge that dropped a row, a roster that retired a turret and
         /// a hand-edited file all have to land on a line that plays. The fallback is the starter,
         /// which is what every other refusal here falls back to.
         /// </para>
@@ -451,7 +451,7 @@ namespace GlimmerGrove.Tests
 
             // **No ownership asked is no ownership applied**, which is what every rule test,
             // content gate and offline mirror plays against, and what a visitor's card resolves
-            // through — the server has already refused every seat it could not vouch for.
+            // through - the server has already refused every seat it could not vouch for.
             var uncapped = WardLine.Resolve(catalog, chosen, null);
             for (int i = 0; i < WardLine.Colours.Length; i++)
                 Assert.AreEqual(legend.Id, uncapped.At(i).Id);
@@ -492,7 +492,7 @@ namespace GlimmerGrove.Tests
         /// What <c>WardCatalog.Resolve</c> says about the shipped roster with one entry rewritten.
         ///
         /// <b>Through <c>Resolve</c> rather than through the private constructor</b>, so what is
-        /// being tested is the door content comes in by — which is the only door a bad file can
+        /// being tested is the door content comes in by - which is the only door a bad file can
         /// ever use. A refused roster answers the built-in one and names the fault, so what an
         /// assertion reads is the fault rather than the catalog.
         /// </summary>
@@ -538,7 +538,7 @@ namespace GlimmerGrove.Tests
         /// <b>The roster used to carry an exception and does not.</b> A prism reached the next
         /// colour round for a share of a hit; under the colour lock that was worth something only
         /// while its own colour was clear, which the seat beside it was already answering at full
-        /// weight — so both its rungs now carry a stun instead (invariant 5d, asked of a purchase).
+        /// weight - so both its rungs now carry a stun instead (invariant 5d, asked of a purchase).
         /// </summary>
         [Test]
         public void ATurretIsStrongAgainstOneColourAndNoOther()
@@ -722,13 +722,13 @@ namespace GlimmerGrove.Tests
         /// The board draws a turret firing and <c>WardFiringStage</c> draws the same turret firing
         /// on the loadout panel. Those were two copies of the arithmetic and only one of them was
         /// taught about barrels, so a twin turret fired from both barrels on the hill and from its
-        /// middle on the panel a player opens to decide what it looks like — which is the one
+        /// middle on the panel a player opens to decide what it looks like - which is the one
         /// disagreement that panel exists to rule out. Both ask
         /// <c>SiegeView.BarrelStep</c> now, and this is what stops a third copy appearing.
         /// </para>
         /// <para>
         /// <b>Keyed on the rung, never on the id</b>, because the hull <em>is</em> the shelf rung
-        /// (the art tool's own rule) — so a turret moved up or down the shelf takes the right
+        /// (the art tool's own rule) - so a turret moved up or down the shelf takes the right
         /// number of barrels with it.
         /// </para>
         /// </summary>
@@ -786,7 +786,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// Two different properties and the second is the one worth a fixture. The bounds are
         /// enforced by <c>WardModel</c>'s own clamps, so checking them is cheap insurance; what no
-        /// clamp can say is whether the roster <em>uses</em> the range — a shelf where twenty
+        /// clamp can say is whether the roster <em>uses</em> the range - a shelf where twenty
         /// turrets carry the same two numbers has a stat system nobody can see, which is invariant
         /// 5d's decoration arriving on a card a player reads before paying.
         /// </para>
@@ -858,8 +858,8 @@ namespace GlimmerGrove.Tests
         /// it says it does.</b>
         ///
         /// <para>
-        /// A tier is a label on the order the shelf already had — nothing gates on it and nothing
-        /// is priced by it — so the only way it can be wrong is by describing a shelf that is no
+        /// A tier is a label on the order the shelf already had - nothing gates on it and nothing
+        /// is priced by it - so the only way it can be wrong is by describing a shelf that is no
         /// longer there. The roster is content and can grow, so this is the property rather than
         /// the twenty answers somebody wrote down: an empty band is a header with nothing under
         /// it, and a boundary past the end of the roster is a header nobody ever scrolls to.
@@ -913,7 +913,7 @@ namespace GlimmerGrove.Tests
         /// more than the one below it.</b>
         ///
         /// A rung that costs no more than the one under it is a rung nobody chooses between, and
-        /// nought is not a cheap upgrade — it is how <c>WardStars.PriceOf</c> says there is no
+        /// nought is not a cheap upgrade - it is how <c>WardStars.PriceOf</c> says there is no
         /// next star at all, so an authored nought would silently top a turret out.
         /// </summary>
         [Test]
@@ -987,7 +987,7 @@ namespace GlimmerGrove.Tests
         /// <b>An upgraded turret never hits softer than the free one</b>, which is the load-bearing
         /// rule of the whole roster asked of the second ladder.
         ///
-        /// A star only ever adds, so this cannot fail by arithmetic — it is here because the
+        /// A star only ever adds, so this cannot fail by arithmetic - it is here because the
         /// <em>data</em> could change under it, and a roster whose stars took something away would
         /// push three stars out of reach of whoever paid for them.
         /// </summary>
@@ -1112,7 +1112,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// The bug this pins shipped: the stat bars were built once from a <c>WardModel</c>, so
-        /// they never carried a turret's stars and never changed when one was bought — a player
+        /// they never carried a turret's stars and never changed when one was bought - a player
         /// upgraded a turret and watched nothing happen on the one screen that exists to say what
         /// an upgrade is worth. What makes it unrepeatable is that the figures are read back
         /// through <c>SiegeTuning</c> from a <c>WardBuild</c>, so a card and a board cannot hold
@@ -1120,7 +1120,7 @@ namespace GlimmerGrove.Tests
         /// </para>
         /// <para>
         /// Asked of the arithmetic rather than of the widgets, because a Unity UI cannot be built
-        /// in an offline run — what a fixture can prove is that there is something to draw.
+        /// in an offline run - what a fixture can prove is that there is something to draw.
         /// </para>
         /// </summary>
         [Test]
@@ -1183,7 +1183,7 @@ namespace GlimmerGrove.Tests
                                model.Id + " is priced in both gems and credits");
 
                 // **Every priced turret is behind a keeper level, gems included.** It used to be
-                // the reverse — a gate belonged to a credit price alone — and what that made was
+                // the reverse - a gate belonged to a credit price alone - and what that made was
                 // a shelf whose dearest half could be taken in any order by anybody holding gems.
                 if (!model.IsStarter)
                     Assert.Greater(model.MinLevel, 0,
@@ -1210,7 +1210,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// Invariant 5d asked of the one rule that is left. The shelf used to be climbed a rung
-        /// at a time — a turret sealed until the one below it was held — so the walls were the
+        /// at a time - a turret sealed until the one below it was held - so the walls were the
         /// second of two conditions and a slack one cost nothing. With the seal gone at the
         /// owner's decision, a keeper level is the whole of what opens a rung: a wall of nought
         /// would hand a turret to a player on their first launch, and the reader refuses one, but
@@ -1258,7 +1258,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// Both halves are the check, and both of them moved when the seal went. A tie used to be
-        /// refused because a rung was sealed until the one below it was bought — so reaching it
+        /// refused because a rung was sealed until the one below it was bought - so reaching it
         /// meant having met every wall under it, and a level an earlier rung had already asked
         /// for could never refuse anybody (invariant 5d). With no seal, twenty refuses everybody
         /// under twenty whatever stands beside it, so a tie is legal content and refusing it
@@ -1307,7 +1307,7 @@ namespace GlimmerGrove.Tests
         /// being a caption. With nothing forcing the order, the three headers are all a player has
         /// to go on: TIER II means "this stretch opens between keeper level twenty and
         /// twenty-nine" and nothing else in the build says so. A rung authored outside its band
-        /// parses, prices, validates and plays — what it does is put a lie in a header, which is
+        /// parses, prices, validates and plays - what it does is put a lie in a header, which is
         /// exactly the class of fault no numeric gate can see.
         /// </para>
         /// </summary>
@@ -1546,7 +1546,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <b>The one thing about this ability that could be half-implemented and look right.</b>
         /// The ward's capacity is read when it is built, and every other place fuel arrives used
-        /// the mode's <em>constant</em> — so a beacon would have said it held half again as much,
+        /// the mode's <em>constant</em> - so a beacon would have said it held half again as much,
         /// drawn a longer tube, and spilled at the old ceiling anyway.
         /// </summary>
         [Test]
@@ -1584,7 +1584,7 @@ namespace GlimmerGrove.Tests
         /// arrangement beats none however old it is, then the later stamp wins, then a stable
         /// comparison settles a tie.
         ///
-        /// <b>Which makes it idempotent and commutative</b>, and those are what a merge promises —
+        /// <b>Which makes it idempotent and commutative</b>, and those are what a merge promises -
         /// a device that ran the join twice, or ran it the other way round, must reach the same
         /// line.
         /// </summary>
@@ -1625,7 +1625,7 @@ namespace GlimmerGrove.Tests
         /// A tie is settled the same way whichever device runs it.
         ///
         /// Two arrangements at the same instant is two files that both predate the stamps carrying
-        /// zero, far more often than it is two people arranging a line inside one second — and an
+        /// zero, far more often than it is two people arranging a line inside one second - and an
         /// arbitrary choice that depended on argument order would leave two devices pushing over
         /// each other for ever.
         /// </summary>

@@ -9,7 +9,7 @@ namespace GlimmerGrove.Content
     /// <b>The mistake this exists for is completely silent, and it shipped the first time a mode
     /// grew a second chapter.</b> A chapter's mode lives in <c>manifest.json</c> (invariant 20)
     /// and decides three things: which screen opens its levels, which lane of the switcher it
-    /// appears in, and — through <see cref="Progression.LevelUnlock.GateFor"/> — whose stars
+    /// appears in, and - through <see cref="Progression.LevelUnlock.GateFor"/> - whose stars
     /// unlock it. A weave chapter whose entry forgets to say <c>"mode": "weave"</c> is indexed as
     /// a glade chapter, and nothing anywhere refuses it: every level parses, every board is
     /// proved solvable, every string resolves, every address loads and the build goes green. What
@@ -20,7 +20,7 @@ namespace GlimmerGrove.Content
     /// <b>Two answers rather than one, because the two callers need different halves.</b>
     /// <c>Sync Manifest</c> asks <see cref="TryDerive"/> and writes the answer, which is
     /// invariant 4a's rule for the level list applied to the one field of an entry that was still
-    /// hand-written — the manifest owns membership and order, and which way of playing a
+    /// hand-written - the manifest owns membership and order, and which way of playing a
     /// chapter's levels are is content. <c>ContentValidation</c> asks
     /// <see cref="TryDisagreement"/> and fails the build, because deriving makes the mistake
     /// unlikely and only a check proves it did not happen anyway: a manifest is a text file, and
@@ -31,7 +31,7 @@ namespace GlimmerGrove.Content
     /// In <c>GlimmerGrove.Authoring</c> rather than beside either caller, for
     /// <see cref="ChapterMapValidator"/>'s reason: it is a fact about content, so it wants to be
     /// provable offline against the chapters that actually ship rather than looked at once in the
-    /// Editor — and the suite reaches <c>Authoring</c> where it cannot reach <c>Editor</c>. It is
+    /// Editor - and the suite reaches <c>Authoring</c> where it cannot reach <c>Editor</c>. It is
     /// not in Domain, because no shipped type calls it and a player would carry it for nothing.
     /// </para>
     /// </summary>
@@ -84,7 +84,7 @@ namespace GlimmerGrove.Content
             {
                 issue = new LevelIssue(LevelIssueSeverity.Error,
                     $"chapter '{chapter}' holds levels of more than one mode ('{levels[0].Mode}' " +
-                    $"and '{Odd(levels)}'). A chapter is one way of playing — its mode decides " +
+                    $"and '{Odd(levels)}'). A chapter is one way of playing - its mode decides " +
                     "which screen opens it and whose stars unlock it, so it cannot be two");
                 return true;
             }
@@ -94,7 +94,7 @@ namespace GlimmerGrove.Content
             issue = new LevelIssue(LevelIssueSeverity.Error,
                 $"chapter '{chapter}' is indexed as a '{declared}' chapter and its levels are " +
                 $"'{derived}' levels. That decides which screen opens them, which lane of the " +
-                "switcher the chapter sits in and whose stars unlock it — run " +
+                "switcher the chapter sits in and whose stars unlock it - run " +
                 "Content > Sync Manifest, which derives the field from the body");
             return true;
         }

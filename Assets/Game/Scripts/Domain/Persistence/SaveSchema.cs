@@ -10,41 +10,41 @@ namespace GlimmerGrove.Persistence
     /// reordered or inserted without a player's history sliding onto the wrong levels.
     /// Every optional value has a "not written" state distinct from a real value,
     /// because JsonUtility fills missing fields with zero and a missing sound setting
-    /// must not read as "muted". And nothing derivable is stored — XP and earned
+    /// must not read as "muted". And nothing derivable is stored - XP and earned
     /// credits are recomputed from the level records, so they cannot drift, be
     /// double-counted across devices, or be forged by editing a number.
     ///
     /// <para>
     /// <b>Adding a field is not free.</b> <see cref="SaveChecksum"/> hashes the
     /// serialised object, so a file written by an older schema can never match a
-    /// newer build's hash. That is why verification is skipped across versions —
+    /// newer build's hash. That is why verification is skipped across versions -
     /// without it, growing this file would fail every save on every device at once.
     /// </para>
     /// </summary>
     public static class SaveSchema
     {
         /// <summary>
-        /// v1 — levels, settings, flat coin/gem balances.
-        /// v2 — currency ledgers (granted/spent/earned high-water), progression
+        /// v1 - levels, settings, flat coin/gem balances.
+        /// v2 - currency ledgers (granted/spent/earned high-water), progression
         ///      high-water marks, cloud sync state.
-        /// v3 — the chosen profile companion (<see cref="WalletDto.avatarId"/>).
-        /// v4 — the heart refill deadline (<see cref="WalletDto.heartsNextRefillUnix"/>),
+        /// v3 - the chosen profile companion (<see cref="WalletDto.avatarId"/>).
+        /// v4 - the heart refill deadline (<see cref="WalletDto.heartsNextRefillUnix"/>),
         ///      which turned hearts from a number nothing moved into a resource that
         ///      regenerates and gates play.
-        /// v5 — the set of mechanic tips already shown (<see cref="SaveFileDto.tipsSeen"/>),
+        /// v5 - the set of mechanic tips already shown (<see cref="SaveFileDto.tipsSeen"/>),
         ///      so a lesson taught once is never repeated on any of a player's devices.
-        /// v6 — the daily chest counters (<see cref="SaveFileDto.daily"/>), the heart-regen
+        /// v6 - the daily chest counters (<see cref="SaveFileDto.daily"/>), the heart-regen
         ///      boost deadline (<see cref="WalletDto.heartBoostUntilUnix"/>) and pending
         ///      grants (<see cref="CurrencyLedgerDto.pendingGrants"/>). The last of those
         ///      is the one that matters: it is how currency a player has been *given*
         ///      reaches them offline without the client ever raising its own granted
         ///      baseline, which is the field the server owns and an attacker wants.
-        /// v7 — the rewarded-ad counters (<see cref="SaveFileDto.ads"/>): which day they
+        /// v7 - the rewarded-ad counters (<see cref="SaveFileDto.ads"/>): which day they
         ///      describe, how many paying views each placement has had, and when the last
-        ///      one was. All three are caps and pacing, not currency — what an ad actually
+        ///      one was. All three are caps and pacing, not currency - what an ad actually
         ///      paid arrives through the v6 grant queue, keyed on the impression nonce, so
         ///      losing this section costs a player nothing they earned.
-        /// v8 — the heart ledger (<see cref="WalletDto.heartsProduced"/>,
+        /// v8 - the heart ledger (<see cref="WalletDto.heartsProduced"/>,
         ///      <see cref="WalletDto.heartsSpent"/>, <see cref="WalletDto.heartsDueUnix"/>),
         ///      replacing a stored count that could not be merged without either minting
         ///      hearts or destroying them. It destroyed them: a stale cloud snapshot won
@@ -52,20 +52,20 @@ namespace GlimmerGrove.Persistence
         ///      app being backgrounded. See <see cref="Hearts"/>. The v4 count and deadline
         ///      remain, written as a derived mirror so a client rolled back to an older
         ///      build still reads the right number.
-        /// v9 — the daily streak (<see cref="SaveFileDto.streak"/>): the day the current
+        /// v9 - the daily streak (<see cref="SaveFileDto.streak"/>): the day the current
         ///      run of consecutive days began and the last day a run was finished. Two
-        ///      dates rather than a count, because a count cannot be merged — see
+        ///      dates rather than a count, because a count cannot be merged - see
         ///      invariant 11b and <see cref="Daily.DailyStreak"/>. The length is derived
         ///      from the pair, so nothing here is a source of truth about how long a
         ///      streak is, only about when it started and when it was last fed.
-        /// v10 — the day through which streak rewards have been collected
+        /// v10 - the day through which streak rewards have been collected
         ///      (<see cref="StreakStateDto.collectedThroughDay"/>). A streak rung is now
         ///      handed over when the player taps it rather than applied silently at the
         ///      end of a run, which needs somewhere to record what has been taken. A
         ///      third date rather than a count or a set of flags, for the third time and
         ///      the same reason: it only ever rises, so the merge is <c>max</c> like the
         ///      other two and a rung can never be paid twice. See <see cref="Daily.DailyStreak"/>.
-        /// v11 — the goal through which each event's reward track has been collected
+        /// v11 - the goal through which each event's reward track has been collected
         ///      (<see cref="SaveFileDto.events"/>), and the flag that says this file has
         ///      been through a build which collects them by hand
         ///      (<see cref="SaveFileDto.eventsSeeded"/>). An event milestone is now handed
@@ -73,49 +73,49 @@ namespace GlimmerGrove.Persistence
         ///      moment the glade is cleared, for the reason v10 changed the streak: a
         ///      reward that arrives as a number moving behind another screen is not a
         ///      reward. A floor per event keyed by the event's permanent id, for the
-        ///      fourth time and the same reason — it only ever rises, so the merge is
+        ///      fourth time and the same reason - it only ever rises, so the merge is
         ///      <c>max</c> per key. See <see cref="Events.SeasonLedger"/>.
-        /// v12 — the companions bought with credits (<see cref="SaveFileDto.companionsOwned"/>).
+        /// v12 - the companions bought with credits (<see cref="SaveFileDto.companionsOwned"/>).
         ///      The first thing in this file that is stored because it genuinely <em>cannot</em>
         ///      be derived: a companion reached by keeper level needs no record, but nothing
         ///      observable implies "this player paid 8,000 credits for Coral". A set of
         ///      permanent ids, joined by union, which is the shape invariant 11b permits and
-        ///      the one <see cref="TipLedger"/> already had — buying is irreversible, so
+        ///      the one <see cref="TipLedger"/> already had - buying is irreversible, so
         ///      between two devices the player owns whatever either of them bought. A count
         ///      would have been hearts' old mistake and a per-companion flag could not tell
         ///      "not bought" from "written before this companion existed". See
         ///      <see cref="Progression.CompanionLedger"/>.
-        /// v13 — the best standing ever held on each glade
+        /// v13 - the best standing ever held on each glade
         ///      (<see cref="LevelRecordDto.bestRank"/>), so the map can mark a result
         ///      permanently instead of the victory panel mentioning it once and losing it.
         ///      A standing is the first thing in this file derived from a <em>population</em>
         ///      rather than from the player, which is what makes it interesting: the figure
         ///      moves for reasons the player had no part in. Stored and promoted by
-        ///      <c>max</c>, never recomputed for display — recomputing means a node sagging
+        ///      <c>max</c>, never recomputed for display - recomputing means a node sagging
         ///      while its owner is away, and freezing whatever was current when the record
         ///      was set means a player who beats their own move count against a larger
         ///      population is demoted for playing better. Zero is unreachable for a real
         ///      standing (<see cref="Social.LevelStats.MinRank"/> is 5), so a v12 file reads
-        ///      as unranked and this is the first section to need no migration at all — the
+        ///      as unranked and this is the first section to need no migration at all - the
         ///      move counts it is derived from were already on disk, and
         ///      <see cref="PlayerProgress.RefreshRanks"/> backfills from them the first time
         ///      a table lands. See <see cref="Social.RankTier"/>.
-        /// v14 — the fastest clear of each glade in milliseconds
+        /// v14 - the fastest clear of each glade in milliseconds
         ///      (<see cref="LevelRecordDto.bestMillis"/>), so a map node can report what the
         ///      player actually did rather than only how it compared. Smaller wins and zero
         ///      is absent, which is the join <c>bestMoves</c> has always used: a best only
         ///      ever falls, so both devices hold real achievements and the lower is the
         ///      better one. Milliseconds rather than seconds so zero is unreachable for a
-        ///      real run — a one-turn board can be finished inside a second — which is the
+        ///      real run - a one-turn board can be finished inside a second - which is the
         ///      same sentinel argument v13 made. Needs no migration for the same reason: an
         ///      older file reads as untimed. Unlike a standing it cannot be backfilled,
         ///      because nothing already stored implies how long a past clear took. See
         ///      <c>RunScreen.Tick</c>.
-        /// v15 — when the player last chose their name and their companion
+        /// v15 - when the player last chose their name and their companion
         ///      (<see cref="WalletDto.displayNameSetUnix"/>, <see cref="WalletDto.avatarSetUnix"/>).
         ///      The two preferences in this file are the only values merged by recency rather
         ///      than by a join, and until now the recency they were merged by was the file's
-        ///      own <see cref="SaveFileDto.updatedUnix"/> — which
+        ///      own <see cref="SaveFileDto.updatedUnix"/> - which
         ///      <see cref="SaveService.Snapshot"/> stamps with <em>now</em> every time the
         ///      cloud sync asks for one. That made "the newer file wins" mean "the local file
         ///      always wins", so a device that had never been renamed pushed its default name
@@ -123,30 +123,30 @@ namespace GlimmerGrove.Persistence
         ///      downloaded. A stamp per field is the fix: it travels with the value it
         ///      describes, so the answer no longer depends on when the question was asked.
         ///      Zero means "never chosen", which is unreachable for a real choice, so a v14
-        ///      file needs no migration — see <see cref="Wallet.LoadFrom"/> for the one
+        ///      file needs no migration - see <see cref="Wallet.LoadFrom"/> for the one
         ///      ambiguity it does have to resolve.
-        /// v16 — the grove the player builds: the pieces they bought
+        /// v16 - the grove the player builds: the pieces they bought
         ///      (<c>homesteadOwned</c>, since v20 <c>homesteadStock</c>)
         ///      and where everything stands
         ///      (<c>homesteadPlaced</c>). Two fields for a whole screen,
         ///      because the rest of it is derived: the land from chapters finished, the
         ///      residents from glades cleared, and neither leaves a trace on disk. What
         ///      cannot be derived is split by shape rather than by feature. A purchase is an
-        ///      entitlement, so it is a set of permanent ids joined by union — invariant 15,
+        ///      entitlement, so it is a set of permanent ids joined by union - invariant 15,
         ///      and <see cref="Progression.CompanionLedger"/>'s shape for the second time.
         ///      An arrangement is an <em>instruction</em>, so it is merged by recency with a
-        ///      stamp per slot — invariant 11c, and the third thing in this file under that
+        ///      stamp per slot - invariant 11c, and the third thing in this file under that
         ///      rule after the keeper's name and their worn companion. Note what is
         ///      deliberately absent: any count of how many benches a player owns. Holding a
         ///      piece is permission to draw it in as many slots as they like, because a
         ///      stored count is the one shape invariant 11b forbids and hearts already spent
         ///      a schema version proving it. See <c>HomesteadLayout</c>.
-        /// v17 — the grove stands on a floor rather than on floating islands, and the floor
+        /// v17 - the grove stands on a floor rather than on floating islands, and the floor
         ///      is bought (<c>groveLandOwned</c>). This is the one thing
         ///      the change cost: land used to be <em>derived</em> from chapters finished, so
         ///      it recomputed everywhere, survived every merge and left nothing on disk
         ///      (invariant 14). Land paid for with credits cannot be derived from anything
-        ///      observable, so it is stored — as a set of permanent ids joined by union,
+        ///      observable, so it is stored - as a set of permanent ids joined by union,
         ///      invariant 15 for the third time after companions and grove pieces. It is a
         ///      set of <em>regions</em> rather than of tiles on purpose: both are legal
         ///      shapes and only one stays small, since a filled floor is several hundred
@@ -154,40 +154,40 @@ namespace GlimmerGrove.Persistence
         ///      Note what did <em>not</em> change: <c>homesteadPlaced</c>
         ///      is untouched, because a tile is a slot and its id is permanent, so an empty
         ///      floor still costs nothing and a floor with two things on it costs two rows.
-        /// v18 — which way a placed piece faces
+        /// v18 - which way a placed piece faces
         ///      (<c>HomesteadPlacementDto.flipped</c>), so the grove can be edited
         ///      rather than only filled. It is a <em>mirror</em> and not a rotation because the
         ///      art cannot be rotated: every one of the catalog's pieces is a single drawing
         ///      from one fixed isometric angle, and the packs they were cut from ship no
-        ///      directional variants, so there is no second sprite to turn to — see
+        ///      directional variants, so there is no second sprite to turn to - see
         ///      <c>Placement.Flipped</c>. It costs a bool on a row that
         ///      already exists rather than a section of its own, and it needs no stamp of its
         ///      own because the facing and the piece are one decision about one slot, dated by
         ///      the stamp the row already carries (invariant 11c). It needs no migration
         ///      either: <see cref="JsonUtility"/> writes false into a field a v17 file never
         ///      had, and false is what every v17 row meant. What did change is
-        ///      <c>HomesteadLayout.Later</c> — a tie on stamp <em>and</em> piece used to fall
+        ///      <c>HomesteadLayout.Later</c> - a tie on stamp <em>and</em> piece used to fall
         ///      through to "return the first argument", which is argument order rather than a
         ///      tie-break, and with a second field able to differ that would have left two
         ///      devices pushing facings at each other for ever.
-        /// v19 — the hint pool (<see cref="WalletDto.hintsProduced"/>,
+        /// v19 - the hint pool (<see cref="WalletDto.hintsProduced"/>,
         ///      <see cref="WalletDto.hintsSpent"/>, <see cref="WalletDto.hintsDueUnix"/>).
         ///      A hint used to be three per glade, handed back in full at every board, so it
-        ///      was stored nowhere and meant nothing — the only players who never used one
+        ///      was stored nowhere and meant nothing - the only players who never used one
         ///      were the ones who had not found the button. It is now an account-wide
         ///      resource on a clock, which means it is state, which means it has to be
         ///      mergeable. So it is the heart ledger's shape for the second time and for its
         ///      reason: three counters that only ever rise, joined by <c>max</c>, with the
-        ///      count derived (invariant 11b). The arithmetic is not written out twice —
+        ///      count derived (invariant 11b). The arithmetic is not written out twice -
         ///      both pools run <see cref="RegenLedger"/>, which is invariant 5b applied
         ///      before the mistake rather than after it. Zero in
         ///      <see cref="WalletDto.hintsProduced"/> means "written before hints were
         ///      stored", which is unreachable for a real ledger because an account is seeded
         ///      at the refill cap and the field only rises, so a v18 file needs no migration
         ///      code at all: it reads as a fresh full pool. The per-glade allowance is gone
-        ///      from <see cref="Content.LevelTuning"/> entirely — a glade has no opinion
+        ///      from <see cref="Content.LevelTuning"/> entirely - a glade has no opinion
         ///      about how much of a player's own pool they may spend on it.
-        /// v20 — grove decor is bought <b>by the copy</b>
+        /// v20 - grove decor is bought <b>by the copy</b>
         ///      (<c>homesteadStock</c> replaces <c>homesteadOwned</c>).
         ///      Read v16's entry above and then this one, because this is that decision
         ///      reversed and the reversal needs its reasons written down.
@@ -197,7 +197,7 @@ namespace GlimmerGrove.Persistence
         ///      stored <em>count remaining</em> is unmergeable for hearts' reason: two devices
         ///      at 3 and 1 are equally consistent with "one bought two more" and "one has not
         ///      heard about a purchase". A stored count of <em>copies ever bought</em> has no
-        ///      such problem — it only ever rises, so the join is <c>max</c> per id and the
+        ///      such problem - it only ever rises, so the join is <c>max</c> per id and the
         ///      larger value is always the one that knows more. That is the produced/spent
         ///      ledger's trick for the third time after hearts and hints, and it is why this
         ///      section stores purchases and derives what is left: <c>available = bought −
@@ -208,14 +208,14 @@ namespace GlimmerGrove.Persistence
         ///      each place the last copy on a different tile; the placement map merges by
         ///      recency per slot (invariant 11c), so both placements survive and the grove
         ///      briefly holds more than it bought. The reading is clamped at zero and
-        ///      <em>nothing is taken down</em> — a merge that removed a placement to balance
+        ///      <em>nothing is taken down</em> - a merge that removed a placement to balance
         ///      an arithmetic identity would be the data loss invariant 11 exists to refuse,
         ///      to fix a discrepancy worth one fence. It resolves itself the moment anything
         ///      is bought or cleared.
         ///      </para>
         ///      <para>
         ///      <b>Only priced decor is stocked.</b> Anything earned by playing, anything
-        ///      free, every resident and every home rung is held exactly as it was before —
+        ///      free, every resident and every home rung is held exactly as it was before -
         ///      an entitlement, unlimited, derived where it can be. So the twelve starter
         ///      pieces and the eight earned ones behave identically to v19 and the stock is
         ///      purely the shop's half. See <c>GroveStock</c>.
@@ -226,22 +226,22 @@ namespace GlimmerGrove.Persistence
         ///      row of <c>max(copies placed, GroveStock.LegacyGrant)</c>, which is read out of
         ///      the same DTO. Nobody loses a placement and everybody keeps room to rearrange.
         ///      </para>
-        /// v21 — the heart containers bought with real money
+        /// v21 - the heart containers bought with real money
         ///      (<see cref="SaveFileDto.heartContainersOwned"/>) and the ones a refund has
         ///      taken back (<see cref="SaveFileDto.heartContainersRevoked"/>).
         ///      <para>
-        ///      A container raises the refill cap permanently — 5 becomes 10, 20 or 50 — and
+        ///      A container raises the refill cap permanently - 5 becomes 10, 20 or 50 - and
         ///      it is the first thing in this game bought with money that is not currency.
         ///      Invariant 18 says a real-money product grants currency and nothing else, and
         ///      the argument behind it is exact: hearts and boosts are <em>amounts</em>, so a
         ///      product granting one would need the client to apply half a purchase after the
-        ///      server applied the other half — which means a record of "did I already apply
+        ///      server applied the other half - which means a record of "did I already apply
         ///      this transaction's hearts", in this file, merged across devices, whose failure
         ///      mode is somebody paying and receiving nothing. A capacity is not an amount: it
         ///      arrives as the union of one permanent id, so applying it twice is applying it
         ///      once and the record has nothing to answer. The rule is therefore widened
-        ///      rather than broken — <b>a real-money product grants currency, or an idempotent
-        ///      permanent entitlement, never a stored amount and never both</b> — and the
+        ///      rather than broken - <b>a real-money product grants currency, or an idempotent
+        ///      permanent entitlement, never a stored amount and never both</b> - and the
         ///      shape is <see cref="companionsOwned"/>'s for the fourth time (invariant 15).
         ///      </para>
         ///      <para>
@@ -272,7 +272,7 @@ namespace GlimmerGrove.Persistence
         ///      A v20 file reads as "bought nothing, refunded nothing", which is true, so
         ///      there is no migration. See <see cref="HeartContainerLedger"/>.
         ///      </para>
-        /// v22 — the utilities a player is holding (<see cref="SaveFileDto.utilityStock"/>): a
+        /// v22 - the utilities a player is holding (<see cref="SaveFileDto.utilityStock"/>): a
         ///      firepot thrown onto the hill, a mending poured into a ward, a surge of fuel.
         ///      <para>
         ///      <b>The first consumable in this file that is neither currency nor on a clock</b>,
@@ -281,7 +281,7 @@ namespace GlimmerGrove.Persistence
         ///      Grove decor is bought and then <em>stands somewhere</em>, so
         ///      <c>homesteadStock</c> stores purchases alone and derives what
         ///      is left from the placements already in this file. A utility is granted, used, and
-        ///      gone — nothing else in the save implies it ever existed — so both halves have to
+        ///      gone - nothing else in the save implies it ever existed - so both halves have to
         ///      be written down: <c>earned</c> and <c>spent</c>, each monotonic, joined by a
         ///      per-id <c>max</c>, with what is in hand derived as the difference and clamped at
         ///      nought. That is invariant 11b for the fourth time, and the first time the answer
@@ -289,7 +289,7 @@ namespace GlimmerGrove.Persistence
         ///      </para>
         ///      <para>
         ///      <b>Nothing here is adjudicated, and invariant 39 is why that is safe.</b> A
-        ///      utility is not currency (invariant 13), so the server is told nothing about one —
+        ///      utility is not currency (invariant 13), so the server is told nothing about one -
         ///      but a consumable that made a board easier could still reach a public number
         ///      through stars, which derive credits, which are a grove's worth on a leaderboard
         ///      (invariant 19a). What closes that is the grade: a utility that delivers damage is
@@ -299,7 +299,7 @@ namespace GlimmerGrove.Persistence
         ///      </para>
         ///      <para>
         ///      Absent is the same fact as "granted none", so a v21 file needs no migration and
-        ///      no sentinel — the property that makes every other id-keyed section here
+        ///      no sentinel - the property that makes every other id-keyed section here
         ///      mergeable. See <see cref="Utilities.UtilityStock"/>.
         ///      </para>
         /// v23 - the ward roster and the line it stands in
@@ -334,13 +334,13 @@ namespace GlimmerGrove.Persistence
         ///      Absent is the same fact as "bought nothing, chose nothing, never played one", so
         ///      a v22 file needs no migration and no sentinel.
         ///      </para>
-        /// v24 — the grove is a village, so a piece can be <em>turned</em>
+        /// v24 - the grove is a village, so a piece can be <em>turned</em>
         ///      (<c>HomesteadPlacementDto.facing</c>) and a grove belongs to a
         ///      generation of the catalogue (<c>groveEpoch</c>).
         ///      <para>
         ///      <b>The facing is v18's mirror widened, and what changed is the art.</b> Every
         ///      grove piece used to be one drawing cut from a flat isometric sheet, so the only
-        ///      transform it survived was a reflection — turning the transform turns the
+        ///      transform it survived was a reflection - turning the transform turns the
         ///      <em>painting</em>, and a tree leans over. Every piece is now rendered from a
         ///      model at four camera yaws, so a facing is a different picture and a village can
         ///      be laid out with its doors facing the road. It rides the row it belongs to and
@@ -352,8 +352,8 @@ namespace GlimmerGrove.Persistence
         ///      <para>
         ///      <b>The epoch is the first thing in this file that can take something away, and
         ///      it exists because nothing else could.</b> The grove's three sections are joined
-        ///      so that nothing is ever lost — purchases and land by union, placements by the
-        ///      later stamp — which is invariant 11's promise and also means a grove cannot be
+        ///      so that nothing is ever lost - purchases and land by union, placements by the
+        ///      later stamp - which is invariant 11's promise and also means a grove cannot be
         ///      <em>cleared</em>: clearing it locally is undone by the next pull, and wiping the
         ///      server is undone by the first device that has not synced. A monotonic integer
         ///      merged by <c>max</c> says it, because the rule is that the lower epoch's grove
@@ -362,19 +362,19 @@ namespace GlimmerGrove.Persistence
         ///      named pieces that no longer exist. See <c>GroveEpoch</c> for
         ///      why it must never be used to take things away from players.
         ///      </para>
-        /// v25 — a turret can be upgraded, so how far each one has been taken is stored
+        /// v25 - a turret can be upgraded, so how far each one has been taken is stored
         ///      (<see cref="SaveFileDto.wardStars"/>).
         ///      <para>
         ///      <b>A count that may be stored, which is rare here and is worth the sentence.</b>
-        ///      Invariant 11b refuses a stored count because two devices cannot be told apart —
+        ///      Invariant 11b refuses a stored count because two devices cannot be told apart -
         ///      and an upgrade is irreversible, so the join is a per-key <c>max</c> and there is
         ///      nothing to be ambiguous about. It is keyed on the <em>holding</em>
         ///      (<c>{id}:{colour}</c>), because a turret is bought per colour and the shelf is
         ///      drawn per seat, so the card a player upgrades is already one seat's.
         ///      </para>
         ///      <para>
-        ///      <b>Absent means one star</b> — what a turret bought before this shipped means,
-        ///      and what a rolled-back client writes — so a v24 file needs no migration and no
+        ///      <b>Absent means one star</b> - what a turret bought before this shipped means,
+        ///      and what a rolled-back client writes - so a v24 file needs no migration and no
         ///      sentinel, and a row is written only above the first star.
         ///      </para>
         ///      <para>
@@ -384,13 +384,13 @@ namespace GlimmerGrove.Persistence
         ///      part of it. The money half is defended where money always is, by
         ///      <c>submitSpends</c> refusing a debit the derived balance cannot cover.
         ///      </para>
-        /// v27 — the tasks (<see cref="SaveFileDto.tasks"/>): what has been done this day and
+        /// v27 - the tasks (<see cref="SaveFileDto.tasks"/>): what has been done this day and
         ///      this week, and which dealt tasks were paid.
         ///      <para>
         ///      <b>Counters per goal, never progress per task.</b> A task's progress is derived
         ///      from the period's count for its goal, so a slate retuned by a content push
         ///      cannot leave a task starting from nothing on a device that had already done the
-        ///      thing it asks for — and a counter of things that happened only ever rises, so
+        ///      thing it asks for - and a counter of things that happened only ever rises, so
         ///      the join is a per-goal <c>max</c> (invariant 11b). The claims are a set of task
         ///      ids joined by union, because claiming cannot be undone. The period key is the
         ///      later one outright, for <see cref="DailyStateDto"/>'s reason.
@@ -404,7 +404,7 @@ namespace GlimmerGrove.Persistence
         ///      without losing every save write (12a).
         ///      </para>
         ///      <para>
-        ///      <b>v28</b> — the season track stopped being a count of glades and became a count
+        ///      <b>v28</b> - the season track stopped being a count of glades and became a count
         ///      of <em>marks</em> (<see cref="Events.SeasonLedger"/>), so
         ///      <see cref="EventStateDto"/> gained <see cref="EventStateDto.marks"/> and a
         ///      second claim floor, <see cref="EventStateDto.premiumGoal"/>. All three numbers
@@ -414,7 +414,7 @@ namespace GlimmerGrove.Persistence
         ///      <para>
         ///      <b>No migration, and the reason is structural rather than lucky.</b> Every floor
         ///      is clamped to the marks actually grown before it is read
-        ///      (<c>EventLedger.ProgressOf</c>), and a v27 file has no marks at all — so a
+        ///      (<c>EventLedger.ProgressOf</c>), and a v27 file has no marks at all - so a
         ///      stale <c>collectedGoal</c> written under the old meaning clamps to nought on
         ///      the first read whatever it says. (It is also nought in fact: the one authored
         ///      season shipped <c>"disabled": true</c>, and a disabled season never enters the
@@ -423,20 +423,20 @@ namespace GlimmerGrove.Persistence
         ///      written, because a rolled-back client writes it and the rules' allow-list
         ///      cannot lose a key without losing every save write (12a).
         ///      </para>
-        /// v29 — the streak shield (<see cref="StreakStateDto.shieldFromDay"/>): the day a
+        /// v29 - the streak shield (<see cref="StreakStateDto.shieldFromDay"/>): the day a
         ///      player paid gems to keep their streak alive while they are away.
         ///      <para>
         ///      <b>One date, for the fourth time in this section and the same reason.</b> The
         ///      shield covers a fixed number of days from the one it was bought on, so the
         ///      entitlement <em>is</em> that day: it only ever rises, the merge is <c>max</c>,
-        ///      and "days remaining" — the shape that first suggests itself — is the stored
+        ///      and "days remaining" - the shape that first suggests itself - is the stored
         ///      count invariant 11b refuses. It is also what makes the promise exact: there is
         ///      one date, so playing during the window writes nothing and cannot extend it.
         ///      </para>
         ///      <para>
         ///      <b>No migration and no rules release.</b> Zero is a file that has never bought
         ///      one, which no live player can be wrong about, and the field rides inside the
-        ///      existing <c>streak</c> map — which <c>firestore.rules</c> already bounds as a
+        ///      existing <c>streak</c> map - which <c>firestore.rules</c> already bounds as a
         ///      map without naming its fields, so <c>hasOnly</c> has nothing new to learn
         ///      (12a). The version moves because <see cref="SaveChecksum"/> hashes the
         ///      serialised object and a v28 file can never match a v29 hash.
@@ -447,43 +447,43 @@ namespace GlimmerGrove.Persistence
         ///      under the id a currency night already used, and what a chest holds has never
         ///      been stored anywhere (<c>DailyChests</c>).
         ///      </para>
-        /// v30 — the Infinite lane counts what it has seen off
+        /// v30 - the Infinite lane counts what it has seen off
         ///      (<see cref="EndlessBestDto.waves"/>), because it now pays XP for it.
         ///      <para>
         ///      <b>The first XP in this game that is not derived from the star ledger</b>, which
-        ///      invariant 9 is written against — so it is worth saying exactly what was and was
+        ///      invariant 9 is written against - so it is worth saying exactly what was and was
         ///      not given up. What 9 forbids is an <em>accumulator</em>: a number that cannot be
         ///      merged, cannot be retuned for existing players and cannot be recovered when lost.
         ///      This is none of those. It is a monotonic count per level joined by <c>max</c>
         ///      (11b's exception, as <see cref="WardStarDto"/> is), the rate and the ceiling are
-        ///      both content, and the server derives the same figure from the same rows — so a
+        ///      both content, and the server derives the same figure from the same rows - so a
         ///      retune moves every player at once and a lost file recomputes to the same answer.
         ///      </para>
         ///      <para>
         ///      <b>What it did give up is that this number cannot be recomputed by the server</b>
         ///      (invariant 10d's shape), and the two defences left are the ones invariant 13's
         ///      fourth clause allows: it is <em>bounded</em> so tightly that forging it buys
-        ///      nothing worth having, and it buys no <em>currency</em> at all — credits still
+        ///      nothing worth having, and it buys no <em>currency</em> at all - credits still
         ///      derive from the star ledger alone, so a forged tally moves a keeper level inside
         ///      an honest range and moves no balance. The board that is published still reads
         ///      <c>wave</c>, which still pays nothing (19l).
         ///      </para>
         ///      <para>
         ///      <b>No migration and no rules release.</b> Absent is floored by the best beside it
-        ///      (see the field), and the field rides inside the existing <c>endlessBest</c> list —
+        ///      (see the field), and the field rides inside the existing <c>endlessBest</c> list -
         ///      which <c>firestore.rules</c> bounds by length without naming a row's fields, so
         ///      <c>hasOnly</c> has nothing new to learn (12a). The version moves because
         ///      <see cref="SaveChecksum"/> hashes the serialised object and a v29 file can never
         ///      match a v30 hash.
         ///      </para>
-        /// v31 — the XP boost (<see cref="WalletDto.xpBoostWatchedUntilUnix"/>,
+        /// v31 - the XP boost (<see cref="WalletDto.xpBoostWatchedUntilUnix"/>,
         ///      <see cref="WalletDto.xpBoostBoughtUntilUnix"/>,
         ///      <see cref="WalletDto.xpBoostEarned"/>): two windows during which XP is paid at a
         ///      higher rate, and the bonus they have paid.
         ///      <para>
         ///      <b>Two deadlines and a total, which is the only shape a boost on a *derived*
         ///      number can take.</b> XP is recomputed from the star ledger every time it is read
-        ///      (invariant 9), so there is no running figure for a multiplier to scale — and
+        ///      (invariant 9), so there is no running figure for a multiplier to scale - and
         ///      scaling the derived one while a window was open would make a player's level
         ///      <em>fall</em> when it closed, which every floor in this file exists to prevent. So
         ///      the bonus is worked out when it is earned and banked: one monotonic total joined
@@ -494,7 +494,7 @@ namespace GlimmerGrove.Persistence
         ///      <b>The watched deadline carries two facts and the bought one carries a track.</b>
         ///      A window is a fixed length, so the watched one also says when it <em>began</em>,
         ///      and the cooldown on watching another is derived from it rather than stored
-        ///      (<c>XpBoost.WatchedReadyAt</c>) — the streak shield's trick (48c). That only holds
+        ///      (<c>XpBoost.WatchedReadyAt</c>) - the streak shield's trick (48c). That only holds
         ///      while nothing else writes it, which is why a purchase or a gift lands on the
         ///      bought deadline instead.
         ///      </para>
@@ -502,7 +502,7 @@ namespace GlimmerGrove.Persistence
         ///      <b>The bound on the total is proportional rather than flat</b>, and it is the
         ///      interesting half. A boost can only ever have multiplied XP that was really paid,
         ///      so the total is clamped on every read to a share of the star ledger's XP plus the
-        ///      Infinite lane's (<c>XpBoost.BonusFrom</c>) — <c>groveWorth</c>'s "clamped to what
+        ///      Infinite lane's (<c>XpBoost.BonusFrom</c>) - <c>groveWorth</c>'s "clamped to what
         ///      the account could afford" (19a) said about a multiplier, and far tighter than any
         ///      absolute ceiling. A forged figure therefore buys a keeper level inside an honest
         ///      range and buys no <b>currency</b> at all, because credits still derive from the
@@ -516,19 +516,19 @@ namespace GlimmerGrove.Persistence
         ///      <see cref="SaveChecksum"/> hashes the serialised object and a v30 file can never
         ///      match a v31 hash.
         ///      </para>
-        /// v32 — the lifetime tally (<see cref="TaskStateDto.lifetime"/>): how many of each
+        /// v32 - the lifetime tally (<see cref="TaskStateDto.lifetime"/>): how many of each
         ///      counted verb this account has ever done, for the rank ladder to read.
         ///      <para>
         ///      <b>The same registry as the task counters, at a window that never closes.</b>
         ///      A day and a week deal a slate and reset; "for ever" does neither, so it is not a
-        ///      <c>TaskPeriod</c> and carries no key and no claims — one row per
+        ///      <c>TaskPeriod</c> and carries no key and no claims - one row per
         ///      <c>TaskGoals</c> id and nothing else. One hook in <c>TaskLedger.Note</c> feeds
         ///      all three, so there is one list of counted verbs in this game rather than two
         ///      that drift, and a verb added for a future mode is countable for ever the day it
         ///      is countable for a task.
         ///      </para>
         ///      <para>
-        ///      <b>Monotonic, so it merges by a per-goal <c>max</c></b> — invariant 11b's
+        ///      <b>Monotonic, so it merges by a per-goal <c>max</c></b> - invariant 11b's
         ///      storable-count exception for the fourth time (<see cref="WardStarDto"/>,
         ///      <see cref="EndlessBestDto.waves"/>, <see cref="WalletDto.xpBoostEarned"/>), and
         ///      the simplest of them: there is no key to decide and nothing to lose.
@@ -536,12 +536,12 @@ namespace GlimmerGrove.Persistence
         ///      <para>
         ///      <b>It buys nothing, which is what makes a client-written count safe here.</b> A
         ///      rank is a badge; currency still derives from the star ledger alone (invariant 9),
-        ///      so a forged row moves a picture and never a balance — invariant 13's fourth
+        ///      so a forged row moves a picture and never a balance - invariant 13's fourth
         ///      clause, with <c>LifetimeTally.Ceiling</c> as the bound.
         ///      </para>
         ///      <para>
         ///      <b>No migration and no deploy ordering.</b> Absent is nought, which is what every
-        ///      earlier file means and what a rolled-back client writes — and the reading is
+        ///      earlier file means and what a rolled-back client writes - and the reading is
         ///      floored by what the rest of the save already proves
         ///      (<c>LifetimeTally.FloorFor</c>), so an account older than the feature reads
         ///      correctly on its first launch rather than starting again from zero. The row rides
@@ -551,7 +551,7 @@ namespace GlimmerGrove.Persistence
         ///      because <see cref="SaveChecksum"/> hashes the serialised object and a v31 file
         ///      can never match a v32 hash.
         ///      </para>
-        /// v33 — the Grovement is gone, and with it the eight fields that described it:
+        /// v33 - the Grovement is gone, and with it the eight fields that described it:
         ///      <c>homesteadStock</c>, <c>homesteadOwned</c>, <c>homesteadPlaced</c>,
         ///      <c>groveLandOwned</c>, <c>groveEpoch</c>, <c>groveHall</c>,
         ///      <c>groveHallFacing</c> and <c>groveHallSetUnix</c>, together with
@@ -559,14 +559,14 @@ namespace GlimmerGrove.Persistence
         ///      <para>
         ///      <b>This is a removal, so it moves the version for invariant 12's reason read
         ///      backwards.</b> <see cref="SaveChecksum"/> hashes the serialised object, and this
-        ///      build's object no longer has fields every stored file still carries — so every
+        ///      build's object no longer has fields every stored file still carries - so every
         ///      v32 file on every device would fail its checksum at once. It does not, because
         ///      <see cref="SaveChecksum.Verify"/> trusts a file whose <c>schemaVersion</c> is not
         ///      this one; the bump is what buys that, and the next write stamps a v33 hash.
         ///      </para>
         ///      <para>
         ///      <b>Nothing is destroyed and there is no rules release.</b> The eight keys stay in
-        ///      <c>hasOnly</c> in <c>firestore.rules</c> deliberately — dropping a key a
+        ///      <c>hasOnly</c> in <c>firestore.rules</c> deliberately - dropping a key a
         ///      rolled-back client still writes costs that client <em>every</em> save write
         ///      (12a), and an allow-list entry for a field nobody sends costs nothing. The
         ///      server's copy of a player's grove is left where it is: an incremental push is a
@@ -575,11 +575,11 @@ namespace GlimmerGrove.Persistence
         ///      yet. What a device drops is its own local copy, on its next write, which is what
         ///      removing a feature means.
         ///      </para>
-        /// v34 — the daily challenges (<see cref="SaveFileDto.challenges"/>): today's attempts
+        /// v34 - the daily challenges (<see cref="SaveFileDto.challenges"/>): today's attempts
         ///      and wins per genre, a lifetime tally of levels cleared per genre, and the day
         ///      each deal was last bought.
         ///      <para>
-        ///      <b>A new top-level key, so it costs the whole of invariant 12a</b> — the field
+        ///      <b>A new top-level key, so it costs the whole of invariant 12a</b> - the field
         ///      is in this DTO, in <c>SaveDelta</c>, in the mapper both ways and in
         ///      <c>hasOnly</c>, and the rules release goes out <em>before</em> the client. It
         ///      is not folded into <c>tasks</c> the way the lifetime tally was, because the
@@ -588,7 +588,7 @@ namespace GlimmerGrove.Persistence
         ///      </para>
         ///      <para>
         ///      <b>Three merge rules, each the one its shape allows</b> (11b): the day's rows
-        ///      are period counters (later day wins, larger count within a day — the task
+        ///      are period counters (later day wins, larger count within a day - the task
         ///      ledger's rule), the tally is a per-genre <c>max</c> (the storable-count
         ///      exception for the fifth time), and a deal is one instant per tier id joined by
         ///      <c>max</c> with its window derived from the tier's authored length (48c).
@@ -601,7 +601,7 @@ namespace GlimmerGrove.Persistence
         ///      the serialised object and a v33 file can never match a v34 hash.
         ///      </para>
         /// </summary>
-        /// v35 — the XP surge (<see cref="WalletDto.xpBoostSurgeUntilUnix"/>): a third XP boost
+        /// v35 - the XP surge (<see cref="WalletDto.xpBoostSurgeUntilUnix"/>): a third XP boost
         ///      window, bought from the shop in two lengths at a higher percentage than the day
         ///      boost. <b>A deadline of its own rather than a strength on the bought one</b>,
         ///      because a window is one monotonic number joined by <c>max</c> (9e) and a deadline
@@ -673,7 +673,7 @@ namespace GlimmerGrove.Persistence
 
         /// <summary>
         /// Permanent ids of the mechanic tips this player has been shown. Unknown ids
-        /// are carried through untouched — a lesson learned on a newer build must not
+        /// are carried through untouched - a lesson learned on a newer build must not
         /// be re-taught after a trip through an older one.
         /// </summary>
         public string[] tipsSeen;
@@ -710,7 +710,7 @@ namespace GlimmerGrove.Persistence
         /// chests claimed by hand and no longer fold into derived earnings at all, so there
         /// is nothing for a seeding pass to make honest. It stays on the wire because a
         /// rolled-back client still writes it and <c>hasOnly</c> is an allow-list over the
-        /// whole document — dropping the key would lose <em>every</em> save write (12a). A
+        /// whole document - dropping the key would lose <em>every</em> save write (12a). A
         /// bool that only goes one way is a join, so the merge is still <c>or</c>.
         /// </para>
         /// </summary>
@@ -721,7 +721,7 @@ namespace GlimmerGrove.Persistence
         ///
         /// <para>
         /// Purchases only. A companion reached by keeper level is never listed, because that
-        /// half of the rule is derived and re-derives correctly on every device — writing it
+        /// half of the rule is derived and re-derives correctly on every device - writing it
         /// down as well would create a second answer that a retune could put out of step with
         /// the first. See <see cref="Progression.CompanionLedger"/>, which owns the composite
         /// rule.
@@ -733,7 +733,7 @@ namespace GlimmerGrove.Persistence
         /// </para>
         /// <para>
         /// Absent is the same fact as "bought nothing", which is what makes this mergeable
-        /// without a sentinel — the problem <see cref="WalletDto.heartsProduced"/> needed a
+        /// without a sentinel - the problem <see cref="WalletDto.heartsProduced"/> needed a
         /// paragraph to solve. <c>JsonUtility</c> writes a null array into a field an older
         /// file never had, and a null set and an empty set say the same true thing.
         /// </para>
@@ -744,7 +744,7 @@ namespace GlimmerGrove.Persistence
         /// The heart containers this account has bought, sorted.
         ///
         /// <para>
-        /// An entitlement, so a set of permanent ids joined by union — invariant 15, and the
+        /// An entitlement, so a set of permanent ids joined by union - invariant 15, and the
         /// same shape as <see cref="companionsOwned"/> for the fourth time. It is the first
         /// entitlement here paid for with real money rather than with credits, which changes
         /// nothing about the shape and one thing about the reasoning: see v21 in
@@ -754,7 +754,7 @@ namespace GlimmerGrove.Persistence
         /// <para>
         /// The refill cap is <em>derived</em> from these against the store catalog and is
         /// never written down. Unknown ids are carried through untouched, for
-        /// <see cref="tipsSeen"/>'s reason — a container bought on a newer build must not be
+        /// <see cref="tipsSeen"/>'s reason - a container bought on a newer build must not be
         /// confiscated by a trip through an older one, and here that would be a real payment
         /// silently undone.
         /// </para>
@@ -771,7 +771,7 @@ namespace GlimmerGrove.Persistence
         /// The heart containers a refund or a chargeback has taken back, sorted.
         ///
         /// <para>
-        /// Written only from the server's own answer — the receipts it granted and has since
+        /// Written only from the server's own answer - the receipts it granted and has since
         /// reversed. It is a <b>revocation list and not an ownership list</b>, and that
         /// distinction is the whole safety of the design: an id missing from the server's
         /// reply means nothing, so a short answer, a cold account or an older deployment can
@@ -791,9 +791,9 @@ namespace GlimmerGrove.Persistence
         ///
         /// <para>
         /// <b>Two counters per row, both monotonic, joined by a per-id <c>max</c>.</b> A count of
-        /// utilities <em>remaining</em> is the shape invariant 11b forbids — two devices showing
+        /// utilities <em>remaining</em> is the shape invariant 11b forbids - two devices showing
         /// 3 and 1 are equally consistent with "one opened a chest" and "one spent two on a
-        /// siege" — so what is stored is everything ever granted and everything ever used, and
+        /// siege" - so what is stored is everything ever granted and everything ever used, and
         /// what is in hand is the difference, clamped at nought. The subtraction may briefly go
         /// negative when two devices each spend the last one before syncing, and nothing is taken
         /// back to balance it: that is <c>homesteadStock</c>'s rule and for its reason.
@@ -801,7 +801,7 @@ namespace GlimmerGrove.Persistence
         /// <para>
         /// <b>Account-wide, and shared by every level of every mode that offers them.</b> A stock
         /// kept per level would be state keyed on a level id and, worse, would make a utility part
-        /// of a board's difficulty — which is exactly what invariant 29c refuses a companion's
+        /// of a board's difficulty - which is exactly what invariant 29c refuses a companion's
         /// ability. What a player is holding is a fact about the account.
         /// </para>
         /// <para>
@@ -898,8 +898,8 @@ namespace GlimmerGrove.Persistence
         ///
         /// <para>
         /// <b>A count, and storable only because it cannot fall.</b> Invariant 11b refuses a
-        /// stored count outright — two devices showing 3 and 0 are equally consistent with "one
-        /// spent three" and "one has not heard yet" — and an upgrade cannot be undone, so the
+        /// stored count outright - two devices showing 3 and 0 are equally consistent with "one
+        /// spent three" and "one has not heard yet" - and an upgrade cannot be undone, so the
         /// join is a per-key <c>max</c> and the two devices are unambiguous. The same shape as
         /// <see cref="endlessBest"/>.
         /// </para>
@@ -975,7 +975,7 @@ namespace GlimmerGrove.Persistence
 
     /// <summary>
     /// The instant a deal's window last began. Its end is derived from the tier's authored
-    /// length — exactly that many days of the clock — and an upgrade shares the start of the
+    /// length - exactly that many days of the clock - and an upgrade shares the start of the
     /// deal it replaced, so the rows of one window agree about when it ends.
     /// </summary>
     [Serializable]
@@ -1000,7 +1000,7 @@ namespace GlimmerGrove.Persistence
         ///
         /// <para>
         /// <b>A bare list rather than a third <see cref="TaskPeriodDto"/></b>, because it has
-        /// neither of the other two fields: there is no period key — the window never ends —
+        /// neither of the other two fields: there is no period key - the window never ends -
         /// and there is nothing to claim, since a rank is derived and pays nothing. A row shaped
         /// like a period would have carried a nought key, which <c>TaskLedger.Read</c> treats as
         /// "no period" and clears.
@@ -1058,7 +1058,7 @@ namespace GlimmerGrove.Persistence
         /// <c>settings</c> is already carried by the merge, already in the mapper both ways and
         /// already inside <c>firestore.rules</c>' <c>hasOnly</c> list, so a preference put here
         /// reaches the server without any of the four places invariant 12a names having to be
-        /// touched — which is the same reason it is the right home for it rather than a
+        /// touched - which is the same reason it is the right home for it rather than a
         /// coincidence. It is also read by <c>publishGrove</c> off the save document the server
         /// already opens, so the refusal is enforced where it cannot be talked out of.
         /// </para>
@@ -1091,7 +1091,7 @@ namespace GlimmerGrove.Persistence
         /// Hearts held, as a <b>derived mirror</b> of the v8 ledger below. -1 means never
         /// written, so a full set is seeded.
         ///
-        /// Read only when <see cref="heartsProduced"/> says the writer kept no ledger —
+        /// Read only when <see cref="heartsProduced"/> says the writer kept no ledger -
         /// a pre-v8 build, or a cloud document one of those last pushed. Still written on
         /// every save, for the same reason <see cref="coins"/> is: a player rolled back to
         /// an older build should see their real hearts rather than a seeded five.
@@ -1106,20 +1106,20 @@ namespace GlimmerGrove.Persistence
         public long heartsNextRefillUnix;
 
         /// <summary>
-        /// Every heart ever handed to this player — timer refills, chests, ads, the
+        /// Every heart ever handed to this player - timer refills, chests, ads, the
         /// starting set. Only ever rises.
         ///
         /// <para>
         /// <b>Zero or less means the writer kept no ledger</b>, and that is a real
         /// sentinel rather than a hopeful one. <c>JsonUtility</c> fills an absent field
-        /// with zero, so a pre-v8 file cannot be recognised by a -1 nobody wrote — reading
+        /// with zero, so a pre-v8 file cannot be recognised by a -1 nobody wrote - reading
         /// one that way would hand every existing player an empty ledger and take all five
         /// of their hearts on the upgrade, which is a worse version of the bug this
         /// replaces. Zero is safe to spend as the marker because it is unreachable: an
         /// account is seeded at a full set, this only ever rises, and so any genuine
         /// ledger has produced at least <see cref="HeartRules.RefillCap"/>. Even if one somehow
         /// did read as zero the fallback is <see cref="hearts"/>, which would also be
-        /// zero — the sentinel cannot cost anybody a heart.
+        /// zero - the sentinel cannot cost anybody a heart.
         /// </para>
         ///
         /// <para>
@@ -1127,7 +1127,7 @@ namespace GlimmerGrove.Persistence
         /// stored count cannot be merged: two devices showing 3 and 0 are equally
         /// consistent with "one of them spent three" and "one of them has not heard about
         /// a refill", so any rule over the pair mints hearts in one reading and deletes
-        /// them in the other. Counters of things that happened have no such ambiguity —
+        /// them in the other. Counters of things that happened have no such ambiguity -
         /// the larger value is always the one that knows more, so the merge is
         /// <c>max</c> and loses nothing. Same argument, same shape and the same reasons as
         /// <see cref="CurrencyLedgerDto.grantedBaseline"/>; see <see cref="Hearts"/> for
@@ -1138,7 +1138,7 @@ namespace GlimmerGrove.Persistence
 
         /// <summary>
         /// Every heart ever consumed. Only ever rises. Read only when
-        /// <see cref="heartsProduced"/> says a ledger is present — on its own, zero is
+        /// <see cref="heartsProduced"/> says a ledger is present - on its own, zero is
         /// both "spent nothing" and "field absent", and it does not have to tell them
         /// apart.
         /// </summary>
@@ -1147,7 +1147,7 @@ namespace GlimmerGrove.Persistence
         /// <summary>
         /// When the pending refill lands. Advances one period per refill, and forward
         /// again when a spend restarts an idle timer; never rewound, and never cleared on
-        /// reaching the cap — a field that is zeroed cannot be merged with <c>max</c>.
+        /// reaching the cap - a field that is zeroed cannot be merged with <c>max</c>.
         /// Zero means only "this timer has never started".
         /// </summary>
         public long heartsDueUnix;
@@ -1169,7 +1169,7 @@ namespace GlimmerGrove.Persistence
         /// <para>
         /// <b>One number carrying two facts</b>, which is the streak shield's trick (invariant
         /// 48c): the window ends here, and because a window is a fixed length, it also <em>began</em>
-        /// at <c>this - watchedHours</c> — so the cooldown on watching another is derived rather
+        /// at <c>this - watchedHours</c> - so the cooldown on watching another is derived rather
         /// than stored (<c>XpBoost.WatchedReadyAt</c>). There is one number, so "when does it end"
         /// and "when may I watch again" cannot drift apart, and playing inside the window writes
         /// nothing at all.
@@ -1208,7 +1208,7 @@ namespace GlimmerGrove.Persistence
         /// <para>
         /// <b>Stored because XP is derived and a boost is not.</b> XP is recomputed from the star
         /// ledger every time it is read (invariant 9), so there is no running total for a
-        /// multiplier to scale — and scaling the derived figure while a window was open would make
+        /// multiplier to scale - and scaling the derived figure while a window was open would make
         /// a player's level <em>fall</em> when it closed. So the bonus is worked out when it is
         /// earned and remembered, as one monotonic total joined by <c>max</c>: invariant 11b's
         /// storable-count exception, the shape <see cref="WardStarDto"/> and
@@ -1217,7 +1217,7 @@ namespace GlimmerGrove.Persistence
         /// costs and what a per-payment claim would cost a server round trip to avoid.
         /// </para>
         /// <para>
-        /// <b>The bound on it is proportional, not flat</b> — a boost can only ever have
+        /// <b>The bound on it is proportional, not flat</b> - a boost can only ever have
         /// multiplied XP that was really paid, so this is clamped on every read to
         /// <c>(star XP + endless XP) x maxPercent%</c> (<c>XpBoost.BonusFrom</c>), which is
         /// <c>groveWorth</c>'s "clamped to what the account could afford" said about a multiplier
@@ -1253,7 +1253,7 @@ namespace GlimmerGrove.Persistence
         public int keeperLevelsBought;
 
         /// <summary>
-        /// Every hint ever handed to this player — timer refills, the starting set, a
+        /// Every hint ever handed to this player - timer refills, the starting set, a
         /// watched video. Only ever rises.
         ///
         /// <para>
@@ -1277,7 +1277,7 @@ namespace GlimmerGrove.Persistence
 
         /// <summary>
         /// Every hint ever consumed. Only ever rises. Read only when
-        /// <see cref="hintsProduced"/> says a ledger is present — on its own, zero is both
+        /// <see cref="hintsProduced"/> says a ledger is present - on its own, zero is both
         /// "spent nothing" and "field absent", and it does not have to tell them apart.
         /// </summary>
         public long hintsSpent;
@@ -1285,7 +1285,7 @@ namespace GlimmerGrove.Persistence
         /// <summary>
         /// When the pending hint lands. Advances one period per refill, and forward again
         /// when a spend restarts an idle timer; never rewound, and never cleared on reaching
-        /// the cap — a field that is zeroed cannot be merged with <c>max</c>. Zero means only
+        /// the cap - a field that is zeroed cannot be merged with <c>max</c>. Zero means only
         /// "this timer has never started".
         /// </summary>
         public long hintsDueUnix;
@@ -1298,7 +1298,7 @@ namespace GlimmerGrove.Persistence
         /// is what an unnamed keeper is <em>shown</em>, never what is stored: writing it
         /// down turns "this device has no opinion" into "this device chose Grovekeeper",
         /// and the merge cannot tell those apart. That is precisely how a rename used to
-        /// be lost — a second device, or the same one after a reinstall, pushed the
+        /// be lost - a second device, or the same one after a reinstall, pushed the
         /// default over a name the player had picked. See <see cref="Wallet.LoadFrom"/>.
         /// </para>
         /// </summary>
@@ -1312,7 +1312,7 @@ namespace GlimmerGrove.Persistence
         /// The one thing in this file merged by recency, so the recency has to be a fact
         /// about the <em>value</em>. It used to be taken from
         /// <see cref="SaveFileDto.updatedUnix"/>, which the cloud sync restamps with the
-        /// current moment every time it takes a snapshot — so the local side won every
+        /// current moment every time it takes a snapshot - so the local side won every
         /// comparison it was ever part of, whatever it held and however old the choice
         /// behind it was. See <see cref="SaveMerge"/> for the rule this feeds.
         /// </para>
@@ -1321,7 +1321,7 @@ namespace GlimmerGrove.Persistence
 
         /// <summary>
         /// The companion shown on the profile, by permanent avatar id. Empty means the
-        /// player has never chosen one, which is not the same as choosing the first —
+        /// player has never chosen one, which is not the same as choosing the first -
         /// the roster's default may change, and a real choice must survive that.
         /// </summary>
         public string avatarId;
@@ -1329,7 +1329,7 @@ namespace GlimmerGrove.Persistence
         /// <summary>
         /// When <see cref="avatarId"/> was chosen, as a Unix timestamp; 0 when it never
         /// was. Exists for the reason <see cref="displayNameSetUnix"/> does, and is merged
-        /// by the same rule — a companion worn on a phone must not be undone by a tablet
+        /// by the same rule - a companion worn on a phone must not be undone by a tablet
         /// that has simply been opened more recently.
         /// </summary>
         public long avatarSetUnix;
@@ -1355,7 +1355,7 @@ namespace GlimmerGrove.Persistence
     [Serializable]
     public sealed class CurrencyLedgerDto
     {
-        /// <summary>Permanent id — <c>credits</c>, <c>gems</c>. Never renamed or reused.</summary>
+        /// <summary>Permanent id - <c>credits</c>, <c>gems</c>. Never renamed or reused.</summary>
         public string currency;
 
         /// <summary>
@@ -1385,8 +1385,8 @@ namespace GlimmerGrove.Persistence
         ///
         /// <para>
         /// These are a <em>claim</em>, not money. They count toward the displayed balance
-        /// so the reward is real the instant it is opened, and they are replaced — not
-        /// added to — by the server's own figure on the next sync. If the server disagrees
+        /// so the reward is real the instant it is opened, and they are replaced - not
+        /// added to - by the server's own figure on the next sync. If the server disagrees
         /// about what a chest was worth, the server is right.
         /// </para>
         /// </summary>
@@ -1466,7 +1466,7 @@ namespace GlimmerGrove.Persistence
     public sealed class DailyStateDto
     {
         /// <summary>
-        /// Which day these counters describe. Zero means none — 1970 is not a day any
+        /// Which day these counters describe. Zero means none - 1970 is not a day any
         /// live player has counters for, so no separate "unwritten" flag is needed.
         /// </summary>
         public int dayKey;
@@ -1485,7 +1485,7 @@ namespace GlimmerGrove.Persistence
     /// Every field here exists to answer "may I offer another ad?", and none of them
     /// records what an ad paid. That belongs in the grant queue, keyed on the impression
     /// nonce and adjudicated by the server, so a player who loses this section loses
-    /// nothing but their place in today's cap — which is exactly the failure worth having,
+    /// nothing but their place in today's cap - which is exactly the failure worth having,
     /// because the alternative is a section that can be edited to mint currency.
     /// </para>
     /// <para>
@@ -1498,7 +1498,7 @@ namespace GlimmerGrove.Persistence
     public sealed class AdStateDto
     {
         /// <summary>
-        /// Which day these counters describe. Zero means none — no live player has
+        /// Which day these counters describe. Zero means none - no live player has
         /// counters for 1970, so no separate "unwritten" flag is needed.
         /// </summary>
         public int dayKey;
@@ -1539,14 +1539,14 @@ namespace GlimmerGrove.Persistence
     /// This is invariant 11b applied before the mistake rather than after it. A stored
     /// <em>length</em> is exactly the shape hearts used to be: two devices showing 6 and 1
     /// are equally consistent with "one is behind" and "the streak broke and restarted",
-    /// so the merge would have to guess, and both guesses are wrong somewhere — the
+    /// so the merge would have to guess, and both guesses are wrong somewhere - the
     /// generous one resurrects a streak the player really did lose, the conservative one
     /// deletes one they really do hold.
     /// </para>
     /// <para>
     /// Two dates have no such ambiguity. Both only ever rise, so the merge is <c>max</c>
     /// on each with no special cases, and the length is <c>lastPlayedDay - startDay + 1</c>
-    /// — derived, exactly as XP, credits and the heart count are. Zero on either means
+    /// - derived, exactly as XP, credits and the heart count are. Zero on either means
     /// "never", which is safe as a sentinel for the reason <see cref="DailyStateDto.dayKey"/>
     /// gives: no live player has a streak dating from 1970, and <c>JsonUtility</c> writes a
     /// zero into every field an older file never had.
@@ -1556,7 +1556,7 @@ namespace GlimmerGrove.Persistence
     /// something has to record which ones have been taken, and the obvious candidates are
     /// both wrong: a count of collected rungs is <see cref="Hearts"/>'s old mistake, and a
     /// set of flags per run is not monotonic across a streak that breaks and restarts.
-    /// <see cref="collectedThroughDay"/> is neither — it is the last <em>day</em> whose
+    /// <see cref="collectedThroughDay"/> is neither - it is the last <em>day</em> whose
     /// rung has been handed over, so it only ever rises, the merge is <c>max</c>, and a
     /// rung already paid on one device cannot come back on another.
     /// </para>
@@ -1587,8 +1587,8 @@ namespace GlimmerGrove.Persistence
         /// <para>
         /// <b>A fourth date, for the fourth time and the same reason.</b> A shield covers
         /// <c>StreakTable.ShieldDays</c> days from the one it was bought on, so the whole
-        /// entitlement is a single day key: it only ever rises — a later purchase is by
-        /// definition a later day — so the merge is <c>max</c> and nothing has to decide
+        /// entitlement is a single day key: it only ever rises - a later purchase is by
+        /// definition a later day - so the merge is <c>max</c> and nothing has to decide
         /// which device is right. A stored "days remaining" would be hearts' old mistake
         /// (invariant 11b) and could not be joined at all.
         /// </para>
@@ -1602,7 +1602,7 @@ namespace GlimmerGrove.Persistence
         /// <b>Nothing about it is adjudicated</b>, and that is a fact about what it does
         /// rather than an oversight. It keeps a streak alive across days nobody played; it
         /// does not advance the night count, so a forged shield still collects at most one
-        /// night per calendar day — exactly what an honest player who opens the game every
+        /// night per calendar day - exactly what an honest player who opens the game every
         /// day collects. The gems it costs are an ordinary debit the server already refuses
         /// to let a balance go negative for. See <c>DailyStreak.TryBuyShield</c>.
         /// </para>
@@ -1618,7 +1618,7 @@ namespace GlimmerGrove.Persistence
     /// live event is retuned. An index would slide: inserting a rung between two authored
     /// ones renumbers everything after it, so a floor of "two" would silently come to mean
     /// a different pair of rewards than the one the player took. A goal is a number of
-    /// glades, which is a fact about what they did — every milestone asking for that many
+    /// glades, which is a fact about what they did - every milestone asking for that many
     /// glades or fewer has been collected, whatever the track looks like afterwards.
     /// </para>
     /// <para>
@@ -1659,7 +1659,7 @@ namespace GlimmerGrove.Persistence
         /// Whether this account has bought the season's pass.
         ///
         /// <para>
-        /// A bool that only ever goes one way, so the join is <c>or</c> — buying is
+        /// A bool that only ever goes one way, so the join is <c>or</c> - buying is
         /// irreversible, which is the same argument that makes owned companions and owned
         /// land union-joined id sets (invariant 15).
         /// </para>
@@ -1685,12 +1685,12 @@ namespace GlimmerGrove.Persistence
     /// used.
     ///
     /// <para>
-    /// An array on the wire and a map everywhere else, keyed by the utility's permanent id —
+    /// An array on the wire and a map everywhere else, keyed by the utility's permanent id -
     /// invariant 11a, for <see cref="SaveFileDto.levels"/>'s reason.
     /// </para>
     /// <para>
     /// <b>Both counters, and never one.</b> Grove decor could store purchases alone because the
-    /// other half of its subtraction — what is standing in the grove — is already in this file.
+    /// other half of its subtraction - what is standing in the grove - is already in this file.
     /// A utility is consumed inside a run and leaves no trace anywhere, so what has been spent
     /// has to be written down too. Two monotonic counters joined by <c>max</c> is the same shape
     /// <see cref="RegenLedger"/> gives hearts and hints, without the clock neither of these needs.
@@ -1736,12 +1736,12 @@ namespace GlimmerGrove.Persistence
         /// <para>
         /// <b>A count, and storable for <see cref="WardStarDto"/>'s reason.</b> Invariant 11b
         /// refuses a stored count because two devices showing 3 and 0 are equally consistent with
-        /// "one spent three" and "one has not heard yet" — and waves already played cannot be
+        /// "one spent three" and "one has not heard yet" - and waves already played cannot be
         /// un-played, so the join is a per-field <c>max</c> and there is nothing ambiguous about
         /// it. What it costs is the one thing a <c>max</c> always costs: two devices that each
         /// play offline contribute the larger of the two tallies rather than the sum. That is the
-        /// same bargain <c>wave</c> beside it has always made, and the alternative — a claim per
-        /// run — is a server round trip for a number nothing adjudicates.
+        /// same bargain <c>wave</c> beside it has always made, and the alternative - a claim per
+        /// run - is a server round trip for a number nothing adjudicates.
         /// </para>
         /// <para>
         /// <b>Absent means "never counted", and the migration is that <c>wave</c> floors it</b>
@@ -1752,7 +1752,7 @@ namespace GlimmerGrove.Persistence
         /// </para>
         /// <para>
         /// <b>This is the one number in the save file that decides XP without a star behind it</b>
-        /// — see <c>EndlessRewardTable</c> for the ceiling that makes that defensible, and note
+        /// - see <c>EndlessRewardTable</c> for the ceiling that makes that defensible, and note
         /// that it is never published: the ordered board reads <c>wave</c> and goes on paying
         /// nothing (invariant 19l).
         /// </para>
@@ -1763,7 +1763,7 @@ namespace GlimmerGrove.Persistence
     /// <summary>
     /// One turret's place on the upgrade ladder.
     ///
-    /// <b>Keyed on the holding rather than the turret</b> — <c>{id}:{colour}</c>, the string
+    /// <b>Keyed on the holding rather than the turret</b> - <c>{id}:{colour}</c>, the string
     /// <c>wardsOwned</c> already uses (<c>WardHolding</c>), because a turret is bought per colour.
     /// </summary>
     [Serializable]
@@ -1782,7 +1782,7 @@ namespace GlimmerGrove.Persistence
         /// <summary>The utility's permanent id, as authored in <c>progression.json</c>.</summary>
         public string id;
 
-        /// <summary>Every one ever handed over — a chest, a purchase. Only ever rises.</summary>
+        /// <summary>Every one ever handed over - a chest, a purchase. Only ever rises.</summary>
         public int earned;
 
         /// <summary>Every one ever used on a board. Only ever rises.</summary>

@@ -9,7 +9,7 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// <see cref="Tween.Punch"/> reads a transform's scale, squashes it about for a third of
     /// a second and restores it in its <c>OnDone</c>. A second punch on the same transform
-    /// supersedes the first on the <c>punch</c> channel — and supersession used to drop a
+    /// supersedes the first on the <c>punch</c> channel - and supersession used to drop a
     /// tween exactly where it stood, without that restore, so the new punch read a
     /// half-squashed scale as its own rest and handed <em>that</em> back at the end. The
     /// error is multiplicative: every tap during a squash keeps a little more of the squash
@@ -17,14 +17,14 @@ namespace GlimmerGrove.Tests
     /// </para>
     /// <para>
     /// It was reported against the home screen's companion, which is poked by hand and so is
-    /// the one place a human can drive the loop fast enough to see it — but the shape is in
+    /// the one place a human can drive the loop fast enough to see it - but the shape is in
     /// every control here that can be punched twice inside a third of a second: a board tile
     /// tapped repeatedly, the move counter, a chest's thumps, the streak tiles.
     /// </para>
     /// <para>
     /// Driving <see cref="Tween.Tick"/> directly is what makes this assertable at all. The
     /// deformation is invisible in a compile, in a validator and in a screenshot of the
-    /// source — the same reason <see cref="TweenOwnerTests"/> and <see cref="TweenCycleTests"/>
+    /// source - the same reason <see cref="TweenOwnerTests"/> and <see cref="TweenCycleTests"/>
     /// exist.
     /// </para>
     /// </summary>
@@ -117,7 +117,7 @@ namespace GlimmerGrove.Tests
         [Test]
         public void APunchStillHonoursAScaleItWasHandedAtRest()
         {
-            // The rest scale is whatever the caller had set, not a hardcoded one — several
+            // The rest scale is whatever the caller had set, not a hardcoded one - several
             // call sites punch a control that lives at a size of its own.
             var tr = Fresh();
             try

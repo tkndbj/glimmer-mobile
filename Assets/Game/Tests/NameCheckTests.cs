@@ -10,7 +10,7 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// A reservation check is one document read, which is cheap; a check per keystroke, per
     /// player, for the life of the game is not. That single factor is roughly ten times the
-    /// bill, so it is worth proving rather than asserting — and it can be proved here because
+    /// bill, so it is worth proving rather than asserting - and it can be proved here because
     /// <see cref="NameCheckScheduler"/> holds no clock, no socket and no Unity types, which is
     /// <c>SyncScheduler</c>'s and <c>TweenCycle</c>'s bargain.
     /// </para>
@@ -153,7 +153,7 @@ namespace GlimmerGrove.Tests
             Assert.AreNotEqual(NameAvailability.Taken, names.Availability,
                                "a stale answer was shown against the current name");
 
-            // Remembered, though — going back to it costs no second read.
+            // Remembered, though - going back to it costs no second read.
             names.Typed("Fernwillow");
             Assert.AreEqual(NameAvailability.Taken, names.Availability);
         }
@@ -205,7 +205,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The claim is adjudicated and the hint is not, so its verdict has to overwrite the
-        /// hint — otherwise pressing save twice reports two different things about one name.
+        /// hint - otherwise pressing save twice reports two different things about one name.
         /// </summary>
         [Test]
         public void TheClaimsVerdictOverridesWhatTheHintBelieved()
@@ -231,7 +231,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// <b>The property this whole feature has to hold.</b> Whatever the server answers, a
-        /// player who pressed save either has the name or is left looking at a reason — never
+        /// player who pressed save either has the name or is left looking at a reason - never
         /// neither. "Neither" is a rename that vanished, which is the failure this codebase has
         /// already shipped once for a different reason (invariant 11c) and the one a player
         /// reports as "renaming does not work".
@@ -305,8 +305,8 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// <b>A refused button always says why.</b> That is `AdOfferState`'s rule — a greyed
-        /// control with no explanation is how players learn a feature is broken — and it is the
+        /// <b>A refused button always says why.</b> That is `AdOfferState`'s rule - a greyed
+        /// control with no explanation is how players learn a feature is broken - and it is the
         /// assertion worth making over the whole enum, because it holds for states added later.
         ///
         /// <para>
@@ -328,8 +328,8 @@ namespace GlimmerGrove.Tests
                 Assert.AreNotEqual(string.Empty, line.Key,
                                    $"{availability} refuses the button without saying why");
 
-                // Muted is right for "too short" — it is guidance while typing rather than a
-                // fault — but nothing that blocks the button may read as good news.
+                // Muted is right for "too short" - it is guidance while typing rather than a
+                // fault - but nothing that blocks the button may read as good news.
                 Assert.AreNotEqual(NameTone.Good, line.Tone,
                                    $"{availability} refuses the button and reads as good news");
             }
@@ -350,7 +350,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// An empty field is a real choice — it stores the default name — so it is never scolded
+        /// An empty field is a real choice - it stores the default name - so it is never scolded
         /// for being short. It is also the state the panel opens in for anyone who has never
         /// renamed, which makes it the commonest first frame there is.
         /// </summary>

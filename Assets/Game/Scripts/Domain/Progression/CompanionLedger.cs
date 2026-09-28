@@ -11,7 +11,7 @@ namespace GlimmerGrove.Progression
         /// <summary>Affordable, unheld and for sale. The only state a buy button is live in.</summary>
         Ready,
 
-        /// <summary>Already held — reached by level, or bought earlier.</summary>
+        /// <summary>Already held - reached by level, or bought earlier.</summary>
         AlreadyHeld,
 
         /// <summary>The roster does not price this one: it is earned by playing or not at all.</summary>
@@ -26,7 +26,7 @@ namespace GlimmerGrove.Progression
         /// <para>
         /// Tested <em>before</em> affordability on purpose. When both refusals apply, the gate
         /// is the one that cannot be resolved by finding credits, so leading with the price
-        /// would offer somebody a rewarded video for a companion the video cannot buy — the
+        /// would offer somebody a rewarded video for a companion the video cannot buy - the
         /// mistake <c>HintPrompt</c> documents, where the board is asked before the pool so
         /// nobody is ever sold a watch they could not have spent.
         /// </para>
@@ -70,7 +70,7 @@ namespace GlimmerGrove.Progression
     /// <b>The rule is keeper level AND purchase, and it lives here alone.</b> Every screen
     /// asks <see cref="IsHeld(AvatarDefinition, int)"/>; nothing else composes the halves.
     /// <see cref="AvatarCatalog.ReachedBy"/> answers only the level half and is named so
-    /// that reading it as the whole rule is obviously wrong — it used to be called
+    /// that reading it as the whole rule is obviously wrong - it used to be called
     /// <c>IsUnlocked</c>, and a call site checking half the rule under a name that promises
     /// all of it is precisely how a companion somebody paid for stays behind a padlock.
     /// </para>
@@ -80,13 +80,13 @@ namespace GlimmerGrove.Progression
     /// the companion over, then at the moment a player became allowed to buy one they would
     /// already own it, and the price would be unreachable code. So a priced companion is
     /// held only when it was <em>bought</em>, and the gate is a prerequisite for buying it.
-    /// A companion the roster puts no price on is still granted at its gate — that is the
+    /// A companion the roster puts no price on is still granted at its gate - that is the
     /// starter, and <see cref="AvatarDefinition.IsForSale"/> is what tells the two apart.
     /// </para>
     /// <para>
     /// <b>Why the purchased half is stored when nothing else here is.</b> This file's
-    /// neighbours go to some length to derive rather than store — XP, credits, the heart
-    /// count, an event's payout — and every one of them can, because each is a function of
+    /// neighbours go to some length to derive rather than store - XP, credits, the heart
+    /// count, an event's payout - and every one of them can, because each is a function of
     /// facts already in the save. A purchase is not. Nothing observable implies "this player
     /// paid 8,000 credits for Coral": the spend that bought it is in the currency ledger,
     /// but a ledger records amounts and reasons, not entitlements, and mining a purchase back
@@ -95,7 +95,7 @@ namespace GlimmerGrove.Progression
     /// </para>
     /// <para>
     /// <b>A set of permanent ids, joined by union.</b> Buying is irreversible, so between two
-    /// devices the player owns whatever either of them bought — the join is idempotent,
+    /// devices the player owns whatever either of them bought - the join is idempotent,
     /// commutative and associative without trying, exactly like <see cref="TipLedger"/>. Note
     /// what this is <em>not</em>: a count of companions owned would be hearts' old mistake
     /// (two devices at 4 and 2 are equally consistent with "one is behind" and "one bought
@@ -112,7 +112,7 @@ namespace GlimmerGrove.Progression
     /// <b>The forging bound.</b> The set is client-written, so a player who edits their save
     /// can award themselves a companion. It buys a cosmetic and nothing else: no currency, no
     /// progression, no advantage on a board. The money half is the part that is defended, and
-    /// it is defended where money always is — <see cref="PlayerProgression.TrySpend"/> books
+    /// it is defended where money always is - <see cref="PlayerProgression.TrySpend"/> books
     /// a debit with an idempotency key, <c>submitSpends</c> refuses one the balance cannot
     /// cover, and the balance is server-derived. So the worst outcome is a forged save wearing
     /// a portrait it did not pay for, which is the same class of loss as the forgeable run
@@ -149,7 +149,7 @@ namespace GlimmerGrove.Progression
             => IsHeld(avatar, keeperLevel, _bought.Contains);
 
         /// <summary>
-        /// The unlock rule over any purchased set — this ledger's, or the one written in a
+        /// The unlock rule over any purchased set - this ledger's, or the one written in a
         /// save file (<c>SaveHoldings</c>). One body, so the two cannot come to disagree
         /// about what "held" means; invariant 15a's rule reached through one door.
         /// </summary>
@@ -172,7 +172,7 @@ namespace GlimmerGrove.Progression
 
         /// <summary>
         /// How many companions were paid for. Asked by the account screen, which has to decide
-        /// whether this device is holding anything a player would mind losing — and a purchase
+        /// whether this device is holding anything a player would mind losing - and a purchase
         /// is the one thing here that is neither derivable nor recoverable by playing again.
         /// </summary>
         public static int BoughtCount => _bought.Count;
@@ -196,7 +196,7 @@ namespace GlimmerGrove.Progression
         /// Skipping the ones already bought is the whole reason this is not
         /// <c>AvatarCatalog.NextLocked</c> any more. <see cref="UnlockGoal"/> points the hub's
         /// progress bar at whatever comes back, and aiming it at a companion the player is
-        /// already wearing is worse than showing no goal at all — it tells somebody who just
+        /// already wearing is worse than showing no goal at all - it tells somebody who just
         /// spent 9,000 credits that they have four ranks to climb for what they are looking at.
         /// </para>
         /// </summary>
@@ -224,7 +224,7 @@ namespace GlimmerGrove.Progression
         ///
         /// <para>
         /// Every refusal is a distinct member because each one renders a different sentence,
-        /// and the panel is built from them — the same bargain <c>AdOfferState</c> makes. A
+        /// and the panel is built from them - the same bargain <c>AdOfferState</c> makes. A
         /// single "unavailable" would mean a player short of 300 credits and a player looking
         /// at a companion that is not for sale read the same greyed button, and one of those
         /// resolves by playing for an hour while the other never resolves at all.
@@ -326,7 +326,7 @@ namespace GlimmerGrove.Progression
         /// player owns whatever either bought.
         ///
         /// <para>
-        /// No early return for an empty side, deliberately — the same trap
+        /// No early return for an empty side, deliberately - the same trap
         /// <c>SeasonLedger.Join</c> documents. Handing one array straight back would skip
         /// the sort, so an unsorted file joined against nothing would come out still unsorted,
         /// and <see cref="SaveDelta"/> walks these in order: every launch would then read as

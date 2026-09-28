@@ -14,7 +14,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>A drop-down under the header rather than a drop-up in a corner.</b> It began in the
     /// bottom-right corner, which cost the map no vertical chrome and hid the one control every
-    /// other mode is reached through — a pill under the thumb, on a screen whose whole job is a
+    /// other mode is reached through - a pill under the thumb, on a screen whose whole job is a
     /// chain of glades running the other way, that a player has to be <em>taught</em> exists (see
     /// <c>Mechanic.ModeSwitch</c>). Under the plaque it is where the eye already is.
     /// </para>
@@ -26,7 +26,7 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>Names and nothing else.</b> Each row carried its mode's generated mark, and a mark is
-    /// what a mode looks like on a <em>node</em> — a leaf, a disc, a ring — which says nothing
+    /// what a mode looks like on a <em>node</em> - a leaf, a disc, a ring - which says nothing
     /// about how it is played and is one more thing to read in a list whose whole content is two
     /// words. The mode's colour still identifies it, on the selected row's seat and rim.
     /// </para>
@@ -45,7 +45,7 @@ namespace GlimmerGrove
         /// Violet, and it is the only pill on this screen.
         ///
         /// <para>
-        /// The corner pill was <c>btn_blue</c>, which is this UI's second-action colour — the undo
+        /// The corner pill was <c>btn_blue</c>, which is this UI's second-action colour - the undo
         /// key, the map key, the pill in a panel that is not the affirmative. That is exactly the
         /// wrong thing to say about the one control that reaches the other half of the game, and
         /// under a brown plaque on a dark teal fade it was also the least visible choice on the
@@ -61,7 +61,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// It hangs off this one constant so a build without that define is the file it was before
-        /// — the guard below, the row count, the list height and the row itself all fold away
+        /// - the guard below, the row count, the list height and the row itself all fold away
         /// together, and no shipped build can draw a control that navigates to a screen it does not
         /// contain.
         /// </para>
@@ -74,7 +74,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Puts the switcher in <paramref name="host"/>, centred on <paramref name="y"/>, and
-        /// hands back the pill it drew — or <c>null</c> when it drew nothing.
+        /// hands back the pill it drew - or <c>null</c> when it drew nothing.
         /// </summary>
         /// <remarks>
         /// The return value exists so the map can point a first-run lesson at this control
@@ -102,7 +102,7 @@ namespace GlimmerGrove
 #if GLIMMER_BENCH
             // Last, always, and never selected: it is a workbench rather than a way of playing, so
             // putting it under the real modes is what keeps the list still reading as the list of
-            // games. Its words are literals rather than loc keys deliberately — nothing here is
+            // games. Its words are literals rather than loc keys deliberately - nothing here is
             // ever seen by a player, and a key would be a string the translators carry for ever.
             rows.Add(new HeaderRow("Mode_demo", "DEMO", "vfx bench", Pal.Bloom, false,
                                    () => Flow.Go<Dev.VfxDemoScreen>()));
@@ -119,7 +119,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>A second control rather than a widened first one</b>, and the alternative is what says
     /// why. Folding tracks into the mode list would give a player rows like "Thornwatch" and
-    /// "Thornwatch · Infinite" — a list whose length is modes times tracks, whose rows repeat a
+    /// "Thornwatch · Infinite" - a list whose length is modes times tracks, whose rows repeat a
     /// word, and which reorders itself the day a second mode gets a second ladder. Two controls
     /// each answer one question, and each draws nothing when its own question has one answer
     /// (<see cref="HeaderMenu.Build"/>), so today the map shows exactly one pill.
@@ -167,13 +167,13 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Whether a lane can be entered at all — its <em>first</em> chapter's gate and nothing
+        /// Whether a lane can be entered at all - its <em>first</em> chapter's gate and nothing
         /// finer.
         ///
         /// <para>
         /// <b>The first chapter, because that is what switching to a lane lands on</b>
         /// (<c>LevelsScreen.FirstOf</c>), and because a lane is not shut just for having a
-        /// chapter further along that nobody has reached — every laddered lane has one of those
+        /// chapter further along that nobody has reached - every laddered lane has one of those
         /// permanently.
         /// </para>
         /// <para>
@@ -184,7 +184,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// <b>Public because the first-run tip asks it too.</b> A lesson is offered once in a
-        /// player's life, so one naming a lane nobody can enter yet is spent for good — the rule
+        /// player's life, so one naming a lane nobody can enter yet is spent for good - the rule
         /// the chapter-gate tip beside it already follows.
         /// </para>
         /// </summary>

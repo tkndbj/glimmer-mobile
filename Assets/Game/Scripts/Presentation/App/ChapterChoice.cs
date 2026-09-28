@@ -8,8 +8,8 @@ namespace GlimmerGrove
     /// Which chapter of each mode the player was last looking at.
     ///
     /// <para>
-    /// The map shows one chapter at a time (invariant 8) and every way back to it — the back
-    /// key, a forfeit, the victory panel, the home screen — arrives carrying no chapter at all,
+    /// The map shows one chapter at a time (invariant 8) and every way back to it - the back
+    /// key, a forfeit, the victory panel, the home screen - arrives carrying no chapter at all,
     /// so without this every one of them opened on <c>LevelUnlock.CurrentChapter</c>: wherever
     /// the player is <em>up to</em>, which on an account that has unlocked everything is the
     /// newest chapter and almost never the one they were just playing. Replaying an early
@@ -24,7 +24,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>Device-local, and never in the save file.</b> A view preference rather than progress:
     /// it moves both ways, so it could never be joined (invariant 11b), and it costs nothing to
-    /// get wrong — one arrow tap and it is right again. Nothing keys on it either, so a chapter
+    /// get wrong - one arrow tap and it is right again. Nothing keys on it either, so a chapter
     /// id landing here from a build that no longer holds it is dropped on the next read rather
     /// than being a stale id anything has to honour.
     /// </para>
@@ -47,7 +47,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// The remembered chapter of one mode, or null when there is nothing usable to
-        /// remember — which is the caller's cue to fall back to wherever the player is up to.
+        /// remember - which is the caller's cue to fall back to wherever the player is up to.
         ///
         /// <para>
         /// Three ways it comes back null, and they are the reason this returns an entry rather
@@ -65,7 +65,7 @@ namespace GlimmerGrove
         {
             if (index == null || !mode.IsValid) return null;
 
-            // Through MapMemory, so an account only ever gets back the chapter it left — see
+            // Through MapMemory, so an account only ever gets back the chapter it left - see
             // that class for the switch that opened a new account's map on the old one's chapter.
             string raw = MapMemory.Read(KeyFor(mode, track));
             if (!ChapterId.TryParse(raw, out var id, out _)) return null;
@@ -83,7 +83,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Written on the map's <em>arrival</em>, so the common call is one that changes
-        /// nothing — a player stepping in and out of the same chapter. <see cref="DevicePrefs"/>
+        /// nothing - a player stepping in and out of the same chapter. <see cref="DevicePrefs"/>
         /// is what keeps that off the disk.
         /// </para>
         /// </summary>

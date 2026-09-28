@@ -20,7 +20,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Four beats a player can read, and the first three are the point.</b> The warlord
         /// swings into its own attack frames; a violet light gathers on it; and a tether reaches
-        /// for the ward it has chosen — so what is about to happen, and to whom, is on the board
+        /// for the ward it has chosen - so what is about to happen, and to whom, is on the board
         /// for <c>SiegeTuning.BossTell</c> before it happens. That window is not decoration: it is
         /// long enough to pour a <c>mending</c> into the ward that is about to be hit, which is
         /// the one thing on this board a player can do about a warlord other than shoot it.
@@ -51,7 +51,7 @@ namespace GlimmerGrove
             // **It asks the rule rather than restating half of it**, which its own comment already
             // claimed and the code did not: this read `Craft != Rally && Ward >= 0`, naming one of
             // the three unaimed crafts and leaving the other two to be caught by an index nobody
-            // set. That happened to work and it is the shape invariant 5d warns about — a clause
+            // set. That happened to work and it is the shape invariant 5d warns about - a clause
             // carrying a rule that has moved twice since, under a comment pointing at the rule it
             // was supposed to be. The index test is kept as well because a -1 here would be a lane
             // position on the ward line, not a refusal.
@@ -82,7 +82,7 @@ namespace GlimmerGrove
             Gather(mob, cast.Opens ? 1.4f : 1f);
 
             // The tell. **Nothing is ever drawn on the ward itself, and no ring is drawn on
-            // the boss either** — an aimed spell is announced from the caster's end, by the
+            // the boss either** - an aimed spell is announced from the caster's end, by the
             // gather above and the tether below. A roar has no target at all, so what it gets
             // of its own is the brace, and nothing is drawn round it.
             //
@@ -92,14 +92,14 @@ namespace GlimmerGrove
             if (cast.Craft == SiegeSpell.Rally) Brace(mob);
 
             // **The storm the wind-up is actually made of** (see `SiegeView.Storm`): crackle
-            // accelerating over the whole window, motes dragged in off the hill, and — for a boss
-            // that has chosen a ward — a tether flickering between it and its target. None of it
+            // accelerating over the whole window, motes dragged in off the hill, and - for a boss
+            // that has chosen a ward - a tether flickering between it and its target. None of it
             // moves the schedule; all of it happens inside `BossTell`.
             Winding(mob, from, to, aimed);
 
             Audio.Sfx("whoosh", .5f, Pitch(mob.Kind));
 
-            // The bolt itself leaves when the wind-up ends, and crosses in `BossFlight` — but only
+            // The bolt itself leaves when the wind-up ends, and crosses in `BossFlight` - but only
             // if the warlord is still standing when it does. The board already fizzles a spell
             // whose caster has been destroyed (`SiegeBoard.Arrive`), and a spell drawn crossing the
             // hill that then does nothing is worse than one that was never thrown: it reads as the
@@ -117,7 +117,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Whether a reel is a comet — a head with a tail behind it — rather than something
+        /// Whether a reel is a comet - a head with a tail behind it - rather than something
         /// round, answered from the art and from nothing else.
         ///
         /// <b>Halfway between the only two shapes the bake cuts</b>, so it cannot be a close
@@ -125,11 +125,11 @@ namespace GlimmerGrove
         /// <c>leanest == longest == 1</c>, which <c>SiegeShotBake.Shape</c> returns outright, so
         /// its frame is square to the pixel. A comet is clamped to <c>LeanestShot</c>..
         /// <c>LongestShot</c> and then quantised by <c>Pixels</c> to a multiple of sixteen inside
-        /// <c>NarrowestShot</c>..<c>WidestShot</c> — so the leanest frame that can actually be
+        /// <c>NarrowestShot</c>..<c>WidestShot</c> - so the leanest frame that can actually be
         /// written is 384 / 224 = <b>1.71</b>, not 1.6. The realised set is {1.0} and
         /// [1.71, 6.86], with nothing in between, and 1.3 sits three tenths clear of both ends.
         /// That gap is what makes reading the sprite safe where a table of kinds would be a
-        /// second opinion — see the call in <see cref="Hurl"/>.
+        /// second opinion - see the call in <see cref="Hurl"/>.
         /// </summary>
         static bool Tailed(Sprite[] frames)
         {
@@ -181,7 +181,7 @@ namespace GlimmerGrove
         /// The tell a warbringer wears: it braces itself before it goes.
         ///
         /// <b>No ring.</b> A roar has no target, so the thing a player has to read is not
-        /// "which ward" but "how long" — and that window is said by the gather and the storm
+        /// "which ward" but "how long" - and that window is said by the gather and the storm
         /// (<see cref="Winding"/>), both of which are on the boss already. What is left here is
         /// the anticipation, which is the one bit a boss that throws nothing has to work with.
         /// </summary>
@@ -208,7 +208,7 @@ namespace GlimmerGrove
              // **An arrow is the smallest thing thrown in this mode and the heaviest slam is the
              // second largest**, and both numbers are the rule above being obeyed rather than a
              // taste. A bind takes no health at all, so it has to read lighter than anything that
-             // does — lighter even than a hex, because a hex at least takes the fuel with it. An
+             // does - lighter even than a hex, because a hex at least takes the fuel with it. An
              // ironclad's strike takes less health than a warlord's and is drawn bigger than one:
              // that is not a contradiction, because what the drawing has to say is that the axe
              // came down, and the thing it is really announcing is the aegis it stands behind.
@@ -241,7 +241,7 @@ namespace GlimmerGrove
         /// <b><paramref name="bow"/> is what makes a volley read as a volley.</b> Three orbs on
         /// the same straight line are one orb drawn three times; pushed sideways by a sine that is
         /// nought at both ends, they leave together, spread across the hill and converge on the
-        /// ward — and the two halves of an overlord's pair bow in opposite directions, which is
+        /// ward - and the two halves of an overlord's pair bow in opposite directions, which is
         /// the whole of why it reads as a launch rather than as a bigger smite.
         /// </para>
         /// <para>
@@ -264,7 +264,7 @@ namespace GlimmerGrove
                 frames = new[] { Art.Glow(96, 2.0f) };
 
             // **Half again the width of a ward's bolt, and anchored wherever its own picture
-            // says.** Most of these are orbs — baked square, so the thing *is* the frame and its
+            // says.** Most of these are orbs - baked square, so the thing *is* the frame and its
             // middle is where it is. Two are not: a shackler looses an arrow and an ironclad
             // brings a blade down, and a comet's frame is mostly the tail behind the head, so
             // anchoring one at its middle would draw it half a length past wherever it had got to.
@@ -272,7 +272,7 @@ namespace GlimmerGrove
             // **Read off the sprite rather than switched on the kind**, which is `Lend`'s own rule
             // one step further: the bake decides orb or comet (`SiegeShotBake.Shot.Comet`) and a
             // second table here saying which is which is a second opinion that goes stale the
-            // first time a row is re-baked. The aspect cannot be ambiguous — a square frame is 1.0
+            // first time a row is re-baked. The aspect cannot be ambiguous - a square frame is 1.0
             // and the leanest comet the bake will ever cut is 1.6.
             var puff = Lend(frames, Color.white, Cell * ThrownAt(kind) * scale, from, angle, 30f,
                             true, Tailed(frames) ? HeadAt : .5f);
@@ -284,7 +284,7 @@ namespace GlimmerGrove
 
             // **A hex drifts rather than flies**, which is the one thing about its motion a player
             // can read before it lands: it wobbles across the hill and swells, where a smite and
-            // an omen go straight. The arrival is on the rules' clock either way (invariant 37s) —
+            // an omen go straight. The arrival is on the rules' clock either way (invariant 37s) -
             // what changes is the path, never the time.
             bool wafts = SiegeTuning.SpellOf(kind) == SiegeSpell.Douse;
             var side = new Vector2(-dir.y, dir.x).normalized * Cell;
@@ -315,7 +315,7 @@ namespace GlimmerGrove
                 // volley is a trail of sparks rather than a wall of them.
                 //
                 // **One pooled ember rather than a general-purpose burst, and that is worth
-                // 108 GameObjects a cast** — see `SiegeView.Cinder`, which records what this line
+                // 108 GameObjects a cast** - see `SiegeView.Cinder`, which records what this line
                 // used to cost and why the cost landed on the whole board's geometry rather than
                 // here. It also reads better: what a wake wants is a thinning line of embers
                 // falling away from the head, and what it was getting was a radial scatter with a
@@ -339,7 +339,7 @@ namespace GlimmerGrove
         /// it.
         ///
         /// <b>The one boss effect in this mode that is not aimed</b>, so it is drawn as the thing
-        /// a roar is — pressure going outward from a point — rather than as something travelling
+        /// a roar is - pressure going outward from a point - rather than as something travelling
         /// to a place. It is the loudest single drawing on the board and it is meant to be: what
         /// it announces is every raider on the hill breaking into a run, which a player has about
         /// five seconds to do something about.
@@ -375,8 +375,8 @@ namespace GlimmerGrove
         /// <b><see cref="Roar"/> read backwards, and that is the design rather than a saving.</b>
         /// The two are the mode's only pair of spells that throw nothing and land nowhere, so the
         /// one thing separating them has to be the thing they are: a roar is pressure going out
-        /// and a devour is a pull coming in. Same two reels used the same two ways — one upright
-        /// on the caster, one flat over the ground — and the hill is drawn *up* the board
+        /// and a devour is a pull coming in. Same two reels used the same two ways - one upright
+        /// on the caster, one flat over the ground - and the hill is drawn *up* the board
         /// instead of the board being shoved off it.
         /// </para>
         /// <para>
@@ -390,7 +390,7 @@ namespace GlimmerGrove
         {
             var fire = Casting(kind);
 
-            // The floor going first, and wider than the mouth — a pull is felt further out than
+            // The floor going first, and wider than the mouth - a pull is felt further out than
             // it is seen, which is the reading a roar gets from the same pair the other way up.
             var ground = SpellMuzzleArt(kind);
             if (ground != null && ground.Length > 0)
@@ -402,7 +402,7 @@ namespace GlimmerGrove
                 Ends(Lend(mouth, Color.white, Cell * 5.4f, at, 0f, 32f, false, .5f), .5f);
 
             // The hill itself starting to go. These are the motes a wind-up drags in
-            // (`SiegeView.Drawn`), spent here at four times the count and from twice as far —
+            // (`SiegeView.Drawn`), spent here at four times the count and from twice as far -
             // what a player has to understand in this half-second is that the *ground* is moving,
             // so that when `Swallowed` takes their cogs and firepots a moment later it reads as
             // this having happened rather than as things vanishing.
@@ -425,7 +425,7 @@ namespace GlimmerGrove
         ///
         /// <b>The quieter half of a raise, deliberately.</b> What the player has to watch is the
         /// crest, because that is where the bodies arrive and that is a thing they will have to
-        /// answer — so the caster gets a bloom and a reach and the crest gets the rest of it on
+        /// answer - so the caster gets a bloom and a reach and the crest gets the rest of it on
         /// the arrival (<see cref="Rise"/>), which is also the beat the raiders are hatched on.
         /// Drawing the loud half here would put the ceremony half a second before the event.
         /// </summary>
@@ -439,7 +439,7 @@ namespace GlimmerGrove
 
             var crest = new Vector2(0f, MarchY(SiegeTuning.RaiseAt));
 
-            // The reach. Two flickers rather than a held line, for the tether's reason — a line
+            // The reach. Two flickers rather than a held line, for the tether's reason - a line
             // that stays lit is a beam, and the beams on this board come the other way.
             for (int i = 0; i < 2; i++)
                 Arc(at, crest, fire, Cell * .05f, .26f, 2, .5f, i * .12f);
@@ -470,7 +470,7 @@ namespace GlimmerGrove
             var fire = Casting(kind);
 
             // **A roar arrives on every ward at once, so it is four records and one stampede.**
-            // The hill breaking into a run is drawn once, on the first of them — `_roared` is
+            // The hill breaking into a run is drawn once, on the first of them - `_roared` is
             // cleared at the top of every frame's report, so "first" means first *this frame*
             // rather than first ever.
             if (spell.Craft == SiegeSpell.Rally && !_roared)
@@ -516,14 +516,14 @@ namespace GlimmerGrove
             Shockwave(at, fire, 3.6f * BurstAt(kind), .34f);
             Burst.Sparks(_fx, at, fire, greater ? 20 : 14, Cell * 3f, Cell * .24f, .5f);
 
-            // What the boss's own verb leaves behind on the post, over and above the burst — see
+            // What the boss's own verb leaves behind on the post, over and above the burst - see
             // `SiegeView.Storm`. A roar has already had its own above, because it lands on four
             // wards at once and this is one drawing.
             if (spell.Craft != SiegeSpell.Rally) Aftermath(kind, spell.Ward, at, fire);
 
             // **A douse is drawn as a light going out, and everything about it is quieter.** It
             // takes no health, so a hit that shook the board and flashed the screen would be the
-            // drawing overstating the rule — and the thing a player has to notice is the ward
+            // drawing overstating the rule - and the thing a player has to notice is the ward
             // itself going dark, which `Post` keeps drawn for as long as it lasts.
             // **A chain lands quietly and on the chassis rather than on the tube.** A douse is
             // drawn at the fuel readout because what it took was in there (invariant 37y); a bind
@@ -608,7 +608,7 @@ namespace GlimmerGrove
             var crest = new Vector2(0f, MarchY(SiegeTuning.RaiseAt));
 
             // **The loud half, and it is the one that had no art in it.** A shockwave and a
-            // scatter of sparks is a primitive and a primitive (invariant 47i) — so the moment a
+            // scatter of sparks is a primitive and a primitive (invariant 47i) - so the moment a
             // bonecaller puts a fresh group at the top of the hill, which is the single biggest
             // thing that boss does to a run, was two circles. The bloom is drawn widest here
             // because this is the beat the bodies are hatched on, and the ground wash under it is
@@ -626,7 +626,7 @@ namespace GlimmerGrove
             Burst.Sparks(_fx, crest, fire, 22, Cell * 5f, Cell * .28f, .7f);
 
             // Shards coming up out of the ground on the spot the bodies will stand on. Upward
-            // only — a raise is the one thing on this board that arrives from *under* it, and
+            // only - a raise is the one thing on this board that arrives from *under* it, and
             // that is the half-second the reading has to happen in.
             for (int i = 0; i < 7; i++)
             {
@@ -734,7 +734,7 @@ namespace GlimmerGrove
             Tween.Shake(post.Node, Cell * .1f, .26f);
 
             // A second scatter down at the tube, because what a douse really took is what was in
-            // it — the fuel readout is where every decision in this mode is read (invariant 37y),
+            // it - the fuel readout is where every decision in this mode is read (invariant 37y),
             // so that is where the loss has to be seen happening.
             Burst.Sparks(_fx, new Vector2(PostX(ward), _lineY - Cell * .1f), fire, 8,
                          Cell * 1.4f, Cell * .12f, .45f);
@@ -748,7 +748,7 @@ namespace GlimmerGrove
         /// <b>Deliberately smaller than <see cref="Snuffed"/>, because it takes less.</b> A douse
         /// empties the tube and the drawing follows the loss down to where the loss was; a bind
         /// takes six seconds and leaves everything, so a burst of the same weight would be the
-        /// picture overstating the rule — the same argument the douse's own note makes against
+        /// picture overstating the rule - the same argument the douse's own note makes against
         /// flashing the screen. What has to read is that the turret is *held*, and that is the
         /// standing state rather than this instant.
         /// </summary>
@@ -762,8 +762,8 @@ namespace GlimmerGrove
 
             // **The chain's own clip, and it is the one sound in the library that is a *fastening*
             // rather than a blow.** A douse is a `whoosh` because a light goes out; a bind is a
-            // thing being shut, so `blocked` — which is what this game plays when an input is
-            // refused — is the right noise in the right place: what the player is being told is
+            // thing being shut, so `blocked` - which is what this game plays when an input is
+            // refused - is the right noise in the right place: what the player is being told is
             // that a turret has stopped answering.
             Audio.Sfx("blocked", .55f, .8f);
         }
@@ -772,7 +772,7 @@ namespace GlimmerGrove
         /// What a doused ward is drawn in: standing, cold, and unmistakably not firing.
         ///
         /// <b>Slate rather than dark</b>, so it cannot be read as the <c>ward_dead</c> a fallen
-        /// one wears — one of these is over in five seconds and the other is over for the run,
+        /// one wears - one of these is over in five seconds and the other is over for the run,
         /// and a player who confuses them stops feeding a colour that is coming back.
         /// </summary>
         static readonly Color DarkCoat = new Color(.46f, .53f, .60f, 1f);
@@ -877,8 +877,8 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Three of the four things felling a ward does are outside anything the per-frame paint
-        /// touches — the wreck sprite, the sixteen degrees it topples through and the fuel tube
-        /// faded to a quarter — so a raised ward left to <see cref="Charge"/> would come back
+        /// touches - the wreck sprite, the sixteen degrees it topples through and the fuel tube
+        /// faded to a quarter - so a raised ward left to <see cref="Charge"/> would come back
         /// upright in the model and lying on its side on the screen. Only the body's tint heals
         /// itself, and that is the one that would have looked fine.
         /// </para>
@@ -955,7 +955,7 @@ namespace GlimmerGrove
 
             // Cream and gentle, against the ember flash `Ruin` threw a moment ago: the same
             // gesture in the opposite colour, at a third of the strength, because this is relief
-            // rather than another blow. The peak is the parameter, not the colour's own alpha —
+            // rather than another blow. The peak is the parameter, not the colour's own alpha -
             // `Flow.Flash` zeroes that before it starts.
             Audio.Sfx("mend", .85f, .92f);
             Flow.Flash(Pal.Cream, .34f, .34f);
@@ -1012,7 +1012,7 @@ namespace GlimmerGrove
 
             // **The warlord's wave is announced as itself rather than as a number.** "WAVE 4 OF 4"
             // is true and is the wrong thing to say about the one wave that is not like the others
-            // — the header carries the count for anybody who wants it (`SiegeScreen.Readouts`), and
+            // - the header carries the count for anybody who wants it (`SiegeScreen.Readouts`), and
             // what the board owes this moment is the news.
             bool boss = _board.BossWave;
             var kind = _layout.BossKind;
@@ -1020,7 +1020,7 @@ namespace GlimmerGrove
             // **Each boss is announced as itself.** Two of them shared one banner while the mode
             // had two, which is the same fault as sharing a body: the one moment the game has to
             // say "this is not the thing you fought last time" was spent saying "a boss".
-            // Written out rather than keyed off the kind's name, for invariant 6's reason — a loc
+            // Written out rather than keyed off the kind's name, for invariant 6's reason - a loc
             // key built by concatenation is a key the build gate cannot see.
             string banner = BossKey(kind);
 
@@ -1066,7 +1066,7 @@ namespace GlimmerGrove
             if (boss)
             {
                 // How hard each one lands is how big it is, which is the same ladder its
-                // silhouette, its health bar and its spell are drawn on — the blightcaller arrives
+                // silhouette, its health bar and its spell are drawn on - the blightcaller arrives
                 // as the lightest of the four because it is the first one a chapter shows.
                 float weight = kind == SiegeKind.Overlord ? 1f
                              : kind == SiegeKind.Warbringer ? .88f
@@ -1183,7 +1183,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Numbers are tallied per raider rather than one to a bolt, and that is what makes
         /// them readable here at all.</b> A lit line fires every <c>SiegeTuning.FireEvery</c>, so
-        /// four wards on one target is about eighteen hits a second — eighteen separate figures a
+        /// four wards on one target is about eighteen hits a second - eighteen separate figures a
         /// second is a wall of text nobody can read one number out of, and drawing each of them
         /// bigger makes that worse rather than better. So a hit landing on a raider that is
         /// already showing a number <em>adds to it</em>: the figure climbs, grows, punches again
@@ -1192,8 +1192,8 @@ namespace GlimmerGrove
         /// quiet.
         /// </para>
         /// <para>
-        /// <b>A double reads as a different kind of number rather than a bigger one</b> — gold, a
-        /// much harder punch, a longer and higher float — because the elemental double is the one
+        /// <b>A double reads as a different kind of number rather than a bigger one</b> - gold, a
+        /// much harder punch, a longer and higher float - because the elemental double is the one
         /// rule this mode is about, and this is the only place it is ever said in figures.
         /// </para>
         /// </summary>
@@ -1251,7 +1251,7 @@ namespace GlimmerGrove
             // Built through `Titled` rather than `Label`: a bare figure over a lit hill and a
             // bright cast is unreadable, and the outline is most of what a floating number is.
             //
-            // **On `_figures` rather than `_fx`**, so nothing drawn afterwards covers it — see
+            // **On `_figures` rather than `_fx`**, so nothing drawn afterwards covers it - see
             // `SiegeView.Build`, where the layer is the last one made for exactly this.
             tally.Label = UIKit.Titled("Hit", _figures, damage.ToString(), 24, Pal.Cream,
                                        TextAnchor.MiddleCenter,
@@ -1331,7 +1331,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// The float, restarted from wherever the number has got to every time it takes another
-        /// hit — so a figure still climbing does not drift off in the middle of its own tally.
+        /// hit - so a figure still climbing does not drift off in the middle of its own tally.
         ///
         /// Every channel is owned by the <c>Text</c> rather than by its transform, because they
         /// are two different Unity objects and a channel killed on one is not killed on the other.
@@ -1350,7 +1350,7 @@ namespace GlimmerGrove
             label.color = opaque;
 
             // **It lifts, and then it stands still.** The first cut floated a cell and a half
-            // over a second and the second floated half a cell over the whole of its life — both
+            // over a second and the second floated half a cell over the whole of its life - both
             // of them numbers still travelling at the moment they are being read, which on a
             // board sending the next one 55 milliseconds behind reads as figures climbing the
             // screen. What a floating number owes the player is to be legible on arrival and then

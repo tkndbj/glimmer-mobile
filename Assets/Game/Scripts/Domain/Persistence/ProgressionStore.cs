@@ -10,8 +10,8 @@ namespace GlimmerGrove.Persistence
     /// would each recompute a smaller value than the player was shown yesterday.
     ///
     /// Watching your level fall is the kind of thing that ends a review with one star,
-    /// so these marks ratchet. They are never a source of truth — only a lower bound
-    /// on one — which is why they can be merged across devices by simply taking the
+    /// so these marks ratchet. They are never a source of truth - only a lower bound
+    /// on one - which is why they can be merged across devices by simply taking the
     /// larger value.
     /// </summary>
     public static class ProgressionStore

@@ -16,12 +16,12 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// <b>It is one class because there are two shops.</b> The browse screen is one, and a run
-    /// that has just been lost is the other — a player short of gems for a continue is offered
+    /// that has just been lost is the other - a player short of gems for a continue is offered
     /// the gem shelf where they stand, because navigating to the shop would forfeit the board
     /// they are trying to save (invariant 23). Both draw the same objects: a plate, an edge,
     /// <c>ShopArt</c>'s picture, a headline figure, a note under it and a price face. Two copies
     /// of that would be two answers to questions the shop has already settled once and paid for
-    /// settling — that a store's own formatted price is used verbatim and never rebuilt from a
+    /// settling - that a store's own formatted price is used verbatim and never rebuilt from a
     /// number and a currency code, that a short gem balance still shows the price and greys the
     /// face rather than replacing one with the other, and that the four money states each get
     /// their own colour.
@@ -31,13 +31,13 @@ namespace GlimmerGrove
     /// plate this was lifted from, so at <see cref="Look.Shelf"/>'s size every number resolves
     /// to exactly what the shop screen drew before this class existed, and a smaller card is
     /// the same design rather than a second one. Vertical measurements scale by the plate's
-    /// height and horizontal ones by its width, because a card is not always the same shape —
+    /// height and horizontal ones by its width, because a card is not always the same shape -
     /// scaling both by one factor is what made the picture and the headline overlap on the
     /// compact card the first time.
     /// </para>
     /// <para>
     /// <b>It draws and nothing else.</b> What is on a shelf, what a tap does, what a refusal is
-    /// worded as and whether the store has answered are all the caller's — see
+    /// worded as and whether the store has answered are all the caller's - see
     /// <see cref="StoreWording"/> and <c>StoreTap</c>. This is why the same card can sit in a
     /// grid that navigates and in a grid that must not.
     /// </para>
@@ -49,8 +49,8 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <see cref="Decorated"/> is deliberately one flag rather than four. The seat, the
-        /// spinning rays, the bonus ribbon and the badge seal all answer the same question —
-        /// <em>how does this compare with the others</em> — and that question only exists on a
+        /// spinning rays, the bonus ribbon and the badge seal all answer the same question -
+        /// <em>how does this compare with the others</em> - and that question only exists on a
         /// screen where somebody is choosing between shelves. A player who opened a card list
         /// to buy a specific number of gems has already chosen, so every one of them would be
         /// noise, and letting a caller take three of the four would be an invitation to invent
@@ -100,7 +100,7 @@ namespace GlimmerGrove
         /// How wide the price caption and any glyph beside it may be, together.
         ///
         /// Kept because <see cref="UIKit.CentreGlyph"/> needs it on every repaint and the box it
-        /// would otherwise be read from is the one that call is about to narrow — measuring from
+        /// would otherwise be read from is the one that call is about to narrow - measuring from
         /// the last centring is how a caption walks off centre a little further each time it is
         /// drawn.
         /// </summary>
@@ -115,7 +115,7 @@ namespace GlimmerGrove
 
             // The whole card is the button, so a press squashes plate, picture and price as one
             // object. That is why the price sits on a painted face rather than on a real button
-            // — the rule the hub's feature row and the nav caps both follow.
+            // - the rule the hub's feature row and the nav caps both follow.
             var button = UIKit.Button("Cell", parent, Art.Pixel,
                                       new Vector2(look.Width - 16f, look.Height - 20f),
                                       new Vector2(.5f, 1f), Vector2.zero, tapped);
@@ -126,8 +126,8 @@ namespace GlimmerGrove
             //
             // It used to be three coloured frames keyed on the shelf, and losing them is what
             // this restyle is really about. Five saturated blocks of colour side by side read
-            // as five different games rather than as one shop, and what the colour was *for* —
-            // telling one shelf from another — is now said twice over by things that say it
+            // as five different games rather than as one shop, and what the colour was *for* -
+            // telling one shelf from another - is now said twice over by things that say it
             // better: a lit tab, which the old dark chips could not do at all, and a coloured
             // light under the goods, where a player is already looking.
             _plate = UIKit.Img("Plate", Root, Art.S("Ui/" + Skins.Card), Color.white,
@@ -135,15 +135,15 @@ namespace GlimmerGrove
                                new Vector2(.5f, .5f), Vector2.zero);
 
             // 300 rather than 236, and the stack under it moved down to pay for it. The
-            // picture is what a card is for — it is the only part a player reads before the
-            // price — and against a kit frame that carries its own colour there is nothing
+            // picture is what a card is for - it is the only part a player reads before the
+            // price - and against a kit frame that carries its own colour there is nothing
             // else on the plate for the empty room above it to be doing.
             // A pool of light under the picture, and it is back after being taken off with
             // everything else behind an item. The distinction that makes it work where the
             // rest did not: a *fan of rays* and a lighter panel across the top of the frame
             // are patterns on the card, so on an opaque frame they read as decoration behind
             // the object; a soft round light centred on the object reads as light on it. One
-            // colour, one strength, no rung and no rotation — nothing here is saying how much,
+            // colour, one strength, no rung and no rotation - nothing here is saying how much,
             // because the picture already does.
             // It carries the shelf's colour now rather than plain white, which is the job the
             // frame used to do. Still one strength and no rotation - nothing here says *how
@@ -192,7 +192,7 @@ namespace GlimmerGrove
             // binds on the one screen that must not stutter.
             //
             // It is on the price face rather than beside the caption because the face is what
-            // moves when the card is pressed — a glyph parented anywhere else would stay put
+            // moves when the card is pressed - a glyph parented anywhere else would stay put
             // while the price it belongs to squashed away from it.
             //
             // **Its sprite is assigned on every draw rather than fixed here**, because there is
@@ -215,7 +215,7 @@ namespace GlimmerGrove
             // the sort, so this was a machined title plate standing in for cloth.
             //
             // **It hangs again**, at `ProductCardBadges.RibbonTilt`. That went to nought while
-            // the mark was a plate — a plate off square reads as one that has come loose — and
+            // the mark was a plate - a plate off square reads as one that has come loose - and
             // the reason expired with the art. The angle is applied here and the *reach* it
             // costs is arithmetic over in `ProductCardBadges`, which is what keeps a tilted
             // ribbon from quietly growing into the seal on the card beside it.
@@ -231,7 +231,7 @@ namespace GlimmerGrove
             // **Bent to the cloth, and lifted onto the flag.** A straight word inside a ribbon
             // reads as a label that happens to be sitting on a curved thing, which is what this
             // was; and the sprite's own centre is not the writable band's centre, because the
-            // tails hang below it — see `Skins.RibbonLift`, which is measured off the picture.
+            // tails hang below it - see `Skins.RibbonLift`, which is measured off the picture.
             //
             // The radius is the ribbon's own width, which is what keeps every card's mark
             // bending by the same amount however wide the grid draws a column. It is not
@@ -247,7 +247,7 @@ namespace GlimmerGrove
                                    new Vector2(0f, ProductCardBadges.RibbonHeight * kv * Skins.RibbonLift));
 
             // The badge, top right, on the seal the win panel already uses for a record. Where
-            // it sits is ProductCardBadges' — it has to clear the *next column's* ribbon, which
+            // it sits is ProductCardBadges' - it has to clear the *next column's* ribbon, which
             // is a fact about the grid rather than about this card, and it was drawn straight
             // through one for as long as the shop has had two shelves.
             _seal = UIKit.Img("Seal", _plate.transform, Art.S("Ui/" + Skins.Badge), Pal.Rose,
@@ -259,7 +259,7 @@ namespace GlimmerGrove
             _seal.transform.localRotation = Quaternion.Euler(0f, 0f, ProductCardBadges.SealTilt);
 
             // Cream, and inside the disc. It was dark brown in a box half again as wide as the
-            // field it sits on, so a badge said its piece across the rim and onto the plate —
+            // field it sits on, so a badge said its piece across the rim and onto the plate -
             // where lettering chosen to read on gold was being drawn on the darkest thing on
             // the card. The two faults were one fault: the box was sized against the sprite
             // rather than against the maroon field inside it.
@@ -277,7 +277,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The line under the headline figure when it is a unit label rather than an amount —
+        /// The line under the headline figure when it is a unit label rather than an amount -
         /// deliberately quiet, because it names what the number above it is and competing with
         /// that number is the one thing it must not do.
         /// </summary>
@@ -290,7 +290,7 @@ namespace GlimmerGrove
         /// <summary>
         /// Leaves the slot empty.
         ///
-        /// For a row a grid has asked for and the caller has nothing to put in — a product the
+        /// For a row a grid has asked for and the caller has nothing to put in - a product the
         /// store has never heard of, or a cell scrolled past the end of a list. Hidden rather
         /// than left drawing the row it used to be, because a recycled cell keeps whatever it
         /// last showed.
@@ -305,7 +305,7 @@ namespace GlimmerGrove
         /// There is no <c>featured</c> flag any more. It used to buy a lift on the rung's own
         /// light and a gold seat behind the plate, and both went with the decoration the owner
         /// asked to have taken off: what is *worth pointing at* is now said by the badge and by
-        /// the badge alone. A parameter that reaches nothing is worse than no parameter — it
+        /// the badge alone. A parameter that reaches nothing is worse than no parameter - it
         /// reads as a knob somebody can turn.
         /// </remarks>
         public void Draw(StoreProduct product, StoreOffer offer)
@@ -321,7 +321,7 @@ namespace GlimmerGrove
             if (product.IsContainer)
             {
                 // A container leads with the cap it sells rather than with a currency, because
-                // the number *is* the product — "20" against a heart is the whole offer, and
+                // the number *is* the product - "20" against a heart is the whole offer, and
                 // there is nothing underneath it to add up. The colour is the hearts' own, so
                 // a shelf that also sells five hearts for gems reads as one resource in two
                 // shapes rather than as two things that happen to share a tab.
@@ -348,8 +348,8 @@ namespace GlimmerGrove
 
                 // A currency is always drawn in its own colour, and on a bundle this line is a
                 // currency rather than a unit. That is the whole distinction: on every other
-                // card the line under the figure is the *label* for the figure — "GEMS" beneath
-                // a violet 8,500 — so colouring it violet too would say one thing twice and
+                // card the line under the figure is the *label* for the figure - "GEMS" beneath
+                // a violet 8,500 - so colouring it violet too would say one thing twice and
                 // leave the card monochrome. A bundle's line is a *second amount in a second
                 // currency*, and the coins were being drawn in the same faint cream as a unit
                 // label, which is the one reading that makes an extra 42,000 credits look like
@@ -392,7 +392,7 @@ namespace GlimmerGrove
             // **Switched rather than asked twice with a ternary**, which is invariant 44e's
             // rule: a two-way test whose `else` is a real answer hides the case nobody is
             // looking at, and a third kind added to one would have drawn an XP boost as a pile
-            // of hearts — silently, on a card somebody is being asked to pay for.
+            // of hearts - silently, on a card somebody is being asked to pay for.
             bool hours = good.Kind == StoreGoodKind.HeartBoost || StoreGoodKinds.IsXp(good.Kind);
 
             // **The XP boost names itself rather than printing its length**, and it is the one
@@ -422,7 +422,7 @@ namespace GlimmerGrove
                     _amount.color = Pal.A(Pal.Aqua, 1f);
 
                     // **No second line, and it is the headline that earned that.** Every other
-                    // card here is a figure over a noun — "5" over "Hearts" — because the figure
+                    // card here is a figure over a noun - "5" over "Hearts" - because the figure
                     // alone says nothing. This one is a sentence, so the noun under it repeated
                     // a word already in it and answered a question the headline had just
                     // answered. Blank rather than removed: the label is the same one four other
@@ -440,12 +440,12 @@ namespace GlimmerGrove
 
             // A short balance still shows the price. It used to replace it with "not enough
             // gems", which spends the one line the card has on a refusal and answers a question
-            // nobody asked — a player looking at this cell wants to know what it costs, and the
+            // nobody asked - a player looking at this cell wants to know what it costs, and the
             // state where that matters most is the one where they cannot yet afford it. The
             // amount is what turns "no" into a target, and it is not information the card was
             // withholding for any reason: the tap is not refused either, it opens the gem shelf.
             //
-            // What still carries the "not yet" is the *face*, which stays grey — so the card
+            // What still carries the "not yet" is the *face*, which stays grey - so the card
             // says both things at once instead of trading one for the other.
             //
             // The two *full* refusals keep their sentence, and the difference is the point: a
@@ -458,8 +458,8 @@ namespace GlimmerGrove
             _price.color = ready ? Pal.Cream : Pal.A(Pal.Cream, .72f);
 
             // The gem rides with the number and only with the number. A price on this face is
-            // the one figure in the shop with no currency written beside it — every money card
-            // carries the store's own formatted string, symbol and all — so without the glyph
+            // the one figure in the shop with no currency written beside it - every money card
+            // carries the store's own formatted string, symbol and all - so without the glyph
             // "280" is a quantity of nothing, sitting under a card whose *other* number is a
             // quantity of hearts. It comes off for the two full refusals, which are sentences
             // rather than prices: a gem in front of "your hearts are full" prices the refusal.
@@ -478,7 +478,7 @@ namespace GlimmerGrove
         /// <b>The one card on this screen whose price is not a number</b>, and it keeps the
         /// card's grammar exactly: the headline is what arrives, the line under it names the
         /// currency, and the face says what it costs. What tells it apart from the packs beside
-        /// it is the three things a player reads before any of that — the picture is a small
+        /// it is the three things a player reads before any of that - the picture is a small
         /// heap with a play mark on it rather than a painted chest (<c>ShopArt.PaintAd</c>), the
         /// face is <see cref="Skins.Affirm"/>'s green rather than the money orange or the gem
         /// violet, and the ribbon says FREE where a pack's says how much extra.
@@ -486,7 +486,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Green because the panel it opens is green.</b> The watch button on
         /// <c>AdOfferOverlay</c> is <c>btn_green</c> and has been since rewarded ads shipped, so
-        /// a card that leads to it wearing the same face is one control rather than two — the
+        /// a card that leads to it wearing the same face is one control rather than two - the
         /// argument the shelf tabs make about borrowing a glyph the game already draws.
         /// </para>
         /// <para>
@@ -495,14 +495,14 @@ namespace GlimmerGrove
         /// them resolves by waiting; the panel behind this card says which one it is, in its own
         /// words, with the allowance and the cooldown beside it. Painting a refusal here as well
         /// would be a second copy of those five sentences on a cell that is rebound as the shelf
-        /// scrolls — and a countdown drawn on a card nothing ticks is a number that is wrong a
+        /// scrolls - and a countdown drawn on a card nothing ticks is a number that is wrong a
         /// second after it is written. It is the rule the hub's <c>+</c> already follows: a
         /// control beside a resource opens that resource's panel, whatever the state of the
         /// world.
         /// </para>
         /// <para>
         /// What <em>does</em> take the card off the shelf is the content table not carrying the
-        /// placement at all, which is the caller's to decide — see <c>ShopScreen.Reload</c> and
+        /// placement at all, which is the caller's to decide - see <c>ShopScreen.Reload</c> and
         /// <c>AdRewardTable.Offer</c>. That is a refusal no amount of waiting resolves, and it
         /// is how a config push switches the offer off everywhere at once.
         /// </para>
@@ -518,8 +518,8 @@ namespace GlimmerGrove
             ShopArt.PaintAd(_art, offer.Kind);
 
             // **The XP boost names itself**, the same exception the gem-priced one above makes
-            // and for the same reason: every other placement pays a *quantity* — 300 coins, 2
-            // hearts, 1 hint — where this one pays a window, so the bare figure reads as "2" of
+            // and for the same reason: every other placement pays a *quantity* - 300 coins, 2
+            // hearts, 1 hint - where this one pays a window, so the bare figure reads as "2" of
             // nothing. The percentage is `XpBoostTable`'s and never the advert's `amount`,
             // because that field is the window's *length* and the two are held together by the
             // content gates rather than by this card (9e).
@@ -581,7 +581,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The headline is the name rather than a figure, and that is the one place this card
         /// breaks its own grammar on purpose.</b> Everywhere else the big line is <em>what
-        /// arrives</em> — 8,500 gems, 20 capacity, 5 hearts — because the amount is what
+        /// arrives</em> - 8,500 gems, 20 capacity, 5 hearts - because the amount is what
         /// distinguishes one rung from the next. A utility shelf has no rungs: four different
         /// objects, each bought one at a time, so the amount would read "1" on all four and the
         /// only thing that tells them apart is which one it is.
@@ -596,7 +596,7 @@ namespace GlimmerGrove
         /// <para>
         /// The gem price behaves exactly as a good's does: a short balance still shows it and
         /// greys the face, because the amount is what turns "no" into a target and the tap is not
-        /// refused either — it opens the gem shelf. A full pack is the one state that trades the
+        /// refused either - it opens the gem shelf. A full pack is the one state that trades the
         /// price for a sentence, for the good's own reason: it is not a price problem, and
         /// printing a cost beside something the shop is turning down invites the one purchase it
         /// exists to prevent.
@@ -641,7 +641,7 @@ namespace GlimmerGrove
         /// <summary>
         /// The price line, and the four things it can say.
         ///
-        /// The store's own formatted string is used verbatim whenever there is one — never
+        /// The store's own formatted string is used verbatim whenever there is one - never
         /// rebuilt from a number and a currency code, because there is no correct client-side
         /// rule for that and drawing anything else is a review risk as well as simply wrong in
         /// most of the world.
@@ -652,7 +652,7 @@ namespace GlimmerGrove
             // the store's own with the player's own currency symbol already in it. The glyph is
             // taken off explicitly rather than left alone, because the same cell object is
             // rebound between a gem-priced good and a real-money container as the supplies shelf
-            // scrolls (invariant 16d) — leaving it would put a gem in front of a dollar sign.
+            // scrolls (invariant 16d) - leaving it would put a gem in front of a dollar sign.
             SetMark(null);
 
             switch (offer.State)
@@ -709,7 +709,7 @@ namespace GlimmerGrove
         ///
         /// One method rather than three assignments at each call site, because the caption and
         /// the glyph have to be measured together and a caller that sets one and forgets the
-        /// other leaves a price shoved half a glyph off centre — the failure
+        /// other leaves a price shoved half a glyph off centre - the failure
         /// <see cref="UIKit.CentreGlyph"/> exists to make unforgettable.
         /// </summary>
         void SetPrice(string text, bool gem) => SetPrice(text, gem ? GemMark : null);
@@ -733,7 +733,7 @@ namespace GlimmerGrove
         ///
         /// The sprite is assigned before the object is shown rather than after, because an
         /// <c>Image</c> turned on with the previous row's sprite still in it draws that sprite
-        /// for a frame — which on this screen is a gem flashing in front of a free offer.
+        /// for a frame - which on this screen is a gem flashing in front of a free offer.
         /// </summary>
         void SetMark(string address)
         {
@@ -749,7 +749,7 @@ namespace GlimmerGrove
         /// The price bar: which kit button it is, and whether it is turned down.
         ///
         /// One place rather than a sprite assignment at each of eight branches, because the
-        /// tint has to be cleared as reliably as it is set — a cell is rebound rather than
+        /// tint has to be cleared as reliably as it is set - a cell is rebound rather than
         /// rebuilt (invariant 16d), so a muted face left behind by the row this cell used to
         /// be is a live price nobody believes they can tap.
         /// </summary>
@@ -792,7 +792,7 @@ namespace GlimmerGrove
         /// A caption rather than a percentage, because the ribbon has two things to say now: a
         /// money card's bonus, which is arithmetic over the ladder, and the one card on the
         /// shelf that asks for nothing at all. Both are "why this one is worth a look", which is
-        /// the whole of what this corner has ever meant — a second badge invented for the second
+        /// the whole of what this corner has ever meant - a second badge invented for the second
         /// case would be a second vocabulary for one idea.
         /// </para>
         /// </summary>
@@ -807,7 +807,7 @@ namespace GlimmerGrove
             // An arc is one label per character, so re-laying it out is destroying and
             // rebuilding them. This card is recycled and rebound as the grid scrolls and
             // repainted whenever a price arrives, so the caption is remembered and the work is
-            // skipped when it has not moved — which is most binds, since a shelf of coin packs
+            // skipped when it has not moved - which is most binds, since a shelf of coin packs
             // carries the same handful of percentages.
             if (said == _ribbonSaid) return;
 

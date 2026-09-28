@@ -266,8 +266,8 @@ namespace GlimmerGrove.Tests
 
         // ------------------------------------------------------------------ the runs
         /// <summary>
-        /// Custom, played at every pace a hand plays it, has to be <b>lost</b> — to the crowd,
-        /// on the last wave, late — and has to have met everything it was built to show.
+        /// Custom, played at every pace a hand plays it, has to be <b>lost</b> - to the crowd,
+        /// on the last wave, late - and has to have met everything it was built to show.
         ///
         /// <b>The table is printed on a pass</b>: <c>Tough</c> is the dial and the seconds
         /// column is what it moves, and it is chaotic (a step of twenty moves which wave the

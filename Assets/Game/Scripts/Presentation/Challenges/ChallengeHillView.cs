@@ -14,12 +14,12 @@ namespace GlimmerGrove
     /// <para>
     /// <b>It draws a state and replays a list; it decides nothing.</b> <see cref="Repaint"/>
     /// puts every widget where <see cref="ChallengeHill"/> says it is, and a replay walks one
-    /// turn's events in the order the rules resolved them — bolts, steps, blows, musters — so
+    /// turn's events in the order the rules resolved them - bolts, steps, blows, musters - so
     /// what a player sees is exactly the order the model used and nothing this class made up.
     /// </para>
     /// <para>
     /// <b>Turns are queued, never awaited by the board</b> (2026-09-26). The first cut had the
-    /// screen wait for the whole replay — a bolt, a step and a blow is about a second — and
+    /// screen wait for the whole replay - a bolt, a step and a blow is about a second - and
     /// refuse every tap made inside it, which on the glade read as conduits that "sometimes
     /// don't rotate". Now <see cref="Enqueue"/> takes a turn and returns; the hill drains its
     /// queue on its own, and a player who moves faster than the hill walks sees it hurry
@@ -68,8 +68,8 @@ namespace GlimmerGrove
         /// A post is drawn at this fraction of a siege turret. The siege sizes a turret to the
         /// match-three cell it fires from; here the line stands under a hill, and four posts
         /// at full size took two cells of a screen the hill needs (the owner's "make turrets
-        /// smaller", 2026-09-23). Everything on a post — chassis, socket, glow, health, bank
-        /// — is sized off <see cref="_post"/>, and everything on the hill off the unit, so
+        /// smaller", 2026-09-23). Everything on a post - chassis, socket, glow, health, bank
+        /// - is sized off <see cref="_post"/>, and everything on the hill off the unit, so
         /// the raiders did not shrink with them.
         /// </summary>
         public const float PostScale = .72f;
@@ -516,7 +516,7 @@ namespace GlimmerGrove
                 yield return Replay(turn, pace);
                 if (!this) yield break;
 
-                // Between queued turns only the banks are re-read — they carry no position
+                // Between queued turns only the banks are re-read - they carry no position
                 // and no step, so the model's answer cannot jump anything. The last turn is
                 // followed by the full repaint.
                 if (_turns.Count > 0) PaintBanks();

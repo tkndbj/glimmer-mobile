@@ -9,7 +9,7 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// The flight itself is images on an arc and can only be judged by watching it. What
     /// cannot be judged by watching it is whether the number underneath is honest, and that
-    /// is what this pins — because every way it goes wrong is invisible in a screenshot and
+    /// is what this pins - because every way it goes wrong is invisible in a screenshot and
     /// visible to a player as the game having eaten something. A pill that stops one short
     /// of the balance reads as a reward that was not fully paid; a pill that walks backwards
     /// mid-cascade reads as one being taken away again; a prize that throws seven tokens for
@@ -19,7 +19,7 @@ namespace GlimmerGrove.Tests
     /// The currency cases are the ones worth having. A chest's credits are in the ledger
     /// before the animation starts, so <c>live</c> never moves and the old chest code could
     /// safely capture it once. An ad's are granted by the server (invariant 10d), so
-    /// <c>live</c> is read at every landing and may rise part way through — which is the one
+    /// <c>live</c> is read at every landing and may rise part way through - which is the one
     /// arrangement nobody would think to try by hand.
     /// </para>
     /// </summary>
@@ -51,7 +51,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A boost is one thing however many hours it runs for, so it is one token — not
+        /// A boost is one thing however many hours it runs for, so it is one token - not
         /// twelve, which is what its amount would otherwise buy it.
         /// </summary>
         [Test]
@@ -70,7 +70,7 @@ namespace GlimmerGrove.Tests
         // ------------------------------------------------------------- the readout
         /// <summary>
         /// The last token writes the balance itself rather than the interpolation. Without
-        /// this a 1,000-credit prize thrown as seven lands on 999 for ever — one short, on
+        /// this a 1,000-credit prize thrown as seven lands on 999 for ever - one short, on
         /// the number a player is most likely to be watching.
         /// </summary>
         [Test]
@@ -103,7 +103,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// A rewarded ad's credits are granted by the server, so the balance can move
-        /// <em>during</em> the cascade — the tokens start flying against an unchanged figure
+        /// <em>during</em> the cascade - the tokens start flying against an unchanged figure
         /// and the sync lands two landings in. The reading must not fall back to where it
         /// started when that happens: it walks from wherever it had got to.
         /// </summary>
@@ -141,8 +141,8 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A balance that has fallen since the snapshot cannot happen on the hub — nothing is
-        /// spent from behind a modal — but the reading is defined for it anyway, because the
+        /// A balance that has fallen since the snapshot cannot happen on the hub - nothing is
+        /// spent from behind a modal - but the reading is defined for it anyway, because the
         /// alternative to defining it is a number that jitters if it ever does.
         /// </summary>
         [Test]

@@ -5,8 +5,8 @@ namespace GlimmerGrove.Modes
     ///
     /// <para>
     /// <b>A raider's lane is its colour's, and that is what makes the hill readable at a
-    /// glance.</b> Lanes used to be dealt — one draw per raider, uniform over
-    /// <see cref="SiegeTuning.Lanes"/> — which is correct and says nothing: the question this mode
+    /// glance.</b> Lanes used to be dealt - one draw per raider, uniform over
+    /// <see cref="SiegeTuning.Lanes"/> - which is correct and says nothing: the question this mode
     /// is about is <em>which colour is coming</em>, and answering it meant parsing a dozen small
     /// moving bodies four hundred points away. That is two seconds of work under a clock that
     /// gives none, so the player's eye correctly refused and the mode played as "take the biggest
@@ -15,7 +15,7 @@ namespace GlimmerGrove.Modes
     /// </para>
     /// <para>
     /// <b>Loosely, though, and the jitter is the half that is load-bearing.</b> Strictly sorted
-    /// lanes make a splash, a chain and a lance worth nothing — every neighbour of a red raider
+    /// lanes make a splash, a chain and a lance worth nothing - every neighbour of a red raider
     /// would be red, so a multi-target turret could only ever reach the colour it was already
     /// strong against, and the whole dear half of the shelf is priced on reaching across
     /// (invariant 37ax). One lane of slop is what keeps the colours mostly separated and the edges
@@ -51,14 +51,14 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>Three in five, because an even stray is not a column.</b> The first cut rolled the
         /// three lanes uniformly, so a colour stood in its own lane only a third of the time and
-        /// the hill came back from play as <em>too spread apart</em> — which it was: with four
+        /// the hill came back from play as <em>too spread apart</em> - which it was: with four
         /// colours each taking three of five lanes, every lane holds every colour and the sorting
         /// says nothing at a glance.
         /// </para>
         /// <para>
         /// <b>It is a bias rather than a rule, and that is deliberate.</b> Straight columns would
-        /// make a splash, a chain and a lance worth nothing — every neighbour of a red raider
-        /// would be red — and the dear half of the shelf is priced on reaching across (invariant
+        /// make a splash, a chain and a lance worth nothing - every neighbour of a red raider
+        /// would be red - and the dear half of the shelf is priced on reaching across (invariant
         /// 37ax). Three in five reads as a column with stragglers, which is what was asked for.
         /// </para>
         /// </summary>
@@ -73,7 +73,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// Spread rather than indexed, because a line may stand two, three or four wards
         /// (<see cref="SiegeLayout.MaxWards"/>) and the hill is always
-        /// <see cref="SiegeTuning.Lanes"/> wide. Four wards on five lanes land on 0, 1, 3 and 4 —
+        /// <see cref="SiegeTuning.Lanes"/> wide. Four wards on five lanes land on 0, 1, 3 and 4 -
         /// which leaves the middle lane belonging to nobody and therefore to everybody, and that
         /// is where <see cref="Stray"/> does its mixing.
         /// </para>

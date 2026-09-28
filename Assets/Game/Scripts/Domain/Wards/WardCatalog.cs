@@ -12,7 +12,7 @@ namespace GlimmerGrove.Wards
     /// roster are: the price of a turret and how strong its trick is are the two numbers a live
     /// game retunes most, and a build that has to go through two store reviews to move one is a
     /// build that never gets tuned. What content may <em>not</em> do is invent an
-    /// <see cref="WardAbility"/> — an ability is a rule the board runs, so an entry naming one
+    /// <see cref="WardAbility"/> - an ability is a rule the board runs, so an entry naming one
     /// this build has never heard of still stands and simply fires a plain bolt (invariant 20's
     /// answer, one level down).
     /// </para>
@@ -20,22 +20,22 @@ namespace GlimmerGrove.Wards
     /// <b>The shape of the roster is the design: ten abilities, each with a rung a player earns
     /// and a rung they can buy.</b> The earned rung is priced in credits and the bought rung in
     /// gems, which is invariant 16j's two-currency ladder exactly. That gives twenty turrets a
-    /// player can tell apart at a glance — ten silhouettes, each in two liveries — where twenty
+    /// player can tell apart at a glance - ten silhouettes, each in two liveries - where twenty
     /// unrelated ones would be a shelf nobody could hold in their head.
     /// </para>
     /// <para>
     /// <b>A keeper level is the whole of what opens a rung, and the sequential unlock is
     /// gone.</b> It was there: a turret was sealed until the one before it on the shelf was held,
     /// on the argument that a wall of twenty prices is not a next step. What that made, once the
-    /// walls were real, was two conditions saying nearly the same thing — a player at keeper
+    /// walls were real, was two conditions saying nearly the same thing - a player at keeper
     /// level twenty-two who had skipped one credit turret could not buy the gem turret they had
     /// earned, and the shelf's answer named a turret they did not want. <b>The owner's
     /// decision</b>: reach the level and the rung is open, in whatever order a player likes.
     /// </para>
     /// <para>
     /// <b>So the three bands are the ladder now.</b> What used to be forced one rung at a time is
-    /// three stretches of keeper level a player climbs through — under twenty, twenty to thirty,
-    /// thirty to forty (<see cref="WardTier"/>) — and every priced turret carries a wall inside
+    /// three stretches of keeper level a player climbs through - under twenty, twenty to thirty,
+    /// thirty to forty (<see cref="WardTier"/>) - and every priced turret carries a wall inside
     /// its own band, gem half included. That is what <see cref="LadderProblem"/> holds the roster
     /// to: the walls may not fall as the shelf climbs, and none of them may stand outside the
     /// band whose header a player is reading it under.
@@ -49,7 +49,7 @@ namespace GlimmerGrove.Wards
     /// <para>
     /// <b>No entry may make a bolt weaker, and there is no field that could.</b> A siege's par is
     /// the hill's health over the baseline bolt, so a turret that hit softer would put three stars
-    /// out of reach of whoever chose it — a grade decided by a purchase, which is what invariant
+    /// out of reach of whoever chose it - a grade decided by a purchase, which is what invariant
     /// 39 refuses a utility. Every ability is an <em>addition</em>; see <see cref="WardAbility"/>.
     /// </para>
     /// </summary>
@@ -152,7 +152,7 @@ namespace GlimmerGrove.Wards
         /// <para>
         /// <b>The first starter in shelf order, derived rather than named.</b> A named default
         /// would be a second place the roster says which one is free, and the two would drift the
-        /// first time a drop reordered the shelf — <c>AvatarCatalog.Starter</c>'s rule.
+        /// first time a drop reordered the shelf - <c>AvatarCatalog.Starter</c>'s rule.
         /// </para>
         /// <para>
         /// It is never null while the catalog holds anything: a roster with no starter at all is
@@ -184,22 +184,22 @@ namespace GlimmerGrove.Wards
         ///
         /// <para>
         /// Present so the line works on a first launch that has not reached the content yet, and
-        /// so a malformed file costs a retune rather than a session — the bargain
+        /// so a malformed file costs a retune rather than a session - the bargain
         /// <c>ProgressionTable.Default</c>, <c>DailyChestTable.Default</c> and
         /// <c>UtilityCatalog.Default</c> all make.
         /// </para>
         /// <para>
         /// <b>The credit ladder is the ramp and the gem ladder is what is above it.</b> Credit
         /// prices climb 1,200 to 9,000 against keeper levels 2 to 18, two levels a rung; gem
-        /// prices climb 600 to 2,000 — the same band the grove's gem-priced land sits in
-        /// (invariant 16j) — against levels 20 to 40. Gems still buy a rung far sooner than
+        /// prices climb 600 to 2,000 - the same band the grove's gem-priced land sits in
+        /// (invariant 16j) - against levels 20 to 40. Gems still buy a rung far sooner than
         /// credits could, which is what makes them a shortcut; what they no longer do is skip a
         /// wall.
         /// </para>
         /// <para>
         /// <b>The honest cost of the owner's re-banding, said out loud: today's three chapters
         /// pay for about keeper level nine, so tiers two and three are shut to every player
-        /// alive.</b> That is the same state the home ladder is in and it is deliberate — a shelf
+        /// alive.</b> That is the same state the home ladder is in and it is deliberate - a shelf
         /// whose top is reachable on the content that exists is a shelf with nothing left in it
         /// the week after. Every number here is <em>content</em>, so it is a config push to
         /// retune rather than a store review; see <c>progression.json</c>.
@@ -396,7 +396,7 @@ namespace GlimmerGrove.Wards
                 {
                     // A holding is `{id}:{colour}` and a copy is `{id}#{n}` (see
                     // `WardHolding`), so an id carrying either mark would make every row about
-                    // it ambiguous — and a save is not the place to find that out.
+                    // it ambiguous - and a save is not the place to find that out.
                     problems.Add($"wards entry '{entry.id}' contains '{WardHolding.Mark}' or " +
                                  $"'{WardHolding.CopyMark}', which separate a turret from the " +
                                  "colour it was bought for and from which copy of it a row is");
@@ -495,7 +495,7 @@ namespace GlimmerGrove.Wards
         /// <para>
         /// <b>Two rules, and both of them moved when the sequential unlock went.</b> A turret used
         /// to be sealed until the rung below it was held, so reaching rung <em>n</em> meant having
-        /// met every wall under it — which is what made a wall that did not <em>strictly</em>
+        /// met every wall under it - which is what made a wall that did not <em>strictly</em>
         /// climb a wall that could never refuse anybody (invariant 5d). That argument is gone with
         /// the seal: a level of twenty refuses everybody under twenty whatever stands beside it,
         /// so two rungs may now share a wall and this asks only that none of them <em>falls</em>.
@@ -504,19 +504,19 @@ namespace GlimmerGrove.Wards
         /// <b>A fall is still refused, and for a plainer reason than 5d.</b> The shelf is ordered
         /// by how much of the hill an ability reaches and its prices climb with it (invariant
         /// 37ax), so a wall that drops as the shelf rises opens a dearer, further-reaching turret
-        /// <em>earlier</em> than a cheaper one under it — which a player reads as arbitrary, and
+        /// <em>earlier</em> than a cheaper one under it - which a player reads as arbitrary, and
         /// which is very nearly always a typed digit rather than a decision.
         /// </para>
         /// <para>
         /// <b>And there is a third now: the legendary flag and the legendary band are one
         /// fact.</b> <see cref="WardModel.Legendary"/> is authored rather than derived from the
-        /// rung, for <see cref="WardTier"/>'s own reason — a band is punctuation and may not
-        /// decide what a turret does — so something has to hold the two together, and this is it.
+        /// rung, for <see cref="WardTier"/>'s own reason - a band is punctuation and may not
+        /// decide what a turret does - so something has to hold the two together, and this is it.
         /// </para>
         /// <para>
         /// <b>And every wall has to stand inside its own band, which is the rule the removal
         /// left uncovered.</b> With nothing forcing the order, the three headers are all a player
-        /// has to go on — TIER II now means "this stretch of the shelf opens between keeper level
+        /// has to go on - TIER II now means "this stretch of the shelf opens between keeper level
         /// twenty and twenty-nine" and nothing else says so. A rung authored outside its band
         /// parses, prices, validates and plays; what it does is put a lie in a header
         /// (<see cref="WardTier.OpensAtLevel"/>).

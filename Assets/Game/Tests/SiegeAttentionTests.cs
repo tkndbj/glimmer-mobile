@@ -9,7 +9,7 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// Worth pinning because every one of them fails silently and none of them can be checked by
     /// eye: a wrong average is a column of plausible seconds, and the fault it is meant to catch
-    /// — a mode where the eye never leaves the gem field — looks exactly like a mode that is
+    /// - a mode where the eye never leaves the gem field - looks exactly like a mode that is
     /// working. There is also no second chance at the data, because a run happens once.
     /// </para>
     /// <para>
@@ -64,7 +64,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The measurement the whole event exists for. A bomb nobody tapped must not pull the
-        /// average <em>down</em> — which is what folding in its current age would do, and it
+        /// average <em>down</em> - which is what folding in its current age would do, and it
         /// would do it harder the longer the bomb was ignored.
         /// </summary>
         [Test]
@@ -139,7 +139,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// Two numbers rather than a rate, so a run that met one boss and a run that met two are
-        /// distinguishable — a ratio alone would read them as the same player.
+        /// distinguishable - a ratio alone would read them as the same player.
         /// </summary>
         [Test]
         public void ABossIsCountedWhetherOrNotItsColourWasBanked()

@@ -19,7 +19,7 @@ namespace GlimmerGrove.Utilities
         /// <summary>Holding as many as the catalog allows; another would be thrown away.</summary>
         Full = 3,
 
-        /// <summary>Not for sale — a chest hands this one out and gems do not.</summary>
+        /// <summary>Not for sale - a chest hands this one out and gems do not.</summary>
         NotForSale = 4,
 
         /// <summary>Short of gems.</summary>
@@ -29,7 +29,7 @@ namespace GlimmerGrove.Utilities
         /// The keeper gate is not reached. Carried by <c>UtilityItem.MinLevel</c>.
         ///
         /// <b>Appended</b>, for this project's usual reason: these ordinals reach analytics. And
-        /// it gates <em>buying</em> only — a utility already in hand is spendable whatever the
+        /// it gates <em>buying</em> only - a utility already in hand is spendable whatever the
         /// gate says, or a retune would confiscate something bought with gems.
         /// </summary>
         Locked = 6,
@@ -42,7 +42,7 @@ namespace GlimmerGrove.Utilities
     /// <para>
     /// <b>Account-wide and shared by every level of every mode that offers them.</b> That is the
     /// point rather than a convenience: a stock kept per level would be per-level state in the
-    /// save, keyed on a level id, merged across devices — and it would make a utility part of a
+    /// save, keyed on a level id, merged across devices - and it would make a utility part of a
     /// board's difficulty, which is exactly what invariant 29c forbids a companion's ability from
     /// being. What a player is holding is a fact about the account, so it is one ledger and a
     /// siege is dealt no utilities of its own.
@@ -58,7 +58,7 @@ namespace GlimmerGrove.Utilities
     /// award reaches the player as a claim when it is <em>currency</em>, because currency is what
     /// an attacker wants and what real money buys. A utility is neither: it is bounded by
     /// <see cref="UtilityItem.MaxHeld"/>, it is consumed, it buys no star and no credit
-    /// (invariant 39), and nothing about it reaches a leaderboard — so it is applied here and
+    /// (invariant 39), and nothing about it reaches a leaderboard - so it is applied here and
     /// now, exactly as a chest's hearts and hints are, and the server is told nothing because
     /// there is nothing for it to adjudicate.
     /// </para>
@@ -107,7 +107,7 @@ namespace GlimmerGrove.Utilities
         ///
         /// <para>
         /// <b>The ceiling is enforced here and nowhere else</b>, which is what makes it safe to
-        /// lower from a config push — <c>RegenLedger.Grant</c>'s rule: a grant is a decision taken
+        /// lower from a config push - <c>RegenLedger.Grant</c>'s rule: a grant is a decision taken
         /// once, so a smaller ceiling refuses new ones without ever reaching back into a save to
         /// take one. An id this build does not know is refused rather than banked, because a row
         /// nothing can spend is a row that would sit in the save for ever.
@@ -137,13 +137,13 @@ namespace GlimmerGrove.Utilities
         ///
         /// <para>
         /// <b>It exists because the ceiling moved.</b> There was deliberately no such thing while
-        /// a player could hold nine — the only quantity anything asked about was one, and an
+        /// a player could hold nine - the only quantity anything asked about was one, and an
         /// unused bound is a bound nothing keeps honest. At a hundred that stops being true in
         /// both directions: a stepper needs an upper stop, and a shop that sold a hundred one tap
         /// at a time would be a hundred taps.
         /// </para>
         /// <para>
-        /// <b>Both stops, not just the ceiling</b> — <c>HomesteadLedger.MaxQuantity</c>'s rule.
+        /// <b>Both stops, not just the ceiling</b> - <c>HomesteadLedger.MaxQuantity</c>'s rule.
         /// A stepper that climbed to the room left would walk a player past what they can pay for
         /// and hand the refusal to the button, which is the panel lying about the one thing it
         /// exists to be exact about. Nought is a legal answer and means "not now": the caller
@@ -199,7 +199,7 @@ namespace GlimmerGrove.Utilities
         /// <para>
         /// <b>The gems leave first and the stock rises second, and never the other way round.</b>
         /// <c>PlayerProgression.TrySpend</c> is what refuses an unaffordable order, so a caller
-        /// that granted first would have to take something back on a failure — and taking back is
+        /// that granted first would have to take something back on a failure - and taking back is
         /// the one thing this project's ledgers are built never to do.
         /// </para>
         /// <para>
@@ -247,7 +247,7 @@ namespace GlimmerGrove.Utilities
         /// <para>
         /// <b>Called once per use that actually landed on the board, and nowhere else.</b> A
         /// player charged for a utility whose target refused it is a player who lost something
-        /// they paid gems for — which is <c>ProtoView.Took</c>'s rule about a move, applied to the
+        /// they paid gems for - which is <c>ProtoView.Took</c>'s rule about a move, applied to the
         /// one resource here that costs real money to replace. The board is asked first and this
         /// is asked second; see <c>SiegeUtility.Apply</c>, which returns what it did before
         /// anything is taken.
@@ -286,7 +286,7 @@ namespace GlimmerGrove.Utilities
         }
 
         // No Reset(). Erasing an account goes through `SaveService.Adopt(FreshFile())`, which
-        // re-runs LoadFrom over an empty file and clears this with everything else — a second
+        // re-runs LoadFrom over an empty file and clears this with everything else - a second
         // door would be a second thing to remember on the one path with no undo (invariant 27).
 
     }

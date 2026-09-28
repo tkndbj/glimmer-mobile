@@ -15,7 +15,7 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// <b>Set once and used everywhere, which is the whole shape of the feature.</b> Nothing about
-    /// a level, a chapter or a mode reaches the loadout — a line is a fact about the account
+    /// a level, a chapter or a mode reaches the loadout - a line is a fact about the account
     /// (<c>WardLoadout</c>), so a player arranges it here and walks into any rung with it. That is
     /// the same argument invariant 39a makes for holding utility stock account-wide: a loadout
     /// kept per level would make the turrets part of a board's difficulty, which is exactly what
@@ -29,10 +29,10 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>Every turret is drawn in the colour it would stand on.</b> The four seats wear the line
-    /// the player takes into a run, and the grid wears whichever seat is being filled — so tapping
+    /// the player takes into a run, and the grid wears whichever seat is being filled - so tapping
     /// a different slot turns the whole screen that colour, which says what no caption can: a
     /// turret has no colour of its own, and the colour is the seat. It is the real board sprite
-    /// rather than a thumbnail, which is <em>not</em> invariant 16c being relaxed — a turret is cut
+    /// rather than a thumbnail, which is <em>not</em> invariant 16c being relaxed - a turret is cut
     /// at 192x240, smaller than the thumbnail it replaces, so the true picture costs no more than
     /// the cheap one. It is still held rather than global, and still leaves
     /// with the screen.
@@ -51,7 +51,7 @@ namespace GlimmerGrove
         /// Which colour of the line the grid is filling.
         ///
         /// <b>A selection rather than a drag, and it is the one interaction decision here.</b> The
-        /// alternative — drag a turret from the grid onto a slot — reads well on a desk and badly
+        /// alternative - drag a turret from the grid onto a slot - reads well on a desk and badly
         /// on a phone, where the grid scrolls under the same finger. Tapping a slot and then a
         /// turret is two taps that can each be taken back.
         /// </summary>
@@ -104,7 +104,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>The canvas rather than 1,080</b>, because <c>CanvasFit</c> widens a squarer
-        /// display's canvas instead of scaling a phone's — every phone is 1,080 units across and
+        /// display's canvas instead of scaling a phone's - every phone is 1,080 units across and
         /// a tablet is 1,350 to 1,620. Pinned to the phone's row, this shelf would draw as a
         /// 1,004-unit column down the middle of a 1,620-unit screen with three hundred units of
         /// nothing either side, every card drawn at two thirds the size for no reason at all.
@@ -113,7 +113,7 @@ namespace GlimmerGrove
         /// <b>And it is not invariant 37cc being broken; it is 37cc's own reason read the other
         /// way.</b> A siege field may not spend a tablet's extra width because its cell is
         /// square, so every unit it takes across it takes back out of the hill and the ward line
-        /// — the width was bought to buy height, and is not the board's to spend. A shelf is a
+        /// - the width was bought to buy height, and is not the board's to spend. A shelf is a
         /// scrolling grid that fights nothing for height. <b>Before spending a tablet's width,
         /// ask what the thing being widened would be taking it from.</b>
         /// </para>
@@ -122,7 +122,7 @@ namespace GlimmerGrove
         /// rule the other way up and worth stating once: a constant lies when the thing it
         /// describes has moved, and a <em>rect</em> lies when nothing has laid it out yet. This
         /// is read while the grid is being built, a frame before uGUI resolves anything, and
-        /// <c>CanvasFit.WidthFor</c> is a pure function of the screen — which is the same reason
+        /// <c>CanvasFit.WidthFor</c> is a pure function of the screen - which is the same reason
         /// <c>SplashScreen.Fit</c> reads it rather than measuring.
         /// </para>
         /// </summary>
@@ -133,14 +133,14 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>A declared pair rather than a count derived from the width, and the argument is
-        /// the threshold rather than the arithmetic</b> — which is worth saying plainly, because
+        /// the threshold rather than the arithmetic</b> - which is worth saying plainly, because
         /// the arithmetic one was written here first and is no longer true. This number used to
         /// be defended as "twenty divides by four": at three across, twenty turrets were six
-        /// full rows and a row of two, so the bottom-right cell — where anybody looks for "the
-        /// last one" — was <em>empty</em>, and it was reported as the shelf being in the wrong
+        /// full rows and a row of two, so the bottom-right cell - where anybody looks for "the
+        /// last one" - was <em>empty</em>, and it was reported as the shelf being in the wrong
         /// order when the order was right the whole time. <b>That stopped being the reason the
         /// day <see cref="TierBadge"/> shipped.</b> A band starts a fresh row, the bands hold
-        /// ten, seven and three, and <em>no</em> column count leaves all three full — two across
+        /// ten, seven and three, and <em>no</em> column count leaves all three full - two across
         /// leaves 0, 1 and 1 over; three leaves 1, 1 and 0; four leaves 2, 3 and 3. It does not
         /// matter, and the render is what says so: a part-full row under a header reads as the
         /// end of that band rather than as a hole in a grid, which is the whole of what 37bc
@@ -151,20 +151,20 @@ namespace GlimmerGrove
         /// is <c>CanvasFit</c>'s own threshold, which sits in the gap between the squarest phone
         /// (16:9) and the tallest tablet (16:10): no shipping display is near it and none can be
         /// on both sides of it from one frame to the next. A count ramped off the canvas width
-        /// would answer <b>three</b> on a 16:10 tablet and <b>four</b> on a 4:3 — two devices a
+        /// would answer <b>three</b> on a 16:10 tablet and <b>four</b> on a 4:3 - two devices a
         /// player would call the same thing, drawing two different screens, with the ragged
         /// bands landing in different places on each. A threshold has one answer per kind of
         /// display, which is the same shape, for the same reason, as <c>PhoneFloor</c> itself.
         /// </para>
         /// <para>
-        /// <b>Whoever changes the roster's size owns both numbers</b> — not because the total
+        /// <b>Whoever changes the roster's size owns both numbers</b> - not because the total
         /// has to divide, but because the card is sized by them: four across a phone drew each
         /// turret 130 units wide, and six across a tablet would do it again.
         /// </para>
         /// <para>
         /// <b>What two across costs is the scroll</b>, which is the trade and not a fault: ten
         /// rows on a phone where there were five. What it buys is a card wide enough for the
-        /// picture to be the thing being judged — this shelf's whole job is a choice between
+        /// picture to be the thing being judged - this shelf's whole job is a choice between
         /// twenty silhouettes, and at four across a phone drew each one 130 units wide.
         /// </para>
         /// </summary>
@@ -173,7 +173,7 @@ namespace GlimmerGrove
         const int PhoneColumns = 2, TabletColumns = 4;
 
         /// <summary>
-        /// The cell this card was drawn at — a phone's, two across — and what
+        /// The cell this card was drawn at - a phone's, two across - and what
         /// <see cref="Scale"/> is measured against.
         /// </summary>
         const float DesignW = 492f;
@@ -184,8 +184,8 @@ namespace GlimmerGrove
         /// whatever size the row has room for.
         ///
         /// <para>
-        /// <b>It is 1 on every phone by construction</b> — 1,080 less two gutters, less one gap,
-        /// halved, is <see cref="DesignW"/> exactly — so a tablet is the only display this
+        /// <b>It is 1 on every phone by construction</b> - 1,080 less two gutters, less one gap,
+        /// halved, is <see cref="DesignW"/> exactly - so a tablet is the only display this
         /// arithmetic does anything on, and a change to the card is still a change to the
         /// numbers a phone draws.
         /// </para>
@@ -222,13 +222,13 @@ namespace GlimmerGrove
         /// 36 units taller than a turret's to carry a sentence about what the item does; the
         /// turret shelf had already dropped its own for the reason below, and the kit's went the
         /// same way on the owner's call. There is nothing left for the two to differ about, so
-        /// the ward-only numbers are gone rather than kept equal — two constants holding one
+        /// the ward-only numbers are gone rather than kept equal - two constants holding one
         /// figure is the shape this project keeps recording as the thing that drifts.
         /// </para>
         /// <para>
         /// <b>What a thing does is a sentence, and a sentence belongs on the panel.</b> Twenty
         /// turrets or four utilities, each with a line of small print, is a wall of prose on a
-        /// screen whose job is a choice between pictures — and every one of those sentences is
+        /// screen whose job is a choice between pictures - and every one of those sentences is
         /// already drawn one tap in, on the panel where somebody is deciding rather than
         /// scanning. What the space buys is a price big enough to read at a glance, which is the
         /// number a shelf is really about.
@@ -268,7 +268,7 @@ namespace GlimmerGrove
         /// Where a held turret's star ladder sits, measured down from the cell's top.
         ///
         /// <b>Between the name and the foot</b>, which is the band a for-sale card spends on its
-        /// price — so a cell is the same height whichever it is, and the eye finds one thing or
+        /// price - so a cell is the same height whichever it is, and the eye finds one thing or
         /// the other in the same place rather than in two.
         /// </summary>
         static float StarsY => 395f * Scale;
@@ -310,7 +310,7 @@ namespace GlimmerGrove
         /// <summary>
         /// How many levels of this mode's own ladder the player has cleared.
         ///
-        /// <b>Read once per paint rather than per slot</b>, since it walks the mode's levels — and
+        /// <b>Read once per paint rather than per slot</b>, since it walks the mode's levels - and
         /// held in a field rather than recomputed, because the line is painted on every repaint
         /// and the answer cannot change while this screen is open.
         /// </summary>
@@ -442,7 +442,7 @@ namespace GlimmerGrove
                     Compact.Number(Profile.Gems), Compact.Number);
 
             // **And the two are watched, which is the whole of what was wrong here.** This row
-            // was built once out of `Profile.Coins` and never written to again — so a turret
+            // was built once out of `Profile.Coins` and never written to again - so a turret
             // bought or a star upgraded debited the wallet, repainted the cell, repainted the
             // line, and left the purse over all of it reading what the player held before they
             // spent it. It came back the moment the screen was left and re-entered, which is the
@@ -607,7 +607,7 @@ namespace GlimmerGrove
         /// The four colour slots, above the grid.
         ///
         /// <b>Always four, whatever a level stands.</b> A line is arranged against the mode rather
-        /// than against a rung — a player choosing a turret has not chosen a level yet — and a
+        /// than against a rung - a player choosing a turret has not chosen a level yet - and a
         /// siege that stands three wards simply never draws the fourth.
         /// </summary>
         void BuildLine()
@@ -662,7 +662,7 @@ namespace GlimmerGrove
 
                 // **A four-by-five box now that the picture is the turret itself.** A board sprite
                 // is 192x240 where the thumbnail was square, and `preserveAspect` fits *inside* a
-                // box — so left at 112x112 the turret would have drawn 90 wide and read as having
+                // box - so left at 112x112 the turret would have drawn 90 wide and read as having
                 // shrunk. 112x140 keeps it the height it was, and the seat has the room: the name
                 // sits 167 down and this reaches 144.
                 var icon = UIKit.Img("Turret", box, null, Color.white, new Vector2(112f, 140f),
@@ -804,7 +804,7 @@ namespace GlimmerGrove
         /// Rebuilds the whole screen below the header.
         ///
         /// The answer to changing <em>which shelf</em> is showing, and to nothing else:
-        /// <see cref="Paint"/> takes every other change, for <c>CompanionScreen</c>'s reason — a
+        /// <see cref="Paint"/> takes every other change, for <c>CompanionScreen</c>'s reason - a
         /// rebuild replays the entrance, so a small confirmation would be answered with the
         /// animation that says "you have just arrived".
         /// </summary>
@@ -814,7 +814,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>It used to throw away everything under <c>Safe</c> and build the screen again</b>,
         /// which meant the ribbon, the back key and the two balance pills were destroyed and
-        /// re-created on every tap between TURRETS and KIT — so the heading popped in each time,
+        /// re-created on every tap between TURRETS and KIT - so the heading popped in each time,
         /// reported as exactly that. None of them depends on which shelf is showing. It is the
         /// same fault five screens in this project have had one at a time and the same fix:
         /// rebuild the part that differs, repaint the rest (<c>GridView</c>'s Show/Refresh rule,
@@ -835,7 +835,7 @@ namespace GlimmerGrove
         /// <summary>
         /// Repaints the shelf when the display changes shape, which is <c>CanvasFitter</c>'s
         /// argument one layer up: a column count read once is right on every device that never
-        /// changes shape and silently wrong on the ones that do — an iPad entering split view, a
+        /// changes shape and silently wrong on the ones that do - an iPad entering split view, a
         /// foldable being opened, and Android reporting a different size for a frame or two
         /// after a rotation.
         ///

@@ -49,7 +49,7 @@ namespace GlimmerGrove.EditorTools
     ///
     /// A puzzle game gets to ship one unsolvable level before it costs a store review
     /// cycle and a wave of one-star ratings. Every check here is cheap and mechanical,
-    /// so there is no reason for it to be optional — it runs on every build, and a
+    /// so there is no reason for it to be optional - it runs on every build, and a
     /// failure stops the build rather than producing a broken binary.
     /// </summary>
     public static class ContentValidation
@@ -77,7 +77,7 @@ namespace GlimmerGrove.EditorTools
             foreach (var problem in load.Problems) result.Errors.Add(problem);
 
             // Before anything that walks the manifest, because a chapter missing from it
-            // is invisible to every check that does — including the empty-catalog one
+            // is invisible to every check that does - including the empty-catalog one
             // just below, which would otherwise report the symptom and hide the cause.
             ValidateManifestCoverage(result);
 
@@ -105,7 +105,7 @@ namespace GlimmerGrove.EditorTools
         ///
         /// This is the one check that cannot be made by reading the manifest, because
         /// its subject is what the manifest failed to say. A chapter file nobody listed
-        /// is not loaded and rejected — it is never opened, so every other validator
+        /// is not loaded and rejected - it is never opened, so every other validator
         /// here passes it in silence and the build is green with a fortnight of content
         /// missing from it. <c>Content ▸ Sync Manifest</c> now adopts such a file
         /// automatically; this exists because making a mistake unlikely is not the same
@@ -168,7 +168,7 @@ namespace GlimmerGrove.EditorTools
         /// <b>The failure this catches is completely silent, and it has happened.</b> A
         /// chapter's mode lives in <c>manifest.json</c> (invariant 20) and decides three
         /// things: which screen opens its levels, which lane of the switcher it appears
-        /// under, and — through <c>LevelUnlock.GateFor</c> — which chapter's stars unlock
+        /// under, and - through <c>LevelUnlock.GateFor</c> - which chapter's stars unlock
         /// it. A weave chapter whose entry does not say <c>"mode": "weave"</c> is indexed
         /// as a glade chapter, and <em>nothing else refuses it</em>: every level parses,
         /// every board is proved solvable, every string resolves and every address loads.
@@ -180,7 +180,7 @@ namespace GlimmerGrove.EditorTools
         /// somebody to type it, which is invariant 4a's rule for the level list applied to
         /// the one field of an entry that was still hand-written. This is the other half of
         /// that bargain and the half with teeth: deriving makes the mistake unlikely, and
-        /// only a check proves it did not happen anyway — a manifest is a text file, and the
+        /// only a check proves it did not happen anyway - a manifest is a text file, and the
         /// one thing this project has learned twice is that a step somebody has to remember
         /// is a step that gets skipped.
         /// </para>
@@ -203,7 +203,7 @@ namespace GlimmerGrove.EditorTools
 
         /// <summary>
         /// Two chapters at the same order sort by id, which is deterministic but is
-        /// almost never what the author meant — and the mistake is invisible until
+        /// almost never what the author meant - and the mistake is invisible until
         /// players find the game's chapters in an order nobody chose. Orders are sparse
         /// (10, 20, 30) precisely so there is never a reason for a collision.
         /// </summary>
@@ -226,7 +226,7 @@ namespace GlimmerGrove.EditorTools
         /// <summary>
         /// Proves the XP curve and reward table are usable.
         ///
-        /// The curve is content, which means it can be retuned without a store review —
+        /// The curve is content, which means it can be retuned without a store review -
         /// and means a typo in it reaches players the same way. A band costing zero XP
         /// would hand out unbounded levels at once, and a reward override naming a
         /// chapter that does not exist would silently pay the default rate forever
@@ -291,7 +291,7 @@ namespace GlimmerGrove.EditorTools
         /// Every XP the shipped catalog can pay: three stars on every glade in it.
         ///
         /// <b>The ceiling on what any account can ever reach</b>, because XP derives from the
-        /// star ledger and from nothing else (invariant 9) — so it is the number every keeper
+        /// star ledger and from nothing else (invariant 9) - so it is the number every keeper
         /// wall has to be checked against, and the reason that check cannot be made from
         /// <c>progression.json</c> alone.
         /// </summary>
@@ -312,7 +312,7 @@ namespace GlimmerGrove.EditorTools
         /// <b>The only way this goes wrong is invisible in either file alone</b>, which is
         /// <c>ValidateChapterGate</c>'s complaint with the units changed. A wall is one integer
         /// in <c>manifest.json</c>; what can reach it is every reward rule in
-        /// <c>progression.json</c> multiplied by every glade in the catalog — so a wall above
+        /// <c>progression.json</c> multiplied by every glade in the catalog - so a wall above
         /// that ceiling is a lane padlocked for the life of the build, with the manifest, the
         /// index, the map and the hub all perfectly correct. It has happened to the home ladder
         /// and to the turret shelf already, both deliberately; what must not happen is its
@@ -321,8 +321,8 @@ namespace GlimmerGrove.EditorTools
         /// <para>
         /// <b>An error above the level curve's own ceiling and a warning above the catalog's.</b>
         /// The first is unreachable by arithmetic and can only be a mistake. The second is a
-        /// decision somebody may genuinely want — a wall meant for content that has not shipped
-        /// yet is exactly how the home ladder's rungs are authored — so it is said loudly and
+        /// decision somebody may genuinely want - a wall meant for content that has not shipped
+        /// yet is exactly how the home ladder's rungs are authored - so it is said loudly and
         /// never refused.
         /// </para>
         /// <para>
@@ -370,7 +370,7 @@ namespace GlimmerGrove.EditorTools
         /// <para>
         /// <b>Errors here, not warnings.</b> Every other block in <c>progression.json</c>
         /// describes what play pays, and an aggressive tuning is a legitimate weekend
-        /// decision — which is why the heart gate and the chest odds are checked with
+        /// decision - which is why the heart gate and the chest odds are checked with
         /// warnings and a build still goes out. This block describes what somebody is
         /// <em>charged</em>, and there is no version of "a bit wrong" that is acceptable: a
         /// product granting the wrong amount is a real payment honoured for a figure nobody
@@ -380,12 +380,12 @@ namespace GlimmerGrove.EditorTools
         /// The two checks that matter are the ones no reader can make on its own. A ladder
         /// that gets worse as it gets bigger is invisible in the file and obvious to the
         /// first player who does the arithmetic. And a good that cannot be bought at any
-        /// moment — hearts above the ceiling, a boost longer than the cap — is a card that
+        /// moment - hearts above the ceiling, a boost longer than the cap - is a card that
         /// is permanently refused, which reads exactly like a bug and is one.
         /// </para>
         /// <para>
         /// The seeder re-checks all of this before publishing <c>config/products</c>. Two
-        /// implementations of one rule is what invariant 9a normally forbids — but these run
+        /// implementations of one rule is what invariant 9a normally forbids - but these run
         /// on different sides of a wire, in different languages, and the failure they guard
         /// is a card promising what the server will not honour. A disagreement between them
         /// is exactly the thing worth catching, so it is checked twice on purpose.
@@ -396,8 +396,8 @@ namespace GlimmerGrove.EditorTools
             var catalog = table.Store;
             if (catalog == null) { result.Errors.Add("progression.json produced no store catalog"); return; }
             // A season's pass used to be a store product, and this is where the two files were
-            // held to naming each other. It is priced in gems now — one number in the manifest,
-            // with nothing on the other side of it to drift from — so the check that survives
+            // held to naming each other. It is priced in gems now - one number in the manifest,
+            // with nothing on the other side of it to drift from - so the check that survives
             // is about the *price*, and it lives with the rest of the season's rules below.
 
             if (!catalog.HasAnything)
@@ -410,7 +410,7 @@ namespace GlimmerGrove.EditorTools
             {
                 // Both stores accept longer ids than this and both refuse some characters
                 // this allows; the narrow set is what works on both without surprises. Worth
-                // saying out loud because a product id can never be changed after it ships —
+                // saying out loud because a product id can never be changed after it ships -
                 // neither console lets one be reused, so a rename is a new product and a
                 // migration for anybody mid-purchase.
                 if (product.Id.Length > 40)
@@ -501,7 +501,7 @@ namespace GlimmerGrove.EditorTools
         ///
         /// <para>
         /// A container grants no currency, so its value per unit of money is zero and
-        /// <see cref="ValidateStoreLadder"/> would fail every shelf it was ranked on — which
+        /// <see cref="ValidateStoreLadder"/> would fail every shelf it was ranked on - which
         /// is why it is exempt there (as a non-consumable) and checked here instead. What has
         /// to hold is the same claim in the units this product is sold in: a dearer vessel
         /// holds more. A rung that costs more and holds no more is a card nobody can be right
@@ -512,7 +512,7 @@ namespace GlimmerGrove.EditorTools
         /// The check against the free cap is the one that matters most and is an error rather
         /// than a warning: a container at or below the cap a player already has takes real
         /// money and changes nothing they can see. Both numbers are content, so the mistake is
-        /// one config push away at any time — raise the free tuning past a shipped container
+        /// one config push away at any time - raise the free tuning past a shipped container
         /// and it happens on its own, to everybody, with no code change to notice.
         /// </para>
         /// </summary>
@@ -575,7 +575,7 @@ namespace GlimmerGrove.EditorTools
         /// <para>
         /// Two figures are worth reading: what a coin pack is worth against what a day of
         /// play earns, and how long a gem-priced good takes to collect for free. Both come
-        /// from the same published tables the game reads, so a retune moves them — the rule
+        /// from the same published tables the game reads, so a retune moves them - the rule
         /// every explanatory panel in this game follows, applied to the console.
         /// </para>
         /// </summary>
@@ -589,7 +589,7 @@ namespace GlimmerGrove.EditorTools
                 foreach (var product in catalog.Shelf(shelf))
                 {
                     // A container is priced in the same money and sold in a different unit,
-                    // so printing it as "0 gems + 0 credits" would be true and useless — and
+                    // so printing it as "0 gems + 0 credits" would be true and useless - and
                     // the number worth reading is the one it moves the free cap to.
                     if (product.IsContainer)
                     {
@@ -628,11 +628,11 @@ namespace GlimmerGrove.EditorTools
 
         /// <summary>
         /// Gems an engaged player collects in a day: every task chest's expected gems plus a
-        /// streak night amortised over the ladder's lap — which since the ladder pays chests
+        /// streak night amortised over the ladder's lap - which since the ladder pays chests
         /// is itself a chest expectation as often as it is a figure.
         ///
         /// The gem half of <see cref="DailyCreditIncome"/>, and it exists for the same
-        /// reason — a price is only meaningful beside the income that has to pay it, and
+        /// reason - a price is only meaningful beside the income that has to pay it, and
         /// gems are the currency the whole supplies shelf is priced in.
         /// </summary>
         static long DailyGemIncome(ProgressionTable table)
@@ -735,7 +735,7 @@ namespace GlimmerGrove.EditorTools
         /// <para>
         /// The reader clamps every field into a supported range and says so, which stops a
         /// typo shipping as a broken game. What it cannot judge is whether the numbers make
-        /// sense <em>together</em> — and the ones below are the combinations that would
+        /// sense <em>together</em> - and the ones below are the combinations that would
         /// validate, build, ship, and then quietly wreck either the economy or the point of
         /// the feature.
         /// </para>
@@ -753,7 +753,7 @@ namespace GlimmerGrove.EditorTools
             if (hearts == null) { result.Errors.Add("progression.json produced no heart table"); return; }
 
             // A full set that refills in under an hour is not a gate, and every number
-            // balanced against it — chest values, ad payouts, the streak ladder — was tuned
+            // balanced against it - chest values, ad payouts, the streak ladder - was tuned
             // against a game where sessions are rationed.
             long toFull = hearts.RefillSeconds * hearts.RefillCap;
             if (toFull < 3600)
@@ -802,15 +802,15 @@ namespace GlimmerGrove.EditorTools
         /// The published number alone does not say what it does: it is counted inside the first
         /// chapter of each mode and stops at that chapter's end (<see cref="HeartStake"/>), so
         /// the same three means three of ten on a full chapter and all of a three-glade one. A
-        /// window that swallows a whole chapter is a legitimate decision and a large one — the
-        /// heart gate simply does not exist on that map — so it is named here rather than
+        /// window that swallows a whole chapter is a legitimate decision and a large one - the
+        /// heart gate simply does not exist on that map - so it is named here rather than
         /// discovered from a retention chart.
         /// </para>
         /// <para>
         /// Asked of <c>HeartStake</c> rather than worked out here, through the overload that
         /// takes a table: what is being checked is the candidate this build would publish
         /// rather than the rules currently running, and a rule about charging players must not
-        /// exist twice — least of all in the file whose job is to prove that it does not.
+        /// exist twice - least of all in the file whose job is to prove that it does not.
         /// </para>
         /// </summary>
         static void ValidateFreeOpenings(HeartRuleTable hearts, CatalogIndex index,
@@ -828,7 +828,7 @@ namespace GlimmerGrove.EditorTools
 
                 // Only worth saying of a chapter with something to cover. A mode still finding
                 // its shape ships one board, and "the window is longer than this chapter" is
-                // then a fact about how much content exists rather than about the tuning — a
+                // then a fact about how much content exists rather than about the tuning - a
                 // warning on every build for something that fixes itself when the second board
                 // lands is a warning nobody reads.
                 if (free >= chapter.LevelCount && chapter.LevelCount > 1)
@@ -864,7 +864,7 @@ namespace GlimmerGrove.EditorTools
                                     "costs nothing and the pool is decoration");
 
             // A payout larger than the whole pool can never land in full, whatever the player
-            // is holding — so it is a mistake rather than a tuning, and it is worth naming
+            // is holding - so it is a mistake rather than a tuning, and it is worth naming
             // even though the grant clamps it safely.
             var offer = ads?.Offer(AdPlacement.HintRefill) ?? default;
             if (offer.IsValid && offer.Amount > hints.Ceiling)
@@ -872,7 +872,7 @@ namespace GlimmerGrove.EditorTools
                                     $"pool that holds {hints.Ceiling}; the surplus is refused, not banked");
 
             // Note what is deliberately *not* warned about: a ceiling equal to the cap. That is
-            // the shipped shape, so a warning would fire on every run for ever — and a warning
+            // the shipped shape, so a warning would fire on every run for ever - and a warning
             // that always fires is one nobody reads. It is logged as a fact below instead, and
             // the thing that has to be true because of it, that no offer is made at a full
             // pool, is held by RewardedAds.WouldBenefit and pinned by HintsTests.
@@ -895,14 +895,14 @@ namespace GlimmerGrove.EditorTools
         /// <b>An icon is not content.</b> Which utilities exist, what they cost and how strong
         /// they are are all authored and retunable from a config push; a picture is in the build.
         /// So an entry this build has no sprite for would draw a white rectangle on the bar
-        /// (invariant 7b) and is an <em>error</em> — adding a utility is a build, exactly as
+        /// (invariant 7b) and is an <em>error</em> - adding a utility is a build, exactly as
         /// adding a mode is (invariant 20). The loc keys are checked in
         /// <see cref="ValidateLocalisation"/>, where every other derived key is.
         /// </para>
         /// <para>
         /// <b>And a chest may only name a utility that exists.</b> This is the one cross-block
         /// check here that is otherwise invisible: a band paying <c>utility:firepop</c> rolls,
-        /// publishes, seeds and grants nothing at all — the client's reader skips the id, the
+        /// publishes, seeds and grants nothing at all - the client's reader skips the id, the
         /// server never granted utilities in the first place, and the only symptom is a chest
         /// that quietly pays less than its odds say.
         /// </para>
@@ -970,8 +970,8 @@ namespace GlimmerGrove.EditorTools
         ///
         /// <para>
         /// <b>The art check is the one only this gate can make.</b> A turret's addresses are
-        /// <em>built</em> from its id (<c>WardModel.ArtFor</c>) — twenty models times four colours
-        /// is eighty names nobody would keep in step with a roster that is content — so
+        /// <em>built</em> from its id (<c>WardModel.ArtFor</c>) - twenty models times four colours
+        /// is eighty names nobody would keep in step with a roster that is content - so
         /// <c>Tools/verify/artnames.py</c>, which reads literals off a call site, cannot see any of
         /// them. What replaces the literal is this: the roster is walked and every address it
         /// implies is held to what is addressable, which catches a missing picture and a
@@ -981,7 +981,7 @@ namespace GlimmerGrove.EditorTools
         /// </para>
         /// <para>
         /// <b>Errors rather than warnings</b>, because every one of these is a turret that cannot
-        /// be drawn, cannot be named, or cannot be bought — and all three look like a perfectly
+        /// be drawn, cannot be named, or cannot be bought - and all three look like a perfectly
         /// authored file.
         /// </para>
         /// </summary>
@@ -994,7 +994,7 @@ namespace GlimmerGrove.EditorTools
         /// (<c>RankDefinition.Icon</c>), so <c>artnames.py</c> cannot see one of them and a rung
         /// renamed without its picture moving is a white rectangle on the map (invariant 7b).
         /// Whether anything <em>loads</em> it is the Addressables audit's question, not this
-        /// one — <c>AssetManifest.GlobalAssets</c> derives the list from the live ladder, so
+        /// one - <c>AssetManifest.GlobalAssets</c> derives the list from the live ladder, so
         /// there is no list here that could fall out of step.
         /// </para>
         /// <para>
@@ -1019,7 +1019,7 @@ namespace GlimmerGrove.EditorTools
             if (ranks.IsEmpty)
             {
                 // Legal and complete: a game with no ranks is a game (`RankLadder`). Said out
-                // loud because the alternative reading — "the block failed to parse" — is
+                // loud because the alternative reading - "the block failed to parse" - is
                 // reported as an error by the reader itself, so silence here would be ambiguous.
                 if (verbose) Debug.Log("[Glimmer] no rank ladder authored; no badges are drawn");
                 return;
@@ -1036,7 +1036,7 @@ namespace GlimmerGrove.EditorTools
             }
 
             // Null only when the file itself is missing, which `ValidateLocalisation` reports on
-            // its own — one missing file must not also read as every string being absent.
+            // its own - one missing file must not also read as every string being absent.
             var strings = LocalisationTable();
 
             foreach (var rung in ranks.Rungs)
@@ -1087,13 +1087,13 @@ namespace GlimmerGrove.EditorTools
         }
 
         /// <summary>
-        /// The ladder may not open before the lane it ranks does (invariant 52i) — the rule
+        /// The ladder may not open before the lane it ranks does (invariant 52i) - the rule
         /// itself is <see cref="Ranks.RankGate"/>, and this is the build gate asking it.
         ///
         /// <para>
         /// <b>The rule lives in <c>GlimmerGrove.Authoring</c> and not here, and the reason is
         /// this file.</b> Its first cut was written in place, where the suite cannot reach it,
-        /// and it shipped having never once executed — a validator with no failing case is not a
+        /// and it shipped having never once executed - a validator with no failing case is not a
         /// check. `RankGateTests` drives every branch of it now, offline.
         /// </para>
         /// <para>
@@ -1124,7 +1124,7 @@ namespace GlimmerGrove.EditorTools
         /// The fallback language's strings, or null when the file is missing.
         ///
         /// <b>Read rather than asked of <see cref="Loc"/>.</b> Nothing loads the runtime table in
-        /// the Editor, so <c>Loc.Has</c> is false for every key in the game — a validator built
+        /// the Editor, so <c>Loc.Has</c> is false for every key in the game - a validator built
         /// on it does not under-report, it reports everything as missing, which is how this was
         /// found. <see cref="ValidateLocalisation"/> parses its own copy for the same reason.
         /// </summary>
@@ -1352,7 +1352,7 @@ namespace GlimmerGrove.EditorTools
                                           "star at all");
                     else if (price <= under)
                         result.Errors.Add($"turret '{model.Id}' prices star {stars + 1} at " +
-                                          $"{price}, no more than the {under} below it — an " +
+                                          $"{price}, no more than the {under} below it - an " +
                                           "upgrade nobody chooses between");
 
                     under = price;
@@ -1365,7 +1365,7 @@ namespace GlimmerGrove.EditorTools
             }
 
             // **No two rungs of the shelf are the same turret.** A magnitude nobody reads makes
-            // two rungs of one ability identical, and both `rend` and `prism` shipped that way —
+            // two rungs of one ability identical, and both `rend` and `prism` shipped that way -
             // so a thousand-gem breaker was exactly a four-thousand-credit cleaver, and the
             // dearer one bought nothing (invariant 5d, met on the one thing a player pays for).
             // Priced rungs only: the free turret is not a rung.
@@ -1382,8 +1382,8 @@ namespace GlimmerGrove.EditorTools
                              + " " + model.PowerTenths + "/" + model.GuardTenths;
 
                 if (shapes.TryGetValue(shape, out string first))
-                    result.Errors.Add($"turrets '{first}' and '{model.Id}' are the same turret — " +
-                                      $"{shape} — so whichever is dearer buys nothing at all");
+                    result.Errors.Add($"turrets '{first}' and '{model.Id}' are the same turret - " +
+                                      $"{shape} - so whichever is dearer buys nothing at all");
                 else
                     shapes[shape] = model.Id;
             }
@@ -1404,7 +1404,7 @@ namespace GlimmerGrove.EditorTools
                     && model.GuardTenths < under.GuardTenths)
                     result.Errors.Add(
                         $"turret '{model.Id}' sits below '{under.Id}' on the shelf and is worse " +
-                        "at both jobs — a dearer rung may trade weight for toughness and may not " +
+                        "at both jobs - a dearer rung may trade weight for toughness and may not " +
                         "give up both");
 
                 below[model.Ability] = model;
@@ -1593,7 +1593,7 @@ namespace GlimmerGrove.EditorTools
             }
 
             Debug.Log($"[Glimmer] the tasks deal {tasks.ActivePerPeriod} a period and are paid by " +
-                      "the server from config/progression — run firebase/seed/seed-config.mjs " +
+                      "the server from config/progression - run firebase/seed/seed-config.mjs " +
                       "after this change or every task claim is left unconfirmed.");
         }
 
@@ -1604,8 +1604,8 @@ namespace GlimmerGrove.EditorTools
         /// <c>AccountPromptRuleTable.Resolve</c> already clamps anything outside the band a
         /// published file may ask for, and says so. What is left is the combination that is
         /// perfectly legal and probably not what somebody meant: switching off the ask that
-        /// protects money. Zero is deliberately a value an author can write — it is the lever
-        /// that turns the panel off in minutes if it costs more conversion than it protects —
+        /// protects money. Zero is deliberately a value an author can write - it is the lever
+        /// that turns the panel off in minutes if it costs more conversion than it protects -
         /// so this is a warning, never an error.
         /// </para>
         /// <para>
@@ -1692,7 +1692,7 @@ namespace GlimmerGrove.EditorTools
         ///
         /// <para>
         /// The reader bounds both numbers and refuses the one value that would break the
-        /// feature outright — a free heart. What it cannot judge is whether the price is
+        /// feature outright - a free heart. What it cannot judge is whether the price is
         /// <em>reachable</em>, and that is the only way this pair goes quietly wrong:
         /// <c>ValidateContinue</c>'s complaint, one panel further on and sharper, because the
         /// player being shown this one has no hearts at all. A rescue dearer than the cheapest
@@ -1701,14 +1701,14 @@ namespace GlimmerGrove.EditorTools
         /// <para>
         /// The second check has no counterpart on the continue and is the one worth having.
         /// Hearts are also sold by the copy in the shop (<c>hearts_five</c> and friends), and
-        /// the two prices are set in different blocks of the same file on different days — so
+        /// the two prices are set in different blocks of the same file on different days - so
         /// a rescue dearer per heart than the shelf is a panel quietly charging a premium at
         /// the moment a player is least able to compare, which is the shape a store reviewer
         /// is right to object to.
         /// </para>
         /// <para>
         /// <b>Against the shop's smallest pack rather than its best rate</b>, and the
-        /// difference is what stops this being noise. A bulk pack is a volume discount — the
+        /// difference is what stops this being noise. A bulk pack is a volume discount - the
         /// shipped ladder runs 50/5, 125/15 and 280/40, so a two-heart rescue is dearer per
         /// heart than the top of it at every price anybody would ever set, and a check that
         /// fires on every honest tuning is a check people learn to scroll past. The entry pack
@@ -1783,7 +1783,7 @@ namespace GlimmerGrove.EditorTools
         ///
         /// <para>
         /// The reader bounds it and refuses the two values that would break the feature
-        /// outright — a free continue, and one that hands over nothing. What it cannot judge is
+        /// outright - a free continue, and one that hands over nothing. What it cannot judge is
         /// whether the price is <em>reachable</em>, and that is the only way this block goes
         /// quietly wrong: a continue dearer than the cheapest gem pack means every player short
         /// of gems is sold a purchase that does not cover it, and one dearer than a week of
@@ -1801,7 +1801,7 @@ namespace GlimmerGrove.EditorTools
         ///
         /// <para>
         /// The second block here that decides XP outside the star ledger and the first that is a
-        /// <em>multiplier</em>, so the figures are printed rather than left to be worked out — a
+        /// <em>multiplier</em>, so the figures are printed rather than left to be worked out - a
         /// percentage nobody has read against the curve is a keeper ladder climbing at a speed
         /// nobody wrote down. It is the mirror of the <c>xp boost</c> block in
         /// <c>Tools/verify/content.py</c>, and both print the same lines on purpose.
@@ -1811,7 +1811,7 @@ namespace GlimmerGrove.EditorTools
         /// one window.</b> The advert says what a view pays and the boost block says what the
         /// rule actually opens; they have to agree, because the cooldown is derived by
         /// subtracting the boost block's figure from the stored deadline. <c>ProgressionTable</c>
-        /// already refuses the mismatch — this repeats the reading so the gate's own output says
+        /// already refuses the mismatch - this repeats the reading so the gate's own output says
         /// which two numbers it is talking about.
         /// </para>
         /// </summary>
@@ -1873,7 +1873,7 @@ namespace GlimmerGrove.EditorTools
         /// printed rather than left to be worked out: a rate whose ceiling nobody has read
         /// against the curve is a keeper ladder climbing at a speed nobody wrote down. It is the
         /// mirror of the <c>endless xp</c> block in <c>Tools/verify/content.py</c>, and both
-        /// print the same three lines on purpose — this is the only number here a <em>server</em>
+        /// print the same three lines on purpose - this is the only number here a <em>server</em>
         /// also derives, and the two content gates are where a retune is read.
         /// </para>
         /// <para>
@@ -1889,7 +1889,7 @@ namespace GlimmerGrove.EditorTools
             if (endless == null) { result.Errors.Add("progression.json produced no endless rule"); return; }
 
             // An Infinite lane that pays nothing is a legitimate authoring decision, but a lane
-            // nothing *ships* on is a block tuning a feature that is not there — worth a word,
+            // nothing *ships* on is a block tuning a feature that is not there - worth a word,
             // because it is the only way an author would find out.
             bool laneShips = false;
             if (index != null)
@@ -1972,7 +1972,7 @@ namespace GlimmerGrove.EditorTools
         /// <para>
         /// Printed rather than asserted, and printed in full rather than as the two numbers
         /// that produce it. A factor in hundredths and a step is a recurrence, and nobody
-        /// reads a recurrence off two integers — the thing a retune has to be judged against
+        /// reads a recurrence off two integers - the thing a retune has to be judged against
         /// is the sequence a player is actually quoted, so that is what the gate says. It is
         /// also the one reading that shows <c>ContinueLimits.MaxGems</c> binding, which is
         /// invariant 37cc's rule: a ceiling that binds is checked rather than discovered.
@@ -2022,7 +2022,7 @@ namespace GlimmerGrove.EditorTools
         /// </para>
         /// <para>
         /// It also prints the published odds. That is the point of running it verbosely
-        /// before a drop — the disclosure a store or a regulator may ask for is generated
+        /// before a drop - the disclosure a store or a regulator may ask for is generated
         /// from the file the game actually rolls against, so it cannot be out of date.
         /// </para>
         /// </summary>
@@ -2109,7 +2109,7 @@ namespace GlimmerGrove.EditorTools
         /// see.
         ///
         /// <para>
-        /// The builder has already refused anything structurally wrong — an inverted
+        /// The builder has already refused anything structurally wrong - an inverted
         /// window, a track that cannot be finished, a glade no chapter holds. What is left
         /// is the class of mistake that produces a perfectly valid event nobody wanted: two
         /// running at once, one that opened last year, one whose whole track is a single
@@ -2118,7 +2118,7 @@ namespace GlimmerGrove.EditorTools
         /// <para>
         /// The calendar is also <em>printed</em>, past events included, with the dates
         /// resolved. An event is authored as two Unix timestamps, which is the correct
-        /// storage and an impossible thing to proofread — the single most likely mistake in
+        /// storage and an impossible thing to proofread - the single most likely mistake in
         /// this whole feature is a window that is off by a month and looks fine in the file.
         /// </para>
         /// </summary>
@@ -2146,7 +2146,7 @@ namespace GlimmerGrove.EditorTools
                 }
 
                 // Every rung has to name a tier the live table actually holds, or it pays a
-                // chest nobody can price — a claim the server leaves unconfirmed for ever.
+                // chest nobody can price - a claim the server leaves unconfirmed for ever.
                 // An **error**, because it is invisible in either file on its own: the ladder
                 // lives in the manifest and the tiers in progression.json.
                 foreach (var rung in groveEvent.Milestones)
@@ -2215,7 +2215,7 @@ namespace GlimmerGrove.EditorTools
         /// About how many marks a day a player who claims everything is dealt.
         ///
         /// The daily slate over a day plus the weekly slate over a week, at the rate the
-        /// rotation actually deals them — which is the only honest reading, because a slate
+        /// rotation actually deals them - which is the only honest reading, because a slate
         /// of ten dealt three at a time never pays all ten in one period. Zero when the table
         /// pays no marks at all, which is a season nobody can advance and is caught by the
         /// reachability warning above rather than here.
@@ -2262,7 +2262,7 @@ namespace GlimmerGrove.EditorTools
         /// <c>GoldenTable</c> already refuses a band that would pay below the base. What
         /// is left is the question a reader cannot ask: <em>how much does this multiply
         /// everything by</em>. The bonus sits inside the credit derivation, so its weighted
-        /// average multiplies every credits-per-star figure in the file — and unlike a
+        /// average multiplies every credits-per-star figure in the file - and unlike a
         /// chest or an ad, nobody sees it as a line item. A table that quietly raised the
         /// economy by forty percent would look like four harmless-looking rows.
         /// </para>
@@ -2278,7 +2278,7 @@ namespace GlimmerGrove.EditorTools
         /// <para>
         /// <b>The mean is printed rather than judged.</b> The wheel multiplies
         /// <c>win_bonus</c>'s authored amount, so from the moment it is published that amount
-        /// stops being what a view is worth — and nothing else in the file says so. What the
+        /// stops being what a view is worth - and nothing else in the file says so. What the
         /// placement <em>should</em> pay is an economy decision and not this check's to make;
         /// what it must never be is a surprise, which is the same bargain <see cref="ValidateGolden"/>
         /// strikes one method up.
@@ -2287,7 +2287,7 @@ namespace GlimmerGrove.EditorTools
         /// The two things it does refuse are the two a picture can get wrong. A slice that pays
         /// less than the flat offer is refused by the reader before this runs (the wheel only
         /// ever adds); what is left is <b>two equal figures side by side</b>, which makes a
-        /// wheel look like it has fewer prizes than it has — the rim is drawn in the authored
+        /// wheel look like it has fewer prizes than it has - the rim is drawn in the authored
         /// order, so the file is where that is fixed. A warning rather than an error, because
         /// it is a legibility judgement and a deliberately repeated figure on a big wheel is a
         /// coherent thing to want.
@@ -2320,7 +2320,7 @@ namespace GlimmerGrove.EditorTools
                 result.Warnings.Add($"wheel slices {i} and {next} both pay " +
                                     $"{wheel.SliceAt(i).Percent}% and sit side by side. The rim is " +
                                     "drawn in the authored order, so the wheel will look like it " +
-                                    "has fewer prizes than it has — interleave them in the file");
+                                    "has fewer prizes than it has - interleave them in the file");
             }
 
             int mean = wheel.MeanPercent;
@@ -2345,7 +2345,7 @@ namespace GlimmerGrove.EditorTools
             Debug.Log($"[Glimmer] '{AdPlacement.WinBonus}' authors {offer.Amount} a view and really " +
                       $"pays about {perView} (mean {mean}%), best {best}. At a cap of " +
                       $"{offer.DailyCap} that is up to about {perView * offer.DailyCap} a day on " +
-                      "average — hold it against the free-play figure below before retuning either");
+                      "average - hold it against the free-play figure below before retuning either");
         }
 
         static void ValidateGolden(GoldenTable golden, ProgressionTable table,
@@ -2367,7 +2367,7 @@ namespace GlimmerGrove.EditorTools
             if (plainWeight == 0)
                 result.Errors.Add("every golden band pays a bonus, so every glade pays more than " +
                                   "its reward rule says. That is not a bonus, it is an unannounced " +
-                                  "retune of every credit figure in the file — change the rule instead");
+                                  "retune of every credit figure in the file - change the rule instead");
             else if (plainWeight * 2 <= golden.TotalWeight)
                 result.Warnings.Add("most glades draw a golden bonus. The effect works because it " +
                                     "is rare; at this rate a player learns to expect it and the " +
@@ -2381,7 +2381,7 @@ namespace GlimmerGrove.EditorTools
             float average = weighted / (float)golden.TotalWeight;
 
             if (average > 200f)
-                result.Errors.Add($"the golden bands average {average:0.#}% — they more than double " +
+                result.Errors.Add($"the golden bands average {average:0.#}% - they more than double " +
                                   "every credit reward in the game. Retune the reward rule rather " +
                                   "than hiding a multiplier in the bonus table");
             else if (average > 140f)
@@ -2398,7 +2398,7 @@ namespace GlimmerGrove.EditorTools
 
             Debug.Log(line.ToString());
 
-            // What it is actually worth over the shipped catalog, at three stars — the
+            // What it is actually worth over the shipped catalog, at three stars - the
             // figure a tuning pass is really asking about.
             long plain = 0;
             foreach (var id in index.LevelIds)
@@ -2412,7 +2412,7 @@ namespace GlimmerGrove.EditorTools
         /// The streak ladder, checked for the things the reader cannot know.
         ///
         /// <para>
-        /// <c>StreakTable</c> already refuses anything unreadable — an unknown kind, a retired
+        /// <c>StreakTable</c> already refuses anything unreadable - an unknown kind, a retired
         /// one, a zero, a tier the tasks block does not define, a ladder longer than the cap.
         /// What is left is the shape, which is a design question a reader has no opinion
         /// about: a rung that pays less than an earlier one of the same kind, a chest humbler
@@ -2422,7 +2422,7 @@ namespace GlimmerGrove.EditorTools
         /// <para>
         /// It also prints the ladder, and now prints what the lap is worth. A streak is the
         /// one reward a player plans several days around, so the person tuning it needs to
-        /// see all of it at once, in the order the player meets it — and since the ladder
+        /// see all of it at once, in the order the player meets it - and since the ladder
         /// laps, the week's total is the number that actually sets the payout rate.
         /// </para>
         /// </summary>
@@ -2438,7 +2438,7 @@ namespace GlimmerGrove.EditorTools
             // Hearts clamp at the cap and boosts do not, so the two are not comparable and
             // only like-for-like rungs are checked. That is enough to catch the mistake
             // that matters: a longer streak paying less than a shorter one. Only within one
-            // lap — night eight paying less than night seven is the lap starting over,
+            // lap - night eight paying less than night seven is the lap starting over,
             // which is the design rather than a mistake.
             for (int night = 2; night <= streak.Length; night++)
             {
@@ -2451,9 +2451,9 @@ namespace GlimmerGrove.EditorTools
                     if (!before.IsValid) continue;
 
                     // A chest is compared against the chest before it and a figure against the
-                    // figure before it. The two are not comparable at all — what a chest holds
+                    // figure before it. The two are not comparable at all - what a chest holds
                     // is a roll, so "is a gold chest worth more than eight hundred credits" is a
-                    // question with no answer a gate could check — which is why the ladder
+                    // question with no answer a gate could check - which is why the ladder
                     // climbs in two independent runs rather than one.
                     if (rung.IsChest != before.IsChest) continue;
 
@@ -2497,7 +2497,7 @@ namespace GlimmerGrove.EditorTools
 
             // The shield: the one thing on the streak page that is for sale. A price the
             // content forgot is a feature that silently disappears from a screen, which is
-            // exactly the failure a gate is for — and it is a warning rather than an error
+            // exactly the failure a gate is for - and it is a warning rather than an error
             // because withdrawing the offer deliberately is a legitimate content decision.
             if (!streak.SellsShield)
                 result.Warnings.Add("the streak block sells no shield (shieldGems is zero), so the " +
@@ -2532,7 +2532,7 @@ namespace GlimmerGrove.EditorTools
             {
                 var rung = streak.Rung(night);
                 line.Append("  n").Append(night).Append(' ')
-                    .Append(rung.IsValid ? rung.ToString() : "—");
+                    .Append(rung.IsValid ? rung.ToString() : "-");
             }
             line.Append("  · night ").Append(streak.Length + 1).Append(" begins the lap again");
 
@@ -2546,7 +2546,7 @@ namespace GlimmerGrove.EditorTools
             // figure into a wallet while the board advertises the new one.
             Debug.Log($"[Glimmer] one lap pays {credits} credits, {gems} gems and {chests} chest(s); " +
                       $"a shield costs {streak.ShieldGems} gems for {streak.ShieldDays} days. The " +
-                      "currency and the chests are granted by the server from config/progression — run " +
+                      "currency and the chests are granted by the server from config/progression - run " +
                       "firebase/seed/seed-config.mjs after this change or players will be paid the " +
                       "previous ladder.");
         }
@@ -2623,7 +2623,7 @@ namespace GlimmerGrove.EditorTools
         /// curve that stays reachable.
         ///
         /// The last one is the check that earns its keep. Unlock levels are content now,
-        /// so a drop can retune them without a build — and a threshold set above what
+        /// so a drop can retune them without a build - and a threshold set above what
         /// the shipped catalog can actually reach produces a companion nobody will ever
         /// see, which nothing else in the pipeline would notice.
         /// </summary>
@@ -2640,7 +2640,7 @@ namespace GlimmerGrove.EditorTools
             foreach (var companion in companions)
             {
                 // A player stands at keeper level 1 on their first launch, so a gate of 1 is
-                // as free as a gate of 0 — and reading only == 0 would pass a roster whose
+                // as free as a gate of 0 - and reading only == 0 would pass a roster whose
                 // starter had been retuned to 1 while still failing to notice one retuned
                 // to 2, which is the case that leaves a new player with nobody to wear.
                 if (companion.IsStarter) anyFree = true;
@@ -2708,7 +2708,7 @@ namespace GlimmerGrove.EditorTools
         ///
         /// <para>
         /// Every check here warns rather than errors, with one exception, because a price is
-        /// an economy decision and the validator is not entitled to overrule one — what it is
+        /// an economy decision and the validator is not entitled to overrule one - what it is
         /// entitled to do is state the consequence, since none of these are visible by
         /// reading the manifest. The exception is a price a player can reach before they can
         /// reach the companion's own gate <em>and</em> before the seed runs out, which is not
@@ -2776,7 +2776,7 @@ namespace GlimmerGrove.EditorTools
             // What the whole roster is worth in days of ordinary play. Logged rather than
             // judged: it is the one number that says whether the sink outlasts the content,
             // and no threshold on it would be anything but a guess.
-            Debug.Log($"[Glimmer] {forSale} companions for sale, {total} coins in total — about " +
+            Debug.Log($"[Glimmer] {forSale} companions for sale, {total} coins in total - about " +
                       $"{total / daily} days of play at roughly {daily} coins a day, " +
                       "before any rewarded video");
 
@@ -2794,18 +2794,18 @@ namespace GlimmerGrove.EditorTools
         /// <summary>
         /// Credits an engaged player collects in a day without watching a video: every task
         /// chest's guaranteed contents plus its expected bonus, and a streak night amortised
-        /// over the ladder's lap — which since the ladder pays chests is itself a chest
+        /// over the ladder's lap - which since the ladder pays chests is itself a chest
         /// expectation as often as it is a figure.
         ///
         /// Read from the published tables rather than written down, so a retune moves this
-        /// with it — the same rule every explanatory panel in the game follows.
+        /// with it - the same rule every explanatory panel in the game follows.
         /// </summary>
         static long DailyCreditIncome(ProgressionTable table)
         {
             long daily = 0;
 
             // The task chests: every live task's tier at its expectation, averaged over the
-            // slate and scaled to what a period deals — the daily slate over a day, the weekly
+            // slate and scaled to what a period deals - the daily slate over a day, the weekly
             // over seven. The daily *ladder* this replaced no longer pays anybody on this build.
             daily += TaskIncome(table.Tasks, ExpectedCredits);
 
@@ -2819,7 +2819,7 @@ namespace GlimmerGrove.EditorTools
         /// credit option's midpoint weighted by the chance of drawing it.
         ///
         /// An expectation rather than the floor, because the floor understates a chest whose
-        /// bonus is usually credits — and understating income here would let a price that is
+        /// bonus is usually credits - and understating income here would let a price that is
         /// genuinely two weeks away pass as one week.
         /// </summary>
         static long ExpectedCredits(ChestDefinition chest)
@@ -2925,7 +2925,7 @@ namespace GlimmerGrove.EditorTools
             }
 
             // A reminder's two lines are derived from its kind's permanent id, so the source
-            // scan below sees neither — and a notification whose title does not resolve is a
+            // scan below sees neither - and a notification whose title does not resolve is a
             // blank row in somebody's shade, drawn by the operating system with the app not
             // running, which is the least observable failure in this whole project.
             //
@@ -2940,7 +2940,7 @@ namespace GlimmerGrove.EditorTools
             }
 
             // Companion names are derived from the id like a level's, so the source scan
-            // below cannot see them — only this can.
+            // below cannot see them - only this can.
             foreach (var companion in content.Index.Companions)
                 Require(table, companion.NameKey, $"companion '{companion.Id}'", result);
 
@@ -2972,7 +2972,7 @@ namespace GlimmerGrove.EditorTools
             // And a utility's two, derived from its id like everything above (invariant 5a) and
             // therefore invisible to the source scan below. A utility with no strings ships as
             // "utility.firepot.name" written across a shop panel and a bar slot with no name at
-            // all — which is exactly what a mechanic with no strings does, one screen along.
+            // all - which is exactly what a mechanic with no strings does, one screen along.
             foreach (var item in ProgressionRules.Table.Utilities.Items)
             {
                 Require(table, item.NameKey, $"utility '{item.Id}'", result);
@@ -3036,8 +3036,8 @@ namespace GlimmerGrove.EditorTools
         /// "ui.pause.resume" printed on a button.
         ///
         /// It matches any literal shaped like a key rather than only the arguments to
-        /// Loc, because plenty of keys are passed through a variable first — a nav
-        /// item's label, an overlay's title — and those need checking just as much.
+        /// Loc, because plenty of keys are passed through a variable first - a nav
+        /// item's label, an overlay's title - and those need checking just as much.
         /// </summary>
         static void ValidateKeysUsedInCode(LocTable table, ContentValidationResult result)
         {
@@ -3087,13 +3087,13 @@ namespace GlimmerGrove.EditorTools
         /// <remarks>
         /// <para>
         /// <b>The only place either half of a composed lesson can be checked.</b> Two of these
-        /// sentences carry a figure that is content — how many stars open the next chapter — and
+        /// sentences carry a figure that is content - how many stars open the next chapter - and
         /// invariant 21 is the reason it is printed rather than typed into the prose. What that
         /// buys has to be protected at both ends: a body that <em>lost</em> its placeholder is a
         /// lesson that silently stops naming the number, and a body that <em>gained</em> one is a
         /// literal "{1}" drawn on a panel a player is shown once in their life. Neither fails
         /// anywhere else, because <c>Loc.Format</c> catches the mismatch and hands back the
-        /// pattern — which is right at run time and is exactly what makes it invisible.
+        /// pattern - which is right at run time and is exactly what makes it invisible.
         /// </para>
         /// <para>
         /// It is the string side that this is really for: a body is translated, and a translator
@@ -3129,8 +3129,8 @@ namespace GlimmerGrove.EditorTools
         /// <b>Hidden is not gone, and the two get different severities.</b> A level whose
         /// chapter carries <c>"disabled": true</c> is switched off, not removed: the manifest
         /// still names the id, nothing else may claim it, and re-enabling the chapter puts every
-        /// record back exactly where it was. That is a real state this game ships in — the
-        /// classic glade and Lightfall are both hidden as of invariant 38 — and failing the
+        /// record back exactly where it was. That is a real state this game ships in - the
+        /// classic glade and Lightfall are both hidden as of invariant 38 - and failing the
         /// build on it would mean the flag could never be used on a chapter the legacy import
         /// names, which is every chapter of the original build. A level the manifest does not
         /// name <em>at all</em> is the failure invariant 2 exists to raise, and stays an error.
@@ -3181,7 +3181,7 @@ namespace GlimmerGrove.EditorTools
             var warnings = new List<string>(result.Warnings);
 
             // And that the art is imported the way the folder rules say. This one is not about
-            // whether an asset is *there* — it is about what it costs once it is, which nothing
+            // whether an asset is *there* - it is about what it costs once it is, which nothing
             // else in this gate can see: an uncompressed texture validates, addresses, loads and
             // draws perfectly while taking several times the memory it should. See
             // ArtImportRules.Audit for why a preprocessor alone cannot be the answer (7a).

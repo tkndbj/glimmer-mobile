@@ -29,7 +29,7 @@ namespace GlimmerGrove.Referral
     /// <para>
     /// The server keeps two counts and no list (invariant 51): <see cref="ReferralState.Bound"/>
     /// friends typed the code and <see cref="ReferralState.Finished"/> of them cleared the
-    /// chapter. The payment is flat, so a row is a <em>seat</em> rather than a person — the
+    /// chapter. The payment is flat, so a row is a <em>seat</em> rather than a person - the
     /// finished friends fill the seats from the top, the ones still playing sit under them,
     /// and which real person is in which seat is a question nothing here needs answered.
     /// </para>
@@ -52,16 +52,16 @@ namespace GlimmerGrove.Referral
     /// <para>
     /// <b>Server-owned, device-cached, never in the save.</b> Every number here is written by
     /// <c>referral.ts</c> and only ever read here: how many invitees have bound to this code,
-    /// how many have cleared the milestone, which chests have been paid, and — for an account
-    /// that typed somebody else's code — whether its own milestone has been reached. Putting
+    /// how many have cleared the milestone, which chests have been paid, and - for an account
+    /// that typed somebody else's code - whether its own milestone has been reached. Putting
     /// any of it in the save would make it mergeable state with two writers, and a count of
     /// invitees is exactly the count invariant 11b refuses. The cache is a hint for drawing
     /// while the network is out, keyed by account so a switch cannot inherit the other
     /// player's code (8b's shape).
     /// </para>
     /// <para>
-    /// <b>A paid chest is a subject string</b> — <c>rung:{friend}:{n}</c> or <c>invitee:{n}</c>
-    /// (<see cref="ReferralLanding.Subject"/>) — the same spelling the server keys its grant
+    /// <b>A paid chest is a subject string</b> - <c>rung:{friend}:{n}</c> or <c>invitee:{n}</c>
+    /// (<see cref="ReferralLanding.Subject"/>) - the same spelling the server keys its grant
     /// on, so the list here and the grant log cannot disagree about what "paid" means.
     /// </para>
     /// </summary>
@@ -126,7 +126,7 @@ namespace GlimmerGrove.Referral
 
         /// <summary>
         /// Where the account's feed counter stood when this answer was asked for, as the
-        /// listener last reported it — or <see cref="UnknownFeed"/> when no listener had
+        /// listener last reported it - or <see cref="UnknownFeed"/> when no listener had
         /// spoken by then.
         ///
         /// <para>
@@ -134,7 +134,7 @@ namespace GlimmerGrove.Referral
         /// <c>players/{uid}/private/referral</c> inside every transaction that moves this
         /// account's referral state, and the device listens to that document. A listener's
         /// first delivery is the document as it stands, and it says nothing about whether
-        /// anything moved — unless the device remembers which value its cached answer was
+        /// anything moved - unless the device remembers which value its cached answer was
         /// read under. With the stamp, a delivery that matches it is proof the cached answer
         /// is still the server's answer, and no call is made. Taken at the moment the ask
         /// went out rather than when the reply landed, so a bump in between can only make
@@ -166,7 +166,7 @@ namespace GlimmerGrove.Referral
         /// <para>
         /// <b><see cref="FetchedUnix"/> is deliberately not compared, and neither is
         /// <see cref="FeedRev"/>.</b> The first moves on every read, so a comparison including
-        /// it would answer "different" every single time and be worth nothing — which is the
+        /// it would answer "different" every single time and be worth nothing - which is the
         /// whole reason this method exists. A server read that brings back what the device
         /// already had must be able to say so, or every visit to the invite page raises a
         /// change nobody made and the page redraws itself underneath the player. The second is
@@ -179,8 +179,8 @@ namespace GlimmerGrove.Referral
         /// comparing position by position would report a reordering as a change. Both
         /// directions rather than one plus equal lengths, because a duplicate on one side
         /// would otherwise read as a match. The list is bounded by
-        /// <c>maxBound * count + count</c> server-side — about a hundred entries at the
-        /// shipped ceiling — so the quadratic walk is cheap and allocates nothing.
+        /// <c>maxBound * count + count</c> server-side - about a hundred entries at the
+        /// shipped ceiling - so the quadratic walk is cheap and allocates nothing.
         /// </para>
         /// </summary>
         public bool Matches(ReferralState other)

@@ -11,8 +11,8 @@ namespace GlimmerGrove.Events
     /// <b>Derived on every read rather than written down.</b> This is the shop's
     /// <c>BonusPercent</c> argument (invariant 18b) asked of the one thing sold outside the
     /// shop: a card claiming a figure that a retune has moved is a promise the game is not
-    /// keeping, and every input here — the pass price, the ladder's tiers, each tier's chest
-    /// and the gem/credit rate — is content that moves without a build. Authoring the
+    /// keeping, and every input here - the pass price, the ladder's tiers, each tier's chest
+    /// and the gem/credit rate - is content that moves without a build. Authoring the
     /// percentage would be a fifth opinion sitting between four files that already imply one.
     /// </para>
     /// <para>
@@ -22,7 +22,7 @@ namespace GlimmerGrove.Events
     /// </para>
     /// <para>
     /// <b>Integer arithmetic throughout, in thousandths.</b> A chest's expectation is a
-    /// weighted mean, so it is genuinely fractional — and a float deciding a displayed figure
+    /// weighted mean, so it is genuinely fractional - and a float deciding a displayed figure
     /// is the one shape this project refuses outright, because .NET, Mono and IL2CPP round it
     /// three ways and the badge would read differently on a phone than in the mirror. Each
     /// chest is summed over twice its own total weight, which makes the halves exact.
@@ -39,13 +39,13 @@ namespace GlimmerGrove.Events
         const long Scale = 1000L;
 
         /// <summary>
-        /// What the paid column pays, as a percentage of the pass price — 258 meaning the
+        /// What the paid column pays, as a percentage of the pass price - 258 meaning the
         /// chests are worth about two and a half times what the pass costs.
         ///
         /// <b>Nought is a real answer and means "do not draw a badge"</b>: a season with no
         /// pass, no paid rungs, or one naming a tier this build's table has never heard of
         /// (<c>GroveEvent.TierOn</c> answers null there, deliberately). A badge is the wrong
-        /// place to report a content mismatch, so it simply does not appear — both content
+        /// place to report a content mismatch, so it simply does not appear - both content
         /// gates already error on that file.
         /// </summary>
         public static int PassPercent(GroveEvent season)

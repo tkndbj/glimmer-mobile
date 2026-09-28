@@ -11,7 +11,7 @@ namespace GlimmerGrove.Layout
 
         /// <summary>
         /// Which token of the pile this is, counted left to right along the front row and then
-        /// left to right along the back one — <em>not</em> the order it is drawn in.
+        /// left to right along the back one - <em>not</em> the order it is drawn in.
         ///
         /// The two differ because a pile has to be drawn back to front, and a caller filling a
         /// mixed pile (a bundle's gems and its coins) is choosing by position rather than by
@@ -30,7 +30,7 @@ namespace GlimmerGrove.Layout
     }
 
     /// <summary>
-    /// A tidy heap of identical tokens — a shop card's coins, its gems, and the hearts over a
+    /// A tidy heap of identical tokens - a shop card's coins, its gems, and the hearts over a
     /// vessel's lip.
     ///
     /// <para>
@@ -38,7 +38,7 @@ namespace GlimmerGrove.Layout
     /// smallest): a pile of currency, a pack of hearts and a container's spill were three
     /// copies of one idea that had already drifted into three different arrangements. All
     /// three were a single shallow arc with every second token dropped a little, and that
-    /// alternation is what made them read as spilt rather than stacked — <c>i % 2</c> is only
+    /// alternation is what made them read as spilt rather than stacked - <c>i % 2</c> is only
     /// symmetric when the count is odd, so a pile of four or six came out visibly heavier on
     /// one side, and the side it was heavy on changed with the rung.
     /// </para>
@@ -46,7 +46,7 @@ namespace GlimmerGrove.Layout
     /// <b>Two rows, wider at the bottom, centred.</b> A heap is legible because its rows are,
     /// and it is symmetric for the same reason a face is: nothing about the arrangement should
     /// be a decision the eye has to take in. The positions come from the index rather than from
-    /// a random number for the reason they always did here — a grid cell is rebound as it
+    /// a random number for the reason they always did here - a grid cell is rebound as it
     /// scrolls, so a scatter would re-scatter every time a card came back on screen.
     /// </para>
     /// <para>

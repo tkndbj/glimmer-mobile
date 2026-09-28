@@ -47,7 +47,7 @@ namespace GlimmerGrove.EditorTools
     /// Loads the bundled content synchronously for Editor tooling.
     ///
     /// In the Editor, StreamingAssets is an ordinary folder, so the bundled source
-    /// completes without ever yielding — blocking on it here is safe and keeps the
+    /// completes without ever yielding - blocking on it here is safe and keeps the
     /// validation tools plain synchronous methods. It deliberately reads only what
     /// ships in the build, never the device cache, because a build must be judged on
     /// its own content rather than on whatever a previous run downloaded.

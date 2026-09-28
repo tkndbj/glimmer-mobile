@@ -9,15 +9,15 @@ namespace GlimmerGrove
     /// The bottom navigation shared by the hub, the glade map and the storefront.
     ///
     /// <para>
-    /// Every tab is a full-height cell that takes the tap — cap, glyph and caption
-    /// together — rather than the glyph alone. A 200x176 target is what a thumb actually
+    /// Every tab is a full-height cell that takes the tap - cap, glyph and caption
+    /// together - rather than the glyph alone. A 200x176 target is what a thumb actually
     /// hits on a phone; the old 124px icon was the whole hit box and the caption under it
     /// was dead.
     /// </para>
     /// <para>
     /// <b>There is a bar again, and the reason it came back is the reason it went.</b> It was
     /// removed because a plate is the cheap way to guarantee contrast and it cost the bottom
-    /// eighth of every screen — the backdrop stopped being the grove and became a slab. What
+    /// eighth of every screen - the backdrop stopped being the grove and became a slab. What
     /// replaced it was five caps earning their own contrast off a moulded rim and a seat
     /// shadow, which worked. The kit's rail is not that plate: it is a 77-unit strip with a
     /// notch in it that the caps <em>overhang</em>, so it reads as the console they are set
@@ -25,16 +25,16 @@ namespace GlimmerGrove
     /// nothing was ever drawn in the bottom 77 units of any screen.
     /// </para>
     /// <para>
-    /// Selection is carried by the cap itself — the kit draws a lit tab and an unlit one as
+    /// Selection is carried by the cap itself - the kit draws a lit tab and an unlit one as
     /// two different objects, a yellow face in a bright frame against a blue face in a dark
-    /// one — plus size, height and a breath. Four signals beat one because half these glyphs
+    /// one - plus size, height and a breath. Four signals beat one because half these glyphs
     /// are painted in full colour and half are white silhouettes, so any scheme that leans on
     /// tinting the glyph reads differently depending on which tab you happen to be standing
     /// on.
     /// </para>
     /// <para>
     /// <b>The glyphs are this game's own and never the kit's.</b> The pack ships five caps
-    /// carrying a champion, a weapon and a backpack, which name nothing here — so what is used
+    /// carrying a champion, a weapon and a backpack, which name nothing here - so what is used
     /// is the kit's blank face wearing the icons the rest of the UI already draws. A restyle
     /// that quietly renamed five destinations would be a much more expensive change than a
     /// restyle.
@@ -44,7 +44,7 @@ namespace GlimmerGrove
     {
         /// <summary>
         /// Vertical space the bar occupies. Screens keep their content above this.
-        /// Unchanged across two restyles on purpose — the caps were sized to fit the budget
+        /// Unchanged across two restyles on purpose - the caps were sized to fit the budget
         /// every screen already reserves, so the look can move without any layout moving.
         /// </summary>
         public const float Height = 236f;
@@ -67,8 +67,8 @@ namespace GlimmerGrove
         static readonly Tab[] Order = { Tab.Home, Tab.Shop, Tab.Ranks, Tab.Profile };
 
         /// <summary>
-        /// The button itself, and the cell that takes the tap. The button is the whole tab —
-        /// icon and caption sit inside it — which is the shape the genre uses and the reason
+        /// The button itself, and the cell that takes the tap. The button is the whole tab -
+        /// icon and caption sit inside it - which is the shape the genre uses and the reason
         /// the icon is allowed to break its top edge: a glyph that overhangs reads as a thing
         /// standing in a slot rather than as a picture printed on a square.
         ///
@@ -77,7 +77,7 @@ namespace GlimmerGrove
         /// at five tabs and wrong the moment there were four: the slot went 216 to 270 and every
         /// one of those 54 units became <em>air</em>, so the bar read as four caps adrift in a
         /// strip rather than as a console. <see cref="Gutter"/> is the air a cap is entitled to
-        /// and the rest belongs to the cap — so a five-tab bar still <em>draws</em> exactly what
+        /// and the rest belongs to the cap - so a five-tab bar still <em>draws</em> exactly what
         /// shipped (216 - 16 = the old 200; the hit cell gains two units it was leaving dead)
         /// and re-spaces itself if a fifth tab ever comes back.
         /// </para>
@@ -85,15 +85,15 @@ namespace GlimmerGrove
         /// <b><see cref="MaxBtnW"/> is why it is a clamp rather than a share.</b> Four tabs would
         /// take 254 and three would take 344, and past a point a nav cap stops reading as a
         /// button and starts reading as a banner with a word on it. The ceiling binds today, so
-        /// it is a number to look at rather than one to trust — `render_home.py` is the
+        /// it is a number to look at rather than one to trust - `render_home.py` is the
         /// instrument.
         /// </para>
         /// <para>
         /// <b>Nothing vertical moves, deliberately.</b> The height, the glyph and the overhang
         /// are exactly what shipped, so <see cref="Height"/> stays the budget every screen
         /// reserves and no other screen's layout moves by a unit. The complaint was horizontal
-        /// and so is the answer; growing the cap's height would push the glyph — which already
-        /// breaks the top edge on purpose — up into whatever the screen is drawing above it.
+        /// and so is the answer; growing the cap's height would push the glyph - which already
+        /// breaks the top edge on purpose - up into whatever the screen is drawing above it.
         /// </para>
         /// </summary>
         const float Gutter = 16f;
@@ -127,7 +127,7 @@ namespace GlimmerGrove
         /// tab rather than the tab's own screen. Without it the marked tab is left inert,
         /// which is right when you are standing on it and wrong one page in: a dead control
         /// is the worst thing to put where somebody is looking for the way back. Nothing
-        /// passes it today — the grove's shop is the one caller left and it carries the bar
+        /// passes it today - the grove's shop is the one caller left and it carries the bar
         /// not at all, leaning on its own back arrow instead.
         /// </para>
         /// </summary>
@@ -173,7 +173,7 @@ namespace GlimmerGrove
             if (active) UIKit.Halo(cell.transform, Pal.Sun, btnW * 1.7f, .30f, new Vector2(0f, 6f));
 
             // A soft-cornered plate in the tab's own colour, lifted when it is the live one.
-            // Selection is the plate and its frame, never the glyph — see Glyph.
+            // Selection is the plate and its frame, never the glyph - see Glyph.
             var plate = UIKit.Img("Plate", cell.transform, Art.Round(26),
                                   active ? Lift(face, .22f) : Pal.A(face, .92f),
                                   new Vector2(btnW * grow, BtnH * grow), new Vector2(.5f, .5f),
@@ -238,8 +238,8 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>The Grovement's permanent orange did not survive the kit, and losing it is a
-        /// gain.</b> It used to keep a colour of its own whether or not it was the live tab —
-        /// the one exception to the teal-means-here rule — because it needed to stand out when
+        /// gain.</b> It used to keep a colour of its own whether or not it was the live tab -
+        /// the one exception to the teal-means-here rule - because it needed to stand out when
         /// you were standing somewhere else. The kit's unlit cap is a *frame* rather than a
         /// flat jelly, so what makes this tab stand out now is its size alone, which is the
         /// signal that was doing most of the work anyway. A third cap colour in a row of five
@@ -249,7 +249,7 @@ namespace GlimmerGrove
         static string CapSkin(Tab tab, bool active) => active ? Skins.CapOn : Skins.CapOff;
 
         /// <summary>
-        /// The pack's own glyphs — painted pictures rather than silhouettes, so nothing here
+        /// The pack's own glyphs - painted pictures rather than silhouettes, so nothing here
         /// tints one and a selected tab cannot black its icon out. Cut by
         /// <c>Tools/make_nav_icons.py</c>, which is where a name is re-pointed.
         /// </summary>
@@ -266,7 +266,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Every tab is a screen. A tab whose own screen is the one being drawn returns null
-        /// and is left inert rather than re-entering it — <paramref name="standing"/>, which is
+        /// and is left inert rather than re-entering it - <paramref name="standing"/>, which is
         /// not the same as being the marked tab. See <see cref="Build"/>.
         ///
         /// <para>
@@ -291,7 +291,7 @@ namespace GlimmerGrove
                 case Tab.Shop: return () => Flow.Go<ShopScreen>();
 
                 // The boards. It was the last tab that opened a panel saying "soon", which is
-                // the worst thing to leave in a row of permanent controls — every other one
+                // the worst thing to leave in a row of permanent controls - every other one
                 // goes somewhere, and the odd one teaches the player that this one does not.
                 case Tab.Ranks: return () => Flow.Go<LeaderboardScreen>();
 

@@ -12,7 +12,7 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// <b>A file of its own because the fault it pins was invisible to every other one, and to
     /// every gate.</b> Reported from play: <em>no raider came in, the hill was visually empty, but
-    /// cogs were dropping on the ground</em> — with a line of five-star legendaries. Nothing about
+    /// cogs were dropping on the ground</em> - with a line of five-star legendaries. Nothing about
     /// the rules was wrong, and a rules sweep could never have seen it: every raider was mustered,
     /// walked, shot, killed and paid for exactly as authored.
     /// </para>
@@ -21,7 +21,7 @@ namespace GlimmerGrove.Tests
     /// a frame.</b> <c>SiegeBoard.Advance</c> musters, walks and fires in one call and then sweeps
     /// the dead out of its own list; the view mints a raider's widget from that list, once a step,
     /// afterwards. So a raider mustered and felled inside one call was never in the list at any
-    /// moment the view could look — and because every drawing this mode makes about a raider is
+    /// moment the view could look - and because every drawing this mode makes about a raider is
     /// keyed on that widget, the bolt, the muzzle flash, the impact and the death burst all went
     /// with the body. The cog was the only thing left, because a cog carries its own coordinates.
     /// </para>
@@ -72,7 +72,7 @@ namespace GlimmerGrove.Tests
         /// its ladder, on all four seats.
         ///
         /// <b>Read off the roster rather than named</b>, so a retune or a new top band keeps this
-        /// fixture pointed at whatever the hardest-hitting line has become — which is the line
+        /// fixture pointed at whatever the hardest-hitting line has become - which is the line
         /// that reproduces this, and the only thing about it that matters is that it fells a
         /// raider with one bolt.
         /// </summary>
@@ -141,7 +141,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// The two assertions are one sentence in two halves. The first is that the setup still
-        /// reproduces the report — if every raider is visible for at least one step then this
+        /// reproduces the report - if every raider is visible for at least one step then this
         /// fixture is green about nothing, which is the state it would quietly drift into if a
         /// turret were retuned or the muster gained a beat. The second is the rule: whatever the
         /// board killed, it said so, so <c>SiegeView.Unseen</c> has a body to stand where it fell.
@@ -197,7 +197,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// The view mints a body for a felled raider it has no widget for and lets <c>Reap</c>
         /// take it down in the same frame, so a raider reported twice would be a body blown apart
-        /// twice — and a raider reported and <em>also</em> left in the board's list alive would be
+        /// twice - and a raider reported and <em>also</em> left in the board's list alive would be
         /// a corpse standing on the hill. Both are cheap to refuse here and impossible to see on a
         /// device without playing the exact run again.
         /// </para>
@@ -239,7 +239,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// A firepot, a utility and an overcharge all kill from a tap, and the view takes their
         /// widgets down itself (<c>SiegeView.Settled</c>). <c>Advance</c> clears the report before
-        /// it does anything, so those kills are wiped before any frame reads them — which is what
+        /// it does anything, so those kills are wiped before any frame reads them - which is what
         /// keeps <c>SiegeView.Unseen</c> from minting a second body for a raider that has already
         /// been blown apart. The clause is one line in <c>Advance</c> and nothing else says it.
         /// </para>

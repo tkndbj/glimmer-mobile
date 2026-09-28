@@ -10,7 +10,7 @@ namespace GlimmerGrove.Modes
     /// <b>Its own vocabulary rather than a flag on the kind, because the view reads it too.</b>
     /// Every one of the four is drawn differently, aimed differently and answered differently, and
     /// a rule that only <c>SiegeTuning</c> knew would leave the drawing to guess from health
-    /// numbers — which is how a mode ends up with two bosses that look the same.
+    /// numbers - which is how a mode ends up with two bosses that look the same.
     /// </para>
     /// <para>
     /// <b>Appended, like <see cref="SiegeKind"/></b>: these reach analytics through
@@ -35,8 +35,8 @@ namespace GlimmerGrove.Modes
         /// <b>Retired: nothing casts these and the three ids must never be reused.</b>
         ///
         /// A weave locked a cell of the field, a snatch took a gem off it, and a bombard dropped a
-        /// bomb onto one. All three were the same withdrawn idea — the hill reaching into the gem
-        /// board — and the bomber that survived it drops its bomb <em>on the hill where it dies</em>
+        /// bomb onto one. All three were the same withdrawn idea - the hill reaching into the gem
+        /// board - and the bomber that survived it drops its bomb <em>on the hill where it dies</em>
         /// rather than casting anything (see <see cref="SiegeKind.Bomber"/>). Kept as members
         /// because these ordinals reach analytics.
         /// </summary>
@@ -49,7 +49,7 @@ namespace GlimmerGrove.Modes
         Bombard,
 
         /// <summary>
-        /// Takes every loose thing off the hill — the cogs and the bombs nobody has picked up.
+        /// Takes every loose thing off the hill - the cogs and the bombs nobody has picked up.
         /// The gravemaw's, and aimed at no ward.
         /// </summary>
         Devour,
@@ -71,7 +71,7 @@ namespace GlimmerGrove.Modes
         Bind,
 
         /// <summary>
-        /// Nothing, to a ward — it is the standing rule that only the caster's own colour may hurt
+        /// Nothing, to a ward - it is the standing rule that only the caster's own colour may hurt
         /// it. The ironclad's, and aimed at no ward.
         ///
         /// <b>A verb with no event is a contradiction, so this one has a blow behind it.</b> An
@@ -98,7 +98,7 @@ namespace GlimmerGrove.Modes
         /// <b>Deliberately not a bind with a tap on it.</b> Both end on the clock now
         /// (<c>SiegeTuning.ColossusBury</c>), because a burial that ended only when the player
         /// said so could end never; what still separates them is that a chain is seconds the
-        /// player can only wait out and a pile is seconds they can <em>spend</em> — every tap
+        /// player can only wait out and a pile is seconds they can <em>spend</em> - every tap
         /// (<c>SiegeBoard.Dig</c>) takes a piece the clock would have taken later. So the two
         /// stay two fields: a surge lifts a douse, nothing lifts a chain, and only hands shorten
         /// a burial.

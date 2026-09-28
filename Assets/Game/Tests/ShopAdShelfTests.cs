@@ -14,7 +14,7 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// <b>The failure these exist for is a silent one.</b> A shelf that names a retired
     /// placement, or a built-in table that stops carrying one, does not throw, log or draw
-    /// anything wrong — <c>AdRewardTable.Offer</c> answers <see cref="AdOffer.None"/>, the row
+    /// anything wrong - <c>AdRewardTable.Offer</c> answers <see cref="AdOffer.None"/>, the row
     /// count drops by one and the shelf simply has one fewer card on it. Every other gate in
     /// this project stays green, because the shop is individually correct on every card it does
     /// draw. That is invariant 40a's fault with a shelf in place of a wave: a thing nobody
@@ -24,7 +24,7 @@ namespace GlimmerGrove.Tests
     /// Offline, all of them: nothing here reads <c>progression.json</c>, which needs
     /// <c>JsonUtility</c> and therefore the Editor (invariant 29e). What they hold is the
     /// built-in table, which is what a client runs before any content push has landed and what
-    /// it falls back to when one is refused — so it is the table that must be right, not merely
+    /// it falls back to when one is refused - so it is the table that must be right, not merely
     /// the published one.
     /// </para>
     /// </summary>
@@ -37,7 +37,7 @@ namespace GlimmerGrove.Tests
         public void EveryShelfNamesAPlacementThisBuildStillHas()
         {
             // **`All` rather than `For`, and that is not a tidy-up.** A shelf may stand more than
-            // one video now, and `For` answers only the first — so a second placement retired
+            // one video now, and `For` answers only the first - so a second placement retired
             // under it would go unchecked by exactly the gate written to catch that.
             foreach (var shelf in Shelves)
                 foreach (string placement in ShopAdShelf.All(shelf))
@@ -49,8 +49,8 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// One shelf may not stand the same placement twice, and no two shelves may share one.
         ///
-        /// <b>Both would draw two identical free cards</b> — on one shelf side by side, across two
-        /// shelves as the same offer in two places — and a player who took it once would find the
+        /// <b>Both would draw two identical free cards</b> - on one shelf side by side, across two
+        /// shelves as the same offer in two places - and a player who took it once would find the
         /// other refused by the cooldown with nothing to explain it. Only reachable since a shelf
         /// became a list, which is why it is checked since a shelf became a list.
         /// </summary>
@@ -97,7 +97,7 @@ namespace GlimmerGrove.Tests
         /// A video stands where the thing it pays for is sold.
         ///
         /// Derived from <c>StoreGoodKinds.ShelfFor</c> rather than restated, so moving a good
-        /// between shelves moves this with it — the fault it guards against is the two drifting
+        /// between shelves moves this with it - the fault it guards against is the two drifting
         /// apart and nobody noticing until a player sees the same offer on two tabs.
         /// </summary>
         [Test]

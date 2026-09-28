@@ -12,8 +12,8 @@ namespace GlimmerGrove
     /// <para>
     /// <b>It is the launch screen's curtain, not a screen of its own, and that is what makes it
     /// free.</b> <see cref="SplashScreen"/> already covers its own first frames with a black
-    /// plate — the canvas takes a frame or two to settle and a hard cut into a full-brightness
-    /// illustration reads as a jolt — and the load runs underneath that plate regardless. An
+    /// plate - the canvas takes a frame or two to settle and a hard cut into a full-brightness
+    /// illustration reads as a jolt - and the load runs underneath that plate regardless. An
     /// ident raised as a separate screen would be a second or two of a black screen doing
     /// nothing, added to the front of every launch; painted onto the curtain that already exists,
     /// it is a second or two the content loader was going to spend anyway. The player sees a
@@ -24,7 +24,7 @@ namespace GlimmerGrove
     /// <b>The letters are a hole, not an object, and every other decision here follows from
     /// that.</b> The first cut drew white lettering and passed a coloured band over it, which is
     /// a different thing wearing the same description: over white, a saturated colour is a colour
-    /// <em>mixed with white</em>, so the brightest the card could ever be was pastel — and the
+    /// <em>mixed with white</em>, so the brightest the card could ever be was pastel - and the
     /// letters stayed equally legible whether the light was on them or not, which is precisely
     /// what stops it reading as light at all. Here the mark is a <see cref="Mask"/> with its
     /// graphic <b>not drawn</b>, so nothing is ever painted in the shape of the word. What is
@@ -33,13 +33,13 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>Nothing spills.</b> There is no glow around the word and no halo behind it, because an
-    /// opaque sheet does not leak — the cut before this had both, and a bloom around a word is
+    /// opaque sheet does not leak - the cut before this had both, and a bloom around a word is
     /// what a lit *object* does. The only thing outside the cut-out is the rule.
     /// </para>
     /// <para>
     /// <b>The ambient is what keeps the word a word.</b> A light narrow enough to travel is a
     /// light that leaves most of the letters unlit, and unlit here means invisible rather than
-    /// dim — so a low fill sits behind the whole cut-out and the sweep moves across it. Without
+    /// dim - so a low fill sits behind the whole cut-out and the sweep moves across it. Without
     /// it the card spells out three letters at a time.
     /// </para>
     ///
@@ -47,7 +47,7 @@ namespace GlimmerGrove
     /// <b>A missing mark leaves black, never a white rectangle.</b> The sprite is claimed onto
     /// the launch screen's own scope and fetched synchronously in the frame this is built, which
     /// is the one place in this game where an unresolved address would be full-screen and
-    /// first — so nothing is built at all when it comes back null (invariant 7b), and the card
+    /// first - so nothing is built at all when it comes back null (invariant 7b), and the card
     /// simply holds its beat on black.
     /// </para>
     /// </summary>
@@ -87,7 +87,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>It was <c>#123E63</c> and was too dark to read the word by.</b> The sweep is
         /// narrow enough to travel, so at any instant most of the mark is lit by this and
-        /// nothing else — and against the curtain's black, a navy that dark spelt out three
+        /// nothing else - and against the curtain's black, a navy that dark spelt out three
         /// letters at a time with the rest merely implied. Raised until every letter reads at
         /// every position of the band (<c>render_splash.py --ident</c>, four values drawn side
         /// by side), and no further: past about <c>#3A82B4</c> the fill starts competing with
@@ -156,7 +156,7 @@ namespace GlimmerGrove
             _ruleWidth = plan.RuleWidth;
 
             // The sheet's cut-out. `showMaskGraphic` is false, so the mark itself is never
-            // painted — it writes the stencil and nothing else, and everything under it is seen
+            // painted - it writes the stencil and nothing else, and everything under it is seen
             // only where a letter is.
             var markRT = UIKit.Box("Cutout", parent, new Vector2(plan.Width, plan.Height),
                                    new Vector2(.5f, .5f), Vector2.zero);
@@ -168,7 +168,7 @@ namespace GlimmerGrove
 
             // **The fade is of the light, not of the sheet**, and that is not tidiness. A `Mask`
             // clips on its own graphic's alpha, so fading the cut-out would be fading the thing
-            // deciding where the hole *is* — the stencil and the light would come up together,
+            // deciding where the hole *is* - the stencil and the light would come up together,
             // through a threshold, on a card whose first frame is the first frame of the game.
             // The hole is cut once and stays cut; what is turned up is what is behind it.
             var lightRT = UIKit.Box("Light", markRT, Vector2.zero, new Vector2(.5f, .5f), Vector2.zero);
@@ -198,7 +198,7 @@ namespace GlimmerGrove
 
             if (_markGroup == null)
             {
-                // Nothing was built — see the class note. Hold the beat anyway rather than
+                // Nothing was built - see the class note. Hold the beat anyway rather than
                 // cutting straight to the loading screen, so a launch that lost one address is
                 // a plain one rather than a flicker.
                 Tween.After(RuleGrow + Hold, done, owner);
@@ -214,7 +214,7 @@ namespace GlimmerGrove
 
             // The card comes on rather than arriving: the light behind the sheet is turned up,
             // which is the only entrance that makes sense for a hole. Nothing scales and nothing
-            // slides — a cut-out that moves is a cut-out in something that moved.
+            // slides - a cut-out that moves is a cut-out in something that moved.
             Tween.Run(LightRise, Ease.OutCubic, t => { if (_markGroup) _markGroup.alpha = t; }, owner)
                  .Delay(LightLead);
 

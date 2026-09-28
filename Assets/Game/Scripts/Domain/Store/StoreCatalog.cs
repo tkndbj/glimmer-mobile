@@ -13,7 +13,7 @@ namespace GlimmerGrove.Store
     /// Same job <c>HeartLimits</c> does for the gate and <c>AdRules</c> does for the ad
     /// table: content is allowed to retune the shop, it is not allowed to redefine what
     /// the shop is. Everything here is a compile-time constant precisely because it is
-    /// what a published file is checked <em>against</em> — a limit that could itself be
+    /// what a published file is checked <em>against</em> - a limit that could itself be
     /// published would not be a limit.
     /// </para>
     /// </summary>
@@ -40,7 +40,7 @@ namespace GlimmerGrove.Store
         ///
         /// <para>
         /// A sanity bound rather than a design one, and it is the server that enforces the
-        /// figure that matters — this side only decides what a card is allowed to promise.
+        /// figure that matters - this side only decides what a card is allowed to promise.
         /// It exists because a misplaced zero in a content push is the cheapest possible way
         /// to hand out ten times what a product costs, and unlike every other number in this
         /// file that mistake cannot be taken back: the currency has been granted against a
@@ -64,7 +64,7 @@ namespace GlimmerGrove.Store
         ///
         /// <para>
         /// A container has to be worth more than the cap the player already has, and the
-        /// shipped base is five — so anything at or below that is a product that takes money
+        /// shipped base is five - so anything at or below that is a product that takes money
         /// and changes nothing, which is the one mistake in this file that a player would
         /// notice from the outside. Six rather than "above the published cap" deliberately:
         /// the cap is content and may be retuned after these are sold, and a limit that moved
@@ -100,7 +100,7 @@ namespace GlimmerGrove.Store
     /// <para>
     /// <b>One authored list, two consumers, and that is the whole point.</b> This table is
     /// read from <c>progression.json</c> by the client to draw the shop, and the seed
-    /// script derives <c>config/products</c> on the server from the same block — so the
+    /// script derives <c>config/products</c> on the server from the same block - so the
     /// amount a card promises and the amount a receipt is honoured for cannot disagree
     /// unless somebody forgets to re-seed, which is the one failure the seeder exists to
     /// make loud. This is invariant 9a's lesson applied to money: the rule exists in two
@@ -109,15 +109,15 @@ namespace GlimmerGrove.Store
     /// </para>
     /// <para>
     /// Like every other optional block in the progression file this is deliberately not a
-    /// schema bump — see <c>HeartRuleTable</c>. A client that predates it reads a file with
+    /// schema bump - see <c>HeartRuleTable</c>. A client that predates it reads a file with
     /// a store block and ignores it; a client that has it reads a file written before the
     /// block existed and falls back to the built-in ladder.
     /// </para>
     /// <para>
     /// <b>Nothing here is safe to lower after release in the way the heart block is.</b>
     /// The heart gate's numbers describe a rule; these describe what somebody has already
-    /// paid for. Lowering a product's grant does not confiscate anything — the receipt is
-    /// keyed to a transaction and honoured once — but it does mean two players who paid the
+    /// paid for. Lowering a product's grant does not confiscate anything - the receipt is
+    /// keyed to a transaction and honoured once - but it does mean two players who paid the
     /// same price got different amounts, and the second one will notice. Retune by adding a
     /// product, never by re-pointing one.
     /// </para>
@@ -181,7 +181,7 @@ namespace GlimmerGrove.Store
         public bool HasAnything => _products.Length > 0 || _goods.Length > 0;
 
         /// <summary>
-        /// True when something on this catalog grants gems — a gem pack or a bundle carrying
+        /// True when something on this catalog grants gems - a gem pack or a bundle carrying
         /// some.
         ///
         /// <para>
@@ -191,7 +191,7 @@ namespace GlimmerGrove.Store
         /// good answer to "I need gems" and a catalog could one day sell them only that way.
         /// </para>
         /// <para>
-        /// A property rather than a call to <see cref="Shelf"/>, which allocates a list — this
+        /// A property rather than a call to <see cref="Shelf"/>, which allocates a list - this
         /// is asked from a run's fail state, which is a moment that must not stutter.
         /// </para>
         /// </summary>
@@ -209,16 +209,16 @@ namespace GlimmerGrove.Store
         /// rungs rather than written down.
         ///
         /// <para>
-        /// It exists for one job — putting a bundle's gems and credits on one scale so a
-        /// shelf can be ranked and its bonus badges computed — and it is derived so that
+        /// It exists for one job - putting a bundle's gems and credits on one scale so a
+        /// shelf can be ranked and its bonus badges computed - and it is derived so that
         /// retuning either ladder moves it automatically. A typed constant would be a third
         /// opinion about the exchange rate sitting between two ladders that already imply
         /// one, and it would go stale the first time either moved.
         /// </para>
         /// <para>
         /// Note carefully what this is <b>not</b>: it is not an exchange the player can
-        /// make. Gems do not buy credits anywhere in this game, deliberately — see
-        /// <see cref="StoreGood"/> — so nothing about this number reaches an economy, and
+        /// make. Gems do not buy credits anywhere in this game, deliberately - see
+        /// <see cref="StoreGood"/> - so nothing about this number reaches an economy, and
         /// it can be wrong by a fifth without any player being able to tell.
         /// </para>
         /// </summary>
@@ -258,7 +258,7 @@ namespace GlimmerGrove.Store
         /// A real catalog rather than an empty one, for the reason every other table here
         /// ships a real default: a content read that fails must cost live tuning and never
         /// a feature. It is kept byte-for-byte in step with <c>progression.json</c> by
-        /// <c>StoreTests</c>, which reads the shipped file and compares — otherwise this
+        /// <c>StoreTests</c>, which reads the shipped file and compares - otherwise this
         /// would be a second opinion about what the shop sells, and the failure mode is a
         /// card promising an amount the server will not grant.
         /// </para>
@@ -267,7 +267,7 @@ namespace GlimmerGrove.Store
             new[]
             {
                 // No season pass here, and that is a removal rather than an omission. It was
-                // `gg_first_bloom_pass`, a $4.99 non-consumable on `StoreShelf.EventPass` — the
+                // `gg_first_bloom_pass`, a $4.99 non-consumable on `StoreShelf.EventPass` - the
                 // one product in this catalog that granted neither currency nor capacity. A
                 // pass is bought with **gems** now (`SeasonLedger.TryBuyPass`), which makes it
                 // an ordinary spend and costs the store nothing at all: no receipt, no
@@ -334,8 +334,8 @@ namespace GlimmerGrove.Store
 
                 // The XP boost's bought window. It reached `progression.json`, the shelf and the
                 // server's clamp when it was built and never reached this list, so a device that
-                // fell back to the built-in catalog — no cached content, or a content file it
-                // could not read — drew a UTILITIES shelf with the free watch on it and nothing
+                // fell back to the built-in catalog - no cached content, or a content file it
+                // could not read - drew a UTILITIES shelf with the free watch on it and nothing
                 // to buy. `StoreTests.TheBuiltInLadderMatchesTheShippedContent` says so and runs
                 // only in the Editor, which is why it sat red rather than being noticed.
                 new StoreGood("xp_boost_day", StoreGoodKind.XpBoost, 24, 120),
@@ -376,7 +376,7 @@ namespace GlimmerGrove.Store
             // <b>An absent block and an empty one are the same thing, and they have to be.</b>
             // <c>JsonUtility</c> instantiates a nested serialisable field whether or not the
             // file carried it, so <c>dto</c> is non-null for a progression file that has never
-            // heard of a shop — which is every file this project shipped before today, and the
+            // heard of a shop - which is every file this project shipped before today, and the
             // reward-vector fixture, which deliberately carries only the blocks it is about.
             // Reporting that as an authoring mistake made two vector tests red for a shop
             // nobody had authored. So the complaint below is gated on something actually
@@ -469,7 +469,7 @@ namespace GlimmerGrove.Store
             if (!oneTime && !string.Equals(dto.kind, "consumable", StringComparison.OrdinalIgnoreCase))
             {
                 problems.Add($"store product '{id}' has kind '{dto.kind}'; it must be 'consumable' or " +
-                             "'nonconsumable', and the two are not interchangeable — the store itself " +
+                             "'nonconsumable', and the two are not interchangeable - the store itself " +
                              "enforces that a nonconsumable is sold once per account");
                 return null;
             }
@@ -486,13 +486,13 @@ namespace GlimmerGrove.Store
             // and it may not be both. See StoreProduct.HeartCapacity: what makes a capacity
             // safe to sell for money is that it is an idempotent entitlement rather than an
             // amount, and a product that also paid gems would put an amount straight back
-            // onto the path — the client would owe half a purchase after the server had
+            // onto the path - the client would owe half a purchase after the server had
             // applied the other half, which is invariant 18's whole argument.
             if (capacity > 0 && (credits > 0 || gems > 0))
             {
                 problems.Add($"store product '{id}' sells a heart capacity and also grants " +
                              "currency; a real-money product may grant one or the other, never " +
-                             "both — see StoreProduct.HeartCapacity");
+                             "both - see StoreProduct.HeartCapacity");
                 return null;
             }
 
@@ -565,7 +565,7 @@ namespace GlimmerGrove.Store
             var badge = ReadBadge(dto.badge, id, problems);
 
             // At most one Popular and one BestValue per shelf. Two of either is not a
-            // content error the player can see as an error — it reads as a shop that cannot
+            // content error the player can see as an error - it reads as a shop that cannot
             // make up its mind, which is exactly what a badge exists to prevent.
             if (badge == StoreBadge.Popular || badge == StoreBadge.BestValue)
             {
@@ -614,7 +614,7 @@ namespace GlimmerGrove.Store
                 problems.Add($"store good '{id}' names unknown kind '{dto.kind}'. Only " +
                              $"'{StoreGoodKinds.Hearts}', '{StoreGoodKinds.HeartBoost}', " +
                              $"'{StoreGoodKinds.XpBoost}' and '{StoreGoodKinds.XpSurge}' can be " +
-                             "bought with gems — currency cannot, " +
+                             "bought with gems - currency cannot, " +
                              "because only the server may grant it");
                 return null;
             }
@@ -681,7 +681,7 @@ namespace GlimmerGrove.Store
         /// Credits per gem, from the cheapest product on each money shelf.
         ///
         /// Falls back to a flat 1 when either shelf is absent, which makes a bundle's value
-        /// meaningless rather than wrong — and nothing but a badge depends on it.
+        /// meaningless rather than wrong - and nothing but a badge depends on it.
         /// </summary>
         static long DeriveCreditsPerGem(StoreProduct[] products)
         {
@@ -719,8 +719,8 @@ namespace GlimmerGrove.Store
         /// </para>
         /// <para>
         /// <b>One-time products are never the baseline.</b> A starter offer is deliberately
-        /// worth several times the ladder — that is what it is for, and it is safe because
-        /// the store will not sell it twice — so measuring the ladder against it would make
+        /// worth several times the ladder - that is what it is for, and it is safe because
+        /// the store will not sell it twice - so measuring the ladder against it would make
         /// every ordinary rung read as no bonus at all. They are still measured against the
         /// ladder themselves, which is exactly the number worth printing on one.
         /// </para>
@@ -736,7 +736,7 @@ namespace GlimmerGrove.Store
                 if (onShelf.Count == 0) continue;
 
                 // The picture on a card is a function of where it sits, so the order is
-                // taken from the reference price rather than from the file — a rung inserted
+                // taken from the reference price rather than from the file - a rung inserted
                 // in the middle re-draws everything above it and nothing has to be re-authored.
                 onShelf.Sort((a, b) => a.ReferenceUsdCents.CompareTo(b.ReferenceUsdCents));
 

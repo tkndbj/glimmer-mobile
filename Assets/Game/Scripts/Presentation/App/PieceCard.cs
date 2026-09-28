@@ -10,7 +10,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>Two screens offer the same catalog and one of them was drawn twice.</b>
     /// <c>HomesteadShopScreen</c> sells a piece and <c>HomesteadPickerOverlay</c> stands one on
-    /// a tile, and until this existed the picker carried its own chrome — a drawn rounded box
+    /// a tile, and until this existed the picker carried its own chrome - a drawn rounded box
     /// with a traced outline over it, which is the shape this UI used before it had a kit. So a
     /// player walked from a shelf of kit cards straight into a grid of something else, one tap
     /// apart, and the two could only be brought back together by hand. Reported from a device
@@ -20,7 +20,7 @@ namespace GlimmerGrove
     /// <b>It is a builder rather than a table of numbers, and that is the point.</b> A table
     /// says what the card should be and leaves each caller to assemble it; two callers
     /// assembling one design is two designs a week later. What both screens hold now is the
-    /// object this hands back — the plate, the picture, the name and the one line under it —
+    /// object this hands back - the plate, the picture, the name and the one line under it -
     /// and everything a screen has of its own (a padlock, a price, a "take it away" cross)
     /// goes on top of that.
     /// </para>
@@ -41,7 +41,7 @@ namespace GlimmerGrove
         /// The corner the plate is drawn with, for anything a caller has to lay over it.
         ///
         /// The plate is <c>Skins.Card</c> and carries its own keyline, so this is <em>not</em>
-        /// for tracing a rim round it — see <c>HomesteadShopScreen.ShopCell</c> for the tinted
+        /// for tracing a rim round it - see <c>HomesteadShopScreen.ShopCell</c> for the tinted
         /// box and traced outline this kit replaced. It is here so a veil covering the plate
         /// has the same corner the plate does.
         /// </summary>
@@ -55,7 +55,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// A transparent <c>Image</c> rather than the plate itself, because the plate is
-        /// inset — a thumb landing in the gutter between two cards would otherwise hit
+        /// inset - a thumb landing in the gutter between two cards would otherwise hit
         /// neither, which reads as a grid that ignores you rather than as a near miss.
         /// </para>
         /// </summary>
@@ -76,7 +76,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// It carries its own keyline and its own face, so there is nothing to trace and
-        /// nothing to tint — which is what lets a cell say which state it is in with a padlock,
+        /// nothing to tint - which is what lets a cell say which state it is in with a padlock,
         /// a badge and a caption rather than with a colour that has to be legible against
         /// forty different pictures.
         /// </para>
@@ -96,7 +96,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Computed rather than typed.</b> The art used to be pinned a fixed distance from
         /// the top of the plate, which left it riding high in a box whose real bounds are the
-        /// plate's top edge and the caption's — so every cell had a band of empty plate under
+        /// plate's top edge and the caption's - so every cell had a band of empty plate under
         /// the picture and none above it. This is the middle of the space the labels actually
         /// leave, so a change to either label moves the picture with it instead of quietly
         /// unbalancing the card.
@@ -115,7 +115,7 @@ namespace GlimmerGrove
         public static float ArtBox(float cell) => 196f * ScaleFor(cell);
 
         /// <summary>
-        /// The picture. Left with no sprite, because what goes on it is the caller's — the
+        /// The picture. Left with no sprite, because what goes on it is the caller's - the
         /// shop's thumbnail, the picker's, or nothing at all while the atlas is still arriving.
         ///
         /// An <c>Image</c> with no sprite is a solid white rectangle rather than a blank
@@ -138,8 +138,8 @@ namespace GlimmerGrove
         /// A glyph standing exactly where the picture does and at a fraction of its size: the
         /// shop's padlock, the picker's "take it away" cross.
         ///
-        /// Here rather than measured at each call site because the two are the same statement —
-        /// "this cell is not a picture of a thing" — and a glyph half a card away from where
+        /// Here rather than measured at each call site because the two are the same statement -
+        /// "this cell is not a picture of a thing" - and a glyph half a card away from where
         /// the picture would have been is a card that looks broken rather than empty.
         /// </summary>
         public static Image Glyph(string name, Image plate, float cell, Sprite sprite,
@@ -156,7 +156,7 @@ namespace GlimmerGrove
             return glyph;
         }
 
-        /// <summary>What the thing is called. Shrinks rather than clipping — every name is a loc key.</summary>
+        /// <summary>What the thing is called. Shrinks rather than clipping - every name is a loc key.</summary>
         public static Text Name(Image plate, float cell)
         {
             float k = ScaleFor(cell);

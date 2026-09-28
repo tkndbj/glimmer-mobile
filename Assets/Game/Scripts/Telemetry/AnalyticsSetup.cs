@@ -12,7 +12,7 @@ namespace GlimmerGrove.Analytics
     /// </para>
     /// <para>
     /// <b>Two platforms, one assembly, because they are one concern.</b> Every other vendor
-    /// here has an assembly to itself — <c>Ads</c>, <c>Cloud</c>, <c>Iap</c>, <c>Privacy</c> —
+    /// here has an assembly to itself - <c>Ads</c>, <c>Cloud</c>, <c>Iap</c>, <c>Privacy</c> -
     /// and that reads like a rule about vendors when it is really a rule about concerns: each
     /// of those is the only supplier of the thing it supplies. Measurement is one concern with
     /// two suppliers answering different halves of it, and splitting them would give the boot
@@ -21,7 +21,7 @@ namespace GlimmerGrove.Analytics
     /// <para>
     /// <b>Each half is a partial method, absent rather than empty when its package is not
     /// installed.</b> A call to an unimplemented partial is removed by the compiler, so the
-    /// alternative — a body wrapped in <c>#if</c> — differs only in leaving a method that does
+    /// alternative - a body wrapped in <c>#if</c> - differs only in leaving a method that does
     /// nothing and a define that has to be spelled correctly in two files to say so.
     /// </para>
     /// </summary>

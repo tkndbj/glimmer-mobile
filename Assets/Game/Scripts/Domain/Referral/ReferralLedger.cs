@@ -20,7 +20,7 @@ namespace GlimmerGrove.Referral
     /// <para>
     /// The server has already moved the currency by the time one of these exists; what is
     /// still to do is bank the rest of the drops and adopt the balances, and that happens in
-    /// <see cref="Land"/> — inside the chest overlay's claim, so the payout's snapshot of the
+    /// <see cref="Land"/> - inside the chest overlay's claim, so the payout's snapshot of the
     /// pills is taken before the grant lands (<c>RewardFlight.Begin</c>'s rule) and the
     /// ceremony reports a chest being opened rather than one that was opened a moment ago.
     /// </para>
@@ -32,7 +32,7 @@ namespace GlimmerGrove.Referral
 
         /// <summary>
         /// Who this was rolled for. <see cref="Land"/> refuses if somebody else is signed in by
-        /// the time the ceremony runs it — a payout is currency and hearts moving into a
+        /// the time the ceremony runs it - a payout is currency and hearts moving into a
         /// wallet, and there is no undo for putting them in the wrong one (invariant 17's
         /// reason). The account keeps its in-flight note, so it banks on its own next tap.
         /// </summary>
@@ -72,7 +72,7 @@ namespace GlimmerGrove.Referral
 
         /// <summary>
         /// Banks the drops and adopts the balances. Answers the drops, or null when there is
-        /// nothing to land — which is what <c>ChestClaim</c> shows by closing. Idempotent: a
+        /// nothing to land - which is what <c>ChestClaim</c> shows by closing. Idempotent: a
         /// second call answers the same list and banks nothing again.
         /// </summary>
         public List<ChestDrop> Land()
@@ -107,8 +107,8 @@ namespace GlimmerGrove.Referral
     ///
     /// <para>
     /// <b>Nothing here is in the save, and that is the design</b> (invariant 51). Every count
-    /// is a fact about <em>other</em> accounts — how many typed this code, how many cleared a
-    /// chapter — which no device can know and no merge could join, so the server owns the
+    /// is a fact about <em>other</em> accounts - how many typed this code, how many cleared a
+    /// chapter - which no device can know and no merge could join, so the server owns the
     /// lot and this class holds a per-account cache for drawing. A chest is <em>paid by the
     /// server on request</em> rather than claimed with a derived id: the request needs the
     /// network anyway, because the count it pays on lives nowhere else, and a payout the
@@ -117,8 +117,8 @@ namespace GlimmerGrove.Referral
     /// </para>
     /// <para>
     /// <b>The invitee's milestone is settled by asking.</b> The server judges the chapter off
-    /// the save it holds, so the ask goes out after a <em>settled</em> sync — never after the
-    /// change itself (invariant 19j) — and only when this device's own ledger says the
+    /// the save it holds, so the ask goes out after a <em>settled</em> sync - never after the
+    /// change itself (invariant 19j) - and only when this device's own ledger says the
     /// chapter is cleared, once per server revision. A device that has never asked at all
     /// asks once, so an invitee who typed the code on one phone and played on another is
     /// still settled.
@@ -138,13 +138,13 @@ namespace GlimmerGrove.Referral
         ///
         /// <para>
         /// One gate over all three calls meant the read <see cref="RefreshAsync"/> fires the
-        /// moment the invite page opens refused the redeem the player typed a second later —
+        /// moment the invite page opens refused the redeem the player typed a second later -
         /// reported to them as <em>unavailable</em>, which is a lie about a call that was never
         /// made. A read and a write do not conflict: the read asks a question, and if a write
         /// lands first the read's answer is simply out of date. So a read is skipped while
         /// another read is out (there is nothing to gain from two), a write is refused only by
         /// another write (which is a double tap), and the ordering between them is held by
-        /// <see cref="Claim"/> rather than by a lock — asymmetrically, because the two are not
+        /// <see cref="Claim"/> rather than by a lock - asymmetrically, because the two are not
         /// equals: a read yields to a write and a write yields to nothing.
         /// </para>
         /// </summary>
@@ -160,12 +160,12 @@ namespace GlimmerGrove.Referral
         /// flight comes back with the pre-redeem answer and adopts it, and the page goes back
         /// to offering the code the player has just used. A read captures this before it calls
         /// and drops its reply if anything moved meanwhile, which is correct rather than merely
-        /// safe — the thing it would be writing is known to be older than what is already held.
+        /// safe - the thing it would be writing is known to be older than what is already held.
         /// </para>
         /// <para>
         /// <b>A write is deliberately not ordered by it</b> (<see cref="Claim.Write"/>), and
         /// making it so was a bug that cost a redeem: with the calls overlapping the other way
-        /// round — redeem out, read out, read back, redeem back — the read's arrival bumped
+        /// round - redeem out, read out, read back, redeem back - the read's arrival bumped
         /// this and the redeem's own reply was then discarded as stale. A write is the freshest
         /// word there is about this account, because the server has just acted on it.
         /// </para>
@@ -240,7 +240,7 @@ namespace GlimmerGrove.Referral
         ///
         /// <para>
         /// A count of <em>chests</em> rather than of rows, because that is what a tap opens and
-        /// what the hub's task badge counts — a row paying two chests with one taken is one
+        /// what the hub's task badge counts - a row paying two chests with one taken is one
         /// thing still to collect, and a badge reading the row would say nothing had changed
         /// after the first ceremony.
         /// </para>
@@ -325,7 +325,7 @@ namespace GlimmerGrove.Referral
 
             // Anything in flight belongs to the account that has just been left. Bumping here
             // is what makes `Reply` drop it; without it a read, a redeem or a claim issued as
-            // one player could land as another — and `Adopt` would cache the first player's
+            // one player could land as another - and `Adopt` would cache the first player's
             // code and counts under the second player's key. Invariant 17's shape, one layer
             // down: an answer may only ever be adopted by the account that asked for it.
             Interlocked.Increment(ref _generation);
@@ -334,7 +334,7 @@ namespace GlimmerGrove.Referral
 
             // The listener was watching the account that has just been left. `SettleListener`
             // stops it and attaches one for whoever is signed in now, or nothing if that is
-            // nobody — a stream against a signed-out uid is a permission error on a loop.
+            // nobody - a stream against a signed-out uid is a permission error on a loop.
             SettleListener();
 
             Raise();
@@ -345,8 +345,8 @@ namespace GlimmerGrove.Referral
         /// ledger had adopted at the time.
         ///
         /// <para>
-        /// Taken before the call and tested after it. It fails closed — an answer that cannot
-        /// prove it is still wanted is dropped rather than applied — and dropping one costs
+        /// Taken before the call and tested after it. It fails closed - an answer that cannot
+        /// prove it is still wanted is dropped rather than applied - and dropping one costs
         /// nothing, because whatever moved the ledger underneath it is by definition newer.
         /// </para>
         /// </summary>
@@ -357,7 +357,7 @@ namespace GlimmerGrove.Referral
         /// <b>A read and a write claim different things, and conflating them cost a redeem.</b>
         /// A read asks a question, so anything that landed while it was out is fresher and the
         /// read's answer is dropped. A write <em>is</em> the freshest word there is about this
-        /// account — the server has just acted on it — so a read that happens to come back
+        /// account - the server has just acted on it - so a read that happens to come back
         /// after it must not discard it. Both were <see cref="Take"/> for a while, and the
         /// order redeem-out, read-out, read-back, redeem-back left the ledger never learning
         /// the code had been bound: the panel closed, the toast said welcome, and the page went
@@ -393,7 +393,7 @@ namespace GlimmerGrove.Referral
 
             /// <summary>
             /// A claim that always holds, for a caller that has already proved the answer is
-            /// wanted by other means — <see cref="Landed"/>, whose payout checked its own owner
+            /// wanted by other means - <see cref="Landed"/>, whose payout checked its own owner
             /// before it banked a thing (<see cref="ReferralPayout.Land"/>).
             /// </summary>
             public static Claim Open => new Claim(null, 0, false);
@@ -412,7 +412,7 @@ namespace GlimmerGrove.Referral
         /// account may discard.
         ///
         /// <para>
-        /// Pure, named and tested, rather than four operators inside a property — because it is
+        /// Pure, named and tested, rather than four operators inside a property - because it is
         /// the rule that decides whether one player's referral state may be written over
         /// another's, and that is the one failure on this page with no undo.
         /// </para>
@@ -430,7 +430,7 @@ namespace GlimmerGrove.Referral
         /// <para>
         /// Two clauses, and the second is the one that is easy to leave out. The state may say
         /// exactly what <see cref="ReferralState.Empty"/> says and still be a change, because
-        /// the *first* answer turns <see cref="ReferralState.IsKnown"/> on — and that is what
+        /// the *first* answer turns <see cref="ReferralState.IsKnown"/> on - and that is what
         /// moves the offer row off the device's own guess and onto the server's word.
         /// </para>
         /// </summary>
@@ -462,13 +462,13 @@ namespace GlimmerGrove.Referral
 
         // ------------------------------------------------------------- watching
         /// <summary>
-        /// How often something watching this should ask, in seconds — with a live listener, and
+        /// How often something watching this should ask, in seconds - with a live listener, and
         /// without one.
         ///
         /// <para>
         /// <b>A referral count is the one thing here no local event can announce.</b> How many
         /// strangers typed the code and how many cleared the chapter are facts about other
-        /// people's play (invariant 51), so nothing on this device fires when one changes — the
+        /// people's play (invariant 51), so nothing on this device fires when one changes - the
         /// sync hook (<see cref="OnSettled"/>) is driven by *this* account's saves and says
         /// nothing about an invitee's.
         /// </para>
@@ -485,7 +485,7 @@ namespace GlimmerGrove.Referral
         /// player.</b> Every ask is a callable that opens a transaction and reads this account's
         /// referral document <em>and its whole save</em> (<c>getReferral</c> judges the milestone
         /// off the save the server holds, invariant 51a), so a poll is the most expensive thing a
-        /// standing screen in this game does per minute — for a number that moves when a stranger
+        /// standing screen in this game does per minute - for a number that moves when a stranger
         /// finishes a chapter, which is rare. The listener already carries the common case in the
         /// moment it happens, so the net behind it is slow (ten minutes) and the one without it,
         /// which is the failure path rather than the normal one, is two minutes: a friend who
@@ -506,7 +506,7 @@ namespace GlimmerGrove.Referral
         /// How long an answer counts as fresh enough that asking again would be waste.
         ///
         /// It is what makes <see cref="Poke"/> safe to call from anywhere that thinks the answer
-        /// may have moved — a screen opening, a tab returning, a watcher ticking — without three
+        /// may have moved - a screen opening, a tab returning, a watcher ticking - without three
         /// of them in a row costing three calls.
         /// </summary>
         const double FreshSeconds = 5d;
@@ -534,7 +534,7 @@ namespace GlimmerGrove.Referral
         // The whole of the lifetime rule, in one place: a listener exists exactly while
         // somebody is watching, the app is in the foreground, and an account is signed in.
         // Every path that can change one of those three ends at `Settle`, which attaches or
-        // detaches to match — so there is no sequence of screen changes, backgroundings and
+        // detaches to match - so there is no sequence of screen changes, backgroundings and
         // account switches that can leave one running with nobody to hear it.
 
         static readonly ReferralFeedWatch Feed = new ReferralFeedWatch(
@@ -569,8 +569,8 @@ namespace GlimmerGrove.Referral
         ///
         /// <para>
         /// <b>This is the rule that makes a profile or shop open free.</b> Before it, every
-        /// screen carrying a referral reading asked the server on open — a callable running a
-        /// transaction over the whole save, the most expensive thing a standing screen does —
+        /// screen carrying a referral reading asked the server on open - a callable running a
+        /// transaction over the whole save, the most expensive thing a standing screen does -
         /// and the listener's first delivery asked again, deduplicated only by a five-second
         /// window. Now a delivery is compared with the counter the cached answer was read
         /// under: equal means the server has not moved this account's referral state since,
@@ -580,10 +580,10 @@ namespace GlimmerGrove.Referral
         /// <para>
         /// Three things force an ask, and every one fails toward asking: nothing has ever been
         /// read for this account; the listener could not read the document; or the stamp and
-        /// the delivery differ — which an answer read with no listener speaking always does,
+        /// the delivery differ - which an answer read with no listener speaking always does,
         /// because its stamp is <see cref="ReferralState.UnknownFeed"/>. A stamp taken at the
         /// moment a read went out can only be older than the reply, so a bump landing between
-        /// the two makes the next delivery differ and the device asks once more — never fewer
+        /// the two makes the next delivery differ and the device asks once more - never fewer
         /// times than the server moved.
         /// </para>
         /// </summary>
@@ -598,7 +598,7 @@ namespace GlimmerGrove.Referral
         ///
         /// <para>
         /// <b>A socket held open across a backgrounding is the one cost this design must not
-        /// pay.</b> Firestore would keep the stream alive and the OS may or may not let it —
+        /// pay.</b> Firestore would keep the stream alive and the OS may or may not let it -
         /// on a handset that is a radio kept warm for a page nobody is looking at, and on iOS
         /// it is a connection that will be torn down under us anyway. Detaching is cheap and
         /// re-attaching is cheaper than being wrong about which.
@@ -619,7 +619,7 @@ namespace GlimmerGrove.Referral
         /// <para>
         /// <b>The ask is the half that is easy to leave out.</b> Nothing was listening while the
         /// app was away, so anything that happened in the gap produced no callback and never
-        /// will — a re-attached listener reports the document as it is now, which is a snapshot
+        /// will - a re-attached listener reports the document as it is now, which is a snapshot
         /// this device has no reason to think is new. Without the poke a friend who finished
         /// overnight would not show until the backstop timer came round.
         /// </para>
@@ -627,7 +627,7 @@ namespace GlimmerGrove.Referral
         public static void Resumed()
         {
             // A re-attached listener delivers the document as it stands, and `Pump` compares
-            // that with the stamp on the cached answer — so with a listener the gap is covered
+            // that with the stamp on the cached answer - so with a listener the gap is covered
             // by the delivery, and only a device that could not re-attach asks blind.
             if (!Feed.Resume()) Poke();
         }
@@ -637,7 +637,7 @@ namespace GlimmerGrove.Referral
 
         /// <summary>
         /// The feed was delivered. <b>This may be on any thread</b>, so it does exactly two
-        /// things that are safe on any thread — records the counter and raises a flag — and
+        /// things that are safe on any thread - records the counter and raises a flag - and
         /// leaves the rest to <see cref="Pump"/>.
         /// </summary>
         static void OnFeedMoved(long feedRev)
@@ -657,7 +657,7 @@ namespace GlimmerGrove.Referral
         /// nothing assumes it: were a callback to run <see cref="Adopt"/> on a pool thread it
         /// would raise <see cref="Changed"/> straight into screen code and write
         /// <c>PlayerPrefs</c>, neither of which survives it. A flag costs nothing and is right
-        /// either way — and it coalesces a burst of changes into one ask for free.
+        /// either way - and it coalesces a burst of changes into one ask for free.
         /// </para>
         /// </summary>
         public static void Pump()
@@ -694,7 +694,7 @@ namespace GlimmerGrove.Referral
             {
                 // Taken before the call, not after: anything that lands while this is out is
                 // newer than what comes back, and may be a different account's entirely. The
-                // feed stamp is taken before for the opposite reason — see ReferralState.FeedRev.
+                // feed stamp is taken before for the opposite reason - see ReferralState.FeedRev.
                 var claim = Claim.Take();
                 long feed = FeedAtAsk;
 
@@ -739,11 +739,11 @@ namespace GlimmerGrove.Referral
                 var (result, reply) = await Backend.RedeemReferralAsync(code, cancellation);
                 if (!result.Ok || reply == null) return ReferralRedeemOutcome.Unavailable;
 
-                // The bind itself stands whatever happened here — it is the server's, and
+                // The bind itself stands whatever happened here - it is the server's, and
                 // it is keyed on the account that asked. What must not happen is *this*
                 // account's state being written over whoever is signed in now. A write bumps
                 // the feed, so the stamp taken before it is older than the counter the
-                // listener delivers next and the device reads once more — which is right: the
+                // listener delivers next and the device reads once more - which is right: the
                 // server may have settled more than this reply carries.
                 Adopt(reply.State?.WithFeed(feed), claim);
 
@@ -846,22 +846,22 @@ namespace GlimmerGrove.Referral
         /// <b>It raises <see cref="Changed"/> only when the answer says something new</b>, and
         /// that is load-bearing rather than tidy. Every visit to the invite page fires a read,
         /// and the overwhelmingly common reply is the state the device already had; raising on
-        /// it told the page a change had happened, and the page — which cannot tell a real
-        /// change from a null one — redrew itself a network round-trip after it had drawn,
+        /// it told the page a change had happened, and the page - which cannot tell a real
+        /// change from a null one - redrew itself a network round-trip after it had drawn,
         /// replaying the entrance on all fifty rows and throwing away the scroll position. The
         /// comparison is <see cref="ReferralState.Matches"/>, which ignores the fetch stamp for
         /// exactly this reason.
         /// </para>
         /// <para>
         /// <b>The cache is written on the same test</b>, because <see cref="DevicePrefs"/>
-        /// compares the serialised string and the fetch stamp is inside it — so an unconditional
+        /// compares the serialised string and the fetch stamp is inside it - so an unconditional
         /// write is a whole-store <c>PlayerPrefs</c> flush on every screen entry, for a file
         /// whose content did not change. The first known answer is always written, or a device
         /// that read once and learned nothing new would never cache anything at all.
         /// </para>
         /// <para>
         /// <b>The staleness test is in here rather than at the three call sites</b>, so there is
-        /// one place that decides and it decides in the same breath as it writes — a caller
+        /// one place that decides and it decides in the same breath as it writes - a caller
         /// cannot forget it, and there is no window between asking and acting for a reader of
         /// this file to wonder about.
         /// </para>
@@ -869,7 +869,7 @@ namespace GlimmerGrove.Referral
         /// <b>Threading.</b> This, and everything it raises, is main-thread only: it writes
         /// <c>PlayerPrefs</c> and raises <see cref="Changed"/> straight into screen code, and
         /// neither tolerates anything else. The interlocked counters above are not a claim to
-        /// the contrary — they guard the two <em>in-flight flags</em>, which are set on either
+        /// the contrary - they guard the two <em>in-flight flags</em>, which are set on either
         /// side of an <c>await</c> and which <see cref="IsBusy"/> may be read from anywhere.
         /// </para>
         /// </summary>
@@ -949,7 +949,7 @@ namespace GlimmerGrove.Referral
         ///
         /// <para>
         /// A note is written before a claim and cleared when its drops land, so a reply lost on
-        /// the way back leaves one standing for ever — that is the design (see
+        /// the way back leaves one standing for ever - that is the design (see
         /// <see cref="ReferralLanding"/>), and it is what makes the retry bank rather than skip.
         /// The list is already bounded in the ordinary case, because a subject is noted at most
         /// once and there are only so many subjects; what this guards is the string outliving

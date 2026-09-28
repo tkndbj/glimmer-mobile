@@ -30,7 +30,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// <c>Application.dataPath</c> is a native call, and the offline runner has no engine
-        /// behind it — so every test here that reads the rules file used to be one that "needs
+        /// behind it - so every test here that reads the rules file used to be one that "needs
         /// the Editor", which for a gate whose whole job is to fail before the Editor is opened
         /// is the same as not having it (the lesson of 29e). The runner is started from the
         /// checkout, so walking up from the working directory to the folder holding
@@ -108,7 +108,7 @@ namespace GlimmerGrove.Tests
 
                     // The shield too. A fixture that left it out would prove three quarters of
                     // the wire, and the quarter it left out is the one a player paid gems for
-                    // — invariant 12a's rule that a round trip is only as complete as what is
+                    // - invariant 12a's rule that a round trip is only as complete as what is
                     // fed into it.
                     shieldFromDay = 20_313,
                 },
@@ -166,7 +166,7 @@ namespace GlimmerGrove.Tests
 
                 // The line: what was bought, what stands on each colour, and when that was
                 // arranged. The stamp is here because it *is* the merge rule for the rows beside
-                // it — a fixture carrying the arrangement and not its date would prove the wire
+                // it - a fixture carrying the arrangement and not its date would prove the wire
                 // and leave out the one field that decides which of two devices' lines survives.
                 wardsOwned = new[] { "mortar", "rime" },
                 wardLoadout = new[]
@@ -213,7 +213,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// A document written before the daily challenges existed reads back as no day, no rows,
-        /// no tally and no deal — the fact the join treats as "knows nothing", so the local side
+        /// no tally and no deal - the fact the join treats as "knows nothing", so the local side
         /// wins and nothing has to detect the upgrade.
         /// </summary>
         [Test]
@@ -233,7 +233,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The block survives the round trip whole, and an empty one comes back as the writer
-        /// drops it — day nought with no rows — so SaveDelta never reads a launch as changed.
+        /// drops it - day nought with no rows - so SaveDelta never reads a launch as changed.
         /// </summary>
         [Test]
         public void TheChallengeBlockSurvivesTheRoundTrip()
@@ -260,7 +260,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// A document written before utilities existed reads back as no rows, which is the same
-        /// fact as "granted none" — so the join takes the local side whole and nothing has to
+        /// fact as "granted none" - so the join takes the local side whole and nothing has to
         /// detect the upgrade. The bargain every id-keyed section in this file makes.
         /// </summary>
         [Test]
@@ -308,7 +308,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A row whose counters are both nought says nothing, so it is never written — and if it
+        /// A row whose counters are both nought says nothing, so it is never written - and if it
         /// were, the round trip would hand back a row it did not receive and
         /// <c>SaveDelta</c> would read every launch as changed, for ever.
         /// </summary>
@@ -332,7 +332,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The rules pin the document's top-level keys with <c>hasOnly</c>. If the
         /// client ever writes a key that list does not contain, Firestore rejects the
-        /// write — every write, for every player, permanently — and the only symptom is
+        /// write - every write, for every player, permanently - and the only symptom is
         /// that cloud save stops working. Catching that here costs one test.
         /// </summary>
         [Test]
@@ -355,7 +355,7 @@ namespace GlimmerGrove.Tests
 
             foreach (var key in document.Keys)
                 Assert.IsTrue(allowed.Contains(key),
-                              $"the client writes '{key}', which firestore.rules would reject — " +
+                              $"the client writes '{key}', which firestore.rules would reject - " +
                               "every push would fail with permission-denied");
         }
 
@@ -367,7 +367,7 @@ namespace GlimmerGrove.Tests
         /// The keys test above proves a field is <em>allowed</em>; this proves it stays allowed
         /// as it grows. The rules bound each list with <c>size() &lt;= N</c>, and because
         /// <c>wellFormed()</c> is one expression over the whole document, a list one entry
-        /// over its bound does not lose that entry — it loses every save write for that account,
+        /// over its bound does not lose that entry - it loses every save write for that account,
         /// for ever, with no screen saying so (invariant 12a). That is exactly how the lesson
         /// ledger failed on 2026-09-16: the rules said 64, the client said nothing, and the
         /// longest-played account was the first to cross it. Every bound below is now paired
@@ -375,14 +375,14 @@ namespace GlimmerGrove.Tests
         /// change to either side alone fails here.
         /// </para>
         /// <para>
-        /// Lists with no constant of their own are bounded by content — the companion roster,
-        /// the heart-container products and the ad placements — and their bounds are generous
+        /// Lists with no constant of their own are bounded by content - the companion roster,
+        /// the heart-container products and the ad placements - and their bounds are generous
         /// by an order of magnitude against what ships.
         /// </para>
         /// <para>
         /// <b>The grove's four lists are deliberately absent from this table and still bounded
         /// in the rules.</b> Nothing in this build writes them, so there is no client cap to
-        /// pair — but the keys stay allow-listed, because dropping a key a rolled-back client
+        /// pair - but the keys stay allow-listed, because dropping a key a rolled-back client
         /// still writes costs that client every save write (invariant 12a).
         /// </para>
         /// </summary>
@@ -420,7 +420,7 @@ namespace GlimmerGrove.Tests
             {
                 int bound = Bound(expression);
                 Assert.LessOrEqual(clientCap, bound,
-                                   $"the client may write {clientCap} '{field}' rows and the rules allow {bound} — " +
+                                   $"the client may write {clientCap} '{field}' rows and the rules allow {bound} - " +
                                    "every save write for an account at the cap would be refused");
             }
 
@@ -518,7 +518,7 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual("Fern", restored.wallet.displayName);
 
             // The hint ledger, whole. All three or none: the count is derived from the first
-            // two, and the deadline moves without the count moving — a device that received
+            // two, and the deadline moves without the count moving - a device that received
             // only what is on screen would have nothing to join against, which is the fault
             // the heart ledger cost a schema version to fix.
             Assert.AreEqual(9, restored.wallet.hintsProduced);
@@ -527,7 +527,7 @@ namespace GlimmerGrove.Tests
 
             // The streak used to stay on the phone, so a player's flame quietly restarted
             // on their second device. All four dates have to make the round trip or the
-            // merge on the other side has nothing to join against — and the shield is the
+            // merge on the other side has nothing to join against - and the shield is the
             // sharpest of them, because a player who paid to be away and then opened the game
             // on their tablet must not find the streak they bought cover for already broken.
             Assert.AreEqual(20_310, restored.streak.startDay);
@@ -578,18 +578,18 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// This is the test that was missing. <c>groveLandOwned</c> (a grove field, removed
         /// with the Grovement in v33) shipped in save schema v17,
-        /// reached <c>SaveDelta</c> — which is the half everybody remembers, because it decides
-        /// what a sync sends — and never reached <see cref="FirestoreSaveMapper"/> or
+        /// reached <c>SaveDelta</c> - which is the half everybody remembers, because it decides
+        /// what a sync sends - and never reached <see cref="FirestoreSaveMapper"/> or
         /// <c>firestore.rules</c>. Every existing wire test passed, because a field the fixture
         /// does not carry is a field no assertion mentions. The round trip could only ever be
         /// as complete as what is fed into it, so the completeness has to be checked rather
-        /// than trusted — exactly the argument invariant 4c makes about the manifest writer,
+        /// than trusted - exactly the argument invariant 4c makes about the manifest writer,
         /// which lost a live event and thirty prices the same way.
         /// </para>
         /// <para>
         /// It deliberately checks the <em>fixture</em> rather than the mapper. A test that read
         /// the mapper's output and demanded a key per field would have to know which fields are
-        /// deliberately absent — the currency ledgers are not uploaded at all — and would grow a
+        /// deliberately absent - the currency ledgers are not uploaded at all - and would grow a
         /// list of exceptions that is itself a thing to forget to update. Making the fixture
         /// complete makes the round trip complete, and the round trip already knows what
         /// "survived" means.
@@ -623,7 +623,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// A document written before rewards were collected by hand reads back as no floors
         /// and an unseeded flag. Both are what the join treats as "knows nothing", so the
-        /// local side wins and nothing has to detect the upgrade — the same bargain the
+        /// local side wins and nothing has to detect the upgrade - the same bargain the
         /// streak block makes one version earlier.
         /// </summary>
         [Test]
@@ -642,7 +642,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// A document written before the streak travelled reads back as four zeros rather
-        /// than throwing — and zero is the value the join treats as "knows nothing", so the
+        /// than throwing - and zero is the value the join treats as "knows nothing", so the
         /// local streak simply wins. Nothing has to detect the upgrade.
         /// </summary>
         [Test]
@@ -746,7 +746,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The functions run in one region and Firestore lives in another only if
         /// somebody edits one and forgets the other. Both are constants, so the
-        /// mismatch is cheap to catch and expensive to debug — it shows up as every
+        /// mismatch is cheap to catch and expensive to debug - it shows up as every
         /// callable timing out on a device and nothing at all in the Editor.
         /// </summary>
         [Test]

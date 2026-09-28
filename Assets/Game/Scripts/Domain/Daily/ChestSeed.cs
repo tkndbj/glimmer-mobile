@@ -7,8 +7,8 @@ namespace GlimmerGrove.Daily
     /// <para>
     /// A chest used to be identified by a day and an index and nothing else, so the seed
     /// was three loose arguments on every roll. A task's chest is identified by a task and
-    /// the period it was finished in — a <em>subject</em>, in <see cref="ChestRandom"/>'s
-    /// terms — and threading a second trio through every method of
+    /// the period it was finished in - a <em>subject</em>, in <see cref="ChestRandom"/>'s
+    /// terms - and threading a second trio through every method of
     /// <see cref="ChestDefinition"/> would have doubled the one loop whose stream numbers
     /// the server mirrors. So the identity is a value and the roll takes the value.
     /// </para>

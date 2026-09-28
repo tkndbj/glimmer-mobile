@@ -76,7 +76,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// The lesson about the line points at the field's own top row, which is as close as a
-        /// cell anchor can get to the wards standing above it — <c>ProtoView</c>'s anchors are
+        /// cell anchor can get to the wards standing above it - <c>ProtoView</c>'s anchors are
         /// cells, and a tip pointing at nothing is worse than no tip.
         /// </summary>
         public override int FriendCell => Width / 2;
@@ -86,8 +86,8 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>It was public, and was a lesson's <c>Icon</c>.</b> Pointing at a cog was held to be
-        /// unreliable while one was dealt into the gem field at a rate — a rung could open with
-        /// none standing, and a lesson is offered once in a player's life — so the ring went on a
+        /// unreliable while one was dealt into the gem field at a rate - a rung could open with
+        /// none standing, and a lesson is offered once in a player's life - so the ring went on a
         /// turret and the panel <em>drew</em> the cog instead. A cog is dropped by a felled raider
         /// now, so the ring goes on the cog (<see cref="LiveCog"/>) and there is nothing left for a
         /// picture in a panel to say.
@@ -100,14 +100,14 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>The bomb, not the bomber, and that is the whole of what was wrong.</b> This lesson
-        /// used to be raised when a bomber walked on and ringed the raider — so the one sentence
+        /// used to be raised when a bomber walked on and ringed the raider - so the one sentence
         /// it exists to say, <em>tap this</em>, arrived while the thing to tap did not exist, and
         /// the panel was long gone by the time one landed. Reported from a device exactly that
         /// way. It is raised by <see cref="Bombed"/> now, on the drop.
         /// </para>
         /// <para>
         /// <b>Asked at the moment the tip goes up rather than remembered</b>, because the two are
-        /// a beat apart — a lesson is resolved through <c>Lessons</c> every time one is offered,
+        /// a beat apart - a lesson is resolved through <c>Lessons</c> every time one is offered,
         /// so a null here is a tip that teaches without pointing rather than a ring drawn round
         /// bare hill. The run is held while a tip is up (<c>RunHold.Teaching</c>) and a bomb only
         /// leaves when it is tapped, so in practice the one that raised this is still there.
@@ -150,13 +150,13 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The cog itself, where this lesson used to ring the middle of the ward line.</b> That
         /// anchor was the best that could be said while a cog was dealt into the gem field and a
-        /// rung might open with none standing — the lesson had to point at the thing a cog is
+        /// rung might open with none standing - the lesson had to point at the thing a cog is
         /// <em>for</em>, because the cog itself might not exist. A cog is dropped by a felled
         /// raider now (invariant 37bl), so <see cref="Salvaged"/> raises this at the moment one
         /// lands and there is a real object to ring.
         /// </para>
         /// <para>
-        /// <b>The newest, and resolved when the tip goes up rather than remembered</b> — see
+        /// <b>The newest, and resolved when the tip goes up rather than remembered</b> - see
         /// <see cref="LiveBomb"/>, whose two rules these are. A cog also runs out on its own clock,
         /// which is the one way this differs from a bomb: it can be trampled while the panel is
         /// still opening, and a null here is a tip that teaches without pointing rather than a ring
@@ -193,7 +193,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The turret rather than the glyph on it.</b> What the lesson has to say is <em>this
         /// one is full</em>, and the chassis key is a small bright thing sitting inside the ring
-        /// that already pulses on its own — ringing the key alone would point at a control without
+        /// that already pulses on its own - ringing the key alone would point at a control without
         /// saying which turret it belongs to, on a line of four that differ only in colour.
         /// </para>
         /// <para>
@@ -204,8 +204,8 @@ namespace GlimmerGrove
         /// is gone rather than kept for a caller that no longer wants it.
         /// </para>
         /// <para>
-        /// <b>The first armed one, and asked when the tip goes up.</b> Which of four is arbitrary —
-        /// the sentence is about the rule and not about that turret — so a fixed order is worth
+        /// <b>The first armed one, and asked when the tip goes up.</b> Which of four is arbitrary -
+        /// the sentence is about the rule and not about that turret - so a fixed order is worth
         /// more than a cleverer choice, and a charge can be spent or a ward can fall between the
         /// hook firing and the panel opening.
         /// </para>

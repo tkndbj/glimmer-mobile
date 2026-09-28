@@ -37,7 +37,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <see cref="Box"/> <b>always</b> pivots at centre, so anchoring something to a corner
-        /// and passing the margin directly puts half of it off the screen — the trap the win
+        /// and passing the margin directly puts half of it off the screen - the trap the win
         /// panel's two lines already fell into once, and which shipped again on the Grovement's
         /// shop button and the shop's own coin pill. Half a control hanging past the right edge
         /// is not a rounding error; the label is simply cut in two.
@@ -80,14 +80,14 @@ namespace GlimmerGrove
 
         /// <summary>
         /// A single line of text by default: <paramref name="wrap"/> is off because most
-        /// labels here are chrome — counts, captions, headings — sized to their box, and
+        /// labels here are chrome - counts, captions, headings - sized to their box, and
         /// for those wrapping is worse than spilling. A coin count that folds onto two
         /// lines breaks the HUD; one that overhangs by a few pixels does not.
         ///
         /// <para>
         /// Anything the player reads as a <i>sentence</i> must pass <c>wrap: true</c>.
         /// Without it the string renders as one unbroken line and simply leaves the
-        /// screen — there is no clipping to hint that text is missing, which is how
+        /// screen - there is no clipping to hint that text is missing, which is how
         /// <c>ui.account.guest_body</c> shipped unreadable.
         /// </para>
         /// </summary>
@@ -119,7 +119,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <paramref name="rich"/> is off by default and must stay off anywhere a <b>player</b>
-        /// supplies the string — a keeper's name rendered as rich text would let one player put
+        /// supplies the string - a keeper's name rendered as rich text would let one player put
         /// markup on another player's screen. It is on only where the text is a loc string, which
         /// is what <see cref="Scenery.Toast"/> is.
         /// </para>
@@ -135,13 +135,13 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// <paramref name="radius"/> is the circle the baseline rides, measured in the same
-        /// units everything else here is, and the centre sits <em>below</em> the text — so a
+        /// units everything else here is, and the centre sits <em>below</em> the text - so a
         /// larger radius is a flatter arc and the word always bows upward, which is the shape a
         /// ribbon drawn with a raised middle wants. A negative radius bows it the other way.
         /// </para>
         /// <para>
         /// Each character is measured through <see cref="Text.preferredWidth"/>, which uGUI
-        /// answers from the font's cached character info in the same frame — no layout pass —
+        /// answers from the font's cached character info in the same frame - no layout pass -
         /// so the advance is the font's own rather than a guess, and a space is as wide here as
         /// it would be on a straight line. The word is then centred about the arc's middle.
         /// </para>
@@ -166,7 +166,7 @@ namespace GlimmerGrove
         /// <para>
         /// The overload a repainting caller wants: a product card is recycled and rebound, so
         /// its ribbon has to be able to say a different number without the card being rebuilt.
-        /// Everything an arc is made of is per-character, so there is nothing to repaint — the
+        /// Everything an arc is made of is per-character, so there is nothing to repaint - the
         /// letters are destroyed and laid out again. Cheap at a word's length, and the caller
         /// is expected not to call it with a caption that has not changed.
         /// </para>
@@ -196,7 +196,7 @@ namespace GlimmerGrove
             {
                 // **A black outline and no drop shadow, whatever the caller asked for.** uGUI's
                 // `Shadow` offsets the whole mesh in one fixed direction, so under a *rotated*
-                // glyph it no longer falls where the letter's own light does — on an arc, each
+                // glyph it no longer falls where the letter's own light does - on an arc, each
                 // character gets its shadow at a different angle to itself and the word reads as
                 // a double image rather than as lifted type. And `Outline`'s default here is a
                 // near-black navy, which is right on this UI's own plates and muddy on the one
@@ -239,12 +239,12 @@ namespace GlimmerGrove
                                   // at is the face plus its border, and this is the half that
                                   // is ours.** The outline is drawn on every side of every
                                   // stem, so at 4 it was adding more dark mass to a 24pt
-                                  // caption than the letter's own stem carried — which reads
+                                  // caption than the letter's own stem carried - which reads
                                   // as a heavy *font*, and sent one face swap down the wrong
                                   // road entirely. Changing it here reaches all 241 callers at
                                   // once, exactly as re-cutting `btn_green` reaches every
                                   // button (44); the thirty that pass their own numbers keep
-                                  // them, which is right — those are the places that asked.
+                                  // them, which is right - those are the places that asked.
                                   float outline = 2f, float shadow = 3f, bool wrap = false,
                                   bool rich = false)
         {
@@ -291,7 +291,7 @@ namespace GlimmerGrove
         /// jelly art carried a moulded base below its face and measured 8.8% and 8.1%; the
         /// interface kit that replaced it centred its face in its frame, so both went to
         /// nought; the merge-shooter kit moulded a bright face over an indigo base and they
-        /// came back at 6.7% and 5.4%. This kit does neither — it draws a lighter top half
+        /// came back at 6.7% and 5.4%. This kit does neither - it draws a lighter top half
         /// over a saturated bottom half of the same hue, which is a <em>material</em> rather
         /// than a moulding, so the face is very nearly the whole sprite and the lift is very
         /// nearly nought again. Twenty call sites correctly ask "lift my caption by whatever
@@ -302,7 +302,7 @@ namespace GlimmerGrove
         /// every run, off the two moulds it actually cuts, so re-cutting the kit re-answers
         /// the question instead of leaving a number here that used to be true. A caption that
         /// were *not* re-measured would sit a few units low on every control in the game at
-        /// once — the kind of wrongness that is much easier to see than to explain, and which
+        /// once - the kind of wrongness that is much easier to see than to explain, and which
         /// would be spread across twenty files rather than living in one.
         /// </para>
         /// </summary>
@@ -314,7 +314,7 @@ namespace GlimmerGrove
         /// half of the sprite and the rim and base fill the bottom third. A glyph
         /// centred on the sprite lands on the rim, not the face. Measured the same way
         /// as the two above, from the white face of <c>node_open</c> and of every
-        /// <c>node_s*</c> skin — they share one disc, so a single number covers all of
+        /// <c>node_s*</c> skin - they share one disc, so a single number covers all of
         /// them and a glade cannot drift as it earns stars.
         /// </summary>
         public const float NodeFaceLift = 0.165f;
@@ -322,7 +322,7 @@ namespace GlimmerGrove
         /// <summary>
         /// Pill button with a label, and optionally a glyph in front of it. Returns the
         /// Btn, carrying its label as <see cref="Btn.Label"/> and its glyph as
-        /// <see cref="Btn.Icon"/> — so a disabled button dims both together, and a repaint
+        /// <see cref="Btn.Icon"/> - so a disabled button dims both together, and a repaint
         /// goes through <see cref="Btn.SetCaption"/> rather than hunting for a child.
         /// </summary>
         /// <remarks>
@@ -345,13 +345,13 @@ namespace GlimmerGrove
         /// <para>
         /// The sprite overload exists because not every glyph is an <c>Ui/ic_*</c> file:
         /// credits have no still sprite at all in this UI, only the <c>Ui/Coin</c> flipbook,
-        /// so a coin beside a price is frame zero of that — the choice
+        /// so a coin beside a price is frame zero of that - the choice
         /// <c>CompanionUnlockOverlay.CoinFace</c> already made and documented. Passing a
         /// sprite also means a caller can pass <c>null</c> for art that has not arrived and
         /// get a plain caption rather than a white square (invariant 7b).
         /// </para>
         /// <para>
-        /// <paramref name="iconTrails"/> is <see cref="Btn.IconTrails"/> — see there for when
+        /// <paramref name="iconTrails"/> is <see cref="Btn.IconTrails"/> - see there for when
         /// a glyph belongs behind the caption instead of in front of it.
         /// </para>
         /// </summary>
@@ -381,7 +381,7 @@ namespace GlimmerGrove
             // measured from the label's box, so a caption that overflowed its box would be
             // drawn wider than the width the glyph was placed against and the pair would
             // read as off-centre. Shrinking to fit keeps the drawn text inside what was
-            // measured. Short captions reach neither case — best-fit never grows text past
+            // measured. Short captions reach neither case - best-fit never grows text past
             // the size it was asked for, so "WATCH" renders exactly as it did.
             Shrinkable(b.Label, Mathf.Max(1, fontSize / 2));
 
@@ -395,7 +395,7 @@ namespace GlimmerGrove
         /// <summary>
         /// Re-centres a pill button's glyph and label as one block, after either has
         /// changed. A no-op on a button with no glyph, so a paint path can call it
-        /// unconditionally — though <see cref="Btn.SetCaption"/> is what should be calling
+        /// unconditionally - though <see cref="Btn.SetCaption"/> is what should be calling
         /// it, so that nothing has to remember to.
         /// </summary>
         /// <remarks>
@@ -420,8 +420,8 @@ namespace GlimmerGrove
             // Best-fit is switched off *here* rather than only in OneLine, so that raising the
             // flag by hand cannot leave the two rules fighting over one label. It shipped that
             // way on both buttons that open and take the video bonus: Squeeze computed a size
-            // from preferredWidth, best-fit overrode it at draw time, and — because best-fit
-            // concedes the line before it concedes the size — the caption folded onto two lines
+            // from preferredWidth, best-fit overrode it at draw time, and - because best-fit
+            // concedes the line before it concedes the size - the caption folded onto two lines
             // and then re-laid itself out a frame later when the dynamic font's texture was
             // regenerated, which the player sees as a caption arriving crushed and springing
             // out. One label, one rule that sizes it.
@@ -441,7 +441,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>Extracted so it is not written twice.</b> <see cref="FitLabel"/> is the caller
-        /// that matters, but a glyph beside a number is not only a button — the shop's price
+        /// that matters, but a glyph beside a number is not only a button - the shop's price
         /// face is a painted plate on a card whose *whole* surface is the button, so it carries
         /// a <see cref="Text"/> and an <see cref="Image"/> with no <see cref="Btn"/> between
         /// them and cannot use <see cref="FitLabel"/> at all. This file already records what a
@@ -450,7 +450,7 @@ namespace GlimmerGrove
         /// is in here rather than left to the caller.
         /// </para>
         /// <para>
-        /// <see cref="Text.preferredWidth"/> is read directly — uGUI answers it from cached
+        /// <see cref="Text.preferredWidth"/> is read directly - uGUI answers it from cached
         /// glyph metrics in the same frame the caption was assigned, so no layout pass is
         /// needed and none is forced.
         /// </para>
@@ -462,7 +462,7 @@ namespace GlimmerGrove
             var labelRt = label.rectTransform;
 
             // No glyph: the caption owns the whole face, so the box is put back to full width
-            // and centred. Returning early instead — which is what this did — leaves behind
+            // and centred. Returning early instead - which is what this did - leaves behind
             // whatever the *last* fit wrote, and that is not hypothetical: a control built with
             // a glyph is measured with one, so a caller that later takes the glyph away (the
             // wheel's SPIN, the victory panel's COLLECTED, a shop card swapping a gem price for
@@ -503,8 +503,8 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Why it is not simply "turn wrapping off".</b> A caption on a pill has to satisfy
         /// two rules that pull against each other: it must not wrap, and it must not draw
-        /// outside the button. Unity's best-fit — which is what <see cref="Shrinkable"/> turns
-        /// on, and what <see cref="TextButton"/> applies to every button carrying a glyph —
+        /// outside the button. Unity's best-fit - which is what <see cref="Shrinkable"/> turns
+        /// on, and what <see cref="TextButton"/> applies to every button carrying a glyph -
         /// gets the second by conceding the first: it sets <c>HorizontalWrapMode.Wrap</c>, so a
         /// caption that is too wide breaks onto a second line and never shrinks at all,
         /// because two short lines fit the box the one long line did not. That is why
@@ -520,7 +520,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// <b>It is a property of the button rather than a one-off call</b>, so it survives
-        /// <c>Btn.SetCaption</c> — the ad button rewrites its caption every frame it counts
+        /// <c>Btn.SetCaption</c> - the ad button rewrites its caption every frame it counts
         /// down, and a fit the caller had to re-apply would be right only on the first frame.
         /// </para>
         /// </summary>
@@ -531,7 +531,7 @@ namespace GlimmerGrove
         /// <para>
         /// The same two rules pulling against each other, and the same resolution. <see
         /// cref="Shrinkable"/> gets "must not draw outside the box" by conceding "must not
-        /// wrap" — it turns on best-fit, which sets <c>HorizontalWrapMode.Wrap</c>, so a caption
+        /// wrap" - it turns on best-fit, which sets <c>HorizontalWrapMode.Wrap</c>, so a caption
         /// too wide for its box breaks onto a second line and never shrinks at all, because two
         /// short lines fit where one long one did not. On a button that made "WATCH FOR HEARTS"
         /// come out stacked; on a title ribbon it made "THE ENDLESS WATCH" come out as three
@@ -539,7 +539,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// So the size is worked out directly from <see cref="Text.preferredWidth"/>, which uGUI
-        /// answers from cached glyph metrics in the same frame the caption was set — one ratio,
+        /// answers from cached glyph metrics in the same frame the caption was set - one ratio,
         /// then a re-measure to catch the rounding.
         /// </para>
         /// <para>
@@ -548,15 +548,15 @@ namespace GlimmerGrove
         /// against whatever the last string left behind is a ratchet: the streak's state pill
         /// spends its life changing between "a night is waiting" and a countdown, and the
         /// season's does between "41d 23h" and "23:59:07", so each long line filed the type down
-        /// a point or two and no short one ever gave it back. Nothing could see it — the label
+        /// a point or two and no short one ever gave it back. Nothing could see it - the label
         /// fits, the mirror redraws from scratch every render, and a fixture's clock does not
-        /// tick — and the tell was a pill whose words got smaller the longer you sat on the page.
+        /// tick - and the tell was a pill whose words got smaller the longer you sat on the page.
         /// </para>
         /// <para>
         /// <b>It is required rather than optional because the compiler is the only gate that
         /// cannot be forgotten.</b> Four callers on the siege hill already reset the size by
         /// hand on the line above; two screens did not, and there was nothing in the signature
-        /// to say which was right. A parameter with no default makes the omission unwritable —
+        /// to say which was right. A parameter with no default makes the omission unwritable -
         /// which is <c>Btn.Squeeze</c>'s rule (it measures from <see cref="Btn.LabelSize"/> so
         /// the ad button's caption grows back as its countdown shortens) said to a bare label.
         /// </para>
@@ -605,7 +605,7 @@ namespace GlimmerGrove
         /// Shrinks a single-line caption until it fits <paramref name="room"/>.
         ///
         /// Measured from <see cref="Btn.LabelSize"/> rather than from the size left by the last
-        /// pass, so a caption that gets shorter grows back — otherwise an ad button would walk
+        /// pass, so a caption that gets shorter grows back - otherwise an ad button would walk
         /// its own type down a point at a time as it counted down and never recover.
         /// </summary>
         static void Squeeze(Btn button, float room)
@@ -674,7 +674,7 @@ namespace GlimmerGrove
         /// for chrome sized to its content and wrong for anything holding a translated
         /// string: German is routinely half again the length of English, and overflow has
         /// no clipping to hint that text has left the panel. Best-fit caps at the size the
-        /// caller asked for, so nothing ever grows — a short string looks exactly as it
+        /// caller asked for, so nothing ever grows - a short string looks exactly as it
         /// did, and only a long one gets smaller.
         /// </para>
         /// </summary>
@@ -685,19 +685,19 @@ namespace GlimmerGrove
         /// already inside and did nothing at all. That is why the streak page's state line
         /// ran out of its pill while being marked shrinkable. With wrapping on, an over-long
         /// line folds, the fold overflows vertically, and best-fit then does the shrinking
-        /// it was asked for — so in practice the text shrinks first and only folds once it
-        /// has hit <paramref name="minSize"/>. Short chrome — a coin count, a day number —
+        /// it was asked for - so in practice the text shrinks first and only folds once it
+        /// has hit <paramref name="minSize"/>. Short chrome - a coin count, a day number -
         /// reaches neither case and is unaffected.
         /// <para>
         /// <b>And the vertical mode is set here too, because the paragraph above was one
         /// setting short of true and this shrank nothing for as long as it has existed.</b>
         /// "Fails to fit vertically" is measured against the box only while
         /// <see cref="VerticalWrapMode.Truncate"/> is on; under <see cref="VerticalWrapMode.Overflow"/>
-        /// — which <see cref="Label"/> gives every label it builds — a fold has somewhere to
+        /// - which <see cref="Label"/> gives every label it builds - a fold has somewhere to
         /// go, so the fold does not fail the test either and best-fit keeps the size the
         /// caller asked for. Measured on the shop's price face, 348x56 at 34 down to 18: the
         /// gem-boost refusal came out at <b>34pt over three lines, 119 units tall</b>, which
-        /// is taller than the box it is in and taller than the pill the box sits on — the
+        /// is taller than the box it is in and taller than the pill the box sits on - the
         /// sentence drew clean across the card below it. With Truncate it comes out at 21pt
         /// over two, 47 units, inside both. <b>The tell that this was the fault and not the
         /// string is that every other shrinkable label reported the same 34</b>, however long
@@ -711,7 +711,7 @@ namespace GlimmerGrove
         /// round for a helper whose whole promise is "stays inside the box": a spill draws
         /// over whatever is beside it and says nothing (invariant 37n), where a clip is
         /// bounded, and the case only arises where a box is genuinely too small for its
-        /// content — which is a fault either way, and today's spill is not a way of noticing
+        /// content - which is a fault either way, and today's spill is not a way of noticing
         /// it. Every caller asked to be shrunk; none asked to be allowed out.
         /// </para>
         /// </remarks>

@@ -7,8 +7,8 @@ namespace GlimmerGrove.Wards
     ///
     /// <para>
     /// <b>Every one of these is an addition, and that is the load-bearing rule of the whole
-    /// roster.</b> A siege's par is <c>SiegeTuning.Par</c> — the hill's health over the most one
-    /// match can ever be worth — and it is computed against the <em>baseline</em> bolt every
+    /// roster.</b> A siege's par is <c>SiegeTuning.Par</c> - the hill's health over the most one
+    /// match can ever be worth - and it is computed against the <em>baseline</em> bolt every
     /// turret fires. So a model that hit <em>softer</em> would push three stars out of reach for
     /// anybody who chose it, which is a grade decided by a purchase: exactly what invariant 39
     /// refuses a utility, asked of the line instead. A model that hits harder only makes par
@@ -25,7 +25,7 @@ namespace GlimmerGrove.Wards
     /// <b>What makes choosing one a decision rather than a straight upgrade</b> (invariant 26h's
     /// test) is that a line holds four turrets, one per colour, and a colour is what a level's
     /// hill decides. Rend on red is worth a great deal on a rung sending red bulwarks and worth
-    /// nothing at all on one that sends none — so a player can be wrong, and can be wrong in a way
+    /// nothing at all on one that sends none - so a player can be wrong, and can be wrong in a way
     /// they could have read off the board before they started.
     /// </para>
     /// </summary>
@@ -72,7 +72,7 @@ namespace GlimmerGrove.Wards
         /// <summary>
         /// Every so often its bolt runs the whole length of its lane, striking everything in it.
         ///
-        /// The answer to a column marching in single file — the arrangement splash is worst
+        /// The answer to a column marching in single file - the arrangement splash is worst
         /// against.
         /// </summary>
         Pierce,
@@ -95,7 +95,7 @@ namespace GlimmerGrove.Wards
         /// A kill hands some of its fuel back.
         ///
         /// It rewards feeding the ward whose colour the hill is actually wearing, which is the
-        /// mode's own question — so it is the model that gets better the better the player is.
+        /// mode's own question - so it is the model that gets better the better the player is.
         /// </summary>
         Siphon,
 
@@ -114,27 +114,27 @@ namespace GlimmerGrove.Wards
         /// <para>
         /// <b>It replaced the prism, and the colour lock is why.</b> A prism fired at a second
         /// colour for a share of a hit, which was worth something only in the moments a ward's own
-        /// colour was clear — and with a line holding one turret per colour that is a trick the
+        /// colour was clear - and with a line holding one turret per colour that is a trick the
         /// seat beside it was already doing at full weight. Withdrawn on the owner's reading:
         /// invariant 5d, asked of a purchase.
         /// </para>
         /// <para>
         /// <b>Its reach is the whole line even though it hits one raider</b>, which is why it
         /// stands above armour on a shelf ordered by reach (invariant 37ax). A frost slows what one
-        /// ward was shooting at; a stun takes a raider out of the raid — every other turret gets
+        /// ward was shooting at; a stun takes a raider out of the raid - every other turret gets
         /// the same seconds, and so does the ward it was walking at.
         /// </para>
         /// <para>
         /// <b>It can never lock a raider in place, and that bound is a rule rather than a
         /// tuning.</b> A ward fires every <c>SiegeTuning.FireEvery</c> seconds, so a stun that
-        /// simply refreshed would stop its colour for the whole run — a fail state that rejects
+        /// simply refreshed would stop its colour for the whole run - a fail state that rejects
         /// nothing (invariant 5d) from the other side. <c>SiegeRaider.Stagger</c> makes a raider
         /// walk free for <c>SiegeTuning.StunRest</c> seconds before another one takes hold, so the
         /// duration is what the family climbs on and half the clock is the most it can ever buy.
         /// </para>
         /// <para>
         /// <b>Its magnitude is not read.</b> Being stopped is not a thing there can be more or
-        /// less of, so the one number this ability has is how long — which lives in
+        /// less of, so the one number this ability has is how long - which lives in
         /// <c>Extent</c>, where <see cref="Frost"/> and <see cref="Ember"/> already keep their
         /// seconds.
         /// </para>
@@ -156,7 +156,7 @@ namespace GlimmerGrove.Wards
         /// <summary>
         /// The name each ability is authored under. Permanent: content keys on these.
         ///
-        /// <b>A table rather than <c>Enum.Parse</c></b>, for <c>UtilityKinds</c>'s reason — a
+        /// <b>A table rather than <c>Enum.Parse</c></b>, for <c>UtilityKinds</c>'s reason - a
         /// parse that accepts the C# member name accepts casing and numbers too, and would make
         /// the enum's own spelling a content contract nobody meant to sign.
         /// </summary>
@@ -179,7 +179,7 @@ namespace GlimmerGrove.Wards
         /// never heard of.
         ///
         /// <b>Never a failure</b>, and that is invariant 20's answer one level down: a model naming
-        /// an ability from a newer build still stands, still fires, and simply does nothing extra —
+        /// an ability from a newer build still stands, still fires, and simply does nothing extra -
         /// which is a turret that works rather than a slot in the line that cannot be filled.
         /// </summary>
         public static WardAbility Parse(string name)

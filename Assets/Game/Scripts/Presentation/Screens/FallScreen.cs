@@ -16,15 +16,15 @@ namespace GlimmerGrove
     /// credits and XP.
     ///
     /// <para>
-    /// <b>What it was.</b> An endless score attack — random colours into an empty well until a
+    /// <b>What it was.</b> An endless score attack - random colours into an empty well until a
     /// column filled up. No goal, so nothing to reach; no par, so nothing to grade; no fixed
     /// future, so nothing a validator could prove and no ladder a chapter could climb. It is now
     /// a well that starts full and has to be emptied, with an authored procession to empty it
     /// with, and everything graded derives from a search over the two (see <c>FallSolver</c>).
     /// </para>
     /// <para>
-    /// <b>Everything about the ending goes through <see cref="RunLedger"/></b> — the record, the
-    /// daily chests, the streak, the reward and the analytics — so this screen holds no second
+    /// <b>Everything about the ending goes through <see cref="RunLedger"/></b> - the record, the
+    /// daily chests, the streak, the reward and the analytics - so this screen holds no second
     /// copy of what a finished run does. That is invariant 20b's whole demand of a mode: bring
     /// your own board, share the run. Adding it cost the save file no schema version, no merge
     /// rule and no server work, because a Lightfall level is an ordinary level with its own
@@ -34,7 +34,7 @@ namespace GlimmerGrove
     /// <b>Two fail states, and only one of them may be sold a continue.</b> Running out of motes
     /// is a shortage, so more motes fix it; a flooded well is not, and no amount of supply
     /// empties a well that has already reached its brim. So <see cref="ContinueDeficit"/>
-    /// answers <c>NoContinue</c> for a flood — the honest answer, and the one invariant 23
+    /// answers <c>NoContinue</c> for a flood - the honest answer, and the one invariant 23
     /// sanctions. It also means the mistake money cannot fix is the spatial one, which is the
     /// half this mode is actually about.
     /// </para>
@@ -52,7 +52,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// A property rather than a field latched at build time, so the floor, the legend and
-        /// the view's tray cannot be taken from two different answers — which is a real hazard
+        /// the view's tray cannot be taken from two different answers - which is a real hazard
         /// rather than a tidy one, since the answer moves: a tablet in split view is resized
         /// while the app is running, and the three are read in three different frames. It is two
         /// pure functions of <c>Screen</c>, so asking again costs nothing.
@@ -62,13 +62,13 @@ namespace GlimmerGrove
 
         /// <summary>
         /// The board's floor, read from <c>FallBand</c> rather than repeated here, so the legend
-        /// below it and the well above it cannot come to disagree about where the floor is —
+        /// below it and the well above it cannot come to disagree about where the floor is -
         /// which is exactly how a carefully measured band ends up under a tray.
         ///
         /// <para>
         /// The floor is the one inset that differs by display, and only here. A well is the one
-        /// board in the game whose grid is bound by <em>height</em> — 4x6 to 6x10, so
-        /// <c>min(width / columns, usable / rows)</c> always takes the second term — which means
+        /// board in the game whose grid is bound by <em>height</em> - 4x6 to 6x10, so
+        /// <c>min(width / columns, usable / rows)</c> always takes the second term - which means
         /// every unit of furniture under it comes straight off the cell, and on a 4:3 display it
         /// took the cell down to 62 against a phone's 151. See <c>FallBand</c>. The top stays
         /// 350 on every display because what it clears is the readout row, which
@@ -84,7 +84,7 @@ namespace GlimmerGrove
         /// Lightweave's reason: a restart deals a fresh supply <em>and</em> puts the well back
         /// under its brim, so it is by some distance the cheapest way out of a run going wrong
         /// and must not sit under a thumb that is already reaching across the board. The restart
-        /// is still there, one deliberate tap inside — <c>PauseOverlay</c> is mode-agnostic.
+        /// is still there, one deliberate tap inside - <c>PauseOverlay</c> is mode-agnostic.
         /// </summary>
         protected override HeaderKey RightKey => new HeaderKey("ic_pause", Pause);
 
@@ -119,7 +119,7 @@ namespace GlimmerGrove
 
             // The run is decided when the last mote bursts and the panel opens a beat later
             // while the chain plays out. Everything that could still end the run has to stop at
-            // the first of those two moments — see FallView.Finishing.
+            // the first of those two moments - see FallView.Finishing.
             _view.Finishing = () => { _closing = true; Teaching.Refresh(); };
 
             _finished = false;
@@ -146,7 +146,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Asks, every frame, whether this run may be under way at all — and puts the answer on
+        /// Asks, every frame, whether this run may be under way at all - and puts the answer on
         /// the board.
         ///
         /// <para>
@@ -154,14 +154,14 @@ namespace GlimmerGrove
         /// the funnel the question is supposed to go through: a mode cannot let a run advance
         /// without it being asked. It had two callers while both the glade and the weave ran
         /// clocks and has had one since the countdown went, so the guarantee it exists to give
-        /// was being given by one mode out of four — <c>CLAUDE.md</c> says to put a mode back
+        /// was being given by one mode out of four - <c>CLAUDE.md</c> says to put a mode back
         /// through it before adding anything that reads it, and this is a mode being added.
         /// </para>
         /// <para>
         /// What it buys here is the window between the board being built and the first lesson
         /// going up. The board is live from the frame it exists, so without this a player could
         /// drop a mote while the iris was still opening, or in the beat before a first-timer's
-        /// tip arrives — which is a run they were charged for and never saw begin.
+        /// tip arrives - which is a run they were charged for and never saw begin.
         /// </para>
         /// </summary>
         protected internal override bool Runnable => _view != null && _view.TakingInput;
@@ -178,21 +178,21 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Recall is not difficulty.</b> "A mote adds its colour rather than matching it" is
         /// one sentence and the whole mode, but a player still has to remember mid-drop that
-        /// orange is the one waiting for blue — and being asked to hold three pairs in your head
+        /// orange is the one waiting for blue - and being asked to hold three pairs in your head
         /// is not a puzzle, it is a tax on the puzzle. It was reported exactly that way: "I
         /// always forget which colour blends with which". So the board answers it, always, and
         /// what is left to think about is *where*.
         /// </para>
         /// <para>
-        /// Each chip says both halves of one recipe — the two pures that make a blend, and the
-        /// one colour that then bursts it — because those are the same fact read forwards and
+        /// Each chip says both halves of one recipe - the two pures that make a blend, and the
+        /// one colour that then bursts it - because those are the same fact read forwards and
         /// backwards and a player needs it both ways: forwards while building, backwards while
         /// finishing. The recipes come from <c>FallMixing</c>, which derives them from the same
         /// masks the board does, so there is no table here to fall out of step with the rules.
         /// </para>
         /// <para>
         /// It sits in the band <c>FallBand</c> reserves below the board and is built once, in
-        /// <see cref="Safe"/> rather than on the host — so a restart or a retry rebuilds the
+        /// <see cref="Safe"/> rather than on the host - so a restart or a retry rebuilds the
         /// well and leaves the legend exactly where it was.
         /// </para>
         /// </summary>
@@ -206,8 +206,8 @@ namespace GlimmerGrove
             band.anchorMin = band.anchorMax = new Vector2(.5f, 0f);
 
             // Scaled rather than re-laid-out on a short display. Everything on this plate sits
-            // at a fixed offset from its centre — three recipes at ±114, with dots, glyphs and a
-            // spark inside each — so a second set of coordinates would be a second layout to
+            // at a fixed offset from its centre - three recipes at ±114, with dots, glyphs and a
+            // spark inside each - so a second set of coordinates would be a second layout to
             // keep in step, and the box keeps its own rect while the drawing shrinks around the
             // centre `FallBand` placed. Exactly 1 on every phone. See `FallBand.Of`.
             band.localScale = Vector3.one * shape.LegendScale;
@@ -229,7 +229,7 @@ namespace GlimmerGrove
         /// One recipe: two pures, the blend they make, and the colour that bursts it.
         ///
         /// Laid out from a table of offsets rather than by stacking, for <c>ReadoutRow</c>'s
-        /// reason — the pieces are small and close, so where each one sits is arithmetic and
+        /// reason - the pieces are small and close, so where each one sits is arithmetic and
         /// belongs where it can be read at a glance rather than accumulated down a method.
         /// </summary>
         void Chip(RectTransform parent, float centre, FallRecipe recipe)
@@ -284,7 +284,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// The supply is the only one that is coloured, because it is the only one that can end
-        /// the run — and the thresholds come from <c>FallSupply.Pressure</c> rather than from a
+        /// the run - and the thresholds come from <c>FallSupply.Pressure</c> rather than from a
         /// comparison written here, so they are fractions of this well's own budget and a test
         /// can hold them to what they claim. The other fail state has no number at all: it is
         /// the brim line on the board, which is where a rule the board can show belongs.
@@ -315,7 +315,7 @@ namespace GlimmerGrove
                                  run == null ? "0" : run.Best.ToString()));
         }
 
-        /// <summary>Which slot the supply sits in — what a lesson about it rings.</summary>
+        /// <summary>Which slot the supply sits in - what a lesson about it rings.</summary>
         const int SupplyReadout = 1;
 
         // ------------------------------------------------------------------ the stake
@@ -338,7 +338,7 @@ namespace GlimmerGrove
         ///
         /// A fresh supply and a well back under its brim is exactly why a restart here has to be
         /// paid for. What it costs is <c>RunScreen.RestartLevel</c>'s, which asks before this
-        /// runs — a mode never gets at the price.
+        /// runs - a mode never gets at the price.
         /// </summary>
         protected override void Rewind()
         {
@@ -347,7 +347,7 @@ namespace GlimmerGrove
             _view.Begin(Host, Rules.Layout, Budget);
             Audio.Sfx("rotate_a", .55f);
 
-            // A fresh run: the old one has just been paid for, so nothing carries over — not
+            // A fresh run: the old one has just been paid for, so nothing carries over - not
             // the play clock, and not any continues bought on it.
             _startedAt = Time.unscaledTime;
             ResetPlayed();
@@ -389,7 +389,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>Two answers, and the second is why this exists.</b> A well that simply ran dry has
-        /// a deficit of nought — any mote at all is a playable mote — but a well can also be
+        /// a deficit of nought - any mote at all is a playable mote - but a well can also be
         /// lost while there are still motes to come, because what is left of the procession
         /// cannot supply a channel some mote is missing. Selling six motes into that would put
         /// the player back on a board that is still provably unfinishable and end the run again
@@ -454,7 +454,7 @@ namespace GlimmerGrove
 
             // No route, deliberately, and it is the weave's argument: the victory panel's route
             // bar compares a run against the board's own carved solution, and a well has many
-            // par-length answers that are equally good — so it would print the same verdict for
+            // par-length answers that are equally good - so it would print the same verdict for
             // everybody. What the run carries instead is the count it was graded on.
             var done = RunLedger.Win(Level, stars, drops,
                                      Time.unscaledTime - _startedAt, 0,
@@ -490,7 +490,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The run reached a fail state. The offer first, the defeat only if it is declined —
+        /// The run reached a fail state. The offer first, the defeat only if it is declined -
         /// see <c>RunContinueFlow.OfferOrLose</c>. Nothing below runs until the player has said
         /// no, which is what keeps a continued run from being recorded as a loss, counted
         /// towards a chest or charged a heart.
@@ -505,7 +505,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// The run is lost for good. Charged, recorded and reported exactly as a glade's defeat
-        /// is — <c>RunLedger.Loss</c> owns the heart, the streak, the chest count and the
+        /// is - <c>RunLedger.Loss</c> owns the heart, the streak, the chest count and the
         /// analytics, so there is no second copy here of what losing a run does.
         /// </summary>
         void Lose()
@@ -529,7 +529,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Writes the run off, and hands back what happened so a caller can show it — or not.
+        /// Writes the run off, and hands back what happened so a caller can show it - or not.
         ///
         /// <para>
         /// Split from the panel because two exits now share it and only one of them raises
@@ -554,8 +554,8 @@ namespace GlimmerGrove
                        ? DefeatReason.WellFlooded : DefeatReason.OutOfMotes;
 
             // No near miss. That line is measured in turns from the solution, which a well has
-            // no notion of — a board is one lucky chain from finished or six drops from it,
-            // depending on nothing anybody can be told in a sentence — so it is left at nought,
+            // no notion of - a board is one lucky chain from finished or six drops from it,
+            // depending on nothing anybody can be told in a sentence - so it is left at nought,
             // where RunOutcome.NearMiss reads it as "not close" and says nothing.
             return RunLedger.Loss(Level, reason, Math.Max(1, run.Drops),
                                   Time.unscaledTime - _startedAt, 0, route: 0,
@@ -572,15 +572,15 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Declared, not shown.</b> What goes up, in what order, and whether this particular
         /// player has met any of it is <c>RunScreen</c>'s to arrange. This says only what the
-        /// board holds — which is what lets the review key in the header work at all, since a
+        /// board holds - which is what lets the review key in the header work at all, since a
         /// list filtered by "never seen" is empty exactly when somebody asks to be reminded.
         /// </para>
         /// <para>
         /// <b>Each one is conditional on something real, and that is what stops this being a
         /// tutorial.</b> The cooking lesson is on every well because every well is made of
         /// motes. The supply lesson is only on a well that can actually run dry, so the first
-        /// level of the chapter — which is authored without a budget, exactly as the first glade
-        /// in the game is — does not spend a once-in-a-lifetime lesson teaching a meter it does
+        /// level of the chapter - which is authored without a budget, exactly as the first glade
+        /// in the game is - does not spend a once-in-a-lifetime lesson teaching a meter it does
         /// not have. And the brim lesson waits for a well where the brim is genuinely in reach:
         /// on a board with six rows of clearance it is a line nobody can touch, and a modal
         /// about it would be a modal about nothing.
@@ -597,14 +597,14 @@ namespace GlimmerGrove
             into.Add(Lesson.At(Mechanic.FallCook, _view.RipeAnchor));
 
             // Then the one thing on the board that is not a mote. Conditional on the board
-            // actually standing one, which every well of the first chapter does not — and a
+            // actually standing one, which every well of the first chapter does not - and a
             // lesson spent over a board with no glass on it is one that can never be spent
             // again. Second rather than last because it is about what is *there*, where the two
             // below are about meters and fail lines.
             if (run.Board.Lenses > 0)
                 into.Add(Lesson.At(Mechanic.FallLens, _view.LensAnchor));
 
-            // Then the whorl, which is a fact about *position* rather than about glass — so
+            // Then the whorl, which is a fact about *position* rather than about glass - so
             // unlike the two mechanics it replaced it needs no lens on the board to mean
             // anything, and it is taught wherever one stands. Conditional on the board standing
             // one for the lens's reason: two of this mode's three chapters do not, and a lesson
@@ -640,7 +640,7 @@ namespace GlimmerGrove
         protected internal override float LessonDelay => FallTempo.Entrance + .15f;
 
         /// <summary>
-        /// Holds the well while a lesson is up, and hands it back afterwards — but never to a
+        /// Holds the well while a lesson is up, and hands it back afterwards - but never to a
         /// run that ended underneath the panel.
         /// </summary>
         protected internal override void Latch(bool latched)

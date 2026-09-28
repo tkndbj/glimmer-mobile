@@ -10,7 +10,7 @@ namespace GlimmerGrove
     /// Three colours rather than one, because that is the difference between a light and a
     /// place. A tint over black gives a bright shape floating on nothing; a partner lighting
     /// the ground, an accent crossing it and a deep hue underneath give somewhere for the thing
-    /// to arrive into — which is the entire job of a reveal screen.
+    /// to arrive into - which is the entire job of a reveal screen.
     /// </para>
     /// <para>
     /// Every colour is one already in <see cref="Pal"/>, so the loudest moments in the game
@@ -20,7 +20,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>Shared rather than owned by one screen, and that is a design decision before it is a
     /// tidying.</b> It began inside <c>CompanionRevealOverlay</c>, and when the grove's shop
-    /// grew a ceremony of its own the obvious move was a second table beside the first — which
+    /// grew a ceremony of its own the obvious move was a second table beside the first - which
     /// is invariant 5b's mistake in the place it is least visible, since two colour ladders
     /// that disagree do not fail a build, they just quietly teach the player two different
     /// things. Gold means <em>the best one</em>, and it has to mean that whether what arrived
@@ -37,7 +37,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The three lights in order, wrapping — for anything spawning a run of them, so a row
+        /// The three lights in order, wrapping - for anything spawning a run of them, so a row
         /// of rings or sparks cycles the scheme instead of repeating one colour.
         /// </summary>
         public Color Nth(int i)
@@ -55,7 +55,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// The <see cref="Tint"/> ladder is deliberately the rarity ladder every player already
-        /// knows from every other game they have installed — common through to legendary —
+        /// knows from every other game they have installed - common through to legendary -
         /// because this is the one part of a reveal that has to be understood without being
         /// taught. The first version ran cream → mint → sun → gold → magenta, which put the
         /// game's own premium colour in fourth place and ended on a pink nobody reads as "the
@@ -66,7 +66,7 @@ namespace GlimmerGrove
         /// The partner is always across the wheel from the tint and the accent always warm,
         /// because a scheme built from neighbours is the monochrome problem again wearing three
         /// names. The deep hue is the tint's own family driven down to about a tenth of its
-        /// value — dark enough for cream text and a lit rim to read against, and still
+        /// value - dark enough for cream text and a lit rim to read against, and still
         /// unmistakably a colour rather than the absence of one.
         /// </para>
         /// <para>

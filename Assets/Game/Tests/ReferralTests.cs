@@ -346,7 +346,7 @@ namespace GlimmerGrove.Tests
         {
             var paid = new[] { "rung:1:1", "rung:1:2" };
 
-            // A different array, a different instance and — the point — a later fetch stamp,
+            // A different array, a different instance and - the point - a later fetch stamp,
             // which is the one field that moves on every single read.
             Assert.IsTrue(State(paid).Matches(State(new[] { "rung:1:1", "rung:1:2" }, 1700009999L)));
         }
@@ -405,9 +405,9 @@ namespace GlimmerGrove.Tests
         // ------------------------------------------------- what the ledger does with an answer
         //
         // Four rules, each pulled out of the method that used to bury it so it can be asked
-        // directly. Three of them decide something with no undo — whether a page redraws itself
+        // directly. Three of them decide something with no undo - whether a page redraws itself
         // under the player, whether one account's state is written over another's, and whose
-        // wallet a chest is paid into — and none of them was reachable while it was four
+        // wallet a chest is paid into - and none of them was reachable while it was four
         // operators inside a property.
 
         [Test]
@@ -466,7 +466,7 @@ namespace GlimmerGrove.Tests
         {
             // The other order, and the one that cost a redeem: redeem out, read out, read back
             // (bumping the generation), redeem back. A write is the freshest word there is
-            // about this account — the server has just acted on it — so nothing that merely
+            // about this account - the server has just acted on it - so nothing that merely
             // *asked* a question may discard it. Dropped here, the panel closes, the toast says
             // welcome, and the page goes on offering to type a code.
             Assert.IsTrue(ReferralLedger.StillWanted("uid-a", 7, ordered: false, "uid-a", 8));
@@ -501,7 +501,7 @@ namespace GlimmerGrove.Tests
             Assert.IsFalse(ReferralLanding.PaysInto("uid-a", "uid-b"));
 
             // Signed out reads as empty in one place and null in the other, and they are the
-            // same account — nobody.
+            // same account - nobody.
             Assert.IsTrue(ReferralLanding.PaysInto(string.Empty, null));
             Assert.IsFalse(ReferralLanding.PaysInto("uid-a", null));
             Assert.IsFalse(ReferralLanding.PaysInto(null, "uid-b"));
@@ -521,7 +521,7 @@ namespace GlimmerGrove.Tests
         public void TheInFlightCeilingNeverFallsToNothing()
         {
             // A withdrawn or unreadable table must not bound the list at nought and evict a
-            // note that is still owed — the note is what makes a lost reply bank on the retry.
+            // note that is still owed - the note is what makes a lost reply bank on the retry.
             var withdrawn = Resolve(new ReferralDto { maxBound = 0 }, new List<string>());
 
             Assert.GreaterOrEqual(ReferralLedger.NotesCeiling(withdrawn), 16);
@@ -533,7 +533,7 @@ namespace GlimmerGrove.Tests
         {
             // The one case `Matches` cannot carry on its own, and the reason `Adopt` tests
             // `IsKnown` beside it: the server's first reply to a brand new account says
-            // exactly what `Empty` says, and the page still has to hear about it — that flip
+            // exactly what `Empty` says, and the page still has to hear about it - that flip
             // is what moves the offer row off the device's guess and onto the server's word.
             var first = new ReferralState(string.Empty, 0, 0, new string[0], false, false, false, 1700000000L);
 

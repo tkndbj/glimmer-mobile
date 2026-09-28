@@ -13,7 +13,7 @@ namespace GlimmerGrove.Tests
     /// Keeper levels bought outright (invariant 57), the client half.
     ///
     /// <para>
-    /// <b>The price rule exists twice and a drift is a purchase refused</b> — the device shows a
+    /// <b>The price rule exists twice and a drift is a purchase refused</b> - the device shows a
     /// price and debits it, the server holds the debit to its own copy, and a disagreement is a
     /// level taken back from a player who was just shown its cost. So both halves run
     /// <c>firebase/shared/grove-vectors.json</c>: this fixture through the shipped reader and
@@ -80,7 +80,7 @@ namespace GlimmerGrove.Tests
         // ----------------------------------------------------------- the table
         /// <summary>
         /// Publishes a whole reward table carrying the block under test, through the shipped
-        /// reader — <c>XpBoostTests.Publish</c>'s argument: a table assembled by the test would
+        /// reader - <c>XpBoostTests.Publish</c>'s argument: a table assembled by the test would
         /// prove nothing about the one the game builds.
         /// </summary>
         static void Publish(KeeperLadderDto keeperLevels, int maxLevel = 500)

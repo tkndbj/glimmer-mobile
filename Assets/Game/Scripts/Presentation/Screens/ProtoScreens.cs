@@ -22,7 +22,7 @@ namespace GlimmerGrove
     /// the move that was just resolved, a beat is looked up in content, and a band says it
     /// (invariant 30d). It was built for Deep Orbit, kept when that was withdrawn, re-cast for
     /// Nova Raid, re-cast again for Hollowmarch, and lifted into a class of its own the day a
-    /// second mode wanted it — which is what a seam is for, and it is now the fifth time this one
+    /// second mode wanted it - which is what a seam is for, and it is now the fifth time this one
     /// has paid.
     /// </para>
     /// <para>
@@ -155,9 +155,9 @@ namespace GlimmerGrove
     /// way to a sleeping critter, and the vein between them lights.
     ///
     /// <para>
-    /// <b>It inherits the whole run.</b> Everything about being a run — the heart, the stake, the
+    /// <b>It inherits the whole run.</b> Everything about being a run - the heart, the stake, the
     /// record, the chests, the streak, the continue, what a restart costs, which latch holds the
-    /// board while a lesson is up — comes from <see cref="ProtoScreen"/>. What is left here is
+    /// board while a lesson is up - comes from <see cref="ProtoScreen"/>. What is left here is
     /// four answers, which is what invariant 20b asks of a mode: bring your own board, share the
     /// run.
     /// </para>
@@ -169,7 +169,7 @@ namespace GlimmerGrove
         /// <summary>
         /// <b>It takes <see cref="ProtoScreen"/> rather than <see cref="StoryScreen"/>, and that
         /// is a decision rather than an omission.</b> The band is a seam and it is paid for, but
-        /// its cast are raiders — Bolt and the Collector belong to the smelter and the haul-road,
+        /// its cast are raiders - Bolt and the Collector belong to the smelter and the haul-road,
         /// and a grove mode borrowing them would be two stories wearing one set of ids. Every
         /// mode set in the grove ships silent (four chapters of glades, three of Lightfall, two of
         /// Budburst) and this one joins them; a chapter that wants a voice later can change this
@@ -186,7 +186,7 @@ namespace GlimmerGrove
         /// <summary>
         /// The one refusal the board cannot show for itself: a lantern and a critter are
         /// <em>fixed</em>, so the first thing a new player does is try to drag one of them.
-        /// Everything else answers on the board — two gems of a colour lean into each other and
+        /// Everything else answers on the board - two gems of a colour lean into each other and
         /// come back, which is the genre's own answer and needs no sentence.
         /// </summary>
         protected override string RefusalKey => "mode.prism.nodrag";
@@ -196,7 +196,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// The board sits low and wide, because this mode has no band under it and no readout of
-        /// its own — everything it counts is drawn on the field itself.
+        /// its own - everything it counts is drawn on the field itself.
         /// </summary>
         protected override Vector4 HostInset => new Vector4(14f, 250f, 14f, 300f);
     }
@@ -252,7 +252,7 @@ namespace GlimmerGrove
         /// <summary>
         /// The four turrets this run draws, held for the length of the run.
         ///
-        /// Four of the eighty the roster holds — the bound invariant 7b asks for, and the reason
+        /// Four of the eighty the roster holds - the bound invariant 7b asks for, and the reason
         /// the shelf that browses them reads thumbnails instead.
         /// </summary>
         AssetHold _line;
@@ -348,7 +348,7 @@ namespace GlimmerGrove
         /// <summary>
         /// What an endless run is graded on: waves seen off, not matches spent.
         ///
-        /// <b>The one lane in this game where a bigger count is a better run</b> — see
+        /// <b>The one lane in this game where a bigger count is a better run</b> - see
         /// <c>LevelTuning.Climbs</c> for why the direction is a property of the level rather than
         /// a special case at a call site.
         /// </summary>
@@ -367,7 +367,7 @@ namespace GlimmerGrove
         /// <b>Two floors, and only one of them pays</b> (invariant 14a). The best is the number
         /// the public board is ordered on and it pays nothing, which is what keeps a figure the
         /// server cannot recompute safe to publish (invariant 19l). The tally pays XP, at a rate
-        /// and under a ceiling that are both content — see <c>EndlessRewardTable</c>.
+        /// and under a ceiling that are both content - see <c>EndlessRewardTable</c>.
         /// </para>
         /// <para>
         /// <b>The tally is banked unconditionally and the best is not</b>, which is the whole
@@ -378,7 +378,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Banked from the board rather than from <paramref name="count"/>.</b> The count
         /// arrives floored at one by <c>ProtoScreen.Solve</c>, because a graded count of nought
-        /// is not a grade — so paying on it would pay a wave for a run that saw off none, which
+        /// is not a grade - so paying on it would pay a wave for a run that saw off none, which
         /// is the cheapest thing in this game to repeat. <c>WavesCleared</c> is the truth, and it
         /// is what <see cref="Scored"/> handed over in the first place.
         /// </para>
@@ -408,7 +408,7 @@ namespace GlimmerGrove
             // **Reported as well as banked.** `Bank` answers what it paid, and a payment nobody
             // is told about is the fault this line was written to close: the run's credits arrive
             // as a claim against the wallet, while the victory panel's coin chip counts the star
-            // ledger's own delta — which on a replay of this lane is nought, so a real payment
+            // ledger's own delta - which on a replay of this lane is nought, so a real payment
             // drew nothing at all. `Banked` is what carries it to the panel (invariant 44j's
             // rule about readouts, said about a payout).
             Banked(EndlessCoins.Bank(board.WavesCleared));
@@ -419,7 +419,7 @@ namespace GlimmerGrove
         /// ground (invariant 7c, and <see cref="SiegeMode.Ground"/>).
         ///
         /// Read off the catalog rather than carried on the level, because a level's place is a
-        /// fact about the chapter that holds it and nothing about the level itself — and because
+        /// fact about the chapter that holds it and nothing about the level itself - and because
         /// a chapter body naming its own floors is exactly the per-chapter choice 7c refuses.
         /// </summary>
         int Rung()
@@ -449,7 +449,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b><c>Content</c> rather than <c>Safe</c>, and that is what closed the gap.</b> Hung
         /// off the safe layer the shelf stopped where the layer did, so on any phone with a home
-        /// indicator there was a band of backdrop under it with nothing in it — reported from a
+        /// indicator there was a band of backdrop under it with nothing in it - reported from a
         /// device as a gap at the foot of the screen. A flat plate under a home indicator is the
         /// full-bleed case the safe layer's own remarks describe; what belongs inside the inset is
         /// the cells, and <c>UtilityBar.Foot</c> is what they get. See <c>UtilityBar.Room</c> for
@@ -510,8 +510,8 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>The one sentence this feature cannot show on the board.</b> Everything else about a
-        /// utility answers on the board — the ring says how far a firepot reaches, the ward
-        /// targets say which wards will take a mending — but whether the thing in your hand is
+        /// utility answers on the board - the ring says how far a firepot reaches, the ward
+        /// targets say which wards will take a mending - but whether the thing in your hand is
         /// dragged or tapped is not a fact anything on screen can carry. Said on arming rather
         /// than taught as a lesson, because it is a reminder about *this* item rather than a rule
         /// about the mode, and a player who already knows it has still asked for it by tapping.
@@ -546,7 +546,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The whole transaction, in one place, in that order.</b> The board is asked what the
         /// utility would do before anything is taken, so a firepot that reached nobody and a
-        /// mending on a ward at full health cost the player nothing — which is invariant 23's
+        /// mending on a ward at full health cost the player nothing - which is invariant 23's
         /// rule about a continue that does not continue, applied to a consumable. Charging the
         /// run is the view's, because only a <c>ProtoView</c> may move the allowance; drawing it
         /// is the view's for the same reason it draws everything else.
@@ -571,7 +571,7 @@ namespace GlimmerGrove
             var use = SiegeUtility.Apply(_siege.Siege, item, aim, strikes);
             if (!use.Landed) return SiegeUse.Refused;
 
-            // Only now, and only once — the board moved, so the item is gone. Nothing can change
+            // Only now, and only once - the board moved, so the item is gone. Nothing can change
             // the stock between the check above and this, so the answer is not read: a `false`
             // here would mean the ledger disagreed with itself, and the honest response to that
             // is still to leave the board as it stands rather than to un-kill a raider.
@@ -592,12 +592,12 @@ namespace GlimmerGrove
         /// <b>The firepot's blast, charged the firepot's way, and spending nothing.</b> The three
         /// halves of a utility are the effect, the price in stock and the price in matches; a
         /// bomb was dropped on the board rather than bought, so it has no stock to spend and no
-        /// cooldown to start — and it has exactly the same price in matches, because that price
+        /// cooldown to start - and it has exactly the same price in matches, because that price
         /// is what stops damage the player did not match for improving their grade (invariant 39,
         /// and 19a for why a grade here is not a private number).
         /// </para>
         /// <para>
-        /// <b>A blast that reached nobody is refused</b>, exactly as a firepot's is — but the
+        /// <b>A blast that reached nobody is refused</b>, exactly as a firepot's is - but the
         /// bomb is already off the board by then, which is the one place the two differ and it is
         /// deliberate: the alternative is putting a bomb back on a cell the field has since
         /// filled. What it costs is a wasted tap on an empty stretch of hill, which is the same
@@ -608,7 +608,7 @@ namespace GlimmerGrove
         /// The firepot in the published catalog, whatever it is called there.
         ///
         /// <b>Found by <em>kind</em> and never by id</b>, because what a bomb throws is "the
-        /// blast this build knows about" — the roster is content, so an id typed in here would be
+        /// blast this build knows about" - the roster is content, so an id typed in here would be
         /// a second copy of a name a config push can change, and its failure is a bomb that does
         /// nothing when tapped.
         /// </summary>
@@ -639,7 +639,7 @@ namespace GlimmerGrove
         ///
         /// <b>The raid stops while it is up, and not because of anything here.</b>
         /// <c>RunHold.Covered</c> holds any run behind any panel, asked once a frame by
-        /// <c>RunScreen</c> — so this is one <c>Flow.Modal</c> call and stays one, and a panel
+        /// <c>RunScreen</c> - so this is one <c>Flow.Modal</c> call and stays one, and a panel
         /// added to this mode next year inherits the same answer without being told.
         /// </summary>
         void Offer(UtilityItem item)
@@ -663,8 +663,8 @@ namespace GlimmerGrove
         /// <summary>
         /// Says why a target was refused.
         ///
-        /// One sentence for every kind, because the three refusals a player can actually meet —
-        /// a firepot that reached nobody, a mending on an unhurt ward, a surge into a full one —
+        /// One sentence for every kind, because the three refusals a player can actually meet -
+        /// a firepot that reached nobody, a mending on an unhurt ward, a surge into a full one -
         /// are all the same news: nothing happened and nothing was taken.
         /// </summary>
         void Refuse()
@@ -678,7 +678,7 @@ namespace GlimmerGrove
         /// dropped the moment it does not.
         ///
         /// Read from <see cref="Runnable"/> rather than tracked separately, so the bar and the
-        /// board cannot come to disagree about whether a run is under way — which is the second
+        /// board cannot come to disagree about whether a run is under way - which is the second
         /// thing this screen would otherwise have to remember, and the first one is what
         /// invariant 24a is about.
         /// </summary>
@@ -716,7 +716,7 @@ namespace GlimmerGrove
             _bar.Arm(null);
 
             // And every cooldown with it. A restart is a new board, so a firepot thrown at the
-            // one that was thrown away is not a debt this one inherits — which would make
+            // one that was thrown away is not a debt this one inherits - which would make
             // restarting a thing the bar punished.
             _bar.Cooled();
         }
@@ -757,7 +757,7 @@ namespace GlimmerGrove
         /// <summary>
         /// None, and that is a withdrawal rather than an omission.
         ///
-        /// <b>It was <c>SiegeLine</c> — "the line is your life" — and the board already says it.</b>
+        /// <b>It was <c>SiegeLine</c> - "the line is your life" - and the board already says it.</b>
         /// Four turrets carrying health bars fill the middle of the screen for the whole run and
         /// visibly take hits; a panel explaining that they matter is a panel explaining a picture
         /// the player is looking at. See <see cref="Mechanic.SiegeLine"/>, whose id is spent.
@@ -771,7 +771,7 @@ namespace GlimmerGrove
         /// <b>Declared as a fact about <em>this</em> board</b>, which is what
         /// <c>ProtoScreen.Lessons</c> is for: a cog is dealt by the level rather than by the mode,
         /// so a lesson about one on a level that deals none would be spent on something that is
-        /// not on the screen — and a lesson is shown once in a player's life. The first rung of
+        /// not on the screen - and a lesson is shown once in a player's life. The first rung of
         /// this chapter deals no cogs on purpose (invariant 24's argument about attention), so
         /// this is genuinely per level and not per mode.
         /// </para>
@@ -857,7 +857,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// A siege does not run out of board — its line falls while the hill is still full, which
+        /// A siege does not run out of board - its line falls while the hill is still full, which
         /// is a different piece of news and wants different words. See
         /// <c>ProtoScreen.StuckReason</c>.
         /// </summary>
@@ -865,7 +865,7 @@ namespace GlimmerGrove
 
         // ------------------------------------------------------------------ one more go
         /// <summary>
-        /// A siege is lost when its ward line falls, so the line is what a continue puts back —
+        /// A siege is lost when its ward line falls, so the line is what a continue puts back -
         /// not moves, which this mode does not count.
         ///
         /// <para>
@@ -882,8 +882,8 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The charge is the half no other mode needs, and leaving it out would have been a
         /// silent economy hole.</b> Everywhere else a run reaches its fail state by exhausting
-        /// the very counter it is graded on, so invariant 23's promise — a bought run scores one
-        /// star at most — costs no code. A siege is graded in matches and lost when its ward line
+        /// the very counter it is graded on, so invariant 23's promise - a bought run scores one
+        /// star at most - costs no code. A siege is graded in matches and lost when its ward line
         /// falls, and the two are unrelated: a player outpaced on the fourth wave may have spent
         /// five matches against a three-star line of fourteen, so twenty gems would buy a
         /// top-rung clear, and stars are what a grove's public worth is derived from (19a).
@@ -907,7 +907,7 @@ namespace GlimmerGrove
             _siege.Grant(wards);
 
             // A board handed back is a board with nothing armed, exactly as a rewind and a retry
-            // leave it — the panel that was up cost the player a beat, and an item still ringed
+            // leave it - the panel that was up cost the player a beat, and an item still ringed
             // from before the line fell is one they did not choose to be holding.
             if (_bar != null) _bar.Arm(null);
         }
@@ -918,7 +918,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>One number, in the middle, and it is the wave.</b> Invariant 33a says the number in
         /// the corner and the picture on the board have to be the same number, and 37v already
-        /// applied that once — the ward line came off the header because the line itself
+        /// applied that once - the ward line came off the header because the line itself
         /// <em>is</em> a picture, four turrets carrying health bars across the middle of the
         /// board for the whole run. The other two go for the same reason and it took a device to
         /// see it: <b>"left to clear" is the raiders still walking down the hill</b>, which is the
@@ -928,7 +928,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>What is genuinely given up is the matches count, and that is a real trade rather
         /// than a tidy-up.</b> It is the number a siege is <em>graded</em> on (invariant 37a), so
-        /// dropping it means a player cannot watch their own star line during a run — they meet it
+        /// dropping it means a player cannot watch their own star line during a run - they meet it
         /// on the victory panel. The argument for going anyway is that it is the one reading here
         /// nobody can act on: a match is worth the colour it was, never the count, so there is no
         /// play a player would change on seeing it. If it comes back it belongs somewhere the eye
@@ -937,12 +937,12 @@ namespace GlimmerGrove
         /// <para>
         /// So the row holds one, and <c>ReadoutRow.XFor</c> puts a row of one in the middle, where
         /// the eye already is. How far through the raid this is is the thing the board cannot say
-        /// — it existed nowhere but in a banner that fades after a second and a half, so a player
+        /// - it existed nowhere but in a banner that fades after a second and a half, so a player
         /// who looked away at the wrong moment had no way to find out whether the worst was over.
         /// </para>
         /// <para>
         /// The last wave is gold, because "this is the last one" is the one thing this number is
-        /// really for — and on a level that ends with a warlord (<c>SiegeLayout.Boss</c>) it is
+        /// really for - and on a level that ends with a warlord (<c>SiegeLayout.Boss</c>) it is
         /// also the warning that the last one is not like the others.
         /// </para>
         /// </summary>
@@ -964,7 +964,7 @@ namespace GlimmerGrove
 
             // **The lemniscate rather than the count, and it is drawn rather than written.** An
             // endless lane's authored wave list is empty, so `Waves` is nought and the header read
-            // "8/0" — a fraction whose denominator says the run is over. There is no last wave to
+            // "8/0" - a fraction whose denominator says the run is over. There is no last wave to
             // name, so the sign says so; and it is the one glyph here that needs no translating,
             // which is why it is a literal rather than a key.
             if (board.IsEndless)
@@ -990,7 +990,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>Exactly the bar, and no gap at all.</b> The bar is a shelf that meets the board's
-        /// own plate rather than a strip floating under it — the room this mode used to leave
+        /// own plate rather than a strip floating under it - the room this mode used to leave
         /// empty at the foot is the room it fills. `ProtoView` already insets its plate by
         /// `Margin` inside this host, so the two are separated without a number here saying so.
         /// </para>
@@ -999,7 +999,7 @@ namespace GlimmerGrove
         /// bar does not.</b> The bar's rect starts at the bottom of the display; this margin is
         /// measured from the bottom of the safe area, which is already the display's own inset up
         /// from there. Insetting by the bar's whole height would count that inset twice and push
-        /// the board's foot up behind the shelf — and on every device with nothing in the way the
+        /// the board's foot up behind the shelf - and on every device with nothing in the way the
         /// two answers are the same number, so nothing would say so.
         /// </para>
         /// <para>
@@ -1025,7 +1025,7 @@ namespace GlimmerGrove
         /// used to be *above* it, and that direction is the whole point: <c>ProtoView</c> sizes
         /// its plate to fill this host exactly, so 300 against a row ending at 334 meant the
         /// plate was drawn over the captions and they had been invisible on this mode since it
-        /// shipped. A host inset here is a hard edge, not a margin — anything the row leaves
+        /// shipped. A host inset here is a hard edge, not a margin - anything the row leaves
         /// below it is painted over.
         /// </para>
         /// </summary>

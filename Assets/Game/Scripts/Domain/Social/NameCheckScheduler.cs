@@ -30,7 +30,7 @@ namespace GlimmerGrove.Social
     ///
     /// <para>
     /// <b>This class is the cost control for the whole feature.</b> A reservation check is one
-    /// document read, which is cheap; a check per keystroke, per player, forever, is not — a
+    /// document read, which is cheap; a check per keystroke, per player, forever, is not - a
     /// sixteen-character name typed straight through is sixteen reads where one will do, and
     /// that single factor is the difference between hundreds of dollars and thousands over the
     /// life of the game. Three rules do the work, and each of them removes reads the naive
@@ -40,14 +40,14 @@ namespace GlimmerGrove.Social
     /// <item><b>A pause, not a keystroke.</b> Nothing is asked until the field has been still
     /// for <see cref="DebounceSeconds"/>, so a name typed at speed costs one read.</item>
     /// <item><b>An answer is remembered.</b> Deleting three characters and typing them again
-    /// asks nothing, and so does typing past a name and coming back to it — which is exactly
+    /// asks nothing, and so does typing past a name and coming back to it - which is exactly
     /// what somebody does while they are choosing.</item>
     /// <item><b>A name that cannot be reserved is never asked about.</b> Under two folded
     /// characters is refused here, where it is free, rather than at a database.</item>
     /// </list>
     /// <para>
     /// <b>It is a hint and never the decision.</b> Two players can be typing one name at the
-    /// same moment, so what this shows can be out of date by the time somebody presses save —
+    /// same moment, so what this shows can be out of date by the time somebody presses save -
     /// the claim is adjudicated by a transaction on the server and its answer is the one that
     /// counts. That is why being occasionally optimistic here is acceptable and being
     /// expensive here is not.
@@ -73,7 +73,7 @@ namespace GlimmerGrove.Social
         /// How many answers are kept. A person auditions a handful of names, not a hundred.
         ///
         /// Bounded rather than unbounded because this object lives as long as the panel and a
-        /// panel can be held open indefinitely — an unbounded cache fed by a text field is a
+        /// panel can be held open indefinitely - an unbounded cache fed by a text field is a
         /// slow leak with a keyboard attached to it.
         /// </summary>
         public const int MaxRemembered = 32;
@@ -103,8 +103,8 @@ namespace GlimmerGrove.Social
         /// <para>
         /// An optimisation and not the rule: the reservation carries its holder's id, so
         /// <see cref="Answered"/> can tell "mine" from "somebody else's" exactly. This exists
-        /// so the commonest case of all — opening the panel, which starts with the current
-        /// name in the field — asks nothing at all.
+        /// so the commonest case of all - opening the panel, which starts with the current
+        /// name in the field - asks nothing at all.
         /// </para>
         /// </summary>
         public void Hold(string storedName)
@@ -195,8 +195,8 @@ namespace GlimmerGrove.Social
         ///
         /// <para>
         /// Deliberately not retried and deliberately not remembered. There is nothing here
-        /// worth spending a battery on — the claim at the end is the authority and gives the
-        /// real answer a moment later — and a policy that retried in front of an open keyboard
+        /// worth spending a battery on - the claim at the end is the authority and gives the
+        /// real answer a moment later - and a policy that retried in front of an open keyboard
         /// would turn one unreachable network into a read every second for as long as the
         /// panel stays up. Typing again asks again, which is the only retry anybody wants.
         /// </para>
@@ -214,7 +214,7 @@ namespace GlimmerGrove.Social
         /// Takes the claim's own answer as the truth for this key.
         ///
         /// The claim is adjudicated where the hint is only a hint, so a name the server refused
-        /// must not go on being shown as free — otherwise pressing save twice reports two
+        /// must not go on being shown as free - otherwise pressing save twice reports two
         /// different things about one name.
         /// </summary>
         public void Adopt(string key, NameAvailability verdict)

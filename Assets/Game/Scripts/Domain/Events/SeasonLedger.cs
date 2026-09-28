@@ -46,11 +46,11 @@ namespace GlimmerGrove.Events
         ///
         /// <para>
         /// <b>A sound over-approximation, and it has to be one.</b> Answering exactly needs the
-        /// season's own ladder, and the ledger deliberately does not hold a catalog — so this
+        /// season's own ladder, and the ledger deliberately does not hold a catalog - so this
         /// asks the question the row alone can answer: a claim floor is the goal of the highest
         /// rung taken, and every rung still waiting has a goal above that floor and at or below
         /// the marks earned. So <c>Marks &gt; floor</c> is true of every row that owes something
-        /// and of some that owe nothing, which is the direction to be wrong in — the cost of a
+        /// and of some that owe nothing, which is the direction to be wrong in - the cost of a
         /// false yes is one row kept, and the cost of a false no is a player's chest deleted.
         /// </para>
         /// <para>
@@ -67,8 +67,8 @@ namespace GlimmerGrove.Events
     ///
     /// <para>
     /// <b>Everything stored here only ever rises, and that is the whole of why a season is
-    /// mergeable.</b> Three integers per season id — marks grown, and a claim floor per
-    /// track — joined by <c>max</c> (invariant 11b). A count of chests <em>remaining</em>
+    /// mergeable.</b> Three integers per season id - marks grown, and a claim floor per
+    /// track - joined by <c>max</c> (invariant 11b). A count of chests <em>remaining</em>
     /// could not be joined; a count of marks <em>grown</em> can, because two devices
     /// showing 40 and 12 are not ambiguous: the larger knows more. A set of claimed rungs
     /// would merge too, but a floor makes "claiming a later rung takes the earlier ones with
@@ -83,13 +83,13 @@ namespace GlimmerGrove.Events
     /// claimed. Nothing else grows a season, which is what makes the pace bounded by the
     /// calendar rather than by how long somebody is willing to replay a level: the slates
     /// deal what they deal, and a board already beaten pays no chest at all. A chest claimed
-    /// while no season is running grows nothing — there is no track for it to belong to, and
+    /// while no season is running grows nothing - there is no track for it to belong to, and
     /// banking it for a season that has not started would be paying a player for a week they
     /// were not here.
     /// </para>
     /// <para>
     /// <b>Claiming pays exactly as a task chest pays</b> (<see cref="TaskLedger"/>): the
-    /// banked kinds — hearts, boosts, utilities — are applied here and now, and currency
+    /// banked kinds - hearts, boosts, utilities - are applied here and now, and currency
     /// leaves as a claim whose id is derived from what earned it
     /// (<see cref="GrantEntry.MarkChestId"/>), so two devices claiming one rung produce one
     /// entry and the server re-rolls the chest from the same three facts and pays its own
@@ -152,8 +152,8 @@ namespace GlimmerGrove.Events
         ///
         /// <para>
         /// What <see cref="GroveEvents.All"/> joins onto the authored calendar, so a season that
-        /// has closed and left no trace in the manifest — every cycle of a repeating season, the
-        /// moment the next one opens — stays reachable while the player still has something in
+        /// has closed and left no trace in the manifest - every cycle of a repeating season, the
+        /// moment the next one opens - stays reachable while the player still has something in
         /// it (invariant 47c). Ids rather than seasons, because turning one back into a season
         /// is the catalog's job and this assembly's ledger has no catalog in it.
         /// </para>
@@ -194,7 +194,7 @@ namespace GlimmerGrove.Events
         /// </para>
         /// <para>
         /// It used to be session state read back from a callable, which is what a
-        /// <em>receipt</em> needs — a purchase made with real money is the server's fact and
+        /// <em>receipt</em> needs - a purchase made with real money is the server's fact and
         /// nothing else may assert it (invariant 10). A gem debit is not: it is an ordinary
         /// spend, so the entitlement it buys is stored exactly as every other gem-bought
         /// permanent thing in this game is, and the page works offline.
@@ -217,9 +217,9 @@ namespace GlimmerGrove.Events
         ///
         /// <para>
         /// The gems are already back (the ledger dropped the entry before announcing it); what
-        /// is left is the flag the purchase set beside them. Without this a refused pass — the
+        /// is left is the flag the purchase set beside them. Without this a refused pass - the
         /// price retuned while the device was offline, or a debit that reached the server in the
-        /// wrong currency, which is how it happened on the owner's own account — stayed drawn
+        /// wrong currency, which is how it happened on the owner's own account - stayed drawn
         /// as owned for ever while every paid chest it offered was refused.
         /// </para>
         /// <para>
@@ -302,7 +302,7 @@ namespace GlimmerGrove.Events
         ///
         /// <para>
         /// The live season and nothing else, judged on the trusted clock. A season that has
-        /// closed stops counting the moment it closes — the rewards it is already holding do
+        /// closed stops counting the moment it closes - the rewards it is already holding do
         /// not expire, but the track does, which is what makes a season a deadline rather
         /// than a backlog.
         /// </para>
@@ -368,12 +368,12 @@ namespace GlimmerGrove.Events
         /// <b>The debit goes first and the entitlement is only written if it succeeded</b>,
         /// which is <c>WardLedger.TryBuy</c>'s ordering and its argument: a process killed
         /// between the two leaves a player who paid and did not receive, which the spend log
-        /// can see and support can put right — where the other order leaves a pass nobody paid
+        /// can see and support can put right - where the other order leaves a pass nobody paid
         /// for, which is indistinguishable from a forgery and therefore invisible.
         /// </para>
         /// <para>
         /// <b>A closed season cannot be sold one.</b> A pass buys the paid column of rungs the
-        /// player goes on to reach, and marks stop counting at the deadline — so after it, the
+        /// player goes on to reach, and marks stop counting at the deadline - so after it, the
         /// purchase is gems for nothing. Rungs already reached stay claimable for ever, which
         /// is why this is the one refusal here that is about the clock.
         /// </para>
@@ -466,7 +466,7 @@ namespace GlimmerGrove.Events
 
         /// <summary>
         /// Hands out one chest's contents: banked kinds here and now, currency as a claim.
-        /// The split <see cref="DailyChests"/> drew, for its reason — currency is the thing
+        /// The split <see cref="DailyChests"/> drew, for its reason - currency is the thing
         /// an attacker forges, so it is the thing the server adjudicates.
         /// </summary>
         static void Apply(List<ChestDrop> drops, string seasonId, SeasonTrack track, int goal)
@@ -529,7 +529,7 @@ namespace GlimmerGrove.Events
         /// <summary>
         /// Joins two calendars, taking the larger of every number.
         ///
-        /// A join in the strict sense — idempotent and order-independent — because every
+        /// A join in the strict sense - idempotent and order-independent - because every
         /// value in it only rises. A season one device has never heard of is carried through
         /// untouched, which is what lets a client on last month's content sync with one that
         /// has the new calendar without either of them losing a track.
@@ -538,7 +538,7 @@ namespace GlimmerGrove.Events
         {
             // No early return for an empty side, deliberately. Handing one array straight
             // back would skip the sort and the deduplication, so a malformed file joined
-            // against nothing would come out still malformed — and `SaveDelta` walks these in
+            // against nothing would come out still malformed - and `SaveDelta` walks these in
             // order, so it would then read as changed on every single sync.
             var byId = new Dictionary<string, SeasonState>(StringComparer.Ordinal);
             Absorb(byId, mine);
@@ -553,13 +553,13 @@ namespace GlimmerGrove.Events
         /// <para>
         /// The sort is not tidiness. <see cref="SaveChecksum"/> hashes the serialised file and
         /// <c>SaveDelta</c> decides whether to sync by walking these in order, so rows in
-        /// dictionary order would make an unchanged save look changed on every launch — a write
+        /// dictionary order would make an unchanged save look changed on every launch - a write
         /// and an upload for nothing, forever.
         /// </para>
         /// <para>
         /// <b>The cap used to truncate the sorted list, and that was a live bug waiting for a
         /// repeating season.</b> Ordinal order is calendar order, so lopping off the tail keeps
-        /// the <em>oldest</em> sixty-four rows and throws away the newest — which on a calendar
+        /// the <em>oldest</em> sixty-four rows and throws away the newest - which on a calendar
         /// that never ends means the season being played is the first thing deleted, silently, at
         /// the moment the sixty-fifth opens. It was unreachable while seasons were authored one
         /// at a time and a real ending on the day one was not.
@@ -569,8 +569,8 @@ namespace GlimmerGrove.Events
         /// worth: anything that might still be holding an unopened chest (<see
         /// cref="SeasonState.MayOwe"/>) is kept ahead of anything settled, and within each group
         /// the newest survives. A player who somehow has more than sixty-four unsettled seasons
-        /// still loses the oldest of them — there is no arrangement in which a bounded list keeps
-        /// everything — but that is sixty-four seasons of never opening a chest, against the old
+        /// still loses the oldest of them - there is no arrangement in which a bounded list keeps
+        /// everything - but that is sixty-four seasons of never opening a chest, against the old
         /// rule's "the one you are playing".
         /// </para>
         /// </summary>

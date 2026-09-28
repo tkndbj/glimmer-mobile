@@ -29,8 +29,8 @@ namespace GlimmerGrove.Modes
     /// </para>
     /// <para>
     /// <b>The two fail states are read in the order a player would want them.</b> An empty well
-    /// wins even if the last mote came to rest on the brim before bursting — there is nothing
-    /// left to flood — and a run that has just flooded is not also reported as starved.
+    /// wins even if the last mote came to rest on the brim before bursting - there is nothing
+    /// left to flood - and a run that has just flooded is not also reported as starved.
     /// </para>
     /// <para>
     /// <b>A run ends when the supply runs out, and not one drop before.</b> There used to be a
@@ -41,12 +41,12 @@ namespace GlimmerGrove.Modes
     /// </para>
     /// <para>
     /// <b>It was removed anyway, and being right is not the same as being wanted.</b> Reported
-    /// from play as a run that ended while the tray still had motes in it — which reads as the
+    /// from play as a run that ended while the tray still had motes in it - which reads as the
     /// game deciding on the player's behalf, and is indistinguishable from a bug unless you
     /// already know the rule it is enforcing. A player who wants to spend their last three motes
     /// on a board that cannot be won is entitled to; it costs them nothing they had not already
     /// lost, and the alternative is being told "no" by something they cannot see. The proof
-    /// survives as <see cref="Deficit"/>, where it is still exactly the right question — how
+    /// survives as <see cref="Deficit"/>, where it is still exactly the right question - how
     /// much would have to be bought before a continue was usable room.
     /// </para>
     /// </summary>
@@ -62,7 +62,7 @@ namespace GlimmerGrove.Modes
         /// <b>Not always nought, unlike a glade's</b>, and this is the reason a deficit exists
         /// at all. A glade is lost when its counter reaches the budget and any turn makes it
         /// playable again. A well runs dry at a moment that has nothing to do with what is
-        /// standing in it — so the motes that come next may be the wrong colours entirely, and
+        /// standing in it - so the motes that come next may be the wrong colours entirely, and
         /// handing over the authored allowance alone would put the player back on a board that
         /// still cannot be finished and end the run again a few drops later, having taken their
         /// gems. So the deficit is however many drops it takes for every channel still wanted to
@@ -94,7 +94,7 @@ namespace GlimmerGrove.Modes
             => live && committed && (Ending == FallEnding.Flooded || Ending == FallEnding.Starved);
 
         /// <summary>
-        /// Reads a well and its supply. Pure — every input is passed in — so every branch is
+        /// Reads a well and its supply. Pure - every input is passed in - so every branch is
         /// proved offline against a board and two integers.
         /// </summary>
         public static FallVerdict Read(FallBoard board, FallSupply supply, FallDeal deal)
@@ -139,7 +139,7 @@ namespace GlimmerGrove.Modes
             if (deal == null || deal.Count == 0) return RunContinueDeficit.None;
 
             // There used to be a clause here refusing a continue on a well with no mote left to
-            // cook — glass with nothing to light it, which was then genuinely unfinishable. It
+            // cook - glass with nothing to light it, which was then genuinely unfinishable. It
             // is gone because the board changed underneath it: a drop now feeds glass it lands
             // on, so a lone lens is one drop from firing and more motes are exactly what such a
             // run needs. Left in, it would refuse the offer on the one board where it is most
@@ -155,7 +155,7 @@ namespace GlimmerGrove.Modes
 
             // A deal that cannot supply a wanted channel at all is a board no purchase can
             // rescue. The validator refuses to ship one, so this is the guard rather than the
-            // ordinary path — and answering "no offer" is the safe direction for the one seam
+            // ordinary path - and answering "no offer" is the safe direction for the one seam
             // here that charges money.
             if ((wanted & ~deal.Channels) != Energy.None) return RunContinueDeficit.None;
 
@@ -179,7 +179,7 @@ namespace GlimmerGrove.Modes
     /// The one value a deficit can take that is not a number of anything.
     ///
     /// It mirrors <c>RunContinue.NoContinue</c> so that Domain's board classes can answer the
-    /// continue's question without reaching across into the progression layer for a constant —
+    /// continue's question without reaching across into the progression layer for a constant -
     /// <c>FallScreen</c> hands this straight through, and <c>FallVerdictTests</c> pins that the
     /// two agree.
     /// </summary>

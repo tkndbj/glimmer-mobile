@@ -16,7 +16,7 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// The text is a delegate rather than a string because most of these lines move while
-    /// the panel is open — a heart countdown ticks, a boost expires, the day's allowance
+    /// the panel is open - a heart countdown ticks, a boost expires, the day's allowance
     /// drops as videos are watched. Building them as live readings means the panel has one
     /// description of each fact rather than one for the first paint and another for the
     /// repaint, which is how a screen ends up telling a player two different things.
@@ -40,8 +40,8 @@ namespace GlimmerGrove
     /// The panel behind every "watch a video for this" offer in the game.
     ///
     /// <para>
-    /// One overlay for both entry points — the defeat screen's heart refill and the home
-    /// screen's coin pill — because they are the same transaction seen from two moods, and
+    /// One overlay for both entry points - the defeat screen's heart refill and the home
+    /// screen's coin pill - because they are the same transaction seen from two moods, and
     /// the honest states below are the whole substance of it. Two panels would be two
     /// places to get "no fill" wrong.
     /// </para>
@@ -50,7 +50,7 @@ namespace GlimmerGrove
     /// happening and a player meets all of them: the network has nothing loaded, the day's
     /// allowance is spent, another ad was watched a minute ago, hearts are already full, or
     /// there is no account to pay coins into yet. A panel that renders those as one greyed
-    /// button teaches people the feature is broken, and they stop looking at it — which
+    /// button teaches people the feature is broken, and they stop looking at it - which
     /// costs far more than the ad it failed to show.
     /// </para>
     /// </summary>
@@ -67,7 +67,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Exactly one of this and <see cref="Rewarded"/> fires, always, for every way this
-        /// panel can end — the watch button, the corner cross, a tap on
+        /// panel can end - the watch button, the corner cross, a tap on
         /// the scrim, the hardware back key, and the screen underneath being destroyed while
         /// the panel is open. That completeness is the whole point of it, and it is why it is
         /// raised from <c>OnDestroy</c> rather than from the three or four exits: this panel
@@ -79,7 +79,7 @@ namespace GlimmerGrove
         /// Most callers do not need it, and the one that needed it absolutely is gone: the
         /// retired <c>run_continue</c> froze a run mid-defeat behind this panel, where a
         /// dismissal reporting nothing would have left the player on a dead board with no way
-        /// forward. It stays because the completeness is the point — a caller that opens this
+        /// forward. It stays because the completeness is the point - a caller that opens this
         /// over something it has latched has exactly one reliable way to hear that it closed.
         /// </para>
         /// </summary>
@@ -90,7 +90,7 @@ namespace GlimmerGrove
         // because the fact list is not a fixed length: a placement the content table does
         // not carry loses its allowance line, and the two placements do not explain
         // themselves in the same number of sentences. Absolute offsets would mean a fourth
-        // fact silently drawn over the button — the failure this file's sibling Cue was
+        // fact silently drawn over the button - the failure this file's sibling Cue was
         // rewritten to avoid.
         const float PanelW = 880f;
         const float ContentW = 700f;
@@ -138,7 +138,7 @@ namespace GlimmerGrove
         /// <para>
         /// It also needs the shop to actually work. <c>StoreService.IsAvailable</c> is false
         /// in a build with no store SDK and in every Editor session, and a button leading to
-        /// a screen with nothing on it is worse than no button — the same judgement the watch
+        /// a screen with nothing on it is worse than no button - the same judgement the watch
         /// button makes about a placement the content table does not carry.
         /// </para>
         /// <para>
@@ -169,8 +169,8 @@ namespace GlimmerGrove
             float buttonY = y + ButtonH * .5f;  y += ButtonH;
 
             // A quiet way through to the shop, on the two placements opened from somewhere
-            // a player can leave. Not on the run continue — the board behind it is frozen
-            // mid-defeat and navigating away would forfeit the run — and not on the win
+            // a player can leave. Not on the run continue - the board behind it is frozen
+            // mid-defeat and navigating away would forfeit the run - and not on the win
             // bonus, which sits inside the victory sequence.
             //
             // It is here rather than on the hub because this panel is already the answer to
@@ -201,7 +201,7 @@ namespace GlimmerGrove
 
             // No watch button at all when the content table does not carry this placement.
             // It is the one refusal on this panel that cannot resolve by waiting, and a
-            // green button that can never work is worse than no button — the facts above
+            // green button that can never work is worse than no button - the facts above
             // are still worth the player's trip, so the panel closes rather than teasing.
             if (offer.IsValid)
                 _watch = UIKit.TextButton("Watch", Panel, "btn_green", Loc.Get(WatchKey(PlacementId)), 46,
@@ -243,7 +243,7 @@ namespace GlimmerGrove
             RewardedAds.Changed -= Repaint;
 
             // The backstop, not the normal path. Reporting from here as well as from the
-            // close means the caller hears exactly once however the panel ended — including
+            // close means the caller hears exactly once however the panel ended - including
             // the two endings no button knows about: the hardware back key pressed during the
             // reward beat, and the screen underneath being torn down with this still open.
             Report(_paid);
@@ -255,8 +255,8 @@ namespace GlimmerGrove
         /// Tells the caller how this ended, exactly once.
         ///
         /// <para>
-        /// The latch is the substance. This panel has several exits — watch, the corner
-        /// cross, the scrim, the back key and the screen dying underneath it — and a caller
+        /// The latch is the substance. This panel has several exits - watch, the corner
+        /// cross, the scrim, the back key and the screen dying underneath it - and a caller
         /// that hears twice is as broken as one that never hears: <c>PlayScreen</c> would
         /// extend a clock it had already lost the run on. Reporting through one method with
         /// one guard is what makes "exactly one of Rewarded and Dismissed fires, always"
@@ -292,7 +292,7 @@ namespace GlimmerGrove
         /// <summary>
         /// <b>Every placement is named, and the fallback is the <em>kind</em> rather than
         /// hearts.</b> This used to end in a bare <c>: "ui.ads.hearts_title"</c>, so the day a
-        /// fifth placement shipped it offered an XP boost under a panel headed "Out of hearts" —
+        /// fifth placement shipped it offered an XP boost under a panel headed "Out of hearts" -
         /// invariant 44e exactly, a default that is a real answer hiding the case nobody is
         /// looking at. A placement this build does not name now takes its title from what the
         /// published table says it pays, which is wrong far more loudly and far less often.
@@ -341,7 +341,7 @@ namespace GlimmerGrove
         // ------------------------------------------------------------- the prize
         /// <summary>
         /// What the ad pays, drawn the way a chest draws a reward so the two read as the
-        /// same kind of thing — which they are.
+        /// same kind of thing - which they are.
         /// </summary>
         void BuildRewardCard(AdOffer offer, float y)
         {
@@ -365,7 +365,7 @@ namespace GlimmerGrove
             // **The box is the shape of the widest mark rather than a square**, and the height
             // and the position are untouched, so the optical centre is exactly where the square
             // one sat. `preserveAspect` fits a sprite *inside* this rect and centres it there,
-            // so a square mark — a coin, a heart, a hint — still draws at 114 in the middle of
+            // so a square mark - a coin, a heart, a hint - still draws at 114 in the middle of
             // it and nothing about those three moves. What changes is the one mark that is not
             // square: the XP wordmark is 1.55:1, so in a square box it drew at 114 x 74 with a
             // third of the box empty above and below it, small in the one panel whose whole job
@@ -394,7 +394,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// The "+" beside a resource is the only question mark on the home screen, and
-        /// until now it answered exactly one question — "will you watch a video?" — while
+        /// until now it answered exactly one question - "will you watch a video?" - while
         /// leaving the three a player actually has unanswered: how the resource comes back
         /// on its own, when the next one lands, and whether collecting past a full bar is
         /// worth anything. Those are the facts below, and they are read from
@@ -421,7 +421,7 @@ namespace GlimmerGrove
             {
                 // Read from HintRules rather than written into the copy, for the reason the
                 // heart facts are. Nothing here says "collected hints stack", which the heart
-                // panel's third line does, because they do not — the pool has no headroom
+                // panel's third line does, because they do not - the pool has no headroom
                 // above its cap. That is not a fact worth printing, because a player can
                 // never meet it: WouldBenefit hides the whole offer at a full pool rather
                 // than letting somebody watch a video for a grant that would be refused.
@@ -437,7 +437,7 @@ namespace GlimmerGrove
                 // Read from the published table rather than written into the copy, for the
                 // reason every other branch here is: a panel that explains the game is the
                 // first thing to rot when the game is retuned. Both numbers are the ones the
-                // rule actually uses — the percentage and the window come out of `XpBoostTable`,
+                // rule actually uses - the percentage and the window come out of `XpBoostTable`,
                 // not out of the advert's own `amount`, because that is the pair the cooldown is
                 // derived against (`ProgressionTable` errors when the two drift).
                 var boost = ProgressionRules.Table.XpBoost;
@@ -468,7 +468,7 @@ namespace GlimmerGrove
         /// When another XP boost may be watched, or that one may be taken now.
         ///
         /// The cooldown is derived from the window's own deadline (<c>XpBoost.WatchedReadyAt</c>),
-        /// so this reads the same number the offer is gated on — there is no second clock that
+        /// so this reads the same number the offer is gated on - there is no second clock that
         /// could disagree with the button.
         /// </summary>
         static string NextBoostLine()
@@ -536,7 +536,7 @@ namespace GlimmerGrove
         // ------------------------------------------------------------- painting
         /// <summary>
         /// Kept live rather than painted once, because two of the reasons an offer is
-        /// unavailable resolve by themselves — a cooldown runs out, and fill arrives — and
+        /// unavailable resolve by themselves - a cooldown runs out, and fill arrives - and
         /// a panel that had to be closed and reopened to notice is a panel players learn
         /// to distrust.
         /// </summary>
@@ -544,8 +544,8 @@ namespace GlimmerGrove
         /// Ticks the panel four times a second rather than sixty.
         ///
         /// <para>
-        /// Every live thing on it — a heart countdown, a boost, a cooldown, the day's
-        /// allowance — has one-second granularity, so a per-frame repaint was rebuilding
+        /// Every live thing on it - a heart countdown, a boost, a cooldown, the day's
+        /// allowance - has one-second granularity, so a per-frame repaint was rebuilding
         /// the same five strings fifty-nine times out of sixty. That is a few hundred
         /// bytes of garbage a second on a phone, spent to render pixels nobody could tell
         /// apart. A quarter second still lands inside every second boundary, and anything
@@ -571,7 +571,7 @@ namespace GlimmerGrove
         {
             if (_paid || _watching) return;
 
-            // The facts keep ticking even when there is no offer to make — a player who
+            // The facts keep ticking even when there is no offer to make - a player who
             // opened this panel to find out when their next heart lands is owed a clock
             // that moves, whether or not the network has anything to show them.
             PaintFacts();
@@ -622,7 +622,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// The five steps and their order live in <see cref="RewardedVideo.Watch"/>, which is
-        /// where the two orderings that matter are stated once — the impression is minted before
+        /// where the two orderings that matter are stated once - the impression is minted before
         /// the SDK is asked for anything, and the pills are snapshotted before the reward is
         /// redeemed. What is left here is the part only a panel can do: deciding whether it is
         /// still standing, and what to say if nothing was paid.
@@ -632,7 +632,7 @@ namespace GlimmerGrove
         {
             var payment = await RewardedVideo.Watch(PlacementId);
 
-            // The overlay can be gone by now — a player who backgrounds the app during a video
+            // The overlay can be gone by now - a player who backgrounds the app during a video
             // may come back to a different screen entirely. The reward is still banked.
             if (!Living) return;
 
@@ -695,7 +695,7 @@ namespace GlimmerGrove
         /// The player took the reward. Where the hub is underneath, it flies there.
         ///
         /// <para>
-        /// This is the daily chest's collect, and deliberately the very same one — see
+        /// This is the daily chest's collect, and deliberately the very same one - see
         /// <see cref="RewardFlight"/>. A reward that lands somewhere is worth more than a
         /// reward that is merely granted, and the two panels pay the same three currencies
         /// into the same three pills; a player who has watched the chest fill their coin pill
@@ -715,7 +715,7 @@ namespace GlimmerGrove
             if (_collecting) return;
 
             // Asked before the latch, so a panel with nowhere to fly to is still an ordinary
-            // close — including its sound and its scale-out, which the cascade does not use.
+            // close - including its sound and its scale-out, which the cascade does not use.
             if (_flight == null || !_flight.Add(_drop, _card))
             {
                 Close(() => Report(true));
@@ -732,14 +732,14 @@ namespace GlimmerGrove
         /// <para>
         /// The card is lifted out of the panel first. Everything else here is chrome the
         /// moment the reward has been taken, and the panel has to go because the pills being
-        /// paid into are behind it — but the card is the thing the tokens come out of, so it
+        /// paid into are behind it - but the card is the thing the tokens come out of, so it
         /// has to outlive its own parent by a beat. <c>SetParent</c> keeps its world position,
         /// so it does not move as it changes hands.
         /// </para>
         /// <para>
         /// The scrim stops taking taps rather than merely fading. A scrim at zero alpha still
         /// swallows everything aimed at what is now visible through it, and on this panel it
-        /// carries a dismissal that would fade the whole content group — tokens included —
+        /// carries a dismissal that would fade the whole content group - tokens included -
         /// leaving the pills rewound with nothing on the way to walk them forward.
         /// </para>
         /// </summary>
@@ -774,7 +774,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Swallowed once the payout has started, for <c>ChestOverlay.OnBack</c>'s reason:
-        /// everything is already banked, so leaving early costs the player nothing — but
+        /// everything is already banked, so leaving early costs the player nothing - but
         /// <see cref="ModalView.Close"/> fades the whole content group and the tokens are in
         /// it, so the back key would delete the animation mid-flight and leave the hub's pills
         /// rewound to their old figures.

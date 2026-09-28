@@ -17,8 +17,8 @@ namespace GlimmerGrove.Tests
     /// that stop rather than as an economy that drifts.
     /// </para>
     /// <para>
-    /// Split the way the house rules ask for. The arithmetic — how many stars, is it met, how
-    /// many are left — is proved against plain integers, and the wiring is proved against a
+    /// Split the way the house rules ask for. The arithmetic - how many stars, is it met, how
+    /// many are left - is proved against plain integers, and the wiring is proved against a
     /// driven catalog and a driven save. Nothing here needs the Editor, which is the point:
     /// the gate must be provable on the machine of whoever is changing it.
     /// </para>
@@ -228,7 +228,7 @@ namespace GlimmerGrove.Tests
         // =============================================================== the wiring
         /// <summary>
         /// Two chapters of three levels each, in the ordinary mode, plus a one-level chapter
-        /// in a mode of its own — which is what proves the ladders do not chain.
+        /// in a mode of its own - which is what proves the ladders do not chain.
         /// </summary>
         static CatalogIndex TwoChapters()
         {

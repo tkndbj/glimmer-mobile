@@ -7,8 +7,8 @@ namespace GlimmerGrove.Modes
     ///
     /// <para>
     /// <b>Its own file because it is the one thing on the line the player does with their
-    /// hands.</b> Everything else the line does is a consequence of the field — fuel arrives, a
-    /// bolt leaves, a charge is tapped — and a tap on rubble is none of those: it moves no fuel,
+    /// hands.</b> Everything else the line does is a consequence of the field - fuel arrives, a
+    /// bolt leaves, a charge is tapped - and a tap on rubble is none of those: it moves no fuel,
     /// throws nothing and costs the run no match. What it costs is the beat it took, which is
     /// the resource a colossus is built to take (<see cref="SiegeKind.Colossus"/>).
     /// </para>

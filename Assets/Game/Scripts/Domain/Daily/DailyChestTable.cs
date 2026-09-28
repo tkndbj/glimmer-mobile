@@ -4,7 +4,7 @@ using GlimmerGrove.Content;
 namespace GlimmerGrove.Daily
 {
     /// <summary>
-    /// An authored band: <c>min</c> to <c>max</c> of one kind, inclusive — and, for a kind that
+    /// An authored band: <c>min</c> to <c>max</c> of one kind, inclusive - and, for a kind that
     /// names a thing, which thing.
     /// </summary>
     public readonly struct ChestBand
@@ -18,7 +18,7 @@ namespace GlimmerGrove.Daily
         ///
         /// <b>It does not touch the streams.</b> Which id a band names changes what is granted and
         /// never what is rolled, so adding one to a shipped table cannot reroll an unopened chest
-        /// — the property the whole generator is built around (invariant 9c).
+        /// - the property the whole generator is built around (invariant 9c).
         /// </summary>
         public readonly string Item;
 
@@ -58,8 +58,8 @@ namespace GlimmerGrove.Daily
     /// guaranteed bands every time, then makes <b>exactly one</b> weighted pick. That is
     /// deliberately less flexible than N picks from a pool: with one pick the odds are a
     /// list of percentages that sum to a hundred, which is a thing a player can read, a
-    /// store reviewer can check and a disclosure page can print. With several picks —
-    /// with or without replacement — the true odds of any particular outcome stop being
+    /// store reviewer can check and a disclosure page can print. With several picks -
+    /// with or without replacement - the true odds of any particular outcome stop being
     /// any number written in the file, and the honest disclosure becomes a simulation.
     /// </para>
     /// <para>
@@ -106,7 +106,7 @@ namespace GlimmerGrove.Daily
         /// Each band draws on its own stream so that adding a guaranteed band to a chest
         /// in a future content drop cannot shift the outcome of the weighted pick. Without
         /// that, retuning the floor would silently reroll every unopened chest in the
-        /// world — including, for a few minutes either side of a config push, ones the
+        /// world - including, for a few minutes either side of a config push, ones the
         /// server and the client would then disagree about.
         /// </summary>
         public List<ChestDrop> Roll(string playerKey, int dayKey, int chestIndex)
@@ -119,7 +119,7 @@ namespace GlimmerGrove.Daily
         /// The one roll, with the seed handed in rather than built here. A day-keyed chest
         /// and a subject-keyed one (a task's chest is seeded from the task and the period
         /// it was done in) are the same arithmetic over a different first hash, and a second
-        /// copy of the loop below would be a second place the stream numbers live — the
+        /// copy of the loop below would be a second place the stream numbers live - the
         /// numbers the server mirrors byte for byte (invariant 9c).
         /// </para>
         /// </summary>
@@ -141,14 +141,14 @@ namespace GlimmerGrove.Daily
         /// <summary>
         /// Folds a drop into the list, adding to an existing entry that is the same reward.
         ///
-        /// <b>The same reward, not the same kind</b> — a chest that pays two different utilities
+        /// <b>The same reward, not the same kind</b> - a chest that pays two different utilities
         /// pays two of them, and folding them together would grant one id twice and the other
         /// never. <c>ChestDrop.SameAs</c> is where that comparison lives so the server's mirror
         /// can be held to the same rule.
         ///
         /// <para>
         /// Not cosmetic. A chest whose guaranteed band and whose bonus pick are both
-        /// credits produces two drops, and both of them award the same currency — which
+        /// credits produces two drops, and both of them award the same currency - which
         /// means both would carry the id <c>daily:{day}:{chest}:credits</c>, and the
         /// second would be refused as a duplicate of the first. The player would be shown
         /// two rewards and paid for one. Worse, the server sums a chest's drops per
@@ -259,7 +259,7 @@ namespace GlimmerGrove.Daily
         /// The table that ships inside the build.
         ///
         /// Present so the feature works on a first launch that has not reached the
-        /// content yet, and so a malformed file costs a retune rather than a session —
+        /// content yet, and so a malformed file costs a retune rather than a session -
         /// the same bargain <see cref="Progression.ProgressionTable.Default"/> makes.
         ///
         /// The shape of it is the design: every chest guarantees credits, so no chest is
@@ -310,7 +310,7 @@ namespace GlimmerGrove.Daily
 
             // Unwritten reads as -1 and inherits, the same tri-state the reward rules use.
             // Zero would mean a chest nobody has to play for, so it inherits too rather
-            // than being honoured — there is no reading of "0 runs" worth shipping.
+            // than being honoured - there is no reading of "0 runs" worth shipping.
             int runsPerChest = dto.runsPerChest > 0 ? dto.runsPerChest : Default.RunsPerChest;
 
             if (dto.chests == null || dto.chests.Length == 0)
@@ -387,7 +387,7 @@ namespace GlimmerGrove.Daily
                 }
             }
 
-            // A chest with no options is legal — it is simply a fixed reward, which is a
+            // A chest with no options is legal - it is simply a fixed reward, which is a
             // perfectly good thing for a first chest to be.
             return new ChestDefinition(guaranteed.ToArray(), options.ToArray());
         }
@@ -410,7 +410,7 @@ namespace GlimmerGrove.Daily
             }
 
             // A chest is opened on the home screen, where there is no run to extend, so a
-            // rolled one would pay nothing at all — and being a *guaranteed* slot it would
+            // rolled one would pay nothing at all - and being a *guaranteed* slot it would
             // pay nothing reliably. Refused rather than skipped: an unknown kind is a newer
             // content pack reaching an older build and degrading is right, but this kind is
             // one this build knows and knows to be wrong here.

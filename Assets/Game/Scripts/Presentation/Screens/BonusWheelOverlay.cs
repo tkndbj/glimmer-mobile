@@ -15,13 +15,13 @@ namespace GlimmerGrove
     /// <b>Which half is the offer.</b> The spin is free and the collection is not, and that
     /// ordering is the whole feature. A player who spins and does not like the answer has lost
     /// nothing and is not being sold anything; a player who spins well is choosing to spend
-    /// thirty seconds on a figure they can already see. The reverse — watch first, then find
-    /// out — is the shape that makes people feel tricked, because the thing they paid for was
+    /// thirty seconds on a figure they can already see. The reverse - watch first, then find
+    /// out - is the shape that makes people feel tricked, because the thing they paid for was
     /// decided after they paid.
     /// </para>
     /// <para>
     /// <b>Nothing about the spin is random at the moment it happens.</b> The slice is a pure
-    /// function of (account, day, spin index) and was decided before the panel opened — see
+    /// function of (account, day, spin index) and was decided before the panel opened - see
     /// <see cref="BonusWheel"/>. So backing out and coming back lands on the same slice, which
     /// is invariant 9c's anti-reroll property, and the number shown before the video is the
     /// number the server independently grants after it. This panel is a picture of an answer
@@ -38,7 +38,7 @@ namespace GlimmerGrove
     {
         /// <summary>
         /// Which placement is being spun for. A field rather than a constant because the wheel
-        /// is a way of paying a rewarded placement rather than a feature of one — a second
+        /// is a way of paying a rewarded placement rather than a feature of one - a second
         /// wheel on a second placement would need nothing here changed but this.
         /// </summary>
         public string PlacementId = AdPlacement.WinBonus;
@@ -50,7 +50,7 @@ namespace GlimmerGrove
         /// Raised when the panel goes away having paid nothing.
         ///
         /// Exactly one of this and <see cref="Rewarded"/> fires, for every way out this panel
-        /// has — the collect, the corner cross, the scrim, the back key, and the screen
+        /// has - the collect, the corner cross, the scrim, the back key, and the screen
         /// underneath being torn down mid-spin. The house rule about panels with several exits:
         /// the safe outcome goes on <c>OnDestroy</c> and the latch is what stops the ordinary
         /// exit reporting twice.
@@ -63,7 +63,7 @@ namespace GlimmerGrove
         /// <para>
         /// The one place that decision is made, so no screen has to remember the three things
         /// that have to be true. Both destinations are real offers for the same placement, so
-        /// the fallback is a quieter panel rather than a refusal — which is what makes the
+        /// the fallback is a quieter panel rather than a refusal - which is what makes the
         /// wheel safe to ship before the functions that grant it are deployed (invariant 12a).
         /// </para>
         /// </summary>
@@ -86,7 +86,7 @@ namespace GlimmerGrove
             });
         }
 
-        // The geometry lives in Domain — see WheelPanel — because whether two things on a
+        // The geometry lives in Domain - see WheelPanel - because whether two things on a
         // screen overlap is arithmetic, and arithmetic in a MonoBehaviour is the one place
         // nothing can prove it. WheelPanelTests holds the panel under the shortest canvas this
         // game is drawn on and checks that no row is drawn through the one above it; neither
@@ -104,7 +104,7 @@ namespace GlimmerGrove
         bool _watching, _paid;
 
         /// <summary>
-        /// True once the button has actually become the video offer — see
+        /// True once the button has actually become the video offer - see
         /// <see cref="BecomeTheOffer"/>.
         ///
         /// <para>
@@ -112,7 +112,7 @@ namespace GlimmerGrove
         /// difference is a whole beat wide: <c>WheelSpin.CelebrationSeconds</c> passes between
         /// the slice being decided and the button changing hands, and the tick runs four times a
         /// second throughout it. Gated on the landing, the first thing to write
-        /// "WATCH A VIDEO TO COLLECT" was that tick — onto a button that still had no play
+        /// "WATCH A VIDEO TO COLLECT" was that tick - onto a button that still had no play
         /// glyph, so the caption was fitted to the whole face and drawn nearly edge to edge.
         /// <c>BecomeTheOffer</c> then added the glyph and re-fitted it smaller, and what the
         /// player saw was a caption that overflowed its button and then tidied itself up as the
@@ -121,7 +121,7 @@ namespace GlimmerGrove
         /// </summary>
         bool _offering;
 
-        /// <summary>The offer being multiplied. Read once — a table swap mid-panel would move
+        /// <summary>The offer being multiplied. Read once - a table swap mid-panel would move
         /// the figures under a wheel the player has already been shown.</summary>
         AdOffer _offer;
         BonusWheel _wheel;
@@ -132,8 +132,8 @@ namespace GlimmerGrove
             _wheel = WheelStand.Wheel;
             _landing = WheelStand.Landing();
 
-            // Nothing to draw. Reached only if the stand shut between OpenFor and here — a sync
-            // landing in the same frame — and the honest answer is the flat offer rather than a
+            // Nothing to draw. Reached only if the stand shut between OpenFor and here - a sync
+            // landing in the same frame - and the honest answer is the flat offer rather than a
             // wheel with no slice under its pointer.
             if (_landing < 0 || !_wheel.IsUsable || !_offer.IsValid)
             {
@@ -178,7 +178,7 @@ namespace GlimmerGrove
 
             // Through UIKit.OneLine rather than by raising the flag, and the difference is the
             // whole of the bug it fixes. TextButton turns Unity's best-fit on for any button
-            // carrying a glyph, and best-fit concedes the *line* before it concedes the size —
+            // carrying a glyph, and best-fit concedes the *line* before it concedes the size -
             // so a long caption folds, and the fold is measured, re-measured when the font
             // texture rebuilds a frame later, and re-laid out again by FitLabel against the box
             // that measurement produced. What the player sees is WATCH A VIDEO TO COLLECT
@@ -192,7 +192,7 @@ namespace GlimmerGrove
             Tween.Breathe(_spin.transform, .028f, 1.9f);
 
             // A corner cross rather than a "no thanks" button. Nobody taps decline, and a whole
-            // button spent on the option to refuse reads as a panel expecting to be refused —
+            // button spent on the option to refuse reads as a panel expecting to be refused -
             // but a modal whose only exit is the scrim is one players experience as being
             // trapped by an advert, which is a store-review problem as much as a decency one.
             UIKit.IconButton("Dismiss", Panel, Skins.Nav, "ic_close", new Vector2(84f, 84f),
@@ -220,7 +220,7 @@ namespace GlimmerGrove
         {
             RewardedAds.Changed -= Repaint;
 
-            // The backstop, not the normal path — including the two endings no button knows
+            // The backstop, not the normal path - including the two endings no button knows
             // about: the back key pressed during the payout, and the screen underneath being
             // torn down with this still open.
             Report(_paid);
@@ -251,7 +251,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Every slice is the same size and every slice is equally likely, so the whole
-        /// disclosure is one sentence with a number in it — the property invariant 10b protects
+        /// disclosure is one sentence with a number in it - the property invariant 10b protects
         /// for the daily chest, here for the same reason. It is read off the live table rather
         /// than written into the copy, so a content push that changes the wheel changes the
         /// sentence, which is what stops the panel that explains the game being the first thing
@@ -291,7 +291,7 @@ namespace GlimmerGrove
 
             // Before the spin the button says SPIN whatever the network is doing, because the
             // spin is free and the refusal below it is about the video. Once the button has
-            // become the video it takes the ad's own caption — cooldowns and allowances
+            // become the video it takes the ad's own caption - cooldowns and allowances
             // included. See _offering for why that is not the same moment as the wheel landing.
             if (_offering && _spin != null)
                 AdOfferButton.Paint(_spin, PlacementId, "ui.wheel.collect");
@@ -300,7 +300,7 @@ namespace GlimmerGrove
             // ready video needs no sentence: before the landing the button says SPIN and the
             // spin is free, and after it the button *is* the video and carries its own caption,
             // so "watch a short video and it is yours" underneath it was the same instruction a
-            // third time — printed over the odds line, which had already said it too. What is
+            // third time - printed over the odds line, which had already said it too. What is
             // left is the half a caption cannot carry: loading, a cooldown, a cap, no account.
             _status.text = status.State == AdOfferState.Ready
                 ? string.Empty
@@ -312,7 +312,7 @@ namespace GlimmerGrove
         {
             if (_face == null || _face.Spinning || _face.Landed) return;
 
-            // Asked here as well as painted, because a cooldown can expire — or a cap arrive —
+            // Asked here as well as painted, because a cooldown can expire - or a cap arrive -
             // between the paint and the tap. The spin itself costs nothing, but selling a
             // player a result they cannot collect is worse than refusing the spin.
             if (!RewardedAds.CanOffer(PlacementId)) { Repaint(); return; }
@@ -349,7 +349,7 @@ namespace GlimmerGrove
 
             // No haptic, here or on the payout. Handheld.Vibrate is one fixed-length pulse on
             // Android with no way to make it lighter, and this panel fires twice inside a few
-            // seconds on an event a player meets several times a session — which is one rumble
+            // seconds on an event a player meets several times a session - which is one rumble
             // rather than two taps. The victory panel's payout lost its buzz for the same
             // reason; the sound and the light are what mark the moment.
             // One sound for every landing rather than two bells chosen by tier. The
@@ -362,7 +362,7 @@ namespace GlimmerGrove
                                           460f, 30f, .85f);
 
             // The wash and the confetti are for a slice that is genuinely worth it. Spending
-            // them on every spin spends them on most spins and marks out none — the same
+            // them on every spin spends them on most spins and marks out none - the same
             // argument that keeps the victory panel's flash for a full star row alone.
             // Confetti on every landing, sized by what was won. Spending it only on the top
             // slice marked one spin in eight and left the rest looking like a near miss -
@@ -419,9 +419,9 @@ namespace GlimmerGrove
             if (_spin == null) return;
 
             // The breath is stopped and the scale put back before anything reads it. Three
-            // things here take the button's local scale as a resting value — Setup latches it
+            // things here take the button's local scale as a resting value - Setup latches it
             // as what a press returns to, Pop takes it as what it is springing towards, and
-            // Breathe borrows it — so with the old breath still running each of them would
+            // Breathe borrows it - so with the old breath still running each of them would
             // capture a size a few percent off and hand the next one something worse. The house
             // rule about a tween that reads its own target's value; the fix is to have exactly
             // one of them own the scale at a time.
@@ -441,7 +441,7 @@ namespace GlimmerGrove
 
             // Only now, with the glyph in place, is the caption allowed to change: the fit is
             // measured against the room the glyph leaves, and SetCaption re-fits only when the
-            // words actually change — so a caption written a beat early is one that never gets
+            // words actually change - so a caption written a beat early is one that never gets
             // measured again.
             _offering = true;
             AdOfferButton.Paint(_spin, PlacementId, "ui.wheel.collect");
@@ -504,13 +504,13 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// They are the same number and that is exactly why the wheel's is the one printed. The
-        /// drop is the flat placement amount — <c>RewardedAds.Redeem</c> has no opinion about
-        /// multipliers and should not — while the multiplier is applied by the server on the
+        /// drop is the flat placement amount - <c>RewardedAds.Redeem</c> has no opinion about
+        /// multipliers and should not - while the multiplier is applied by the server on the
         /// callback. Printing the drop here would show a player two hundred under a wheel that
         /// had just stopped on a thousand, and the thousand is what arrives.
         /// </para>
         /// <para>
-        /// <b>The payoff is a panel of its own</b> — see <see cref="PrizeOverlay"/>. It used
+        /// <b>The payoff is a panel of its own</b> - see <see cref="PrizeOverlay"/>. It used
         /// to be a caption change on this button: the wheel stayed up with its question answered
         /// and its own COLLECT where WATCH had been, which drew the largest moment in the
         /// placement as the smallest change on the screen. The wheel asks; the celebration
@@ -530,7 +530,7 @@ namespace GlimmerGrove
             // not depend on it: a player who backgrounded the app during the video may be
             // standing somewhere else entirely by now, and the celebration is the only thing
             // that tells them what the video was worth. Nothing below this line is load-bearing
-            // either — the grant is the server's (invariant 10d) and Redeem has already asked
+            // either - the grant is the server's (invariant 10d) and Redeem has already asked
             // for it.
             Flow.Modal<PrizeOverlay>(v =>
             {
@@ -560,7 +560,7 @@ namespace GlimmerGrove
         /// Back closes, except while the wheel is turning.
         ///
         /// <para>
-        /// A spin that is interrupted costs nothing — the slice is a fact about the day rather
+        /// A spin that is interrupted costs nothing - the slice is a fact about the day rather
         /// than about the moment, so reopening the panel finds it exactly where it was. It is
         /// swallowed anyway, because a modal that vanishes mid-animation reads as a crash, and
         /// the player is three seconds from an answer they can then decline.

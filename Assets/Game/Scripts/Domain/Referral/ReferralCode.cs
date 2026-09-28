@@ -10,9 +10,9 @@ namespace GlimmerGrove.Referral
     /// <b>Eight symbols from an alphabet with no look-alikes.</b> No <c>0</c>/<c>O</c>, no
     /// <c>1</c>/<c>I</c>/<c>L</c>: a code is read off a friend's screen, said aloud or typed
     /// from a message, and every one of those pairs is a support ticket. Thirty-one symbols to
-    /// the eighth is about eight hundred billion codes, which is not a security bound — a
+    /// the eighth is about eight hundred billion codes, which is not a security bound - a
     /// guessed code only lets a stranger bind themselves to somebody, which pays the stranger
-    /// nothing — but is what keeps a mint from ever colliding in practice, and the document id
+    /// nothing - but is what keeps a mint from ever colliding in practice, and the document id
     /// is what refuses it when it does (invariant 19d).
     /// </para>
     /// <para>
@@ -41,7 +41,7 @@ namespace GlimmerGrove.Referral
 
         /// <summary>
         /// Folds what somebody typed into what the server keys on: upper case, separators gone.
-        /// Never validates — a fold that also judged would be two rules in one method.
+        /// Never validates - a fold that also judged would be two rules in one method.
         /// </summary>
         public static string Normalise(string typed)
         {
@@ -89,7 +89,7 @@ namespace GlimmerGrove.Referral
         /// <summary>
         /// What the entry field shows for what has been typed so far: upper case, separators
         /// gone, at most <see cref="Length"/> symbols, and the hyphen put in after the fourth
-        /// the moment there is a fifth — so a code read off a friend's screen looks the same in
+        /// the moment there is a fifth - so a code read off a friend's screen looks the same in
         /// the field as it did there, whatever case it was typed in and whether or not the
         /// hyphen was.
         ///
@@ -182,7 +182,7 @@ namespace GlimmerGrove.Referral
             return sb.ToString();
         }
 
-        /// <summary>ASCII letters and digits only — the code's own script, whatever keyboard is up.</summary>
+        /// <summary>ASCII letters and digits only - the code's own script, whatever keyboard is up.</summary>
         static bool IsSymbol(char c)
             => (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
     }

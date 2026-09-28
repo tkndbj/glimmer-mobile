@@ -14,7 +14,7 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// <b>A view draws a state and hands inputs back.</b> Nothing here decides whether a tap
-    /// was legal, what it fed or whether the hill walks — <see cref="Send"/> gives the input to
+    /// was legal, what it fed or whether the hill walks - <see cref="Send"/> gives the input to
     /// <c>ChallengeScreen</c>, which asks the rules and then asks this class to
     /// <see cref="Animate"/> what the rules said. That is the split every board in this game
     /// keeps (invariant 3), and it is what lets <c>ChallengeTests</c> play every board with no
@@ -26,7 +26,7 @@ namespace GlimmerGrove
     /// <see cref="MaxCell"/> binds first, and the grid is centred in what is left above the
     /// strip. <b>The width is meant to bind</b>: <see cref="BandWanted"/> tells the screen how
     /// tall the board is at the cell the width allows, and the screen gives the hill the rest
-    /// — which is what makes a wide, short board a bigger hill rather than a taller plate.
+    /// - which is what makes a wide, short board a bigger hill rather than a taller plate.
     /// </para>
     /// <para>
     /// <b>The band is a framed plate, and the frame is as big as the band</b> (the owner's
@@ -61,7 +61,7 @@ namespace GlimmerGrove
         protected Image Frame { get; private set; }
 
         /// <summary>
-        /// The frame's inside — the band minus <see cref="FrameSide"/> on every side — which
+        /// The frame's inside - the band minus <see cref="FrameSide"/> on every side - which
         /// is what a board is laid out in. A board bringing its own floor (the glade's
         /// <c>BoardView</c>) builds into this rather than into <see cref="Host"/>.
         /// </summary>
@@ -97,7 +97,7 @@ namespace GlimmerGrove
         protected virtual float MaxCell => 200f;
 
         /// <summary>
-        /// Furniture a board hangs past its plate, above and below together, in cells — the
+        /// Furniture a board hangs past its plate, above and below together, in cells - the
         /// pipes' sources and sinks. Counted into the band the board asks for, so it is not
         /// drawn into the rampart above or the foot of the screen below.
         /// </summary>
@@ -118,7 +118,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Whether a win is celebrated by the board itself, so the screen's curtain arrives
-        /// without its own flash and confetti — the glade's fanfare is the glade, and a second
+        /// without its own flash and confetti - the glade's fanfare is the glade, and a second
         /// celebration a second later reads as one stuttering (<c>BoardView.Celebrate</c>).
         /// </summary>
         public virtual bool CelebratesItself => false;
@@ -250,7 +250,7 @@ namespace GlimmerGrove
         ///
         /// <b>The handler sits on the field, not on a catcher</b>: Unity finds a drag handler
         /// by walking up from whatever the finger hit, so a board that also has tap targets
-        /// per cell still swipes — the target is hit, the field above it handles the drag. The
+        /// per cell still swipes - the target is hit, the field above it handles the drag. The
         /// catcher only exists so a board with no targets has something to hit.
         /// </summary>
         protected void Swipes(Action<Vector2Int> swiped)
@@ -365,7 +365,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Every lesson about this genre, for the screen's info key: queued through
-        /// <c>ScreenLessons.Add</c>, so a lesson already seen is shown again — a player who
+        /// <c>ScreenLessons.Add</c>, so a lesson already seen is shown again - a player who
         /// pressed the key has asked. The genre's verb first, then anything this board carries.
         /// The screen appends the lesson every genre shares (<c>Mechanic.ChallengeHill</c>).
         /// </summary>

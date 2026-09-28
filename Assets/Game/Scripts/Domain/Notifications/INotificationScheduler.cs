@@ -15,7 +15,7 @@ namespace GlimmerGrove.Notifications
     /// <b>The interface is four calls, and the one that is not obvious is
     /// <see cref="Arm"/>'s contract: it replaces everything.</b> A scheduler that appended
     /// would accumulate a week of stale reminders every time the app was backgrounded, and
-    /// the failure would be invisible in every test — the duplicates only exist on the
+    /// the failure would be invisible in every test - the duplicates only exist on the
     /// device, they only appear while nobody is looking, and the first person to find out is
     /// a player getting nine notifications on a Tuesday. So cancel-then-write is the whole
     /// operation rather than two the caller has to remember to pair.
@@ -25,7 +25,7 @@ namespace GlimmerGrove.Notifications
     /// game sends is derived on the device (see <see cref="NotificationKind"/>), so a second
     /// implementation that talked to a push service would be answering a question nothing
     /// asks. The day a genuine broadcast is wanted it is a sibling seam, not a widening of
-    /// this one — a broadcast has no fire time and no local predicate, which is to say it has
+    /// this one - a broadcast has no fire time and no local predicate, which is to say it has
     /// nothing in common with this interface but the word.
     /// </para>
     /// </summary>
@@ -46,7 +46,7 @@ namespace GlimmerGrove.Notifications
         ///
         /// Separate from <see cref="RequestPermission"/> because the two are genuinely
         /// different acts: a player who revoked permission in the system settings did it while
-        /// this app was not running, so the only way to learn about it is to look — and
+        /// this app was not running, so the only way to learn about it is to look - and
         /// looking must never turn into a dialog.
         /// </summary>
         void Refresh();
@@ -75,7 +75,7 @@ namespace GlimmerGrove.Notifications
         ///
         /// The only honest control to offer a player whose device is blocking us: neither
         /// platform will show its permission dialog twice, so a second in-game "allow" button
-        /// would do nothing at all — which is the broken button invariant 16o refuses.
+        /// would do nothing at all - which is the broken button invariant 16o refuses.
         /// </summary>
         void OpenSettings();
 
@@ -95,7 +95,7 @@ namespace GlimmerGrove.Notifications
         /// An event rather than a property, because neither platform can answer synchronously:
         /// Android has to read the launching intent and iOS the delegate callback, both of
         /// which arrive after the boot path has started. A property would therefore answer
-        /// "no" on every launch and be right by accident in the Editor — the shape of bug this
+        /// "no" on every launch and be right by accident in the Editor - the shape of bug this
         /// project has already paid for in probes that write off a real failure as expected.
         /// </para>
         /// </summary>
@@ -103,7 +103,7 @@ namespace GlimmerGrove.Notifications
     }
 
     /// <summary>
-    /// The scheduler used when no notification package is installed — the Editor, a desktop
+    /// The scheduler used when no notification package is installed - the Editor, a desktop
     /// build, a machine that has never resolved packages.
     ///
     /// <para>

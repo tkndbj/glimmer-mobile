@@ -25,7 +25,7 @@ namespace GlimmerGrove.Content
         public readonly LevelId Id;
         public readonly ChapterId Chapter;
 
-        /// <summary>How this level is played. Never null — see <see cref="ILevelRules"/>.</summary>
+        /// <summary>How this level is played. Never null - see <see cref="ILevelRules"/>.</summary>
         public readonly ILevelRules Rules;
 
         public readonly LevelTuning Tuning;
@@ -69,7 +69,7 @@ namespace GlimmerGrove.Content
         /// Kept as a property because the classic mode is most of the game and every one of its
         /// readers would otherwise cast. <c>HasBoard</c> is the guard, and
         /// <c>Tools/verify/compile.py</c> refuses a file that reads this without ever admitting
-        /// it can be absent — that check exists because forgetting has crashed a build twice.
+        /// it can be absent - that check exists because forgetting has crashed a build twice.
         /// </summary>
         public LevelLayout Layout => (Rules as GladeRules)?.Layout;
 
@@ -85,15 +85,15 @@ namespace GlimmerGrove.Content
 
         /// <summary>
         /// A level's strings are a pure function of its id, by convention and with no override.
-        /// That is what lets anything holding a <see cref="LevelId"/> — the map, the home
-        /// screen's "next up" line, the win overlay naming what just opened — label a level
+        /// That is what lets anything holding a <see cref="LevelId"/> - the map, the home
+        /// screen's "next up" line, the win overlay naming what just opened - label a level
         /// without reading its chapter body.
         /// </summary>
         public static string DefaultNameKey(LevelId id) => "level." + id.Value + ".name";
         public static string DefaultTaglineKey(LevelId id) => "level." + id.Value + ".tagline";
 
         // A third key, `level.<id>.lesson`, is retired. It was a line of flavour floated along
-        // the bottom of any run with nothing new to teach — so on every level of every mode
+        // the bottom of any run with nothing new to teach - so on every level of every mode
         // after the first few, which is furniture rather than something anybody reads. The tips
         // are what a board has to say. The key is not re-pointed at anything else: a level's
         // strings are a pure function of its id, so re-using the suffix for a different sentence

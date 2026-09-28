@@ -13,13 +13,13 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// <b>It is a room rather than a panel, and that is the whole of what was wrong with it.</b>
-    /// The first cut celebrated inside the parchment panel the purchase had just been made on — a
-    /// small fan behind a star row, a couple of sparks, two short bars — and the owner's verdict
+    /// The first cut celebrated inside the parchment panel the purchase had just been made on - a
+    /// small fan behind a star row, a couple of sparks, two short bars - and the owner's verdict
     /// after playing it was one word. Every piece of it was individually defensible and the whole
     /// was the smallest change on the screen at the largest moment in the feature, which is the
     /// fault <c>WardRevealOverlay</c>'s own note records about the purchase that used to celebrate
     /// itself in place, and the one <c>WheelPrizeOverlay</c> was built to fix. The dearest star on
-    /// this shelf is a hundred and fifty thousand credits — days of play — and invariant 20m's
+    /// this shelf is a hundred and fifty thousand credits - days of play - and invariant 20m's
     /// rule is that the event is the reward and gets the biggest drawing there is.
     /// </para>
     /// <para>
@@ -28,7 +28,7 @@ namespace GlimmerGrove
     /// about two bosses told apart by a hue, asked of a celebration. An unlock is a <em>thing
     /// arriving</em>, so <c>WardRevealOverlay</c> stands the turret on a plate and lets it fire
     /// for ever under its name and its note. An upgrade is the same turret, and what changed is a
-    /// star and two readings the player was looking at a second ago — so the <em>star</em> is the
+    /// star and two readings the player was looking at a second ago - so the <em>star</em> is the
     /// hero here: it falls out of the sky into the slot it bought, the light of the impact is what
     /// the turret takes, and the numbers are the last word rather than the first.
     /// </para>
@@ -44,7 +44,7 @@ namespace GlimmerGrove
     /// out of this screen.
     /// </para>
     /// <para>
-    /// <b>And it makes exactly one sound</b>, on the break — see <see cref="Land"/>. What the
+    /// <b>And it makes exactly one sound</b>, on the break - see <see cref="Land"/>. What the
     /// player hears across the whole purchase is the coin as the money leaves and the victory as
     /// the star lands.
     /// </para>
@@ -72,7 +72,7 @@ namespace GlimmerGrove
         /// one of them has caught faults each numeric gate was green through; there is none for a
         /// modal ceremony, so the fault that would otherwise ship unseen is a caption drawn
         /// through the thing above it. <c>WardRevealTests</c> walks these edges for the unlock and
-        /// does the same here — a poor substitute for a picture, and what there is.
+        /// does the same here - a poor substitute for a picture, and what there is.
         /// </summary>
         internal const float TitleY = 660f, NameY = 534f, StarsY = 410f, PlateY = 40f,
                              BarsY = -430f, ActY = -724f;
@@ -99,7 +99,7 @@ namespace GlimmerGrove
         ///
         /// <b>Between the ladder and the turret rather than on either.</b> The two things this
         /// ceremony is about stand 370 apart, and a fan centred on one of them says the other is
-        /// scenery — so the light sits between, and what tells the eye where to look is the star
+        /// scenery - so the light sits between, and what tells the eye where to look is the star
         /// falling and the turret flaring, which are events rather than lighting.
         /// </summary>
         const float LightY = 210f;
@@ -109,7 +109,7 @@ namespace GlimmerGrove
         const float VignetteAlpha = CeremonySky.VignetteAlpha, FanAlpha = .30f, Fan2Alpha = .20f, GlowAlpha = .40f;
 
         /// <summary>
-        /// Its own hold, never the board's — <see cref="WardFiringStage"/>'s
+        /// Its own hold, never the board's - <see cref="WardFiringStage"/>'s
         /// rule and its reason: a live board's four turrets must not be released because a
         /// celebration closed. Its own name and not the unlock's, so the two can never be up at
         /// once and release each other's art.
@@ -118,7 +118,7 @@ namespace GlimmerGrove
 
         // ----------------------------------------------------------------- timing
         /// <summary>
-        /// The sequence, as gaps rather than absolute times — <see cref="Cue"/>'s whole argument.
+        /// The sequence, as gaps rather than absolute times - <see cref="Cue"/>'s whole argument.
         ///
         /// <b>Three movements: the room charges, the star lands, and the numbers climb.</b> The
         /// charge is the part that cannot be cut: it is the only stretch where nothing has
@@ -138,7 +138,7 @@ namespace GlimmerGrove
         /// <b>The bright green rather than <c>WardStatBars</c>' own dark one</b>, because the two
         /// are drawn on opposite grounds: that one sits on cream parchment and this on a room
         /// taken almost to black. The rule is the contrast against what is behind it, never the
-        /// hue — which is the same correction invariant 37l records about a tint that could only
+        /// hue - which is the same correction invariant 37l records about a tint that could only
         /// ever darken.
         /// </summary>
         static readonly Color GainInk = Pal.Mint;
@@ -212,7 +212,7 @@ namespace GlimmerGrove
             // Shared with the rank ceremony and the turret reveal (`CeremonySky`), which is why
             // it is not the seat's own deep hue any more: all three stood their subject on a
             // near-black room and all three came back as *so dark*. The seat's colour is still
-            // on the fans, the light and the rim below — the ground changed, not the lighting.
+            // on the fans, the light and the rim below - the ground changed, not the lighting.
             _sky = CeremonySky.Ground(Content, Skip);
 
             BuildAurora();
@@ -241,7 +241,7 @@ namespace GlimmerGrove
             _glow.raycastTarget = false;
         }
 
-        // Where the three masses of light sit — a composition rather than a scatter, so the frame
+        // Where the three masses of light sit - a composition rather than a scatter, so the frame
         // is lit unevenly the way a place is. The unlock's table, and its reasoning.
         static readonly Vector2[] AuroraHome =
         {
@@ -267,7 +267,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// One blob's endless wander. Both axes are whole multiples of the loop, or the drift
-        /// snaps back every time the tween wraps — which on something this large is the most
+        /// snaps back every time the tween wraps - which on something this large is the most
         /// visible thing on screen.
         /// </summary>
         void Drift(int index)
@@ -292,8 +292,8 @@ namespace GlimmerGrove
         /// The plate the turret stands on, firing.
         ///
         /// <b>It is here on the strength of what an upgrade <em>is</em>.</b> A turret's power is
-        /// its bolt — that is the argument <see cref="WardFiringStage"/> is built on and the
-        /// reason nineteen projectiles were baked — so a ceremony about a turret getting stronger
+        /// its bolt - that is the argument <see cref="WardFiringStage"/> is built on and the
+        /// reason nineteen projectiles were baked - so a ceremony about a turret getting stronger
         /// with no turret on it would be celebrating a number rather than a thing. It arrives
         /// already standing rather than springing up, which is what keeps it from being the
         /// unlock: nothing new turned up here.
@@ -334,7 +334,7 @@ namespace GlimmerGrove
         /// The star ladder, hosted in a box of its own.
         ///
         /// <b>A box rather than <c>Content</c> directly</b>, because <c>WardStarRow</c> anchors to
-        /// its parent's <em>top</em> — pointed at a full-screen layer that is the top of the
+        /// its parent's <em>top</em> - pointed at a full-screen layer that is the top of the
         /// display, which moves with every screen shape. Hosted, the row is centred on a band this
         /// file states.
         /// </summary>
@@ -388,7 +388,7 @@ namespace GlimmerGrove
         {
             // Green, never the price pill: the money has already changed hands and this key only
             // leaves. `Skins.Buy` is orange because it means *this costs something*, so wearing it
-            // here would be asking for a second payment — invariant 42a's own note about what the
+            // here would be asking for a second payment - invariant 42a's own note about what the
             // colour names mean.
             _act = UIKit.Button("Act", Content, Art.S("Ui/" + Skins.Settled),
                                 new Vector2(ActW, ActH), new Vector2(.5f, .5f),
@@ -488,8 +488,8 @@ namespace GlimmerGrove
         /// charge: everything else in this game that throws light throws it away from something.
         ///
         /// <b>And into the <em>slot</em> rather than into the turret</b>, so the gathering and the
-        /// thing it is gathering for share one place. Split across the two — light into the turret
-        /// and then a star out of the sky — they read as two unrelated events that happened to be
+        /// thing it is gathering for share one place. Split across the two - light into the turret
+        /// and then a star out of the sky - they read as two unrelated events that happened to be
         /// close together.
         /// </summary>
         void Charge(int count)
@@ -547,7 +547,7 @@ namespace GlimmerGrove
         /// The star itself, falling into the slot it was bought for.
         ///
         /// <b>It arrives from off the top of the canvas</b> rather than fading up in place, so
-        /// there is a moment where the thing about to happen is visible and has not happened —
+        /// there is a moment where the thing about to happen is visible and has not happened -
         /// which is the whole difference between a reward landing and a readout changing. Where it
         /// lands is <see cref="WardStarRow.XOf"/> and never this file's own arithmetic, or the
         /// star would stand beside the one it is supposed to become the day either the size or the
@@ -560,7 +560,7 @@ namespace GlimmerGrove
 
             // **One node carrying both**, rather than a star and a halo moved in step. Two objects
             // are two things a skip has to remember to take away, and the one it forgot would be
-            // left as a gold smear over a ladder that had already relit — which is exactly the
+            // left as a gold smear over a ladder that had already relit - which is exactly the
             // shape of leak this file's own <see cref="Skip"/> exists to make impossible.
             _falling = UIKit.Box("Falling", Content, Vector2.one * StarSize,
                                  new Vector2(.5f, .5f), from);
@@ -595,9 +595,9 @@ namespace GlimmerGrove
         /// <summary>
         /// The impact: the star is in the ladder, the room breaks open, and the turret takes it.
         ///
-        /// <b>One sound in the whole ceremony, and it is here.</b> It shipped with five — a
+        /// <b>One sound in the whole ceremony, and it is here.</b> It shipped with five - a
         /// whoosh under the charge, a bell on the star, the fanfare on the title, a chime under
-        /// the climbing bars and a collect when they landed — each one placed on a beat that
+        /// the climbing bars and a collect when they landed - each one placed on a beat that
         /// deserved marking, and played back as a pile-up rather than as a celebration. The
         /// owner's verdict after a device was to keep the victory and nothing else. That is
         /// <c>WardRevealOverlay</c>'s own note arrived at from the other side: the companion
@@ -635,7 +635,7 @@ namespace GlimmerGrove
             Relight();
 
             // The turret takes the light rather than arriving in it: `Claim` is the stage's own
-            // overcharge — a halo, rings out of the barrel and a spring — with its white-out off,
+            // overcharge - a halo, rings out of the barrel and a spring - with its white-out off,
             // because the screen is already white and two flashes a frame apart is one flash with
             // a seam in it.
             _stage?.Claim(whiteOut: false);
@@ -762,7 +762,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// One pass of assignments rather than a second choreography, which is only possible
-        /// because every element already exists — the beats reveal things rather than build them.
+        /// because every element already exists - the beats reveal things rather than build them.
         /// Pending beats are killed by owner; <see cref="Cue"/> schedules every one of them
         /// against this component, which is what makes them cancellable as a group.
         /// </para>

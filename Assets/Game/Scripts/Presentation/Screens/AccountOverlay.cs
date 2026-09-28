@@ -16,7 +16,7 @@ namespace GlimmerGrove
     ///
     /// The whole design of this screen follows from one fact: an anonymous account dies
     /// with the installation. Everything a player has done lives under a uid that exists
-    /// nowhere but this device, so a reinstall — or a lost phone — takes all of it. That
+    /// nowhere but this device, so a reinstall - or a lost phone - takes all of it. That
     /// is why the guest state is stated plainly rather than hidden, and why linking is
     /// offered after a chapter is finished rather than on the first launch, when there is
     /// nothing to protect and the ask only costs a player.
@@ -27,7 +27,7 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// <b>One panel, four states.</b> Guest, signed in, choosing an account to switch to, and
-    /// the prompt for a provider that already belongs to another grove — plus a fifth nobody
+    /// the prompt for a provider that already belongs to another grove - plus a fifth nobody
     /// should ever see, a device whose last account change did not finish. They are all
     /// answers to one question, "which grove is this phone", so they are one panel that
     /// rebuilds rather than four overlays: this project has already paid for the alternative
@@ -47,15 +47,15 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>What this panel is not allowed to say.</b> Every sentence here is read by somebody
-    /// who is, at that moment, worried about losing years of play — so a warning that is not
+    /// who is, at that moment, worried about losing years of play - so a warning that is not
     /// literally true is worse than no warning at all. It used to break that badly: a switch
     /// whose one network read failed reported "signed in, but that grove could not be loaded",
     /// then "this phone is signed in as someone else", and then offered the destructive prompt
     /// with "this account is already used by another player · you will lose 26 finished
-    /// levels". None of it was true — both accounts belonged to the same person, the twenty-six
+    /// levels". None of it was true - both accounts belonged to the same person, the twenty-six
     /// glades were on the server and on the phone, and the only thing that had gone wrong was
     /// one document read. The states that produced those sentences are gone (see
-    /// <c>SaveService.SwitchTo</c>); what remains says only what it can stand behind — and says
+    /// <c>SaveService.SwitchTo</c>); what remains says only what it can stand behind - and says
     /// it in one sentence per state, at the owner's instruction (see <see cref="Build"/>).
     /// </para>
     /// </summary>
@@ -89,7 +89,7 @@ namespace GlimmerGrove
         /// <summary>
         /// True once this panel has sent the player somewhere itself, which is
         /// <see cref="Leave"/> and nothing else. It is the exception <see cref="Then"/> must
-        /// not fire behind — a grove that now belongs to a different account is not one the
+        /// not fire behind - a grove that now belongs to a different account is not one the
         /// interrupted tap was about.
         /// </summary>
         bool _moved;
@@ -98,8 +98,8 @@ namespace GlimmerGrove
         bool _continued;
 
         // Laid out by stacking downward from the top edge. Everything here is anchored
-        // to the panel top and positioned by its own centre — UIKit.Box pivots every box
-        // centrally whatever its anchor — so a row's position is computed rather than
+        // to the panel top and positioned by its own centre - UIKit.Box pivots every box
+        // centrally whatever its anchor - so a row's position is computed rather than
         // guessed. Mixing top-anchored text with bottom-anchored buttons is what let the
         // stakes line and the sign-in buttons occupy the same forty pixels.
         const float TopMargin = 100f, BottomMargin = 56f;
@@ -113,7 +113,7 @@ namespace GlimmerGrove
         /// another third-party sign-in appears, so it is offered on iOS without exception;
         /// that rule does not reach Android, where the flow is a web sheet rather than the
         /// system one, so the key is withdrawn there. It is a platform define rather than a
-        /// runtime check so the Editor on an Android target draws exactly what ships — and
+        /// runtime check so the Editor on an Android target draws exactly what ships - and
         /// the measure pass and the build pass read the same constant, because the gaps are
         /// consumed positionally and a row measured but not drawn shifts every row under it.
         /// </summary>
@@ -129,8 +129,8 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Measured before anything is built, the way <c>WinOverlay</c> measures a victory:
-        /// the height of this panel depends on what it is saying, and the alternative —
-        /// reserving room for the tallest state — leaves a visible hole in the states that
+        /// the height of this panel depends on what it is saying, and the alternative -
+        /// reserving room for the tallest state - leaves a visible hole in the states that
         /// are shorter, of which the signed-in one is what most players see most often.
         /// </para>
         /// </summary>
@@ -183,8 +183,8 @@ namespace GlimmerGrove
             float height = TopMargin + BottomMargin + BeforeClose;
 
             // Each row records the gap that follows it and adds itself to the total, so the
-            // panel is sized by the same statements that decide what is in it. Two lists —
-            // one to measure, one to lay out — is how they come to disagree.
+            // panel is sized by the same statements that decide what is in it. Two lists -
+            // one to measure, one to lay out - is how they come to disagree.
             void Row(float h, float gap)
             {
                 _gaps.Add(gap);
@@ -215,7 +215,7 @@ namespace GlimmerGrove
             //
             // Written out rather than composed from the reason, because a key built by
             // concatenation is invisible to the build gate's string scanner and ships missing
-            // in whichever language nobody tested — WinOverlay.RankKeys' rule. A purchase
+            // in whichever language nobody tested - WinOverlay.RankKeys' rule. A purchase
             // swaps the guest sentence for the one about money, because somebody who has just
             // paid is not thinking about levels, and what they bought is the one thing no
             // amount of playing earns back.
@@ -230,8 +230,8 @@ namespace GlimmerGrove
                              : "ui.account.guest";
 
             // Moss rather than Mint, and every green on this panel is the same decision. Mint
-            // is a board colour — bright because everywhere else it is drawn on something dark
-            // — and every line here is unoutlined text on the cream panel paper, where it comes
+            // is a board colour - bright because everywhere else it is drawn on something dark
+            // - and every line here is unoutlined text on the cream panel paper, where it comes
             // out at about 1.8:1 and has to be squinted at. This panel is the one place a
             // player is told their grove is safe, so it is the last place a sentence should be
             // hard to read. See Pal.Moss.
@@ -242,7 +242,7 @@ namespace GlimmerGrove
             Fit(_status, 24, 34);
 
             // An address, so it is dimmer and smaller than everything else here and never
-            // wraps — a long one is elided by the fitter rather than pushed onto a line that
+            // wraps - a long one is elided by the fitter rather than pushed onto a line that
             // would read as a second sentence.
             if (showAccount)
                 Fit(Line("Account", account, 26, new Color(.44f, .32f, .24f, .78f),
@@ -250,7 +250,7 @@ namespace GlimmerGrove
 
             // Named concretely rather than as "your progress". Somebody three weeks in
             // deserves to see the three weeks before they tap, and the other account's
-            // contents cannot be shown at all — reading it requires signing in as it,
+            // contents cannot be shown at all - reading it requires signing in as it,
             // which is the irreversible step itself.
             if (costly)
                 Fit(Line("AdoptCost",
@@ -275,7 +275,7 @@ namespace GlimmerGrove
                 Button("Google", "btn_green", Loc.Get("ui.account.google"),
                        () => Begin(LinkCredential.ForGoogle()));
 
-                // iOS only — see ShowApple.
+                // iOS only - see ShowApple.
                 if (ShowApple)
                     Button("Apple", "btn_blue", Loc.Get("ui.account.apple"),
                            () => Begin(LinkCredential.ForApple()));
@@ -316,7 +316,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// The rows are walked in the order they were measured, so the measure and the build
-        /// have to agree about which rows exist — they read the same flags a dozen lines apart
+        /// have to agree about which rows exist - they read the same flags a dozen lines apart
         /// and that is the one thing to check when editing this. Reading the gaps back rather
         /// than repeating them is what keeps the panel's height and its contents from drifting
         /// apart, which is the failure this file has already had once, when a cost line ended
@@ -328,7 +328,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Lets a label shrink rather than spill. Every string here is translated, and
-        /// German runs half as long again — an overflow that only appears in one market
+        /// German runs half as long again - an overflow that only appears in one market
         /// is the kind nobody sees until a review mentions it.
         /// </summary>
         static void Fit(Text label, int min, int max)
@@ -343,7 +343,7 @@ namespace GlimmerGrove
         // ------------------------------------------------------------- the flows
         /// <summary>
         /// Opens the account chooser. Nothing has happened yet and nothing will until a
-        /// provider is tapped — the grove is saved as the first step of that, not of this.
+        /// provider is tapped - the grove is saved as the first step of that, not of this.
         /// </summary>
         void OfferSwitch()
         {
@@ -355,13 +355,13 @@ namespace GlimmerGrove
 
         /// <summary>
         /// A provider was tapped. Which of the two things that means is decided here, once,
-        /// from the state the panel is in — never by the button, because the same two buttons
+        /// from the state the panel is in - never by the button, because the same two buttons
         /// appear in three states and a handler per state is three places to get it wrong.
         ///
         /// <para>
         /// A device whose last account change did not finish takes the switch route too, and
         /// deliberately. It used to have a third one, which asked to be let back in to the
-        /// account the save named and refused anything else — and refusing was how a player
+        /// account the save named and refused anything else - and refusing was how a player
         /// choosing their own second account was shown a prompt about losing twenty-six
         /// glades. There is nothing to be let back in to any more: the sync repairs that state
         /// by itself now, and whichever account is tapped here is simply the account this
@@ -421,7 +421,7 @@ namespace GlimmerGrove
 
             // The player gets one sentence; the log gets the reason. Classify puts the
             // provider's own text into Message and nothing was reading it, so every failure
-            // here looked identical from outside — which cost a diagnosis round trip on the
+            // here looked identical from outside - which cost a diagnosis round trip on the
             // one flow whose failures are hardest to reproduce.
             Debug.LogWarning($"[Account] link failed: {result.Failure} · {result.Message}");
 
@@ -449,7 +449,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Every branch here is a different sentence on purpose. Four of the outcomes are not
-        /// failures at all and two of them leave the device exactly as it was — telling a
+        /// failures at all and two of them leave the device exactly as it was - telling a
         /// player "something went wrong" for any of those is how somebody decides their grove
         /// is gone when it is sitting safely on a server.
         /// </para>
@@ -546,7 +546,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// This is the only place left in the game that leaves something behind, and it is
-        /// unavoidable — but it is far narrower than it used to be. It is reachable from
+        /// unavoidable - but it is far narrower than it used to be. It is reachable from
         /// <em>linking</em> and from nothing else, which means the account being left is
         /// always an anonymous one: a uid that exists on this handset alone, that has never
         /// been signed into anywhere, and that no provider can ever sign into again. That is
@@ -626,7 +626,7 @@ namespace GlimmerGrove
             if (_busy) return true;      // a sign-in flow is mid-air; swallow the back
 
             // Backing out of the chooser returns to the account, not out of the panel. It is a
-            // step in, so back is a step out of it — the same reading the route bubble on the
+            // step in, so back is a step out of it - the same reading the route bubble on the
             // victory panel gets, and the one a player expects from a hardware key.
             if (_stage == Stage.Choosing)
             {
@@ -646,7 +646,7 @@ namespace GlimmerGrove
         /// Null when the player opened it themselves from the profile, which is the ordinary
         /// case and the one the general copy is written for. A purchase swaps the guest
         /// paragraph for one about purchases, because somebody who has just paid is not
-        /// thinking about glades and keeper levels — and the sentence they need is true only of
+        /// thinking about glades and keeper levels - and the sentence they need is true only of
         /// money: currency is granted to an account rather than to a phone, and a receipt is
         /// recorded against the transaction globally, so it can never be redeemed a second time
         /// under a new anonymous account. Unlike everything else in the save, that is the part
@@ -654,7 +654,7 @@ namespace GlimmerGrove
         /// the wrong loss.
         /// </para>
         /// <para>
-        /// Deciding <em>whether</em> to raise this is no longer the panel's job — that is
+        /// Deciding <em>whether</em> to raise this is no longer the panel's job - that is
         /// <c>AccountPrompts</c> over <c>AccountPromptPolicy</c>. It moved out because the rule
         /// grew a second trigger and a quiet period the two share, and a policy living inside
         /// the screen it renders is one that cannot be tested and has two places to forget.
@@ -667,7 +667,7 @@ namespace GlimmerGrove
         /// is gone.
         ///
         /// <para>
-        /// Null when they opened the panel themselves — then there is nothing to resume, and
+        /// Null when they opened the panel themselves - then there is nothing to resume, and
         /// closing it is the whole of what they asked for. It is set only by
         /// <c>AccountPrompts.Offer</c>, on behalf of a tap that meant something else: the
         /// victory panel's Next, which raises this instead of moving on and would otherwise
@@ -675,7 +675,7 @@ namespace GlimmerGrove
         /// indistinguishable from a broken button, and it is worse than the nudge is worth.
         /// </para>
         /// <para>
-        /// It runs on <b>every</b> ending except one — the close, the corner cross, the scrim,
+        /// It runs on <b>every</b> ending except one - the close, the corner cross, the scrim,
         /// the back key, a sign-in that succeeded, and this panel being torn down with the
         /// screen underneath it. The exception is <see cref="Leave"/>, which has already sent
         /// the player somewhere of its own and is the one case where the interrupted tap has
@@ -690,8 +690,8 @@ namespace GlimmerGrove
         /// <para>
         /// Here rather than on the close for the reason <c>AdOfferOverlay</c> and
         /// <c>ContinueOverlay</c> both report from here: this panel has several exits and one
-        /// of them is no exit at all — the screen underneath being replaced with this still up
-        /// — so a continuation hung off any single button is one a player can lose by using a
+        /// of them is no exit at all - the screen underneath being replaced with this still up
+        /// - so a continuation hung off any single button is one a player can lose by using a
         /// different one. The latch is the other half: a caller that hears twice is as broken
         /// as one that never hears, and this one navigates.
         /// </para>

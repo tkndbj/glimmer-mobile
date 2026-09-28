@@ -31,6 +31,28 @@ namespace GlimmerGrove.Progression
         /// <summary>Raised after a recompute changes anything a screen might be showing.</summary>
         public static event Action Changed;
 
+        /// <summary>
+        /// Raised after a debit has been taken, and at no other time - the player's act, never
+        /// a load. Every purchase in the game made with credits or gems passes through
+        /// <see cref="TrySpend(string,long,string,string)"/>, and most of them buy something
+        /// that lives only in the save (a streak shield, a season pass, a turret, a keeper
+        /// level, a challenge deal). So this is what <c>SyncTriggers</c> hangs a sync on: one
+        /// door, so a purchase added later reaches the other device without being taught to.
+        /// Raised synchronously, before the caller records what the gems bought; that is safe
+        /// because a sync request is debounced and reads the save when it runs, not when asked.
+        /// </summary>
+        public static event Action Spent;
+
+        /// <summary>
+        /// Raised after a claim was booked, and at no other time - <see cref="Spent"/>'s twin on
+        /// the other side of the wallet. Every reward the game hands out as currency passes
+        /// through <see cref="Award"/> - a task or season chest, a streak night, a cleared
+        /// challenge, the Infinite lane's waves - and a claim reaches the server only through
+        /// the sync that submits it, so this is the door <c>SyncTriggers</c> hangs a prompt sync
+        /// on. A duplicate claim (an id already held) raises nothing, because nothing moved.
+        /// </summary>
+        public static event Action Awarded;
+
         static PlayerProgression() => Hook();
 
         static void Hook()
@@ -45,24 +67,24 @@ namespace GlimmerGrove.Progression
 
             // The one source of XP that is not the star ledger (invariant 9's exception, see
             // `EndlessRewardTable`). `Changed` rather than `Beaten`, because a run that did not
-            // beat the best still added waves — and because a merge that arrives from the cloud
+            // beat the best still added waves - and because a merge that arrives from the cloud
             // moves the tally without anybody playing, which the hub's badge has to repaint for.
             EndlessLedger.Changed += Invalidate;
 
             // The second source of XP that is not a star (see `XpBoost`). A window opening moves
-            // nothing on its own, but the bonus it banks does — and a merge can move the banked
+            // nothing on its own, but the bonus it banks does - and a merge can move the banked
             // total without anybody playing, which the hub's badge has to repaint for.
             XpBoost.Changed += Invalidate;
 
             // The third source of XP that is not a star (see `ChallengeRewardRule`): a lifetime
             // tally of cleared daily challenges, which a merge can move without anybody playing
-            // — and the rule over it is content of its own file, so a retune of that file moves
+            // - and the rule over it is content of its own file, so a retune of that file moves
             // every keeper level that reads it.
             Challenges.ChallengeLedger.Changed += Invalidate;
             Challenges.ChallengeRules.Changed += Invalidate;
 
             // A season's chests are claims rather than derived credits, so they already
-            // invalidate through `Award`. This is here for the other half — the hub's badge
+            // invalidate through `Award`. This is here for the other half - the hub's badge
             // and the pills repaint on the same cue the rest of the wallet does, so a rung
             // taken on the season page cannot leave a stale number behind it.
             Events.SeasonLedger.Changed += Invalidate;
@@ -95,7 +117,7 @@ namespace GlimmerGrove.Progression
         ///
         /// <para>
         /// <b>Exposed because a run has to be able to say what it just earned</b>, and it is
-        /// measured either side of the fold rather than handed along — <c>ProtoScreen.Solve</c>
+        /// measured either side of the fold rather than handed along - <c>ProtoScreen.Solve</c>
         /// reads this before and after <c>Finished</c>, which is exactly how
         /// <c>WinRecord.ChapterOpened</c> is answered and for the same reason: by the time a panel
         /// is built the transition is over.
@@ -112,7 +134,7 @@ namespace GlimmerGrove.Progression
 
         /// <summary>
         /// What the daily challenges have paid this account in XP: a rate over the lifetime
-        /// tally of levels cleared, bounded by a ceiling — the Infinite lane's shape exactly
+        /// tally of levels cleared, bounded by a ceiling - the Infinite lane's shape exactly
         /// (<see cref="EndlessXp"/>), and a separate addend for its reason. The rule lives in
         /// <c>challenges.json</c> rather than in the reward table, so a challenge retune moves
         /// nothing in <c>progression.json</c>; the server derives the same figure from the
@@ -125,7 +147,7 @@ namespace GlimmerGrove.Progression
         ///
         /// <para>
         /// A third addend beside the star ledger and the Infinite lane, and the only one that is
-        /// a <em>percentage of the other two</em> — which is why it is clamped against them
+        /// a <em>percentage of the other two</em> - which is why it is clamped against them
         /// rather than against a flat ceiling (<see cref="XpBoost.BonusFrom"/>). Exposed for the
         /// same reason <see cref="EndlessXp"/> is: a screen that wants to say where a level came
         /// from should not have to re-derive it.
@@ -136,7 +158,7 @@ namespace GlimmerGrove.Progression
         /// <summary>
         /// The level the player stands at: the earned level plus every level bought
         /// (<see cref="KeeperLadder.Compose"/>). What every gate, honorific, card and profile
-        /// reads — the one reading that is <em>not</em> this is the rank ladder's.
+        /// reads - the one reading that is <em>not</em> this is the rank ladder's.
         /// </summary>
         public static PlayerLevel Level { get { EnsureFresh(); return _level; } }
 
@@ -187,8 +209,8 @@ namespace GlimmerGrove.Progression
         /// ordinary reward.
         ///
         /// Exposed so the victory panel can say when a glade paid more than it should have.
-        /// That announcement is the entire reason the bonus is worth having — a variable
-        /// reward the player never notices is just noise in the economy — but it is only
+        /// That announcement is the entire reason the bonus is worth having - a variable
+        /// reward the player never notices is just noise in the economy - but it is only
         /// ever a report of arithmetic that has already happened, and asking here gives the
         /// same answer the ledger used.
         /// </summary>
@@ -212,12 +234,13 @@ namespace GlimmerGrove.Progression
 
             SaveService.Save();
             Invalidate();
+            Raise(Spent);
             return true;
         }
 
         /// <summary>
         /// The same debit under an id the caller chose, for a purchase the server has to be
-        /// able to recognise. See <see cref="SpendEntry.SeasonPassId"/> — it is the one of
+        /// able to recognise. See <see cref="SpendEntry.SeasonPassId"/> - it is the one of
         /// these in the game, and the comment there says why it is not the default.
         /// </summary>
         public static bool TrySpend(string currency, long amount, string reason, string id)
@@ -229,7 +252,17 @@ namespace GlimmerGrove.Progression
 
             SaveService.Save();
             Invalidate();
+            Raise(Spent);
             return true;
+        }
+
+        // A listener that throws must not turn a debit already taken or a claim already booked
+        // into a false return, which every caller reads as "did not happen" - gems gone and
+        // nothing granted, or a reward the player saw paid and the game says it was not.
+        static void Raise(Action happened)
+        {
+            try { happened?.Invoke(); }
+            catch (Exception e) { Debug.LogException(e); }
         }
 
         public static bool CanAfford(string currency, long amount)
@@ -244,8 +277,8 @@ namespace GlimmerGrove.Progression
         /// That field is the server's, because a client that can raise it is a client that
         /// can print money, and it is the only field an attacker with real purchases in
         /// play is interested in. What lands here instead is a claim carrying an id
-        /// derived from whatever earned it, which counts toward the balance immediately —
-        /// so a reward opened on a plane is spendable on that plane — and which the server
+        /// derived from whatever earned it, which counts toward the balance immediately -
+        /// so a reward opened on a plane is spendable on that plane - and which the server
         /// either confirms into the baseline or replaces with its own figure on the next
         /// sync.
         /// </para>
@@ -264,6 +297,7 @@ namespace GlimmerGrove.Progression
 
             SaveService.Save();
             Invalidate();
+            Raise(Awarded);
             return true;
         }
 
@@ -284,7 +318,7 @@ namespace GlimmerGrove.Progression
             var table = ProgressionRules.Table;
 
             // The seed is read here, at the one place the live totals are derived, rather
-            // than inside the ledger — see ProgressionLedger.Value for why that has to stay
+            // than inside the ledger - see ProgressionLedger.Value for why that has to stay
             // a pure function. Empty before the first sign-in, which pays the base and can
             // only ever be revised upward afterwards.
             _totals = ProgressionLedger.Compute(PlayerProgress.Records, GameContent.Index, table,
@@ -292,7 +326,7 @@ namespace GlimmerGrove.Progression
 
             // The Infinite lane, added here and nowhere else. It is a second *addend* rather than
             // a second clause inside the ledger, so `_totals` keeps meaning "what the star records
-            // are worth" for every caller that already reads it — and so the rule the server
+            // are worth" for every caller that already reads it - and so the rule the server
             // mirrors stays the one the shared vectors prove. See `EndlessRewardTable`.
             _endlessXp = table.Endless.XpFor(EndlessLedger.LifetimeWaves);
 
@@ -310,7 +344,7 @@ namespace GlimmerGrove.Progression
             _boostXp = XpBoost.BonusFrom(_totals.Xp + _endlessXp + _challengeXp);
 
             // Three floors, applied as one: whichever demands the most XP wins, and
-            // everything downstream — level, progress bar, remaining XP — then stays
+            // everything downstream - level, progress bar, remaining XP - then stays
             // internally consistent instead of being patched up afterwards.
             long effectiveXp = _totals.Xp + _endlessXp + _challengeXp + _boostXp;
             if (ProgressionStore.XpHighWater > effectiveXp) effectiveXp = ProgressionStore.XpHighWater;

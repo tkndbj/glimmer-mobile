@@ -7,7 +7,7 @@ namespace GlimmerGrove.Dev
     /// <b>Compiled unconditionally, unlike everything else about the bench.</b>
     /// <see cref="VfxDemoScreen"/> and the switcher row that reaches it are both behind
     /// <c>GLIMMER_BENCH</c>, but the Editor tool that files these prefabs into Addressables has
-    /// to be able to run when that define is <em>off</em> — that is precisely when it has work
+    /// to be able to run when that define is <em>off</em> - that is precisely when it has work
     /// to do, because turning the bundle back off is what keeps two hundred megabytes of
     /// somebody else's particle art out of a store build. A constants class either side of the
     /// define would be two copies of the one thing that must never disagree: the string the
@@ -39,7 +39,7 @@ namespace GlimmerGrove.Dev
         public static readonly string[] KindNames = { "HITS", "MUZZLES", "SHOTS" };
 
         /// <summary>
-        /// Addresses begin here — outside <c>Art/</c> on purpose, so nothing about this pack can
+        /// Addresses begin here - outside <c>Art/</c> on purpose, so nothing about this pack can
         /// ever be picked up by <c>AddressableAutoRegister</c> and filed into the global group,
         /// which is the one mistake that would put it in every player's download.
         /// </summary>
@@ -50,7 +50,7 @@ namespace GlimmerGrove.Dev
 
         /// <summary>
         /// The label a whole kind is loaded by. Addressables has no folders, so a folder-shaped
-        /// request is a label — the same convention <c>AssetLibrary.Frames</c> already uses for
+        /// request is a label - the same convention <c>AssetLibrary.Frames</c> already uses for
         /// animation frames, and what makes <c>IAssetProvider.LoadAll</c> answer with the set.
         /// </summary>
         public static string LabelFor(int kind) => AddressRoot + Kinds[kind];

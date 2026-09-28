@@ -9,7 +9,7 @@ namespace GlimmerGrove.Ads
     /// The ceilings that bound whatever a content file asks for.
     ///
     /// Every number here exists to stop a bad or hostile <c>progression.json</c> from
-    /// doing something the build cannot survive — the same job <c>DailyRules.MaxChests</c>
+    /// doing something the build cannot survive - the same job <c>DailyRules.MaxChests</c>
     /// does for the chest panel. Content is allowed to retune the economy; it is not
     /// allowed to redefine what the economy is.
     /// </summary>
@@ -19,7 +19,7 @@ namespace GlimmerGrove.Ads
         /// Most ads one placement may pay out for in a day, however high content sets it.
         ///
         /// Thirty is far above what any mediation network will actually fill for a single
-        /// user — which is the point. The cap that binds in practice is the network's, and
+        /// user - which is the point. The cap that binds in practice is the network's, and
         /// this one exists only so a typo cannot turn a daily limit into an unbounded
         /// currency faucet that the server would then have to argue with.
         /// </summary>
@@ -54,7 +54,7 @@ namespace GlimmerGrove.Ads
     /// <para>
     /// The kind is a <see cref="ChestDropKind"/>, reused rather than redeclared. The name
     /// says "chest" because that is where the vocabulary was first needed, but the type is
-    /// the game's whole reward language — credits, gems, hearts, a heart boost — and there
+    /// the game's whole reward language - credits, gems, hearts, a heart boost - and there
     /// is exactly one place that maps those ids to currencies and decides which of them
     /// the server has to adjudicate. Declaring a second, parallel enum for ads would
     /// duplicate that decision, and a duplicated rule about which rewards are server-owned
@@ -96,7 +96,7 @@ namespace GlimmerGrove.Ads
     /// <para>
     /// Content, for the reason the chest table already argues and one more besides. A
     /// rewarded ad's payout is the lever that balances ad revenue against the heart gate,
-    /// and it is tuned against numbers — fill rate, eCPM, session length — that nobody has
+    /// and it is tuned against numbers - fill rate, eCPM, session length - that nobody has
     /// until the game is live in a market. A payout that needs a store review to change is
     /// a payout that gets set once, badly, from a guess.
     /// </para>
@@ -129,7 +129,7 @@ namespace GlimmerGrove.Ads
         ///
         /// <para>
         /// It lives inside the ad table rather than beside it because it <em>is</em> an ad
-        /// payout — the multiplier and the amount it multiplies have to be swapped atomically,
+        /// payout - the multiplier and the amount it multiplies have to be swapped atomically,
         /// or a client briefly holds a retuned wheel against an untuned figure. That is the
         /// same window <c>ProgressionTable.Ads</c> exists to close, one level up, and keeping
         /// the two in one object means it cannot be reopened by adding a second fetch.
@@ -159,7 +159,7 @@ namespace GlimmerGrove.Ads
         ///
         /// <para>
         /// The shape of it is the design. Hearts pay two at a time, because one is not
-        /// worth a thirty-second video to a player who just lost — the offer has to be
+        /// worth a thirty-second video to a player who just lost - the offer has to be
         /// obviously better than waiting, or it teaches people to ignore it. The cap is
         /// ten, which is above what a mediation network will fill and therefore invisible
         /// to an honest player, but present so the number exists and can be lowered from a
@@ -169,7 +169,7 @@ namespace GlimmerGrove.Ads
         /// Coins pay <b>1,000</b> and are capped tighter, because that placement is
         /// player-initiated with no natural trigger: it is the one a determined farmer
         /// would sit on, and the one whose payout competes directly with playing the game.
-        /// The cap is what bounds it — six a day is 6,000 credits against roughly 593 a
+        /// The cap is what bounds it - six a day is 6,000 credits against roughly 593 a
         /// day of free play, so the offer is worth taking rather than worth ignoring, and
         /// the daily ceiling rather than the per-view figure is the lever to pull if that
         /// turns out to be too generous once there are live numbers to read.
@@ -190,14 +190,14 @@ namespace GlimmerGrove.Ads
         /// several times a session, so it is also the one whose payout most directly
         /// competes with playing the next glade. Two hundred is roughly what a clean
         /// three-star first clear pays, which is what makes "on top of what you just
-        /// earned" true enough to print — the coin pill is a trip the player chose to make
+        /// earned" true enough to print - the coin pill is a trip the player chose to make
         /// and pays accordingly, this one rides a glade they were going to finish anyway.
         /// </para>
         /// <para>
         /// A hint pays <b>one</b>, and one is the only number that can be right: the shipped
         /// pool holds three and the ceiling is the cap, so paying two would be refused
         /// outright for anybody holding two. Its cap is five, which is above the three a
-        /// full pool holds — the binding limit is meant to be "you already have hints",
+        /// full pool holds - the binding limit is meant to be "you already have hints",
         /// not the allowance, so that a player who genuinely burns through a day's help can
         /// keep going.
         /// </para>
@@ -210,7 +210,7 @@ namespace GlimmerGrove.Ads
             new AdOffer(AdPlacement.HintRefill, ChestDropKind.Hints, 1, 5),
 
             // The amount is the *window*, in hours, exactly as a heart boost authors one. What
-            // the window is worth is not here — that is `XpBoostTable.WatchedPercent`, because a
+            // the window is worth is not here - that is `XpBoostTable.WatchedPercent`, because a
             // percentage and a duration are two halves of one decision and splitting them across
             // two blocks is how they come to disagree. The daily cap is generous because the
             // binding limit is meant to be the cooldown, not the allowance.
@@ -257,7 +257,7 @@ namespace GlimmerGrove.Ads
 
             // Read before the placements so a wheel that fails its own rules is named in its own
             // words rather than swallowed by a later fallback. It degrades to BonusWheel.None,
-            // which is the flat offer — never to the built-in ladder, for the reason that field
+            // which is the flat offer - never to the built-in ladder, for the reason that field
             // documents: a published file that has never heard of the wheel must keep paying
             // exactly what it authored.
             var wheel = BonusWheel.Resolve(dto.wheel, problems);
@@ -287,7 +287,7 @@ namespace GlimmerGrove.Ads
             }
 
             // A wheel with no placement to multiply is a wheel over nothing. It cannot make the
-            // table unusable — every other placement in it is still fine — so the wheel is the
+            // table unusable - every other placement in it is still fine - so the wheel is the
             // half that is dropped, and the sentence says which half and why.
             if (wheel.IsUsable && !map.ContainsKey(AdPlacement.WinBonus))
             {
@@ -303,7 +303,7 @@ namespace GlimmerGrove.Ads
         /// <summary>
         /// One placement, or false when it breaks a rule.
         ///
-        /// Unknown placement ids are skipped rather than fatal — that is how a newer
+        /// Unknown placement ids are skipped rather than fatal - that is how a newer
         /// content pack reaches an older build, and dropping the entry degrades the table
         /// instead of the game. Everything else is a mistake in a file we authored.
         /// </summary>
@@ -329,7 +329,7 @@ namespace GlimmerGrove.Ads
             // A transient kind is spent inside a run, and no placement is offered from
             // inside one any more: the only one that was bought seconds on a countdown that
             // no longer exists. Refused rather than dropped silently, because the failure is
-            // silent in the worst way — the offer would be drawn, the video would play, and
+            // silent in the worst way - the offer would be drawn, the video would play, and
             // the reward would land nowhere at all. See ChestDropKinds.IsTransient, which is
             // kept as the seam a future in-run reward would come back through.
             if (ChestDropKinds.IsTransient(kind))

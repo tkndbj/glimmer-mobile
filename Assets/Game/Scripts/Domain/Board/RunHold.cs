@@ -8,8 +8,8 @@ namespace GlimmerGrove
     /// <para>
     /// <b>It exists because "is the board playable" was a boolean with two writers.</b> The
     /// clock's start edge was polled off <c>BoardView.Locked</c>, and so was a first-timer's
-    /// lesson: the tip latched the board, and the intro sweep — scheduled half a second
-    /// earlier, from a different object — unlatched it again a moment later. The last writer
+    /// lesson: the tip latched the board, and the intro sweep - scheduled half a second
+    /// earlier, from a different object - unlatched it again a moment later. The last writer
     /// won, which was the animation, so the countdown ran behind a modal the player was
     /// reading and a long lesson could cost them the glade. Nothing in a compile, a validator
     /// or a screenshot can see that: both writes are correct, and only their order is wrong.
@@ -23,8 +23,8 @@ namespace GlimmerGrove
     /// <para>
     /// <b>Idempotent both ways</b>, which is the same bargain <see cref="Persistence.SaveMerge"/>
     /// makes and for the same reason: a counter would need every take to be paired with exactly
-    /// one release, and the one caller that releases twice — a panel with several exits, this
-    /// project's oldest bug — would free a run that is still being taught. Taking a reason
+    /// one release, and the one caller that releases twice - a panel with several exits, this
+    /// project's oldest bug - would free a run that is still being taught. Taking a reason
     /// already held changes nothing and releasing one that is not held changes nothing, so no
     /// call site has to remember what it did last.
     /// </para>
@@ -46,7 +46,7 @@ namespace GlimmerGrove
         /// The screen has been built but not yet presented.
         ///
         /// Held from construction and released by <c>RunScreen.OnPresented</c>, so a run
-        /// cannot begin during the transition that is still hiding it — which is time the
+        /// cannot begin during the transition that is still hiding it - which is time the
         /// player has not been shown the board for, and on a mode whose board is built from
         /// a coroutine it is time they may not even have a board for.
         /// </summary>
@@ -67,7 +67,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Covers the whole sequence rather than the one panel, exactly as
-        /// <see cref="Teaching"/> does — the offer, the gem shop raised on top of it, the
+        /// <see cref="Teaching"/> does - the offer, the gem shop raised on top of it, the
         /// store's own payment sheet, and the receipt that lands afterwards. The app is
         /// backgrounded for most of that, and a run that resumed while a purchase was being
         /// authorised would be one nobody was playing.
@@ -86,7 +86,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>It is the only reason here nobody takes, and that is the whole of its value.</b>
         /// The other three are taken by the thing that causes them, which works because each of
-        /// those things is a sequence somebody wrote. A panel over a run is not a sequence — it
+        /// those things is a sequence somebody wrote. A panel over a run is not a sequence - it
         /// is every modal in the game, raised from wherever it happens to be raised, and asking
         /// each one to hold the run it covers is the "remember to consult the latch" shape this
         /// type was made to remove. So it is polled, once, from the frame <c>RunScreen</c>
@@ -95,11 +95,11 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// <b>It was bought by the one mode with a clock.</b> Every other board here is
-        /// turn-based, so a panel over it stops nothing by itself and the reason is a no-op —
+        /// turn-based, so a panel over it stops nothing by itself and the reason is a no-op -
         /// which is exactly why the hole went unseen for as long as it did. A siege's hill walks
         /// on its own, and the action bar's shop opens over a live one: a player who tapped an
         /// empty slot was reading a price while raiders closed on their ward line. It also makes
-        /// <c>RunScreen.Played</c> mean what its own remarks already claimed — that a panel over
+        /// <c>RunScreen.Played</c> mean what its own remarks already claimed - that a panel over
         /// the board contributes nothing.
         /// </para>
         /// <para>
@@ -111,7 +111,7 @@ namespace GlimmerGrove
         public const string Covered = "covered";
 
         /// <summary>
-        /// Small enough that a list beats a set on every count that matters here — no
+        /// Small enough that a list beats a set on every count that matters here - no
         /// hashing, no allocation on the first take, and it keeps the order for a log line.
         /// </summary>
         readonly List<string> _reasons = new List<string>(2);
@@ -139,7 +139,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Lets one reason go. Returns whether it was being held, so a caller that wants to
-        /// assert can — nobody has to.
+        /// assert can - nobody has to.
         /// </summary>
         public bool Release(string reason)
             => !string.IsNullOrEmpty(reason) && _reasons.Remove(reason);
@@ -147,7 +147,7 @@ namespace GlimmerGrove
         /// <summary>
         /// Lets everything go.
         ///
-        /// For a run being handed back wholesale — a retry after defeat, say — and never as a
+        /// For a run being handed back wholesale - a retry after defeat, say - and never as a
         /// tidy-up for a release somebody forgot: that would put back exactly the bug this
         /// type exists to remove.
         /// </summary>

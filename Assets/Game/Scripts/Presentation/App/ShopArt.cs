@@ -12,7 +12,7 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// <b>This used to compose a card out of a container and a heap of tokens</b>, and the
-    /// argument for that was a good one — thirteen near-identical piles of coins is a texture
+    /// argument for that was a good one - thirteen near-identical piles of coins is a texture
     /// budget spent on the difference between four coins and six, and a picture derived from
     /// the ladder cannot drift from it. What it could not do is look like money. Every rung of
     /// a shelf was the same two tokens in slightly different quantities, so a shelf read as one
@@ -36,7 +36,7 @@ namespace GlimmerGrove
     /// <b>Hearts are still composed, and that is not an inconsistency.</b> A heart pack sells a
     /// number of the thing the hub already counts, so the pile <em>is</em> the amount and a
     /// painted picture would put something between the player and the figure. The rule is that
-    /// a picture is painted when the ladder is the message and composed when the count is —
+    /// a picture is painted when the ladder is the message and composed when the count is -
     /// which is <c>CompanionRevealOverlay</c>'s argument about what may wait on an art order.
     /// </para>
     /// </summary>
@@ -48,7 +48,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Four rungs because the shelf sells four products.</b> It was six for as long as
         /// the pictures came off a sheet that happened to carry six coin tiles, and with four
-        /// products <see cref="ShopLadder"/> then picked rungs 0, 2, 3 and 5 — so two of the
+        /// products <see cref="ShopLadder"/> then picked rungs 0, 2, 3 and 5 - so two of the
         /// four painted quantities were never drawn in the shop at all. A ladder longer than
         /// its shelf hides art and a ladder shorter than its shelf repeats it, and neither is
         /// visible anywhere, because both ship a shelf that is correct on every card.
@@ -81,14 +81,14 @@ namespace GlimmerGrove
         /// coins, which is exactly what a bundle sells; the pack that replaced them paints no
         /// mixed pile, so a borrowed picture would say only half of what a bundle grants. The
         /// shelf is therefore told apart by what a chest is made of rather than by how full
-        /// it is — there is no quantity to draw when two currencies arrive at once.
+        /// it is - there is no quantity to draw when two currencies arrive at once.
         /// </para>
         /// <para>
         /// <b>Three rungs against three products, of which the first is drawn by nothing today</b>,
         /// and that is the one place a ladder is deliberately longer than what it draws: the
         /// starter bundle is one-time, so <see cref="ShopLadder"/> puts it on the top rung whatever
         /// it costs, leaving the bottom one for a cheaper bundle nobody has authored yet.
-        /// Everywhere else a ladder is exactly as long as its shelf — invariant 18e.
+        /// Everywhere else a ladder is exactly as long as its shelf - invariant 18e.
         /// </para>
         /// </summary>
         static readonly string[] Bundles =
@@ -108,8 +108,8 @@ namespace GlimmerGrove
         /// Draws one product into <paramref name="box"/>, replacing whatever was there.
         ///
         /// <para>
-        /// Clears first, because a grid cell is rebound rather than rebuilt — see
-        /// <c>GridView</c> — so the picture from the row this cell used to be is still
+        /// Clears first, because a grid cell is rebound rather than rebuilt - see
+        /// <c>GridView</c> - so the picture from the row this cell used to be is still
         /// hanging in it. And it clears <em>immediately</em> rather than by
         /// <c>Destroy</c>, which lands at the end of the frame: a cell rebound during a
         /// flick would otherwise draw two products on top of each other for a frame, which
@@ -153,7 +153,7 @@ namespace GlimmerGrove
         /// Draws one gem-priced good: a heart, or a heart wearing the boost's mark.
         ///
         /// Simpler than a product on purpose. Hearts do not come in chests and never will,
-        /// because the pile <em>is</em> the amount here — a player buying five hearts is
+        /// because the pile <em>is</em> the amount here - a player buying five hearts is
         /// buying five of a thing they already count on the hub, and a container would put
         /// something between them and the number.
         /// </summary>
@@ -187,7 +187,7 @@ namespace GlimmerGrove
             if (good.Kind == StoreGoodKind.XpBoost)
             {
                 // The wordmark rather than the keeper ladder's star. A boost is a rate on
-                // something the player already has, so there is no object to draw — and the star
+                // something the player already has, so there is no object to draw - and the star
                 // this used to borrow is the *level* mark, which reads as "a star" on a shelf
                 // where nothing else is one. The letters say what is being multiplied.
                 var mark = UIKit.Img("XpBoost", box, Art.S("Ui/ic_xp_boost"), Color.white,
@@ -208,7 +208,7 @@ namespace GlimmerGrove
                 return;
             }
 
-            // One, three or five hearts — the shape of the pile says "more" faster than the
+            // One, three or five hearts - the shape of the pile says "more" faster than the
             // number under it does, and the number is there for the exact figure. The sizes
             // step down as the count goes up so a heap of five is no wider than the picture it
             // is drawn in, and TokenPile.Width is what says whether it is.
@@ -226,7 +226,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Composed rather than painted, and it has to be.</b> Every other card on these two
         /// shelves draws a rung of a painted ladder (<see cref="ShopLadder"/>), and a video
-        /// stands on no ladder — it is one fixed amount that content retunes, so borrowing the
+        /// stands on no ladder - it is one fixed amount that content retunes, so borrowing the
         /// cheapest rung would draw this card and the pack below it identically, which is the
         /// fault invariant 18e is about arriving from the other end. The heap is the same
         /// arrangement <see cref="PaintGood"/> piles hearts in, so the two read as the same
@@ -235,7 +235,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The play mark is the picture's whole job.</b> A heap of coins says coins and says
         /// nothing at all about how they are come by, and there is no bought "watch a video"
-        /// art in this project — nine icon packs on this machine hold none, which was surveyed
+        /// art in this project - nine icon packs on this machine hold none, which was surveyed
         /// rather than assumed. So the answer is the one invariant 32b prescribes: compose it
         /// out of what the game already draws. <c>ic_play</c> is the mark on the watch button
         /// every rewarded offer in the game is taken through, so a player meets it here and
@@ -243,7 +243,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// It rides the heap rather than sitting beside it, on a disc of its own, because a
-        /// glyph floating on a plate is a glyph nobody put anywhere — the same judgement the
+        /// glyph floating on a plate is a glyph nobody put anywhere - the same judgement the
         /// streak tile's reward well makes (invariant 48g).
         /// </para>
         /// </summary>
@@ -258,7 +258,7 @@ namespace GlimmerGrove
 
             // **A drawn picture where there is one, and the composed heap where there is not.**
             // Three of the four placements now ship a single illustration that already contains
-            // its own play button, so everything below — the heap, the seat, the ring, the mark —
+            // its own play button, so everything below - the heap, the seat, the ring, the mark -
             // would be drawn *over* a picture that has all of it. A placement with no picture
             // (the hint refill) still gets the composition, which is why this is a fallback and
             // not a replacement: taking the old path out would leave that card blank.
@@ -270,7 +270,7 @@ namespace GlimmerGrove
                                     Vector2.zero);
                 art.preserveAspect = true;
 
-                // The same breath the composed mark had, moved onto the whole picture — the
+                // The same breath the composed mark had, moved onto the whole picture - the
                 // play button is part of the drawing now, so breathing it alone is not possible
                 // and breathing nothing would make the card the one still thing on the shelf.
                 Tween.Breathe(art.transform, .04f, 2.4f);
@@ -281,7 +281,7 @@ namespace GlimmerGrove
             if (token == null) return;
 
             // **Two, always, and two is the whole of why it is two.** The figure under the
-            // picture is the amount — 300 coins is not a pile anybody can draw — so the heap
+            // picture is the amount - 300 coins is not a pile anybody can draw - so the heap
             // only has to say "some of these". What it must *also* do is not be one of the
             // packs: `PaintGood`'s ladder draws one, three or five, so a heap of three beside a
             // fifteen-heart pack is two cards on one shelf with the same picture, which is
@@ -292,7 +292,7 @@ namespace GlimmerGrove
             // Centred and low, which is a fact about a row of two rather than a taste: two
             // tokens leaning away from each other (`TokenPile.Tilt`) leave a notch under the
             // middle, so the mark stands *in* the heap and covers neither of them. It is why
-            // the count above is not three — an odd row puts a token on the centre line, and a
+            // the count above is not three - an odd row puts a token on the centre line, and a
             // mark there is a mark drawn over the picture it is meant to be part of.
             var seat = UIKit.Img("PlaySeat", box, Art.Disc(96), new Color(.05f, .09f, .06f, .88f),
                                  Vector2.one * (size * .34f), new Vector2(.5f, .5f),
@@ -321,7 +321,7 @@ namespace GlimmerGrove
         /// remember the day a fifth placement pays something that already has one.
         /// </para>
         /// <para>
-        /// Null is a real answer and the caller depends on it — see <see cref="PaintAd"/>. Every
+        /// Null is a real answer and the caller depends on it - see <see cref="PaintAd"/>. Every
         /// name here is resident in <c>AssetManifest</c>, so none of them can arrive late.
         /// </para>
         /// </summary>
@@ -344,7 +344,7 @@ namespace GlimmerGrove
         /// a heap because the count is the offer; a utility is one object with one job, and what
         /// a player has to recognise on this shelf is the picture they will be tapping on the bar
         /// half a minute later. Drawing it twice two ways would be teaching a second name for the
-        /// same thing — the tab-glyph rule, one card down.
+        /// same thing - the tab-glyph rule, one card down.
         /// </para>
         /// <para>
         /// <b>Nothing behind it.</b> Every picture on this screen used to stand on a coloured
@@ -398,7 +398,7 @@ namespace GlimmerGrove
         /// The hearts are the game's own <c>ic_heart</c>, for the reason the pile is the
         /// game's own coin: a prettier heart drawn only in the shop would be a different
         /// resource as far as a player is concerned. The vessels are three of the six potion
-        /// bottles already in the global set, so this needed no art order — which is what the
+        /// bottles already in the global set, so this needed no art order - which is what the
         /// class summary means by composing where the count is the message.
         /// </para>
         /// </summary>
@@ -409,8 +409,8 @@ namespace GlimmerGrove
 
             // Ranked, rather than the `ShopLadder.Rung(product, ...)` overload every other
             // shelf uses. That one puts a **one-time** product on the top rung whatever it
-            // costs, which is right for the starter bundle — a single offer with nothing to
-            // be compared against — and wrong here, because all three vessels are
+            // costs, which is right for the starter bundle - a single offer with nothing to
+            // be compared against - and wrong here, because all three vessels are
             // non-consumables and the three of them *are* a ladder. Under it every cap drew
             // the largest bottle with five hearts, so the shelf that sells 10, 20 and 50
             // hearts showed one picture three times: invariant 18e's fault reached through
@@ -434,13 +434,13 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// A heap of one repeated sprite — the hearts, in both of the places they are piled.
+        /// A heap of one repeated sprite - the hearts, in both of the places they are piled.
         ///
         /// <para>
         /// The arrangement is <see cref="TokenPile"/>'s, and it is the same arrangement the
         /// coins take, which is the whole reason it left this file: the three heaps here were
         /// three copies of one shallow arc with every second token dropped a little, and that
-        /// alternation is only symmetric on an odd count — so a heap of four came out
+        /// alternation is only symmetric on an odd count - so a heap of four came out
         /// visibly heavier on one side and a heap of five did not, from the same three lines.
         /// </para>
         /// </summary>
@@ -454,7 +454,7 @@ namespace GlimmerGrove
         /// <para>
         /// The overload above is the one every shelf uses, because a shelf knows the address it
         /// wants. <see cref="PaintAd"/> does not: what a placement pays is content, so the
-        /// picture comes out of <see cref="RewardArt.Token"/> — which is the one place that
+        /// picture comes out of <see cref="RewardArt.Token"/> - which is the one place that
         /// knows credits have no sprite at all and are a frame of a flipbook, and the one place
         /// that answers a tinted disc rather than <b>null</b> when the art has not arrived
         /// (invariant 7b).
@@ -478,7 +478,7 @@ namespace GlimmerGrove
         ///
         /// <c>Destroy</c> is deferred, so a rebound cell would draw the outgoing product
         /// over the incoming one for a frame. <c>DestroyImmediate</c> is not available at
-        /// runtime, so the children are hidden as they are marked — which is the same
+        /// runtime, so the children are hidden as they are marked - which is the same
         /// two-line rule the hub, the profile and the grove each arrived at separately.
         /// </summary>
         static void Clear(RectTransform box)

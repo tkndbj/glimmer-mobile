@@ -12,14 +12,14 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// <b>These boards author nothing that can be graded</b>, so everything a player is measured
-    /// against is a property of <see cref="ProtoSearch"/> over the mode's own rules — par, both
+    /// against is a property of <see cref="ProtoSearch"/> over the mode's own rules - par, both
     /// star lines and the allowance the run is dealt. A change to a settle order, a roll rule or a
     /// flood boundary therefore silently re-grades the level, which is <c>BudLadderTests</c>'
     /// argument for the mode that already shipped that bug.
     /// </para>
     /// <para>
     /// <b>The boards are held inline, and that is the whole point of the fixture.</b> Every rule
-    /// here exists twice — once in C# and once in <c>Tools/verify/proto.py</c> — and the offline
+    /// here exists twice - once in C# and once in <c>Tools/verify/proto.py</c> - and the offline
     /// runner cannot read a JSON fixture, because <c>JsonUtility</c> is a native call and every
     /// <c>*VectorTests</c> in this project is reported as "needs the Editor" and skipped on the
     /// way past. A rule that exists twice needs at least one guard that runs where the code is
@@ -30,7 +30,7 @@ namespace GlimmerGrove.Tests
     /// <b>What each number is for.</b> <c>Par</c> and the two thresholds are what the player is
     /// graded on. <c>Ways</c> is invariant 5d counted: how many shortest answers the board has, so
     /// a rule change that makes a board easier is as visible as one that makes it harder.
-    /// <c>Careless</c> is what a player who always takes the biggest thing going spends — nought,
+    /// <c>Careless</c> is what a player who always takes the biggest thing going spends - nought,
     /// deliberately, because none of these is commissioned to be effortless.
     /// <c>Nodes</c> is what the search costs on the phone that opens the level.
     /// </para>
@@ -61,7 +61,7 @@ namespace GlimmerGrove.Tests
             /// more sharply: the deal decides which moves exist at every depth, so a rung that
             /// quietly took a default where its body deals something else would be proving a
             /// board nobody ships and would still answer a plausible par. No mode on this shape
-            /// deals anything today — Prismvale leaves it empty — so it is null on every rung and
+            /// deals anything today - Prismvale leaves it empty - so it is null on every rung and
             /// is kept because the block carries it.
             /// </summary>
             public readonly string Cores;
@@ -188,8 +188,8 @@ namespace GlimmerGrove.Tests
         /// The number invariant 5d asks for, and the one that catches a rule change in the
         /// direction nothing else does.
         ///
-        /// A rule that makes a board <em>easier</em> leaves par plausible and every gate green —
-        /// that is Budburst's wash bug from the other side — so what has to be pinned is how many
+        /// A rule that makes a board <em>easier</em> leaves par plausible and every gate green -
+        /// that is Budburst's wash bug from the other side - so what has to be pinned is how many
         /// shortest answers there are, which moves whenever the reachable state graph does.
         /// </summary>
         [Test]
@@ -209,7 +209,7 @@ namespace GlimmerGrove.Tests
         /// What a player who never looks ahead spends, held to the authored number.
         ///
         /// The reading is a warning in <c>ProtoValidator</c> rather than a gate, because early in
-        /// a chapter thoughtlessness is supposed to work — and the opening floor is authored so
+        /// a chapter thoughtlessness is supposed to work - and the opening floor is authored so
         /// that it does. What is pinned is the <em>number</em>, in both directions: a rule change
         /// that lets greedy play through the finale is as invisible as one that stops it getting
         /// through the first rung, and only this notices either.
@@ -256,7 +256,7 @@ namespace GlimmerGrove.Tests
         /// Every board is authored at rest and none of them opens finished.
         ///
         /// Both are refusals in the mode's own reader, so this is really a test that the shipped
-        /// boards still pass their own gate — which is what stops a rule change turning a settled
+        /// boards still pass their own gate - which is what stops a rule change turning a settled
         /// cairn into one that collapses before the player touches it.
         /// </summary>
         [Test]
@@ -278,7 +278,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// <b>This exists because the offline content check let a board through that the Editor's
         /// build gate refused.</b> <c>Tools/verify/content.py</c> is a <em>mirror</em> of the
-        /// validators, not the validators — so a check that is wrong in C# and right in Python
+        /// validators, not the validators - so a check that is wrong in C# and right in Python
         /// reads as green everywhere except twenty minutes into an APK build. That is exactly
         /// what happened: <c>RibbonValidator</c> looked for the companion by scanning the file
         /// for a literal <c>@</c>, and <c>r01_firstribbon</c> authored its wild as a lower-case
@@ -350,7 +350,7 @@ namespace GlimmerGrove.Tests
         /// only thing in the suite that would notice this mode's subject quietly going away.
         /// <c>Used</c> is the one that condemns a board: a field standing three lantern colours
         /// whose answer only ever uses one is a field with two decorative lanterns on it, and the
-        /// colour rule — which is the whole mode — decided nothing (invariants 5d, 20m, 26h).
+        /// colour rule - which is the whole mode - decided nothing (invariants 5d, 20m, 26h).
         /// </para>
         /// <para>
         /// <c>Dealt</c> is invariant 5g counted, and it is here rather than only in the validator
@@ -393,8 +393,8 @@ namespace GlimmerGrove.Tests
         /// </para>
         /// <para>
         /// <b>And there is deliberately no <c>life</c> test here</b>, where the retired Emberforge and the
-        /// retired Kindlewake both have one. Nothing on this board is ever consumed — a gem is
-        /// moved and never spent — so a run always has a legal move and the allowance is the only
+        /// retired Kindlewake both have one. Nothing on this board is ever consumed - a gem is
+        /// moved and never spent - so a run always has a legal move and the allowance is the only
         /// way to lose. A check asking "does the board outlast the meter" could only ever answer
         /// yes, and a check that cannot fail is not a check.
         /// </para>

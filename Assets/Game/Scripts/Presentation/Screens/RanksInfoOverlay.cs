@@ -15,13 +15,13 @@ namespace GlimmerGrove
     /// question this panel was asked for: <b>a board is a tally taken once a day, not a live
     /// reading</b>. Without that stated, a keeper who buys half the grove catalogue and comes
     /// straight here sees a list that has not moved, and the only two readings available are
-    /// "the boards are broken" and "what I built did not count" — both wrong, and both the kind
+    /// "the boards are broken" and "what I built did not count" - both wrong, and both the kind
     /// of conclusion somebody reaches once and never revisits.
     /// </para>
     /// <para>
     /// The other two are the ones a player cannot arrive at by looking. <b>What the one board
-    /// is ordered on</b> is said by the rows and by nothing else — they print the figure their
-    /// own board is ordered on and no other (<c>LeaderboardBoard.IsEndless</c>) — and this used
+    /// is ordered on</b> is said by the rows and by nothing else - they print the figure their
+    /// own board is ordered on and no other (<c>LeaderboardBoard.IsEndless</c>) - and this used
     /// to be the section naming <em>both</em> ladders, which is why it survived the finest
     /// groves being held rather than going with the tabs: a list that descends by a number
     /// nobody has been told about reads as shuffled whether there is one board or two. And that
@@ -32,7 +32,7 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>Every number is read rather than written into the copy</b>, for
-    /// <see cref="StreakInfoOverlay"/>'s reason — a panel that explains the game is the first
+    /// <see cref="StreakInfoOverlay"/>'s reason - a panel that explains the game is the first
     /// thing to go stale when the game is retuned. The row count comes off
     /// <c>LeaderboardBoard</c> and the cadence off <c>LeaderboardBoard.RebuildMinutes</c>; when
     /// the screen has a board in hand, <em>when this one was actually built</em> comes off the
@@ -93,7 +93,7 @@ namespace GlimmerGrove
         /// Everything the panel has to say, in reading order.
         ///
         /// Gathered before anything is drawn because the count decides the panel's height, and
-        /// asking twice — once to measure and once to fill — is how two layouts drift apart.
+        /// asking twice - once to measure and once to fill - is how two layouts drift apart.
         /// </summary>
         List<Answer> Answers()
         {
@@ -114,7 +114,7 @@ namespace GlimmerGrove
 
             // `ic_profile` rather than `ic_rank`, and the render is what said so: the sentence
             // sends the reader to their own profile for the percentile, and the rank badge is a
-            // coloured emblem that fights the two flat white glyphs above it — a column of
+            // coloured emblem that fights the two flat white glyphs above it - a column of
             // three marks that is one mark's worth of decoration is not a column.
             answers.Add(new Answer("ic_profile", "ui.board.info_place_title",
                                    Loc.Format("ui.board.info_place_body",
@@ -124,7 +124,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// When the boards move, and — when this device has actually read one — when the board
+        /// When the boards move, and - when this device has actually read one - when the board
         /// behind the panel last did.
         ///
         /// <para>
@@ -158,7 +158,7 @@ namespace GlimmerGrove
         /// One answer, placed.
         ///
         /// The glyph is the one the game already uses for the thing being explained, so reading
-        /// the panel also teaches what the marks elsewhere mean — half of what somebody opened
+        /// the panel also teaches what the marks elsewhere mean - half of what somebody opened
         /// it to find out. Every coordinate comes from <see cref="PanelStack"/>, which measures
         /// downward from the panel's top edge; <c>UIKit</c> takes the opposite sign, so it is
         /// negated here, once.
@@ -192,7 +192,7 @@ namespace GlimmerGrove
             // Shrinkable as well as wrapped, for the reason every panel of this shape is: these
             // are among the longest strings in the game, and a translation half again the length
             // of the English would otherwise run out of its paragraph and into the row below it.
-            // It is also what makes PanelStack's arithmetic true rather than hopeful — the box
+            // It is also what makes PanelStack's arithmetic true rather than hopeful - the box
             // is a fixed depth because the text shrinks into it instead of growing.
             UIKit.Shrinkable(
                 UIKit.Titled("B", host, answer.Text, 27, Body, TextAnchor.UpperLeft,

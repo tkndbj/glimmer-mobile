@@ -20,7 +20,7 @@ namespace GlimmerGrove.Analytics
     /// </para>
     /// <para>
     /// <b>Nothing is ever blocked on the network.</b> The SDK is told to start as soon as the
-    /// gateway answers, which happens on the splash — not when a sign-in completes, and not
+    /// gateway answers, which happens on the splash - not when a sign-in completes, and not
     /// when a save syncs. An install reported late is an install attributed to nobody, and a
     /// sign-in is the one step here that can fail on a device with no Play Services.
     /// </para>
@@ -35,7 +35,7 @@ namespace GlimmerGrove.Analytics
         {
             // Two gates, exactly as Boot applies to the ad provider: the SDK has to be
             // compiled in *and* a real dev key has to exist. Without the second, the SDK
-            // starts happily and reports every install into nobody's account — a campaign
+            // starts happily and reports every install into nobody's account - a campaign
             // that spends against a dashboard which stays empty, with nothing anywhere
             // saying why.
             if (!AttributionConfig.IsConfigured)
@@ -62,7 +62,7 @@ namespace GlimmerGrove.Analytics
 
             // The join between an advert and an account. Set after the start rather than
             // before it, because AppsFlyer's wait-for-id mode holds the whole install back
-            // until an id exists — which puts attribution behind an anonymous sign-in that
+            // until an id exists - which puts attribution behind an anonymous sign-in that
             // can fail, to buy a link that is just as correct arriving a few seconds later.
             CloudSaveService.Synced += Identify;
         }
@@ -78,11 +78,11 @@ namespace GlimmerGrove.Analytics
         /// <b>The signals are taken from the event rather than read back off
         /// <c>AdPrivacy</c>.</b> <c>ResolveAsync</c> raises <c>Changed</c> and sets
         /// <c>IsResolved</c> on the line <em>after</em> it, so a handler that asks the flag is
-        /// told the answer has not arrived — during the one call that carries it. Both halves
+        /// told the answer has not arrived - during the one call that carries it. Both halves
         /// of this file did exactly that and both failed the same silent way: attribution was
         /// initialised and never started, and analytics collection stayed off for the life of
         /// the session, with the SDK logs showing a healthy startup either way. What made it
-        /// invisible is that the miss leaves no trace at all — there is no error, no retry and
+        /// invisible is that the miss leaves no trace at all - there is no error, no retry and
         /// no second event, because consent is answered once.
         /// </para>
         /// </summary>

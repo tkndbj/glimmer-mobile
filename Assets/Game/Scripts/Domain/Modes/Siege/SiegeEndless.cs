@@ -46,8 +46,8 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>Deliberately the same multiplier <see cref="Health"/> applies, and that identity is
-        /// the whole feature.</b> A firepot is authored as a share of a raider — 440 against a
-        /// creeper's 200 is two creepers and a bit — and putting <em>both sides of that
+        /// the whole feature.</b> A firepot is authored as a share of a raider - 440 against a
+        /// creeper's 200 is two creepers and a bit - and putting <em>both sides of that
         /// comparison</em> through one multiplier is what keeps the share exact on every chapter
         /// that will ever ship and on wave ninety of an endless run. A flat figure decays against
         /// a hill that surges: at a chapter carrying three tenths, a firepot that was worth two
@@ -56,8 +56,8 @@ namespace GlimmerGrove.Modes
         /// </para>
         /// <para>
         /// <b>Its own member rather than a call to <see cref="Health"/>, and pinned to it by a
-        /// test.</b> The two say different things at a call site — one is what a raider carries,
-        /// the other is what it takes — and a reader who finds <c>surge.Health(damage)</c> has to
+        /// test.</b> The two say different things at a call site - one is what a raider carries,
+        /// the other is what it takes - and a reader who finds <c>surge.Health(damage)</c> has to
         /// work out whether that is deliberate or a paste. What must never happen is the two
         /// drifting apart, so <c>SiegeSurgeTests</c> asserts they answer identically for every
         /// tenths this mode can produce.
@@ -83,20 +83,20 @@ namespace GlimmerGrove.Modes
     /// <b>A pure function of the wave number rather than a generated list, and that is the whole
     /// of why it costs nothing.</b> A level cannot author an infinite muster and a board cannot
     /// hold one, so the layout answers questions about wave <em>n</em> instead of carrying an
-    /// array of them — which means an endless level parses, validates, indexes and merges exactly
+    /// array of them - which means an endless level parses, validates, indexes and merges exactly
     /// like the ten-wave one beside it, and the board's <c>Muster</c> did not change at all.
     /// </para>
     /// <para>
     /// <b>The ramp is in the raiders, never in the rules.</b> Every constant this mode runs on
-    /// stays where invariant 20d put it — a bolt is worth what it is worth on wave one and on wave
-    /// ninety — and what climbs is what is walking down the hill: more of them, tougher, hitting
+    /// stays where invariant 20d put it - a bolt is worth what it is worth on wave one and on wave
+    /// ninety - and what climbs is what is walking down the hill: more of them, tougher, hitting
     /// harder. That is the only shape that can climb for ever without eventually contradicting a
     /// number some other level depends on, and it is why a run always ends: the line's output is
     /// bounded (a ward tops out at rank four) and the hill's is not.
     /// </para>
     /// <para>
     /// <b>The boss schedule is a rule, not a table.</b> Four bosses come round one at a time to
-    /// wave sixteen, and after that they come in <em>pairs</em> — every unordered pair of the four,
+    /// wave sixteen, and after that they come in <em>pairs</em> - every unordered pair of the four,
     /// six of them, which is thirty waves before anything repeats. A player who reaches wave
     /// forty-six has met every fight this mode has and every combination of two of them, which is
     /// as far as a schedule can honestly go before it starts being the same wave with bigger
@@ -140,7 +140,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>Four of the six, and the two it leaves out are left out deliberately.</b> A gravemaw
         /// eats the cogs and bombs lying on the hill and a bonecaller raises creepers onto it
-        /// (invariants 37bs, 37bt) — both are fine here and both would change what this lane
+        /// (invariants 37bs, 37bt) - both are fine here and both would change what this lane
         /// <em>sends</em>, and its two star waves are guesses nobody has played against yet
         /// (invariant 43). Adding them is one line and a re-measure; adding them before the
         /// measurement exists would move a ladder nothing is holding.
@@ -204,8 +204,16 @@ namespace GlimmerGrove.Modes
         /// A ramp that stepped every other wave would be two waves that are the same wave, which
         /// is invariant 5d asked of a slope.
         /// </para>
+        /// <para>
+        /// <b>Cut from three to one on 2026-09-28, at the owner's instruction, and health
+        /// alone.</b> +10% of base a wave rather than +30%, so the three-star wave carries 3.9x
+        /// rather than 9.7x. The blow step was left where it was, so health and blow now climb
+        /// one to one; this is the floor, and a further cut is a change of shape, not a smaller
+        /// number. Only the endless lane reads it (<c>SiegeLayout.SurgeOf</c>); an authored
+        /// chapter's surge is its own <c>tough</c>.
+        /// </para>
         /// </summary>
-        public const int HealthStepTenths = 3;
+        public const int HealthStepTenths = 1;
 
         /// <summary>
         /// How much harder one wave swings than the last, in tenths.
@@ -215,6 +223,7 @@ namespace GlimmerGrove.Modes
         /// which of the two ends a run - a blow ramp ends one suddenly, when a ward that was
         /// standing falls, and a health ramp ends one gradually, when the line stops keeping up.
         /// A score chase wants the gradual ending, so the ratio is held where it was.
+        /// <b>Not moved on 2026-09-28</b>, when the health step alone was cut to one.
         /// </summary>
         public const int BlowStepTenths = 1;
 
@@ -251,7 +260,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <b>Authored, because nothing can derive it.</b> Par everywhere else in this game is a
         /// search or an arithmetic floor over what a level sends; an endless lane sends everything,
-        /// so how far is far is the one number a designer has to decide — and it is decided by
+        /// so how far is far is the one number a designer has to decide - and it is decided by
         /// playing, which is what <c>SiegeRuleTests</c> and a device are for.
         /// </summary>
         public readonly int GoldWave;
@@ -281,7 +290,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <b>The pairs repeat rather than stopping</b>, because an endless lane that ran out of
         /// schedule would have to invent something, and the honest thing to invent is the list
-        /// again — by then the ramp has moved so far that the same pair is a different fight.
+        /// again - by then the ramp has moved so far that the same pair is a different fight.
         /// </summary>
         public static void BossesAt(int wave, List<SiegeKind> into)
         {
@@ -318,14 +327,14 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>Deterministic from the wave number and the level's own seed</b>, so two devices on
-        /// the same endless lane meet the same hill in the same order — which is what makes a
+        /// the same endless lane meet the same hill in the same order - which is what makes a
         /// score comparable at all, and what lets a bug reported at wave thirty be a bug somebody
         /// else can reach.
         /// </para>
         /// <para>
         /// <b>A boss wave sends its boss and nothing else.</b> A duel stacked on a wave still
         /// swinging at the line is two fail states arriving together, which is what invariant 37t
-        /// moved the quiet before a warlord to avoid — and on an endless lane, where the ramp
+        /// moved the quiet before a warlord to avoid - and on an endless lane, where the ramp
         /// never lets up, it is the difference between a fight and a pile-up.
         /// </para>
         /// </summary>
@@ -344,12 +353,12 @@ namespace GlimmerGrove.Modes
             {
                 // **A boss that takes no health arrives with an escort, and one of the four
                 // does.** A duel is a wave of its own everywhere else (37t) because a warlord,
-                // a warbringer and an overlord all shell the line for as long as they live — so
+                // a warbringer and an overlord all shell the line for as long as they live - so
                 // an empty hill is the *point*, and stacking one on a wave still swinging is two
                 // fail states arriving together. A blightcaller takes a ward's **fire**
                 // (<c>SiegeSpell.Douse</c>, 37z), and fire is worth exactly nothing with nothing
                 // on the hill to burn: reported from play as "the first boss does no damage",
-                // which was true and is invariant 5d — a wave that rejects no play decides
+                // which was true and is invariant 5d - a wave that rejects no play decides
                 // nothing however big the thing standing on it is.
                 //
                 // It is asked as <c>EndangersTheLine</c> rather than as "is this a blightcaller",
@@ -360,7 +369,7 @@ namespace GlimmerGrove.Modes
                 // **The authored ladder asks the same predicate and answers it by *merging*
                 // rather than escorting** (<c>SiegeLayout</c>'s constructor): a boss that cannot
                 // bring a ward down is stood at the head of the last authored wave instead of
-                // being given one of its own. Two shapes, one rule, because the lanes differ —
+                // being given one of its own. Two shapes, one rule, because the lanes differ -
                 // this one derives its waves and has spare raiders to hand, that one authors
                 // them and merging costs par nothing. What neither can use is a *shorter quiet*:
                 // the muster fires the moment the hill is clear, so a player who is ahead meets a
@@ -432,7 +441,7 @@ namespace GlimmerGrove.Modes
         /// a ceiling.
         ///
         /// <b>A ceiling rather than a straight line</b>, because a hill that is eventually all
-        /// bulwarks is a hill whose colour question has one answer — which is invariant 5d asked
+        /// bulwarks is a hill whose colour question has one answer - which is invariant 5d asked
         /// of a ramp: a wave that rejects no play decides nothing however tough it is.
         /// </b>
         /// </summary>

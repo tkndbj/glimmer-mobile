@@ -41,7 +41,7 @@ namespace GlimmerGrove.Store
 
         /// <summary>
         /// The store has never heard of this product. Its card is hidden entirely rather
-        /// than greyed — a product not yet created, or not for sale in this storefront, is
+        /// than greyed - a product not yet created, or not for sale in this storefront, is
         /// not something a player can do anything about, and a dead card is worse than no
         /// card.
         /// </summary>
@@ -59,13 +59,13 @@ namespace GlimmerGrove.Store
         /// sentences and only one of them is true: a player who bought the 50 does not own
         /// the 10, and a card marked YOURS over a purchase they never made is the shop
         /// telling them something they can check and find wrong. What they need to know is
-        /// that this rung is already included in what they hold — which is also the answer
+        /// that this rung is already included in what they hold - which is also the answer
         /// to "why can I not buy it".
         /// </para>
         /// <para>
         /// Drawn rather than hidden, for <see cref="Missing"/>'s reason read the other way
         /// round: a ladder with a rung cut out of it reads as a shop that has lost something,
-        /// where the whole ladder with the lower rungs marked included reads as what it is —
+        /// where the whole ladder with the lower rungs marked included reads as what it is -
         /// a player at the top of it. See <c>HeartContainerLedger.Covers</c>.
         /// </para>
         /// </summary>
@@ -116,7 +116,7 @@ namespace GlimmerGrove.Store
         /// Where the heart refill cap stood before this purchase, when it was a container.
         ///
         /// <para>
-        /// Read before the entitlement is applied, because after it the old figure is gone —
+        /// Read before the entitlement is applied, because after it the old figure is gone -
         /// and "5 → 20" is the whole of what a receipt for a container has to say. Zero on
         /// every currency product. See <c>HeartContainerLedger</c>.
         /// </para>
@@ -124,7 +124,7 @@ namespace GlimmerGrove.Store
         public readonly int CapacityWas;
 
         /// <summary>
-        /// The transaction this came out of — <see cref="StorePurchase.Key"/>, which is the
+        /// The transaction this came out of - <see cref="StorePurchase.Key"/>, which is the
         /// store and the store's own transaction id.
         ///
         /// <para>
@@ -132,7 +132,7 @@ namespace GlimmerGrove.Store
         /// exists.</b> Nothing downstream draws it. A grant with no id cannot be told apart
         /// from a second grant of the same payment by anything that receives one, so "one
         /// payment, one thank-you" was an emergent property of three separate layers each
-        /// being idempotent rather than a rule anything held — and the day any of them was
+        /// being idempotent rather than a rule anything held - and the day any of them was
         /// not, the player was congratulated twice for one charge with every gate green. See
         /// <see cref="StoreService.Announce"/>, which is where the rule now lives.
         /// </para>
@@ -175,7 +175,7 @@ namespace GlimmerGrove.Store
         /// <para>
         /// Refused rather than silently clamped, and that is a deliberate departure from
         /// how every free grant in this game behaves. A chest opened at the ceiling loses
-        /// its surplus and that is fine — nobody paid for it. Taking gems for hearts that
+        /// its surplus and that is fine - nobody paid for it. Taking gems for hearts that
         /// are thrown away on arrival is a different thing entirely, and it is the kind of
         /// thing a player notices exactly once.
         /// </para>
@@ -208,7 +208,7 @@ namespace GlimmerGrove.Store
     /// Everything that can go wrong is therefore some flavour of "the transaction is still
     /// unfinished", and both stores re-deliver an unfinished transaction on every launch
     /// until it is confirmed. A crash between the payment and the grant, a flat battery, a
-    /// tunnel, a server outage, a force-quit — all of them come back as the same thing, and
+    /// tunnel, a server outage, a force-quit - all of them come back as the same thing, and
     /// all of them are recovered by the same retry. That is why there is no per-purchase
     /// state anywhere in the save file: the store is already keeping the record, far more
     /// reliably than a client could.
@@ -216,8 +216,8 @@ namespace GlimmerGrove.Store
     /// <para>
     /// <b>Google's three-day rule is the one real deadline.</b> An unacknowledged Play
     /// purchase is refunded automatically after three days, and confirming is what
-    /// acknowledges it. That is the reason the retry below is aggressive — immediately, then
-    /// on a doubling backoff, then on every reconnection and every foreground — rather than
+    /// acknowledges it. That is the reason the retry below is aggressive - immediately, then
+    /// on a doubling backoff, then on every reconnection and every foreground - rather than
     /// polite. It is also, on balance, a good rule: a player whose grant never lands gets
     /// their money back without asking.
     /// </para>
@@ -226,7 +226,7 @@ namespace GlimmerGrove.Store
     /// <c>CrossPlatformValidator</c> runs on the device, which is the one machine an
     /// attacker owns, so it stops nobody who matters and adds a second implementation to
     /// keep alive. The only validation that counts is the server asking the store, over TLS,
-    /// with a key only we hold — see <c>firebase/functions/src/receipts.ts</c>.
+    /// with a key only we hold - see <c>firebase/functions/src/receipts.ts</c>.
     /// </para>
     /// </summary>
     public static class StoreService
@@ -240,8 +240,8 @@ namespace GlimmerGrove.Store
         /// <summary>
         /// The retry policy, borrowed whole from the sync rather than written again.
         ///
-        /// It is the same problem — work that is owed, a network that comes and goes, and a
-        /// backoff that must not punish a device for being in a tunnel — and it is already
+        /// It is the same problem - work that is owed, a network that comes and goes, and a
+        /// backoff that must not punish a device for being in a tunnel - and it is already
         /// proved offline by <c>SyncSchedulerTests</c>. A second implementation would be a
         /// second thing to get wrong, in the feature where getting it wrong costs money.
         /// </summary>
@@ -253,10 +253,10 @@ namespace GlimmerGrove.Store
         ///
         /// <para>
         /// <b>This is the rule, and it lives here because this is the only place a grant has a
-        /// transaction attached to it.</b> Every layer under it is already idempotent — the
+        /// transaction attached to it.</b> Every layer under it is already idempotent - the
         /// store re-delivers the same transaction id, the pending set is keyed on it, and the
         /// server records it against a global receipt key and grants nothing the second time
-        /// (invariant 18a) — but not one of them announces anything, and nothing joined the
+        /// (invariant 18a) - but not one of them announces anything, and nothing joined the
         /// three claims together. A duplicate reaching the event is therefore a duplicate
         /// receipt panel: <c>ReceiptQueue</c> is built to show two grants one after the other
         /// and is right to, so it cannot tell a second payment from a second telling of the
@@ -265,8 +265,8 @@ namespace GlimmerGrove.Store
         /// <para>
         /// <b>Dropping the second is always correct, and that is a property of the server
         /// rather than an assumption about the store.</b> A transaction can be honoured exactly
-        /// once — the receipt document is global, keyed on store and transaction id, and is
-        /// never deleted — so a second announcement of one key can never be a second payment.
+        /// once - the receipt document is global, keyed on store and transaction id, and is
+        /// never deleted - so a second announcement of one key can never be a second payment.
         /// Nothing is hidden by refusing it either: the money is granted by the server and held
         /// by <c>CurrencyLedger</c> whether a panel is drawn or not, which is the same bargain
         /// <c>ReceiptQueue</c> makes when it says the money is not in there.
@@ -275,7 +275,7 @@ namespace GlimmerGrove.Store
         /// <b>It is not the only rule of this shape, and the second one is not redundant.</b>
         /// This says a transaction is <em>announced</em> once, which is a promise to every
         /// subscriber. <c>ReceiptQueue</c> says a transaction is <em>thanked for</em> once,
-        /// which is a promise to the player — and the second does not follow from the first,
+        /// which is a promise to the player - and the second does not follow from the first,
         /// because nothing enforces that this event has one subscriber. Two of them, however
         /// they arrived, is one announcement drawn twice, and no guard at this end can see it.
         /// </para>
@@ -299,7 +299,7 @@ namespace GlimmerGrove.Store
         ///
         /// <para>
         /// Deliberately not persisted and deliberately cleared by every outcome. It is a fact
-        /// about this run of the process — if the app dies with a sheet open, the transaction
+        /// about this run of the process - if the app dies with a sheet open, the transaction
         /// comes back through the ordinary re-delivery path and this has nothing to add.
         /// </para>
         /// </summary>
@@ -309,7 +309,7 @@ namespace GlimmerGrove.Store
         public static event Action Changed;
 
         /// <summary>
-        /// Raised once per purchase, after the server has granted it — and <em>once</em> is
+        /// Raised once per purchase, after the server has granted it - and <em>once</em> is
         /// enforced rather than hoped for. See <see cref="Announce"/>.
         /// </summary>
         public static event Action<StoreGrant> Granted;
@@ -334,8 +334,8 @@ namespace GlimmerGrove.Store
         /// <para>
         /// <b>Scoped to a checkout this session opened, which is the half that stops it being a
         /// nuisance.</b> Both stores re-deliver an unfinished transaction on every launch for
-        /// ever (invariant 18a), and a receipt the server will not honour — a product missing
-        /// from <c>config/products</c>, say — is deliberately retried for the life of the
+        /// ever (invariant 18a), and a receipt the server will not honour - a product missing
+        /// from <c>config/products</c>, say - is deliberately retried for the life of the
         /// install. Raised on every pending purchase this would put a panel in front of such a
         /// player at every single launch, which is the shape of bug that gets an app deleted.
         /// <see cref="_checkout"/> is the only thing in this class that knows the difference
@@ -344,7 +344,7 @@ namespace GlimmerGrove.Store
         /// and cleared by every other outcome.
         /// </para>
         /// <para>
-        /// A re-delivery therefore says nothing here and is reported the way it always was —
+        /// A re-delivery therefore says nothing here and is reported the way it always was -
         /// the card's own <see cref="StoreOfferState.AwaitingGrant"/> face and the shop's
         /// summary line, both of which are still the right reporting for something the player
         /// did not just do.
@@ -362,9 +362,9 @@ namespace GlimmerGrove.Store
         ///
         /// <para>
         /// The counterpart to <see cref="CheckoutLanded"/> and the only thing anything watching
-        /// one needs: the key leaves this dictionary on <em>every</em> ending — granted,
+        /// one needs: the key leaves this dictionary on <em>every</em> ending - granted,
         /// refused-and-closed-out (invariant 18a's one exception), and a
-        /// <see cref="Reset"/> — so a caller that waits on this cannot be left waiting by an
+        /// <see cref="Reset"/> - so a caller that waits on this cannot be left waiting by an
         /// outcome nobody thought to announce. That is a stronger promise than an event pair
         /// makes, and it is the promise a panel standing over a paid-for purchase needs.
         /// </para>
@@ -437,7 +437,7 @@ namespace GlimmerGrove.Store
         ///
         /// <para>
         /// Its own method because <see cref="BeginConnect"/> is fire-and-forget, and an
-        /// awaited task whose result is discarded reports nothing anywhere — which is
+        /// awaited task whose result is discarded reports nothing anywhere - which is
         /// exactly what happened the first time this shipped to a device: the shop drew its
         /// empty state, and the device log carried not one line explaining why. The one call
         /// that decides whether the shop works at all has to leave a trace of its outcome.
@@ -455,7 +455,7 @@ namespace GlimmerGrove.Store
             }
 
             // The count is the useful half. A connection that succeeds and returns nothing is
-            // the commonest failure by far, and it means the store — not this code — has no
+            // the commonest failure by far, and it means the store - not this code - has no
             // products to give: an agreement not yet active, products still short of their
             // metadata, or a catalog that has not propagated yet.
             var catalog = StoreRules.Catalog;
@@ -545,7 +545,7 @@ namespace GlimmerGrove.Store
 
             // Our own record first, and the store's second. They answer different questions:
             // the store knows what this *store account* has bought, and the ledger knows what
-            // this *game account* holds — which is what a player who signed in on a friend's
+            // this *game account* holds - which is what a player who signed in on a friend's
             // phone, or linked after buying as a guest, actually cares about. Either saying
             // yes is enough to stop offering it, because neither can sell it again.
             if (product.IsContainer && HeartContainerLedger.IsHeld(product.Id))
@@ -553,7 +553,7 @@ namespace GlimmerGrove.Store
 
             // A smaller vessel than the one they hold. The cap is the largest container held
             // and never the sum, so this would take real money and change nothing a player
-            // can see — which is the one thing a shop must never sell, and it is not a state
+            // can see - which is the one thing a shop must never sell, and it is not a state
             // either store can refuse for us: these are three separate non-consumables, so
             // both would happily charge for the 10 to somebody holding the 50.
             if (HeartContainerLedger.Covers(product))
@@ -613,7 +613,7 @@ namespace GlimmerGrove.Store
             var opened = _backend.Buy(product.Id);
 
             // Cleared here only when the sheet never opened. Every other way out of a
-            // checkout — a transaction, a cancellation, a decline — arrives as an event, and
+            // checkout - a transaction, a cancellation, a decline - arrives as an event, and
             // clearing it optimistically would put the card back to "buy" while a sheet was
             // still in front of the player.
             if (!opened.Ok) { _checkout = string.Empty; Raise(); }
@@ -628,7 +628,7 @@ namespace GlimmerGrove.Store
         /// Apple requires a control for this in any app selling a non-consumable, and the
         /// starter bundle is one. It is also the manual version of what this class does
         /// automatically, so it is the right thing to point a player at when a purchase has
-        /// not landed — it costs nothing and it cannot double-grant, because every
+        /// not landed - it costs nothing and it cannot double-grant, because every
         /// re-delivered transaction carries the same id the server has already recorded.
         /// </para>
         /// </summary>
@@ -651,7 +651,7 @@ namespace GlimmerGrove.Store
             bool justPaid = string.Equals(_checkout, purchase.ProductId, StringComparison.Ordinal);
 
             // Keyed by store and transaction, so a re-delivery of something already queued
-            // replaces it rather than queuing a second copy — which is what an app resumed
+            // replaces it rather than queuing a second copy - which is what an app resumed
             // twice while offline would otherwise accumulate.
             _pending[purchase.Key] = purchase;
             if (justPaid) _checkout = string.Empty;
@@ -670,9 +670,9 @@ namespace GlimmerGrove.Store
                 catch (Exception e) { Debug.LogException(e); }
             }
 
-            // Last, and it has to be: the redemption can finish inside this call — the cloud
+            // Last, and it has to be: the redemption can finish inside this call - the cloud
             // double in the test suite answers synchronously, and a warm connection is not far
-            // off it — so anything wanting to hear that the purchase landed has to have been
+            // off it - so anything wanting to hear that the purchase landed has to have been
             // told before the thing that can finish it starts.
             Drain();
         }
@@ -701,7 +701,7 @@ namespace GlimmerGrove.Store
         /// <summary>
         /// Advances the retry policy. Driven from <c>Boot.Pump</c> beside the sync's own
         /// tick, so the whole thing holds no clock and can be run a thousand simulated
-        /// frames at a time offline — <c>RunScreen.Tick</c>'s bargain, in the feature where a
+        /// frames at a time offline - <c>RunScreen.Tick</c>'s bargain, in the feature where a
         /// mistake is charged to somebody's card.
         /// </summary>
         public static void Tick(float deltaSeconds, bool networkReachable)
@@ -731,7 +731,7 @@ namespace GlimmerGrove.Store
             // pointless attempt.
             if (_pending.Count == 0) { _retry.Succeeded(); return; }
 
-            // A drain is already running. Deliberately *not* settled here — the work is
+            // A drain is already running. Deliberately *not* settled here - the work is
             // still owed, and reporting success on behalf of an attempt that has not
             // finished would clear a backoff the in-flight drain is about to need.
             if (_draining) return;
@@ -777,7 +777,7 @@ namespace GlimmerGrove.Store
         /// refunded. A confirmed purchase that was never granted is gone for ever.
         /// </para>
         /// <para>
-        /// <b>A refused receipt is deliberately never confirmed — with exactly one
+        /// <b>A refused receipt is deliberately never confirmed - with exactly one
         /// exception.</b> The temptation is to clear it out so the queue stops retrying, and
         /// that is precisely the wrong move, because "the server refused" covers a product that
         /// has not been added to <c>config/products</c> yet as well as a genuinely bad receipt.
@@ -789,13 +789,13 @@ namespace GlimmerGrove.Store
         /// The exception is <see cref="CloudFailure.AlreadyRedeemed"/>, and it is the exception
         /// because it is the one refusal that cannot become a success later: the transaction was
         /// granted to a different account, a receipt document is never deleted and its owner is
-        /// never rewritten. Leaving that one unfinished is not a harmless retry — it is a loop
+        /// never rewritten. Leaving that one unfinished is not a harmless retry - it is a loop
         /// for the life of the install, and on Google it ends in an auto-refund after three days
         /// whose sweep reverses the grant against <em>the account that actually paid</em>. So
         /// finishing it is what protects that account rather than what abandons this one.
         /// Nothing is granted here and nothing can be: the server refused, and confirming is
         /// purely a message to the store saying this device has nothing further to do with the
-        /// transaction. Reached by switching accounts and by deleting one — both re-deliver a
+        /// transaction. Reached by switching accounts and by deleting one - both re-deliver a
         /// purchase belonging to the previous account, for ever.
         /// </para>
         /// </summary>
@@ -840,13 +840,13 @@ namespace GlimmerGrove.Store
 
             // What the *server* says it granted, not what the balance appears to have moved
             // by. A background sync can land inside the await above, so a subtraction of two
-            // readings is occasionally wrong — and the place it would be wrong is the panel
+            // readings is occasionally wrong - and the place it would be wrong is the panel
             // that says thank you after somebody has paid.
             long credits = redemption.AmountOf(Currency.Credits);
             long gems = redemption.AmountOf(Currency.Gems);
 
             // A heart container is recorded here, and it is recorded on *every* successful
-            // redemption rather than only on the first — including the ones the server
+            // redemption rather than only on the first - including the ones the server
             // reports as already granted. That is the property the whole feature rests on
             // rather than an optimisation. A capacity is idempotent, so re-applying it is
             // free; and both stores re-deliver a non-consumable for ever, so a player who
@@ -857,7 +857,7 @@ namespace GlimmerGrove.Store
             //
             // Note what it does *not* wait for: the sync. The entitlement is in the save the
             // moment the receipt is honoured, so a player who buys on a train sees their bar
-            // grow before the next wallet reply arrives — the reply's only job here is to
+            // grow before the next wallet reply arrives - the reply's only job here is to
             // carry a refund back the other way.
             int capacityWas = 0;
             bool entitled = false;
@@ -897,7 +897,7 @@ namespace GlimmerGrove.Store
             // meaning anything.
             //
             // A container reads that question differently and has to. `GrantedAnything` is
-            // about currency, and a container grants none — so what decides is whether this
+            // about currency, and a container grants none - so what decides is whether this
             // device's own ledger moved. That answers both halves at once: the first purchase
             // celebrates, and a re-delivery onto a device that already holds it does not,
             // which is exactly the retry case above. A Restore onto a fresh install *does*
@@ -924,13 +924,13 @@ namespace GlimmerGrove.Store
         /// </summary>
         static void Announce(in StoreGrant grant)
         {
-            // An empty key is always fresh and is never recorded — it is the absence of an
+            // An empty key is always fresh and is never recorded - it is the absence of an
             // identity rather than one every unidentified grant shares. See TransactionMemory.
             if (!_announced.Fresh(grant.TransactionKey))
             {
                 Debug.LogWarning($"[Store] {grant.TransactionKey} has already been celebrated; " +
                                  "dropping the second announcement. The purchase itself is " +
-                                 "unaffected — the server grants a transaction once — but " +
+                                 "unaffected - the server grants a transaction once - but " +
                                  "something upstream redeemed it twice and reported a grant " +
                                  "both times.");
                 return;
@@ -944,7 +944,7 @@ namespace GlimmerGrove.Store
         /// <summary>
         /// Whether a gem-priced good can be bought right now, and why not when it cannot.
         ///
-        /// The two "nearly full" states are the interesting ones — see
+        /// The two "nearly full" states are the interesting ones - see
         /// <see cref="GoodOfferState.HeartsNearlyFull"/>.
         /// </summary>
         public static GoodOfferState OfferForGood(StoreGood good)
@@ -981,7 +981,7 @@ namespace GlimmerGrove.Store
             {
                 // The same refusal as the heart boost above and for its reason: a window that
                 // would run past the ceiling is hours somebody paid for and never receives.
-                // Measured against the *bought* window alone, because that is the one this buys —
+                // Measured against the *bought* window alone, because that is the one this buys -
                 // a watched window running beside it is free and must not block a purchase.
                 long ceiling = Progression.XpBoostLimits.MaxHours * 3600L;
                 long held = Progression.XpBoost.BoughtUntilUnix - GameClock.NowUnix();
@@ -999,7 +999,7 @@ namespace GlimmerGrove.Store
         /// Buys a good with gems: hearts, or a faster clock.
         ///
         /// <para>
-        /// No network, no receipt, no server round trip — and that is not a shortcut, it is
+        /// No network, no receipt, no server round trip - and that is not a shortcut, it is
         /// the reason goods are priced in gems at all. A gem debit is a
         /// <c>CurrencyLedger.TrySpend</c>, which carries an idempotency key, is refused by
         /// the server on the next sync if the derived balance could not cover it, and works

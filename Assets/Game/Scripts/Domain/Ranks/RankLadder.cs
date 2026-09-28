@@ -11,7 +11,7 @@ namespace GlimmerGrove.Ranks
     /// <b>Content, and the whole of it.</b> Which rungs exist, in what order and asking for
     /// what are all rows of <c>progression.json</c>, so a rung retuned, added or withdrawn is a
     /// content push. What a push cannot do is ship a picture, which is the one place this
-    /// stops — a new rung needs its badge cut into <c>Art/Ui/Rank/</c> by
+    /// stops - a new rung needs its badge cut into <c>Art/Ui/Rank/</c> by
     /// <c>Tools/make_rank_art.py</c> and addressed, exactly as a new utility needs its icon
     /// (invariant 7b). <c>check_ranks</c> refuses a rung whose badge is not on disk rather than
     /// letting it draw a white rectangle.
@@ -20,14 +20,14 @@ namespace GlimmerGrove.Ranks
     /// <b>Rides with the curve</b> for the reason every block in <c>ProgressionTable</c> does,
     /// and one of its own: a rung asks about keeper levels, stars and waves, every one of which
     /// is decided by a number in the same file. A ladder loaded separately from the curve would
-    /// be a set of goals measured against a game that had moved — the same window the chest
+    /// be a set of goals measured against a game that had moved - the same window the chest
     /// table and the ad payouts are published here to close.
     /// </para>
     /// <para>
     /// <b>The default is empty, and that is deliberate.</b> Every other table here has a
     /// built-in copy because a game with no chest odds or no heart gate cannot be played; a
     /// game with no ranks can. A hard-coded ladder would be a second answer nobody maintains,
-    /// and the first thing to go stale the moment content moved — so a file that cannot be read
+    /// and the first thing to go stale the moment content moved - so a file that cannot be read
     /// draws no badge and no page rather than a ladder that disagrees with the one the owner
     /// authored. Both readouts take themselves off screen when the ladder is empty.
     /// </para>
@@ -70,7 +70,7 @@ namespace GlimmerGrove.Ranks
         /// <para>
         /// <b>Consecutive rather than highest-met, and that is a safety property rather than a
         /// nicety.</b> A ladder is authored by a person, and one rung asking for something the
-        /// rung above it does not is an ordinary authoring slip — with "highest met" that slip
+        /// rung above it does not is an ordinary authoring slip - with "highest met" that slip
         /// hands out rank six to somebody who never met rank five, and the page then draws a
         /// held badge above unmet lines. Walking up from the bottom makes the ladder monotone by
         /// construction whatever content says, and the gate still errors on the slip so it is
@@ -84,7 +84,7 @@ namespace GlimmerGrove.Ranks
         public RankDefinition Held(CatalogIndex index) => Held(new LedgerRankSource(index));
 
         /// <summary>
-        /// The same walk over a source — the live ledgers, or the save file a card is built
+        /// The same walk over a source - the live ledgers, or the save file a card is built
         /// from.
         ///
         /// <para>
@@ -130,7 +130,7 @@ namespace GlimmerGrove.Ranks
         }
 
         /// <summary>
-        /// Whether a rung is held, which is <em>not</em> the same as its own lines being met —
+        /// Whether a rung is held, which is <em>not</em> the same as its own lines being met -
         /// see <see cref="Held"/>. The question a page's badge asks per row.
         /// </summary>
         public bool IsHeld(RankDefinition rung, CatalogIndex index)
@@ -145,7 +145,7 @@ namespace GlimmerGrove.Ranks
         /// Reads the optional <c>ranks</c> block. Never throws and never returns null.
         ///
         /// <para>
-        /// <b>Refused whole on a structural fault, degraded on an unknown</b> — the split
+        /// <b>Refused whole on a structural fault, degraded on an unknown</b> - the split
         /// <c>TaskTable.Resolve</c> draws, and it matters more here than anywhere: a ladder
         /// missing one line of one rung is a rank handed out for less than it asks for, which
         /// nobody would ever notice. So a malformed rung takes the whole ladder down to
@@ -157,7 +157,7 @@ namespace GlimmerGrove.Ranks
         /// never heard of: that is a newer content pack reaching an older client, and dropping
         /// the whole ladder for it would take the feature off the screen of every player who
         /// had not updated. Such a rung is dropped by name, which can only ever make a ladder
-        /// easier to climb on an old build — never harder — and the rungs above it still ask
+        /// easier to climb on an old build - never harder - and the rungs above it still ask
         /// for everything they always did.
         /// </para>
         /// </summary>
@@ -166,7 +166,7 @@ namespace GlimmerGrove.Ranks
             if (problems == null) problems = new List<string>();
 
             // Absent is not an error: JsonUtility instantiates the block whether or not the
-            // file wrote one, so "absent" is a block with no array — a value a real one cannot
+            // file wrote one, so "absent" is a block with no array - a value a real one cannot
             // hold (`IsAuthored`), which is the fixed shape for a serialised class field.
             if (dto == null || !dto.IsAuthored) return Empty;
 

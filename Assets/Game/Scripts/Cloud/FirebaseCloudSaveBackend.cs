@@ -17,13 +17,13 @@ namespace GlimmerGrove.Cloud
     ///
     /// Lives in its own assembly so the Firebase SDK never becomes a dependency of
     /// <c>GlimmerGrove.Domain</c>. That is not tidiness: it is what keeps the merge,
-    /// the reward arithmetic and the ledger — the parts most likely to be wrong —
+    /// the reward arithmetic and the ledger - the parts most likely to be wrong -
     /// runnable in the EditMode test suite with no SDK installed and no network.
     ///
     /// <para>
     /// The whole file compiles out when <c>GLIMMER_FIREBASE</c> is undefined, which is
     /// how the project stays buildable before the SDK is installed. The define comes
-    /// from asmdef <c>versionDefines</c>, never Player Settings — those are stored per
+    /// from asmdef <c>versionDefines</c>, never Player Settings - those are stored per
     /// build target, so one added on Standalone is silently absent on Android and iOS.
     /// </para>
     ///
@@ -53,7 +53,7 @@ namespace GlimmerGrove.Cloud
         /// <para>
         /// <b>Every call, without exception, because the failure is the latch.</b> A Firestore
         /// write completes only when the backend acknowledges it, so on a connection that drops
-        /// after the request went out it never completes at all — and one call that never
+        /// after the request went out it never completes at all - and one call that never
         /// completes holds <c>CloudSaveService</c>'s sync latch for the life of the process,
         /// which every later sync, switch and link reports as a failure of its own. A callable
         /// has a client timeout of its own; the auth exchanges and the document operations do
@@ -99,7 +99,7 @@ namespace GlimmerGrove.Cloud
         /// belonging to one person routinely carry the same display name, so a panel labelled
         /// with the name would say the same thing on both sides of a switch. Apple only hands
         /// over an address on the first authorisation, so a returning Apple player falls
-        /// through to the name, and an anonymous account has neither and gets nothing — which
+        /// through to the name, and an anonymous account has neither and gets nothing - which
         /// the screen reads as "no account to name" rather than as an empty field.
         /// </para>
         /// </summary>
@@ -123,8 +123,8 @@ namespace GlimmerGrove.Cloud
 
         // ------------------------------------------------------------ lifecycle
         /// <summary>
-        /// Resolves the native dependencies once. On Android this can genuinely fail —
-        /// an ancient Play Services, a device with none at all — and the answer is to
+        /// Resolves the native dependencies once. On Android this can genuinely fail -
+        /// an ancient Play Services, a device with none at all - and the answer is to
         /// mark the backend unavailable and let the game carry on locally, not to
         /// spend the session retrying something that will not change.
         /// </summary>
@@ -164,8 +164,8 @@ namespace GlimmerGrove.Cloud
                 // queued while offline survives an account switch in the previous account's
                 // queue and is replayed the next time that account signs in, with a revision
                 // the rules refuse. With the cache off, an offline read fails at once with
-                // Unavailable — which the sync reports as Offline and retries when the app is
-                // next foregrounded — and a write never outlives the call that made it.
+                // Unavailable - which the sync reports as Offline and retries when the app is
+                // next foregrounded - and a write never outlives the call that made it.
                 try { _db.Settings.PersistenceEnabled = false; }
                 catch (Exception e) { Debug.LogWarning("[Cloud] could not turn the Firestore cache off: " + e.Message); }
 
@@ -212,8 +212,8 @@ namespace GlimmerGrove.Cloud
         ///
         /// <para>
         /// Firebase persists the signed-in user and restores it during
-        /// <see cref="EnsureReadyAsync"/>, so for the overwhelmingly common case — a launch by
-        /// somebody who signed in months ago — this returns their account without a network
+        /// <see cref="EnsureReadyAsync"/>, so for the overwhelmingly common case - a launch by
+        /// somebody who signed in months ago - this returns their account without a network
         /// round trip. An empty answer means the session is genuinely gone, which is a fact
         /// worth reporting rather than papering over with a new anonymous account; see the
         /// interface for what that used to cost.
@@ -270,7 +270,7 @@ namespace GlimmerGrove.Cloud
         }
 
         /// <summary>
-        /// Adopts the account the credential already belongs to. Destructive — see the
+        /// Adopts the account the credential already belongs to. Destructive - see the
         /// interface. The caller is responsible for having asked first.
         /// </summary>
         public async Task<(CloudResult result, CloudIdentity identity)> SignInWithCredentialAsync(
@@ -291,7 +291,7 @@ namespace GlimmerGrove.Cloud
                 // linger as the current user if the new sign-in failed halfway. That reasoning
                 // only holds while this is reached from the one flow that has already decided
                 // to abandon the current account. It is now also how a player *switches*
-                // accounts and how a device recovers from an interrupted switch — and there,
+                // accounts and how a device recovers from an interrupted switch - and there,
                 // signing out first means the single most ordinary outcome in the whole flow,
                 // a player closing the Google sheet without choosing, permanently ends the
                 // session they were happily in. The save then names an account nothing can
@@ -333,8 +333,8 @@ namespace GlimmerGrove.Cloud
         ///
         /// <para>
         /// <b>This is not an optimisation and it is not optional.</b> FirebaseAuth on iOS calls
-        /// <c>fatalError</c> — not an exception, an immediate process kill no <c>catch</c> can
-        /// intercept — the moment <c>apple.com</c> reaches <see cref="Provider"/>:
+        /// <c>fatalError</c> - not an exception, an immediate process kill no <c>catch</c> can
+        /// intercept - the moment <c>apple.com</c> reaches <see cref="Provider"/>:
         /// <c>"Sign in with Apple is not supported via generic IDP"</c>. So the check has to
         /// happen <em>before</em> the call rather than around it, which is the whole reason this
         /// is a separate step instead of a try/catch at the call site.
@@ -342,7 +342,7 @@ namespace GlimmerGrove.Cloud
         /// <para>
         /// Everything else keeps the path it had. Google uses the generic provider on both
         /// platforms, Apple uses it on Android, and a credential that already carries a token
-        /// is returned untouched — so a caller that obtained one some other way still works.
+        /// is returned untouched - so a caller that obtained one some other way still works.
         /// </para>
         /// <para>
         /// A cancelled sheet is reported as <see cref="CloudFailure.Cancelled"/> rather than an
@@ -419,7 +419,7 @@ namespace GlimmerGrove.Cloud
             var data = new FederatedOAuthProviderData { ProviderId = providerId };
 
             // Only what the account actually needs, and the address is now part of that.
-            // Nothing is stored and nothing is sent anywhere — see CloudIdentity.Label — but
+            // Nothing is stored and nothing is sent anywhere - see CloudIdentity.Label - but
             // switching between two of one person's own accounts is what this flow is for, and
             // two Google accounts belonging to the same person routinely carry the same display
             // name. Without the address the panel cannot tell them apart, which is the whole
@@ -440,18 +440,18 @@ namespace GlimmerGrove.Cloud
         /// <summary>
         /// Pulls the <see cref="AuthError"/> out of whichever exception type Auth chose
         /// to throw. Firestore and Functions do not derive from
-        /// <see cref="FirebaseException"/> — they throw their own types — so one reaching
+        /// <see cref="FirebaseException"/> - they throw their own types - so one reaching
         /// here came from Auth, and the <c>Enum.IsDefined</c> check only guards against a
         /// code outside the enum.
         ///
         /// <para>
         /// <b><see cref="FirebaseAccountLinkException"/> is the trap.</b> Despite the name
         /// it derives from <see cref="Exception"/> directly, <i>not</i> from
-        /// <see cref="FirebaseException"/> — verified by reflection over
+        /// <see cref="FirebaseException"/> - verified by reflection over
         /// Firebase.Auth.dll 13.15.0. It carries the same <c>int ErrorCode</c>, but a type
         /// check on <c>FirebaseException</c> misses it entirely. It is what the link calls
-        /// throw for precisely the case this screen exists to handle — a provider already
-        /// attached to another grove — so missing it silently downgrades an expected,
+        /// throw for precisely the case this screen exists to handle - a provider already
+        /// attached to another grove - so missing it silently downgrades an expected,
         /// actionable outcome into <see cref="CloudFailure.Error"/> and the player is told
         /// "something went wrong" about a situation the game knows exactly how to resolve.
         /// </para>
@@ -497,8 +497,8 @@ namespace GlimmerGrove.Cloud
         /// <para>
         /// Every failure returns an empty table rather than propagating, and a malformed
         /// entry is skipped rather than poisoning the rest. Nothing on any screen depends
-        /// on this arriving — the worst outcome of it being wrong or missing is one
-        /// sentence not being drawn — so it must never be able to fail a launch or a sync.
+        /// on this arriving - the worst outcome of it being wrong or missing is one
+        /// sentence not being drawn - so it must never be able to fail a launch or a sync.
         /// </para>
         /// </summary>
         public async Task<(CloudResult result, Dictionary<Content.LevelId, Social.LevelStats> stats)>
@@ -575,7 +575,7 @@ namespace GlimmerGrove.Cloud
         /// </para>
         /// <para>
         /// <b>Every shape of "there is nothing here" succeeds with
-        /// <see cref="Release.ReleaseRequirement.None"/></b> — an unseeded project, a document
+        /// <see cref="Release.ReleaseRequirement.None"/></b> - an unseeded project, a document
         /// with no block for this platform, a block with no minimum. Only a genuine failure to
         /// reach Firestore is reported as one, because that is the single distinction
         /// <c>ReleaseGate</c> cannot make for itself and the one that decides whether a standing
@@ -583,7 +583,7 @@ namespace GlimmerGrove.Cloud
         /// </para>
         /// <para>
         /// A published block that names no store link falls back to the platform's derived one,
-        /// which exists on Android and cannot on iOS — see <c>ReleasePlatform.FallbackStoreUrl</c>.
+        /// which exists on Android and cannot on iOS - see <c>ReleasePlatform.FallbackStoreUrl</c>.
         /// Whether what comes out of that is enforceable is not decided here; the requirement
         /// answers it, in one place, for every reader.
         /// </para>
@@ -768,7 +768,7 @@ namespace GlimmerGrove.Cloud
                     if (string.IsNullOrEmpty(submission.Currency)) continue;
 
                     // The currency is the ledger's, never assumed. This line once read
-                    // `Currency.Credits` for every debit — "one currency spends today" — and by
+                    // `Currency.Credits` for every debit - "one currency spends today" - and by
                     // the time gems were spent nothing here said so: every gem debit was taken
                     // from the server's credit balance and the season pass, priced in gems,
                     // was refused as underpaid on every sync for the life of the account.
@@ -805,7 +805,7 @@ namespace GlimmerGrove.Cloud
         /// Offers up awards the client has already applied, for the server to adjudicate.
         ///
         /// Only the ids travel with any authority. The amounts are sent because they make
-        /// a support case legible — "the client thought this chest was worth 240" — and
+        /// a support case legible - "the client thought this chest was worth 240" - and
         /// are otherwise ignored: <c>claimAwards</c> re-rolls each chest from the account
         /// id, the day and the index, and grants its own answer.
         /// </summary>
@@ -930,8 +930,8 @@ namespace GlimmerGrove.Cloud
         ///
         /// <para>
         /// The request body is empty and stays empty. Everything on a card is recomputed by
-        /// the function from the save document it reads with its own credentials — see
-        /// <c>functions/src/grove.ts</c> — so there is nothing here for a modified client to
+        /// the function from the save document it reads with its own credentials - see
+        /// <c>functions/src/grove.ts</c> - so there is nothing here for a modified client to
         /// put its thumb on. The reply carries the card that was actually written, which is
         /// what the profile draws afterwards rather than its own prediction.
         /// </para>
@@ -951,7 +951,7 @@ namespace GlimmerGrove.Cloud
 
                 // Absent and zero are different answers. A deployment that predates the field
                 // reports nothing, and the client must not read that as "built from nothing"
-                // — see GrovePublication for why that would be a retry loop.
+                // - see GrovePublication for why that would be a retry loop.
                 long revision = reply != null && reply.ContainsKey("revision") ? ReadLong(reply, "revision") : -1L;
 
                 return (CloudResult.Success,
@@ -966,7 +966,7 @@ namespace GlimmerGrove.Cloud
         /// <summary>
         /// Takes this account's card down.
         ///
-        /// An account that has no card is a success rather than an error — the function says
+        /// An account that has no card is a success rather than an error - the function says
         /// so and this passes it through, because a withdrawal that can never succeed is a
         /// device retrying for the life of the account (invariant 13a).
         /// </summary>
@@ -994,7 +994,7 @@ namespace GlimmerGrove.Cloud
         /// Reads who holds a reserved name.
         ///
         /// <para>
-        /// A direct document read by id, deliberately — this runs while somebody is typing, so
+        /// A direct document read by id, deliberately - this runs while somebody is typing, so
         /// it is the one call in the whole feature whose cost could ever matter, and a callable
         /// here would add a function invocation and a cold start to every pause in a text
         /// field. One read, no index, and the same price at any player count.
@@ -1070,7 +1070,7 @@ namespace GlimmerGrove.Cloud
         /// </para>
         /// <para>
         /// <b>The subject rides in the body rather than in the callable's name.</b> It was
-        /// <c>reportKeeperName</c> until this drop and is <c>reportKeeper</c> now — a callable's
+        /// <c>reportKeeperName</c> until this drop and is <c>reportKeeper</c> now - a callable's
         /// name is not an id anything is keyed on, so renaming it cost a deploy, an invoker
         /// binding and a delete, which is a price only payable before a client ships. What the
         /// body buys is that a third subject is one word and no ops at all.
@@ -1136,7 +1136,7 @@ namespace GlimmerGrove.Cloud
         /// Reads a claim reply.
         ///
         /// An outcome this build does not recognise is read as
-        /// <see cref="Social.NameClaimOutcome.Unavailable"/> rather than as a refusal — an
+        /// <see cref="Social.NameClaimOutcome.Unavailable"/> rather than as a refusal - an
         /// older client meeting a newer server must fall back to "nothing was decided here",
         /// which leaves the rename local and lets the next publish settle it, rather than
         /// telling somebody their name was rejected for a reason it cannot name.
@@ -1172,7 +1172,7 @@ namespace GlimmerGrove.Cloud
         /// A direct document read rather than a callable: it is a public document by design,
         /// the rules already say who may read it, and routing it through a function would add
         /// an invocation and a cold start to the one interaction on the board that has to feel
-        /// immediate. An absent card is success with an empty answer — the owner may have
+        /// immediate. An absent card is success with an empty answer - the owner may have
         /// opted out between the board being built and the row being tapped, which is ordinary
         /// rather than a fault.
         /// </summary>
@@ -1270,7 +1270,7 @@ namespace GlimmerGrove.Cloud
         /// <para>
         /// <b>The wave pair is read exactly as the worth pair is, through one reader.</b> Two
         /// copies of "nine ascending numbers and a sample count" would be two places for the
-        /// ascending check to be forgotten — and that check is what stands between a malformed
+        /// ascending check to be forgotten - and that check is what stands between a malformed
         /// document and a screen printing percentages drawn at random.
         /// </para>
         /// </summary>
@@ -1322,7 +1322,7 @@ namespace GlimmerGrove.Cloud
         /// <see cref="Social.GroveRankTable.None"/>.
         ///
         /// <b>A table that is not ascending is not a decile table</b>, and interpolating through
-        /// one produces percentages at random — so it is refused outright rather than repaired.
+        /// one produces percentages at random - so it is refused outright rather than repaired.
         /// <c>ReadGroveStatsAsync</c> refuses the same way, for the same reason.
         /// </summary>
         static Social.GroveRankTable ReadRankTable(IDictionary<string, object> document,
@@ -1350,7 +1350,7 @@ namespace GlimmerGrove.Cloud
         /// Sanitising rather than trusting, and wanted twice over here: this document was
         /// built from another player's save, and a visitor may be a content drop behind the
         /// keeper they are visiting. A malformed row is skipped rather than poisoning the card,
-        /// and an id this build has never heard of is carried through — <c>WardLine.Resolve</c>
+        /// and an id this build has never heard of is carried through - <c>WardLine.Resolve</c>
         /// falls back to this build's own starter, which every drawing path already handles.
         ///
         /// <para>
@@ -1367,7 +1367,7 @@ namespace GlimmerGrove.Cloud
             if (document == null) return Social.GroveCard.Empty;
 
             // The turret line, as slots plus the rung each seat stands at. A malformed row is
-            // skipped rather than poisoning the line, and a missing seat is simply missing —
+            // skipped rather than poisoning the line, and a missing seat is simply missing -
             // `WardLine.Resolve` fills it with this build's own starter, which is the path every
             // board already takes for a turret that was renamed or retired.
             var line = new List<Wards.WardSlot>(Wards.WardLine.Colours.Length);
@@ -1401,7 +1401,7 @@ namespace GlimmerGrove.Cloud
                 line,
                 rungs,
 
-                // The rank the server derived, not the one this card's owner claimed — see
+                // The rank the server derived, not the one this card's owner claimed - see
                 // `rungOf` in functions/src/grove.ts. Absent on every card written before that
                 // deployment and on any keeper below the first rung, and both read as empty,
                 // which every drawing path already takes as "no badge".
@@ -1438,7 +1438,7 @@ namespace GlimmerGrove.Cloud
         /// <para>
         /// <b>Firebase's own mismatch check does the work.</b> <c>ReauthenticateAndRetrieveData</c>
         /// refuses a credential belonging to anybody but the current user, with
-        /// <see cref="AuthError.UserMismatch"/>, and — unlike a sign-in — leaves the session
+        /// <see cref="AuthError.UserMismatch"/>, and - unlike a sign-in - leaves the session
         /// untouched when it does. Comparing uids by hand afterwards would be a second answer
         /// to a question the SDK already answers correctly, and it would compare them *after*
         /// the session had already moved.
@@ -1494,7 +1494,7 @@ namespace GlimmerGrove.Cloud
         ///
         /// <para>
         /// <b>The session is checked against the caller's id before anything is sent.</b>
-        /// Nothing in the request names an account — the server takes it from the token — so a
+        /// Nothing in the request names an account - the server takes it from the token - so a
         /// device whose session has moved would delete whichever account it is *now* rather
         /// than the one the player was looking at. That is <see cref="AccountGate"/>'s hazard
         /// with the one consequence it cannot repair, and the window is entirely ordinary: a
@@ -1504,7 +1504,7 @@ namespace GlimmerGrove.Cloud
         /// <para>
         /// <b>Signing back in is part of this call rather than left to the caller.</b> Firebase
         /// keeps handing back the deleted user until it is told to forget it, so a device that
-        /// only deleted would hold a session for an account that no longer exists — which is
+        /// only deleted would hold a session for an account that no longer exists - which is
         /// indistinguishable, from every screen in the game, from being signed in. It signs
         /// out and takes a fresh anonymous account, which is what the player is actually left
         /// holding: a new grove they can play immediately.
@@ -1512,7 +1512,7 @@ namespace GlimmerGrove.Cloud
         /// <para>
         /// <b>A failure to sign back in is still a success.</b> The account really is deleted
         /// by then, and reporting a failure would send the panel down a path that offers to
-        /// try again — deleting an account that is already gone, on a device that has just
+        /// try again - deleting an account that is already gone, on a device that has just
         /// lost its network. The next launch signs in anonymously by itself.
         /// </para>
         /// </summary>
@@ -1593,7 +1593,7 @@ namespace GlimmerGrove.Cloud
         }
 
         /// <summary>
-        /// Watches <c>players/{uid}/private/referral</c> — a counter the server bumps whenever
+        /// Watches <c>players/{uid}/private/referral</c> - a counter the server bumps whenever
         /// this account's referral state moves, and nothing else.
         ///
         /// <para>
@@ -1601,7 +1601,7 @@ namespace GlimmerGrove.Cloud
         /// every client by <c>firestore.rules</c>, on purpose: it names the referrer, and a code
         /// owner's document names every invitee. A listener there would hand a caller the list
         /// of people who typed their code. The private counter is already owner-read and
-        /// server-write-only, so this costs **no rules release** and can leak nothing — the
+        /// server-write-only, so this costs **no rules release** and can leak nothing - the
         /// answer still comes from <c>getReferral</c>.
         /// </para>
         /// <para>
@@ -1612,7 +1612,7 @@ namespace GlimmerGrove.Cloud
         /// running game code at the time.
         /// </para>
         /// <para>
-        /// The first delivery is the document as it stands, not a change — Firestore always
+        /// The first delivery is the document as it stands, not a change - Firestore always
         /// opens a listener with a snapshot. It is left to fire, and it is what the ledger
         /// wants: it carries the counter, and the ledger compares that with the stamp on its
         /// cached answer to decide whether a call is needed at all
@@ -1643,7 +1643,7 @@ namespace GlimmerGrove.Cloud
         /// <summary>
         /// The feed document's counter: its <c>rev</c>, nought for a document that does not
         /// exist (nothing has ever happened to this account), and
-        /// <c>ReferralState.UnknownFeed</c> for anything that cannot be read — which the ledger
+        /// <c>ReferralState.UnknownFeed</c> for anything that cannot be read - which the ledger
         /// treats as "ask", so a fault here costs a call and never a stale badge. Runs on the
         /// listener's thread and touches nothing but the snapshot.
         /// </summary>
@@ -1672,7 +1672,7 @@ namespace GlimmerGrove.Cloud
         /// <para>
         /// <c>ListenerRegistration</c> is itself <c>IDisposable</c> and this is not merely a
         /// wrapper for the sake of one: the <c>null</c> exchange is what makes a second
-        /// <c>Dispose</c> — from a screen tearing down and a pause arriving in the same frame —
+        /// <c>Dispose</c> - from a screen tearing down and a pause arriving in the same frame -
         /// a no-op rather than a second <c>Stop</c> against native state.
         /// </para>
         /// </summary>
@@ -1877,8 +1877,8 @@ namespace GlimmerGrove.Cloud
                         if (id is string s && s.Length > 0) state.ConfirmedGrantIds.Add(s);
                 }
 
-                // Refunded heart containers. Repeated on every currency row — see
-                // CloudWalletState.RevokedContainers — and absent entirely on a deployment
+                // Refunded heart containers. Repeated on every currency row - see
+                // CloudWalletState.RevokedContainers - and absent entirely on a deployment
                 // that predates the field, which reads as "nothing was refunded" and is the
                 // right answer for every account until one is.
                 if (entry.TryGetValue("containersRevoked", out object revoked) &&
@@ -1890,7 +1890,7 @@ namespace GlimmerGrove.Cloud
 
                 // The bonus wheel's position. Read as "did the key arrive" first and as a number
                 // second, because a fresh account's honest answer is zero and a deployment that
-                // predates the field also sends nothing — and only one of those two means the
+                // predates the field also sends nothing - and only one of those two means the
                 // wheel may be drawn. See CloudWalletState.CarriesWheel.
                 if (entry.TryGetValue("wheelSpins", out object spins) && spins != null)
                 {
@@ -1939,7 +1939,7 @@ namespace GlimmerGrove.Cloud
         }
 
         /// <summary>
-        /// A debit the server refused is a bug or an attack, never routine — the client
+        /// A debit the server refused is a bug or an attack, never routine - the client
         /// checks affordability before recording one. Worth a loud log either way.
         /// </summary>
         /// <summary>The ids a reply's top-level <c>rejected</c> list names. Empty when it names none.</summary>
@@ -1973,7 +1973,7 @@ namespace GlimmerGrove.Cloud
         {
             var inner = e is AggregateException aggregate ? aggregate.Flatten().InnerException ?? e : e;
 
-            // Somebody walked away from a screen while its read was out — the ordinary end of
+            // Somebody walked away from a screen while its read was out - the ordinary end of
             // work, not a fault. Reported as anything else it would reach a player as "the
             // boards could not be reached", on a board they are no longer looking at, and it
             // would teach whoever reads the log to ignore a class of message that also carries
@@ -1982,7 +1982,7 @@ namespace GlimmerGrove.Cloud
                 return CloudResult.Failed(CloudFailure.Cancelled, "the caller gave up");
 
             // A deadline, not a choice: the network did not answer in time. Retryable and
-            // expected, which is exactly what Offline means to the scheduler — and the one
+            // expected, which is exactly what Offline means to the scheduler - and the one
             // answer that keeps a hung write from being reported as anything a player has to
             // act on. See CloudCancel.Within.
             if (inner is TimeoutException)
@@ -2013,7 +2013,7 @@ namespace GlimmerGrove.Cloud
                     // a re-authentication, where it is the answer that matters most: it is what
                     // a player picking the wrong entry out of an account chooser produces, and
                     // reporting it as an error would tell them the app is broken when they have
-                    // simply mistapped. Nothing has moved — see ReauthenticateAsync.
+                    // simply mistapped. Nothing has moved - see ReauthenticateAsync.
                     case AuthError.UserMismatch:
                         return CloudResult.Failed(CloudFailure.AccountMismatch, inner.Message);
                 }
@@ -2033,7 +2033,7 @@ namespace GlimmerGrove.Cloud
                     // `redeemPurchase` alone raises this, and only from the branch where the
                     // receipt exists against a different account. It is the one refusal here
                     // that no later state can turn into a success, which is what makes it safe
-                    // for the store queue to stop asking — see CloudFailure.AlreadyRedeemed.
+                    // for the store queue to stop asking - see CloudFailure.AlreadyRedeemed.
                     case FunctionsErrorCode.AlreadyExists:
                         return CloudResult.Failed(CloudFailure.AlreadyRedeemed, functions.Message);
                     case FunctionsErrorCode.Unavailable:

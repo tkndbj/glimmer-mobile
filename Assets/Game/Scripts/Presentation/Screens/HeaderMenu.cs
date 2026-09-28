@@ -9,7 +9,7 @@ namespace GlimmerGrove
     /// One row of a header drop-down: what it says, what colour it wears, and what it does.
     ///
     /// <b>Words rather than a domain type</b>, because this control carries rows that are not all
-    /// the same kind of thing — ways of playing, ladders inside one of them, and a workbench that
+    /// the same kind of thing - ways of playing, ladders inside one of them, and a workbench that
     /// is neither. The caller resolves its own text, which is what keeps <c>Loc</c> out of a row
     /// that has no key.
     /// </summary>
@@ -25,14 +25,14 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>It marks the row; it does not disable it.</b> A row a player cannot reach is still
-        /// somewhere they should be able to look — a switcher that hides a lane is one that
+        /// somewhere they should be able to look - a switcher that hides a lane is one that
         /// cannot advertise it, and the screen on the other side is where the wall is said in
         /// full (invariant 42a). What this buys is that nobody taps through expecting to play:
         /// the padlock is the wall, exactly as it is on the turret shelf (invariant 42e).
         /// </para>
         /// <para>
         /// <b>A row rather than a lane, because this control carries rows that are not all the
-        /// same kind of thing</b> — the type's own rule. Whoever builds the rows knows what a
+        /// same kind of thing</b> - the type's own rule. Whoever builds the rows knows what a
         /// wall means for the thing they are naming.
         /// </para>
         /// </summary>
@@ -91,7 +91,7 @@ namespace GlimmerGrove
         /// <summary>
         /// The shortest a row may be squeezed to, and how much air is kept under the list.
         ///
-        /// Below <see cref="MinRowH"/> a row's two lines — its name and its one-line tagline —
+        /// Below <see cref="MinRowH"/> a row's two lines - its name and its one-line tagline -
         /// stop being two lines and start being a smudge, so this is the number that says the
         /// control needs rethinking rather than shrinking again.
         /// </summary>
@@ -113,14 +113,14 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Puts a switcher in <paramref name="host"/>, centred on <paramref name="y"/> measured
-        /// down from the host's top edge, and hands back the pill it drew — or <c>null</c> when it
+        /// down from the host's top edge, and hands back the pill it drew - or <c>null</c> when it
         /// drew nothing.
         ///
         /// <paramref name="host"/> should be the screen's safe-area layer: this is chrome, and a
         /// control under a notch is a control nobody can read.
         /// </summary>
         /// <remarks>
-        /// <b>Null is the answer that matters</b> — it is what says the switcher is not on screen
+        /// <b>Null is the answer that matters</b> - it is what says the switcher is not on screen
         /// at all, which is exactly when a lesson pointing at it must not be spent.
         /// </remarks>
         public static RectTransform Build(RectTransform host, string skin, string label,
@@ -168,7 +168,7 @@ namespace GlimmerGrove
         /// <b>It leaves the way it arrived.</b> Nothing replaces it: it opens over a map that is
         /// already there and simply stops existing, so hiding it instantly is a list that vanishes
         /// mid-tap, which reads as a dropped frame rather than as a menu closing. It falls back
-        /// into the pill it came out of and is destroyed when that lands — and the veil keeps
+        /// into the pill it came out of and is destroyed when that lands - and the veil keeps
         /// eating taps for those few frames, with the close latched, or a second tap during the
         /// exit reaches the pill underneath and opens a second menu over the one still leaving.
         /// </para>
@@ -209,7 +209,7 @@ namespace GlimmerGrove
                                  new Vector2(0f, listY));
 
             // One group for the whole list, so the exit is a single fade rather than a fade per
-            // plate, rim, seat and line — which would be a dozen tweens racing to the same frame.
+            // plate, rim, seat and line - which would be a dozen tweens racing to the same frame.
             var group = list.gameObject.AddComponent<CanvasGroup>();
 
             var plate = UIKit.Img("Plate", list, Art.Round(28), new Color(.05f, .11f, .16f, .95f));
@@ -282,7 +282,7 @@ namespace GlimmerGrove
             float split = height * .165f;
 
             // The row's own hit area. UIKit.Img leaves raycastTarget off on everything it builds,
-            // so a row made only of pictures is a row no tap ever reaches — invisible in the
+            // so a row made only of pictures is a row no tap ever reaches - invisible in the
             // Editor's hierarchy and obvious the first time somebody presses it.
             var hit = row.gameObject.AddComponent<Image>();
             hit.color = new Color(0f, 0f, 0f, 0f);

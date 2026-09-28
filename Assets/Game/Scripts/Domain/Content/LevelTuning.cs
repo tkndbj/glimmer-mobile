@@ -19,7 +19,7 @@ namespace GlimmerGrove.Content
         /// <para>
         /// <b>They are thirds of the slack, and that is what keeps all three bands reachable.</b>
         /// A run is over at <see cref="DefaultBudgetFactor"/>, so everything a player can
-        /// actually score lives in <c>[par, par × 1.60]</c> — a slack of 0.60 par. Cutting it in
+        /// actually score lives in <c>[par, par × 1.60]</c> - a slack of 0.60 par. Cutting it in
         /// three puts three stars at 1.20, two at 1.40 and the end of the run at 1.60, each band
         /// exactly 0.20 par wide.
         /// </para>
@@ -27,7 +27,7 @@ namespace GlimmerGrove.Content
         /// <b>This is a retune and it carries its reason.</b> They were 1.35 and 2.00, chosen
         /// when the fail line was 2.60 and a clock decided most losses. Dropping the budget to
         /// 1.60 left the two-star line *outside* the survivable range, so one star became
-        /// arithmetically unreachable — every clear was worth two or three and the bottom band
+        /// arithmetically unreachable - every clear was worth two or three and the bottom band
         /// existed only in old records. A star band nothing can land in is the same fault
         /// invariant 5d names for mechanics: it rejects no run, so it is decoration.
         /// </para>
@@ -35,13 +35,13 @@ namespace GlimmerGrove.Content
         /// <b>What this does and does not do to the economy.</b> Earned credits derive from the
         /// star ledger, so what matters is the *ceiling*, and the ceiling is unmoved: three
         /// stars a level, 52 levels, exactly as before. What changed is how well you have to
-        /// play to reach it — which is the point. Do not reach for these to make the game
+        /// play to reach it - which is the point. Do not reach for these to make the game
         /// harder in general; that is the boards' job (invariant 5d) and the budget's. Move
         /// these only to keep the bands fitted inside the budget, and move all three together.
         /// </para>
         /// <para>
         /// <c>LevelValidator</c> and <c>Tools/verify/content.py</c> both prove the ordering
-        /// holds — <c>gold &lt; silver &lt; budget</c> — because the failure is silent: the
+        /// holds - <c>gold &lt; silver &lt; budget</c> - because the failure is silent: the
         /// numbers stay individually plausible and a whole band quietly stops existing.
         /// </para>
         /// </summary>
@@ -54,7 +54,7 @@ namespace GlimmerGrove.Content
         /// <para>
         /// <b>1.60, and it sits between the two star lines on purpose.</b> Three stars is
         /// <c>par × 1.35</c> and two is <c>par × 2.00</c>, so a budget of 1.60 means a run can
-        /// end while the player was still on course for two — which the older 2.60 and 2.30
+        /// end while the player was still on course for two - which the older 2.60 and 2.30
         /// values were explicitly shaped to prevent. That protection was removed deliberately
         /// (see <see cref="MoveBudget"/>): with the clock gone this is the only way a glade can
         /// be lost, and a fail line sitting past the point where a player has already stopped
@@ -65,7 +65,7 @@ namespace GlimmerGrove.Content
         /// <para>
         /// <b>The star lines were refitted to sit inside it</b>, and had to be. At 1.60 against
         /// the old 1.35/2.00 the two-star line was *outside* the survivable range, so one star
-        /// could never be scored — see <see cref="DefaultGoldFactor"/>. The three lines are now
+        /// could never be scored - see <see cref="DefaultGoldFactor"/>. The three lines are now
         /// even thirds of the slack this factor creates, so changing it means changing them:
         /// they are one decision in three numbers, and both validators prove the ordering.
         /// </para>
@@ -73,7 +73,7 @@ namespace GlimmerGrove.Content
         /// What keeps this fair rather than merely tight is that the meter counts
         /// <em>committed</em> wrong turns only. <c>BoardView.Undo</c> hands a turn back and is
         /// unlimited, and a hint charges none, so trying a crossing and taking it back is free
-        /// — which it has to be, because a straight conduit and a straight crossing read the
+        /// - which it has to be, because a straight conduit and a straight crossing read the
         /// same half a turn round (invariant 5c), so exploring is correct play here.
         /// </para>
         /// <para>
@@ -89,22 +89,22 @@ namespace GlimmerGrove.Content
         public const float Unlimited = -1f;
 
         /// <summary>
-        /// Room above par measured in moves rather than as a multiple of par. 0 — every mode but
-        /// one — means the budget is <c>par × budgetFactor</c>.
+        /// Room above par measured in moves rather than as a multiple of par. 0 - every mode but
+        /// one - means the budget is <c>par × budgetFactor</c>.
         ///
         /// <para>
         /// <b>It exists because a mistake does not always cost a fixed fraction of a board.</b>
         /// A glade's wrong turn is free: <c>Undo</c> refunds it, without limit, so the budget is
         /// only ever spent on turns the player meant. A weave's wrong channel costs the light it
         /// covered and leaves the grove exactly as it was, and two of them a grove are handed
-        /// back in full. A well's wrong drop is neither — it is permanent <em>and it makes the
+        /// back in full. A well's wrong drop is neither - it is permanent <em>and it makes the
         /// board worse</em>, because the wasted mote lands in the well and now has to be cooked
         /// to white like everything else. One mistake there costs about two drops, not one.
         /// </para>
         /// <para>
         /// So the room a mode needs is a <em>count</em>, not a proportion, and a proportion
-        /// cannot be made to serve: <c>par × 1.60</c> gives a par-2 well two drops of room —
-        /// one mistake — while giving a par-6 well four. Reported from play as "one wrong fall
+        /// cannot be made to serve: <c>par × 1.60</c> gives a par-2 well two drops of room -
+        /// one mistake - while giving a par-6 well four. Reported from play as "one wrong fall
         /// and it says out of turns", on the second level of the chapter, which is exactly where
         /// par is smallest. Raising the factor instead is worse in the other direction: 2.60
         /// fixes par 2 and hands a par-6 well ten wasted drops, at which point the fail state
@@ -114,7 +114,7 @@ namespace GlimmerGrove.Content
         /// The star lines stay multiples of par and are not touched by this. That is the whole
         /// division of labour: <b>stars measure how well a board was played, and the budget only
         /// stops a run that has become hopeless.</b> A generous fail line does not make a level
-        /// generous — it makes the stars the thing that is being asked for.
+        /// generous - it makes the stars the thing that is being asked for.
         /// </para>
         /// </summary>
         public readonly int Slack;
@@ -126,8 +126,8 @@ namespace GlimmerGrove.Content
         /// <para>
         /// <b>It may be resolved lazily, and one mode needs that.</b> A glade's par falls out of
         /// its grid for the cost of walking it, so it is worked out as the level is read. A
-        /// Lightfall well's is a <em>search</em> — the fewest drops that empty it without
-        /// flooding — which is milliseconds rather than microseconds, and a chapter body holds
+        /// Lightfall well's is a <em>search</em> - the fewest drops that empty it without
+        /// flooding - which is milliseconds rather than microseconds, and a chapter body holds
         /// ten of them. Paying for all ten while the map is opening is a hitch on a screen that
         /// nothing on it needs the answer for: par is read by the run screen and by the
         /// validator, and by nothing that draws a map node. So a mode may hand over a function
@@ -168,7 +168,7 @@ namespace GlimmerGrove.Content
         /// moves; nothing that produces a number a player is graded against reads them.
         ///
         /// <para>
-        /// <c>1.20f</c> is not 1.2 — it is 1.20000004768…, so <c>Mathf.CeilToInt(45 * 1.20f)</c>
+        /// <c>1.20f</c> is not 1.2 - it is 1.20000004768…, so <c>Mathf.CeilToInt(45 * 1.20f)</c>
         /// is <b>55</b> where the design says 54, and the same at par 50 and at every par where
         /// the product ought to land exactly on an integer. It shipped that way on four glades,
         /// with the offline mirror (which had always used integers) reporting the design's
@@ -176,7 +176,7 @@ namespace GlimmerGrove.Content
         /// a hundredth, so hundredths are exact and this class of fault cannot come back.
         /// </para>
         /// <para>
-        /// It is <c>WeaveGenerator</c>'s <c>1.3f</c> a second time — see *Hard-won facts* —
+        /// It is <c>WeaveGenerator</c>'s <c>1.3f</c> a second time - see *Hard-won facts* -
         /// and worse in one way: that one differed between .NET and Mono, so a diff could
         /// catch it, while this one is wrong the same way everywhere and only disagrees with
         /// arithmetic. IL2CPP is a third code generator again, which is reason enough on its
@@ -232,7 +232,7 @@ namespace GlimmerGrove.Content
         /// <summary>
         /// Tuning whose par is worked out the first time it is asked for. See <see cref="Par"/>.
         ///
-        /// <paramref name="findPar"/> must be pure and must answer the same number every time —
+        /// <paramref name="findPar"/> must be pure and must answer the same number every time -
         /// it is a search over a board that cannot change, and everything a player is graded
         /// against derives from what it returns.
         /// </summary>
@@ -253,7 +253,7 @@ namespace GlimmerGrove.Content
 
             // 0 means "not authored", which takes the default. Only a deliberate
             // negative turns the budget off, so a level cannot lose its fail state by
-            // omission — see the DTO convention in ContentDto.
+            // omission - see the DTO convention in ContentDto.
             BudgetFactor = budgetFactor == 0f ? DefaultBudgetFactor
                          : budgetFactor < 0f ? Unlimited
                          : budgetFactor;
@@ -284,7 +284,7 @@ namespace GlimmerGrove.Content
         /// <para>
         /// <b>An authored factor means exactly what it says.</b> This used to clamp to
         /// <c>SilverThreshold + 1</c> so that a run still earning stars could never be the run
-        /// that ended — a sound rule while the clock was the fail state and this was a backstop
+        /// that ended - a sound rule while the clock was the fail state and this was a backstop
         /// under somebody drumming. It is gone on purpose. The clock went (invariant 22), this
         /// became the only way to lose a glade, and a floor at the two-star line put the fail
         /// line beyond the point where the player had already stopped earning anything. The
@@ -296,7 +296,7 @@ namespace GlimmerGrove.Content
         /// Nothing bounds this now except the author, so a nonsensical value produces a
         /// nonsensical glade. <c>LevelValidator</c> and <c>Tools/verify/content.py</c> both
         /// report a budget at or under the three-star line, because that is the one setting
-        /// with no honest reading — every surviving run would be a three-star run, so the star
+        /// with no honest reading - every surviving run would be a three-star run, so the star
         /// ladder would stop existing rather than merely tighten.
         /// </para>
         /// </summary>
@@ -317,7 +317,7 @@ namespace GlimmerGrove.Content
         ///
         /// <para>
         /// <b>A precedence nobody can see is the thing this project keeps paying for.</b> When a
-        /// slack is given it wins outright, so a factor written beside it does nothing at all —
+        /// slack is given it wins outright, so a factor written beside it does nothing at all -
         /// which is <c>ChapterDto.order</c>'s trap, and the reason that field was kept rather
         /// than deleted: a number that silently means nothing is worse than a missing one,
         /// because somebody believes it. The validator asks this and refuses the level; it is
@@ -340,7 +340,7 @@ namespace GlimmerGrove.Content
         /// <para>
         /// <b>Turns alone, and that is the whole rule.</b> It used to be the worse of this and
         /// what a clock allowed, which meant the reading a thoughtful player got was almost
-        /// always the clock's — so the move thresholds, the only half that measures whether a
+        /// always the clock's - so the move thresholds, the only half that measures whether a
         /// glade was actually solved well, were dead weight for exactly the players who engage
         /// with the board. A puzzle that is graded on how fast it is tapped is not graded on the
         /// puzzle. See <see cref="GoldFactor"/> for what the thresholds mean.

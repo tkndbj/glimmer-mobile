@@ -17,8 +17,8 @@ namespace GlimmerGrove.Tests
     /// </para>
     /// <para>
     /// The cause is one missing line and it is worth stating exactly, because nothing else could
-    /// have found it. Every way a run ends latches the board — <c>FallView.Settle</c> latches it,
-    /// and <c>Concede</c> and <c>Lose</c> each latch it again before their panel goes up — and
+    /// have found it. Every way a run ends latches the board - <c>FallView.Settle</c> latches it,
+    /// and <c>Concede</c> and <c>Lose</c> each latch it again before their panel goes up - and
     /// <c>FallView.Begin</c> rebuilt everything <em>except</em> that flag. So the retry produced
     /// a fresh well behind a latch belonging to a run that no longer existed. It compiled, it
     /// validated, the whole suite was green, and the board looked perfectly correct: the only
@@ -26,8 +26,8 @@ namespace GlimmerGrove.Tests
     /// </para>
     /// <para>
     /// <b>The fix belongs in <c>Begin</c> rather than in the caller</b>, which is what makes this
-    /// test worth having rather than a note. There are three callers — the first build, a restart
-    /// and a retry — and only two of them happened to unlatch: <c>RunScreen.RestartLevel</c> runs
+    /// test worth having rather than a note. There are three callers - the first build, a restart
+    /// and a retry - and only two of them happened to unlatch: <c>RunScreen.RestartLevel</c> runs
     /// <c>Rewind(); Resume();</c> and the <c>Resume</c> is what cleared it, while
     /// <c>RetryAfterDefeat</c> is a mode's own override with no such pairing. A rule that holds
     /// only when the caller remembers is a rule the fourth caller breaks. <c>RippleView.Begin</c>
@@ -80,7 +80,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The chapter-three shape: a whorl with a yellow on one side and a cyan on the other,
         /// which is the pair whose union is white. One drop opens it, and on the next wave it
-        /// draws both in and leaves a white where it stood — so this board exercises the one
+        /// draws both in and leaves a white where it stood - so this board exercises the one
         /// event in the mode that moves two widgets to a cell neither of them was in.
         /// </summary>
         static FallLayout Whorled()
@@ -96,7 +96,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A host with a real rect, because <c>Begin</c> sizes the well from it — a board built
+        /// A host with a real rect, because <c>Begin</c> sizes the well from it - a board built
         /// against a zero rect is a board of nothing and would prove nothing here.
         /// </summary>
         RectTransform Host()
@@ -172,7 +172,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// A <c>Tween</c> is filed under the <c>UnityEngine.Object</c> its caller named, so
-        /// <c>KillAll(mote.Body)</c> says nothing at all about a tween owned by <c>mote.Rt</c> —
+        /// <c>KillAll(mote.Body)</c> says nothing at all about a tween owned by <c>mote.Rt</c> -
         /// they are two different objects and neither call reaches the other. The pool called the
         /// first; the collapse (<c>Slide</c>) uses the second, because a slide moves the
         /// transform. So a mote or a lens recycled while its slide was still running went into
@@ -183,7 +183,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// It is easy to hit rather than a corner: a slide is dealt a stagger by column, so it
         /// finishes up to a third of a beat after the wave that threw it, and the next wave is
-        /// already bursting by then. Nothing else here could have caught it — the model settles
+        /// already bursting by then. Nothing else here could have caught it - the model settles
         /// correctly (fuzzed at thirty thousand drops across the shipped chapter with no floating
         /// cell), every gate is green, and only the drawing is wrong.
         /// </para>
@@ -191,7 +191,7 @@ namespace GlimmerGrove.Tests
         /// Driven behaviourally rather than by asking the tween system what it holds: the claim
         /// is that a recycled widget is not <em>moved</em>, and the honest way to say that is to
         /// put it somewhere and let time pass. Reflection reaches the pool because it is private
-        /// on purpose — this is a fact about the pool rather than about its interface.
+        /// on purpose - this is a fact about the pool rather than about its interface.
         /// </para>
         /// </summary>
         [Test]
@@ -231,7 +231,7 @@ namespace GlimmerGrove.Tests
 
             Assert.AreEqual(placed, rt.anchoredPosition,
                             "a recycled widget was dragged off the cell it was just placed in by " +
-                            "a slide belonging to the run before it — which is a lens that " +
+                            "a slide belonging to the run before it - which is a lens that " +
                             "refuses to fall, on a board the model settled perfectly");
         }
 
@@ -242,7 +242,7 @@ namespace GlimmerGrove.Tests
         /// picture nobody was counting.
         ///
         /// <para>
-        /// A drop taken in by glass is absorbed — the stack does not grow — so the falling widget
+        /// A drop taken in by glass is absorbed - the stack does not grow - so the falling widget
         /// must be handed back and the lens's own widget left standing. <c>FallView.Drop</c> asked
         /// <c>Enriches</c>, which is false for glass, so it took the "came to rest on top" branch
         /// instead: the falling mote was written into the view's index over the lens, and the
@@ -254,7 +254,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// Driven through the real <c>PlayDrop</c> rather than by inspection, because the claim is
         /// about what is on the screen. Edit mode runs no coroutines, so the body is stepped by
-        /// hand — a wait is satisfied at once and a nested coroutine is pumped, which is what
+        /// hand - a wait is satisfied at once and a nested coroutine is pumped, which is what
         /// Unity does with a longer clock.
         /// </para>
         /// </summary>
@@ -270,7 +270,7 @@ namespace GlimmerGrove.Tests
             Census(view, "the board as it opens");
 
             // The exact sequence it was reported on: green onto the left pane, then blue onto the
-            // right one — which fires, strikes the left pane, and takes the whole board with it.
+            // right one - which fires, strikes the left pane, and takes the whole board with it.
             int lens = view.Run.Board.Index(1, 5);
             object before = WidgetAt(view, lens);
             Assert.IsNotNull(before, "the left pane should be drawn before anybody touches it");
@@ -281,7 +281,7 @@ namespace GlimmerGrove.Tests
             // **The identity is the half a head-count cannot see.** A drop glass takes in is
             // absorbed, so the pane keeps its own widget and the falling mote is handed back.
             // Routed down the "came to rest on top" branch instead, the falling mote is written
-            // into the index over the pane — which draws the cell as a plain green mote until the
+            // into the index over the pane - which draws the cell as a plain green mote until the
             // next repaint, plays the note for a mote that only stacked, and (before the branch
             // learned to reclaim) left the pane's own widget on the board for ever.
             Assert.AreSame(before, WidgetAt(view, lens),
@@ -304,7 +304,7 @@ namespace GlimmerGrove.Tests
         /// everything else.</b> A mote and a pane are handed back by the wave that removed them;
         /// a whorl opens on one wave and, on the next, takes <em>two other cells</em> with it and
         /// hands its own widget on to the mote they became. That is three more places a widget
-        /// can be dropped out of the index and left standing — the exact failure the lens shipped
+        /// can be dropped out of the index and left standing - the exact failure the lens shipped
         /// with, on the one structure in this mode with more of them than glass had.
         /// </summary>
         [Test]
@@ -377,7 +377,7 @@ namespace GlimmerGrove.Tests
 
             Assert.AreEqual(owned, drawn,
                             when + ": " + drawn + " widget(s) are drawn on the board and the view " +
-                            "owns " + owned + ". The difference is orphaned — still on screen, in " +
+                            "owns " + owned + ". The difference is orphaned - still on screen, in " +
                             "nobody's index, so it will never repaint, never fall and never leave");
 
             Assert.AreEqual(view.Run.Board.Motes, owned,

@@ -87,8 +87,8 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <c>RunLessons.WhileCovered</c>'s number and its reason, which this had gone without:
-        /// a chain is walked across seconds of a player's time and a panel they asked for —
-        /// a chest, an offer, a reward — can arrive between two of its links. Raised anyway the
+        /// a chain is walked across seconds of a player's time and a panel they asked for -
+        /// a chest, an offer, a reward - can arrive between two of its links. Raised anyway the
         /// tip lands underneath it (<c>ModalLayer.Teaching</c> is the bottom of the stack), where
         /// it cuts a spotlight nobody can see and is marked seen on a frame nobody looked at.
         /// Waiting costs nothing: none of these screens is running anything.
@@ -243,7 +243,7 @@ namespace GlimmerGrove
             if (queue == null || index >= queue.Count) { finished?.Invoke(); return; }
 
             // Something the player asked for is on top. Wait for it rather than teaching
-            // underneath it — see WhileCovered, and RunLessons.ShowLesson, whose rule this is.
+            // underneath it - see WhileCovered, and RunLessons.ShowLesson, whose rule this is.
             if (Flow.HasModalAbove(ModalLayer.Teaching))
             {
                 Tween.After(WhileCovered,

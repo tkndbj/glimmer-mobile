@@ -45,7 +45,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Repaints a button in place. Safe to call on a timer — the caption is only assigned
+        /// Repaints a button in place. Safe to call on a timer - the caption is only assigned
         /// when it actually changed, and the glyph beside it is only re-measured on the ticks
         /// where it really moved.
         /// </summary>

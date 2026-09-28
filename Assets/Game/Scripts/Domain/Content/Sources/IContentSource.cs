@@ -32,8 +32,8 @@ namespace GlimmerGrove.Content.Sources
     /// Somewhere content can be read from.
     ///
     /// Deliberately free of Unity types so the loading logic above it can be tested
-    /// without an Editor, and so a new delivery mechanism — a CDN, a publisher SDK,
-    /// a test double — only has to satisfy this one method.
+    /// without an Editor, and so a new delivery mechanism - a CDN, a publisher SDK,
+    /// a test double - only has to satisfy this one method.
     /// </summary>
     public interface IContentSource
     {

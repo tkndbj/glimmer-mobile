@@ -7,13 +7,13 @@ namespace GlimmerGrove.AssetPipeline
 {
     /// <summary>
     /// A claim on a set of addresses. While it is alive they stay loaded; when it is disposed
-    /// they are freed — unless somebody else still holds them.
+    /// they are freed - unless somebody else still holds them.
     ///
     /// <para>
     /// <b>This replaces the named scope, and the difference is reference counting.</b> A scope
     /// was a process-global bag keyed by a string: one screen "opened" it and one screen
     /// "closed" it, and because two screens can legitimately want the same art at once, closing
-    /// was never safe. The workarounds are worth listing, because all of them go away here — an
+    /// was never safe. The workarounds are worth listing, because all of them go away here - an
     /// address was claimed by the <em>first</em> scope to ask and silently shared by the second
     /// (so the second lost its art when the first closed); a marker interface
     /// <c>IDrawsGroveArt</c> existed so a leaving screen could ask whether the incoming one drew
@@ -30,7 +30,7 @@ namespace GlimmerGrove.AssetPipeline
     /// </para>
     /// <para>
     /// <b>Disposing is not always freeing.</b> An address whose last hold goes away is put aside
-    /// rather than released, and freed a few seconds later if nothing has asked for it again —
+    /// rather than released, and freed a few seconds later if nothing has asked for it again -
     /// see <see cref="AssetLibrary.GraceSeconds"/>. That is what keeps walking from the grove to
     /// its shop and back from being two full reloads.
     /// </para>
@@ -44,7 +44,7 @@ namespace GlimmerGrove.AssetPipeline
 
         internal AssetHold(string name) => Name = name ?? "hold";
 
-        /// <summary>What this hold is for. Diagnostics only — nothing keys on it.</summary>
+        /// <summary>What this hold is for. Diagnostics only - nothing keys on it.</summary>
         public string Name { get; }
 
         /// <summary>How many addresses this hold is keeping alive.</summary>
@@ -68,7 +68,7 @@ namespace GlimmerGrove.AssetPipeline
         ///
         /// <para>
         /// A replacement rather than a reload, which is what lets a screen call it again
-        /// whenever its own contents change — the grove re-runs it when a piece is placed, and
+        /// whenever its own contents change - the grove re-runs it when a piece is placed, and
         /// pays for the one new piece rather than tearing down the floor and fetching it back.
         /// </para>
         /// </summary>
@@ -104,7 +104,7 @@ namespace GlimmerGrove.AssetPipeline
         /// <b>The one case <see cref="LoadAsync"/> cannot serve.</b> The launch screen draws in
         /// the frame it is built, before the loader it is about to start has run at all, so its
         /// picture is fetched synchronously. Without this it would be treated as global art and
-        /// stay resident for the life of the process — a full-screen texture for a screen shown
+        /// stay resident for the life of the process - a full-screen texture for a screen shown
         /// exactly once.
         /// </para>
         /// </summary>

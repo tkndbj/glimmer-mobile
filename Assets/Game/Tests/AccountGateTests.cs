@@ -8,7 +8,7 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// Five lines of production code, and every one of the failures they prevent is
-    /// unrecoverable and invisible in the Editor — the Editor never authenticates, so a device
+    /// unrecoverable and invisible in the Editor - the Editor never authenticates, so a device
     /// holding the wrong account is a state that only exists on somebody's phone. That is the
     /// same argument <c>TweenCycle</c> made, and it is why <see cref="AccountGate"/> is a pure
     /// function with no Unity types in it: the table below can be walked offline, in full,
@@ -16,7 +16,7 @@ namespace GlimmerGrove.Tests
     /// </para>
     /// <para>
     /// The one to read first is <see cref="TwoDifferentAccountsAreRefused"/>. A sync is pull,
-    /// join, push, and the join is monotonic — so addressed to the wrong account it takes the
+    /// join, push, and the join is monotonic - so addressed to the wrong account it takes the
     /// better half of two strangers' saves and writes it over one of them.
     /// </para>
     /// </summary>
@@ -70,7 +70,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// Signing in with no session <em>creates an anonymous account</em>. Doing that on
         /// behalf of a save that already names somebody produces an account that can never
-        /// match it, so the device is refused for ever afterwards — silently abandoning a grove
+        /// match it, so the device is refused for ever afterwards - silently abandoning a grove
         /// the player believes is backed up. A cancelled consent sheet was enough to reach it.
         /// </para>
         /// </summary>

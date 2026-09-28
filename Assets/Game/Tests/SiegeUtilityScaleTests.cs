@@ -11,7 +11,7 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// <b>Why a fixture rather than a number somebody checks.</b> A chapter is made harder by
     /// surging what its raiders carry (invariant 37by), and nothing else in the mode moves with
-    /// it — so an authored 440 quietly means less on every chapter after the second, and there is
+    /// it - so an authored 440 quietly means less on every chapter after the second, and there is
     /// no reading anywhere that would say so. Every gate stays green: the level parses, par is
     /// derived from the surged health and is correct, the hold simulation never taps a utility at
     /// all, and the shop card prints no number. It is invisible until somebody plays chapter
@@ -21,7 +21,7 @@ namespace GlimmerGrove.Tests
     /// <b>So the invariant is written as arithmetic and pinned here</b>: a utility's damage and a
     /// raider's health go through <em>one</em> multiplier, so their ratio is exact on every
     /// chapter and on every wave of an endless run. These cases are deliberately about the ratio
-    /// rather than about any particular figure — a retune of 440 must not move one of them.
+    /// rather than about any particular figure - a retune of 440 must not move one of them.
     /// </para>
     /// </summary>
     public sealed class SiegeUtilityScaleTests
@@ -61,7 +61,7 @@ namespace GlimmerGrove.Tests
         /// The same board with its first wave standing on the hill.
         ///
         /// <b>The clock is walked rather than the raiders placed</b>, because a raider is minted by
-        /// the muster and it is the muster that hands it its surge — placing one here would be the
+        /// the muster and it is the muster that hands it its surge - placing one here would be the
         /// fixture deciding the very thing it is testing.
         /// </summary>
         static SiegeBoard Mustered(int tough)
@@ -143,7 +143,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// The hill it is measured against really did climb — the other half of the two cases
+        /// The hill it is measured against really did climb - the other half of the two cases
         /// above, which would both pass if <em>nothing</em> scaled.
         /// </summary>
         [Test]
@@ -157,7 +157,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// <b><c>UtilityKind.Storm</c>'s own promise, kept by the ratio rather than by a number.</b>
-        /// Its remarks say it hurts a boss and never fells one — which was a fact about 700 against
+        /// Its remarks say it hurts a boss and never fells one - which was a fact about 700 against
         /// 2,050 and would have stopped being true at the chapter that surged past it. Both sides
         /// climb together, so it is now true at every toughness this mode can reach.
         /// </summary>

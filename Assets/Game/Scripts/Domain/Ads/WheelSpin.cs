@@ -8,8 +8,8 @@ namespace GlimmerGrove.Ads
     ///
     /// <para>
     /// <b>Why this is in Domain and has a test.</b> It is the house rule every timing rule in
-    /// this game follows — <c>Cue</c>, <c>GroveGrowth</c>, <c>RippleTempo</c>, <c>CoachStroke</c>
-    /// — and it earns it more than most, because the one thing a wheel must never do is stop
+    /// this game follows - <c>Cue</c>, <c>GroveGrowth</c>, <c>RippleTempo</c>, <c>CoachStroke</c>
+    /// - and it earns it more than most, because the one thing a wheel must never do is stop
     /// somewhere other than where it said it would. That is not a feel question: the slice is
     /// what the server is granting, so a wheel resting half a degree into its neighbour is the
     /// panel disagreeing with the payout. Motion is the one subsystem whose failures show up
@@ -24,7 +24,7 @@ namespace GlimmerGrove.Ads
     /// Angles are Unity's: degrees, counter-clockwise positive, zero at twelve o'clock. The
     /// pointer is fixed at the top and the wheel turns under it, so a slice's resting rotation
     /// is simply the angle that brings its own centre back to zero. The travel is
-    /// <em>negative</em> — the wheel turns clockwise, which is the direction every wheel a
+    /// <em>negative</em> - the wheel turns clockwise, which is the direction every wheel a
     /// player has ever seen turns.
     /// </para>
     /// </summary>
@@ -40,7 +40,7 @@ namespace GlimmerGrove.Ads
         /// How long the spin takes, wherever it lands and however many slices there are.
         ///
         /// Three and a bit seconds is the shortest a spin can be and still have a tail worth
-        /// watching. It is deliberately not tuned per slice count — see the type summary.
+        /// watching. It is deliberately not tuned per slice count - see the type summary.
         /// </summary>
         public const float Seconds = 3.4f;
 
@@ -62,7 +62,7 @@ namespace GlimmerGrove.Ads
         /// pointer, in <c>[0, 360)</c>.
         ///
         /// Derived from the halves rather than from a centre offset added afterwards, so the
-        /// arithmetic is exact wherever the slice count divides 720 — which every shipped
+        /// arithmetic is exact wherever the slice count divides 720 - which every shipped
         /// count does.
         /// </summary>
         public static float Rest(int count, int index)
@@ -75,7 +75,7 @@ namespace GlimmerGrove.Ads
 
         /// <summary>
         /// Where the spin ends: clockwise through <see cref="Turns"/> revolutions and on to the
-        /// slice. Negative, because clockwise is negative, and never zero-length — a landing on
+        /// slice. Negative, because clockwise is negative, and never zero-length - a landing on
         /// the first slice still turns five times round.
         /// </summary>
         public static float Target(int count, int index)
@@ -88,7 +88,7 @@ namespace GlimmerGrove.Ads
         /// Quintic ease-out: fast enough at the start that the figures blur, slow enough at the
         /// end that the last two or three pegs go past one at a time and the player can see
         /// which one they are going to get. Monotone by construction, so the wheel never
-        /// visibly backs up on its way to a slice — which would read as the result being
+        /// visibly backs up on its way to a slice - which would read as the result being
         /// changed after the fact.
         /// </para>
         /// </summary>
@@ -108,7 +108,7 @@ namespace GlimmerGrove.Ads
         ///
         /// <para>
         /// The view fires a tick each time this changes, rather than counting boundaries for
-        /// itself — one arithmetic rule for where the slices are, asked by the thing that draws
+        /// itself - one arithmetic rule for where the slices are, asked by the thing that draws
         /// them and by the thing that sounds them. Two copies would be a wheel whose clicks
         /// drift out of step with its own edges, which is precisely the kind of fault nobody can
         /// name and everybody notices.
@@ -141,7 +141,7 @@ namespace GlimmerGrove.Ads
             if (percent <= WheelRules.MinPercent) return .55f;
 
             // Two hundred percent lands at about .8s and a thousand at the ceiling. Linear on
-            // purpose — a curve here would be tuning nobody could explain from the numbers.
+            // purpose - a curve here would be tuning nobody could explain from the numbers.
             float extra = (percent - WheelRules.MinPercent) / 400f;
             float seconds = .55f + extra * .55f;
 

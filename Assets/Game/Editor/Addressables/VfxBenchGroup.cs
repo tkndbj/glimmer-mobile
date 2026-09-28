@@ -18,7 +18,7 @@ namespace GlimmerGrove.EditorTools
     /// <b>Why the pack is not simply managed like the game's own art.</b>
     /// <see cref="AddressableAddresses"/> files everything under <c>Assets/Game/Art</c> into the
     /// global group, and the global group is downloaded by every player before they see
-    /// anything. This pack is 74 textures, 59 of them 2048 square — 362MB of runtime texture
+    /// anything. This pack is 74 textures, 59 of them 2048 square - 362MB of runtime texture
     /// memory as it ships, which is not a bundle, it is an uninstall. So it keeps its own root,
     /// its own group, and a switch.
     /// </para>
@@ -51,7 +51,7 @@ namespace GlimmerGrove.EditorTools
         /// <para>
         /// 2048 is the right size for a projectile filling a desktop screen and absurd for one
         /// judged at a fifth of the width of a phone: capping at 512 is a sixteenth of the memory
-        /// — 362MB down to about 23MB across the set — and is invisible at the size the bench
+        /// - 362MB down to about 23MB across the set - and is invisible at the size the bench
         /// draws them. It is set as a <em>platform override</em> rather than by lowering
         /// <c>maxTextureSize</c>, so the source art keeps its full resolution for
         /// <c>Tools/make_bud_fx.py</c>, which cuts the shipped Budburst frames out of the same
@@ -180,7 +180,7 @@ namespace GlimmerGrove.EditorTools
         /// <para>
         /// <b>The format is named rather than left Automatic, and that is not a detail.</b>
         /// Automatic follows the build's texture-compression setting, which for this project is
-        /// ETC2 — and ETC2 falls apart on exactly what a particle pack is made of: large, smooth,
+        /// ETC2 - and ETC2 falls apart on exactly what a particle pack is made of: large, smooth,
         /// near-black gradients. The smoke behind a fireball came back from the device as grey
         /// rectangles, which reads as a broken effect rather than as compression. ASTC 6x6 is
         /// better on gradients <em>and</em> smaller (3.56 bits a pixel against ETC2 RGBA's 8), and
@@ -251,7 +251,7 @@ namespace GlimmerGrove.EditorTools
         ///
         /// <para>
         /// Returns quietly when there is no group, which is the ordinary state of a clone that
-        /// has never imported the pack — a build gate that failed on a missing bench would make
+        /// has never imported the pack - a build gate that failed on a missing bench would make
         /// an optional tool a required one.
         /// </para>
         /// </summary>

@@ -12,7 +12,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>They exist because the colour lock gives the question stakes and does nothing about the
     /// cost of answering it.</b> Reading the hill meant separating a dozen small moving bodies in
-    /// four colours four hundred points away — two seconds of work under a clock that gives none,
+    /// four colours four hundred points away - two seconds of work under a clock that gives none,
     /// so the eye correctly refused and the mode played as "take the biggest match". Both of these
     /// put the answer where the eye already passes: the demand light is on the turret directly
     /// above the gems, and the forecast is drawn on the one stretch of hill that is empty at
@@ -40,7 +40,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// <b>A fallen turret shows nothing, whatever the hill is sending.</b> Its colour cannot
-        /// be answered any more, so a light saying "feed this" would be pointing at a wall — and
+        /// be answered any more, so a light saying "feed this" would be pointing at a wall - and
         /// a wall with an alarm on it is worse than a wall.
         /// </para>
         /// </summary>
@@ -182,7 +182,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Before a boss the row comes off entirely and the band names the boss instead.</b>
         /// Reported from play as confusing, and it is: the forecast answers <em>which colour do I
-        /// bank</em>, and before a boss the answer is not a colour — it is that a boss is coming,
+        /// bank</em>, and before a boss the answer is not a colour - it is that a boss is coming,
         /// which is different news and the loudest this mode has. A blightcaller and a warbringer
         /// ride the head of their last authored wave (invariant 37ad), so such a wave really does
         /// carry ordinary raiders whose counts are given up; that is the trade, taken deliberately,
@@ -206,12 +206,12 @@ namespace GlimmerGrove
         {
             if (_forecastGroup == null || _board == null) return;
 
-            // **And never while a chain banner is standing** — the other half of `Chain`'s rule,
+            // **And never while a chain banner is standing** - the other half of `Chain`'s rule,
             // which is that the hill holds one wide caption at a time and whichever is already up
             // keeps it. The case this half covers is a cascade that runs on into the breather it
             // started before: without it the band would fade in underneath a banner that has a
             // second still to go. Asked of the banner itself rather than of a flag, so there is
-            // nothing to clear — it nulls its own field when it is destroyed.
+            // nothing to clear - it nulls its own field when it is destroyed.
             // **And never while the hill is speaking**, which is the other half of the same
             // rule and the half that was missing. The band is pinned to the middle of the hill
             // and a banner floats up into it: measured (`SiegeView.Captions`), the two share

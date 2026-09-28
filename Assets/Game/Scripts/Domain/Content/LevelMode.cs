@@ -8,14 +8,14 @@ namespace GlimmerGrove.Content
     /// <para>
     /// <b>One field on <see cref="LevelDefinition"/> instead of one per mode</b>, and that is the
     /// whole point of it. A level used to carry a nullable <c>Layout</c>, a nullable
-    /// <c>Hollow</c> and a nullable <c>Lab</c>, exactly one of which was set — so every reader
+    /// <c>Hollow</c> and a nullable <c>Lab</c>, exactly one of which was set - so every reader
     /// had to know the full list, adding a mode meant editing every one of them, and "not a
     /// board, therefore a hollow" was correct right up until it silently was not. That reasoning
     /// crashed an Android build the day a third kind of level appeared.
     /// </para>
     /// <para>
     /// Implementations are immutable and hold only what their mode needs. Nothing here knows how
-    /// a level is <em>drawn</em> — that is <c>ModeLook</c>, on the other side of the layering
+    /// a level is <em>drawn</em> - that is <c>ModeLook</c>, on the other side of the layering
     /// line, because Domain must never reference Presentation.
     /// </para>
     /// </summary>
@@ -38,14 +38,14 @@ namespace GlimmerGrove.Content
     /// <para>
     /// <b>What a mode does <em>not</em> get for free is the run</b>, and it is worth being exact
     /// about that rather than reading the sentence above as more than it says. A run has a shared
-    /// vocabulary — how its defeat is named (<c>DefeatReason</c>), what a continue sells it
+    /// vocabulary - how its defeat is named (<c>DefeatReason</c>), what a continue sells it
     /// (<c>ContinueUnit</c> and <c>ContinueTable.AmountFor</c>), what it teaches
     /// (<c>Mechanic</c>), how it is drawn (<c>ModeLook</c>) and how it is proved fit to ship
-    /// (<c>ModeValidator</c>) — and every one of those is a registry a new mode is *added to*.
+    /// (<c>ModeValidator</c>) - and every one of those is a registry a new mode is *added to*.
     /// That is the design rather than a leak: the alternative is each mode carrying its own copy
     /// of what losing a run costs, which is what <c>RunScreen</c> was taken apart to prevent. The
     /// promise those registries make is not that they never grow, it is that growing one is
-    /// additive and the compiler names the place — an existing mode reads exactly what it read
+    /// additive and the compiler names the place - an existing mode reads exactly what it read
     /// before.
     /// </para>
     /// </summary>
@@ -58,7 +58,7 @@ namespace GlimmerGrove.Content
         /// Reads this mode's block out of a level, or reports why it cannot.
         ///
         /// Returning false with nothing added to <paramref name="problems"/> means "this level is
-        /// not mine" — the mapper then tries the next mode. Returning false <em>with</em> a
+        /// not mine" - the mapper then tries the next mode. Returning false <em>with</em> a
         /// problem means "this is mine and it is broken", which is refused rather than passed on,
         /// because a half-read level is not a degraded level, it is a different one nobody
         /// authored.
@@ -71,7 +71,7 @@ namespace GlimmerGrove.Content
         /// a malformed block still reaches its own reader and is told what is wrong with it,
         /// rather than falling through to another mode and being reported as something else.
         ///
-        /// <b>Never test the DTO's block for null</b> — <c>JsonUtility</c> instantiates a
+        /// <b>Never test the DTO's block for null</b> - <c>JsonUtility</c> instantiates a
         /// <c>[Serializable]</c> class field on every level in the game, so absence has to be a
         /// value a real block cannot hold.
         /// </summary>
@@ -86,11 +86,11 @@ namespace GlimmerGrove.Content
         // A mode used to declare `virtual void Validate(...)` here, and that one member kept six
         // hundred lines of content checks in every player build: the authoring entry point called
         // into the mode and the mode called back into it, so neither could leave. How a mode is
-        // proved fit to ship is now `ModeValidator`, in GlimmerGrove.Authoring — the same split
+        // proved fit to ship is now `ModeValidator`, in GlimmerGrove.Authoring - the same split
         // `ModeLook` already makes for how a mode is drawn, and for a similar reason.
 
         /// <summary>
-        /// What the level's record is counted in — turns, sparks, tiles. Used for the map badge
+        /// What the level's record is counted in - turns, sparks, tiles. Used for the map badge
         /// and the victory panel, which must word one run identically.
         ///
         /// A loc key stem rather than a word, so it translates and pluralises.
@@ -111,7 +111,7 @@ namespace GlimmerGrove.Content
         /// avoid.
         /// </para>
         /// <para>
-        /// Empty for every mode that draws itself, which is all of them but one — so this costs
+        /// Empty for every mode that draws itself, which is all of them but one - so this costs
         /// the others nothing, and <c>AssetManifest.ChapterAssets</c> asks once per chapter
         /// rather than once per level.
         /// </para>
@@ -126,7 +126,7 @@ namespace GlimmerGrove.Content
         /// <b>Because <see cref="Art"/> bounds memory by how much content a <em>mode</em> has
         /// rather than by what is on the screen</b>, which is invariant 7b's rule stopping one
         /// step short. It cost nothing while a mode's cast was a fixed set every level drew from;
-        /// it stops being free the moment a mode has objects only *some* chapters send — four
+        /// it stops being free the moment a mode has objects only *some* chapters send - four
         /// bosses are twelve flipbooks, and a chapter that sends one of them was paying for four.
         /// </para>
         /// <para>

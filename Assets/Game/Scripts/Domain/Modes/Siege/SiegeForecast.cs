@@ -7,7 +7,7 @@ namespace GlimmerGrove.Modes
     /// <b>A struct of counts rather than the wave itself</b>, because what a forecast is for is
     /// being read in a glance: the player needs <em>mostly blue, and a boss</em> in a quarter of a
     /// second, not a list of raiders in the order they will walk on. Weight is counted in raiders
-    /// rather than in health for the same reason — this is a shape, not a sum.
+    /// rather than in health for the same reason - this is a shape, not a sum.
     /// </para>
     /// </summary>
     public readonly struct SiegeForecast
@@ -79,7 +79,7 @@ namespace GlimmerGrove.Modes
         /// Reads wave <paramref name="wave"/> of <paramref name="layout"/>.
         ///
         /// <b>Through the layout's own readers</b>, so an endless lane's generated wave and an
-        /// authored one are the same question asked once — and so a boss riding the head of the
+        /// authored one are the same question asked once - and so a boss riding the head of the
         /// last authored wave is counted exactly where the muster will put it (invariant 37ad).
         /// </summary>
         public static SiegeForecast Of(SiegeLayout layout, int wave)

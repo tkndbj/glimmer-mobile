@@ -27,8 +27,8 @@ namespace GlimmerGrove
     /// the near-miss line, the heart row, the rewarded-video offer and the way back to the map;
     /// a sixth responsibility with its own latch, its own subscription and its own purchase is
     /// how a class becomes the one nobody dares change. The test to apply is the one
-    /// <c>RippleRun</c> was split against — <em>could this rule be proved without building the
-    /// other five</em> — and the answer here is now yes.
+    /// <c>RippleRun</c> was split against - <em>could this rule be proved without building the
+    /// other five</em> - and the answer here is now yes.
     /// </para>
     /// <para>
     /// <b>The split is by what each half knows.</b> This owns what the offer is, what it costs,
@@ -38,7 +38,7 @@ namespace GlimmerGrove
     /// and that is the whole surface.
     /// </para>
     /// <para>
-    /// <b>The offer is decided once, at construction.</b> That is not a detail — it is what
+    /// <b>The offer is decided once, at construction.</b> That is not a detail - it is what
     /// makes the analytics honest without a latch. A defeat panel is rebuilt whenever the gem
     /// balance changes the answer, and an offer recomputed inside <c>Build</c> would count a
     /// second impression every time somebody came back from the gem shelf, which is the
@@ -46,7 +46,7 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// It holds the panel, which is a <c>MonoBehaviour</c>, so <c>if (_panel)</c> is Unity's own
-    /// lifetime check — the same bargain <see cref="RunContinueFlow"/> makes with its screen.
+    /// lifetime check - the same bargain <see cref="RunContinueFlow"/> makes with its screen.
     /// </para>
     /// </summary>
     public sealed class HeartRescueFlow
@@ -72,7 +72,7 @@ namespace GlimmerGrove
         /// <para>
         /// It exists because the debit raises <c>PlayerProgression.Changed</c> <em>from inside
         /// itself</em>, so <see cref="OnBalanceChanged"/> runs while <see cref="Buy"/> is still
-        /// on the stack — and by then the gems are gone, which reads as "short of gems" and
+        /// on the stack - and by then the gems are gone, which reads as "short of gems" and
         /// would redraw the panel into the buy-gems state a frame before it closes.
         /// </para>
         /// </summary>
@@ -83,12 +83,12 @@ namespace GlimmerGrove
         /// <param name="heartsLeft">What the player holds now, after the loss was charged.</param>
         /// <param name="canRetry">
         /// True when there is still a heart to spend. Then there is no offer at all and nothing
-        /// is subscribed to — a player who can already play is never sold a way to play, which
+        /// is subscribed to - a player who can already play is never sold a way to play, which
         /// is the rule that keeps a defeat from being an advertisement. Answered by the panel
         /// because a free opening can be retried whatever the wallet says.
         /// </param>
         /// <param name="where">
-        /// Which panel is drawing this. It labels the two events and reaches nothing else — a
+        /// Which panel is drawing this. It labels the two events and reaches nothing else - a
         /// per-panel price would be the haggling invariant 23a refuses, and the two are met a
         /// minute apart on the same screen.
         /// </param>
@@ -146,12 +146,12 @@ namespace GlimmerGrove
         /// <b>It is not a continue and must not read as one.</b> A continue sells the run where
         /// it stood; this sells a heart, so the board is rebuilt and the attempt is a fresh one
         /// graded like any other (<c>HeartRescue</c>). The label therefore names hearts rather
-        /// than the board, and leads with what arrives — <c>ShopSupplyOverlay</c>'s order,
+        /// than the board, and leads with what arrives - <c>ShopSupplyOverlay</c>'s order,
         /// because a control that opens with a price reads as a demand.
         /// </para>
         /// <para>
         /// There is no third, disabled state: an offer that cannot be met at all is never
-        /// drawn, because a control that can never work is worse than no control — and on this
+        /// drawn, because a control that can never work is worse than no control - and on this
         /// panel of all panels, where the player has just been told they cannot play.
         /// </para>
         /// </summary>
@@ -185,7 +185,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// The debit is asked for again rather than trusted from the state the panel was built
-        /// in, and that is reachable rather than defensive — a sync landing between the build
+        /// in, and that is reachable rather than defensive - a sync landing between the build
         /// and the tap is the ordinary case. <c>HeartRescue.TryBuy</c> decides against the
         /// balance at the instant of the charge, which is the only instant that means anything.
         /// </para>
@@ -200,7 +200,7 @@ namespace GlimmerGrove
                 _buying = false;
 
                 // Reachable exactly as it is on the shop's own supply panel: another device
-                // spent, or a server sync revised the balance down. Redraw rather than close —
+                // spent, or a server sync revised the balance down. Redraw rather than close -
                 // the offer is still good, the player simply cannot meet it yet, and the panel
                 // already knows how to say that.
                 Audio.SfxVaried("back", .5f);
@@ -221,7 +221,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Stacked on top of the defeat panel rather than replacing it, so the thing they are
-        /// buying gems <em>for</em> is still there when they come back — and so that a purchase
+        /// buying gems <em>for</em> is still there when they come back - and so that a purchase
         /// which takes the app into the background for a minute disturbs nothing about the run
         /// that has just been written down. See <see cref="GemShopOverlay"/>.
         /// </para>
@@ -253,7 +253,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// A full rebuild rather than a label write, because the panel is a different height
-        /// with the button in a different state — and this project has already recorded what
+        /// with the button in a different state - and this project has already recorded what
         /// maintaining two sets of coordinates costs.
         /// </para>
         /// </summary>

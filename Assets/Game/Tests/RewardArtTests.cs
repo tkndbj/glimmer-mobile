@@ -14,11 +14,11 @@ namespace GlimmerGrove.Tests
     /// <b>It exists because a whole kind was missing and nothing anywhere said so.</b>
     /// <c>ChestDropKind.Utility</c> was added with the action bar (invariant 39b) and
     /// <c>RewardArt</c> was never taught about it, so <c>Icon</c> fell through its
-    /// <c>default</c> and answered <b>null</b> — and every caller passes what comes back
+    /// <c>default</c> and answered <b>null</b> - and every caller passes what comes back
     /// straight into a <c>UIKit.Img</c>, so what a player opening a chest actually met was a
     /// <b>white rectangle</b> where the firepot should be (invariant 7b). The compile was
     /// green, the whole suite was green, <c>content.py</c> was green, and
-    /// <c>Tools/verify/artnames.py</c> was green — because there is no missing name to find:
+    /// <c>Tools/verify/artnames.py</c> was green - because there is no missing name to find:
     /// the fault is a <em>name that was never written down at all</em>.
     /// </para>
     /// <para>
@@ -30,7 +30,7 @@ namespace GlimmerGrove.Tests
     /// <b>It checks the address and never the sprite</b>, which is <c>SkinsTests</c>' bargain
     /// for its reason: nothing is loaded in an offline run, so a sprite lookup answers null
     /// whatever the table says, and a check that cannot fail is not a check. Holding the
-    /// address to what <c>AssetManifest</c> preloads is what can be proved — and the manifest's
+    /// address to what <c>AssetManifest</c> preloads is what can be proved - and the manifest's
     /// own entries are literals, so they are already held to disk by <c>artnames.py</c>.
     /// </para>
     /// </summary>
@@ -101,7 +101,7 @@ namespace GlimmerGrove.Tests
         /// nothing.
         ///
         /// <para>
-        /// A chest table is <em>published</em>, so it can name a utility from a newer build —
+        /// A chest table is <em>published</em>, so it can name a utility from a newer build -
         /// invariant 20's "content from the future" arriving through the daily chest. The band
         /// reader proves an item id is present and cannot prove the catalog knows it, so the
         /// drawing has to survive one it does not.
@@ -121,7 +121,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// <c>NameKeys</c> is indexed by the enum's own value and <c>Utility</c> is one past
-        /// its end, so the array answered an empty string for every utility ever dropped — the
+        /// its end, so the array answered an empty string for every utility ever dropped - the
         /// same omission as the icon, one line further down, and just as silent: a chest card
         /// with a blank noun under it reads as a layout bug rather than as a missing case.
         /// </para>

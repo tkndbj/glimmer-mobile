@@ -16,7 +16,7 @@ namespace GlimmerGrove.Tests
     /// over): a challenge board reaches no content gate that can solve it, so the only thing
     /// that can say a row is winnable is a bot playing it against the real rules with the real
     /// hill walking. Each one asserts the run is <em>won</em>, that the line was standing when
-    /// it was, and prints the turns it took and the wards it had left — the margin the owner
+    /// it was, and prints the turns it took and the wards it had left - the margin the owner
     /// tunes against. A row the bot cannot win is a row a player is not promised.
     /// </para>
     /// <para>
@@ -288,7 +288,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A volley — a steady source's turn of fire — lands this turn or is spent. Banked, a
+        /// A volley - a steady source's turn of fire - lands this turn or is spent. Banked, a
         /// glade critter woken early stockpiled a turret against every raider to come and the
         /// hill stood empty for the rest of the run (the owner, 2026-09-26).
         /// </summary>
@@ -590,8 +590,8 @@ namespace GlimmerGrove.Tests
 
         // ------------------------------------------------------------------ the glade
         /// <summary>
-        /// A critter lit in its colour feeds its turret every turn it stays lit — the pipes'
-        /// sentence, said of the glade — and the light is the real board's: a red crystal wakes
+        /// A critter lit in its colour feeds its turret every turn it stays lit - the pipes'
+        /// sentence, said of the glade - and the light is the real board's: a red crystal wakes
         /// a red critter through a conduit turned home, and the turn that wakes it pays the red
         /// turret. The board is a 3x1 the mode's own parser reads.
         /// </summary>
@@ -608,7 +608,7 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(0, glade.LampsLit);
 
             // A one-armed crystal is not inert (four angles, four pictures), so it turns and
-            // costs a step — and wakes nobody, so it feeds nothing.
+            // costs a step - and wakes nobody, so it feeds nothing.
             var idle = run.Play(ChallengeInput.Tap(0));
             Assert.IsFalse(idle.Move.Refused);
             Assert.IsTrue(idle.Move.Turn);
@@ -651,8 +651,8 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// <b>Light never mixes on a challenge glade</b> (invariant 56l). The same three cells —
-        /// a red crystal, a conduit, a green crystal — are one orange network on the map and a
+        /// <b>Light never mixes on a challenge glade</b> (invariant 56l). The same three cells -
+        /// a red crystal, a conduit, a green crystal - are one orange network on the map and a
         /// dark one here, because there a blend is a light no turret answers.
         /// </summary>
         [Test]
@@ -1167,7 +1167,7 @@ namespace GlimmerGrove.Tests
         /// The band every glade row's slack must sit in, in hundredths of the bot's turns: a
         /// player that many times slower than the bot, every critter waking that much later,
         /// still wins, and one much slower does not. <b>The ceiling is the owner's</b>
-        /// (2026-09-26: "I can rotate conduits a lot") — the first cut forgave 1.6-2.0x, which is
+        /// (2026-09-26: "I can rotate conduits a lot") - the first cut forgave 1.6-2.0x, which is
         /// a hill a player can ignore; the floor keeps a hard row from asking for the bot's own
         /// line. <c>Tools/make_glade_challenges.py</c> tunes a medium row to 1.50x and a hard one
         /// (all four lanes) to 1.35x inside this band (<c>SLACK_BAND</c>, <c>TARGET</c>).
@@ -1264,7 +1264,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// <b>How slow can a player be and still win</b> — the hill's whole question, asked as a
+        /// <b>How slow can a player be and still win</b> - the hill's whole question, asked as a
         /// count (invariant 5d). The bot's run is replayed against a fresh hill at a slower
         /// pace: at pace <c>p</c> the player's <c>k</c>-th turn has done what the bot had done
         /// by turn <c>k·100/p</c>, so every critter wakes that much later and every raider has
@@ -1303,7 +1303,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// <b>The hill is never empty while the bot plays</b> — the owner's report (2026-09-26:
+        /// <b>The hill is never empty while the bot plays</b> - the owner's report (2026-09-26:
         /// "there are times that there are no enemies on the hill"), asked as a count. Every turn
         /// the bot walks starts with a raider standing, so every turn a player spends is a step
         /// somebody takes toward the line. Printed beside it: how many stand on an average turn.
@@ -1361,8 +1361,8 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// Every glade row is held to <b>the chapter validator</b>, with every warning an error.
-        /// <c>GladePuzzle.Fault</c> asks what a device needs — the row parses, nothing crumbles,
-        /// the solution wakes everything — and nothing more; the chapter's rules are the ones
+        /// <c>GladePuzzle.Fault</c> asks what a device needs - the row parses, nothing crumbles,
+        /// the solution wakes everything - and nothing more; the chapter's rules are the ones
         /// that ask whether a board is <em>fit</em>: a crossing that crosses nothing, a briar or a
         /// twist nothing on the board settles, a taproot that can never agree. A challenge is a
         /// glade a player meets once a day, so it is held to the same bar as one on the map.
@@ -1393,7 +1393,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// A raider walks at the turret of its colour, and only a critter of that colour feeds
-        /// that turret — so a wave naming a colour the board has no critter for sends a raider
+        /// that turret - so a wave naming a colour the board has no critter for sends a raider
         /// nothing on the board can answer. It would strike its post until the post fell and
         /// then walk on to the next, which is a loss the puzzle had no say in.
         /// </summary>

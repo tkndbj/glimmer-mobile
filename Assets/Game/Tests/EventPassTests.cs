@@ -12,7 +12,7 @@ namespace GlimmerGrove.Tests
     /// The shipped season as a contract.
     ///
     /// The shipped cases read <c>manifest.json</c> through <c>JsonUtility</c>, which is a
-    /// native call — so they need the Editor and the offline runner reports them as such
+    /// native call - so they need the Editor and the offline runner reports them as such
     /// (invariant 29e). Everything above them runs anywhere.
     /// </summary>
     public sealed class EventPassTests
@@ -23,7 +23,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <b>Found by being the one enabled season rather than by id</b>, which is not
         /// laziness: the shipped season repeats (<see cref="SeasonCycle"/>), so its manifest
-        /// `id` is a <em>stem</em> that the clock builds cycle ids on — and a fixture pinning
+        /// `id` is a <em>stem</em> that the clock builds cycle ids on - and a fixture pinning
         /// the stem would be pinning the one part of a season's identity that a rename touches
         /// while everything this file actually asserts stays true. It was pinned by id and it
         /// went red the day the season was renamed, with nothing about the ladder wrong.
@@ -36,7 +36,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// Forty rungs and eighty chests, which is the shape the season was commissioned as.
         /// Pinned as a count rather than as a table, because every tier on it is content and
-        /// retunable — what may not move without somebody meaning it is the <em>size</em>.
+        /// retunable - what may not move without somebody meaning it is the <em>size</em>.
         /// </summary>
         [Test]
         public void TheShippedSeasonHasFortyRungsOnBothTracks()
@@ -52,7 +52,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// Goals rise and every tier the ladder names is one the shipped table defines —
+        /// Goals rise and every tier the ladder names is one the shipped table defines -
         /// the one fault that is invisible in either file on its own, because the ladder is
         /// in the manifest and the tiers are in <c>progression.json</c>.
         /// </summary>
@@ -74,7 +74,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// The paid column has to be worth paying for, rung by rung — a pass that sold the
+        /// The paid column has to be worth paying for, rung by rung - a pass that sold the
         /// same chest the free track already gives is a product with nothing behind it. Read
         /// off the ladder's own ranks rather than typed, so a retune keeps this honest.
         /// </summary>
@@ -91,7 +91,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The ladder has to be climbable inside its own window by somebody who claims every
-        /// chest they are dealt — a season whose last rungs nobody can reach is a countdown
+        /// chest they are dealt - a season whose last rungs nobody can reach is a countdown
         /// with an unreachable prize on it. The same arithmetic the Editor validator warns
         /// on, pinned here so it fails a build rather than printing into a log.
         /// </summary>

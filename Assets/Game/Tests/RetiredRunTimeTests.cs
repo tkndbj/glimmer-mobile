@@ -22,8 +22,8 @@ namespace GlimmerGrove.Tests
     /// </para>
     /// <para>
     /// <b>A time already earned still merges.</b> <see cref="LevelRecord.BestMillis"/> is
-    /// retired rather than deleted — it is on the wire in both directions and removing a save
-    /// field is how a rollback loses data (invariant 12a) — so the join has to keep working
+    /// retired rather than deleted - it is on the wire in both directions and removing a save
+    /// field is how a rollback loses data (invariant 12a) - so the join has to keep working
     /// for the accounts that hold one. Smaller wins, zero is absent, and the join stays
     /// idempotent and order-independent like every other rule in <see cref="SaveMerge"/>
     /// (invariant 11).
@@ -88,7 +88,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// Recording a run leaves any stored time exactly where it was. Nothing measures play
-        /// time now, so the only way a time can change is by being lost — which is the one
+        /// time now, so the only way a time can change is by being lost - which is the one
         /// outcome keeping the field was meant to prevent.
         /// </summary>
         [Test]

@@ -286,6 +286,19 @@ ASSEMBLIES = [
                         "GlimmerGrove.Privacy", "GlimmerGrove.Telemetry",
                         "GlimmerGrove.Notifications"),
     )),
+    ("pres-ios", dict(
+        out="GlimmerGrove.Presentation.iOS",
+        src=sources("Assets/Game/Scripts/Presentation"),
+        # The same assembly with UNITY_IOS defined, for `notify-ios`'s reason: every native
+        # binding here (`ShareSheet`, `BackgroundGrace`) declares its `DllImport` behind
+        # `#if UNITY_IOS && !UNITY_EDITOR`, so the pass above compiles none of it and the first
+        # compiler to see a wrong signature would be Xcode's link step.
+        refs=ENGINE_RUNTIME + PKG_RUNTIME + [NETSTANDARD] + SHIMS
+             + compiled("GlimmerGrove.Domain", "GlimmerGrove.Cloud", "GlimmerGrove.Ads",
+                        "GlimmerGrove.Privacy", "GlimmerGrove.Telemetry",
+                        "GlimmerGrove.Notifications"),
+        defines=DEFINES + ["UNITY_IOS"],
+    )),
     ("authoring", dict(
         out="GlimmerGrove.Authoring",
         src=sources("Assets/Game/Authoring"),

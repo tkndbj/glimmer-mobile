@@ -161,7 +161,7 @@ namespace GlimmerGrove.Tests
             Assert.GreaterOrEqual(went, 0, "GO! was never owed");
             Assert.GreaterOrEqual(mustered, 0, "the first wave never mustered");
 
-            // GO! reads over an empty hill and the raiders walk on under it — which is what makes
+            // GO! reads over an empty hill and the raiders walk on under it - which is what makes
             // it an announcement rather than a caption on something already happening.
             Assert.Less(went, mustered,
                         "GO! was owed no earlier than the first raider, so the count no longer "

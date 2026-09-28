@@ -70,7 +70,7 @@ namespace GlimmerGrove.Progression
     ///
     /// Everything here is content, not code. Retuning rewards must not require a
     /// store review, and it is only safe to retune at all because XP is derived from
-    /// the player's ledger rather than accumulated into it — see
+    /// the player's ledger rather than accumulated into it - see
     /// <see cref="ProgressionLedger"/>.
     /// </summary>
     public sealed class ProgressionTable
@@ -145,7 +145,7 @@ namespace GlimmerGrove.Progression
         /// <b>Published with the curve because it <em>is</em> the curve seen from a second
         /// source.</b> Every other block here decides what a glade pays; this is the one thing
         /// in the game that adds XP without a star behind it, so a client holding a retuned rate
-        /// against an untuned curve is a keeper ladder climbing at a speed nobody wrote down —
+        /// against an untuned curve is a keeper ladder climbing at a speed nobody wrote down -
         /// the golden bands' argument, asked of the level rather than of the credits.
         /// </para>
         /// <para>
@@ -164,14 +164,14 @@ namespace GlimmerGrove.Progression
         /// multiplier <em>on</em> XP is the curve seen from the side, so a client holding a
         /// retuned percentage against an untuned ladder climbs at a speed nobody wrote down. It
         /// also prices a shop card and meters an advert, which are the two most retuned surfaces
-        /// in the game — see <see cref="XpBoostTable"/>.
+        /// in the game - see <see cref="XpBoostTable"/>.
         /// </para>
         /// </summary>
         public XpBoostTable XpBoost { get; }
 
         /// <summary>
-        /// What a bought keeper level costs (invariant 57). <see cref="KeeperLadder.Empty"/> — nothing
-        /// for sale — when the file carries no block, because a level sold against a ladder the
+        /// What a bought keeper level costs (invariant 57). <see cref="KeeperLadder.Empty"/> - nothing
+        /// for sale - when the file carries no block, because a level sold against a ladder the
         /// server was never told about is a debit refused and a level taken back.
         /// </summary>
         public KeeperLadder KeeperLevels { get; }
@@ -183,7 +183,7 @@ namespace GlimmerGrove.Progression
         /// <para>
         /// A rung asks about keeper levels, stars and waves, and every one of those is decided by
         /// a number in this same file. A ladder fetched apart from the curve would be a set of
-        /// goals measured against a game that had moved underneath them — the window the chest
+        /// goals measured against a game that had moved underneath them - the window the chest
         /// table and the ad payouts are published here to close, asked about a badge.
         /// </para>
         /// <para>
@@ -199,7 +199,7 @@ namespace GlimmerGrove.Progression
         /// reason and one of its own.
         ///
         /// A utility is granted by a chest and bought with gems, so its strength and its price
-        /// are one number seen from two sides of this file — and a client holding a retuned
+        /// are one number seen from two sides of this file - and a client holding a retuned
         /// price against an untuned drop rate has a consumable that is either free or pointless.
         /// See <see cref="UtilityCatalog"/>.
         /// </summary>
@@ -209,7 +209,7 @@ namespace GlimmerGrove.Progression
         /// The turret roster, published with the curve for the utilities' reason and one more.
         ///
         /// A turret is bought with credits or gems, and a credit price is gated on a keeper level
-        /// that this same table decides — so a client holding a retuned price against an untuned
+        /// that this same table decides - so a client holding a retuned price against an untuned
         /// XP curve would have a shelf whose gates do not line up with the ladder they are
         /// measured against. See <see cref="WardCatalog"/>.
         /// </summary>
@@ -240,7 +240,7 @@ namespace GlimmerGrove.Progression
 
         /// <summary>
         /// How often a glade pays more than the reward rule says. Published with the curve
-        /// because it <em>is</em> the curve seen from another angle — the average multiplier
+        /// because it <em>is</em> the curve seen from another angle - the average multiplier
         /// multiplies every credit figure above it, so tuning one without the other moves
         /// the economy by a factor nobody wrote down.
         /// </summary>
@@ -250,7 +250,7 @@ namespace GlimmerGrove.Progression
         /// The heart gate, published with the curve because it multiplies every number in
         /// it. XP and credits are paid per finished glade; the gate decides how many
         /// glades a day a player gets to finish. Retuning one without the other changes the
-        /// economy by a factor nobody wrote down — the same argument the golden bands make,
+        /// economy by a factor nobody wrote down - the same argument the golden bands make,
         /// one level up.
         /// </summary>
         public HeartRuleTable Hearts { get; }
@@ -262,7 +262,7 @@ namespace GlimmerGrove.Progression
         /// many of those attempts they can buy their way out of. Both multiply the number of
         /// glades finished per day, which is what every credit figure above them is paid per,
         /// so tuning one without the other in front of you moves the economy by a factor
-        /// nobody wrote down — the argument <see cref="Hearts"/> already makes, for the
+        /// nobody wrote down - the argument <see cref="Hearts"/> already makes, for the
         /// resource sitting on the other side of the same decision.
         /// </summary>
         public HintRuleTable Hints { get; }
@@ -298,7 +298,7 @@ namespace GlimmerGrove.Progression
         /// Published with the curve because it is what every number above it is paid
         /// <em>per</em>. The reward rule says what a glade is worth, the heart gate says how
         /// many a player gets to attempt in a day, and this says how many are worth attempting
-        /// at all — a gate tightened without the curve in front of you is a game whose next
+        /// at all - a gate tightened without the curve in front of you is a game whose next
         /// chapter costs more replays than the replays pay for. See <see cref="ChapterGateTable"/>.
         /// </summary>
         public ChapterGateTable ChapterGate { get; }
@@ -310,7 +310,7 @@ namespace GlimmerGrove.Progression
         /// Rides with the curve for the reason every other block here does: one table, one
         /// fetch, one atomic swap. A separately-loaded price would let a player briefly hold a
         /// new continue cost against an old heart gate, and those two numbers only mean
-        /// anything beside each other — what a second chance is worth is entirely a question
+        /// anything beside each other - what a second chance is worth is entirely a question
         /// of what losing costs. See <see cref="ContinueTable"/>.
         /// </para>
         /// </summary>
@@ -318,7 +318,7 @@ namespace GlimmerGrove.Progression
 
         /// <summary>
         /// A usable curve for when no file could be read. The game stays playable and
-        /// the validator fails the build, which is the right way round — a content
+        /// the validator fails the build, which is the right way round - a content
         /// problem should stop a build, never a player's session.
         /// </summary>
         public static readonly ProgressionTable Default = Build(
@@ -420,7 +420,7 @@ namespace GlimmerGrove.Progression
         /// Builds a table from an already-parsed file.
         ///
         /// Split from <see cref="TryRead"/> so the reward rules can be exercised without
-        /// a JSON serialiser in the way — the shared reward vectors are run offline
+        /// a JSON serialiser in the way - the shared reward vectors are run offline
         /// against this, where <c>JsonUtility</c> does not exist.
         /// </summary>
         public static bool TryBuild(ProgressionDto dto, out ProgressionTable table, List<string> problems)
@@ -430,7 +430,7 @@ namespace GlimmerGrove.Progression
 
             if (dto == null) { problems.Add("progression file is empty"); return false; }
 
-            // Its own schema, not the catalog's — see ProgressionSchema for why.
+            // Its own schema, not the catalog's - see ProgressionSchema for why.
             string schemaProblem = ProgressionSchema.Explain(dto.schemaVersion);
             if (schemaProblem != null) { problems.Add("progression file " + schemaProblem); return false; }
 
@@ -495,7 +495,7 @@ namespace GlimmerGrove.Progression
                 }
             }
 
-            // Optional, and reported through the same problems list — a daily block that
+            // Optional, and reported through the same problems list - a daily block that
             // does not read is a content error worth failing a build over, but never a
             // reason to discard a perfectly good XP curve.
             var daily = DailyChestTable.Resolve(dto.daily, problems);
@@ -506,26 +506,26 @@ namespace GlimmerGrove.Progression
             var ads = AdRewardTable.Resolve(dto.ads, problems);
 
             // And once more. Of the four optional blocks this is the one whose absence is
-            // least visible — every glade simply pays exactly what the rule says, which is
-            // a working game — so it must be reported loudly and never allowed to be fatal.
+            // least visible - every glade simply pays exactly what the rule says, which is
+            // a working game - so it must be reported loudly and never allowed to be fatal.
             var golden = GoldenTable.Resolve(dto.golden, problems);
 
             // And once more, for the block with the widest blast radius. An unreadable
             // hearts block costs the live pacing of the gate and nothing else; it must not
             // take the curve or any of the four tables above it down with it, and it must
-            // never be able to leave the game unplayable — which is why every field in it
+            // never be able to leave the game unplayable - which is why every field in it
             // clamps to a built-in rather than rejecting the block.
             var hearts = HeartRuleTable.Resolve(dto.hearts, problems);
 
             // And once more, for the gate's other half. An unreadable hints block costs the
-            // live pacing of the hint pool and nothing else — every field clamps to a
+            // live pacing of the hint pool and nothing else - every field clamps to a
             // built-in rather than rejecting the block, so the worst case is a pool that
             // refills at the shipped rate instead of the published one.
             var hints = HintRuleTable.Resolve(dto.hints, problems);
 
             // And once more, for the only block whose failure costs real money rather than
-            // live tuning. An unreadable product is dropped by name rather than clamped —
-            // see StoreCatalog.Resolve — so the worst case is a shelf with a card missing
+            // live tuning. An unreadable product is dropped by name rather than clamped -
+            // see StoreCatalog.Resolve - so the worst case is a shelf with a card missing
             // from it, which is visible at a glance, instead of a card promising an amount
             // the server would refuse to honour.
             var store = StoreCatalog.Resolve(dto.store, problems);
@@ -537,7 +537,7 @@ namespace GlimmerGrove.Progression
 
             // And once more, for the block that paces the content rather than the economy. An
             // unreadable chapter gate costs the live pacing of how a catalog opens up and
-            // nothing else — the built-in gate is a working game — and it clamps rather than
+            // nothing else - the built-in gate is a working game - and it clamps rather than
             // rejecting, because the one value that must never be reachable by a typo is a
             // requirement no amount of play could meet.
             var chapterGate = ChapterGateTable.Resolve(dto.chapterGate, problems);
@@ -545,12 +545,12 @@ namespace GlimmerGrove.Progression
             // And the price of a second chance, which is neither an economy block nor a
             // pacing one but sits between them: it decides what losing actually costs, so it
             // is tuned against the heart gate above rather than against the shop below. An
-            // unreadable block costs live tuning and never the feature — see ContinueTable.
+            // unreadable block costs live tuning and never the feature - see ContinueTable.
             var carryOn = ContinueTable.Resolve(dto.continueRun, problems);
 
             // And the consumables, which is the block that sits across two others: a utility
             // drops out of a chest and is bought with gems, so it is only meaningful beside
-            // both. An unreadable block costs live tuning and never the feature — the built-in
+            // both. An unreadable block costs live tuning and never the feature - the built-in
             // catalog is a working bar.
             var utilities = UtilityCatalog.Resolve(dto.utilities, problems);
 
@@ -567,7 +567,7 @@ namespace GlimmerGrove.Progression
 
             // And the slates. Read late because their chests are read with the daily
             // table's own band reader, and an unreadable block costs the live slate and
-            // never the feature — the built-in slate is a working screen.
+            // never the feature - the built-in slate is a working screen.
             var tasks = TaskTable.Resolve(dto.tasks, problems);
 
             // And the same bargain again. An unreadable streak ladder costs the live
@@ -575,7 +575,7 @@ namespace GlimmerGrove.Progression
             // down with it.
             //
             // Read *after* the slates on purpose: a streak night may pay a chest, and the
-            // tier it names is one of theirs (invariant 45 — naming a tier makes one
+            // tier it names is one of theirs (invariant 45 - naming a tier makes one
             // published disclosure the odds for every night that pays it). Resolving it
             // earlier would have made the streak author a second chest ladder nobody would
             // remember to retune beside the first.
@@ -586,8 +586,8 @@ namespace GlimmerGrove.Progression
             // ladder and never the screen, and an authored-empty one withdraws the feature.
             var referral = ReferralTable.Resolve(dto.referral, tasks.Tier, problems);
 
-            // And the Infinite lane's rate. The same bargain as every optional block above it —
-            // an unreadable one costs the live tuning and never the feature — with one extra
+            // And the Infinite lane's rate. The same bargain as every optional block above it -
+            // an unreadable one costs the live tuning and never the feature - with one extra
             // reason to be careful about the fallback: this is the only block whose absence makes
             // the *server* compute a different keeper level than the device does, which shows up
             // as a published card quietly missing whatever that level gated rather than as an
@@ -601,7 +601,7 @@ namespace GlimmerGrove.Progression
 
             // **Two numbers describing one window, held together here because nothing else can
             // see both.** The advert's `amount` is what the content file says a view pays, and
-            // `xpBoost.watchedHours` is the length `XpBoost.GrantWatched` actually opens — it has
+            // `xpBoost.watchedHours` is the length `XpBoost.GrantWatched` actually opens - it has
             // to be the table's, because the cooldown is derived by subtracting that same figure
             // from the stored deadline (`XpBoost.WatchedReadyAt`). If the two drift, the advert
             // advertises one window, the player gets another, and the cooldown is measured
@@ -622,13 +622,13 @@ namespace GlimmerGrove.Progression
             // `WardStars.Resolve` two lines up in spirit and for its reason: nothing that asks
             // this table a question needs it, so threading it through would be an eighteenth
             // argument for the benefit of no caller. It is also the one block here that reaches
-            // no server — see `NotificationsDto`.
+            // no server - see `NotificationsDto`.
             Notifications.NotificationTable.Resolve(dto.notifications, problems);
 
             // And the rank ladder. Read last because it is the one block that is about all the
             // others: a rung asks for stars this table's rules pay for, a keeper level its curve
             // decides and a wave its Infinite rate is measured in. An unreadable ladder costs the
-            // badges and never the game — there is no built-in one, deliberately (`RankLadder`).
+            // badges and never the game - there is no built-in one, deliberately (`RankLadder`).
             var ranks = RankLadder.Resolve(dto.ranks, problems);
 
             // And the price of a keeper level. Read against the curve because it names levels

@@ -9,22 +9,22 @@ namespace GlimmerGrove.Modes
     /// distinction has to exist somewhere, and every other place it could have gone is worse. A
     /// parallel <c>bool[]</c> beside <c>_cells</c> would be a second array for <c>Fork</c>,
     /// <c>Settle</c> and <c>Signature</c> to keep in step, and the search forks hundreds of
-    /// thousands of boards — one of those three forgetting it is a divergence nothing could see,
+    /// thousands of boards - one of those three forgetting it is a divergence nothing could see,
     /// because a board that settles differently still settles. A sentinel inside the colour mask
     /// would collide with <see cref="Energy.All"/> and burst.
     /// </para>
     /// <para>
     /// So a lens is a bit <em>above</em> the three channels, and it carries its charge in the
-    /// three below. Everything that reads a cell for occupancy — gravity, the mote count, the
-    /// brim, the fingerprint — asks the same "non-zero" question it always did and is correct
+    /// three below. Everything that reads a cell for occupancy - gravity, the mote count, the
+    /// brim, the fingerprint - asks the same "non-zero" question it always did and is correct
     /// with no change at all. Everything that reads a cell as <em>light</em> asks
     /// <see cref="IsMote"/>, and everything that reads it as glass asks <see cref="IsLens"/>.
     /// </para>
     /// <para>
     /// <b><see cref="Wants"/> is the one thing both kinds answer the same way, and that is the
     /// mechanic.</b> A mote wants what it needs to reach white and <em>burst</em>; a lens wants
-    /// what it needs to reach white and <em>fire</em>. One sentence covers both — light fills a
-    /// thing up and then it goes off — which is why the lens needed no new rule taught, only a
+    /// what it needs to reach white and <em>fire</em>. One sentence covers both - light fills a
+    /// thing up and then it goes off - which is why the lens needed no new rule taught, only a
     /// new consequence.
     /// </para>
     /// <para>
@@ -33,7 +33,7 @@ namespace GlimmerGrove.Modes
     /// played and both came back as the same complaint: they were the lens again. A mirror only
     /// ever bent somebody else's beam, so on a board with no glass it did nothing at all. A wick
     /// held one authored colour and washed it into the four cells beside it when any light
-    /// touched it — which is a <em>burst</em> with the colour changed, on an object with no
+    /// touched it - which is a <em>burst</em> with the colour changed, on an object with no
     /// decision in it: its colour was fixed by the author, its trigger was free, and the player
     /// never chose anything about it at all. See <see cref="Whorl"/> for what replaced them, and
     /// why it is a different kind of object rather than a stronger one.
@@ -48,7 +48,7 @@ namespace GlimmerGrove.Modes
         /// A lens: one bit above the three channels, so it is occupied and is not light.
         ///
         /// It can never equal <see cref="Energy.All"/>, which is what keeps "a mote that reached
-        /// white bursts" correct for glass with no clause of its own — glass reaching white is
+        /// white bursts" correct for glass with no clause of its own - glass reaching white is
         /// <see cref="Full"/>, a different value and a different consequence.
         /// </summary>
         public const int Lens = 8;
@@ -72,7 +72,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>It is the mode's own arithmetic applied to a pair of operands it never had.</b>
-        /// Everything in Lightfall is <c>|</c> — a drop adds one channel to a mote, a wash adds
+        /// Everything in Lightfall is <c>|</c> - a drop adds one channel to a mote, a wash adds
         /// one channel to a neighbour, a beam adds all three. In every one of those the second
         /// operand is a <em>colour</em>. A whorl is the only place two <em>motes</em> are ever
         /// combined, so a cyan and a red that would each have needed a drop of their own become
@@ -82,19 +82,19 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>It pulls sideways, and that is a rule about gravity rather than a choice.</b> The
         /// well falls; the one direction nothing here ever travels in is across. A lens fires
-        /// sideways for exactly this reason — up is the open air and down is the thing holding it
-        /// up — and a whorl is that same observation turned into a verb. It is the only object in
+        /// sideways for exactly this reason - up is the open air and down is the thing holding it
+        /// up - and a whorl is that same observation turned into a verb. It is the only object in
         /// this mode that <em>moves</em> a mote, which is what makes it unmistakable on the
         /// board: two lights slide together and fuse.
         /// </para>
         /// <para>
-        /// <b>What makes it hard is the pair, not the trigger.</b> Any light opens a whorl — a
-        /// burst beside it, a beam, or a drop straight onto it — for the reason the wick was
+        /// <b>What makes it hard is the pair, not the trigger.</b> Any light opens a whorl - a
+        /// burst beside it, a beam, or a drop straight onto it - for the reason the wick was
         /// given that rule and the lens had one added after a player was stranded (invariant
         /// 26f): an object only a chain can reach is an object that can strand a well. The price
         /// is paid somewhere else entirely. What a whorl gives back is decided by <em>what is
         /// standing either side of it at the instant it turns</em>, and the well collapses under
-        /// every chain — so the player is engineering two particular motes into two particular
+        /// every chain - so the player is engineering two particular motes into two particular
         /// cells and then choosing the moment. A lens asks for three drops of three colours in
         /// any order at all; a whorl asks for one arrangement, which is a harder and a far more
         /// interesting thing to ask for.
@@ -107,7 +107,7 @@ namespace GlimmerGrove.Modes
         /// it removable and the well winnable.
         /// </para>
         /// <para>
-        /// It holds no channels of its own — bits nought to two are always clear on one — so
+        /// It holds no channels of its own - bits nought to two are always clear on one - so
         /// <see cref="Wants"/> is nought for it and it can never be enriched, charged or burst.
         /// </para>
         /// </summary>
@@ -118,7 +118,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// A bit on the cell rather than a parallel array, so <c>Fork</c>, <c>Settle</c> and
-        /// <c>Signature</c> carry it for nothing — which is the whole reason the lens's own
+        /// <c>Signature</c> carry it for nothing - which is the whole reason the lens's own
         /// "struck" flag was the awkward part of that mechanic. It is never authored: a board
         /// that begins turning is a board that rearranges itself before anybody has touched it.
         /// </para>
@@ -154,7 +154,7 @@ namespace GlimmerGrove.Modes
         public static bool IsLit(int cell) => (cell & Lit) != 0;
 
         /// <summary>
-        /// Whether this is a mote of light — the only kind that can be enriched, burst, or drawn
+        /// Whether this is a mote of light - the only kind that can be enriched, burst, or drawn
         /// into a whorl.
         ///
         /// <b>Both other kinds are excluded, and each had to be added when it arrived.</b> Read
@@ -169,7 +169,7 @@ namespace GlimmerGrove.Modes
 
         /// <summary>
         /// The channels this cell still lacks before it goes off. Nought for bare ground and for
-        /// a whorl, which never fills up — it opens, which is a different thing entirely.
+        /// a whorl, which never fills up - it opens, which is a different thing entirely.
         /// </summary>
         public static int Wants(int cell)
             => cell == Empty || IsWhorl(cell)
@@ -183,7 +183,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>The one question three callers ask, said once here rather than three times
         /// there.</b> <c>FallBoard.Landing</c>, <c>FallBoard.Takes</c> and the view's ghost all
-        /// need it, and the version spelt out at each of them — <c>(cell | colour) != cell</c> —
+        /// need it, and the version spelt out at each of them - <c>(cell | colour) != cell</c> -
         /// is right for a mote, right for a lens and wrong for a whorl, which holds no channels
         /// at all and whose answer does not depend on the colour.
         /// </para>
@@ -191,7 +191,7 @@ namespace GlimmerGrove.Modes
         /// <b>A drop opens an unlit whorl, whatever colour it is</b>, and that is a rule rather
         /// than a convenience: it is what stops a well ever becoming unwinnable. A whorl is only
         /// otherwise reached by a chain, and a player who cleared every mote around one would be
-        /// left tapping at a board that could not be finished — which is exactly the state the
+        /// left tapping at a board that could not be finished - which is exactly the state the
         /// lens shipped with and had to have a valve added for (invariant 26f). Here the valve is
         /// the rule from the start.
         /// </para>
@@ -206,7 +206,7 @@ namespace GlimmerGrove.Modes
 
         /// <summary>
         /// The letter this cell is authored with. Light is upper case, glass is lower, and a
-        /// whorl is a spiral — so a board says at a glance what is made of what.
+        /// whorl is a spiral - so a board says at a glance what is made of what.
         ///
         /// A whorl that has caught writes as an ordinary one: <see cref="Lit"/> is state rather
         /// than content, and it cannot be authored.
@@ -231,7 +231,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>Pre-charged glass is a chapter's difficulty dial, which is why it is authorable at
         /// all.</b> A drop's whole chain carries that drop's colour, so an empty lens needs three
-        /// separate drops of three separate colours each engineered to burst beside it —
+        /// separate drops of three separate colours each engineered to burst beside it -
         /// measured, that leaves 7 boards in 90 solvable where two-thirds-full glass leaves 50.
         /// </para>
         /// <para>
@@ -265,7 +265,7 @@ namespace GlimmerGrove.Modes
     /// <para>
     /// <b>It exists so the view can draw the shot where and when it happened.</b> A drop settles
     /// the whole cascade before a single frame is drawn (<c>FallRun.Drop</c>), so the board the
-    /// screen can read carries no time at all — and a beam is the one thing in this mode whose
+    /// screen can read carries no time at all - and a beam is the one thing in this mode whose
     /// whole point is that it <em>travelled</em>. Budburst paid for this lesson twice by asking
     /// the settled board which neighbour was bare and drawing lightning out of cells that had
     /// never held anything: the model has to say what happened, or the view will invent it.
@@ -285,7 +285,7 @@ namespace GlimmerGrove.Modes
 
         /// <summary>
         /// How many cells it crossed. As many as the well is wide for one that leaves it, and the
-        /// endpoint is then one cell outside the wall — which is exactly where it should go out.
+        /// endpoint is then one cell outside the wall - which is exactly where it should go out.
         /// </summary>
         public readonly int Steps;
 
@@ -318,7 +318,7 @@ namespace GlimmerGrove.Modes
     /// <para>
     /// <b>It exists for <see cref="FallBeam"/>'s reason.</b> The model settles the whole cascade
     /// before a frame is drawn, so the board a screen can read holds the position the chain
-    /// <em>ends</em> in — and a merge is two motes that were somewhere else a moment ago. Asked
+    /// <em>ends</em> in - and a merge is two motes that were somewhere else a moment ago. Asked
     /// of the settled board, "which motes did this whorl take" has no answer at all: their cells
     /// are bare, and bare is also what a cell the author left empty looks like.
     /// </para>

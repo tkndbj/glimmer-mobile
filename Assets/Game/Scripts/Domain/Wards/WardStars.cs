@@ -16,7 +16,7 @@ namespace GlimmerGrove.Wards
     /// <b>Every star only ever adds, which is what keeps it out of par's way.</b> A siege's par is
     /// the hill's health over a match computed against the baseline bolt, so a turret that hit
     /// <em>softer</em> would push three stars out of reach of whoever bought it (invariant 37bb).
-    /// Upward only means par over-states what an upgraded player needs — the direction invariant
+    /// Upward only means par over-states what an upgraded player needs - the direction invariant
     /// 22 says to err in, and exactly what invariant 37w accepted when cogs shipped. **No level's
     /// par or star line moves because somebody upgraded a turret.**
     /// </para>
@@ -61,7 +61,7 @@ namespace GlimmerGrove.Wards
         /// <para>
         /// <b>Written out rather than generated from a curve.</b> They are the owner's numbers and
         /// a curve that happened to fit them today would quietly disagree the first time one was
-        /// retuned — which is <c>HomesteadRegion</c>'s argument about an authored ladder
+        /// retuned - which is <c>HomesteadRegion</c>'s argument about an authored ladder
         /// (invariant 16j), asked of a price list instead of an order.
         /// </para>
         /// </summary>
@@ -83,8 +83,8 @@ namespace GlimmerGrove.Wards
         /// The ladder in force: what content authored, or <see cref="Built"/>.
         ///
         /// <b>Content, because a price that needs a store review to change is not a price.</b>
-        /// Every other number a live economy turns here is in <c>progression.json</c> — the heart
-        /// gate, the chest odds, the ad payouts, the shelf's own prices — and this is the largest
+        /// Every other number a live economy turns here is in <c>progression.json</c> - the heart
+        /// gate, the chest odds, the ad payouts, the shelf's own prices - and this is the largest
         /// credit sink in the game, so it is the one most likely to be wrong first guess. The
         /// built-in table is the floor rather than a nicety: a malformed block costs a retune and
         /// never a session, which is the bargain <c>WardCatalog.Default</c> already makes.
@@ -157,7 +157,7 @@ namespace GlimmerGrove.Wards
         /// next one, or nought when there is no next one.
         ///
         /// <b>Nought is the answer for a turret already at the top</b>, and every caller reads it
-        /// that way rather than testing the star count itself — one question, asked once.
+        /// that way rather than testing the star count itself - one question, asked once.
         /// </summary>
         public static int PriceOf(WardModel model, int stars)
         {
@@ -185,8 +185,8 @@ namespace GlimmerGrove.Wards
         ///
         /// <b>Clamped rather than trusted</b>, because the number arrives from the save: a file
         /// written by a newer build, a rolled-back client or a hand-edited one must not be able to
-        /// stand a turret at nought stars or at fifty. Nought — which is what an absent row and an
-        /// older file both mean — reads as <see cref="Least"/>, so a turret bought before this
+        /// stand a turret at nought stars or at fifty. Nought - which is what an absent row and an
+        /// older file both mean - reads as <see cref="Least"/>, so a turret bought before this
         /// shipped is a one-star turret rather than a broken one.
         /// </summary>
         public static int Sane(int stars)

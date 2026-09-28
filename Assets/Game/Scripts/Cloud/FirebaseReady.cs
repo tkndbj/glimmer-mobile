@@ -9,7 +9,7 @@ namespace GlimmerGrove.Cloud
     ///
     /// <para>
     /// <b>`CheckAndFixDependenciesAsync` may not be called twice at once, and the SDK's refusal
-    /// names the wrong thing.</b> A second caller — or any other Firebase call — made while one
+    /// names the wrong thing.</b> A second caller - or any other Firebase call - made while one
     /// check is in flight fails with <em>"Don't call other Firebase functions while
     /// CheckDependencies is running"</em>, and on this project that arrived as
     /// <c>[Cloud] Firebase failed to initialise</c>: no auth, no Firestore, therefore no sign-in
@@ -17,7 +17,7 @@ namespace GlimmerGrove.Cloud
     /// visible relationship and the failure named neither of them.
     /// </para>
     /// <para>
-    /// It <em>is</em> safe to call sequentially — a later call is handed the settled answer —
+    /// It <em>is</em> safe to call sequentially - a later call is handed the settled answer -
     /// which is what makes this the whole fix: one check, one Task, every caller awaiting the
     /// same one. It lives in the cloud assembly rather than in Domain because this is where
     /// Firebase is initialised and where the reference to the SDK already exists.

@@ -10,7 +10,7 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// <b>The one control this mode has in the middle band</b>, which is the band that used to
-    /// exist only to be read. A tube fills, it starts pulsing, and the player has a decision — let
+    /// exist only to be read. A tube fills, it starts pulsing, and the player has a decision - let
     /// it burn down as ordinary bolts, or dump the lot now at whatever is furthest down the hill.
     /// It can be wrong, which is what makes it a decision rather than a button: a tube spent on a
     /// creeper is a tube not standing ready for the brute three beats behind it.
@@ -36,11 +36,11 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>The raycast is switched with it</b>, so a tube that cannot be spent cannot be tapped
-        /// at all — a control that is live and silently refuses is one nobody learns.
+        /// at all - a control that is live and silently refuses is one nobody learns.
         /// </para>
         /// <para>
         /// <b>And "can be spent" is the board's answer, not this file's guess.</b> It read
-        /// <c>ward.Armed</c> — a charge banked, not chained, not buried — which is only half the
+        /// <c>ward.Armed</c> - a charge banked, not chained, not buried - which is only half the
         /// question: <c>SiegeBoard.Overcharge</c> also needs something on the hill it could hurt,
         /// and against a boss there are frames where there is not (the walk in, and a stand
         /// already resting on its floor). So the button pulsed, invited a tap and shook it off,
@@ -111,7 +111,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>It charges the run nothing</b>, and that is arithmetic rather than generosity. What
         /// an overcharge delivers is exactly what the tube would have delivered as ordinary bolts
-        /// — the same fuel, the same weight, landing as an own-colour hit does — so the player has
+        /// - the same fuel, the same weight, landing as an own-colour hit does - so the player has
         /// moved damage they had already matched for rather than conjured any, and invariant 39's
         /// exchange rate has nothing to price. See <c>SiegeBoard.Overcharge</c>.
         /// </para>
@@ -149,7 +149,7 @@ namespace GlimmerGrove
         /// The beam out of the turret that spent itself.
         ///
         /// <b>Drawn from the muzzle to the box rather than to the raider</b>, because the raider it
-        /// was aimed at is very often dead by the time this runs — and a beam that ends where the
+        /// was aimed at is very often dead by the time this runs - and a beam that ends where the
         /// blast is is the same fact said twice, which is what makes the pair read as one event.
         /// </b>
         /// </summary>

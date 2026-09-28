@@ -15,7 +15,7 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// It replaces a toast. Tapping a padlock used to say "Reach keeper level 24 to wake this
-    /// friend" and vanish, which was true and useless — level 24 is unreachable by play for
+    /// friend" and vanish, which was true and useless - level 24 is unreachable by play for
     /// well over a year on a hundred-glade catalog, so the one thing the game told a player
     /// about most of its roster was a wait they could not serve. The panel exists because
     /// there is now a second answer, and a second answer needs somewhere to be given.
@@ -28,7 +28,7 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// Every number on it is read from the roster and the live balance rather than written
-    /// into the copy — <c>AdOfferOverlay</c> and <c>StreakInfoOverlay</c> are built the same
+    /// into the copy - <c>AdOfferOverlay</c> and <c>StreakInfoOverlay</c> are built the same
     /// way for the same reason: a panel that explains the economy is the first thing to rot
     /// when the economy is retuned.
     /// </para>
@@ -40,7 +40,7 @@ namespace GlimmerGrove
         ///
         /// A property rather than a field, for the reason <c>DefeatOverlay.Run</c> is one:
         /// <see cref="AvatarDefinition"/> is not <c>[Serializable]</c>, so a public field of
-        /// that type earns a UAC1001 warning about serialization that will never happen —
+        /// that type earns a UAC1001 warning about serialization that will never happen -
         /// this is assigned in code, never through the inspector.
         /// </summary>
         public AvatarDefinition Avatar { get; set; }
@@ -52,7 +52,7 @@ namespace GlimmerGrove
         /// <para>
         /// The profile's roster is a picker: the tap that buys somebody there is the same tap
         /// that chooses them, and making the player choose twice would be friction over a
-        /// decision they have already made. The grove's shelf is not — a resident is bought to
+        /// decision they have already made. The grove's shelf is not - a resident is bought to
         /// <em>stand</em> somewhere, and quietly changing who the player is called after is the
         /// kind of surprise that makes somebody distrust a shop. One panel, one flag, because
         /// two panels would be two places to get the six honest refusals right.
@@ -90,12 +90,12 @@ namespace GlimmerGrove
         /// True while a purchase is in flight, which <see cref="Repaint"/> must not paint over.
         ///
         /// <para>
-        /// Not defensive bookkeeping — it closes a real hole. The debit is booked before the
+        /// Not defensive bookkeeping - it closes a real hole. The debit is booked before the
         /// companion is recorded as held (see <c>CompanionLedger.TryBuy</c> for why that order
         /// is the safe one), and booking it raises <c>PlayerProgression.Changed</c>. So there
         /// is a moment inside the purchase where the balance has already fallen and the id has
         /// not yet arrived, and a repaint landing there reads the state as "unheld and now
-        /// unaffordable" — it would destroy the buy button from inside that button's own click
+        /// unaffordable" - it would destroy the buy button from inside that button's own click
         /// handler, replace it with the coin offer, and leave <see cref="Paid"/> stamping
         /// "WEAR" onto the wrong control. <c>AdOfferOverlay</c> holds <c>_watching</c> for the
         /// same reason.
@@ -138,14 +138,14 @@ namespace GlimmerGrove
             BuildButton(buttonY, offer);
 
             // A corner cross rather than a second full-width button, and never no exit at
-            // all — the reasoning is AdOfferOverlay's, and it applies harder here: a modal
+            // all - the reasoning is AdOfferOverlay's, and it applies harder here: a modal
             // about spending currency whose only exit is the scrim is what store reviewers
             // flag as a dark pattern.
             UIKit.IconButton("Dismiss", Panel, Skins.Nav, "ic_close", new Vector2(84f, 84f),
                              new Vector2(1f, 1f), new Vector2(-58f, -58f), () => Close());
 
-            // A balance that moves while the panel is open — the player watched a video from
-            // the ad panel this one opened — has to reach the button, or they come back to
+            // A balance that moves while the panel is open - the player watched a video from
+            // the ad panel this one opened - has to reach the button, or they come back to
             // the exact screen that sent them away still saying they cannot afford it.
             PlayerProgression.Changed += Repaint;
             Repaint();
@@ -181,7 +181,7 @@ namespace GlimmerGrove
             _portrait.preserveAspect = true;
 
             // Companion art loads into a scope, so it may not be resident when this opens
-            // from anywhere but the picker. Repaint on arrival — an Image with no sprite is
+            // from anywhere but the picker. Repaint on arrival - an Image with no sprite is
             // a white disc, not a blank one. See invariant 7b.
             _art = CompanionArt.OpenOne(this, Avatar, () =>
             {
@@ -210,7 +210,7 @@ namespace GlimmerGrove
             int i = 0;
 
             // The gate first, always, because it is the half credits cannot answer. It used
-            // to be described as the free route — "wakes on its own at keeper level 40" — and
+            // to be described as the free route - "wakes on its own at keeper level 40" - and
             // that sentence stopped being true when the rule became level AND purchase: the
             // gate is now permission to pay rather than a second way in.
             Fact(top, i++, Art.S("Ui/ic_star"), ChestDropKind.None, Pal.Gold,
@@ -218,8 +218,8 @@ namespace GlimmerGrove
                      ? Loc.Format("ui.companion.by_level", Avatar.UnlockLevel)
                      : Loc.Get("ui.companion.by_level_none"));
 
-            // A still coin, not the spinning one. Credits have no static sprite in this UI —
-            // only the Ui/Coin flipbook — and animating it here was a mistake worth recording:
+            // A still coin, not the spinning one. Credits have no static sprite in this UI -
+            // only the Ui/Coin flipbook - and animating it here was a mistake worth recording:
             // the coin turns edge-on for part of every cycle, so a 48-pixel glyph beside a
             // price spent a third of its life as a thin orange bar that reads as a broken
             // image. A reveal can afford a spinning coin because it is 114 pixels and the
@@ -273,7 +273,7 @@ namespace GlimmerGrove
 
         // ------------------------------------------------------------- the button
         /// <summary>
-        /// One button, whose meaning depends on the state — and which is never dead.
+        /// One button, whose meaning depends on the state - and which is never dead.
         ///
         /// <para>
         /// The interesting case is <see cref="CompanionPurchaseState.TooExpensive"/>. A greyed
@@ -281,13 +281,13 @@ namespace GlimmerGrove
         /// must not take: it is the moment a player has decided they want something, which is
         /// the single best moment in the game to offer a video, and a disabled control spends
         /// it on teaching them the feature is broken. So the button stays live and opens the
-        /// coin offer instead. That is not a trick — the panel has already said, in the fact
+        /// coin offer instead. That is not a trick - the panel has already said, in the fact
         /// list above, exactly how far short they are.
         /// </para>
         /// <para>
         /// <see cref="CompanionPurchaseState.NotForSale"/> is the one refusal that cannot
         /// resolve, so it gets a plain acknowledgement rather than a green button that can
-        /// never work — <c>AdOfferOverlay</c> makes the same call for a placement the content
+        /// never work - <c>AdOfferOverlay</c> makes the same call for a placement the content
         /// table does not carry.
         /// </para>
         /// </summary>
@@ -303,7 +303,7 @@ namespace GlimmerGrove
             {
                 case CompanionPurchaseState.Ready:
                     // The coin goes after the figure, because it is the unit on the number
-                    // rather than a label on the verb — see Btn.IconTrails. It is the still
+                    // rather than a label on the verb - see Btn.IconTrails. It is the still
                     // face rather than the spin, for Art.CoinFace's reason.
                     _buy = UIKit.TextButton("Buy", Panel, "btn_green",
                                             Loc.Format("ui.companion.unlock_for", Compact.Number(offer.Cost)), 44,
@@ -339,7 +339,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// The button is replaced rather than relabelled, because the three states differ by
-        /// sprite, glyph and action as well as caption — and a player who returns from the ad
+        /// sprite, glyph and action as well as caption - and a player who returns from the ad
         /// panel with enough coins must find a green "unlock" where the blue "get coins" was.
         /// Patching four properties in step is how one of them gets left behind.
         /// </para>
@@ -406,7 +406,7 @@ namespace GlimmerGrove
             try
             {
                 // Re-checked here rather than trusted from the button, because the balance can
-                // have moved since it was painted — a spend on another screen, or a sync that
+                // have moved since it was painted - a spend on another screen, or a sync that
                 // replaced a claim with the server's smaller figure.
                 bought = WearOnBuy
                     ? Profile.TryBuyAvatar(Avatar)
@@ -445,15 +445,15 @@ namespace GlimmerGrove
         /// the moment to <see cref="CompanionRevealOverlay"/>.
         ///
         /// <para>
-        /// It used to do the celebrating itself — the price button became "WEAR" and a few
-        /// sparks fired — and that was the whole problem: a transaction panel is the wrong
+        /// It used to do the celebrating itself - the price button became "WEAR" and a few
+        /// sparks fired - and that was the whole problem: a transaction panel is the wrong
         /// place for a payoff, because it is still wearing the furniture of a decision the
         /// player has already made. Closing first also means the reveal opens onto a dark
         /// screen rather than on top of a panel showing a price that has been paid.
         /// </para>
         /// <para>
         /// Nothing is reported to the screen behind from here. It repaints on
-        /// <c>CompanionLedger.Changed</c>, which the purchase already raised — see
+        /// <c>CompanionLedger.Changed</c>, which the purchase already raised - see
         /// <c>CompanionScreen</c> for why that is an event and not a callback.
         /// </para>
         /// </summary>
@@ -462,7 +462,7 @@ namespace GlimmerGrove
             _paid = true;
 
             // Silent, for the same reason the celebrating moved: this panel closes into the
-            // reveal in the same breath, so a chime here is not the purchase being confirmed —
+            // reveal in the same breath, so a chime here is not the purchase being confirmed -
             // it is the first note of the reveal's fanfare, played by the wrong screen and a
             // beat early. The unlock has exactly one sound and the reveal owns it.
             Close(() => Flow.Modal<CompanionRevealOverlay>(v => v.Avatar = Avatar));

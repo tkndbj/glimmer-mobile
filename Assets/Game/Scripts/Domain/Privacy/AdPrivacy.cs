@@ -42,14 +42,14 @@ namespace GlimmerGrove.Privacy
     /// <b>The ordering is the whole feature.</b> Everything else here is plumbing; the one
     /// thing that cannot be got wrong is that the mediation SDK does not start until this has
     /// finished. An SDK initialised before consent has already chosen what it may collect and
-    /// has already run an auction on it — telling it the answer afterwards changes the
+    /// has already run an auction on it - telling it the answer afterwards changes the
     /// <em>next</em> request and cannot undo the first. That is why <c>Boot</c> awaits
     /// <see cref="ResolveAsync"/> and only then constructs the provider, and why this type
     /// exists at all rather than each caller asking the CMP directly.
     /// </para>
     /// <para>
     /// <b>Nothing here is stored by us, and that is deliberate.</b> The CMP writes its own
-    /// record — the IAB TCF string — into the platform preference store where the adapters
+    /// record - the IAB TCF string - into the platform preference store where the adapters
     /// read it, and iOS keeps the tracking answer itself. A copy in our save file would be a
     /// second source of truth that a merge would then have to arbitrate, for a value that is
     /// per-device, revocable and therefore not monotonic: exactly the shape invariant 11b
@@ -71,7 +71,7 @@ namespace GlimmerGrove.Privacy
         ///
         /// <para>
         /// A compile-time constant because it is a fact about the product rather than a
-        /// tuning knob — it follows from the store listing's age rating and from how the game
+        /// tuning knob - it follows from the store listing's age rating and from how the game
         /// is marketed, and a published file that could flip it would let a content push
         /// change the app's legal posture. Glimmer Grove is a general-audience puzzle game and
         /// is not child-directed; if that ever changes, this constant and the store listings
@@ -88,7 +88,7 @@ namespace GlimmerGrove.Privacy
         public static bool IsResolved { get; private set; }
 
         /// <summary>
-        /// Raised whenever the signals change — on first resolve, and again if the player
+        /// Raised whenever the signals change - on first resolve, and again if the player
         /// revisits the form. Anything holding a copy has to repaint; the settings row and
         /// the ad provider both listen rather than polling.
         /// </summary>
@@ -108,8 +108,8 @@ namespace GlimmerGrove.Privacy
         /// <b>Consent form first, then Apple's prompt.</b> Both orders are legal and the
         /// choice is about opt-in rates rather than compliance: Apple only requires its prompt
         /// to precede any use of the advertising id, and nothing touches the id until the
-        /// mediation SDK starts, which is after both. Showing the system dialog cold — with no
-        /// explanation, seconds after a first launch — is the reliable way to have it refused,
+        /// mediation SDK starts, which is after both. Showing the system dialog cold - with no
+        /// explanation, seconds after a first launch - is the reliable way to have it refused,
         /// where the CMP's form has already established what the question is for. Swapping the
         /// two is moving one line, and the reason to do it would be evidence rather than taste.
         /// </para>
@@ -124,14 +124,14 @@ namespace GlimmerGrove.Privacy
         /// </para>
         /// <para>
         /// Never throws. A CMP that cannot reach its servers, a cancelled boot, an SDK that
-        /// misbehaves — all of them leave the restrictive default in place, which is a game
+        /// misbehaves - all of them leave the restrictive default in place, which is a game
         /// that runs and shows unpersonalised ads rather than a splash screen that never ends.
         /// </para>
         /// </summary>
         /// <remarks>
         /// Deliberately no <c>ConfigureAwait(false)</c> on any await here. Everything downstream
-        /// of this eventually calls into a native SDK — the CMP, Apple's prompt, then mediation
-        /// — and those must be reached from Unity's main thread. A plain await resumes there
+        /// of this eventually calls into a native SDK - the CMP, Apple's prompt, then mediation
+        /// - and those must be reached from Unity's main thread. A plain await resumes there
         /// because the main thread carries a SynchronizationContext; ConfigureAwait(false)
         /// resumes on the thread pool, where the first JNI call throws into a task nobody is
         /// watching. See <see cref="Ads.RewardedAds.BeginStart"/>.
@@ -148,7 +148,7 @@ namespace GlimmerGrove.Privacy
             {
                 // Deliberately swallowed rather than logged-and-rethrown. This runs on the boot
                 // path before anything is on screen, so an exception here is a game that never
-                // starts — and the safe answer is already known.
+                // starts - and the safe answer is already known.
                 resolved = AdPrivacySignals.Restricted;
             }
 
@@ -157,7 +157,7 @@ namespace GlimmerGrove.Privacy
             // sequence of awaits only orders what each await *covers*: a gateway that gave up
             // on its own form and returned with it still on screen put Apple's dialog on top
             // of it, and Apple rejected 1.0.2 for exactly that (5.1.1(iv), 2026-09-22). The
-            // gateway no longer does that, and this is the second half — whatever a gateway
+            // gateway no longer does that, and this is the second half - whatever a gateway
             // does, an open question means Apple waits for a launch on which the form came
             // first. The cost is one launch's tracking answer on a bad network, and a device
             // whose status is NotDetermined is one nothing here tracks (AllowsDeviceId).

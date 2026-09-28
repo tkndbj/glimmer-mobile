@@ -13,14 +13,14 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// <b>A rank is derived and stored nowhere</b> (invariant 52), so there is no "unclaimed
-    /// promotion" anywhere in the save to read — which means the only honest way to know a rung
+    /// promotion" anywhere in the save to read - which means the only honest way to know a rung
     /// was <em>just</em> reached is to have known what was held a moment ago. That is the whole
     /// of this file: one baseline ordinal per session, and the difference between it and the
     /// live reading is what is owed.
     /// </para>
     /// <para>
     /// <b>It is a reading rather than a subscription, and that is the substance.</b>
-    /// <see cref="RankLedger.Promoted"/> exists and would have been the obvious hook — but it
+    /// <see cref="RankLedger.Promoted"/> exists and would have been the obvious hook - but it
     /// fires lazily, from inside whichever repaint happens to read <see cref="RankLedger.Held"/>
     /// first, so whether it has fired by the time a panel is raised depends on what else is on
     /// screen. A ceremony that plays on the map and not in a run, or on a phone with a readout
@@ -50,7 +50,7 @@ namespace GlimmerGrove
     /// <b>What that last one costs is one case, deliberately.</b> A rung reached in the final
     /// seconds of a session the player then kills is never celebrated, because nothing remembers
     /// it. Remembering it would mean a save field, a <c>hasOnly</c> line, a schema bump and a
-    /// merge rule for a flag that pays nothing (invariants 12, 12a, 52e) — a great deal of wire
+    /// merge rule for a flag that pays nothing (invariants 12, 12a, 52e) - a great deal of wire
     /// for a lost flourish. The badge is still theirs on the next launch, because the badge was
     /// never stored either.
     /// </para>
@@ -69,7 +69,7 @@ namespace GlimmerGrove
         /// <summary>
         /// The ordinal this session has already accounted for, or -1 for "not yet taken".
         ///
-        /// Nought is a real reading — an account below the first rung — so it cannot double as
+        /// Nought is a real reading - an account below the first rung - so it cannot double as
         /// "unknown", which is <see cref="RankLedger"/>'s own distinction one field over.
         /// </summary>
         static int _seen = -1;
@@ -91,8 +91,8 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>It deliberately takes no baseline of its own.</b> At the moment <c>Boot</c> runs,
-        /// the save has loaded but the content has not — the catalog and
-        /// <c>progression.json</c> arrive on the splash — so the ladder is empty and the reading
+        /// the save has loaded but the content has not - the catalog and
+        /// <c>progression.json</c> arrive on the splash - so the ladder is empty and the reading
         /// would be a nought that means "no ladder" rather than "no rank". The first of the
         /// three cues below takes it instead, by which time both halves are in place.
         /// </para>
@@ -154,7 +154,7 @@ namespace GlimmerGrove
                     var rung = ladder.At(ordinal);
 
                     // A hole in the ladder is not reachable through `RankLadder`, which is built
-                    // from a contiguous list — but a null here would be a ceremony with nothing
+                    // from a contiguous list - but a null here would be a ceremony with nothing
                     // in it, so the walk stops rather than carrying on past one.
                     if (rung == null) break;
 
@@ -172,7 +172,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// The ids rather than the thresholds, because a threshold moving is exactly the retune
-        /// that should <em>not</em> reset anything the player is in the middle of earning — and
+        /// that should <em>not</em> reset anything the player is in the middle of earning - and
         /// an ordinal only shifts under somebody when the <em>list</em> changes. Ids are short,
         /// bounded at <c>RankLadder.MaxRungs</c> and built once per content push, so joining
         /// them is cheaper than any hash worth writing.
@@ -195,7 +195,7 @@ namespace GlimmerGrove
 
         // -------------------------------------------------------------- the gateway
         /// <summary>
-        /// Shows every ceremony that is owed and then does <paramref name="next"/> — which is
+        /// Shows every ceremony that is owed and then does <paramref name="next"/> - which is
         /// how a run's victory or defeat panel is raised.
         ///
         /// <para>
@@ -209,8 +209,8 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The whole queue is played, one ceremony each, in ladder order.</b> Crossing two
         /// rungs on one run is close to impossible against the shipped ladder and is not
-        /// impossible in general — a fortnight of another device's play landing in one merge
-        /// does it — and when it happens, showing the top one and swallowing the other would
+        /// impossible in general - a fortnight of another device's play landing in one merge
+        /// does it - and when it happens, showing the top one and swallowing the other would
         /// mean a badge the player never saw arrive. Each is skippable by a tap, so the honest
         /// answer is also the cheap one.
         /// </para>
@@ -230,7 +230,7 @@ namespace GlimmerGrove
                 // Nothing owed is the ordinary case, and it costs one integer comparison.
                 if (_owed.Count == 0 || Flow.Overlays == null) { next(); return; }
 
-                // A ceremony already standing means this is being driven twice over — the panel
+                // A ceremony already standing means this is being driven twice over - the panel
                 // behind it will be raised by whichever call owns that one, so the rest of the
                 // queue waits for the next ending rather than being raised through it.
                 if (Flow.LiveModal<RankUpOverlay>() != null) { next(); return; }
@@ -291,8 +291,8 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// The one caller is <see cref="RankBadge"/>, whose toast under the map's back key is
-        /// the announcement this replaces. It keeps its pop and its halo — it is a readout and
-        /// has to draw the truth the moment the truth moves — and gives up only the sentence,
+        /// the announcement this replaces. It keeps its pop and its halo - it is a readout and
+        /// has to draw the truth the moment the truth moves - and gives up only the sentence,
         /// because a rank announced twice is a rank announced badly.
         /// </para>
         /// </summary>

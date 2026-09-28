@@ -5,7 +5,7 @@ namespace GlimmerGrove
     /// <summary>
     /// Colour language of the grove: which actual colour each energy mask is painted.
     ///
-    /// The masks themselves belong to <see cref="Energy"/> on the gameplay side —
+    /// The masks themselves belong to <see cref="Energy"/> on the gameplay side -
     /// what mixes with what is a rule, not a look. These aliases stay so existing UI
     /// code reads naturally.
     /// </summary>
@@ -31,7 +31,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>This is a look, not a rule.</b> <see cref="Energy"/> still mixes by <c>|</c> over
-        /// three bits and nothing about the boards, the search, par or the vectors moved — the
+        /// three bits and nothing about the boards, the search, par or the vectors moved - the
         /// only thing that changed is which actual colour each of the seven masks is drawn in.
         /// That separation is why it could change at all: every mode asks
         /// <see cref="EnergyColour"/>, and the two legends that teach the arithmetic
@@ -40,13 +40,13 @@ namespace GlimmerGrove
         /// to fall out of step.
         /// </para>
         /// <para>
-        /// <b>Why it moved.</b> The channels were additive — red, green and blue, blending to
-        /// yellow, magenta and cyan — which is exactly correct for light and is the one thing
+        /// <b>Why it moved.</b> The channels were additive - red, green and blue, blending to
+        /// yellow, magenta and cyan - which is exactly correct for light and is the one thing
         /// nobody outside a graphics pipeline has ever been taught. Reported from play as
         /// confusion rather than as a bug: a player mixing red and blue expects purple, because
         /// what they have handled all their lives is paint. So the middle channel is drawn as
         /// <see cref="Pollen"/> and the blends fall out of the primary-school wheel that needs
-        /// no teaching at all — red+yellow is orange, red+blue is purple, yellow+blue is green.
+        /// no teaching at all - red+yellow is orange, red+blue is purple, yellow+blue is green.
         /// </para>
         /// <para>
         /// <b>The warm three are separated by value as well as by hue</b>, because red, orange
@@ -57,7 +57,7 @@ namespace GlimmerGrove
         /// <para>
         /// All three still meet at <see cref="Radiance"/>, which paint does not do. That is
         /// deliberate: white is not a colour on these boards, it is the <em>finished</em> state
-        /// — a mote about to burst, a bloomed tile, a flower nothing can add to — and it has to
+        /// - a mote about to burst, a bloomed tile, a flower nothing can add to - and it has to
         /// read as completion in every mode. A muddy brown would be arithmetically honest and
         /// would say the opposite of what the state means.
         /// </para>
@@ -100,8 +100,8 @@ namespace GlimmerGrove
         /// <para>
         /// <see cref="Mint"/> cannot do this job and every one of its forty call sites explains
         /// why: it is drawn on the board, on a halo, on a dark plate or as a fill, and it is
-        /// bright because all of those are dark. On cream it is a pale colour on a pale ground —
-        /// about 1.8:1 — so the defeat panel's "no heart was spent" line, which is 32pt body copy
+        /// bright because all of those are dark. On cream it is a pale colour on a pale ground -
+        /// about 1.8:1 - so the defeat panel's "no heart was spent" line, which is 32pt body copy
         /// with no outline and no shadow because that is what body copy is here, was the one
         /// place in the game where a whole sentence had to be squinted at. Darkening it at the
         /// call site with <c>Pal.A</c> would only have made it translucent; what it needed was a
@@ -109,7 +109,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// About 5.3:1 against the paper, which is a shade lighter than the body brown next to
-        /// it — enough to read as an aside rather than as the panel's subject, which is what the
+        /// it - enough to read as an aside rather than as the panel's subject, which is what the
         /// line is. Named for the colour rather than for the one line using it, so the next
         /// positive line on cream does not invent a second dark green a shade away from this one.
         /// </para>
@@ -122,7 +122,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// It exists because neither neighbour does the job. Gold is nearly the value of the
-        /// paper it sits on, so it only holds together under a heavy outline — fine for a
+        /// paper it sits on, so it only holds together under a heavy outline - fine for a
         /// 40pt shout like the golden-glade line, wrong for a sentence. Rose is already spoken
         /// for by the star rank directly above, and two warm reds in one column read as one
         /// thing said twice. Named for the colour rather than for the one line using it, so
@@ -137,7 +137,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Every other tint a tile can wear is an <see cref="EnergyColour"/>, so a taproot
-        /// drawn in a hue would be claiming to be a colour of light — and the board's whole
+        /// drawn in a hue would be claiming to be a colour of light - and the board's whole
         /// language is that colour means energy. Roots are therefore pale rope, one shade
         /// for all of them, and two conduits are matched by the pips on their mark rather
         /// than by tint. Tapping one also pulses its partners, which is the fast answer;
@@ -153,7 +153,7 @@ namespace GlimmerGrove
         /// <para>
         /// Dry bramble, desaturated well off the energy wheel. The three channels and their
         /// blends are all bright and saturated, so a dull warm brown cannot be read as a dim
-        /// one — which matters more here than anywhere, because the thorns are drawn on an
+        /// one - which matters more here than anywhere, because the thorns are drawn on an
         /// <em>unlit</em> arm and a player who read them as faint light would have the
         /// mechanic exactly backwards. Not rope either: rope means "these tiles turn
         /// together", and a mark that meant two things would be worth less than both.
@@ -168,15 +168,15 @@ namespace GlimmerGrove
         /// <para>
         /// Glass holds no channels, so it may not wear one. That is the easy half. The hard half
         /// is that it may not wear <see cref="Radiance"/> either, which is the obvious choice for
-        /// something clear: Radiance <em>is</em> a mote — it is what a mote holding all three
-        /// looks like for the instant before it bursts — and a lens tinted with it would read as
+        /// something clear: Radiance <em>is</em> a mote - it is what a mote holding all three
+        /// looks like for the instant before it bursts - and a lens tinted with it would read as
         /// a mote permanently about to go off, on the one object whose whole point is that it
         /// never does.
         /// </para>
         /// <para>
         /// So it is a cool near-white, off the energy wheel in the one direction nothing else on
         /// this board uses: Radiance is warm and every channel colour is saturated, so pale and
-        /// cold cannot be read as a dim anything. The silhouette carries the rest — glass is
+        /// cold cannot be read as a dim anything. The silhouette carries the rest - glass is
         /// drawn as a rim and a four-point glint where a mote is a filled disc.
         /// </para>
         /// </summary>

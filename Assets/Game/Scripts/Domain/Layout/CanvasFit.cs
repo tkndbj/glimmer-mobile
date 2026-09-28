@@ -11,7 +11,7 @@ namespace GlimmerGrove.Layout
     /// does.</b> <c>Boot.BuildCanvas</c> pins the reference <em>width</em> and lets the height
     /// fall out of the display, which is exactly right for a portrait game: a control is sized
     /// against the width of the thing it is drawn on, and every phone this game has ever run on
-    /// is 1080 units across. What varies is how many units of <em>height</em> that buys — 2400
+    /// is 1080 units across. What varies is how many units of <em>height</em> that buys - 2400
     /// on a 20:9 phone, 2340 on a 19.5:9, 1920 on a 16:9, and <b>1440 on a 4:3 tablet</b>.
     /// </para>
     /// <para>
@@ -22,14 +22,14 @@ namespace GlimmerGrove.Layout
     /// and all of it was chosen against a phone. Handed 1440 units instead of 2340, the same
     /// arithmetic draws the hub's companion through the streak box, a modal filling 88% of the
     /// display, and a 6x10 well at a cell of 62 units against a phone's 151. Reported from an
-    /// iPad as everything being too big and overlapping, which is exactly what it is — the
+    /// iPad as everything being too big and overlapping, which is exactly what it is - the
     /// chrome did not grow, the room shrank.
     /// </para>
     /// <para>
     /// <b>So the canvas is widened until it is as tall as the layouts need.</b> A short display
     /// is given <see cref="ShortHeight"/> units of height and the width follows from its aspect.
-    /// Nothing moves relative to anything else — every size, offset and margin in the game is
-    /// untouched, in units — and the whole interface is simply drawn smaller against a screen
+    /// Nothing moves relative to anything else - every size, offset and margin in the game is
+    /// untouched, in units - and the whole interface is simply drawn smaller against a screen
     /// that is physically much larger, which is what a tablet wants anyway. It is one rule in
     /// one place rather than a tablet variant of every constant in Presentation, and it is the
     /// only shape that could be: a second hand-tuned layout is a second thing to keep in step,
@@ -38,7 +38,7 @@ namespace GlimmerGrove.Layout
     /// <para>
     /// <b>Phones are left exactly as they are, and that is a decision rather than a
     /// consequence.</b> The obvious implementation is <c>CanvasScaler.ScreenMatchMode.Expand</c>
-    /// against a reference height, and it would quietly shrink a 16:9 phone as well — the
+    /// against a reference height, and it would quietly shrink a 16:9 phone as well - the
     /// iPhone SE is 1.778 and would lose a tenth of its scale for a problem it does not have.
     /// So the rule switches at <see cref="PhoneFloor"/> instead, which is a threshold no
     /// shipping device sits near: every phone is 16:9 (1.778) or taller, every tablet 16:10
@@ -59,7 +59,7 @@ namespace GlimmerGrove.Layout
         /// The reference width a phone is drawn at, which is the width everything in this game
         /// was laid out against.
         ///
-        /// Taken from <see cref="ChapterMap.Width"/> for <c>Boot.RefWidth</c>'s reason — the map
+        /// Taken from <see cref="ChapterMap.Width"/> for <c>Boot.RefWidth</c>'s reason - the map
         /// validator measures glade collisions against that number, so the two have to be the
         /// same one.
         /// </summary>
@@ -71,9 +71,9 @@ namespace GlimmerGrove.Layout
         ///
         /// <para>
         /// 7:4, and where it sits matters more than the value: there is a real gap in the
-        /// devices this game runs on between the squarest phone (16:9, 1.778 — the iPhone SE)
+        /// devices this game runs on between the squarest phone (16:9, 1.778 - the iPhone SE)
         /// and the tallest tablet (16:10, 1.6), and this is inside it. So the rule is a
-        /// threshold rather than a ramp, and the step across it — about 14% — is one no shipping
+        /// threshold rather than a ramp, and the step across it - about 14% - is one no shipping
         /// display can be on both sides of.
         /// </para>
         /// </summary>
@@ -108,8 +108,8 @@ namespace GlimmerGrove.Layout
         /// Derived, and that is the point of it. A phone is drawn at <see cref="PhoneWidth"/>
         /// and is never squarer than <see cref="PhoneFloor"/>, so it can never offer less than
         /// the two multiplied; anything squarer is given <see cref="ShortHeight"/> outright,
-        /// which is more. A bound rather than a device — the squarest real phone is 16:9 and
-        /// offers 1920 — because a fit check wants the number nothing can go under, not the
+        /// which is more. A bound rather than a device - the squarest real phone is 16:9 and
+        /// offers 1920 - because a fit check wants the number nothing can go under, not the
         /// number some catalogue of handsets happens to stop at.
         /// </para>
         /// </summary>
@@ -134,7 +134,7 @@ namespace GlimmerGrove.Layout
         ///
         /// <para>
         /// A pure function of the screen, which is what lets it be asked in the frame the canvas
-        /// is created in — <c>SplashScreen.Fit</c> needs an answer before <c>CanvasScaler</c>
+        /// is created in - <c>SplashScreen.Fit</c> needs an answer before <c>CanvasScaler</c>
         /// has run for the first time, and the whole reason that method measures nothing is that
         /// the rect it would measure is a frame behind.
         /// </para>
@@ -145,7 +145,7 @@ namespace GlimmerGrove.Layout
 
             // Wide enough that the height this aspect buys is ShortHeight. The Max is a backstop
             // rather than a case anybody reaches: at the floor the quotient is already 1234, so
-            // it only guards a ShortHeight retuned below PhoneWidth's own aspect — which would
+            // it only guards a ShortHeight retuned below PhoneWidth's own aspect - which would
             // otherwise make a tablet's canvas narrower than a phone's and shrink nothing.
             return Mathf.Max(PhoneWidth, ShortHeight * screenWidth / screenHeight);
         }
@@ -161,7 +161,7 @@ namespace GlimmerGrove.Layout
         /// How much smaller the interface is drawn on this display than on a phone: 1 on every
         /// phone, and about .67 on a 4:3 tablet.
         ///
-        /// Nothing is scaled <em>by</em> it — the shrink is the canvas being wider, and every
+        /// Nothing is scaled <em>by</em> it - the shrink is the canvas being wider, and every
         /// control keeps its size in units. It is here so a screen that wants to say how much
         /// room it has relative to a phone can ask rather than divide.
         /// </summary>

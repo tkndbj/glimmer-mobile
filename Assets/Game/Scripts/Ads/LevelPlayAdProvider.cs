@@ -15,14 +15,14 @@ namespace GlimmerGrove.Ads
     /// The LevelPlay half of <see cref="IAdProvider"/>.
     ///
     /// <para>
-    /// Compiled only when the mediation package is installed — <c>GLIMMER_ADS</c> comes
+    /// Compiled only when the mediation package is installed - <c>GLIMMER_ADS</c> comes
     /// from this assembly's <c>versionDefines</c>, never from Player Settings, for the
     /// reason <c>GLIMMER_ADDRESSABLES</c> already documents: a Player Settings define is
     /// per build target, so one added on Standalone is silently absent on Android and iOS.
     /// For an ad SDK that would mean a mobile build that compiles, ships, and earns nothing.
     /// </para>
     /// <para>
-    /// Everything here is plumbing. No policy lives in this file — not the reward amounts,
+    /// Everything here is plumbing. No policy lives in this file - not the reward amounts,
     /// not the caps, not the cooldown, not whether an offer should be made. Those are
     /// <see cref="RewardedAds"/> and the content table, and they are testable without an
     /// SDK precisely because this class is the only thing that knows LevelPlay exists.
@@ -79,8 +79,8 @@ namespace GlimmerGrove.Ads
         /// Safe before <c>Init</c>, and that is not luck: the Unity wrapper builds its
         /// platform bridge in a <em>static constructor</em> rather than on initialisation, so
         /// <c>SetMetaData</c> and <c>SetGDPRConsent</c> reach the native SDK from the first
-        /// touch of the class. ironSource's own contract requires exactly that — the metadata
-        /// keys are documented as "before init" — and calling them after would configure an
+        /// touch of the class. ironSource's own contract requires exactly that - the metadata
+        /// keys are documented as "before init" - and calling them after would configure an
         /// SDK that had already run an auction.
         /// </para>
         /// <para>
@@ -92,7 +92,7 @@ namespace GlimmerGrove.Ads
         /// <para>
         /// <c>SetGDPRConsent</c> is given <see cref="AdPrivacySignals.AllowsPersonalisation"/>
         /// rather than the raw GDPR answer, so a US opt-out and a child-directed build also
-        /// turn personalisation off — one derived answer, decided in Domain, rather than three
+        /// turn personalisation off - one derived answer, decided in Domain, rather than three
         /// conditions restated at the edge.
         /// </para>
         /// </summary>
@@ -114,7 +114,7 @@ namespace GlimmerGrove.Ads
             if (_starting) return _ready.Task;
 
             // Never start unconfigured. A caller that forgets the ordering gets the restrictive
-            // answer rather than an SDK free to assume consent — the failure is then lost
+            // answer rather than an SDK free to assume consent - the failure is then lost
             // revenue, which is recoverable, instead of personalised ads served to somebody who
             // was never asked, which is not.
             if (!_privacyApplied)
@@ -139,7 +139,7 @@ namespace GlimmerGrove.Ads
             LevelPlay.OnInitFailed += OnInitFailed;
 
             // The account id is passed at start-up when there is one, and refreshed before
-            // every impression by ShowAsync — see the note there about sign-in landing late.
+            // every impression by ShowAsync - see the note there about sign-in landing late.
             LevelPlay.Init(AppKey, CloudState.UserId);
 
             return _ready.Task;
@@ -168,7 +168,7 @@ namespace GlimmerGrove.Ads
         /// <summary>
         /// Builds one ad unit and starts it loading.
         ///
-        /// Every unit reloads the moment it is finished with — shown, closed or failed —
+        /// Every unit reloads the moment it is finished with - shown, closed or failed -
         /// because a rewarded ad that is not preloaded is an offer the player taps and then
         /// waits ten seconds for, which is indistinguishable from a broken button.
         /// </summary>
@@ -195,7 +195,7 @@ namespace GlimmerGrove.Ads
 
                 // Only the first few are logged. No fill is the ordinary state of an ad unit
                 // in most of the world for most of the day, and once the backoff stretches
-                // out there is nothing new to say — but during bring-up the difference
+                // out there is nothing new to say - but during bring-up the difference
                 // between "no demand" and "this ad unit id is wrong" is the only thing
                 // anyone wants to know, and it is invisible without this.
                 if (attempt <= 3)
@@ -245,13 +245,13 @@ namespace GlimmerGrove.Ads
         /// Reloading immediately is the obvious thing and it is wrong: an ad unit with no
         /// demand fails in about a third of a second, so a straight retry becomes three
         /// network round trips per second for as long as the app is open. That flattens a
-        /// battery, and from the network's side it is indistinguishable from abuse — which
+        /// battery, and from the network's side it is indistinguishable from abuse - which
         /// is a good way to get an app rate-limited before it has ever shown an ad.
         /// </para>
         /// <para>
         /// Doubling from two seconds to a two-minute ceiling. The ceiling matters more than
         /// the curve: fill returns when a market wakes up or a waterfall is reconfigured,
-        /// neither of which this client can see, so it has to keep asking — just not often.
+        /// neither of which this client can see, so it has to keep asking - just not often.
         /// </para>
         /// </summary>
         void RetryLater(string placementId, int attempt)
@@ -317,8 +317,8 @@ namespace GlimmerGrove.Ads
         /// <summary>
         /// Completes the waiting caller exactly once.
         ///
-        /// The SDK fires more than one terminal event for a single view — a rewarded ad
-        /// that pays raises <c>OnAdRewarded</c> and then <c>OnAdClosed</c> — so whichever
+        /// The SDK fires more than one terminal event for a single view - a rewarded ad
+        /// that pays raises <c>OnAdRewarded</c> and then <c>OnAdClosed</c> - so whichever
         /// arrives first decides, and the rest are dropped. Without this the reward would
         /// be overwritten by the dismissal that always follows it.
         /// </summary>

@@ -1,14 +1,24 @@
 namespace GlimmerGrove.Layout
 {
     /// <summary>
-    /// Where the pieces of a lane's hub sit: the medal carrying its record, the plate of lines
-    /// saying what it is, and the key that starts it.
+    /// Where the pieces of a lane's hub sit: the keeper's rank badge, the plate of lines saying
+    /// what the lane is, the medal carrying its record, and the key that starts it.
+    ///
+    /// <para>
+    /// <b>The rank is the hero and the record stands under the lines, since 2026-09-28</b>, at
+    /// the owner's instruction: the badge a keeper holds goes where the best-wave medal was, at
+    /// the medal's size, and the medal moves down to sit above the key, drawn at
+    /// <see cref="RecordScale"/>. The column grew by the medal, which the squarest phone could not
+    /// hold at full size - so the column is <b>drawn to fit</b> (<see cref="ScaleIn"/>) with a
+    /// floor under it (<see cref="MinScale"/>), and the gate asks the floor rather than a
+    /// fit at full size.
+    /// </para>
     ///
     /// <para>
     /// <b>Here rather than beside the screen, for <see cref="PanelStack"/>'s reason</b> (invariant
     /// 8a, earned a seventh time): whether two things on a screen overlap is arithmetic, and
     /// arithmetic inside a <c>MonoBehaviour</c> is arithmetic nothing can check. This one has the
-    /// tightest budget of any stack in the game and the least room to be wrong in — it is drawn
+    /// tightest budget of any stack in the game and the least room to be wrong in - it is drawn
     /// between two pieces of furniture that were sized without it, the map's header column above
     /// and the loadout shelf below.
     /// </para>
@@ -42,26 +52,37 @@ namespace GlimmerGrove.Layout
 
         // ------------------------------------------------------------------ the medal
         /// <summary>
-        /// The hero block: a starburst, a medallion carrying the furthest wave, and a plate under
-        /// it naming what the number is.
+        /// The hero block, and the medal's own block before <see cref="RecordScale"/>: a starburst,
+        /// a medallion carrying the furthest wave, and a plate under it naming what the number is.
         ///
         /// <para>
-        /// <b>The record is the hero because the record is what this lane is.</b> Every other lane
-        /// in the game is a chain of levels and is drawn as one; this one is a single run played
-        /// for how far it got, so the number it is graded on is the only thing on the screen worth
-        /// making large. The first cut of this hub made an emblem the hero and printed the record
-        /// as a line of text under it, which is the same screen with the subject buried.
+        /// <b>The rank holds this box now, and the medal holds a smaller copy of it.</b> The record
+        /// was the hero until 2026-09-28 ("the record is what this lane is"); the owner moved the
+        /// keeper's rank badge into its place at its size, with the rank's name on the same plate,
+        /// and the medal under the lines. One block, two tenants: the badge is drawn in
+        /// <see cref="BurstSize"/> exactly where the burst was, so "the same size" is a constant
+        /// and not a second number that could drift from the first.
         /// </para>
         /// <para>
         /// <b>Derived from the plate that hangs off its foot, never typed.</b> It was typed, and
-        /// was one unit short of what it held — caught by <see cref="IsClear"/> rather than by a
+        /// was one unit short of what it held - caught by <see cref="IsClear"/> rather than by a
         /// phone, which is the whole reason this arithmetic is not in the screen.
         /// </para>
         /// </summary>
         public static float HeroHeight => PlateDown + PlateHeight * .5f;
 
+        // ------------------------------------------------------------------ the record
         /// <summary>
-        /// The starburst behind the medal — <b>the hero's own box</b>, never larger. See the class
+        /// The best-wave medal under the lines: the same composition the hero used to be - burst,
+        /// disc, nameplate - drawn whole at this scale, so nothing about it is a second design.
+        /// </summary>
+        public const float RecordScale = .62f;
+
+        /// <summary>The block the record takes in the column, as drawn. Derived.</summary>
+        public static float RecordHeight => HeroHeight * RecordScale;
+
+        /// <summary>
+        /// The starburst behind the medal - <b>the hero's own box</b>, never larger. See the class
         /// note for why.
         /// </summary>
         public const float BurstSize = 310f;
@@ -110,8 +131,15 @@ namespace GlimmerGrove.Layout
         public const float ButtonWidth = 620f, ButtonHeight = 178f;
 
         // ------------------------------------------------------------------ the air
-        /// <summary>The gaps: under the medal, and above the key.</summary>
-        const float HeroGap = 24f, PanelGap = 34f;
+        /// <summary>The gaps: under the rank, under the lines, and above the key.</summary>
+        const float HeroGap = 24f, RecordGap = 20f, ButtonGap = 26f;
+
+        /// <summary>
+        /// The least the column is ever drawn at. <see cref="ScaleIn"/> shrinks it to the band it
+        /// is given and never below this; <c>EndlessHubTests</c> asks it of the shortest canvas
+        /// with both switcher pills drawn, which is the tightest band this game can hand it.
+        /// </summary>
+        public const float MinScale = .78f;
 
         /// <summary>
         /// Air the column leaves under the header before it begins.
@@ -137,38 +165,55 @@ namespace GlimmerGrove.Layout
 
         public static float PanelCentre => HeroHeight + HeroGap + PanelHeight * .5f;
 
+        public static float RecordCentre
+            => HeroHeight + HeroGap + PanelHeight + RecordGap + RecordHeight * .5f;
+
         /// <summary>Where row <paramref name="index"/> is read, measured down from the plate's top.</summary>
         public static float RowCentre(int index)
             => PanelPad + RowHeight * .5f + index * (RowHeight + RowGap);
 
         public static float ButtonCentre
-            => HeroHeight + HeroGap + PanelHeight + PanelGap + ButtonHeight * .5f;
+            => HeroHeight + HeroGap + PanelHeight + RecordGap + RecordHeight + ButtonGap
+             + ButtonHeight * .5f;
 
         /// <summary>How tall the whole column is. Derived, never typed.</summary>
         public static float Height => ButtonCentre + ButtonHeight * .5f;
 
         /// <summary>
+        /// The scale the column is drawn at in a band <paramref name="band"/> tall: whole where it
+        /// fits, shrunk uniformly to the band where it does not, and never below
+        /// <see cref="MinScale"/>. The screen scales the column about its top edge, so every
+        /// centre above is multiplied by this and nothing else moves.
+        /// </summary>
+        public static float ScaleIn(float band)
+        {
+            if (band >= Height) return 1f;
+            float s = band / Height;
+            return s > MinScale ? s : MinScale;
+        }
+
+        /// <summary>
         /// Where the column's top edge sits inside a band <paramref name="band"/> tall, measured
-        /// down from the band's own top.
+        /// down from the band's own top, once it is drawn at <see cref="ScaleIn"/>.
         ///
-        /// Never negative: a band too short to hold the column starts it at the top and lets it
-        /// run past the bottom, which is a composition somebody can see is wrong rather than one
-        /// hanging off the top of the screen where nobody can.
+        /// Never negative: a band too short to hold the column even at its floor starts it at the
+        /// top and lets it run past the bottom, which is a composition somebody can see is wrong
+        /// rather than one hanging off the top of the screen where nobody can.
         /// </summary>
         public static float TopIn(float band)
         {
-            float slack = band - Height;
+            float slack = band - Height * ScaleIn(band);
             return slack > 0f ? slack * Lift : 0f;
         }
 
-        /// <summary>Whether a band this tall holds the column at all.</summary>
-        public static bool Fits(float band) => band >= Height;
+        /// <summary>Whether a band this tall holds the column at its floor scale or better.</summary>
+        public static bool Fits(float band) => band >= Height * MinScale;
 
         /// <summary>
         /// Whether the column leaves clear air everywhere and fits inside the reference width.
         ///
         /// <paramref name="fault"/> names what went wrong, so a failure reads as an instruction
-        /// rather than as a boolean — <see cref="PanelStack.IsClear"/>'s rule.
+        /// rather than as a boolean - <see cref="PanelStack.IsClear"/>'s rule.
         ///
         /// <para>
         /// It checks the <em>stack</em>, which is a fact about the constants above and not about
@@ -182,9 +227,9 @@ namespace GlimmerGrove.Layout
         {
             fault = null;
 
-            float[] centres = { HeroCentre, PanelCentre, ButtonCentre };
-            float[] heights = { HeroHeight, PanelHeight, ButtonHeight };
-            string[] names = { "the medal", "the plate", "the button" };
+            float[] centres = { HeroCentre, PanelCentre, RecordCentre, ButtonCentre };
+            float[] heights = { HeroHeight, PanelHeight, RecordHeight, ButtonHeight };
+            string[] names = { "the rank", "the plate", "the record", "the button" };
 
             for (int i = 1; i < centres.Length; i++)
             {

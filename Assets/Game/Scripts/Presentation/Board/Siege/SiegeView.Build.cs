@@ -38,7 +38,7 @@ namespace GlimmerGrove
             _chain = null;
             _chainAura = null;
 
-            // The pool's widgets hang off `_fx`, which this rebuild replaces — so a spare kept
+            // The pool's widgets hang off `_fx`, which this rebuild replaces - so a spare kept
             // across it is a destroyed node handed out as a live one, and every bolt after the
             // first rebuild would be invisible.
             _spare.Clear();
@@ -46,12 +46,12 @@ namespace GlimmerGrove
             _wave = 0;
 
             // The idle nudge is per run and its widgets hang off gems this rebuild is about to
-            // replace — a kept one is a destroyed node held as a live one. See `SiegeView.Hint`.
+            // replace - a kept one is a destroyed node held as a live one. See `SiegeView.Hint`.
             Unhinted();
 
             // The targeting layer hangs off the layers this rebuild is about to replace, so a
             // board dealt again while something was armed would leave a destroyed node behind a
-            // live `Arming` — and the bar would still be showing a ring. Cleared through the
+            // live `Arming` - and the bar would still be showing a ring. Cleared through the
             // field rather than the property, because the layer it would tear down is already
             // gone; the screen re-arms nothing, which is what a fresh board should be.
             _arming = null;
@@ -113,7 +113,7 @@ namespace GlimmerGrove
 
             // **The effects layer gets a canvas of its own, and it is the single cheapest thing
             // in this mode.** Unity rebuilds a canvas's whole geometry whenever any `Graphic` on
-            // it is added, removed, moved or re-tinted — and this board's canvas carries the
+            // it is added, removed, moved or re-tinted - and this board's canvas carries the
             // ground, the ward line, four fuel tubes, the gem field and a dozen raiders. Every
             // spark of every boss cast was therefore re-meshing all of that, twenty to forty
             // times a second, at exactly the moment the mode has the most on screen. A nested
@@ -126,7 +126,7 @@ namespace GlimmerGrove
             // rebuild boundary, which is the whole of what is wanted.
             //
             // **It costs one batch.** Geometry either side of the boundary cannot be batched
-            // together, so the board pays a draw call for it — against a canvas rebuild that
+            // together, so the board pays a draw call for it - against a canvas rebuild that
             // was touching several thousand vertices per spark. No raycaster: everything drawn
             // here sets `raycastTarget = false`, so there is nothing on this layer to hit.
             _fx.gameObject.AddComponent<Canvas>().overrideSorting = false;
@@ -137,8 +137,8 @@ namespace GlimmerGrove
             // instead (`OnBoard`, invariant 37ac). A stormcall's bolt cannot: it falls out of the
             // sky onto a raider, so it is longer than the room above whatever it hit and the top
             // of it belongs off the top of the picture. The two ways to spend that are to *shrink*
-            // the bolt until it fits — which on a hill four cells deep is a spark rather than
-            // lightning — or to let it run off and cut it at the frame, which is what every game
+            // the bolt until it fits - which on a hill four cells deep is a spark rather than
+            // lightning - or to let it run off and cut it at the frame, which is what every game
             // that has ever drawn a lightning strike does. `RectMask2D` rather than `Mask`: it is
             // a clip rectangle handed to the shader, so it costs no stencil buffer and no extra
             // draw call.
@@ -147,12 +147,12 @@ namespace GlimmerGrove
 
             // **A damage figure is a readout, not an effect, so it is the last thing built and
             // nothing on this board is ever drawn over one.** Sharing `_fx` was right for as long
-            // as the busiest thing here was a lit line — hits land 55ms apart at one raider and a
+            // as the busiest thing here was a lit line - hits land 55ms apart at one raider and a
             // `Pop` is a cell wide, so a number was covered by very little for very little time.
             // A stormglass is not that: it throws every standing ward at every raider inside half
             // a second, so each beam, each two-cell scorch and each landing reel is a new sibling
             // over the top of every figure already standing. The number was drawn, was correct,
-            // and was buried about thirty milliseconds after it appeared — which on a screen the
+            // and was buried about thirty milliseconds after it appeared - which on a screen the
             // whole game stops for reads as a payoff that does not say what it did.
             //
             // Above `_sky` as well as `_fx`, because a stormcall's lightning is the other thing
@@ -183,8 +183,8 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Worked out here rather than handed to an <see cref="AspectRatioFitter"/>, and the
         /// reason is that this has to be testable.</b> <see cref="Scenery.Cover"/> uses the fitter
-        /// because a backdrop's parent resizes under it; the hill band does not — it is one
-        /// rectangle, computed once — so the fitter would buy nothing but a dependency on when
+        /// because a backdrop's parent resizes under it; the hill band does not - it is one
+        /// rectangle, computed once - so the fitter would buy nothing but a dependency on when
         /// layout runs. This is <c>SiegeView.StrikeCentre</c>'s bargain for the same reason: the
         /// arithmetic is a static a fixture can sweep, and the fixture asserts <em>the
         /// consequence</em> (it covers, and its aspect is the art's) rather than restating the
@@ -197,7 +197,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>They were drawn at <c>Span.x</c>, which is a strip of bare plate down each side.</b>
         /// <c>ProtoView</c> sizes the plate to the field plus <c>Margin</c> on every edge, so a
-        /// ground drawn at the field's own width leaves 18 units showing left and right — reported
+        /// ground drawn at the field's own width leaves 18 units showing left and right - reported
         /// as tiny side gaps, and correct in the sense that every widget on a board is inset by
         /// that margin. A floor is not a widget on the board; it <em>is</em> the board, and so is
         /// the rampart the turrets stand on. Both run to the edge.
@@ -226,7 +226,7 @@ namespace GlimmerGrove
         /// The hill: ground the raiders walk over, and the breach they come out of.
         ///
         /// <para>
-        /// <b>Enveloped, never stretched — and it was stretched on every device this game runs
+        /// <b>Enveloped, never stretched - and it was stretched on every device this game runs
         /// on.</b> The ground was drawn as a plain <c>Image</c> sized to the band, which scales a
         /// sprite independently in x and y; the band's aspect is <b>0.99</b> on a 21:9 phone,
         /// <b>1.14</b> on an iPhone, <b>1.77</b> on a 16:9 screen and <b>2.85</b> on an iPad,
@@ -243,14 +243,14 @@ namespace GlimmerGrove
         /// deliberately larger than the band on one axis, so without a mask it would draw over the
         /// ward line and the field below it. <c>RectMask2D</c> rather than <c>Mask</c>, for the
         /// reason <c>_sky</c> gives: a clip rectangle handed to the shader costs no stencil buffer
-        /// and no extra draw call. The mask wraps the ground alone — the raiders are in
+        /// and no extra draw call. The mask wraps the ground alone - the raiders are in
         /// <c>_mobs</c> and are untouched.
         /// </para>
         ///
         /// <para>
         /// <b>Nothing offline could see any of this.</b> Every gate here reads the model, and
-        /// <c>Tools/render_siege.py</c> — the one instrument built to catch a widget in the wrong
-        /// place — stretched it in exactly the same way, so the mirror reproduced the fault
+        /// <c>Tools/render_siege.py</c> - the one instrument built to catch a widget in the wrong
+        /// place - stretched it in exactly the same way, so the mirror reproduced the fault
         /// faithfully and drew a picture that looked composed (44d). What saw it is the owner.
         /// </para>
         /// </summary>
@@ -473,7 +473,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Always drawn, and it says one before anybody has spent a cog.</b> A badge that only
         /// appeared once a ward had been upgraded would be a reward for knowing about a mechanic
-        /// nobody had met — this way the ladder is on the board from the first frame, and what a
+        /// nobody had met - this way the ladder is on the board from the first frame, and what a
         /// cog does is legible the moment it happens rather than the moment it is explained.
         /// </para>
         /// <para>
@@ -541,7 +541,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The plate under them runs to the edge of the board, exactly as the ground and the
         /// rampart do</b> (see <see cref="PlateWide"/>). On a phone it always did, by arithmetic
-        /// rather than by rule — the field is laid out to the width, so eight cells and a
+        /// rather than by rule - the field is laid out to the width, so eight cells and a
         /// third of one is the plate's own width to within six units. On a tablet the field is
         /// laid out to the width a <em>phone</em> would have given it (invariant 37cc,
         /// <see cref="CellFor"/>), so the two part by a couple of hundred units and a plate cut
@@ -687,10 +687,10 @@ namespace GlimmerGrove
         /// How many beats of the count-in are owed, given the seconds of opening quiet left.
         ///
         /// <para>
-        /// <b>A static, so a fixture can sweep it</b> — <see cref="GroundSize"/>'s bargain and
+        /// <b>A static, so a fixture can sweep it</b> - <see cref="GroundSize"/>'s bargain and
         /// <c>SiegeView.StrikeCentre</c>'s: what a render can only look at one frame at a time, a
         /// test can walk end to end. It answers nought at the top of the quiet, climbs one beat a
-        /// step, and reaches <see cref="Beats"/> no later than the quiet runs out — which is the
+        /// step, and reaches <see cref="Beats"/> no later than the quiet runs out - which is the
         /// property that makes GO! and the first raider land together
         /// (<c>SiegeCountInTests</c>).
         /// </para>

@@ -9,8 +9,8 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// <b>The one thing on this account that no local event can announce.</b> Everything else a
-    /// screen draws moves because something on this device moved it — a level cleared, a chest
-    /// opened, a wallet credited — and each of those raises an event a screen can listen to.
+    /// screen draws moves because something on this device moved it - a level cleared, a chest
+    /// opened, a wallet credited - and each of those raises an event a screen can listen to.
     /// How many strangers typed your code, and how many of them cleared the chapter, are facts
     /// about <em>other people's</em> play (invariant 51). Nothing here fires when one changes;
     /// the ledger's own hook (<c>OnSettled</c>) is driven by this account's saves and says
@@ -39,7 +39,7 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>Nothing outlives the screen.</b> The component dies with its host, and
-    /// <see cref="OnDisable"/> releases the ledger's watch — so the listener is stopped by
+    /// <see cref="OnDisable"/> releases the ledger's watch - so the listener is stopped by
     /// leaving the page, by the page being destroyed under a navigation, and by the object
     /// being switched off, whichever happens first. Backgrounding is the ledger's
     /// (<c>Paused</c>/<c>Resumed</c>, raised by <c>Boot</c>), because it is a fact about the
@@ -63,7 +63,7 @@ namespace GlimmerGrove
             var watch = host.GetComponent<ReferralWatch>();
             if (watch == null) watch = host.gameObject.AddComponent<ReferralWatch>();
 
-            // The first ask belongs to the page opening, not to the first tick of a timer —
+            // The first ask belongs to the page opening, not to the first tick of a timer -
             // and with a listener attached (which `AddComponent` has just done, through
             // `OnEnable`) the listener's first delivery *is* that ask, or proves it is not
             // needed (`ReferralLedger.NeedsAsk`). Only a host that could not get a listener
@@ -75,7 +75,7 @@ namespace GlimmerGrove
         }
 
         /// <remarks>
-        /// <see cref="Attach"/> adds the component, which runs this before it returns — so the
+        /// <see cref="Attach"/> adds the component, which runs this before it returns - so the
         /// watch is taken here rather than there, and a host that is disabled and enabled again
         /// takes a fresh one rather than holding a stale handle across the gap.
         /// </remarks>
@@ -113,7 +113,7 @@ namespace GlimmerGrove
         {
             // The listener's callback may arrive on any thread, so all it does is record the
             // counter and set a flag. This is the main thread, and this is where that flag
-            // becomes an ask — or, when the counter matches the cached answer's stamp, nothing.
+            // becomes an ask - or, when the counter matches the cached answer's stamp, nothing.
             ReferralLedger.Pump();
 
             _tick += Time.unscaledDeltaTime;

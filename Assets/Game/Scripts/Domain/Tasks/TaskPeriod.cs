@@ -6,8 +6,8 @@ namespace GlimmerGrove.Tasks
     /// How often a task's slate is dealt again.
     ///
     /// Two, and only two, on purpose. A daily loop is the thing that brings somebody back
-    /// tonight; a weekly one is the thing that gives a week a shape. A third cadence — a
-    /// monthly, a seasonal — would be a third slate on one screen, and every screen in this
+    /// tonight; a weekly one is the thing that gives a week a shape. A third cadence - a
+    /// monthly, a seasonal - would be a third slate on one screen, and every screen in this
     /// game that grew a third responsibility was one too many (<c>CRAFT.md</c>). A season is
     /// an <em>event</em>, and events already exist.
     /// </summary>

@@ -7,7 +7,7 @@ namespace GlimmerGrove.Modes
     /// Where a utility is being aimed. Which half is read depends on the kind.
     ///
     /// <b>Integers throughout.</b> A blast names one box of the hill's grid rather than a point
-    /// on it, so there is nothing here a view and a rule could round differently — which is what
+    /// on it, so there is nothing here a view and a rule could round differently - which is what
     /// the float version quietly risked, on the one input a player pays gems for.
     /// </summary>
     public readonly struct SiegeAim
@@ -68,21 +68,21 @@ namespace GlimmerGrove.Modes
     }
 
     /// <summary>
-    /// What a utility does to a siege, and — the half that matters — what it costs.
+    /// What a utility does to a siege, and - the half that matters - what it costs.
     ///
     /// <para>
     /// <b>Invariant 39 lives here, and it is arithmetic rather than a policy.</b> A utility must
     /// be able to buy a <em>finish</em> and never a <em>grade</em>, because a grade is not a
     /// private number: stars derive credits, credits are a grove's worth, and a grove's worth
     /// reaches a public leaderboard (invariant 19a). A consumable that made a run score better
-    /// would therefore be a consumable that moved a public figure — and utilities are not
+    /// would therefore be a consumable that moved a public figure - and utilities are not
     /// adjudicated, so a forged one would move it for free.
     /// </para>
     /// <para>
     /// What closes that is the exchange rate the mode already has.
-    /// <c>SiegeTuning.PerfectMatch</c> is <em>the most</em> one match can ever deliver — three
+    /// <c>SiegeTuning.PerfectMatch</c> is <em>the most</em> one match can ever deliver - three
     /// gems, every one spent as a bolt, every bolt landing on a raider that ward is strong
-    /// against — which is exactly why <c>SiegeTuning.Par</c> is allowed to divide by it and call
+    /// against - which is exactly why <c>SiegeTuning.Par</c> is allowed to divide by it and call
     /// itself a floor. Charge a utility <c>ceil(damage / PerfectMatch)</c> and the charge is a
     /// floor on the matches it saved, so the run's spent count can never come out lower than a
     /// run that did the same work by playing. Using one is therefore, at best, exactly neutral to
@@ -92,8 +92,8 @@ namespace GlimmerGrove.Modes
     /// <b>A mending charges nothing, and that is the same rule rather than an exception.</b> It
     /// delivers no damage, so it saves no matches: what it buys is survival, which invariant 23
     /// already says a purchase may sell ("the offer sells a finish, never a grade"). The whole
-    /// design falls out of one question asked of each kind — <em>how many matches would this have
-    /// taken?</em> — and answering nought is a real answer.
+    /// design falls out of one question asked of each kind - <em>how many matches would this have
+    /// taken?</em> - and answering nought is a real answer.
     /// </para>
     /// <para>
     /// <b>Which means a utility can never be the difficulty a board was tuned against.</b>
@@ -129,12 +129,12 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// The most, not the likely: every tenth spent as a bolt, every bolt landing on something
         /// that ward is strong against. Over-stating what a surge is worth over-charges the grade,
-        /// which is the safe direction — under-stating it would let a player buy a star.
+        /// which is the safe direction - under-stating it would let a player buy a star.
         /// </para>
         /// </summary>
         /// <param name="rank">
         /// The rank of the ward it is being poured into. An upgraded ward gets more damage out of
-        /// the same fuel, so it is charged for more — read live rather than assumed at nought,
+        /// the same fuel, so it is charged for more - read live rather than assumed at nought,
         /// which would under-charge exactly the ward a player has spent cogs on.
         /// </param>
         public static int DamageOfFuel(int tenths, int rank = 0)
@@ -149,7 +149,7 @@ namespace GlimmerGrove.Modes
         /// <b>Asked before an item is spent and never after.</b> A player charged for a utility
         /// that changed nothing has lost something they may have paid gems for, which is
         /// <c>ProtoView.Took</c>'s rule about a move applied to the one resource here that costs
-        /// money to replace — and invariant 23's rule about a continue that does not continue.
+        /// money to replace - and invariant 23's rule about a continue that does not continue.
         /// </para>
         /// <para>
         /// A blast is the one kind this cannot answer honestly in advance and does not try to: it
@@ -189,7 +189,7 @@ namespace GlimmerGrove.Modes
                     // **A doused ward always takes one**, whatever is in its tube: what a surge
                     // buys there is the seconds rather than the fuel (see `SiegeBoard.Surge`), and
                     // refusing it on a full tube would refuse the item on exactly the ward a
-                    // blightcaller has just put out — which is the one moment it is worth most.
+                    // blightcaller has just put out - which is the one moment it is worth most.
                     if (board.Doused(aim.Ward)) return true;
 
                     // Half, rather than all of it. Refusing a ward that cannot take the whole
@@ -207,7 +207,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>A magnitude goes in as it was authored and the board converts it.</b> Every damaging
-        /// kind is measured in <c>UtilityUnit.Hill</c> — damage against an unsurged raider — and
+        /// kind is measured in <c>UtilityUnit.Hill</c> - damage against an unsurged raider - and
         /// <c>SiegeBoard.Blast</c> and <c>SiegeBoard.Storm</c> put it through each raider's own
         /// surge. Nothing is scaled here, because here there is no raider to scale it against:
         /// an endless hill holds wave four and wave forty at once, and one figure for both would
@@ -216,7 +216,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>The charge needs no change for it, and that is the check worth doing.</b>
         /// <see cref="MatchesFor"/> divides by <c>PerfectMatch</c>, and par is the hill's health
-        /// over the same figure (<c>SiegeTuning.Par</c>) — so a surge multiplies what a utility
+        /// over the same figure (<c>SiegeTuning.Par</c>) - so a surge multiplies what a utility
         /// delivers and what the level is graded against by the same amount. What it costs the
         /// grade as a <em>share of par</em> is therefore identical on every chapter, which is the
         /// whole of why invariant 39 survives a hill that climbs for ever.
@@ -241,7 +241,7 @@ namespace GlimmerGrove.Modes
 
                     // A firepot that reached nobody is not spent. It is the one refusal that can
                     // only be known after the fact, and handing the item back is the only honest
-                    // answer — see Would.
+                    // answer - see Would.
                     if (absorbed <= 0) return SiegeUse.Refused;
 
                     return new SiegeUse(true, MatchesFor(absorbed), absorbed, -1);

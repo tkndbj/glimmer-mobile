@@ -15,7 +15,7 @@ namespace GlimmerGrove.EditorTools
     /// The manifest is the authority on which glades exist and in what order, because
     /// that is what lets the game know its own shape after reading one small file. But
     /// an authority somebody maintains by hand alongside the real data is just a second
-    /// copy waiting to disagree — the author adds a level to a chapter, forgets the
+    /// copy waiting to disagree - the author adds a level to a chapter, forgets the
     /// manifest, and the level silently never appears.
     ///
     /// So nobody writes it: this derives it. It does two things, and the second matters
@@ -23,14 +23,14 @@ namespace GlimmerGrove.EditorTools
     ///
     /// <list type="number">
     /// <item>Every chapter the manifest already names has its level list rewritten from
-    /// its body, in the body's own order — the order an author can see while editing.</item>
+    /// its body, in the body's own order - the order an author can see while editing.</item>
     /// <item>Every chapter file the manifest does <i>not</i> name is adopted into it.
     /// Without that step a whole new chapter is invisible rather than wrong: nothing
     /// reads the folder, so nothing has anything to disagree with, and the drop ships
     /// missing a fortnight of work with a green build behind it.</item>
     /// </list>
     ///
-    /// The build gate then proves both held. Running this is not optional — it is just
+    /// The build gate then proves both held. Running this is not optional - it is just
     /// no longer possible to forget a step it can do itself.
     /// </summary>
     public static class ManifestSync
@@ -129,7 +129,7 @@ namespace GlimmerGrove.EditorTools
         /// <b>It was the one field of a chapter entry still written by hand, and that is
         /// exactly the shape of mistake this whole step exists to remove.</b> A chapter's mode
         /// decides which screen opens it, which lane it sits in and which chapter its star gate
-        /// asks about (invariant 20a) — and a weave chapter whose entry forgets to say so is
+        /// asks about (invariant 20a) - and a weave chapter whose entry forgets to say so is
         /// indexed as a glade chapter. Nothing refuses it: every level still parses, every board
         /// is still solvable, the art still resolves, and <c>Validate Content</c> passes. What
         /// ships is a chapter gated on somebody else's stars and offered under the wrong tab.
@@ -138,7 +138,7 @@ namespace GlimmerGrove.EditorTools
         /// </para>
         /// <para>
         /// So the mode is <em>derived</em>, exactly as the level list is and for invariant 4a's
-        /// reason: the manifest owns membership and order, and a chapter body owns content — and
+        /// reason: the manifest owns membership and order, and a chapter body owns content - and
         /// which way of playing its levels are is content. <c>ContentValidation</c> then proves
         /// the two agree, so a manifest edited by hand is caught by the build rather than by a
         /// player.
@@ -147,7 +147,7 @@ namespace GlimmerGrove.EditorTools
         /// The rule is <see cref="ChapterModeValidator"/>, shared with the build gate rather than
         /// restated here. A chapter whose levels disagree with each other is reported and left
         /// alone: there is no honest answer to derive, and writing whichever mode came first
-        /// would be a guess this file has no business making — the validator says so in full.
+        /// would be a guess this file has no business making - the validator says so in full.
         /// </para>
         /// <para>
         /// The version is deliberately <em>not</em> bumped. A version bump means "the body has
@@ -163,7 +163,7 @@ namespace GlimmerGrove.EditorTools
             if (!ChapterModeValidator.TryDerive(body.Levels, out var mode))
             {
                 notes.Add($"chapter '{id}' holds levels of more than one mode, so its mode could " +
-                          "not be derived and was left as it was — Validate Content names them");
+                          "not be derived and was left as it was - Validate Content names them");
                 return false;
             }
 
@@ -178,7 +178,7 @@ namespace GlimmerGrove.EditorTools
             string was = string.IsNullOrEmpty(entry.mode) ? GameMode.Default.Value : entry.mode;
             entry.mode = wanted;
 
-            notes.Add($"chapter '{id}' is a '{mode}' chapter, not a '{was}' one — its mode has " +
+            notes.Add($"chapter '{id}' is a '{mode}' chapter, not a '{was}' one - its mode has " +
                       "been corrected");
             return true;
         }
@@ -189,8 +189,8 @@ namespace GlimmerGrove.EditorTools
         ///
         /// Adopted chapters are enabled, not disabled. That looks like the riskier
         /// default and is in fact the safer one: an unfinished chapter cannot slip out
-        /// quietly, because it still has to pass validation — solvable boards, present
-        /// strings, addressed art — and the entry appears in a reviewed diff. Adopting
+        /// quietly, because it still has to pass validation - solvable boards, present
+        /// strings, addressed art - and the entry appears in a reviewed diff. Adopting
         /// it disabled would swap a loud failure for the silent absence this whole
         /// mechanism exists to prevent. An author who genuinely wants it held back sets
         /// <c>disabled</c> themselves, which is a deliberate act with a name on it.
@@ -266,14 +266,14 @@ namespace GlimmerGrove.EditorTools
             if (floor >= above)
             {
                 notes.Add($"chapter '{id}' sorts between chapters whose orders are not in id order; " +
-                          $"placed last at {append} — set \"order\" by hand if that is wrong");
+                          $"placed last at {append} - set \"order\" by hand if that is wrong");
                 return append;
             }
 
             if (above - floor < 2)
             {
                 notes.Add($"chapter '{id}' belongs between orders {floor} and {above}, which are adjacent; " +
-                          $"placed last at {append} — respace the orders if that is wrong");
+                          $"placed last at {append} - respace the orders if that is wrong");
                 return append;
             }
 
@@ -307,7 +307,7 @@ namespace GlimmerGrove.EditorTools
         /// <summary>
         /// Written by hand rather than by JsonUtility, which emits one unreadable line.
         /// The manifest is reviewed in pull requests and edited by people, so it has to
-        /// diff cleanly — one chapter per block, one level id per line.
+        /// diff cleanly - one chapter per block, one level id per line.
         /// </summary>
         static string Serialise(ManifestDto manifest)
         {
@@ -337,7 +337,7 @@ namespace GlimmerGrove.EditorTools
 
                 // Written only when it says something, for `mode`'s reason: an omitted track reads
                 // as the main ladder, so every chapter authored before tracks existed round-trips
-                // byte for byte. **It is authored rather than derived**, unlike `mode` — which
+                // byte for byte. **It is authored rather than derived**, unlike `mode` - which
                 // ladder a chapter sits on is not a fact about its levels (an endless siege and an
                 // ordinary one are the same block), so there is nothing to derive it from and the
                 // round trip is what stands in front of losing it.
@@ -346,8 +346,8 @@ namespace GlimmerGrove.EditorTools
 
                 // Written only when it says something, for `mode`'s reason: an omitted wall is
                 // no wall, so every chapter authored before this field existed round-trips byte
-                // for byte. **Authored rather than derived**, like `track` — nothing about a
-                // chapter's levels implies how much of the game belongs in front of it — so the
+                // for byte. **Authored rather than derived**, like `track` - nothing about a
+                // chapter's levels implies how much of the game belongs in front of it - so the
                 // round trip below is the only thing standing between it and a silent deletion.
                 if (entry.minKeeperLevel > 0)
                     sb.AppendLine($"      \"minKeeperLevel\": {entry.minKeeperLevel},");
@@ -364,7 +364,7 @@ namespace GlimmerGrove.EditorTools
 
             // Everything below is authored here, not derived, so this writer's job is
             // simply to give it back unharmed. Anything the manifest carries that this
-            // method forgets to print is deleted by the next sync without a word — which
+            // method forgets to print is deleted by the next sync without a word - which
             // already happened once: the roster's prices and the whole event calendar
             // were both added later, neither reached this method, and the first sync run
             // after them silently deleted a live event and thirty companion prices. That
@@ -434,9 +434,9 @@ namespace GlimmerGrove.EditorTools
         ///
         /// <para>
         /// This exists because the failure it catches is invisible and permanent. The
-        /// writer prints named fields, so a field added to the manifest a year from now —
+        /// writer prints named fields, so a field added to the manifest a year from now -
         /// exactly as <c>unlockCost</c> and <c>events</c> both were, both deliberately
-        /// without a schema bump — is not a compile error here, is not a validation error
+        /// without a schema bump - is not a compile error here, is not a validation error
         /// anywhere, and is not visible in the file until somebody runs the one step
         /// <c>CONTENT.md</c> tells them to run after <em>every</em> content edit. The first
         /// author to do that after such a change deletes live content and gets a success
@@ -478,7 +478,7 @@ namespace GlimmerGrove.EditorTools
                 // **Every authored field, and two of them were missing.** `track` and
                 // `minKeeperLevel` are the only chapter fields this writer prints conditionally,
                 // which makes them precisely the ones a forgotten `AppendLine` would drop in
-                // silence under a success message — invariant 4c's whole subject. A check that
+                // silence under a success message - invariant 4c's whole subject. A check that
                 // does not name a field is a check that cannot see it go.
                 if (a.id != b.id || a.version != b.version || a.order != b.order ||
                     a.disabled != b.disabled || a.minAppVersion != b.minAppVersion ||

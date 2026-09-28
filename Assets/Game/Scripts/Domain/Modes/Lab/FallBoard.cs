@@ -3,15 +3,15 @@ using System.Collections.Generic;
 namespace GlimmerGrove.Modes
 {
     /// <summary>
-    /// <b>Lightfall.</b> A well of coloured motes. You never match them — you <em>cook</em> them,
+    /// <b>Lightfall.</b> A well of coloured motes. You never match them - you <em>cook</em> them,
     /// and a mote that reaches white bursts and washes the colour that finished it into
     /// everything beside it.
     ///
     /// <para>
     /// <b>One verb with two branches, and the branch is what makes it a game.</b> A mote dropped
     /// onto a stack either <em>enriches</em> the top of it or <em>heightens</em> it. Red onto
-    /// yellow makes orange and the stack does not grow. Red onto orange adds nothing — orange
-    /// already holds red — so the mote sits on top and the well is one row nearer its brim.
+    /// yellow makes orange and the stack does not grow. Red onto orange adds nothing - orange
+    /// already holds red - so the mote sits on top and the well is one row nearer its brim.
     /// Every drop therefore costs one of a finite supply and, if it was the wrong one, a row of
     /// headroom as well: one mistake, two meters, and both of them visible.
     /// </para>
@@ -24,14 +24,14 @@ namespace GlimmerGrove.Modes
     /// The wave counter, the rising pitch and the chain multiplier were all dead code against a
     /// rule that rejects them. What replaced it is <em>one</em> destruction and a spread: a
     /// white mote bursts alone, and the motes beside it gain the channel that finished it. Any
-    /// of them that is thereby completed bursts in turn — so a single well-chosen drop runs
+    /// of them that is thereby completed bursts in turn - so a single well-chosen drop runs
     /// through a whole connected blob of motes that were all missing the same channel, which is
     /// the chain the mode was written as if it had.
     /// </para>
     /// <para>
     /// It also decides what the mode <em>is</em>. Dropping blue clears the yellows; the reds and
     /// greens it passes are left one step better rather than untouched; and a mote buried at the
-    /// bottom of a column — which no drop can ever land on — is reached by the wash from its
+    /// bottom of a column - which no drop can ever land on - is reached by the wash from its
     /// neighbours. That is what makes a full well solvable at all, and what makes which colour
     /// goes where the whole of the thinking.
     /// </para>
@@ -68,7 +68,7 @@ namespace GlimmerGrove.Modes
     /// and <em>pops</em>, whatever colour it was. Nothing else here can do that: a burst washes
     /// the drop's one colour and only sets off what was exactly that channel short. What stops
     /// it being invariant 20j's solvent is the <em>price</em> rather than a threshold on the
-    /// consequence — a lens gains at most one channel per drop
+    /// consequence - a lens gains at most one channel per drop
     /// (<c>FallGlassTests.OneDropCanOnlyEverAddOneChannelToGlass</c>), so three separate drops
     /// of three separate colours pay for one shot, and a beam still stops at the first thing it
     /// meets. Reach is bought, and it is bought dearly.
@@ -87,7 +87,7 @@ namespace GlimmerGrove.Modes
     /// <b>A whorl is the third chapter's answer to the one thing a lens cannot do, which is
     /// <em>move</em> anything.</b> Every rule above adds a channel to a cell: a drop adds one, a
     /// wash adds one, a beam adds three. A whorl is the only place two <em>motes</em> are ever
-    /// put together — light reaches it, and on the next wave it draws in whatever is standing
+    /// put together - light reaches it, and on the next wave it draws in whatever is standing
     /// either side of it and leaves one mote holding both. A cyan and a red that would each have
     /// wanted a drop of their own become a white on the spot.
     /// </para>
@@ -97,13 +97,13 @@ namespace GlimmerGrove.Modes
     /// did nothing; a <em>wick</em> washed one authored colour into its four neighbours when any
     /// light touched it, which is this class's own burst with the colour changed and with no
     /// decision anywhere in it. What a whorl gives back is decided entirely by what the player
-    /// arranged beside it, and the well collapses under every chain — so the mechanic is a
+    /// arranged beside it, and the well collapses under every chain - so the mechanic is a
     /// question about <em>position</em>, which is the one axis a mode with one verb and one input
     /// had never been asked about. See <see cref="FallCell.Whorl"/>.
     /// </para>
     /// <para>
     /// <b>No Unity types and no randomness.</b> The whole thing is provable offline, which
-    /// matters because a falling-piece game is wrong in ways a screenshot cannot show — a
+    /// matters because a falling-piece game is wrong in ways a screenshot cannot show - a
     /// gravity pass that settles in the wrong order, a wash applied after the fall rather than
     /// before it, a cascade that resolves one column at a time.
     /// </para>
@@ -117,7 +117,7 @@ namespace GlimmerGrove.Modes
 
         /// <summary>
         /// Scratch for one wave: what channels each cell was handed, accumulated rather than
-        /// latched — and allocated only when a wave actually happens.
+        /// latched - and allocated only when a wave actually happens.
         ///
         /// <para>
         /// <b>It is a mask rather than a flag because a wave no longer carries one colour.</b> A
@@ -142,13 +142,13 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>It has to outlive the wave that sets it, which is why it is not scratch.</b> A lens
         /// a beam lands on is filled in one wave and fires in the next, and the well settles in
-        /// between — so the flag is carried by <see cref="Settle"/> alongside the cell it belongs
+        /// between - so the flag is carried by <see cref="Settle"/> alongside the cell it belongs
         /// to and cleared when that cell leaves. At rest it is all false: a struck lens is always
         /// full, and a full lens always fires on the very next wave.
         /// </para>
         /// <para>
         /// Copied by <see cref="Fork"/> for the same reason the cells are. The search never
-        /// observes a set flag — it forks between drops, and every wave has resolved by then —
+        /// observes a set flag - it forks between drops, and every wave has resolved by then -
         /// but a fork that dropped state the rule reads is the kind of divergence nothing can
         /// see, because a board that settles differently still settles.
         /// </para>
@@ -211,10 +211,10 @@ namespace GlimmerGrove.Modes
         /// How many whorls have drawn in <em>two</em> motes on this board, over its whole life.
         ///
         /// <para>
-        /// <b>An authoring reading rather than a rule</b> — nothing about play consults it, and
+        /// <b>An authoring reading rather than a rule</b> - nothing about play consults it, and
         /// it is deliberately cumulative rather than per drop so a fixture can play a whole
         /// solution and ask one question at the end. It exists because every *other* reading this
-        /// mode takes — solvable, par, ways, greedy, aim — is passed just as happily by an object
+        /// mode takes - solvable, par, ways, greedy, aim - is passed just as happily by an object
         /// that decorates the board as by one that decides it, which is how the mirror this
         /// mechanic replaced got as far as being played (invariant 26g). A whorl that only ever
         /// turns with one mote beside it has moved a mote sideways; a whorl that turns with none
@@ -289,7 +289,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>Glass cannot, and that is the one way a well can hold motes and still be
         /// finished with.</b> A lens is only ever removed by light reaching it, and light only
-        /// ever comes from a burst — so a well down to its last lenses with no mote left to cook
+        /// ever comes from a burst - so a well down to its last lenses with no mote left to cook
         /// is over whatever the supply says. It is the honest input to the one question here
         /// that charges money: <c>FallVerdict.Deficit</c> must answer "no offer" for it, because
         /// selling motes into a well that can never burst again is selling a run that is
@@ -322,7 +322,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// It needs no clause anywhere that a lens needs, and that is the point of the mechanic:
-        /// a drop opens a whorl, and a whorl with nothing beside it closes rather than waiting —
+        /// a drop opens a whorl, and a whorl with nothing beside it closes rather than waiting -
         /// so one can always be got rid of and a well holding nothing but whorls is still
         /// winnable. The lens shipped without that property and had to have a valve added when a
         /// player reported being stranded (invariant 26f).
@@ -360,7 +360,7 @@ namespace GlimmerGrove.Modes
         /// it, otherwise the first free cell above. -1 when the column cannot take one.
         ///
         /// <para>
-        /// Worth being able to ask before committing — the screen draws a ghost of it under the
+        /// Worth being able to ask before committing - the screen draws a ghost of it under the
         /// player's thumb, and that preview is the whole reason this verb works where tapping a
         /// cell did not.
         /// </para>
@@ -398,19 +398,19 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>The valve that stops a well ever becoming unwinnable, and it was added after
         /// play.</b> Glass is only ever charged by light, and light only ever comes from a
-        /// burst — so a player who cleared every mote before feeding the lens had destroyed the
+        /// burst - so a player who cleared every mote before feeding the lens had destroyed the
         /// only thing that could ever fill it, and was left tapping at a board that could not be
         /// finished and would not end. Reported exactly that way: <em>"I have destroyed all the
         /// motes, only this prism ball left, but I cannot finish the level."</em> Measured
         /// afterwards, that state was three drops away on the fifth board and five on the
-        /// sixth — not a corner, the obvious line of play.
+        /// sixth - not a corner, the obvious line of play.
         /// </para>
         /// <para>
         /// <b>It is a valve rather than a shortcut, and the arithmetic is what makes it one.</b>
         /// Feeding glass by hand costs one drop a channel and gives nothing back; feeding it
         /// with a burst is usually free, because the burst was clearing a blob anyway. So the
         /// search still prefers the burst route and par is unmoved on eight of the ten shipped
-        /// boards — what the drop buys is that being wrong can always be paid for, out of the
+        /// boards - what the drop buys is that being wrong can always be paid for, out of the
         /// same five drops of slack every well is dealt.
         /// </para>
         /// </summary>
@@ -432,13 +432,13 @@ namespace GlimmerGrove.Modes
         /// separately is how a caller comes to ask only one of them.</b> A mote lacking the
         /// colour is enriched and a lens lacking it is charged; in both cases the drop is
         /// absorbed and the well does not get any taller. <see cref="Enriches"/> is
-        /// <c>IsMote(...) &amp;&amp; ...</c>, so it answers <b>false</b> for every charging drop —
+        /// <c>IsMote(...) &amp;&amp; ...</c>, so it answers <b>false</b> for every charging drop -
         /// which is correct for the question it asks and catastrophic as a stand-in for this one.
         /// <c>FallView</c> used it to decide whether the falling widget should be handed back or
         /// left standing in the cell, so every drop taken in by glass was drawn as one that had
         /// come to rest on top: the falling mote took the lens's place in the view's own index
         /// and the lens's widget was dropped out of it, still on screen, tracked by nothing.
-        /// It then never repainted, never fell and never left — a pane hanging in the air over a
+        /// It then never repainted, never fell and never left - a pane hanging in the air over a
         /// column that had since emptied, showing the charge it held before the drop. Reported
         /// from play in exactly those words.
         /// </para>
@@ -475,7 +475,7 @@ namespace GlimmerGrove.Modes
 
         /// <summary>
         /// Whether this drop would come to rest above the brim. A warning rather than a verdict
-        /// — the mote may burst on arrival and save the well — but an honest one, because most
+        /// - the mote may burst on arrival and save the well - but an honest one, because most
         /// of the time it will not.
         /// </summary>
         public bool AtBrim(int colour, int x)
@@ -511,16 +511,16 @@ namespace GlimmerGrove.Modes
             if (!enriched) _motes++;
 
             // A whorl is *opened* by a drop rather than filled by it. It holds no channels at
-            // all — `|=` here would quietly make a coloured whorl, which is a cell no rule in
+            // all - `|=` here would quietly make a coloured whorl, which is a cell no rule in
             // this file has a name for and which the letters cannot even write down.
             if (FallCell.IsWhorl(_cells[index])) _cells[index] |= FallCell.Lit;
             else _cells[index] |= colour;
 
             Resolve(colour, steps, out int waves, out int burst);
 
-            // Read after the whole cascade rather than at the landing. It cannot differ today —
+            // Read after the whole cascade rather than at the landing. It cannot differ today -
             // a mote only ever comes to rest on the brim by *heightening*, and a heightened mote
-            // is a pure colour that cannot burst — but a rule that reads the board after it has
+            // is a pure colour that cannot burst - but a rule that reads the board after it has
             // finished moving is the one that stays right if the wash ever reaches further.
             Flooded = BrimBreached();
 
@@ -553,8 +553,8 @@ namespace GlimmerGrove.Modes
             {
                 // ---- what is leaving this wave, decided over the whole board before anything
                 //      moves. Three kinds and two sentences: a mote at Energy.All bursts and
-                //      glass at FallCell.Full fires — which is one sentence twice on purpose,
-                //      light fills a thing up and then it goes off — and a whorl the light
+                //      glass at FallCell.Full fires - which is one sentence twice on purpose,
+                //      light fills a thing up and then it goes off - and a whorl the light
                 //      reached last wave *turns*, which is what light does to the one cell here
                 //      that never fills up at all.
                 List<int> burst = null, fired = null, turning = null;
@@ -687,7 +687,7 @@ namespace GlimmerGrove.Modes
 
                 // A whorl turns: what it drew in leaves the cells it stood in, and comes back as
                 // one mote in the whorl's own. A whorl that drew in nothing closes and leaves
-                // bare ground, which is what keeps it removable — and therefore what keeps a
+                // bare ground, which is what keeps it removable - and therefore what keeps a
                 // well holding nothing but whorls winnable, and a continue on one honest.
                 //
                 // **Two motes in, one out, and that is why the loop still terminates.** Every
@@ -713,13 +713,13 @@ namespace GlimmerGrove.Modes
                         }
                         else
                         {
-                            // The cell stays occupied — the whorl has gone and the mote it made
-                            // is standing in its place — so it is not one the drop was rid of.
+                            // The cell stays occupied - the whorl has gone and the mote it made
+                            // is standing in its place - so it is not one the drop was rid of.
                             _cells[fuse.At] = fuse.Into;
                         }
 
                         // Defensive, and cheap: a whorl is never glass, so this flag is never
-                        // set on one. It is cleared for the reason `Settle` clears it — a flag
+                        // set on one. It is cleared for the reason `Settle` clears it - a flag
                         // left behind at an index would arm whatever comes to rest there.
                         if (_struck != null) _struck[fuse.At] = false;
 
@@ -788,7 +788,7 @@ namespace GlimmerGrove.Modes
         /// turning whorl on each side would go to whichever of the two this loop reached first,
         /// which is a reading order in the one method the whole class is arranged to keep free of
         /// one. Marked afterwards, both whorls see it, both are refused it, and it stays where it
-        /// is — see <see cref="Claim"/>.
+        /// is - see <see cref="Claim"/>.
         /// </para>
         /// </summary>
         List<FallFuse> Draw(List<int> turning)
@@ -825,11 +825,11 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// Three refusals, and each is a rule rather than a guard. A cell already leaving this
-        /// wave is not drawn in — the light got to it first, which is the honest reading and the
+        /// wave is not drawn in - the light got to it first, which is the honest reading and the
         /// one that keeps a mote from both bursting and being taken. Anything that is not a mote
         /// is not drawn in: <b>a whorl draws light and nothing else</b>, so glass stays where it
         /// stands and two whorls never eat each other. And a mote with a turning whorl on
-        /// <em>each</em> side is let go by both, which is the only symmetric answer available —
+        /// <em>each</em> side is let go by both, which is the only symmetric answer available -
         /// giving it to one of them would be a reading order.
         /// </para>
         /// </summary>
@@ -863,7 +863,7 @@ namespace GlimmerGrove.Modes
         /// <b>It accumulates rather than latching, and that is what a white beam cost.</b> A wave
         /// used to carry one colour, so the first thing to reach a cell was the only thing that
         /// could give it anything and a bool was enough. A burst now washes the drop's colour
-        /// while a lens throws all three, so one cell can be reached by both — and it has to take
+        /// while a lens throws all three, so one cell can be reached by both - and it has to take
         /// both, or the answer would depend on which of them was scanned first, which is the one
         /// property this whole wave is arranged to avoid. <c>|=</c> has no reading order in it.
         /// The list is still written once, on the first light to arrive, because that is a list
@@ -878,7 +878,7 @@ namespace GlimmerGrove.Modes
             int cell = _cells[ni];
             if (cell == FallCell.Empty) return;
 
-            // A whorl takes no channels — it holds none and never will. What light does to one
+            // A whorl takes no channels - it holds none and never will. What light does to one
             // is *open* it, and only once: a second arrival in the same wave finds it already
             // open and is not a second event, which is what keeps the wave free of any reading
             // order. It turns on the wave after this one, which is the wind-up the player needs
@@ -917,7 +917,7 @@ namespace GlimmerGrove.Modes
         /// the ordinary way, which is what decides how far round it fires.
         ///
         /// Answers false on a board that has never seen a beam, because the array is allocated
-        /// with the first one — a well with no glass in it, which is every well of the first
+        /// with the first one - a well with no glass in it, which is every well of the first
         /// chapter, never pays for it at all.
         /// </summary>
         bool Struck(int at) => _struck != null && _struck[at];
@@ -928,8 +928,8 @@ namespace GlimmerGrove.Modes
         /// throws is all three.
         ///
         /// <para>
-        /// <b>Two things stop it and both take something.</b> A mote is completed — whatever
-        /// colour it was, white leaves it nothing to want — so it <em>pops</em> on the next wave.
+        /// <b>Two things stop it and both take something.</b> A mote is completed - whatever
+        /// colour it was, white leaves it nothing to want - so it <em>pops</em> on the next wave.
         /// Glass is filled outright and fires on the next wave itself, which is the chain: a shot
         /// down a row of lenses opens every one of them. Bare ground, and anything going off in
         /// this same wave, it passes straight through.
@@ -939,7 +939,7 @@ namespace GlimmerGrove.Modes
         /// the trade this rule makes and it is worth being clear about: a mote that already held
         /// the colour used to stop a beam dead and take nothing, which made a shot a question
         /// about what stood in the line. White has no such mote, so a beam always pays out. What
-        /// keeps it from being invariant 20j's solvent is the price rather than the threshold — a
+        /// keeps it from being invariant 20j's solvent is the price rather than the threshold - a
         /// lens gains at most one channel per drop, so a shot costs three drops of three colours,
         /// and it still only reaches the <em>first</em> thing in each line.
         /// </para>
@@ -952,7 +952,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>A whorl is the third thing it can meet, and it stops the beam like anything
         /// else.</b> What is different is what happens to the whorl: any light at all opens one,
-        /// so a shot is one of the three ways a whorl is set turning — the other two being a
+        /// so a shot is one of the three ways a whorl is set turning - the other two being a
         /// burst beside it and a drop straight onto it. A beam is the only one of the three that
         /// can open a whorl the player cannot otherwise reach, which is what makes glass and
         /// whorls one game on a board rather than two sharing it.
@@ -1096,7 +1096,7 @@ namespace GlimmerGrove.Modes
         /// FNV-1a, and a hash rather than the cells themselves on purpose: a search holds
         /// hundreds of thousands of these and a phone runs it at level load, so the difference
         /// between eight bytes and a hundred is the difference between a search that fits and
-        /// one that does not. Collisions are the price and they are negligible — a quarter of a
+        /// one that does not. Collisions are the price and they are negligible - a quarter of a
         /// million entries in a 64-bit space collide with probability around two in a billion,
         /// and the consequence of one would be a par a single drop out, which the build gate
         /// would have to have passed first.
@@ -1130,8 +1130,8 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>Counted rather than read off <see cref="Steps"/></b>, and that is not tidiness. A
-        /// caller that wants the number and not the choreography passes no step list — the
-        /// search does exactly that, hundreds of thousands of times — and deriving this from the
+        /// caller that wants the number and not the choreography passes no step list - the
+        /// search does exactly that, hundreds of thousands of times - and deriving this from the
         /// list would answer nought for every one of them. It did, and the first thing that
         /// noticed was the test that asked whether a burst had happened at all.
         /// </para>
@@ -1139,7 +1139,7 @@ namespace GlimmerGrove.Modes
         public readonly int Waves;
 
         /// <summary>
-        /// Cells this drop was rid of, over every wave — motes that burst, glass that fired, and
+        /// Cells this drop was rid of, over every wave - motes that burst, glass that fired, and
         /// whatever a whorl took with it, because all of them are things the well had to lose.
         /// Counted for <see cref="Waves"/>' reason.
         ///
@@ -1152,7 +1152,7 @@ namespace GlimmerGrove.Modes
 
         /// <summary>
         /// The waves in order, for a screen that has to play them a beat apart. Empty when the
-        /// caller asked for none — see <see cref="Waves"/>.
+        /// caller asked for none - see <see cref="Waves"/>.
         /// </summary>
         public readonly IReadOnlyList<FallStep> Steps;
 
@@ -1179,9 +1179,9 @@ namespace GlimmerGrove.Modes
     /// <b>Every one of these is a position on the board <em>before</em> the wave was applied.</b>
     /// That is the whole contract with the view: the model settles the entire cascade before a
     /// frame is drawn, so a screen that re-read the live board mid-wave would draw the finished
-    /// well behind a burst that has not happened. Budburst shipped exactly that bug — an effect
+    /// well behind a burst that has not happened. Budburst shipped exactly that bug - an effect
     /// that asked the settled board which neighbour was bare and fired out of cells that had
-    /// never held anything — and this is the shape that makes it unrepresentable.
+    /// never held anything - and this is the shape that makes it unrepresentable.
     /// </para>
     /// </summary>
     public readonly struct FallStep
@@ -1210,7 +1210,7 @@ namespace GlimmerGrove.Modes
         /// Its own list rather than more of <see cref="Burst"/> for <see cref="Fired"/>'s reason:
         /// three things left the well and they are three different events to watch. A mote
         /// bursting is light being spent, a lens firing is three drops of charge going off at
-        /// once, and a whorl turning is two motes <em>moving</em> — the only motion in this mode
+        /// once, and a whorl turning is two motes <em>moving</em> - the only motion in this mode
         /// that is not the stack falling. Drawn the same way, the one thing the chapter is about
         /// would be invisible in the middle of it.
         /// </para>
@@ -1226,7 +1226,7 @@ namespace GlimmerGrove.Modes
         /// Whorls the light <em>opened</em> this wave, which turn on the next one.
         ///
         /// <b>The half a view would otherwise have no way to show.</b> A whorl opens on one beat
-        /// and turns on the following one, exactly as a lens fills on one and fires on the next —
+        /// and turns on the following one, exactly as a lens fills on one and fires on the next -
         /// so without this the merge would have no wind-up, and the player would never get the
         /// instant in which they can see <em>which two motes are about to be taken</em>, which is
         /// the whole of what they arranged.
@@ -1248,7 +1248,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <b>A wave no longer carries one colour, which is why this exists.</b> A burst washes
         /// the drop's colour and a lens throws white, so a view that painted every washed cell in
-        /// the drop's colour would draw a mote about to pop as one that had merely improved — the
+        /// the drop's colour would draw a mote about to pop as one that had merely improved - the
         /// single most misleading thing this board could say. A cell reached by both takes both,
         /// so this is a mask rather than a channel.
         /// </summary>

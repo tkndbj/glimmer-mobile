@@ -9,14 +9,14 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// <b>Five always, with the unearned ones dim rather than absent.</b> A row that grew as a
-    /// player upgraded would say how far they have come and never how far there is to go — and
+    /// player upgraded would say how far they have come and never how far there is to go - and
     /// how far there is to go is the whole reason a shelf shows a ladder at all. It is the same
     /// argument <c>ShopLadder</c> makes about a picture ladder being exactly as long as its shelf
     /// (invariant 18e).
     /// </para>
     /// <para>
     /// <b>Its own file because two screens draw it.</b> The shelf's cells and the preview panel
-    /// both show the same row, and two of them is two designs a week later — <c>PieceCard</c>'s
+    /// both show the same row, and two of them is two designs a week later - <c>PieceCard</c>'s
     /// rule (invariant 16l).
     /// </para>
     /// </summary>

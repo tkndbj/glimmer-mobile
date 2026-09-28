@@ -10,13 +10,13 @@ namespace GlimmerGrove.Content
     /// <b>It is a real siege, and that is the whole design.</b> A tutorial drawn as a diagram
     /// teaches a diagram: the player then has to translate it onto a board they have never seen.
     /// So this is <c>SiegeBoard</c>, <c>SiegeView</c>, the real gems, the real turrets, the real
-    /// raiders and the real clock — the same code the first rung runs — with one wave on it and a
+    /// raiders and the real clock - the same code the first rung runs - with one wave on it and a
     /// script standing beside it. Nothing below re-implements a rule.
     /// </para>
     /// <para>
     /// <b>It is authored here rather than in a chapter body, and that is not a breach of
     /// invariant 4.</b> Invariant 4 is about <em>content</em>: a chapter must never need a code
-    /// change. This is not a chapter and never becomes one — it has no <c>LevelId</c>, no record,
+    /// change. This is not a chapter and never becomes one - it has no <c>LevelId</c>, no record,
     /// no stars, no rewards, no place in the manifest and no gate. What it is, is the fixture
     /// every siege rule test already builds by hand (<c>SiegeRuleTests</c> builds a
     /// <c>SiegeLayout</c> exactly this way), promoted to something the game can draw. Authoring
@@ -25,10 +25,10 @@ namespace GlimmerGrove.Content
     /// </para>
     /// <para>
     /// <b>The one rule the script adds is that this board cannot be lost</b>, and that rule is
-    /// not here — it is <c>SiegeBoard.Sheltered</c>, read where a ward is hurt. A first-timer
+    /// not here - it is <c>SiegeBoard.Sheltered</c>, read where a ward is hurt. A first-timer
     /// who puts the phone down must not come back to a defeat panel, and a tutorial whose fail
-    /// state is real is a tutorial that has to explain one. Everything else — what a match
-    /// feeds, what an overcharge throws, how far a raider walks — is the shipped mode answering
+    /// state is real is a tutorial that has to explain one. Everything else - what a match
+    /// feeds, what an overcharge throws, how far a raider walks - is the shipped mode answering
     /// for itself.
     /// </para>
     /// <para>
@@ -62,7 +62,7 @@ namespace GlimmerGrove.Content
         /// <para>
         /// <b>Twelve, and it has been three and then six.</b> A wave walks on at
         /// <c>SiegeTuning.RaiderSpacing</c> rather than all together, so a short one is a
-        /// trickle that is over before the player has finished reading the board — and the whole
+        /// trickle that is over before the player has finished reading the board - and the whole
         /// of what this mode is about is a hill with something on it. Three was not a raid; six
         /// still ended too quickly; twelve keeps bodies arriving for a quarter of a minute and
         /// is still one wave, in the sense that matters: nothing arrives in a second act, and
@@ -70,7 +70,7 @@ namespace GlimmerGrove.Content
         /// </para>
         /// <para>
         /// <b>Every colour evenly rather than twelve of one</b>, so that whichever turret the player
-        /// fuels has something of its own to shoot at — a turret burns its own colour and little
+        /// fuels has something of its own to shoot at - a turret burns its own colour and little
         /// else. It is also what makes <see cref="SiegeBoard.Kindle"/> certain to finish: every
         /// raider on this hill is answered by a turret standing in front of it.
         /// </para>
@@ -86,15 +86,15 @@ namespace GlimmerGrove.Content
         ///
         /// <para>
         /// The ground pattern is <c>rgb</c> running diagonally, which is the one arrangement of
-        /// three colours on a rectangle that contains <b>no run and no swap at all</b> — so every
+        /// three colours on a rectangle that contains <b>no run and no swap at all</b> - so every
         /// move this board offers is one that was put there on purpose. One cell is then changed,
         /// at (2,3), and that single edit is what makes <see cref="TaughtA"/> ↔ <see cref="TaughtB"/>
         /// line up three greens along the fourth row.
         /// </para>
         /// <para>
-        /// <b>Do not retype this by eye.</b> <c>TutorialTests</c> holds all of it — that the field
+        /// <b>Do not retype this by eye.</b> <c>TutorialTests</c> holds all of it - that the field
         /// is settled, that the taught pair really lines something up, and that the pair is
-        /// adjacent — because a board that is one letter wrong is a tutorial that points a hand at
+        /// adjacent - because a board that is one letter wrong is a tutorial that points a hand at
         /// a move the rules refuse, and nothing else here could see it.
         /// </para>
         /// </summary>
@@ -112,7 +112,7 @@ namespace GlimmerGrove.Content
         ///
         /// <b>Chosen rather than searched, and the difference matters on this one board.</b>
         /// <c>SiegeBoard.FindSwap</c> answers the first pair in reading order, which on this field
-        /// is up near the top edge — a long reach on a phone and a poor first gesture. These two
+        /// is up near the top edge - a long reach on a phone and a poor first gesture. These two
         /// sit low and central, and the drag is left to right, which is the easiest movement to
         /// read from a still frame. <see cref="Taught"/> falls back to the search if they ever
         /// stop working, so the worst a mistyped row can do is move the hand rather than break it.
@@ -133,14 +133,14 @@ namespace GlimmerGrove.Content
         /// <para>
         /// <b>Three, and the first cut was one.</b> A tube really holds fourteen gems' worth
         /// (<c>SiegeTuning.WardCapacity</c> against <c>FuelPerGem</c>), which is four or five
-        /// matches — a good pace for a rung and far too long for the second thing a player is
+        /// matches - a good pace for a rung and far too long for the second thing a player is
         /// ever told. Filling it from a single match fixed the waiting and broke something
         /// worse: a turret that goes from empty to armed on one move teaches that an overcharge
         /// is what happens, rather than something you build. Reported in one word: <em>instant</em>.
         /// </para>
         /// <para>
-        /// <b>Three is the fewest that still reads as accumulation</b> — the tube climbs, twice,
-        /// before it lights — and it is close enough to the real four or five that nothing has to
+        /// <b>Three is the fewest that still reads as accumulation</b> - the tube climbs, twice,
+        /// before it lights - and it is close enough to the real four or five that nothing has to
         /// be unlearned. The shortfall is the tutorial's own (<see cref="Feed"/>); what the
         /// player sees is a tube filling from their matches, which is exactly what will happen on
         /// the first rung.
@@ -148,7 +148,7 @@ namespace GlimmerGrove.Content
         /// <para>
         /// <b>A target rather than a contract, and a caller that treats it as one hangs.</b> The
         /// match's own fuel lands beside the tutorial's share, so a player who matches three
-        /// times into one turret before the wave arrives brims it on the second — and a turret
+        /// times into one turret before the wave arrives brims it on the second - and a turret
         /// whose tube is spending itself on the hill may want a fourth. The loop ends on
         /// <see cref="Charged"/>; this only decides how generous each feed is.
         /// </para>
@@ -175,7 +175,7 @@ namespace GlimmerGrove.Content
         }
 
         /// <summary>
-        /// What is wrong with the board above, or null — the same reading every authored siege
+        /// What is wrong with the board above, or null - the same reading every authored siege
         /// gets, asked of the one that is not authored.
         ///
         /// It exists so a fixture can ask, because this layout goes through none of the content
@@ -236,7 +236,7 @@ namespace GlimmerGrove.Content
         /// real match pays <c>SiegeTuning.FuelPerGem</c> a gem and a tube holds fourteen of
         /// them; here each match pays a third of a tube, so the third one lights it
         /// (<see cref="MatchesToArm"/>). What the player sees is exactly what they will see on
-        /// the first rung — motes arrive, the tube climbs — at a pace the second sentence of a
+        /// the first rung - motes arrive, the tube climbs - at a pace the second sentence of a
         /// tutorial can afford.
         /// </para>
         /// <para>
@@ -253,7 +253,7 @@ namespace GlimmerGrove.Content
 
             float room = board.ToBrim(ward);
 
-            // The feed that arms it: everything that is left, and never nought — `SiegeWard.Fill`
+            // The feed that arms it: everything that is left, and never nought - `SiegeWard.Fill`
             // refuses nought outright, so a tube that has somehow arrived brim-full is handed a
             // drop rather than a zero that would quietly do nothing and leave a caller waiting.
             if (match >= MatchesToArm) return room > Drop ? room : Drop;
@@ -277,7 +277,7 @@ namespace GlimmerGrove.Content
         /// <para>
         /// <b>It is what stops that loop being able to hang.</b> Counting feeds instead looks
         /// right and is not: <see cref="Feed"/> caps what the <em>tutorial</em> pours, while the
-        /// match's own fuel lands beside it through the ordinary door — so a player who matches
+        /// match's own fuel lands beside it through the ordinary door - so a player who matches
         /// three times before the wave arrives can brim a tube a feed early. A loop owed one
         /// more feed then waits for <see cref="Fed"/>, which skips a ward that has already
         /// banked, and if the next match is that same colour it waits for ever.
@@ -315,7 +315,7 @@ namespace GlimmerGrove.Content
         ///
         /// <b>Because a payoff wants something to land on.</b> A wave walks on one raider at a
         /// time (<c>SiegeTuning.RaiderSpacing</c>), so the frame <see cref="Armed"/> first
-        /// answers is the frame the <em>first</em> body appears — and an overcharge taught
+        /// answers is the frame the <em>first</em> body appears - and an overcharge taught
         /// against a hill with one creeper on it is the biggest thing in the mode spent on the
         /// smallest thing in it. Two is enough for a blast to read as a blast and is reached a
         /// second and a half later, which the player spends watching a wave arrive.
@@ -328,8 +328,8 @@ namespace GlimmerGrove.Content
         ///
         /// <para>
         /// <b>The impatience is a parameter rather than a clock in here</b>, so this stays a pure
-        /// reading of the board and the one thing that could hang the script — a crowd that never
-        /// arrives, on a wave somebody later shortens — is answered by the caller's own deadline
+        /// reading of the board and the one thing that could hang the script - a crowd that never
+        /// arrives, on a wave somebody later shortens - is answered by the caller's own deadline
         /// instead of by a rule nobody can see. See <c>TutorialScreen.CrowdCeiling</c>.
         /// </para>
         /// </summary>
@@ -349,7 +349,7 @@ namespace GlimmerGrove.Content
         /// is hurt rather than repaired afterwards; the closing sweep is
         /// <c>SiegeBoard.Kindle</c>; and a feed goes in through <c>SiegeBoard.Pour</c>, which is
         /// <c>SiegeWard.Fill</c>'s own door. What is left here is the board, the readings and
-        /// the pacing — a description of a tutorial, holding no state and mutating nothing.
+        /// the pacing - a description of a tutorial, holding no state and mutating nothing.
         /// </summary>
     }
 }

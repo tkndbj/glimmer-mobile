@@ -8,8 +8,8 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// <b>uGUI has no gradient, and the two ways round that are both worse.</b> A `Text` carries
-    /// one colour, so a graded caption is either a picture — which is a string baked into art,
-    /// and this game's captions are loc keys (invariant 6) — or the same word drawn several
+    /// one colour, so a graded caption is either a picture - which is a string baked into art,
+    /// and this game's captions are loc keys (invariant 6) - or the same word drawn several
     /// times in several colours through a mask, which is one more thing per letter on a canvas
     /// that has already been billed once for exactly that (`UI effects cost the canvas`). A mesh
     /// modifier is neither: uGUI is already building these vertices, and this paints them on the
@@ -17,7 +17,7 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>The ramp runs on the mesh's own extent rather than on the rect</b>, so it grades the
-    /// <em>word</em> and not the box it is centred in — a caption in a box twice its width would
+    /// <em>word</em> and not the box it is centred in - a caption in a box twice its width would
     /// otherwise show only the middle of the ramp, and every one of these labels is centred in a
     /// box sized for the longest string its band can say.
     /// </para>
@@ -30,7 +30,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>Added before <c>Outline</c>, deliberately.</b> uGUI runs mesh modifiers in the order
     /// their components were added, and <c>Outline</c> copies the vertices it is handed and
-    /// paints the copies its own effect colour — so a gradient added first grades the letters
+    /// paints the copies its own effect colour - so a gradient added first grades the letters
     /// and leaves the bleed alone, where one added last would grade the bleed too and lose the
     /// second colour a neon is made of.
     /// </para>

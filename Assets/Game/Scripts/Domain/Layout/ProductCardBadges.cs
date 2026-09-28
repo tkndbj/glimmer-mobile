@@ -12,14 +12,14 @@ namespace GlimmerGrove.Layout
     /// which overlapped were <em>on different cards</em>. The seal hung 38 units past its own
     /// plate and the next column's ribbon reached 22 past its plate's other edge, so with a
     /// gutter of 34 between them the badge and its neighbour's "+40% EXTRA" shared 26 units of
-    /// the screen — and which of the two was drawn on top was whatever order <c>GridView</c>
+    /// the screen - and which of the two was drawn on top was whatever order <c>GridView</c>
     /// happened to have recycled those cells in, so it was not even reliably wrong. Every check
     /// in this project reads one object at a time, and neither number is wrong on its own.
     /// </para>
     /// <para>
     /// <b>The seal is measured as the circle it is, not as the square its sprite is.</b>
     /// <c>seal_gold</c> is a disc inside a square texture with a quarter of its width empty at
-    /// the corners, so treating it as a rotated square overstates its reach by about a sixth —
+    /// the corners, so treating it as a rotated square overstates its reach by about a sixth -
     /// which is a sixth of a badge of clear air bought at the price of pushing it into the
     /// picture underneath. <see cref="Face"/> is the flat maroon field inside the rim, and it
     /// is what the caption has to fit: text sized against the sprite spilled across the rim
@@ -27,7 +27,7 @@ namespace GlimmerGrove.Layout
     /// dark ground and simply disappeared.
     /// </para>
     /// <para>
-    /// Every number is in the <b>reference card's</b> units — the shelf's 508x560 — because the
+    /// Every number is in the <b>reference card's</b> units - the shelf's 508x560 - because the
     /// card scales one layout rather than carrying two (see <c>ProductCard</c>). Only a
     /// decorated card wears either mark, and the only decorated card is the shop's, whose grid
     /// pitch <em>is</em> its cell width, which is what lets a card know where its neighbour's
@@ -63,7 +63,7 @@ namespace GlimmerGrove.Layout
         // plus a margin. 268 is where it sits inside them.
         //
         // **And the tilt is back, which is what says the mark is cloth.** It went to nought
-        // under the kit before this one for a good reason — that kit had no ribbon at all, so
+        // under the kit before this one for a good reason - that kit had no ribbon at all, so
         // this was a machined plate with a clip on each end, and a plate a few degrees off
         // square reads as one that has come loose rather than as one that hangs. This kit ships
         // a real ribbon with tails, so the reason expired with the art. Six degrees, because
@@ -97,14 +97,14 @@ namespace GlimmerGrove.Layout
         // ------------------------------------------------------------------ the seal
         /// <summary>How wide the badge's sprite is drawn, and the angle it is stuck on at.</summary>
         // **Positive is anticlockwise**, because that is what `Quaternion.Euler(0, 0, z)` means
-        // — so a badge that leans to the *right* is a negative number, and it was +11 (leaning
+        // - so a badge that leans to the *right* is a negative number, and it was +11 (leaning
         // left) until the owner asked for it the other way. Nine rather than twenty: the ask
         // was a twenty-degree turn clockwise *from where it was*, which is where that lands.
         //
         // The tilt is free of every clearance rule on this page, and that is a property of the
         // sprite rather than luck: `SealReach` measures the badge as the **disc** it is (see
         // `SealDisc`), and a disc reaches the same distance at every angle. A mark measured as
-        // a rectangle — the ribbon — pays for its tilt in `RibbonReach`.
+        // a rectangle - the ribbon - pays for its tilt in `RibbonReach`.
         public const float SealSize = 164f, SealTilt = -9f;
 
         /// <summary>
@@ -112,7 +112,7 @@ namespace GlimmerGrove.Layout
         /// measured as the disc every clearance rule here treats it as.
         ///
         /// <para>
-        /// <b>Measured off <c>Hud/burst</c>, the sprite the badge is drawn with</b> — a star, whose
+        /// <b>Measured off <c>Hud/burst</c>, the sprite the badge is drawn with</b> - a star, whose
         /// points reach 1.035 of the sprite's half-width on the diagonal (256 px, every pixel with
         /// any alpha, `Tools/render_shop.py --measure` prints it). It read .86 for a long time,
         /// measured off <c>seal_gold</c>, a round seal that was swapped out and never re-measured;
@@ -123,8 +123,8 @@ namespace GlimmerGrove.Layout
         public const float SealDisc = 1.04f;
 
         /// <summary>
-        /// The flat field the caption may sit on — the largest circle inside the star that is
-        /// fully opaque — as a fraction of the sprite, and where its centre sits relative to the
+        /// The flat field the caption may sit on - the largest circle inside the star that is
+        /// fully opaque - as a fraction of the sprite, and where its centre sits relative to the
         /// sprite's own. Measured off the same texture: radius 104 of 128, centred one pixel left
         /// and two up. The old triple described <c>seal_gold</c>'s far smaller field and put the
         /// caption's corner a fifth outside a field the badge no longer had.
@@ -143,7 +143,7 @@ namespace GlimmerGrove.Layout
         /// grow was the box.
         /// </para>
         /// <para>
-        /// <b>The old pair were sized for a disc and the badge is a star</b> — <c>Hud/burst</c>,
+        /// <b>The old pair were sized for a disc and the badge is a star</b> - <c>Hud/burst</c>,
         /// whose flat middle is wider than the inscribed square a round rim would allow, which
         /// is the room this takes. Measured rather than argued (invariant 19n): the three
         /// shipped captions now settle at 17, 20 and 17, and all three are drawn inside the
@@ -165,7 +165,7 @@ namespace GlimmerGrove.Layout
         /// The caption's size, and the floor best-fit may shrink a long one to.
         ///
         /// <b>The floor stays at 10.</b> It is not a taste, it is what a translation longer
-        /// than any of the three English strings falls back to — and below the floor Best Fit
+        /// than any of the three English strings falls back to - and below the floor Best Fit
         /// stops shrinking and the label simply overflows, unclipped and unreported
         /// (invariant 19n). Raising it with the ceiling would have narrowed the one margin
         /// this badge has against a language nobody has typed yet.
@@ -181,7 +181,7 @@ namespace GlimmerGrove.Layout
         /// <para>
         /// The smaller of two demands, and stating both is the point: it has to stay on its own
         /// plate, <em>and</em> it has to stay behind the next column's ribbon. Today the plate
-        /// is the binding one and the ribbon is cleared with room to spare — but a wider ribbon
+        /// is the binding one and the ribbon is cleared with room to spare - but a wider ribbon
         /// or a narrower gutter would swap them over, and a rule that only names the constraint
         /// that happens to bind is a rule that stops being true without anybody editing it.
         /// </para>
@@ -201,7 +201,7 @@ namespace GlimmerGrove.Layout
         /// The badge's centre, down from the plate's top edge.
         ///
         /// <para>
-        /// It is allowed to overhang the top — a badge tucked entirely inside its plate reads
+        /// It is allowed to overhang the top - a badge tucked entirely inside its plate reads
         /// as a printed label rather than as something stuck on, and there is nothing above it
         /// on its own card to be drawn through. What is above it is the <em>row</em> above,
         /// whose plate ends <see cref="PlateInsetY"/> away, so the overhang is exactly that gap

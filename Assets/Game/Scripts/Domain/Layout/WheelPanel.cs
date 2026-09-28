@@ -6,7 +6,7 @@ namespace GlimmerGrove.Layout
         /// <summary>The wheel's centre, and how wide across it is drawn.</summary>
         public readonly float WheelCentre, WheelSize;
 
-        /// <summary>The odds line's centre — one sentence, under the rim.</summary>
+        /// <summary>The odds line's centre - one sentence, under the rim.</summary>
         public readonly float OddsCentre;
 
         /// <summary>
@@ -16,7 +16,7 @@ namespace GlimmerGrove.Layout
         /// It was the paragraph's top, and that is what drew it through the odds line for as
         /// long as the wheel has existed: <c>UIKit.Box</c> pivots every box centrally whatever
         /// it is anchored to, so a top handed to the overlay as a position lifts the box 46
-        /// units — the house rule this file was created to obey, broken by the one row that
+        /// units - the house rule this file was created to obey, broken by the one row that
         /// described itself differently from its neighbours. A stack whose numbers all mean the
         /// same thing cannot be read wrongly by the next caller.
         /// </para>
@@ -51,12 +51,12 @@ namespace GlimmerGrove.Layout
     /// to the game in a while: a 560-unit wheel with four rows around it. Left in the overlay
     /// it would be five constants and a cursor that no test can reach, which is exactly the
     /// arrangement that drew <c>GladeRewardsOverlay</c>'s last paragraph 78 units into its own
-    /// close button — invisible in English, on the one device it was tuned on.
+    /// close button - invisible in English, on the one device it was tuned on.
     /// </para>
     /// <para>
     /// The height is <b>derived</b> rather than typed, so a row inserted above cannot leave a
     /// stale number behind it, and <c>WheelPanelTests</c> holds the result under
-    /// <see cref="PanelStack.TallestPanel"/> — the shortest canvas this game is drawn on, with
+    /// <see cref="PanelStack.TallestPanel"/> - the shortest canvas this game is drawn on, with
     /// the title ribbon's overhang counted at <em>both</em> ends because a modal is centred.
     /// </para>
     /// <para>
@@ -115,7 +115,7 @@ namespace GlimmerGrove.Layout
 
         /// <summary>
         /// The tallest this panel ever gets. It takes one shape, and that is worth stating
-        /// rather than assuming — every row is always drawn, so there is no state in which it
+        /// rather than assuming - every row is always drawn, so there is no state in which it
         /// is shorter and none in which it is taller.
         /// </summary>
         public static float Tallest => Of().Height;

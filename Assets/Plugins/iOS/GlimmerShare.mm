@@ -1,7 +1,7 @@
 // The share sheet, bound for ShareSheet.cs.
 //
 // One function and no state: UIActivityViewController is handed one string and presented
-// from Unity's own view controller. Nothing comes back across the boundary — which app the
+// from Unity's own view controller. Nothing comes back across the boundary - which app the
 // sentence went to is not this game's business, and the managed side treats the tap as done
 // the moment the sheet is up.
 //

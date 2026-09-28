@@ -4,22 +4,22 @@ using GlimmerGrove.Persistence;
 namespace GlimmerGrove.Daily
 {
     /// <summary>
-    /// <b>Retired in place.</b> The daily chest ladder — three chests earned by finishing
-    /// runs, reset at midnight — was folded into the tasks on 2026-09-14: "finish N runs
+    /// <b>Retired in place.</b> The daily chest ladder - three chests earned by finishing
+    /// runs, reset at midnight - was folded into the tasks on 2026-09-14: "finish N runs
     /// today" is one row of the daily slate, paying a tiered chest like every other task.
     /// See <c>Tasks.TaskLedger</c>.
     ///
     /// <para>
     /// What stays is the wire. <see cref="SaveFileDto.daily"/> is still written, joined and
     /// mapped, because a rolled-back client writes it and the security rules' allow-list
-    /// cannot drop a key without refusing every save write (invariant 12a) — and the server's
+    /// cannot drop a key without refusing every save write (invariant 12a) - and the server's
     /// <c>daily:</c> claim path still pays a chest such a client opens. Nothing on this build
     /// counts a run into it or opens one from it; the counters it carries describe a day an
     /// older client played.
     /// </para>
     /// <para>
-    /// The chest engine it was built on — <see cref="ChestRandom"/>,
-    /// <see cref="ChestDefinition"/>, <see cref="DailyChestTable"/> — is what every task chest
+    /// The chest engine it was built on - <see cref="ChestRandom"/>,
+    /// <see cref="ChestDefinition"/>, <see cref="DailyChestTable"/> - is what every task chest
     /// rolls with, and the <c>daily</c> block of <c>progression.json</c> is still seeded so the
     /// server can price an older client's claims. Both are live; only the ladder is not.
     /// </para>

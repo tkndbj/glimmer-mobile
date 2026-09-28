@@ -9,15 +9,15 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// Two things are under contract. The fingerprint must follow exactly what a visitor can
-    /// see and nothing else — a star or a heart moving must not cost a publish, and a new best
-    /// wave must — and a save and the ledgers it loads into must describe <em>the same</em>
+    /// see and nothing else - a star or a heart moving must not cost a publish, and a new best
+    /// wave must - and a save and the ledgers it loads into must describe <em>the same</em>
     /// card, because the request is judged from the file and the player's own screen is drawn
     /// from the ledgers, and a disagreement between them is a card that publishes on every
     /// sync or never.
     /// </para>
     /// <para>
-    /// <b>Most of this fixture used to be about the grove</b> — placements, land, worth and the
-    /// hall's seat — and went with the Grovement on 2026-09-21. The two rules above did not,
+    /// <b>Most of this fixture used to be about the grove</b> - placements, land, worth and the
+    /// hall's seat - and went with the Grovement on 2026-09-21. The two rules above did not,
     /// so they are asked here of what a card still carries: the name, the wave, the badge and
     /// the turret line.
     /// </para>

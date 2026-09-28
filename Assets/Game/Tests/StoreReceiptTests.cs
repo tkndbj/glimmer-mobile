@@ -17,7 +17,7 @@ namespace GlimmerGrove.Tests
     /// Invariant 18a: a refused receipt is never confirmed, because "the server refused" covers
     /// a product missing from <c>config/products</c> as well as a bad receipt, and confirming
     /// the first charges a player for a configuration mistake and destroys the evidence. Every
-    /// refusal is therefore left unfinished and retried for ever — which is right, because
+    /// refusal is therefore left unfinished and retried for ever - which is right, because
     /// every refusal here is temporary.
     /// </para>
     /// <para>
@@ -25,7 +25,7 @@ namespace GlimmerGrove.Tests
     /// this account's: the document is never deleted and its owner is never rewritten. Left
     /// unfinished it is a loop for the life of the install, and on Google it ends in the
     /// three-day auto-refund whose sweep reverses the grant against the account that actually
-    /// paid — so the account harmed by not confirming is not even the one holding the phone.
+    /// paid - so the account harmed by not confirming is not even the one holding the phone.
     /// It is reached by switching accounts, and now also by deleting one, since both leave the
     /// store re-delivering a purchase belonging to the previous account.
     /// </para>
@@ -68,8 +68,8 @@ namespace GlimmerGrove.Tests
 
         // ================================================================== the exception
         /// <summary>
-        /// The one refusal that is finished rather than retried. Nothing is granted by it —
-        /// the server said no — and confirming is only this device telling the store it has
+        /// The one refusal that is finished rather than retried. Nothing is granted by it -
+        /// the server said no - and confirming is only this device telling the store it has
         /// nothing further to do with the transaction.
         /// </summary>
         [Test]
@@ -87,7 +87,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// Confirming it must not look like a purchase landing. Nothing was granted, so nothing
-        /// may be celebrated — a thank-you panel over a refusal is worse than the loop.
+        /// may be celebrated - a thank-you panel over a refusal is worse than the loop.
         /// </summary>
         [Test]
         public void FinishingItGrantsNothingAndCelebratesNothing()
@@ -168,7 +168,7 @@ namespace GlimmerGrove.Tests
         /// Both stores re-deliver an unfinished transaction and this game asks the server again
         /// every time one arrives, so the redemption path running twice for one payment is the
         /// ordinary case rather than the broken one. What must not happen twice is the
-        /// <em>telling</em> — <c>ReceiptQueue</c> exists to draw two grants one after the other
+        /// <em>telling</em> - <c>ReceiptQueue</c> exists to draw two grants one after the other
         /// and is right to, so it cannot tell a second payment from a second telling of the
         /// first, and the player is congratulated twice for one charge with every gate green.
         /// </para>
@@ -203,8 +203,8 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// The other direction, and the one that matters more: a guard written the lazy way —
-        /// on the product, or as a single "already celebrated" latch — would swallow the second
+        /// The other direction, and the one that matters more: a guard written the lazy way -
+        /// on the product, or as a single "already celebrated" latch - would swallow the second
         /// of two real purchases, which is a player charged twice and told once. That is the
         /// failure <c>ReceiptQueue</c> was built for in the first place.
         /// </summary>
@@ -230,7 +230,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// The guard is session state, so it has to be cleared with everything else — a
+        /// The guard is session state, so it has to be cleared with everything else - a
         /// <c>Reset</c> that left it behind would leave a fixture unable to celebrate a
         /// transaction id an earlier one had used, which is the kind of cross-test coupling
         /// that is found a year later.
@@ -270,7 +270,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The queue reads a *failure value*, so the value has to mean "never ask again". If
         /// this ever became retryable the loop comes straight back, and nothing else would say
-        /// so — the symptom is one log line per launch.
+        /// so - the symptom is one log line per launch.
         /// </summary>
         [Test]
         public void AlreadyRedeemedIsNotSomethingToRetry()
@@ -320,7 +320,7 @@ namespace GlimmerGrove.Tests
             /// Delivers a purchase the way both stores do on every launch until it is finished.
             ///
             /// The drain it starts completes inline, because the cloud double answers
-            /// synchronously — so a test can assert straight after this call rather than
+            /// synchronously - so a test can assert straight after this call rather than
             /// pumping frames.
             /// </summary>
             public void Deliver(string productId, string transactionId)
@@ -370,7 +370,7 @@ namespace GlimmerGrove.Tests
             /// before.
             ///
             /// <para>
-            /// Default is <c>Nothing</c> — nothing granted, already honoured — which is the
+            /// Default is <c>Nothing</c> - nothing granted, already honoured - which is the
             /// re-delivery every launch makes and is right for every refusal fixture above.
             /// A test about a <em>celebration</em> has to set it, because a grant of nothing is
             /// deliberately not worth showing.
@@ -446,7 +446,7 @@ namespace GlimmerGrove.Tests
                                     new Dictionary<Content.LevelId, Social.LevelStats>()));
 
             /// <summary>
-            /// Nothing to say about releases, and a failure rather than "nothing is required" —
+            /// Nothing to say about releases, and a failure rather than "nothing is required" -
             /// see <c>NullCloudBackend.ReadReleaseAsync</c>. A double that answered success here
             /// would clear a standing update wall on behalf of a fixture that is about something
             /// else entirely.

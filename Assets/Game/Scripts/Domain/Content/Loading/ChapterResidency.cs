@@ -11,8 +11,8 @@ namespace GlimmerGrove.Content
     /// neighbouring chapters on the map is the common navigation and re-reading a
     /// body to go back one screen would be visible.
     ///
-    /// Bodies are small — a chapter of twenty levels is a few hundred kilobytes of
-    /// definitions — so this bounds parsed content by a constant instead of by the
+    /// Bodies are small - a chapter of twenty levels is a few hundred kilobytes of
+    /// definitions - so this bounds parsed content by a constant instead of by the
     /// size of the catalog, exactly as the chapter's own <c>AssetHold</c> bounds texture memory.
     ///
     /// Not thread safe, and deliberately so: every caller is the main thread.

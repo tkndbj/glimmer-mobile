@@ -14,7 +14,7 @@ namespace GlimmerGrove.Analytics
     /// <summary>
     /// Fans game events out to whatever sinks are attached.
     ///
-    /// No vendor SDK is wired up yet and that is fine — the point of having this now
+    /// No vendor SDK is wired up yet and that is fine - the point of having this now
     /// is that the call sites exist from the first level. Difficulty tuning for a
     /// global audience is only possible with per-level completion and quit data, and
     /// that is the one thing that cannot be backfilled: data not collected in the

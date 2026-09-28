@@ -15,11 +15,11 @@ namespace GlimmerGrove
     /// <para>
     /// <b>It exists because creation order is not the same as importance.</b> Every modal is a
     /// child of one node and Unity draws the last sibling on top, which is right for the
-    /// overwhelming majority of panels — one is raised from another and belongs above it. It is
+    /// overwhelming majority of panels - one is raised from another and belongs above it. It is
     /// wrong for exactly one kind: a panel that is raised on a <em>timer</em>. A first-timer's
     /// lesson is scheduled a beat after the board arrives (<c>RunScreen.LessonDelay</c>) and
     /// chained a beat after each dismissal, and a player who opens the pause menu inside one of
-    /// those beats had raised their panel first — so the tip landed on top of it, over a menu
+    /// those beats had raised their panel first - so the tip landed on top of it, over a menu
     /// that could still be pressed through the hole cut in the tip's own dim.
     /// </para>
     /// <para>
@@ -47,7 +47,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>It is the one place <see cref="Teaching"/> is not merely conservative but fatal.</b>
         /// A tip cuts its spotlight out of its own dim, so the thing it is pointing at is only
-        /// visible through the hole — put the tip underneath the panel carrying that control and
+        /// visible through the hole - put the tip underneath the panel carrying that control and
         /// the panel hides the lesson and its subject together. The win panel's wheel tip drew
         /// exactly nothing for that reason, and because a tip is marked seen once in a player's
         /// life it was spent on a frame nobody saw.
@@ -55,7 +55,7 @@ namespace GlimmerGrove
         /// <para>
         /// Above <see cref="Panel"/> is safe here only because a tip on a panel is raised by
         /// that panel, which checks it is still the one being looked at first
-        /// (<see cref="Flow.IsTopModal"/>) — and once up, a tip swallows every tap, including
+        /// (<see cref="Flow.IsTopModal"/>) - and once up, a tip swallows every tap, including
         /// the one through its own hole. What is being bought is the licence to cover
         /// <em>one</em> panel, not the licence <see cref="Teaching"/> exists to withhold.
         /// </para>
@@ -68,8 +68,8 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>There is exactly one, and adding a second should be argued for.</b>
-        /// <c>UpdateRequiredOverlay</c> is a wall — the player's only move is to leave for the
-        /// store — so everything the rest of the stack is for stops applying: there is nothing
+        /// <c>UpdateRequiredOverlay</c> is a wall - the player's only move is to leave for the
+        /// store - so everything the rest of the stack is for stops applying: there is nothing
         /// underneath worth reading, nothing it could be raised "from", and no order of arrival
         /// that should put anything over it. A receipt, an arrival panel or a lesson landing on
         /// a timer would otherwise do exactly that, since all three are raised from <c>Boot</c>
@@ -100,13 +100,13 @@ namespace GlimmerGrove
         /// <b>Only controls belong here.</b> <see cref="Content"/> stays full-bleed and is
         /// where backdrops, fades and playfields go: letterboxing a painting to avoid a
         /// camera is a worse picture than the camera. What goes in here is what the player
-        /// has to read or press — a back arrow, a banner, a readout, a button.
+        /// has to read or press - a back arrow, a banner, a readout, a button.
         /// </para>
         /// <para>
         /// Created on first use rather than always, so a screen that never asks for it costs
         /// nothing, and created <em>inside</em> <see cref="Content"/> so the order a screen
         /// builds in still decides what draws over what. On any display with nothing in the
-        /// way — every device without a cutout, and the Editor — its insets are zero and the
+        /// way - every device without a cutout, and the Editor - its insets are zero and the
         /// layout is exactly what it was. See <see cref="SafeArea"/>.
         /// </para>
         /// </summary>
@@ -115,7 +115,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Which edges <see cref="Safe"/> insets. All four unless a screen says otherwise, and
-        /// the only screens that do are the run screens, which give up the top — see
+        /// the only screens that do are the run screens, which give up the top - see
         /// <c>RunScreen.SafeEdges</c>. Read once, when the layer is first asked for.
         /// </summary>
         protected virtual SafeArea.Edges SafeEdges => SafeArea.Edges.All;
@@ -128,7 +128,7 @@ namespace GlimmerGrove
         /// <b>It lives here because of the one handle a screen cannot forget for itself.</b>
         /// <see cref="Safe"/> is cached on this class and is private to it, so a screen that
         /// destroyed <see cref="Content"/>'s children and called <c>Build</c> again kept a
-        /// reference to the old safe-area layer — and <c>Destroy</c> lands at the <em>end of
+        /// reference to the old safe-area layer - and <c>Destroy</c> lands at the <em>end of
         /// the frame</em>, so within the rebuild that reference is still non-null and still
         /// answers as a live object. Everything the screen then built went into a node that
         /// had just been switched off and was about to be collected, and one frame later the
@@ -169,7 +169,7 @@ namespace GlimmerGrove
         /// <para>
         /// Hand it to anything awaited on this screen's behalf. It is the difference between a
         /// fetch that stops when the player leaves and one that goes on running against a screen
-        /// nobody is looking at — which, on a list of groves somebody is scrolling, is a document
+        /// nobody is looking at - which, on a list of groves somebody is scrolling, is a document
         /// read and a grove's worth of art per row they pass through.
         /// </para>
         /// </summary>
@@ -195,7 +195,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>The replacement for <c>async void</c>.</b> An <c>async void</c> method has no task
-        /// to observe, so an exception escaping it surfaces nowhere at all — which is why every
+        /// to observe, so an exception escaping it surfaces nowhere at all - which is why every
         /// one in this project carried a hand-written <c>try/catch</c>, and why the two that
         /// forgot were completely silent failures. Here the catch cannot be forgotten, because
         /// it is not the caller's to write. See <see cref="Async.Fire"/>.
@@ -253,7 +253,7 @@ namespace GlimmerGrove
         /// <para>
         /// It exists for <see cref="Flow.Modal{T}"/>, which refuses to raise a second copy of a
         /// panel that is already up. Without this the refusal would also swallow the legitimate
-        /// case — a panel closing and the next one of the same type opening behind it, which is
+        /// case - a panel closing and the next one of the same type opening behind it, which is
         /// exactly how <c>RunLessons</c> walks a player through a board's tips. A view on its
         /// way out is not "already up".
         /// </para>
@@ -269,7 +269,7 @@ namespace GlimmerGrove
         /// Which layer of the modal stack this panel belongs to. See <see cref="ModalLayer"/>.
         ///
         /// <para>
-        /// Declared here rather than on <c>ModalView</c> for <see cref="IsLeaving"/>'s reason —
+        /// Declared here rather than on <c>ModalView</c> for <see cref="IsLeaving"/>'s reason -
         /// <see cref="Flow"/> holds <see cref="View"/> and may not reach downwards. A screen is
         /// never in the stack, so the value it inherits is never read.
         /// </para>
@@ -290,7 +290,7 @@ namespace GlimmerGrove
         /// needed it for a long time. The map is the exception: it cannot draw until its
         /// chapter's body has been read and that chapter's art is resident, and neither is
         /// guaranteed to be in hand. Without a gate the iris opened on a bare screen and the
-        /// chapter arrived a moment later — the swap the transition exists to hide, happening
+        /// chapter arrived a moment later - the swap the transition exists to hide, happening
         /// in full view.
         /// </para>
         /// <para>
@@ -309,8 +309,8 @@ namespace GlimmerGrove
         /// Whether this screen needs more than one finger at a time.
         ///
         /// <para>
-        /// Multi-touch is <b>off for the whole game</b> — <c>Boot</c> turns it off before the
-        /// first frame — because a board that accepted two fingers would let a player turn two
+        /// Multi-touch is <b>off for the whole game</b> - <c>Boot</c> turns it off before the
+        /// first frame - because a board that accepted two fingers would let a player turn two
         /// conduits in one tap, and a move counter that can be beaten by having two thumbs is
         /// not a move counter. Exactly one screen needs it back: the grove, whose field is
         /// pinch-zoomed.
@@ -318,7 +318,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Declared rather than set.</b> A screen that switched the flag on in <c>Build</c>
         /// would have to switch it off again on every way out, and this project has twice paid
-        /// for a rule shaped like that — the pause menu that only unlatched from its buttons,
+        /// for a rule shaped like that - the pause menu that only unlatched from its buttons,
         /// and the art scope only one of two screens remembered to release. <see cref="Flow"/>
         /// applies this on every screen change, so the board cannot inherit the grove's setting
         /// however the player left it.
@@ -400,7 +400,7 @@ namespace GlimmerGrove
                 else if (screen.Track != null) Audio.Music(screen.Track);
 
                 // Applied on every swap rather than only when it changes, so the answer is
-                // always the incoming screen's own — see View.WantsMultiTouch.
+                // always the incoming screen's own - see View.WantsMultiTouch.
                 Input.multiTouchEnabled = screen.WantsMultiTouch;
             }
 
@@ -413,11 +413,11 @@ namespace GlimmerGrove
             }
 
             // No sound of its own. A screen change is always something the player just
-            // tapped, and the button they tapped has already made a noise — laying a
+            // tapped, and the button they tapped has already made a noise - laying a
             // whoosh over it turned every navigation into two overlapping sounds, which
             // is what made the hub's feature boxes and its buttons seem to disagree about
             // how loud a tap is. The iris carries the transition; the tap carries the
-            // moment. Whoosh is still the right sound where nothing was tapped — a board
+            // moment. Whoosh is still the right sound where nothing was tapped - a board
             // resetting, a panel dealing out its rows.
             IrisClose(() =>
             {
@@ -432,7 +432,7 @@ namespace GlimmerGrove
         /// </summary>
         /// <remarks>
         /// A ceiling rather than a promise. Whatever a screen is waiting for can fail in a way
-        /// it does not notice — a file that never arrives, a task that never completes — and
+        /// it does not notice - a file that never arrives, a task that never completes - and
         /// the alternative to giving up is a slate disc over the whole game with no way out of
         /// it. A half-drawn map the player can leave beats a screen they have to kill the app
         /// to escape. Generous because it should never be reached: the wait it exists for is a
@@ -450,7 +450,7 @@ namespace GlimmerGrove
         {
             float waited = 0f;
 
-            // Unscaled, like every other clock driving the chrome — a transition must not
+            // Unscaled, like every other clock driving the chrome - a transition must not
             // stretch because something paused the game underneath it.
             while (view && !view.Ready && waited < ReadyTimeout)
             {
@@ -499,13 +499,13 @@ namespace GlimmerGrove
 
         // ------------------------------------------------------------- modals
         /// <summary>
-        /// Raises a modal panel — or hands back the one that is already up.
+        /// Raises a modal panel - or hands back the one that is already up.
         ///
         /// <para>
         /// <b>Idempotent by type, and that is the substance rather than a nicety.</b> A button
         /// can be pressed twice before the panel it raises has drawn a single frame: a fast
         /// double-tap, a stylus, a screen reader, an accessibility switch, a phone that dropped
-        /// a frame. Every one of those used to build two panels — two scrims, two entrance
+        /// a frame. Every one of those used to build two panels - two scrims, two entrance
         /// chimes, and a player who dismisses one and finds an identical one behind it. On the
         /// gem shelf raised over a lost run that is worse than untidy: the second copy owns the
         /// same <c>Bought</c> callback, so a purchase would be reported twice into whatever
@@ -513,7 +513,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// <b>The existing panel is returned unconfigured, and that is deliberate.</b> A second
-        /// call is a duplicate of a request already granted — the panel in front of the player
+        /// call is a duplicate of a request already granted - the panel in front of the player
         /// was configured by the first one and is live. Re-running <paramref name="configure"/>
         /// on it would rewrite the callbacks of a panel mid-interaction, which is a subtler
         /// version of the bug this exists to stop.
@@ -521,7 +521,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>A panel on its way out does not count as already up.</b> A modal stays in the
         /// stack for the fifth of a second its exit takes, and a sequence that closes one and
-        /// opens the next of the same type — <c>RunLessons</c> walking a board's tips — must
+        /// opens the next of the same type - <c>RunLessons</c> walking a board's tips - must
         /// not be refused. See <see cref="View.IsLeaving"/>.
         /// </para>
         /// </summary>
@@ -553,7 +553,7 @@ namespace GlimmerGrove
         /// the newcomer, because the two are not the same list: <c>Destroy</c> lands at the end
         /// of the frame, so a panel already dismissed is still a child for the rest of it and
         /// any index taken from <see cref="Overlays"/> would be off by however many of those
-        /// there are. Doing it this way needs no such arithmetic — every live panel is lifted
+        /// there are. Doing it this way needs no such arithmetic - every live panel is lifted
         /// above every leftover, in order, and the leftovers sink to the bottom where they
         /// belong for the frame they have left.
         /// </para>
@@ -572,7 +572,7 @@ namespace GlimmerGrove
         /// The modal of this type that is up and staying up, or null.
         ///
         /// Walked from the top down, so the answer is the one the player is looking at rather
-        /// than the oldest of several — a distinction that cannot arise while
+        /// than the oldest of several - a distinction that cannot arise while
         /// <see cref="Modal{T}"/> refuses duplicates, and would matter the moment somebody
         /// added a way round it.
         /// </summary>
@@ -596,7 +596,7 @@ namespace GlimmerGrove
         public static bool HasModal => _modals.Count > 0;
 
         /// <summary>
-        /// Whether anything is standing over the screen — including a panel part-way through
+        /// Whether anything is standing over the screen - including a panel part-way through
         /// its exit.
         ///
         /// <para>
@@ -611,7 +611,7 @@ namespace GlimmerGrove
         /// player can watch walking and cannot answer.
         /// </para>
         /// <para>
-        /// Read every frame by <c>RunScreen</c>, which turns it into <c>RunHold.Covered</c> —
+        /// Read every frame by <c>RunScreen</c>, which turns it into <c>RunHold.Covered</c> -
         /// see there for why the question is asked rather than announced. A destroyed panel that
         /// has somehow outlived its removal is skipped rather than counted, because the failure
         /// this must not have is a run held for ever by something nobody can close.
@@ -640,7 +640,7 @@ namespace GlimmerGrove
         /// tapped the offer inside one of them has a panel up that the lesson would cover.
         /// </para>
         /// <para>
-        /// A panel on its way out does not count, for <see cref="View.IsLeaving"/>'s reason —
+        /// A panel on its way out does not count, for <see cref="View.IsLeaving"/>'s reason -
         /// a lesson chained behind a panel that is still fading must not be refused by it.
         /// </para>
         /// </summary>
@@ -663,7 +663,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// For a panel that raises itself on a timer and has to decide whether now is a good
-        /// moment — <c>RunLessons</c> is the one caller and the reason this exists. A panel on
+        /// moment - <c>RunLessons</c> is the one caller and the reason this exists. A panel on
         /// its way out does not count, for <see cref="View.IsLeaving"/>'s reason: a lesson
         /// chained behind the tip that is still fading must not be refused by it.
         /// </para>
@@ -690,7 +690,7 @@ namespace GlimmerGrove
                 if (_modals[i] && _modals[i].OnBack()) return;
 
             // A screen does not. Its OnBack navigates through Go, which no longer makes a
-            // sound of its own, and there is no button here to have made one — this is the
+            // sound of its own, and there is no button here to have made one - this is the
             // hardware key. Without this line, five screens would retreat in silence while
             // the back key drawn in their own corner clicked.
             if (Current != null && Current.OnBack()) Audio.SfxVaried("back", .5f);

@@ -73,8 +73,8 @@ namespace GlimmerGrove.Social
     ///
     /// <para>
     /// <b>Here rather than in the panel, for <c>NameCheckScheduler</c>'s reason.</b> These are
-    /// the two branching decisions in the whole feature — what a line under the field reads,
-    /// and what a claim's answer is worth — and both were <c>switch</c> statements inside a
+    /// the two branching decisions in the whole feature - what a line under the field reads,
+    /// and what a claim's answer is worth - and both were <c>switch</c> statements inside a
     /// <c>MonoBehaviour</c>, which is the one place in this project nothing can be proved
     /// about. Moving them costs the panel nothing: it still owns every pixel, and now owns no
     /// rules.
@@ -82,7 +82,7 @@ namespace GlimmerGrove.Social
     /// <para>
     /// <b>The property worth proving is that a rename is never silently dropped.</b> For every
     /// answer the server can give, either the name is stored or the panel stays open with
-    /// something to read — never neither. That is one assertion over an enum, it holds for
+    /// something to read - never neither. That is one assertion over an enum, it holds for
     /// members added later, and it is the failure a player would describe as "renaming does
     /// not work", which this codebase has already shipped once for a different reason
     /// (invariant 11c).
@@ -93,8 +93,8 @@ namespace GlimmerGrove.Social
         /// <summary>
         /// What to say under the field for an availability, and whether saving is offered.
         ///
-        /// <paramref name="fieldIsBlank"/> is asked because an empty field is not a mistake —
-        /// it stores the default name — so it must not be scolded for being too short. It is
+        /// <paramref name="fieldIsBlank"/> is asked because an empty field is not a mistake -
+        /// it stores the default name - so it must not be scolded for being too short. It is
         /// the state the panel opens in for a player who has never renamed.
         /// </summary>
         public static NamePanelLine LineFor(NameAvailability availability, bool fieldIsBlank)
@@ -117,7 +117,7 @@ namespace GlimmerGrove.Social
 
                 case NameAvailability.Taken:
                     // The one state where the button is refused, and it is refused with the
-                    // reason directly above it — which is the whole of `AdOfferState`'s rule
+                    // reason directly above it - which is the whole of `AdOfferState`'s rule
                     // about never greying a control without saying why.
                     return new NamePanelLine("ui.profile.name_taken", NameTone.Bad, canSave: false);
 
@@ -126,7 +126,7 @@ namespace GlimmerGrove.Social
 
                 default:
                     // Nothing was decided: no backend, no signal, or a read that failed. Say
-                    // nothing rather than guess, and let saving work — uniqueness is not this
+                    // nothing rather than guess, and let saving work - uniqueness is not this
                     // device's to enforce.
                     return new NamePanelLine(string.Empty, NameTone.Muted, canSave: true);
             }
@@ -159,7 +159,7 @@ namespace GlimmerGrove.Social
                                                 isSetback: true);
 
                 case NameClaimOutcome.Cooldown:
-                    // Rare — a second rename inside a minute — and deliberately not applied.
+                    // Rare - a second rename inside a minute - and deliberately not applied.
                     // Applying it would leave this device and the board disagreeing until the
                     // cooldown expired, which is a worse thing to explain than a countdown.
                     return new RenameResolution(storesName: false, closes: false,
@@ -170,7 +170,7 @@ namespace GlimmerGrove.Social
                     // Never a rejection (invariant 19b): the name is kept and drawn on the
                     // player's own screens, and the boards show a generated handle. Said out
                     // loud rather than silently, because a name that quietly does not appear
-                    // reads as the boards being broken — and saying it leaks that a filter
+                    // reads as the boards being broken - and saying it leaks that a filter
                     // exists without leaking what is in it.
                     return new RenameResolution(storesName: true, closes: true,
                                                 "ui.profile.name_hidden", NameTone.Bad);

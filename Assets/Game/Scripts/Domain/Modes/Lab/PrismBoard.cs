@@ -13,13 +13,13 @@ namespace GlimmerGrove.Modes
     /// feeds the gems of <em>its own colour</em> that are touching it, that colour runs on
     /// through every gem of the same colour beside it, and any critter standing against that
     /// vein wakes. What the player does is <b>drag one gem onto its neighbour</b> and the two
-    /// change places — the genre's own gesture, with the match-three taken out of it.
+    /// change places - the genre's own gesture, with the match-three taken out of it.
     /// </para>
     /// <para>
     /// <b>Nothing is ever removed, and that is the whole shape of the mode.</b> Gems do not
     /// burst, do not fall and are never spent: the board a player is dealt is the board they
     /// finish on, so every move is a rearrangement rather than a purchase. That is what makes a
-    /// vein something to <em>build</em>, and it is also why a vein can be <em>broken</em> —
+    /// vein something to <em>build</em>, and it is also why a vein can be <em>broken</em> -
     /// light here is not stored, it is read off the arrangement, so a gem pulled out of a vein
     /// takes the light with it and a swap made carelessly on one side of the board can put out
     /// the line on the other.
@@ -28,7 +28,7 @@ namespace GlimmerGrove.Modes
     /// <b>What it does not pass, and what it passes instead.</b> Invariant 20j's second test
     /// asks whether every legal input strictly moves something that only goes one way, and a
     /// swap does not: swap two gems back and forth for ever and the board is where it started.
-    /// So the honest statement is narrower and is the one the search actually needs — the
+    /// So the honest statement is narrower and is the one the search actually needs - the
     /// <em>goal</em> count is monotone, because a critter that wakes never sleeps again; the
     /// board is finite, so the arrangements are finite and the visited set closes the walk; and
     /// a run can never stall, because two touching gems of different colours are always a legal
@@ -39,7 +39,7 @@ namespace GlimmerGrove.Modes
     /// </para>
     /// <para>
     /// <b>And what falls out of it: the fail state is the meter and nothing else.</b> Every
-    /// other mode built on this shape has two endings, because its material runs out — a well
+    /// other mode built on this shape has two endings, because its material runs out - a well
     /// runs dry, a hollow runs out of embers, a wall runs out of shards. Nothing here is ever
     /// consumed, so <see cref="AnyMove"/> is true until the last critter wakes and the only way
     /// to lose is to spend the allowance. That is why a run may always be sold a continue
@@ -53,7 +53,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>The only thing that shapes a vein, and that is deliberate.</b> A second blocking
-        /// character — stone beside bare ground — would be two letters wearing one rule, which
+        /// character - stone beside bare ground - would be two letters wearing one rule, which
         /// is how two letters come to disagree. What a board needs is somewhere the light may
         /// not go, and empty ground says that without bringing a second idea to teach.
         /// </para>
@@ -63,7 +63,7 @@ namespace GlimmerGrove.Modes
         /// <summary>
         /// The four gems, lower case because they are the material. Index i is colour i.
         ///
-        /// <b>Four, and they differ in silhouette as well as in hue</b> — Emberforge's rule
+        /// <b>Four, and they differ in silhouette as well as in hue</b> - Emberforge's rule
         /// (invariant 34f) and it decides more here than it does there: the whole verb is "is
         /// this gem the same as that one", so a player who cannot separate red from green has to
         /// be able to separate a heart from a rhombus. A palette alone would make this a
@@ -144,7 +144,7 @@ namespace GlimmerGrove.Modes
         /// every swap there is: a critter with no gem beside it can never be touched by a vein,
         /// and a critter whose gems belong to a run of the board no lantern touches can never be
         /// fed. What it deliberately does not model is whether there are <em>enough</em> gems of
-        /// the right colour, or whether two critters want the same ones — that is contention,
+        /// the right colour, or whether two critters want the same ones - that is contention,
         /// and contention is the search's job.
         /// </summary>
         public readonly int[] Marooned;
@@ -222,7 +222,7 @@ namespace GlimmerGrove.Modes
         /// <summary>
         /// The cells touching this one, written into <paramref name="into"/>.
         ///
-        /// Left, right, up, down, in that order — which is contract, because
+        /// Left, right, up, down, in that order - which is contract, because
         /// <see cref="PrismBoard.WokeBy"/> takes the first lit neighbour it finds and a
         /// different order would hand a critter to a different lantern's colour.
         /// </summary>
@@ -429,7 +429,7 @@ namespace GlimmerGrove.Modes
     ///
     /// <para>
     /// <b>The light is not state.</b> Which cells are lit is a pure function of the arrangement
-    /// — walk out of each lantern through gems of its own colour — so it is derived on demand
+    /// - walk out of each lantern through gems of its own colour - so it is derived on demand
     /// and cached until the next swap, and it is deliberately <em>not</em> part of the key. A
     /// key carrying a derived value is a key that can disagree with itself, and here it would
     /// also be a key that never merged two identical boards.
@@ -571,7 +571,7 @@ namespace GlimmerGrove.Modes
         /// Whether a critter is already standing against light before anybody has played.
         ///
         /// A board dealt with a vein already reaching a sleeper is a board whose first move its
-        /// author played — Budburst's "authored settled" rule, and it matters here because the
+        /// author played - Budburst's "authored settled" rule, and it matters here because the
         /// goal count the player is graded against would already have moved.
         /// </summary>
         public bool Stirred
@@ -591,7 +591,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <b>Two gems of different colours.</b> Two alike is a move that changes nothing, and a
         /// move that changes nothing must answer null or the search never leaves the layer it is
-        /// on (<see cref="ProtoPosition.Play"/>'s rule) — and the player is never charged for it
+        /// on (<see cref="ProtoPosition.Play"/>'s rule) - and the player is never charged for it
         /// either.
         /// </summary>
         public bool CanSwap(int a, int b)
@@ -644,7 +644,7 @@ namespace GlimmerGrove.Modes
         /// A certainty and never a guess (invariant 28f), so it under-reports: it asks only the
         /// two questions no arrangement of the gems could ever answer differently, and those are
         /// facts about the layout worked out once. In practice a shipped board answers false,
-        /// because the validator refuses one that does not — which is the honest state of
+        /// because the validator refuses one that does not - which is the honest state of
         /// affairs for a mode where nothing is ever consumed.
         /// </summary>
         public bool Stranded
@@ -668,7 +668,7 @@ namespace GlimmerGrove.Modes
         /// arrangement that leaves; and every critter is then asked <em>once</em> whether a lit
         /// gem is standing beside it. Asking as the flood runs would hand a critter to whichever
         /// lantern the loop reached first, which is exactly the reading order
-        /// <c>FallBoard.Resolve</c> is built to avoid — and a divergence of that kind is one a
+        /// <c>FallBoard.Resolve</c> is built to avoid - and a divergence of that kind is one a
         /// second runtime cannot see, because both copies would still be internally consistent.
         /// </para>
         /// </summary>
@@ -793,7 +793,7 @@ namespace GlimmerGrove.Modes
         /// The cells and nothing else.
         ///
         /// Light is a pure function of the arrangement, so putting it in the key would be
-        /// putting one fact in twice — and the woken critters are in it because they are the one
+        /// putting one fact in twice - and the woken critters are in it because they are the one
         /// thing a swap cannot undo.
         /// </summary>
         public void Write(List<byte> key)
@@ -805,7 +805,7 @@ namespace GlimmerGrove.Modes
         /// The same key as a string, for a walk that is not the shared search.
         ///
         /// <c>PrismReading</c> keeps its own frontier and would otherwise have to build a whole
-        /// <see cref="PrismFuture"/> — which re-enumerates every move — just to be handed to
+        /// <see cref="PrismFuture"/> - which re-enumerates every move - just to be handed to
         /// <c>ProtoKey</c>. Same bytes, said the other way.
         /// </summary>
         public string Key() => new string(_cells);
@@ -840,7 +840,7 @@ namespace GlimmerGrove.Modes
         /// <summary>
         /// What a player who is not thinking would notice this swap is worth.
         ///
-        /// Waking weighs a hundred times lighting, and light lost counts against — which is the
+        /// Waking weighs a hundred times lighting, and light lost counts against - which is the
         /// honest greedy reading here, because the mistake this mode is made of is breaking one
         /// vein to build another.
         /// </summary>

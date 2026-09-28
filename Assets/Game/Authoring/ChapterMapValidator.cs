@@ -11,7 +11,7 @@ namespace GlimmerGrove.Content
     /// run against a single board in the authoring tool, and it already refuses a
     /// position outside the 0..1 map. But two glades sitting on top of each other is
     /// not a property of either of them, and a trail running back down the map is a
-    /// property of the pair — no amount of per-level checking can see either.
+    /// property of the pair - no amount of per-level checking can see either.
     ///
     /// These are the mistakes somebody makes hand-placing twenty nodes on a Thursday,
     /// and they are invisible everywhere else in the pipeline: the JSON is valid, the
@@ -24,8 +24,8 @@ namespace GlimmerGrove.Content
     public static class ChapterMapValidator
     {
         /// <summary>
-        /// Validates a chapter's node placement. Levels must be given in play order —
-        /// the index's order, not the body's — because half of what this checks is
+        /// Validates a chapter's node placement. Levels must be given in play order -
+        /// the index's order, not the body's - because half of what this checks is
         /// about consecutive glades, and the player walks the index's order.
         /// </summary>
         public static List<LevelIssue> Validate(ChapterDefinition chapter,
@@ -95,7 +95,7 @@ namespace GlimmerGrove.Content
         /// <summary>
         /// The end-of-chapter marker is placed automatically above the highest glade,
         /// but it stops climbing at the ceiling. A chapter whose last glades are
-        /// authored near the top therefore pushes the marker into them — a collision
+        /// authored near the top therefore pushes the marker into them - a collision
         /// nobody wrote a coordinate for, which is exactly why it is easy to miss.
         /// </summary>
         static void CheckTeaserClearance(IReadOnlyList<LevelDefinition> levels, int strips,
@@ -128,7 +128,7 @@ namespace GlimmerGrove.Content
         ///
         /// The disc is what <see cref="CheckSpacing"/> and <see cref="CheckTeaserClearance"/>
         /// measure, and the disc is not what collides: a cleared glade carries its record and
-        /// rank above it, and every perch — a glade's or the marker's — hangs a name plate
+        /// rank above it, and every perch - a glade's or the marker's - hangs a name plate
         /// below its own centre. The two reach further towards each other than the discs do,
         /// so a layout can pass both distance checks and still draw the next chapter's plate
         /// over the player's standing, which is exactly how the Shallows shipped. This asks

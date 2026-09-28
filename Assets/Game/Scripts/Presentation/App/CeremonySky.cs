@@ -10,7 +10,7 @@ namespace GlimmerGrove
     /// <b>It exists because three screens were the same room and each one built its own.</b>
     /// <c>RankUpOverlay</c>, <c>WardRevealOverlay</c> and <c>WardUpgradeRevealOverlay</c> all
     /// stood their subject on a vertical gradient of the subject's own hue driven down to about
-    /// a tenth of its value, under a vignette of near-black at seven tenths — so all three came
+    /// a tenth of its value, under a vignette of near-black at seven tenths - so all three came
     /// back from the owner as <em>so dark</em>, all three would have had to be fixed separately,
     /// and they would have drifted apart the first time one of them was touched. That is
     /// invariant 5b's rule about a thing existing exactly once, and invariant 44d's about two
@@ -18,8 +18,8 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>The colours are measured off a reference the owner supplied, not picked</b> (invariant
-    /// 44b). The wash in that picture is a four-corner field — warm peach in one corner, orchid
-    /// and magenta across the middle, deep blue in the opposite one — and the figures below are
+    /// 44b). The wash in that picture is a four-corner field - warm peach in one corner, orchid
+    /// and magenta across the middle, deep blue in the opposite one - and the figures below are
     /// a robust bilinear fit to it with the badges standing on it masked out, which is the only
     /// way to measure a background through its own foreground. The fit explains the wash to a
     /// mean error of 23/255 and what it rejected is exactly the badges;
@@ -28,22 +28,22 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>What is deliberately <em>not</em> shared is the light on top of it.</b> The fans, the
-    /// halo, the rim and the aurora still wear the colour of the thing being revealed — the seat
-    /// a turret was bought for, the metal of the rung — because that is the one fact each of
+    /// halo, the rim and the aurora still wear the colour of the thing being revealed - the seat
+    /// a turret was bought for, the metal of the rung - because that is the one fact each of
     /// those screens exists to carry, and <c>WardRevealOverlay</c>'s own remarks argue it at
     /// length. The room is shared and the lighting is not: what changed is the ground the
     /// subject stands on, never what the subject is lit by.
     /// </para>
     /// <para>
-    /// <b>It costs no art and no address.</b> The wash is <see cref="Art.Corners"/> — generated,
-    /// cached by key, 64 pixels square and stretched by the hardware — so nothing here is
+    /// <b>It costs no art and no address.</b> The wash is <see cref="Art.Corners"/> - generated,
+    /// cached by key, 64 pixels square and stretched by the hardware - so nothing here is
     /// imported, addressed, bundled, or capable of arriving as a white rectangle (invariant 7b).
     /// </para>
     /// <para>
     /// <b>Two calls rather than one, and the gap between them is the point.</b> Each of these
     /// screens builds drifting masses of light and a scatter of fireflies between its wash and
     /// its vignette, so that the vignette holds them in too. A single builder would have had to
-    /// either take those over — three screens' worth of composition that genuinely differs — or
+    /// either take those over - three screens' worth of composition that genuinely differs - or
     /// put the vignette underneath them, which is a different picture.
     /// </para>
     /// </summary>
@@ -80,7 +80,7 @@ namespace GlimmerGrove
         /// <summary>How large that glow is drawn, and how strongly.</summary>
         const float WarmSize = 1500f, WarmAlpha = .46f;
 
-        /// <summary>Where it sits — the top-left corner, off the edge, as in the reference.</summary>
+        /// <summary>Where it sits - the top-left corner, off the edge, as in the reference.</summary>
         static readonly Vector2 WarmHome = new Vector2(-470f, 880f);
 
         /// <summary>
@@ -89,7 +89,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Both halves of that are the fix.</b> It was about seven tenths, which is most of
         /// why the rooms read as black; and it was tinted toward <em>black</em>, which on a
-        /// coloured screen makes the corners the one grey thing in the picture — the mistake all
+        /// coloured screen makes the corners the one grey thing in the picture - the mistake all
         /// three screens had already written a comment against and then made anyway. A vignette
         /// is for holding the eye in the middle, and at a quarter it still does that.
         /// </para>
@@ -105,7 +105,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>A bright ground inverts which way contrast runs, and that is the half of this
         /// change that is not a colour.</b> Every one of these screens had furniture drawn as
-        /// white at a low alpha — an empty pip, the trough under a rail, a faint rule — because
+        /// white at a low alpha - an empty pip, the trough under a rail, a faint rule - because
         /// that is what shows on a near-black room. On this one it is invisible: the rank
         /// ceremony's rail lost its trough and every unheld pip on it, and its eyebrow, drawn in
         /// the rung's own metal, went from gold-on-black to gold-on-peach. All of it is drawn in
@@ -129,7 +129,7 @@ namespace GlimmerGrove
         /// the caller to fade up on its opening beat.
         /// </summary>
         /// <param name="onTapped">
-        /// What a tap on the room does — the skip, on all three. Null makes the layer
+        /// What a tap on the room does - the skip, on all three. Null makes the layer
         /// transparent to touches instead.
         /// </param>
         public static Image Ground(RectTransform content, System.Action onTapped,

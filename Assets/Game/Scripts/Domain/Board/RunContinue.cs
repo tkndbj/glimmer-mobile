@@ -12,7 +12,7 @@ namespace GlimmerGrove
     /// <para>
     /// A permanent enum with explicit values for <c>DefeatReason</c>'s reason: it reaches
     /// analytics, where an ordinal that moved would silently re-label history. It is
-    /// deliberately <em>not</em> a mode id — two modes could share a unit, and the panel
+    /// deliberately <em>not</em> a mode id - two modes could share a unit, and the panel
     /// speaks in the unit rather than in the mode.
     /// </para>
     /// </summary>
@@ -24,7 +24,7 @@ namespace GlimmerGrove
         /// <summary>
         /// <b>Retired.</b> Cells of light in a Lightweave pot of ink. The mode is gone; the
         /// member stays because the ordinal reaches analytics on every continue ever bought,
-        /// so re-pointing it at another unit would silently re-label that history — the same
+        /// so re-pointing it at another unit would silently re-label that history - the same
         /// rule <c>DefeatReason.OutOfInk</c> is kept under.
         /// </summary>
         Ink = 1,
@@ -73,8 +73,8 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Its own unit even though the mode rides the prototype level shape</b>, which is
         /// exactly the addition <see cref="Moves"/> says to make when one of these modes ships
-        /// for real and wants its own economy. A siege has no move allowance at all — its fail
-        /// state is the ward line (invariant 37b) — so a continue here does not hand over more
+        /// for real and wants its own economy. A siege has no move allowance at all - its fail
+        /// state is the ward line (invariant 37b) - so a continue here does not hand over more
         /// of the thing that ran out in the unit the run is <em>graded</em> in. It hands over
         /// the line: every fallen turret back at full health, keeping the rank its cogs bought,
         /// with the hill exactly where it stood.
@@ -104,7 +104,7 @@ namespace GlimmerGrove
         public readonly ContinueUnit Unit;
 
         /// <summary>
-        /// The whole allowance handed over, deficit included — the number the panel prints
+        /// The whole allowance handed over, deficit included - the number the panel prints
         /// and the number the mode is given.
         ///
         /// <para>
@@ -113,12 +113,12 @@ namespace GlimmerGrove
         /// left cannot cover the cheapest possible finish, so there may be light in the pot
         /// and none of it spendable. Handing over the authored allowance alone would put the
         /// player back on a board that is still provably unwinnable, which would end the run
-        /// again in the same frame — having taken their gems. So the shortfall is cleared
+        /// again in the same frame - having taken their gems. So the shortfall is cleared
         /// first and the authored figure is working room on top of it.
         /// </para>
         /// <para>
-        /// A glade has no such notion — every turn is a turn, and a board with one turn left
-        /// is playable — so its deficit is nought and this is exactly what the table authored.
+        /// A glade has no such notion - every turn is a turn, and a board with one turn left
+        /// is playable - so its deficit is nought and this is exactly what the table authored.
         /// That is why the deficit is asked of the <em>mode</em> rather than worked out here.
         /// </para>
         /// </summary>
@@ -172,8 +172,8 @@ namespace GlimmerGrove
     /// <b>Why it is one place rather than one per mode.</b> Every mode here has a fail state
     /// and every fail state costs the player a heart, so "what a way out of a run costs" has
     /// been <c>RunScreen</c>'s and never a mode's since Lightweave shipped a restart that was
-    /// free (see <c>RunStakeTests</c>). A continue is the same rule read from the other end —
-    /// it is the one way out that costs money instead — and two copies of it would be two
+    /// free (see <c>RunStakeTests</c>). A continue is the same rule read from the other end -
+    /// it is the one way out that costs money instead - and two copies of it would be two
     /// prices, two idempotency keys and two chances to charge somebody for a board that was
     /// still lost. What a mode contributes is the only thing it alone knows: how much
     /// allowance it takes to make its own board playable again.
@@ -182,11 +182,11 @@ namespace GlimmerGrove
     /// <b>Why the economy is safe without a line of server work.</b> The gems leave through
     /// <see cref="PlayerProgression.TrySpend"/>, which carries an idempotency key, lands
     /// locally so it works on a plane, and is refused by <c>submitSpends</c> on the next sync
-    /// if the server-derived balance could not cover it — the same two lines that buy a
+    /// if the server-derived balance could not cover it - the same two lines that buy a
     /// companion. What they buy is turns on a board: it mints nothing, is stored nowhere, and
     /// is gone when the run ends. And it cannot inflate a reward, because stars are held
     /// against par rather than against the budget (invariant 22), so a run that had to be
-    /// bought is already past the two-star line and can only ever pay one star — less than
+    /// bought is already past the two-star line and can only ever pay one star - less than
     /// replaying the glade for nothing would.
     /// </para>
     /// <para>
@@ -221,8 +221,8 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Invariant 23's arithmetic, said out loud for the one mode where it is not an
         /// accident.</b> Everywhere else a run reaches its fail state by exhausting the very
-        /// counter it is graded on — a glade dies at <c>par x 1.60</c> having already spent past
-        /// the two-star line at <c>par x 1.40</c> — so "a continued run can only ever pay one
+        /// counter it is graded on - a glade dies at <c>par x 1.60</c> having already spent past
+        /// the two-star line at <c>par x 1.40</c> - so "a continued run can only ever pay one
         /// star" needs no code at all. A siege is graded in <em>matches</em> and lost when its
         /// <em>ward line</em> falls, and the two have nothing to do with each other: a player
         /// beaten on the fourth wave may have spent five matches against a three-star line of
@@ -230,14 +230,14 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// That is not a grading curiosity. Stars derive credits, credits are what a grove is
-        /// worth, and a grove's worth reaches a public board — so a continue that moved the
+        /// worth, and a grove's worth reaches a public board - so a continue that moved the
         /// grade would let money move a leaderboard, which is the exact thing invariant 19a
         /// exists to stop. The offer sells a finish, never a grade, in every mode.
         /// </para>
         /// <para>
         /// <b>Charged against the graded count rather than clamped on the star.</b> A cap on the
         /// star would be a second thing deciding a grade, and it would leave the <em>record</em>
-        /// — which feeds the published deciles — reading as an excellent run. Spending the
+        /// - which feeds the published deciles - reading as an excellent run. Spending the
         /// difference is the same conversion a utility already makes (invariant 39): what the
         /// purchase saved you, priced in the unit the mode counts.
         /// </para>
@@ -267,7 +267,7 @@ namespace GlimmerGrove
         /// Builds the offer for a run that has just been lost.
         ///
         /// <para>
-        /// Pure — every input is passed in and nothing static is read — so every branch of it
+        /// Pure - every input is passed in and nothing static is read - so every branch of it
         /// is proved offline against plain integers. That is deliberate: this is the function
         /// that decides whether somebody is asked for money, and the three inputs that decide
         /// it (what they hold, what it costs, whether there is a shop) are exactly the three
@@ -283,7 +283,7 @@ namespace GlimmerGrove
         /// <param name="gemsHeld">The player's gem balance.</param>
         /// <param name="gemsForSale">
         /// Whether a shop is reachable that could sell them some. False in a build with no
-        /// store SDK, in the Editor, and while the store has not connected — and a "buy gems"
+        /// store SDK, in the Editor, and while the store has not connected - and a "buy gems"
         /// button in any of those leads nowhere, which is worse than no button at all.
         /// </param>
         public static ContinueOffer Offer(ContinueUnit unit, int deficit, int taken,
@@ -299,7 +299,7 @@ namespace GlimmerGrove
             if (room <= 0) return ContinueOffer.None;
 
             // Saturating, for ContinueTable.PriceFor's reason. A deficit is bounded by the
-            // board and the allowance by ContinueLimits, so this cannot overflow in practice —
+            // board and the allowance by ContinueLimits, so this cannot overflow in practice -
             // it is guarded because "in practice" is what a content push changes.
             int amount = deficit > int.MaxValue - room ? int.MaxValue : deficit + room;
 
@@ -318,7 +318,7 @@ namespace GlimmerGrove
         /// <para>
         /// Re-checks affordability through the ledger rather than trusting the offer it was
         /// handed, and that is reachable rather than defensive: the balance moves while the
-        /// panel is open — a sync landing, another device spending, a purchase arriving — and
+        /// panel is open - a sync landing, another device spending, a purchase arriving - and
         /// the whole point of routing through <see cref="PlayerProgression.TrySpend"/> is that
         /// the decision is taken against the balance at the instant of the debit.
         /// </para>
@@ -338,7 +338,7 @@ namespace GlimmerGrove
             LevelAnalytics.TrackContinueBought(level, offer);
 
             // The debit is owed to the server. Requesting rather than syncing outright is the
-            // debounce doing its job, exactly as a gem-priced good does it — and a run is a
+            // debounce doing its job, exactly as a gem-priced good does it - and a run is a
             // place where several of these can land inside a minute.
             CloudSaveService.RequestSync();
 

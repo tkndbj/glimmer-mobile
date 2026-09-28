@@ -10,7 +10,7 @@ namespace GlimmerGrove.Tests
     /// written against are the same shape: a wrong number here is not a wrong pixel, it is a
     /// wrong <em>motion</em>. A hand that arrives before it has faded in, ink still standing
     /// from the previous repeat, a fingertip that jumps because a route's two legs were split
-    /// evenly rather than by length — every one of those compiles, validates and reads
+    /// evenly rather than by length - every one of those compiles, validates and reads
     /// perfectly in the source, and the Editor is usually not running.
     /// </para>
     /// <para>
@@ -225,7 +225,7 @@ namespace GlimmerGrove.Tests
         [Test]
         public void AZeroLengthLegIsSteppedOverRatherThanLandedOn()
         {
-            // Two board things on the same cell — a bead whose neighbour is the cell it stands
+            // Two board things on the same cell - a bead whose neighbour is the cell it stands
             // on would produce one, and the fingertip must not stall there for a third of the
             // stroke.
             var lengths = new[] { 50f, 0f, 50f };
@@ -246,7 +246,7 @@ namespace GlimmerGrove.Tests
         /// A repeat never outstays the bar <see cref="CoachStroke.MaxDraw"/> was picked from.
         ///
         /// <para>
-        /// The ceiling on a stroke exists to bound the <em>loop</em>, not the stroke — a player
+        /// The ceiling on a stroke exists to bound the <em>loop</em>, not the stroke - a player
         /// waits for the whole cycle before the sentence can be read again. Raising CellSeconds
         /// or any of the fixed beats without moving MaxDraw would quietly lengthen that wait, and
         /// nothing else in this file would notice, because every other case reads the constants
@@ -285,7 +285,7 @@ namespace GlimmerGrove.Tests
         /// The hand's pivot is the fingertip, and it is derived from the glyph rather than typed.
         ///
         /// <para>
-        /// Pure arithmetic — no texture is generated — so it can be proved without the Editor,
+        /// Pure arithmetic - no texture is generated - so it can be proved without the Editor,
         /// which is the whole reason the constants moved into <c>Art</c>. It was a literal in
         /// <c>CoachHand</c> and went stale the first time the finger was redrawn: the hand still
         /// animated, still looked right in a still, and traced its route about a twentieth of the

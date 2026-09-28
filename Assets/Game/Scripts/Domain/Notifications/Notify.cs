@@ -18,7 +18,7 @@ namespace GlimmerGrove.Notifications
     ///
     /// <para>
     /// <b>Armed when the app is backgrounded and never on a timer</b>, because being
-    /// backgrounded is the last moment a mobile app is reliably told anything — Android may
+    /// backgrounded is the last moment a mobile app is reliably told anything - Android may
     /// kill the process afterwards without another callback, which is why <c>Boot.Pump</c>
     /// already flushes the save there. It is the correct moment for a second reason: the plan
     /// has to be built from the state the player is *leaving behind*, and there is no later
@@ -26,7 +26,7 @@ namespace GlimmerGrove.Notifications
     /// </para>
     /// <para>
     /// <b>Nothing about the schedule is stored, and that is what makes it safe to rebuild.</b>
-    /// There is no record of what was armed last time, no cursor, no "already sent" set — the
+    /// There is no record of what was armed last time, no cursor, no "already sent" set - the
     /// plan is a pure function of the save and the clock, so re-arming is idempotent by
     /// construction and a device that is restored from a backup, cloned to a new phone or
     /// rolled back a version simply computes the right answer. That is invariant 14's argument
@@ -78,7 +78,7 @@ namespace GlimmerGrove.Notifications
             }
 
             // The switch and the OS answer are two facts (see NotificationOptIn), and the
-            // player may have changed either while the game was closed — turning notifications
+            // player may have changed either while the game was closed - turning notifications
             // off in the OS settings is the commonest way a granted permission becomes a
             // denied one. Re-arming on the next background is what makes that stick.
             NotificationOptIn.Changed -= Rearm;
@@ -88,7 +88,7 @@ namespace GlimmerGrove.Notifications
             _scheduler.Opened += Tapped;
 
             // Initialising reads the OS's current answer, which moves `Permission` off
-            // `Unsupported` and therefore raises `Changed` — so binding on a device that is
+            // `Unsupported` and therefore raises `Changed` - so binding on a device that is
             // already granted writes a schedule then and there, as well as on the way out.
             // That is wanted rather than incidental: a process the OS kills without ever
             // sending a pause callback would otherwise be left holding last session's plan.
@@ -101,7 +101,7 @@ namespace GlimmerGrove.Notifications
         ///
         /// <para>
         /// <b>Deliberately not called on the boot path.</b> A permission dialog on the splash
-        /// screen is the highest-refusal moment there is — the player has not seen the game,
+        /// screen is the highest-refusal moment there is - the player has not seen the game,
         /// has nothing to be reminded about, and cannot be asked again by us afterwards,
         /// because both platforms show the system dialog once per install. Asked instead the
         /// first time the player is holding something that will be waiting for them, which is
@@ -161,7 +161,7 @@ namespace GlimmerGrove.Notifications
             // Re-entrancy is real rather than theoretical: `Refresh` below can discover that
             // the OS answer has changed, which raises `NotificationOptIn.Changed`, which this
             // class subscribes `Rearm` to. Without the guard, a player who revoked permission
-            // in the system settings would re-arm twice on their next background — harmless
+            // in the system settings would re-arm twice on their next background - harmless
             // today, and the kind of loop that stops being harmless the moment somebody adds a
             // second listener.
             _rearming = true;
@@ -172,7 +172,7 @@ namespace GlimmerGrove.Notifications
 
                 if (!NotificationOptIn.Allowed)
                 {
-                    // Not merely "send nothing next time" — the schedule already on the device
+                    // Not merely "send nothing next time" - the schedule already on the device
                     // has to go, or a player who switches reminders off keeps getting the week
                     // that was armed before they did, which reads as the switch being broken.
                     _scheduler.Arm(Array.Empty<PlannedNotification>());
@@ -206,7 +206,7 @@ namespace GlimmerGrove.Notifications
         ///
         /// <para>
         /// Resolved here, at schedule time, because the OS draws the text with the app not
-        /// running and cannot call back into a string table. That is what freezes the copy —
+        /// running and cannot call back into a string table. That is what freezes the copy -
         /// and what makes the rule on <see cref="NotificationState"/> load-bearing: any number
         /// inside one of these strings must be a function of the fire instant rather than of
         /// this moment, so every string this game ships is argument-free.
@@ -239,7 +239,7 @@ namespace GlimmerGrove.Notifications
                 nowUnix: now,
                 utcOffsetSeconds: (int)TimeZoneInfo.Local.GetUtcOffset(DateTime.Now).TotalSeconds,
                 // Nought when the bar is already at the cap, which the predicate treats as a
-                // different fact rather than as "full a long time ago" — see NotificationState.
+                // different fact rather than as "full a long time ago" - see NotificationState.
                 heartsFullUnix: hearts.IsRefilled ? 0L : hearts.NextRefillUnix,
                 streakChestWaiting: DailyStreak.AnyPending,
                 streakLastPlayedDay: DailyStreak.LastPlayedDay,
@@ -260,7 +260,7 @@ namespace GlimmerGrove.Notifications
         /// Whether any lane on the Infinite track is open to this player.
         ///
         /// Asked of the catalog rather than of a chapter id, because a chapter id written into
-        /// Domain is a content fact in code (invariant 4) — and the one lane that exists today
+        /// Domain is a content fact in code (invariant 4) - and the one lane that exists today
         /// is exactly the kind of thing a drop adds a second of.
         /// </summary>
         static bool EndlessIsOpen()

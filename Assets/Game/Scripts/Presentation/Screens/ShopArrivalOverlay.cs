@@ -12,7 +12,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>What it replaces was a word on the face of a button.</b> A purchase arrives from the
     /// store as an unfinished transaction and is only ours once the server has honoured it
-    /// (invariant 18a), which is a round trip away — and for the whole of that round trip the
+    /// (invariant 18a), which is a round trip away - and for the whole of that round trip the
     /// only thing this game said about somebody's money was that the card they tapped now read
     /// ARRIVING. On the shop screen that is small; raised over a lost run from
     /// <c>GemShopOverlay</c> it is a player who has paid to save a glade, looking at a shelf
@@ -21,7 +21,7 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>Raised from <c>Boot</c>, for <c>ReceiptQueue</c>'s reason exactly.</b> A payment sheet
-    /// outlives the screen that opened it — on Android it outlives the process — so a shop
+    /// outlives the screen that opened it - on Android it outlives the process - so a shop
     /// screen listening for its own purchases would miss the ones that matter most. Hung on
     /// <c>StoreService.CheckoutLanded</c>, this appears wherever the player is standing, and the
     /// receipt panel that follows is hung on the same place for the same reason.
@@ -40,7 +40,7 @@ namespace GlimmerGrove
     /// <b>Nothing depends on it, which is the property worth keeping.</b> The purchase is banked
     /// by the store and honoured by the server whether this panel is drawn, dismissed, or never
     /// raised at all; the receipt is raised by <c>ReceiptQueue</c> off its own event. This is
-    /// reporting and only reporting — the same bargain <c>ReceiptQueue</c> makes when it says
+    /// reporting and only reporting - the same bargain <c>ReceiptQueue</c> makes when it says
     /// the money is not in there.
     /// </para>
     /// <para>
@@ -63,7 +63,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>A second arrival joins the panel that is up rather than raising another.</b>
         /// <c>Flow.Modal</c> refuses a duplicate by type and hands back the live one
-        /// <em>unconfigured</em>, which is right and would quietly drop the second transaction —
+        /// <em>unconfigured</em>, which is right and would quietly drop the second transaction -
         /// so the live panel is asked for by name and told, which is the shape that refusal is
         /// meant to be used with.
         /// </para>
@@ -74,7 +74,7 @@ namespace GlimmerGrove
 
             // Owned by nothing, on purpose. A tween owned by the screen that was up when the
             // purchase landed would be dropped the moment the player navigated
-            // (Tween.Orphaned), and a purchase is not the screen's business — it is the app's.
+            // (Tween.Orphaned), and a purchase is not the screen's business - it is the app's.
             Tween.After(ArrivalWatch.Grace, () => Raise(transactionKey, product));
         }
 
@@ -98,7 +98,7 @@ namespace GlimmerGrove
         // Absolute offsets rather than a cursor, on ShopSupplyOverlay's judgement: the rows are
         // fixed and the only thing that moves is whether the last one is there at all, which is
         // a term in the sum below rather than a second layout. Both heights are comfortably
-        // inside PanelStack.TallestPanel (1716) — the shortest canvas this game is drawn on,
+        // inside PanelStack.TallestPanel (1716) - the shortest canvas this game is drawn on,
         // with the title ribbon's overhang counted at both ends.
         const float PanelW = 820f;
         const float HeadRoom = 150f;
@@ -113,7 +113,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <c>panel_main</c> carries a 60-unit nine-slice rim, so a button seated in the fifties
-        /// — which is what <c>ShopGrantOverlay</c> and <c>ShopSupplyOverlay</c> both do — has its
+        /// - which is what <c>ShopGrantOverlay</c> and <c>ShopSupplyOverlay</c> both do - has its
         /// foot on the parchment's own lip rather than on its face. Caught by the render and
         /// nothing else; every numeric gate here is happy with a panel that adds up.
         /// </para>
@@ -145,7 +145,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Heard outside <see cref="Build"/>, because <see cref="ModalView.Rebuild"/> runs it
-        /// again — and a subscription taken there would be taken twice and dropped once.
+        /// again - and a subscription taken there would be taken twice and dropped once.
         /// </summary>
         void Awake() => StoreService.Granted += OnGranted;
 
@@ -157,8 +157,8 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Two heights rather than one with the button's room reserved</b>, which is what
         /// <see cref="ModalView.Rebuild"/> exists for. Reserving it leaves a third of the panel
-        /// empty for the entire ordinary case — every purchase that lands inside
-        /// <see cref="ArrivalWatch.Patience"/>, which is meant to be all of them — and an empty
+        /// empty for the entire ordinary case - every purchase that lands inside
+        /// <see cref="ArrivalWatch.Patience"/>, which is meant to be all of them - and an empty
         /// band under a sentence reads as a panel that has lost something. The growth happens
         /// once, six seconds in, on a panel nobody is touching, and it happens in the same beat
         /// as the button springing into it.
@@ -186,7 +186,7 @@ namespace GlimmerGrove
             // is about a payment that has just been taken, and one a thumb landing anywhere can
             // flick away is one a player can miss entirely and then wonder about. The back key
             // works from the first frame, and the button arrives once the wait stops being
-            // ordinary — see OnBack and Advance.
+            // ordinary - see OnBack and Advance.
             var panel = MakePanel(new Vector2(PanelW, y), Loc.Get("ui.shop.arriving"),
                                   dismissOnScrim: false);
 
@@ -197,7 +197,7 @@ namespace GlimmerGrove
             // Most of the ring rather than a fraction of it, which is the rule ShopArt.Paint
             // already follows on a card: every one of these sprites is square with a good deal
             // of air baked in, so a box fitted to the hole leaves the picture floating in the
-            // middle of it. Measured rather than guessed — the widest of them fills 94% of its
+            // middle of it. Measured rather than guessed - the widest of them fills 94% of its
             // own frame, so this is the number that keeps even that one clear of the track.
             _art = UIKit.Box("Art", panel, Vector2.one * ArtSize, new Vector2(.5f, 1f),
                              new Vector2(0f, -ringY));
@@ -237,7 +237,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// A track as well as a sweep because an arc alone on a light ground reads as a stray
-        /// mark rather than as a dial — the same reason <c>BusyVeil</c> can draw its arc bare and
+        /// mark rather than as a dial - the same reason <c>BusyVeil</c> can draw its arc bare and
         /// this cannot: that one sits on a dark plate of its own. On the unscaled clock like
         /// every other animation here, because a modal takes <c>Time.timeScale</c> to nought
         /// (invariant 30h) and a spinner that has stopped turning is worse than no spinner at all.
@@ -263,8 +263,8 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>And stops naming a product the moment it is about more than one.</b> Two purchases
-        /// seconds apart is ordinary — a mistap, or a second pack bought straight after the
-        /// first — and a panel that went on showing the first one's picture would be telling the
+        /// seconds apart is ordinary - a mistap, or a second pack bought straight after the
+        /// first - and a panel that went on showing the first one's picture would be telling the
         /// player something true about half of what they are waiting for. The ring and the word
         /// are honest about any number of them; the picture is not, so it goes.
         /// </para>
@@ -286,7 +286,7 @@ namespace GlimmerGrove
 
             // A count rather than a blank when there is more than one. An empty ring over an
             // empty line reads as a panel that has lost its picture; the number says what the
-            // panel is actually about, and it can only ever be two or more here — a single
+            // panel is actually about, and it can only ever be two or more here - a single
             // purchase is named, so there is no plural to get wrong.
             _name.text = named ? Loc.Get(_product.NameKey)
                        : _watch.Count > 1 ? Loc.Format("ui.shop.arriving_many", _watch.Count)
@@ -318,8 +318,8 @@ namespace GlimmerGrove
         /// <para>
         /// Quiet, for <c>GemShopOverlay.OnGranted</c>'s reason: the receipt's own chime is
         /// already playing and a backing-out whoosh underneath a celebration is one sound too
-        /// many. And it can settle with no receipt behind it — a re-delivery the server had
-        /// already granted celebrates nothing (see <c>StoreService</c>'s <c>worthShowing</c>) —
+        /// many. And it can settle with no receipt behind it - a re-delivery the server had
+        /// already granted celebrates nothing (see <c>StoreService</c>'s <c>worthShowing</c>) -
         /// which is exactly why this closes on the transaction rather than on the panel it
         /// usually hands over to.
         /// </para>
@@ -331,7 +331,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <c>Flow.HandleBack</c> walks the stack downwards until something says it dealt with
-        /// the press, so a panel that stays silent hands it to whatever is <em>underneath</em> —
+        /// the press, so a panel that stays silent hands it to whatever is <em>underneath</em> -
         /// which over a lost run is the continue offer, whose back key declines and ends the run
         /// (<c>GemShopOverlay.OnBack</c> records that exact bug). Nothing is lost by closing: the
         /// purchase is with the store and the server either way, and <c>StoreService</c> goes on

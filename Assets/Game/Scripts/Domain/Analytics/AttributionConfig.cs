@@ -5,7 +5,7 @@ namespace GlimmerGrove.Analytics
     /// needs to recognise this app.
     ///
     /// <para>
-    /// <c>AdConfig</c>'s shape and its reasoning, one concern along. These are not tuning —
+    /// <c>AdConfig</c>'s shape and its reasoning, one concern along. These are not tuning -
     /// they are the address of the account a campaign's numbers arrive in, and putting them
     /// in <c>progression.json</c> would let a content push redirect somebody else's ad spend
     /// into this project's dashboard, or this project's into theirs.
@@ -33,7 +33,7 @@ namespace GlimmerGrove.Analytics
     /// actually carry: the partner ships as a UPM package, so it is gated by
     /// <c>versionDefines</c> like every other vendor here, where a <c>.unitypackage</c>
     /// unpacks as loose files under <c>Assets/</c>, carries no version, and would compile to
-    /// nothing in silence — the exact failure <c>GooglePackages/fetch.ps1</c> documents for
+    /// nothing in silence - the exact failure <c>GooglePackages/fetch.ps1</c> documents for
     /// the consent SDK.
     /// </para>
     /// </summary>
@@ -49,13 +49,13 @@ namespace GlimmerGrove.Analytics
         /// This is live, and <see cref="IsConfigured"/> still reads the placeholder state, so a
         /// fork of this project with the identifier stripped ships dark rather than shipping an
         /// SDK that cannot work. That matters more here than it does for an ad unit: an SDK
-        /// started with a placeholder key does not error — it reports every install into
+        /// started with a placeholder key does not error - it reports every install into
         /// nobody's account, and the only symptom is a dashboard that stays empty while the
         /// campaign spends.
         /// </para>
         /// <para>
         /// <b>It is a client-side key and it ships inside the binary</b>, which is why it lives
-        /// in source beside <c>AdConfig</c>'s app keys rather than in a secret store — anybody
+        /// in source beside <c>AdConfig</c>'s app keys rather than in a secret store - anybody
         /// can read it out of an APK, so hiding it here would buy nothing. The account's
         /// <em>API token</em> is the opposite and must never appear in this project: it can
         /// read the account's data and post server-to-server events, and the two are issued a
@@ -65,7 +65,7 @@ namespace GlimmerGrove.Analytics
         public const string DevKey = "hELUpUkCaA8t6MdZGcRcMU";
 
         /// <summary>
-        /// The numeric App Store id, iOS only — the digits in the store URL, with no prefix.
+        /// The numeric App Store id, iOS only - the digits in the store URL, with no prefix.
         ///
         /// <para>
         /// Android does not have one and must be given an empty string rather than the

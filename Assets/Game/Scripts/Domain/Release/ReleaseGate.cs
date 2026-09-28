@@ -10,7 +10,7 @@ namespace GlimmerGrove.Release
     /// <para>
     /// <b>The requirement is remembered on the device, so the wall is not a network state.</b>
     /// A gate that lived only in memory would be dismissed by the one gesture every player
-    /// already knows — force-quit and reopen, in flight mode if they like — because the read
+    /// already knows - force-quit and reopen, in flight mode if they like - because the read
     /// that raised it would simply fail on the way back. One integer and one link are written
     /// device-locally the moment the server names them, so a cold start with no signal enforces
     /// exactly what the last answered launch was told. That is the whole of what makes this
@@ -37,7 +37,7 @@ namespace GlimmerGrove.Release
     /// <b>Nothing here stops the game working underneath.</b> The save still loads, the sync
     /// still runs, a purchase still redeems. A blocked client that could not push would strand
     /// whatever the player did in the session before the wall went up, and there is nothing to
-    /// protect the server from in the first place — every write this game makes is an
+    /// protect the server from in the first place - every write this game makes is an
     /// idempotent monotonic join, which is why an old client pushing is safe by construction.
     /// What the wall takes away is <em>input</em>, and only that.
     /// </para>
@@ -51,7 +51,7 @@ namespace GlimmerGrove.Release
         /// <b>One key holding both halves, on purpose.</b> Two keys are two writes, and a
         /// process killed between them leaves a build number paired with the previous release's
         /// link. Writing "10402 https://..." makes the pair atomic in the only sense that
-        /// matters here — there is no state in which half of it landed.
+        /// matters here - there is no state in which half of it landed.
         /// </para>
         /// <para>
         /// Renaming it forgets every wall on every device, which is a real (if slow-acting)
@@ -95,7 +95,7 @@ namespace GlimmerGrove.Release
         /// <para>
         /// Cheap enough to ask every frame, which is what the driver does: after the first call
         /// it is an integer comparison against a field. It has to be asked rather than
-        /// announced, for the reason <c>Flow.Covered</c> is — the thing that would consume an
+        /// announced, for the reason <c>Flow.Covered</c> is - the thing that would consume an
         /// announcement is a panel, and the panel is destroyed and rebuilt by every screen
         /// change (see <c>UpdateGate</c>).
         /// </para>
@@ -114,7 +114,7 @@ namespace GlimmerGrove.Release
         /// <see cref="ReleaseRequirement.None"/> means "the server says nothing is required" or
         /// "nobody answered", and the two demand opposite behaviour: the first must lift a wall
         /// that is standing, the second must leave it exactly where it is. The caller knows,
-        /// because it is holding the <c>CloudResult</c> — see <c>CloudSaveService</c>.
+        /// because it is holding the <c>CloudResult</c> - see <c>CloudSaveService</c>.
         /// </para>
         /// <para>
         /// <b>A requirement with no door is applied as nothing at all</b> rather than stored and
@@ -138,8 +138,8 @@ namespace GlimmerGrove.Release
             _fromCache = false;
 
             // Before the equality check, and that is not a style choice. A doorless requirement
-            // collapses to None, so on the overwhelmingly common device — one that was never
-            // walled — it compares equal to what is already held and the method returns. Left
+            // collapses to None, so on the overwhelmingly common device - one that was never
+            // walled - it compares equal to what is already held and the method returns. Left
             // below, the one guard that makes this mistake visible would be silent in exactly
             // the case it exists for. Latched, because this runs on a timer.
             if (requirement.Demands && !requirement.HasDoor && !_warnedDoorless)
@@ -153,7 +153,7 @@ namespace GlimmerGrove.Release
                 Debug.LogError(
                     $"[Release] the deployment asks for build {requirement.MinimumBuild} but " +
                     "names no usable store link for this platform, so nothing is being " +
-                    "enforced — a wall with no door would be unopenable. Re-seed config/release.");
+                    "enforced - a wall with no door would be unopenable. Re-seed config/release.");
             }
 
             if (wanted.MinimumBuild == _held.MinimumBuild && wanted.StoreUrl == _held.StoreUrl) return;
@@ -175,7 +175,7 @@ namespace GlimmerGrove.Release
         /// </para>
         /// <para>
         /// Once per <em>process</em>, because a player who is walled out has one session and it
-        /// consists of this — and because the panel is re-raised on every screen change, so per
+        /// consists of this - and because the panel is re-raised on every screen change, so per
         /// raise would count the same wall as many times as anything happened to navigate. It is
         /// the only way to tell a gate that is working from a gate nobody has ever met, which
         /// for a feature whose success state is invisible is the difference between shipped and
@@ -196,8 +196,8 @@ namespace GlimmerGrove.Release
         /// <summary>
         /// Reads the held requirement off the device, once.
         ///
-        /// A malformed value — a hand edit, a half-written file, a key some future version
-        /// wrote differently — reads as nothing required. That is the same direction every
+        /// A malformed value - a hand edit, a half-written file, a key some future version
+        /// wrote differently - reads as nothing required. That is the same direction every
         /// other refusal here takes: this feature may fail to wall somebody out, and may never
         /// wall somebody out by accident.
         /// </summary>
@@ -234,7 +234,7 @@ namespace GlimmerGrove.Release
         /// Drops everything this remembers, on the device as well as in memory.
         ///
         /// For the test suite, which cannot otherwise reach "this install has never been told
-        /// anything" — the Editor's own <c>PlayerPrefs</c> survive between runs, so a fixture
+        /// anything" - the Editor's own <c>PlayerPrefs</c> survive between runs, so a fixture
         /// about the unknown case would quietly test whatever the last one wrote
         /// (<c>ChapterChoiceTests</c> records that exact trap).
         /// </summary>

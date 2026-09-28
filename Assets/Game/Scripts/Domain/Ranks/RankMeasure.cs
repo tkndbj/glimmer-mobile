@@ -21,7 +21,7 @@ namespace GlimmerGrove.Ranks
     /// <b>Every measure must be monotone, and that is the invariant the whole feature rests
     /// on</b> (invariant 52). A rank is <em>derived</em> from these on every read and stored
     /// nowhere, so if one of them could fall, a badge could be taken away from somebody who did
-    /// nothing wrong — a population shifting under a percentile, a retune lowering a keeper
+    /// nothing wrong - a population shifting under a percentile, a retune lowering a keeper
     /// level, a record being replayed worse. Every reading below only ever rises: stars and
     /// clears are bests, the keeper level stands on a high-water floor, an endless best is a
     /// <c>max</c>, and a lifetime tally is a count of things that happened. Adding a measure
@@ -30,7 +30,7 @@ namespace GlimmerGrove.Ranks
     /// <para>
     /// <b>The lifetime kind is why a new mode costs this file nothing.</b> Anything already in
     /// <see cref="TaskGoals"/> is addressable as a measure by its own id with no entry here, so
-    /// a verb added for a task — a new mode's raiders, blocks, rescues — is a rank requirement
+    /// a verb added for a task - a new mode's raiders, blocks, rescues - is a rank requirement
     /// the same day, authored rather than written. That is the same registry the task slate
     /// counts against, so there is one list of counted verbs in the game rather than two that
     /// drift.
@@ -120,7 +120,7 @@ namespace GlimmerGrove.Ranks
     /// <b>Ids are permanent</b> for invariant 1's reason applied to content rather than to a
     /// save: a shipped <c>progression.json</c> names them, a loc key is derived from them
     /// (<see cref="SentenceKey"/>), and a published ladder that stopped resolving one would
-    /// silently lose a requirement — which is a rank handed out for less than it asks for.
+    /// silently lose a requirement - which is a rank handed out for less than it asks for.
     /// </para>
     /// <para>
     /// <b>The derived ids shadow two goals on purpose.</b> <c>stars</c> and <c>three_stars</c>
@@ -143,7 +143,7 @@ namespace GlimmerGrove.Ranks
 
         /// <summary>
         /// Resolves a content id. <see cref="RankMeasure.None"/> for anything this build has
-        /// never heard of, which is a newer content pack reaching an older client — the table
+        /// never heard of, which is a newer content pack reaching an older client - the table
         /// drops the rung rather than the file, exactly as <c>TaskTable</c> drops a task naming
         /// an unknown goal.
         /// </summary>
@@ -187,7 +187,7 @@ namespace GlimmerGrove.Ranks
         ///
         /// Written out rather than defaulted, for invariant 44e's reason: a <c>switch</c> whose
         /// <c>default</c> is a real answer hides the case nobody is looking at, and here that
-        /// case would be a scope silently ignored — a requirement that reads as "clear ten
+        /// case would be a scope silently ignored - a requirement that reads as "clear ten
         /// glades of Barrowfell" and is met by clearing ten glades anywhere.
         /// </summary>
         public static RankScopeKind ScopeOf(RankMeasureKind kind)
@@ -228,13 +228,13 @@ namespace GlimmerGrove.Ranks
         // ------------------------------------------------------------------ reading
         /// <summary>
         /// What the account currently holds against this measure. Never negative, and never
-        /// falls between two calls — see <see cref="RankMeasureKind"/>.
+        /// falls between two calls - see <see cref="RankMeasureKind"/>.
         ///
         /// <para>
         /// <paramref name="index"/> is handed in rather than fetched so this stays a pure
         /// function of (account, catalog) and can be exercised with a catalog a fixture built.
         /// A null index is a game whose content has not loaded yet, and answers nought for the
-        /// catalog-shaped readings rather than throwing — the map draws before the splash is
+        /// catalog-shaped readings rather than throwing - the map draws before the splash is
         /// finished on a slow device, and a readout that crashes there is worse than one that
         /// says "not yet".
         /// </para>
@@ -243,13 +243,13 @@ namespace GlimmerGrove.Ranks
             => Read(measure, scope, new LedgerRankSource(index));
 
         /// <summary>
-        /// The same reading taken off whichever <see cref="IRankSource"/> is in hand — the live
+        /// The same reading taken off whichever <see cref="IRankSource"/> is in hand - the live
         /// ledgers for the player's own screens, a save file for the card that goes public.
         ///
         /// <para>
         /// <b>This switch is the whole of what a measure <em>is</em>, and it exists once.</b>
         /// Everything that made it two readings lives behind the source, which is what keeps a
-        /// published badge and the badge on the player's own map the same badge — see
+        /// published badge and the badge on the player's own map the same badge - see
         /// <see cref="IRankSource"/> for why a second copy of this walk would have been a rank
         /// handed out for less than it asks for, invisibly.
         /// </para>
@@ -276,7 +276,7 @@ namespace GlimmerGrove.Ranks
         /// <c>rank.req.{measure}.in</c> when it names a scope.
         ///
         /// <para>
-        /// <b>Derived, never authored</b>, for <c>TaskDefinition.NameKey</c>'s reason — a target
+        /// <b>Derived, never authored</b>, for <c>TaskDefinition.NameKey</c>'s reason - a target
         /// retuned in content changes the sentence without touching a translation, because the
         /// target is the sentence's <c>{0}</c>. The scoped key is a second key rather than a
         /// second argument on the first, because "clear 10 glades" and "clear 10 glades of the
@@ -284,7 +284,7 @@ namespace GlimmerGrove.Ranks
         /// missing.
         /// </para>
         /// <para>
-        /// <c>loc.py</c> cannot see either — they are built from an id (invariant 5a) — so
+        /// <c>loc.py</c> cannot see either - they are built from an id (invariant 5a) - so
         /// <c>check_ranks</c> in <c>content.py</c> is what proves every shipped requirement
         /// resolves one.
         /// </para>

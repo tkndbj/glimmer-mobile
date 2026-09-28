@@ -9,21 +9,21 @@ namespace GlimmerGrove.Store
     /// <para>
     /// <b>Written because the same question is asked twice and must not be answered twice.</b>
     /// "Has this payment already been announced" and "has this payment already been thanked for"
-    /// are different rules in different layers — see <c>StoreService.Announce</c> and
-    /// <c>ReceiptQueue</c> — but they are one mechanism, and a second hand-written copy of a
+    /// are different rules in different layers - see <c>StoreService.Announce</c> and
+    /// <c>ReceiptQueue</c> - but they are one mechanism, and a second hand-written copy of a
     /// bounded set is the shape invariant 5b is written about: both correct until one of them
     /// grows a bound, an eviction or an opinion about an empty key that the other does not.
     /// </para>
     /// <para>
     /// <b>An empty key is always fresh, and that is the one rule worth reading twice.</b> Empty
-    /// is not an identity every unidentified thing shares — it is the absence of one — so
+    /// is not an identity every unidentified thing shares - it is the absence of one - so
     /// collapsing two of them onto each other would drop a real second event for no reason.
     /// </para>
     /// <para>
     /// <b>Bounded, because a set that only ever grows is one more thing to be wrong about in the
     /// feature where being wrong costs money.</b> The oldest key is evicted, which is the right
     /// direction: a duplicate arrives seconds after its original, never a capacity of sales
-    /// later. Nothing here is persisted — a fact about a payment in the save is exactly what
+    /// later. Nothing here is persisted - a fact about a payment in the save is exactly what
     /// invariant 18a keeps out of it, and the launch after a purchase is already silent for its
     /// own reason (the server reports the receipt as already granted).
     /// </para>
@@ -57,7 +57,7 @@ namespace GlimmerGrove.Store
 
         /// <summary>
         /// True the first time a key is offered and false for every repeat of it, recording it
-        /// either way. An empty key is always true and is never recorded — see the remarks.
+        /// either way. An empty key is always true and is never recorded - see the remarks.
         /// </summary>
         public bool Fresh(string key)
         {

@@ -8,7 +8,7 @@ namespace GlimmerGrove.Modes
     /// reason.</b> Motion is the one subsystem whose failures show up only in play, so the
     /// arithmetic has to be reachable without an Editor. It matters more on this mode than on
     /// the others because a glade's celebration is the only one whose length is a function of
-    /// the <em>board</em> — the light walks the network it was just solved into, so a deep
+    /// the <em>board</em> - the light walks the network it was just solved into, so a deep
     /// grove has more to say than a shallow one, and nothing but a bound stops that becoming
     /// a wait.
     /// </para>
@@ -35,8 +35,8 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// It is not dead time and it is not politeness. The turn that finishes a glade looks
-        /// exactly like every other turn at the instant it is taken — a conduit swings, a
-        /// critter wakes — so without a beat that says <em>stop, that was the one</em>, the
+        /// exactly like every other turn at the instant it is taken - a conduit swings, a
+        /// critter wakes - so without a beat that says <em>stop, that was the one</em>, the
         /// celebration begins while the player is still reading their own move and the first
         /// third of it is spent catching up. Everything dims and draws in slightly, which is
         /// the only moment in the mode where the board gets quieter.
@@ -85,7 +85,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>A ring is a ripple, not a frame.</b> Six tiles equidistant from the crystal are
         /// one instant as far as the model is concerned, and drawing them that way reads as a
-        /// flat blink rather than as six things lighting — <c>BudTempo.StaggerStep</c>'s lesson,
+        /// flat blink rather than as six things lighting - <c>BudTempo.StaggerStep</c>'s lesson,
         /// and it costs the ring nothing because the ripple is bounded to a fraction of the
         /// beat it lives in. However wide a ring is, the next one still starts on time.
         /// </para>
@@ -117,7 +117,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>A ceiling on sound rather than on rings, because the two have different
         /// limits.</b> Twenty-three rings inside a second and a third is a legible sweep of
-        /// light and an unlistenable machine-gun of notes — and <c>Audio.PlayOne</c> pools ten
+        /// light and an unlistenable machine-gun of notes - and <c>Audio.PlayOne</c> pools ten
         /// voices, so past that the sounds do not merely crowd, they cut each other off. So a
         /// deep grove sounds every nth ring and the light still walks every one of them.
         /// </para>
@@ -137,7 +137,7 @@ namespace GlimmerGrove.Modes
         /// What the note for a ring this far out is pitched at.
         ///
         /// A climb rather than a ladder, because the surge is one gesture travelling and not a
-        /// phrase of separate events — the pitch says <em>how far the light has got</em>, which
+        /// phrase of separate events - the pitch says <em>how far the light has got</em>, which
         /// is a position along something and reads best as a slide.
         /// </summary>
         public static float Pitch(int depth, int rings)
@@ -152,23 +152,23 @@ namespace GlimmerGrove.Modes
         /// <summary>The pitch the light leaves the crystal at.</summary>
         public const float Lowest = .82f;
 
-        /// <summary>And the one it arrives at the far end of the grove at — a touch over an octave.</summary>
+        /// <summary>And the one it arrives at the far end of the grove at - a touch over an octave.</summary>
         public const float Highest = 1.78f;
 
         // ------------------------------------------------------------------ a critter waking
         /// <summary>
-        /// How long one critter's answer to the light takes, whichever answer it is giving —
+        /// How long one critter's answer to the light takes, whichever answer it is giving -
         /// the flinch as the wave reaches it, or the leap at the bloom.
         ///
         /// <para>
         /// The wake rides <em>on</em> the surge rather than after it: a critter goes off when
         /// the light gets to it, which is what makes the wave read as causing something rather
-        /// than as passing over it. So this never lengthens the sequence — <see cref="Tail"/>
+        /// than as passing over it. So this never lengthens the sequence - <see cref="Tail"/>
         /// is what pays for the last one.
         /// </para>
         /// <para>
         /// <b>Only the bloom leaps.</b> Both moments used to, and two leaps a second apart from
-        /// one creature read as a single gesture stuttering rather than as two — so the wake is
+        /// one creature read as a single gesture stuttering rather than as two - so the wake is
         /// now a squash and a shiver in place, and the jump is the one thing the whole grove
         /// does together. <see cref="Leap"/> and <see cref="Land"/> below describe that jump's
         /// arc and are read only by the finale.
@@ -234,7 +234,7 @@ namespace GlimmerGrove.Modes
         /// The longest a celebration may run before it stops being one.
         ///
         /// <para>
-        /// Not a clamp — nothing reads this to cut anything short. It is the bound the parts
+        /// Not a clamp - nothing reads this to cut anything short. It is the bound the parts
         /// are chosen against, asserted by the suite over every grove this mode can author, so
         /// that a beat lengthened for its own good reasons cannot quietly walk the whole
         /// sequence past the point where the player is waiting rather than watching.
@@ -247,7 +247,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>Measured, not guessed.</b> The deepest network in the forty shipped glades is
-        /// fifteen rings (<c>c02_stonebridge</c>, 7x7), and this is a little over double that —
+        /// fifteen rings (<c>c02_stonebridge</c>, 7x7), and this is a little over double that -
         /// past the point where <see cref="MinRing"/> takes over from
         /// <see cref="SurgeCeiling"/>, so it exercises the branch a shipped board does not.
         /// A grove cannot be deeper than the cells it has, so an 8x7 board could in principle

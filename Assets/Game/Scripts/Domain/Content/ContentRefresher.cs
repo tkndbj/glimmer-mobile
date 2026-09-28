@@ -11,8 +11,8 @@ namespace GlimmerGrove.Content
     ///
     /// Nothing here is on the boot path. The player starts playing immediately with
     /// whatever is already local, and a fortnightly content drop simply appears on
-    /// the launch after it downloaded. That trade — one session of latency for zero
-    /// risk of a slow or hostile network delaying the game — is what every shipped
+    /// the launch after it downloaded. That trade - one session of latency for zero
+    /// risk of a slow or hostile network delaying the game - is what every shipped
     /// live puzzle game settles on.
     ///
     /// The manifest is written last and atomically. A refresh interrupted halfway

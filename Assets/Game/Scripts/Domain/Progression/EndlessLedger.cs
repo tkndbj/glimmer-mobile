@@ -11,8 +11,8 @@ namespace GlimmerGrove.Progression
     ///
     /// <para>
     /// <b>Two numbers per level and both are floors.</b> Everything else about a run is already
-    /// recorded by the machinery every other level uses — the heart, the chest count, the streak,
-    /// the star ledger — and none of it fits a board that is never won. Neither of these is a
+    /// recorded by the machinery every other level uses - the heart, the chest count, the streak,
+    /// the star ledger - and none of it fits a board that is never won. Neither of these is a
     /// grade: a <see cref="Row.Best">best</see> is a high-water mark and a
     /// <see cref="Row.Waves">lifetime count</see> is a tally of things that happened, so both are
     /// monotonic integers per level id joined by <c>max</c>, which is invariant 14a's floor
@@ -24,7 +24,7 @@ namespace GlimmerGrove.Progression
     /// recompute a wave, so the two defences a <em>published</em> number has are that it is
     /// <see cref="MaxWave">bounded</see> and that forging it buys nothing (invariant 19l). The
     /// lifetime count is never published, and it pays XP at a rate and under a ceiling that are
-    /// both content (<see cref="EndlessRewardTable"/>) — so a forged one buys keeper levels inside
+    /// both content (<see cref="EndlessRewardTable"/>) - so a forged one buys keeper levels inside
     /// a range an honest player is drawn in, and buys no currency at all, because credits still
     /// derive from the star ledger and from nothing else. <b>Never publish the lifetime count, and
     /// never make the ordered board pay.</b>
@@ -41,7 +41,7 @@ namespace GlimmerGrove.Progression
         /// The most rows this will keep.
         ///
         /// A bound because the client controls the length, and it matches the <c>endlessBest</c>
-        /// size guard in <c>firestore.rules</c> — it has to, because <c>hasOnly</c> is an
+        /// size guard in <c>firestore.rules</c> - it has to, because <c>hasOnly</c> is an
         /// allow-list over the whole document, so a save the client writes and the rules refuse
         /// loses <em>every</em> save write rather than the extra rows (invariant 12a).
         /// </summary>
@@ -60,8 +60,8 @@ namespace GlimmerGrove.Progression
         /// disagree for the one account that reaches it.
         /// </para>
         /// <para>
-        /// Four figures is far past anything the mode can produce — a wave is a muster on a clock,
-        /// so ten thousand of them is a run measured in days — and it is deliberately not tuned any
+        /// Four figures is far past anything the mode can produce - a wave is a muster on a clock,
+        /// so ten thousand of them is a run measured in days - and it is deliberately not tuned any
         /// tighter than that: a ceiling a real player could ever meet is a ceiling that silently
         /// stops recording their best.
         /// </para>
@@ -88,7 +88,7 @@ namespace GlimmerGrove.Progression
         ///
         /// <para>
         /// A struct in one dictionary rather than two dictionaries keyed alike, so the pair cannot
-        /// be written apart — which is <c>invariant 16x</c>'s fault said about a ledger: a value
+        /// be written apart - which is <c>invariant 16x</c>'s fault said about a ledger: a value
         /// and the value derived beside it want one writer, or one of them is stale and nothing
         /// can see it.
         /// </para>
@@ -114,8 +114,8 @@ namespace GlimmerGrove.Progression
             /// <b>The best is a floor under the lifetime count, and that is the migration.</b> A
             /// save written before this ledger counted lifetime waves has a best and no tally, and
             /// reading it as nought would tell a player who had already reached wave forty that
-            /// they had never played. Taking the larger of the two is honest in both directions —
-            /// a lifetime total is at least one run's worth by definition — it is idempotent, it
+            /// they had never played. Taking the larger of the two is honest in both directions -
+            /// a lifetime total is at least one run's worth by definition - it is idempotent, it
             /// can only ever rise, and it needs no sentinel and no migration, which is the
             /// property every other id-keyed section in the save file has.
             /// </para>
@@ -139,7 +139,7 @@ namespace GlimmerGrove.Progression
         ///
         /// <para>
         /// <b>An intent, where <see cref="Changed"/> is a state.</b> <see cref="Changed"/> fires on
-        /// every <see cref="LoadFrom"/>, which is every sync that adopts a merge — so a sync asked
+        /// every <see cref="LoadFrom"/>, which is every sync that adopts a merge - so a sync asked
         /// for on it is a sync every few seconds for the life of the process, which is exactly the
         /// trap <c>SyncTriggers</c> is written around. This fires once, from <see cref="Record"/>,
         /// when a person actually did something.
@@ -159,14 +159,14 @@ namespace GlimmerGrove.Progression
         public static bool Any => _rows.Count > 0;
 
         /// <summary>
-        /// The furthest wave reached anywhere on the endless lane — the one number the public
+        /// The furthest wave reached anywhere on the endless lane - the one number the public
         /// board is ordered on.
         ///
         /// <para>
         /// <b>The best of every row rather than one named level, and that is a decision about what
         /// the board is about.</b> Nothing but an endless run ever writes a row here, so this is
         /// "the furthest this keeper has ever held out", which stays the right sentence if the
-        /// Infinite lane ever grows a second level (invariant 43 — the lane is a track, and a track
+        /// Infinite lane ever grows a second level (invariant 43 - the lane is a track, and a track
         /// is one ladder). A board about one named level would have to carry that level's id into
         /// the save, into the server's config and into a board id, and would answer nothing better.
         /// </para>
@@ -188,7 +188,7 @@ namespace GlimmerGrove.Progression
         /// <b>A sum where <see cref="Best"/> is a maximum</b>, because the two answer different
         /// questions: the board asks how far one run got and the reward asks how much was played.
         /// Summed across rows rather than read off one named level for <see cref="Best"/>'s reason
-        /// — nothing but an endless run writes here — and <c>long</c> because the ceiling is
+        /// - nothing but an endless run writes here - and <c>long</c> because the ceiling is
         /// applied by <see cref="EndlessRewardTable.XpFor"/> afterwards rather than here, so this
         /// may legitimately exceed it.
         /// </para>
@@ -231,7 +231,7 @@ namespace GlimmerGrove.Progression
 
         /// <summary>
         /// Lifetime waves off a save file, read exactly as <c>endlessWaves</c> in
-        /// <c>functions/src/grove.ts</c> reads them — the same rows, the same per-row clamp and
+        /// <c>functions/src/grove.ts</c> reads them - the same rows, the same per-row clamp and
         /// the same <see cref="Row.Payable">best-as-a-floor</see> rule.
         ///
         /// <b>The two must agree</b>, or the server's keeper level and the device's differ and a
@@ -248,8 +248,8 @@ namespace GlimmerGrove.Progression
             // **The cap bounds the walk, not the tally of rows it accepted**, which is the same
             // reading `endlessWaves` and `bestWave` take on the server and the same one
             // `firestore.rules` bounds (`size() <= 64`). The distinction only ever shows on a
-            // malformed document — a refused row near the top would otherwise let this side read
-            // a sixty-fifth that the other side never reaches — and the shared vectors caught
+            // malformed document - a refused row near the top would otherwise let this side read
+            // a sixty-fifth that the other side never reaches - and the shared vectors caught
             // exactly that, which is what they are for. An honest save never has more than
             // `MaxRows`, because `Sorted` is the only thing that writes one.
             int walk = rows.Length < MaxRows ? rows.Length : MaxRows;
@@ -304,7 +304,7 @@ namespace GlimmerGrove.Progression
         ///
         /// <para>
         /// <b>Separate from <see cref="Record"/> because it is unconditional.</b> A run that did
-        /// not beat the best still happened, and it is what the player is paid for — folding this
+        /// not beat the best still happened, and it is what the player is paid for - folding this
         /// into the best's early return is how the tenth run on a good day would have paid nothing.
         /// </para>
         /// <para>
@@ -315,7 +315,7 @@ namespace GlimmerGrove.Progression
         /// </para>
         /// <para>
         /// Adds rather than assigns, and saturates at <see cref="MaxLifetimeWaves"/> rather than
-        /// wrapping — a tally that wrapped would fall, and everything downstream of this is a
+        /// wrapping - a tally that wrapped would fall, and everything downstream of this is a
         /// <c>max</c> that assumes it cannot.
         /// </para>
         /// </summary>
@@ -330,7 +330,7 @@ namespace GlimmerGrove.Progression
 
             // **Added to the tally, never to <see cref="Row.Payable"/>, and that distinction is a
             // bug `EndlessRewardTests.ARunThatBeatNothingStillPays` caught.** `Payable` floors the tally with the best, and `Record`
-            // runs immediately before this on the same run — so a run that set a new best of forty
+            // runs immediately before this on the same run - so a run that set a new best of forty
             // raised the floor to forty and then had its own forty added on top of it, paying
             // twice for one watch. The floor is materialised once, where it belongs, at the load
             // and merge boundary (`Absorb`); by the time anything is banked the tally already
@@ -376,7 +376,7 @@ namespace GlimmerGrove.Progression
         /// <para>
         /// <b>No early return for an empty side</b>, which is <c>CompanionLedger.Join</c>'s trap:
         /// handing one array straight back would skip the sort, and <c>SaveDelta</c> walks these
-        /// in order — so an unsorted file joined against nothing would read as changed on every
+        /// in order - so an unsorted file joined against nothing would read as changed on every
         /// launch and push a write for nothing, for ever.
         /// </para>
         /// </summary>
@@ -403,7 +403,7 @@ namespace GlimmerGrove.Progression
                 // so applying it on the way in leaves an invariant everything downstream can rely
                 // on: an in-memory tally is never below its own best. `Bank` then simply adds,
                 // and the v29 file that arrives with a best and no tally is migrated by being
-                // read — no sentinel, no migration step, and idempotent because taking the
+                // read - no sentinel, no migration step, and idempotent because taking the
                 // maximum twice is taking it once.
                 var read = new Row(row.wave, row.waves);
                 var arriving = new Row(read.Best, read.Payable);

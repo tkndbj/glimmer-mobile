@@ -7,14 +7,14 @@ namespace GlimmerGrove.Wards
     /// <b>A named rule rather than a branch, because the branch left a state with no answer.</b>
     /// The panel offered one key and decided what it said: for a turret the player owned it sold
     /// the next star, and only fell back to standing it when there was none left to sell. Every
-    /// turret starts at one star, so there was always a star left to sell — which meant a turret
+    /// turret starts at one star, so there was always a star left to sell - which meant a turret
     /// somebody owned and had not stood offered <c>UPGRADE</c> and nothing else, and the loadout's
     /// whole purpose was unreachable.
     /// </para>
     /// <para>
     /// <b>Nothing could see it.</b> Both branches are individually correct and every gate reads
     /// one branch at a time; what was wrong is that their union does not cover the states a
-    /// turret can be in. That is only visible as a <em>property</em> — <c>WardPreviewTests</c>
+    /// turret can be in. That is only visible as a <em>property</em> - <c>WardPreviewTests</c>
     /// sweeps all eight combinations and asserts the two that matter: a key is always offered, and
     /// a turret the player owns can always be put on the line.
     /// </para>
@@ -31,7 +31,7 @@ namespace GlimmerGrove.Wards
         /// Whether the lower key is the one state that is not an offer.
         ///
         /// EQUIPPED pays nothing, moves nothing and only closes the panel, so it wears the settled
-        /// pill rather than the price one — see <c>WardPreviewOverlay.Paint</c>.
+        /// pill rather than the price one - see <c>WardPreviewOverlay.Paint</c>.
         /// </summary>
         public readonly bool Equipped;
 
@@ -54,7 +54,7 @@ namespace GlimmerGrove.Wards
         /// <paramref name="rises"/> whether it has a star left that could be bought.
         /// </para>
         /// <para>
-        /// <b>A turret nobody owns has one key</b> — a price, or the wall in front of it — because
+        /// <b>A turret nobody owns has one key</b> - a price, or the wall in front of it - because
         /// there is nothing to stand and nothing to upgrade. <b>A turret somebody owns always has
         /// the lower one</b>, which is the clause that was missing: it is either the way onto the
         /// line or the statement that it is already there, and it does not depend on whether a

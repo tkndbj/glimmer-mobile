@@ -21,7 +21,7 @@ namespace GlimmerGrove.Content
     /// Turns the authored text grid into board cells.
     ///
     /// Pure and side-effect free: no Unity objects, no logging, no statics touched.
-    /// That is deliberate — this is the piece that has to be trustworthy, so it can
+    /// That is deliberate - this is the piece that has to be trustworthy, so it can
     /// be run over every level in a build step and in tests without an Editor.
     /// See <see cref="LevelLayout.Grammar"/> for the token language.
     /// </summary>
@@ -238,7 +238,7 @@ namespace GlimmerGrove.Content
                 p++;
             }
 
-            // '~N' — a conduit that crumbles after N turns.
+            // '~N' - a conduit that crumbles after N turns.
             if (p < token.Length && token[p] == '~')
             {
                 if (p + 1 >= token.Length) { error = "'~' with no turn count after it"; return false; }
@@ -254,7 +254,7 @@ namespace GlimmerGrove.Content
                 p += 2;
             }
 
-            // '&A'..'&Z' — the taproot this conduit shares. Every conduit carrying the
+            // '&A'..'&Z' - the taproot this conduit shares. Every conduit carrying the
             // same rune turns as one.
             if (p < token.Length && token[p] == '&')
             {
@@ -295,7 +295,7 @@ namespace GlimmerGrove.Content
             }
 
             // A crumbling taproot would break several conduits on one tap, and only one of
-            // them can be reported as the tile that gave way — so the board would lose cells
+            // them can be reported as the tile that gave way - so the board would lose cells
             // the view never showed going. Refused here rather than warned about, because
             // there is no reading of the pair that does something sensible.
             if (cell.link > 0 && cell.fragile > 0)

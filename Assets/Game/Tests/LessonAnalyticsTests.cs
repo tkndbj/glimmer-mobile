@@ -9,13 +9,13 @@ namespace GlimmerGrove.Tests
     /// The teaching funnel is the only instrument that says where the first ten minutes
     /// lose people, and every one of its faults is silent: a wrong parameter is a column of
     /// plausible numbers, and a missing event is a gap nobody can tell from a player who
-    /// never got there. None of it can be checked after the fact either — analytics not
+    /// never got there. None of it can be checked after the fact either - analytics not
     /// collected in the first months is simply gone.
     ///
     /// <para>
     /// So what is pinned here is the shape rather than the wiring: that both halves are
     /// raised, that the parameters a report groups by are present and spelled the way the
-    /// sinks read them, and that reading time is floored rather than rounded — because a tip
+    /// sinks read them, and that reading time is floored rather than rounded - because a tip
     /// dismissed in 900ms has to report nought, which is the reading the whole event exists
     /// to produce.
     /// </para>
@@ -86,7 +86,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The measurement the event exists for. A tip dismissed inside a second was not read,
-        /// and rounding would report it as one second of reading — the same figure as a tip
+        /// and rounding would report it as one second of reading - the same figure as a tip
         /// somebody actually looked at.
         /// </summary>
         [Test]
@@ -113,7 +113,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// An absent screen is a value rather than a missing parameter, because a report
-        /// cannot group by something that is not there — the rows simply vanish.
+        /// cannot group by something that is not there - the rows simply vanish.
         /// </summary>
         [Test]
         public void AnAbsentScreenIsStillAValue()
@@ -152,7 +152,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The two halves are separate events on purpose: a ratio needs both counted
         /// independently, and a shown with no finished is the one exit a panel cannot report
-        /// for itself — the process dying while a modal is up.
+        /// for itself - the process dying while a modal is up.
         /// </summary>
         [Test]
         public void TheTwoHalvesAreCountedSeparately()

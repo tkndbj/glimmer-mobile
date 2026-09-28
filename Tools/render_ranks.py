@@ -70,15 +70,22 @@ STAGE_LEAST, STAGE_MOST = 790.0, 1.24
 RAIL_H = 150.0
 SEAT, SEAT_PITCH_MOST, SEAT_FACE, SEAT_FACE_LOCKED, SEAT_CHOSEN = 104.0, 140.0, .82, .64, 1.22
 LINK_THICK, LINK_GAP, LOCK_CHIP = 12.0, 6.0, 34.0
-PLATE_W, PLATE_HEAD, LINE_H, PLATE_FOOT = 1024.0, 76.0, 88.0, 22.0
-PLATE_GAP, FOOT_PAD = 40.0, 24.0
-WELL_INSET, ROW_H, ICON, COUNT_W, BAR_H = 36.0, 78.0, 58.0, 210.0, 14.0
-
-# The furniture (`RankKit`): the pieces `make_rank_kit_art.py` cuts from the owner's UI kit,
+# The furniture (`RankKit`): the pieces `make_rank_kit_art.py` cuts from the owner's UI kits,
 # pre-scaled, so every one is drawn 1:1 by the border its own `.meta` carries.
-TAB_W, TAB_H, TAB_PT = 420.0, 84.0, 30
-KIT_BOARD, KIT_ROW, KIT_SEAT, KIT_TAB, KIT_CHIP = ("Rank/kit_board", "Rank/kit_row", "Rank/kit_seat",
-                                                    "Rank/kit_tab", "Rank/kit_chip")
+KIT_BOARD, KIT_ROW, KIT_SEAT, KIT_CHIP = ("Rank/kit_board", "Rank/kit_row", "Rank/kit_seat",
+                                          "Rank/kit_chip")
+BOARD_CAP, BOARD_PLINTH, BOARD_SIDE = 73.0, 77.0, 36.0      # RankKit.BoardCap/BoardPlinth/BoardSide
+RIBBON_W = 440.0                                           # RanksScreen.RibbonW, on Hud/title
+RIBBON_H = RIBBON_W * 208.0 / 775.0
+RIBBON_LIFT, TAB_PT = .103, 30                             # Skins.RibbonLift
+TITLE_RISE = RIBBON_H * .5 - BOARD_CAP * .5 + 2.0
+CAP_GAP, PLINTH_GAP = 14.0, 10.0
+
+PLATE_W, LINE_H = 1024.0, 88.0
+PLATE_HEAD = TITLE_RISE + BOARD_CAP + CAP_GAP
+PLATE_FOOT = BOARD_PLINTH + PLINTH_GAP
+PLATE_GAP, FOOT_PAD = 40.0, 24.0
+WELL_INSET, ROW_H, ICON, COUNT_W, BAR_H = BOARD_SIDE + 14.0, 78.0, 58.0, 210.0, 14.0
 
 #: `RankKit.IconFor` - the measure id to (sprite under Ui/, tint).
 MEASURE_ICON = {
@@ -155,7 +162,7 @@ def badge(rid, box):
 def piece(name, w, h):
     """One kit piece (`RankKit.Lay`): the cut sprite, nine-sliced by its own meta's border."""
     im, border = K.load(name)
-    return slice9(im, border[0], w, h, 1.0)
+    return slice9(im, tuple(border), w, h, 1.0)
 
 
 def measure_icon(measure_id, box):
@@ -442,26 +449,28 @@ def plate(sheet, band_bottom, band_h, held, chosen):
     top = band_bottom - band_h
     cy = top + height / 2
 
-    # The board is the kit's notched panel, the same for a live rung and a locked one.
-    K.paste(sheet, piece(KIT_BOARD, PLATE_W, height), W / 2, cy)
+    # The board is the cartoon kit's notice board, standing TITLE_RISE under the band's top.
+    board_top = top + TITLE_RISE
+    board_h = height - TITLE_RISE
+    K.paste(sheet, piece(KIT_BOARD, PLATE_W, board_h), W / 2, board_top + board_h / 2)
 
     well_w = PLATE_W - WELL_INSET * 2
     well_left = W / 2 - well_w / 2
-    head_y = top + PLATE_HEAD / 2
+    cap_y = board_top + BOARD_CAP / 2
 
-    # The kit's tab hanging from the board's top edge, with the title on it.
-    K.paste(sheet, piece(KIT_TAB, TAB_W, TAB_H), W / 2, top + TAB_H / 2)
+    # The kit's ribbon over the cap, with the title on it.
+    K.paste(sheet, K.fit(K.load("Hud/title")[0], (RIBBON_W, RIBBON_H)), W / 2, cap_y)
     title = txt("ui.ranks.requirements").upper()
-    px = K.one_line(sheet, title, W / 2, top + TAB_H / 2 - TAB_H * .07, TAB_W * .8, TAB_PT, 16,
+    px = K.one_line(sheet, title, W / 2, cap_y - RIBBON_H * RIBBON_LIFT, RIBBON_W * .66, TAB_PT, 16,
                     fill=K.CREAM, outline=3)
     MEASURED.append(("plate title '%s'" % title, px, 16))
 
     met = sum(1 for l in lines if progress(l, held, order) >= l["target"])
     count = txt("ui.ranks.fraction", met, len(lines))
-    K.text(sheet, count, well_left + well_w - K.font(28).getlength(count) / 2, head_y + 6, 28,
-           fill=K.MINT if met >= len(lines) else (K.CREAM if live else LOCKED_INK), outline=2)
+    K.text(sheet, count, well_left + well_w - 24 - K.font(30).getlength(count) / 2, cap_y - 2, 30,
+           fill=K.MINT if met >= len(lines) else (K.CREAM if live else LOCKED_INK), outline=3)
 
-    line_y = top + PLATE_HEAD + LINE_H / 2 + 2
+    line_y = board_top + BOARD_CAP + CAP_GAP + LINE_H / 2
     for line in lines:
         have = progress(line, held, order)
         done = have >= line["target"]

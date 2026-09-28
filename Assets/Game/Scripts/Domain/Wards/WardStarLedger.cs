@@ -8,14 +8,14 @@ namespace GlimmerGrove.Wards
     /// How far each turret a player owns has been upgraded, and what buying the next star costs.
     ///
     /// <para>
-    /// <b>Keyed on the holding rather than on the turret</b> — <c>{id}:{colour}</c>, the same
+    /// <b>Keyed on the holding rather than on the turret</b> - <c>{id}:{colour}</c>, the same
     /// string <c>wardsOwned</c> uses (<see cref="WardHolding"/>). A turret is bought per colour
     /// because which colour a trick is worth having on is the whole of what makes the shelf a
-    /// choice (invariant 42c), and the shelf is drawn per seat — so the card a player is looking
+    /// choice (invariant 42c), and the shelf is drawn per seat - so the card a player is looking
     /// at is already "this turret, on this seat", and the stars on it are that seat's.
     /// </para>
     /// <para>
-    /// <b>Every turret on the shelf, with no band exempt — which is what a seat being the unit
+    /// <b>Every turret on the shelf, with no band exempt - which is what a seat being the unit
     /// of purchase buys.</b> A legendary was bought outright for three days (invariant 42k), so
     /// its row carried no colour and its four seats shared one ladder: upgrading the Eclipse on
     /// red upgraded the Eclipse on blue, which is not what a player who paid four times for four
@@ -25,7 +25,7 @@ namespace GlimmerGrove.Wards
     /// which is the whole reason invariant 15a asks for that shape.
     ///
     /// <b>The bare row is still read, and is now only ever legacy.</b> A file from before colours
-    /// existed holds one, and so does a legendary bought under the old rule — so
+    /// existed holds one, and so does a legendary bought under the old rule - so
     /// <see cref="StarsOf(string, char)"/> falls back to it, and a five-star Eclipse keeps five
     /// stars on all four seats rather than being handed back at one.
     /// </para>
@@ -33,13 +33,13 @@ namespace GlimmerGrove.Wards
     /// <b>A star count only ever rises, which is the whole reason it is storable.</b> Invariant 11b
     /// refuses a stored count outright: two devices showing 3 and 0 are equally consistent with
     /// "one spent three" and "one has not heard yet". An upgrade cannot be undone, so the join is
-    /// a per-key <c>max</c> and the two devices are unambiguous — the same shape as
+    /// a per-key <c>max</c> and the two devices are unambiguous - the same shape as
     /// <c>endlessBest</c> (14a's floor) and <c>homesteadStock</c>. <b>Before adding anything else
     /// here, check it only ever rises.</b>
     /// </para>
     /// <para>
     /// <b>Absent means one star, not nought.</b> A turret bought before this shipped, a row a
-    /// merge dropped and a file from an older build all read the same way — so nothing needs a
+    /// merge dropped and a file from an older build all read the same way - so nothing needs a
     /// migration and nothing can stand at nought stars. The floor lives in
     /// <c>WardStars.Sane</c>, which every read goes through.
     /// </para>
@@ -47,7 +47,7 @@ namespace GlimmerGrove.Wards
     /// <b>Nothing here is adjudicated, for <c>WardLedger</c>'s reason.</b> A forged star buys an
     /// addition to a bolt and a little health; it can never reach a public number, because a
     /// grove's worth is derived from what is held in the grove (19a) and the line is not part of
-    /// it. The money half is defended where money always is — <c>submitSpends</c> refuses a debit
+    /// it. The money half is defended where money always is - <c>submitSpends</c> refuses a debit
     /// the server-derived balance cannot cover.
     /// </para>
     /// </summary>
@@ -61,7 +61,7 @@ namespace GlimmerGrove.Wards
         /// <b>It was thirty-eight short, and what spent the headroom was the legendary band
         /// becoming per-seat</b> (invariant 42k): ten turrets that carried one row each now carry
         /// four. Nothing about that is unsafe today, and the failure if it ever stops being safe
-        /// is the quiet kind — <see cref="Write"/> truncates, so the rows past the bound are
+        /// is the quiet kind - <see cref="Write"/> truncates, so the rows past the bound are
         /// upgrades a player paid for that stop being written down. <b>So it is a fixture rather
         /// than a comment</b>: <c>WardLoadoutTests.TheStarLedgerHoldsTheWholeShelf</c> fails the
         /// day a roster outgrows this, which is the day to raise both this and the rules' bound
@@ -115,7 +115,7 @@ namespace GlimmerGrove.Wards
         {
             if (string.IsNullOrEmpty(id)) return WardStars.Least;
 
-            // The seat's own row first, then the bare one — a file written before colours
+            // The seat's own row first, then the bare one - a file written before colours
             // existed, or a legendary bought while the band was bought outright (invariant 42k,
             // `WardHolding.CopyMark`). Taking the seat's first
             // means a per-colour row always wins where both somehow exist, which is the reading
@@ -139,13 +139,13 @@ namespace GlimmerGrove.Wards
         ///
         /// <para>
         /// <b>The ledger does not take the money.</b> Who may pay, and whether they can, is the
-        /// caller's question and is asked through <c>PlayerProgression.TrySpend</c> — a ledger
+        /// caller's question and is asked through <c>PlayerProgression.TrySpend</c> - a ledger
         /// that debited would be a second place a purchase happens, and two of those is two
         /// chances to charge for one thing (invariant 23's argument about the continue).
         /// </para>
         /// <para>
         /// <b>It takes the model rather than its id, because <see cref="WardHolding.Row"/> is
-        /// where a holding's spelling is decided</b> — it answered differently for the legendary
+        /// where a holding's spelling is decided</b> - it answered differently for the legendary
         /// band while that band was bought outright, and the day it does so again this writer
         /// follows it without being told. Every writer takes this overload; the id one is kept
         /// for a caller that has nothing else, and writes the per-colour row.
@@ -178,7 +178,7 @@ namespace GlimmerGrove.Wards
         /// <summary>
         /// Joins two files' ladders by taking the further of each.
         ///
-        /// <b>A per-key maximum, which is the only join a count may have</b> — see the summary.
+        /// <b>A per-key maximum, which is the only join a count may have</b> - see the summary.
         /// Idempotent and order-independent by construction, which is what invariant 11 asks of
         /// anything a sync touches.
         /// </summary>

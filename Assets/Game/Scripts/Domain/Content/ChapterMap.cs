@@ -8,7 +8,7 @@ namespace GlimmerGrove.Content
     /// These numbers live in Domain rather than beside the screen that draws them
     /// because they are an authoring contract, not a rendering detail. Whether two
     /// glades collide, or whether the trail between them runs backwards, is a question
-    /// about the content, and it has to be answerable by the build gate — which cannot
+    /// about the content, and it has to be answerable by the build gate - which cannot
     /// reach into Presentation. The alternative, a validator holding its own copy of
     /// the numbers, would agree with the screen right up until somebody changed one.
     ///
@@ -23,7 +23,7 @@ namespace GlimmerGrove.Content
     {
         /// <summary>
         /// Canvas units across. This is the UI canvas reference width itself, not a copy
-        /// of it — <c>Boot.RefWidth</c> reads it from here, because Domain cannot read
+        /// of it - <c>Boot.RefWidth</c> reads it from here, because Domain cannot read
         /// anything from Presentation and a second copy would drift the moment either
         /// side was retuned.
         /// </summary>
@@ -32,7 +32,7 @@ namespace GlimmerGrove.Content
         /// <summary>Canvas units per background strip. A chapter is as tall as its strips.</summary>
         public const float StripHeight = 1200f;
 
-        /// <summary>The tappable glade disc — the part a player actually sees collide.</summary>
+        /// <summary>The tappable glade disc - the part a player actually sees collide.</summary>
         public const float NodeDiameter = 196f;
 
         /// <summary>Air between two discs, below which they read as one lump rather than two glades.</summary>
@@ -61,7 +61,7 @@ namespace GlimmerGrove.Content
         /// Named here because the disc was the only footprint the clearance check knew, and
         /// the disc is not what collides. <see cref="MinimumNodeSeparation"/> guarantees 220
         /// units; the mark reaches 302 above a node and the end-of-chapter marker hangs a name
-        /// plate 227 below its own centre — so the Shallows shipped its marker 308 units
+        /// plate 227 below its own centre - so the Shallows shipped its marker 308 units
         /// directly above its tenth glade, every gate green, with the plate sitting on the
         /// player's standing on the one glade in the chapter that earns a look.
         /// <c>ChapterMapTests</c> holds these numbers to what the screen draws. The glow behind
@@ -71,7 +71,7 @@ namespace GlimmerGrove.Content
         public const float CrownHalfWidth = 204f, CrownBottom = -52f, CrownTop = 302f;
 
         /// <summary>
-        /// A perch's own body — rock, disc and the name plate under it — as the rectangle
+        /// A perch's own body - rock, disc and the name plate under it - as the rectangle
         /// another node's crown must stay out of: <see cref="BodyHalfWidth"/> either side,
         /// <see cref="BodyBelow"/> under the centre and <see cref="BodyAbove"/> over it.
         ///
@@ -95,8 +95,8 @@ namespace GlimmerGrove.Content
         ///
         /// <para>
         /// A distance rather than a fraction, and that is the whole of it. What the marker
-        /// has to clear is the header — a fixed number of canvas units however long the
-        /// chapter is — while a fraction of a four-strip map is a different distance from
+        /// has to clear is the header - a fixed number of canvas units however long the
+        /// chapter is - while a fraction of a four-strip map is a different distance from
         /// the same fraction of a six-strip one. As a ceiling of 0.95 it sat 240 units from
         /// the top of the Mill Vale and 360 from the top of the Shallows, so one constant
         /// put the marker completely behind the banner in one chapter and clipped it in the
@@ -110,7 +110,7 @@ namespace GlimmerGrove.Content
         /// cannot see.
         /// </para>
         /// <para>
-        /// <b>The column, not the plaque</b> — and getting that wrong is what this number was
+        /// <b>The column, not the plaque</b> - and getting that wrong is what this number was
         /// last changed for. It was sized against the banner's underside when the banner was
         /// the last thing in the header; the mode switcher then arrived beneath it, and the
         /// marker went on landing at the same 500 units in <em>every</em> chapter of
@@ -119,7 +119,7 @@ namespace GlimmerGrove.Content
         /// content file was wrong, and the clearance check only ever compared it against
         /// glades. <see cref="TeaserTopInset"/> and <see cref="TeaserReach"/> are the other two
         /// terms named so a test can add them to what the header actually measures, which is
-        /// the guard that did not exist before — see <c>ChapterMapTests</c>.
+        /// the guard that did not exist before - see <c>ChapterMapTests</c>.
         /// </para>
         /// </summary>
         public const float TeaserHeadroom = 700f;
@@ -137,14 +137,14 @@ namespace GlimmerGrove.Content
         /// <summary>
         /// How far the marker reaches above its own centre, plus the air that keeps it from
         /// merely touching the control above it. Its disc is <see cref="NodeDiameter"/> and
-        /// everything else it carries — the plate, the shadow — hangs below.
+        /// everything else it carries - the plate, the shadow - hangs below.
         /// </summary>
         public const float TeaserReach = NodeDiameter * .5f + 52f;
 
         /// <summary>
         /// Where the end-of-chapter marker sits across the map when a chapter does not say.
         /// Every chapter's last glade stands on the left (<c>Tools/chapters/mapart.py</c>), so
-        /// this is the other side of the map from it — a marker above the last glade sits its
+        /// this is the other side of the map from it - a marker above the last glade sits its
         /// plate on that glade's standing mark, which is what <see cref="Overshadows"/> refuses.
         /// </summary>
         public const float TeaserX = 0.66f;
@@ -154,7 +154,7 @@ namespace GlimmerGrove.Content
         /// map) means "not authored" and takes <see cref="TeaserX"/>.
         ///
         /// The same convention <c>par</c> and <c>budgetFactor</c> already use, and for the
-        /// same reason — <c>JsonUtility</c> writes a zero into every field a file predating
+        /// same reason - <c>JsonUtility</c> writes a zero into every field a file predating
         /// it never had, so zero is the one value that cannot mean a choice. Nothing is
         /// lost by it: a marker at the very left edge of the map is half off it.
         /// </summary>
@@ -180,7 +180,7 @@ namespace GlimmerGrove.Content
         /// <inheritdoc cref="TeaserPosition(float,int)"/>
         /// <param name="across">
         /// The chapter's own <c>teaserX</c>; 0 takes the default. Only this axis is
-        /// authorable — see <see cref="ChapterDefinition.TeaserX"/>.
+        /// authorable - see <see cref="ChapterDefinition.TeaserX"/>.
         /// </param>
         public static Vector2 TeaserPosition(float highestY, int stripCount, float across)
         {
@@ -191,8 +191,8 @@ namespace GlimmerGrove.Content
         /// <summary>
         /// The distance between two authored positions, in canvas units.
         ///
-        /// The axes scale differently — x across a fixed width, y across however many
-        /// strips the chapter declares — so this is the only honest way to ask whether
+        /// The axes scale differently - x across a fixed width, y across however many
+        /// strips the chapter declares - so this is the only honest way to ask whether
         /// two glades are too close. Comparing the raw fractions would call a pair in a
         /// tall chapter cramped when they are half a screen apart.
         /// </summary>
@@ -206,7 +206,7 @@ namespace GlimmerGrove.Content
         /// <summary>
         /// Whether the perch standing at <paramref name="body"/> covers any of the standing
         /// mark above the glade at <paramref name="crown"/>. Both are authored fractions and
-        /// the answer is in canvas units, which is why the strip count is needed — see
+        /// the answer is in canvas units, which is why the strip count is needed - see
         /// <see cref="Separation"/>. A rectangle test rather than a distance, because the
         /// mark is four times wider than it is tall and a radius that cleared its corners
         /// would refuse every alternating layout that ships.

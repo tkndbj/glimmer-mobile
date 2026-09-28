@@ -27,7 +27,7 @@ namespace GlimmerGrove.Tasks
     ///
     /// <para>
     /// <b>The state is counters, never task progress.</b> Each period stores one count per
-    /// <see cref="TaskGoal"/> — runs finished today, raiders felled this week — and a task's
+    /// <see cref="TaskGoal"/> - runs finished today, raiders felled this week - and a task's
     /// progress is <em>derived</em>: the count for its goal, clamped to its target. Storing
     /// per-task progress would be a second copy of the same fact, and the copy that breaks
     /// the moment the slate is retuned: a task added by a content push mid-week would start
@@ -40,7 +40,7 @@ namespace GlimmerGrove.Tasks
     /// joined by union: claiming cannot be undone, and a set of ids survives the slate being
     /// retuned underneath it. Together with the period key that is the whole of the save
     /// section (<see cref="TaskStateDto"/>); nothing about what a chest contained is stored
-    /// anywhere, for <see cref="DailyChests"/>' reason — it is recomputed from the player, the
+    /// anywhere, for <see cref="DailyChests"/>' reason - it is recomputed from the player, the
     /// period and the task whenever it is needed, on every device and on the server.
     /// </para>
     /// <para>
@@ -216,7 +216,7 @@ namespace GlimmerGrove.Tasks
         /// <para>
         /// Both, because a run finished today is also a run finished this week; the two
         /// slates count the same world at two scales. Bounded per goal rather than per task,
-        /// so a very long week cannot grow a number without limit — there is nothing above
+        /// so a very long week cannot grow a number without limit - there is nothing above
         /// the largest target on the slate to earn, and a counter that only ever needs to
         /// reach a target has no business being a million.
         /// </para>
@@ -229,7 +229,7 @@ namespace GlimmerGrove.Tasks
             // **Before the period loop, because that loop can decline the note.** A goal already
             // at its slate's ceiling moves nothing below and returns early; for ever, it still
             // happened. This is the one hook the lifetime tally has, and it is enough because
-            // every counted verb in this game is reported through this method — which is what
+            // every counted verb in this game is reported through this method - which is what
             // makes a future mode's goal a rank requirement with no code (`LifetimeTally`).
             LifetimeTally.Note(goal, amount);
 
@@ -340,7 +340,7 @@ namespace GlimmerGrove.Tasks
             Sync();
 
             // Only a dealt task can be claimed. A task finished under yesterday's slate and
-            // not claimed before midnight is gone with the day — a chest that banks is a chest
+            // not claimed before midnight is gone with the day - a chest that banks is a chest
             // nobody has to come back tomorrow for, which is DailyChests' rule kept.
             if (!IsDealt(task)) return false;
             if (StateOf(task) != TaskState.Ready) return false;
@@ -358,7 +358,7 @@ namespace GlimmerGrove.Tasks
 
             // The season grows here and nowhere else. A chest is the one thing in this game
             // that is both repeatable and calendar-bounded, which is why it is what a season
-            // is graded on — see `ChestTier.Marks`. Before the save, so one write carries
+            // is graded on - see `ChestTier.Marks`. Before the save, so one write carries
             // both; after the claim, so a refused one grows nothing.
             Events.SeasonLedger.NoteChest(task.Tier);
 
@@ -385,7 +385,7 @@ namespace GlimmerGrove.Tasks
 
         /// <summary>
         /// Hands out one chest's contents: banked kinds here and now, currency as a claim.
-        /// The split <see cref="DailyChests"/> drew, for its reason — currency is the thing
+        /// The split <see cref="DailyChests"/> drew, for its reason - currency is the thing
         /// an attacker forges, so it is the thing the server adjudicates.
         /// </summary>
         static void Apply(List<ChestDrop> drops, TaskDefinition task, int key)
@@ -420,7 +420,7 @@ namespace GlimmerGrove.Tasks
         /// <summary>
         /// Rolls the periods over when the calendar has moved on. Lazy, for
         /// <see cref="DailyChests"/>' reason: a comparison at the top of every read cannot be
-        /// forgotten by a caller and cannot arrive late. Only ever forward — a merged save
+        /// forgotten by a caller and cannot arrive late. Only ever forward - a merged save
         /// carrying a key from a device whose clock was ahead must not be reset back into a
         /// period it has already been paid for.
         /// </summary>
@@ -473,7 +473,7 @@ namespace GlimmerGrove.Tasks
 
                     // An unknown goal is carried nowhere: it is a row a newer build wrote and
                     // this one cannot count, and dropping it costs a newer build one period's
-                    // worth of that count on this device — which the join's max on the other
+                    // worth of that count on this device - which the join's max on the other
                     // device already holds.
                     var goal = TaskGoals.Parse(row.goal);
                     if (goal == TaskGoal.None) continue;
@@ -527,7 +527,7 @@ namespace GlimmerGrove.Tasks
         /// <summary>
         /// Joins two devices' periods.
         ///
-        /// The later key wins outright — an older period's counters describe a period that is
+        /// The later key wins outright - an older period's counters describe a period that is
         /// over, and carrying them forward would hand the player a head start on one they have
         /// not played. Within a shared period every count takes the larger value and the claims
         /// take the union: both are records of things that happened, the awards behind a claim

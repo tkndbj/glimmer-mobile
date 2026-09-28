@@ -48,7 +48,7 @@ namespace GlimmerGrove.Modes
         /// </para>
         /// <para>
         /// <b><paramref name="baseline"/> is damage against an unsurged raider, and every raider
-        /// takes it through its own surge</b> — see <see cref="SiegeSurge.Hurt"/>, and
+        /// takes it through its own surge</b> - see <see cref="SiegeSurge.Hurt"/>, and
         /// <c>UtilityUnit.Hill</c> for the rule this is one half of. That is what keeps a firepot
         /// worth the same share of a raider on chapter one and on chapter forty, and worth the
         /// same share of wave ninety as of wave one in an endless run, where the two are standing
@@ -68,7 +68,7 @@ namespace GlimmerGrove.Modes
                 var raider = _raiders[i];
                 if (!raider.Alive || !raider.OnTheHill) continue;
 
-                // **What its body covers, against the boxes the firepot burns** — two rectangles
+                // **What its body covers, against the boxes the firepot burns** - two rectangles
                 // overlapping, and neither of them a point. `SiegeTuning.Caught` owns both halves:
                 // a raider is as wide as it is drawn (a boss spans the hill; everything else fits
                 // its lane) and as deep as it is drawn, centred where it stands, and a firepot is
@@ -105,7 +105,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>The strikes are shuffled, and they are shuffled off the board's own stream.</b> The
-        /// view draws them one at a time down the list, so the order is what a player sees — bolts
+        /// view draws them one at a time down the list, so the order is what a player sees - bolts
         /// falling here and there across the hill rather than a tidy sweep left to right, which
         /// reads as a list being processed. It comes from <see cref="Next"/> rather than from
         /// <c>Random</c> because everything else this mode deals does (invariant 37e): two devices
@@ -184,7 +184,7 @@ namespace GlimmerGrove.Modes
         /// <b>It mends a standing ward and can never raise a fallen one.</b> That is not a
         /// kindness withheld, and the reason moved once without the rule moving with it. It used
         /// to be that nothing at all could put a ward back up, so <see cref="Stranded"/> could
-        /// honestly say a fallen line was beyond rescue. <see cref="Rally"/> now can — but only
+        /// honestly say a fallen line was beyond rescue. <see cref="Rally"/> now can - but only
         /// as a <em>continue</em>, which is a purchase made after the run is over, offered before
         /// any of the accounting happens and priced against the grade (invariant 23). A mending
         /// that raised a ward would be that same purchase sold for eight gems in the middle of a
@@ -199,14 +199,14 @@ namespace GlimmerGrove.Modes
         /// <b>Raising a fallen turret is the half the colour lock made necessary.</b> While a bolt
         /// merely preferred its own colour a dead ward cost the line a quarter of its output and
         /// nothing else; under the lock its colour can never be hurt again by anything except a
-        /// splash, a chain or an overcharge — so a line that loses a turret early is a line
+        /// splash, a chain or an overcharge - so a line that loses a turret early is a line
         /// walking into a colour it cannot answer, and the run spirals for a reason the player can
         /// do nothing about. A mending is the one thing in the game that can undo it, which is
         /// exactly what invariant 23 says a purchase is allowed to sell: a finish, never a grade.
         /// </para>
         /// <para>
         /// <b>It comes back with what the mending gave and no more</b>, so raising one is a real
-        /// cost rather than a free reset — a turret put back on a sixth of its health is a turret
+        /// cost rather than a free reset - a turret put back on a sixth of its health is a turret
         /// the next wave can take down again.
         /// </para>
         /// <para>
@@ -278,7 +278,7 @@ namespace GlimmerGrove.Modes
 
             // **A surge lifts a douse, and that is what makes it the blightcaller's answer.**
             // Fuel poured into a ward that cannot fire is fuel spent on nothing until the dark
-            // runs out on its own, which is a utility charged for a delay — so pouring re-lights
+            // runs out on its own, which is a utility charged for a delay - so pouring re-lights
             // it. The player is buying the seconds rather than the fuel, which is exactly what
             // invariant 39 says a utility may sell: a finish, never a grade.
             post.Dark = 0f;
@@ -305,7 +305,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>The one thing in this mode that raises a fallen ward, and it is a continue rather
-        /// than a utility</b> — see <see cref="Mend"/> for the difference and why it matters.
+        /// than a utility</b> - see <see cref="Mend"/> for the difference and why it matters.
         /// The hill is not touched: every raider stands where it stood, mid-march or mid-swing,
         /// with the wave clock where it was, which is what "carry on from where you left off"
         /// has to mean when the thing that ended the run was the line and not the board.
@@ -314,14 +314,14 @@ namespace GlimmerGrove.Modes
         /// <b>Full health, and the rank the cogs bought.</b> Health, because a line raised at
         /// anything less is a line that falls again in a breath and a continue that does not
         /// continue is a charge (invariant 23). Rank, because it is the one thing in this mode a
-        /// player earns (invariant 37w) and nothing has taken it away — a continue that
+        /// player earns (invariant 37w) and nothing has taken it away - a continue that
         /// confiscated it would be selling back less than was lost.
         /// </para>
         /// <para>
         /// <b>No fuel, deliberately.</b> Fuel is damage, and damage is progress the run was
         /// graded against; a continue may buy a finish and never a grade, so the wards come back
         /// standing and empty and the player matches to light them. The dark a blightcaller left
-        /// is cleared for the opposite reason — it is seconds the player would be paying for and
+        /// is cleared for the opposite reason - it is seconds the player would be paying for and
         /// not receiving.
         /// </para>
         /// <para>
@@ -377,7 +377,7 @@ namespace GlimmerGrove.Modes
         /// How much fuel this ward could take, in tenths.
         ///
         /// <b>A ward short of its charge cap has room for the charges it has not banked yet</b>, so
-        /// a surge poured into a nearly-full tube is not refused for having nowhere to go — what it
+        /// a surge poured into a nearly-full tube is not refused for having nowhere to go - what it
         /// does there is bank an overcharge, which is worth more than the fuel was.
         /// </summary>
         public int RoomForFuel(int ward)

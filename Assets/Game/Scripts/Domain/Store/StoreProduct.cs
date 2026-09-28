@@ -29,7 +29,7 @@ namespace GlimmerGrove.Store
         ///
         /// <para>
         /// <b>The one shelf that carries both, and it has to.</b> A shelf is a tab, and a tab
-        /// is how a player finds a thing — somebody who wants more hearts wants this page,
+        /// is how a player finds a thing - somebody who wants more hearts wants this page,
         /// and splitting the permanent answer onto a fifth tab would mean the shelf they open
         /// is the one that cannot solve their problem. What it costs is that the guest notice
         /// and the value ladder both had to learn that a supplies row may be a product; what
@@ -56,7 +56,7 @@ namespace GlimmerGrove.Store
         /// <b>And <c>TryReadShelf</c> deliberately does not know the word.</b> Nothing here may
         /// ever be bought with money: a utility is consumed, so a real-money product granting one
         /// would be the stored amount invariant 18d forbids. Leaving the string unparseable means
-        /// a content push cannot file one here even by accident — it is named as an unknown
+        /// a content push cannot file one here even by accident - it is named as an unknown
         /// shelf and refused.
         /// </para>
         /// </summary>
@@ -92,7 +92,7 @@ namespace GlimmerGrove.Store
     /// A mark drawn on a product's card, to make one of them easier to pick than the rest.
     ///
     /// <para>
-    /// Authored rather than derived, and that is the exception rather than the rule here —
+    /// Authored rather than derived, and that is the exception rather than the rule here -
     /// the "+40% extra" line <em>is</em> derived (see <see cref="StoreProduct.BonusPercent"/>)
     /// because it is arithmetic, and arithmetic that disagreed with the ladder would be a
     /// lie a player can check. Which single card to point at is not arithmetic; it is a
@@ -125,7 +125,7 @@ namespace GlimmerGrove.Store
     /// runtime as an already-formatted string. Writing one into content would be wrong in
     /// every country but one within a week, and drawing a hardcoded price is a review
     /// rejection on both stores. <see cref="ReferenceUsdCents"/> exists only so the build
-    /// gate can prove the ladder gets better as it gets bigger — it is never shown to
+    /// gate can prove the ladder gets better as it gets bigger - it is never shown to
     /// anybody.
     /// </para>
     /// <para>
@@ -135,7 +135,7 @@ namespace GlimmerGrove.Store
     /// no client involvement at all; hearts and boosts live in the save file and are
     /// applied by the phone. A product that granted both would need the client to apply
     /// half of it after the server had applied the other half, which means a record of
-    /// "did I already apply this transaction's hearts" — a new field in the save, merged
+    /// "did I already apply this transaction's hearts" - a new field in the save, merged
     /// across devices, whose failure mode is a player being charged and given nothing. So
     /// hearts and boosts are bought with <b>gems</b> instead (see <see cref="StoreGood"/>),
     /// which is a currency spend the ledger already makes idempotent, and every real-money
@@ -166,7 +166,7 @@ namespace GlimmerGrove.Store
         /// Permanent, in the full sense invariant 1 means: it keys a receipt document that
         /// lives for ever, it is what the server looks up to decide what a purchase was
         /// worth, and neither store lets a product id be reused after it has been deleted.
-        /// Never rename one and never repoint one at a different amount — a receipt
+        /// Never rename one and never repoint one at a different amount - a receipt
         /// redeemed a year from now is looked up against today's table.
         /// </para>
         /// </summary>
@@ -186,7 +186,7 @@ namespace GlimmerGrove.Store
         /// What this is expected to cost in US cents.
         ///
         /// <para>
-        /// Never displayed — see the type's remarks. It exists for two jobs, both of them
+        /// Never displayed - see the type's remarks. It exists for two jobs, both of them
         /// offline: <c>Validate Content</c> proves a shelf's value per unit of money rises
         /// with its size, so a ladder cannot ship with a middle rung worse than the one
         /// below it; and <see cref="BonusPercent"/> is computed from it, so the "+40% extra"
@@ -208,7 +208,7 @@ namespace GlimmerGrove.Store
         /// the argument behind it is precise: hearts and boosts are <em>amounts</em>, so a
         /// product granting one would need the client to apply half a purchase after the
         /// server applied the other half, which means a record of "did I already apply this
-        /// transaction's hearts" living in the save and merged across devices — and its
+        /// transaction's hearts" living in the save and merged across devices - and its
         /// failure mode is somebody paying and receiving nothing.
         /// </para>
         /// <para>
@@ -217,13 +217,13 @@ namespace GlimmerGrove.Store
         /// cannot be asked. That is the same property that makes a companion purchase safe to
         /// store (invariant 15), and it is why this is a widening of invariant 18 rather than
         /// a hole in it: <b>a real-money product grants currency, or an idempotent permanent
-        /// entitlement — never a stored amount, and never both.</b> The "never both" half is
+        /// entitlement - never a stored amount, and never both.</b> The "never both" half is
         /// enforced by <c>StoreCatalog</c>, not by convention: a container that also paid gems
         /// would put an amount back on the path this reasoning removed it from.
         /// </para>
         /// <para>
         /// It is a capacity rather than a delta, so two containers do not stack into a number
-        /// nobody authored — what a player holds is the largest one they have bought, which is
+        /// nobody authored - what a player holds is the largest one they have bought, which is
         /// what makes buying them out of order, or buying the same one twice through a restore,
         /// impossible to get wrong. See <c>HeartContainerLedger</c>.
         /// </para>
@@ -245,7 +245,7 @@ namespace GlimmerGrove.Store
         /// on its shelf, as a whole percentage. Zero on the base product itself.
         ///
         /// <para>
-        /// Set by <see cref="StoreCatalog"/> once, at load, over the shelf as authored —
+        /// Set by <see cref="StoreCatalog"/> once, at load, over the shelf as authored -
         /// which is why it is a property with an internal setter rather than a constructor
         /// argument. A product does not know what else is on its shelf, and a card that
         /// computed this for itself would be computing it against nothing.
@@ -265,7 +265,7 @@ namespace GlimmerGrove.Store
         ///
         /// <para>
         /// Derived from the reference price rather than authored, so the picture on a card
-        /// cannot come to disagree with the ladder — a rung inserted in the middle of a
+        /// cannot come to disagree with the ladder - a rung inserted in the middle of a
         /// shelf re-draws everything above it with no art order and no edit anywhere else.
         /// It is what <c>ShopArt</c> composes from: which container a product sits in and
         /// how much is piled on it are a function of this and <see cref="ShelfSize"/>, which
@@ -285,7 +285,7 @@ namespace GlimmerGrove.Store
         /// Currency units per hundred dollars, as a whole number, used to rank a shelf.
         ///
         /// Integral rather than a float division per comparison, so two products whose
-        /// value works out the same cannot swap places on a rounding difference — the
+        /// value works out the same cannot swap places on a rounding difference - the
         /// build gate asserts this order, and an assertion that depends on rounding is an
         /// assertion that fails on somebody else's machine. Bundles mix two currencies, so
         /// gems are converted at the rate <see cref="StoreCatalog"/> derives from the two
@@ -299,7 +299,7 @@ namespace GlimmerGrove.Store
         }
 
         /// <summary>
-        /// The loc key for this product's name, derived from its id and not overridable —
+        /// The loc key for this product's name, derived from its id and not overridable -
         /// invariant 5a, for its reason. Anything holding a product id can name it without
         /// reading the catalog, which is what lets a purchase confirmation say what was
         /// bought after the shop screen is long gone.
@@ -321,8 +321,8 @@ namespace GlimmerGrove.Store
     /// idempotency key, and is already refused by the server when the derived balance
     /// cannot cover it. Applying hearts in the same call is exactly what buying a companion
     /// does and needs no new machinery whatever. Selling hearts for money instead would
-    /// mean a permanent store product per heart bundle — priced in every storefront,
-    /// undeletable, and re-priced by hand every time the gate is retuned — in exchange for
+    /// mean a permanent store product per heart bundle - priced in every storefront,
+    /// undeletable, and re-priced by hand every time the gate is retuned - in exchange for
     /// nothing a player can tell apart.
     /// </para>
     /// </summary>
@@ -353,8 +353,8 @@ namespace GlimmerGrove.Store
 
         /// <summary>
         /// What a debit for this records as its cause. Free text on the wire, and read by
-        /// nothing — the server does not adjudicate what a gem was spent on, only that the
-        /// balance covered it — so it exists for a human looking at a support case.
+        /// nothing - the server does not adjudicate what a gem was spent on, only that the
+        /// balance covered it - so it exists for a human looking at a support case.
         /// </summary>
         public string SpendReason => "store_good:" + Id;
 
@@ -367,7 +367,7 @@ namespace GlimmerGrove.Store
     /// <para>
     /// Deliberately its own enum rather than a reuse of <c>ChestDropKind</c>, even though
     /// two members would line up. A chest drop is a thing the server re-rolls and can pay
-    /// in currency; this is a thing gems buy, and currency is explicitly not on the list —
+    /// in currency; this is a thing gems buy, and currency is explicitly not on the list -
     /// a good that paid credits would need the server to mint them, which is the whole
     /// reason products grant currency and goods do not. Sharing the enum would make that
     /// distinction impossible to see and easy to break.
@@ -385,7 +385,7 @@ namespace GlimmerGrove.Store
 
         /// <summary>
         /// A window during which XP is paid at a higher rate. Amount is the duration in hours,
-        /// so the shelf is authored the way it reads — <see cref="HeartBoost"/>'s convention.
+        /// so the shelf is authored the way it reads - <see cref="HeartBoost"/>'s convention.
         ///
         /// Bought with gems and never with money, which is invariant 18 exactly: a real-money
         /// product grants currency and nothing else, so a boost is a gem sink like every other.

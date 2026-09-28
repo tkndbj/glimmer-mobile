@@ -209,7 +209,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Drags the pressed hand to <paramref name="to"/>, and calls <paramref name="atFraction"/>
-        /// once the tip has covered <paramref name="fraction"/> of the way — which is where a
+        /// once the tip has covered <paramref name="fraction"/> of the way - which is where a
         /// real drag fires (<c>CellDrag.Threshold</c> is well under a cell), so the gems begin
         /// to move while the thumb is still travelling, exactly as they do under a finger.
         /// </summary>

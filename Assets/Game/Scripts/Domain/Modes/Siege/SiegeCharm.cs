@@ -7,8 +7,8 @@ namespace GlimmerGrove.Modes
     ///
     /// <para>
     /// <b>A power on a gem rather than a fifth kind of gem, and that is the whole of why this
-    /// cost the match rule nothing.</b> Every rule on this field asks one of two questions —
-    /// <em>what colour is this</em> and <em>what is standing here</em> — and this mode has twice
+    /// cost the match rule nothing.</b> Every rule on this field asks one of two questions -
+    /// <em>what colour is this</em> and <em>what is standing here</em> - and this mode has twice
     /// shipped a second alphabet to answer the second one (a cog in a cell, a thief's sack) and
     /// twice taken it back out (see <see cref="SiegeLayout.RetiredCog"/>,
     /// <see cref="SiegeLayout.RetiredSack"/>). A charm keeps the cell a gem: it falls, it swaps,
@@ -17,7 +17,7 @@ namespace GlimmerGrove.Modes
     /// rule at all, and it touches it in one predicate.
     /// </para>
     /// <para>
-    /// <b>Six, and each one takes a different thing</b> — invariant 37z's test about bosses,
+    /// <b>Six, and each one takes a different thing</b> - invariant 37z's test about bosses,
     /// asked of a payoff. A prism decides a <em>colour</em>, a lance decides a piece of the
     /// <em>board</em>, a stormglass decides a moment on the <em>hill</em>, a furnace hands the
     /// <em>line</em> a charge, an hourglass takes the hill's <em>time</em> and an anvil takes its
@@ -29,8 +29,8 @@ namespace GlimmerGrove.Modes
     /// what separates all three from the wick: a prism spent completing a colour whose ward is
     /// full or fallen is a wild thrown away; a lance sprung on a row that carries nothing wanted
     /// clears twelve gems into wards that were not asking; and a stormglass matched over an empty
-    /// hill delivers nothing at all, which is invariant 40i's rule about a bomb — <b>the decision
-    /// is <em>when</em></b> — arriving on the player's own board instead of on the hill.
+    /// hill delivers nothing at all, which is invariant 40i's rule about a bomb - <b>the decision
+    /// is <em>when</em></b> - arriving on the player's own board instead of on the hill.
     /// </para>
     /// <para>
     /// <b>Appended, never renumbered.</b> These reach analytics through the run's own readings
@@ -50,7 +50,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>The one charm that is a fact about the cell rather than about what happens when it
-        /// goes</b>, so it is the one that reaches <see cref="SiegeLayout.Runs"/> — and it reaches
+        /// goes</b>, so it is the one that reaches <see cref="SiegeLayout.Runs"/> - and it reaches
         /// it as a single predicate rather than as a second alphabet, which is what keeps
         /// <c>Lines</c>, <c>AnySwap</c>, <c>Settle</c> and both offline mirrors asking one
         /// question about a run.
@@ -70,7 +70,7 @@ namespace GlimmerGrove.Modes
         /// gem that goes with it is worth its own colour's fuel.
         ///
         /// <para>
-        /// <b>It rides a coloured gem, so the player reads a colour and a power at once</b> — the
+        /// <b>It rides a coloured gem, so the player reads a colour and a power at once</b> - the
         /// prism is colourless because it has to be, and nothing else here may be, since a gem
         /// whose colour cannot be read is a gem that cannot be aimed (invariant 37f).
         /// </para>
@@ -91,13 +91,13 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>The one charm that reaches the hill, and the only reason it may.</b> Invariant 40h
         /// is that the hill has no business reaching into the gem board; the arrow the other way
-        /// is exactly what 40i kept — the player reaching up — and a stormglass is that reach made
+        /// is exactly what 40i kept - the player reaching up - and a stormglass is that reach made
         /// out of the player's own material rather than out of a raider's corpse.
         /// </para>
         /// <para>
         /// <b>Its colour decides the double, which is what makes <em>when</em> a real question.</b>
         /// Under the colour lock (invariant 37bl) a ward only ever answers its own colour, and a
-        /// stormglass is the one thing in the mode that answers all four at once — so it is worth
+        /// stormglass is the one thing in the mode that answers all four at once - so it is worth
         /// most on a full hill and worth nothing at all on an empty one, and the player is the
         /// only one who can see which they are looking at.
         /// </para>
@@ -227,15 +227,15 @@ namespace GlimmerGrove.Modes
     ///
     /// <para>
     /// <b>A table rather than a <c>switch</c> per reader</b>, for <see cref="SiegeLayout.Modifiers"/>'s
-    /// reason — the shield shipped as a special case in four places and every one of them would
+    /// reason - the shield shipped as a special case in four places and every one of them would
     /// have had to be extended in step, by hand, twice more. A fourth charm is a row here, a case
     /// in <c>SiegeBoard.Detonate</c>, an entry in the art table and a lesson; it cannot be
     /// half-added, because <c>SiegeCharmTests</c> holds this list to the enum.
     /// </para>
     /// <para>
     /// <b>The letters are lower case and disjoint from everything else a body may carry.</b> A
-    /// charm is never written into <see cref="SiegeLayout.Grid"/> — it is dealt, never authored
-    /// (see <c>SiegeBoard.Deal</c>) — so these letters share no space with a cell, and they are
+    /// charm is never written into <see cref="SiegeLayout.Grid"/> - it is dealt, never authored
+    /// (see <c>SiegeBoard.Deal</c>) - so these letters share no space with a cell, and they are
     /// not a colour, so they share none with <see cref="SiegeLayout.Letters"/> either.
     /// </para>
     /// </summary>
@@ -292,7 +292,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>Derived from the ordinal and then written into the body, never looked up at run
-        /// time</b> — the same bargain <c>tough</c> strikes (invariant 37by) and for the same
+        /// time</b> - the same bargain <c>tough</c> strikes (invariant 37by) and for the same
         /// load-bearing reason: the hold simulation builds its layouts from an inline table with
         /// no catalog anywhere near it, so a charm set that came from the chapter index would be
         /// empty in every measurement this mode has. The chapter tool asks this; the board carries
@@ -320,7 +320,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <b>Asked rather than tested against <see cref="SiegeCharm.Prism"/></b>, so the day a
         /// second colourless charm exists every reader of the match rule is already correct about
-        /// it — which is the shape <c>SiegeTuning.AimsAtAWard</c> exists in for the same reason.
+        /// it - which is the shape <c>SiegeTuning.AimsAtAWard</c> exists in for the same reason.
         /// </summary>
         public static bool IsWild(SiegeCharm charm) => charm == SiegeCharm.Prism;
 

@@ -10,7 +10,7 @@ namespace GlimmerGrove.Daily
     ///
     /// <para>
     /// <b>Why this exists.</b> The opening ceremony is one panel with three beats, a reel,
-    /// a payout cascade and an odds line — seven hundred lines of drawing whose only
+    /// a payout cascade and an odds line - seven hundred lines of drawing whose only
     /// dependency on <em>where the chest came from</em> is a tier and a claim. It was bound
     /// to <see cref="TaskDefinition"/> because the tasks page was the only thing that had
     /// one; the season track is now the second, and a second copy of that panel would be a
@@ -18,7 +18,7 @@ namespace GlimmerGrove.Daily
     /// </para>
     /// <para>
     /// A value rather than an interface, because a source is a tier plus a closure and
-    /// nothing else — an interface would be two classes and a factory to say the same thing.
+    /// nothing else - an interface would be two classes and a factory to say the same thing.
     /// The closure answers <c>null</c> when the chest could not be claimed, which is a real
     /// state on both sides: another device may have synced the claim in, or the period may
     /// have rolled over between the tap and the frame that opens the panel.
@@ -41,7 +41,7 @@ namespace GlimmerGrove.Daily
         public bool IsValid => Tier != null && _claim != null;
 
         /// <summary>
-        /// Claims it. False — with no drops — when it could not be, which the caller shows
+        /// Claims it. False - with no drops - when it could not be, which the caller shows
         /// by closing rather than by saying anything: nothing was lost, and a panel
         /// explaining a race is worse than no panel.
         /// </summary>
@@ -63,8 +63,8 @@ namespace GlimmerGrove.Daily
         /// <summary>
         /// One night of the streak ladder, when that night pays a chest.
         ///
-        /// Invalid for a night that pays a figure — the streak page throws those to the
-        /// wallet itself — which is the honest answer rather than a chest panel wrapped
+        /// Invalid for a night that pays a figure - the streak page throws those to the
+        /// wallet itself - which is the honest answer rather than a chest panel wrapped
         /// around a number: a ceremony whose reel is a lid opening has nothing to open when
         /// the reward was never in a chest.
         /// </summary>
@@ -82,7 +82,7 @@ namespace GlimmerGrove.Daily
         ///
         /// The closure is <c>ReferralPayout.Land</c>: the server rolled the chest and moved
         /// the currency before this panel opened, and what is left to do at the start of the
-        /// ceremony is bank the rest of the drops and adopt the balances — inside the claim,
+        /// ceremony is bank the rest of the drops and adopt the balances - inside the claim,
         /// so the payout's snapshot of the pills is taken before the grant lands. It answers
         /// null when there is nothing for this device to bank (invariant 51), which the
         /// panel shows by closing.

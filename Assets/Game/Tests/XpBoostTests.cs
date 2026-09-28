@@ -14,7 +14,7 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// <b>A boost on a derived number is the awkward case, and every test here is about that.</b>
     /// XP is recomputed from the star ledger each time it is read (invariant 9), so there is no
-    /// running total for a multiplier to scale — scaling the derived figure while a window was
+    /// running total for a multiplier to scale - scaling the derived figure while a window was
     /// open would make a player's level <em>fall</em> when it closed. So the bonus is worked out
     /// when it is earned and banked, and what keeps a banked figure honest is that it is clamped
     /// to a share of XP the account can prove.
@@ -27,7 +27,7 @@ namespace GlimmerGrove.Tests
     /// <em>drops</em> what that level gated rather than clamping it.
     /// </para>
     /// <para>
-    /// Everything else here is client-only by nature — no server ever offers a boost — and is
+    /// Everything else here is client-only by nature - no server ever offers a boost - and is
     /// pinned because it is where a window could be double-paid, silently metered wrong, or
     /// granted on the track that breaks the derived cooldown.
     /// </para>
@@ -118,7 +118,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// <b>The clamp, against the server's own cases.</b> Driven through
         /// <see cref="XpBoost.BonusOn"/> rather than <see cref="XpBoost.BonusFrom"/>, because the
-        /// latter reads the live wallet and a vector supplies its own stored figure — what is
+        /// latter reads the live wallet and a vector supplies its own stored figure - what is
         /// under contract is the arithmetic, and the wallet read is exercised below.
         /// </summary>
         [Test]
@@ -148,7 +148,7 @@ namespace GlimmerGrove.Tests
             {
                 // **Both windows zeroed on purpose.** The clamp reads `MaxPercent` and nothing
                 // else, and a table whose windows pay more than its cap has that cap *raised* to
-                // them by the reader — correctly, but it would quietly replace the figure the
+                // them by the reader - correctly, but it would quietly replace the figure the
                 // vector is about. Zeroing them isolates the one number under test.
                 Wallet.LoadFrom(SaveWith(earned: c.Stored));
                 Publish(c.MaxPercent, watchedPercent: 0, boughtPercent: 0);
@@ -174,7 +174,7 @@ namespace GlimmerGrove.Tests
         // --------------------------------------------------------------- the clamp
         /// <summary>
         /// <b>The proportional bound is the whole defence, so it gets its own case.</b> A stored
-        /// figure the account cannot have earned is cut to what it could have — which is what
+        /// figure the account cannot have earned is cut to what it could have - which is what
         /// makes a number no server can recompute safe to pay for at all (invariant 13's fourth
         /// clause).
         /// </summary>
@@ -197,7 +197,7 @@ namespace GlimmerGrove.Tests
             Publish(150);
 
             // The most an honest player can bank is exactly the share, so the clamp must not
-            // bite on it — a bound that trims real earnings is a bug, not a defence.
+            // bite on it - a bound that trims real earnings is a bug, not a defence.
             Wallet.LoadFrom(SaveWith(earned: 1500L));
             Assert.AreEqual(1500L, XpBoost.BonusFrom(1000L));
         }
@@ -425,7 +425,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// <b>A gift must land on the bought track.</b> The watched deadline carries the cooldown,
-        /// so anything else writing it would move a cooldown it knows nothing about — a chest
+        /// so anything else writing it would move a cooldown it knows nothing about - a chest
         /// would silently postpone the player's next free window.
         /// </summary>
         [Test]
@@ -446,7 +446,7 @@ namespace GlimmerGrove.Tests
 
         // ---------------------------------------------------------------- the seam
         /// <summary>
-        /// <b>The seam.</b> One multiplier, applied once, banking as it computes — because there
+        /// <b>The seam.</b> One multiplier, applied once, banking as it computes - because there
         /// is no running XP total to scale later.
         /// </summary>
         [Test]
@@ -507,7 +507,7 @@ namespace GlimmerGrove.Tests
             var problems = new List<string>();
 
             // -1 is what `JsonUtility` leaves on a field the file never wrote. Nought is a
-            // decision here — it withdraws a window — so the two must not be the same fact.
+            // decision here - it withdraws a window - so the two must not be the same fact.
             // Under the inherited cap of 150, so the reader has nothing to repair and the case
             // is about inheritance alone. A window *over* the cap is raised and reported, which
             // is `ACapUnderASingleWindowIsRaisedToItAndReported` below.

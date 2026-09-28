@@ -15,7 +15,7 @@ Scripts/Presentation/  GlimmerGrove.Presentation  references Domain + UnityEngin
 ```
 
 Domain cannot see Presentation and cannot see `UnityEngine.UI` at all. That is what
-lets the whole content pipeline — parsing, validating, solving, saving — be checked
+lets the whole content pipeline - parsing, validating, solving, saving - be checked
 with no renderer present, and it is why `Tests` references Domain only.
 
 Consequences worth knowing:
@@ -25,13 +25,13 @@ Consequences worth knowing:
   it looks like* is not.
 - Domain never calls into the UI. `GameSettings` raises `Changed`; the audio player
   subscribes. If you find yourself wanting a `using` that points at Presentation from
-  inside Domain, the dependency is backwards — raise an event instead.
+  inside Domain, the dependency is backwards - raise an event instead.
 
 ## Tests
 
 `Assets/Game/Tests` (EditMode, Domain only). Run them from **Window ▸ General ▸ Test
 Runner**. They cover the grid parser, the validator, par derivation, catalog ordering
-and identity, the save store's rotation and integrity check, and — most importantly —
+and identity, the save store's rotation and integrity check, and - most importantly -
 the legacy PlayerPrefs migration, which runs once per player and is the only code that
 can silently destroy progress.
 
@@ -41,8 +41,8 @@ solvable, and every id in the frozen legacy table must still exist in the catalo
 ## The one rule
 
 **A level id is permanent.** Save files, analytics and remote config all key on it.
-Once an id has shipped, never change it and never reuse it. Everything else —
-order, difficulty, art, text — can change freely, which is precisely *because*
+Once an id has shipped, never change it and never reuse it. Everything else -
+order, difficulty, art, text - can change freely, which is precisely *because*
 identity never does.
 
 Corollary: never edit `LegacyPlayerPrefsImport.LegacyIndexOrder`. It is a frozen
@@ -68,7 +68,7 @@ understanding this system.
 
 **The index** (`CatalogIndex`) is built from `manifest.json` alone and is always
 resident. It answers identity, order and membership: which glades exist, in what
-order, belonging to which chapter. That is everything the boot path needs —
+order, belonging to which chapter. That is everything the boot path needs -
 totalling stars, deriving XP, working out where the player is up to, deciding
 what is unlocked. At forty chapters and eight hundred glades the manifest is
 about 25 KB and parses in well under a millisecond.
@@ -89,7 +89,7 @@ an ordinary folder.
 Two consequences worth holding on to:
 
 - **The manifest is the authority on membership and order; the body is the
-  authority on content.** Nobody writes the manifest by hand — `Glimmer Grove ▸
+  authority on content.** Nobody writes the manifest by hand - `Glimmer Grove ▸
   Content ▸ Sync Manifest` generates its level lists from the bodies and adopts
   any chapter file that is missing from it altogether. The build gate then proves
   both held, so forgetting to run it fails a build rather than silently hiding a
@@ -100,7 +100,7 @@ Two consequences worth holding on to:
   chapter. An overridable key would have made naming something you can only know
   after a file read, and the index would have stopped being sufficient.
   <br>There was a third, `.lesson`, and it is **retired**: it was floated along the
-  bottom of any run with nothing new to teach — so on every level of every mode
+  bottom of any run with nothing new to teach - so on every level of every mode
   after the first few, which is furniture rather than something anybody reads.
   A board says what it has to say through its tips (`Mechanic`, `TipOverlay`),
   which are derived from the board rather than authored per level. Do not re-point
@@ -109,70 +109,70 @@ Two consequences worth holding on to:
 
 ## Adding a chapter
 
-1. `Glimmer Grove ▸ Content ▸ Create Chapter Template` — scaffolds the JSON.
+1. `Glimmer Grove ▸ Content ▸ Create Chapter Template` - scaffolds the JSON.
 2. Author the grids (grammar below). `Tools/verify/author.py` is the aid: you say which
    cells exist and which are joined, and it derives every arm mask, refuses a board that
    cannot be finished, dials par to a target with `fit`, and reports what the board
-   actually asks of a player — see *What makes a glade hard* below, and read it before
+   actually asks of a player - see *What makes a glade hard* below, and read it before
    authoring anything, because the first cut of two whole chapters got that wrong in a
    way nobody could see by looking. Every glade chapter now keeps its boards that way in
    `Tools/chapters/<chapter_id>.py`, which regenerate the shipped JSON and can check
-   themselves against it (`--check`) — copy one for any new chapter. It stays deliberately
+   themselves against it (`--check`) - copy one for any new chapter. It stays deliberately
    outside the build gate all the same: a gate demanding a source would make a chapter
    authored by hand unbuildable, and the point of these files is that a chapter can be
    *retuned* rather than that it must have been generated.
-   **Leave `par` out** — it is derived from the
+   **Leave `par` out** - it is derived from the
    board, so an omitted par can never be wrong while a typed one can. **Do not choose a
    `backdrop` or a `mapStrips`**: both are arithmetic now, from the chapter's ordinal
-   inside its own mode — `Tools/chapters/mapart.py` hands back the map and the ten skies,
+   inside its own mode - `Tools/chapters/mapart.py` hands back the map and the ten skies,
    and the generator writes them into the JSON. See *A chapter's art is a rule* below.
-3. Place the glades with `mapX`/`mapY`, fractions of *this chapter's* map — and for a
+3. Place the glades with `mapX`/`mapY`, fractions of *this chapter's* map - and for a
    ten-level chapter, **do not choose them**: `mapart.places(ordinal)` is one layout for
    every chapter of every mode, odd glades on the right, even on the left, the tenth on the
    left under a marker on the right. Seven generators once carried their own copy of that
    table and drifted, and every mode's first chapter ended on the *right*, straight under
    the marker, whose name plate then sat on the tenth glade's standing mark. Walk
-   them upward — each above the one before — and keep them apart; validation
+   them upward - each above the one before - and keep them apart; validation
    measures the gap in canvas units against the chapter's strip count and warns
    about collisions, backwards trails, anything crowding the end-of-chapter
-   marker, and any perch — a glade's or the marker's — standing on the record-and-rank
+   marker, and any perch - a glade's or the marker's - standing on the record-and-rank
    mark a cleared glade draws above its disc (`ChapterMap.Overshadows`: the mark reaches
    302 units up, a plate hangs 227 down, so a node straight above another needs 529 units
-   of drop where the discs alone need 220). More levels means more `mapStrips`, not tighter packing — which in
+   of drop where the discs alone need 220). More levels means more `mapStrips`, not tighter packing - which in
    practice means **the map decides how long a chapter is**, and the map is the one at
    this chapter's ordinal: six strips at ordinal 1 and 4, four at ordinal 2 and 5, five
    at ordinal 3 (`mapart.STRIPS`). Those counts are facts about the five paintings rather
-   than preferences — except `map5`'s, which is the one decided by the *chain*: three strips
+   than preferences - except `map5`'s, which is the one decided by the *chain*: three strips
    cannot seat ten nodes at all and six crops the painting down to its road, so four is what is
-   left — — `make_chapter_art.py` scales a source to *whole* strips, so a count
+   left - - `make_chapter_art.py` scales a source to *whole* strips, so a count
    that leaves the scaled source narrower than 1080 stretches the map sideways, and the
    Amberwood's 892x4745 source is 1128 wide at five strips and would have stretched by a
    fifth at four. **A chapter at a new ordinal is the only thing that needs a map cut**,
    and it needs its count worked out before boards are authored, not after, because every
    distance on a map is measured against it. The end-of-chapter marker caps the trail and places
    itself: how far *up* it floats is derived, but which side it sits on is
-   `teaserX` — a fraction across the map, 0.66 if omitted, which is the right-hand side.
+   `teaserX` - a fraction across the map, 0.66 if omitted, which is the right-hand side.
    No shipped chapter sets it: every one ends on the left, so the default is already the
    other side from the last glade. A chapter that does end on the right must set a left
    `teaserX`, or the marker stands on that glade's standing mark and the validator says so.
 4. Add `chapter.<id>.name` and, per level, `level.<id>.name` / `.tagline` to
    `loc/en.json`. Missing keys fail validation, which names each one. There is no
-   third per-level string — see the derived-strings note above.
-5. `Glimmer Grove ▸ Content ▸ Sync Manifest` — adopts the new chapter into
+   third per-level string - see the derived-strings note above.
+5. `Glimmer Grove ▸ Content ▸ Sync Manifest` - adopts the new chapter into
    `manifest.json`, picks an `order`, fills in its level list and derives its `mode`
    from the levels it holds. Run it after *every* content edit.
 6. `Glimmer Grove ▸ Addressables ▸ Sync All Assets`. **There is no art to cut**, unless
-   the chapter is the first at a new ordinal — the map and the ten skies already exist and
+   the chapter is the first at a new ordinal - the map and the ten skies already exist and
    are shared, which is the whole point of *A chapter's art is a rule* below. Sync **after**
    step 5 and never before it: which bundle a piece of art belongs in is derived from which
    chapter claims it, and a chapter claims nothing until the manifest lists it. See
    *Addressing* below.
-7. `Glimmer Grove ▸ Validate Content`. It must report zero errors — builds refuse
+7. `Glimmer Grove ▸ Validate Content`. It must report zero errors - builds refuse
    to run otherwise.
 
 Nothing in `manifest.json` is written by hand. Sync assigns `order` from the
-chapter's id — sparse (10, 20, 30…) so a chapter can be slotted between two that
-shipped — and says in the log what it chose; change the number there if it guessed
+chapter's id - sparse (10, 20, 30…) so a chapter can be slotted between two that
+shipped - and says in the log what it chose; change the number there if it guessed
 wrong. **`order` lives only in the manifest**: a chapter body that states its own is
 rejected, because where the game goes next must be readable from one file and
 changeable by pushing that one file.
@@ -180,7 +180,7 @@ changeable by pushing that one file.
 **`mode` is derived too, and that is invariant 20h.** It was the last field of an entry
 written by hand, and it is the one field whose absence nothing notices: a second-mode chapter
 missing its `"mode"` is indexed as a glade chapter, and every level still parses,
-every board is still proved solvable, every string resolves and the build goes green —
+every board is still proved solvable, every string resolves and the build goes green -
 while the chapter is gated on a stranger's stars, filed under the wrong tab and routed to
 a screen that cannot play it. Sync now reads the mode off the body, `Validate Content`
 fails the build on any disagreement, and a chapter holding two modes is refused by both,
@@ -197,12 +197,12 @@ anything differs. Add a field to `ManifestDto` and forget the writer and you get
 refusal with the field named, not a silent deletion.
 
 A chapter file that never reaches the manifest is the one content mistake nothing
-used to catch. Every reader walks the manifest, so an unlisted file is not rejected —
+used to catch. Every reader walks the manifest, so an unlisted file is not rejected -
 it is never opened, and the drop ships without it behind a green build. Sync adopts
 it, and the build gate fails on one that slipped through anyway.
 
 Drop new art into `Assets/Game/Art/…` at any point; it is given an address and
-filed into the right bundle group on import. Nothing to remember, nothing to run —
+filed into the right bundle group on import. Nothing to remember, nothing to run -
 *while the Editor is open*. Art copied in by a script with Unity closed arrives
 unaddressed and draws as nothing, so anything that writes art while the Editor is
 shut ends by telling you to run `Glimmer Grove ▸ Addressables ▸ Sync All Assets`.
@@ -211,7 +211,7 @@ The build gate's audit is what stops that ever shipping.
 **Sync the manifest before you sync the assets, and this is the one ordering that bites.**
 Which bundle a piece of art belongs in is derived from *which chapter claims it*, and a chapter
 claims nothing until the manifest lists it (`AddressableAddresses.ChapterOwnership`). Run the
-addressable sync first and a new chapter's strips and backdrops are filed as **global** art —
+addressable sync first and a new chapter's strips and backdrops are filed as **global** art -
 loaded at launch and never released, which is precisely the bound invariant 7b exists to hold.
 Everything still resolves, `Validate Art` is green and the audit passes, because the art is
 addressed and present; it is simply in the wrong bundle. Re-running the sync after the manifest
@@ -229,7 +229,7 @@ Tools/make_sky_art.py        cuts the forty shared skies
 
 **The map belongs to the ordinal, not to the chapter.** Every mode's first chapter draws
 `map1`, every mode's second draws `map2`, and so on; a mode is told apart on the map by its
-**perch** — the floating tile a node stands on, `ModeLook.Perch` — and by nothing else. That
+**perch** - the floating tile a node stands on, `ModeLook.Perch` - and by nothing else. That
 was already the rule for the perch and is now true of the painting too, which is what stopped
 Lightfall's three chapters being three unrelated places from the glade chapters' four others.
 Sharing is also what puts a painting in the **global** group by itself, because
@@ -237,19 +237,19 @@ Sharing is also what puts a painting in the **global** group by itself, because
 nobody.
 
 **The backdrop belongs to the level's place in its chapter.** Forty skies, `sky_00`..`sky_39`,
-ten per ordinal — the same soft cloud painting at forty different colours, dealt round the
+ten per ordinal - the same soft cloud painting at forty different colours, dealt round the
 wheel with a stride so two levels in a row are never close in hue. Level *i* of a chapter at
 ordinal *k* draws `mapart.sky(k, i)`, which is what a generator writes into the JSON.
 
 What that buys is the reason to keep it: **a chapter published next year needs no art at all.**
-It names an ordinal and gets a map and ten skies — nothing to cut, no row to add, no name to
+It names an ordinal and gets a map and ten skies - nothing to cut, no row to add, no name to
 invent, and no way for two chapters of two modes to disagree about what the second chapter of
 the game looks like. It replaced forty-one backdrops cut from six different paintings, of which
 a whole Lightfall chapter's ten levels shared *one*.
 
 `python Tools/make_chapter_art.py <chapter_id> --source <pack folder>` cuts the map strips
 named in that chapter's `mapStrips`, sliced **bottom upward** out of one tall image.
-`Tools/chapter_art.tsv` is one row per chapter and says only which source to cut from — and
+`Tools/chapter_art.tsv` is one row per chapter and says only which source to cut from - and
 almost every row says `-`, because an ordinal's map is cut once, by whichever chapter owns it.
 It **scales the map to whole strips and never stretches it**, trimming the surplus width from
 the centre: a 3% vertical stretch makes every tree on the map the wrong shape, which reads as
@@ -257,7 +257,7 @@ cheapness rather than as an error.
 
 `python Tools/make_sky_art.py --source <pack folder>` cuts all forty skies, and `--check`
 proves the shipped ones are what it would cut. The grade is `make_chapter_art.vivid`, imported
-rather than copied — it took four attempts to get right (see `CRAFT.md`), and a second copy
+rather than copied - it took four attempts to get right (see `CRAFT.md`), and a second copy
 would be a second thing to get wrong.
 
 ## Token grammar
@@ -272,7 +272,7 @@ head   -  conduit    =  crossing    %  briar    *  heart-crystal
 arms   any of N E S W, written in the SOLVED orientation
 A+B    on a crossing: the arms of one strand, then the arms of the other, which are
        interchangeable. On a briar: the arms that are OPEN, then the arms the thorns
-       have closed — and there the order is the tile.
+       have closed - and there the order is the tile.
 colour R G B, Y=R+G, M=R+B, C=G+B, W=R+G+B, A=any
 /0..3  quarter turns clockwise the tile starts away from its solution
 !      rooted: the player cannot turn this tile
@@ -286,20 +286,20 @@ must light every critter. The validator proves both.
 
 **Rooted tiles (`!`) must be authored at `/0`.** Everything the validator proves is
 proved against a copy of the board with every rotation zeroed, because that is the
-authored solution — and a rooted tile can never be turned, so one authored away from
+authored solution - and a rooted tile can never be turned, so one authored away from
 its solution is a tile the player is stuck with at an angle the proof never sees. What
 gets proved is then a different board from the one that ships, and nothing else notices:
 every arm mates, the solved probe lights, the glade draws, and par is unaffected because
 `MinimumMoves` skips rooted tiles. It also makes `Puzzle.TurnsToSolution` count turns
 that can never be paid, so a player who *has* reached the solution is told they were one
-turn away — the near-miss line being generous, which is the single thing it exists not to
+turn away - the near-miss line being generous, which is the single thing it exists not to
 be. `CheckRootedTiles` refuses it, and asks `Puzzle.Alike` rather than `rot == 0`: a
 straight conduit and a straight crossing genuinely read the same half a turn round, and
 every rooted straight in the Mill Vale is one.
 
 **Fragile conduits (`~N`)** crumble after N turns and leave a gap. Undo rewinds
 the rotation but never mends them, so exploring costs something. The validator
-proves each one can still reach its own solved orientation within its count —
+proves each one can still reach its own solved orientation within its count -
 a conduit needing three turns but surviving two is an unwinnable level that
 otherwise looks perfect.
 
@@ -307,12 +307,12 @@ otherwise looks perfect.
 local act. Two things follow, and both are the validator's business:
 
 - **A root is charged once.** Par is the sum of the turns each *root* owes, not
-  each tile, because one tap moves them all — so a bound board's par is lower
+  each tile, because one tap moves them all - so a bound board's par is lower
   than its tile count suggests, and the star lines and the move budget (all
   multiples of par) follow it automatically. Nothing is authored for this.
 - **A root must be able to reach its own solution.** Some single number of turns
   has to solve every conduit on it. If none does, the glade cannot be finished
-  and looks perfectly authored — the same trap a brittle conduit owed more turns
+  and looks perfectly authored - the same trap a brittle conduit owed more turns
   than it survives sets, and refused for the same reason. Note that a straight
   conduit reads the same every half turn, so it is solved at *two* of the four
   offsets and simply follows whatever the elbows on its root demand; that is
@@ -320,12 +320,12 @@ local act. Two things follow, and both are the validator's business:
 
 A rune only one conduit carries is an error, not a shrug: it draws a binding mark
 on a tile bound to nothing. A bound conduit may not also be rooted (`!`) or
-brittle (`~`) — the first is a contradiction, and the second would break several
+brittle (`~`) - the first is a contradiction, and the second would break several
 conduits on one tap when only one can be reported as the tile that gave way.
 
 **Crossings (`=`)** carry two flows through one tile and never let them meet.
 Written `=NS+EW` or `=NE+SW`: four arms in two pairs of two, one pair either side of
-the `+`, and which pair you write first does not matter — the strands are
+the `+`, and which pair you write first does not matter - the strands are
 interchangeable labels. Light entering by one arm can only leave by the arm that
 shares its strand.
 
@@ -335,7 +335,7 @@ three of them are the validator's business:
 
 - **A straight crossing (`=NS+EW`) can never be turned.** Rotating it swaps which
   strand is called which and nothing on the board can tell, so it is inert, owes no
-  turns and costs nothing in par. It is architecture — a bridge somebody built.
+  turns and costs nothing in par. It is architecture - a bridge somebody built.
 - **A twisted crossing (`=NE+SW`) is worth exactly one tap, however far out it is
   authored**, because two turns is the same tile again. That is the whole of what
   `Puzzle.Alike` exists to say, and it is why every owed-turn count in the game asks
@@ -344,7 +344,7 @@ three of them are the validator's business:
   per twisted crossing.
 - **A crossing whose two strands are joined elsewhere crosses nothing**, and the
   validator says so. The player will spend turns routing around a separation that is
-  not there. A warning rather than an error — a loop that leaves by one arm and comes
+  not there. A warning rather than an error - a loop that leaves by one arm and comes
   back by another has to close somewhere, so it is a question about intent.
 - **A crossing takes no colour and has no hub.** The hub disc is what this board means
   by "these arms are joined", so a crossing simply does not draw one, and the strand
@@ -353,22 +353,22 @@ three of them are the validator's business:
 
 What it unlocks is worth knowing before authoring with it. **A second network can now
 run *through* a live one rather than only around it.** In the solution every arm mates, so
-a lit cell's neighbours are lit — which used to force two networks that must stay apart to
+a lit cell's neighbours are lit - which used to force two networks that must stay apart to
 detour around each other with a gap between them. Across a crossing they do not, and the
 misrotation that joins the two is a real and recoverable trap.
 
 **Briars (`%`)** are conduits with two of their four ways thorned shut, and one tap
 swaps which. Written `%NS+EW` or `%NE+SW`: four arms in two pairs of two, the open pair
-first. They are the crossing's opposite number — a bridge carries both ways through and a
-bramble carries one — and they cost the light model even less: a crossing splits a cell
+first. They are the crossing's opposite number - a bridge carries both ways through and a
+bramble carries one - and they cost the light model even less: a crossing splits a cell
 into two strands, where a briar leaves the graph alone and changes only *which of a tile's
 arms conduct* (`Puzzle.Live`). Five things follow.
 
 - **All four arms are drawn and all four must mate**, thorned or not. That is the whole
   point rather than an implementation detail: every one of a briar's neighbours mates it at
   every angle, so **nothing about the pipe-fitting can settle a briar** and only colour or
-  the dark can. It is the cheapest honest decision a board can carry — cheaper than a
-  twisted crossing, which is worth two states where a twisted briar is worth four — and it
+  the dark can. It is the cheapest honest decision a board can carry - cheaper than a
+  twisted crossing, which is worth two states where a twisted briar is worth four - and it
   is why a briar may never stand on the border. `author.Board.briar` joins the four edges
   itself, because the arm an author forgets is always the same one: a thorned way carries
   no light, so nothing about the solution notices it missing.
@@ -383,7 +383,7 @@ arms conduct* (`Puzzle.Live`). Five things follow.
   finishes is a tile the player cannot place by looking, with no reason on the board to
   place it either way and a par charged for it. A warning rather than an error: a glade may
   want a bramble that is scenery on the board that teaches what a bramble is. Note what the
-  question is *not*. It is not whether the tile carries light — an unlit briar is not
+  question is *not*. It is not whether the tile carries light - an unlit briar is not
   evidence of anything. And it is not whether the thorns separate two networks, which is
   the reading that shipped and was wrong in both directions: it missed a briar holding
   apart two networks of the **same colour**, where opening the thorns costs nobody
@@ -402,7 +402,7 @@ authoring one:
 2. **It joins what its thorns were holding apart.** Thorns standing between a red network
    and a blue one blend both the moment they move.
 3. **It only answers to the pocket beside it.** If the open pair is part of a *loop*,
-   shutting it costs the grove nothing — the light goes round — so none of the grove's
+   shutting it costs the grove nothing - the light goes round - so none of the grove's
    critters warns the player, and the only thing that changed is the pocket the other pair
    just let in on. That is this file's rule about fords, and the briar is what makes it easy
    to author rather than a happy accident: put one shut arm on the live network and the
@@ -412,7 +412,7 @@ authoring one:
 **There was a fifth tile and it is gone.** `x` was the **duskcap**, a creature the light had
 to never reach: a glade with one woken was unfinished however many critters were awake. It
 was removed because no board could ever demonstrate the rule. Every other thing a player can
-get wrong here shows itself — a critter goes out — and a woken duskcap looked precisely like
+get wrong here shows itself - a critter goes out - and a woken duskcap looked precisely like
 a finished glade that refuses to settle, which is the one thing a board must never look like
 (invariant 20g, learned again in Lightweave). The twenty-nine duskcaps that had shipped are
 now ordinary critters, each standing in a **pocket with a heart of its own**: the ford still
@@ -425,33 +425,33 @@ content written for a build that no longer exists.
 and the losing line are multiples of `par`, and `par` is derived from the board, so
 a glade authors *no* difficulty number unless it wants a different budget from the
 default. Three stars is `ceil(par × 1.20)` turns, two is `ceil(par × 1.40)`, and the
-run is lost at `ceil(par × 1.60)` — computed from exact hundredths, because `1.20f` is
+run is lost at `ceil(par × 1.60)` - computed from exact hundredths, because `1.20f` is
 1.20000004768… and a float product put three stars a turn out on every par where it should
 have landed on a whole number.
 
 **The three lines are even thirds of the slack, and that is what keeps them all landable.**
-A run can only ever score inside `[par, par × 1.60]` — 0.60 par of slack — so it is cut into
+A run can only ever score inside `[par, par × 1.60]` - 0.60 par of slack - so it is cut into
 three bands 0.20 wide. Change one and you change all three: this was learned by shipping a
 1.60 budget against a 2.00 two-star line, which put two stars *outside* the survivable range
 and made one star unscorable by anybody, with every number still looking plausible and every
 board still validating green.
 
 **Why the countdown went.** A timer prices *thinking*, and thinking is the whole
-product — every rule the board has (brittle stone on a crossing, taproots whose
+product - every rule the board has (brittle stone on a crossing, taproots whose
 members the arms cannot settle, a ford on a cycle) exists to force a
 decision, and a clock makes flailing the dominant strategy. Stars were the *worse*
-of the turns and the time, so the turn thresholds — the only half that measures
-whether the board was solved well — decided nothing for any player who stopped to
+of the turns and the time, so the turn thresholds - the only half that measures
+whether the board was solved well - decided nothing for any player who stopped to
 think, and the third star asked 1.35 sustained taps a second, which is a motor
 threshold rather than a puzzle one. It also scaled with the wrong thing: the limit
 came off par, and par is *length*, so a long dot-to-dot got a generous clock and a
 short board full of twisted crossings got a tight one.
 
 **Move budget.** Every glade gets one automatically: `ceil(par × 1.6)`. Override with
-`budgetFactor` on a level, or set it negative to remove the budget entirely — which
+`budgetFactor` on a level, or set it negative to remove the budget entirely - which
 the first glade in the game does, and nothing else. Running out costs a heart.
 
-**An authored `budgetFactor` means exactly what it says — there is no floor.** `MoveBudget`
+**An authored `budgetFactor` means exactly what it says - there is no floor.** `MoveBudget`
 used to clamp to one turn past the two-star line so a run still earning stars could never be
 the run that ended. That floor is gone: with the clock removed this is the only way to lose a
 glade, and a fail line past the point where the player has already stopped earning anything is
@@ -474,7 +474,7 @@ Both read the **factors**, not the turn counts they derive: on a board of par 1 
 round onto the same number however they are set, and reporting that would be a complaint about
 board size rather than about tuning.
 
-Do not reach for these to make the game harder in general — that is the boards' job (see *What
+Do not reach for these to make the game harder in general - that is the boards' job (see *What
 makes a glade hard*) and the budget's. And note what a star retune does **not** touch: the
 ceiling. Three stars a level, over however many levels the catalog holds, exactly as before, so
 earned credits are unmoved at the top and only the standard of play needed to reach them has
@@ -483,23 +483,23 @@ not.
 
 **`Undo` refunds a move, is unlimited, and a hint charges none**, so the meter counts
 *committed* wrong turns and nothing else. Trying a crossing that reads the same half a turn
-round and taking it back is free — which it has to be, because that is correct play rather
+round and taking it back is free - which it has to be, because that is correct play rather
 than flailing. That is what makes a budget this tight fair: the default came down **2.60 →
 2.30 → 1.60** as the clock was removed and the budget became the only fail state, and 2.60
 had been chosen while the clock ended lost runs first.
 
-**Par is length, not difficulty.** A chapter's pars should *not* rise monotonically —
+**Par is length, not difficulty.** A chapter's pars should *not* rise monotonically -
 ten rising numbers read as a treadmill, and a low-par board that is hard to think
 about is a better change of pace than a long one. What makes a glade hard is
 *decisions*, which is a countable thing: see **What makes a glade hard** above and
 `Tools/verify/difficulty.py`. Aim a chapter at a *clear rate* rather than at a
-feeling — around 85% of first attempts early, around 60% late, with finales lower.
+feeling - around 85% of first attempts early, around 60% late, with finales lower.
 
 ## Hollow levels
 
 A chapter chooses how it is played. `"mode": "hollow"` on a manifest chapter entry (absent means
 `"glade"`) says its levels are hollows rather than conduit boards. A hollow has **no `rows`** at
-the level's top level — it carries a `hollow` block instead, and a level must have exactly one of
+the level's top level - it carries a `hollow` block instead, and a level must have exactly one of
 the two:
 
 ```json
@@ -522,7 +522,7 @@ the two:
 **The rule in one paragraph.** Every critter wants a colour (its *ring*) and gives a colour (the
 *pip* on its shoulder). Spend a spark on a sleeping critter and that light lands on it; when the
 light on a critter contains what it wants, it wakes and hands its own colour to the four critters
-beside it — which may wake them, and so on. Light accumulates and never decays. You win when
+beside it - which may wake them, and so on. Light accumulates and never decays. You win when
 every critter is awake; you lose when the sparks run out and one is not.
 
 **The vocabulary**, one space-separated token per cell:
@@ -532,23 +532,23 @@ every critter is awake; you lose when the sparks run out and one is not.
 | `.` | nothing stands here |
 | `R>G` | a sleeping critter that needs red and gives green |
 | `A>B` | needs *any* light at all, gives blue |
-| `Y>R` | needs yellow — red **and** green have to reach it — and gives red |
+| `Y>R` | needs yellow - red **and** green have to reach it - and gives red |
 | `*G` | a heart: awake before the run starts, giving green from the first frame |
 
 Colours are the board's own letters: `R G B` and the mixes `Y M C W`, plus `A` for "anything".
 A token may end in `:n` to choose which critter flipbook draws it; left off, one is picked from
 the cell's coordinates, which is varied, stable and nothing an author has to think about.
 
-**`sparks` is the whole difficulty.** It is the queue, in the order it must be spent — `"RGB"` is
-red then green then blue — and it is also the fail state. Nothing else about a hollow is authored:
+**`sparks` is the whole difficulty.** It is the queue, in the order it must be spent - `"RGB"` is
+red then green then blue - and it is also the fail state. Nothing else about a hollow is authored:
 
 - **Never author a par.** Par is the fewest sparks that finish the board and is found by search
-  (`HollowSolver`), because it *is* the star ladder here — three stars is finishing in exactly
-  par — and a typed one that drifts by a single spark either hands three stars to a careless run
+  (`HollowSolver`), because it *is* the star ladder here - three stars is finishing in exactly
+  par - and a typed one that drifts by a single spark either hands three stars to a careless run
   for ever or makes them unreachable. `Validate Content` prints the par it found, the slack the
   queue leaves over it, and how many positions the proof took.
 - **Give exactly one spare spark.** Par sparks is the three-star line; one more is worth two
-  stars. Past two spare, most wrong answers still win and the board stops having a shape — the
+  stars. Past two spare, most wrong answers still win and the board stops having a shape - the
   validator warns.
 - **The queue is ordered, and that is the puzzle.** Light never decays, so *which* cells are
   sparked could not otherwise matter in what order. An ordered queue makes the decision an
@@ -557,7 +557,7 @@ red then green then blue — and it is also the fail state. Nothing else about a
 
 ### What makes a hollow hard
 
-`wins` — the number of distinct winning states at par — is the number that matters, and
+`wins` - the number of distinct winning states at par - is the number that matters, and
 `Tools/hollow/generate.py` searches for boards against it. Par is a weak knob on a connected
 field: light spreads far, so most boards are one tap and a demanding one is two, and pushing
 needs harder to raise par tips straight over into unsolvable (at a blend rate of .65 on a 6x6,
@@ -567,7 +567,7 @@ of taps that work; a late one has two.
 
 Boards are *searched for* rather than typed. `Tools/hollow/` holds a mirror of the rules in
 Python, a generator, and `build_chapter.py`, which writes the chapter body and prints the ladder
-as a table. The mirror is a second copy of the rules and is therefore never authoritative — the
+as a table. The mirror is a second copy of the rules and is therefore never authoritative - the
 shipping C# solver is what `Validate Content` runs, and any disagreement is a bug in the mirror.
 
 ## Lightfall levels
@@ -600,7 +600,7 @@ shipping C# solver is what `Validate Content` runs, and any disagreement is a bu
 on top of that column lacks the colour, the two blend and the stack does *not* grow; if it
 already holds the colour, the new mote comes to rest above it and the stack is one row taller.
 A mote holding all three channels **bursts**, and the burst washes the colour that finished it
-into the motes beside it — so any of *them* that is thereby completed bursts in turn, and one
+into the motes beside it - so any of *them* that is thereby completed bursts in turn, and one
 well-chosen drop runs through a whole connected blob. You win when the well is empty. You lose
 two ways: the supply runs out, or a mote comes to rest above the **brim**, which is row nought.
 
@@ -610,44 +610,44 @@ two ways: the supply runs out, or a mote comes to rest above the **brim**, which
 |--------|-------|
 | `.` | bare ground |
 | `R` `G` `B` | a mote of one channel: two more to go |
-| `Y` `M` `C` | a mote of two channels — *ripe*, and one drop from bursting |
+| `Y` `M` `C` | a mote of two channels - *ripe*, and one drop from bursting |
 | `W` | refused: a well that bursts before anybody touches it is a board its author did not mean |
-| `O` | an empty **lens** — glass, which fills with light and then fires |
+| `O` | an empty **lens** - glass, which fills with light and then fires |
 | `r` `g` `b` `y` `m` `c` | a lens already holding that much. Light is upper case and glass is lower |
 | `w` | refused, for `W`'s reason: a lens holding all three fires the moment the board is read |
-| `@` | a **whorl** — a mouth that draws the motes either side of it together and mixes them |
+| `@` | a **whorl** - a mouth that draws the motes either side of it together and mixes them |
 | `1` `2` `3` | refused: these were a **wick**, and the wick was withdrawn (invariant 26h) |
 
 **The lens** (Glasswater, `f02`) is the one thing in a well that is not made of light. Nothing
 cooks it by landing on it; what it does is *fill up*, one channel at a time, from any burst
-beside it, from another lens's beam, or from a drop taken straight in — and when it holds all
+beside it, from another lens's beam, or from a drop taken straight in - and when it holds all
 three it **fires white**, each beam crossing bare ground until the first cell in its line takes
 it. A beam is white, so whatever it lands on is *completed* and pops whatever colour it was.
 
 Every wave of one drop carries that drop's colour, so **a lens gains at most one channel per
 drop**: filling an empty one costs three separate drops of three separate colours, each
 engineered to burst beside it. How full each pane starts is therefore a chapter's whole
-difficulty ramp — measured, two-thirds-full glass leaves 50 boards in 90 solvable where empty
+difficulty ramp - measured, two-thirds-full glass leaves 50 boards in 90 solvable where empty
 glass leaves 7. A lens charged the ordinary way fires **sideways**; one *struck by another
 lens's shot* fires along all four axes, which is the chain a chapter of glass is built on.
 
-**The whorl** (Whorlwater, `f03`) holds no light at all. **Anything** opens it — a burst beside
-it, a lens beam, or a drop straight onto it — and on the *next* wave it draws in whatever is
+**The whorl** (Whorlwater, `f03`) holds no light at all. **Anything** opens it - a burst beside
+it, a lens beam, or a drop straight onto it - and on the *next* wave it draws in whatever is
 standing to its **left and its right**, leaves one mote holding both, and is gone.
 
 That is the mode's own arithmetic on a pair of operands it never had. Every other rule here adds
 a *colour* to a cell: a drop adds one channel, a wash adds one, a beam adds all three. A whorl is
-the only place two **motes** are combined — so a cyan and a red that were each a drop away from
+the only place two **motes** are combined - so a cyan and a red that were each a drop away from
 white are none. Nothing has to be taught for it: a player who has cooked one mote already knows
 what yellow and blue make.
 
 **It pulls sideways, and that is a fact about gravity rather than a choice.** The well falls, so
-across is the one direction nothing here ever travels in — the same observation that makes a lens
+across is the one direction nothing here ever travels in - the same observation that makes a lens
 fire sideways. It is the only object in this mode that *moves* a mote.
 
 **The trigger is free and the pair is what costs.** What a whorl gives back is decided entirely by
 what stands either side of it **at the instant it turns**, and the well collapses under every
-chain — so authoring one means arranging two particular motes into two particular cells, and
+chain - so authoring one means arranging two particular motes into two particular cells, and
 opening it early spends it on a pair that was not ready. A lens asks for three drops of three
 colours in any order at all; a whorl asks for one arrangement.
 
@@ -658,30 +658,30 @@ Three rules it is held to, and each is checkable:
 - **One with nothing beside it closes and is gone**, which is what keeps a well of them winnable
   and a continue on one honest.
 - **Never against a wall.** Gravity only moves a whorl *down*, so the two columns it can ever draw
-  from are the two it is authored between — one in column nought or the last column has one side
+  from are the two it is authored between - one in column nought or the last column has one side
   for its whole life and can never merge a pair. `ContentValidation` warns about it.
 
 **Its two predecessors are worth knowing about before adding a fourth object.** The third chapter
 shipped a *mirror* that turned a lens's beam ninety degrees, and then a *wick* that washed one
 authored colour into the four cells beside it. Both were reported inside a session and withdrawn:
-the mirror had no event of its own, and the wick had one and no **decision** in it — its colour
+the mirror had no event of its own, and the wick had one and no **decision** in it - its colour
 was the author's, its trigger was free, and its effect was identical on every board it stood on.
 A lens delivers all three channels at range, so anything that also delivers light is competing on
 degree and will lose. See invariants 26g and 26h for the test to apply instead: *what can it do
 that a lens cannot*, and *what does the player decide about it*.
 
-`motes` is the procession, in the order it is dealt, written in `R`, `G` and `B` only — dealing a
+`motes` is the procession, in the order it is dealt, written in `R`, `G` and `B` only - dealing a
 blend would hand the player a step of the cooking for free. **It repeats**, so it never needs to
 be longer than one lap, and it must carry every channel the board is missing or those motes could
 never be finished however many drops were bought.
 
 **Nothing else about a well is authored.** Par is the fewest drops that empty it *without ever
 breaching the brim*, found by search (`FallSolver`). Three stars is `par x 1.20` and two is
-`par x 1.40`, as everywhere else — but the **supply is `par + spare`**, a count of wasted drops
+`par x 1.40`, as everywhere else - but the **supply is `par + spare`**, a count of wasted drops
 rather than a multiple of par, because a wrong drop here is permanent *and* leaves a mote that
 still has to be cooked, so a mistake costs about two drops wherever it happens. `spare` defaults
 to 5 (two mistakes and a little) and is authorable per level; see invariant 26e for why a factor
-could not do this job. A typed par is the failure with no symptom — one too high hands three
+could not do this job. A typed par is the failure with no symptom - one too high hands three
 stars to a careless run for ever, one too low makes them unreachable, and neither is visible in
 the file that caused it.
 
@@ -691,14 +691,14 @@ Two rules the validator holds a well to that are easy to get wrong by hand:
 - **Nothing may float.** The well settles the instant anything bursts, so a mote with nothing
   under it is a mote drawn in one place and met in another. Glass and whorls fall too.
 - **A whorl needs nothing.** A drop opens one and one with nothing beside it closes, so whorls are
-  always removable and a well of them is always winnable — which is why there is no rule here
+  always removable and a well of them is always winnable - which is why there is no rule here
   about them, and why `FallVerdict` needs no clause either. That is deliberate: the lens shipped
   without the equivalent property and had to have a valve added after a player reported being
   stranded.
 
 `budgetFactor: -1` turns the supply off entirely, and exactly one level in the game uses it: the
 first well, for the reason the first glade cannot be lost either. It is also what keeps the
-supply lesson off that board — a lesson shown over a meter that is not there can never be shown
+supply lesson off that board - a lesson shown over a meter that is not there can never be shown
 again.
 
 ### What makes a well hard
@@ -706,34 +706,34 @@ again.
 Four dials, and **par is not one of them**. Par is length: a big well cleared by four huge chains
 is a shorter number than a small one that has to be picked apart. The dials are:
 
-- **Headroom** — how many rows the tallest column has before the brim. This is the one that makes
+- **Headroom** - how many rows the tallest column has before the brim. This is the one that makes
   every individual drop frightening, because a wasted mote costs a row as well as a mote. A
   teaching well leaves four; a finale leaves two.
-- **What is standing in it** — how many motes, and how much of the well is blends (ripe, one drop
+- **What is standing in it** - how many motes, and how much of the well is blends (ripe, one drop
   from bursting) against pure colours (two drops away, and only reachable by a wash from
   somewhere else).
-- **`ways`** — how many distinct shortest solutions there are. This is invariant 5d, counted: a
+- **`ways`** - how many distinct shortest solutions there are. This is invariant 5d, counted: a
   well with hundreds of them is one where almost any tidy play wins, so the colours and the
   ordering are deciding nothing however pretty it looks. It falls down a chapter.
-- **`greedy`** — whether a player who never looks ahead, always taking the biggest burst going,
+- **`greedy`** - whether a player who never looks ahead, always taking the biggest burst going,
   clears the well inside its supply. On a chapter's opening wells they should; that is what
   teaching the verb looks like. By the middle they should not.
-- **`aim`** — how many of a lens's two sideways shots land on anything.
+- **`aim`** - how many of a lens's two sideways shots land on anything.
   Glass pointing at nothing has taken three drops of charging and bought nothing. It is geometry
-  of the authored position rather than a proof — the well collapses under a chain, so a lens
-  fires from wherever it has fallen to — so it warns and never refuses.
+  of the authored position rather than a proof - the well collapses under a chain, so a lens
+  fires from wherever it has fallen to - so it warns and never refuses.
 
 `Validate Content` and `Tools/verify/content.py` both print all four beside par, the two star
 lines, the supply and the number of positions the proof cost.
 
-**Boards are searched for rather than typed**, because a random fill is almost never solvable —
+**Boards are searched for rather than typed**, because a random fill is almost never solvable -
 every pure mote needs two more channels and the stragglers pile up faster than any chain clears
 them. `Tools/chapters/f01_lightfall.py` holds the shipped ten and self-checks against the JSON;
 `Tools/verify/fall.py` is the rule mirror it and the offline gate both run. The mirror is a
-second copy of the rules and is therefore never authoritative — `fall-vectors.json` is the
+second copy of the rules and is therefore never authoritative - `fall-vectors.json` is the
 contract between it and the shipping C#, and both sides run it.
 
-**Keep a well cheap to prove.** The player's device runs the same search — once, lazily, when
+**Keep a well cheap to prove.** The player's device runs the same search - once, lazily, when
 somebody opens the level (`LevelTuning.Par` resolves the first time anything asks, which is the
 run screen and never the map). The validator **warns above 40,000 positions and refuses a level
 above 120,000**, which is about a quarter of a second of nothing happening on the way in. Cost
@@ -741,17 +741,17 @@ goes as the column count to the power of par, so par 7 on a six-wide well is fou
 the same board: narrow the well or shorten the answer, and start it fuller rather than making it
 bigger.
 
-## Budburst, Hollowmarch and Emberforge levels — deleted
+## Budburst, Hollowmarch and Emberforge levels - deleted
 
 All three modes were withdrawn together (invariant 38), and the sections that said how to author a
 grove, a haul-road and a wall went with them. **`bud`, `march` and `ember` are retired block names
 and must never be reused**: `Tools/verify/content.py` refuses each of them by name, for the
-duskcap's reason (invariant 5f) — `JsonUtility` drops an unknown field without a word, so a chapter
+duskcap's reason (invariant 5f) - `JsonUtility` drops an unknown field without a word, so a chapter
 body still carrying one would index, derive a plausible glade and ship as something nobody authored.
 Their chapter and level ids are spent too; the list is in `GameMode.cs` and in invariant 38.
 
 The **glade** and **Lightfall** sections above still stand and are still correct. Those two modes are
-*hidden* rather than deleted — `"disabled": true` on their manifest entries and nothing else — so a
+*hidden* rather than deleted - `"disabled": true` on their manifest entries and nothing else - so a
 chapter of either can be authored, validated and turned back on without a code change.
 
 ## Prismvale levels
@@ -761,7 +761,7 @@ among them. **Drag a gem onto its neighbour and the two change places.** A lante
 of *its own colour* that are touching it, that colour runs on through every matching gem beside
 them, and a critter standing against that vein wakes.
 
-The level authors the **whole field** and nothing else — no deal, and the reader refuses one that
+The level authors the **whole field** and nothing else - no deal, and the reader refuses one that
 tries: nothing ever falls in from above and nothing is ever removed, which is what keeps the board
 searchable at all (invariant 36).
 
@@ -786,7 +786,7 @@ searchable at all (invariant 36).
 | `@` | a **critter**, asleep. A goal. It wakes when a lit gem is standing beside it. |
 | `.` | **bare ground**. Nothing stands on it, nothing swaps with it, and a vein stops dead at it. |
 
-`*` — a critter that has woken — is a state a board reaches and never one it is written in. It is
+`*` - a critter that has woken - is a state a board reaches and never one it is written in. It is
 not in the grammar and is refused if typed.
 
 **A critter wants light and not a colour**, deliberately (36d): the colour already decides
@@ -800,8 +800,8 @@ carries, and it is a **count** of wasted moves (26e).
 ### Authoring a field
 
 **The field is designed and the colours are dealt** (invariant 32d), and `Tools/prism_sweep.py` is
-that split made into a tool. Draw the shape by hand — where the bare ground runs, where the
-lanterns stand, how far each critter is from one — because those are what a player *reads*; leave
+that split made into a tool. Draw the shape by hand - where the bare ground runs, where the
+lanterns stand, how far each critter is from one - because those are what a player *reads*; leave
 every other cell as `-` and let the sweep deal colours into it by seed.
 
 ```
@@ -811,24 +811,24 @@ python Tools/prism_sweep.py --board "Rbrgg.,br@rgG,..." --spare 3
 
 What to keep a seed for, and what each column means:
 
-- **`par`** — the ladder derives from it, and **it is capped at 4 on this mode** (36b). Cost goes
+- **`par`** - the ladder derives from it, and **it is capped at 4 on this mode** (36b). Cost goes
   as the swap count to the power of par and a 6x6 field carries thirty to fifty swaps, so par 3
   proves in about 200 positions, par 4 in about 1,700, and par 5 is over what a level may cost on
   a phone. A longer chapter ramps on critters, lanterns and bare ground rather than on length.
-- **`ways`** — how many shortest answers there are (invariant 5d). The two shipped boards are 10
+- **`ways`** - how many shortest answers there are (invariant 5d). The two shipped boards are 10
   and 120.
-- **`less`** — what a player who never looks ahead spends. **It cannot be beaten at par 3** (36f),
+- **`less`** - what a player who never looks ahead spends. **It cannot be beaten at par 3** (36f),
   because three critters at one swap each is exactly what a greedy player takes; check it only on
   boards whose par exceeds their goal count.
-- **`dealt`** — gems already lit as the board is dealt, which is invariant 5g counted. A gem or two
+- **`dealt`** - gems already lit as the board is dealt, which is invariant 5g counted. A gem or two
   beside each lantern is how the mode teaches itself without a sentence; a third of the field is a
   level somebody else half finished, and nothing else would ever notice. The gate warns above 35%.
-- **`used`** — how many distinct lantern colours a *shortest* answer really wakes a critter with.
+- **`used`** - how many distinct lantern colours a *shortest* answer really wakes a critter with.
   A field standing three lanterns whose answer only ever uses one is a field with two decorative
   lanterns on it. Measured over **every** shortest answer rather than over the opening move:
   `ways` is rarely one, so the first winning line is arbitrary among several and tuning against it
   is tuning against a coin toss (invariant 26h).
-- **`pair`** — the most critters one swap wakes. Two is a vein the player *arranged* to serve both,
+- **`pair`** - the most critters one swap wakes. Two is a vein the player *arranged* to serve both,
   which is the only thing on this board better than the obvious move.
 
 Three rules the sweep will not tell you.
@@ -839,7 +839,7 @@ Both gates refuse it.
 
 **Every critter needs a lantern in its own run of gems.** Which cells hold gems never changes, so
 a critter whose gems belong to a run no lantern touches can never be woken however the colours are
-arranged — and no amount of sweeping fixes it. `PrismLayout.Marooned` is certain, errors, and names
+arranged - and no amount of sweeping fixes it. `PrismLayout.Marooned` is certain, errors, and names
 the cell.
 
 **Bare ground is the only thing that shapes a vein.** A field with none of it is one where every
@@ -853,8 +853,8 @@ colour as the first is not a second decision; a second *colour* is.
 
 **Look at it.** `python Tools/render_prism.py` draws every shipped field with the real sprites at
 the size a phone draws it, and `--lit` plays a shortest answer first so the veins are on the board.
-One fault came out of it that no numeric gate could see — a lantern drawn as a hooped drum, which
-at cell size reads as a **crosshair** on the one object nothing may be aimed at (invariant 36g) —
+One fault came out of it that no numeric gate could see - a lantern drawn as a hooped drum, which
+at cell size reads as a **crosshair** on the one object nothing may be aimed at (invariant 36g) -
 and it was past every green check in the repository.
 
 ## What makes a glade hard
@@ -868,8 +868,8 @@ python Tools/verify/difficulty.py                       # every chapter
 python Tools/verify/difficulty.py c02_millvale --detail # one, per tile
 ```
 
-It enumerates every arrangement in which **every arm mates and none dangles** — the tidy
-boards a player might plausibly arrive at — and then asks which of them actually win.
+It enumerates every arrangement in which **every arm mates and none dangles** - the tidy
+boards a player might plausibly arrive at - and then asks which of them actually win.
 
 ```
 glance   tiles a player cannot place by looking at that tile and the ground around it
@@ -897,7 +897,7 @@ crossing they never thought about was never turnable.
 
 **A four-armed tile is the cheapest honest decision a board can carry**, and everything
 else rides on it. A twisted crossing or a briar wears all four arms at every angle, so
-nothing about the arms can settle it — only colour can. Three of them is eight tidy
+nothing about the arms can settle it - only colour can. Three of them is eight tidy
 arrangements with one winner. A **briar** is the stronger of the two and usually the one to
 reach for: a twisted crossing has two states where a straight briar has two and a twisted
 one has four. That is where the rest of the vocabulary gets its teeth:
@@ -911,7 +911,7 @@ one has four. That is where the rest of the vocabulary gets its teeth:
   force and the root is a hint, not a decision. The reading prints what the binding removes.
 - **A ford must sit on a *cycle* of the live network, and what it lets in must have a
   heart of its own.** This is the one that is easy to get wrong and impossible to see
-  afterwards. Turning the ford has to matter *while the grove's own critters stay lit* — so
+  afterwards. Turning the ford has to matter *while the grove's own critters stay lit* - so
   it stands on a loop, where shutting a way costs the grove nothing, and the pocket on the
   other side carries a heart and a critter of a different colour. The wrong turn then pours
   one into the other and exactly one critter goes out: a warning, but somewhere the player
@@ -922,7 +922,7 @@ one has four. That is where the rest of the vocabulary gets its teeth:
 
 **`hazards` is the metric this replaces, and it is worth knowing why it was wrong**, because
 a whole chapter was authored to it. It counts places where *some* rotation would mate two
-networks — but a rotation that does that usually leaves an arm dangling somewhere else, so
+networks - but a rotation that does that usually leaves an arm dangling somewhere else, so
 it is not an arrangement a player ever plausibly reaches. A board can score twenty-nine
 hazards and admit exactly one tidy arrangement.
 
@@ -930,7 +930,7 @@ Nothing here fails a build. `Validate Content` remains the authority on whether 
 *sound*; this says whether it is *worth playing*.
 
 **Tips teach themselves.** A glade that contains a mechanic the player has never
-met shows a one-off spotlight tip on entry — no authoring, no list to maintain.
+met shows a one-off spotlight tip on entry - no authoring, no list to maintain.
 Adding a mechanic means adding it to `Mechanic.TeachingOrder` and writing
 `ui.tip.<id>.title` / `.body`; every chapter that uses it is then covered forever.
 Only one tip is shown per glade, most dangerous first.
@@ -945,7 +945,7 @@ chapter's, which is that same sky. `mapX`/`mapY` are fractions of the *chapter's
 band of the map, not of the whole map, so chapters stay independent.
 
 A *chapter* inherits nothing. It must name its own `backdrop`, and validation fails
-if it does not — the check is unchanged even though what it names is now derived,
+if it does not - the check is unchanged even though what it names is now derived,
 because a chapter drawing art it never asked for is a chapter nobody decided the look
 of. What it names is shared, and shared art goes in the global group, which the
 Addressables tooling works out for itself.
@@ -964,7 +964,7 @@ The profile roster lives in `manifest.json`, beside the chapter list:
 ```
 
 It is in the manifest rather than a body of its own because the whole roster is wanted at
-once — the picker draws the locked ones too — and an entry is a few dozen bytes, so a
+once - the picker draws the locked ones too - and an entry is a few dozen bytes, so a
 hundred companions is a few kilobytes on a file the boot path already reads. A lazily
 loaded companion file would add a read to a screen and save nothing.
 
@@ -976,16 +976,16 @@ loaded companion file would add a read to a screen and save nothing.
 - **`animated`** is optional and names a sprite-set folder under `Art/Critters/`. Only the
   five companions that also appear on a board have one. A still portrait is about 45 KB;
   a flipbook is about 700 KB, which is the whole reason the roster can grow.
-- **`unlockLevel`** is a keeper level. Reaching it is *derived* and never stored — the same
-  argument as derived XP — so it can be retuned for existing players. **Exactly one
+- **`unlockLevel`** is a keeper level. Reaching it is *derived* and never stored - the same
+  argument as derived XP - so it can be retuned for existing players. **Exactly one
   companion should be free at level 1** (the starter every account begins wearing);
   `Validate Content` fails the build if none is.
 - **`unlockCost`** is credits that buy the companion outright, ignoring the level. **Zero or
-  absent means it cannot be bought** — earned by playing or not at all. That sentinel is the
+  absent means it cannot be bought** - earned by playing or not at all. That sentinel is the
   safe direction rather than an accident: `JsonUtility` writes a zero into a field an older
   manifest never had, so reading zero as "free" would put the whole roster on sale for
   nothing. A purchase *is* stored, because nothing observable implies "this player paid
-  8,000 credits" — see below.
+  8,000 credits" - see below.
 - **`disabled`** retires a companion without deleting anyone's choice of it.
 
 Adding one is a portrait, a manifest entry and a `ui.avatar.<id>` string. No code changes,
@@ -1006,11 +1006,11 @@ prints and checks them.
 
 **Most of the roster is unreachable by levelling, for years.** Three-starring an entire
 hundred-glade catalog reaches about keeper level 15, and roughly level 24 after a year of
-drops. Any gate above that is reached by coins or not at all — which is why a gated
+drops. Any gate above that is reached by coins or not at all - which is why a gated
 companion with no `unlockCost` is a build **error**, not a warning: no player could ever
 obtain it.
 
-**Ordinary play pays about 540 credits a day** before any rewarded video — three daily
+**Ordinary play pays about 540 credits a day** before any rewarded video - three daily
 chests plus a streak rung, all read from `progression.json`. `Validate Content` derives that
 figure and reports the whole roster in days, so a ladder that outlasts the content is a
 number somebody chose rather than one nobody noticed. The shipped ladder runs 800 → 30,000
@@ -1020,22 +1020,22 @@ Three checks guard it: a price under half the account seed on a gated companion 
 warns (the ladder is inverted), and a cheapest companion more than a week away warns
 (nothing teaches a new player that coins buy friends).
 
-Purchases are stored — save schema v12, `companionsOwned`, a set of permanent ids joined by
+Purchases are stored - save schema v12, `companionsOwned`, a set of permanent ids joined by
 **union**, which is the only mergeable shape (see invariant 11b) because buying is
 irreversible. The set is client-written and therefore forgeable; it buys a portrait and
 nothing else, and the money half is defended by `submitSpends` refusing a debit the
 server-derived balance cannot cover. See `CompanionLedger`, which owns the composite
-"level **or** purchase" rule — nothing else composes it.
+"level **or** purchase" rule - nothing else composes it.
 
 Portraits live in their own Addressables group and load into
 `AssetLibrary.CompanionScope` when a roster screen opens, then drop when it closes. Only
 the worn companion stays resident, warmed at boot by `Profile.WarmWornAvatar`. That is
 what keeps launch costing the same at a hundred companions as at five.
 
-## The Grovement — removed
+## The Grovement - removed
 
-**Removed from the game on 2026-09-21.** The village a player built — its tile floor, its
-land, its homes, its decor and its residents — is gone: `homestead.json`, `Art/Homestead/`,
+**Removed from the game on 2026-09-21.** The village a player built - its tile floor, its
+land, its homes, its decor and its residents - is gone: `homestead.json`, `Art/Homestead/`,
 the generated browse atlases, the `Glimmer Grove Homestead` bundle, the whole `Homestead`
 namespace, five screens, five save fields and ~165 loc keys. It had been *held* (off every
 screen, everything still standing) since 2026-09-15.
@@ -1052,7 +1052,7 @@ What is deliberately still here, and why:
   build writes them; save schema **v33** dropped them from `SaveFileDto`.
 - **The companion roster.** Nothing in the game draws a companion, but the ids are still in
   the manifest and still on the wire. The grove was the last thing that *counted* them, so
-  the roster is now inert rather than load-bearing — see invariant 16a for the reason it
+  the roster is now inert rather than load-bearing - see invariant 16a for the reason it
   could not be deleted while the grove stood.
 - **The two lesson ids** `grove` and `grove_shop`, in `Mechanic.Retired`. A lesson id
   travels in `tipsSeen`, so it is spent for ever (invariant 5f).
@@ -1080,7 +1080,7 @@ beside the chapter list and the roster:
 ```
 
 - **`id` is permanent.** It names the event's loc keys and a player's earned credits depend
-  on it through the reward track — renaming one silently un-pays everybody who finished it.
+  on it through the reward track - renaming one silently un-pays everybody who finished it.
 - **`startUnix` / `endUnix`** are absolute Unix seconds, compared against `GameClock` and
   never the device's, or an event could be entered by changing the date. Ninety days is the
   ceiling: a "limited time" that outlives interest in it is content with a countdown on it.
@@ -1089,7 +1089,7 @@ beside the chapter list and the roster:
 - **`milestones`** must rise, and none may ask for more glades than the event names. An
   out-of-order track is refused rather than sorted, because sorting it would pay rewards
   nobody authored.
-- **`icon`** is optional and names **a mark the client knows how to draw** — not an art
+- **`icon`** is optional and names **a mark the client knows how to draw** - not an art
   path. Today that is `"bloom"`, a flower generated by `Art.Bloom` whose petals open as the
   track fills; anything else, including an empty field, draws the default.
 
@@ -1097,21 +1097,21 @@ That last one is worth being precise about, because the obvious reading is wrong
 name a sprite file: invariant 7 routes every sprite through `AssetLibrary` and
 `AssetManifest` decides what is registered, so a filename invented in a content push would
 resolve to nothing and the box would draw a white rectangle. A *named mark* degrades the
-other way — `SeasonCrest` falls back to the default for a name it has never heard of, so the
+other way - `SeasonCrest` falls back to the default for a name it has never heard of, so the
 worst a typo can do is draw the wrong flower, and a manifest naming a mark that ships in a
 later build stays valid on the clients that have not updated. `CatalogIndexBuilder` checks
 only that the name is a clean id, deliberately: whether a mark exists is a question about
 what has been drawn, and refusing the event over it would pull its window, its glades and
 its track because of a picture.
 
-Like the roster, `events` was added **without raising `ContentSchema.Version`** — an older
+Like the roster, `events` was added **without raising `ContentSchema.Version`** - an older
 client ignores it and simply never runs an event.
 
 ### A rung is reached by playing and taken by tapping
 
 Since save schema **v11** a milestone is not paid the moment the glade that reached it is
 cleared. It opens, and then it waits on `EventScreen` until the player taps it. Authoring is
-unchanged — this is not a field — but three consequences are worth knowing before you write
+unchanged - this is not a field - but three consequences are worth knowing before you write
 a track:
 
 - **A closed event is still a live page.** Glades stop counting at `endUnix`; marks do not
@@ -1122,7 +1122,7 @@ a track:
   together, and eight of them scroll rather than squash. Nothing needs a code change; a track
   of any shape up to `EventRules.MaxMilestones` draws itself.
 - **The floor travels and the server pays on it.** `EventCollection` stores one integer per
-  event — the largest goal taken — which merges by `max`, rides in the save document, and is
+  event - the largest goal taken - which merges by `max`, rides in the save document, and is
   clamped server-side to the glades actually finished before anything is paid. Retuning a
   live track is therefore safe in one direction only: *adding* a rung between two existing
   ones counts as already collected for anyone whose floor is past it, and *raising* a goal
@@ -1149,7 +1149,7 @@ not need a store review.
 
 Bands are increments, not cumulative totals, so inserting a band changes one number
 rather than every number after it. A chapter override inherits any field it does not
-set — `-1` means unwritten, because `0` is a legitimate payout for a tutorial. Bump
+set - `-1` means unwritten, because `0` is a legitimate payout for a tutorial. Bump
 `progressionVersion` in `manifest.json` when you change the file, or the refresher will
 not pull it.
 
@@ -1169,8 +1169,8 @@ Three things follow that are easy to get wrong:
 
 - **Re-run the seed script after every content drop.** The server derives credits from
   its own copy of the catalog, and a glade it has not been seeded with earns nothing.
-  `node firebase/seed/seed-config.mjs`. Nobody loses anything if you forget — the earned
-  floor on both sides holds the balance up — but the new chapter pays out only once the
+  `node firebase/seed/seed-config.mjs`. Nobody loses anything if you forget - the earned
+  floor on both sides holds the balance up - but the new chapter pays out only once the
   server knows it exists.
 - **Only ever raise a reward, or accept that the floor holds.** Lowering one recomputes
   a smaller value for everyone. `ProgressionStore` and `earnedHighWater` stop anybody's
@@ -1198,14 +1198,14 @@ The optional `hearts` block. How many hearts a player holds and how fast they co
 }
 ```
 
-Every field is optional on its own — omit one and it inherits the built-in value, so a
+Every field is optional on its own - omit one and it inherits the built-in value, so a
 push that changes the refill period does not have to restate the other five. Omit the
 whole block and `HeartRuleTable.Default` stands. Not a schema bump, for the reason the
 daily block is not one.
 
 Two numbers, and the difference between them is the feature:
 
-- **`refillCap` is where the clock stops.** This is the gate — the number that paces free
+- **`refillCap` is where the clock stops.** This is the gate - the number that paces free
   play. A player who never collects anything settles here.
 - **`ceiling` is the most anybody may hold.** Hearts from chests, streak nights and
   watched videos stack past the cap up to this, instead of evaporating at a full bar.
@@ -1213,7 +1213,7 @@ Two numbers, and the difference between them is the feature:
   cap means collected hearts are routinely thrown away. `Validate Content` warns about it.
 
 **`graceLevels` is where the gate does not apply.** The first three levels of the first
-chapter of *each mode* cost no heart at all — lose them, restart them or walk away from
+chapter of *each mode* cost no heart at all - lose them, restart them or walk away from
 them as often as you like. It is per mode rather than once per account because a mode
 shipped a year from now is somebody's first board of that mode: Thornwatch is matched
 rather than turned and is lost on a ward line rather than on moves, so a player meeting it
@@ -1222,19 +1222,19 @@ window is counted inside the first chapter and stops at that chapter's end, so t
 three means three of ten on a full chapter and all of a one-glade one. Nought switches it
 off and is a legal value; unwritten inherits three. `HeartStake` owns the rule, nothing
 about a free run is written to the save, and `Validate Content` prints where the window
-lands in every mode — and warns if it swallows a whole first chapter of more than one
+lands in every mode - and warns if it swallows a whole first chapter of more than one
 level, because the heart gate then does not exist anywhere on that map.
 
 **Every field here is safe to lower, and that is a designed property rather than a
 coincidence.** Lowering `refillCap` stops the clock earlier and leaves anybody above it
-holding what they had. Lowering `ceiling` refuses *new* grants and takes nothing away —
+holding what they had. Lowering `ceiling` refuses *new* grants and takes nothing away -
 the ledger's own bound is `HeartLimits.HardCeiling`, a constant no file can move, precisely
 so a tuning push can never clamp `produced` downward. If it could, a device that had fetched
 the new table and one that had not would disagree forever, because `produced` only ever
 rises and the merge depends on that. Enforcement lives in `Hearts.Grant`, where it is a
 decision taken once.
 
-`boostedRefillSeconds` is held at `refillSeconds` if authored longer — a boost that slows
+`boostedRefillSeconds` is held at `refillSeconds` if authored longer - a boost that slows
 hearts down is the feature inverted, and both numbers are individually legal so nothing else
 would catch it. Everything is clamped into a supported range by `HeartLimits`; a clamped
 file still reports a problem and still fails the build gate.
@@ -1242,7 +1242,7 @@ file still reports a problem and still fails the build gate.
 One thing this block does **not** reach: hearts are applied by the client and never
 adjudicated, so nothing here is published to `config/progression` for the server. It is
 tuned through the content channel like the chest odds, which means it needs
-`ContentConfig.RemoteBaseUrl` set to change without an app update — the same status the ad
+`ContentConfig.RemoteBaseUrl` set to change without an app update - the same status the ad
 payouts and chest rates already have.
 
 ### The hint pool
@@ -1258,7 +1258,7 @@ The optional `hints` block. How many hints a player holds and how fast they come
 ```
 
 **A hint is account-wide.** It used to be an allowance of three per glade, handed back in
-full at every board — which meant it cost nothing, meant nothing, and the only players who
+full at every board - which meant it cost nothing, meant nothing, and the only players who
 never used one were the ones who had not found the button. There is no per-level
 `hintAllowance` any more and there must not be one again: a glade has no opinion about how
 much of a player's own pool they may spend on it.
@@ -1270,7 +1270,7 @@ bump. Everything is clamped into a supported range by `HintLimits`.
 The one difference worth knowing is that **`ceiling` equals `refillCap` as shipped**, where
 hearts keep a wide gap. That is a deliberate choice, not an oversight, and it has exactly
 one consequence: a hint granted to somebody already holding three is **refused**, not
-clamped — so nothing may offer one there. `RewardedAds.WouldBenefit` is where that is
+clamped - so nothing may offer one there. `RewardedAds.WouldBenefit` is where that is
 enforced and `HintsTests` is what pins it; raise the ceiling above the cap and hints start
 banking like hearts, with no other change. Both validators print the fact so nobody has to
 remember it.
@@ -1293,7 +1293,7 @@ Every reward in it is a chest, and a task names a tier rather than a prize (inva
   "tiers": [
     { "id": "wood", "chest": { "guaranteed": [ { "kind": "credits", "min": 70, "max": 110 } ],
                                "options": [ { "kind": "hearts", "min": 1, "max": 1, "weight": 25 }, "..." ] } },
-    "... silver, gold, royal — humblest first; the order is the rank"
+    "... silver, gold, royal - humblest first; the order is the rank"
   ],
   "daily":  [ { "id": "d_play",  "goal": "runs",    "target": 2,  "tier": "wood" },  "..." ],
   "weekly": [ { "id": "w_bosses", "goal": "bosses", "target": 2,  "tier": "royal" }, "..." ]
@@ -1304,7 +1304,7 @@ Every reward in it is a chest, and a task names a tier rather than a prize (inva
   reader, so every rule below about a daily chest's bands holds here. A tier id is permanent: it
   names `Ui/Chest/{id}` (the closed icon, global), `Chests/{id}/` (the opening reel, scoped) and
   `chest.{id}.name`. Add a tier and `Tools/make_chest_art.py` has to cut its pictures.
-- **A task id is permanent** — it is written into the save's claim set and into the claim id the
+- **A task id is permanent** - it is written into the save's claim set and into the claim id the
   server keys a grant on. Retire one with `"retired": true` rather than deleting it: it leaves the
   rotation and keeps its tier, so a claim already in flight still pays. Its title is
   `task.{id}.name` with `{0}` the target, and `task.{id}.name_one` when the target can be one.
@@ -1323,7 +1323,7 @@ Every reward in it is a chest, and a task names a tier rather than a prize (inva
 **Re-run the seed script when you change the block.** `claimAwards` leaves a task claim
 unconfirmed if `config/progression` has no usable tasks block, so a retune that is not seeded
 stops the chests paying out rather than paying the wrong amount. The generator exists **three**
-times for this block — `ChestSeed.cs`, `functions/src/tasks.ts` and `Tools/make_task_vectors.py`,
+times for this block - `ChestSeed.cs`, `functions/src/tasks.ts` and `Tools/make_task_vectors.py`,
 which writes the `taskChestCases` vectors both harnesses run.
 
 ### Daily chests
@@ -1352,12 +1352,12 @@ from the home screen.
 }
 ```
 
-`kind` is a permanent id: `credits`, `gems`, `hearts`, `heart_boost` — and a boost's
+`kind` is a permanent id: `credits`, `gems`, `hearts`, `heart_boost` - and a boost's
 band is measured in **hours**. There is a fifth, `run_time`, which is **retired**: it paid
 seconds onto a run's countdown, and there is no countdown. Its enum value is frozen because
 the daily chest vectors key on it, nothing can produce it, and both the reader and the
 seeder refuse it wherever it appears. There is a sixth, `hints`, which a chest *may* hold but should not while the hint ceiling equals the
-cap — a chest that rolls one for a player already holding three pays them nothing, which is
+cap - a chest that rolls one for a player already holding three pays them nothing, which is
 the same failure in a slower costume. Omit the whole block and the built-in table in
 `DailyChestTable.Default` stands; it is deliberately not a schema bump, because a
 daily-chest retune must not invalidate the XP curve for clients that have not updated.
@@ -1373,15 +1373,15 @@ not an accident:
   becomes a simulation. `Glimmer Grove ▸ Validate Content` prints the published odds, and
   the chest overlay shows them to the player.
 - **The guaranteed band is why there is no pity counter.** Every chest pays something
-  worth having, so "thirty chests and nothing" cannot happen — which removes the usual
+  worth having, so "thirty chests and nothing" cannot happen - which removes the usual
   reason to keep per-player streak state that would then have to merge and be recomputed
   server-side.
 - **Later chests must never pay less.** They cost more play. The build gate fails on a
   table where a chest's floor is below the one before it.
 
 **A chest's contents are computed, never stored.** They are a pure function of
-(account id, day, chest index) through a specified generator — FNV-1a then xorshift32,
-all 32-bit — so the same chest holds the same thing however many times it is asked, on
+(account id, day, chest index) through a specified generator - FNV-1a then xorshift32,
+all 32-bit - so the same chest holds the same thing however many times it is asked, on
 every device, before and after a crash. Two consequences worth knowing: force-quitting
 the opening animation cannot reroll a prize, and the server can work out what a chest was
 worth without being told.
@@ -1394,8 +1394,8 @@ save for good, so this only ever trips on a first launch with no connection at a
 no backend configured the gate lifts, because then nothing is adjudicated.
 
 **Re-run the seed script when you change the block.** `claimAwards` refuses to grant
-anything if `config/progression` has no usable daily table — granting a guess would be
-inventing money — so a retune that is not seeded stops the chests paying out rather than
+anything if `config/progression` has no usable daily table - granting a guess would be
+inventing money - so a retune that is not seeded stops the chests paying out rather than
 paying the wrong amount.
 
 #### The generator exists twice, too
@@ -1403,7 +1403,7 @@ paying the wrong amount.
 `DailyChestTable.cs` and `firebase/functions/src/daily.ts`, pinned by the
 `dailyChestConfig` / `dailyChestCases` vectors in the same shared file. Those vectors use
 a **synthetic** table, not the shipped one, so retuning real drop rates does not turn them
-red — what is under contract is the arithmetic. The hash constants, the shift amounts, the
+red - what is under contract is the arithmetic. The hash constants, the shift amounts, the
 stream numbers, the modulo and the summing of same-kind drops are all part of it, and
 changing any of them rerolls every unopened chest in the world.
 
@@ -1430,7 +1430,7 @@ video, capped per UTC day.
 
 Placement ids are permanent, for the reason a `LevelId` is: one is written into every
 award id the server adjudicates, into the save file's cap counters, into the mediation
-dashboard and into analytics — three of those outside this repository. A placement with
+dashboard and into analytics - three of those outside this repository. A placement with
 no entry is **switched off** everywhere it is drawn, with no build and no dead code path,
 so removing an offer is a content change. An id this build does not know is skipped, which
 is how a newer content pack reaches an older client.
@@ -1448,16 +1448,16 @@ Where each one is offered, and why there:
 | `hint_refill` | the hint button, pool empty | hints |
 
 **`run_continue` is a retired placement id and must never be reused.** It bought seconds
-on a glade's countdown, and the countdown is gone. An id travels the way a `LevelId` does —
+on a glade's countdown, and the countdown is gone. An id travels the way a `LevelId` does -
 into the mediation dashboard, into `grantLog` on the server and into every analytics row
-ever written — so pointing it at some other offer would silently re-label history. It is
+ever written - so pointing it at some other offer would silently re-label history. It is
 absent from `AdPlacement.All`, from `AD_PLACEMENTS` in `functions/src/ads.ts` and from the
 seeder's `known` list, which together mean a published table naming it is *refused* rather
 than honoured.
 
 **`run_time` is retired with it, and the `transient` rule it created survives.** A kind
 spent inside a run is meaningless anywhere a run is not open, and nothing is offered from
-inside one any more — so `AdRewardTable` and `seed-config.mjs` both refuse a transient kind
+inside one any more - so `AdRewardTable` and `seed-config.mjs` both refuse a transient kind
 outright. That is the seam a future in-run reward would come back through; the failure it
 prevents is silent in the worst way, with the offer drawn where no run exists, the video
 played and the reward landing on nothing.
@@ -1465,7 +1465,7 @@ played and the reward landing on nothing.
 `win_bonus` pays a **flat amount and the button prints it**, rather than doubling what the
 run earned. Earned credits are derived from the star ledger (invariant 9), so there is no
 accumulated figure to multiply, and doubling one run would mean storing which runs had been
-doubled — a forgeable per-level set that pays, which invariant 15 sends straight back to 13.
+doubled - a forgeable per-level set that pays, which invariant 15 sends straight back to 13.
 What a signed callback can attest to is that a view of a placement happened, so that is what
 the amount is keyed on. A multiplier the panel cannot honour is worse than a smaller number
 it can.
@@ -1498,7 +1498,7 @@ is no longer a hand-maintained `products.json`.
 ```
 
 A **product** is bought with money. A **good** is bought with gems. The split is not a
-presentation choice — see below.
+presentation choice - see below.
 
 **There is no price field, and there must never be one.** A price lives in App Store
 Connect and the Play Console, is set per storefront, moves with tax and exchange rates,
@@ -1514,7 +1514,7 @@ redeemed a year from now is looked up against whatever the table says then. Retu
 adding a product, never by repointing one.
 
 **`kind` is the store's word, not ours.** A `nonconsumable` is sold once per store
-account and both stores enforce that themselves, before any money moves — which is how
+account and both stores enforce that themselves, before any money moves - which is how
 the starter offer is made one-time without a flag in the save file that two devices would
 have to agree about. It is also why one-time offers are exempt from the ladder check: a
 starter pack is deliberately worth several times the ladder and cannot undercut it,
@@ -1525,13 +1525,13 @@ because it cannot be bought twice.
 This is the load-bearing decision of the whole feature. Currency is the one thing the
 server owns (invariant 10), so it can be granted against a validated receipt with no
 client involvement at all. Hearts and boosts live in the save file and are applied by the
-phone — so a product granting both would need the client to apply half a purchase after
+phone - so a product granting both would need the client to apply half a purchase after
 the server applied the other half, which means a record in the save of "did I already
 apply this transaction's hearts": a new field, merged across devices, whose failure mode
 is somebody paying and receiving nothing.
 
 So hearts and boosts are bought with **gems** instead, and a gem debit is an ordinary
-`CurrencyLedger.TrySpend` — idempotent, offline-capable, and refused by the server on the
+`CurrencyLedger.TrySpend` - idempotent, offline-capable, and refused by the server on the
 next sync if the derived balance could not cover it. It is the same two lines that buy a
 companion. Selling hearts for money directly would mean a permanent store product per
 bundle, priced in every storefront, undeletable, and re-priced by hand every time the
@@ -1548,14 +1548,14 @@ globally unique key, and grants the currency. *Only then* is the transaction con
 with the store.
 
 Everything that can go wrong is therefore some flavour of "still unfinished", and both
-stores re-deliver an unfinished transaction on every launch until it is confirmed — a
+stores re-deliver an unfinished transaction on every launch until it is confirmed - a
 crash, a flat battery, a tunnel, a force-quit, a server outage. That is why there is no
 per-purchase state anywhere in the save file: the store is already keeping the record,
 far more reliably than a client could.
 
 Google's three-day rule is the one real deadline: an unacknowledged Play purchase is
 refunded automatically, and confirming is what acknowledges it. Hence a retry that is
-aggressive rather than polite — immediately, then on a doubling backoff, then on every
+aggressive rather than polite - immediately, then on a doubling backoff, then on every
 reconnection and every foreground.
 
 #### After editing the block
@@ -1565,15 +1565,15 @@ npm --prefix firebase/functions run build
 node firebase/seed/seed-config.mjs
 ```
 
-Then `Glimmer Grove ▸ Validate Content`. It **errors** — not warns, unlike every other
-block in this file — on a ladder that gets worse as it gets bigger, on a good that can
+Then `Glimmer Grove ▸ Validate Content`. It **errors** - not warns, unlike every other
+block in this file - on a ladder that gets worse as it gets bigger, on a good that can
 never be bought (hearts above the ceiling, a boost past the cap), and on a product with
 no `store.product.<id>` string. Every other block here describes what play pays and an
 aggressive tuning is a legitimate weekend decision; this one describes what somebody is
 charged, and the only way to put a wrong figure right afterwards is one refund at a time.
 
 `python Tools/verify/content.py` checks the same things from a terminal and prints the
-shop against the income that has to pay for it — what a day of free play collects, and
+shop against the income that has to pay for it - what a day of free play collects, and
 how many days the whole catalog of credit sinks comes to.
 
 ### The rule exists twice
@@ -1610,17 +1610,17 @@ served alongside the old one rather than replacing it under live players.
 All loading goes through `AssetLibrary`; nothing calls `Resources.Load` directly.
 Assets have one of two lifetimes:
 
-- **Global** — buttons, icons, critters, the font. Loaded once on the splash, kept.
-- **Chapter** — a chapter's backdrop and map strips, plus any backdrop one of its
+- **Global** - buttons, icons, critters, the font. Loaded once on the splash, kept.
+- **Chapter** - a chapter's backdrop and map strips, plus any backdrop one of its
   levels overrides. Loaded on entering the chapter, **released on leaving it**. All of
-  it is *shared* now — the ordinal's map, the ten skies — so it lives in the global
+  it is *shared* now - the ordinal's map, the ten skies - so it lives in the global
   bundle and is still claimed and released by the chapter scope. A bundle is where a
   file is downloaded from; a scope is what is decoded and resident.
 
 The chapter set is *derived from the catalog*, never hand-listed. The old build
 hardcoded `play_0, play_1, play_2` inside the splash screen, so every content drop
 needed someone to remember to edit a screen. Now a chapter declares its own art
-and `AssetManifest` reads it back — publishing chapter forty touches no code.
+and `AssetManifest` reads it back - publishing chapter forty touches no code.
 
 The map screen shows **one chapter at a time**. That is what bounds node count and
 loaded textures by chapter size (~20 levels) rather than by catalog size, so no
@@ -1637,15 +1637,15 @@ cannot disagree.
 
 **Registration is automatic.** `AddressableAutoRegister` is an `AssetPostprocessor`:
 anything landing under `Art/`, `Audio/` or `Fonts/` is given its address and filed
-into the right group as it imports — on a drag-and-drop, a fresh clone, or a
+into the right group as it imports - on a drag-and-drop, a fresh clone, or a
 `git pull` with the Editor closed. Deleted assets have their entries removed.
 
 This used to be a menu item, and that is exactly why it is not one now. A menu
 item is a thing a person has to remember during the week a chapter ships, and this
 project had already been bitten by that class of bug once: the splash screen
 hardcoded `play_0, play_1, play_2`, so every content drop needed somebody to edit
-a screen. The migration tool that replaced it then rotted into a no-op — it
-scanned `Assets/Game/Resources`, which its own step 3 had deleted — leaving a
+a screen. The migration tool that replaced it then rotted into a no-op - it
+scanned `Assets/Game/Resources`, which its own step 3 had deleted - leaving a
 repair tool that silently did nothing in a project whose art pipeline depended on
 it. New chapter art would have imported fine, validated fine, built fine, and
 shipped with no backdrop.
@@ -1661,8 +1661,8 @@ Glimmer Grove ▸ Addressables ▸ Audit Addresses        prove every request re
 Use **Sync** after a merge that touched the Addressables settings, or after moving
 a backdrop between chapters (which changes who owns it). Use **Audit** any time;
 it also runs from the build gate, so an unaddressed asset fails the build instead
-of reaching a player. Grouping mistakes — chapter art in the wrong bundle, shared
-art claimed by one chapter — are reported as warnings by the same pass.
+of reaching a player. Grouping mistakes - chapter art in the wrong bundle, shared
+art claimed by one chapter - are reported as warnings by the same pass.
 
 `GLIMMER_ADDRESSABLES` is defined automatically by the `versionDefines` entry in
 `GlimmerGrove.Domain.asmdef` and `GlimmerGrove.Presentation.asmdef` whenever the
@@ -1670,14 +1670,14 @@ Addressables package is installed. `Boot` then selects `AddressablesAssetProvide
 
 **Do not put it in Player Settings ▸ Scripting Define Symbols.** Those are stored
 *per build target*, so a define added while on Standalone is absent on Android and
-iOS — and since the assets do not live under `Resources/`, a mobile build would
+iOS - and since the assets do not live under `Resources/`, a mobile build would
 ship with no art at all and no error saying why. The asmdef defines it for every
 platform at once, which is the point.
 
 ### Building a player
 
 **Addressable content must be built, or the player ships with no art.** In the
-Editor this is invisible — Play mode defaults to *Use Asset Database*, which reads
+Editor this is invisible - Play mode defaults to *Use Asset Database*, which reads
 assets directly and always works. A device build does not.
 
 Check `Window ▸ Asset Management ▸ Addressables ▸ Settings` and make sure
@@ -1686,7 +1686,7 @@ Check `Window ▸ Asset Management ▸ Addressables ▸ Settings` and make sure
 player build. A build made without it launches to a game with missing sprites and
 no errors that point at the cause.
 
-Until the define is set, `ResourcesAssetProvider` is used and everything works —
+Until the define is set, `ResourcesAssetProvider` is used and everything works -
 it simply cannot stream or genuinely free memory, because Resources cannot.
 
 ### The app icon
@@ -1717,13 +1717,13 @@ Three things about that script are worth knowing before changing the artwork:
 - **The subject is found by flooding the background, never by colour.** The artwork
   is three turrets firing over a radial burst of blue, and the cyan turret reads
   (20, 240, 253) against a background that reads (76, 233, 253) near the burst's
-  centre — the same colour to any threshold that would also keep the blue plate.
+  centre - the same colour to any threshold that would also keep the blue plate.
   What separates them is the near-black outline the artist drew round every turret,
   so the script floods inward from the border across everything that is neither
   outline nor flame and keeps what the flood cannot reach. **Excluding the flames
   from the flood is the load-bearing half**: a flame leaves the muzzle without an
   outline, so with them passable the fill walks up the barrel and hollows out the
-  turret behind it — which is exactly how the cyan turret was lost on the first cut,
+  turret behind it - which is exactly how the cyan turret was lost on the first cut,
   with nothing else about the run looking wrong.
 - **The iOS master is written as RGB, deliberately.** App Store Connect rejects a
   1024 icon that carries an alpha channel.
@@ -1732,9 +1732,9 @@ Three things about that script are worth knowing before changing the artwork:
   Erasing them and blurring leaves a ghost of the silhouette that peeks out from
   behind the foreground layer, and extending each ray inward from the last pixel it
   can be seen at smears the plinths' ground shadow into a cone down the plate. So
-  the burst is *fitted* as the one thing it is — brightness that varies with radius
+  the burst is *fitted* as the one thing it is - brightness that varies with radius
   (a hot centre, a vignette at the corners) times a colour that varies with angle
-  (the rays) — separable, in the log of each channel, three passes with the outliers
+  (the rays) - separable, in the log of each channel, three passes with the outliers
   thrown out so the sparkles and the shadow do not drag it. **The bins are read back
   by interpolation rather than by bin**, because a piecewise-constant radial profile
   draws visible rings across the plate. The sparkles are composited back on top; the
@@ -1742,20 +1742,20 @@ Three things about that script are worth knowing before changing the artwork:
   they stand on. The burst's centre is searched for, not typed: the right centre is
   the one that leaves the background's brightness depending on angle and little else.
 
-The subject in the foreground layer is fitted to 286 px of the 432 px canvas — just
-under the 72 dp every launcher mask keeps — so the outermost flame tips survive a
+The subject in the foreground layer is fitted to 286 px of the 432 px canvas - just
+under the 72 dp every launcher mask keeps - so the outermost flame tips survive a
 circular mask.
 
 ## Sound
 
 Twenty clips under `Assets/Game/Audio/Sfx/`, three music tracks beside them, and one
-player — `Audio` (Presentation). A sound is asked for by name: `Audio.Sfx("click")`,
+player - `Audio` (Presentation). A sound is asked for by name: `Audio.Sfx("click")`,
 or `Audio.SfxVaried`, which is the same thing with a little random detune so a repeat
 never lands on exactly the same pitch twice.
 
 **The twenty names are a fixed vocabulary.** `AssetManifest.Sfxs` preloads exactly
 those names and nothing else, and `python Tools/verify/sfxnames.py` proves the three
-lists agree — what the code plays, what is on disk, and what is preloaded. Before that
+lists agree - what the code plays, what is on disk, and what is preloaded. Before that
 check existed a misspelled name was a runtime `InvalidKeyException` and a silence that
 shipped green (`Audio.Sfx("tap")` did, twice), and `press.wav` sat in the project for
 months played by nobody. Adding a twenty-first sound means adding it in three places:
@@ -1764,27 +1764,27 @@ months played by nobody. Adding a twenty-first sound means adding it in three pl
 ### The clips are cut by a tool, never edited by hand
 
 `python Tools/make_sfx.py` cuts all twenty out of the licensed source pack against
-`Tools/sfx.tsv` — one row per name, giving the source file, a transposition, a length
+`Tools/sfx.tsv` - one row per name, giving the source file, a transposition, a length
 cap, and a gain trim. `--check` proves the shipped wavs are what the table says, the
 same bargain `make_shop_art.py` strikes for the shop's money ladders.
 
 The reason to cut rather than copy is that four properties have to hold across the
 whole set, and not one of them is a property of any single file:
 
-- **One perceived loudness.** The volumes authored at the 115 call sites — `.28`,
-  `.34`, `.42`, `.5`, `.62`, `.9` — only mean something if the samples underneath them
+- **One perceived loudness.** The volumes authored at the 115 call sites - `.28`,
+  `.34`, `.42`, `.5`, `.62`, `.9` - only mean something if the samples underneath them
   are the same size to begin with. They were not: the previous set ranged over a
   six-fold spread of RMS, so some of those numbers were compensating for the sample
   rather than expressing a mix.
-- **A peak ceiling.** The game *pitches* these at playback — `lit` climbs to three
-  times its recorded rate — and pitching resamples, which overshoots a signal already
+- **A peak ceiling.** The game *pitches* these at playback - `lit` climbs to three
+  times its recorded rate - and pitching resamples, which overshoots a signal already
   at full scale. A dB of headroom is what stops the happiest moment in the game being
   the one that clips.
 - **Short where repeated.** `Audio.PlayOne` is a ten-voice round-robin that calls
   `Stop()` on reuse, so the eleventh overlapping one-shot cuts the first off mid-tail.
   `--report` prints, per clip, how many copies of itself it has to stand alongside at
   its busiest moment; over ten is an error rather than a judgement call. The old `lit`
-  was 1.06 s against a ladder that fires twelve notes 70 ms apart — fifteen overlapping
+  was 1.06 s against a ladder that fires twelve notes 70 ms apart - fifteen overlapping
   copies, so it was cutting itself off every time anybody solved anything.
 - **Audible on a phone.** A phone speaker reproduces very little below about 500 Hz, so
   a beautifully warm sample can simply be missing on the device most players use.
@@ -1797,13 +1797,13 @@ Three materials and one scale. **Wood** is the interface (`click`, `back`, `tick
 `tock`, `pop`, `pop2`, `blocked`, `shatter`), **stone** is movement (`rotate_a`,
 `rotate_b`, `whoosh`, `chest`), a **mallet** is the ladder (`lit`), and **bells** are
 reward (`chime`, `chime2`, `bell`, `coin`, `star`, `unlock`, `win`). Twelve source
-files carry the twenty slots, and the reuse is deliberate — a small palette is what
+files carry the twenty slots, and the reuse is deliberate - a small palette is what
 makes a set sound like one place rather than twenty samples. Where a source is used
 twice the two sit an interval apart, so they read as two notes of one instrument:
 `tick` and `tock` are literally the same block of wood a fourth apart.
 
 Every transposition in the table is a **pentatonic** step. That matters more here than
-it would in most games because this one overlaps sound constantly — `lit` climbs twelve
+it would in most games because this one overlaps sound constantly - `lit` climbs twelve
 notes over two octaves on a single turn, `coin` runs dozens of tokens in two seconds,
 and three modes fire cascade voices on a rising ladder. A pentatonic set has no
 semitone in it, so no two of those can collide into a beat.
@@ -1811,7 +1811,7 @@ semitone in it, so no two of those can collide into a beat.
 ### Judging it is a listening job, and there is a tool for that too
 
 `python Tools/make_sfx.py --contact sfx.html` writes a single self-contained page that
-*plays* the set. `--check` proves reproduction and says nothing about quality — the
+*plays* the set. `--check` proves reproduction and says nothing about quality - the
 same gap `make_shop_art.py --contact` exists to close for pictures, except that a
 contact sheet for sound has to be pressed rather than looked at.
 
@@ -1819,36 +1819,36 @@ Three controls per clip, and the last two are the ones that matter. **one** is t
 as it ships. **ladder** is the clip at the pitches the game really uses, which is the
 only way to hear whether `lit` reads as a phrase or as a sample being sped up. **run**
 is the clip at the rate the game really repeats it, which is how `coin` at nine a
-second is judged. Above them are four **scenes** — a turn, a solve, a payout, the wheel
-— assembled from the real delays, pitches and volumes. Every wrong choice this set has
+second is judged. Above them are four **scenes** - a turn, a solve, a payout, the wheel
+- assembled from the real delays, pitches and volumes. Every wrong choice this set has
 made was inaudible one clip at a time.
 
 ### Import settings are written by a tool as well
 
 `python Tools/sfx_meta.py` writes one `AudioImporter` block for all twenty, preserving
-each file's GUID — Addressables keys on the GUID, so a regenerated `.meta` would
+each file's GUID - Addressables keys on the GUID, so a regenerated `.meta` would
 silently unaddress every sound in the game. They are PCM, `DecompressOnLoad`, preloaded,
 and **`normalize: 0`**. That last one is the one to leave alone: Unity's importer
 peak-normalises when it downmixes, which would undo the loudness match and leave nothing
-at all to notice — the game would simply be mixed wrong.
+at all to notice - the game would simply be mixed wrong.
 
 ## Strings
 
 Every player-facing string is a key in `loc/<lang>.json`. The build gate scans the
 source for key-shaped literals and fails if any is missing, so a new button with
-an unregistered string cannot ship. Keys assembled at runtime defeat that check —
+an unregistered string cannot ship. Keys assembled at runtime defeat that check -
 write them out (see `WinOverlay.RankKeys`) rather than concatenating.
 
 ## Schema evolution
 
 `ContentSchema.Version` is the contract. A client reads anything at or below its
-own version and **skips** — never crashes on — anything above it. Adding an
+own version and **skips** - never crashes on - anything above it. Adding an
 optional field is not a breaking change; removing or repurposing one is.
 `minAppVersion` on a manifest entry hides content from clients too old for it.
 
 ``progression.json`` versions **separately**, via `ProgressionSchema`. It is delivered
-on its own — the manifest carries a `progressionVersion` so it can be refetched without
-touching a chapter — and it changes far more often than the catalog's shape. Sharing one
+on its own - the manifest carries a `progressionVersion` so it can be refetched without
+touching a chapter - and it changes far more often than the catalog's shape. Sharing one
 number would mean a *catalog* format bump invalidated the *reward* file for every client
 that had not updated, silently dropping them back to the built-in curve over a change
 that had nothing to do with the economy. Two formats, two readers, two versions.
@@ -1856,7 +1856,7 @@ that had nothing to do with the economy. Two formats, two readers, two versions.
 **v2** moved chapter membership and order into the manifest so the boot path reads
 one file instead of every chapter. `MinimumSupported` was raised with it rather
 than the field being made optional, because a v1 manifest lists no levels at all
-and a client that read one would show a game with no glades in it — a clear
+and a client that read one would show a game with no glades in it - a clear
 refusal beats a silent empty catalog. It cost nothing to do: remote delivery was
 still off and one chapter had shipped, so there was no content anywhere to
 migrate. The same change made after a CDN goes live is a migration under live
@@ -1868,14 +1868,14 @@ Not content, and deliberately in this file anyway: it is the only pipeline docum
 three parts below are all things that go wrong at build or release time rather than at runtime.
 
 **Nothing here is stored in the save file, and nothing is published in `progression.json`.** A
-consent answer is per-device, revocable and therefore not monotonic — the shape invariant 11b
-forbids — and the CMP already keeps the authoritative record in the form the ad networks read.
+consent answer is per-device, revocable and therefore not monotonic - the shape invariant 11b
+forbids - and the CMP already keeps the authoritative record in the form the ad networks read.
 `AdPrivacy` holds it in memory for the session and asks again on the next launch.
 
 ### The order
 
 `RewardedAds.StartAsync` is the whole rule: resolve consent, apply it to the provider, then
-initialise. Never the other way round — an SDK that starts first has already decided what it may
+initialise. Never the other way round - an SDK that starts first has already decided what it may
 collect and has already auctioned on that decision, and a signal applied afterwards changes only
 the next request. `Boot` installs the gateway; the **splash** starts it, for the reason the store
 connection starts there: it is a network round trip and it may put a native dialog on screen,
@@ -1884,7 +1884,7 @@ and neither belongs before the first scene has loaded.
 ### The consent platform
 
 Google UMP, behind `GLIMMER_UMP`, which comes from `GlimmerGrove.Privacy.asmdef`'s
-`versionDefines` on `com.google.ads.mobile` — never a Player Settings define, for the
+`versionDefines` on `com.google.ads.mobile` - never a Player Settings define, for the
 per-build-target reason `GLIMMER_ADDRESSABLES` documents. Without the package installed,
 `NullConsentGateway` answers "no consent, assume the GDPR applies", so ads run unpersonalised
 rather than assuming a yes nobody gave.
@@ -1897,13 +1897,13 @@ once AdMob is in the waterfall.
 ### iOS tracking
 
 `AppTrackingPrompt` plus `Assets/Game/Plugins/iOS/GlimmerAppTracking.mm`. The prompt is shown
-once per install — iOS enforces that, not us — so it is safe to call every launch, and a player
+once per install - iOS enforces that, not us - so it is safe to call every launch, and a player
 who changes their mind does it in iOS Settings.
 
 `IosPrivacyPlist` writes `NSUserTrackingUsageDescription` into the built Xcode project.
 **Without the key iOS silently refuses to show the prompt at all**: no dialog, every player
 non-consented, and a build that passes review with iOS ad revenue near zero. The sentence
-matters — Apple rejects copy that merely restates the dialog — and it needs an
+matters - Apple rejects copy that merely restates the dialog - and it needs an
 `InfoPlist.strings` per store language, which is deliberately not generated, because a string
 invented at build time would slip past the loc gate.
 
@@ -1911,7 +1911,7 @@ invented at build time would slip past the loc gate.
 
 In the repository root. It must be served as plain text at `https://<developer-website>/app-ads.txt`
 on the exact domain named in **both** store listings, and every line in it is currently a
-placeholder taken from no dashboard. A missing or unreachable file produces no error anywhere —
+placeholder taken from no dashboard. A missing or unreachable file produces no error anywhere -
 only lower fill and lower prices, for ever.
 
 Change the waterfall, change that file, in the same commit.

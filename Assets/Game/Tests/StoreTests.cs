@@ -23,7 +23,7 @@ namespace GlimmerGrove.Tests
     /// </para>
     /// <para>
     /// The last fixture reads the shipped <c>progression.json</c> and is therefore
-    /// Editor-only — it reaches <c>Application.dataPath</c>, which the offline runner
+    /// Editor-only - it reaches <c>Application.dataPath</c>, which the offline runner
     /// cannot. That is the same bargain <c>HomesteadTests</c> makes, and it is worth the
     /// split: what it proves is that the built-in fallback catalog and the shipped content
     /// have not drifted apart, and a drifted fallback is a shop that promises one amount
@@ -63,7 +63,7 @@ namespace GlimmerGrove.Tests
         /// <c>JsonUtility</c> instantiates a nested serialisable field whether or not the
         /// file carried one, so every progression file written before the shop existed
         /// arrives here as a non-null <see cref="StoreDto"/> with nothing in it. If that
-        /// counted as an authoring mistake, every such file would report a problem — and
+        /// counted as an authoring mistake, every such file would report a problem - and
         /// <c>ContentValidation</c> turns a problem into a build error.
         /// </summary>
         [Test]
@@ -187,8 +187,8 @@ namespace GlimmerGrove.Tests
                 products = new[] { Product("s", "bundles", 5000, 500, 299, badge: "starter") },
             }, problems);
 
-            // A one-time offer that can be bought twice is not one, and the store — not this
-            // code — is what makes it one-time. So the badge follows the product kind.
+            // A one-time offer that can be bought twice is not one, and the store - not this
+            // code - is what makes it one-time. So the badge follows the product kind.
             Assert.AreEqual(StoreBadge.None, catalog.Find("s").Badge);
         }
 
@@ -360,7 +360,7 @@ namespace GlimmerGrove.Tests
         /// always about <em>amounts</em>: a product granting hearts would need the client to
         /// apply half a purchase after the server applied the other half, which means a record
         /// in the save of what has already been applied, merged across devices, whose failure
-        /// mode is somebody paying and receiving nothing. A heart capacity is not an amount —
+        /// mode is somebody paying and receiving nothing. A heart capacity is not an amount -
         /// it is the union of a permanent id, so applying it twice is applying it once and the
         /// record has nothing to answer.
         /// </para>
@@ -377,7 +377,7 @@ namespace GlimmerGrove.Tests
         /// paid by <c>eventPass</c> against a server-held claim floor, so the receipt buys
         /// permission to claim and never an amount. This case reads the union rather than
         /// naming the shelves, so a third entitlement added next year fails here until somebody
-        /// has thought about it — which is the whole point of the assertion.
+        /// has thought about it - which is the whole point of the assertion.
         /// </para>
         /// </summary>
         [Test]
@@ -411,7 +411,7 @@ namespace GlimmerGrove.Tests
         /// Editor-only, because it reads <c>Application.dataPath</c>. It earns the split:
         /// <c>StoreCatalog.Default</c> exists so that a failed content read costs live
         /// tuning rather than the shop, and a fallback that has drifted from the file is a
-        /// shop promising one amount before the content loads and another after — against a
+        /// shop promising one amount before the content loads and another after - against a
         /// server that only ever honours the published one.
         /// </para>
         /// </summary>

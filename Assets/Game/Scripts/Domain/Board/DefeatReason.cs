@@ -26,7 +26,7 @@ namespace GlimmerGrove
         ///
         /// Nothing raises it: the countdown was removed, so the only two ways to lose a
         /// glade are the move budget and a crumbled conduit. The member stays because these
-        /// values are permanent — analytics keys on them, so every defeat row ever written
+        /// values are permanent - analytics keys on them, so every defeat row ever written
         /// carries a 2 and re-pointing it at some other ending would silently re-label
         /// history. Retired in place, exactly as <c>ChestDropKind.RunTime</c> is.
         /// </summary>
@@ -34,7 +34,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// <b>Retired.</b> A Lightweave grove ran out of light. The mode is gone; the member
-        /// stays because these values are permanent — analytics keys on them, so every defeat
+        /// stays because these values are permanent - analytics keys on them, so every defeat
         /// row ever written carries a 3 and re-pointing it at some other ending would silently
         /// re-label history. Retired in place, exactly as <see cref="OutOfTime"/> is.
         /// </summary>
@@ -57,8 +57,8 @@ namespace GlimmerGrove
         /// <summary>
         /// A Lightfall well ran out of motes with light still standing in it.
         ///
-        /// Covers both ways the supply ends — the tray emptying, and what is left to come being
-        /// unable to finish what is left standing — because from the player's side those are
+        /// Covers both ways the supply ends - the tray emptying, and what is left to come being
+        /// unable to finish what is left standing - because from the player's side those are
         /// one thing: there are not enough motes left to clear the well.
         /// </summary>
         OutOfMotes = 5,
@@ -116,17 +116,17 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Its own value rather than <see cref="Stuck"/>, which is what a siege technically
-        /// reaches — with no ward up, a match feeds nothing and there is no legal move. It is told
+        /// reaches - with no ward up, a match feeds nothing and there is no legal move. It is told
         /// apart for this enum's reason: the two want different fixes and analytics cannot tell
         /// them apart afterwards. A prototype board goes <see cref="Stuck"/> because it *ran out
         /// of board*, which is a level-design reading; a siege line falls because the player was
-        /// outpaced, which is a tuning one. And a player is owed the difference too — "nothing
+        /// outpaced, which is a tuning one. And a player is owed the difference too - "nothing
         /// left to do" over a hill still full of raiders is a sentence that reads as a bug.
         /// </para>
         /// <para>
         /// <b>And money <em>can</em> fix it, which is the other half of the same distinction.</b>
         /// A prototype board that has run out of board is beyond rescue at any price; a fallen
-        /// line is put back up by a continue, with the hill exactly where it stood — so
+        /// line is put back up by a continue, with the hill exactly where it stood - so
         /// <c>SiegeBoard.Stranded</c> answers false and <c>ProtoVerdict</c> sells the offer.
         /// This panel is therefore reached only when the offer was declined, or never made
         /// because the run was free.

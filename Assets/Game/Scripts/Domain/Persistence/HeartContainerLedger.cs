@@ -12,7 +12,7 @@ namespace GlimmerGrove.Persistence
     /// The rule that permits it is written out in <see cref="StoreProduct.HeartCapacity"/> and
     /// is worth restating from this side, because it is what decides the shape of everything
     /// here: <b>a capacity is an idempotent permanent entitlement rather than an amount</b>.
-    /// It arrives as the union of one permanent id, so applying it twice is applying it once —
+    /// It arrives as the union of one permanent id, so applying it twice is applying it once -
     /// which means no record of "did I already apply this transaction" has to exist, and that
     /// record is the whole of what invariant 18 was protecting against. The same property is
     /// what makes <c>CompanionLedger</c> safe, and this is that shape for the fifth time in
@@ -21,7 +21,7 @@ namespace GlimmerGrove.Persistence
     /// <para>
     /// <b>What is held is a set of product ids and what is derived is the cap.</b> Storing the
     /// number instead would be a second answer to a question the catalog already answers, and
-    /// it would freeze a container's worth at whatever it was on the day it was bought — a
+    /// it would freeze a container's worth at whatever it was on the day it was bought - a
     /// rung retuned upward could then never reach the people who had already paid for it. The
     /// cap is the <em>largest</em> container held rather than the sum, so buying the rungs out
     /// of order, buying one twice through a restore, or restoring on a device that already
@@ -45,7 +45,7 @@ namespace GlimmerGrove.Persistence
     /// <b>Buying one usually hands over hearts at once, and that falls out rather than being
     /// arranged.</b> <see cref="RegenLedger.DueUnix"/> idles in the past while a player sits
     /// at their cap, so raising the cap lets the catch-up walk pay for the time they really
-    /// did wait — somebody who has been full for a week arrives at their new cap immediately,
+    /// did wait - somebody who has been full for a week arrives at their new cap immediately,
     /// and somebody who has been playing hard gets a higher ceiling and no windfall. Both are
     /// right, both are bounded by the cap that was paid for, and neither can be repeated
     /// without buying again. Do not "fix" it by restarting the clock: that would take the
@@ -53,8 +53,8 @@ namespace GlimmerGrove.Persistence
     /// </para>
     /// <para>
     /// It lives beside <see cref="Hearts"/> rather than with the other entitlements because
-    /// <see cref="Hearts"/> is what reads it, on the HUD's own tick. The common case — an
-    /// account holding no container at all — costs one integer comparison and no lookup.
+    /// <see cref="Hearts"/> is what reads it, on the HUD's own tick. The common case - an
+    /// account holding no container at all - costs one integer comparison and no lookup.
     /// </para>
     /// </summary>
     public static class HeartContainerLedger
@@ -78,7 +78,7 @@ namespace GlimmerGrove.Persistence
         /// <para>
         /// Held to the published <see cref="HeartRules.Ceiling"/> as well, because a timer
         /// carrying somebody past the most they are allowed to hold would leave every grant
-        /// refused while the clock kept paying — the same contradiction
+        /// refused while the clock kept paying - the same contradiction
         /// <c>HeartRuleTable.Resolve</c> refuses to publish. It is a bound and not a clamp on
         /// anything stored: nothing here can reach into a ledger and take a heart out of it,
         /// so lowering the ceiling from a content push still costs nobody anything.
@@ -94,7 +94,7 @@ namespace GlimmerGrove.Persistence
             {
                 int published = HeartRules.RefillCap;
 
-                // The overwhelmingly common case — an account that has bought nothing — and
+                // The overwhelmingly common case - an account that has bought nothing - and
                 // this property is read on every HUD tick through Hearts.Bounds, so it costs
                 // one count and nothing else.
                 if (_held.Count == 0) return published;
@@ -107,7 +107,7 @@ namespace GlimmerGrove.Persistence
                 //
                 // What it is keyed on is the point. A content push swaps in a whole new
                 // immutable catalog, so a reference comparison catches a retune with no
-                // event to subscribe to and no install step to forget — the same argument
+                // event to subscribe to and no install step to forget - the same argument
                 // that made the addressable registration an importer hook rather than a menu
                 // item. The two published numbers are compared because a push can move them
                 // without moving anything else.
@@ -127,7 +127,7 @@ namespace GlimmerGrove.Persistence
                     var product = catalog.Find(id);
 
                     // An id this build's catalog does not carry is kept and ignored rather than
-                    // dropped — a container bought on a newer build must survive a trip through
+                    // dropped - a container bought on a newer build must survive a trip through
                     // an older one, exactly as tipsSeen and companionsOwned do.
                     if (product == null || !product.IsContainer) continue;
 
@@ -149,7 +149,7 @@ namespace GlimmerGrove.Persistence
 
         /// <summary>
         /// Throws the cached cap away. Called from every writer, because the cache cannot see
-        /// the sets change — only the catalog and the published numbers it was keyed on.
+        /// the sets change - only the catalog and the published numbers it was keyed on.
         /// </summary>
         static void Invalidate() => _cachedAgainst = null;
 
@@ -175,14 +175,14 @@ namespace GlimmerGrove.Persistence
         ///
         /// <para>
         /// <b>The cap is the largest container held, never the sum</b>, so a player who owns
-        /// the 50 is not made better off by also buying the 10 — and a real-money product
+        /// the 50 is not made better off by also buying the 10 - and a real-money product
         /// that grants nothing is the one thing a shop must never sell. That is what this
         /// answers, and it is deliberately asked of the <em>derived cap</em> rather than of
         /// the held set: a bigger container, this very container, a ceiling that has been
         /// lowered under a rung, and a free refill cap raised past one are four different
         /// stories with one honest answer, and reading <see cref="RefillCap"/> gets all four
         /// with no case analysis and no second rule to keep in step. A refund is covered for
-        /// the same reason — a revoked container contributes nothing to the cap, so the rung
+        /// the same reason - a revoked container contributes nothing to the cap, so the rung
         /// under it becomes buyable again the moment the revocation lands.
         /// </para>
         /// <para>
@@ -204,7 +204,7 @@ namespace GlimmerGrove.Persistence
         /// already granted</b>, and that is the property the whole feature rests on rather than
         /// an optimisation. A capacity is idempotent, so re-applying it is free; and both stores
         /// re-deliver a non-consumable for ever, so a player who reinstalls, switches phone or
-        /// loses their save gets it back by tapping Restore — with no state of ours involved and
+        /// loses their save gets it back by tapping Restore - with no state of ours involved and
         /// nothing for a support case to repair. Granting only on the first delivery would make
         /// that recovery impossible for the one purchase in the shop that can never be bought
         /// again.
@@ -226,7 +226,7 @@ namespace GlimmerGrove.Persistence
         }
 
         /// <summary>
-        /// Adopts the server's list of revoked containers — receipts it granted and has since
+        /// Adopts the server's list of revoked containers - receipts it granted and has since
         /// reversed, because the store refunded or charged back the payment.
         ///
         /// <para>
@@ -238,8 +238,8 @@ namespace GlimmerGrove.Persistence
         /// </para>
         /// <para>
         /// Monotonic, so it is joined by union like every other set in this file and two devices
-        /// converge whatever order they merge in. The reverse — buying a refunded container
-        /// again — is not an un-revocation arriving from here; it is
+        /// converge whatever order they merge in. The reverse - buying a refunded container
+        /// again - is not an un-revocation arriving from here; it is
         /// <see cref="Grant(StoreProduct)"/>, driven by a real receipt.
         /// </para>
         /// </summary>
@@ -267,7 +267,7 @@ namespace GlimmerGrove.Persistence
         /// Deliberately not called from <see cref="LoadFrom"/>: the load path runs this
         /// before <c>Wallet.LoadFrom</c> (see <c>SaveService</c>), so announcing there would
         /// hand every listener the outgoing account's ledger with the incoming account's cap
-        /// on it — and the wallet raises its own event a few lines later anyway.
+        /// on it - and the wallet raises its own event a few lines later anyway.
         /// </para>
         /// </summary>
         static void Announce()
@@ -307,7 +307,7 @@ namespace GlimmerGrove.Persistence
 
         /// <summary>
         /// The union of two devices' containers. Buying cannot be undone by anything a device
-        /// knows about, so between them the player owns whatever either bought — and the
+        /// knows about, so between them the player owns whatever either bought - and the
         /// revoked set is joined the same way, because a refund cannot be undone either.
         ///
         /// <para>

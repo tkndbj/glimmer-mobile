@@ -8,8 +8,8 @@ using UnityEngine;
 namespace GlimmerGrove
 {
     /// <summary>
-    /// What one rewarded video came to: the prize, the snapshot the payout needs, and — where
-    /// nothing was paid — why.
+    /// What one rewarded video came to: the prize, the snapshot the payout needs, and - where
+    /// nothing was paid - why.
     ///
     /// <para>
     /// <see cref="Flight"/> is opened <em>before</em> the reward is redeemed and is therefore
@@ -47,32 +47,32 @@ namespace GlimmerGrove
     }
 
     /// <summary>
-    /// Showing a rewarded video and finding out what it paid — once, for every caller.
+    /// Showing a rewarded video and finding out what it paid - once, for every caller.
     ///
     /// <para>
     /// <b>It was written three times before it was written here.</b> <c>AdOfferOverlay</c>, the
     /// bonus wheel and the defeat panel's heart refill each need the same five steps in the same
-    /// order — mint an impression, show it, snapshot the pills, redeem, read the refusal — and
+    /// order - mint an impression, show it, snapshot the pills, redeem, read the refusal - and
     /// the order is the substance rather than the steps. The impression is minted before the SDK
     /// is asked for anything because the nonce inside it has to reach the network as a custom
     /// parameter (<see cref="AdImpression"/>); the snapshot is taken before the redeem because
     /// the redeem is what moves the pills. A copy per panel is three places for one of those two
     /// orderings to be got wrong, and neither failure is visible in a compile, a validator or a
-    /// screenshot — the first pays nobody and the second rewinds a readout to a figure it never
+    /// screenshot - the first pays nobody and the second rewinds a readout to a figure it never
     /// held. Invariant 9a at the smallest scale it appears at, which is the argument
     /// <c>AdOfferButton</c> was lifted out on.
     /// </para>
     /// <para>
     /// <b>It returns rather than calling back, and it deliberately knows nothing about panels.</b>
-    /// Every caller here is a <c>MonoBehaviour</c> that may not survive the video — a player who
-    /// backgrounds the app during one can come back to a different screen entirely — so the
+    /// Every caller here is a <c>MonoBehaviour</c> that may not survive the video - a player who
+    /// backgrounds the app during one can come back to a different screen entirely - so the
     /// liveness check belongs to whoever is holding a reference, right after the await, where
     /// C#'s own <c>if (this == null)</c> reads as what it is. A callback taken by this method
     /// would put that check somewhere the caller cannot see it.
     /// </para>
     /// <para>
     /// The reward is banked either way: <see cref="RewardedAds.Redeem"/> touches no UI, so a
-    /// caller that has been destroyed by the time this returns has still been paid — which is
+    /// caller that has been destroyed by the time this returns has still been paid - which is
     /// why the redeem happens here rather than in the caller's own continuation.
     /// </para>
     /// </summary>
@@ -84,7 +84,7 @@ namespace GlimmerGrove
         /// <para>
         /// Never throws. An ad SDK that faults must not leave a panel stuck on "opening" with a
         /// dead button, and every caller of this is exactly one <c>await</c> away from a screen
-        /// in that state — so the fault is reported as a <see cref="VideoPayment"/> like any
+        /// in that state - so the fault is reported as a <see cref="VideoPayment"/> like any
         /// other refusal, logged on the way past so it is still in the console.
         /// </para>
         /// </summary>

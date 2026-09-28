@@ -8,7 +8,7 @@ namespace GlimmerGrove.Progression
     ///
     /// Kept apart from both the catalog and the save file on purpose. The index knows
     /// the order, progress knows what is cleared, and this is the only place that turns
-    /// those two facts into a rule — so changing the rule later (star gates between
+    /// those two facts into a rule - so changing the rule later (star gates between
     /// chapters, a skip-ahead offer, an event track) is a change here and nowhere else.
     ///
     /// It works entirely in <see cref="LevelId"/> against the <see cref="CatalogIndex"/>,
@@ -26,13 +26,13 @@ namespace GlimmerGrove.Progression
         /// chain, it is what makes a map readable, and it has not changed.
         /// </para>
         /// <para>
-        /// <b>At a chapter boundary</b> the chain gives way to a star gate — see
+        /// <b>At a chapter boundary</b> the chain gives way to a star gate - see
         /// <see cref="GateFor"/>. Clearing every glade of a chapter is not the price of the next
         /// one; earning most of its stars is. The reason is that the two are different
         /// questions and only one of them is about mastery: a player can clear ten glades on
         /// one star each without ever meeting what the chapter was teaching, and a player stuck
         /// on the ninth of ten has no route forward at all except the glade that beat them. A
-        /// star gate answers both — it can be met from anywhere in the chapter, so being stuck
+        /// star gate answers both - it can be met from anywhere in the chapter, so being stuck
         /// on one board is never being stuck on the game, and it cannot be met without having
         /// played most of it well.
         /// </para>
@@ -42,7 +42,7 @@ namespace GlimmerGrove.Progression
         /// <c>ChapterGate.IsOpen</c> is the conjunction, which is what stops anything here
         /// asking for half of it (invariant 15a). It is a fact about the chapter being entered
         /// rather than the one behind, so it is the only gate a lane's <em>first</em> chapter
-        /// can have — see <c>ManifestChapterDto.minKeeperLevel</c>.
+        /// can have - see <c>ManifestChapterDto.minKeeperLevel</c>.
         /// </para>
         /// <para>
         /// Note what the boundary rule does <em>not</em> do: it never opens a glade in the
@@ -67,7 +67,7 @@ namespace GlimmerGrove.Progression
 
             // **The head is asked before the chain, and the order is load-bearing.** This used
             // to shortcut on "no level before it" first, which was harmless while the only gate
-            // was on the chapter behind — a lane's first level has no chapter behind it, so the
+            // was on the chapter behind - a lane's first level has no chapter behind it, so the
             // gate would have answered open anyway. It stopped being harmless the moment a
             // chapter could carry a wall of its own: the Infinite lane is one chapter of one
             // level, so that shortcut returned true before anything looked at the wall, and the
@@ -80,7 +80,7 @@ namespace GlimmerGrove.Progression
         }
 
         /// <summary>
-        /// Whether this player has ever played this level at all — the fact the monotonic
+        /// Whether this player has ever played this level at all - the fact the monotonic
         /// clause above is really about.
         ///
         /// <para>
@@ -88,7 +88,7 @@ namespace GlimmerGrove.Progression
         /// laddered level records a <c>LevelRecord</c> when it is beaten; an endless one is
         /// never beaten and leaves a wave count in <see cref="EndlessLedger"/> instead
         /// (invariant 43). Asking only about clears would take the Infinite lane back off
-        /// somebody who has run it, the first time a wall was put in front of it — which is the
+        /// somebody who has run it, the first time a wall was put in front of it - which is the
         /// exact failure the monotonic clause exists to prevent, arriving through the one lane
         /// that does not use the ledger it reads.
         /// </para>
@@ -131,8 +131,8 @@ namespace GlimmerGrove.Progression
         /// </para>
         /// <para>
         /// <b>The keeper wall is on <em>this</em> chapter, and it is read before the early
-        /// return.</b> A lane's first chapter has nothing behind it and so no star gate at all —
-        /// which is every mode's opening chapter and the whole of the Infinite lane — so a wall
+        /// return.</b> A lane's first chapter has nothing behind it and so no star gate at all -
+        /// which is every mode's opening chapter and the whole of the Infinite lane - so a wall
         /// computed after that return would be a field the one lane that needs it could never
         /// use. It comes from the manifest and costs nothing to move
         /// (<c>ManifestChapterDto.minKeeperLevel</c>).
@@ -146,7 +146,7 @@ namespace GlimmerGrove.Progression
         /// </para>
         /// <para>
         /// Returns a reading rather than a verdict, because four callers want different halves
-        /// of it — this one wants <c>IsOpen</c>, the map wants <c>Held</c> and <c>Required</c>,
+        /// of it - this one wants <c>IsOpen</c>, the map wants <c>Held</c> and <c>Required</c>,
         /// the victory panel wants to know whether the gate opened on this run and the
         /// information panel wants the rule itself. Answering with a bool would have each of
         /// them recomputing the rest.
@@ -180,7 +180,7 @@ namespace GlimmerGrove.Progression
         }
 
         /// <summary>
-        /// The same reading for the chapter <em>after</em> this one — what the map is asking
+        /// The same reading for the chapter <em>after</em> this one - what the map is asking
         /// when it draws the signpost at the end of a chain, and what the victory panel asks
         /// after a run. Open when there is nothing after it, because nothing is being withheld.
         /// </summary>
@@ -224,8 +224,8 @@ namespace GlimmerGrove.Progression
             // fall-through returns, and it has to be tracked rather than assumed: since the
             // chapter boundary became a star gate, "nothing uncleared is open" no longer implies
             // "the mode is finished". A player who clears every glade of a chapter on one star
-            // each is in exactly that state, and handing them the last level of the catalog —
-            // which is what this used to do — would drop the hub's continue button onto a
+            // each is in exactly that state, and handing them the last level of the catalog -
+            // which is what this used to do - would drop the hub's continue button onto a
             // padlocked board. Sending them to the last thing they can play is the honest
             // answer, and it is a glade whose stars are worth going back for.
             var furthest = LevelId.None;
@@ -249,7 +249,7 @@ namespace GlimmerGrove.Progression
         /// <summary>
         /// A chapter opens once its first level does. Expressed in terms of the level
         /// rule rather than duplicating it, so a change to how levels unlock carries through
-        /// to chapters automatically — which is exactly what happened when the boundary
+        /// to chapters automatically - which is exactly what happened when the boundary
         /// became a star gate, and this method did not move.
         /// </summary>
         public static bool IsChapterUnlocked(CatalogIndex index, ChapterId chapter)

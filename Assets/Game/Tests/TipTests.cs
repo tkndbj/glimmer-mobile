@@ -12,7 +12,7 @@ namespace GlimmerGrove.Tests
     /// the ledger must never forget that a lesson was taught.
     ///
     /// The scan is derived from the board rather than declared per level, which is the
-    /// property worth protecting — it means a chapter shipped a year from now teaches
+    /// property worth protecting - it means a chapter shipped a year from now teaches
     /// its mechanics with no authoring and no list to keep in step.
     /// </summary>
     public sealed class TipTests
@@ -71,7 +71,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// A glade bringing two ideas queues both rather than holding one back for a
-        /// later glade that happens to repeat it — the player would otherwise meet the
+        /// later glade that happens to repeat it - the player would otherwise meet the
         /// second one unexplained in between.
         /// </summary>
         [Test]
@@ -135,7 +135,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// A heart of the right colour that the solution never joins to the critter is not
         /// where its light comes from, however near it stands. Pointing at one would teach a
-        /// rule this glade does not follow — and this board is exactly the trap, because the
+        /// rule this glade does not follow - and this board is exactly the trap, because the
         /// stray heart is nearer than the one that really feeds it.
         /// </summary>
         [Test]
@@ -153,7 +153,7 @@ namespace GlimmerGrove.Tests
                             "the stray red heart at 6 is the nearest one and mates with nothing");
         }
 
-        /// <summary>Two hearts alone are not a blend — twin_streams wants them apart.</summary>
+        /// <summary>Two hearts alone are not a blend - twin_streams wants them apart.</summary>
         [Test]
         public void TwoHeartColoursWithNoBlendedCritterTeachNothing()
         {
@@ -214,8 +214,8 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A crossing cannot be worked out and can be misread — a four-armed tile is a
-        /// crossroads everywhere else in this game — whereas a taproot announces itself the
+        /// A crossing cannot be worked out and can be misread - a four-armed tile is a
+        /// crossroads everywhere else in this game - whereas a taproot announces itself the
         /// first time it is tapped, because two tiles visibly move. So the tile that says
         /// nothing about itself goes first.
         /// </summary>
@@ -286,7 +286,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// A critter wanting a blend is a fussy critter, so it is the other half of the
-        /// contrast — a board mixing the two teaches both, in that order.
+        /// contrast - a board mixing the two teaches both, in that order.
         /// </summary>
         [Test]
         public void ABlendedCritterIsWhatAnUnfussyOneIsContrastedWith()
@@ -304,7 +304,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The review key is offered on a glade whose lessons the player has already been
-        /// shown — which is every glade it will ever be offered on, since a first-timer meets
+        /// shown - which is every glade it will ever be offered on, since a first-timer meets
         /// the tips on the way in. So the scan behind it must be blind to the ledger.
         /// </summary>
         [Test]
@@ -396,7 +396,7 @@ namespace GlimmerGrove.Tests
         /// A lesson about a screen must never be queued by a board.
         ///
         /// Both live on <see cref="Mechanic"/> because everything about a lesson is already
-        /// there — a permanent id, strings derived from it, and a union-joined ledger that
+        /// there - a permanent id, strings derived from it, and a union-joined ledger that
         /// reaches the cloud with no new save field. What separates them is the queue:
         /// <see cref="Mechanic.TeachingOrder"/> is what a glade walks, and a lesson about a
         /// screen appearing on a board would be a modal about a shop over a puzzle.
@@ -412,7 +412,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// A lesson id travels in the save file exactly like a level id, so a typo is not a
-        /// compile error and not a wrong string — it is a lesson silently sharing a ledger
+        /// compile error and not a wrong string - it is a lesson silently sharing a ledger
         /// entry with a different lesson, which reads as "that tip never appears" for one of
         /// them and can only be repaired by re-teaching everybody. The switcher's obvious id
         /// was <c>modes</c>, one letter from the move budget's <c>moves</c>; this pins the
@@ -433,7 +433,7 @@ namespace GlimmerGrove.Tests
                 }
         }
 
-        /// <summary>Levenshtein distance, capped at 2 — nothing here needs a larger answer.</summary>
+        /// <summary>Levenshtein distance, capped at 2 - nothing here needs a larger answer.</summary>
         static int Distance(string a, string b)
         {
             if (System.Math.Abs(a.Length - b.Length) > 1) return 2;
@@ -484,11 +484,11 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// <b>The guard that was missing, and it was missing in both directions at once.</b>
-        /// <c>Mechanic.SiegeLine</c> was withdrawn — its doc rewritten, its two strings deleted
-        /// from <c>en.json</c>, no screen raising it — and was left in <c>Mechanic.All</c>, which
+        /// <c>Mechanic.SiegeLine</c> was withdrawn - its doc rewritten, its two strings deleted
+        /// from <c>en.json</c>, no screen raising it - and was left in <c>Mechanic.All</c>, which
         /// is what the Editor's <c>Validate Content</c> walks to prove every lesson has strings; so
         /// the build failed over two keys nobody wanted. In the same list <c>Mechanic.SiegeShield</c>
-        /// was live, shown by <c>SiegeScreen.Lessons</c>, and had never been added — so nothing
+        /// was live, shown by <c>SiegeScreen.Lessons</c>, and had never been added - so nothing
         /// proved it had strings at all, which is the exact failure <c>All</c> exists to prevent and
         /// which read as fine only because somebody happened to write them. Both have since been
         /// withdrawn; they are named here for how they failed rather than for what they taught.

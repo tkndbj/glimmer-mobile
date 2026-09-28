@@ -11,10 +11,10 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// The arithmetic is <see cref="RegenLedger"/>'s and is already pinned by
-    /// <c>HeartsTests</c> — which is the point of there being one copy of it. What is tested
+    /// <c>HeartsTests</c> - which is the point of there being one copy of it. What is tested
     /// here is what is <em>different</em> about hints: the published numbers, the fact that
     /// nothing shortens their clock, the migration from a file that never stored them, and
-    /// the one property hearts do not have — a ceiling equal to the cap, which makes a grant
+    /// the one property hearts do not have - a ceiling equal to the cap, which makes a grant
     /// at a full pool a refusal rather than a clamp.
     /// </para>
     /// </summary>
@@ -71,7 +71,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The case an eight-hour timer is really for: the app is closed and reopened a week
-        /// later. Nothing runs in between, so the whole catch-up happens on one read — and
+        /// later. Nothing runs in between, so the whole catch-up happens on one read - and
         /// it must stop at the cap rather than paying out a week of hints.
         /// </summary>
         [Test]
@@ -191,7 +191,7 @@ namespace GlimmerGrove.Tests
         // ------------------------------------------------------------- the merge
         /// <summary>
         /// The property the whole representation exists for. One device spends, the other
-        /// waits out a refill, and the join keeps both facts — where a stored count would
+        /// waits out a refill, and the join keeps both facts - where a stored count would
         /// have to guess which side was stale and would be wrong either way.
         /// </summary>
         [Test]
@@ -225,7 +225,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// Two devices cannot refill each other. Every field is a counter of something that
-        /// happened, so the larger is always the one that knows more — there is nothing here
+        /// happened, so the larger is always the one that knows more - there is nothing here
         /// for a stale snapshot to mint.
         /// </summary>
         [Test]
@@ -266,7 +266,7 @@ namespace GlimmerGrove.Tests
         // ------------------------------------------------------- the wire and the file
         /// <summary>
         /// A save written before hints were stored reads as a fresh full pool rather than as
-        /// a player who has spent everything — which is the whole of the v19 migration, and
+        /// a player who has spent everything - which is the whole of the v19 migration, and
         /// why there is no migration code. Zero is unreachable for a genuine ledger because
         /// an account is seeded at the cap and <c>produced</c> only ever rises.
         /// </summary>
@@ -283,7 +283,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// A device that has a ledger is not talked out of it by one that does not. The
         /// absent side contributes a full pool, which is what it is about to seed itself
-        /// with anyway — generous, bounded by the cap, and worth nothing to forge.
+        /// with anyway - generous, bounded by the cap, and worth nothing to forge.
         /// </summary>
         [Test]
         public void ALedgerJoinedAgainstAnAbsentOneKeepsItsSpends()
@@ -402,7 +402,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// And nothing else does. Each of these was a way to put a panel where nobody asked
-        /// for one — over a glade the hint had just solved, over a run the clock had already
+        /// for one - over a glade the hint had just solved, over a run the clock had already
         /// ended, after a hint that left two more in the pool, and in a build with no video
         /// to show at all.
         /// </summary>
@@ -424,7 +424,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The pool empties exactly once per refill, so the panel it raises arrives exactly
-        /// once — the fact that makes the automatic offer an event rather than a habit.
+        /// once - the fact that makes the automatic offer an event rather than a habit.
         /// </summary>
         [Test]
         public void TheOfferFollowsTheLastHintAndNotTheOnesBeforeIt()

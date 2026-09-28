@@ -13,7 +13,7 @@ namespace GlimmerGrove.Tests
     /// This import runs exactly once per player, on the launch after they update, and
     /// it is the only thing standing between the old index-keyed PlayerPrefs and the
     /// new id-keyed save file. If it maps a star onto the wrong level, nobody finds
-    /// out until the reviews arrive — there is no second chance to get it right.
+    /// out until the reviews arrive - there is no second chance to get it right.
     /// </summary>
     public sealed class SaveMigrationTests
     {
@@ -186,7 +186,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// Every shipped level, bodies and all. Only the tests that genuinely inspect
-        /// grids use this — the same split the game itself makes.
+        /// grids use this - the same split the game itself makes.
         /// </summary>
         internal static System.Collections.Generic.List<LevelDefinition> LoadBundledLevels()
         {

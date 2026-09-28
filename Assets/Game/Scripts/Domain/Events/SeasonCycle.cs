@@ -10,19 +10,19 @@ namespace GlimmerGrove.Events
     ///
     /// <para>
     /// <b>This is invariant 45b's shape, arriving on a season.</b> The task slate rotates by a
-    /// pure function of the day — "day <c>k</c> deals slate entries <c>k·n …</c>, on every device
-    /// and on the server, with nothing stored" — and a repeating season is the same trick with a
+    /// pure function of the day - "day <c>k</c> deals slate entries <c>k·n …</c>, on every device
+    /// and on the server, with nothing stored" - and a repeating season is the same trick with a
     /// longer period: cycle <c>n</c> runs <c>[start + n·period, start + (n+1)·period)</c>, both
     /// sides compute <c>n</c> from the clock, and no row, cursor or "which season is it" flag
-    /// exists on either. **The bill for running seasons for ever is therefore nought** — no
+    /// exists on either. **The bill for running seasons for ever is therefore nought** - no
     /// content push a season, no re-seed a season, no deploy a season, and no calendar for
     /// somebody to forget to extend.
     /// </para>
     /// <para>
     /// <b>Why a period rather than a list of dated seasons.</b> A list is a thing that runs out,
     /// silently, at a date somebody picked months earlier: the hub's box simply stops appearing
-    /// and nothing anywhere is red. That is the failure this file refuses everywhere else — a
-    /// gate that cannot fail (invariant 19e) and a wall nobody is checking (37aw) — and it is
+    /// and nothing anywhere is red. That is the failure this file refuses everywhere else - a
+    /// gate that cannot fail (invariant 19e) and a wall nobody is checking (37aw) - and it is
     /// worse here because the symptom is a feature quietly ending rather than a crash.
     /// </para>
     /// <para>
@@ -30,7 +30,7 @@ namespace GlimmerGrove.Events
     /// separate "repeat every N days" would be a second number that can disagree with the first,
     /// and the disagreement is invisible: a 42-day window repeating every 50 leaves eight days
     /// with no season and every file still reading as authored. Back to back is also what the
-    /// owner asked for — when the time finishes it restarts — so the one number that exists is
+    /// owner asked for - when the time finishes it restarts - so the one number that exists is
     /// <see cref="PeriodSeconds"/>, and it <em>is</em> <c>endUnix - startUnix</c>.
     /// </para>
     /// <para>
@@ -38,13 +38,13 @@ namespace GlimmerGrove.Events
     /// id.</b> Marks live in a per-season row (<see cref="SeasonLedger"/>) so they start at
     /// nought; the grant log is keyed on <c>mark:{id}:{track}:{goal}:{ccy}</c> so every rung pays
     /// again; and the pass entitlement is <c>pass:{id}</c> so it has to be bought again. **No save
-    /// schema version, no <c>firestore.rules</c> change and no new claim shape** — which is the
+    /// schema version, no <c>firestore.rules</c> change and no new claim shape** - which is the
     /// same bargain invariant 20a collects for a mode, arriving on a season.
     /// </para>
     /// <para>
     /// <b>What it costs is the name.</b> A season's name key is derived from its id
     /// (<see cref="GroveEvent.DefaultNameKey"/>), and an id that is derived cannot carry an
-    /// authored string — nobody can write <c>ui.event.watch_0037.name</c> into a table that ships
+    /// authored string - nobody can write <c>ui.event.watch_0037.name</c> into a table that ships
     /// inside the app. So a cycle's name comes from a <b>pool</b> that wraps
     /// (<see cref="NamePoolSize"/>), which is the one place a repeating season is not free. See
     /// <see cref="NameKeyFor"/>.
@@ -64,7 +64,7 @@ namespace GlimmerGrove.Events
         /// <c>watch_2</c> and every one of those is quietly wrong.
         /// </para>
         /// <para>
-        /// Four digits is 10,000 seasons — over a thousand years at a six-week period, so the
+        /// Four digits is 10,000 seasons - over a thousand years at a six-week period, so the
         /// ceiling is a sanity bound rather than a limit anybody meets. It is <b>contract</b>: the
         /// id it builds goes into a save row, a loc lookup and every claim id the season's chests
         /// produce, so widening it later would orphan every id already written (invariant 1).
@@ -80,7 +80,7 @@ namespace GlimmerGrove.Events
         ///
         /// <para>
         /// Twelve, which at the shipped six-week period is well over a year before a name comes
-        /// round again — and a name coming round again is the honest answer rather than a
+        /// round again - and a name coming round again is the honest answer rather than a
         /// shortcoming. The alternatives are worse: an ordinal composed at runtime ("the 37th
         /// Watch") cannot be translated, because ordinals inflect differently in most of the
         /// languages this game ships, and a number in the title is a counter rather than a name.
@@ -88,20 +88,20 @@ namespace GlimmerGrove.Events
         /// <para>
         /// It is <b>contract with the string table</b>: <c>content.py</c> errors when any of the
         /// twelve name keys is missing, because a season whose name does not resolve draws an
-        /// empty banner on the hub's largest card — and <c>loc.py</c> cannot see a derived key
+        /// empty banner on the hub's largest card - and <c>loc.py</c> cannot see a derived key
         /// at all, which is why the check lives with the content gate and not with the strings.
         /// </para>
         /// </summary>
         public const int NamePoolSize = 12;
 
-        /// <summary>The stem every cycle id is built from — the manifest's own <c>id</c>.</summary>
+        /// <summary>The stem every cycle id is built from - the manifest's own <c>id</c>.</summary>
         public readonly string BaseId;
 
         /// <summary>When cycle nought opened. Absolute Unix seconds.</summary>
         public readonly long StartUnix;
 
         /// <summary>
-        /// How long one cycle runs, in seconds — and therefore also the gap between two
+        /// How long one cycle runs, in seconds - and therefore also the gap between two
         /// openings, because the seasons run back to back. Always positive on a valid cycle.
         /// </summary>
         public readonly long PeriodSeconds;
@@ -133,8 +133,8 @@ namespace GlimmerGrove.Events
         /// <para>
         /// <b>Integer division on the elapsed seconds, and it is floored toward zero on purpose
         /// by refusing the negative case outright</b> rather than letting C# truncate it. A clock
-        /// reading before <see cref="StartUnix"/> is a real state — a build shipped ahead of the
-        /// season opening, or a device whose clock is wrong — and <c>-1 / period</c> answering
+        /// reading before <see cref="StartUnix"/> is a real state - a build shipped ahead of the
+        /// season opening, or a device whose clock is wrong - and <c>-1 / period</c> answering
         /// <c>0</c> would put such a device inside cycle nought weeks early. The answer is "no
         /// cycle", which every caller already handles, because a season that has not started is
         /// the state the game shipped in.
@@ -153,7 +153,7 @@ namespace GlimmerGrove.Events
         /// <summary>When cycle <paramref name="index"/> opens. Undefined for a negative index.</summary>
         public long StartOf(int index) => StartUnix + (long)index * PeriodSeconds;
 
-        /// <summary>When cycle <paramref name="index"/> closes — the instant the next one opens.</summary>
+        /// <summary>When cycle <paramref name="index"/> closes - the instant the next one opens.</summary>
         public long EndOf(int index) => StartOf(index) + PeriodSeconds;
 
         /// <summary>
@@ -161,7 +161,7 @@ namespace GlimmerGrove.Events
         ///
         /// <b>The whole of what bounds a forged claim</b>, and the server asks exactly this. A
         /// cycle that has not opened may not be claimed against, so the most any save can ever
-        /// extract is one ladder per elapsed period — which is precisely what an honest player
+        /// extract is one ladder per elapsed period - which is precisely what an honest player
         /// who finishes every season gets, and is invariant 47c's bound restated for a calendar
         /// that no longer ends.
         /// </summary>
@@ -174,8 +174,8 @@ namespace GlimmerGrove.Events
         /// padded to <see cref="IndexDigits"/>.
         ///
         /// <b>Invariant-culture formatting, always.</b> A save row, a loc lookup and a claim id
-        /// are built from this, and a device whose culture renders digits in another script —
-        /// Arabic-Indic, Devanagari — would otherwise write an id no other device can read and
+        /// are built from this, and a device whose culture renders digits in another script -
+        /// Arabic-Indic, Devanagari - would otherwise write an id no other device can read and
         /// no server can parse. Nothing in this game formats an id with the ambient culture; this
         /// is the one place it would have been easy to.
         /// </summary>
@@ -193,7 +193,7 @@ namespace GlimmerGrove.Events
         /// <see cref="IndexDigits"/> digits, and the id must round-trip through
         /// <see cref="IdFor"/>. A looser parse would accept <c>watch_7</c> and <c>watch_00007</c>
         /// as the same season as <c>watch_0007</c>, which is three save rows and three sets of
-        /// grant-log keys for one season — the sort of thing that reads as a reset to the player
+        /// grant-log keys for one season - the sort of thing that reads as a reset to the player
         /// who hits it and as nothing at all to everybody else.
         /// </para>
         /// </summary>
@@ -245,7 +245,7 @@ namespace GlimmerGrove.Events
         /// <b>One string rather than one per pool slot, because a blurb says what a watch *is*
         /// and that does not vary by which watch it is.</b> Twelve near-identical sentences would
         /// be twelve things to translate into every language this game ships, to say the same
-        /// thing twelve times — and the first one to be edited without the others would be a
+        /// thing twelve times - and the first one to be edited without the others would be a
         /// season that quietly explains itself differently from its neighbours.
         /// </summary>
         public const string BlurbKey = "ui.season.blurb";
@@ -270,9 +270,9 @@ namespace GlimmerGrove.Events
         /// Cycle <paramref name="index"/> as an ordinary <see cref="GroveEvent"/>, or null.
         ///
         /// <para>
-        /// <b>This is the whole of what keeps the recurrence cheap.</b> Everything downstream —
+        /// <b>This is the whole of what keeps the recurrence cheap.</b> Everything downstream -
         /// the ledger, the two screens, the notification plan, the progress reader, the claim
-        /// builder — takes a <c>GroveEvent</c> and has never heard of a cycle, so a repeating
+        /// builder - takes a <c>GroveEvent</c> and has never heard of a cycle, so a repeating
         /// season is a *source* of seasons rather than a second kind of season with its own path
         /// through the game. The alternative, a flag on <c>GroveEvent</c> that every reader
         /// checks, is the shape this file refuses in <c>ModeValidator</c>'s note: a branch an
@@ -296,7 +296,7 @@ namespace GlimmerGrove.Events
         ///
         /// <b>No clock is consulted, deliberately.</b> This is what reaches a season the player
         /// still holds an unopened chest from, and one of those is by definition in the past; the
-        /// *clock* question — may this be claimed against yet — is <see cref="HasOpenedBy"/>, and
+        /// *clock* question - may this be claimed against yet - is <see cref="HasOpenedBy"/>, and
         /// it is the server that has to ask it.
         /// </summary>
         public GroveEvent EventById(string id) => EventFor(IndexOf(id));

@@ -28,8 +28,8 @@ namespace GlimmerGrove.Content
     /// Kept apart from <see cref="ChapterResidency"/> on purpose: this is the I/O, that
     /// is the policy about how long a result is kept. Splitting them is what lets the
     /// Editor load every chapter eagerly and the game load one lazily using the very
-    /// same code, and what lets the residency rule be changed — prefetch a neighbour,
-    /// keep two, keep none — without touching a line that reads a file.
+    /// same code, and what lets the residency rule be changed - prefetch a neighbour,
+    /// keep two, keep none - without touching a line that reads a file.
     /// </summary>
     public sealed class ChapterLoader
     {

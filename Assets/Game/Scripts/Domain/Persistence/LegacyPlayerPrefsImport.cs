@@ -12,7 +12,7 @@ namespace GlimmerGrove.Persistence
     /// walk of the live catalog: the moment a level is inserted or reordered, "index 1"
     /// stops meaning what it meant when those PlayerPrefs were written, and deriving
     /// the mapping from today's catalog would quietly move a player's stars onto the
-    /// wrong levels. Never edit, reorder or extend this array — it is a record of what
+    /// wrong levels. Never edit, reorder or extend this array - it is a record of what
     /// shipped, not a description of the game.
     /// </summary>
     public static class LegacyPlayerPrefsImport
@@ -175,7 +175,7 @@ namespace GlimmerGrove.Persistence
         /// <para>
         /// <b>A hidden chapter is not a deleted one, and only this overload can tell the
         /// difference.</b> <see cref="MissingFromCatalog"/> asks the catalog index, which is
-        /// built from the manifest with disabled chapters skipped whole — so the day a mode
+        /// built from the manifest with disabled chapters skipped whole - so the day a mode
         /// was hidden behind one boolean (invariant 38), every level it holds left the index
         /// and this frozen table started naming levels nothing could find. The file is still
         /// on disk, still listed, still parseable; turning the boolean back makes those stars

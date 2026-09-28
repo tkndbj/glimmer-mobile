@@ -10,7 +10,7 @@ namespace GlimmerGrove.Tests
     /// The card is the first thing a player ever sees and there is nothing else that can check
     /// it: the glyphs are inside a PNG, so no compile and no validator can reach them, and the
     /// only other instrument is looking at one phone. What can be checked is the arithmetic
-    /// around them — that the mark fits the narrowest canvas this game can be drawn on, that it
+    /// around them - that the mark fits the narrowest canvas this game can be drawn on, that it
     /// does not grow into a banner on the widest, and that a degenerate reading answers nothing
     /// rather than something inverted.
     /// </para>
@@ -64,7 +64,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The rule is measured from the mark rather than typed, so it cannot be left describing
-        /// a mark that has since been re-cut — and it always overhangs, because a rule that
+        /// a mark that has since been re-cut - and it always overhangs, because a rule that
         /// stops short of the word reads as an underline that missed.
         /// </summary>
         [Test]

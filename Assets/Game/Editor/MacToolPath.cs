@@ -14,10 +14,10 @@ namespace GlimmerGrove.EditorTools
     /// <para>
     /// <b>The failure this exists to stop is silent, total, and looks like a Unity bug.</b>
     /// An application launched from Finder, the Dock or Unity Hub does not inherit a login
-    /// shell's environment — macOS hands it a minimal <c>PATH</c>, measured here as
+    /// shell's environment - macOS hands it a minimal <c>PATH</c>, measured here as
     /// <c>/usr/bin:/bin:/usr/sbin:/sbin</c>. Homebrew on Apple Silicon installs to
     /// <c>/opt/homebrew/bin</c>, which is on none of those, and the External Dependency
-    /// Manager's iOS resolver searches the process <c>PATH</c> plus <c>/usr/local/bin</c> —
+    /// Manager's iOS resolver searches the process <c>PATH</c> plus <c>/usr/local/bin</c> -
     /// the *Intel* Homebrew prefix. So on every Apple Silicon Mac, EDM4U cannot find
     /// <c>pod</c> even though CocoaPods is installed and works perfectly in a terminal.
     /// </para>
@@ -25,7 +25,7 @@ namespace GlimmerGrove.EditorTools
     /// <b>What that costs is not one missing step but the rest of the chain.</b> EDM4U runs
     /// <c>pod install</c> from a <c>[PostProcessBuild]</c> callback at order 4. Unity aborts
     /// the remaining callbacks when one throws, so the failure takes down every post-processor
-    /// ordered after it — here that is <see cref="IosPrivacyPlist"/> at order 100, which is the
+    /// ordered after it - here that is <see cref="IosPrivacyPlist"/> at order 100, which is the
     /// only writer of <c>NSUserTrackingUsageDescription</c> and the only thing that links
     /// <c>AppTrackingTransparency.framework</c>. The observable result is an Xcode project that
     /// exists and looks complete, with no <c>.xcworkspace</c>, no linked ad SDKs, no tracking
@@ -37,14 +37,14 @@ namespace GlimmerGrove.EditorTools
     /// <c>pod</c> into <c>/usr/local/bin</c> needs <c>sudo</c>, fixes one machine, and is exactly
     /// the undocumented manual step this project has twice learned gets forgotten. Enabling
     /// EDM4U's "execute via shell" reads a login shell's profile, which on this machine sets no
-    /// <c>PATH</c> at all — it would work by luck and break on the next clone. Setting the
+    /// <c>PATH</c> at all - it would work by luck and break on the next clone. Setting the
     /// variable in-process is deterministic, needs no privileges, is inherited by every child
     /// process the build spawns, and travels with the repository, so a teammate or a CI runner
     /// gets the same answer as this Mac.
     /// </para>
     /// <para>
     /// It is deliberately additive and idempotent: entries already present are not duplicated,
-    /// directories that do not exist are not added, and nothing is ever removed — so a machine
+    /// directories that do not exist are not added, and nothing is ever removed - so a machine
     /// that already has a working <c>PATH</c> is left exactly as it was.
     /// </para>
     /// </summary>
@@ -144,7 +144,7 @@ namespace GlimmerGrove.EditorTools
             Apply();
 
             string pod = Find("pod");
-            string verdict = pod ?? "NOT FOUND — CocoaPods cannot run, so an iOS build will " +
+            string verdict = pod ?? "NOT FOUND - CocoaPods cannot run, so an iOS build will " +
                                     "produce no .xcworkspace and its post-processors will not run";
 
             Debug.Log("[Tools] PATH = " + Environment.GetEnvironmentVariable("PATH") + "\n" +

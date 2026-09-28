@@ -8,7 +8,7 @@ namespace GlimmerGrove.Progression
     {
         /// <summary>
         /// Permanent id. It is written into the save file and will key analytics and,
-        /// once the shop exists, purchases — so it is subject to the same rule as a
+        /// once the shop exists, purchases - so it is subject to the same rule as a
         /// <c>LevelId</c>: never renamed, never reused, never derived from position.
         /// </summary>
         public readonly string Id;
@@ -23,7 +23,7 @@ namespace GlimmerGrove.Progression
         /// <summary>
         /// Sprite-set key under <c>Art/Critters/</c> for the few companions that also
         /// appear animated on a board, or empty. A still portrait is all the profile
-        /// needs, and it costs about 45 KB against 700 KB for a full flipbook — which is
+        /// needs, and it costs about 45 KB against 700 KB for a full flipbook - which is
         /// the difference between a roster that scales and one that does not.
         /// </summary>
         public readonly string Animated;
@@ -60,7 +60,7 @@ namespace GlimmerGrove.Progression
         public bool IsForSale => IsValid && UnlockCost > 0;
 
         /// <summary>
-        /// True when nothing gates this companion — the starter every account begins with.
+        /// True when nothing gates this companion - the starter every account begins with.
         ///
         /// Exactly one companion should answer true, and <c>ContentValidation</c> fails the
         /// build when none does: a roster where everything is gated leaves a new player with
@@ -69,7 +69,7 @@ namespace GlimmerGrove.Progression
         public bool IsStarter => IsValid && UnlockLevel <= 1;
 
         /// <summary>
-        /// A companion's name is a pure function of its id, with no override — the same
+        /// A companion's name is a pure function of its id, with no override - the same
         /// rule as a level's, and for the same reason. Anything holding an avatar id can
         /// name it without reading anything else, which is what lets the top bar, the
         /// picker and the showcase all label a companion from the save file alone.
@@ -87,7 +87,7 @@ namespace GlimmerGrove.Progression
     /// <para>
     /// The roster is <b>content</b>: it comes from the manifest, which means a drop can
     /// add, retire or re-tune a companion without an app update. What lives here is the
-    /// question-answering — resolve an id, decide what is unlocked — plus a built-in
+    /// question-answering - resolve an id, decide what is unlocked - plus a built-in
     /// roster used only when content has not loaded yet or arrived without one. That
     /// fallback is not a placeholder to delete: a client whose CDN fetch failed still
     /// has to draw somebody's profile, and "the companions this build shipped with" is
@@ -96,7 +96,7 @@ namespace GlimmerGrove.Progression
     /// <para>
     /// <b>This type answers questions about content, never about a player.</b> A companion
     /// is held either because the keeper level reached its gate or because it was bought,
-    /// and the second half is save state — so the composite rule lives in
+    /// and the second half is save state - so the composite rule lives in
     /// <see cref="CompanionLedger"/> and every screen asks there.
     /// <see cref="ReachedBy"/> is deliberately named for the narrow question it answers,
     /// because it used to be called <c>IsUnlocked</c> and a call site that reads like the
@@ -105,8 +105,8 @@ namespace GlimmerGrove.Progression
     /// <para>
     /// The level half is <em>derived</em>, for the same reason XP is: it recomputes, it can
     /// be retuned for existing players, and it cannot be lost. The purchased half cannot be
-    /// derived from anything — nothing observable implies "this player paid 8,000 credits"
-    /// — so it is stored, and it is stored in the one shape invariant 11b permits: a set of
+    /// derived from anything - nothing observable implies "this player paid 8,000 credits"
+    /// - so it is stored, and it is stored in the one shape invariant 11b permits: a set of
     /// permanent ids that only ever grows, joined by union. A retune that moves a gate above
     /// somebody's level takes nothing away, because <see cref="Resolve"/> keeps a player on
     /// whatever they are already wearing.
@@ -119,7 +119,7 @@ namespace GlimmerGrove.Progression
         /// carries no roster at all.
         /// </summary>
         /// <summary>
-        /// Ordered by unlock level, because <see cref="Default"/> is simply the first —
+        /// Ordered by unlock level, because <see cref="Default"/> is simply the first -
         /// and the first is the companion a brand-new player wears. It must agree with
         /// the manifest's roster, or a client that failed to fetch content would greet
         /// somebody with a different character than the one they had.
@@ -146,7 +146,7 @@ namespace GlimmerGrove.Progression
 
         /// <summary>
         /// Installs the roster a manifest carried. An empty or null list restores the
-        /// built-in one rather than leaving the game with no companions — a content
+        /// built-in one rather than leaving the game with no companions - a content
         /// mistake must not cost every player their profile.
         /// </summary>
         public static void Publish(IReadOnlyList<AvatarDefinition> roster)
@@ -188,7 +188,7 @@ namespace GlimmerGrove.Progression
         /// Whether the keeper level alone has reached this companion's gate.
         ///
         /// <b>Half of the unlock rule.</b> A player may also have bought it, which this
-        /// cannot see — ask <see cref="CompanionLedger.IsHeld(AvatarDefinition, int)"/> for
+        /// cannot see - ask <see cref="CompanionLedger.IsHeld(AvatarDefinition, int)"/> for
         /// the question a screen actually has. Named for its narrowness on purpose; see the
         /// type's remarks.
         /// </summary>
@@ -201,7 +201,7 @@ namespace GlimmerGrove.Progression
         /// The companion to actually draw for a stored id.
         ///
         /// An unknown id means the save came from a build that shipped a companion this
-        /// one does not have — a rollback, or a device a drop ahead — so it falls back
+        /// one does not have - a rollback, or a device a drop ahead - so it falls back
         /// rather than drawing nothing. It deliberately does <em>not</em> check the
         /// unlock level: a player who earned a companion and was then caught by a
         /// retune keeps wearing it, and the id survives in the save either way.
@@ -213,7 +213,7 @@ namespace GlimmerGrove.Progression
         }
 
         /// <summary>
-        /// The starter every account begins wearing — the one companion nothing gates.
+        /// The starter every account begins wearing - the one companion nothing gates.
         ///
         /// Falls back to <see cref="Default"/> rather than to nothing, because a roster that
         /// gates everything is a content mistake that must not cost a player their profile.

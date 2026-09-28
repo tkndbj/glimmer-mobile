@@ -8,7 +8,7 @@ namespace GlimmerGrove
     /// The one thing standing between a started run and the player walking away from it.
     ///
     /// <para>
-    /// Restarting and leaving used to be free, and now cost a heart — see
+    /// Restarting and leaving used to be free, and now cost a heart - see
     /// <see cref="Persistence.RunGuard"/> for why they had to. A control that was free
     /// yesterday and silently charges today is indistinguishable from a bug on the player's
     /// side of the screen, so it asks first. That is the whole job: state the price, name the
@@ -16,20 +16,20 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>It is only ever raised on a committed run.</b> A player who opens a glade, looks at
-    /// it and backs out is not charged and never sees this — see <c>PlayScreen.Committed</c>.
+    /// it and backs out is not charged and never sees this - see <c>PlayScreen.Committed</c>.
     /// A confirmation on an action that costs nothing is pure friction, and it would teach
     /// players to dismiss the one that does cost something without reading it.
     /// </para>
     /// <para>
     /// The green button is <em>staying</em>, not leaving. Green is the affirmative everywhere
-    /// else in this game, and here the affirmative is "keep playing" — putting it on the
+    /// else in this game, and here the affirmative is "keep playing" - putting it on the
     /// destructive half would spend the game's own colour language on losing a heart.
     /// </para>
     /// <para>
     /// <b>It is also the daily challenges' confirmation, and that is what keeps the count at
     /// three.</b> A challenge stakes one of the day's plays rather than a heart (invariant 56g:
     /// spent at the first move), and leaving a board that has been moved on is the same
-    /// question — a committed run being abandoned — with a different price on the tag. So
+    /// question - a committed run being abandoned - with a different price on the tag. So
     /// <see cref="Stake"/> picks the sentence and the picture, and nothing else about the
     /// panel changes; a fourth confirmation would be this one with a new name.
     /// </para>
@@ -49,13 +49,13 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Whether this run was bought at the gate rather than owed for at its ending
-        /// (<c>HeartPrice.Entry</c>) — a lane with no ladder, invariant 43.
+        /// (<c>HeartPrice.Entry</c>) - a lane with no ladder, invariant 43.
         ///
         /// <para>
         /// <b>It changes the sentence and nothing else.</b> The price tag below still says -1 and
         /// is still true: a restart takes a heart whichever way the run was priced, because the
         /// fresh one is bought at the gate like every other. What is not true of such a lane is
-        /// the ordinary body's reassurance that this is "the same as running out of turns" —
+        /// the ordinary body's reassurance that this is "the same as running out of turns" -
         /// running out of turns there costs nothing, and a panel that says otherwise is teaching
         /// a player a rule the game does not have.
         /// </para>
@@ -79,7 +79,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Written out rather than assembled from the enum, so the build's string checker can
-        /// see every key — the reason <c>WinOverlay.RankKeys</c> is written out too.
+        /// see every key - the reason <c>WinOverlay.RankKeys</c> is written out too.
         /// </summary>
         static string TitleKey(Kind kind, Stakes stake)
         {
@@ -100,7 +100,7 @@ namespace GlimmerGrove
         protected override void Build()
         {
             // No scrim dismissal. This is a question with a price on it, and a stray tap
-            // outside the panel is not an answer to it — the same call AccountOverlay's
+            // outside the panel is not an answer to it - the same call AccountOverlay's
             // destructive prompt makes.
             //
             // A play's panel is its own, shorter geometry. Its sentence is two lines where a
@@ -130,18 +130,18 @@ namespace GlimmerGrove
             // anchored to a different edge: the body ends at -291 from the top, and the Stay
             // button's top edge is at -(800 - 301) = -499. The seat spans -330..-450 and the
             // glow -305..-475, so it clears the copy above it and the button below it with
-            // room either side. That glow is the tall part — anything moving the seat has to
+            // room either side. That glow is the tall part - anything moving the seat has to
             // count it, since it reaches 25px past the box on every side and was what the
             // button used to be sitting on top of.
             //
             // A play's tag: the sentence's band ends at -205, the 120-unit mark spans -230..-350
             // around a seat at -290 and its glow -205..-375, and the Stay button's top edge is at
-            // -(700 - 301) = -399 — so the glow touches neither and the mark sits in the middle.
+            // -(700 - 301) = -399 - so the glow touches neither and the mark sits in the middle.
             var seat = UIKit.Box("Cost", Panel, new Vector2(200f, 120f), new Vector2(.5f, 1f),
                                  new Vector2(0f, play ? -290f : -390f));
 
             // The tag is the same shape whatever is on it: a glow, the thing, and -1. A play
-            // wears the Battle key's mark in gold — the mark a challenge is entered under —
+            // wears the Battle key's mark in gold - the mark a challenge is entered under -
             // where a run wears the heart in rose.
             var ink = play ? Pal.Gold : Pal.Rose;
             var glowTint = play ? new Color(1f, .78f, .24f, .28f) : new Color(.91f, .38f, .35f, .30f);

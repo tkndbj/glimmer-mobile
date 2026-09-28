@@ -6,7 +6,7 @@ namespace GlimmerGrove.Persistence
     /// Detects a save file that was damaged rather than merely old.
     ///
     /// This guards against truncation, not tampering. A file cut short by a process
-    /// kill can still be valid JSON — the tail is simply missing — and would then
+    /// kill can still be valid JSON - the tail is simply missing - and would then
     /// load as a plausible-looking save with half the player's levels gone. That
     /// silently-wrong outcome is worse than an obvious failure, so a mismatch sends
     /// the loader to the backup copy instead.
@@ -43,7 +43,7 @@ namespace GlimmerGrove.Persistence
         ///
         /// An absent checksum predates the feature. A checksum written by a different
         /// schema version cannot match, because the hash covers the serialised object
-        /// and this build's object has fields the writer had never heard of — so every
+        /// and this build's object has fields the writer had never heard of - so every
         /// save on every device would fail the moment the schema grew. The next write
         /// stamps a current checksum and full checking resumes.
         /// </summary>

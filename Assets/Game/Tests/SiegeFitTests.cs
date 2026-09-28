@@ -12,8 +12,8 @@ namespace GlimmerGrove.Tests
     /// is in the first place.</b> That gap is where a tablet fault lived: the bands were swept
     /// over every span a board could have and every one of them divided correctly, while the
     /// <em>cell</em> those spans were measured against was a third bigger on a tablet than on a
-    /// phone and nothing anywhere said so. The bands fixture could not see it — handed the
-    /// tablet's own cell it would have agreed the division was right — and a render could not
+    /// phone and nothing anywhere said so. The bands fixture could not see it - handed the
+    /// tablet's own cell it would have agreed the division was right - and a render could not
     /// either, because a render draws one display at a time and every one of them had been taken
     /// at a phone.
     /// </para>
@@ -22,7 +22,7 @@ namespace GlimmerGrove.Tests
     /// get it for free.</b> A squarer display is given a wider canvas so every layout keeps its
     /// sizes in units and is simply drawn smaller; that works because every other screen here is
     /// a vertical stack of fixed-height chrome. A board laid out to the width is not, so it has
-    /// to be capped by hand (invariant 37cc, <c>SiegeView.CellFor</c>) — and this is what says
+    /// to be capped by hand (invariant 37cc, <c>SiegeView.CellFor</c>) - and this is what says
     /// the cap is still doing its job.
     /// </para>
     /// </summary>
@@ -48,7 +48,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// How much of the canvas the board is not given: <c>ModeScreen</c> builds its host inside
         /// the safe area with these insets, and the two rows are the two a run screen really uses
-        /// — <c>ProtoScreen</c>'s 330 under the board, and <c>ModeScreen</c>'s own 350.
+        /// - <c>ProtoScreen</c>'s 330 under the board, and <c>ModeScreen</c>'s own 350.
         ///
         /// <para>
         /// <b>Swept rather than copied, because a hand copy of a number that lives somewhere else
@@ -83,7 +83,7 @@ namespace GlimmerGrove.Tests
                                    canvasH - inset.Top - inset.Foot);
 
             // `ProtoView.Begin` floors the cell before anything is measured against it, so the
-            // fixture has to as well — a third of a unit is nothing, and a fixture that measured
+            // fixture has to as well - a third of a unit is nothing, and a fixture that measured
             // a board the game never draws is a fixture agreeing with itself.
             float cell = Mathf.Floor(SiegeView.CellFor(room, CanvasFit.ScaleFor(screenW, screenH), W, H));
             float span = Mathf.Max(cell * H, room.y - Margin * 2f);
@@ -116,7 +116,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The hill is what a player spends the run looking at, and it is the band that pays for
-        /// a field drawn too big — it went to 3.2 cells on a 4:3 against a phone's 6.9, which is
+        /// a field drawn too big - it went to 3.2 cells on a 4:3 against a phone's 6.9, which is
         /// what came back from a tablet as the hill being too small.
         ///
         /// <para>
@@ -141,7 +141,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// <c>SiegeBandTests</c>' rule, asked of the cell the display really draws rather than a
         /// phone's. A line squeezed onto its own furniture floor is a fuel tube across a turret's
-        /// chassis (invariant 37y) and a plinth behind the field's plate (37g) — which is what a
+        /// chassis (invariant 37y) and a plinth behind the field's plate (37g) - which is what a
         /// tablet reported as the turrets being obscured by the gem board.
         /// </summary>
         [Test]

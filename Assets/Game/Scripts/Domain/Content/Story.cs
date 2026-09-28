@@ -8,14 +8,14 @@ namespace GlimmerGrove.Content
     ///
     /// <para>
     /// <b>Cues rather than a script with a timeline.</b> A run is played, not watched, so
-    /// nothing can know in advance when the third critter comes out — what content can say is
+    /// nothing can know in advance when the third critter comes out - what content can say is
     /// "when one does, this is what Bolt says". Every cue below is a thing the run already knows
     /// about because a readout or an ending depends on it, so a story costs the mode no new
     /// state at all: <c>MarchScreen</c> raises them off the shot it just resolved.
     /// </para>
     /// <para>
     /// <b>The ids are permanent and travel in content, not in the save.</b> Nothing here reaches
-    /// <c>tipsSeen</c> — a lesson is once in a player's life and a story line is once in a run —
+    /// <c>tipsSeen</c> - a lesson is once in a player's life and a story line is once in a run -
     /// so a cue can be retired by deleting its beats, and an unknown one in a chapter body is a
     /// build error rather than something silently ignored (invariant 5f's rule applied to a
     /// third vocabulary).
@@ -53,7 +53,7 @@ namespace GlimmerGrove.Content
     ///
     /// <para>
     /// A speaker names a folder of frames under <c>Art/March/</c>, so a typo is a portrait that
-    /// does not load — which invariant 7b says draws as a <em>white rectangle</em>, not as a
+    /// does not load - which invariant 7b says draws as a <em>white rectangle</em>, not as a
     /// blank. That is a content mistake with no symptom until somebody looks at the screen, so
     /// the set is a list a validator can walk rather than a convention.
     /// </para>
@@ -100,7 +100,7 @@ namespace GlimmerGrove.Content
         /// because anything holding a <see cref="LevelId"/> has to be able to name it without
         /// reading a chapter body; nothing ever needs to name a line of dialogue it has not
         /// read. What the derivation would buy is protection from typos, and that is bought
-        /// instead by the build gate resolving every one of these against <c>loc/en.json</c> —
+        /// instead by the build gate resolving every one of these against <c>loc/en.json</c> -
         /// which is a stricter check than a naming convention, because it also catches a key
         /// that is correctly shaped and simply missing.
         /// </summary>
@@ -140,7 +140,7 @@ namespace GlimmerGrove.Content
     /// <para>
     /// Presentation, not rules: a story cannot move par, cannot move a star line and cannot be
     /// read by anything that grades a run. That is why it hangs off
-    /// <see cref="LevelPresentation"/> rather than off the mode's own block — a mode's block is
+    /// <see cref="LevelPresentation"/> rather than off the mode's own block - a mode's block is
     /// the board, and the board is the thing every graded number derives from.
     /// </para>
     /// </summary>

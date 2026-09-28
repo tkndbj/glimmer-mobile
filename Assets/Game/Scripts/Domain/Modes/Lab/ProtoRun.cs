@@ -25,7 +25,7 @@ namespace GlimmerGrove.Modes
     ///
     /// <para>
     /// <b>The budget, in the unit the mode is graded in</b> (invariant 22b). Every mode built on
-    /// this shape counts one thing — an input — so they share one meter, and none of them gets to
+    /// this shape counts one thing - an input - so they share one meter, and none of them gets to
     /// invent its own arithmetic for what running out means. The same par plus slack every other
     /// mode is dealt, counted in moves.
     /// </para>
@@ -47,7 +47,7 @@ namespace GlimmerGrove.Modes
         /// <summary>
         /// Moves this run may spend. The pot rather than a constant, because it can be topped up:
         /// a continue that has been paid for raises this and nothing else. Note what it
-        /// deliberately does not touch — <see cref="Spent"/>, which is the grade, so a board
+        /// deliberately does not touch - <see cref="Spent"/>, which is the grade, so a board
         /// finished with bought moves scores exactly what it spent (invariant 23).
         /// </summary>
         public int Dealt { get; private set; }
@@ -135,8 +135,8 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>Whether money can fix it is the board's answer, not this member's.</b> It was the
-        /// latter for as long as every mode on this shape ran out of <em>board</em> — no purchase
-        /// gives a cairn another stone to pull — and Thornwatch is the first that does not: a
+        /// latter for as long as every mode on this shape ran out of <em>board</em> - no purchase
+        /// gives a cairn another stone to pull - and Thornwatch is the first that does not: a
         /// siege has no legal move because its ward line has fallen, and a continue puts the line
         /// back up. So the deficit is asked of <see cref="IProtoBoard.Stranded"/> on this branch
         /// exactly as it is on <see cref="Spent"/>, and a board for which nothing helps says so
@@ -158,7 +158,7 @@ namespace GlimmerGrove.Modes
     /// two that matter most are the last: <see cref="AnyMove"/> and <see cref="Stranded"/> split
     /// "this run is over on the board" from "this run is over in a way no purchase rescues", and
     /// both are <b>certainties</b> rather than heuristics. They decide whether money changes
-    /// hands, so they under-report and never over-report — the retired <c>KeeperBoard.AnyBedLost</c>'s
+    /// hands, so they under-report and never over-report - the retired <c>KeeperBoard.AnyBedLost</c>'s
     /// rule, kept.
     /// </para>
     /// </summary>
@@ -186,7 +186,7 @@ namespace GlimmerGrove.Modes
         /// back: a run that ends while the player still has moves in hand reads as the game
         /// deciding on their behalf, and a player who wants to spend their last three pulls on a
         /// cairn that cannot be finished is entitled to. So this is asked at the moment a run is
-        /// already over — the allowance gone, or no legal move left — and at no other.
+        /// already over - the allowance gone, or no legal move left - and at no other.
         /// </para>
         /// <para>
         /// <b>It is a question about purchases and not about the board's shape</b>, which is why
@@ -196,7 +196,7 @@ namespace GlimmerGrove.Modes
         /// </para>
         /// <para>
         /// Never a guess. It decides whether money changes hands, so it under-reports and never
-        /// over-reports — a false answer costs a run that ends a few moves later, and a wrong true
+        /// over-reports - a false answer costs a run that ends a few moves later, and a wrong true
         /// answer refuses a rescue to somebody who could still have won.
         /// </para>
         /// </summary>
@@ -215,13 +215,13 @@ namespace GlimmerGrove.Modes
     /// <para>
     /// <b>Two fail states, and whether either may be sold a continue is the board's answer.</b>
     /// Running out of moves is a shortage and more moves fix it. Running out of <em>board</em>
-    /// usually is not — no purchase gives a cairn another stone to pull or a grove another ribbon
-    /// to draw — so <see cref="Deficit"/> answers <see cref="RunContinueDeficit.None"/> and the
+    /// usually is not - no purchase gives a cairn another stone to pull or a grove another ribbon
+    /// to draw - so <see cref="Deficit"/> answers <see cref="RunContinueDeficit.None"/> and the
     /// offer is never made. <b>Usually, not always</b>, and that is the one thing here that
     /// changed after five modes: Thornwatch has no legal move when its ward line has fallen, and
     /// a continue puts the line back up. So both branches ask
-    /// <see cref="IProtoBoard.Stranded"/> — which was written as a certainty about
-    /// <em>purchases</em> from the start — instead of one of them assuming the answer.
+    /// <see cref="IProtoBoard.Stranded"/> - which was written as a certainty about
+    /// <em>purchases</em> from the start - instead of one of them assuming the answer.
     /// </para>
     /// </summary>
     public readonly struct ProtoVerdict
@@ -263,7 +263,7 @@ namespace GlimmerGrove.Modes
             && (Ending == ProtoEnding.Stuck || Ending == ProtoEnding.Spent);
 
         /// <summary>
-        /// Reads a board and its allowance. Pure — every input is passed in — so every branch is
+        /// Reads a board and its allowance. Pure - every input is passed in - so every branch is
         /// proved offline against a board and two integers.
         ///
         /// The order is the order a player would want: a finished board wins even if the move
@@ -353,7 +353,7 @@ namespace GlimmerGrove.Modes
         /// </para>
         /// <para>
         /// A charge of nought is legal and still passes through here, so a mending that costs the
-        /// grade nothing still counts as the player having acted — which is what
+        /// grade nothing still counts as the player having acted - which is what
         /// <c>ProtoView.Took</c>'s commit flag is for and what stops a run being abandoned as
         /// untouched after one was spent on it.
         /// </para>
@@ -362,7 +362,7 @@ namespace GlimmerGrove.Modes
 
         /// <summary>
         /// Deals more moves, because a continue was paid for. Nothing else moves: the board stands
-        /// exactly as it stood, and <see cref="Spent"/> — the grade — is untouched.
+        /// exactly as it stood, and <see cref="Spent"/> - the grade - is untouched.
         /// </summary>
         public void Grant(int moves) => Budget.Grant(moves);
     }

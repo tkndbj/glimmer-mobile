@@ -18,7 +18,7 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// <b>One panel, because two was a tax.</b> The route measurement used to live in its own
-    /// overlay, slipped in front of the Next button — so the control labelled "next glade"
+    /// overlay, slipped in front of the Next button - so the control labelled "next glade"
     /// answered a different question the first time it was tapped. That is the same mistake
     /// the hub's <c>+</c> buttons made before <c>AdOfferOverlay</c> became the one destination
     /// for a resource, and it fails the same way: a player who wants the next glade taps once
@@ -31,7 +31,7 @@ namespace GlimmerGrove
     /// because at every moment there is still something about to happen. That is why the
     /// sequence is declared as a <see cref="Cue"/> rather than as a scatter of absolute
     /// delays: the beats are relative, so inserting one cannot silently shove two others onto
-    /// the same frame. They had been — the rank and the reward were computed from two
+    /// the same frame. They had been - the rank and the reward were computed from two
     /// different formulae over the star count and collided on a three-star win.
     /// </para>
     /// <para>
@@ -43,7 +43,7 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>It never runs off the screen.</b> The canvas is width-matched at 1080, so its height
-    /// is whatever the device's aspect makes it — 1920 on a 16:9 phone, 2400 on a tall one and
+    /// is whatever the device's aspect makes it - 1920 on a 16:9 phone, 2400 on a tall one and
     /// 1440 on a 4:3 tablet. A panel whose height depends on how much the run earned cannot be
     /// laid out against a fixed screen, so the whole block is measured and then fitted; see
     /// <see cref="VictoryFrame"/>, which holds the window, the crest and the fit for this
@@ -63,7 +63,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// This glade's golden multiplier, as a percentage. 100 is the ordinary reward.
-        /// Applied to <see cref="CreditsGained"/> less <see cref="LaneCredits"/> — see
+        /// Applied to <see cref="CreditsGained"/> less <see cref="LaneCredits"/> - see
         /// <c>GoldenTable</c>.
         /// </summary>
         public int GoldenPercent = 100;
@@ -73,7 +73,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>Already inside <see cref="CreditsGained"/></b>, exactly as <see cref="BoostXp"/> is
-        /// already inside <see cref="XpGained"/> — the chip counts the total. What this is for is
+        /// already inside <see cref="XpGained"/> - the chip counts the total. What this is for is
         /// the golden line beside it: a multiplier is a fact about what a <em>glade</em> paid, so
         /// a run that earned nothing from its stars and everything from its lane must not be told
         /// it was paid extra. See <see cref="GoldenPercent"/>.
@@ -89,7 +89,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>Already inside <see cref="XpGained"/></b>, exactly as the golden multiplier is
-        /// already inside <see cref="CreditsGained"/> — the chip counts the total and this line
+        /// already inside <see cref="CreditsGained"/> - the chip counts the total and this line
         /// says where part of it came from. Saying it is the whole reason a boost is worth
         /// buying: a multiplier the player never sees is one they have no reason to pay for.
         /// </para>
@@ -139,13 +139,13 @@ namespace GlimmerGrove
         const float PayoutOverlap = .45f;
 
         // ------------------------------------------------------------- geometry
-        // The window, the crest and the fit are VictoryFrame's — shared with the
+        // The window, the crest and the fit are VictoryFrame's - shared with the
         // challenge deal sheet since 2026-09-23, so every number measured off that art
         // lives there once. What is left here is this panel's own furniture.
 
         /// <summary>
         /// The star row: where its centre sits, how big a star is, and how far apart they are.
-        /// <see cref="StarsBottom"/> is where the rows below start — the row's own extent plus
+        /// <see cref="StarsBottom"/> is where the rows below start - the row's own extent plus
         /// the air a 176px star needs to not touch a caption.
         /// </summary>
         const float StarsY = 268f, StarSize = 176f, StarSpacing = 186f, StarsBottom = 402f;
@@ -234,7 +234,7 @@ namespace GlimmerGrove
 
             // "Last" is really "nothing to go on to", and since the chapter boundary became a
             // star gate that is two different things. The catalog may have a glade after this
-            // one and still be right to refuse it — the last level of a chapter is finished
+            // one and still be right to refuse it - the last level of a chapter is finished
             // every time somebody clears it, and the chapter after it opens on stars rather
             // than on that clear. Asking the unlock rule rather than the catalog is what stops
             // the Next button dropping a player straight through the gate it exists to hold:
@@ -245,9 +245,9 @@ namespace GlimmerGrove
 
             // Every one of these decides the panel's height, so all of them are answered
             // before a single thing is built. Asking later and growing the panel afterwards is
-            // how a line ends up drawn a few pixels outside the frame it belongs to — which
+            // how a line ends up drawn a few pixels outside the frame it belongs to - which
             // looks fine on the one device it was tuned on.
-            // Both are the *difference* the run made — see RunLedger.Win, which subtracts the
+            // Both are the *difference* the run made - see RunLedger.Win, which subtracts the
             // record before from the record after. So a replay that turns two stars into three
             // pays the difference and this reads true, which is what makes the offer reachable
             // on a glade the player has cleared before; a replay that beat nothing pays nothing
@@ -257,7 +257,7 @@ namespace GlimmerGrove
 
             // Asked of the star ledger's half alone. The multiplier is a property of the glade
             // and is applied to what the record earned, so a run paid only by its lane has
-            // nothing for it to have multiplied — and a "GOLDEN 150%" line over a coin chip it
+            // nothing for it to have multiplied - and a "GOLDEN 150%" line over a coin chip it
             // did not touch is the panel lying about where the money came from.
             bool goldened = CreditsGained - LaneCredits > 0L && GoldenPercent > 100;
 
@@ -276,11 +276,11 @@ namespace GlimmerGrove
             bool ranked = band != RankBand.None;
 
             // The comparison is drawn on every win that has a route, because merging the panels
-            // made it free — it costs no tap and no navigation. Only the *sentence* stays
+            // made it free - it costs no tap and no navigation. Only the *sentence* stays
             // upward-only: a bar that happens to be longer than the grove's is a neutral fact
             // the player can act on, while a line reading "twenty turns from a perfect route"
             // after every win is a scolding. The rule lives in Domain rather than here so
-            // RouteTests can pin it — see RunOutcome.RouteWorthSaying, which had to give up its
+            // RouteTests can pin it - see RunOutcome.RouteWorthSaying, which had to give up its
             // personal-best clause when this panel absorbed the other one.
             bool route = Run.HasRoute;
             bool praise = Run.RouteWorthSaying;
@@ -309,14 +309,14 @@ namespace GlimmerGrove
             if (boosted) { boostY = y + 34f; y += GoldenRow; }
 
             // Offered only on a run that actually paid, which is the honest reading of "on top
-            // of what this glade earned" — a replay that beat nothing earns nothing, and a
+            // of what this glade earned" - a replay that beat nothing earns nothing, and a
             // bonus stacked on zero is a coin offer wearing a victory panel's clothes. That is
             // the same condition the payout chips are built under, deliberately: the offer sits
             // directly beneath the number it is doubling and disappears with it.
             //
             // ShouldOffer, not CanOffer, matching every other surface: a cooldown draws the
             // button with its own countdown on it rather than vanishing. The refusals that
-            // cannot resolve by waiting — no provider, no account to pay coins into — hide the
+            // cannot resolve by waiting - no provider, no account to pay coins into - hide the
             // row entirely, so a signed-out first launch never sees it.
             bool bonus = paid && RewardedAds.ShouldOffer(AdPlacement.WinBonus);
 
@@ -415,7 +415,7 @@ namespace GlimmerGrove
 
             // ---------------------------------------------------------- the payout
             // Two chips rather than one sentence, each number put there by things the player
-            // watches leave the stars — see Payout for why the flight is what makes it land.
+            // watches leave the stars - see Payout for why the flight is what makes it land.
             // Built only when the run improved the record: a replay that beat nothing earns
             // nothing, and a chip reading "+0 XP" looks like a bug.
             Payout xpChip = null, coinChip = null;
@@ -437,7 +437,7 @@ namespace GlimmerGrove
 
                 if (CreditsGained > 0)
                 {
-                    // Credits are the spinning coin, which has no single sprite — the glyph is
+                    // Credits are the spinning coin, which has no single sprite - the glyph is
                     // finished by RewardArt, fallback and all. The tokens use the coin's first
                     // frame flat and untinted: gold art washed in gold stops reading as a coin.
                     var frames = Art.Frames("Ui/Coin");
@@ -461,7 +461,7 @@ namespace GlimmerGrove
                 : null;
             if (goldenLine) goldenLine.transform.localScale = Vector3.zero;
 
-            // The boost's own line, built and beaten exactly as the golden one is — it answers
+            // The boost's own line, built and beaten exactly as the golden one is - it answers
             // the same question ("why was that more than usual?") about the other chip.
             var boostLine = boosted
                 ? Row("Boost", -boostY, Loc.Format("ui.win.xp_boosted", Compact.Number(BoostXp),
@@ -480,7 +480,7 @@ namespace GlimmerGrove
             // gap after the line above rather than a time from the start.
             var cue = new Cue(this);
 
-            // The crown arrives silently. The fanfare is not missing — BoardView.Celebrate plays
+            // The crown arrives silently. The fanfare is not missing - BoardView.Celebrate plays
             // "win" as the board solves, and this panel opens about a second later, so sounding
             // it again here was the same cue twice with a gap in it. Everything from the banner
             // down has its own beat.
@@ -502,14 +502,14 @@ namespace GlimmerGrove
             // ------------------------------------------------------ the payout lane
             // A second lane, opened at the same instant as the stars rather than queued behind
             // them. It used to run after the rank and the record, which put three or four
-            // seconds between a player landing their last star and seeing what it was worth —
+            // seconds between a player landing their last star and seeing what it was worth -
             // long enough that the reward read as a separate announcement instead of as the
             // consequence of the thing they had just watched. The two belong together: the
             // reward is derived from exactly those stars (see ProgressionLedger), and the
             // tokens are thrown out of the star row to say so.
             //
             // A lane rather than more beats on the main one, because the sequences overlap and
-            // a single playhead cannot express that — walking it forward over the payout would
+            // a single playhead cannot express that - walking it forward over the payout would
             // push the rank behind it, which is the problem in reverse.
             float payoutEnds = cue.Playhead;
             if (paid)
@@ -537,7 +537,7 @@ namespace GlimmerGrove
                 }
 
                 // Lands before the coins so the number the player then watches climb is
-                // already explained — "something special happened", then the evidence. Only
+                // already explained - "something special happened", then the evidence. Only
                 // ever on a paid run: announcing a multiplier on top of no credits would read
                 // as the game owing the player money.
                 if (goldenLine)
@@ -554,7 +554,7 @@ namespace GlimmerGrove
                 }
 
                 // After the golden line and before the coins, because it is about the XP chip
-                // that has already flown — the panel reads top to bottom and so does the beat.
+                // that has already flown - the panel reads top to bottom and so does the beat.
                 // Aqua and no flash: the golden line is the rare one and owns the wash, and two
                 // washes in a row on one panel is neither of them being special.
                 if (boostLine)
@@ -582,11 +582,11 @@ namespace GlimmerGrove
             cue.Wait(StarGap * stars);
 
             // The last star is the loudest moment on the panel, and only a full row earns the
-            // wash. Spending it on every win spends it on most of them and marks out none —
+            // wash. Spending it on every win spends it on most of them and marks out none -
             // the same argument that keeps the map's rays for the top tier alone.
             //
             // Light only: no confetti and no haptic anywhere in this sequence. Both were tried
-            // and both are gone by request. Worth knowing why they were easy to lose — the
+            // and both are gone by request. Worth knowing why they were easy to lose - the
             // board has already thrown confetti and buzzed once when it solved (see
             // BoardView.Celebrate), so the panel was restating a celebration the player had
             // just had rather than adding one.
@@ -669,7 +669,7 @@ namespace GlimmerGrove
             }
 
             // The two lanes rejoin here. Everything below is either news in its own right or a
-            // call to leave, and none of it should arrive while coins are still in the air —
+            // call to leave, and none of it should arrive while coins are still in the air -
             // least of all the shine on the Next button, which exists to ask for attention
             // once there is nothing left worth watching.
             cue.Wait(Mathf.Max(0f, payoutEnds - cue.Playhead));
@@ -690,8 +690,8 @@ namespace GlimmerGrove
             // the glade line needs the next glade to be open already, and this line is the
             // moment it became so.
             //
-            // It is drawn from a fact measured before the record was folded in — see
-            // RunLedger.WinRecord.ChapterOpened — because by now the gate simply reads open,
+            // It is drawn from a fact measured before the record was folded in - see
+            // RunLedger.WinRecord.ChapterOpened - because by now the gate simply reads open,
             // and a panel that announced every open gate would announce this chapter after
             // every run in it for the rest of the game.
             if (ChapterOpened.IsValid)
@@ -715,13 +715,13 @@ namespace GlimmerGrove
             // Both ways on stand together, and the shine on both arrives together.
             //
             // The offer used to be built at scale zero and popped here, several seconds after
-            // the exits it sits above — which was defended as "an offer should not arrive while
+            // the exits it sits above - which was defended as "an offer should not arrive while
             // the panel is still telling them what they did", and was wrong for a reason worth
             // keeping. A control that materialises after the player has already read the screen
             // is not polite, it is invisible: their eye finished with the panel while it was
             // absent, so what they see is a NEXT button and nothing else. It now arrives with
-            // the panel, exactly as NEXT, REPLAY and the map key do — those have never been
-            // sequenced either — and what waits for this beat is the *attention*, which is the
+            // the panel, exactly as NEXT, REPLAY and the map key do - those have never been
+            // sequenced either - and what waits for this beat is the *attention*, which is the
             // half that was actually doing the work.
             cue.Then(.35f, () =>
             {
@@ -741,13 +741,13 @@ namespace GlimmerGrove
             // The lesson, on the heels of the beat that asks for the eye rather than a second
             // after it. It used to sit last of everything, a full second past the punch, and
             // that second was spent on a player already reading a button nobody had explained
-            // — the shine says *look here* and the tip says *here is what it is*, so anything
+            // - the shine says *look here* and the tip says *here is what it is*, so anything
             // between the two is a gap in one sentence. Only where there is something to point
             // at: once in a player's life, and a tip shown over a button that is not on screen
-            // is one that can never be shown again — see Mechanic.LuckySpin.
+            // is one that can never be shown again - see Mechanic.LuckySpin.
             if (_bonus) cue.Then(.14f, TeachTheWheel);
 
-            // The breath waits for the punch to land, and that is not pacing — the two write the
+            // The breath waits for the punch to land, and that is not pacing - the two write the
             // same local scale on different channels, so started together the punch borrows a
             // mid-breath size as its resting value and hands back something the breath then
             // walks away from. The house rule about a tween that reads its own target's value,
@@ -762,7 +762,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// It rings the real button on the real panel rather than describing it, which is what
-        /// <see cref="TipOverlay"/> is for — a diagram has to be translated back onto the screen
+        /// <see cref="TipOverlay"/> is for - a diagram has to be translated back onto the screen
         /// by whoever reads it, and this is a control they can simply be shown.
         /// </para>
         /// <para>
@@ -776,7 +776,7 @@ namespace GlimmerGrove
         /// Guarded on the wheel too, and that is <c>Mechanic.ModeSwitch</c>'s rule rather than a
         /// nicety. The lesson describes a wheel; the button falls back to the flat offer when
         /// there is no account to seed one from or no server that understands it, and the ledger
-        /// is a once-in-a-lifetime record — so a tip spent describing a wheel this player cannot
+        /// is a once-in-a-lifetime record - so a tip spent describing a wheel this player cannot
         /// reach is a tip that can never be shown when they can.
         /// </para>
         /// <para>
@@ -784,15 +784,15 @@ namespace GlimmerGrove
         /// used to be invisible.</b> Every other tip in the game points at a tile on a board and
         /// therefore belongs under anything the player raised (<see cref="ModalLayer.Teaching"/>);
         /// this one points at a button on <em>this panel</em>, so the default put it behind the
-        /// thing it was pointing at — a spotlight cut into a dim that nothing can see, marked
+        /// thing it was pointing at - a spotlight cut into a dim that nothing can see, marked
         /// seen for the rest of that player's life. A tip is only ever as visible as the control
         /// it rings, so its layer has to be the control's and not the board's.
         /// </para>
         /// <para>
         /// The licence that buys is bounded by the two guards under it rather than by the layer.
         /// Above <c>Panel</c> a tip would cover <em>any</em> panel, and several seconds of
-        /// sequence run before this beat — long enough for a player to have tapped the offer
-        /// already — so it is refused unless this panel is still the one being looked at, and
+        /// sequence run before this beat - long enough for a player to have tapped the offer
+        /// already - so it is refused unless this panel is still the one being looked at, and
         /// refused once the offer has been taken, since a lesson about a wheel spent on a button
         /// that now reads COLLECTED is spent on nothing. Neither refusal marks the ledger: an
         /// unshown lesson is owed, not used.
@@ -825,8 +825,8 @@ namespace GlimmerGrove
         /// <summary>
         /// Keeps the offer's caption live while the panel is open.
         ///
-        /// A victory panel is somewhere players sit — reading the comparison, looking at the
-        /// standing — so a cooldown that only updated on reopen would tick down invisibly and
+        /// A victory panel is somewhere players sit - reading the comparison, looking at the
+        /// standing - so a cooldown that only updated on reopen would tick down invisibly and
         /// leave the button stale. The same reason <c>DefeatOverlay</c> has one, and the paint
         /// is a no-op on any frame the caption did not change.
         /// </summary>
@@ -845,7 +845,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// The wheel needs an account and a server that understands it, and a sync can supply
-        /// either while this panel is open — so the button has to be able to become the wheel
+        /// either while this panel is open - so the button has to be able to become the wheel
         /// mid-panel. Latching the caption would leave somebody looking at a flat figure on a
         /// control that now opens a wheel, which is the one direction the wording must not be
         /// wrong in: the flat sentence names an amount, and the wheel does not pay that amount.
@@ -865,7 +865,7 @@ namespace GlimmerGrove
         /// <b>A flat amount, and the caption says which.</b> The obvious framing is "double
         /// your reward", and it cannot be honoured here: earned credits are derived from the
         /// star ledger (invariant 9), so there is no accumulated figure to multiply, and
-        /// doubling one run would mean storing which runs had been doubled — a forgeable
+        /// doubling one run would mean storing which runs had been doubled - a forgeable
         /// per-level set that pays, which invariant 15 sends straight back to 13. What the
         /// server can actually attest to is "a view of this placement happened", so the amount
         /// is content and the button prints it. A multiplier the panel cannot honour is worse
@@ -874,7 +874,7 @@ namespace GlimmerGrove
         /// <para>
         /// It does not compete with <c>Next</c>. The exits keep their own block below this, the
         /// sheen still lands on <c>Next</c> at the end of the sequence, and this row is drawn
-        /// last of the content rather than first — an offer placed above the thing a player came
+        /// last of the content rather than first - an offer placed above the thing a player came
         /// for is the mistake the hub's <c>+</c> buttons made before <c>AdOfferOverlay</c>
         /// became the single destination for a resource.
         /// </para>
@@ -885,7 +885,7 @@ namespace GlimmerGrove
 
             // Violet, and it is the only violet on this panel. NEXT is the green one, REPLAY the
             // orange one, and a second green button beside the first would read as a second way
-            // of doing the same thing — which is exactly what it is not. It is also the colour
+            // of doing the same thing - which is exactly what it is not. It is also the colour
             // of the panel it opens, so the button and its destination are one object seen
             // twice; the same reason the gem shelf's cards carry the gem colour.
             _bonus = UIKit.TextButton("Bonus", Panel, "btn_violet",
@@ -897,7 +897,7 @@ namespace GlimmerGrove
             // and a folded one on a 124-high pill overlaps its own glyph. Through UIKit.OneLine
             // rather than by raising the flag: TextButton turns Unity's best-fit on for any
             // button carrying a glyph, and best-fit concedes the line before it concedes the
-            // size — so the flag alone leaves two rules fighting over one caption, which is what
+            // size - so the flag alone leaves two rules fighting over one caption, which is what
             // made the wheel's own button arrive crushed and then spring out to its real width.
             UIKit.OneLine(_bonus, 22);
 
@@ -914,7 +914,7 @@ namespace GlimmerGrove
         /// The win panel is the thing the player is looking at and the reason the offer makes
         /// sense; closing it to show an advert and then dropping them on the map would be a
         /// worse version of the two-panel tax that got <c>RouteOverlay</c> deleted. The button
-        /// simply repaints when the offer resolves — the credits themselves arrive on the next
+        /// simply repaints when the offer resolves - the credits themselves arrive on the next
         /// sync, because an ad grant is the server's to make (invariant 10d).
         /// </summary>
         void OnBonus()
@@ -930,7 +930,7 @@ namespace GlimmerGrove
         ///
         /// It is a fact about this panel rather than about the placement, and that distinction
         /// is the reason it is a field. The placement itself only knows it is cooling down or
-        /// capped, both of which expire — so a player who sat on a victory screen for five
+        /// capped, both of which expire - so a player who sat on a victory screen for five
         /// minutes would watch the offer come back and buy the same bonus for the same glade a
         /// second time.
         /// </summary>
@@ -940,8 +940,8 @@ namespace GlimmerGrove
         /// The offer has been taken. The button stops being one.
         ///
         /// <para>
-        /// Raised by whichever panel paid — the wheel or the flat offer, both routed through
-        /// <c>BonusWheelOverlay.OpenFor</c> — and it fires the moment the reward is banked
+        /// Raised by whichever panel paid - the wheel or the flat offer, both routed through
+        /// <c>BonusWheelOverlay.OpenFor</c> - and it fires the moment the reward is banked
         /// rather than when the celebration is dismissed, so the control is already spent behind
         /// the panel standing in front of it.
         /// </para>
@@ -964,7 +964,7 @@ namespace GlimmerGrove
             _bonus.Setup(null);
 
             // The breath borrows the button's resting scale, so it has to be stopped before
-            // anything else reads it — KillChannel hands the borrowed value back. See
+            // anything else reads it - KillChannel hands the borrowed value back. See
             // Tw.OnAbandon; the same three lines the wheel's own button needed.
             Tween.KillChannel(_bonus.transform, "breathe");
 
@@ -984,7 +984,7 @@ namespace GlimmerGrove
         /// The record, as a wax seal.
         ///
         /// The caption is one key rather than two lines written into the string table, and it
-        /// is <see cref="UIKit.Shrinkable"/> — which switches wrapping on, so "NEW BEST" folds
+        /// is <see cref="UIKit.Shrinkable"/> - which switches wrapping on, so "NEW BEST" folds
         /// onto the seal by itself and a longer translation shrinks instead of running off the
         /// disc. Two hard-coded lines would need a translator to know the shape of the art.
         /// </summary>
@@ -1041,7 +1041,7 @@ namespace GlimmerGrove
         /// cannot sit at a constant x without either colliding with a long one or floating away
         /// from a short one. <see cref="Text.preferredWidth"/> is read directly: uGUI computes
         /// it from the font's cached character info on demand, so it is correct in the same
-        /// frame the text was assigned — the same trick <see cref="UIKit.FitLabel"/> uses.
+        /// frame the text was assigned - the same trick <see cref="UIKit.FitLabel"/> uses.
         /// </para>
         /// <para>
         /// It is clamped to the caption's own box, which is what stops a very long translation
@@ -1090,7 +1090,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Why a bubble and not another modal.</b> The game's other explanations
         /// (<c>StreakInfoOverlay</c>, <c>EventInfoOverlay</c>) are full panels, and they earn
-        /// it — they answer three questions each about a whole screen. This answers one
+        /// it - they answer three questions each about a whole screen. This answers one
         /// question about one row, and a panel that covers the thing it is describing makes the
         /// player close it to check. The bubble hangs <em>below</em> the row so both bars stay
         /// visible while it is read.
@@ -1098,14 +1098,14 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Everything lives inside the fit.</b> The veil and the bubble are children of the
         /// same scaled node the panel is, so on a short screen they shrink with it and the tail
-        /// stays under the dot. The veil is deliberately built oversized — the fit may be
+        /// stays under the dot. The veil is deliberately built oversized - the fit may be
         /// scaled below one, and a screen-sized catcher inside it would leave an uncovered
         /// margin where a tap did nothing at all.
         /// </para>
         /// <para>
         /// The copy has one hard constraint: it must never call the route a minimum. It is the
         /// distance to the <em>authored</em> solution and a player can beat it, which is the
-        /// whole reason the verdict has three readings — see <see cref="VerdictLine"/>.
+        /// whole reason the verdict has three readings - see <see cref="VerdictLine"/>.
         /// </para>
         /// </summary>
         void OpenRouteInfo()
@@ -1187,7 +1187,7 @@ namespace GlimmerGrove
         /// Where <paramref name="target"/> sits in the fit's own coordinates.
         ///
         /// Measured through world space rather than read off an anchoredPosition, because the
-        /// dot is anchored to the panel's top edge and the bubble to the fit's centre — their
+        /// dot is anchored to the panel's top edge and the bubble to the fit's centre - their
         /// local numbers are not in the same frame. Same reason <c>Payout.LocalIn</c> does it.
         /// </summary>
         Vector2 InFit(Transform target)
@@ -1231,7 +1231,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// A fill pinned to its track's left edge, so growing it extends rightwards rather
-        /// than from the middle — which is what makes two bars share one origin.
+        /// than from the middle - which is what makes two bars share one origin.
         /// </summary>
         Image Fill(Image track, string name, Color ink)
         {
@@ -1297,7 +1297,7 @@ namespace GlimmerGrove
         /// so: a trophy rather than a star, because the stars directly above are already
         /// counting something else and a gold star here would read as a fourth one. One glyph
         /// in three colours rather than three glyphs, because a medal ladder needs no teaching.
-        /// The rim is cream on every tier — ringing a bronze medal in bronze makes the rim
+        /// The rim is cream on every tier - ringing a bronze medal in bronze makes the rim
         /// vanish.
         /// </para>
         /// </summary>
@@ -1364,7 +1364,7 @@ namespace GlimmerGrove
 
             // Offered here and nowhere else. A player who has just finished a chapter has
             // something worth keeping, which is exactly when asking them to protect it is a
-            // service rather than an obstacle — and the answer costs nothing either way.
+            // service rather than an obstacle - and the answer costs nothing either way.
             bool offerAccount = FinishedAChapter(index)
                                 && AccountPrompts.ShouldOffer(AccountPromptTrigger.Chapter);
 
@@ -1374,7 +1374,7 @@ namespace GlimmerGrove
             {
                 // The heart gate, asked while this panel is still standing. PlayRoute would
                 // refuse the run either way, but refusing it after the victory panel has closed
-                // leaves the player on a solved board with a modal over it and nothing behind —
+                // leaves the player on a solved board with a modal over it and nothing behind -
                 // where staying up keeps their replay and their map key one tap away. Only
                 // "next" needs it: "glades" navigates, and a replay of the glade they have just
                 // cleared is free for ever (HeartStake's replay clause).
@@ -1420,7 +1420,7 @@ namespace GlimmerGrove
 
             // Skins.Nav rather than the literal, so this panel moves with the rule the rest of
             // the chrome now follows. Replay keeps its own orange: only the greys moved.
-            UIKit.IconButton("Map", Panel, Skins.Nav, "ic_list", new Vector2(138f, 138f),
+            UIKit.IconButton("Map", Panel, Skins.Nav, "ic_home", new Vector2(138f, 138f),
                              new Vector2(.5f, 0f), new Vector2(SideButtonX, ButtonY),
                              () => Close(() => Flow.Go<LevelsScreen>()));
 

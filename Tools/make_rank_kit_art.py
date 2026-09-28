@@ -1,14 +1,24 @@
 #!/usr/bin/env python3
-"""Cut the hall of ranks' furniture from the owner's bought 2D Mobile Game UI Kit.
+"""Cut the hall of ranks' furniture from the owner's bought UI kits.
 
-Six sprites into `Assets/Game/Art/Ui/Rank/`, five of them nine-sliced plates and one icon:
+Five sprites into `Assets/Game/Art/Ui/Rank/`, four of them nine-sliced plates and one icon:
 
-    kit_board   the notched cyan panel the requirement lines stand on ("what it asks")
+    kit_board   the notice board the requirement lines stand on ("what it asks")
     kit_row     the dark navy bar one requirement line is written on
     kit_seat    the dark blue-rimmed square a rung's badge sits in on the rail
-    kit_tab     the orange hanging tab the board's title is written on
     kit_chip    the navy pill the ordinal ("RANK 3") is written on
     ic_raiders  the crossed swords beside "Defeat N raiders" (Layer Lab's casual icon pack)
+
+**The board is the cartoon kit's, since 2026-09-28** (the owner: "the What It Asks board is
+bad"). The 300Mind kit's notched cyan panel read as a sticker from another game on this wall,
+so the board is now `Artboard 20` of the CraftPix *Cartoon UI Elements Mini Kit* - the same kit
+every plate, key and ribbon in the game is cut from (`make_hud_kit_art.py`, invariant 44): a
+cream notice board under a riveted orange cap on a plinth. Its own ribbon is **lifted off**,
+because a ribbon in the middle of a nine-slice's top edge is stretched with the board; the
+columns it covers are found by comparing each against a plain column of the cap and are
+painted from that column, and the title is written on `Hud/title` - the kit's ribbon, already
+the game's - laid over the cap by `RanksScreen`. That also withdrew `kit_tab` (8d). The board's
+slice is **four measured sides** rather than one number: a cap and a plinth are not a rim.
 
 **Where they come from, and why the tool reads the package itself.** The kit is a Unity Asset
 Store purchase (300Mind, *2D Mobile Game UI Kit*) that ships as two 3118x1754 sprite sheets
@@ -64,15 +74,24 @@ KIT_PACKAGE = STORE / "300Mind" / "Textures MaterialsGUI Skins" / "2D Mobile Gam
 ICON_PACKAGE = STORE / "LAYERLAB" / "Textures MaterialsIcons UI" / "2D Icons - Casual Icon Pack.unitypackage"
 
 #: name -> (sheet, slice index, scale). The index is the kit's own `UI-pack_Sprite_<sheet>_<i>`.
-#: Scales are against the size `RanksScreen` draws each piece at on a 1080 canvas: the board
-#: 1024 wide, a row 972x78, a seat 104, the tab 420x84, the chip 156x48.
+#: Scales are against the size `RanksScreen` draws each piece at on a 1080 canvas: a row
+#: 952x78, a seat 104, the chip 156x48.
 CUTS = {
-    "kit_board": (2, 4, .50),
     "kit_row": (2, 5, .37),
     "kit_seat": (1, 26, .62),
-    "kit_tab": (1, 45, .90),
     "kit_chip": (2, 10, .40),
 }
+
+#: The board: the cartoon kit's zip (read where `make_hud_kit_art.py` reads it), the entry, and
+#: the scale. At .32 the cap draws 69 units tall and the plinth 79 - `RanksScreen.PlateHead` /
+#: `PlateFoot` are read off the border this measures, never typed beside it.
+CARTOON_ZIP = Path(r"C:\Users\Digikey\Downloads\2D ASSETS") / "craftpix-net-828046-cartoon-ui-elements-mini-kit (2).zip"
+BOARD = ("kit_board", "Png/Artboard 20.png", .32)
+
+#: A plain column of the board's cap, left of the ribbon and right of the rivet, in source pixels,
+#: and how deep the ribbon's reach is probed. The span painted over is measured against it.
+BOARD_PLAIN_COLUMN = 200
+BOARD_RIBBON_DEPTH = 340
 
 #: The one icon the game did not already have: (path inside the icon package, long edge).
 ICONS = {
@@ -219,6 +238,64 @@ def cut(kit, icons):
     return made
 
 
+def board_source():
+    """The cartoon kit's board as an image, or None when this machine has no copy of the kit."""
+    import zipfile
+    from PIL import Image
+
+    if not CARTOON_ZIP.exists():
+        return None
+    with zipfile.ZipFile(CARTOON_ZIP) as z:
+        return Image.open(io.BytesIO(z.read(BOARD[1]))).convert("RGBA")
+
+
+def cut_board(image):
+    """The notice board with its ribbon lifted off, trimmed, scaled: (image, (l, b, r, t))."""
+    import numpy as np
+    from PIL import Image
+
+    arr = np.asarray(image).copy()
+    top = arr[:BOARD_RIBBON_DEPTH].astype(int)
+    plain = top[:, BOARD_PLAIN_COLUMN:BOARD_PLAIN_COLUMN + 1]
+    differs = np.abs(top - plain).sum(axis=2).max(axis=0) > 24
+    # The ribbon is the run of differing columns between the two rivets; everything past the
+    # plain column on each side up to its mirror is the cap, flat across.
+    w = arr.shape[1]
+    span = [x for x in range(BOARD_PLAIN_COLUMN + 1, w - BOARD_PLAIN_COLUMN - 1) if differs[x]]
+    if not span:
+        sys.exit("kit_board: no ribbon found over the cap - is this still Artboard 20?")
+    x0, x1 = span[0] - 6, span[-1] + 6
+    arr[:BOARD_RIBBON_DEPTH, x0:x1 + 1] = arr[:BOARD_RIBBON_DEPTH, BOARD_PLAIN_COLUMN:BOARD_PLAIN_COLUMN + 1]
+
+    piece = Image.fromarray(arr, "RGBA")
+    piece = piece.crop(piece.getbbox())
+    scale = BOARD[2]
+    piece = piece.resize((max(1, int(round(piece.width * scale))),
+                          max(1, int(round(piece.height * scale)))), Image.LANCZOS)
+    return piece, board_border(piece)
+
+
+def board_border(piece):
+    """Four sides, measured: how far in from each edge the board stops being what its middle row
+    and column are. Unity's order, (left, bottom, right, top)."""
+    import numpy as np
+
+    a = np.asarray(piece).astype(int)
+    h, w = a.shape[:2]
+    rows = np.abs(a - a[h // 2:h // 2 + 1]).sum(axis=2).max(axis=1) > 24
+    cols = np.abs(a - a[:, w // 2:w // 2 + 1]).sum(axis=2).max(axis=0) > 24
+    top = int(np.where(rows[:h // 2])[0].max()) + 3
+    bottom = h - int(np.where(rows[h // 2:])[0].min() + h // 2) + 3
+    left = int(np.where(cols[:w // 2])[0].max()) + 3
+    right = w - int(np.where(cols[w // 2:])[0].min() + w // 2) + 3
+    return (left, bottom, right, top)
+
+
+def sides(border):
+    """A border as Unity's four sides, whether it was measured as one number or four."""
+    return tuple(border) if isinstance(border, tuple) else (border,) * 4
+
+
 def png_bytes(image):
     buffer = io.BytesIO()
     image.save(buffer, format="PNG", optimize=True)
@@ -231,7 +308,7 @@ def rebordered(text, border, guid=None):
         if guid and line.startswith("guid: "):
             out.append(f"guid: {guid}\n")
         elif line.strip().startswith("spriteBorder:"):
-            out.append("  spriteBorder: {x: %d, y: %d, z: %d, w: %d}\n" % ((border,) * 4))
+            out.append("  spriteBorder: {x: %d, y: %d, z: %d, w: %d}\n" % sides(border))
         else:
             out.append(line)
     return "".join(out)
@@ -243,22 +320,25 @@ def meta(name, border):
 
 
 def nine(im, border, w, h, zoom=1.0):
-    """`Image.Type.Sliced`: corners kept at `border / zoom`, edges and middle stretched.
-    Shared with `render_ranks.py`."""
+    """`Image.Type.Sliced`: corners kept at `border / zoom`, edges and middle stretched. The
+    border is one number or Unity's four sides (left, bottom, right, top). Shared with
+    `render_ranks.py`."""
     from PIL import Image
 
     w, h = max(1, int(round(w))), max(1, int(round(h)))
     src = im if zoom == 1.0 else im.resize((max(1, int(round(im.width / zoom))),
                                             max(1, int(round(im.height / zoom)))), Image.LANCZOS)
-    b = int(round(border / zoom))
+    bl, bb, br, bt = (int(round(s / zoom)) for s in sides(border))
     W0, H0 = src.size
-    if b * 2 > min(w, h):
-        b = min(w, h) // 2
-    if b <= 0:
+    if bl + br > w:
+        bl = br = w // 2
+    if bt + bb > h:
+        bt = bb = h // 2
+    if max(bl, bb, br, bt) <= 0:
         return src.resize((w, h), Image.LANCZOS)
     out = Image.new("RGBA", (w, h), (0, 0, 0, 0))
-    xs = [(0, b, 0, b), (b, W0 - b, b, w - b), (W0 - b, W0, w - b, w)]
-    ys = [(0, b, 0, b), (b, H0 - b, b, h - b), (H0 - b, H0, h - b, h)]
+    xs = [(0, bl, 0, bl), (bl, W0 - br, bl, w - br), (W0 - br, W0, w - br, w)]
+    ys = [(0, bt, 0, bt), (bt, H0 - bb, bt, h - bb), (H0 - bb, H0, h - bb, h)]
     for sx0, sx1, dx0, dx1 in xs:
         for sy0, sy1, dy0, dy1 in ys:
             if sx1 <= sx0 or sy1 <= sy0 or dx1 <= dx0 or dy1 <= dy0:
@@ -272,8 +352,8 @@ def contact(made, path):
     """Every piece as cut and at the size the page draws it, on the wall the page draws it on."""
     from PIL import Image, ImageDraw
 
-    uses = {"kit_board": (1024, 450), "kit_row": (972, 78), "kit_seat": (104, 104),
-            "kit_tab": (420, 84), "kit_chip": (156, 48), "ic_raiders": (58, 58)}
+    uses = {"kit_board": (1024, 530), "kit_row": (952, 78), "kit_seat": (104, 104),
+            "kit_chip": (156, 48), "ic_raiders": (58, 58)}
     pad = 24
     rows = []
     for name, (piece, border) in made.items():
@@ -306,16 +386,20 @@ def main():
     parser.add_argument("--contact", action="store_true", help="write the contact sheet")
     args = parser.parse_args()
 
-    names = list(CUTS) + list(ICONS)
+    names = [BOARD[0]] + list(CUTS) + list(ICONS)
     src = sources()
-    if src is None:
-        missing = [n for n in names if not (OUT / f"{n}.png").exists()]
-        if missing:
-            sys.exit("the UI kit package is not on this machine and no committed PNG for: " + ", ".join(missing))
-        print(f"rank kit: no package on this machine; the {len(names)} committed PNGs stand")
+    board = board_source()
+    made = cut(*src) if src is not None else {}
+    if board is not None:
+        made[BOARD[0]] = cut_board(board)
+    missing = [n for n in names if n not in made and not (OUT / f"{n}.png").exists()]
+    if missing:
+        sys.exit("a kit is not on this machine and no committed PNG for: " + ", ".join(missing))
+    if not made:
+        print(f"rank kit: no kit on this machine; the {len(names)} committed PNGs stand")
         return 0
-
-    made = cut(*src)
+    if len(made) < len(names):
+        print("rank kit: %d of %d piece(s) cut here; the rest stand committed" % (len(made), len(names)))
 
     if args.contact:
         contact(made, ROOT / "rank_kit.png")
@@ -331,7 +415,7 @@ def main():
             elif png.read_bytes() != png_bytes(piece):
                 bad.append(f"{name}.png is not what this tool cuts")
             if side.exists():
-                want = "spriteBorder: {x: %d, y: %d, z: %d, w: %d}" % ((border,) * 4)
+                want = "spriteBorder: {x: %d, y: %d, z: %d, w: %d}" % sides(border)
                 if want not in side.read_text(encoding="utf8"):
                     bad.append(f"{name}.png.meta does not carry the measured border {border}")
         if bad:

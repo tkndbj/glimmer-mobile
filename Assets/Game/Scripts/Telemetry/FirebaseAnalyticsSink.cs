@@ -20,11 +20,11 @@ namespace GlimmerGrove.Analytics
     /// </para>
     /// <para>
     /// GA4 refuses names it does not like rather than mangling them, and it refuses them
-    /// <em>server-side</em> — the call succeeds, the device logs nothing, and the event is
+    /// <em>server-side</em> - the call succeeds, the device logs nothing, and the event is
     /// simply absent from a report weeks later. So every name and key is forced into the
     /// legal shape here rather than trusted to call sites: a rule enforced at one boundary
     /// cannot be forgotten by the ninetieth caller. The costs of the two mistakes are not
-    /// symmetrical — a squashed name is a row with an odd label, a rejected one is data that
+    /// symmetrical - a squashed name is a row with an odd label, a rejected one is data that
     /// was never collected and cannot be backfilled.
     /// </para>
     /// <para>
@@ -181,7 +181,7 @@ namespace GlimmerGrove.Analytics
         ///
         /// <para>
         /// Numbers stay numbers, because a figure delivered as text cannot be averaged or
-        /// bucketed in a report and there is no way to change that after the fact — the rows
+        /// bucketed in a report and there is no way to change that after the fact - the rows
         /// are already written. Booleans go as 0/1 for the same reason: "true" and "false"
         /// are a two-valued dimension where 0 and 1 are a rate.
         /// </para>

@@ -11,7 +11,7 @@ namespace GlimmerGrove.Social
     /// there is no global sort anywhere in this feature.</b> The obvious implementation of
     /// "where do I stand" keeps every player's score in one ordered structure and asks it for
     /// a rank. That is a write on every purchase and a read that has to walk a list which
-    /// grows with the game — exactly the trade <c>stats.ts</c> refused for move counts, for
+    /// grows with the game - exactly the trade <c>stats.ts</c> refused for move counts, for
     /// exactly the same reasons. Nine scores published once a day answer the same question to
     /// within a percentage point, in one document, at O(1), at any player count. There is no
     /// scale at which the exact version buys a player anything they could notice.
@@ -20,14 +20,14 @@ namespace GlimmerGrove.Social
     /// <b>Higher is better here, which is the one difference from <see cref="LevelStats"/>.</b>
     /// A move count is a score you want small, so its reading is "how many keepers took more".
     /// A grove's worth is a score you want large, so the reading is "how many keepers hold
-    /// less" — <see cref="PercentBelow"/>. The two are not the same function with a sign
+    /// less" - <see cref="PercentBelow"/>. The two are not the same function with a sign
     /// flipped, because the deciles ascend in both cases and only one of them ascends
     /// <em>towards</em> the good end. Written out separately rather than shared, because a
     /// shared one would take a flag and the flag would be got wrong exactly once.
     /// </para>
     /// <para>
     /// <b>Deciles of what population.</b> Every sampled save that has actually done the thing.
-    /// For grove worth that is "keepers who have built something" — groves worth zero are
+    /// For grove worth that is "keepers who have built something" - groves worth zero are
     /// excluded deliberately, because on the day the feature ships most accounts have bought
     /// nothing and including them would put the median at zero and tell the first player who
     /// bought a fence that they are ahead of ninety per cent of the world. For waves it is
@@ -36,7 +36,7 @@ namespace GlimmerGrove.Social
     /// <para>
     /// <b>One type, two distributions, and no flag.</b> Grove worth and a wave count are both
     /// scores you want <em>large</em>, so <see cref="PercentBelow"/> is the same function over
-    /// both and this is used twice rather than being copied or parameterised — the reading that
+    /// both and this is used twice rather than being copied or parameterised - the reading that
     /// genuinely differs is <c>LevelStats</c>', where a move count is a score you want small,
     /// and that one is written out separately on purpose.
     /// </para>
@@ -86,7 +86,7 @@ namespace GlimmerGrove.Social
         ///
         /// <para>
         /// Linear interpolation between the deciles, which is the honest reading of what a
-        /// decile table knows — it says where the boundaries are and nothing about the shape
+        /// decile table knows - it says where the boundaries are and nothing about the shape
         /// between them, so a straight line is the least invented answer. A score of zero
         /// gets -1 rather than a percentile: a player who has built nothing is not in the
         /// population these deciles describe, and telling them they are behind everybody is
@@ -144,7 +144,7 @@ namespace GlimmerGrove.Social
     /// <b>A named type rather than a tuple, and the second distribution is why.</b> This
     /// arrived as <c>(result, table, population, builtUnix)</c> and adding waves would have made
     /// it six positional values threaded through an interface, an implementation, a test double
-    /// and a caller — where the only thing stopping two same-typed members being swapped is
+    /// and a caller - where the only thing stopping two same-typed members being swapped is
     /// whoever is reading the diff. Every field here is named at every call site, and a third
     /// distribution costs one member instead of one more position.
     /// </para>
@@ -186,7 +186,7 @@ namespace GlimmerGrove.Social
     /// The published distributions, and how many keepers each board was chosen from.
     ///
     /// <para>
-    /// Read from the server, never computed here — <c>publishGroveRanks</c> writes one
+    /// Read from the server, never computed here - <c>publishGroveRanks</c> writes one
     /// document a day and the client holds it for the session, exactly as
     /// <see cref="GroveStats"/> does. Absent is the ordinary state and costs nothing: no
     /// backend, no network, a game whose first day it is. Every reader gets
@@ -217,7 +217,7 @@ namespace GlimmerGrove.Social
         ///
         /// <b>A hundred rows is a board; this is what answers the same question for everybody
         /// else.</b> At ten million players the Endless Watch reaches 0.001% of them, so without
-        /// this the lane would be ranked for a hundred people and silent for the rest — and it
+        /// this the lane would be ranked for a hundred people and silent for the rest - and it
         /// costs no reads at all, because it comes out of the sample the worth deciles already
         /// walk.
         /// </summary>
@@ -235,7 +235,7 @@ namespace GlimmerGrove.Social
                 : 0;
 
         /// <summary>
-        /// Every keeper on the global board — which is the game's population of keepers who
+        /// Every keeper on the global board - which is the game's population of keepers who
         /// have built something, and not a sum.
         ///
         /// <b>Deliberately not added up across the boards.</b> A keeper with a grove and an
@@ -246,7 +246,7 @@ namespace GlimmerGrove.Social
 
         /// <summary>
         /// Adopts a table. Replaces wholesale rather than merging, so a board that emptied
-        /// cannot leave a stale count behind claiming to be current — <see cref="GroveStats"/>
+        /// cannot leave a stale count behind claiming to be current - <see cref="GroveStats"/>
         /// replaces for the same reason.
         /// </summary>
         public static void Publish(GroveRankPublication published)

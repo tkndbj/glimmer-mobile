@@ -19,18 +19,18 @@ namespace GlimmerGrove
     /// <b>A screen of its own, sharing the world and nothing about being a run</b> (MODES.md
     /// 20b, read the other way): a challenge is not a level. It has no <c>LevelId</c>, no
     /// record, no stars, no hearts, no continue and no lesson, so it goes through none of
-    /// <c>RunScreen</c>, <c>ProtoScreen</c> or the reward path — by the owner's instruction that
+    /// <c>RunScreen</c>, <c>ProtoScreen</c> or the reward path - by the owner's instruction that
     /// tuning a challenge must never move the core game. What it shares is the art
     /// (<see cref="ChallengeArt"/>), the kit and the flow.
     /// </para>
     /// <para>
     /// <b>Opened by genre, dealt by the ledger, spent at the first move.</b> The list says
     /// which genre; which level that is today, and whether a play is left, is
-    /// <see cref="ChallengeLedger.Begin"/>'s answer — so a screen that is somehow reached
+    /// <see cref="ChallengeLedger.Begin"/>'s answer - so a screen that is somehow reached
     /// with no play left goes straight back to the list. The play itself is taken by
     /// <see cref="ChallengeLedger.Commit"/> on the first move the rules accept (invariant
     /// 56g), so a board opened, looked at and backed out of costs nothing and is dealt
-    /// again untouched — the owner's instruction, 2026-09-26.
+    /// again untouched - the owner's instruction, 2026-09-26.
     /// </para>
     /// <para>
     /// <b>One door for every input, and nothing behind it is thrown away.</b> A view hands
@@ -38,7 +38,7 @@ namespace GlimmerGrove
     /// <em>queues</em> the hill's (<see cref="ChallengeHillView.Enqueue"/>): the hill draws
     /// its turns on its own and hurries when it falls behind, so the board is never latched
     /// for a walk it is not part of. The board is latched only for its own landing, and an
-    /// input made inside that is <b>held, not dropped</b> — one deep, the latest wins — and
+    /// input made inside that is <b>held, not dropped</b> - one deep, the latest wins - and
     /// played the frame the board is free. The first cut latched for both and refused every
     /// tap inside the second they took, which on the glade was reported as conduits that
     /// "sometimes don't rotate" (2026-09-26). A refused input shakes and costs nothing.
@@ -78,7 +78,7 @@ namespace GlimmerGrove
         /// board is asked first and the hill takes the rest</b>: a board is laid out at the
         /// widest cell the safe width allows, so a wide, short board leaves the hill most of
         /// the screen, and the hill is bounded so a tall phone does not make a walk of it and
-        /// a short one cannot squeeze it to a strip — below the floor it is the <em>board</em>
+        /// a short one cannot squeeze it to a strip - below the floor it is the <em>board</em>
         /// that shrinks its cells. The owner's reading of the first cut (2026-09-23) was
         /// "the hills are too small": at a fixed share of the room the hill was 3.3 cells
         /// against a 4x4 board given 6.6, and the four posts stood two cells tall over it.
@@ -98,7 +98,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// The puzzle band runs edge to edge and to the foot of the screen, on an opaque
-        /// ground (<see cref="Ground"/>) — the owner's instruction on 2026-09-23: "make the
+        /// ground (<see cref="Ground"/>) - the owner's instruction on 2026-09-23: "make the
         /// board cover the full area and make it non-transparent". So there is no inset, no
         /// pad under it and no gap between it and the line; the board is centred in the whole
         /// of what the hill leaves, and the brick backdrop stops at the rampart.
@@ -273,7 +273,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// The opaque ground under the puzzle band: full width, from the band's top edge to
-        /// the foot of the canvas — past the safe area's bottom inset, so a home indicator sits
+        /// the foot of the canvas - past the safe area's bottom inset, so a home indicator sits
         /// on ground and not on brick. It goes into <c>Content</c> (which is full-bleed)
         /// directly under the safe layer, so it covers the scenery and nothing else.
         /// </summary>
@@ -340,7 +340,7 @@ namespace GlimmerGrove
                 return;
             }
 
-            // The first move the rules accepted is the play being spent — written before
+            // The first move the rules accepted is the play being spent - written before
             // anything is drawn, so a process killed on the board finds it spent on relaunch.
             ChallengeLedger.Commit(_play);
 
@@ -412,7 +412,7 @@ namespace GlimmerGrove
         // ------------------------------------------------------------------ the endings
         /// <summary>
         /// The run is over. <b>The ledger is told before anything is drawn</b>, so a process
-        /// killed during the curtain has still paid — a win is a claim in the save and a tally
+        /// killed during the curtain has still paid - a win is a claim in the save and a tally
         /// moved, both persisted by the ledger's own save, and the curtain merely reports them.
         /// </summary>
         void End(bool won)
@@ -429,9 +429,9 @@ namespace GlimmerGrove
 
         /// <summary>
         /// A beat, the flash the board did not already give, and then the run's own ending
-        /// panel — the victory design over what the clear paid
+        /// panel - the victory design over what the clear paid
         /// (<see cref="ChallengeWinOverlay"/>), or the defeat design with the line's reason and
-        /// no hearts (<see cref="ChallengeDefeatOverlay"/>) — by the owner's instruction on
+        /// no hearts (<see cref="ChallengeDefeatOverlay"/>) - by the owner's instruction on
         /// 2026-09-24. The boost's percentage is read here, at the moment the panel is raised,
         /// because the ledger banked the bonus at the win and only the window knows its rate.
         /// </summary>

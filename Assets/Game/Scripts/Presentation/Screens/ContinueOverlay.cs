@@ -24,7 +24,7 @@ namespace GlimmerGrove
     /// <b>The short-of-gems branch never navigates, and that is the whole reason this panel is
     /// not simply a re-skin of <c>ShopSupplyOverlay</c>.</b> Every other short balance in this
     /// game opens the shop, which is right everywhere else and catastrophic here: the screen
-    /// underneath is a run in progress, and leaving it forfeits a heart — so a player who
+    /// underneath is a run in progress, and leaving it forfeits a heart - so a player who
     /// tapped "get gems" to <em>save</em> their run would lose it on the way to paying for it.
     /// The gems are brought to the player instead (<see cref="GemShopOverlay"/>), stacked on
     /// top of this panel, and when they land this one is still standing with the price now
@@ -32,7 +32,7 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>Exactly one of <see cref="Bought"/> and <see cref="Declined"/> fires, always</b>, for
-    /// every way this panel can end — the two buttons, the hardware back key, and the screen
+    /// every way this panel can end - the two buttons, the hardware back key, and the screen
     /// underneath being destroyed while it is open. It is reported from <c>OnDestroy</c> for
     /// <c>AdOfferOverlay</c>'s reason, and it matters more here than it did there: the run
     /// behind this is frozen mid-defeat with its heart uncharged and its record unwritten, so
@@ -44,7 +44,7 @@ namespace GlimmerGrove
     {
         /// <summary>
         /// What is being sold. Set by the caller's configure callback before <c>Init</c> runs,
-        /// which is why it is a property rather than a field — the shape <c>WinOverlay.Run</c>
+        /// which is why it is a property rather than a field - the shape <c>WinOverlay.Run</c>
         /// uses, and what keeps Unity's serialization analyser off a type never meant to
         /// survive a domain reload.
         /// </summary>
@@ -55,7 +55,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// The gems were taken. Carries the allowance to hand over, which is the offer's
-        /// figure rather than the table's — see <see cref="ContinueOffer.Amount"/>.
+        /// figure rather than the table's - see <see cref="ContinueOffer.Amount"/>.
         /// </summary>
         public Action<int> Bought;
 
@@ -64,7 +64,7 @@ namespace GlimmerGrove
 
         // A "restart level" button lived here for one revision and was taken out again. It
         // charged the same heart declining charges, wrote the same record, and differed only in
-        // skipping the panel that follows — whose own first button then did exactly what it had
+        // skipping the panel that follows - whose own first button then did exactly what it had
         // just done. Two buttons with one outcome is the confusion this panel was being fixed
         // for, one layer further down. The panel asks whether to pay; what to do instead is the
         // defeat panel's whole job.
@@ -73,7 +73,7 @@ namespace GlimmerGrove
         // A cursor walking down the panel rather than absolute offsets, because the panel now
         // has four heights: the short-of-gems line and the restart button are each optional and
         // they combine. Absolute offsets would mean a line drawn through a button on exactly one
-        // of the branches — which is the failure AdOfferOverlay's layout was rewritten to avoid.
+        // of the branches - which is the failure AdOfferOverlay's layout was rewritten to avoid.
         //
         // The numbers themselves live in ContinuePanel, in Domain, with the fit check that
         // refused the first version of the banner for being ten units off the top of a 4:3
@@ -97,7 +97,7 @@ namespace GlimmerGrove
         /// <para>
         /// It exists because the debit raises <c>PlayerProgression.Changed</c> <em>from inside
         /// itself</em>, so the balance handler runs while <see cref="Spend"/> is still on the
-        /// stack — and by then the gems are gone, which reads as "short of gems" and would
+        /// stack - and by then the gems are gone, which reads as "short of gems" and would
         /// rebuild the panel into the buy-gems state a frame before it closes. Guarding the
         /// repaint is cheaper and clearer than making the debit quiet.
         /// </para>
@@ -106,8 +106,8 @@ namespace GlimmerGrove
 
         protected override void Build()
         {
-            // An offer that has evaporated between being built and being drawn — a content
-            // push withdrawing the feature, a balance that moved — is not a panel worth
+            // An offer that has evaporated between being built and being drawn - a content
+            // push withdrawing the feature, a balance that moved - is not a panel worth
             // showing. Closing reports a decline, which loses the run exactly as it would have
             // been lost had the offer never been made.
             if (!Offer.Exists) { Flow.Dismiss(this); Report(false); return; }
@@ -118,7 +118,7 @@ namespace GlimmerGrove
 
             // Every row's offset is the centre of its slot, because UIKit.Box always pivots
             // centre whatever it is anchored to. The note alone used to be placed at the top
-            // of its slot, which drew it half its own height too high — straight through the
+            // of its slot, which drew it half its own height too high - straight through the
             // "more turns" line above it. The house rule the map nodes and the weave band
             // both landed on: whether two things overlap is arithmetic, so do the arithmetic.
             float y = HeadRoom;
@@ -136,7 +136,7 @@ namespace GlimmerGrove
             MakePanel(new Vector2(PanelW, y), Loc.Get("ui.continue.title"), dismissOnScrim: false);
 
             // Held back until the word above has landed and risen. Sequencing them is what makes
-            // the two read as one sentence — this happened, so: this question — and it is the
+            // the two read as one sentence - this happened, so: this question - and it is the
             // whole reason the banner is worth animating at all.
             var entrance = Panel.gameObject.AddComponent<CanvasGroup>();
             entrance.alpha = 0f;
@@ -148,13 +148,13 @@ namespace GlimmerGrove
                .OnAbandon(() => { if (entrance) entrance.alpha = 1f; });
 
             // The word first, so nobody has to infer from a price that they have lost. It was
-            // reported exactly that way — a panel offering gems, read as the cost of *finishing*
+            // reported exactly that way - a panel offering gems, read as the cost of *finishing*
             // the level rather than of undoing a defeat. The panel below it asks a question; this
             // says what happened, and it is the one thing on screen that is not a choice.
             BuildBanner(y);
 
             // One sentence with the number in it, set large enough to be read at the moment
-            // somebody has just lost — which is not a moment anybody spends on a paragraph. It
+            // somebody has just lost - which is not a moment anybody spends on a paragraph. It
             // is built from the offer rather than written into the copy, so a retune of what a
             // continue hands over cannot leave this saying something else.
             UIKit.Shrinkable(
@@ -189,7 +189,7 @@ namespace GlimmerGrove
             // A whole button rather than a corner cross, which is where this parts company
             // with AdOfferOverlay. There, declining costs nothing and a button spent on it
             // reads as a panel expecting to be declined. Here declining ends the run and takes
-            // a heart, so it is a decision the player is entitled to make deliberately — and a
+            // a heart, so it is a decision the player is entitled to make deliberately - and a
             // panel whose only visible exit is the one that charges them is the shape a store
             // reviewer is right to call a dark pattern.
             var give = UIKit.TextButton("GiveUp", Panel, "btn_red",
@@ -199,7 +199,7 @@ namespace GlimmerGrove
             UIKit.Shrinkable(give.Label, 20);
 
             // Unsubscribed first, because Rebuild runs Build again on the same component and
-            // a second subscription would repaint twice for every balance change — and then
+            // a second subscription would repaint twice for every balance change - and then
             // four times, and then eight.
             PlayerProgression.Changed -= OnBalanceChanged;
             PlayerProgression.Changed += OnBalanceChanged;
@@ -209,15 +209,15 @@ namespace GlimmerGrove
         /// The word, and the one animation on this panel.
         ///
         /// <para>
-        /// It arrives at the middle of the screen — where the eye already is, because that is
-        /// where the board was — holds for a beat, and glides up to sit above the panel that is
+        /// It arrives at the middle of the screen - where the eye already is, because that is
+        /// where the board was - holds for a beat, and glides up to sit above the panel that is
         /// arriving underneath it. Landing it in place immediately was tried and reads as a
         /// header; travelling from where the run ended to where the question is being asked is
         /// what makes the two feel like one sentence rather than two panels.
         /// </para>
         /// <para>
         /// Where it comes to rest is <c>ContinuePanel.BannerCentre</c>'s, which counts the
-        /// panel's half-height, the ribbon standing proud of it and the gap — a modal is
+        /// panel's half-height, the ribbon standing proud of it and the gap - a modal is
         /// centred, so all three are above the middle and all three have to be paid for.
         /// </para>
         /// </summary>
@@ -234,7 +234,7 @@ namespace GlimmerGrove
 
             var rt = (RectTransform)word.transform;
 
-            // Under the reason, so the player is told what happened *and* why in one glance —
+            // Under the reason, so the player is told what happened *and* why in one glance -
             // and the why is the mode's own word for it, not a generic one.
             var why = UIKit.Titled("Why", Content, Loc.Get(ReasonKey(Offer.Unit)), 30,
                                    Pal.A(Pal.Cream, .78f), TextAnchor.MiddleCenter,
@@ -261,7 +261,7 @@ namespace GlimmerGrove
                .OnAbandon(() => { if (word) rt.anchoredPosition = new Vector2(0f, rest); });
 
             // No sound. Breaking glass over a lost run is a punishment noise, and this panel is
-            // an offer — it was the one thing on screen saying "you have been told off" while
+            // an offer - it was the one thing on screen saying "you have been told off" while
             // everything else was asking a question.
         }
 
@@ -281,7 +281,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// The debit is asked for again here rather than trusted from the state the panel was
-        /// built in, and that is reachable rather than defensive — the balance moves while a
+        /// built in, and that is reachable rather than defensive - the balance moves while a
         /// panel is open, and a sync landing between the build and the tap is the ordinary
         /// case. <c>RunContinue.TryBuy</c> decides against the balance at the instant of the
         /// charge, which is the only instant that means anything.
@@ -297,7 +297,7 @@ namespace GlimmerGrove
                 _spending = false;
                 // Reachable exactly as it is on the shop's own supply panel: another device
                 // spent, or a server sync revised the balance down. Repaint rather than close
-                // — the offer is still good, the player simply cannot meet it yet, and this
+                // - the offer is still good, the player simply cannot meet it yet, and this
                 // panel already knows how to say that.
                 Audio.SfxVaried("back", .5f);
                 Rebuild();
@@ -323,7 +323,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Stacked on top of this panel rather than replacing it, so the thing they are buying
-        /// gems <em>for</em> is still there when they come back — and so that nothing about
+        /// gems <em>for</em> is still there when they come back - and so that nothing about
         /// this run's frozen board is disturbed by a purchase that may take the app into the
         /// background for a minute. See <see cref="GemShopOverlay"/>.
         /// </para>
@@ -395,7 +395,7 @@ namespace GlimmerGrove
         /// <summary>
         /// Written out per unit rather than built from the enum name, so the build gate's
         /// string scanner can see every key. A concatenated key is invisible to it and ships
-        /// missing in whichever language nobody tested — the rule <c>WinOverlay.RankKeys</c>
+        /// missing in whichever language nobody tested - the rule <c>WinOverlay.RankKeys</c>
         /// states and <c>DefeatOverlay</c> follows.
         /// </summary>
         /// <summary>

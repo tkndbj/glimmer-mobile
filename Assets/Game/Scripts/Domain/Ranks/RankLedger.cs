@@ -17,18 +17,18 @@ namespace GlimmerGrove.Ranks
     /// </para>
     /// <para>
     /// <b>Cached and invalidated like <see cref="PlayerProgression"/>, and for the same
-    /// reason</b> — a map readout and a page of rows both ask several times a repaint, and the
+    /// reason</b> - a map readout and a page of rows both ask several times a repaint, and the
     /// walk behind the answer touches every level record. The cache is dropped by the six things
     /// that can move it: a run being recorded, the save being reloaded or merged, the catalog
     /// being republished, the ladder being retuned, an Infinite best landing, and a counted verb
     /// happening. That list <em>is</em> the measure registry read backwards, which is why adding
-    /// a measure means adding its cue here — the one thing a new measure costs beyond its
+    /// a measure means adding its cue here - the one thing a new measure costs beyond its
     /// reading.
     /// </para>
     /// <para>
     /// <b><see cref="Promoted"/> fires only on the way up, and cannot fire on the way down,
     /// because there is no way down</b> (invariant 52). It carries the rung reached so a screen
-    /// can celebrate it; nothing depends on it, and nothing is paid by it — see
+    /// can celebrate it; nothing depends on it, and nothing is paid by it - see
     /// <see cref="RankDefinition"/> for why a rank pays nothing.
     /// </para>
     /// </summary>
@@ -69,7 +69,7 @@ namespace GlimmerGrove.Ranks
 
             // What a rung can be about, one cue each. A measure added without its cue would be
             // a badge that is correct whenever a screen happens to be rebuilt and stale the rest
-            // of the time — which compiles, draws and passes every fixture, because nothing
+            // of the time - which compiles, draws and passes every fixture, because nothing
             // moves during a test (invariant 44j's lesson, about a rank rather than a balance).
             Persistence.PlayerProgress.RecordChanged += _ => Invalidate();
             Persistence.PlayerProgress.Reloaded += Invalidate;
@@ -78,8 +78,8 @@ namespace GlimmerGrove.Ranks
             EndlessLedger.Changed += Invalidate;
             Tasks.LifetimeTally.Changed += Invalidate;
 
-            // The keeper level moves on XP alone — an Infinite run, a boost banking, a season
-            // chest — with no record changing, so it needs its own cue rather than riding on
+            // The keeper level moves on XP alone - an Infinite run, a boost banking, a season
+            // chest - with no record changing, so it needs its own cue rather than riding on
             // the record one.
             PlayerProgression.Changed += Invalidate;
         }
@@ -93,8 +93,8 @@ namespace GlimmerGrove.Ranks
         /// <summary>
         /// The highest rung held, or null for an account that has not reached the first.
         ///
-        /// Null is an ordinary state rather than a fault — every account is there for its first
-        /// few glades — and every screen draws it as the first rung, unheld.
+        /// Null is an ordinary state rather than a fault - every account is there for its first
+        /// few glades - and every screen draws it as the first rung, unheld.
         /// </summary>
         public static RankDefinition Held
         {
@@ -114,7 +114,7 @@ namespace GlimmerGrove.Ranks
         public static int Count => Ladder.Count;
 
         /// <summary>
-        /// How far through the rung being climbed the player is, as a fraction — the mean of its
+        /// How far through the rung being climbed the player is, as a fraction - the mean of its
         /// lines, each clamped to its own target.
         ///
         /// <para>
@@ -122,7 +122,7 @@ namespace GlimmerGrove.Ranks
         /// not in the same units: a rung asking for ten glades and two hundred and fifty battles
         /// would be a bar that barely moves for the glades and then jumps, which reads as a bar
         /// that is broken. Each line contributes the same share, which is also how the page
-        /// draws them — one row each, same width.
+        /// draws them - one row each, same width.
         /// </para>
         /// </summary>
         public static float Progress01
@@ -173,7 +173,7 @@ namespace GlimmerGrove.Ranks
             _account = account;
 
             // `before < 0` is the first read of the session, which is not a promotion however
-            // high the account stands — every launch would otherwise announce the rank the
+            // high the account stands - every launch would otherwise announce the rank the
             // player already had. Nor is a rise that belongs to somebody else's save; see
             // <see cref="_account"/>.
             if (before >= 0 && sameAccount && _heldOrdinal > before && _held != null)

@@ -14,12 +14,12 @@ namespace GlimmerGrove.Tests
     /// deliberate. The vector test that reads the file needs <c>JsonUtility</c> and so only
     /// runs inside the Editor; these run anywhere, which means the generator is checked on
     /// every offline compile rather than only when somebody opens Unity. They were produced
-    /// by a third implementation — a Python transcription of the same algorithm — so a
+    /// by a third implementation - a Python transcription of the same algorithm - so a
     /// green run here means C#, the vector file and that transcription all agree.
     /// </para>
     /// <para>
     /// If these go red, do not "fix" them. Every percentage is a glade somebody has already
-    /// been paid for, and the server recomputes the same number from the same two facts —
+    /// been paid for, and the server recomputes the same number from the same two facts -
     /// see invariant 9c. A change here that is not mirrored in
     /// <c>functions/src/progression.ts</c> makes a player's balance move after a sync.
     /// </para>
@@ -87,7 +87,7 @@ namespace GlimmerGrove.Tests
             Assert.IsEmpty(failures,
                            "the golden generator no longer matches the shared vectors. Every one of " +
                            "these is a glade somebody has been paid for, and the server derives the " +
-                           "same number — see invariant 9c.\n" + string.Join("\n", failures));
+                           "same number - see invariant 9c.\n" + string.Join("\n", failures));
         }
 
         /// <summary>
@@ -105,7 +105,7 @@ namespace GlimmerGrove.Tests
         // ------------------------------------------------------------ the rule
         /// <summary>
         /// The state before the first sign-in. The client cannot know the server's seed
-        /// until it has spoken to the server, so it pays the base — the one direction that
+        /// until it has spoken to the server, so it pays the base - the one direction that
         /// cannot cost anybody anything, because the earned floor means the number can only
         /// rise afterwards.
         /// </summary>
@@ -121,7 +121,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The bonus belongs to the glade, not to the run. That is what makes it
-        /// unfarmable — replaying pays nothing, and force-quitting re-rolls nothing — and
+        /// unfarmable - replaying pays nothing, and force-quitting re-rolls nothing - and
         /// it is the property the server relies on to recompute without an attempt counter.
         /// </summary>
         [Test]

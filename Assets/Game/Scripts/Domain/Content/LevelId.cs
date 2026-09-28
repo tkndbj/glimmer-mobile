@@ -7,7 +7,7 @@ namespace GlimmerGrove.Content
     ///
     /// This is the single most important type in the content system. Save files,
     /// analytics events and remote config all key on it, so once an id has shipped
-    /// it must never change or be reused — reordering, inserting or removing levels
+    /// it must never change or be reused - reordering, inserting or removing levels
     /// then costs nothing. It is a struct rather than a raw string so the compiler
     /// stops anyone passing an array index where an identity is expected.
     /// </summary>

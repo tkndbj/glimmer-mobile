@@ -7,13 +7,13 @@ namespace GlimmerGrove.Tests
 {
     /// <summary>
     /// The map checks exist because a chapter can be perfectly valid level by level and
-    /// still be laid out unplayably — two glades on the same rock, a trail running back
+    /// still be laid out unplayably - two glades on the same rock, a trail running back
     /// down the hill. Nothing else in the pipeline can see either: the JSON parses, the
     /// boards are solvable, the art resolves, the build is green.
     ///
     /// These tests pin the two things that make the check worth trusting: that it fires
     /// on the real mistakes, and that it measures in canvas units rather than in raw
-    /// fractions — because a chapter with six strips is six times as tall, and a checker
+    /// fractions - because a chapter with six strips is six times as tall, and a checker
     /// that forgot would nag every large chapter about glades half a screen apart.
     /// </summary>
     public sealed class ChapterMapTests
@@ -140,7 +140,7 @@ namespace GlimmerGrove.Tests
         /// The offending glade is placed by <em>asking the rule</em> rather than at a typed
         /// fraction. It used to sit at a literal 0.95, which was the ceiling at the time; when
         /// the ceiling became a distance from the top of the map (<see cref="ChapterMap.TeaserHeadroom"/>)
-        /// the marker moved and this fixture quietly stopped crowding anything — the test went
+        /// the marker moved and this fixture quietly stopped crowding anything - the test went
         /// green-adjacent by testing nothing. Passing a highest of 1 forces the clamp, so this
         /// is wherever the marker actually is for a chapter this tall, for ever.
         /// </remarks>
@@ -162,7 +162,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The shape every mode's first chapter shipped in: the last glade on the right, under
         /// a marker on its default side, 308 canvas units straight up. The discs clear each
-        /// other by 88 units, so the distance check passed — and the marker's name plate sat on
+        /// other by 88 units, so the distance check passed - and the marker's name plate sat on
         /// the player's standing above the tenth glade. Mirrored, with the tenth glade on the
         /// left, the same chapter is clean.
         /// </summary>
@@ -195,7 +195,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The same rule between two glades: one standing 360 units straight above another
         /// clears its disc by 140 and still hangs its plate over the lower glade's standing.
-        /// On the other side of the map, or 576 units up, it is clean — which is why every
+        /// On the other side of the map, or 576 units up, it is clean - which is why every
         /// shipped chapter alternates sides.
         /// </summary>
         [Test]
@@ -273,7 +273,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// A chapter may say which side the marker caps its trail on, and the check has to
         /// follow it there. Reading the default instead would be invisible in the ordinary
-        /// direction — it would simply stop noticing a glade the marker now sits on — which
+        /// direction - it would simply stop noticing a glade the marker now sits on - which
         /// is the one thing this check exists for.
         /// </summary>
         [Test]
@@ -296,7 +296,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// Zero is what <c>JsonUtility</c> writes into a field a chapter authored before this
-        /// existed, so it has to keep meaning "the default" rather than "the left edge" — the
+        /// existed, so it has to keep meaning "the default" rather than "the left edge" - the
         /// convention <c>par</c> and <c>budgetFactor</c> already use.
         /// </summary>
         [Test]
@@ -344,7 +344,7 @@ namespace GlimmerGrove.Tests
         /// </summary>
         /// <remarks>
         /// <para>
-        /// The marker's coordinate is authored nowhere — it is placed for the author by
+        /// The marker's coordinate is authored nowhere - it is placed for the author by
         /// <see cref="ChapterMap.TeaserPosition"/>, and the clearance check only ever compares
         /// it against glades. So when the mode switcher was added <em>beneath</em> the plaque
         /// the headroom had been sized against, the marker went on landing at the same

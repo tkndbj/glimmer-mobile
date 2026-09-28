@@ -24,7 +24,7 @@ namespace GlimmerGrove.Layout
     /// <para>
     /// <b>The glyphs are not here and are not in the build either.</b> They are baked from
     /// Orbitron by <c>Tools/make_ident_art.py</c> into a single white-on-transparent PNG, which
-    /// the launch screen draws twice — once as the letters, and once as the <c>Mask</c> that
+    /// the launch screen draws twice - once as the letters, and once as the <c>Mask</c> that
     /// clips a neon sweep to their shapes. A second font in <c>Assets</c> would be a file, a
     /// manifest entry, an Addressables row, an audit and a typeface loaded at runtime, all for
     /// nine letters that never change.
@@ -32,7 +32,7 @@ namespace GlimmerGrove.Layout
     /// <para>
     /// <b>The mark's aspect is deliberately not a constant here.</b> It is read off the sprite,
     /// so re-cutting the bake at a different weight or tracking cannot leave a number in this
-    /// file quietly describing the previous cut — the class that was here before this one held a
+    /// file quietly describing the previous cut - the class that was here before this one held a
     /// whole stroke alphabet, and every one of those coordinates was a thing that could drift
     /// from what shipped.
     /// </para>
@@ -76,7 +76,7 @@ namespace GlimmerGrove.Layout
         /// it.
         /// </summary>
         /// <param name="canvasWidth">
-        /// Canvas width in reference units: 1080 on a phone, wider on anything squarer — see
+        /// Canvas width in reference units: 1080 on a phone, wider on anything squarer - see
         /// <see cref="CanvasFit"/>. A degenerate reading answers zeroes rather than a negative
         /// mark, because a zero-sized screen is reported briefly during a resize and on some
         /// Android devices on the first frame after a rotation.

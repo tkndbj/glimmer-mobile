@@ -9,14 +9,14 @@ namespace GlimmerGrove.EditorTools
     /// Re-files every managed asset from scratch.
     ///
     /// The importer hook keeps the project correct as it changes; this puts it right
-    /// when something has happened the hook could not see — a merge that brought in a
+    /// when something has happened the hook could not see - a merge that brought in a
     /// settings file, an asset added while the package was missing, or a chapter whose
     /// backdrop moved from one chapter to another and so changed which group its art
     /// belongs in. It is safe to run at any time and does nothing when nothing is wrong.
     ///
     /// This is also what replaced the old three-step migration. Those steps described a
     /// journey off <c>Resources/</c> that has since been completed, which left step one
-    /// scanning a folder that no longer existed — a repair tool that silently did
+    /// scanning a folder that no longer existed - a repair tool that silently did
     /// nothing, in a project whose whole asset story depends on it.
     /// </summary>
     public static class AddressableSync
@@ -96,7 +96,7 @@ namespace GlimmerGrove.EditorTools
         /// <b>"The GUID maps to a managed path" is not the same as "the asset is there", and
         /// the difference is a failed build.</b> This used to ask only the first question, and
         /// <c>AssetDatabase.GUIDToAssetPath</c> keeps answering with the old path for a while
-        /// after a file has gone — so a folder of art deleted outside the Editor left every one
+        /// after a file has gone - so a folder of art deleted outside the Editor left every one
         /// of its entries in place, each pointing at a path that looked perfectly managed. The
         /// game did not care, because nothing requested them any more, and
         /// <c>AddressableAudit</c> did not care, because it only proved that everything

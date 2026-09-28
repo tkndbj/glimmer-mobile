@@ -11,7 +11,7 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// <b>Split from <see cref="ReleaseGateTests"/> so that it runs.</b> That fixture reaches
     /// <c>PlayerPrefs</c>, which is a native call, so the offline runner reports every case in
-    /// it as "needs the Editor" — and a single shared <c>[SetUp]</c> would drag these in with
+    /// it as "needs the Editor" - and a single shared <c>[SetUp]</c> would drag these in with
     /// them, leaving the most consequential comparison in the game behind the one gate nobody
     /// runs on the way past (invariant 29e, which this project has already paid for once).
     /// Nothing here touches the device, so all of it is checked on every offline run.
@@ -60,7 +60,7 @@ namespace GlimmerGrove.Tests
         {
             // AppVersion.Running answers nought when Application.version is not a version. A
             // comparison against an unknown build would wall out every install in the world
-            // rather than the old ones — the failure direction with no recovery at all.
+            // rather than the old ones - the failure direction with no recovery at all.
             Assert.IsFalse(Wall(10300).Shuts(0));
         }
 
@@ -79,7 +79,7 @@ namespace GlimmerGrove.Tests
         [Test]
         public void AWallWithAnUnusableStoreLinkIsNotEnforced()
         {
-            // Whatever the platform does with a malformed URL, it is not "open the store" — and
+            // Whatever the platform does with a malformed URL, it is not "open the store" - and
             // on a device doing nothing is indistinguishable from a dead button, on the one
             // panel in this game that has only the one button.
             Assert.IsFalse(Wall(10300, "play.google.com/store").IsEnforceable);
@@ -110,7 +110,7 @@ namespace GlimmerGrove.Tests
         [Test]
         public void ADoorlessRequirementComposesToNothing()
         {
-            // The device may not hold a wall it cannot open — see
+            // The device may not hold a wall it cannot open - see
             // ReleaseGateTests.ADoorlessWallIsNotEvenRemembered for the same claim through the
             // store itself. Pinned here too because this is the half a future refactor would
             // reach for first.
@@ -159,7 +159,7 @@ namespace GlimmerGrove.Tests
         public void AVersionThatIsNotOneIsRefusedRatherThanGuessedAt()
         {
             // Refused, so AppVersion.Running answers nought, so nothing is walled out. The
-            // alternative — salvaging a number out of "1.4.2-beta" — is this file inventing a
+            // alternative - salvaging a number out of "1.4.2-beta" - is this file inventing a
             // convention nobody wrote down, on the input that decides who gets locked out.
             Assert.IsFalse(AppVersion.TryParse(null, out _));
             Assert.IsFalse(AppVersion.TryParse("", out _));
@@ -172,7 +172,7 @@ namespace GlimmerGrove.Tests
         {
             // 1.100.0 and 2.0.0 are the same integer under this scheme, and the direction that
             // fails in is the bad one: a build that reads as newer than it is walks through the
-            // gate. Refused rather than clamped — a clamp makes two real versions equal, which
+            // gate. Refused rather than clamped - a clamp makes two real versions equal, which
             // is the same fault wearing a check's clothes.
             Assert.IsFalse(AppVersion.TryParse("1.100.0", out _));
             Assert.IsFalse(AppVersion.TryParse("1.0.100", out _));
@@ -184,7 +184,7 @@ namespace GlimmerGrove.Tests
         {
             // A chapter's minAppVersion compares against this one, where the worst outcome of
             // being wrong is a chapter shown that could have been hidden. The gate's default is
-            // deliberately the opposite (nought, wall nobody) — two callers, two directions, one
+            // deliberately the opposite (nought, wall nobody) - two callers, two directions, one
             // parser.
             Assert.AreEqual(1, AppVersion.Parse("nonsense"));
             Assert.AreEqual(10402, AppVersion.Parse("1.4.2"));
@@ -198,13 +198,13 @@ namespace GlimmerGrove.Tests
             watch.Claim();
             watch.Answered(ok: true);
 
-            // An hour of frames with no network must not produce a single attempt — and must not
+            // An hour of frames with no network must not produce a single attempt - and must not
             // spend the cadence either, so that regaining a signal is what asks rather than the
             // quarter of an hour that happened to pass in a tunnel.
             for (int i = 0; i < 3600; i++) Assert.IsFalse(watch.Tick(1f, reachable: false));
 
             // Regaining it brings the next attempt forward to the reconnect pause rather than
-            // firing on the frame the interface came up — NetworkReachability flips somewhat
+            // firing on the frame the interface came up - NetworkReachability flips somewhat
             // before the interface carries traffic, and asking on that frame buys one guaranteed
             // failure and nothing else.
             Assert.IsFalse(watch.Tick(1f, reachable: true), "asked on the frame the signal returned");
@@ -215,7 +215,7 @@ namespace GlimmerGrove.Tests
         public void ALaunchWithNoSignalAsksTheMomentOneArrives()
         {
             // The device that has never been told anything. Nothing has been spent, so there is
-            // no pause to serve — this is the launch in a tunnel, and the first moment it can be
+            // no pause to serve - this is the launch in a tunnel, and the first moment it can be
             // answered is the first moment it asks.
             var watch = new ReleaseWatch();
 

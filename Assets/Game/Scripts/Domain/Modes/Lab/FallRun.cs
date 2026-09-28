@@ -8,7 +8,7 @@ namespace GlimmerGrove.Modes
     ///
     /// <para>
     /// <b>It is small on purpose.</b> All of this lived inside <c>FallBoard</c> once, and one
-    /// change turned that class into a puzzle model with an economy and a fail state in it —
+    /// change turned that class into a puzzle model with an economy and a fail state in it -
     /// after which none of the three could be tested without building a well. <c>RippleRun</c>
     /// is the same split for the same reason, and it is what makes "the supply is taken exactly
     /// once per landed drop" and "a lost run is only ever ended once" arithmetic over integers
@@ -50,7 +50,7 @@ namespace GlimmerGrove.Modes
         /// <summary>Motes still standing in the well.</summary>
         public int Left => Board.Motes;
 
-        /// <summary>The longest chain this run has set off — the number worth shouting about.</summary>
+        /// <summary>The longest chain this run has set off - the number worth shouting about.</summary>
         public int Best { get; private set; }
 
         /// <summary>How the run stands. Recomputed rather than cached: it is one walk of a small board.</summary>
@@ -88,8 +88,8 @@ namespace GlimmerGrove.Modes
         /// <summary>
         /// Deals more motes, because a continue was paid for.
         ///
-        /// Nothing else moves: the well stands exactly as it stood, and <see cref="Drops"/> —
-        /// the grade — is untouched, so a bought run scores what it spent. Since a run only
+        /// Nothing else moves: the well stands exactly as it stood, and <see cref="Drops"/> -
+        /// the grade - is untouched, so a bought run scores what it spent. Since a run only
         /// reaches the offer after spending past the two-star line, it can score one star at
         /// most (invariant 23).
         /// </summary>

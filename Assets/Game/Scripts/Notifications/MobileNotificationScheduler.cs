@@ -15,8 +15,8 @@ namespace GlimmerGrove.Notifications
     /// The half of the notification system that knows a phone exists.
     ///
     /// <para>
-    /// Everything that can be reasoned about — which reminders, in what order, at what hours,
-    /// how often, and whether a sentence will still be true when it is read — is in Domain and
+    /// Everything that can be reasoned about - which reminders, in what order, at what hours,
+    /// how often, and whether a sentence will still be true when it is read - is in Domain and
     /// runs in the offline suite. What is here is the handful of calls that cannot be: ask the
     /// OS, write a schedule, clear the shade, find out whether this launch came from a tap.
     /// </para>
@@ -30,7 +30,7 @@ namespace GlimmerGrove.Notifications
     /// <para>
     /// <b>The two platform APIs are used directly rather than the unified <c>NotificationCenter</c>,
     /// and the reason is the icon.</b> The unified API is one code path for channels,
-    /// authorisation and both schedulers, and it was written against first — but in 2.4.3 its
+    /// authorisation and both schedulers, and it was written against first - but in 2.4.3 its
     /// <c>Notification</c> struct carries no icon field and <c>NotificationCenterArgs</c> has no
     /// <c>AndroidSmallIcon</c> (that exists only on the package's <c>master</c>, in no release).
     /// So the one thing this binding exists to get right cannot be expressed through it at all.
@@ -48,7 +48,7 @@ namespace GlimmerGrove.Notifications
         /// <b>A contract with <c>Tools/make_notification_icons.py</c>, and the one string here
         /// whose failure is silent.</b> The package resolves it through
         /// <c>Resources.getIdentifier(name, "drawable", packageName)</c> and, finding nothing,
-        /// falls back to <c>getApplicationInfo().icon</c> — the launcher icon, whose alpha
+        /// falls back to <c>getApplicationInfo().icon</c> - the launcher icon, whose alpha
         /// channel is a solid square, which Android 5.0 and up then renders as a white blob.
         /// So a typo here is not an error, a warning or a missing icon: it is a working
         /// notification with a featureless white circle on it, on every Android device, and
@@ -61,8 +61,8 @@ namespace GlimmerGrove.Notifications
         /// The Android channel every reminder goes down.
         ///
         /// <para>
-        /// One channel, not one per kind. Channels are the player's own controls — they can
-        /// silence one and keep another — and a channel per kind would put ten switches in the
+        /// One channel, not one per kind. Channels are the player's own controls - they can
+        /// silence one and keep another - and a channel per kind would put ten switches in the
         /// OS settings for a game with one thing to say. The id is permanent: Android
         /// remembers a channel's settings for the life of the install and ignores a
         /// re-registration that tries to raise its importance, so renaming it makes a
@@ -87,8 +87,8 @@ namespace GlimmerGrove.Notifications
         Runner _runner;
         bool _ready;
 
-        // Raised only by the device branch below, so every other compilation of this file —
-        // the Editor's, a desktop build's, a clone with no package — warns that nothing raises
+        // Raised only by the device branch below, so every other compilation of this file -
+        // the Editor's, a desktop build's, a clone with no package - warns that nothing raises
         // it. That is the stub doing its job rather than a fault, and the warning is noisy on
         // the one console this project reads for real ones.
 #pragma warning disable 67
@@ -127,7 +127,7 @@ namespace GlimmerGrove.Notifications
             // Default rather than High: these are invitations, not alarms. High gives a
             // heads-up banner over whatever the player is doing, which for "your hearts are
             // full" is the behaviour that gets a game muted. Registering again with a
-            // different importance would change nothing anyway — Android freezes a channel's
+            // different importance would change nothing anyway - Android freezes a channel's
             // settings at creation for the life of the install.
             AndroidNotificationCenter.RegisterNotificationChannel(
                 new AndroidNotificationChannel(Channel, _channelName, _channelBlurb,
@@ -143,7 +143,7 @@ namespace GlimmerGrove.Notifications
         ///
         /// The request is polled on frames rather than against a wall clock because that is
         /// what both platforms expose; what it must never be is a fixed frame budget, since a
-        /// system dialog's lifetime has nothing to do with this game's frame rate — the trap a
+        /// system dialog's lifetime has nothing to do with this game's frame rate - the trap a
         /// <c>[UnityTest]</c> in this project has already fallen into from the other side.
         /// </summary>
         public void RequestPermission()
@@ -163,7 +163,7 @@ namespace GlimmerGrove.Notifications
             var request = new PermissionRequest();
             while (request.Status == PermissionStatus.RequestPending) yield return null;
 #elif UNITY_IOS
-            // Alert, badge and sound — the three this game actually uses. Not asking for
+            // Alert, badge and sound - the three this game actually uses. Not asking for
             // sound would deliver every reminder silently, which reads as the feature not
             // working; `registerForRemoteNotifications` is false because nothing here is a
             // push and asking for one would put this app on APNs for no reason.
@@ -190,7 +190,7 @@ namespace GlimmerGrove.Notifications
         /// </para>
         /// <para>
         /// Deliberately not <c>RequestPermission</c> with the answer thrown away. That answers
-        /// immediately once the OS has decided — but on a fresh install it has <em>not</em>
+        /// immediately once the OS has decided - but on a fresh install it has <em>not</em>
         /// decided, so it prompts, which would turn a background re-arm into a permission
         /// dialog on the splash screen: the exact moment <c>Notify.Ask</c> exists to avoid.
         /// </para>
@@ -261,7 +261,7 @@ namespace GlimmerGrove.Notifications
                     SmallIcon = SmallIcon,
 
                     // The kind travels with the notification, so a tap can be attributed
-                    // without the app keeping any record of what it armed — which is the whole
+                    // without the app keeping any record of what it armed - which is the whole
                     // of why this feature stores nothing at all.
                     IntentData = NotificationKinds.Id(planned.Kind),
 
@@ -353,7 +353,7 @@ namespace GlimmerGrove.Notifications
             string data = null;
 
 #if UNITY_ANDROID
-            // Bounded, because on an ordinary launch there is no intent and never will be —
+            // Bounded, because on an ordinary launch there is no intent and never will be -
             // an unbounded poll would be a coroutine running for the life of the session to
             // answer a question that was settled in the first frame.
             for (int frame = 0; frame < 30 && data == null; frame++)
@@ -406,7 +406,7 @@ namespace GlimmerGrove.Notifications
         /// <para>
         /// The binding owns one rather than borrowing <c>Boot.Pump</c>, because this assembly
         /// must not reference Presentation and because a permission dialog outlives any screen
-        /// — a player can sit on it, switch apps and come back, and a coroutine on a screen's
+        /// - a player can sit on it, switch apps and come back, and a coroutine on a screen's
         /// object would have been destroyed under them.
         /// </para>
         /// <para>

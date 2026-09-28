@@ -4,7 +4,7 @@ namespace GlimmerGrove
     /// The three light channels, as additive bit masks.
     ///
     /// These live with the board rather than with the UI palette. The rule of the
-    /// puzzle — that joined networks mix their colours — is a gameplay fact, and the
+    /// puzzle - that joined networks mix their colours - is a gameplay fact, and the
     /// parser and validator need it long before anything is drawn. Keeping the bits
     /// here is what lets the whole content pipeline be checked with no renderer,
     /// no Editor and no UI assembly present.
@@ -33,11 +33,11 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>A letter names a mask, never the paint the mask is drawn in.</b> They were minted
-        /// when the board mixed like light and they still read as yellow, magenta and cyan —
+        /// when the board mixed like light and they still read as yellow, magenta and cyan -
         /// which is no longer what a player sees, because <c>Pal</c> now paints the wheel the way
         /// paint behaves (R|G is orange, R|B purple, G|B green). The letters stay exactly as they
         /// are: they are in every shipped chapter file and in three offline mirrors, so renaming
-        /// them would be a content migration bought for nothing — the look is <c>Pal</c>'s and
+        /// them would be a content migration bought for nothing - the look is <c>Pal</c>'s and
         /// this is the rule.
         /// </para>
         /// </summary>

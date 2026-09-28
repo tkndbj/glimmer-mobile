@@ -18,8 +18,8 @@ namespace GlimmerGrove
     /// <para>
     /// <b>A climb, not a list.</b> The page is a night sky with a lit path winding up it: the
     /// top of the ladder at the top, level 1 at the foot, the level the player stands on
-    /// crowned and throwing a beam at the next one. Every level is a disc on the path — the
-    /// level-selection pack's three, green for reached, silver for above, crowned for here —
+    /// crowned and throwing a beam at the next one. Every level is a disc on the path - the
+    /// level-selection pack's three, green for reached, silver for above, crowned for here -
     /// and what a level opens stands beside it as a picture on a pedestal (a turret off the
     /// shelf, the Infinite lane) or hangs under it as a banner (an honorific). <b>The page says
     /// almost nothing in words</b>, by the owner's instruction: a number on every disc, a name
@@ -43,8 +43,8 @@ namespace GlimmerGrove
     /// Buying is one tap on the docked key and the level moves at once:
     /// <see cref="KeeperLedger.TryBuy"/> debits, counts and invalidates, this page hears the
     /// change and rebinds, and a refusal from the server takes it back the same way. <b>A
-    /// bought level is drawn as bought</b> — a mint run of path and the currency it was bought
-    /// with on its disc — and the count sits on the medallion, which is the transparency the
+    /// bought level is drawn as bought</b> - a mint run of path and the currency it was bought
+    /// with on its disc - and the count sits on the medallion, which is the transparency the
     /// owner asked for said without a sentence.
     /// </para>
     /// </summary>
@@ -89,7 +89,7 @@ namespace GlimmerGrove
         const float TrackW = 16f, TrackEdge = 32f;
 
         /// <summary>
-        /// A prize stands in a column this far off the middle — past the path's widest swing
+        /// A prize stands in a column this far off the middle - past the path's widest swing
         /// plus half a disc, so no prize can meet the path whatever the level.
         /// </summary>
         public const float ColumnX = 360f;
@@ -287,7 +287,7 @@ namespace GlimmerGrove
         /// Where the player stands: the crowned disc at the size of a medallion under a turning
         /// fan of light, the honorific on the banner hung from it, and the XP bar.
         ///
-        /// <b>The XP bar is the earned level's</b> — a bought level adds a whole rung and moves
+        /// <b>The XP bar is the earned level's</b> - a bought level adds a whole rung and moves
         /// no XP, so the bar keeps meaning "how far to the next level by play" whatever was
         /// bought. Saying otherwise would be a bar that jumps to empty when you spend.
         /// </summary>

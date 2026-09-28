@@ -10,9 +10,9 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// Small, and worth pinning exactly, because both edges are traps. Too strict and a
     /// deployment that predates the field refuses every client for ever (invariant 13a);
-    /// too loose and the check is decoration, and the failure it exists for — a card one
+    /// too loose and the check is decoration, and the failure it exists for - a card one
     /// session behind its grove, with a successful call and a well-formed card on every
-    /// publish — comes back without a symptom.
+    /// publish - comes back without a symptom.
     /// </para>
     /// </summary>
     public sealed class GrovePublicationTests

@@ -11,8 +11,8 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// Against a real temporary directory, for <c>SaveStoreTests</c>' reason: what this type
     /// does is decide where files go and which of them to throw away, and a fake filesystem
-    /// would prove neither. The rules above it — which grove is on the device after a swap,
-    /// and which account owns it — are in-memory facts and are proved offline in
+    /// would prove neither. The rules above it - which grove is on the device after a swap,
+    /// and which account owns it - are in-memory facts and are proved offline in
     /// <c>AccountSwitchTests</c> against an archive that keeps nothing on disk at all.
     /// </para>
     /// </summary>
@@ -24,7 +24,7 @@ namespace GlimmerGrove.Tests
         string _dir;
 
         // Made on demand rather than in a SetUp, so that the one case here needing no
-        // filesystem — that the folder name a grove is filed under never moves — is not
+        // filesystem - that the folder name a grove is filed under never moves - is not
         // dragged into the Editor by Application.temporaryCachePath, which is native.
         [TearDown]
         public void RemoveDir()
@@ -69,7 +69,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// Reading does not remove. The caller drops a slot only once the grove in it has been
         /// adopted, so a process death between the two costs a duplicate copy rather than a
-        /// grove — which is the one failure this whole subsystem exists to make unreachable.
+        /// grove - which is the one failure this whole subsystem exists to make unreachable.
         /// </summary>
         [Test]
         public void ReadingDoesNotRemove()
@@ -156,7 +156,7 @@ namespace GlimmerGrove.Tests
                 //
                 // Aged into the *past*, and that is not cosmetic: the eviction runs inside
                 // Stash, before this line, so stamping a folder into the future would make the
-                // next one created — which is the newest — look like the oldest thing there and
+                // next one created - which is the newest - look like the oldest thing there and
                 // throw it away immediately. That is what this test caught on its first run in
                 // the Editor.
                 string folder = Path.Combine(_dir, Key(uid));
@@ -172,7 +172,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The folder name is derived from the id and must never move. A hash that changed with
         /// the runtime would orphan every archive on the device the day the engine was
-        /// upgraded — the copies would still be there and nothing would ever look for them.
+        /// upgraded - the copies would still be there and nothing would ever look for them.
         /// </summary>
         [Test]
         public void TheFolderNameIsStable()

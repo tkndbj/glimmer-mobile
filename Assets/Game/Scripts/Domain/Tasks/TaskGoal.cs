@@ -10,7 +10,7 @@ namespace GlimmerGrove.Tasks
     /// number.</b> That split is the whole design: a goal is code, because counting it means
     /// a hook at the moment it happens, and a task is a row in <c>progression.json</c>,
     /// because "fell forty raiders" and "fell sixty" are the same hook with a different
-    /// target — so a live-ops retune, a new task, or a whole new slate is a content push
+    /// target - so a live-ops retune, a new task, or a whole new slate is a content push
     /// and never a build (invariant 4). What <em>is</em> a build is a new verb.
     /// </para>
     /// <para>
@@ -21,8 +21,8 @@ namespace GlimmerGrove.Tasks
     /// because a task the save holds a claim for has to keep resolving (invariant 1).
     /// </para>
     /// <para>
-    /// Every goal is a <em>monotone</em> count within a period — a thing that happened, never
-    /// a level held — which is what lets the counters merge by <c>max</c> across devices
+    /// Every goal is a <em>monotone</em> count within a period - a thing that happened, never
+    /// a level held - which is what lets the counters merge by <c>max</c> across devices
     /// (invariant 11b) without a single special case.
     /// </para>
     /// </summary>

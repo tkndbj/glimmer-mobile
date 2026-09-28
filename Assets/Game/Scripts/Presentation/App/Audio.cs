@@ -27,7 +27,7 @@ namespace GlimmerGrove
         /// <see cref="ApplyMusicSetting"/> and <see cref="Duck"/> put the music *back*
         /// afterwards. Spelt as a constant in each, a track faded in at anything but the
         /// default would be silently promoted to the default by the next settings toggle or
-        /// fanfare — a track getting louder on its own, which is the one failure a music bed
+        /// fanfare - a track getting louder on its own, which is the one failure a music bed
         /// must not have.
         /// </para>
         /// </summary>
@@ -120,20 +120,20 @@ namespace GlimmerGrove
         /// This exists for one shape, and it is a shape the interface has everywhere: a
         /// button makes a noise on pointer *down*, and the thing it opens makes its own a
         /// moment later on pointer *up*. That is two sounds for one tap, and it was
-        /// reported as exactly that — "when I click on menu button multiple sounds appear".
+        /// reported as exactly that - "when I click on menu button multiple sounds appear".
         /// </para>
         /// <para>
         /// <b>Why this rather than silencing the button.</b> The idiom already in the
         /// codebase is <c>Btn.ClickSfx = null</c>, and five call sites use it. Applying it
         /// to every control that opens a panel means finding all of them and remembering it
-        /// on the next one — a step somebody has to remember, which is the failure mode the
+        /// on the next one - a step somebody has to remember, which is the failure mode the
         /// importer hook exists to avoid one folder over. A panel opening is a single place,
         /// so the rule lives there and covers all twenty-five modals and every one added
         /// later.
         /// </para>
         /// <para>
         /// The fade is what makes it safe: a voice stopped mid-waveform steps to zero, and a
-        /// step is a click — which would be a worse artefact than the doubled sound it is
+        /// step is a click - which would be a worse artefact than the doubled sound it is
         /// removing. 50 ms is below the ear's threshold for a fade and far above the step.
         /// </para>
         /// </summary>
@@ -173,7 +173,7 @@ namespace GlimmerGrove
             // so a clip that did not resolve left the player in a state nothing recovers
             // from: the live deck is the empty one, the outgoing track keeps playing at the
             // volume it had, and every later ApplyMusicSetting and Duck writes to the deck
-            // with no clip in it — so turning the music off in settings leaves it playing.
+            // with no clip in it - so turning the music off in settings leaves it playing.
             var clip = Clip(AssetManifest.Music(name));
             if (clip == null) return;
 

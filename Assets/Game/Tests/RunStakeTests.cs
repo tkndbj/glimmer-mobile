@@ -11,16 +11,16 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// <b>This suite exists because the alternative shipped.</b> Every mode used to carry its own
-    /// <c>Commit</c>, <c>Resolve</c>, <c>Forfeit</c> and <c>ConfirmForfeit</c> — four
+    /// <c>Commit</c>, <c>Resolve</c>, <c>Forfeit</c> and <c>ConfirmForfeit</c> - four
     /// near-identical methods about charging a player a heart. They drifted, as copies do: one
     /// guarded a closing cascade and the other did not. Then Lightweave's restart simply never
-    /// called its copy, so a restart there was free — and since a restart also deals a fresh pot
+    /// called its copy, so a restart there was free - and since a restart also deals a fresh pot
     /// of ink, the mode's entire fail state could be walked out of for nothing.
     /// </para>
     /// <para>
     /// <b>Nothing could have caught it except playing the game.</b> It compiled, it validated,
     /// 1,206 tests passed, and the rule it broke was not written anywhere: it was in two places
-    /// and missing from a third. What follows is the cheapest guard that would have failed —
+    /// and missing from a third. What follows is the cheapest guard that would have failed -
     /// not a test of what a restart costs, which needs a screen, but a test that no mode is in a
     /// position to have an opinion about it.
     /// </para>
@@ -41,17 +41,17 @@ namespace GlimmerGrove.Tests
         /// would be two prices, two idempotency keys and two chances to charge somebody for a
         /// board that was still lost. <c>Continue</c> and <c>Teaching</c> are the collaborators
         /// that own those rules, and a mode declaring either would <em>hide</em> the real one
-        /// rather than replace it — the <c>ModeScreen.Resolve</c> trap, which compiled fine and
+        /// rather than replace it - the <c>ModeScreen.Resolve</c> trap, which compiled fine and
         /// would have charged a won grove for again at the next launch.
         /// </para>
         /// <para>
-        /// What a mode <em>is</em> expected to declare — <c>MeasuredIn</c>,
-        /// <c>ContinueDeficit</c>, <c>ContinueWith</c> — is deliberately absent from this list:
+        /// What a mode <em>is</em> expected to declare - <c>MeasuredIn</c>,
+        /// <c>ContinueDeficit</c>, <c>ContinueWith</c> - is deliberately absent from this list:
         /// those are the questions only the mode can answer, and none of them touches a price.
         /// </para>
         /// <para>
         /// <c>Committed</c>, <c>Staked</c> and <c>Price</c> are the facts the exits are priced
-        /// from — has this run been paid for, does it cost anything at all, and if not, why not
+        /// from - has this run been paid for, does it cost anything at all, and if not, why not
         /// (a mode's free opening does not, and neither does a glade the player has already
         /// finished; see <c>HeartStake</c>). They are read by the modes and written only here,
         /// so a mode declaring any of them would shadow the answer rather than change it, and
@@ -88,7 +88,7 @@ namespace GlimmerGrove.Tests
                     if (Array.IndexOf(StakeMembers, member.Name) < 0) continue;
 
                     // A mode may still *say* what leaving means for its own board when the base
-                    // asks it to — those hooks are named differently on purpose (Rewind,
+                    // asks it to - those hooks are named differently on purpose (Rewind,
                     // RunOver, NoteAbandoned, StakeLevel) so the two cannot be confused.
                     found.Add($"{mode.Name}.{member.Name}");
                 }
@@ -104,7 +104,7 @@ namespace GlimmerGrove.Tests
         {
             // The other half: the base can only price an exit if every mode fills in the hooks
             // it prices them with. An abstract member cannot be forgotten, so this is really a
-            // guard against one being quietly relaxed to virtual with a do-nothing default —
+            // guard against one being quietly relaxed to virtual with a do-nothing default -
             // which would put a mode back in the position of deciding by omission.
             foreach (var name in new[] { "Rewind", "RunOver", "NoteAbandoned", "StakeLevel" })
             {
@@ -165,7 +165,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// It was each mode's own, and every copy was the same two lines with a different name
-        /// for the board — which is the drift this whole suite is about, at a smaller scale.
+        /// for the board - which is the drift this whole suite is about, at a smaller scale.
         /// What made it worth consolidating rather than merely tidy is the clause the shared
         /// answer now carries: a board a lesson is holding is <em>not</em> handed back. A lesson
         /// goes up on a timer, so a player can open the pause menu in the beat before the first
@@ -201,7 +201,7 @@ namespace GlimmerGrove.Tests
         public void ARestartCannotBeOverriddenByAMode()
         {
             // The specific hole that shipped. RestartLevel is where the price is applied, so a
-            // mode that could replace it could replace the price with nothing — which is what
+            // mode that could replace it could replace the price with nothing - which is what
             // Lightweave did.
             var restart = typeof(RunScreen).GetMethod("RestartLevel",
                                                       BindingFlags.Instance | BindingFlags.Public);

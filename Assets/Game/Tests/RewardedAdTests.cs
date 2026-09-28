@@ -51,7 +51,7 @@ namespace GlimmerGrove.Tests
         [Test]
         public void AnImpressionWithoutAPlacementIsNotValid()
         {
-            // The placement is the only field that means anything off this device — the
+            // The placement is the only field that means anything off this device - the
             // trace id never leaves it, so an impression with one and no placement is not
             // a thing that can be shown.
             Assert.IsFalse(new AdImpression(string.Empty, "abc").IsValid);
@@ -130,7 +130,7 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(400, table.Offer(AdPlacement.CoinBonus).Amount);
             Assert.AreEqual(3, table.Offer(AdPlacement.CoinBonus).DailyCap);
 
-            // A placement the file leaves out is switched off, not defaulted — that is how
+            // A placement the file leaves out is switched off, not defaulted - that is how
             // an offer is withdrawn without a build.
             Assert.IsFalse(table.Has(AdPlacement.HeartRefill));
         }
@@ -318,7 +318,7 @@ namespace GlimmerGrove.Tests
             var a = RewardedAds.Join(unsorted, reversed);
             var b = RewardedAds.Join(reversed, unsorted);
 
-            // Sorted, and therefore comparable by an ordered walk — which is what stops the
+            // Sorted, and therefore comparable by an ordered walk - which is what stops the
             // checksum moving, and the sync firing, on a save that did not change.
             Assert.AreEqual("coin_bonus", a.watched[0].placement);
             Assert.AreEqual("heart_refill", a.watched[1].placement);
@@ -332,7 +332,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// The one fault in this loop that is completely silent. A placement the provider is
         /// never handed creates no rewarded unit, so <c>IsReady</c> answers false for ever,
-        /// <c>ShowAsync</c> answers <c>Unavailable</c> and <b>nothing is logged at all</b> —
+        /// <c>ShowAsync</c> answers <c>Unavailable</c> and <b>nothing is logged at all</b> -
         /// the provider's "no ad unit id for this platform" warning only fires for a
         /// placement that is in the dictionary with an empty id. From the screen it is
         /// indistinguishable from a market with no demand, which is where it hid: the XP

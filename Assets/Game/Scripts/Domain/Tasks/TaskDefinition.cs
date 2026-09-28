@@ -11,14 +11,14 @@ namespace GlimmerGrove.Tasks
     /// <b>Every reward in the task system is a chest, and a chest is one of these.</b> A
     /// task names a tier rather than a prize, so retuning what a tier pays retunes every
     /// task that pays it at once, and the odds a player is shown for a wooden chest are the
-    /// odds for every wooden chest — one disclosure per tier rather than one per task.
+    /// odds for every wooden chest - one disclosure per tier rather than one per task.
     /// </para>
     /// <para>
     /// <b>The id is permanent</b> (invariant 1 applied to art and copy): the tier's picture
     /// (<see cref="Icon"/>, <see cref="Reel"/>) and its name (<see cref="NameKey"/>) are
     /// derived from it, so anything holding a tier id can draw and name the chest without
     /// reading the table. Rank is its position on the ladder, authored by order, and is
-    /// what the gates check rises with the floor — a dearer chest that pays less reads as
+    /// what the gates check rises with the floor - a dearer chest that pays less reads as
     /// the game punishing the player for the harder task.
     /// </para>
     /// </summary>
@@ -44,16 +44,16 @@ namespace GlimmerGrove.Tasks
         ///
         /// <para>
         /// <b>The season's pace is a property of the chest, not of what paid for it.</b> A
-        /// season track needs a unit that is repeatable — a finite catalog of levels is
+        /// season track needs a unit that is repeatable - a finite catalog of levels is
         /// cleared once and then pays nothing for ever, which is exactly how the first one
-        /// died — and it needs one nothing can farm. A claimed chest is both: the calendar
+        /// died - and it needs one nothing can farm. A claimed chest is both: the calendar
         /// bounds how many a player can be dealt, so the ceiling is the slate rather than a
         /// cap somebody has to remember, and every future source of chests feeds the season
         /// by naming a tier rather than by growing a second rule.
         /// </para>
         /// <para>
         /// Authored per tier rather than derived from <see cref="Rank"/>, so the pace of a
-        /// season is content and retunable without a build — and nought is a legal answer,
+        /// season is content and retunable without a build - and nought is a legal answer,
         /// which is what lets a tier be added for a one-off promotion without moving anybody's
         /// track.
         /// </para>
@@ -79,7 +79,7 @@ namespace GlimmerGrove.Tasks
     /// One task: a goal, how much of it, which chest it pays, and the slate it belongs to.
     ///
     /// <para>
-    /// A task authors no reward of its own — it names a <see cref="ChestTier"/> — and no
+    /// A task authors no reward of its own - it names a <see cref="ChestTier"/> - and no
     /// copy of its own: its title is <see cref="NameKey"/>, derived from the id, and takes
     /// <see cref="Target"/> as its one argument, so a target retuned in content changes the
     /// sentence without touching a translation.
@@ -89,8 +89,8 @@ namespace GlimmerGrove.Tasks
     /// save and reaches the server as <c>task:{period}:{key}:{id}:{currency}</c>; a task
     /// deleted from the table would leave that claim naming a chest nobody can price, which
     /// is the unconfirmed-for-ever loop invariant 13a forbids. So a task that should stop
-    /// being dealt is marked <see cref="Retired"/> — it leaves the rotation and keeps its
-    /// tier — and the spent id joins the table in <c>CLAUDE.md</c>.
+    /// being dealt is marked <see cref="Retired"/> - it leaves the rotation and keeps its
+    /// tier - and the spent id joins the table in <c>CLAUDE.md</c>.
     /// </para>
     /// </summary>
     public sealed class TaskDefinition

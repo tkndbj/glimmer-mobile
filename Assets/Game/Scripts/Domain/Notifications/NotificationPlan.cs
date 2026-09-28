@@ -28,15 +28,15 @@ namespace GlimmerGrove.Notifications
     /// <para>
     /// <b>The whole feature is this function.</b> Everything around it is plumbing: a
     /// snapshot in, a list of (kind, instant) out, and a platform seam that hands the list to
-    /// Android or iOS. So the part that can actually be wrong — the pacing, the ordering, the
-    /// cooldowns, the quiet hours, whether a sentence will still be true when it is read —
+    /// Android or iOS. So the part that can actually be wrong - the pacing, the ordering, the
+    /// cooldowns, the quiet hours, whether a sentence will still be true when it is read -
     /// is a pure function that the offline suite runs in full, on a machine with no phone
     /// attached. That is the same bargain <c>ReleaseWatch</c> and <c>SyncScheduler</c> strike
     /// and it is why they are the two policies in this project nobody is afraid of.
     /// </para>
     /// <para>
     /// <b>Slots are filled evening-first, and that is the design rather than an
-    /// optimisation.</b> Ranking a whole day at once hands the best window — the evening — to
+    /// optimisation.</b> Ranking a whole day at once hands the best window - the evening - to
     /// whatever is left over after the morning has taken the best candidate, which is
     /// precisely backwards. Filling the evening first means the most urgent thing the planner
     /// holds goes where it will be read, and the morning gets the second best.
@@ -46,7 +46,7 @@ namespace GlimmerGrove.Notifications
     /// <see cref="NotificationKind.GroveIdle"/> and its own cooldown, so a day on which
     /// nothing is genuinely true is a day with one or two notifications rather than three.
     /// "Two to three a day" is an outcome of the table, never a quota the table has to be
-    /// kept consistent with — which means retuning the table cannot accidentally produce a
+    /// kept consistent with - which means retuning the table cannot accidentally produce a
     /// day of six.
     /// </para>
     /// </summary>
@@ -61,8 +61,8 @@ namespace GlimmerGrove.Notifications
         /// <summary>
         /// The schedule, in the order it will fire.
         ///
-        /// Deterministic in the strict sense — the same state and table give byte-identical
-        /// output on every runtime — because the candidate walk is over an array in ranking
+        /// Deterministic in the strict sense - the same state and table give byte-identical
+        /// output on every runtime - because the candidate walk is over an array in ranking
         /// order and the ties break on position. Nothing here enumerates a dictionary or a
         /// set, for the reason invariant 37w spells out about a contested cog.
         /// </summary>
@@ -85,7 +85,7 @@ namespace GlimmerGrove.Notifications
             {
                 int sent = 0;
 
-                // Per day rather than a constant, because the schedule thins past the taper —
+                // Per day rather than a constant, because the schedule thins past the taper -
                 // three a day for the first week, one a night after that. See
                 // NotificationTable.TaperAfterDays for why the reach matters more than the
                 // rate once somebody has been away a fortnight.
@@ -133,7 +133,7 @@ namespace GlimmerGrove.Notifications
 
                 // The table is sorted by priority, so the first match is the answer. The
                 // comparison is kept anyway: `Entries` is public and a caller that built a
-                // table by hand — every fixture does — would otherwise get whatever order it
+                // table by hand - every fixture does - would otherwise get whatever order it
                 // happened to write, silently.
                 if (best == null || entry.Priority > best.Priority) best = entry;
             }
@@ -144,7 +144,7 @@ namespace GlimmerGrove.Notifications
         /// <summary>
         /// The UTC instant of one slot on one <em>local</em> day.
         ///
-        /// Local days are counted in "local epoch space" — UTC seconds shifted by the offset —
+        /// Local days are counted in "local epoch space" - UTC seconds shifted by the offset -
         /// so the whole calculation is integer arithmetic on seconds and there is no
         /// <c>DateTime</c>, no timezone table and nothing that answers differently on Mono,
         /// .NET and IL2CPP. That matters here for the reason it matters everywhere in this
@@ -168,8 +168,8 @@ namespace GlimmerGrove.Notifications
         /// <summary>
         /// A stable id per (day, slot).
         ///
-        /// Stable rather than generated because a schedule is always <em>replaced</em> — every
-        /// arm cancels the lot and writes the plan again — and an id that meant something
+        /// Stable rather than generated because a schedule is always <em>replaced</em> - every
+        /// arm cancels the lot and writes the plan again - and an id that meant something
         /// different each time would make a log of what a device actually holds unreadable.
         /// It is not used to reconcile anything: reconciling would need the previous plan,
         /// which is state, and this feature deliberately stores none.

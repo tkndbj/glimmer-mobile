@@ -9,7 +9,7 @@ namespace GlimmerGrove.Tests
     /// The three numbers a season keeps in the save, and the join that merges them.
     ///
     /// <para>
-    /// Marks grown and a claim floor per track — all monotone, all joined by <c>max</c>,
+    /// Marks grown and a claim floor per track - all monotone, all joined by <c>max</c>,
     /// which is the only shape invariant 11b allows a count to take. What is pinned here is
     /// the file bridge and the join; what a rung is <em>worth</em> lives in the shared
     /// reward vectors, which both halves of the economy run.
@@ -18,7 +18,7 @@ namespace GlimmerGrove.Tests
     /// Claiming itself is deliberately not tested here: it writes the save, rolls a chest
     /// from the account seed and hands currency to the wallet, so a case for it would be a
     /// case about four other systems. <c>MarkVectorTests</c> pins the roll against the
-    /// server's copy, and the claim's two guards — the floor and the derived grant id — are
+    /// server's copy, and the claim's two guards - the floor and the derived grant id - are
     /// each proved where they live.
     /// </para>
     /// </summary>
@@ -82,7 +82,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// A pass is bought optimistically and the debit is what makes it real, so a debit the
-        /// server refuses takes the pass back — and nothing else. The paid floor is a record of
+        /// server refuses takes the pass back - and nothing else. The paid floor is a record of
         /// chests already opened (47c), so it stays; a later purchase resumes above it. This is
         /// the client half of the day a pass debit reached the server in the wrong currency and
         /// was refused on every sync while the page went on drawing the pass as held.
@@ -124,7 +124,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// A v27 file has no mark count at all, and <c>JsonUtility</c> writes nought into a
-        /// field an older file never had — which is exactly the right answer here, and is why
+        /// field an older file never had - which is exactly the right answer here, and is why
         /// v28 needed no migration. A stale free floor written under the old meaning is then
         /// clamped to the marks on the first read, whatever it says.
         /// </summary>
@@ -235,7 +235,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// Written sorted, because <c>SaveDelta</c> walks these in order and
         /// <c>SaveChecksum</c> hashes them. Dictionary order would make an unchanged save
-        /// look changed on every launch — a write and an upload, for ever, for nothing.
+        /// look changed on every launch - a write and an upload, for ever, for nothing.
         /// </summary>
         [Test]
         public void SeasonsAreWrittenSortedById()
@@ -298,7 +298,7 @@ namespace GlimmerGrove.Tests
 
         // --------------------------------------------------------------- the pass
         /// <summary>
-        /// Save state joined by <c>or</c>, because buying is irreversible — the join owned
+        /// Save state joined by <c>or</c>, because buying is irreversible - the join owned
         /// companions and owned land take (invariant 15), on one season rather than a set.
         /// </summary>
         [Test]
@@ -341,7 +341,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// The paid column cannot be claimed without the entitlement — and the client's copy
+        /// The paid column cannot be claimed without the entitlement - and the client's copy
         /// is only half of that. The server keeps its own and refuses independently; this
         /// pins the half that stops the page offering a chest it cannot pay.
         /// </summary>
@@ -361,7 +361,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// <b>And the reading has to agree with the refusal.</b> The hub's event box lights its
         /// border, swaps its caption to <em>collect</em> and pins a count to its corner off
-        /// <c>EventProgress.Waiting</c>, while the page it opens refuses every one of them —
+        /// <c>EventProgress.Waiting</c>, while the page it opens refuses every one of them -
         /// so a player on eight marks who had taken the only free rung they had reached was
         /// shown a badge reading one with nothing behind it.
         ///
@@ -400,7 +400,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The consequence that is worse than the badge. <see cref="GroveEvents.Featured"/> is
         /// the oldest season still owing something, so a season owing only a paid column
-        /// nobody bought would hold the hub's box — and the page it opens — on a closed season
+        /// nobody bought would hold the hub's box - and the page it opens - on a closed season
         /// for ever, with no way to reach the live one (invariant 47m).
         /// </summary>
         [Test]
@@ -419,7 +419,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A season with no price sells nothing, whatever a screen asks — the refusal a
+        /// A season with no price sells nothing, whatever a screen asks - the refusal a
         /// free-track-only season has to give.
         /// </summary>
         [Test]
@@ -463,7 +463,7 @@ namespace GlimmerGrove.Tests
             // And it still fits at the far end of the calendar, which is the one the season id
             // grows toward: a cycle id is the same length whatever cycle it names, by
             // construction (`SeasonCycle.IndexDigits`), so this is a proof rather than a spot
-            // check — but the length ceiling is what `season.ts` parses against and a claim id
+            // check - but the length ceiling is what `season.ts` parses against and a claim id
             // that overflows it is a claim refused for ever with every file correct.
             Assert.Less(GrantEntry.MarkChestId("watch_9999", SeasonTrack.Pass,
                                                EventRules.MaxGoal, "credits").Length, 64);
@@ -488,7 +488,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// <b>This was a live bug waiting for a repeating season.</b> The old rule sorted by id
-        /// and lopped off the tail — and ordinal order is calendar order, so it kept the
+        /// and lopped off the tail - and ordinal order is calendar order, so it kept the
         /// <em>oldest</em> sixty-four rows and deleted the newest. On a calendar that ends, the
         /// sixty-fifth season is a decade away and nobody meets it; on one that does not, it is
         /// the season being played, deleted silently at the moment it opens.
@@ -503,7 +503,7 @@ namespace GlimmerGrove.Tests
             for (int i = 0; i < SeasonLedger.MaxSeasons; i++)
                 rows[i] = new EventStateDto { id = Cycle(i), marks = 200, collectedGoal = 200 };
 
-            // And the newest, mid-season, with marks past its claim floor — something waiting.
+            // And the newest, mid-season, with marks past its claim floor - something waiting.
             string newest = Cycle(SeasonLedger.MaxSeasons);
             rows[SeasonLedger.MaxSeasons] =
                 new EventStateDto { id = newest, marks = 40, collectedGoal = 10 };
@@ -516,7 +516,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// With nothing settled to drop, the oldest goes — there is no arrangement in which a
+        /// With nothing settled to drop, the oldest goes - there is no arrangement in which a
         /// bounded list keeps everything, and the honest fallback is the one a player is least
         /// likely to be looking at.
         /// </summary>
@@ -540,7 +540,7 @@ namespace GlimmerGrove.Tests
         ///
         /// Not tidiness: <c>SaveDelta</c> decides whether to sync by walking these in order, so
         /// rows that came out in eviction order would make an unchanged save read as changed on
-        /// every launch — a write and an upload for nothing, for ever.
+        /// every launch - a write and an upload for nothing, for ever.
         /// </summary>
         [Test]
         public void TheSurvivorsAreStillWrittenInIdOrder()

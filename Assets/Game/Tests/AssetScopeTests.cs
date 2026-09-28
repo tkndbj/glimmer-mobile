@@ -52,7 +52,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// Hands nothing back until it is told to, so a release can be staged in the middle of a
-        /// load — which is one tap in the game and impossible to reach with a provider that
+        /// load - which is one tap in the game and impossible to reach with a provider that
         /// answers immediately.
         /// </summary>
         sealed class GatedProvider : IAssetProvider
@@ -147,7 +147,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// <b>The case a named scope could not express at all.</b> Two screens can legitimately
         /// want the same picture, and the old library handed it to whichever asked first and
-        /// silently let the second share it — so the second lost its art the moment the first
+        /// silently let the second share it - so the second lost its art the moment the first
         /// closed, which is a white rectangle appearing on a screen nobody had touched.
         /// </summary>
         [Test]
@@ -172,7 +172,7 @@ namespace GlimmerGrove.Tests
         /// <b>The hand-over, which is the ordering hazard three screens used to work around.</b>
         /// Unity destroys the outgoing screen at the end of the frame, so the incoming one has
         /// already built and painted before the outgoing one lets go. The old answer was a marker
-        /// interface read off <c>Flow.Current</c> — a question that had to be re-answered every
+        /// interface read off <c>Flow.Current</c> - a question that had to be re-answered every
         /// time a screen was added, and that was wrong twice.
         /// </summary>
         [Test]
@@ -195,7 +195,7 @@ namespace GlimmerGrove.Tests
         // ------------------------------------------------------------------- grace
         /// <summary>
         /// The other half of the hand-over, and the one that covers a screen change in the
-        /// <em>other</em> order — leave, then come back. Freeing on the frame the last hold goes
+        /// <em>other</em> order - leave, then come back. Freeing on the frame the last hold goes
         /// makes every round trip a full reload.
         /// </summary>
         [Test]
@@ -205,7 +205,7 @@ namespace GlimmerGrove.Tests
             Load(first, One("Art/Props/bench"));
             first.Dispose();
 
-            // A moment passes — less than the grace — and the player comes back.
+            // A moment passes - less than the grace - and the player comes back.
             AssetLibrary.Tick(1f);
 
             var second = AssetLibrary.Hold("grove");
@@ -299,7 +299,7 @@ namespace GlimmerGrove.Tests
         /// The launch screen's case: a screen that draws in the frame it is built has to fetch
         /// synchronously, so the address must already belong to a hold by the time it is asked
         /// for. Claimed late, the picture is treated as the game's own and stays resident for
-        /// the whole session — a full-screen texture for a screen shown once.
+        /// the whole session - a full-screen texture for a screen shown once.
         /// </summary>
         [Test]
         public void AClaimedAddressIsFreedEvenThoughItWasFetchedSynchronously()
@@ -317,7 +317,7 @@ namespace GlimmerGrove.Tests
 
         // ----------------------------------------------------------------- filling
         /// <summary>
-        /// A hold is refilled rather than rebuilt as a screen's contents change — the grove when
+        /// A hold is refilled rather than rebuilt as a screen's contents change - the grove when
         /// a piece is placed, the shop when the tab changes. What it still wants is not fetched
         /// again, and what it no longer wants is let go.
         /// </summary>
@@ -357,7 +357,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// <b>The poisoned cache.</b> A hold released while its art is arriving must leave no
         /// trace of the load behind. The destination used to be resolved by address, at
-        /// completion time — so a released scope's address, owned by nothing, resolved to the
+        /// completion time - so a released scope's address, owned by nothing, resolved to the
         /// <em>global</em> cache, and the value written there was <c>null</c>, because releasing
         /// the scope had already freed the handle the load was holding. <c>Peek</c> and
         /// <c>Get</c> both answer from that cache for the life of the process, so the art was
@@ -389,8 +389,8 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// Frame folders are the bulk of this game's art — sixty-eight of the eighty-six grove
-        /// pieces, every turret reel, every baked effect — and warming one used to go through the
+        /// Frame folders are the bulk of this game's art - sixty-eight of the eighty-six grove
+        /// pieces, every turret reel, every baked effect - and warming one used to go through the
         /// synchronous path, so a screen's whole art set landed inside one frame however
         /// carefully the batching was written. A busy screen opening on a full scope was
         /// that stall.
@@ -415,7 +415,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// Two holds wanting one address fetch it once. Starting a second load would leave the
         /// provider holding two handles for one asset, and reading a result off an unfinished
-        /// handle yields null — the same white rectangle by a slower route.
+        /// handle yields null - the same white rectangle by a slower route.
         /// </summary>
         [Test]
         public void TwoHoldsWantingOneAddressFetchItOnce()

@@ -77,7 +77,7 @@ namespace GlimmerGrove.Tests
         /// A debit the server refuses is dropped and its money comes back, and the ledger says
         /// which one by id. Before this the refusal was only logged: the entry stayed, was
         /// resubmitted on every sync for the life of the account (invariant 13a), and the thing
-        /// it paid for went on drawing as bought — which is how a season pass sent to the server
+        /// it paid for went on drawing as bought - which is how a season pass sent to the server
         /// in the wrong currency stayed "owned" for a day while every paid chest was refused.
         /// </summary>
         [Test]
@@ -111,7 +111,7 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual((Currency.Gems, pass.Id), announced[0]);
 
             // Announced after the entry is gone, so a listener reading the balance in the
-            // callback sees the money already back — which is what SeasonLedger relies on.
+            // callback sees the money already back - which is what SeasonLedger relies on.
             long seenDuring = -1;
             void Peek(string currency, string id) => seenDuring = ledger.BalanceFrom(0);
             ledger.TrySpend(100, 0, "boost", out var again);
@@ -147,8 +147,8 @@ namespace GlimmerGrove.Tests
             ledger.GrantLocally(1000);
             ledger.TrySpend(100, 0, "booster", out var entry);
 
-            // A file that somehow lists the same debit twice — a bad merge, a manual
-            // edit — must still charge for it once.
+            // A file that somehow lists the same debit twice - a bad merge, a manual
+            // edit - must still charge for it once.
             var dto = ledger.ToDto();
             dto.pendingSpends = new[] { entry.ToDto(), entry.ToDto() };
 
@@ -205,7 +205,7 @@ namespace GlimmerGrove.Tests
 
             Assert.AreEqual(150, a.PendingSpend,
                             "taking the larger counter would forgive a spend; summing counters " +
-                            "would charge twice — only a union of identified debits is right");
+                            "would charge twice - only a union of identified debits is right");
         }
 
         [Test]
@@ -389,7 +389,7 @@ namespace GlimmerGrove.Tests
 
             // Dated by its own stamp, not by the file's. The file's date is stamped with
             // "now" every time the sync takes a snapshot, so reading recency off it made
-            // the local device win every comparison — see SaveMerge.Chosen.
+            // the local device win every comparison - see SaveMerge.Chosen.
             Assert.AreEqual("New Name", merged.wallet.displayName);
             Assert.AreEqual(500, merged.wallet.displayNameSetUnix,
                             "the stamp has to travel with the value it dates");

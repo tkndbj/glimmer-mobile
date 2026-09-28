@@ -17,7 +17,7 @@ namespace GlimmerGrove.Wards
     /// <para>
     /// <b>Counted in levels cleared rather than read off the levels themselves.</b> The honest
     /// question is "has this player met a rung that stands a yellow ward", and answering it
-    /// directly would mean opening every chapter body in the mode — which the boot path may never
+    /// directly would mean opening every chapter body in the mode - which the boot path may never
     /// do (invariant 4a) and this screen has no reason to. Levels chain, so how many have been
     /// cleared is the same fact in a form the catalog already holds.
     /// </para>

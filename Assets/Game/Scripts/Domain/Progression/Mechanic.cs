@@ -12,8 +12,8 @@ namespace GlimmerGrove.Progression
     /// freely, never rename, never reuse.
     /// </para>
     /// <para>
-    /// Its strings are derived from the id — <c>ui.tip.&lt;id&gt;.title</c> and
-    /// <c>.body</c> — for the same reason a level's are: anything holding a mechanic
+    /// Its strings are derived from the id - <c>ui.tip.&lt;id&gt;.title</c> and
+    /// <c>.body</c> - for the same reason a level's are: anything holding a mechanic
     /// can name it without a lookup table to keep in step.
     /// </para>
     /// </summary>
@@ -27,16 +27,16 @@ namespace GlimmerGrove.Progression
         /// <para>
         /// <b>It is declared beside the id so that both ends of a composed sentence can be
         /// checked against one number.</b> Two lessons about the map's chrome carry a figure that
-        /// is <em>content</em> — how many stars open the next chapter, and what the other ladder
-        /// of this mode is called — and invariant 21's whole argument is that such a number must
+        /// is <em>content</em> - how many stars open the next chapter, and what the other ladder
+        /// of this mode is called - and invariant 21's whole argument is that such a number must
         /// be printed rather than written into the prose. A string that then loses its
         /// placeholder in translation, or a call site that forgets to supply one, draws a literal
         /// "{0}" on a panel shown once in a player's life, and nothing anywhere would say so:
         /// <c>Loc.Format</c> catches the mismatch and hands back the pattern.
         /// </para>
         /// <para>
-        /// So <c>ContentValidation</c> holds every body to this — each index below it present,
-        /// and none at or above it — and <c>ScreenLessons</c> holds every caller to it.
+        /// So <c>ContentValidation</c> holds every body to this - each index below it present,
+        /// and none at or above it - and <c>ScreenLessons</c> holds every caller to it.
         /// Zero is the ordinary answer and means the body is a plain sentence.
         /// </para>
         /// </summary>
@@ -58,15 +58,15 @@ namespace GlimmerGrove.Progression
         /// <para>
         /// <b>It is taught because the ring is read as a demand.</b> Every other sleeping
         /// critter wears the colour it is waiting for, so a player learns within a glade or
-        /// two that the ring on a critter is an instruction — and an unfussy one wears all
+        /// two that the ring on a critter is an instruction - and an unfussy one wears all
         /// three channels at once (<c>Art.PrismRing</c>), which under that reading says
         /// <em>bring me white</em>. That is the opposite of what it means, and it is the
         /// crossing's fault rather than the taproot's: the player does not fail to learn a
         /// rule, they conclude a wrong one and route light they never needed to.
         /// </para>
         /// <para>
-        /// <b>Only where the board can show it.</b> The lesson is a contrast — this one asks
-        /// for nothing, those ones ask for something — so it is reported only on a board that
+        /// <b>Only where the board can show it.</b> The lesson is a contrast - this one asks
+        /// for nothing, those ones ask for something - so it is reported only on a board that
         /// also holds a fussy critter. A glade where every critter is unfussy has no colour
         /// rule on it yet, so there is nothing for "any" to be the absence of, and a lesson is
         /// shown once in a player's life: spent on the opening glade, where all three critters
@@ -83,7 +83,7 @@ namespace GlimmerGrove.Progression
         // travels in the save (`tipsSeen`) exactly as a level id does, so re-pointing one
         // at a different rule would tell a player they have already been taught something
         // they have never seen. Same rule as `weave_fill`, and for the same reason: the
-        // mechanic it named was removed because no board could demonstrate it — a glade
+        // mechanic it named was removed because no board could demonstrate it - a glade
         // with every critter awake and a duskcap lit looks precisely like a finished glade
         // that refuses to settle, which is the one thing a board must never look like.
 
@@ -104,7 +104,7 @@ namespace GlimmerGrove.Progression
         // once" type would be a second ledger, a second merge rule and a second save field,
         // for two strings and a ring.
         //
-        // They are deliberately absent from TeachingOrder, which is the *board* scan's queue —
+        // They are deliberately absent from TeachingOrder, which is the *board* scan's queue -
         // see the remarks there. A screen tip is raised by the screen that owns it, because
         // nothing about a board implies the player has opened the Grovement, and nothing about
         // a glade implies they have ever met a second mode.
@@ -190,7 +190,7 @@ namespace GlimmerGrove.Progression
         /// <para>
         /// <b>The board shows the filling and cannot show the rule behind it.</b> Three pips on
         /// the glass say what it holds and what it still wants, and the shot itself is the
-        /// loudest thing in the mode — so once a player has seen one go off they understand it
+        /// loudest thing in the mode - so once a player has seen one go off they understand it
         /// completely. What no board can say is the part that has to be known <em>before</em>
         /// the first one: that a lens takes light from a burst beside it rather than from a
         /// drop. Every other cell here is filled by dropping on it, so the natural thing to do
@@ -216,7 +216,7 @@ namespace GlimmerGrove.Progression
         ///
         /// <para>
         /// <b>The board shows what it does and cannot show what it is for.</b> Watch one turn and
-        /// the mechanism is obvious — two lights slide in and one comes out. What no board can
+        /// the mechanism is obvious - two lights slide in and one comes out. What no board can
         /// state is the reason a player should care, and it is the one fact that makes the
         /// mechanic worth having: <em>every other rule in this mode adds a colour to a mote</em>,
         /// so a cyan and a red are two separate drops away from bursting. Put them either side of
@@ -224,8 +224,8 @@ namespace GlimmerGrove.Progression
         /// </para>
         /// <para>
         /// The second sentence is the one that costs a run if it is left to be discovered:
-        /// <b>anything</b> opens a whorl — a burst beside it, a lens beam, or a drop straight
-        /// onto it — and what it gives back is whatever is standing beside it <em>at that
+        /// <b>anything</b> opens a whorl - a burst beside it, a lens beam, or a drop straight
+        /// onto it - and what it gives back is whatever is standing beside it <em>at that
         /// moment</em>. A player who reads it as glass will try to charge it and waste drops; a
         /// player who does not know it fires on any touch will lose the pair they spent four
         /// drops arranging to a chain that reached it early.
@@ -234,7 +234,7 @@ namespace GlimmerGrove.Progression
         /// <b>It replaced two mechanics that had to be withdrawn, and that is why this one is
         /// shaped the way it is.</b> The mirror turned a lens's beam ninety degrees, so it had no
         /// event of its own and did nothing at all on a board with no glass. The wick washed one
-        /// authored colour into its four neighbours, which is a burst with the colour changed —
+        /// authored colour into its four neighbours, which is a burst with the colour changed -
         /// its colour was the author's, its trigger was free, and there was no point at which the
         /// player decided anything. Both were reported as the lens again, correctly. A whorl is
         /// bought with <em>position</em> rather than with drops, which is the one currency this
@@ -261,7 +261,7 @@ namespace GlimmerGrove.Progression
         ///
         /// <para>
         /// <b>One lesson for however many modes share the shape, because it really is one
-        /// rule.</b> A pull takes exactly one from the meter and cannot be taken back — which is
+        /// rule.</b> A pull takes exactly one from the meter and cannot be taken back - which is
         /// the half a player arriving from four chapters of turning conduits has to be told,
         /// since a glade hands a turn back for every undo and so rewards tapping about to see
         /// what happens. Separate from <see cref="MoveBudget"/> and <see cref="FallSupply"/> for
@@ -272,8 +272,8 @@ namespace GlimmerGrove.Progression
         /// </para>
         /// <para>
         /// Only on a board that can actually run out. The opening board of such a mode is
-        /// authored without an allowance — as the first glade, the first well and the first
-        /// thicket are (invariant 24) — and a lesson shown over a meter that is not there is one
+        /// authored without an allowance - as the first glade, the first well and the first
+        /// thicket are (invariant 24) - and a lesson shown over a meter that is not there is one
         /// that can never be shown again.
         /// </para>
         /// </summary>
@@ -384,8 +384,8 @@ namespace GlimmerGrove.Progression
         /// Deliberately two halves of one sentence, exactly as <see cref="PrismVein"/> is. A
         /// player who does not know fuel fades will bank a colour
         /// through a quiet moment and find it gone; one who does not know the line is the fail
-        /// state will let a wave through to keep matching. Both halves are the same fact — what a
-        /// colour is worth depends entirely on when it is spent — and it is the only thing that
+        /// state will let a wave through to keep matching. Both halves are the same fact - what a
+        /// colour is worth depends entirely on when it is spent - and it is the only thing that
         /// makes an unhurried match cost anything, so both have to arrive at once.
         /// </para>
         /// </summary>
@@ -393,7 +393,7 @@ namespace GlimmerGrove.Progression
         /// <b>Retired: no screen raises this and its id must never be reused.</b>
         ///
         /// It taught that the ward line is the fail state, and was withdrawn after play as saying
-        /// what the board says by itself — four turrets with health bars, in the middle of the
+        /// what the board says by itself - four turrets with health bars, in the middle of the
         /// screen, for the whole run. Kept as a member rather than deleted because a lesson id
         /// travels in the save (<c>tipsSeen</c>) exactly as a level id travels in the ledger, and
         /// re-pointing one at a rule it never described would tell a player they have already been
@@ -441,7 +441,7 @@ namespace GlimmerGrove.Progression
         /// <b>One lesson per charm rather than one about charms</b>, because the three do
         /// different things and a panel that said all three would be three sentences about things
         /// two of which are not on this board yet. A chapter introduces one charm
-        /// (<c>SiegeCharms.Upto</c>), so a player meets one panel a chapter — which is the same
+        /// (<c>SiegeCharms.Upto</c>), so a player meets one panel a chapter - which is the same
         /// cadence the bosses are dealt at and for the same reason (invariant 37bd).
         /// </para>
         /// <para>
@@ -452,7 +452,7 @@ namespace GlimmerGrove.Progression
         /// <para>
         /// <b>And raised when the board <em>settles</em>, not when the charm is minted.</b> A
         /// refill is built above the field and slides into its socket over the next third of a
-        /// second, so a lesson raised at the mint rings a cell that does not hold the gem yet —
+        /// second, so a lesson raised at the mint rings a cell that does not hold the gem yet -
         /// the bomber's tip paid for exactly this once already, ringing the bomber rather than the
         /// bomb. It is the repaint that announces it (<c>SiegeView.Flush</c>), and a kind with
         /// nothing standing to ring is <em>held over</em> rather than spent.
@@ -467,7 +467,7 @@ namespace GlimmerGrove.Progression
         /// The stormglass: that matching it makes the whole line fire at everything on the hill,
         /// and twice at whatever wears its own colour.
         ///
-        /// <b>Both halves, because only one of them can be acted on</b> — the salvage lesson's own
+        /// <b>Both halves, because only one of them can be acted on</b> - the salvage lesson's own
         /// rule. A player who does not know it reaches the hill has no reason to hold it; one who
         /// does not know the colour doubles has no reason to care which one they were dealt.
         /// </summary>
@@ -573,7 +573,7 @@ namespace GlimmerGrove.Progression
         // prototypes built into Groovekeeper's slot to be judged by playing them (invariant 29);
         // Toppleglen is the one the owner kept. A lesson id travels in the save (`tipsSeen`)
         // exactly as a level id travels in the ledger, so re-pointing one at a rule it never
-        // described would tell a player they have already been shown something they never saw —
+        // described would tell a player they have already been shown something they never saw -
         // and all four modes were played on a device, which is precisely when that stops being
         // hypothetical. `topple_roll` and `topple_burrow` are the two that survive.
 
@@ -584,7 +584,7 @@ namespace GlimmerGrove.Progression
         /// The one lesson here about a <em>control</em> rather than about a rule, and it is the
         /// shape of that control that earns it. It is a closed drop-down (see <c>ModeSwitch</c>)
         /// naming only the mode the player is already in, so nothing about it says there is
-        /// anything inside it — and every other mode is reachable through it and through nothing
+        /// anything inside it - and every other mode is reachable through it and through nothing
         /// else, so a player who never presses it never learns the other half of the game exists.
         /// </para>
         /// <para>
@@ -604,8 +604,8 @@ namespace GlimmerGrove.Progression
         /// <para>
         /// <b>Taught only while the switcher is actually drawn.</b> <c>ModeSwitch</c> builds
         /// nothing when the catalog holds one mode, so a client whose content has not caught up
-        /// — a rolled-back build, an undownloaded drop, or simply the day before a second mode
-        /// ships — must not spend this lesson on a control that is not there. The ledger is a
+        /// - a rolled-back build, an undownloaded drop, or simply the day before a second mode
+        /// ships - must not spend this lesson on a control that is not there. The ledger is a
         /// once-in-a-lifetime record, so a tip shown over nothing is a tip that can never be
         /// shown again.
         /// </para>
@@ -620,7 +620,7 @@ namespace GlimmerGrove.Progression
         /// same reason.</b> The victory panel is the loudest moment in the game and the button
         /// arrives at the end of it, under a reward the player is already reading, on a screen
         /// whose whole purpose is a large green NEXT. A control in that position is not
-        /// discovered — it is scrolled past. The wheel is the game's most generous offer and
+        /// discovered - it is scrolled past. The wheel is the game's most generous offer and
         /// most players would never learn it exists.
         /// </para>
         /// <para>
@@ -633,7 +633,7 @@ namespace GlimmerGrove.Progression
         /// <para>
         /// <b>Taught only while the button is actually drawn</b>, which is <see cref="ModeSwitch"/>'s
         /// rule and not a detail: the offer is withheld on a cooldown, at a spent allowance and
-        /// with no account, and the ledger is a once-in-a-lifetime record — so a tip shown over
+        /// with no account, and the ledger is a once-in-a-lifetime record - so a tip shown over
         /// a corner with nothing in it is a tip that can never be shown again.
         /// </para>
         /// </summary>
@@ -652,7 +652,7 @@ namespace GlimmerGrove.Progression
         // ------------------------------------------------------------------ the map
         // Five lessons about *controls* rather than about rules, and they earn their panels the
         // way <see cref="ModeSwitch"/> does: every one of them is a piece of chrome that says
-        // nothing about what is behind it. Two of them are the reason `ScreenLessons` exists —
+        // nothing about what is behind it. Two of them are the reason `ScreenLessons` exists -
         // a screen teaching several things needs the same chaining a board does, and a third
         // copy of it was one copy too many.
 
@@ -663,7 +663,7 @@ namespace GlimmerGrove.Progression
         /// <para>
         /// <b>It is a readout that happens to be a door, which is exactly what has to be
         /// taught.</b> The bar shows four turrets and five kit slots and looks like a status
-        /// line — nothing about a row of pictures says it answers a tap, and the LOADOUT button
+        /// line - nothing about a row of pictures says it answers a tap, and the LOADOUT button
         /// that used to say so was removed when the bar replaced it (see <c>LoadoutBar</c>).
         /// A player who never presses it never arranges a line, and the whole turret shelf is
         /// reached through it and through nothing else.
@@ -683,7 +683,7 @@ namespace GlimmerGrove.Progression
         /// <para>
         /// <b>The one rule on this screen a player cannot read off it.</b> The map draws a chain
         /// of glades and a star count, and neither says that finishing every glade is not the
-        /// price of going on — invariant 21's whole point is that the gate is stars rather than
+        /// price of going on - invariant 21's whole point is that the gate is stars rather than
         /// clears, so a player who three-stars nothing can clear ten glades and still find the
         /// next chapter shut. The signpost at the end of the chain says so, and it is a screen's
         /// length away from the plaque this lesson rings.
@@ -691,7 +691,7 @@ namespace GlimmerGrove.Progression
         /// <para>
         /// <b>Its number is derived, never written into the string.</b> The gate is content
         /// (<c>ChapterGateTable</c>) and a chapter is not a fixed size, so the sentence takes
-        /// what <c>LevelUnlock.GateAfter</c> answers — see <c>TipOverlay.BodyArgs</c>. A typed
+        /// what <c>LevelUnlock.GateAfter</c> answers - see <c>TipOverlay.BodyArgs</c>. A typed
         /// "20" would be wrong the first time either is retuned, in a string nothing can check.
         /// </para>
         /// <para>
@@ -709,7 +709,7 @@ namespace GlimmerGrove.Progression
         /// <para>
         /// <b><see cref="ModeSwitch"/>'s argument, one level finer.</b> <c>TrackSwitch</c> is a
         /// closed drop-down naming only the ladder the player is already on, so nothing about it
-        /// says there is another — and the Infinite lane is reached through it and through
+        /// says there is another - and the Infinite lane is reached through it and through
         /// nothing else. It is a lesson of its own rather than a widened <see cref="ModeSwitch"/>
         /// because the two controls answer different questions and each draws nothing when its
         /// own question has one answer: today the map carries the track pill and no mode pill,
@@ -738,7 +738,7 @@ namespace GlimmerGrove.Progression
         /// modal.
         /// </para>
         /// <para>
-        /// Replayable from the screen's own info key — see <c>LoadoutScreen.Review</c> — which
+        /// Replayable from the screen's own info key - see <c>LoadoutScreen.Review</c> - which
         /// is the one thing this lesson has that a board lesson does not: the shelf is a screen
         /// a player comes back to, so the panel is worth re-reading rather than being spent once.
         /// </para>
@@ -843,7 +843,7 @@ namespace GlimmerGrove.Progression
         /// <summary>
         /// Teaching order, most disruptive first.
         ///
-        /// Only one tip is ever shown on entering a glade — two modal lessons before a
+        /// Only one tip is ever shown on entering a glade - two modal lessons before a
         /// player has touched anything is a tutorial, not a hint. When a glade brings
         /// several ideas at once this decides which gets the moment, and the rest wait
         /// for a later glade that has them.
@@ -857,13 +857,13 @@ namespace GlimmerGrove.Progression
         /// A crossing goes first of the three because it can be <em>misread</em>, which is
         /// worse than not knowing: a tile with four arms is a crossroads everywhere else in
         /// this game, so a player who has not been told does not discover a new rule, they
-        /// conclude the board is broken. A taproot goes last for the opposite reason — it
+        /// conclude the board is broken. A taproot goes last for the opposite reason - it
         /// announces itself the first time it is tapped, because two tiles visibly move.
         /// </para>
         /// <para>
         /// A briar sits directly after the crossing, and for the same reason one notch weaker.
         /// It is the other tile here that wears four arms and is not a crossroads, so it is
-        /// misread in exactly the way a crossing is — but a briar shows its own rule, because
+        /// misread in exactly the way a crossing is - but a briar shows its own rule, because
         /// the thorns are drawn across the ways they have closed and the light stops at them
         /// while the player watches. What it still cannot show is that the thorns *move*, and
         /// that is what the lesson is for.
@@ -884,7 +884,7 @@ namespace GlimmerGrove.Progression
         /// added without them compiles, validates and ships, and the first player to reach it
         /// reads <c>ui.tip.grove.title</c> off the screen. That check used to walk the
         /// teaching order, which was the same list until a lesson appeared that no board can
-        /// bring — after which the order would have quietly stopped being the set of
+        /// bring - after which the order would have quietly stopped being the set of
         /// everything, and the check with it.
         /// </para>
         /// <para>
@@ -937,7 +937,7 @@ namespace GlimmerGrove.Progression
         /// <b>Written down rather than left implicit, because "retired" is the one state nothing
         /// could see.</b> A <c>Mechanic</c> lives here for ever once its id has travelled in a save
         /// (<c>tipsSeen</c>), so the only thing that separates a withdrawn lesson from one somebody
-        /// forgot to register is a sentence in a doc comment — which is why <see cref="SiegeLine"/>
+        /// forgot to register is a sentence in a doc comment - which is why <see cref="SiegeLine"/>
         /// sat in <see cref="All"/> failing the build over deleted strings while
         /// <see cref="SiegeShield"/> sat outside it with nothing proving it had any. Two opposite
         /// mistakes, one missing list. (Both are retired now, which is the point: the pair are
@@ -987,7 +987,7 @@ namespace GlimmerGrove.Progression
         /// critter alone shows the <em>question</em> and none of the answer, so a first-timer
         /// is told two hearts blend while being shown neither of them. The hearts belong to
         /// the lesson exactly as much as the critter does, and which hearts they are is a fact
-        /// about the board — derived here rather than authored, so a chapter shipped a year
+        /// about the board - derived here rather than authored, so a chapter shipped a year
         /// from now points at its own.
         /// </para>
         /// </summary>
@@ -1012,7 +1012,7 @@ namespace GlimmerGrove.Progression
     /// tip can never point at a mechanic a level does not actually have.
     ///
     /// It reads a built <see cref="Puzzle"/> rather than a definition so it costs
-    /// nothing extra — the board is already parsed by the time anybody asks.
+    /// nothing extra - the board is already parsed by the time anybody asks.
     /// </summary>
     public static class MechanicScan
     {
@@ -1024,7 +1024,7 @@ namespace GlimmerGrove.Progression
             int fragile = -1, rooted = -1, blended = -1, bound = -1, crossing = -1;
             int briar = -1;
 
-            // The unfussy critter to ring, and whether anything on this board is fussy —
+            // The unfussy critter to ring, and whether anything on this board is fussy -
             // without which there is no contrast to teach. See Mechanic.AnyLight.
             int unfussy = -1;
             bool fussy = false;
@@ -1039,12 +1039,12 @@ namespace GlimmerGrove.Progression
                 if (cell.kind == Kind.Briar && briar < 0) briar = i;
 
                 // Asked of the board rather than of the cell, because a rune only one
-                // conduit carries binds nothing — the validator refuses that level, and
+                // conduit carries binds nothing - the validator refuses that level, and
                 // pointing a lesson at it would teach a rule the board does not follow.
                 if (bound < 0 && board.IsBound(i)) bound = i;
 
                 // A critter asking for more than one channel is the only proof that
-                // blending is actually required here — two heart colours on their own
+                // blending is actually required here - two heart colours on their own
                 // may just as well mean "keep these apart".
                 if (cell.kind == Kind.Lamp && cell.colour != 0 &&
                     (cell.colour & (cell.colour - 1)) != 0 && blended < 0) blended = i;
@@ -1058,7 +1058,7 @@ namespace GlimmerGrove.Progression
 
             if (fragile >= 0) found.Add(new MechanicSighting(Mechanic.FragileConduit, fragile));
 
-            // The budget has no cell to ring — it lives in the counter at the top.
+            // The budget has no cell to ring - it lives in the counter at the top.
             if (board.HasBudget) found.Add(new MechanicSighting(Mechanic.MoveBudget, -1));
 
             if (rooted >= 0) found.Add(new MechanicSighting(Mechanic.RootedTile, rooted));
@@ -1066,7 +1066,7 @@ namespace GlimmerGrove.Progression
             // Both halves, always: a board of nothing but unfussy critters is the board the
             // player starts on, and "this one is not fussy" says nothing where none of them
             // is. The ring goes round the unfussy critter alone rather than round one of each
-            // — unlike blending, whose answer is two hearts elsewhere on the board, the whole
+            // - unlike blending, whose answer is two hearts elsewhere on the board, the whole
             // of this rule is drawn on the tile being pointed at.
             if (unfussy >= 0 && fussy) found.Add(new MechanicSighting(Mechanic.AnyLight, unfussy));
             if (blended >= 0)
@@ -1087,7 +1087,7 @@ namespace GlimmerGrove.Progression
         ///
         /// <para>
         /// <b>Out of those the solution joins it to</b>, rather than out of every heart of the
-        /// right colour on the board — a red heart the critter is never joined to is not where
+        /// right colour on the board - a red heart the critter is never joined to is not where
         /// its red comes from, and pointing at one teaches a rule the glade does not follow.
         /// <b>The nearest</b>, because the lesson lights everything it rings and one hole has
         /// to hold the lot: a far heart of a colour that is also standing next door would cut
@@ -1139,7 +1139,7 @@ namespace GlimmerGrove.Progression
         /// has by definition already seen every one of them.
         /// </para>
         /// <para>
-        /// A glade can bring two at once — a rooted tile and a blend, say — and holding the
+        /// A glade can bring two at once - a rooted tile and a blend, say - and holding the
         /// second back until some later glade repeats it means the player meets it unexplained
         /// in between. Shown one after another instead, which is a short queue rather than a
         /// wall of text: the list is empty on almost every glade after the first few.

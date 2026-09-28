@@ -4,7 +4,7 @@ namespace GlimmerGrove.Content
     /// Where content comes from and whether remote delivery is switched on.
     ///
     /// Remote is off until a CDN actually exists, and the game is fully playable in
-    /// that state — the seam is built now so that turning it on later is a one line
+    /// that state - the seam is built now so that turning it on later is a one line
     /// change here rather than a refactor of the loader. Set <see cref="RemoteBaseUrl"/>
     /// to the folder that holds manifest.json and serve it over HTTPS.
     /// </summary>

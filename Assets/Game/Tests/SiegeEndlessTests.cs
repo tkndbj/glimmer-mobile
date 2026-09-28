@@ -11,7 +11,7 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// <b>These are the only gate there is on the ramp.</b> An endless lane authors no waves, so
-    /// there is nothing in a content file for a reader to be wrong about — what wave forty sends
+    /// there is nothing in a content file for a reader to be wrong about - what wave forty sends
     /// is a rule, and a rule with no test is a rule nothing checks.
     /// </para>
     /// </summary>
@@ -41,7 +41,7 @@ namespace GlimmerGrove.Tests
 
         // ------------------------------------------------------------------ the schedule
         /// <summary>
-        /// A boss every fourth wave to sixteen, then a <b>pair</b> every fifth — every unordered
+        /// A boss every fourth wave to sixteen, then a <b>pair</b> every fifth - every unordered
         /// pair of the four, which is thirty waves before anything repeats.
         ///
         /// <b>Written out rather than derived here</b>, because a test that re-derived the rule
@@ -81,7 +81,7 @@ namespace GlimmerGrove.Tests
             }
 
             // And it starts again rather than running out, because a lane that ran out of schedule
-            // would have to invent something — and by then the ramp has moved so far that the same
+            // would have to invent something - and by then the ramp has moved so far that the same
             // pair is a different fight.
             SiegeEndless.BossesAt(51, found);
             Assert.AreEqual(new[] { SiegeKind.Blightcaller, SiegeKind.Boss }, found);
@@ -246,8 +246,8 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The two field raiders arrive last, and never more than one of each in a wave.
         ///
-        /// <b>Two of a kind share one answer</b> — the field only comes back when the last of them
-        /// is dead — so a wave dealing three weavers would be a wave whose field is simply gone.
+        /// <b>Two of a kind share one answer</b> - the field only comes back when the last of them
+        /// is dead - so a wave dealing three weavers would be a wave whose field is simply gone.
         /// </summary>
         [Test]
         public void AWaveNeverSendsTwoOfTheSameFieldRaider()
@@ -274,7 +274,7 @@ namespace GlimmerGrove.Tests
         /// A duel sends its bosses and nothing else.
         ///
         /// A duel stacked on a wave still swinging at the line is two fail states arriving
-        /// together, which is what invariant 37t moved the quiet before a warlord to avoid — so
+        /// together, which is what invariant 37t moved the quiet before a warlord to avoid - so
         /// an empty hill is the <em>point</em> for the three bosses that shell the line.
         /// </summary>
         [Test]
@@ -308,7 +308,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// <b>Reported from play as "the first boss does no damage", and it was true.</b> Wave
         /// four is a lone blightcaller, which takes a ward's <em>fire</em> and never its health
-        /// (37z) — so with nothing walking, the five seconds of dark it buys cost the player
+        /// (37z) - so with nothing walking, the five seconds of dark it buys cost the player
         /// exactly nothing and the wave rejects no play at all (invariant 5d). The escort is what
         /// gives the fire something to be worth.
         /// </para>
@@ -351,7 +351,7 @@ namespace GlimmerGrove.Tests
         /// The same wave is dealt twice the same way, and a different level deals a different one.
         ///
         /// <b>A hash rather than a stream</b>, so wave forty does not depend on how many rolls
-        /// waves one to thirty-nine happened to take — a rule change anywhere would otherwise move
+        /// waves one to thirty-nine happened to take - a rule change anywhere would otherwise move
         /// a hill somebody had already learned.
         /// </summary>
         [Test]
@@ -439,7 +439,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// <b>The only placement rule a pair wave brought</b>, and the one thing about it a number
         /// can check. A boss is three cells tall and stands still for the rest of its life, so two
-        /// of them in the middle lane would be one silhouette with two health bars over it — and
+        /// of them in the middle lane would be one silhouette with two health bars over it - and
         /// the bars were the half that really did overlap until <c>SiegeView.FreeCrown</c> gave
         /// the second one a rung of its own (invariant 37u).
         /// </para>
@@ -474,7 +474,7 @@ namespace GlimmerGrove.Tests
         /// A pair wave really is a pair, so the wave's own size is how many bosses it holds.
         ///
         /// <c>SiegeBoard.Muster</c> passes the wave's size to <see cref="SiegeTuning.BossLane"/>
-        /// as the boss count, which is exact only while a boss wave sends nothing else — the
+        /// as the boss count, which is exact only while a boss wave sends nothing else - the
         /// clause is checked next door, and this is the half that says the two facts are joined.
         /// </summary>
         [Test]

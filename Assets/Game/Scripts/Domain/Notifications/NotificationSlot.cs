@@ -5,8 +5,8 @@ namespace GlimmerGrove.Notifications
     ///
     /// <para>
     /// <b>They are hours of the player's <em>local</em> day, and that is not a nicety.</b>
-    /// Every other clock in this project is UTC on purpose — a day the server can adjudicate
-    /// has to be a day both sides compute from one number (<c>DailyRules</c>) — and a
+    /// Every other clock in this project is UTC on purpose - a day the server can adjudicate
+    /// has to be a day both sides compute from one number (<c>DailyRules</c>) - and a
     /// notification is the one thing here that must not be, because UTC 09:00 is three in the
     /// morning for a third of the world and a game that wakes somebody at three is a game
     /// they uninstall. Nothing is adjudicated here, nothing is paid, so there is nothing to
@@ -16,7 +16,7 @@ namespace GlimmerGrove.Notifications
     /// <para>
     /// <b>A slot is a preference rather than a rule, and the order slots are filled in is the
     /// design.</b> The evening is the best window and is filled first, so the most urgent
-    /// thing the planner has goes where it will be seen — which is the opposite of what
+    /// thing the planner has goes where it will be seen - which is the opposite of what
     /// ranking the whole day at once would do, since that hands the evening whatever is left
     /// over. A kind that fits nowhere in particular is <see cref="Any"/> and fills whatever
     /// the named ones did not want.

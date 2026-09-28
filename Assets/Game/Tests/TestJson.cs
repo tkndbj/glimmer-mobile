@@ -13,7 +13,7 @@ namespace GlimmerGrove.Tests
     /// <b>This exists for one reason: invariant 29e.</b> "A vector file that only the Editor can
     /// read is not a guard on the rule it pins." Every shared-vector fixture in this suite reaches
     /// the file through <c>Application.dataPath</c> and <c>JsonUtility.FromJson</c>, and both are
-    /// engine <c>ECall</c>s with no implementation outside a player or the Editor — so
+    /// engine <c>ECall</c>s with no implementation outside a player or the Editor - so
     /// <c>Tools/verify/tests.py</c> reports them as "needs the Editor" and walks past. That has
     /// already cost this project twice, on the one guard that stops the client and the server
     /// paying different amounts: the fixtures went red when a block was added to the reader and
@@ -22,8 +22,8 @@ namespace GlimmerGrove.Tests
     /// </para>
     /// <para>
     /// <b>Nothing here ships and nothing here is clever.</b> It is a straight recursive-descent
-    /// reader over the subset the vector files use — objects, arrays, strings, numbers, booleans
-    /// and null — written out rather than pulled in because the test assembly's reference set is
+    /// reader over the subset the vector files use - objects, arrays, strings, numbers, booleans
+    /// and null - written out rather than pulled in because the test assembly's reference set is
     /// Unity's, which carries no JSON library of its own. It is deliberately <em>strict</em>: a
     /// malformed file throws rather than answering an empty object, because a reader that returns
     /// nothing on a file it did not understand turns every vector case into a silent pass.
@@ -274,7 +274,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// A whole number. <b>Absent means <paramref name="fallback"/></b>, because a vector row
-        /// leaves a field out to say "nought here", and a fractional value throws — every number
+        /// leaves a field out to say "nought here", and a fractional value throws - every number
         /// these files carry is a count, and a rounded one would be an arithmetic difference the
         /// fixture silently absorbed.
         /// </summary>

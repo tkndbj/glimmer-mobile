@@ -8,14 +8,14 @@ using NUnit.Framework;
 namespace GlimmerGrove.Tests
 {
     /// <summary>
-    /// Which rungs are owed a ceremony — the half of <see cref="RankCeremony"/> that decides,
+    /// Which rungs are owed a ceremony - the half of <see cref="RankCeremony"/> that decides,
     /// as opposed to the half that draws.
     ///
     /// <para>
     /// <b>Everything here runs offline</b> (invariant 29e): the ladder is built from DTOs by
     /// hand, the catalog from a builder, and nothing touches a canvas, a sprite or
     /// <c>Application.dataPath</c>. That split is the reason <see cref="RankCeremony"/> is a
-    /// static gate and <c>RankUpOverlay</c> is a view — a rule only the Editor can run is not a
+    /// static gate and <c>RankUpOverlay</c> is a view - a rule only the Editor can run is not a
     /// guard on the rule it pins, and every fault this gate exists to stop is a fault of
     /// arithmetic rather than of drawing.
     /// </para>
@@ -81,7 +81,7 @@ namespace GlimmerGrove.Tests
             => Publish(Rung("cinderling", 2), Rung("silverwatch", 5), Rung("goldbrand", 8));
 
         /// <summary>
-        /// Drives the save directly, exactly as <c>RankLadderTests.Holding</c> does — and names
+        /// Drives the save directly, exactly as <c>RankLadderTests.Holding</c> does - and names
         /// the account, because whose save this is decides whether a rise is a promotion.
         /// </summary>
         static void Holding(string account, params int[] stars)
@@ -152,7 +152,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// <b>The Boot-ordering case, and the one most likely to be broken by a later change.</b>
         /// <c>RankCeremony.Begin</c> runs from <c>Boot</c>, where the save has loaded and the
-        /// content has not — so the first reading it can take is a nought that means "no ladder"
+        /// content has not - so the first reading it can take is a nought that means "no ladder"
         /// rather than "no rank". If that nought were treated as a baseline, every rung the
         /// account already held would be celebrated the moment the splash published the
         /// content.
@@ -194,7 +194,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The ladder is content and retunes without a build (invariant 52a), so a push can move
-        /// every ordinal under somebody who is standing still. A retune is not a promotion —
+        /// every ordinal under somebody who is standing still. A retune is not a promotion -
         /// and the cost of that rule is stated where it is paid: a retune that genuinely grants
         /// a rank passes in silence, which is the right way round.
         /// </summary>
@@ -247,7 +247,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// Two rungs crossed at once — a fortnight of another device's play landing in one
+        /// Two rungs crossed at once - a fortnight of another device's play landing in one
         /// merge. Both are owed, because showing the top one and swallowing the other would mean
         /// a badge the player never saw arrive.
         /// </summary>
@@ -289,7 +289,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// <c>RankBadge</c>'s toast gives way to the ceremony, and this is the predicate that
         /// decides. It is asked from inside <c>RankLedger.Promoted</c>, which fires from the
-        /// read <see cref="RankCeremony.Sync"/> itself performs — so it is deliberately a
+        /// read <see cref="RankCeremony.Sync"/> itself performs - so it is deliberately a
         /// question about the <em>baseline</em> rather than about the queue, which at that
         /// moment has not been written yet.
         /// </summary>

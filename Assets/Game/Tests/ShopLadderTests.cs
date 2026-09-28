@@ -9,7 +9,7 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// This is arithmetic nobody can see. A card carries a painted picture of what arrives and,
-    /// behind it, a fan of light in that rung's colour — and both are the same answer to the
+    /// behind it, a fan of light in that rung's colour - and both are the same answer to the
     /// same question, so the whole risk here is the two coming to disagree while every check
     /// this project has stays green. What that looks like on a phone is the fifth picture under
     /// the sixth colour, which reads as a card that is simply slightly wrong.
@@ -46,7 +46,7 @@ namespace GlimmerGrove.Tests
         public void AShelfOfOneIsTheTopRungRatherThanTheBottom()
         {
             // A product with nothing to be compared against is the best thing on its shelf.
-            // The other reading — no comparison, so the lowest rung — draws the only product
+            // The other reading - no comparison, so the lowest rung - draws the only product
             // on a shelf as the meanest one there is.
             Assert.AreEqual(5, ShopLadder.Rung(Ranked(1, 1), 6));
         }
@@ -76,8 +76,8 @@ namespace GlimmerGrove.Tests
         public void EveryShippedShelfClimbsWithoutRepeatingARung()
         {
             // The three shipped shelves, each with a ladder as long as itself: coins 4, gems 6,
-            // bundles 3. `Tools/make_shop_art.py` is what holds the art to those counts — see
-            // invariant 18e — and these are what "as long as itself" buys, one picture a card.
+            // bundles 3. `Tools/make_shop_art.py` is what holds the art to those counts - see
+            // invariant 18e - and these are what "as long as itself" buys, one picture a card.
             CollectionAssert.AreEqual(new[] { 0, 1, 2, 3 }, Rungs(shelf: 4, rungs: 4));
             CollectionAssert.AreEqual(new[] { 0, 1, 2, 3, 4, 5 }, Rungs(shelf: 6, rungs: 6));
             CollectionAssert.AreEqual(new[] { 0, 1, 2 }, Rungs(shelf: 3, rungs: 3));
@@ -112,7 +112,7 @@ namespace GlimmerGrove.Tests
         {
             // Six products over six rungs is one each, and that is what makes the top of a
             // shelf legible as the top. It stops holding the moment a shelf is longer than the
-            // ladder, which is correct — two products then share a picture — so the claim is
+            // ladder, which is correct - two products then share a picture - so the claim is
             // only made where it can be true.
             for (int rungs = 2; rungs <= 8; rungs++)
                 CollectionAssert.AreEquivalent(Sequence(rungs), Rungs(rungs, rungs),
@@ -123,7 +123,7 @@ namespace GlimmerGrove.Tests
         public void AShelfOfOneTimeProductsStillClimbsWhenItIsRankedRatherThanShortcut()
         {
             // The heart containers. All three are non-consumables, so the `Rung(product, n)`
-            // overload puts every one of them on the top rung — right for the starter bundle,
+            // overload puts every one of them on the top rung - right for the starter bundle,
             // which is a single offer with nothing to be compared against, and wrong for three
             // products that *are* a ladder. `ShopArt.PaintContainer` shipped calling it that
             // way, so the shelf selling 10, 20 and 50 hearts drew the largest bottle with five

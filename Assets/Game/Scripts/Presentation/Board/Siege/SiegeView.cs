@@ -17,7 +17,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>It inherits the latches and lays itself out.</b> <see cref="ProtoView"/> draws nothing
     /// but the plate and is explicit that a mode wanting a different shape may ignore every
-    /// drawing helper and still take the part that is dangerous to get wrong — whether a finger
+    /// drawing helper and still take the part that is dangerous to get wrong - whether a finger
     /// does anything, and how a run ends. This board is three bands rather than one grid, so
     /// <see cref="Fit"/>, <see cref="Span"/> and <see cref="CentreOf"/> are all overridden and
     /// nothing else about being a board had to move.
@@ -32,8 +32,8 @@ namespace GlimmerGrove
     /// <para>
     /// <b>The clock is not stopped by an animation, and that is deliberate.</b> <c>Busy</c> stops
     /// a second swap landing while the first is still falling; if it also stopped the hill, a
-    /// player could hold time still by swapping. What stops the hill is exactly what stops a run —
-    /// a lesson, the pause menu, the ending — which is <see cref="Live"/> below.
+    /// player could hold time still by swapping. What stops the hill is exactly what stops a run -
+    /// a lesson, the pause menu, the ending - which is <see cref="Live"/> below.
     /// </para>
     /// </summary>
     public sealed partial class SiegeView : ProtoView
@@ -45,18 +45,18 @@ namespace GlimmerGrove
         /// <para>
         /// Roughly forty / fifteen / forty, which is the arrangement the mode was commissioned as
         /// with the middle band widened once. <b>A render is why it was widened.</b> At a tenth of
-        /// the height a ward's own furniture — its plinth, its fuel tube and its four health pips
-        /// — is nearly two cells tall against a band of one and a half, so the tube fell behind
+        /// the height a ward's own furniture - its plinth, its fuel tube and its four health pips
+        /// - is nearly two cells tall against a band of one and a half, so the tube fell behind
         /// the field's plate and the one readout this mode is decided on was invisible. Nothing
         /// but a picture at the size a phone draws it could have said so (invariant 33h).
         /// </para>
         /// <para>
         /// <b>They are a ratio and not two shares, which is what makes moving one safe.</b> The
-        /// field's height is a fact rather than a share — it is laid out to the width (see
-        /// <see cref="MaxGemBand"/>) — so these two only ever divide what is left. The hill's half
+        /// field's height is a fact rather than a share - it is laid out to the width (see
+        /// <see cref="MaxGemBand"/>) - so these two only ever divide what is left. The hill's half
         /// went from .44 to .54 after a device reported the enemy ground as too small: on a
         /// 19.5:9 phone that is about seventy points of hill, and it costs the line a tenth of
-        /// itself, leaving it just under two cells — which is the bar the render bought.
+        /// itself, leaving it just under two cells - which is the bar the render bought.
         /// <b>Check it with <c>Tools/render_siege.py --phone</c> before moving either.</b>
         /// </para>
         /// </summary>
@@ -66,8 +66,8 @@ namespace GlimmerGrove
         /// The least the ward line may be, in cells, whatever the ratio above works out to.
         ///
         /// <b>A floor rather than a share, because the line holds furniture and not a picture.</b>
-        /// Everything standing on it is sized off <c>Cell</c> — plinth, tube, health bar, rank
-        /// badge — so on a short display a band that is only a fraction of what the field leaves
+        /// Everything standing on it is sized off <c>Cell</c> - plinth, tube, health bar, rank
+        /// badge - so on a short display a band that is only a fraction of what the field leaves
         /// gets squeezed under them, and what a player sees is a tube drawn across a turret's own
         /// chassis (invariant 37y) and a plinth behind the field's plate (37g). One and a half
         /// cells is where the render stops showing either.
@@ -80,7 +80,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>A ceiling rather than a share, because the field is now laid out to the width.</b>
         /// The three bands were 44 / 16 / 40 of the height and the cell was whichever of width and
-        /// height bound first — which on every phone was the height, so the gems sat in a column
+        /// height bound first - which on every phone was the height, so the gems sat in a column
         /// with a hand's width of empty plate either side of them. They fill the width now, and
         /// what that costs comes out of the hill: this is the line past which it stops costing the
         /// hill anything, because a hill with no room to walk down is the one band this mode
@@ -101,7 +101,7 @@ namespace GlimmerGrove
             /// The weaver's lock over it, or null.
             ///
             /// <b>A child of the gem rather than a cell of its own</b>, so it falls with the gem
-            /// it is on and nothing has to keep two lists in step — which is the same rule the
+            /// it is on and nothing has to keep two lists in step - which is the same rule the
             /// board keeps about <c>_webbed</c> travelling through <c>Collapse</c>. Kept once
             /// minted and hidden rather than destroyed, because a field of forty cells locks and
             /// unlocks all run.
@@ -112,7 +112,7 @@ namespace GlimmerGrove
             /// <summary>
             /// What this gem is carrying.
             ///
-            /// <b>The picture that says so is the gem's own face</b> — a lance is a stellated star
+            /// <b>The picture that says so is the gem's own face</b> - a lance is a stellated star
             /// and a stormglass a vortex orb, each cut in all four gem colours (<c>CharmFace</c>),
             /// so a charmed cell is a <em>different stone</em> rather than one of the four with a
             /// glyph printed on it. That is a correction: the glyph was the first cut and the
@@ -198,7 +198,7 @@ namespace GlimmerGrove
             /// <para>
             /// <b>A boss is the only body on this hill that ever stops, so it is the only one for
             /// which "standing" and "walking" are two pictures.</b> <see cref="Idle"/>'s note
-            /// above is about an insect, whose legs cycle in place — the picture of one standing
+            /// above is about an insect, whose legs cycle in place - the picture of one standing
             /// and one walking really are the same picture. A boss rendered out of 3D is the case
             /// that note says would want two, arriving: it walks to
             /// <c>SiegeTuning.HoldOf</c> and holds the middle of the hill from there (37t), and
@@ -220,7 +220,7 @@ namespace GlimmerGrove
 
             /// <summary>
             /// What it swings at the ward line, and <b>null for every cast whose pack drew no
-            /// attack</b> — which is the insects and the brood, so nothing about either of them
+            /// attack</b> - which is the insects and the brood, so nothing about either of them
             /// changes.
             ///
             /// <b>Its frame is bigger than the walk's and its body is not</b>, which is
@@ -251,8 +251,8 @@ namespace GlimmerGrove
             /// <summary>
             /// Which ward colour its fire is drawn in, which is <b>not</b> its own colour.
             ///
-            /// A burn is drawn in the colour of the seat that lit it (<c>WardModel.BurnFor</c>) —
-            /// that is what tells the player which of their four turrets is being paid for — and a
+            /// A burn is drawn in the colour of the seat that lit it (<c>WardModel.BurnFor</c>) -
+            /// that is what tells the player which of their four turrets is being paid for - and a
             /// raider's own colour is what decides who may hit it. Remembered here because
             /// <c>SiegeRaider.BurnFrom</c> names a ward that can fall while its fire is still
             /// burning, and a flame that changed hue because a turret died would be saying
@@ -270,7 +270,7 @@ namespace GlimmerGrove
             /// Seconds until this boss crackles again. See <c>SiegeView.Ambient</c>.
             ///
             /// <b>A countdown per boss rather than one clock for the hill</b>, because a pair of
-            /// them striking on the same frame reads as one flash rather than as two creatures —
+            /// them striking on the same frame reads as one flash rather than as two creatures -
             /// and it is jittered on every reset for the same reason.
             /// </summary>
             public float Crackle;
@@ -279,7 +279,7 @@ namespace GlimmerGrove
             /// A warlord's health, pinned across the top of the board rather than carried.
             ///
             /// Its own node under the effects layer, so it is not moved by the raider and has to
-            /// be taken down by hand when one falls — see <see cref="SiegeView.Fall"/>.
+            /// be taken down by hand when one falls - see <see cref="SiegeView.Fall"/>.
             /// </summary>
             public RectTransform Crown;
 
@@ -288,7 +288,7 @@ namespace GlimmerGrove
             ///
             /// <b>Nought until an endless lane sends a pair.</b> A crown is a full-width bar
             /// anchored at one place, so two bosses arriving together drew two of them exactly on
-            /// top of each other — invariant 37u's own finding (two readouts overlapping is two
+            /// top of each other - invariant 37u's own finding (two readouts overlapping is two
             /// readouts nobody can read), arriving through a door that was safe for as long as a
             /// level could only ever send one. See <see cref="SiegeView.FreeCrown"/>.
             /// </summary>
@@ -314,7 +314,7 @@ namespace GlimmerGrove
             /// <b>Deliberately no ring any more.</b> A boss behind a guard used to stand in a
             /// spinning, breathing circle of its own fire; the guard is a floor under its health
             /// now (<c>SiegeTuning.BossPhases</c>) and the circle went with it, at the owner's
-            /// instruction and on its own merits — what a player read off it was "a shape has
+            /// instruction and on its own merits - what a player read off it was "a shape has
             /// been laid over the board", which is the same verdict that took every other ring in
             /// this mode off the hill (see <c>SiegeView.Cast</c>).
             /// </summary>
@@ -339,7 +339,7 @@ namespace GlimmerGrove
             ///
             /// <b>It sits behind the tube rather than on the chassis</b>, because the tube is
             /// already the one thing on this line a player's eye passes on its way back to the
-            /// gems — see <c>SiegeView.Wanted</c>.
+            /// gems - see <c>SiegeView.Wanted</c>.
             /// </summary>
             public Image Want;
 
@@ -349,8 +349,8 @@ namespace GlimmerGrove
             ///
             /// <para>
             /// <b>On the turret rather than on the fuel bar, which is where it started.</b> The bar
-            /// is a *meter* — it says how much, continuously, and it is already carrying the demand
-            /// light — so a control living on it was a button hidden inside a readout. The chassis
+            /// is a *meter* - it says how much, continuously, and it is already carrying the demand
+            /// light - so a control living on it was a button hidden inside a readout. The chassis
             /// is the one part of a ward nothing else uses (the badge has the shoulder, the health
             /// bar is above, the bar below) and it is what a finger goes for when it means "this
             /// turret".
@@ -362,7 +362,7 @@ namespace GlimmerGrove
             public Image Halo;
 
             /// <summary>
-            /// The unscaled instant the glyph last came up, or below nought while it is down —
+            /// The unscaled instant the glyph last came up, or below nought while it is down -
             /// what <c>SiegeView.Ready</c> times the glyph's arrival and its pulse from, so every
             /// bolt starts its beat at rest rather than mid-swell.
             /// </summary>
@@ -404,7 +404,7 @@ namespace GlimmerGrove
             /// The rank its picture is currently drawn at, which is not always the ward's.
             ///
             /// <b>Remembered rather than compared against the sprite</b>, so the one frame a rank
-            /// changes on is a frame something can be made to happen on — see
+            /// changes on is a frame something can be made to happen on - see
             /// <see cref="SiegeView.Rose"/>. Asking "is the sprite the right one" every frame would
             /// answer the same question and lose the *edge*, which is the only interesting part.
             /// </summary>
@@ -441,11 +441,11 @@ namespace GlimmerGrove
 
         RectTransform _hill, _mobs, _fuseLayer, _cogLayer, _wall, _field, _meters, _fx;
 
-        /// <summary>The effect layer that is clipped to the board — see <c>SiegeView.Build</c>.</summary>
+        /// <summary>The effect layer that is clipped to the board - see <c>SiegeView.Build</c>.</summary>
         RectTransform _sky;
 
         /// <summary>
-        /// The damage figures, above every effect on this board — see <c>SiegeView.Build</c> for
+        /// The damage figures, above every effect on this board - see <c>SiegeView.Build</c> for
         /// why they are not on <c>_fx</c> and <c>SiegeView.Number</c> for what they are.
         /// </summary>
         RectTransform _figures;
@@ -465,7 +465,7 @@ namespace GlimmerGrove
         float _hillTop, _hillFoot, _lineY, _gemCentre;
 
         /// <summary>
-        /// The ward line's share of the board, as <c>Compose</c> derived it — not
+        /// The ward line's share of the board, as <c>Compose</c> derived it - not
         /// <see cref="LineBand"/>, which is one half of the ratio that produced it.
         /// </summary>
         float _lineBand;
@@ -484,7 +484,7 @@ namespace GlimmerGrove
         /// <b>A storm resolves in the rules in one instant and is drawn over a second or more</b>
         /// (see <c>Stormcall</c>), so between the two there is a stretch where the model holds a
         /// dozen dead raiders that are still standing on the screen on purpose. <c>Reap</c> runs
-        /// every frame and takes down the widget of anything dead — correctly, and it would take
+        /// every frame and takes down the widget of anything dead - correctly, and it would take
         /// the whole hill down one frame in, leaving the rest of the bolts falling on empty
         /// ground and the staggering pointless.
         /// </para>
@@ -503,7 +503,7 @@ namespace GlimmerGrove
         /// <b>The same problem as <see cref="_striking"/> and a list of its own rather than a
         /// share of it.</b> Both are "the model killed a dozen things in one instant and the
         /// drawing runs on for a second and a half", and both need <c>Reap</c> to leave the bodies
-        /// standing until their bolt arrives — but a stormcall clears its whole claim when its
+        /// standing until their bolt arrives - but a stormcall clears its whole claim when its
         /// sequence ends, so sharing one list would let either of them drop the other's corpses
         /// mid-flight. Two lists cost a second <c>Contains</c> per mob per frame and cannot
         /// interfere.
@@ -537,7 +537,7 @@ namespace GlimmerGrove
         /// Raised once a chosen target has resolved, however it resolved.
         ///
         /// <b>The bar owns what is armed, and this is how it finds out.</b> Without it the view
-        /// disarmed itself and the slot kept its ring — a highlight sitting on an item the player
+        /// disarmed itself and the slot kept its ring - a highlight sitting on an item the player
         /// had already spent, which is what it looked like: an item stuck on. Two places holding
         /// one piece of state is the fault; one of them telling the other is the fix.
         /// </summary>
@@ -554,7 +554,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>It replaced a hook that fired when a bomber <em>walked on</em>, and the difference
-        /// is the whole lesson.</b> What the tip has to say is "tap this" — so it was arriving
+        /// is the whole lesson.</b> What the tip has to say is "tap this" - so it was arriving
         /// while the thing to tap did not exist, ringing the raider instead and being long gone by
         /// the time a bomb landed. Reported from a device as the tip highlighting the wrong thing,
         /// and it is invariant 20m's rule about a payoff being something the player <em>made</em>,
@@ -576,7 +576,7 @@ namespace GlimmerGrove
         /// Which utility is being aimed, or null.
         ///
         /// Setting it builds or tears down the targeting layer, so nothing outside has to
-        /// remember to do either — and disarming is what a paused board, a finished run and a
+        /// remember to do either - and disarming is what a paused board, a finished run and a
         /// tapped slot all do.
         /// </summary>
         public UtilityItem Arming
@@ -587,7 +587,7 @@ namespace GlimmerGrove
                 if (_arming == value) return;
                 _arming = value;
 
-                // Arming is the player doing something, so the idle nudge starts over — and a
+                // Arming is the player doing something, so the idle nudge starts over - and a
                 // targeting layer going up over a ringed gem would be two things at once asking
                 // to be looked at. See `SiegeView.Hint`.
                 Stir();

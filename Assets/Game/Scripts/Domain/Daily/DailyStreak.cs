@@ -22,7 +22,7 @@ namespace GlimmerGrove.Daily
     /// <b>Why it is stored as dates and not as a count.</b> Invariant 11b. A count is
     /// not mergeable: a device holding 6 and one holding 1 are equally consistent with
     /// "one of them is behind" and "the streak broke and restarted", so every rule over the
-    /// pair is wrong somewhere — and the wrong one here silently resurrects a streak the
+    /// pair is wrong somewhere - and the wrong one here silently resurrects a streak the
     /// player really did break, or deletes one they really do hold. Dates have no such
     /// ambiguity. <see cref="StartDay"/> is the day the current run began and
     /// <see cref="LastPlayedDay"/> is the last day something was finished; both only ever
@@ -32,16 +32,16 @@ namespace GlimmerGrove.Daily
     /// <para>
     /// The one thing that join gives up is worth naming. Two devices that have not synced
     /// can each hold a start date, and taking the later of them can under-report a streak
-    /// by a day or two — device A knows about Monday and Tuesday, device B started
+    /// by a day or two - device A knows about Monday and Tuesday, device B started
     /// counting on Wednesday, and the merged answer says Wednesday. That is the safe
     /// direction: it can only ever shorten a streak, never invent one, and it corrects
     /// itself the moment the devices agree. The alternative, taking the <em>earlier</em>
-    /// start, is not a join at all — a stale device could resurrect a streak that was
+    /// start, is not a join at all - a stale device could resurrect a streak that was
     /// genuinely broken, and streak rewards escalate.
     /// </para>
     /// <para>
-    /// <b>Why there is a third date.</b> A night's reward is collected by hand — see
-    /// <see cref="TryCollect"/> — so something has to say which nights have been taken.
+    /// <b>Why there is a third date.</b> A night's reward is collected by hand - see
+    /// <see cref="TryCollect"/> - so something has to say which nights have been taken.
     /// <see cref="CollectedThroughDay"/> is the last one that has, which makes it the
     /// same shape as the other two and mergeable for the same reason: it only ever
     /// rises, so the join is <c>max</c> and a rung already paid cannot come back. The
@@ -55,7 +55,7 @@ namespace GlimmerGrove.Daily
     /// buys a window of days that do not have to be played, for the player who is away from
     /// the game rather than done with it. The whole entitlement is the day it was bought
     /// (<see cref="ShieldFromDay"/>), which is the fourth monotonic date in this file and
-    /// the reason the promise is exact rather than approximate — there is one number, so
+    /// the reason the promise is exact rather than approximate - there is one number, so
     /// playing inside the window writes nothing to it and cannot extend it.
     /// </para>
     /// <para>
@@ -127,7 +127,7 @@ namespace GlimmerGrove.Daily
         ///
         /// <para>
         /// <b>Yesterday still counts.</b> A streak breaks only once a whole day has passed
-        /// with nothing finished in it — otherwise the flame would go out at midnight in
+        /// with nothing finished in it - otherwise the flame would go out at midnight in
         /// front of a player who is mid-session, and the one thing a streak must never do is
         /// punish somebody who is playing right now.
         /// </para>
@@ -194,7 +194,7 @@ namespace GlimmerGrove.Daily
         /// continues the streak, a run after a gap the shield covered continues it too,
         /// anything older starts a new one, and a second run today changes nothing at all.
         /// Both returned values are greater than or equal to the ones passed in, which is the
-        /// property the merge depends on — see <see cref="Join"/>.
+        /// property the merge depends on - see <see cref="Join"/>.
         /// </para>
         /// <para>
         /// <paramref name="forgiven"/> is how much of the gap the shield covered, and it is
@@ -234,13 +234,13 @@ namespace GlimmerGrove.Daily
 
         /// <summary>
         /// True when a streak is being held, has not been extended today, <em>and</em> doing
-        /// nothing today would lose it — the one state worth putting in front of a player,
+        /// nothing today would lose it - the one state worth putting in front of a player,
         /// because it is the only one where doing nothing costs them something.
         ///
         /// <para>
         /// <b>Asked as "would it survive tomorrow", never as "is a shield running".</b> A
-        /// protected streak is not at risk, which is the whole of what was paid for — the
-        /// page must not spend the window it sold telling the player to hurry — but the
+        /// protected streak is not at risk, which is the whole of what was paid for - the
+        /// page must not spend the window it sold telling the player to hurry - but the
         /// shield's <em>last</em> day is not urgent either: yesterday always counts, so a
         /// window ending tonight still leaves tomorrow to play. Reading the shield directly
         /// put the clock up a day early with the row beside it still reporting a day left,
@@ -252,7 +252,7 @@ namespace GlimmerGrove.Daily
             && !Survives(_lastPlayedDay, Today + 1, _shieldFrom, ShieldDays);
 
         /// <summary>
-        /// What the next rung pays — today's run when the streak has not yet been extended,
+        /// What the next rung pays - today's run when the streak has not yet been extended,
         /// tomorrow's when it has.
         ///
         /// One expression covers all three states because <see cref="Days"/> already reads
@@ -300,7 +300,7 @@ namespace GlimmerGrove.Daily
         /// How many days of protection are left, counting today. 0 when none is running.
         ///
         /// Days rather than a clock, because the thing being protected turns over on a
-        /// calendar day — a countdown to the hour would be a second, more precise-looking
+        /// calendar day - a countdown to the hour would be a second, more precise-looking
         /// answer to a question the rule does not ask that precisely.
         /// </summary>
         public static int ShieldDaysLeft
@@ -323,7 +323,7 @@ namespace GlimmerGrove.Daily
             /// <summary>One is already running. Not a failure; nothing is charged.</summary>
             Held,
 
-            /// <summary>This build sells none — the content authored no price.</summary>
+            /// <summary>This build sells none - the content authored no price.</summary>
             NotSold,
 
             /// <summary>There is no streak to protect.</summary>
@@ -340,13 +340,13 @@ namespace GlimmerGrove.Daily
         /// <b>The debit goes first and the date is only written if it succeeded</b>, which is
         /// <c>SeasonLedger.TryBuyPass</c>'s ordering and its argument: a process killed
         /// between the two leaves a player who paid and did not receive, which the spend log
-        /// can see and support can put right — where the other order leaves protection nobody
+        /// can see and support can put right - where the other order leaves protection nobody
         /// paid for, which is indistinguishable from a forgery and therefore invisible.
         /// </para>
         /// <para>
         /// <b>A running shield is never sold a second one.</b> The entitlement is one date, so
-        /// buying again would move it and silently extend the window — which is exactly the
-        /// thing this was asked not to do — and charging for a window already held is worse.
+        /// buying again would move it and silently extend the window - which is exactly the
+        /// thing this was asked not to do - and charging for a window already held is worse.
         /// It becomes buyable again the day the last one lapses.
         /// </para>
         /// <para>
@@ -356,7 +356,7 @@ namespace GlimmerGrove.Daily
         /// unused.
         /// </para>
         /// <para>
-        /// The spend id is <b>derived</b> — <c>shield:{day}</c> — which is the second derived
+        /// The spend id is <b>derived</b> - <c>shield:{day}</c> - which is the second derived
         /// spend id in this game and is here for the first one's reason read sideways: two
         /// devices that both buy on the same day offline write byte-identical entries, the
         /// union keeps one, and the player is charged once. It is not a permission the server
@@ -399,7 +399,7 @@ namespace GlimmerGrove.Daily
         /// Which calendar day the <paramref name="rung"/>th night of a run beginning on
         /// <paramref name="startDay"/> was, or 0 when there is no run.
         ///
-        /// The join between the ladder — which counts from one — and the dates, which is
+        /// The join between the ladder - which counts from one - and the dates, which is
         /// what everything else keys on. Pure, and takes the start rather than reading it,
         /// for the reason <see cref="LengthOf"/> is: it is what lets the collection rules
         /// be exercised over merged files and broken streaks without a save or a clock.
@@ -445,7 +445,7 @@ namespace GlimmerGrove.Daily
         /// The earliest night still waiting, or 0 when nothing is.
         ///
         /// <para>
-        /// What the board pages to, and — since a night can now pay a chest — the only night
+        /// What the board pages to, and - since a night can now pay a chest - the only night
         /// that may actually be taken. A streak runs on past the end of the ladder, so the
         /// board shows one lap of it at a time, and the lap it shows has to be the one holding
         /// the oldest thing the player has not taken. Showing the <em>current</em> lap instead
@@ -472,7 +472,7 @@ namespace GlimmerGrove.Daily
         ///
         /// <para>
         /// <b>Only the earliest waiting night is collectable, and that is what paying a chest
-        /// cost.</b> The floor is a floor — taking night five necessarily takes four with it —
+        /// cost.</b> The floor is a floor - taking night five necessarily takes four with it -
         /// which was invisible while every rung was a figure and is not once a rung opens a
         /// ceremony: a sweep would grant three chests behind one animation, which is the
         /// "reward that arrives while a panel is up" failure this game has already made twice
@@ -513,7 +513,7 @@ namespace GlimmerGrove.Daily
         /// The first night of the lap that contains <paramref name="night"/>.
         ///
         /// The board draws <c>cycleLength</c> nights starting here, and every tile is
-        /// labelled with its <em>absolute</em> night — night eight reads "night 8", not
+        /// labelled with its <em>absolute</em> night - night eight reads "night 8", not
         /// "night 1 of week 2". A board that restarted its numbering while the flame above
         /// it counted on would read as the streak having been reset, which is the one thing
         /// this screen must never appear to do.
@@ -561,13 +561,13 @@ namespace GlimmerGrove.Daily
         /// Pure counterpart of the rule in <see cref="Record"/>, and it does three jobs.
         /// Nights from a lapsed streak stop being offered; a live file's floor is never zero,
         /// which is what makes zero mean "written before rewards were collected by hand"; and
-        /// — new with the shield — a run that continued across forgiven days carries its floor
+        /// - new with the shield - a run that continued across forgiven days carries its floor
         /// forward by the same amount its start moved, because the floor is a <em>day</em> and
         /// every night's day has just slid.
         /// </para>
         /// <para>
         /// Without that last clause a protected player comes back to nights they have already
-        /// been paid for sitting on the board waiting to be paid again — the floor would still
+        /// been paid for sitting on the board waiting to be paid again - the floor would still
         /// name the old calendar day while night one now names a later one.
         /// </para>
         /// </summary>
@@ -579,7 +579,7 @@ namespace GlimmerGrove.Daily
             // The ceiling is belt and braces rather than arithmetic: a floor is never past
             // the last day played and the forgiven days are all strictly before today, so a
             // reachable pair cannot exceed it. What is *not* belt and braces is the second
-            // clamp — without it a floor already at or past yesterday would be pulled back by
+            // clamp - without it a floor already at or past yesterday would be pulled back by
             // the ceiling, which is the one thing this field may never do, since every merge
             // in this file rests on it only ever rising (invariant 11b).
             int moved = collectedThrough + forgiven;
@@ -593,7 +593,7 @@ namespace GlimmerGrove.Daily
         /// What a floor read off disk becomes. Pure counterpart of <see cref="LoadFrom"/>.
         ///
         /// Zero is a file written before rungs were collected by hand, and everything it
-        /// had earned it had also been paid — so the floor is the last day it played.
+        /// had earned it had also been paid - so the floor is the last day it played.
         /// Anything past that day is a file that has been edited, and is pulled back.
         /// </summary>
         public static int RepairCollected(int collectedThrough, int lastPlayedDay)
@@ -638,7 +638,7 @@ namespace GlimmerGrove.Daily
         /// pay a chest: a chest is rolled from the account id so the server can recompute it,
         /// and before the first sign-in there is no account id to roll from. A currency night
         /// needs no such thing, which is why this is asked of the rung rather than of the
-        /// feature — see <see cref="CanCollect"/>.
+        /// feature - see <see cref="CanCollect"/>.
         /// </summary>
         public static bool CanClaimChests => RewardSeed.IsAdjudicable;
 
@@ -676,7 +676,7 @@ namespace GlimmerGrove.Daily
         ///
         /// <para>
         /// <b>One night, never a sweep.</b> Only the earliest waiting night is collectable
-        /// (<see cref="CollectableAt"/>), so this pays exactly one rung per tap — which is
+        /// (<see cref="CollectableAt"/>), so this pays exactly one rung per tap - which is
         /// what lets a night open the same chest ceremony the tasks page and the season do,
         /// instead of granting three chests behind one animation.
         /// </para>
@@ -707,8 +707,8 @@ namespace GlimmerGrove.Daily
             if (through <= _collectedThrough) return false;
 
             // The floor moves *before* the reward is handed over, and the ordering is
-            // load-bearing rather than tidy. Applying a rung writes the save — an award has to
-            // be durable the moment the player is shown it — so a process killed mid-payout
+            // load-bearing rather than tidy. Applying a rung writes the save - an award has to
+            // be durable the moment the player is shown it - so a process killed mid-payout
             // would otherwise come back with the floor still behind a night whose utilities
             // had already been banked. Currency survives that: the award carries a derived id
             // and the second attempt collides with the first. A banked drop carries nothing,
@@ -726,7 +726,7 @@ namespace GlimmerGrove.Daily
             TaskLedger.Note(TaskGoal.Streak);
 
             // The season grows on a claimed chest and nowhere else, so a chest night feeds it
-            // exactly as a task's does — which is invariant 47's whole bargain: every future
+            // exactly as a task's does - which is invariant 47's whole bargain: every future
             // source of chests feeds the season by naming a tier rather than by growing a
             // second rule. A currency night grows nothing, correctly.
             if (night.IsChest) Events.SeasonLedger.NoteChest(night.Tier);
@@ -772,12 +772,12 @@ namespace GlimmerGrove.Daily
         /// The same event <c>TaskLedger.RecordRun</c> counts, and deliberately the same
         /// bar: losing keeps a streak alive. A streak that only counts wins punishes the
         /// player on the day they were struggling, which is the day they most needed a
-        /// reason to come back tomorrow — and it would make the hardest glade in a chapter
+        /// reason to come back tomorrow - and it would make the hardest glade in a chapter
         /// the place streaks go to die.
         /// </para>
         /// <para>
         /// <b>The reward is set aside, not paid.</b> It waits on the streak page until the
-        /// player taps it — see <see cref="TryCollect"/>. What that buys is the moment: a
+        /// player taps it - see <see cref="TryCollect"/>. What that buys is the moment: a
         /// reward that lands silently while a defeat screen is animating is a number the
         /// player never sees arrive, and a number nobody watches arrive is not a reward, it
         /// is an accounting entry. It also gives the page a reason to be opened, which is
@@ -835,14 +835,14 @@ namespace GlimmerGrove.Daily
         /// and utilities are banked here and now: a heart clamps at its ceiling and a boost
         /// expires, so trusting the client with them costs at most a few extra runs today.
         /// Currency is queued as an identified claim for the server to adjudicate, because
-        /// currency is the thing real money buys and therefore the thing an attacker forges —
+        /// currency is the thing real money buys and therefore the thing an attacker forges -
         /// the client never raises <c>grantedBaseline</c> itself. Invariant 10a.
         /// </para>
         /// <para>
         /// The award lands in the ledger immediately either way, so a night collected on a
         /// plane is spendable on that plane. What the server later decides can only revise
         /// it downward, and it does that by replacing a baseline rather than by taking
-        /// anything back — see <c>CurrencyLedger.BalanceFrom</c>.
+        /// anything back - see <c>CurrencyLedger.BalanceFrom</c>.
         /// </para>
         /// </summary>
         static void Apply(List<ChestDrop> drops, int dayKey, int night)
@@ -890,7 +890,7 @@ namespace GlimmerGrove.Daily
             // Pre-v10: rungs were applied at the end of a run, so everything this file has
             // earned it has also been paid. Left at zero, every night of a live streak
             // would light up as collectable on the first launch of this build and pay a
-            // second time. A live v10 file cannot say zero here — see StreakStateDto.
+            // second time. A live v10 file cannot say zero here - see StreakStateDto.
             _collectedThrough = RepairCollected(_collectedThrough, _lastPlayedDay);
 
             Raise();
@@ -912,7 +912,7 @@ namespace GlimmerGrove.Daily
         ///
         /// <para>
         /// Every field is a counter of something that happened rather than a balance, so the
-        /// larger is always the one that knows more — a later last-played day has seen a
+        /// larger is always the one that knows more - a later last-played day has seen a
         /// session the other missed, a later start day has seen a break or a forgiven gap the
         /// other missed, and a later shield date has seen a purchase the other missed. That
         /// makes this idempotent, commutative and associative like every other merge in this
@@ -936,7 +936,7 @@ namespace GlimmerGrove.Daily
 
                 // Larger wins here too, and here that means the device that has paid more
                 // out. It can cost a player a rung they had not collected on either device
-                // — the same direction the start date already errs in, and for the same
+                // - the same direction the start date already errs in, and for the same
                 // reason: the alternative pays a night twice, and two devices claiming the
                 // same chest is the failure this whole file is shaped to avoid.
                 collectedThroughDay = Math.Max(mine.collectedThroughDay, other.collectedThroughDay),

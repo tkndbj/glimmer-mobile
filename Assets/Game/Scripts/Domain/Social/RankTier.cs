@@ -17,15 +17,15 @@ namespace GlimmerGrove.Social
     /// <para>
     /// <b>A band rather than the number.</b> The percentile behind it is a sample of a
     /// live population, so the raw figure moves for reasons that have nothing to do with
-    /// the player — <c>publishGroveStats</c> reads five thousand fresh saves a day. A
+    /// the player - <c>publishGroveStats</c> reads five thousand fresh saves a day. A
     /// band absorbs that: the population has to shift a great deal to move somebody a
     /// whole tier, so what is painted on the map reads as a rank the player holds rather
     /// than as a statistic that twitches. It is also the only form in which the claim is
-    /// safe to shorten — "top 10%" needs no sample size beside it to be true.
+    /// safe to shorten - "top 10%" needs no sample size beside it to be true.
     /// </para>
     /// <para>
-    /// <b>Why this is safe to store at all.</b> A standing is only ever promoted — see
-    /// <see cref="Persistence.LevelRecord.WithRank"/> — so the number under the band is
+    /// <b>Why this is safe to store at all.</b> A standing is only ever promoted - see
+    /// <see cref="Persistence.LevelRecord.WithRank"/> - so the number under the band is
     /// the best the player has ever held, against any population that was ever
     /// published. That is what makes it honest as a permanent mark: it cannot sag while
     /// the player is away, and beating their own move count can never lower it. The two
@@ -58,8 +58,8 @@ namespace GlimmerGrove.Social
         /// The band a stored standing falls in.
         ///
         /// <para>
-        /// Zero — the value <c>JsonUtility</c> leaves in a field an older save never
-        /// wrote — lands in <see cref="RankBand.None"/> without a special case, which is
+        /// Zero - the value <c>JsonUtility</c> leaves in a field an older save never
+        /// wrote - lands in <see cref="RankBand.None"/> without a special case, which is
         /// the whole reason this field needed no migration. So does the -1 that
         /// <see cref="LevelStats.PercentSlower"/> returns when it has nothing to say.
         /// </para>
@@ -83,7 +83,7 @@ namespace GlimmerGrove.Social
         /// reason <c>WinOverlay.RankKeys</c> is: a key that only exists at runtime is
         /// invisible to the build's string checker and ships missing in whichever
         /// language nobody tested. <see cref="RankBand.None"/> has no key because it has
-        /// no label — asking for one is a caller that forgot to check.
+        /// no label - asking for one is a caller that forgot to check.
         /// </para>
         /// </summary>
         public static string KeyOf(RankBand band)

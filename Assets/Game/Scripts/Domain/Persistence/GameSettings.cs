@@ -6,7 +6,7 @@ namespace GlimmerGrove.Persistence
     /// Sound, haptics and language.
     ///
     /// Split out of progress because they answer a different question and have a
-    /// different lifetime — a player who erases their progress keeps their sound
+    /// different lifetime - a player who erases their progress keeps their sound
     /// settings. They share a file with progress only so there is one atomic write.
     /// </summary>
     public static class GameSettings
@@ -15,8 +15,8 @@ namespace GlimmerGrove.Persistence
         public static bool SfxOn { get; private set; } = true;
 
         /// <summary>
-        /// <b>Retired in place.</b> The game no longer vibrates at all — <c>Haptic</c> is gone,
-        /// with it every call site, and with those the control that used to switch this — so
+        /// <b>Retired in place.</b> The game no longer vibrates at all - <c>Haptic</c> is gone,
+        /// with it every call site, and with those the control that used to switch this - so
         /// nothing reads this and nothing ever should again.
         ///
         /// <para>
@@ -30,7 +30,7 @@ namespace GlimmerGrove.Persistence
         /// <para>
         /// <b>Why the buzz went.</b> <c>Handheld.Vibrate</c> on Android is one fixed-length
         /// heavy pulse with no way to make a second lighter than the first, so every use of it
-        /// here was the same blunt knock whatever it was answering — and on a mode that opens
+        /// here was the same blunt knock whatever it was answering - and on a mode that opens
         /// four cocoons in one chain it fired four times inside a second, which is one rumble
         /// rather than four taps.
         /// </para>
@@ -45,7 +45,7 @@ namespace GlimmerGrove.Persistence
         ///
         /// <para>
         /// The one setting here that is about other people rather than about this device, and
-        /// the only one whose "off" has to reach a server to mean anything — turning it off
+        /// the only one whose "off" has to reach a server to mean anything - turning it off
         /// raises a withdrawal, which takes the published card down rather than merely
         /// stopping the next rebuild. See <c>GroveBoard</c> and <see cref="SettingsDto.board"/>.
         /// </para>
@@ -54,8 +54,8 @@ namespace GlimmerGrove.Persistence
 
         /// <summary>
         /// Raised after any setting changes. The audio player subscribes to this
-        /// rather than being called directly, which is what keeps settings — a piece
-        /// of saved state — from having to know that a sound system exists.
+        /// rather than being called directly, which is what keeps settings - a piece
+        /// of saved state - from having to know that a sound system exists.
         /// </summary>
         public static event Action Changed;
 
@@ -86,7 +86,7 @@ namespace GlimmerGrove.Persistence
         ///
         /// Raised through <see cref="Changed"/> like every other setting, so the board service
         /// hears about it by subscribing once rather than by the profile panel remembering to
-        /// call it — the wiring lesson this project has now paid for three times.
+        /// call it - the wiring lesson this project has now paid for three times.
         /// </summary>
         public static void SetBoardOptIn(bool on)
         {

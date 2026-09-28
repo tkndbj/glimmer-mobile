@@ -17,7 +17,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>The page is the tasks page's page, and that is the whole of the rebuild.</b> The
     /// old one was a painted sky with two vines climbing it, forty milestone cards drawn
-    /// from a palette of its own and a dock at the foot — a screen that looked like nothing
+    /// from a palette of its own and a dock at the foot - a screen that looked like nothing
     /// else in the game, on a ground the interface kit does not use. It is the same furniture
     /// as Tasks &amp; Bonuses now: the kit's plates on <see cref="Scenery.Plain"/>, a title
     /// ribbon over the wallet, one hero plate, and a list of cards under pinned headings. A
@@ -35,8 +35,8 @@ namespace GlimmerGrove
     /// <b>The pass is bought with gems, so this screen sells it itself.</b> No store sheet, no
     /// receipt, no round trip and nothing to wait on: a gem debit is an ordinary spend
     /// (invariant 18), so the purchase is <see cref="SeasonLedger.TryBuyPass"/> and the page
-    /// repaints. What used to be here — a pass state fetched once per visit, a price that
-    /// arrived from the store, a refusal for every one of six reasons the sheet could fail —
+    /// repaints. What used to be here - a pass state fetched once per visit, a price that
+    /// arrived from the store, a refusal for every one of six reasons the sheet could fail -
     /// went with the real-money product.
     /// </para>
     /// </summary>
@@ -49,7 +49,7 @@ namespace GlimmerGrove
         const float HeroH = 240f;
         /// <summary>
         /// The pass row is the one thing on this page that is for sale, and at 132 it was the
-        /// shortest plate on a page whose hero is 240 and whose rung cards are 192 — the offer
+        /// shortest plate on a page whose hero is 240 and whose rung cards are 192 - the offer
         /// read as a footnote between them. Grown at the owner's instruction; everything inside
         /// it is measured off the new height rather than left where the short plate put it, so
         /// the crest, the two lines and the key all grow with the box.
@@ -71,7 +71,7 @@ namespace GlimmerGrove
         /// <b>Smaller than the shop's seal and it has to be.</b> A storefront card is a tall
         /// column with an empty corner; this plate is 176 tall with a 128 crest centred in it,
         /// so there is no corner here that is actually empty. At 164, or at 88 set 50 in, the
-        /// two bursts overlap into one mushy double star — which the render showed and no
+        /// two bursts overlap into one mushy double star - which the render showed and no
         /// numeric gate could.
         /// </para>
         /// <para>
@@ -87,7 +87,7 @@ namespace GlimmerGrove
         /// <b>The inset is bounded by the margin, not by the crest.</b> The plate is
         /// <see cref="Width"/> in a canvas that is never narrower than 1080, so there are 40
         /// units of gutter either side. At 36 the badge overhangs 26 of them, so it needs a
-        /// safe area of 1052 against the 1080 the narrowest canvas here is — which portrait
+        /// safe area of 1052 against the 1080 the narrowest canvas here is - which portrait
         /// always is, since the horizontal insets are nought and a tablet is wider still.
         /// </para>
         /// <para>
@@ -116,7 +116,7 @@ namespace GlimmerGrove
         /// What the countdown pill really leaves its words: `Scenery.Pill` reserves the
         /// glyph's lane off the height and 16 units on the right. Written here rather than at
         /// the call site because the clock is re-fitted on every tick and the two have to
-        /// agree — a fitter shrinking against a width the pill does not have is a fitter that
+        /// agree - a fitter shrinking against a width the pill does not have is a fitter that
         /// lets the text spill anyway.
         ///
         /// <para>
@@ -153,7 +153,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <see cref="SeasonCrest.Paint"/> <em>adds</em> to its host rather than replacing what
-        /// is there, so calling it on a repaint would stack a second crest on the first — and a
+        /// is there, so calling it on a repaint would stack a second crest on the first - and a
         /// crest painted at nought on the way in would then never open at all, which is what
         /// this used to do.
         /// </para>
@@ -239,7 +239,7 @@ namespace GlimmerGrove
 
         // --------------------------------------------------------------- the chrome
         /// <summary>
-        /// The corners, the season's name, what it is, and the wallet — the tasks page's
+        /// The corners, the season's name, what it is, and the wallet - the tasks page's
         /// order, for its reason: the first thing read on a page about what there is to earn
         /// should be what the page is, and the pills are still where
         /// <see cref="RewardFlight"/> lands a chest's tokens.
@@ -277,7 +277,7 @@ namespace GlimmerGrove
                  Compact.Number(Profile.Gems), v => Compact.Number(v));
 
             // **All three, including the hearts.** This page used to watch credits and gems by
-            // hand and draw a hearts pill it never wrote to — hearts move on a refill timer
+            // hand and draw a hearts pill it never wrote to - hearts move on a refill timer
             // rather than on a spend, so it was the one of the three that could go stale while
             // somebody sat here reading the ladder.
             WalletWatch.Attach(this, ResourceSlots.Kind.Hearts, ResourceSlots.Kind.Credits,
@@ -316,7 +316,7 @@ namespace GlimmerGrove
         /// <b>The count is the hero for the reason the Infinite lane's medal is</b> (43b): a
         /// track graded on one number puts that number in the middle of the screen. Under it
         /// the bar measures the run between the <em>last</em> rung and the next rather than
-        /// the whole ladder — a bar that crawls across forty rungs is a bar that never visibly
+        /// the whole ladder - a bar that crawls across forty rungs is a bar that never visibly
         /// moves, where this one fills every few chests.
         /// </para>
         /// </summary>
@@ -339,7 +339,7 @@ namespace GlimmerGrove
 
             // The season's own crest. Drawn by PaintMark on the first repaint rather than here,
             // because a crest that fills with the track (SeasonCrest.Bloom) has to be painted
-            // once the progress is known — the shipped one is a fixed emblem and does not care,
+            // once the progress is known - the shipped one is a fixed emblem and does not care,
             // and a screen that only draws the one crest its manifest happens to name today is
             // a screen that breaks on the next season.
             _mark = UIKit.Box("Mark", plate.transform, new Vector2(150f, 150f), Left,
@@ -359,7 +359,7 @@ namespace GlimmerGrove
             // How far up the ladder, at the right end of the plate.
             //
             // The count of marks is what the season is *graded* on and the count of rungs is
-            // what it is *spent* on, and they answer different questions — "am I getting
+            // what it is *spent* on, and they answer different questions - "am I getting
             // anywhere" against "how much is left". Drawn as a fraction rather than as a bar,
             // because the bar beside it is already measuring the run between two rungs and two
             // bars on one plate would be two readings of one thing (37v's rule about what a
@@ -391,7 +391,7 @@ namespace GlimmerGrove
 
             // <b>Placed with `UIKit.Corner`, because `UIKit.Box` always pivots at centre.</b>
             // Handed the margin directly, a 300-wide pill tucked 28 units from the plate's
-            // right edge hangs 122 of them off it — which reads from the outside as the
+            // right edge hangs 122 of them off it - which reads from the outside as the
             // countdown overflowing its container, and is really the container standing in
             // the wrong place. The same trap the win panel's corner buttons are documented
             // for.
@@ -481,7 +481,7 @@ namespace GlimmerGrove
 
             // <b>The sentence is given two lines rather than one, which is what the taller
             // plate is for.</b> `UIKit.Shrinkable` wraps and then truncates, so a one-line box
-            // makes a long sentence *smaller*, not wider — on a narrower column it came out at
+            // makes a long sentence *smaller*, not wider - on a narrower column it came out at
             // its floor and clipped. Both hints here wrap to two lines at 26 and stand 62 units
             // tall, which is the box; the offer is now read at 26 where it used to be read at
             // 15, and it is the line the purchase is decided on.
@@ -490,7 +490,7 @@ namespace GlimmerGrove
                              TextAnchor.MiddleLeft, new Vector2(HintW, 64f), Left,
                              new Vector2(TextX + HintW * .5f, -32f), 0f, 0f), 17);
 
-            // <b>`UIKit.Button` makes no label, so `SetCaption` had nothing to write into</b> —
+            // <b>`UIKit.Button` makes no label, so `SetCaption` had nothing to write into</b> -
             // the button drew as an empty box for as long as it existed. `TextButton` is the
             // one that builds a caption, and a price wants it anyway: a trailing glyph is a
             // *unit* on the number a caption ends with (`Btn.IconTrails`), which is how every
@@ -502,7 +502,7 @@ namespace GlimmerGrove
                                         Art.S("Ui/ic_gem"), iconTrails: true);
 
             // <b>What the paid column is worth against what it costs</b>, in the shop's own
-            // grammar — the same burst the storefront seals a pack with, tilted the other way
+            // grammar - the same burst the storefront seals a pack with, tilted the other way
             // because this one sits in the left corner. It is the last thing built on the
             // plate so it draws over the crest's outer points rather than under them.
             //
@@ -524,7 +524,7 @@ namespace GlimmerGrove
                 // which is `ProductCardBadges`' measurement and its reason: a caption centred
                 // on the sprite sits low, and one sized to the whole texture says its piece
                 // across the rim. Shrinkable because a translation of "VALUE" is not three
-                // letters everywhere, and the floor is the shop's — below it Best Fit stops
+                // letters everywhere, and the floor is the shop's - below it Best Fit stops
                 // shrinking and the label overflows unclipped and unreported (invariant 19n).
                 UIKit.Shrinkable(
                     UIKit.Titled("VT", _passValue.transform,
@@ -552,7 +552,7 @@ namespace GlimmerGrove
         /// <summary>
         /// The two column headings, pinned above the list rather than scrolling with it.
         ///
-        /// A rung card carries two chests and nothing on it says which column is which — the
+        /// A rung card carries two chests and nothing on it says which column is which - the
         /// pictures are the same four tiers on both tracks. Repeating the words on forty cards
         /// would be eighty labels saying one thing; saying it once above the list is the
         /// arrangement every table in this game already uses.
@@ -618,8 +618,8 @@ namespace GlimmerGrove
         /// <summary>
         /// The ladder follows the scroll, and the clock ticks once a second.
         ///
-        /// Repainting the ladder on every frame is what a recycler is for — it binds only the
-        /// rows that moved — and the clock is a label, so it is written on its own slower beat
+        /// Repainting the ladder on every frame is what a recycler is for - it binds only the
+        /// rows that moved - and the clock is a label, so it is written on its own slower beat
         /// rather than every frame like the rows.
         /// </summary>
         void Update()
@@ -766,7 +766,7 @@ namespace GlimmerGrove
                 _toNext.color = _progress.IsComplete ? Pal.Gold : Pal.A(Pal.Cream, .82f);
             }
 
-            // Orange while it is climbing, green the moment a rung is reached — and only on
+            // Orange while it is climbing, green the moment a rung is reached - and only on
             // the paint that changed it, or a tint restarts on every chest claimed. Instantly
             // the first time, because a page opened on a finished run should find it already
             // green rather than watch it arrive.
@@ -834,7 +834,7 @@ namespace GlimmerGrove
         /// The pass row: what it costs, or that it is held.
         ///
         /// The price is the season's own number and is known offline, which is the whole of
-        /// what changed when the product became a gem price — the button never has to say
+        /// what changed when the product became a gem price - the button never has to say
         /// "connecting", and there is no state in which this page can draw a pass it cannot
         /// sell.
         /// </summary>
@@ -846,7 +846,7 @@ namespace GlimmerGrove
             bool live = _season.IsLiveAt(GameClock.NowUnix());
 
             // The glyph changes rather than going away. `UIKit.FitLabel` centres the caption
-            // and the glyph as one block on `Icon != null` — it does not read `enabled` — so
+            // and the glyph as one block on `Icon != null` - it does not read `enabled` - so
             // hiding it would leave "Unlocked" sitting left of centre with a gem's worth of
             // gap beside it. A tick is the right mark for the state anyway: trailing a
             // caption, a glyph is the *unit* on what the caption says, and what "Unlocked"
@@ -865,7 +865,7 @@ namespace GlimmerGrove
             if (_passCaption)
                 _passCaption.color = owned ? Pal.Mint : Pal.Cream;
 
-            // A value badge is a sales mark, so it goes the moment there is nothing to sell —
+            // A value badge is a sales mark, so it goes the moment there is nothing to sell -
             // held, or the watch closed. Kept built rather than destroyed, because a cycle
             // rolls over under a resident page (invariant 47j) and the next season's badge is
             // the same widget with a different figure.

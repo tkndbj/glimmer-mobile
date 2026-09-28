@@ -14,7 +14,7 @@ namespace GlimmerGrove.EditorTools
     // silhouette, and the only way to know what one looks like at the size a phone draws it is to
     // rasterise it. Invariant 37k records six candidates being baked and compared before one boss
     // spell was picked, and every time this project has skipped that step it has shipped a
-    // picture somebody had to redo — a cage that read as firewood, a lantern that read as a
+    // picture somebody had to redo - a cage that read as firewood, a lantern that read as a
     // crosshair, a spell that read as a magenta thread. Nineteen turrets is nineteen of those
     // decisions, so the comparison is made once, for the whole pack, on one sheet.
     // <b>Ungraded on purpose.</b> The shipping bake pulls a reel onto a ward's colour; this draws
@@ -36,7 +36,7 @@ namespace GlimmerGrove.EditorTools
         ///
         /// A still picture of a projectile is a lie if it is taken before the trail exists, so the
         /// effect is flown for a while and the <em>brightest</em> frame is what lands on the sheet
-        /// — which is the same rule <c>Tools/render_siege.py</c> had to learn (drawn at a fixed
+        /// - which is the same rule <c>Tools/render_siege.py</c> had to learn (drawn at a fixed
         /// index it caught two muzzles mid-dip and reported a good bake as broken).
         /// </summary>
         const int SurveyFrames = 10;
@@ -56,7 +56,7 @@ namespace GlimmerGrove.EditorTools
         /// projectile is the part of a three-part event a player watches for four tenths of a
         /// second; the impact is the part drawn five cells wide at the moment the damage lands,
         /// and it was the half of the pack that could not be surveyed at all. So an impact was
-        /// chosen by reading the prefab's *name* — and all three of the pack's slashes are a
+        /// chosen by reading the prefab's *name* - and all three of the pack's slashes are a
         /// vertical line, so `Hit_Slash03` shipped as a hairline down a turret, which is
         /// `Shot.Hit`'s own note recording the identical fault on the cleaver a chapter earlier.
         /// <b>Twice is a missing command, not two mistakes</b> (invariant 37db).
@@ -72,7 +72,7 @@ namespace GlimmerGrove.EditorTools
         /// Every prefab in one of the pack's three folders, laid out on one sheet.
         ///
         /// <b>The folder is a parameter because the pack has three of them</b> and a bolt, a
-        /// flash and an impact are three separate decisions — <see cref="Shot.Muzzle"/> and
+        /// flash and an impact are three separate decisions - <see cref="Shot.Muzzle"/> and
         /// <see cref="Shot.Hit"/> exist precisely so a row can take its flight from one family
         /// and its companions from another, which is a choice nobody can make without seeing all
         /// three sets.
@@ -95,7 +95,7 @@ namespace GlimmerGrove.EditorTools
         /// <summary>
         /// Renders one hero frame per named prefab onto a grid and writes it under <c>Tools/</c>.
         ///
-        /// <b>Reports rather than throws, and never leaves the stage standing</b> —
+        /// <b>Reports rather than throws, and never leaves the stage standing</b> -
         /// <see cref="BuildStage"/>'s camera lives at y = −4000 with <c>HideAndDontSave</c>, and one
         /// left behind renders into whatever is asked to render next.
         /// </summary>
@@ -113,7 +113,7 @@ namespace GlimmerGrove.EditorTools
             int rows = (names.Count + SurveyCols - 1) / SurveyCols;
             var pix = new Color32[SurveyCols * SurveyCell * rows * SurveyCell];
 
-            // The hill, roughly — the same ground the shipping contact sheet composites over, so a
+            // The hill, roughly - the same ground the shipping contact sheet composites over, so a
             // wisp that vanishes against grass vanishes here too.
             var ground = new Color32(46, 44, 42, 255);
             for (int i = 0; i < pix.Length; i++) pix[i] = ground;
@@ -187,14 +187,14 @@ namespace GlimmerGrove.EditorTools
         /// <para>
         /// <b>The same framing the real bake would give it, and that is the whole point.</b> The
         /// first cut of this tool framed its own square around whatever the renderers measured,
-        /// and every candidate in the pack came back as the same hairline — invariant 37k's sliver
+        /// and every candidate in the pack came back as the same hairline - invariant 37k's sliver
         /// arriving inside the instrument built to catch it. A survey that frames differently from
         /// the bake answers a question nobody asked; this one shows what would ship.
         /// </para>
         /// <para>
         /// <b>Graded to one ward colour rather than left as the pack painted it.</b> What is being
-        /// chosen here is a silhouette and a motion — the colour is imposed by the bake either
-        /// way — so showing each candidate as a red ward would actually fire it is the comparison
+        /// chosen here is a silhouette and a motion - the colour is imposed by the bake either
+        /// way - so showing each candidate as a red ward would actually fire it is the comparison
         /// that decides.
         /// </para>
         /// </summary>
@@ -203,7 +203,7 @@ namespace GlimmerGrove.EditorTools
             // **A burst is not a comet and must not be captured as one.** A muzzle flash and an
             // impact happen in place and are over in a fifth of a second; flown down the comet path
             // at a projectile's speed and sampled over its window, they smear off the frame and the
-            // sheet comes back empty — which reads as a missing prefab rather than as the wrong
+            // sheet comes back empty - which reads as a missing prefab rather than as the wrong
             // question being asked. The pack files them in their own folders, so the name is an
             // honest test.
             if (prefab.name.StartsWith("vfx_Muzzle_") || prefab.name.StartsWith("vfx_Hit_"))
@@ -225,7 +225,7 @@ namespace GlimmerGrove.EditorTools
                            LeanestShot, LongestShot, comet: true);
         }
 
-        /// <summary>Which frame of a reel carries the most light — see <see cref="SurveyFrames"/>.</summary>
+        /// <summary>Which frame of a reel carries the most light - see <see cref="SurveyFrames"/>.</summary>
         static int Brightest(Book book)
         {
             var all = book.Sheet.GetPixels32();

@@ -16,8 +16,8 @@ namespace GlimmerGrove.Iap
     /// The whole file exists to turn one vendor's vocabulary into
     /// <see cref="IStoreBackend"/>'s four verbs. It is deliberately the only place in the
     /// project that compiles against the SDK, and it is deliberately thin: every decision
-    /// worth arguing about — when to retry, when to confirm, what a card says in each of
-    /// six states, what happens to a purchase made offline — lives in
+    /// worth arguing about - when to retry, when to confirm, what a card says in each of
+    /// six states, what happens to a purchase made offline - lives in
     /// <see cref="StoreService"/>, where it can be proved without a store, a device or a
     /// real card.
     /// </para>
@@ -26,14 +26,14 @@ namespace GlimmerGrove.Iap
     /// every new app and every update since August 2025, which means 4.13 at the very
     /// oldest; and 5's model is the one this design wants, because a purchase arrives as an
     /// explicit <c>PendingOrder</c> that stays pending until <c>ConfirmPurchase</c> is
-    /// called. In 4 the same thing was expressible but easy to get wrong by accident —
+    /// called. In 4 the same thing was expressible but easy to get wrong by accident -
     /// returning the wrong value from one callback finished a transaction that had not been
     /// granted.
     /// </para>
     /// <para>
     /// <b>Two things this deliberately does not do.</b> It does not validate receipts
     /// locally: <c>CrossPlatformValidator</c> runs on the one machine an attacker owns, so
-    /// it stops nobody who matters and is a second implementation to keep alive — the
+    /// it stops nobody who matters and is a second implementation to keep alive - the
     /// server asks Apple and Google directly instead. And it does not let the SDK
     /// auto-process fetched pending orders (<c>ProcessPendingOrdersOnPurchasesFetched</c>
     /// is switched off), because "process" is the SDK's word and confirming is ours: a
@@ -66,7 +66,7 @@ namespace GlimmerGrove.Iap
         /// <para>
         /// <b>Why a confirm needs watching at all.</b> The grant is the server's and cannot
         /// be lost; the confirm is the store's and can. A connection that drops in the second
-        /// between the two leaves the player paid and Google still holding the order open —
+        /// between the two leaves the player paid and Google still holding the order open -
         /// which refuses the next purchase of the same pack ("you already own this item") and
         /// is refunded by Google after three days. The store re-delivers an open order on the
         /// next fetch and the server answers "already granted", so nothing here is ever paid
@@ -168,7 +168,7 @@ namespace GlimmerGrove.Iap
             if (!ok) return StoreResult.Failed(StoreFailure.NotConnected, "product fetch failed");
 
             // Everything the store is still holding for this account, which is how a
-            // purchase interrupted by a crash — or made on another device — comes back.
+            // purchase interrupted by a crash - or made on another device - comes back.
             // Deliberately after the product fetch, so a re-delivered transaction can be
             // named before it is reported.
             _controller.FetchPurchases();
@@ -219,7 +219,7 @@ namespace GlimmerGrove.Iap
             // nothing anywhere says the list was empty.
             Debug.Log($"[IAP] the store priced {_info.Count} product(s)" +
                       (_info.Count == 0
-                          ? " — nothing is buyable. This is a store-side state, not a build " +
+                          ? " - nothing is buyable. This is a store-side state, not a build " +
                             "problem: check the paid-apps agreement is active and that every " +
                             "product has reached 'Ready to Submit'."
                           : string.Empty));
@@ -231,7 +231,7 @@ namespace GlimmerGrove.Iap
         void OnProductsFetchFailed(ProductFetchFailed failure)
         {
             // Named individually, because the usual cause is one product that has not been
-            // created in a console yet — and "product fetch failed" with no id is a message
+            // created in a console yet - and "product fetch failed" with no id is a message
             // somebody has to go and reproduce before it means anything.
             if (failure?.FailedFetchProducts != null)
             {
@@ -240,8 +240,8 @@ namespace GlimmerGrove.Iap
                                      $"{failure.FailureReason}");
             }
 
-            // Not a hard failure. A partial fetch is normal — a product still in review is
-            // missing from one store and present in the other — and the shop draws the cards
+            // Not a hard failure. A partial fetch is normal - a product still in review is
+            // missing from one store and present in the other - and the shop draws the cards
             // it has prices for. Only a fetch that produced nothing at all is reported as a
             // failed connection.
             _fetch?.TrySetResult(_info.Count > 0);
@@ -272,7 +272,7 @@ namespace GlimmerGrove.Iap
                 // Reachable and harmless: the app was restarted between the grant landing
                 // and this call, so the order object is gone. The transaction is still
                 // unfinished with the store, so it is re-delivered on the next fetch and
-                // confirmed then — the server's second look at the same id grants nothing.
+                // confirmed then - the server's second look at the same id grants nothing.
                 Debug.LogWarning($"[IAP] no live order for {purchase.Key}; it will be " +
                                  "confirmed when the store re-delivers it");
                 return;
@@ -298,7 +298,7 @@ namespace GlimmerGrove.Iap
         /// <para>
         /// A failure keeps the order and retries on a short backoff
         /// (<see cref="ConfirmRetrySeconds"/>). The reasons the SDK gives are all transient
-        /// from here — no connection, the store not yet reconnected — and the one that is not
+        /// from here - no connection, the store not yet reconnected - and the one that is not
         /// (an order with no transaction id) never reaches this class, because
         /// <see cref="Translate"/> refuses it before it is reported. Past the last retry the
         /// order stays in <see cref="_orders"/> for the next fetch to bring back, exactly as a
@@ -348,7 +348,7 @@ namespace GlimmerGrove.Iap
         }
 
         /// <summary>
-        /// The key an order is held under — the same one <see cref="StorePurchase.Key"/>
+        /// The key an order is held under - the same one <see cref="StorePurchase.Key"/>
         /// builds, from the same fields, so the store's answer finds the order it is about.
         /// </summary>
         string KeyOf(Order order)
@@ -381,8 +381,8 @@ namespace GlimmerGrove.Iap
         {
             if (orders == null) return;
 
-            // What the account holds. Only meaningful for a non-consumable — a consumable
-            // is used up the instant it is granted — and it is what lets the starter bundle
+            // What the account holds. Only meaningful for a non-consumable - a consumable
+            // is used up the instant it is granted - and it is what lets the starter bundle
             // draw as owned rather than as a second charge waiting to happen.
             foreach (var confirmed in orders.ConfirmedOrders)
             {
@@ -426,7 +426,7 @@ namespace GlimmerGrove.Iap
         void OnPurchaseDeferredOrder(DeferredOrder order)
         {
             // Apple's Ask to Buy, and Play's pending transactions. The money has not moved
-            // and may never move, so nothing is queued — but the player has to be told,
+            // and may never move, so nothing is queued - but the player has to be told,
             // because from their side they tapped buy and nothing happened.
             foreach (var id in ProductIdsOf(order))
                 PurchaseFailed?.Invoke(id, StoreFailure.Deferred, "awaiting approval");
@@ -451,8 +451,8 @@ namespace GlimmerGrove.Iap
         /// and keeps the order object so it can be confirmed later.
         ///
         /// <para>
-        /// A cart can hold more than one item in IAP 5. This game never builds one — every
-        /// purchase is a single tap on a single card — so an order with several items is a
+        /// A cart can hold more than one item in IAP 5. This game never builds one - every
+        /// purchase is a single tap on a single card - so an order with several items is a
         /// state nothing here can produce, and it is reported by its first item rather than
         /// silently dropped. Should carts ever be used, this is the method to revisit.
         /// </para>
@@ -591,7 +591,7 @@ namespace GlimmerGrove.Iap
         /// Google's purchase token, dug out of the receipt's payload.
         ///
         /// <para>
-        /// The payload is itself JSON — <c>{"json": "...", "signature": "..."}</c> — whose
+        /// The payload is itself JSON - <c>{"json": "...", "signature": "..."}</c> - whose
         /// <c>json</c> member is a <em>string</em> holding another JSON document, and that
         /// inner document is where <c>purchaseToken</c> lives. Two levels of escaping, and
         /// the whole reason for the plain string scan below: <c>JsonUtility</c> would need
@@ -620,8 +620,8 @@ namespace GlimmerGrove.Iap
         /// <summary>
         /// The value of one string field, tolerating the escaping a nested payload carries.
         ///
-        /// Deliberately not a JSON parser. It reads exactly one shape — a quoted key
-        /// followed by a quoted value — which is all either document needs, and it returns
+        /// Deliberately not a JSON parser. It reads exactly one shape - a quoted key
+        /// followed by a quoted value - which is all either document needs, and it returns
         /// empty rather than throwing on anything else.
         /// </summary>
         static string JsonField(string json, string field)

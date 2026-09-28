@@ -11,13 +11,13 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// <b>A panel of its own rather than a third state of whatever asked for the ad.</b> The
-    /// wheel is a question — spin, see the multiplier, decide whether it is worth thirty
-    /// seconds — and by the time this is raised the question has been answered and the video
+    /// wheel is a question - spin, see the multiplier, decide whether it is worth thirty
+    /// seconds - and by the time this is raised the question has been answered and the video
     /// watched. Keeping the two on one panel meant the payoff was a caption change on the
     /// button that had just asked for the ad, under a wheel whose job was finished: the
     /// biggest moment in the placement drawn as the smallest change on the screen. So the
     /// wheel steps out and this arrives, which is the shape <c>ShopGrantOverlay</c> and
-    /// <c>ChestOverlay</c> already use for the other two places currency is handed over — one
+    /// <c>ChestOverlay</c> already use for the other two places currency is handed over - one
     /// gesture the player recognises wherever it happens.
     /// </para>
     /// <para>
@@ -26,16 +26,16 @@ namespace GlimmerGrove
     /// argument applies twice over: the reward used to be a caption change on the button of an
     /// explanatory panel the player had not asked to see, at the one moment in a session when
     /// the only thing they want is to be back on the board. What differs between the two
-    /// callers is a title, a colour, how loud the ending is and where COLLECT leads —
+    /// callers is a title, a colour, how loud the ending is and where COLLECT leads -
     /// <see cref="TitleKey"/>, <see cref="Tint"/>, <see cref="Loud"/> and
-    /// <see cref="Collected"/> — and nothing else, which is why there is one of these rather
+    /// <see cref="Collected"/> - and nothing else, which is why there is one of these rather
     /// than two.
     /// </para>
     /// <para>
     /// <b>It is raised through <c>Flow.Modal</c> by a caller that may already be gone</b>, and
     /// that is deliberate: a player who backgrounds the app during a video can come back to a
     /// different screen entirely, and the prize is theirs either way. Nothing here reaches back
-    /// into whoever asked for it — the way onward is the <see cref="Collected"/> callback, and
+    /// into whoever asked for it - the way onward is the <see cref="Collected"/> callback, and
     /// it fires however the panel ended.
     /// </para>
     /// <para>
@@ -43,15 +43,15 @@ namespace GlimmerGrove
     /// (invariant 10d): <c>RewardedAds.Redeem</c> has already asked for it by the time this
     /// panel exists, and LevelPlay's signed callback is what actually pays. So COLLECT buys
     /// nothing, closing early costs nothing, and a player who force-quits during the confetti
-    /// is paid exactly the same as one who taps the button — the panel is a picture of a
+    /// is paid exactly the same as one who taps the button - the panel is a picture of a
     /// transaction that has already happened. That is why the button appears with the tokens
     /// rather than after them, why the back key works from the first frame, and why the
     /// cascade degrades to an ordinary close wherever there is nothing to fly to.
     /// </para>
     /// <para>
     /// <b>The figure is the wheel's, not the drop's.</b> They are the same number, arrived at
-    /// independently — the phone from <c>BonusWheel.SliceAt</c> and the server from the same
-    /// arithmetic on the callback — and the wheel's is the one printed because the drop is the
+    /// independently - the phone from <c>BonusWheel.SliceAt</c> and the server from the same
+    /// arithmetic on the callback - and the wheel's is the one printed because the drop is the
     /// flat placement amount, which has no opinion about multipliers.
     /// </para>
     /// </summary>
@@ -63,14 +63,14 @@ namespace GlimmerGrove
         /// A property rather than a field, like <c>ShopGrantOverlay.Grant</c> and
         /// <c>DefeatOverlay.Run</c>: neither of the two payloads here is a serializable type, and
         /// a public field of one is a compile-time warning about an Inspector slot that nothing
-        /// was ever going to fill — every one of these is set through <c>Flow.Modal</c>'s
+        /// was ever going to fill - every one of these is set through <c>Flow.Modal</c>'s
         /// configure step.
         /// </summary>
         public ChestDrop Drop { get; set; }
 
         /// <summary>
         /// What the ribbon says. Written out by each caller rather than built from the
-        /// placement, so the loc gate can see every key — a concatenated one is invisible to
+        /// placement, so the loc gate can see every key - a concatenated one is invisible to
         /// the scanner and ships missing (invariant 6).
         ///
         /// <para>
@@ -94,7 +94,7 @@ namespace GlimmerGrove
         /// How loud the ending is: confetti and a fuller spark burst.
         ///
         /// <para>
-        /// Not spent on every prize, which is the victory panel's rule for its star row —
+        /// Not spent on every prize, which is the victory panel's rule for its star row -
         /// spending it on most of them marks out none. The wheel raises it for a slice that
         /// beat the flat offer; the heart refill raises it because being handed the game back
         /// after being stopped is the moment it exists for.
@@ -109,7 +109,7 @@ namespace GlimmerGrove
         /// Where the panel leads once the prize has been taken, or null to simply close.
         ///
         /// <para>
-        /// <b>Raised exactly once, however the panel ended</b> — COLLECT, the back key, or the
+        /// <b>Raised exactly once, however the panel ended</b> - COLLECT, the back key, or the
         /// screen underneath being torn down with this still open. That completeness is the
         /// whole point of it and it is <c>AdOfferOverlay.Report</c>'s lesson: a panel with
         /// several exits reports through none of them reliably, so the safe outcome goes on the
@@ -118,8 +118,8 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// It matters most where it is least visible. The heart refill leaves the panel
-        /// underneath stale — a defeat screen saying "you are out of hearts" over a wallet that
-        /// now holds two — so a dismissal has to lead onward exactly as a collect does. A
+        /// underneath stale - a defeat screen saying "you are out of hearts" over a wallet that
+        /// now holds two - so a dismissal has to lead onward exactly as a collect does. A
         /// callback wired to the button alone would leave that player looking at a lie.
         /// </para>
         /// </summary>
@@ -128,7 +128,7 @@ namespace GlimmerGrove
         /// <summary>
         /// The pill snapshot taken before the reward was redeemed, handed over by the wheel.
         ///
-        /// May be null — a panel raised with nothing to fly to still celebrates and still
+        /// May be null - a panel raised with nothing to fly to still celebrates and still
         /// closes. See <see cref="RewardFlight"/> for why it has to be taken before the grant
         /// rather than derived at collect time.
         /// </summary>
@@ -156,7 +156,7 @@ namespace GlimmerGrove
         {
             // Nothing to hand over, or nothing to head it with. Reachable only if a caller
             // raised this with an empty drop or forgot its title, and a celebration of nothing
-            // is worse than no celebration — as is a ribbon carrying a raw loc key.
+            // is worse than no celebration - as is a ribbon carrying a raw loc key.
             //
             // Dismissed rather than closed, so Collected still fires from OnDestroy: a caller
             // that was going to be led somewhere is led there whatever went wrong here.
@@ -166,7 +166,7 @@ namespace GlimmerGrove
 
             // Never dismissed by a stray tap on the scrim: this is the one screen that says
             // what a video was worth, and one flicked away by a thumb landing anywhere is one a
-            // player can miss entirely. The back key still works throughout — see OnBack.
+            // player can miss entirely. The back key still works throughout - see OnBack.
             var panel = MakePanel(new Vector2(PrizePanel.Width, stack.Height),
                                   Loc.Get(TitleKey), dismissOnScrim: false);
 
@@ -182,7 +182,7 @@ namespace GlimmerGrove
             face.preserveAspect = true;
             face.raycastTarget = false;
 
-            // Credits have no sprite of their own — they are the spinning flipbook — and this
+            // Credits have no sprite of their own - they are the spinning flipbook - and this
             // is also the call that covers the frames not having arrived: an Image with no
             // sprite is a white rectangle, not a blank. See RewardArt.Glyph.
             RewardArt.Glyph(face, Drop.Kind, 12f);
@@ -194,7 +194,7 @@ namespace GlimmerGrove
             BuildChip(panel, stack.AmountCentre);
 
             // Always COLLECT, which is the one place this panel parts company with
-            // <c>ShopGrantOverlay</c> — that one says "Lovely" wherever the currency has no pill
+            // <c>ShopGrantOverlay</c> - that one says "Lovely" wherever the currency has no pill
             // to fly into, on the reasoning that calling it collect promises an animation the
             // player then does not see. The reasoning does not survive here: this panel is
             // raised over the victory screen, which carries no pills at all, so the rule would
@@ -209,7 +209,7 @@ namespace GlimmerGrove
                                         new Vector2(.5f, 1f), new Vector2(0f, -stack.ButtonCentre),
                                         OnCollect);
 
-            // Sized once, deterministically, rather than left to Unity's best-fit — which
+            // Sized once, deterministically, rather than left to Unity's best-fit - which
             // concedes the line before it concedes the size, so a long caption folds in half on
             // a pill instead of shrinking. See UIKit.OneLine.
             UIKit.OneLine(_collect, 24);
@@ -252,7 +252,7 @@ namespace GlimmerGrove
         /// from every other payout in the game. Everywhere else the chip's icon is what names
         /// the currency; here the prize is already drawn three times the size directly above it,
         /// so a second coin beside the number says the same thing twice and shoulders the figure
-        /// off the panel's centre line to do it. The tokens land on the number instead — see
+        /// off the panel's centre line to do it. The tokens land on the number instead - see
         /// <c>Payout</c>'s seat.
         /// </para>
         /// </summary>
@@ -334,7 +334,7 @@ namespace GlimmerGrove
         /// A ring breaking outwards from the prize.
         ///
         /// The starting alpha is captured rather than the live colour being scaled down each
-        /// frame — scaling the live value compounds, so the fade would depend on how many frames
+        /// frame - scaling the live value compounds, so the fade would depend on how many frames
         /// it got. <c>Payout.Ping</c> records the same trap.
         /// </summary>
         void Shockwave(float delay, float to, float dur, float alpha)
@@ -364,7 +364,7 @@ namespace GlimmerGrove
         /// <para>
         /// The confetti is for a slice that is genuinely worth it, which is the victory panel's
         /// rule for its star row: spending it on every spin spends it on most spins and marks
-        /// out none. And there is no haptic anywhere on this panel — <c>Handheld.Vibrate</c> is
+        /// out none. And there is no haptic anywhere on this panel - <c>Handheld.Vibrate</c> is
         /// one fixed-length pulse on Android, so it cannot be made lighter for an event a player
         /// meets several times a session.
         /// </para>
@@ -383,7 +383,7 @@ namespace GlimmerGrove
         // ------------------------------------------------------------- collecting
         /// <summary>
         /// The player took the prize. Where there is a balance row underneath, the chip empties
-        /// into it — the same cascade the chest and the shop's receipt use.
+        /// into it - the same cascade the chest and the shop's receipt use.
         ///
         /// Nothing about the reward depends on this: it is banked before this panel exists, and
         /// a player who never presses the button is paid exactly the same.
@@ -395,13 +395,13 @@ namespace GlimmerGrove
             var from = _chip != null ? _chip.Root : null;
 
             // Asked before the latch, so a panel with nowhere to fly to is still an ordinary
-            // close — including its sound and its scale-out, which the cascade does not use.
+            // close - including its sound and its scale-out, which the cascade does not use.
             if (Flight == null || from == null || !Flight.Add(Drop, from))
             {
                 // Led onward at the top of the close rather than at the end of it, so the panel
                 // this was raised over goes at the same time. Half a second of a defeat screen
                 // still saying "you are out of hearts", over a wallet that now holds two, is the
-                // one frame of this feature a player could read as a bug — and COLLECT that
+                // one frame of this feature a player could read as a bug - and COLLECT that
                 // visibly does nothing for a beat reads as a tap that missed.
                 Onward();
                 Close();
@@ -415,7 +415,7 @@ namespace GlimmerGrove
         /// <summary>
         /// Clears the panel out of the way and throws the prize at what is underneath.
         ///
-        /// The chip is lifted out of the panel first — it is the thing the tokens come out of,
+        /// The chip is lifted out of the panel first - it is the thing the tokens come out of,
         /// so it has to outlive its own parent by a beat, while everything else here is chrome
         /// the moment the figure has been read. <c>SetParent</c> keeps its world position, so
         /// nothing moves as it changes hands. The scrim stops taking taps as well as fading: one
@@ -450,7 +450,7 @@ namespace GlimmerGrove
         /// and leave the balance row rewound to its old figure.
         ///
         /// Before that it closes, which is what gives this panel a way out from the first frame
-        /// — the scrim does not dismiss it and the button takes half a second to arrive.
+        /// - the scrim does not dismiss it and the button takes half a second to arrive.
         /// </summary>
         public override bool OnBack()
         {
@@ -466,8 +466,8 @@ namespace GlimmerGrove
         /// Hands the player on, exactly once, however this panel ended.
         ///
         /// <para>
-        /// <c>AdOfferOverlay.Report</c>'s latch and for its reason: this panel has three exits —
-        /// COLLECT, the back key, and the screen underneath being destroyed with it open — and a
+        /// <c>AdOfferOverlay.Report</c>'s latch and for its reason: this panel has three exits -
+        /// COLLECT, the back key, and the screen underneath being destroyed with it open - and a
         /// caller that hears twice is as broken as one that never hears. Putting it on the
         /// destroy is what makes "exactly one, always" something the type enforces rather than
         /// something the exits agree about.
@@ -484,7 +484,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Called at the top of an ordinary close so the panel underneath leaves with this one,
-        /// and from <see cref="OnDestroy"/> for every other ending — the back key, and the screen
+        /// and from <see cref="OnDestroy"/> for every other ending - the back key, and the screen
         /// beneath being torn down with this open. A payout in flight is the one case that waits:
         /// its tokens are landing on a readout that has to still be there, so the destroy is the
         /// honest moment for it and the cascade's own callback is what gets there.

@@ -26,7 +26,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>Pooled, and this is the one board in the game where that is not premature.</b> A lit
-        /// ward fires every <c>SiegeTuning.FireEvery</c> — seven a second — and a full line is
+        /// ward fires every <c>SiegeTuning.FireEvery</c> - seven a second - and a full line is
         /// four of those, each of which is a muzzle flash, a comet and an impact. Building and
         /// destroying twenty-odd of these a second is churn the rest of this project never asks
         /// for, and the pool is what makes the three-part shot affordable rather than something to
@@ -36,7 +36,7 @@ namespace GlimmerGrove
         /// <b>The node carries the rotation and the reel hangs off it</b>, rather than the reel
         /// being turned about a shifted pivot. A comet's head is at <see cref="HeadAt"/> of its
         /// frame, not the middle, so the image is offset until its head sits on the node's origin
-        /// — and then aiming the node aims the shot, the halo stays on the head, and the growth
+        /// - and then aiming the node aims the shot, the halo stays on the head, and the growth
         /// tween on the way in is one scale on one transform.
         /// </para>
         /// </summary>
@@ -175,7 +175,7 @@ namespace GlimmerGrove
         /// <b>This exists because the thing it replaces was the most expensive drawing in the mode
         /// and one of the least visible.</b> A boss's orb used to drop its wake through
         /// <c>Burst.Sparks</c>, which is a fine general-purpose burst and builds <b>a host, two
-        /// sparks and a core glow — four GameObjects and three <c>Image</c>s — per call</b>, none
+        /// sparks and a core glow - four GameObjects and three <c>Image</c>s - per call</b>, none
         /// of them pooled. <c>Hurl</c> called it every fiftieth of a second for the whole flight,
         /// and a warlord throws three orbs: <b>27 calls, 108 GameObjects and 81 <c>Image</c>s
         /// created and destroyed inside 0.45 s</b>, on top of everything else a cast draws. What
@@ -184,14 +184,14 @@ namespace GlimmerGrove
         /// <para>
         /// <b>And the cost was never the GameObjects, it was the canvas.</b> Every `Image` added,
         /// removed or re-tinted marks its canvas dirty, and this board's canvas holds the ground,
-        /// the ward line, the fuel tubes, the gem field and a dozen raiders — so each of those 81
+        /// the ward line, the fuel tubes, the gem field and a dozen raiders - so each of those 81
         /// forced a rebuild of the whole board's geometry. That is why the loudest moment in the
         /// mode was also the one that hitched. <see cref="SiegeView.Build"/> now gives the effects
         /// layer a canvas of its own as well, so a rebuild this does cause stops at the layer.
         /// </para>
         /// <para>
         /// <b>Pooled and never destroyed</b>, so a cast allocates nothing at all once the pool is
-        /// warm — the same bargain <see cref="Lend"/> already made for the reels, made again one
+        /// warm - the same bargain <see cref="Lend"/> already made for the reels, made again one
         /// size down. Given back on a timer rather than on a callback, for <see cref="Ends"/>'
         /// reason: a tween whose image has been torn down never finishes, and a widget never
         /// handed back is a leak on a board that asks for twenty a second.
@@ -219,7 +219,7 @@ namespace GlimmerGrove
             // **Every tween on an ember is owned by its node, and that is load-bearing rather
             // than tidy.** `Tween.KillAll` matches owners by reference, so hosting the animation
             // on the `Image` and the safety timer on the `RectTransform` means <see cref="Douse"/>
-            // cancels one of them and not the other — and a timer that outlives the hand-back is
+            // cancels one of them and not the other - and a timer that outlives the hand-back is
             // a timer that fires on the *next* ember. This pool is a stack and the wake emits
             // every 50 ms, so the ember handed back is the very next one lent: the stale timer
             // landed 60 ms into a fresh 300 ms life and put it out at a fifth of its age. It
@@ -237,7 +237,7 @@ namespace GlimmerGrove
 
             // **The only guarantee, and it is not belt and braces** (<see cref="Ends"/>' reason):
             // `Tw.Kill` runs the revert and deliberately does *not* raise `OnDone`, so an ember
-            // whose tween is killed — by a screen change, or by `Douse` itself — would never be
+            // whose tween is killed - by a screen change, or by `Douse` itself - would never be
             // handed back. The pool would drain silently and <see cref="Kindle"/> would allocate
             // for ever, which is the leak this whole class exists to end. `Douse` is idempotent,
             // so the two cannot double up.
@@ -260,7 +260,7 @@ namespace GlimmerGrove
 
             if (!ember.Node) return;
 
-            // The node, because that is what every tween on an ember is owned by — see
+            // The node, because that is what every tween on an ember is owned by - see
             // <see cref="Cinder"/> for what killing the other one bought.
             Tween.KillAll(ember.Node);
             ember.Img.color = Color.clear;
@@ -290,7 +290,7 @@ namespace GlimmerGrove
             }
 
             // Sized by the frame's *width*, which is the comet's own width because the bake frames
-            // it that tightly — so this number means "a bolt is two thirds of a gem across" and
+            // it that tightly - so this number means "a bolt is two thirds of a gem across" and
             // stays true when a reel is re-baked into a different shape.
             float scale = BoltScale(model);
 
@@ -310,7 +310,7 @@ namespace GlimmerGrove
         /// <b>Declared here and read by the bake</b> (<c>SiegeShotBake</c> references this
         /// constant), so the number that frames the render and the number that positions the
         /// sprite are one number. Two would be two, and the failure is a comet whose head is not
-        /// where the shot is — visible only as a bolt that seems to land slightly early, which is
+        /// where the shot is - visible only as a bolt that seems to land slightly early, which is
         /// exactly the kind of wrongness nobody can name.
         /// </para>
         /// <para>
@@ -324,7 +324,7 @@ namespace GlimmerGrove
         /// Where the barrel sits in a muzzle flash's own frame, measured from the bottom.
         ///
         /// <b>Low, because a flash is all in front of the gun.</b> Anchored in the middle like an
-        /// impact, half of every flash was drawn behind the turret that threw it — and half of
+        /// impact, half of every flash was drawn behind the turret that threw it - and half of
         /// every reel was empty air, which came off the size of the thing on the board. Read by
         /// <c>SiegeShotBake</c>, which frames the render around it.
         /// </summary>
@@ -337,10 +337,10 @@ namespace GlimmerGrove
         /// <para>
         /// <b>A bolt used to be drawn at full length on the frame it was fired</b>, and that is
         /// what "it does not come out of the barrel" turned out to mean. The origin was never
-        /// wrong — measured against the art, <c>_lineY + Cell</c> sits on the barrel mouth of all
+        /// wrong - measured against the art, <c>_lineY + Cell</c> sits on the barrel mouth of all
         /// thirty turrets to within a hundredth of a cell. What was wrong is that a comet is
-        /// anchored near its <em>head</em> (<see cref="HeadAt"/>), so the rest of it — three or
-        /// four cells of trail — was painted straight back down through the chassis and out of
+        /// anchored near its <em>head</em> (<see cref="HeadAt"/>), so the rest of it - three or
+        /// four cells of trail - was painted straight back down through the chassis and out of
         /// the bottom of the turret. A player reads the whole lit shape, and the whole lit shape
         /// was the turret with a flame through it.
         /// </para>
@@ -349,12 +349,12 @@ namespace GlimmerGrove
         /// than a tuned ramp: a comet cannot have more tail than it has travelled, so at the
         /// muzzle there is a head and nothing behind it, and the trail unrolls out of the barrel
         /// as the thing moves. It needs no constant per turret and it is right for a short shot
-        /// and a long one, which a fixed ramp is not — the bolts differ by a factor of two in
+        /// and a long one, which a fixed ramp is not - the bolts differ by a factor of two in
         /// length (<see cref="BoltScale"/>) and the hill is deeper on some rungs than others.
         /// </para>
         /// <para>
         /// <b>Cut rather than squashed, which is the correction and the whole of it.</b> This
-        /// shipped as a <em>scale</em> on the reel — the trail compressed toward the head — and
+        /// shipped as a <em>scale</em> on the reel - the trail compressed toward the head - and
         /// four turrets came back with "a weird tail at the very first moment". They are exactly
         /// the four whose art wanders <em>off the centre-line</em>: a chain that forks sideways, a
         /// shot that zig-zags between bounces, a meteor trailing sparks, a corona with three rays
@@ -366,14 +366,14 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The answer is a <c>fillAmount</c>, so it is what the reel <em>draws</em> rather than
         /// how big it is.</b> <c>Image.Type.Filled</c> generates a quad from the sprite's outer UV
-        /// rect, so it is safe on these reels' tight mesh and exact on their full-rect frames —
+        /// rect, so it is safe on these reels' tight mesh and exact on their full-rect frames -
         /// none of <c>Art/Fx/Siege</c> is atlassed. Every borrower of a pooled widget gets
         /// <c>Simple</c> back from <see cref="Lend"/>, so a flash or an impact can never inherit
         /// a half-drawn frame.
         /// </para>
         /// <para>
         /// <b>A cut is a straight edge, so it is put where the flash is.</b> Measured, every reel
-        /// in this mode is fully opaque along its trail — there is no depth at which the cut falls
+        /// in this mode is fully opaque along its trail - there is no depth at which the cut falls
         /// on faint pixels and no headroom that hides it on its own. What does hide it is the
         /// muzzle flash, whose ink reaches <c>.58</c> of a cell below the barrel and nearly three
         /// cells across, so <see cref="HeadRoom"/> is a distance in <em>cells</em> tied to that
@@ -403,14 +403,14 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Longer than it was, twice, and the art is the reason both times.</b> A round
         /// crossing the hill in six hundredths of a second is a dot teleporting whatever is drawn
-        /// on it — fine while it was a dot, and it throws away a fourteen-frame comet. Doubled
+        /// on it - fine while it was a dot, and it throws away a fourteen-frame comet. Doubled
         /// again after play: at a fifth of a second the animation was still over before it could
         /// be looked at, which was reported as not being able to see it at all.
         ///
         /// <para>
         /// <b>It is deliberately longer than the cadence now, and that is a change of shape rather
         /// than of degree.</b> A ward fires every <c>SiegeTuning.FireEvery</c> (.22), so a flight
-        /// of up to .40 puts two of a ward's own bolts in the air at once — the line reads as a
+        /// of up to .40 puts two of a ward's own bolts in the air at once - the line reads as a
         /// stream of comets rather than as one thing at a time, which is what makes a trail
         /// visible at all. What stops that being a hose is the cadence, which was slowed for the
         /// same verdict and cannot go further without losing the level.
@@ -482,7 +482,7 @@ namespace GlimmerGrove
         /// </summary>
         /// <b>A switch rather than a static table</b>, and the reason is the gate rather than
         /// taste: a static field on a <c>MonoBehaviour</c> needs the type initialised, which the
-        /// offline runner cannot do — so a table here quietly takes `ATurretDrawnWithTwoBarrels`
+        /// offline runner cannot do - so a table here quietly takes `ATurretDrawnWithTwoBarrels`
         /// out of every run but the Editor's, which is the one nobody makes on the way past.
         public static int Barrels(Wards.WardModel model)
         {
@@ -701,7 +701,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>The pack fires as three parts and all three are played</b>, which is what its own
-        /// demo does — a flash, a comet, an impact. Showing the middle one alone is judging a
+        /// demo does - a flash, a comet, an impact. Showing the middle one alone is judging a
         /// sentence by its verb, and it is also the difference between a turret that emits
         /// something and a turret that <em>fires</em>.
         /// </para>

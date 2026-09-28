@@ -11,7 +11,7 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// Everything else in a level record is a fact about the player's own play, and a fact
-    /// like that is stable — a three-star clear is a three-star clear for ever. A standing
+    /// like that is stable - a three-star clear is a three-star clear for ever. A standing
     /// is a fact about a <em>population</em>, and the population moves: <c>publishGroveStats</c>
     /// re-reads five thousand fresh saves a day, and a game that grows from ten thousand
     /// players to a hundred thousand grows a faster field with it. That makes a stored
@@ -169,7 +169,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The standing is taken over the record after the run is folded in, never over the
         /// run's own move count. A replay that came nowhere near the record would otherwise be
-        /// ranked on its own merits — and since a standing only rises, it would achieve nothing
+        /// ranked on its own merits - and since a standing only rises, it would achieve nothing
         /// at all, silently, on the one path that exists to capture it.
         /// </summary>
         [Test]
@@ -261,7 +261,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A standing buys nothing — a band on a map node, no currency and no advantage — which
+        /// A standing buys nothing - a band on a map node, no currency and no advantage - which
         /// is what makes it safe to store client-side at all, by the same test invariant 15
         /// applies to a companion entitlement. It is still clamped to what the producer can
         /// emit, so a hand-edited file cannot invent a tier above the ladder.
@@ -343,7 +343,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// It is a join: idempotent and order-independent, so a sync — pull, join, push —
+        /// It is a join: idempotent and order-independent, so a sync - pull, join, push -
         /// converges rather than the two devices trading answers for ever.
         /// </summary>
         [Test]

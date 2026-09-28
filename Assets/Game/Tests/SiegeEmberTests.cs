@@ -14,7 +14,7 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// <b>A file of its own because the fault it pins was invisible to every other one.</b> A burn
     /// has always been a damage-over-time in the rules, and every tick of it was reported to the
-    /// view as a <c>SiegeBolt</c> — the record that means <em>a turret fired</em>. So the view
+    /// view as a <c>SiegeBolt</c> - the record that means <em>a turret fired</em>. So the view
     /// answered each one with a recoil, a muzzle flash, a comet and an impact, about thirty times
     /// a second out of one barrel, and an ember turret read as a machine gun. Nothing was wrong
     /// with the arithmetic, which is exactly why no fixture and no gate could see it: the *type*
@@ -78,8 +78,8 @@ namespace GlimmerGrove.Tests
         /// <b>A burn is reported as a burn and never as a bolt, and that is the whole fix.</b>
         ///
         /// <para>
-        /// The view draws a <c>SiegeBolt</c> as a shot leaving a barrel — <c>SiegeView.Bolt</c>
-        /// recoils the turret, flashes the muzzle, flies a comet across the hill and lands it — so
+        /// The view draws a <c>SiegeBolt</c> as a shot leaving a barrel - <c>SiegeView.Bolt</c>
+        /// recoils the turret, flashes the muzzle, flies a comet across the hill and lands it - so
         /// a tick of fire wearing that record was a turret firing thirty times a second. It cost
         /// nothing in the rules and it was the entire player-facing complaint.
         /// </para>
@@ -134,7 +134,7 @@ namespace GlimmerGrove.Tests
         /// <b>The board's own raider rather than one built here</b>, and that is the point of this
         /// helper: what these three cases are about is <c>SiegeBoard.Smoulder</c>, and a fixture
         /// that re-implemented the tick in order to measure it would be a second copy of the rule
-        /// holding itself to itself — green for ever, whatever the game had gone on to do. The
+        /// holding itself to itself - green for ever, whatever the game had gone on to do. The
         /// wards are left dry, so the only thing that can take health off this body is the burn.
         /// </summary>
         static SiegeRaider OnTheHill(SiegeBoard board)
@@ -180,7 +180,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// The count is bounded from both sides on purpose. Too many is the old fault in a new
         /// record; too few would mean the shortest burn on the shelf pays once or twice, which
-        /// reads as a delayed hit rather than as something burning — and
+        /// reads as a delayed hit rather than as something burning - and
         /// <c>SiegeTuning.BurnTick</c> carries that argument in as many words.
         /// </para>
         /// <para>
@@ -226,7 +226,7 @@ namespace GlimmerGrove.Tests
         /// <b>The last instalment is paid on the beat the burn ends.</b>
         ///
         /// Without it, whatever a burn had accumulated since its last boundary would simply be
-        /// dropped — an ember turret quietly paying less than the figure on its card, in a way no
+        /// dropped - an ember turret quietly paying less than the figure on its card, in a way no
         /// arithmetic anywhere else in this project could have seen. The shortest ember on the
         /// shelf runs three seconds, which is a whole number of cadences; a burn refreshed
         /// mid-interval by the next bolt almost never is, which is every real one.
@@ -256,7 +256,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// This is the trap <c>SiegeRaider.Sear</c> is written round, and it is <c>Stagger</c>'s
         /// read from the other side. A ward fires every <c>SiegeTuning.FireEvery</c> seconds,
-        /// which is shorter than the cadence — so a counter re-armed by every bolt would be pushed
+        /// which is shorter than the cadence - so a counter re-armed by every bolt would be pushed
         /// past its own boundary for ever, and a raider under continuous fire from the one turret
         /// bought to burn it would never take a single point of burn damage. It would look like an
         /// ability that simply did nothing.
@@ -302,7 +302,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// The addresses are <em>built</em> from a colour (<c>WardModel.BurnFor</c>), so
-        /// <c>Tools/verify/artnames.py</c> cannot hold them to disk — which is the same gap the
+        /// <c>Tools/verify/artnames.py</c> cannot hold them to disk - which is the same gap the
         /// turret projectiles have and is why both content gates walk the roster instead. This is
         /// the third leg: that the scope a run loads names them at all. A line whose flame is not
         /// in its hold draws a white rectangle a body and a half tall (invariant 7b), and only a

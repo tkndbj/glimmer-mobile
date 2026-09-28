@@ -8,7 +8,7 @@ namespace GlimmerGrove.Persistence
     ///
     /// <para>
     /// <b>An account-wide pool, not a per-glade allowance.</b> A hint used to be three per
-    /// board, handed back in full at every board — so it cost nothing, meant nothing, and
+    /// board, handed back in full at every board - so it cost nothing, meant nothing, and
     /// the only players who never used one were the ones who had not noticed the button.
     /// It is now a resource on a clock, exactly like a heart: three in the pool, one back
     /// every eight hours, spent wherever the player decides it is worth spending. That
@@ -17,7 +17,7 @@ namespace GlimmerGrove.Persistence
     /// <para>
     /// <b>The arithmetic is not here.</b> Everything about how a regenerating pool refills,
     /// is spent, is granted and is merged lives in <see cref="RegenLedger"/>, which hearts
-    /// also run — see its type docs for the merge and the proof that the join preserves it.
+    /// also run - see its type docs for the merge and the proof that the join preserves it.
     /// This type is the hint-shaped part, and it is thin on purpose: hints differ from
     /// hearts in three ways only. Their numbers come from <see cref="HintRules"/>; nothing
     /// shortens their clock, so the period is <see cref="RegenPeriod.Flat"/>; and there is
@@ -27,22 +27,22 @@ namespace GlimmerGrove.Persistence
     /// <para>
     /// <b>Absent means a fresh full pool, and that is the whole migration.</b> A file
     /// written before this existed has <c>hintsProduced</c> of zero, which is unreachable
-    /// for a real ledger — an account is seeded at <see cref="Full"/> and
-    /// <c>produced</c> only ever rises — so <see cref="WalletDto.hintsProduced"/> carries
+    /// for a real ledger - an account is seeded at <see cref="Full"/> and
+    /// <c>produced</c> only ever rises - so <see cref="WalletDto.hintsProduced"/> carries
     /// the same sentinel <see cref="WalletDto.heartsProduced"/> does, and every existing
     /// player opens the new build holding three. Nothing has to be backfilled because
     /// nothing about a past run implies how many hints it used.
     /// </para>
     /// <para>
     /// <b>The ceiling equals the cap as shipped</b>, so a granted hint at three is refused
-    /// rather than half-paid — the opposite of hearts, and deliberate (see
+    /// rather than half-paid - the opposite of hearts, and deliberate (see
     /// <see cref="HintLimits.DefaultCeiling"/>). It is safe only because nothing offers a
     /// hint without asking <see cref="IsAtCeiling"/> first. Anything that learns to grant
     /// hints later must ask, or it will take thirty seconds of somebody's life in exchange
     /// for nothing.
     /// </para>
     /// <para>
-    /// The type is a value with no clock of its own — every method takes <c>now</c> — for
+    /// The type is a value with no clock of its own - every method takes <c>now</c> - for
     /// <see cref="Hearts"/>'s reason: it is what lets the whole rule be tested at arbitrary
     /// times without waiting eight hours.
     /// </para>
@@ -60,7 +60,7 @@ namespace GlimmerGrove.Persistence
         public long Spent => _ledger.Spent;
 
         /// <summary>
-        /// When the pending refill lands. Never cleared on reaching the cap — see
+        /// When the pending refill lands. Never cleared on reaching the cap - see
         /// <see cref="RegenLedger.DueUnix"/> for why a field that is zeroed cannot be
         /// merged. What a screen should draw is <see cref="NextRefillUnix"/>.
         /// </summary>
@@ -91,7 +91,7 @@ namespace GlimmerGrove.Persistence
         public bool IsRefilled => _ledger.IsRefilled(HintRules.RefillCap);
 
         /// <summary>
-        /// Whether another hint would be thrown away — the <em>published</em> ceiling, so
+        /// Whether another hint would be thrown away - the <em>published</em> ceiling, so
         /// this is the one property here that can change without the ledger changing.
         /// Anything about to offer a hint has to ask this first.
         /// </summary>
@@ -104,7 +104,7 @@ namespace GlimmerGrove.Persistence
 
         /// <summary>
         /// When the next hint arrives, or 0 when the player is at or above the refill cap
-        /// and no timer is running — the number a HUD should draw.
+        /// and no timer is running - the number a HUD should draw.
         /// </summary>
         public long NextRefillUnix => _ledger.NextDueUnix(HintRules.RefillCap);
 
@@ -124,14 +124,14 @@ namespace GlimmerGrove.Persistence
         public Hints Spend(int amount, long now) => new Hints(_ledger.Spend(amount, now, Bounds()));
 
         /// <summary>
-        /// Grants hints the player did not wait for — a watched video today, whatever earns
+        /// Grants hints the player did not wait for - a watched video today, whatever earns
         /// one later. Refused outright at the ceiling rather than partly paid, which is why
         /// the offer asks <see cref="IsAtCeiling"/> before it is made.
         /// </summary>
         public Hints Grant(int amount, long now) => new Hints(_ledger.Grant(amount, now, Bounds()));
 
         /// <summary>
-        /// Joins two devices' hints. Three <c>max</c>es and no special cases — see
+        /// Joins two devices' hints. Three <c>max</c>es and no special cases - see
         /// <see cref="RegenLedger.Join"/>.
         /// </summary>
         public static Hints Join(Hints a, Hints b)
@@ -139,7 +139,7 @@ namespace GlimmerGrove.Persistence
 
         // ------------------------------------------------------------- equality
         /// <summary>
-        /// Compares the ledger, not the count — <see cref="Hearts.Equals(Hearts)"/>'s rule,
+        /// Compares the ledger, not the count - <see cref="Hearts.Equals(Hearts)"/>'s rule,
         /// and it matters for the same reason: reaching the cap advances
         /// <see cref="DueUnix"/> without moving <see cref="Count"/>.
         /// </summary>

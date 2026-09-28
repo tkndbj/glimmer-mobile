@@ -9,8 +9,8 @@ namespace GlimmerGrove.Tests
     /// Prismvale's rules, one clause at a time.
     ///
     /// <para>
-    /// <b>Every rule here exists twice</b> — once in <c>PrismBoard.cs</c> and once in
-    /// <c>Tools/verify/prism.py</c> — so what this fixture is really guarding is the C# half of a
+    /// <b>Every rule here exists twice</b> - once in <c>PrismBoard.cs</c> and once in
+    /// <c>Tools/verify/prism.py</c> - so what this fixture is really guarding is the C# half of a
     /// pair that has to stay identical (invariant 9a). The disagreements that matter are silent:
     /// a flood that stops one cell early makes a board <em>harder</em> and par comes out one
     /// higher, which looks exactly like a level somebody authored. That is Budburst's wash bug,
@@ -51,7 +51,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// <b>The whole of what keeps the search finite.</b> A move that changes nothing is a
         /// self-edge, and a self-edge in a breadth-first walk is a layer the frontier never
-        /// leaves — so two gems of one colour are refused rather than swapped for free.
+        /// leaves - so two gems of one colour are refused rather than swapped for free.
         /// </summary>
         [Test]
         public void TwoTouchingGemsOfOneColourAreNotAMove()
@@ -222,7 +222,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// A critter that has woken never sleeps again, which is the only monotone quantity this
-        /// mode has — and the reason the search terminates at all, because a swap on its own can
+        /// mode has - and the reason the search terminates at all, because a swap on its own can
         /// be undone for ever.
         /// </summary>
         [Test]
@@ -244,7 +244,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// A board dealt with a vein already against a sleeper is a board whose first move its
-        /// author played — Budburst's "authored settled" rule, and the mode's reader refuses one.
+        /// author played - Budburst's "authored settled" rule, and the mode's reader refuses one.
         /// </summary>
         [Test]
         public void ABoardWithLightAlreadyOnACritterIsStirred()

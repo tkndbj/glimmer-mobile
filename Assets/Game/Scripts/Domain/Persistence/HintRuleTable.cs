@@ -11,7 +11,7 @@ namespace GlimmerGrove.Persistence
     /// <see cref="HeartLimits"/>'s job for the hint pool, and the reasoning transfers whole:
     /// content is allowed to retune the pool, it is not allowed to redefine what the pool
     /// is. Everything here is a compile-time constant precisely because it is what a
-    /// published file is checked <em>against</em> — a limit that could itself be published
+    /// published file is checked <em>against</em> - a limit that could itself be published
     /// would not be a limit.
     /// </para>
     /// </summary>
@@ -22,7 +22,7 @@ namespace GlimmerGrove.Persistence
         /// The most hints a <see cref="Hints"/> ledger can represent, ever.
         ///
         /// <para>
-        /// <b>Not the ceiling a player experiences</b> — that is
+        /// <b>Not the ceiling a player experiences</b> - that is
         /// <see cref="HintRuleTable.Ceiling"/>, and it is content. This is the bound the
         /// ledger's own clamp uses, and the distinction is the single most important thing
         /// in this file. <see cref="HeartLimits.HardCeiling"/> carries the full argument;
@@ -44,7 +44,7 @@ namespace GlimmerGrove.Persistence
 
         /// <summary>
         /// Shortest refill a content file may ask for, in seconds. Five minutes, for
-        /// <see cref="HeartLimits.MinRefillSeconds"/>'s reason — below that the pool stops
+        /// <see cref="HeartLimits.MinRefillSeconds"/>'s reason - below that the pool stops
         /// being scarce and the timer becomes a busy loop writing the save file.
         /// </summary>
         public const int MinRefillSeconds = 300;
@@ -68,7 +68,7 @@ namespace GlimmerGrove.Persistence
         /// Hearts keep a ceiling well above their cap so a chest opened at a full bar still
         /// pays; hints do not, so a hint granted at three is refused outright. That is only
         /// safe because nothing offers one without asking <see cref="Hints.IsAtCeiling"/>
-        /// first — see <c>RewardedAds.WouldBenefit</c>, which is what stops the video being
+        /// first - see <c>RewardedAds.WouldBenefit</c>, which is what stops the video being
         /// offered for a reward that would evaporate. Raising this later is a config push
         /// and needs no build; lowering it takes nothing from anybody.
         /// </summary>
@@ -79,7 +79,7 @@ namespace GlimmerGrove.Persistence
     }
 
     /// <summary>
-    /// How many hints a player may hold and how fast they come back — content, not code.
+    /// How many hints a player may hold and how fast they come back - content, not code.
     ///
     /// <para>
     /// The same argument <see cref="HeartRuleTable"/> makes, one resource over. A hint pool
@@ -114,15 +114,15 @@ namespace GlimmerGrove.Persistence
         }
 
         /// <summary>
-        /// Where the clock stops. The timer refills to this and no further, so this — not
-        /// <see cref="Ceiling"/> — is the number that sets how much help free play buys.
+        /// Where the clock stops. The timer refills to this and no further, so this - not
+        /// <see cref="Ceiling"/> - is the number that sets how much help free play buys.
         /// </summary>
         public int RefillCap { get; }
 
         /// <summary>
         /// The most a player may hold once granted hints are stacked on top. Enforced at the
         /// moment of a grant, never by re-reading a save. Equal to
-        /// <see cref="RefillCap"/> as shipped — see <see cref="HintLimits.DefaultCeiling"/>.
+        /// <see cref="RefillCap"/> as shipped - see <see cref="HintLimits.DefaultCeiling"/>.
         /// </summary>
         public int Ceiling { get; }
 
@@ -168,7 +168,7 @@ namespace GlimmerGrove.Persistence
             // grant would be refused while the timer kept paying. Raised to the cap rather
             // than rejected, because the author's intent is unambiguous and a session must
             // not lose the rest of a good block over it. A ceiling *equal* to the cap is not
-            // a mistake and is not reported — that is the shipped shape.
+            // a mistake and is not reported - that is the shipped shape.
             if (ceiling < refillCap)
             {
                 problems.Add($"hints ceiling is {ceiling}, below the refill cap of {refillCap}; " +
@@ -182,7 +182,7 @@ namespace GlimmerGrove.Persistence
 
         /// <summary>
         /// One authored number: unwritten inherits, out of range is clamped and named.
-        /// <see cref="HeartRuleTable"/>'s reader, and clamped for its reason — refusing one
+        /// <see cref="HeartRuleTable"/>'s reader, and clamped for its reason - refusing one
         /// scalar would mean discarding the whole block.
         /// </summary>
         static int Read(int authored, int fallback, int min, int max, string name, List<string> problems)

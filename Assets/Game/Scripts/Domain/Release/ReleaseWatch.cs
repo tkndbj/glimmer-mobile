@@ -10,7 +10,7 @@ namespace GlimmerGrove.Release
     /// The same bargain <c>SyncScheduler</c> makes and for the same reason: it holds no clock
     /// and no socket, it is handed elapsed time and told whether the network is up, so the whole
     /// policy is runnable in the test suite. What differs is that nothing is ever waiting on
-    /// this — there is no local work owed to a server — so there is no debounce and no
+    /// this - there is no local work owed to a server - so there is no debounce and no
     /// exponential backoff, only a cadence.
     /// </para>
     /// <para>
@@ -18,7 +18,7 @@ namespace GlimmerGrove.Release
     /// Asking every frame, or on every foreground, would be a per-player-per-day bill that grows
     /// with how twitchy somebody's phone is rather than with how often they play. Asking only at
     /// launch would leave a device that was in flight mode when it started running unwalled
-    /// until the next cold start — which, on a phone, can be a fortnight.
+    /// until the next cold start - which, on a phone, can be a fortnight.
     /// </para>
     /// <para>
     /// <b>The resume check is the one that earns its keep.</b> A launch with no signal learns
@@ -43,7 +43,7 @@ namespace GlimmerGrove.Release
         /// <para>
         /// A failure is the state in which this device might be running something it should not
         /// be, and a standing wall is the state in which it might be walled out of a game it is
-        /// entitled to play — a rolled-back requirement reaches a stuck player through this
+        /// entitled to play - a rolled-back requirement reaches a stuck player through this
         /// number and nothing else. Both are worth a minute rather than a quarter of an hour,
         /// and neither is competing with anything: a failed read costs nothing and a walled
         /// device has no gameplay to interrupt.
@@ -82,7 +82,7 @@ namespace GlimmerGrove.Release
         public bool InFlight => _inFlight;
 
         /// <summary>
-        /// One frame. True means start a read now — and the claim is taken as it is answered, so
+        /// One frame. True means start a read now - and the claim is taken as it is answered, so
         /// a caller that ignores the answer simply does not check this time round.
         /// </summary>
         public bool Tick(float elapsed, bool reachable)
@@ -119,7 +119,7 @@ namespace GlimmerGrove.Release
 
         /// <summary>
         /// A read came back. <paramref name="ok"/> is whether the deployment actually answered;
-        /// <paramref name="urgent"/> asks for the short cadence — see <see cref="RetrySeconds"/>.
+        /// <paramref name="urgent"/> asks for the short cadence - see <see cref="RetrySeconds"/>.
         /// </summary>
         public void Answered(bool ok, bool urgent = false)
         {

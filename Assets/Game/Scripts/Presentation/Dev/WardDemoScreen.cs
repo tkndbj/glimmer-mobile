@@ -13,7 +13,7 @@ namespace GlimmerGrove.Dev
     /// after another.
     ///
     /// <para>
-    /// <b>Kept, and unreachable.</b> Nothing in the game navigates here — the door in the loadout
+    /// <b>Kept, and unreachable.</b> Nothing in the game navigates here - the door in the loadout
     /// header came out once the shelf grew a preview panel of its own
     /// (<c>WardPreviewOverlay</c>), which is the same stage in front of a player rather than in
     /// front of whoever is tuning the art. This survives because judging nineteen effects against
@@ -26,7 +26,7 @@ namespace GlimmerGrove.Dev
     /// </para>
     /// <para>
     /// <b>It draws through <see cref="WardFiringStage"/></b>, which is the widget the shipping
-    /// panel draws through — a bench with its own copy of the anchors, sizes and timings would be a
+    /// panel draws through - a bench with its own copy of the anchors, sizes and timings would be a
     /// bench answering a question nobody asked.
     /// </para>
     /// </summary>
@@ -62,7 +62,7 @@ namespace GlimmerGrove.Dev
 
         // **Asked of the board rather than written out again.** This bench exists to judge a
         // turret's effect against the colour it will really wear, so a second table of the four
-        // is a second answer to the question invariant 37f settles by there being exactly one —
+        // is a second answer to the question invariant 37f settles by there being exactly one -
         // and a bench that flatters a bolt with a colour the board does not paint is worse than
         // no bench. `SiegeView.TintOf` is public for exactly this and for `WardFiringStage`.
         Color Tint => SiegeView.TintOf(Mathf.Clamp(_colour, 0, WardLine.Colours.Length - 1));
@@ -115,7 +115,7 @@ namespace GlimmerGrove.Dev
         void BuildStage()
         {
             // **Above the stage rather than on it.** An impact is drawn 3.2 cells across, which at
-            // this cell is 410 units — anchored on the target it reached the top of the stage and
+            // this cell is 410 units - anchored on the target it reached the top of the stage and
             // drew straight through a caption sitting there.
             _caption = UIKit.Titled("Name", Safe, "", 34, Pal.Cream, TextAnchor.MiddleCenter,
                                     new Vector2(760f, 52f), new Vector2(.5f, 1f),

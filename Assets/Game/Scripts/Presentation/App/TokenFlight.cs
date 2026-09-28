@@ -9,7 +9,7 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// This is <see cref="Payout"/>'s flight, lifted out whole because a second caller
-    /// appeared — the daily chest, whose rewards fly out of the panel and into the hub's
+    /// appeared - the daily chest, whose rewards fly out of the panel and into the hub's
     /// own resource pills. The two want an identical throw and nothing else in common:
     /// a Payout owns a chip with a number on it, the chest owns nothing and is aiming at
     /// somebody else's readout. Copying forty lines of bezier, spin and scale into the
@@ -18,7 +18,7 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// It knows nothing about what is being paid. It takes two points and a sprite, and
-    /// calls back when the token arrives — every decision about what that means belongs
+    /// calls back when the token arrives - every decision about what that means belongs
     /// to the caller.
     /// </para>
     /// </summary>
@@ -80,7 +80,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Where <paramref name="target"/> sits in <paramref name="space"/>'s own coordinates
-        /// — the number a child of <paramref name="space"/> anchored at its centre would need.
+        /// - the number a child of <paramref name="space"/> anchored at its centre would need.
         ///
         /// Measured through world space rather than read off an anchoredPosition, because the
         /// two ends are routinely anchored to different edges of different objects and their

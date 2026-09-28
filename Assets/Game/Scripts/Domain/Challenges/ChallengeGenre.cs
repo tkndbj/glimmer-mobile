@@ -10,13 +10,13 @@ namespace GlimmerGrove.Challenges
     /// Sudoku, Minefield (minesweeper) and Stack (tetris). Their spellings (<c>sudoku</c>,
     /// <c>mines</c>, <c>tetris</c>) are refused at read like any unknown genre; nothing stores a
     /// challenge id, so nothing is spent. <b>Pipeworks went on 2026-09-23</b>, replaced in its
-    /// seat by the glade — the classic conduit mode, hidden from the ladder since Thornwatch
-    /// went live — at the owner's instruction: the hill and the line are untouched, only the
+    /// seat by the glade - the classic conduit mode, hidden from the ladder since Thornwatch
+    /// went live - at the owner's instruction: the hill and the line are untouched, only the
     /// board under them changed. <c>pipes</c> is retired the same way.
     /// </para>
     ///
     /// <para>
-    /// <b>A genre is code and a challenge names one</b> — MODES.md invariant 20, said of this
+    /// <b>A genre is code and a challenge names one</b> - MODES.md invariant 20, said of this
     /// smaller thing. Content can never add a way of playing; a row of <c>challenges.json</c>
     /// says which of these it is and hands the genre its board. Adding a genre is a build
     /// (<see cref="ChallengePuzzles"/> is the one registry), adding a challenge is a content push.
@@ -53,8 +53,8 @@ namespace GlimmerGrove.Challenges
 
         /// <summary>
         /// Spellings that were shipped and withdrawn, refused by name at read (invariant 5f) and
-        /// listed in CLAUDE.md's spent table. A spelling is a wire name — a lifetime row in the
-        /// save keeps counting under it after the genre is gone — so one may never come back
+        /// listed in CLAUDE.md's spent table. A spelling is a wire name - a lifetime row in the
+        /// save keeps counting under it after the genre is gone - so one may never come back
         /// meaning something else. <c>content.py</c> and the seeder hold the same list.
         /// </summary>
         public static readonly string[] Retired = { "sudoku", "mines", "tetris", "pipes" };

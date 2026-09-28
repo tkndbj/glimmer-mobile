@@ -9,7 +9,7 @@ namespace GlimmerGrove.Tests
     /// <see cref="BoardView.Locked"/> moving is something the screen hears about.
     ///
     /// <para>
-    /// This exists because of a bug reported from play — "I use one hint and then I cannot
+    /// This exists because of a bug reported from play - "I use one hint and then I cannot
     /// use another one". There was no cooldown and nothing wrong with the pool.
     /// <c>PlayScreen</c> recomputes the hint and undo buttons from
     /// <see cref="BoardView.OnChanged"/>; the hint's reveal latches the board, every tween
@@ -23,7 +23,7 @@ namespace GlimmerGrove.Tests
     /// <b>These tests are written the way the screen reads the board</b>, which is the only
     /// framing that could have caught it: they keep the value <em>the handler was told</em>
     /// on the last event it received, because that is what ends up on the button. Asserting
-    /// <c>board.CanHint</c> directly after the dust settles passes on the broken code too —
+    /// <c>board.CanHint</c> directly after the dust settles passes on the broken code too -
     /// the state was always right, and nobody was ever told.
     /// </para>
     /// <para>
@@ -39,7 +39,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The hint's reveal beckons the tile, which spawns a <c>Ripple</c> that tidies
-        /// itself up with <c>Object.Destroy</c> — correct in a player, and an error log
+        /// itself up with <c>Object.Destroy</c> - correct in a player, and an error log
         /// outside play mode ("Destroy may not be called from edit mode"). Unity's runner
         /// fails a test on any unexpected error log, so without this the three cases that
         /// take a hint fail on the animation rather than on anything they assert.
@@ -49,7 +49,7 @@ namespace GlimmerGrove.Tests
         /// tile, so the count is a fact about the animation rather than about the rule, and
         /// a test that has to be edited whenever a flourish changes is a test that gets
         /// deleted. Every claim here is an explicit assertion, so nothing is resting on the
-        /// absence of a log line — and the suite still has <c>LogAssert</c> tests elsewhere
+        /// absence of a log line - and the suite still has <c>LogAssert</c> tests elsewhere
         /// for the rules that are genuinely about what was logged.
         /// </para>
         /// </summary>
@@ -116,7 +116,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// What the screen would have painted the last time it was told anything — the whole
+        /// What the screen would have painted the last time it was told anything - the whole
         /// point of these tests. <c>PlayScreen.Refresh</c> is this line.
         /// </summary>
         sealed class Bar
@@ -138,7 +138,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The board raises during its entry animation and unlatches when it lands. If the
         /// unlatch says nothing, a player opens a glade to a hint button that is already
-        /// dead — which is how this shipped.
+        /// dead - which is how this shipped.
         /// </summary>
         [Test]
         public void TheGladeOpensWithALiveHintButton()
@@ -208,7 +208,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The callback is what tells <c>PlayScreen</c> the pool may have just emptied, and
-        /// it has to arrive on the beat the board comes back — not while it is still latched,
+        /// it has to arrive on the beat the board comes back - not while it is still latched,
         /// where a panel would cover the conduit the hint was spent on.
         /// </summary>
         [Test]
@@ -233,7 +233,7 @@ namespace GlimmerGrove.Tests
         // ------------------------------------------------------------- the latch
         /// <summary>
         /// Only a real move raises. Without this the property would be a repaint per
-        /// assignment — several of the game's paths set the latch to what it already is —
+        /// assignment - several of the game's paths set the latch to what it already is -
         /// and it would not be safe to assign from inside a handler of its own event.
         /// </summary>
         [Test]
@@ -295,7 +295,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// A run is written down as owed from the moment it is committed until the screen
-        /// resolves it, and the screen resolves on <c>OnSolved</c> — which the board does not
+        /// resolves it, and the screen resolves on <c>OnSolved</c> - which the board does not
         /// raise until the celebration has played out. So for the whole of that celebration a
         /// solved glade was still recorded as a run in progress: a process killed there charged
         /// a heart at the next launch, and backing out of the screen forfeited a board the
@@ -323,7 +323,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// And the gap is the celebration, so it grows with the board — a deeper grove has more
+        /// And the gap is the celebration, so it grows with the board - a deeper grove has more
         /// network to walk. The point of the pair is that the heart is safe for all of it,
         /// whatever it costs.
         /// </summary>

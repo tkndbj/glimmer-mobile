@@ -26,8 +26,8 @@ namespace GlimmerGrove.Challenges
     /// costs every step spent reaching it and every step spent leaving it, and nothing else.
     /// </para>
     /// <para>
-    /// <b>Two layers</b>: <c>rows</c> — <c>#</c> wall, <c>.</c> floor, <c>R G B Y</c> a pad,
-    /// <c>@</c> where the keeper starts — and <c>gems</c>, the same size, <c>.</c> or
+    /// <b>Two layers</b>: <c>rows</c> - <c>#</c> wall, <c>.</c> floor, <c>R G B Y</c> a pad,
+    /// <c>@</c> where the keeper starts - and <c>gems</c>, the same size, <c>.</c> or
     /// <c>r g b y</c> for a gem standing there when the board opens. The board's edge is a
     /// wall, so a row carries no ring of <c>#</c> round itself. Every shipped row is composed,
     /// proved and tuned by <c>Tools/make_push_challenges.py</c>.

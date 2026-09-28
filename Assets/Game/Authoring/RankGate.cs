@@ -7,8 +7,8 @@ namespace GlimmerGrove.Ranks
     /// Whether the rank ladder opens when the lane it ranks does (invariant 52i).
     ///
     /// <para>
-    /// <b>The mistake this exists for shipped.</b> A rank is this game's competitive readout — it
-    /// is on a board row and on a stranger's public profile (invariant 52h) — and the competitive
+    /// <b>The mistake this exists for shipped.</b> A rank is this game's competitive readout - it
+    /// is on a board row and on a stranger's public profile (invariant 52h) - and the competitive
     /// mode is the Infinite lane, which stands behind a keeper wall. Cinderling asked for eight
     /// Thornwatch clears and fifteen runs and nothing else, so it was worn at keeper level 7
     /// against a lane that opens at 10: a badge for a mode the keeper could not open, with every
@@ -19,13 +19,13 @@ namespace GlimmerGrove.Ranks
     /// that is deliberately the whole mechanism.</b> Both readings of the ladder walk up from the
     /// bottom and stop at the first rung they cannot meet (<see cref="RankLadder.Held"/>, and
     /// <c>rungOf</c> in <c>functions/src/ranks.ts</c>), so one line closes every rung, every badge,
-    /// every board row and every public profile — with no new code on either side of the wire, and
+    /// every board row and every public profile - with no new code on either side of the wire, and
     /// therefore with nothing that could disagree. It is also <em>drawn</em>: the ranks page lists
     /// it beside the rung's other lines, so a keeper below the wall is told why.
     /// </para>
     /// <para>
-    /// <b>What is left is that the figure exists twice</b> — the wall in <c>manifest.json</c>, the
-    /// gate in <c>progression.json</c> — and nothing can make them share one number, because the
+    /// <b>What is left is that the figure exists twice</b> - the wall in <c>manifest.json</c>, the
+    /// gate in <c>progression.json</c> - and nothing can make them share one number, because the
     /// server never reads a manifest. So they are held together by being checked wherever both
     /// files are legible at once: here (the build gate and the suite), <c>check_ranks</c> in
     /// <c>Tools/verify/content.py</c>, and <c>readRanks</c> in <c>seed-config.mjs</c>, which is the
@@ -34,7 +34,7 @@ namespace GlimmerGrove.Ranks
     /// run on different sides of a wire, and the disagreement is exactly the thing worth catching.
     /// </para>
     /// <para>
-    /// <b>Two answers, not one</b> — an error below the wall and a warning above it. Below is a
+    /// <b>Two answers, not one</b> - an error below the wall and a warning above it. Below is a
     /// badge handed out for a mode nobody can open, which is the fault itself and can only be a
     /// mistake. Above is a ladder that no longer opens <em>with</em> its lane: legal, possibly
     /// wanted, and silent, so it is said out loud and never refused. That is
@@ -56,7 +56,7 @@ namespace GlimmerGrove.Ranks
         /// <para>
         /// <b>The lowest wall of every Infinite chapter, rather than a named one.</b> The rule is
         /// "the ladder may not open before ranked play can be reached", so what matters is the
-        /// first lane that opens — and a wall read off the lane itself cannot be pointed at the
+        /// first lane that opens - and a wall read off the lane itself cannot be pointed at the
         /// wrong chapter, which an authored <c>opensWith</c> could. A chapter the manifest has
         /// disabled is not in the index at all, so it cannot anchor anything.
         /// </para>
@@ -82,7 +82,7 @@ namespace GlimmerGrove.Ranks
         /// nought when it asks for none.
         ///
         /// <para>
-        /// Only the first rung, because only the first rung can gate anything — the walk stops at
+        /// Only the first rung, because only the first rung can gate anything - the walk stops at
         /// the first unmet rung, so a keeper line further up closes the rungs above it and none
         /// below. A line carrying a scope is ignored rather than read: <c>keeper_level</c> takes
         /// none, both content gates refuse one, and honouring it here would be this file agreeing

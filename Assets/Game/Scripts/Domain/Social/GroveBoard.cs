@@ -17,8 +17,8 @@ namespace GlimmerGrove.Social
     /// and a second backend would mean a second thing to authenticate, a second thing
     /// <c>Boot</c> has to remember to wire and a second dark path to keep working when no
     /// backend is configured. It is a different <em>service</em> because it answers a different
-    /// question — the save is this player's progress and must never be lost, a card is a
-    /// picture of it that can be rebuilt at any time — and mixing the two would put a
+    /// question - the save is this player's progress and must never be lost, a card is a
+    /// picture of it that can be rebuilt at any time - and mixing the two would put a
     /// leaderboard read on the critical path of the one operation progress depends on.
     /// </para>
     /// <para>
@@ -31,7 +31,7 @@ namespace GlimmerGrove.Social
     /// <para>
     /// <b>A card is asked for after the sync, never after the change.</b> The server builds
     /// the card from the save under <c>players/{uid}</c>, so a publish requested the moment a
-    /// piece was placed was answered from the save pushed <em>last</em> time — and the
+    /// piece was placed was answered from the save pushed <em>last</em> time - and the
     /// fingerprint then noted as published stopped the real one ever being sent. Every board
     /// in the game showed every grove one session behind, for a week, with a successful call
     /// and a well-formed card on each publish. So the only thing that asks for a publish is
@@ -86,7 +86,7 @@ namespace GlimmerGrove.Social
         ///
         /// Resolved on every call rather than cached, because <c>Boot</c> chooses the backend
         /// after this type may first have been touched and a test may replace it between two
-        /// calls — the same reason <see cref="CloudSaveService"/> reads its own field rather
+        /// calls - the same reason <see cref="CloudSaveService"/> reads its own field rather
         /// than handing it out.
         /// </summary>
         static IGroveBoardBackend Backend => CloudSaveService.Backend as IGroveBoardBackend;
@@ -95,7 +95,7 @@ namespace GlimmerGrove.Social
         /// Whether boards work here at all.
         ///
         /// False in a build with no Firebase, and equally false behind a backend that does not
-        /// implement <see cref="IGroveBoardBackend"/> — which is what makes a save-only test
+        /// implement <see cref="IGroveBoardBackend"/> - which is what makes a save-only test
         /// double disable the feature rather than break it.
         /// </summary>
         public static bool IsAvailable => CloudSaveService.IsAvailable && Backend != null;
@@ -116,7 +116,7 @@ namespace GlimmerGrove.Social
         ///
         /// <para>
         /// The sources are the three entitlement ledgers, the arrangement and the endless
-        /// lane's own high-water mark (<c>SyncTriggers</c>) — which is precisely the set
+        /// lane's own high-water mark (<c>SyncTriggers</c>) - which is precisely the set
         /// <see cref="GroveCard.Fingerprint"/> covers, and the agreement between those two
         /// lists is the whole correctness of the debounce. Something that changes a card and
         /// does not raise one of them would simply never publish, so <b>anything added to the
@@ -130,7 +130,7 @@ namespace GlimmerGrove.Social
 
             // The one source. A settled sync is the only moment the server is known to hold
             // the grove a card would be built from, and the receipt says which save and which
-            // revision — see the type's remarks. Nothing else may ask, because a request
+            // revision - see the type's remarks. Nothing else may ask, because a request
             // raised by the change itself was the bug this file's header describes.
             CloudSaveService.Settled += OnSettled;
 
@@ -191,7 +191,7 @@ namespace GlimmerGrove.Social
         /// has already uploaded" is a fact about the device rather than about the account:
         /// merged, a phone would believe a card its tablet published, and a tablet that had
         /// never run would believe one it did not. It also goes both up and down, so it could
-        /// never be joined — invariant 11b, straightforwardly.
+        /// never be joined - invariant 11b, straightforwardly.
         /// </para>
         /// <para>
         /// Keyed by account so a switch cannot inherit the other player's note, which would
@@ -201,7 +201,7 @@ namespace GlimmerGrove.Social
         /// <remarks>
         /// Versioned, and the bump is deliberate. Every note written under the first key
         /// vouched for a card built from the previous session's save (this file's header), so
-        /// each of them is a claim that a stale card is current — and the proof that would
+        /// each of them is a claim that a stale card is current - and the proof that would
         /// catch that only runs on a reply, which no old note is ever going to get. A new key
         /// makes every device republish exactly once on its next settled sync. Bump it again
         /// only for the same reason: a fingerprint that has been recorded against a wrong card.
@@ -210,10 +210,10 @@ namespace GlimmerGrove.Social
         /// <c>SaveMerge</c> wrote the grove's stock without the v19 mirror it derives, and
         /// <c>buildCard</c> asked that mirror alone for the best home held, so every card in
         /// the game was published with the free cottage over a keeper who had paid for a
-        /// farmhouse — see <c>GroveStock.Record</c>. Both halves are fixed, and neither reaches
+        /// farmhouse - see <c>GroveStock.Record</c>. Both halves are fixed, and neither reaches
         /// a card that is already standing: the fingerprint covers what a <em>visitor</em> can
         /// see, and nothing a visitor can see has changed, so the note under key 2 would go on
-        /// suppressing the one publish that would put the house right — for the life of the
+        /// suppressing the one publish that would put the house right - for the life of the
         /// account, or until its owner happened to move a bench. The alternatives were a
         /// backfill over every player document in the database, which is a read and a write per
         /// account at any population, or leaving it to chance. This costs one publish per
@@ -223,8 +223,8 @@ namespace GlimmerGrove.Social
         /// <b>Bumped to 4 when the Grovement was removed (2026-09-21).</b>
         /// <see cref="GroveCard.Fingerprint"/> lost the worth, the land, the placements, the
         /// hall's seat and the companions, so every note taken under key 3 describes a card
-        /// shape that no longer exists. The shape change alone would force the republish — no
-        /// old note can match a new fingerprint — so this is belt and braces rather than the
+        /// shape that no longer exists. The shape change alone would force the republish - no
+        /// old note can match a new fingerprint - so this is belt and braces rather than the
         /// mechanism, and it costs the same one publish per account that every other bump has.
         /// </para>
         /// </remarks>
@@ -243,7 +243,7 @@ namespace GlimmerGrove.Social
         /// taken at the one moment it can be lost: immediately after a network round trip, on
         /// an app that has been in the background long enough to do one. Left to Unity's own
         /// <c>OnApplicationQuit</c> it would survive a clean quit and almost nothing else, and
-        /// a lost note is a card republished on the next launch — harmless, server-side, and
+        /// a lost note is a card republished on the next launch - harmless, server-side, and
         /// paid for by every device it happens to.
         /// </summary>
         static void Note(string fingerprint)
@@ -260,7 +260,7 @@ namespace GlimmerGrove.Social
 
             // Turning it off has to take the card down rather than merely stop rebuilding it.
             // Turning it back on cannot publish here: the server reads the opt-in off the save
-            // it holds, and the save it holds still says off — asked now, it would withdraw
+            // it holds, and the save it holds still says off - asked now, it would withdraw
             // the card the player has just asked for. So the setting goes up first, and the
             // sync that carries it asks for the card through Settled like any other change.
             if (OptedIn) CloudSaveService.RequestSync();
@@ -274,7 +274,7 @@ namespace GlimmerGrove.Social
         /// Invariant 17's discipline applied to a cache: the published fingerprint describes
         /// <em>an account's</em> card, and carrying one across a switch would let the incoming
         /// player's grove look already-published and never reach the board. The visited cards
-        /// go too — not for correctness, but because a switch is the one moment somebody may
+        /// go too - not for correctness, but because a switch is the one moment somebody may
         /// be looking at a stranger's grove that is about to stop being reachable.
         /// </para>
         /// </summary>
@@ -335,7 +335,7 @@ namespace GlimmerGrove.Social
                                   SaveSchema.NowUnix());
 
         /// <summary>
-        /// The card this device would publish right now — the local prediction, drawn while
+        /// The card this device would publish right now - the local prediction, drawn while
         /// the server's own answer is still in flight or absent.
         ///
         /// It is only a prediction because the server recomputes the worth and clamps its
@@ -399,7 +399,7 @@ namespace GlimmerGrove.Social
                 }
                 else if (result.Failure == CloudFailure.Rejected)
                 {
-                    // Permanent for this card — an opted-out account, a save the server will
+                    // Permanent for this card - an opted-out account, a save the server will
                     // not vouch for. Retrying it forever is invariant 13a's loop.
                     _policy.Refused();
                 }
@@ -512,7 +512,7 @@ namespace GlimmerGrove.Social
         /// Aged the way a board is, against the same <see cref="CacheSeconds"/>, and bounded
         /// by count as well, oldest first. A card used to be kept for the life of the process
         /// on the argument that a picture of somebody else's grove is never wrong in a way a
-        /// visitor could notice — which is true of a five-minute-old one and false of a
+        /// visitor could notice - which is true of a five-minute-old one and false of a
         /// week-old one, and a phone that is never quite closed keeps a process for weeks.
         /// </para>
         /// </summary>
@@ -529,7 +529,7 @@ namespace GlimmerGrove.Social
 
             // Remembered even when the answer is "there is no grove here", which it did not used
             // to be. A row on a board whose owner has since opted out is a row a player taps,
-            // reads, backs out of and taps again — and each of those was a document read for an
+            // reads, backs out of and taps again - and each of those was a document read for an
             // answer the client had already been given. A failure is a different thing and is
             // not cached: that one is worth asking again.
             if (result.Ok) Remember(ownerId, card ?? GroveCard.Empty);
@@ -543,13 +543,13 @@ namespace GlimmerGrove.Social
         /// <para>
         /// Best-effort like everything else here: a failure is an empty answer rather than an
         /// exception, and nothing in the game waits on it. A successful report is remembered
-        /// for the session so the control can say it has been used — see
+        /// for the session so the control can say it has been used - see
         /// <see cref="KeeperReports"/> for why that record must never reach the save file.
         /// </para>
         /// <para>
         /// The visited card is <b>not</b> evicted from the cache on a report, whichever subject
-        /// it was about. Nothing changes for the reporter — a takedown needs more than one of
-        /// them — so dropping it would buy a document read and an identical picture.
+        /// it was about. Nothing changes for the reporter - a takedown needs more than one of
+        /// them - so dropping it would buy a document read and an identical picture.
         /// </para>
         /// </summary>
         public static async Task<(CloudResult result, NameReportOutcome outcome)> ReportAsync(
@@ -596,7 +596,7 @@ namespace GlimmerGrove.Social
         /// Takes the id out of the order list as well, which is the whole reason this is a
         /// method rather than a <c>Remove</c> at the call site: the two are one structure, and a
         /// key left in the order after being dropped from the map is a duplicate the moment it
-        /// is fetched again — an eviction list that grows for the life of the session while
+        /// is fetched again - an eviction list that grows for the life of the session while
         /// holding fewer cards than it thinks.
         /// </para>
         /// </summary>

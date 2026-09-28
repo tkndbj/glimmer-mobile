@@ -17,7 +17,7 @@ namespace GlimmerGrove.EditorTools
 
         /// <summary>
         /// Where the generated Xcode project lands. Gitignored, like <c>Builds/</c>, because it
-        /// is generated output — 1.2 GB of transpiled C++ that is reproduced by any clone that
+        /// is generated output - 1.2 GB of transpiled C++ that is reproduced by any clone that
         /// runs this menu item.
         /// </summary>
         public const string IosPath = "glimmer-ios-builds";
@@ -28,7 +28,7 @@ namespace GlimmerGrove.EditorTools
         /// <para>
         /// <b>Never Player Settings, and never a file in the repository.</b> Unity stores a
         /// keystore password in <c>ProjectSettings.asset</c> in plain text the moment you
-        /// type it into the Publishing Settings panel, and that file is committed — so the
+        /// type it into the Publishing Settings panel, and that file is committed - so the
         /// key that identifies this app to Google would be in the history for ever, and
         /// removing it later does not remove it from the history. Reading them from the
         /// environment keeps the credential on the machine doing the build, which is the
@@ -48,8 +48,8 @@ namespace GlimmerGrove.EditorTools
         ///
         /// Debug signing is deliberate rather than lazy: that keystore's SHA-1 is the one
         /// registered against the Firebase Android app, so Google Sign-In actually works
-        /// in this build. A release-signed APK would fail sign-in until its fingerprint —
-        /// and, once you ship through Play, Play App Signing's fingerprint — is added too.
+        /// in this build. A release-signed APK would fail sign-in until its fingerprint -
+        /// and, once you ship through Play, Play App Signing's fingerprint - is added too.
         ///
         /// An APK rather than an App Bundle because this is for sideloading onto a
         /// device; the store build wants <c>buildAppBundle = true</c>.
@@ -58,7 +58,7 @@ namespace GlimmerGrove.EditorTools
         public static void BuildAndroidApk() => BuildAndroid(andRun: false);
 
         /// <summary>
-        /// Build, install and launch on whatever device is plugged in — the loop you
+        /// Build, install and launch on whatever device is plugged in - the loop you
         /// actually want while testing anything mobile-only, such as sign-in.
         /// </summary>
         [MenuItem("Glimmer Grove/Build Android APK and Run", false, 42)]
@@ -81,7 +81,7 @@ namespace GlimmerGrove.EditorTools
         /// Play into per-device downloads, so shipping ARMv7 as well as ARM64 makes the
         /// <em>upload</em> bigger and the build slower and leaves what any individual player
         /// downloads exactly the same. For a game that is meant to be distributed globally
-        /// that is a trade with no downside — ARM64-only would silently exclude the cheaper
+        /// that is a trade with no downside - ARM64-only would silently exclude the cheaper
         /// devices that still make up real markets.
         /// </para>
         /// <para>
@@ -141,7 +141,7 @@ namespace GlimmerGrove.EditorTools
             //
             // The deprecated API is used deliberately. Unity's replacement lives in
             // `UnityEditor.Android.UserBuildSettings`, which only exists when the Android
-            // module is installed — and this file has to compile on a Mac set up to build
+            // module is installed - and this file has to compile on a Mac set up to build
             // iOS only, which is exactly the mistake `LauncherIcons` had to be repaired for.
             // The old property is in UnityEditor core, works, and costs two warnings. If it
             // is ever actually removed, guard the new one with `#if UNITY_ANDROID` rather
@@ -187,7 +187,7 @@ namespace GlimmerGrove.EditorTools
             var s = report.summary;
 
             // The file on disk, not `summary.totalSize`. For an App Bundle that property
-            // counts the staged intermediates — it reported 983 MB for a 97 MB bundle — and
+            // counts the staged intermediates - it reported 983 MB for a 97 MB bundle - and
             // this is the one build where the size decides whether it can be uploaded at all.
             long bytes = File.Exists(AabPath) ? new FileInfo(AabPath).Length : 0L;
 
@@ -207,7 +207,7 @@ namespace GlimmerGrove.EditorTools
             // Said on every successful store build rather than written in a document
             // somebody has to remember to open. Play App Signing re-signs the bundle with a
             // key Google holds, so the fingerprint the app actually ships with is *not* the
-            // one in the keystore above — and Google Sign-In checks the shipped one.
+            // one in the keystore above - and Google Sign-In checks the shipped one.
             Debug.LogWarning(
                 "[Glimmer] before this build can sign anybody in: copy the SHA-1 from Play " +
                 "Console > Setup > App integrity > App signing key certificate, and add it to " +
@@ -221,7 +221,7 @@ namespace GlimmerGrove.EditorTools
         /// <para>
         /// <b>The build number is bumped here, for the reason the App Bundle bumps its
         /// versionCode.</b> App Store Connect refuses an upload whose <c>CFBundleVersion</c> it
-        /// has already seen against the same <c>CFBundleShortVersionString</c> — and it refuses
+        /// has already seen against the same <c>CFBundleShortVersionString</c> - and it refuses
         /// it at the <em>end</em>, after the archive, the upload and the processing wait. Raising
         /// it in the build script means it cannot be forgotten, and because
         /// <c>ProjectSettings.asset</c> is tracked the change shows up in a diff rather than
@@ -230,14 +230,14 @@ namespace GlimmerGrove.EditorTools
         /// <para>
         /// <b>Refused rather than reset when it is not a whole number.</b> Connect compares build
         /// numbers numerically within a version, so guessing at a replacement for something this
-        /// cannot parse risks picking one already uploaded — which fails at the same late point
+        /// cannot parse risks picking one already uploaded - which fails at the same late point
         /// this exists to move earlier.
         /// </para>
         /// <para>
         /// <b>Replace, never Append.</b> Omitting
         /// <see cref="BuildOptions.AcceptExternalModificationsToPlayer"/> is what makes this a
         /// clean regeneration. Append is faster and is exactly where a drop that adds assemblies
-        /// or Addressables groups leaves stale artifacts — and nothing in the generated project is
+        /// or Addressables groups leaves stale artifacts - and nothing in the generated project is
         /// hand-made, because the entitlement, the tracking description and the export-compliance
         /// flag are all written by post-processors on every build.
         /// </para>
@@ -245,8 +245,8 @@ namespace GlimmerGrove.EditorTools
         /// <b>What this deliberately does not do is run <c>pod install</c>.</b> The External
         /// Dependency Manager owns that step and <see cref="IosWorkspaceGuard"/> proves it ran; a
         /// second caller here would be a second source of truth for which pods are installed. If
-        /// the guard reports no workspace the fault is upstream — a tool path
-        /// (<see cref="MacToolPath"/>) or a pod version conflict — and shelling out from here
+        /// the guard reports no workspace the fault is upstream - a tool path
+        /// (<see cref="MacToolPath"/>) or a pod version conflict - and shelling out from here
         /// would hide the cause behind a repair.
         /// </para>
         /// </summary>
@@ -259,7 +259,7 @@ namespace GlimmerGrove.EditorTools
             {
                 Debug.LogError(
                     $"[Glimmer] iOS build number is '{current}', which is not a whole number, so " +
-                    "it cannot be raised safely. Set it to an integer in Player Settings first — " +
+                    "it cannot be raised safely. Set it to an integer in Player Settings first - " +
                     "App Store Connect compares it numerically against every build already " +
                     "uploaded for this version.");
                 return;
@@ -302,7 +302,7 @@ namespace GlimmerGrove.EditorTools
                 targetGroup = BuildTargetGroup.iOS,
 
                 // No Development and no AllowDebugging, and no
-                // AcceptExternalModificationsToPlayer — see the remarks about Replace above.
+                // AcceptExternalModificationsToPlayer - see the remarks about Replace above.
                 options = BuildOptions.None,
             };
 
@@ -334,7 +334,7 @@ namespace GlimmerGrove.EditorTools
         ///
         /// <para>
         /// <b>Nothing in this project ever set a compression format</b>, so every texture took
-        /// Unity's automatic default — ETC2 RGBA8, 8 bits per pixel — and the siege reels alone
+        /// Unity's automatic default - ETC2 RGBA8, 8 bits per pixel - and the siege reels alone
         /// came to 158 MB of it. The first store bundle was 263 MB on disk and about 220 MB of
         /// download per device against Play's 200 MB ceiling, which is a rejected upload rather
         /// than a slow one. <c>ProjectSetup.OnPreprocessTexture</c> sets <c>maxTextureSize</c>
@@ -347,7 +347,7 @@ namespace GlimmerGrove.EditorTools
         /// spends only 4 bpp on colour (the other 4 go to a separate EAC alpha block) and uses a
         /// much weaker block model, where ASTC allocates across all four channels adaptively.
         /// Measured by encoding the shipped PNGs and comparing against the source, colour PSNR
-        /// rises everywhere at 44% of the size — reels 42.2 → 48.2 dB, turrets 31.5 → 40.3,
+        /// rises everywhere at 44% of the size - reels 42.2 → 48.2 dB, turrets 31.5 → 40.3,
         /// UI furniture 33.7 → 45.4, portraits 32.5 → 39.1, backdrops 38.6 → 50.1. What it
         /// gives up is alpha, where EAC is strong: 39–43 dB against ETC2's 45–52. That is
         /// clean at this art's sizes and is the one thing here a number cannot settle, so it
@@ -355,7 +355,7 @@ namespace GlimmerGrove.EditorTools
         /// </para>
         /// <para>
         /// <b>The block size is not settable from here and does not need to be.</b> Unity
-        /// derives it from each texture's own quality tier — Normal gives 6x6, High gives 4x4 —
+        /// derives it from each texture's own quality tier - Normal gives 6x6, High gives 4x4 -
         /// so this one line moves the whole project and writes to no <c>.meta</c> file. Asking
         /// for 5x5 instead means an explicit per-texture override on all 3,700 of them, for
         /// about 3 dB of alpha; do that per folder if a portrait ever shows a fringe, never
@@ -404,7 +404,7 @@ namespace GlimmerGrove.EditorTools
             EditorUserBuildSettings.buildAppBundle = false;
 
             // The APK path pins it too, or the build somebody actually looks at on a device is
-            // drawn in a format the store bundle does not ship — which is the one comparison
+            // drawn in a format the store bundle does not ship - which is the one comparison
             // this change has to be judged by.
             PinTextureCompression();
 
@@ -413,7 +413,7 @@ namespace GlimmerGrove.EditorTools
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
 
             // Engine code stripping removes MonoScript (class 115), which Firebase needs:
-            // it starts by adding UnitySynchronizationContext — a MonoBehaviour — to a
+            // it starts by adding UnitySynchronizationContext - a MonoBehaviour - to a
             // GameObject at runtime, and nothing references that statically for the
             // stripper to see. With it on, the device logs "Could not produce class with
             // ID 115" thousands of times and Firebase never initialises, so cloud save is
@@ -467,7 +467,7 @@ namespace GlimmerGrove.EditorTools
 
         /// <summary>Batch-mode entry point, used by Tools/Play.ps1 and CI:
         /// Unity.exe -batchmode -executeMethod GlimmerGrove.EditorTools.DevBuild.BuildWindowsBatch
-        /// Exits non-zero on failure so the caller can tell a broken build from a good one —
+        /// Exits non-zero on failure so the caller can tell a broken build from a good one -
         /// without this, batchmode reports success even when BuildPlayer fails.</summary>
         public static void BuildWindowsBatch() => EditorApplication.Exit(Build(false) ? 0 : 1);
 

@@ -8,7 +8,7 @@ namespace GlimmerGrove.Persistence
     ///
     /// Ids, not an enum: a save file and a server document both key on these, and an
     /// enum's meaning moves the moment somebody reorders the members. Same rule as a
-    /// <see cref="Content.LevelId"/> — once shipped, never renamed or reused.
+    /// <see cref="Content.LevelId"/> - once shipped, never renamed or reused.
     /// </summary>
     public static class Currency
     {
@@ -19,7 +19,7 @@ namespace GlimmerGrove.Persistence
 
         /// <summary>
         /// What a brand-new account is granted. Applied once, at creation, so changing
-        /// these affects new players only — which is the correct behaviour for a seed.
+        /// these affects new players only - which is the correct behaviour for a seed.
         /// Once the backend is live these move server-side with everything else that
         /// grants currency.
         /// </summary>
@@ -84,7 +84,7 @@ namespace GlimmerGrove.Persistence
         ///
         /// <para>
         /// The second derived spend id here, and it is derived for only <em>half</em> of the
-        /// pass's reason. The server does not have to recognise it — a shield grants no
+        /// pass's reason. The server does not have to recognise it - a shield grants no
         /// currency and no permission, it only keeps a streak alive across days nobody
         /// played, and a protected streak still collects at most one night per calendar day.
         /// What the derivation buys is the other half: two devices that both buy on the same
@@ -106,8 +106,8 @@ namespace GlimmerGrove.Persistence
         ///
         /// <para>
         /// Derived for <em>both</em> of the pass's reasons. The server has to recognise it:
-        /// <c>submitSpends</c> prices it against the published deal — the full price for a fresh
-        /// window, the difference for an upgrade of a deal it already recorded — and writes the
+        /// <c>submitSpends</c> prices it against the published deal - the full price for a fresh
+        /// window, the difference for an upgrade of a deal it already recorded - and writes the
         /// window's start onto the wallet document in the same transaction that takes the gems,
         /// which is what every coin claim past the free allowance is bounded by. And two devices
         /// buying the same deal offline on one day write byte-identical entries, the union keeps
@@ -115,8 +115,8 @@ namespace GlimmerGrove.Persistence
         /// </para>
         /// <para>
         /// <b>Two days, because an upgrade inherits a window it did not open.</b> <c>fromDay</c>
-        /// is the day the window began — the purchase day for a fresh deal, the running deal's
-        /// start for an upgrade — and is what the server records; <c>boughtDay</c> is the day the
+        /// is the day the window began - the purchase day for a fresh deal, the running deal's
+        /// start for an upgrade - and is what the server records; <c>boughtDay</c> is the day the
         /// gems left, which the server windows the purchase on. Parsed back by
         /// <c>parseChallengeTierSpendId</c>; the format is a wire contract.
         /// </para>
@@ -155,13 +155,13 @@ namespace GlimmerGrove.Persistence
         /// recognise it: <c>submitSpends</c> prices it against the published ladder at
         /// <paramref name="level"/>, refuses it unless <paramref name="ordinal"/> is the very
         /// next level this wallet has not yet bought, and raises <c>keeperBought</c> on the
-        /// wallet document in the same transaction that takes the money — so the purchase and
+        /// wallet document in the same transaction that takes the money - so the purchase and
         /// the level cannot come apart. And two devices buying the same ordinal offline write
         /// byte-identical entries, so the player is charged once (48e).
         /// </para>
         /// <para>
-        /// <b>The ordinal is what is bought; the level is what it cost.</b> The ordinal — the
-        /// first bought level is 1, the next 2 — is the fact the wallet stores, because an
+        /// <b>The ordinal is what is bought; the level is what it cost.</b> The ordinal - the
+        /// first bought level is 1, the next 2 - is the fact the wallet stores, because an
         /// <em>earned</em> level can arrive later and shift every bought one up without any of
         /// them having been bought again. The level is the keeper level this purchase reached
         /// as the device saw it (earned + ordinal), and it is in the id so the server prices
@@ -262,7 +262,7 @@ namespace GlimmerGrove.Persistence
         /// <para>
         /// The day cannot be left out and the night cannot be used in its place, however
         /// much tidier that would be. A night number is relative to <c>startDay</c>, and
-        /// <c>startDay</c> moves under a merge — so the same evening can be night five on
+        /// <c>startDay</c> moves under a merge - so the same evening can be night five on
         /// one device and night four on another, which would key two documents and pay
         /// twice. A calendar day is the same number everywhere.
         /// </para>
@@ -298,7 +298,7 @@ namespace GlimmerGrove.Persistence
         /// Derived from what earned it, for <see cref="DailyChestId"/>'s reason, and parsed
         /// back by <c>functions/src/season.ts</c>, which re-rolls the chest from the same
         /// facts. The <em>goal</em> names the rung rather than its position, because a
-        /// position moves when a ladder is retuned and a goal does not — the same argument
+        /// position moves when a ladder is retuned and a goal does not - the same argument
         /// that keeps a level record keyed on an id rather than an order (invariant 1).
         /// </para>
         /// <para>
@@ -347,8 +347,8 @@ namespace GlimmerGrove.Persistence
         ///
         /// <para>
         /// Derived from what earned it, for <see cref="DailyChestId"/>'s reason: the <c>win</c>
-        /// is the ordinal of the win within the day for that genre — the first win of the day is
-        /// <c>1</c> — so two devices that both clear the day's first level mint one string and
+        /// is the ordinal of the win within the day for that genre - the first win of the day is
+        /// <c>1</c> - so two devices that both clear the day's first level mint one string and
         /// are paid once, and a replay of a level already won is not a second payment.
         /// </para>
         /// <para>
@@ -392,7 +392,7 @@ namespace GlimmerGrove.Persistence
     /// that retuning a reward, or a chapter briefly leaving the catalog, can never
     /// reduce a balance somebody is already holding.</item>
     /// <item><b>granted</b> covers the seed, purchases and gifts. Once the backend is
-    /// live the client may never raise it — a client that can grant itself currency is
+    /// live the client may never raise it - a client that can grant itself currency is
     /// a client that can print money, and with real purchases in play that is the one
     /// field an attacker actually wants. Awards made while offline therefore land in a
     /// separate queue of identified entries, exactly as debits do, and are folded into
@@ -467,8 +467,8 @@ namespace GlimmerGrove.Persistence
         ///
         /// <para>
         /// Unconfirmed awards count. A daily chest opened on a plane has to be spendable
-        /// on that plane, and the alternative — showing the reward and withholding it
-        /// until a sync — is a game that appears to be broken to anyone with a bad
+        /// on that plane, and the alternative - showing the reward and withholding it
+        /// until a sync - is a game that appears to be broken to anyone with a bad
         /// connection. The risk it carries is bounded and one-directional: the server can
         /// only ever revise such an award <em>down</em>, and it does so by replacing the
         /// baseline rather than by taking anything back.
@@ -492,8 +492,8 @@ namespace GlimmerGrove.Persistence
         /// <summary>
         /// Records a debit if the player can afford it.
         ///
-        /// Optimistic on purpose — the charge lands locally at once so a shop stays
-        /// responsive offline — but it carries an idempotency key, so submitting it to
+        /// Optimistic on purpose - the charge lands locally at once so a shop stays
+        /// responsive offline - but it carries an idempotency key, so submitting it to
         /// the server later, possibly more than once, still debits exactly one time.
         /// </summary>
         public bool TrySpend(long amount, long derivedEarned, string reason, out SpendEntry entry)
@@ -506,15 +506,15 @@ namespace GlimmerGrove.Persistence
         /// <para>
         /// A spend id is random by default and that is right for almost everything: the id is
         /// only an idempotency key, and two purchases of the same turret are two debits. A
-        /// season pass is the exception — it is bought once, for ever, and the server turns
+        /// season pass is the exception - it is bought once, for ever, and the server turns
         /// that one debit into the entitlement that gates a currency payout, so it has to be
         /// able to say <em>which</em> spend it is looking at. See
         /// <see cref="SpendEntry.SeasonPassId"/>.
         /// </para>
         /// <para>
         /// A duplicate is refused rather than queued twice. The pending list is the only place
-        /// this can check — a confirmed spend is inside <see cref="SpentBaseline"/> and its id
-        /// is gone — so it is a guard against a double tap rather than against a repurchase,
+        /// this can check - a confirmed spend is inside <see cref="SpentBaseline"/> and its id
+        /// is gone - so it is a guard against a double tap rather than against a repurchase,
         /// and the caller's own entitlement check is what stops the second buy.
         /// </para>
         /// </summary>
@@ -556,7 +556,7 @@ namespace GlimmerGrove.Persistence
         /// </para>
         /// <para>
         /// It also returns false once the server has confirmed the award and folded it
-        /// into the baseline — the id is gone from the queue by then, so
+        /// into the baseline - the id is gone from the queue by then, so
         /// <see cref="HasGranted"/> would say no. That is why a caller that needs to know
         /// whether something was <em>ever</em> claimed must ask its own state, not this.
         /// For the daily chests that state is the claimed count, which the day key resets.
@@ -598,7 +598,7 @@ namespace GlimmerGrove.Persistence
         {
             // A claim the server refused is dropped, and the balance it was inflating goes
             // with it. Before the confirmed ids, so an id that somehow appears in both lists
-            // is dropped either way — a refusal is the stronger answer.
+            // is dropped either way - a refusal is the stronger answer.
             if (rejectedGrantIds != null && rejectedGrantIds.Count > 0)
             {
                 for (int i = _pendingGrants.Count - 1; i >= 0; i--)
@@ -606,8 +606,8 @@ namespace GlimmerGrove.Persistence
             }
 
             // A debit the server refused is dropped the same way, and the balance it took
-            // comes back. A refusal here is permanent — unaffordable on the server's figures,
-            // or a pass underpaid or unsold — so an entry kept would be resubmitted on every
+            // comes back. A refusal here is permanent - unaffordable on the server's figures,
+            // or a pass underpaid or unsold - so an entry kept would be resubmitted on every
             // sync for the life of the account (invariant 13a) while the thing it paid for went
             // on drawing as bought. Announced after it is gone, so a listener reading the
             // balance sees the money already back; whatever the debit bought listens for its
@@ -635,14 +635,14 @@ namespace GlimmerGrove.Persistence
             if (confirmedThroughUnix > ConfirmedThroughUnix) ConfirmedThroughUnix = confirmedThroughUnix;
 
             // The server keeps its own floor under derived earnings, and it is the one
-            // that governs what can actually be spent. Adopting it — rather than each
-            // side keeping its own — is what stops the game showing a balance the
+            // that governs what can actually be spent. Adopting it - rather than each
+            // side keeping its own - is what stops the game showing a balance the
             // server will not let the player use.
             RaiseEarnedHighWater(earnedFloor);
 
             // Awards the server has recorded are inside `grantedBaseline` now. Dropping
-            // them here is what stops a chest being counted twice — once in the queue and
-            // once in the baseline — for the rest of the account's life.
+            // them here is what stops a chest being counted twice - once in the queue and
+            // once in the baseline - for the rest of the account's life.
             if (confirmedGrantIds != null && confirmedGrantIds.Count > 0)
             {
                 for (int i = _pendingGrants.Count - 1; i >= 0; i--)
@@ -716,7 +716,7 @@ namespace GlimmerGrove.Persistence
         /// Awards are deliberately <b>not</b> pruned this way, and the asymmetry is the
         /// point. For a debit, guessing wrong in the conservative direction means charging
         /// a player late; for an award it means silently deleting money they were given.
-        /// So an award leaves the queue only when the server names its id — which is safe
+        /// So an award leaves the queue only when the server names its id - which is safe
         /// to wait for, because the id is derived and resubmitting it forever costs
         /// nothing but a few bytes.
         /// </para>

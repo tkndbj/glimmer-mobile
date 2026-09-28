@@ -8,7 +8,7 @@ namespace GlimmerGrove.Tests
     /// The season calendar: what a mark count adds up to, and what the reader refuses.
     ///
     /// <para>
-    /// These are the arithmetic half — <see cref="EventLedger"/> is a pure function of its
+    /// These are the arithmetic half - <see cref="EventLedger"/> is a pure function of its
     /// arguments, so every case here runs offline. What a season does to the <em>save</em>
     /// is <see cref="SeasonLedgerTests"/>, and what it does to a wallet is the shared
     /// vectors.
@@ -17,7 +17,7 @@ namespace GlimmerGrove.Tests
     /// <b>What is deliberately absent is any case about levels.</b> A season used to be
     /// graded on glades first cleared inside its window, which tied it to a named list of
     /// content: the modes those levels belonged to were withdrawn and the season went with
-    /// them. It is graded on marks now — see <see cref="GroveEvent"/> — and the tests that
+    /// them. It is graded on marks now - see <see cref="GroveEvent"/> - and the tests that
     /// proved the old rule are gone with the rule rather than kept as a record of it.
     /// </para>
     /// </summary>
@@ -102,7 +102,7 @@ namespace GlimmerGrove.Tests
         /// instruction to collect something no screen will give.
         ///
         /// <para>
-        /// <see cref="SeasonTrackProgress.Reached"/> is deliberately left alone — the page
+        /// <see cref="SeasonTrackProgress.Reached"/> is deliberately left alone - the page
         /// draws the paid column whether or not it is held, and how far up it the player has
         /// climbed is a true fact about the ladder. It is only <em>waiting</em>, which means
         /// "a tap would hand this over", that the entitlement decides.
@@ -125,7 +125,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The free column is open to everybody, and a pass nobody bought takes nothing off
-        /// it. The failure this guards is an over-correction — gating the wrong track would
+        /// it. The failure this guards is an over-correction - gating the wrong track would
         /// hide a chest a player has genuinely earned.
         /// </summary>
         [Test]
@@ -173,7 +173,7 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(1, forged.Rungs);
             Assert.AreEqual(1, forged.Free.Claimed);
             Assert.AreEqual(0, forged.Free.Waiting);
-            Assert.AreEqual(1, forged.Pass.Claimed, "a clamp, not a refusal — the rung was reached");
+            Assert.AreEqual(1, forged.Pass.Claimed, "a clamp, not a refusal - the rung was reached");
 
             Assert.IsFalse(EventLedger.IsClaimable(Season(), Season().Milestones[0],
                                                    SeasonTrack.Free, 10, int.MaxValue, passHeld: true));
@@ -272,7 +272,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// A paid column with a hole in it is a player looking at what they bought and
-        /// seeing nothing — so a season that sells a pass has to pay on every rung of it.
+        /// seeing nothing - so a season that sells a pass has to pay on every rung of it.
         /// </summary>
         [Test]
         public void ASeasonSellingAPassMustPayOnEveryRungOfIt()
@@ -304,7 +304,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// An icon is carried through untouched, and an absent one is empty rather than null.
         ///
-        /// Domain deliberately has no list of the marks that exist — that is a question about
+        /// Domain deliberately has no list of the marks that exist - that is a question about
         /// what has been drawn, and it is answered in Presentation by <c>SeasonCrest</c>. So the
         /// only thing checkable here is that the string survives the trip.
         /// </summary>
@@ -355,7 +355,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// A "limited time" that outlives interest in it is content with a countdown
-        /// attached — and a window authored with a typo'd year is exactly that.
+        /// attached - and a window authored with a typo'd year is exactly that.
         /// </summary>
         [Test]
         public void AnAbsurdlyLongWindowIsRefused()

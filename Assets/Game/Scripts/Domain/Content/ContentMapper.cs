@@ -8,8 +8,8 @@ namespace GlimmerGrove.Content
     ///
     /// Every rejection is reported rather than thrown. Content can arrive from a CDN,
     /// so this layer treats it as hostile input: one malformed level is dropped and
-    /// named, and the rest of the chapter still loads. The alternative — an exception
-    /// on a background thread three days after a content drop — is how live games
+    /// named, and the rest of the chapter still loads. The alternative - an exception
+    /// on a background thread three days after a content drop - is how live games
     /// lose a weekend.
     ///
     /// Problems go to a plain collection rather than to a particular builder, because
@@ -21,7 +21,7 @@ namespace GlimmerGrove.Content
         /// <summary>
         /// Fallbacks for a chapter that does not state its own colours. Written as hex
         /// here rather than pulled from the UI palette, because content must be
-        /// readable and checkable without a renderer — the build gate parses every
+        /// readable and checkable without a renderer - the build gate parses every
         /// chapter with no UI assembly loaded at all.
         /// </summary>
         const string DefaultAccentHex = "#FFC93C";
@@ -72,7 +72,7 @@ namespace GlimmerGrove.Content
             }
 
             // Order lives in the manifest. A body carrying one is a stale file whose
-            // author believes a number that does nothing — say so rather than discard it.
+            // author believes a number that does nothing - say so rather than discard it.
             if (dto.order != 0)
                 problems.Add($"chapter '{chapterId}' sets \"order\": {dto.order} in its body; " +
                              "order belongs in manifest.json and this value is ignored");
@@ -108,7 +108,7 @@ namespace GlimmerGrove.Content
         /// <para>
         /// <b>No branch per mode.</b> The registry is asked which mode claims the level's
         /// authored block, and that mode reads it and tunes it. Adding a mode therefore adds
-        /// nothing here — which is the whole reason this file used to grow a clause every time
+        /// nothing here - which is the whole reason this file used to grow a clause every time
         /// and had a comment explaining which of two blocks to look at first.
         /// </para>
         /// </summary>
@@ -159,7 +159,7 @@ namespace GlimmerGrove.Content
         /// how a board is read.</b> A board that will not parse is a level nobody can play, so
         /// the mapper refuses it and the build gate says why. A line whose speaker is misspelt
         /// is a sentence nobody hears, and losing it is strictly better than losing the level it
-        /// was written for — a story ships ahead of the art it names exactly as content ships
+        /// was written for - a story ships ahead of the art it names exactly as content ships
         /// ahead of builds. What stops a typo reaching a player is the build gate, which reads
         /// the same file and <em>errors</em> on every one of these; this is the runtime half,
         /// and its job is to be unable to break a run.

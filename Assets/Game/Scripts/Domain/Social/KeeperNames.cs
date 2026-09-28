@@ -18,7 +18,7 @@ namespace GlimmerGrove.Social
         Taken,
 
         /// <summary>
-        /// The server will not publish it — too short once folded, or the word filter.
+        /// The server will not publish it - too short once folded, or the word filter.
         ///
         /// Permanent, and the one outcome the client must not retry (invariant 13a). The
         /// player keeps the name on their own screens regardless.
@@ -32,7 +32,7 @@ namespace GlimmerGrove.Social
         /// Nothing was adjudicated: no backend, no session, or no network.
         ///
         /// <b>Not a refusal, and the rename goes ahead anyway.</b> The name is stored locally
-        /// and the next publish claims it — see <c>functions/src/index.ts</c>. Blocking a
+        /// and the next publish claims it - see <c>functions/src/index.ts</c>. Blocking a
         /// rename on reachability would make the one thing in this game a player does about
         /// their own identity the only thing that needs a signal.
         /// </summary>
@@ -66,7 +66,7 @@ namespace GlimmerGrove.Social
     ///
     /// <para>
     /// <b>Two calls with deliberately different costs.</b> <see cref="CheckAsync"/> is a
-    /// direct document read — one read, no function invocation, no index — because it happens
+    /// direct document read - one read, no function invocation, no index - because it happens
     /// while somebody is typing and is the only part of this feature that could ever be
     /// expensive. <see cref="ClaimAsync"/> is a callable, because taking a name has to be
     /// adjudicated in a transaction and happens once or twice in the life of an account. That
@@ -74,15 +74,15 @@ namespace GlimmerGrove.Social
     /// </para>
     /// <para>
     /// <b>Uniqueness is a rule about the <em>published</em> name, not about the save.</b>
-    /// <c>wallet.displayName</c> stays exactly what it was — a preference, merged by recency,
-    /// stamped by <c>displayNameSetUnix</c> (invariant 11c) — because a global fact cannot be
+    /// <c>wallet.displayName</c> stays exactly what it was - a preference, merged by recency,
+    /// stamped by <c>displayNameSetUnix</c> (invariant 11c) - because a global fact cannot be
     /// enforced by a merge between two devices. So the name joins invariant 13's fourth clause:
     /// the client's copy is what its own screens draw, and the server's reservation is what a
     /// stranger sees. Nothing about this adds a field to the save file.
     /// </para>
     /// <para>
-    /// <b>Every call is best-effort and nothing in the game waits on one.</b> With no backend —
-    /// a build with no Firebase, a player with no signal — there is no uniqueness and renaming
+    /// <b>Every call is best-effort and nothing in the game waits on one.</b> With no backend -
+    /// a build with no Firebase, a player with no signal - there is no uniqueness and renaming
     /// works exactly as it always did, which is the same stance <see cref="GroveBoard"/> takes
     /// towards the boards themselves.
     /// </para>
@@ -104,7 +104,7 @@ namespace GlimmerGrove.Social
         ///
         /// <para>
         /// One document read against a collection the client may <c>get</c> and may never
-        /// <c>list</c> — so a player can ask about a name they have typed and nobody can walk
+        /// <c>list</c> - so a player can ask about a name they have typed and nobody can walk
         /// the reservations. An absent document is success with "free", which is the ordinary
         /// answer and the one that must not cost anything.
         /// </para>

@@ -13,7 +13,7 @@ namespace GlimmerGrove.Daily
     /// makes the contents a fact about that chest rather than about the moment it was
     /// tapped, so the reward is identical however many times the app dies first.</item>
     /// <item><b>It must be reproducible on the server.</b> Currency that was given rather
-    /// than earned is server-owned — the client may never raise its own granted balance —
+    /// than earned is server-owned - the client may never raise its own granted balance -
     /// so the server has to be able to work out what a chest contained without being told
     /// by the client. It recomputes this sequence from the same three inputs and grants
     /// its own answer. That is why the algorithm is written out here in full and pinned
@@ -22,7 +22,7 @@ namespace GlimmerGrove.Daily
     /// <item><b>It must be reproducible in JavaScript.</b> Everything below is 32-bit
     /// integer arithmetic, which JavaScript does natively and exactly. Anything wider
     /// would land in the middle of the 53-bit float mantissa and the two sides would
-    /// diverge on some inputs and not others — the worst possible failure for money.</item>
+    /// diverge on some inputs and not others - the worst possible failure for money.</item>
     /// </list>
     /// </summary>
     public struct ChestRandom
@@ -55,7 +55,7 @@ namespace GlimmerGrove.Daily
 
             // xorshift32 has one fixed point, and it is zero. A seed that lands there
             // would return zero forever, which is a jackpot or a wooden spoon depending
-            // on the table — either way it is not a one-in-four-billion bug worth having.
+            // on the table - either way it is not a one-in-four-billion bug worth having.
             _state = hash == 0u ? FnvOffsetBasis : hash;
         }
 
@@ -63,7 +63,7 @@ namespace GlimmerGrove.Daily
         /// Seeds from a player and a named subject rather than from a day and an index.
         ///
         /// <para>
-        /// The shape a reward keyed to a <em>thing</em> rather than to a date needs — the
+        /// The shape a reward keyed to a <em>thing</em> rather than to a date needs - the
         /// golden bonus on a glade is the first, seeded from the level id. The layout is
         /// deliberately different from the chest constructor's rather than reusing it with
         /// the id stringified, so that no chest seed and no subject seed can ever collide
@@ -92,7 +92,7 @@ namespace GlimmerGrove.Daily
 
         /// <summary>
         /// FNV-1a over the UTF-16 code units of a string, one byte at a time, low byte
-        /// first. Player keys are ASCII ids, so this is the same as hashing the bytes —
+        /// first. Player keys are ASCII ids, so this is the same as hashing the bytes -
         /// it is spelled out per code unit so a non-ASCII key can never make the two
         /// implementations disagree about what "the bytes" were.
         /// </summary>
@@ -140,7 +140,7 @@ namespace GlimmerGrove.Daily
         ///
         /// Plain modulo, with the bias that implies. The bias is at most one part in
         /// 2^32 / bound, and every bound this is called with is a weight total in the
-        /// low hundreds — so the skew is far below the resolution of any odds a player
+        /// low hundreds - so the skew is far below the resolution of any odds a player
         /// or a regulator is shown. Rejection sampling would remove it and would add a
         /// loop whose iteration count both implementations would have to match exactly,
         /// which is a real risk traded for an imaginary one.

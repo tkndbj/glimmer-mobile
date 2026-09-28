@@ -10,15 +10,15 @@ namespace GlimmerGrove.Tests
     /// The rule this exists to keep is the one a tablet broke: every layout in this game is a
     /// vertical stack of fixed-unit chrome, the canvas is width-matched, and a 4:3 display
     /// therefore hands that stack 1440 units of height where a phone hands it 2340. Nothing
-    /// could see it — no constant is wrong, no compile fails, no validator reads Presentation,
-    /// and a screenshot on a phone is correct — so it was reported from an iPad as everything
+    /// could see it - no constant is wrong, no compile fails, no validator reads Presentation,
+    /// and a screenshot on a phone is correct - so it was reported from an iPad as everything
     /// overlapping.
     /// </para>
     /// <para>
     /// The cases below are the ones that matter: that every real phone comes back untouched
     /// (the promise the change was made under), that every real tablet gets the height the
-    /// layouts were built against, and that the two numbers the rest of the game reads —
-    /// <see cref="CanvasFit.ShortestCanvas"/> and the hub's own budget — are still true of what
+    /// layouts were built against, and that the two numbers the rest of the game reads -
+    /// <see cref="CanvasFit.ShortestCanvas"/> and the hub's own budget - are still true of what
     /// the function actually returns.
     /// </para>
     /// </summary>
@@ -63,7 +63,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// The squarest phone that ships is 16:9, and it is the one closest to the threshold —
+        /// The squarest phone that ships is 16:9, and it is the one closest to the threshold -
         /// so it is the case a floor set carelessly would take with it.
         /// </summary>
         [Test]
@@ -93,7 +93,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A canvas is only ever <em>wider</em> than a phone's, never narrower — the whole game
+        /// A canvas is only ever <em>wider</em> than a phone's, never narrower - the whole game
         /// is laid out in boxes up to 1080 units across (a modal is 960), and a canvas narrower
         /// than that would cut them off rather than shrink them.
         /// </summary>
@@ -162,7 +162,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// The same display always answers the same thing, whatever units it is measured in — a
+        /// The same display always answers the same thing, whatever units it is measured in - a
         /// canvas that depended on a device's pixel count rather than its shape would move under
         /// a player switching to a lower render scale.
         /// </summary>
@@ -177,7 +177,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// Squarer means smaller, monotonically — a wider canvas is the same interface drawn
+        /// Squarer means smaller, monotonically - a wider canvas is the same interface drawn
         /// smaller, so the width may only ever rise as the display squares up. A rule with a
         /// dip in it would draw one tablet larger than a squarer one for no reason anybody
         /// could name.

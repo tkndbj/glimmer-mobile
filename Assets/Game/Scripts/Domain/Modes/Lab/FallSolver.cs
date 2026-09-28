@@ -28,7 +28,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// The greedy policy: take the drop that bursts the most motes this turn, preferring one
         /// that enriches, then the leftmost. It is the honest proxy for "does this board ask
-        /// anything" — if thoughtlessness clears it, the answer is no. Reported rather than
+        /// anything" - if thoughtlessness clears it, the answer is no. Reported rather than
         /// gated, because on a chapter's opening levels thoughtlessness is <em>supposed</em> to
         /// work: that is what teaching the verb looks like.
         /// </para>
@@ -95,22 +95,22 @@ namespace GlimmerGrove.Modes
     /// <b>Par is searched, never authored</b> (invariant 5). A typed par is the failure that has
     /// no symptom: one too high hands three stars to a careless run for ever, one too low makes
     /// them unreachable, and neither is visible in the file that caused it. Everything a
-    /// Lightfall level is graded by falls out of this one number — the two star lines and the
-    /// supply it is dealt are all multiples of it — so a level authors a well, a fill and a
+    /// Lightfall level is graded by falls out of this one number - the two star lines and the
+    /// supply it is dealt are all multiples of it - so a level authors a well, a fill and a
     /// procession and no difficulty number at all.
     /// </para>
     /// <para>
     /// <b>It plays the game rather than modelling it.</b> Every position is reached by calling
     /// <c>FallBoard.Drop</c>, the same method the screen calls, with the step list left null so
     /// nothing is allocated to describe waves nobody will watch. A second implementation of the
-    /// burst-and-wash rule is the thing invariant 9a exists to refuse — and this rule is subtle
+    /// burst-and-wash rule is the thing invariant 9a exists to refuse - and this rule is subtle
     /// enough (the wash is read before the fall, from the positions the bursting motes stood in)
     /// that a copy would be wrong within a drop.
     /// </para>
     /// <para>
     /// <b>Breadth-first, and that is the shape the rule earns.</b> The procession is fixed, so
     /// the colour of drop <c>d</c> is known before the search starts and depth <em>is</em> the
-    /// drop count — there is no iterative deepening to do. A burst chain destroys a large part
+    /// drop count - there is no iterative deepening to do. A burst chain destroys a large part
     /// of a well in one drop, so par stays small (single figures on everything that ships) and
     /// positions converge hard: a hundred orders of the same handful of useful drops arrive at
     /// the same board and are counted once.
@@ -118,7 +118,7 @@ namespace GlimmerGrove.Modes
     /// <para>
     /// <b>It runs on the player's phone, at level load, once.</b> <see cref="NodeBudget"/> is
     /// what makes that safe, and <c>FallValidator</c> refuses to ship a well that comes near it
-    /// — so a board that cannot be proved is a build failure rather than a hitch on somebody's
+    /// - so a board that cannot be proved is a build failure rather than a hitch on somebody's
     /// device. See <c>FallSetup</c> for the cache, and for what happens in the case the build
     /// gate is supposed to have made impossible.
     /// </para>
@@ -253,7 +253,7 @@ namespace GlimmerGrove.Modes
                             // Already reachable in this many drops or fewer. Counting the extra
                             // orders that arrive here would be counting routes to a position,
                             // not routes to an answer, so only the first depth to find it holds
-                            // a path count — which is the depth par is read at.
+                            // a path count - which is the depth par is read at.
                             if (countWays && index.TryGetValue(key, out int at))
                                 nextPaths[at] = nextPaths[at] > MostWays - arrivals
                                               ? MostWays : nextPaths[at] + arrivals;
@@ -289,7 +289,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// Read off the authored position with every lens treated as though it were full, which
-        /// is the only cheap way to ask the question at all — actually filling one takes three
+        /// is the only cheap way to ask the question at all - actually filling one takes three
         /// drops of three colours, so no single trial drop can ever set one off and the old
         /// reading (drop everything once, watch the beams) would have answered nought on every
         /// board in the chapter.

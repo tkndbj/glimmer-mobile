@@ -15,7 +15,7 @@ namespace GlimmerGrove
     /// What the loadout's two shelves draw, and the one transaction each of them can do.
     ///
     /// <para>
-    /// <b>The offer is asked of the ledger and never worked out here</b> — <c>WardLedger.OfferFor</c>
+    /// <b>The offer is asked of the ledger and never worked out here</b> - <c>WardLedger.OfferFor</c>
     /// asks the keeper gate before the price (invariant 15a's ordering), so a player both a rung
     /// short and out of credits is told about the wall money cannot climb rather than being sold a
     /// video that could not have bought it.
@@ -181,7 +181,7 @@ namespace GlimmerGrove
         /// wall behind it.
         ///
         /// <para>
-        /// <b>Neon is two things, not a bright colour.</b> One is the bleed — the same light
+        /// <b>Neon is two things, not a bright colour.</b> One is the bleed - the same light
         /// spilled round the letters and pooled behind the word, so the core reads as the thing
         /// lighting the rest rather than as a caption in a loud ink. The other is that a real
         /// tube is never one hue along its length, which is what the rules are: magenta out one
@@ -219,7 +219,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>A label between two rules rather than a plate</b>, because this is punctuation and
         /// not a control. A filled bar the width of the grid would read as another row of the
-        /// shelf — one a player could try to tap — where a caption on a line reads as a heading
+        /// shelf - one a player could try to tap - where a caption on a line reads as a heading
         /// the way it does in every list they have ever scrolled.
         /// </para>
         /// <para>
@@ -238,7 +238,7 @@ namespace GlimmerGrove
             bool neon = tier == WardTier.Count;
 
             // <b>White, and on the neon band that is the reading rather than an undercoat.</b>
-            // The word was a magenta-to-cyan ramp outlined in violet — neon on neon, so the
+            // The word was a magenta-to-cyan ramp outlined in violet - neon on neon, so the
             // letters and their bleed were the same brightness and the caption read as a
             // coloured smudge at a glance. A tube is a white-hot core in a coloured sheath, so
             // the core is white and every hue moved outward: the bleed, the halo and the rules.
@@ -250,8 +250,8 @@ namespace GlimmerGrove
             name.raycastTarget = false;
 
             // **Measured rather than assumed.** The clearance either side used to be a constant
-            // that happened to clear a 30pt "LEGENDARY" — the longest thing any of these
-            // headings says — so the caption growing, or a translation being wider than the
+            // that happened to clear a 30pt "LEGENDARY" - the longest thing any of these
+            // headings says - so the caption growing, or a translation being wider than the
             // English, would have run the rules through the letters with nothing able to see it.
             // uGUI answers `preferredWidth` from the font's cached character info in the same
             // frame (`UIKit.Arc` rides the same fact), so the line is fitted to the word that is
@@ -263,7 +263,7 @@ namespace GlimmerGrove
             {
                 // The sheath: Unity's `Outline` draws the glyphs again at the four corners,
                 // which at this distance is a band round every stem rather than a hairline on
-                // it. <b>Opaque where it used to be .70</b> — it is the colour now, not a
+                // it. <b>Opaque where it used to be .70</b> - it is the colour now, not a
                 // tint over a colour that was already there, and a translucent border on white
                 // letters is a grey one.
                 var bleed = name.gameObject.AddComponent<Outline>();
@@ -315,7 +315,7 @@ namespace GlimmerGrove
                 UIKit.StretchTo((RectTransform)edge.transform, -2, -2, -2, -2);
             }
 
-            // The picture. **The real turret, worn in the colour of the seat being filled** —
+            // The picture. **The real turret, worn in the colour of the seat being filled** -
             // so tapping a different slot turns the whole shelf that colour, which is the mode's
             // central rule shown in one gesture rather than explained: a turret has no colour of
             // its own, and the colour is the seat it is put in. It answers the question somebody
@@ -330,11 +330,11 @@ namespace GlimmerGrove
             // **Placed by its centre, and it is worth saying why the old numbers looked
             // plausible.** `UIKit.Box` pivots at the middle whatever it is anchored to, so a
             // 179-tall picture anchored to the cell's top edge at -22 had 68 units of itself
-            // above the cell — the turret was drawn high, clipped by nothing (uGUI does not
+            // above the cell - the turret was drawn high, clipped by nothing (uGUI does not
             // clip), and the gap it left below read as a picture that had slipped up. Every
             // number under here is now `margin + half the box`.
             // Full colour whichever it is: the veil below does the dimming, and a tint on the
-            // picture only ever *darkens* it — which on a shelf whose whole job is telling twenty
+            // picture only ever *darkens* it - which on a shelf whose whole job is telling twenty
             // silhouettes apart is the one thing not to do (the grove shop's own lesson).
             var icon = UIKit.Img("Turret", cell, AssetLibrary.Sprite(AssetManifest.WardArt(model, _slot)),
                                  Color.white, new Vector2(IconBox, IconBox),
@@ -347,7 +347,7 @@ namespace GlimmerGrove
             if (!held)
             {
                 // **The veil, and where it sits in the order is the whole of it.** uGUI paints in
-                // sibling order, so this goes after the picture and before the padlock — and the
+                // sibling order, so this goes after the picture and before the padlock - and the
                 // name, the note and the footer are all built after it, so the price stays at
                 // full strength. It covers the plate rather than the picture alone, which is what
                 // says the *cell* is not yours rather than that its turret is faded.
@@ -358,13 +358,13 @@ namespace GlimmerGrove
 
                 // **The padlock is the keeper wall and nothing else, which is the owner's
                 // decision and a narrowing.** It used to be drawn on `held`, on the argument that
-                // what it says is "this one is not yours" — true of a turret behind a wall and of
+                // what it says is "this one is not yours" - true of a turret behind a wall and of
                 // one a player could buy this second. Played, that is a shelf of padlocks on a
                 // screen whose whole job is selling: a turret they have earned and can afford
                 // wears the same picture as one they cannot reach for thirty levels, so the lock
                 // stops meaning anything and the price under it is read as decoration too.
                 //
-                // So a wall gets the lock and everything else gets the veil alone — the veil is
+                // So a wall gets the lock and everything else gets the veil alone - the veil is
                 // what says "not yours yet", and the lock is what says "and not for money".
                 //
                 // Built after the picture, so it draws over it: uGUI paints in sibling order.
@@ -396,7 +396,7 @@ namespace GlimmerGrove
             // outright, so it drew held-and-starred on all four seats off one payment and wore a
             // corner chip counting its copies; it is bought per seat like the twenty under it,
             // so the chip is gone and this cell says the same thing about every rung of the
-            // shelf — bought here, this far up here.
+            // shelf - bought here, this far up here.
             if (held)
                 WardStarRow.Build(cell, new Vector2(0f, -StarsY),
                                   WardStarLedger.StarsOf(model, WardLine.Colours[_slot]),
@@ -431,14 +431,14 @@ namespace GlimmerGrove
                 case WardPurchaseState.AlreadyHeld:
                     // A turret already held on this seat draws no strip at all: the star row is
                     // what this band says about it, and the two were drawn together for the
-                    // first time when a legendary's copy count went here — `render_loadout.py`
+                    // first time when a legendary's copy count went here - `render_loadout.py`
                     // drew the strip straight through the stars, and nothing else could see it.
                     return;
 
                 case WardPurchaseState.LevelLocked:
                     // **The level, never the word LOCKED**, which is the owner's rule and the
                     // same one the padlock above follows. There were two refusals here and the
-                    // coarser of them read "Locked" — one word over a cell, which says a player
+                    // coarser of them read "Locked" - one word over a cell, which says a player
                     // cannot have this and not what would change that. "Level 26" is the same
                     // length, is the actual condition, and reads against its neighbours as a
                     // ladder rather than as a row of identical walls.
@@ -454,7 +454,7 @@ namespace GlimmerGrove
                 default:
                     // **`coin` is "there is a price here", `gems` is "and it is in gems".** It
                     // was only ever set from `gems`, so a turret priced in credits drew its
-                    // number with no glyph beside it — half the roster, and the half whose
+                    // number with no glyph beside it - half the roster, and the half whose
                     // currency a player cannot guess from the number.
                     text = offer.Cost.ToString("N0");
                     ink = offer.State == WardPurchaseState.Ready
@@ -484,13 +484,13 @@ namespace GlimmerGrove
             // **Down to 14 rather than 20, because this strip now sometimes holds words.** A price
             // is four characters and a wall is "Level 26"; a `UIKit.Label` that overflows is not
             // clipped by anything (invariant 37n), so the floor is what stops it being drawn over
-            // the plate's own edge. It was lowered for a longer caption still — a sealed rung read
-            // "After Lighthouse" — and it stays low, because the strip has held a sentence once.
+            // the plate's own edge. It was lowered for a longer caption still - a sealed rung read
+            // "After Lighthouse" - and it stays low, because the strip has held a sentence once.
             UIKit.Shrinkable(label, Pt(20f * Scale));
 
             if (!coin) return;
 
-            // The gem's own icon, or the hub's spinning coin — which is a reel rather than a
+            // The gem's own icon, or the hub's spinning coin - which is a reel rather than a
             // sprite, so it is attached rather than named (`ShopScreen.BalancePill`'s idiom: the
             // pile on a card is made of this coin, so a price and a purse read as one currency).
             var glyph = UIKit.Img("Coin", box, gems ? Art.S("Ui/ic_gem") : null, Color.white,
@@ -507,7 +507,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Standing used to be the plain tap and is now one tap deeper, which is a real cost
         /// paid for a real reason.</b> A held turret went straight onto the line and an unheld one
-        /// opened a price — so the only turrets a player could ever *see* firing were the ones they
+        /// opened a price - so the only turrets a player could ever *see* firing were the ones they
         /// had already bought, and the decision this shelf exists to ask them to make was being
         /// made from a thumbnail. <c>WardPreviewOverlay</c> answers both, and standing is still one
         /// tap from inside it.
@@ -589,7 +589,7 @@ namespace GlimmerGrove
                                     0f, 2f);
             UIKit.Shrinkable(name, Pt(22f * Scale));
 
-            // How many are in hand, top-right, where the bar's own badge is — so the two readouts
+            // How many are in hand, top-right, where the bar's own badge is - so the two readouts
             // of one number are in the same corner of the same shape (invariant 39d's rule about
             // where a count goes).
             if (held > 0)

@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace GlimmerGrove
 {
     /// <summary>
-    /// A reward chip — a glyph, a number, and the flight of tokens that puts the number
+    /// A reward chip - a glyph, a number, and the flight of tokens that puts the number
     /// there.
     ///
     /// <para>
@@ -15,7 +15,7 @@ namespace GlimmerGrove
     /// game telling the player what they won; a number that rises because seven coins just
     /// flew out of the stars they earned and landed on it is the player watching the
     /// transaction happen. The information is identical and the two do not feel remotely
-    /// alike — each landing is a discrete little event with its own bump, click and rising
+    /// alike - each landing is a discrete little event with its own bump, click and rising
     /// pitch, and seven small arrivals land harder than one smooth curve.
     /// </para>
     /// <para>
@@ -29,7 +29,7 @@ namespace GlimmerGrove
     /// The token budget is fixed rather than one per unit, for the reason
     /// <see cref="Roll.Ticks"/> gives: a hundred and fifty coins at one coin each is not a
     /// flourish, it is a swarm, and the celebration would change shape every time the
-    /// economy was retuned. The one exception is a prize smaller than the budget — three
+    /// economy was retuned. The one exception is a prize smaller than the budget - three
     /// coins throw three coins, because throwing seven and landing them in fractions is the
     /// one case where the count on screen and the count in the air visibly disagree.
     /// </para>
@@ -50,8 +50,8 @@ namespace GlimmerGrove
         /// The icon the tokens fly into, drawn exactly as it was handed over.
         ///
         /// Public because the glyph is the caller's to finish, and this class has no
-        /// business knowing what a reward is: credits have no single sprite — they are the
-        /// spinning coin flipbook, attached through <c>RewardArt.Glyph</c> — and a generated
+        /// business knowing what a reward is: credits have no single sprite - they are the
+        /// spinning coin flipbook, attached through <c>RewardArt.Glyph</c> - and a generated
         /// shape has no colour of its own and must be tinted or it draws white.
         /// </summary>
         public Image Glyph { get; private set; }
@@ -66,7 +66,7 @@ namespace GlimmerGrove
         /// <para>
         /// A chip without a glyph is not a degenerate case, it is the one the bonus wheel's
         /// payoff wants: the prize is already drawn, three times the size, immediately above the
-        /// figure — so a second coin beside the number is the same thing said twice, and it
+        /// figure - so a second coin beside the number is the same thing said twice, and it
         /// pushes the figure off the panel's centre line to make room for itself. Expressed here
         /// rather than by hiding the <c>Image</c> at the call site, because the seat is not only
         /// a picture: it is where the flight lands, where the ping breaks and what the last
@@ -93,14 +93,14 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <see cref="LeadIn"/> is the beat the chip has to itself before anything is thrown,
-        /// so the tokens arrive somewhere that already exists — a chip that pops in carrying
+        /// so the tokens arrive somewhere that already exists - a chip that pops in carrying
         /// its first coin reads as one event instead of a container being filled. It also
         /// keeps the first landing clear of the glyph's entrance, which owns the same
         /// localScale that <see cref="Land"/> punches.
         /// </para>
         /// <para>
         /// <see cref="LandingGap"/> is the one to be careful with. Spread thin the payout
-        /// drags, and packed tight the landings stop being separable — the number appears to
+        /// drags, and packed tight the landings stop being separable - the number appears to
         /// jump and the rising run of ticks turns into a rattle. About nine a second is where
         /// each one still registers as its own small event.
         /// </para>
@@ -112,7 +112,7 @@ namespace GlimmerGrove
         /// Nothing animates until <see cref="Play"/>.
         /// </summary>
         /// <param name="glyph">May be null for a caller that attaches a flipbook after.</param>
-        /// <param name="tint">The reward's own colour — the number, the glow and the sparks.</param>
+        /// <param name="tint">The reward's own colour - the number, the glow and the sparks.</param>
         /// <param name="token">What flies. One sprite, reused; these are transient.</param>
         /// <param name="tokenTint">
         /// White for art that is already coloured (a coin), the reward's colour for a
@@ -137,7 +137,7 @@ namespace GlimmerGrove
 
             p.Root = UIKit.Box(name, parent, new Vector2(368f, 112f), anchor, pos);
 
-            // A glyph of no size is a chip that is only a figure — see _seat. The glow goes with
+            // A glyph of no size is a chip that is only a figure - see _seat. The glow goes with
             // it: it is the light behind the glyph, and behind a number it is a smudge.
             bool wearsGlyph = glyphSize > 0f;
 
@@ -154,11 +154,11 @@ namespace GlimmerGrove
             }
 
             // Not Shrinkable, deliberately. Best-fit re-measures on every text change, so a
-            // number climbing from 0 to 1,240 would resize itself seven times on the way —
+            // number climbing from 0 to 1,240 would resize itself seven times on the way -
             // and the box is sized for the digits rather than for a translated sentence, so
             // there is nothing here for it to save.
             // Beside the glyph where there is one, and on the chip's own centre line where there
-            // is not — a figure nudged 58 units right of centre to make room for something that
+            // is not - a figure nudged 58 units right of centre to make room for something that
             // is not drawn reads as a panel that has slipped.
             p.Number = UIKit.Titled("N", p.Root, format != null ? format(0) : "0", 54, tint,
                                     TextAnchor.MiddleCenter,
@@ -186,13 +186,13 @@ namespace GlimmerGrove
         /// <paramref name="origin"/> is the whole reason a chip reads as earnings rather
         /// than as a notification. On the victory panel it is the star row, so what the
         /// player sees is the stars they just landed turning into what those stars were
-        /// worth — a claim the game is actually making, since the reward is derived from
+        /// worth - a claim the game is actually making, since the reward is derived from
         /// exactly those stars.
         /// </para>
         /// </summary>
         /// <summary>
         /// How many tokens this chip will throw: the budget, or the prize itself when the
-        /// prize is smaller. Three coins throw three coins — throwing seven and landing them
+        /// prize is smaller. Three coins throw three coins - throwing seven and landing them
         /// in fractions is the one case where the count on screen and the count in the air
         /// visibly disagree.
         /// </summary>
@@ -211,7 +211,7 @@ namespace GlimmerGrove
             var space = Root.parent as RectTransform;
             if (space == null || origin == null) { Settle(); return; }
 
-            // Wakes up first — see LeadIn. Only a glyph gets the entrance: a number that springs
+            // Wakes up first - see LeadIn. Only a glyph gets the entrance: a number that springs
             // in before its first token has landed is a figure announcing itself, which is the
             // opposite of what this class is for.
             if (Glyph)
@@ -242,12 +242,12 @@ namespace GlimmerGrove
         ///
         /// The last landing writes <see cref="_total"/> itself rather than the interpolation,
         /// so a rounding error can never leave a reward reading one short of what was banked
-        /// — the same guarantee <see cref="Roll.Number"/> makes.
+        /// - the same guarantee <see cref="Roll.Number"/> makes.
         /// </summary>
         void Land()
         {
             // The chip can be gone before its last token arrives. The flight belongs to the
-            // token, not to the chip, and the panel under both can be dismissed mid-payout —
+            // token, not to the chip, and the panel under both can be dismissed mid-payout -
             // a player who taps NEXT GLADE while the coins are still in the air. Nothing is
             // lost by stopping: the number this would have moved went with the chip. Guarded
             // here as well as in Tween.Orphaned because Land is a *callback*, and the rule
@@ -265,7 +265,7 @@ namespace GlimmerGrove
                 Number.text = _format != null ? _format(shown) : shown.ToString();
 
                 // Reset before punching. Punch shares a channel, and a punch cancelled
-                // mid-swing leaves the scale where it stopped — seven of those in a row and
+                // mid-swing leaves the scale where it stopped - seven of those in a row and
                 // the number visibly drifts out of size.
                 Number.transform.localScale = Vector3.one;
                 Tween.Punch(Number.transform, last ? .3f : .13f, last ? .42f : .22f);
@@ -291,13 +291,13 @@ namespace GlimmerGrove
 
             // No haptic here, and it is a decision rather than an omission. A chip used to buzz
             // once as its last token landed, which on a two-chip payout is two buzzes inside a
-            // second — and Handheld.Vibrate is one fixed-length buzz on Android, so there is no
+            // second - and Handheld.Vibrate is one fixed-length buzz on Android, so there is no
             // way to make the second one lighter than the first. The victory panel is the only
             // caller, and it is a screen the player sees dozens of times a session; a buzz that
             // arrives that often stops being punctuation and becomes a tic.
         }
 
-        /// <summary>Expanding ring at the point of arrival — the impact, not the prize.</summary>
+        /// <summary>Expanding ring at the point of arrival - the impact, not the prize.</summary>
         void Ping(bool strong)
         {
             if (Root == null || _seat == null) return;

@@ -37,7 +37,7 @@ namespace GlimmerGrove.Content
         /// <para>
         /// Tiles rotate independently, so the minimum is the sum of the quarter turns each
         /// tile still owes. Par is therefore derivable, which is why the content format
-        /// lets authors omit it — a hand-typed par is one more thing that can silently be
+        /// lets authors omit it - a hand-typed par is one more thing that can silently be
         /// wrong.
         /// </para>
         /// <para>

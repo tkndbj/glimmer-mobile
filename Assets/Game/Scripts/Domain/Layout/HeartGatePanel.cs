@@ -5,7 +5,7 @@ namespace GlimmerGrove.Layout
     /// them.
     ///
     /// <para>
-    /// Centres, in canvas reference units measured <em>down</em> from the panel's top edge —
+    /// Centres, in canvas reference units measured <em>down</em> from the panel's top edge -
     /// the direction a panel is read in and the opposite of the sign <c>UIKit.Box</c> takes, so
     /// a caller negates once at the point of placement. A row that is not drawn reads
     /// <see cref="Absent"/>; ask <see cref="HasWatch"/> rather than testing the number.
@@ -34,7 +34,7 @@ namespace GlimmerGrove.Layout
         /// <para>
         /// With nothing standing behind the panel it is the shop, and it is always drawn:
         /// hearts sell for <em>gems</em>, which need no store connection and may already be in
-        /// hand. Over a run it is the rescue — gems for hearts, without leaving the board — and
+        /// hand. Over a run it is the rescue - gems for hearts, without leaving the board - and
         /// it is conditional, because that offer can genuinely not exist (no gems, no store to
         /// buy them from, a bar too full to take them, or the price withdrawn from content).
         /// One slot either way, because the rule that matters about it is the same: it goes
@@ -43,7 +43,7 @@ namespace GlimmerGrove.Layout
         /// </summary>
         public readonly float Paid;
 
-        /// <summary>Away. Always drawn — it is the exit that costs nothing.</summary>
+        /// <summary>Away. Always drawn - it is the exit that costs nothing.</summary>
         public readonly float Ok;
 
         /// <summary>How tall the panel has to be.</summary>
@@ -74,8 +74,8 @@ namespace GlimmerGrove.Layout
     /// </para>
     /// <para>
     /// <b>Two panels draw it and the arithmetic is shared rather than copied.</b>
-    /// <c>OutOfHeartsOverlay</c> is raised where nothing is standing behind it — a refused map
-    /// node, an event tile, the victory panel's next — so its paid row leaves for the shop.
+    /// <c>OutOfHeartsOverlay</c> is raised where nothing is standing behind it - a refused map
+    /// node, an event tile, the victory panel's next - so its paid row leaves for the shop.
     /// <c>RestartGateOverlay</c> is raised over a run in progress, where leaving would abandon
     /// that run without resolving it, so its paid row is the rescue and its gem shelf is
     /// stacked rather than navigated to (invariant 23). What the two share is every number
@@ -151,7 +151,7 @@ namespace GlimmerGrove.Layout
 
         /// <summary>
         /// The tallest this panel ever gets. Derived by asking every shape rather than reasoned
-        /// about, so a row added above cannot leave a stale number behind it — and so that a
+        /// about, so a row added above cannot leave a stale number behind it - and so that a
         /// second caller drawing a different combination cannot exceed a bound taken over the
         /// first caller's two.
         /// </summary>

@@ -10,8 +10,8 @@ namespace GlimmerGrove.Daily
     /// difference is deliberate: nothing persists a reward kind. Drops are recomputed
     /// from the day and the chest index every time they are needed, so no save file and
     /// no server document holds one of these, and reordering the members cannot move
-    /// anybody's history. The ids in the content file are strings for the usual reason —
-    /// see <see cref="ChestDropKinds"/> — and are mapped here on read.
+    /// anybody's history. The ids in the content file are strings for the usual reason -
+    /// see <see cref="ChestDropKinds"/> - and are mapped here on read.
     /// </summary>
     public enum ChestDropKind
     {
@@ -27,7 +27,7 @@ namespace GlimmerGrove.Daily
         /// Hearts, clamped at <see cref="HeartRules.Ceiling"/> like every other grant.
         ///
         /// <para>
-        /// A chest opened at a full bar now <em>keeps</em> its hearts — they stack past
+        /// A chest opened at a full bar now <em>keeps</em> its hearts - they stack past
         /// <see cref="HeartRules.RefillCap"/>, which is where the timer stops rather than
         /// where a player's holding ends. That closes the one place a chest could pay
         /// nothing at all, and it does so without touching the property the whole design
@@ -35,8 +35,8 @@ namespace GlimmerGrove.Daily
         /// what is granted never depends on how many hearts the player happened to hold.
         /// </para>
         /// <para>
-        /// A player sitting on fifty still loses the surplus, and the obvious kindness —
-        /// paying it out as credits instead — is still refused, for the original reason:
+        /// A player sitting on fifty still loses the surplus, and the obvious kindness -
+        /// paying it out as credits instead - is still refused, for the original reason:
         /// the payout would then depend on the player's holding, and the server has no view
         /// of that, so it could no longer recompute what a chest was worth.
         /// </para>
@@ -58,19 +58,19 @@ namespace GlimmerGrove.Daily
         /// and outlives the moment it was granted; this one lands on a
         /// <c>RunScreen.Tick</c> that belongs to a single screen and stops existing when
         /// that run resolves. So <c>RewardedAds.Apply</c> deliberately does nothing with it
-        /// and the caller applies it — Domain statics have no view of a live board, and
+        /// and the caller applies it - Domain statics have no view of a live board, and
         /// giving them one would be a far worse trade than the empty case.
         /// </para>
         /// <para>
         /// It is <b>not a chest drop</b>, and <c>DailyChestTable</c> refuses it. A chest is
         /// opened on the home screen where there is no run to extend, and a chest that could
-        /// roll one would pay a third of its players nothing — the exact failure the
+        /// roll one would pay a third of its players nothing - the exact failure the
         /// <see cref="Hearts"/> ceiling note is careful to avoid.
         /// </para>
         /// <para>
         /// Nothing about it reaches the server. It is not currency, so
         /// <c>adCurrencyOf</c> returns null for the placement that pays it and the signed
-        /// callback grants nothing — correct, and it needed no server change to be true.
+        /// callback grants nothing - correct, and it needed no server change to be true.
         /// </para>
         /// </summary>
         /// <summary>
@@ -80,7 +80,7 @@ namespace GlimmerGrove.Daily
         /// <para>
         /// Nothing produces it: the countdown was removed, so a run is ended and graded on
         /// turns alone, and <c>AdRewardTable</c> now refuses any transient kind. The member
-        /// stays because the values of this enum are a contract — they key the daily chest
+        /// stays because the values of this enum are a contract - they key the daily chest
         /// vectors both runtimes are pinned against (invariant 9c), so deleting one in the
         /// middle renumbers every kind after it and rerolls every unopened chest in the
         /// world. Retired in place, exactly as <c>DefeatReason.OutOfTime</c> is.
@@ -94,13 +94,13 @@ namespace GlimmerGrove.Daily
         /// <para>
         /// Shaped like <see cref="Hearts"/> rather than like <see cref="RunTime"/>: it
         /// outlives the run that earned it, it is not currency, and nothing about it reaches
-        /// the server — <c>adCurrencyOf</c> returns null for the placement that pays it and
+        /// the server - <c>adCurrencyOf</c> returns null for the placement that pays it and
         /// the signed callback grants nothing, which needed no server change to be true.
         /// </para>
         /// <para>
         /// The one thing it does not share with hearts is headroom. The shipped hint ceiling
         /// equals the refill cap, so a hint granted at a full pool is <em>refused</em> rather
-        /// than clamped — which makes asking <see cref="Persistence.Hints.IsAtCeiling"/>
+        /// than clamped - which makes asking <see cref="Persistence.Hints.IsAtCeiling"/>
         /// before offering one mandatory rather than polite. <c>RewardedAds.WouldBenefit</c>
         /// is where that is enforced.
         /// </para>
@@ -108,25 +108,25 @@ namespace GlimmerGrove.Daily
         Hints,
 
         /// <summary>
-        /// One utility for the account-wide bar — a firepot, a mending, a surge.
+        /// One utility for the account-wide bar - a firepot, a mending, a surge.
         ///
         /// <para>
         /// The first kind that is not fully described by <see cref="ChestDrop.Amount"/>: a chest
         /// has to say <em>which</em> one, so <see cref="ChestDrop.Item"/> carries the utility's
         /// permanent id. One kind and an id rather than a kind per utility, because the whole
-        /// point of the catalog is that a utility shipped next year is content — an enum member
+        /// point of the catalog is that a utility shipped next year is content - an enum member
         /// per item would make every addition a code change and a re-numbered contract
         /// (invariant 9c).
         /// </para>
         /// <para>
         /// Shaped like <see cref="Hints"/>: banked, not currency, and nothing about it reaches
         /// the server. That is safe rather than merely cheap because a utility cannot improve a
-        /// grade — see invariant 39 and <c>SiegeUtility</c> — so there is nothing here for an
+        /// grade - see invariant 39 and <c>SiegeUtility</c> - so there is nothing here for an
         /// attacker to want and nothing for the server to recompute.
         /// </para>
         /// <para>
         /// It has a ceiling and no headroom above it, exactly as hints do, so a grant at a full
-        /// bar is <em>refused</em> rather than clamped — which makes asking
+        /// bar is <em>refused</em> rather than clamped - which makes asking
         /// <c>UtilityLedger.RoomFor</c> before offering one mandatory rather than polite.
         /// </para>
         /// </summary>
@@ -134,7 +134,7 @@ namespace GlimmerGrove.Daily
 
         /// <summary>
         /// A window during which XP is paid at a higher rate. Amount is the duration in hours,
-        /// so the band is authored the way it reads — <see cref="HeartBoost"/>'s convention.
+        /// so the band is authored the way it reads - <see cref="HeartBoost"/>'s convention.
         ///
         /// <para>
         /// <b>Added last, and that is a rule rather than a habit.</b> The values of this enum are
@@ -145,7 +145,7 @@ namespace GlimmerGrove.Daily
         /// <para>
         /// Shaped like <see cref="HeartBoost"/>: banked, not currency, and nothing about it
         /// reaches the server as a <em>grant</em>. It differs from hints and utilities in one way
-        /// worth stating — it does reach a public number, because XP decides a keeper level and a
+        /// worth stating - it does reach a public number, because XP decides a keeper level and a
         /// keeper level is published (invariant 19a). What makes that safe is not that it is
         /// invisible but that it is bounded: the bonus it pays is clamped to a fraction of XP the
         /// account can prove, and it buys no currency at all. See <c>XpBoost</c>.
@@ -230,7 +230,7 @@ namespace GlimmerGrove.Daily
         /// Whether a kind is incomplete without <see cref="ChestDrop.Item"/>.
         ///
         /// Asked in one place so the reader, the roll and the grant cannot come to different
-        /// conclusions about what a well-formed band looks like — the rule
+        /// conclusions about what a well-formed band looks like - the rule
         /// <see cref="IsCurrency"/> already follows.
         /// </summary>
         public static bool NeedsItem(ChestDropKind kind) => kind == ChestDropKind.Utility;
@@ -242,7 +242,7 @@ namespace GlimmerGrove.Daily
              : string.Empty;
     }
 
-    /// <summary>One resolved reward: a kind, how much of it, and — for a kind that needs one —
+    /// <summary>One resolved reward: a kind, how much of it, and - for a kind that needs one -
     /// which thing.</summary>
     public readonly struct ChestDrop
     {
@@ -255,7 +255,7 @@ namespace GlimmerGrove.Daily
         /// <para>
         /// <b>Part of a drop's identity and not a payload beside it.</b> Two utilities in one
         /// chest are two drops that must not fold into each other, so
-        /// <see cref="SameAs"/> compares this as well as the kind — and the id a currency claim
+        /// <see cref="SameAs"/> compares this as well as the kind - and the id a currency claim
         /// is keyed on is unaffected, because a utility is never currency.
         /// </para>
         /// </summary>

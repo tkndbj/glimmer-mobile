@@ -13,7 +13,7 @@ namespace GlimmerGrove
     /// <b>The sheet, never the address book.</b> A referral that reads contacts is the one
     /// shape of the feature that costs a permission, a data-safety declaration and a review
     /// question on both stores, and invite spam is a classic pull. The share sheet needs no
-    /// permission and tells this game nothing about who the sentence went to — which is
+    /// permission and tells this game nothing about who the sentence went to - which is
     /// exactly the amount this game wants to know.
     /// </para>
     /// <para>
@@ -98,8 +98,8 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// What is on the clipboard, or empty. Every platform — <c>systemCopyBuffer</c> reads
-        /// the system pasteboard on both phones — and bounded, because a clipboard can hold a
+        /// What is on the clipboard, or empty. Every platform - <c>systemCopyBuffer</c> reads
+        /// the system pasteboard on both phones - and bounded, because a clipboard can hold a
         /// document and nothing pasted into this game is longer than a share message.
         /// </summary>
         public static string Paste()

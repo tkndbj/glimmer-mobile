@@ -11,7 +11,7 @@ namespace GlimmerGrove.Modes
     /// <b>Four things and no numbers</b>, which is invariant 20d's rule read across. How much
     /// fuel a match is worth, how hard a bolt hits, how fast a ward's fuel fades, how long a
     /// raider takes to cross the hill and what a blow costs a ward are all <see cref="SiegeTuning"/>
-    /// — constants in code, one place, retuned for every level at once. A level says what is
+    /// - constants in code, one place, retuned for every level at once. A level says what is
     /// standing there and what is coming; the mode says what any of it does.
     /// </para>
     /// <para>
@@ -19,11 +19,11 @@ namespace GlimmerGrove.Modes
     /// departure worth naming rather than hiding.</b> Everything else here is turn-based and
     /// searchable: a move is a layer of a breadth-first walk, par is the depth of the first
     /// layer that wins, and both star lines fall out of it (invariant 20j). Raiders that walk
-    /// while nobody is touching the board have no state graph, so par cannot be searched — it is
+    /// while nobody is touching the board have no state graph, so par cannot be searched - it is
     /// <see cref="SiegeTuning.Par"/>, arithmetic over the raiders a level authors. Note what that
     /// does <em>not</em> change: a run is still graded on a count the player spends (matches), the
     /// star lines are still the same multiples of par every other mode uses, the fail state is
-    /// still real, and the level is still an ordinary level with its own permanent id — so this
+    /// still real, and the level is still an ordinary level with its own permanent id - so this
     /// mode cost the save file no schema version, no merge rule and no server work (invariant
     /// 20a), and can be withdrawn for the price of a chapter body exactly as five modes before it
     /// were.
@@ -39,7 +39,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>The field is gems again.</b> It used to carry the cog as a second alphabet, which
-        /// was the right shape for a cog that stood <em>on the field</em> — every rule that reads
+        /// was the right shape for a cog that stood <em>on the field</em> - every rule that reads
         /// a cell is asking either <em>what colour is this</em> or <em>what is standing here</em>,
         /// and one alphabet answers the first with a thing that has no colour. A cog is dropped by
         /// a raider now (<c>SiegeBoard.Drop</c>), so the second question has no second answer and
@@ -72,7 +72,7 @@ namespace GlimmerGrove.Modes
         /// What a wave may hold: a creeper in lower case, a brute in upper.
         ///
         /// One letter per raider rather than a count and a kind, so a wave reads as the thing
-        /// that is coming — <c>"rrGb"</c> is two creepers, a brute and a creeper, in that order,
+        /// that is coming - <c>"rrGb"</c> is two creepers, a brute and a creeper, in that order,
         /// and its shape is visible in the file.
         /// </summary>
         public const string RaiderLetters = "rgbyRGBY";
@@ -85,13 +85,13 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>A modifier rather than four more letters, and that is what made the parse change
         /// worth doing.</b> Case already carries one axis (a brute is a capital), so a third kind
-        /// has nowhere to go in a one-character-per-raider alphabet — and the obvious repair, four
+        /// has nowhere to go in a one-character-per-raider alphabet - and the obvious repair, four
         /// new letters, spends the alphabet on a kind and leaves the next one with the same
         /// problem. A prefix costs one rule and any number of future kinds.
         /// </para>
         /// <para>
         /// <b>What it cost is the assumption that a wave string's length is its raider count</b>,
-        /// which six places made — <see cref="RaiderCount"/>, two clauses of <see cref="Check"/>,
+        /// which six places made - <see cref="RaiderCount"/>, two clauses of <see cref="Check"/>,
         /// the spawn loop and two readings in <c>ModeValidator</c>. Every one of them would have
         /// gone on compiling and quietly counted a shielded raider twice, so the string is now
         /// parsed exactly once into <see cref="Coming"/> and nothing asks the raw text how many
@@ -111,8 +111,8 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>A table rather than three <c>if</c>s, and that is what the third modifier bought.</b>
-        /// The shield shipped as a special case in four places — the alphabet, the sweep, the
-        /// parse and the messages — and every one of them would have had to be extended twice
+        /// The shield shipped as a special case in four places - the alphabet, the sweep, the
+        /// parse and the messages - and every one of them would have had to be extended twice
         /// more, in step, by hand. A modifier is now a row here and nothing else, so a fourth
         /// costs one line and cannot be half-added.
         /// </para>
@@ -164,12 +164,12 @@ namespace GlimmerGrove.Modes
         public const char RetiredSack = '%', RetiredBomb = '!';
 
         /// <summary>
-        /// How a level names its boss: <c>"warlord:r"</c> — a <b>kind</b> and the colour it wears.
+        /// How a level names its boss: <c>"warlord:r"</c> - a <b>kind</b> and the colour it wears.
         ///
         /// <para>
         /// <b>It was one letter whose case said which of two bosses this was, and that stopped
-        /// working the moment there were four.</b> The creeper/brute idiom — capitalise the letter
-        /// for the bigger one — is exactly right for two kinds and has nowhere to go for a third:
+        /// working the moment there were four.</b> The creeper/brute idiom - capitalise the letter
+        /// for the bigger one - is exactly right for two kinds and has nowhere to go for a third:
         /// with four bosses a case bit cannot name one, and the two warlords a chapter shipped
         /// were told apart by <em>nothing but hue</em>, which is what a player reported as "the
         /// bosses look exactly the same". A boss is a way of fighting rather than a size, so the
@@ -177,8 +177,8 @@ namespace GlimmerGrove.Modes
         /// </para>
         /// <para>
         /// <b>Spelled rather than lettered, and that is the one place this mode's terseness is
-        /// wrong.</b> Everything else a siege authors is a grid or a wave — a shape whose meaning
-        /// is that it is read at a glance — and this is a single scalar naming a thing. A reader
+        /// wrong.</b> Everything else a siege authors is a grid or a wave - a shape whose meaning
+        /// is that it is read at a glance - and this is a single scalar naming a thing. A reader
         /// of the chapter body sees <c>"warbringer:y"</c> and knows what ships; they would not
         /// have known what <c>"Wy"</c> was.
         /// </para>
@@ -206,7 +206,7 @@ namespace GlimmerGrove.Modes
             ("hollowking", SiegeKind.Hollowking),
         };
 
-        /// <summary>The colour a boss may wear. Lower case only — case no longer means anything.</summary>
+        /// <summary>The colour a boss may wear. Lower case only - case no longer means anything.</summary>
         public const string BossColours = "rgby";
 
         /// <summary>
@@ -266,15 +266,15 @@ namespace GlimmerGrove.Modes
         public const int MaxWards = 4;
 
         /// <summary>
-        /// The fewest wards — and so the fewest gem colours — a siege may stand.
+        /// The fewest wards - and so the fewest gem colours - a siege may stand.
         ///
         /// <para>
         /// <b>Three, and it is a measurement rather than a preference.</b> Under the colour lock a
         /// field may only ever deal colours the line can burn (see <see cref="Check"/>), so the
-        /// ward count <em>is</em> the colour count — and a two-colour match-three is not a board.
+        /// ward count <em>is</em> the colour count - and a two-colour match-three is not a board.
         /// Measured over twenty thousand dealt seeds: <b>not one</b> two-colour field is settled
         /// (three alike are always already touching, so it would go off before anybody moved a
-        /// gem), and a match on one clears <b>202</b> gems against a four-colour field's 5.6 —
+        /// gem), and a match on one clears <b>202</b> gems against a four-colour field's 5.6 -
         /// the refill lands beside its own kind so often that the board cascades until it runs out
         /// of things to remove.
         /// </para>
@@ -282,7 +282,7 @@ namespace GlimmerGrove.Modes
         /// So an opening rung teaches the lock on <b>three</b>, which is the fewest that behaves
         /// like a jewel board: 0.5% of seeds are settled and a match clears 9.5 gems. Par is
         /// deliberately <em>not</em> corrected for that, and the reason is worth reading before
-        /// anybody corrects it — see the note beside <see cref="SiegeTuning.MatchGemsTenths"/>.
+        /// anybody corrects it - see the note beside <see cref="SiegeTuning.MatchGemsTenths"/>.
         /// </para>
         /// </summary>
         public const int MinWards = 3;
@@ -290,7 +290,7 @@ namespace GlimmerGrove.Modes
         /// <summary>The most raiders one level may author. A bound on the run, not a taste.</summary>
         public const int MaxRaiders = 60;
 
-        /// <summary>The opening field, exactly as it is dealt. Authored settled — no run of three.</summary>
+        /// <summary>The opening field, exactly as it is dealt. Authored settled - no run of three.</summary>
         public readonly ProtoGrid Grid;
 
         /// <summary>
@@ -307,7 +307,7 @@ namespace GlimmerGrove.Modes
         public readonly char[] Wards;
 
         /// <summary>
-        /// The waves, in the order they come — <b>including the warlord's</b>, which is appended
+        /// The waves, in the order they come - <b>including the warlord's</b>, which is appended
         /// rather than authored.
         ///
         /// See <see cref="Boss"/> for why a level says only <em>whether</em> there is one.
@@ -320,7 +320,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>A level says whether there is one and what colour it wears, and never which wave it
-        /// is in</b> — the last wave <em>is</em> the boss wave, by rule, so it cannot be authored
+        /// is in</b> - the last wave <em>is</em> the boss wave, by rule, so it cannot be authored
         /// into the middle of a siege and cannot be left off the end of one. That is the same
         /// bargain invariant 33g strikes with the haul-road and invariant 4a with the manifest:
         /// where a fact can be derived from a shape rather than typed beside it, the two can never
@@ -330,7 +330,7 @@ namespace GlimmerGrove.Modes
         /// <b>It is still a wave, and that is what makes it cost nothing.</b> A warlord is
         /// appended to <see cref="Waves"/> as a one-raider wave, so the wave count the header
         /// reads, the muster, the banner, <see cref="RaiderCount"/> and
-        /// <see cref="SiegeTuning.Par"/> all take it without a single special case — the only
+        /// <see cref="SiegeTuning.Par"/> all take it without a single special case - the only
         /// question anything has to ask is <see cref="BossWave"/>, and only because a warlord's
         /// health and its way of fighting are not a creeper's.
         /// </para>
@@ -339,7 +339,7 @@ namespace GlimmerGrove.Modes
         /// the head of the last authored one.</b> A warlord, a warbringer and an overlord shell
         /// the line for as long as they live, so an empty hill is the point (invariant 37t); a
         /// blightcaller takes a ward's <em>fire</em>, which is worth exactly what there is to
-        /// burn, so alone it costs nothing at all — invariant 5d, and reported from play twice.
+        /// burn, so alone it costs nothing at all - invariant 5d, and reported from play twice.
         /// The predicate is <see cref="SiegeTuning.EndangersTheLine"/>, the same one the endless
         /// lane's escort asks (invariant 43), and it costs par nothing because the company is the
         /// raiders the level already sends. See the constructor.
@@ -371,7 +371,7 @@ namespace GlimmerGrove.Modes
         public bool IsDuel => BossKinds.Length > 1;
 
         /// <summary>
-        /// Which wave the boss stands in, or -1. Always the last one when there is one — either a
+        /// Which wave the boss stands in, or -1. Always the last one when there is one - either a
         /// wave of its own, or, for a boss that cannot bring a ward down, the last authored wave
         /// with the boss at its head. <see cref="BossesIn"/> says how many of that wave are
         /// bosses; the boss itself is always index nought.
@@ -385,7 +385,7 @@ namespace GlimmerGrove.Modes
         /// What kind of raider stands at <paramref name="index"/> of wave <paramref name="wave"/>.
         ///
         /// <b>The wave decides, never the letter</b>, and the layout is the only thing that knows
-        /// which wave is the boss's — so this exists once and every caller (par, the muster, the
+        /// which wave is the boss's - so this exists once and every caller (par, the muster, the
         /// build gate's threat reading, the offline mirror) asks it rather than forming a second
         /// opinion about a fact already written down.
         /// </summary>
@@ -408,8 +408,8 @@ namespace GlimmerGrove.Modes
         /// How many of wave <paramref name="wave"/>'s raiders are bosses.
         ///
         /// <b>Asked rather than assumed, because it is no longer the wave's size.</b> It was, for
-        /// as long as a boss wave held nothing but bosses — an endless lane's pair wave, an
-        /// authored ladder's appended duel — and a boss that rides the last authored wave
+        /// as long as a boss wave held nothing but bosses - an endless lane's pair wave, an
+        /// authored ladder's appended duel - and a boss that rides the last authored wave
         /// (invariant 43's escort, in this lane's idiom) breaks that identity. <c>Muster</c> hands
         /// this to <see cref="SiegeTuning.BossLane"/>, which decides whether a boss stands in the
         /// middle of the hill or beside it, and handing it the wave's size instead would have put
@@ -541,7 +541,7 @@ namespace GlimmerGrove.Modes
         /// <b>A rate rather than a count, and the denominator is now <em>kills</em>.</b> It used
         /// to be dealt gems, because a cog stood in the gem field and the field refills. A cog is
         /// dropped by a raider that died now (<c>SiegeBoard.Drop</c>), so what a level decides is
-        /// how often a kill pays — and the same field means something quite different: twenty to
+        /// how often a kill pays - and the same field means something quite different: twenty to
         /// thirty-six raiders rather than several hundred gems, so a rung that used to author 3
         /// authors about 25 for the same handful of cogs a run.
         /// </para>
@@ -564,7 +564,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <b>A hundred, and that is the honest ceiling rather than a shrug.</b> When the
         /// denominator was dealt gems a fifth was already a cog every other column, and past it
-        /// the line went up whatever the player did — the decoration invariant 5d names. Per kill
+        /// the line went up whatever the player did - the decoration invariant 5d names. Per kill
         /// there is no such cliff: a level sends a few dozen raiders, so every one of them paying
         /// is still fewer cogs than a full line has rungs, and what bounds the feature is
         /// <see cref="SiegeTuning.MaxRank"/> and <see cref="SiegeTuning.MostCogs"/>.
@@ -575,8 +575,8 @@ namespace GlimmerGrove.Modes
         /// Where the refill stream starts, derived from the authored field rather than typed.
         ///
         /// <b>Derived, so no level ever authors a seed.</b> Two devices dealing the same board the
-        /// same way is worth having — a bug reported against a level is a bug somebody else can
-        /// meet — and a number in the file is a number an author has to invent and can mistype.
+        /// same way is worth having - a bug reported against a level is a bug somebody else can
+        /// meet - and a number in the file is a number an author has to invent and can mistype.
         /// </summary>
         public readonly uint Seed;
 
@@ -600,7 +600,7 @@ namespace GlimmerGrove.Modes
         /// <b>Charms rather than a charm, because a rung deals the whole of its chapter's set.</b>
         /// A chapter at ordinal <em>n</em> deals the first <em>n</em> of the roster
         /// (<see cref="SiegeCharms.Upto"/>), so the third chapter's boards hold three kinds at the
-        /// same rarity between them rather than three times as many charms — which is what keeps
+        /// same rarity between them rather than three times as many charms - which is what keeps
         /// "rare" a fact about the mode rather than about the chapter.
         /// </para>
         /// <para>
@@ -610,7 +610,7 @@ namespace GlimmerGrove.Modes
         /// settled proof would have to know about.
         /// </para>
         /// <para>
-        /// <b>Last in the constructor for <see cref="Tough"/>'s reason</b> — three fixtures pass
+        /// <b>Last in the constructor for <see cref="Tough"/>'s reason</b> - three fixtures pass
         /// <c>endless</c> positionally, and a parameter inserted before it would change what they
         /// mean without changing what they say.
         /// </para>
@@ -639,7 +639,7 @@ namespace GlimmerGrove.Modes
             Wards = Tidy(wards, WardLetters).ToCharArray();
             Cogs = cogs < 0 ? 0 : cogs;
 
-            // **Exactly one legal name and one legal colour, or nothing** — not `Tidy`, which
+            // **Exactly one legal name and one legal colour, or nothing** - not `Tidy`, which
             // keeps whatever it recognises and throws the rest away. "dragon:r" would salvage an
             // 'r' out of itself and ship a warlord nobody authored, which is the shape of accident
             // invariant 5f exists to refuse: content written for a build that is not this one has
@@ -703,7 +703,7 @@ namespace GlimmerGrove.Modes
         /// <b>Reached by nothing in content.</b> A chapter body speaks the string grammar above,
         /// where a boss is one token and always the last wave; this is for a board authored in
         /// code (<c>SiegeShowcase</c>) that wants two bosses walking in with a crowd, which the
-        /// grammar cannot say and the board can already play — <c>SiegeBoard.Muster</c> asks
+        /// grammar cannot say and the board can already play - <c>SiegeBoard.Muster</c> asks
         /// <see cref="KindAt"/> per raider and <c>SiegeTuning.BossLane</c> seats a pair.
         /// <see cref="HasBoss"/> is false here on purpose: <see cref="Boss"/> and
         /// <see cref="BossWave"/> describe the grammar's one-boss-last shape, and the readings
@@ -820,7 +820,7 @@ namespace GlimmerGrove.Modes
         /// <b>Null rather than "the ones I recognised", which is the whole difference between this
         /// and <see cref="Tidy"/>.</b> A body naming a retired or unknown charm was written for a
         /// build that is not this one, and salvaging what is left of it ships a field its author
-        /// never composed — invariant 5f, and the same clause that refuses a boss token this mode
+        /// never composed - invariant 5f, and the same clause that refuses a boss token this mode
         /// cannot draw. <see cref="Check"/> turns the null into a sentence; nothing here guesses.
         /// </para>
         /// <para>
@@ -987,7 +987,7 @@ namespace GlimmerGrove.Modes
 
             // **An endless lane authors no waves, and that is the shape rather than an
             // omission.** What comes at wave n is a rule (`SiegeEndless`), so the list is empty by
-            // construction — and the two clauses below, which walk the authored list, have nothing
+            // construction - and the two clauses below, which walk the authored list, have nothing
             // to walk. What replaces them is a gate that walks the *ramp* (`content.py`'s
             // `check_endless` and `SiegeValidator`), because the question is the same one asked of
             // a hill nobody wrote down: does this line have an answer to what is coming.
@@ -1029,7 +1029,7 @@ namespace GlimmerGrove.Modes
         /// <summary>
         /// Authored settled: no three alike already touching.
         ///
-        /// <b>Its own method because an endless lane needs it and needs nothing else</b> — a field
+        /// <b>Its own method because an endless lane needs it and needs nothing else</b> - a field
         /// that goes off before anybody has touched it is a board whose opening move its author
         /// played, and the count the run is graded against would already have moved. Budburst's
         /// rule, and Prismvale's, asked of a jewel board.
@@ -1045,17 +1045,17 @@ namespace GlimmerGrove.Modes
         }
 
         /// <summary>
-        /// Whether this cell is a gem — something that can line up and is worth fuel.
+        /// Whether this cell is a gem - something that can line up and is worth fuel.
         ///
         /// <b>Kept as a predicate now that a hole is the only thing it excludes</b>, because the
         /// four places that ask it are exactly where a mode with a second kind of cell goes
-        /// quietly wrong (invariant 26f) — and this field has carried one twice.
+        /// quietly wrong (invariant 26f) - and this field has carried one twice.
         /// </summary>
         internal static bool IsGem(char cell)
             => cell != SiegeBoard.Hole && Letters.IndexOf(cell) >= 0;
 
         /// <summary>
-        /// Every cell standing in a run of three or more, as one set — and, optionally, the colour
+        /// Every cell standing in a run of three or more, as one set - and, optionally, the colour
         /// each of them is <em>paid</em> as.
         ///
         /// <para>
@@ -1078,17 +1078,17 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b><paramref name="paid"/> is what a cleared cell is worth, and for a wild it is not
         /// the letter underneath.</b> A prism is drawn colourless because it <em>is</em> colourless
-        /// — the letter it carries is only what the deal happened to hand it — so paying it as that
+        /// - the letter it carries is only what the deal happened to hand it - so paying it as that
         /// letter would be a payoff the player could neither see nor aim. It is paid as the colour
         /// of the run it completed, and a prism completing two runs at once is paid as the first of
         /// them in scan order (rows before columns, <see cref="Letters"/> in order): arbitrary, and
         /// <em>stated</em> rather than emergent, for <c>SiegeBoard</c>'s reason about contested
-        /// cogs — a rule nobody wrote down is a rule two runtimes may answer differently.
+        /// cogs - a rule nobody wrote down is a rule two runtimes may answer differently.
         /// </para>
         /// <para>
         /// Both trailing arguments are null on every reading that only asks <em>whether</em>
-        /// anything lines up — <c>Lines</c>, <c>AnySwap</c>, the settled proof and both offline
-        /// mirrors' cheap paths — so a field with no charms on it costs no allocation and no branch
+        /// anything lines up - <c>Lines</c>, <c>AnySwap</c>, the settled proof and both offline
+        /// mirrors' cheap paths - so a field with no charms on it costs no allocation and no branch
         /// worth naming.
         /// </para>
         /// </summary>
@@ -1161,9 +1161,9 @@ namespace GlimmerGrove.Modes
         /// <b>A second reading of one rule is the shape invariant 5b refuses</b>, so it is not
         /// left to agree by inspection: <c>SiegeFieldTests.OneCellReadsTheSameAsTheWholeField</c>
         /// walks random fields, charms and all, and fails the moment the two disagree about any
-        /// cell. What keeps that honest is that this is written as the <em>same</em> definition —
+        /// cell. What keeps that honest is that this is written as the <em>same</em> definition -
         /// a maximal block of <em>c</em>-or-wild holding at least one real <em>c</em>, walked for
-        /// each colour in turn — rather than as a cheaper procedure that happens to agree today.
+        /// each colour in turn - rather than as a cheaper procedure that happens to agree today.
         /// </para>
         /// </summary>
         internal static bool Lined(char[] cells, int width, int height, SiegeCharm[] charms, int at)
@@ -1185,7 +1185,7 @@ namespace GlimmerGrove.Modes
 
             return false;
 
-            // The maximal block of this colour through `at`, walked both ways from it — which is
+            // The maximal block of this colour through `at`, walked both ways from it - which is
             // the same block `Runs` finds when it scans the whole line, because a maximal block is
             // maximal from wherever inside it you start.
             bool Reaches(int dx, int dy, char colour)

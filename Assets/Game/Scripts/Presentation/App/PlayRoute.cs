@@ -14,12 +14,12 @@ namespace GlimmerGrove
     }
 
     /// <summary>
-    /// Which screen plays a level, decided once — and whether the player may be let onto it at
+    /// Which screen plays a level, decided once - and whether the player may be let onto it at
     /// all.
     ///
     /// <para>
-    /// There are four doors into a run — a node on the map, the victory panel's <b>next</b> and
-    /// its replay, and an event's tile — and before a second mode existed all four could safely
+    /// There are four doors into a run - a node on the map, the victory panel's <b>next</b> and
+    /// its replay, and an event's tile - and before a second mode existed all four could safely
     /// say <c>Flow.Go&lt;PlayScreen&gt;</c>. Two of them still did after one arrived, which is a
     /// bug with a particularly unhelpful shape: the button labelled "next" opens a screen that
     /// finds no board, logs an error and sends the player back to the map, at the one moment
@@ -31,12 +31,12 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>The heart gate is asked here for exactly that reason.</b> It used to live in the map's
-    /// node tap alone, so three of these four doors opened a charged run on an empty heart bar —
+    /// node tap alone, so three of these four doors opened a charged run on an empty heart bar -
     /// the victory panel's <b>next</b> and both of an event's ways in. Nothing about that is
     /// visible in a compile or a validator: the run opens, plays and can even be won, and what
     /// is broken is the one rule in this game that can stop somebody playing. A funnel every
     /// door already walks through is the only place a rule like that can be asked once, which is
-    /// the same argument that put the routing here — see <c>HeartStake.CanBegin</c>.
+    /// the same argument that put the routing here - see <c>HeartStake.CanBegin</c>.
     /// </para>
     /// </summary>
     public static class PlayRoute
@@ -46,7 +46,7 @@ namespace GlimmerGrove
         /// a heart to lose.
         ///
         /// <para>
-        /// Public because a door with something better to say than the panel asks first — the
+        /// Public because a door with something better to say than the panel asks first - the
         /// map shakes the node it refused, and the victory panel stays up so its replay and its
         /// map keys are still under the player's thumb. Everything else lets <see cref="Open"/>
         /// answer, which is what makes the safe behaviour the default rather than the thing
@@ -64,7 +64,7 @@ namespace GlimmerGrove
         /// The refusal raises <c>OutOfHeartsOverlay</c>, which is right here and only here: every
         /// caller of this method is <em>navigating</em>, so nothing is frozen behind the panel
         /// and its shop button may leave. A run already under way must never be refused this way
-        /// — walking out of one through <c>Flow.Go</c> abandons it without resolving it, and the
+        /// - walking out of one through <c>Flow.Go</c> abandons it without resolving it, and the
         /// marker on disk then charges a heart at the next launch for a run nobody finished. That
         /// is why the restart key answers with a line over the board instead
         /// (<c>RunScreen.RestartLevel</c>), which is invariant 23's rule about a shelf rather

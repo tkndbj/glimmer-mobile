@@ -5,7 +5,7 @@ namespace GlimmerGrove.Modes
     ///
     /// <para>
     /// <b>They live on the board because the board owns the line.</b> Both of these began as a
-    /// screen reaching across and writing <c>SiegeWard</c>'s fields — which compiled, worked, and
+    /// screen reaching across and writing <c>SiegeWard</c>'s fields - which compiled, worked, and
     /// put the one type that decides what a turret is at the mercy of anything holding a
     /// reference to it. Everything a ward can have done to it goes through a method on the ward
     /// (<c>Fill</c>, <c>Snuff</c>, <c>Stoke</c>, <c>Drain</c>, <c>Shackle</c>), and everything
@@ -14,7 +14,7 @@ namespace GlimmerGrove.Modes
     /// <para>
     /// <b>Neither is reachable from a graded run.</b> The tutorial is the only caller, the
     /// guarantee that it cannot be lost is <see cref="Sheltered"/> rather than anything below,
-    /// and nothing here is wired to a utility, a charm or a chest — so no board a player is
+    /// and nothing here is wired to a utility, a charm or a chest - so no board a player is
     /// scored on can reach either of them (invariant 39's rule about what may move a run).
     /// </para>
     /// </summary>
@@ -50,7 +50,7 @@ namespace GlimmerGrove.Modes
         /// take any.
         ///
         /// <b>Not <see cref="RoomForFuel"/>, which is a different question.</b> That one answers
-        /// what a surge may be sold — every charge this ward has not banked yet, so a nearly-full
+        /// what a surge may be sold - every charge this ward has not banked yet, so a nearly-full
         /// tube is still worth buying fuel for. This answers what it takes to bank the
         /// <em>next</em> one, which is what something drawing a tube filling has to know.
         /// </summary>
@@ -70,14 +70,14 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>It is what makes that ending certain rather than likely.</b> An overcharge throws a
-        /// blast, and a blast is a shape — whatever it catches dies and whatever it misses walks
-        /// on — so a tutorial that ended when the hill happened to be empty would be one that
+        /// blast, and a blast is a shape - whatever it catches dies and whatever it misses walks
+        /// on - so a tutorial that ended when the hill happened to be empty would be one that
         /// sometimes never ended. Once the charge has been thrown the grove answers with
         /// everything it has, and the run then finishes on <see cref="IsFinished"/> exactly as
         /// every siege does.
         /// </para>
         /// <para>
-        /// Through <c>SiegeWard.Stoke</c>, which is fuel and never a charge — see there.
+        /// Through <c>SiegeWard.Stoke</c>, which is fuel and never a charge - see there.
         /// </para>
         /// </summary>
         public void Kindle()

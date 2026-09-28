@@ -13,9 +13,9 @@ namespace GlimmerGrove.AssetPipeline
     ///
     /// <para>
     /// <b>One entry per address, and that is the whole of the bookkeeping.</b> This used to be
-    /// five dictionaries — a global cache for single assets, a global cache for frame sets, a
+    /// five dictionaries - a global cache for single assets, a global cache for frame sets, a
     /// map of scope name to scope, a map of address to owning scope, and a map of atlas to the
-    /// sprites it had handed out — with the invariant "an address appears in exactly one of
+    /// sprites it had handed out - with the invariant "an address appears in exactly one of
     /// these" maintained by hand at six call sites. It is not an invariant anybody can hold in
     /// their head, and the bug it produced was the worst kind: a load finishing after its scope
     /// had gone resolved its destination by address, found no owner, concluded "global", and
@@ -41,12 +41,12 @@ namespace GlimmerGrove.AssetPipeline
         /// How long an address nobody holds is kept before it is really freed.
         ///
         /// <para>
-        /// <b>Not a cache policy — a correctness one, which the count alone cannot supply.</b>
+        /// <b>Not a cache policy - a correctness one, which the count alone cannot supply.</b>
         /// Navigation is full of round trips that leave and come straight back: the grove to its
         /// shop and back, a level to its map, a visit to the board it was opened from. Freeing on
         /// the exact frame the last hold goes makes every one of those a full reload, and the old
         /// design's answer was a marker interface asking "does the screen replacing me draw this
-        /// too?" — a question nobody can keep answering correctly as screens are added. A few
+        /// too?" - a question nobody can keep answering correctly as screens are added. A few
         /// seconds of grace answers it for every pair of screens at once, including ones that do
         /// not exist yet.
         /// </para>
@@ -74,7 +74,7 @@ namespace GlimmerGrove.AssetPipeline
             /// <summary>Never freed, whatever the count. Boot's art, and anything pinned.</summary>
             public bool Pinned;
 
-            /// <summary>A load has completed — including one that found nothing.</summary>
+            /// <summary>A load has completed - including one that found nothing.</summary>
             public bool Loaded;
 
             /// <summary>Still in the table. False the instant it is freed, which is what a load
@@ -120,7 +120,7 @@ namespace GlimmerGrove.AssetPipeline
         public static ChapterId LoadedChapter { get; private set; } = ChapterId.None;
 
         /// <summary>
-        /// Swaps the backing provider. Call at boot, before anything loads — assets already
+        /// Swaps the backing provider. Call at boot, before anything loads - assets already
         /// cached from the old provider are dropped rather than migrated.
         /// </summary>
         public static void UseProvider(IAssetProvider provider)
@@ -149,7 +149,7 @@ namespace GlimmerGrove.AssetPipeline
         /// <para>
         /// An address fetched this way with nobody holding it is <em>global</em>: it is the boot
         /// preload's path and the fallback for chrome, and it stays for the session. A hold that
-        /// wants to own something it fetches synchronously claims it first — see
+        /// wants to own something it fetches synchronously claims it first - see
         /// <see cref="AssetHold.Claim"/>.
         /// </para>
         /// </summary>
@@ -164,7 +164,7 @@ namespace GlimmerGrove.AssetPipeline
             if (loaded == null) Debug.LogWarning($"[Assets] missing {address}");
 
             // Misses are cached too, so a bad address costs one failed load rather than one per
-            // frame that asks for it. Only a load that genuinely ran may do this — see
+            // frame that asks for it. Only a load that genuinely ran may do this - see
             // WarmEntryAsync for the case that must not.
             entry.One = loaded;
             entry.Loaded = true;
@@ -176,12 +176,12 @@ namespace GlimmerGrove.AssetPipeline
         }
 
         /// <summary>
-        /// The asset if it is <em>already</em> loaded — never loading, never logging, never
+        /// The asset if it is <em>already</em> loaded - never loading, never logging, never
         /// caching a miss.
         ///
         /// <para>
         /// <b>For art that is legitimately not there yet.</b> A screen is built in the frame it
-        /// is asked for and paints before its hold has finished loading — that is the bargain,
+        /// is asked for and paints before its hold has finished loading - that is the bargain,
         /// and it is why every such screen repaints on the callback. Asking through
         /// <see cref="Get{T}"/> during that window is not a mistake and must not read like one:
         /// it printed a screenful of warnings every time the Grovement was opened, which is how
@@ -240,7 +240,7 @@ namespace GlimmerGrove.AssetPipeline
         /// <para>
         /// <b>Why this is not just <see cref="Peek{T}"/> plus a call.</b>
         /// <c>SpriteAtlas.GetSprite</c> builds a <em>new</em> <c>Sprite</c> object on every call
-        /// and hands ownership to the caller — a documented allocation that a grid rebinding on
+        /// and hands ownership to the caller - a documented allocation that a grid rebinding on
         /// every scroll frame would leak by the thousand. So each one is made once and kept on
         /// the atlas's own entry, and destroyed with it.
         /// </para>
@@ -265,7 +265,7 @@ namespace GlimmerGrove.AssetPipeline
             if (sprite == null) return null;
 
             // Unity appends "(Clone)" to whatever GetSprite hands back, which would then reach
-            // anything reading sprite.name — including this project's own frame sorting.
+            // anything reading sprite.name - including this project's own frame sorting.
             sprite.name = name;
 
             entry.AtlasSprites = entry.AtlasSprites
@@ -284,12 +284,12 @@ namespace GlimmerGrove.AssetPipeline
         /// <para>
         /// <b>This exists because the browse grid was allocating per rebind.</b> The caller used
         /// to walk the frames itself: a <c>List</c>, a <c>ToArray</c>, and a fresh name string
-        /// per index — for an animated piece, a dozen allocations every time a cell scrolled
+        /// per index - for an animated piece, a dozen allocations every time a cell scrolled
         /// into view, on the one screen built around recycling cells so that it would not.
         /// Counting by asking rather than being told is still right (a second number saying how
         /// long a loop is would be a number for a regenerated flipbook to put out of step with
         /// the atlas), so the walk is kept and the <em>answer</em> is cached against the atlas
-        /// that produced it — and goes when that atlas does, which is the half a caller-side
+        /// that produced it - and goes when that atlas does, which is the half a caller-side
         /// cache could not get right.
         /// </para>
         /// </summary>
@@ -385,7 +385,7 @@ namespace GlimmerGrove.AssetPipeline
         const int DefaultBatch = 8;
 
         /// <summary>
-        /// Warms a batch of assets with nobody holding them — the boot preload's path, so
+        /// Warms a batch of assets with nobody holding them - the boot preload's path, so
         /// everything it touches is global for the session.
         /// </summary>
         public static Task PreloadAsync(IReadOnlyList<AssetRequest> requests,
@@ -407,8 +407,8 @@ namespace GlimmerGrove.AssetPipeline
         ///
         /// <para>
         /// <b>The caller's token governs the wait, never the load.</b> A load belongs to an
-        /// address rather than to whoever happened to ask for it first — two screens can want
-        /// the same sprite — so handing one caller's cancellation to the provider would let the
+        /// address rather than to whoever happened to ask for it first - two screens can want
+        /// the same sprite - so handing one caller's cancellation to the provider would let the
         /// first to leave abort a fetch the second is waiting on, and the abort would come back
         /// as a null and be cached as a miss. Cancelling therefore stops this walking the list;
         /// what is already in flight finishes and is cached properly.
@@ -567,7 +567,7 @@ namespace GlimmerGrove.AssetPipeline
         /// <summary>
         /// Frees everything idle right now, without waiting out the grace.
         ///
-        /// For the moments memory genuinely matters — entering a chapter is the one that exists —
+        /// For the moments memory genuinely matters - entering a chapter is the one that exists -
         /// where holding a previous screen's art for a few more seconds is the wrong trade.
         /// </summary>
         public static void FlushIdle()
@@ -653,8 +653,8 @@ namespace GlimmerGrove.AssetPipeline
             _chapter = _chapter ?? Hold("chapter");
             await _chapter.LoadAsync(AssetManifest.ChapterAssets(chapter), progress, cancellation);
 
-            // Entering a chapter is the moment this game is closest to its memory ceiling — a
-            // board, its cast and its effects all at once — so the previous screen's art gives
+            // Entering a chapter is the moment this game is closest to its memory ceiling - a
+            // board, its cast and its effects all at once - so the previous screen's art gives
             // up its grace here rather than lingering into the run.
             FlushIdle();
         }

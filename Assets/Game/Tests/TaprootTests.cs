@@ -10,7 +10,7 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// Two properties carry the whole mechanic and both are easy to break by accident.
-    /// A root is <b>charged once</b> — par, the move budget and the clock are all derived
+    /// A root is <b>charged once</b> - par, the move budget and the clock are all derived
     /// from it, so counting a root per member would quietly make every bound glade twice
     /// as generous as it looks. And a root must be able to <b>reach its own solution</b>:
     /// one number of turns has to solve every conduit on it, or the level is unwinnable
@@ -126,7 +126,7 @@ namespace GlimmerGrove.Tests
         /// A straight conduit reads the same every half turn, so it is solved at two of
         /// the four offsets and simply goes along with whatever the elbows on its root
         /// demand. That is what makes the root's count something other than the largest of
-        /// its members' — and it is the case a naive implementation gets wrong.
+        /// its members' - and it is the case a naive implementation gets wrong.
         /// </summary>
         [Test]
         public void AStraightConduitOnARootFollowsTheElbow()
@@ -189,7 +189,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The pip limit is an authoring limit, so it has to be *said*. The mark clamps at
         /// <see cref="Puzzle.MaxReadableRunes"/>, which means a seventh root would be drawn
-        /// wearing the sixth's identity — a binding the player can read that is not there.
+        /// wearing the sixth's identity - a binding the player can read that is not there.
         /// A silent clamp is the failure this project has already been bitten by twice.
         /// </summary>
         [Test]

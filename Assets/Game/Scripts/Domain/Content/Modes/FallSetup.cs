@@ -9,7 +9,7 @@ namespace GlimmerGrove.Content
     ///
     /// <para>
     /// <b>Why the search runs on the phone at all.</b> Par decides both star lines and the
-    /// supply a run is dealt, so it has to be known before the first mote falls — and it may not
+    /// supply a run is dealt, so it has to be known before the first mote falls - and it may not
     /// be authored, because a typed par drifts from the board it claims to describe and the
     /// drift has no symptom (invariant 5). The alternative is writing the number into the
     /// chapter body at authoring time, which is the same typed par with an extra step in front
@@ -20,7 +20,7 @@ namespace GlimmerGrove.Content
     /// when the player leaves the chapter and re-read when they come back (invariant 4a), so
     /// without this every trip in and out of the Deep Well would re-search all ten of its levels.
     /// A level id is permanent and the board behind it is frozen once shipped, so the answer
-    /// cannot go stale within a session — and a content push that changed a board would arrive
+    /// cannot go stale within a session - and a content push that changed a board would arrive
     /// as a new process, because content is fetched at boot.
     /// </para>
     /// <para>
@@ -68,7 +68,7 @@ namespace GlimmerGrove.Content
 
         /// <summary>
         /// Forgets everything. For the test suite and for the Editor's content refresh, which
-        /// rebuilds the catalog inside one process — the only two places a level id can come to
+        /// rebuilds the catalog inside one process - the only two places a level id can come to
         /// name a different board.
         /// </summary>
         public static void Forget() => _par.Clear();

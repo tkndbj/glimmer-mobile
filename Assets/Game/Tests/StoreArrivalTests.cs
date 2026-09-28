@@ -10,7 +10,7 @@ using NUnit.Framework;
 namespace GlimmerGrove.Tests
 {
     /// <summary>
-    /// What is said between paying and being thanked, and — the half that matters — every way
+    /// What is said between paying and being thanked, and - the half that matters - every way
     /// the saying of it comes to an end.
     ///
     /// <para>
@@ -114,7 +114,7 @@ namespace GlimmerGrove.Tests
         /// Both stores re-deliver an unfinished transaction on every launch for ever, and a
         /// receipt the server refuses is deliberately left unfinished (invariant 18a). Announced
         /// on every pending purchase, a player in that state meets a panel about a purchase they
-        /// made last week every time they open the game — a fault with no way for them to clear
+        /// made last week every time they open the game - a fault with no way for them to clear
         /// it, in front of a run they were trying to play.
         /// </para>
         /// </summary>
@@ -130,7 +130,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// A cancelled sheet clears the checkout, so the transaction that turns up afterwards is
-        /// not the one that was cancelled — it is a re-delivery, and it is silent.
+        /// not the one that was cancelled - it is a re-delivery, and it is silent.
         /// </summary>
         [Test]
         public void ASheetTheyBackedOutOfLeavesNothingListening()
@@ -147,8 +147,8 @@ namespace GlimmerGrove.Tests
         /// The announcement has to reach its listener while there is still something to wait for.
         ///
         /// <para>
-        /// A redemption can finish inside the call that delivers the transaction — the double
-        /// here answers synchronously and a warm connection is not far off it — so announcing
+        /// A redemption can finish inside the call that delivers the transaction - the double
+        /// here answers synchronously and a warm connection is not far off it - so announcing
         /// after the drain would hand a panel a transaction that had already been honoured,
         /// which draws a spinner for something that has finished. The ordering in
         /// <c>StoreService.OnPurchasePending</c> is the whole of the fix and nothing else can
@@ -211,7 +211,7 @@ namespace GlimmerGrove.Tests
 
             watch.Tick(0f);
             Assert.IsTrue(watch.Settled,
-                          "nothing was granted, so nothing was announced — and the panel is still up");
+                          "nothing was granted, so nothing was announced - and the panel is still up");
         }
 
         /// <summary>
@@ -239,7 +239,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// This is the case that cannot be fixed by getting the queue right, because the queue is
-        /// right — a refused receipt is <em>supposed</em> to stay in it, so a panel that waits
+        /// right - a refused receipt is <em>supposed</em> to stay in it, so a panel that waits
         /// only on the transaction waits for the life of the install.
         /// </para>
         /// </summary>
@@ -261,7 +261,7 @@ namespace GlimmerGrove.Tests
 
         // ============================================================== more than one
         /// <summary>
-        /// Two purchases seconds apart is ordinary — a mistap, or a second pack straight after
+        /// Two purchases seconds apart is ordinary - a mistap, or a second pack straight after
         /// the first. The panel is one panel, and it may not go away while either is owed.
         /// </summary>
         [Test]
@@ -551,7 +551,7 @@ namespace GlimmerGrove.Tests
                                     new Dictionary<Content.LevelId, Social.LevelStats>()));
 
             /// <summary>
-            /// Nothing to say about releases, and a failure rather than "nothing is required" —
+            /// Nothing to say about releases, and a failure rather than "nothing is required" -
             /// see <c>NullCloudBackend.ReadReleaseAsync</c>. A double that answered success here
             /// would clear a standing update wall on behalf of a fixture that is about something
             /// else entirely.

@@ -9,9 +9,9 @@ namespace GlimmerGrove.Content
     /// The rules a Thornwatch level is played by: the field, the line and what is coming.
     ///
     /// <para>
-    /// <b>It is a <see cref="ProtoLevelRules"/> so that the whole run comes for free</b> — the
+    /// <b>It is a <see cref="ProtoLevelRules"/> so that the whole run comes for free</b> - the
     /// heart, the stake, the record, the chests, the streak, what a restart costs, which latch
-    /// holds the board while a lesson is up — which is exactly invariant 20b's bargain: bring
+    /// holds the board while a lesson is up - which is exactly invariant 20b's bargain: bring
     /// your own board, share the run. What it does <em>not</em> share is the search:
     /// <see cref="Opening"/> answers null, because a hill with raiders walking down it while
     /// nobody is touching the board has no state graph to walk. Par is arithmetic
@@ -49,7 +49,7 @@ namespace GlimmerGrove.Content
         /// <para>
         /// <b>The loadout is read here and nowhere else.</b> Every content gate, every offline
         /// mirror and <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c> build a board directly
-        /// (<c>SiegeBoard.Build(layout)</c>), which stands the <em>starter</em> line — so a level
+        /// (<c>SiegeBoard.Build(layout)</c>), which stands the <em>starter</em> line - so a level
         /// is proved holdable with the weakest line a player could bring, and a validator can
         /// never come to depend on whatever loadout the developer running it happens to have.
         /// </para>
@@ -64,7 +64,7 @@ namespace GlimmerGrove.Content
         /// (par nought, proved). Every other mode on this shape is a DAG whose depth is moves
         /// spent, so par is the first layer that wins; a siege advances on a clock whether or not
         /// a gem is touched, and its field refills, so there is no fixed future and no graph.
-        /// Saying so out loud here is the point — the alternative was a position that pretended to
+        /// Saying so out loud here is the point - the alternative was a position that pretended to
         /// be searchable and answered a par nobody could have earned.
         /// </para>
         /// </summary>
@@ -82,7 +82,7 @@ namespace GlimmerGrove.Content
     ///
     /// <para>
     /// <b>It is the genre's own board bolted to the genre's other loop, and the twist is what a
-    /// match is <em>for</em>.</b> Nothing on the field is a goal — the goals are on the hill — so
+    /// match is <em>for</em>.</b> Nothing on the field is a goal - the goals are on the hill - so
     /// a match is never worth anything by itself and is only ever worth the colour it was. That is
     /// what makes the decision continuous rather than per-move: fuel fades, so a colour banked is
     /// a colour wasted, and the question is always which ward wants feeding <em>now</em> rather
@@ -91,14 +91,14 @@ namespace GlimmerGrove.Content
     /// <para>
     /// <b>What it cost the save file, the wire and the server: nothing</b> (invariant 20a). A
     /// Thornwatch level is an ordinary level with its own permanent id, so its record, its stars,
-    /// its rewards and its merge are the ones every glade already has — which is also what makes
+    /// its rewards and its merge are the ones every glade already has - which is also what makes
     /// it cheap to take back out, exactly as seven modes before it were.
     /// </para>
     /// <para>
     /// <b>And what it costs that no other mode does: par is not a proof.</b> Every graded number
     /// here still derives from par and both star lines are still the same multiples every mode
     /// uses, but par is arithmetic over what the level sends rather than the depth of a search. It
-    /// is a genuine floor — no run of fewer matches could have destroyed what is coming — so it
+    /// is a genuine floor - no run of fewer matches could have destroyed what is coming - so it
     /// errs toward three stars being reachable, which is the direction invariant 22 says to err
     /// in. It is the one thing about this mode to judge by playing before a second level is
     /// authored.
@@ -118,7 +118,7 @@ namespace GlimmerGrove.Content
         /// licensed pack. An address two chapters ask for belongs to neither
         /// (<c>AddressableAddresses.ChapterOwnership</c>), so sharing would move Emberforge's wall
         /// out of its chapter scope and into the global group, resident for the whole session on
-        /// every device (invariant 7b) — and it would weld two modes together in a project that
+        /// every device (invariant 7b) - and it would weld two modes together in a project that
         /// withdraws them often enough for that to matter.
         /// </para>
         /// </summary>
@@ -269,7 +269,7 @@ namespace GlimmerGrove.Content
 
             // **Twelve bodies rather than four, and none of them is tinted here.** A raider used
             // to be one of three creeper models or the brute, multiplied at run time by 62% toward
-            // its colour — which `Image.color` can only do by *darkening*, so what four packs had
+            // its colour - which `Image.color` can only do by *darkening*, so what four packs had
             // drawn came out as four silhouettes of one value. The colour is baked now
             // (`make_siege_art.RAIDER_SET`), which lets the body say it too: one model per colour
             // per kind, so a player who cannot separate two hues can still separate a fly from a
@@ -305,8 +305,8 @@ namespace GlimmerGrove.Content
 
             // What each ward fires, as three parts: the flash it lets go with, the thing that
             // crosses the hill, and what that does when it arrives. Baked out of the bought
-            // projectile pack by `SiegeShotBake`, one element per colour — a fireball, a venom
-            // dart, an icicle and a lightning bolt — so a bolt is told apart by silhouette rather
+            // projectile pack by `SiegeShotBake`, one element per colour - a fireball, a venom
+            // dart, an icicle and a lightning bolt - so a bolt is told apart by silhouette rather
             // than by hue alone, which is the argument the four turret models already carry.
             //
             // **Their colour is baked and none of them is tinted here**, unlike the two white
@@ -337,7 +337,7 @@ namespace GlimmerGrove.Content
         /// One boss, as the three reels its body wears and the three its spell is drawn with.
         ///
         /// <para>
-        /// <b>Six flipbooks each, and this mode has four of them</b> — which is the whole reason
+        /// <b>Six flipbooks each, and this mode has four of them</b> - which is the whole reason
         /// this is asked per chapter rather than listed with the rest of the cast. Every siege
         /// level used to load every boss, so a chapter sending one paid for four; twelve body
         /// reels at three hundred pixels and twelve effect reels is most of what this mode weighs.
@@ -352,7 +352,7 @@ namespace GlimmerGrove.Content
         /// <para>
         /// <b>Public so a fixture can walk every kind through it</b>, which is
         /// <c>SiegeView.BossKey</c>'s bargain for the same reason one step further along. Three
-        /// of these eight arms named the <em>warbringer's</em> two reels — a gravemaw and a
+        /// of these eight arms named the <em>warbringer's</em> two reels - a gravemaw and a
         /// bonecaller drew a roar under colours of their own for two chapters, which is invariant
         /// 37z's fault and the kind of fault that is green on every gate this project has: the
         /// addresses are real, registered, audited and loaded. What catches it is asking whether
@@ -403,7 +403,7 @@ namespace GlimmerGrove.Content
                 // flight and nothing crosses the hill.
                 //
                 // **And they are its own two, which they were not.** This asked for `roar_muzzle`
-                // and `roar_hit` — the warbringer's — under a colour of its own, and so did the
+                // and `roar_hit` - the warbringer's - under a colour of its own, and so did the
                 // bonecaller below: three bosses, one drawing, three tints, which is invariant
                 // 37z exactly. Being aimed at no ward is what a devour shares with a roar, and it
                 // is a fact about the rule rather than about the picture. A ring that *closes* is
@@ -421,7 +421,7 @@ namespace GlimmerGrove.Content
                 //
                 // **And a third body reel, which this is the one boss in the mode to have.** It
                 // is the only one rendered out of 3D (invariant 37bx), so it is the only one that
-                // really stands still when it reaches its ground rather than cycling in place —
+                // really stands still when it reaches its ground rather than cycling in place -
                 // which makes it the only one for which walking on and holding the hill are two
                 // pictures. See `SiegeView.WalkReel`. Named here as well as there because a reel
                 // `SiegeMode.Art` never asks for is one that ships addressed, grouped, built into
@@ -440,7 +440,7 @@ namespace GlimmerGrove.Content
                 //
                 // **And all three flight reels, because unlike the last three bosses these throw
                 // something.** A shackler looses an arrow at a ward and an ironclad brings an axe
-                // down on one, so both have a flight to draw — which is what separates them from
+                // down on one, so both have a flight to draw - which is what separates them from
                 // the roar/devour/raise family that aims at the hill and has nothing crossing it.
                 case SiegeKind.Shackler:
                     into.Add(AssetRequest.SpriteSet(AssetManifest.SiegeArt("snare")));
@@ -557,7 +557,7 @@ namespace GlimmerGrove.Content
         }
 
         /// <summary>
-        /// The hill, the line, the field and the creepers — everything every siege draws.
+        /// The hill, the line, the field and the creepers - everything every siege draws.
         ///
         /// A chapter's bosses and its grounds are added on top by <see cref="ArtFor"/>, because
         /// which of the four bosses a chapter sends, and how many rungs it has, are both facts
@@ -569,14 +569,14 @@ namespace GlimmerGrove.Content
         /// <para>
         /// <b>Twelve bodies rather than four, and none of them is tinted here.</b> A raider used to
         /// be one of three creeper models or the brute, multiplied at run time by 62% toward its
-        /// colour — which <c>Image.color</c> can only do by <em>darkening</em>, so what four packs
+        /// colour - which <c>Image.color</c> can only do by <em>darkening</em>, so what four packs
         /// had drawn came out as four silhouettes of one value. The colour is baked now
         /// (<c>make_siege_art.RAIDER_SET</c>), which lets the body say it too: one model per colour
         /// per kind, so a player who cannot separate two hues can still separate a fly from a
         /// horned beetle.
         /// </para>
         /// <para>
-        /// <b>All twelve are insects, drawn top-down, out of one pack</b> — which is the owner's
+        /// <b>All twelve are insects, drawn top-down, out of one pack</b> - which is the owner's
         /// call and also the one view this board has: the hill is looked down on and its floor is a
         /// top-down tileset, so the side-view cast that stood here was a mismatch nobody had named.
         /// Light fliers and smooth shells creep, horned beetles are the brutes, and the hard domed
@@ -613,8 +613,8 @@ namespace GlimmerGrove.Content
         ///
         /// <para>
         /// <b>This is the second cast set invariant 37ar said a second pack would buy.</b> That
-        /// entry recorded the price in advance — "one table in <c>make_siege_art.RAIDER_SET</c>,
-        /// twelve rows in <c>SiegeMode</c>, and no code" — and the prediction held to the letter.
+        /// entry recorded the price in advance - "one table in <c>make_siege_art.RAIDER_SET</c>,
+        /// twelve rows in <c>SiegeMode</c>, and no code" - and the prediction held to the letter.
         /// The owner supplied two monster packs that between them draw fifteen small bodies, so the
         /// set needs no body worn twice.
         /// </para>
@@ -654,8 +654,8 @@ namespace GlimmerGrove.Content
         /// colour as well as the kind. This pack draws five, so the kind is carried plainly and
         /// nothing else is pretended: a bare rib cage creeps, a helm over a long weapon is a
         /// brute, and a shield or a closed visor is a bulwark. The colour is still said three
-        /// times — the body is hue-rotated, the view tints it and the view rings it (invariant
-        /// 37f) — and none of those was ever the silhouette's job.
+        /// times - the body is hue-rotated, the view tints it and the view rings it (invariant
+        /// 37f) - and none of those was ever the silhouette's job.
         /// </para>
         /// <para>
         /// <b>It is the first cast with a second reel per body</b>: see <see cref="BoneSwings"/>.
@@ -685,7 +685,7 @@ namespace GlimmerGrove.Content
         /// <para>
         /// <b>A raider that reaches the line stands there hitting it</b> every
         /// <c>SiegeTuning.BlowEvery</c> until something kills it, and for two chapters what that
-        /// looked like was a walk cycle looping in place against a turret — invariant 37u's
+        /// looked like was a walk cycle looping in place against a turret - invariant 37u's
         /// complaint (a body doing the wrong thing where it stands) arriving through the art
         /// rather than through the framing. This pack is the first one bought here that drew an
         /// attack, so this is the first cast that can answer it.
@@ -697,7 +697,7 @@ namespace GlimmerGrove.Content
         /// <para>
         /// <b>Cut on a bigger canvas at the walk's own scale</b>, because a shared one fitted to
         /// the walk's height would draw every skeleton at 59–73% of its size for the whole run for
-        /// the sake of six frames at the line — see <c>make_siege_art.walk_and_swing</c>, and
+        /// the sake of six frames at the line - see <c>make_siege_art.walk_and_swing</c>, and
         /// <c>SiegeView.Wear</c> for the half that reads the ratio back.
         /// </para>
         /// </summary>
@@ -727,7 +727,7 @@ namespace GlimmerGrove.Content
         /// has and the one nobody had written down.</b> An insect is seen from directly above, a
         /// blob and a skeleton head-on; all three are mirror-symmetric about their own middle,
         /// because that is what a body facing you looks like. This is the only pack on the
-        /// machine drawn that way, and the cast that shipped before it was not — it was cut from
+        /// machine drawn that way, and the cast that shipped before it was not - it was cut from
         /// a high-resolution pack drawn in three-quarter and profile, and the owner withdrew it
         /// in one line. <b>Facing outranks sharpness</b>: a flat cartoon body inside a heavy
         /// outline carries an upscale, and no resolution recovers a body facing the wrong way.
@@ -735,7 +735,7 @@ namespace GlimmerGrove.Content
         /// <para>
         /// <b>Its kinds are said by what a body is wearing</b>, which is the pack's own drawing:
         /// a manhole cover and a padded helmet are the bulwarks, a sledgehammer and a bearskin
-        /// the brutes, and the two slightest creep. <b>Its swing is built rather than cut</b> —
+        /// the brutes, and the two slightest creep. <b>Its swing is built rather than cut</b> -
         /// the pack draws a walk and nothing else, so the body throws itself at the viewer and
         /// settles, which from this camera is what a lunge is
         /// (<c>make_siege_art.walk_and_swing</c>).
@@ -743,7 +743,7 @@ namespace GlimmerGrove.Content
         /// <para>
         /// <b>Both this cast and the three bosses replaced bodies rendered out of rigged 3D</b>
         /// (<c>SiegeCastBake</c>, withdrawn). The bake existed because this project had recorded
-        /// that every character pack on the machine except the insects was drawn side-view — and
+        /// that every character pack on the machine except the insects was drawn side-view - and
         /// four of them are head-on, which is twenty bodies nobody had opened
         /// (<c>make_siege_art.MONS_V1</c>). <b>Its known cost is the upscale</b>: 2.5x–3.4x to
         /// reach <c>CAST</c>, the worst in the mode. See <c>make_siege_art.RABBLE_SET</c>.
@@ -776,7 +776,7 @@ namespace GlimmerGrove.Content
         /// What the rabble swings at the ward line. See <see cref="BoneSwings"/>.
         ///
         /// <b>Its pack draws an attack for every body</b>, which is what kept this chapter's
-        /// swing when the bake it used to come from was withdrawn — a rendered body could always
+        /// swing when the bake it used to come from was withdrawn - a rendered body could always
         /// be given one, so the question there was only whether somebody cut it; for a bought
         /// sheet it is whether the pack drew one at all.
         /// </summary>
@@ -808,7 +808,7 @@ namespace GlimmerGrove.Content
         /// idea.</b> Every family appears three times, once as a creeper, once as a brute and
         /// once as a bulwark; every kind holds all four families; no colour draws the same
         /// family twice. What a player sees on the Infinite hill is therefore insects, blobs,
-        /// skeletons and the rabble walking down it together, in every role — which is what an
+        /// skeletons and the rabble walking down it together, in every role - which is what an
         /// endless watch <em>is</em>, and it is the one place in this mode where sharing a body
         /// with a chapter is the point rather than the fault (compare <see cref="RabbleCast"/>).
         /// </para>
@@ -897,7 +897,7 @@ namespace GlimmerGrove.Content
         /// <para>
         /// <b>Derived from the four chapter casts rather than written out, which is the whole
         /// point.</b> A thirteenth to twenty-fourth reel written down here would be twelve more
-        /// names to keep in step with the arrays above — and the day one of those casts is
+        /// names to keep in step with the arrays above - and the day one of those casts is
         /// re-cut, the lane would go on naming a reel nobody writes any more. Indexing the very
         /// arrays <see cref="CastArt"/> hands out makes that unrepresentable, exactly as
         /// <see cref="CastAddress"/> made the view's old copy of the names unrepresentable.
@@ -922,7 +922,7 @@ namespace GlimmerGrove.Content
         /// <b>The one partial swing table in this mode, and it is honest rather than
         /// convenient</b>: the insects and the brood have no attack animation at all, so those
         /// six slots have nothing to name and say so. <see cref="CastSwing"/> answers empty for
-        /// them and the view keeps walking — which is exactly what those two chapters do today.
+        /// them and the view keeps walking - which is exactly what those two chapters do today.
         /// </summary>
         static readonly AssetRequest[] MedleySwings = Dealt(MedleyOrder, true);
 
@@ -965,7 +965,7 @@ namespace GlimmerGrove.Content
         /// One of the medley's two arrays, dealt out of <see cref="MedleyOrder"/>.
         ///
         /// <b>A method rather than two initialisers</b>, so the walk and the swing cannot be
-        /// dealt from different squares — which would load one family's body and swing another's
+        /// dealt from different squares - which would load one family's body and swing another's
         /// at the ward line.
         /// </summary>
         static AssetRequest[] Dealt(int[] order, bool swinging)
@@ -977,7 +977,7 @@ namespace GlimmerGrove.Content
                 var from = swinging ? CastSwingArt(order[i]) : CastArt(order[i]);
 
                 // Default is an empty address, which is the "this body does not swing" answer
-                // `CastSwing` already gives — never a made-up name.
+                // `CastSwing` already gives - never a made-up name.
                 into[i] = from != null && from.Count > i ? from[i] : default;
             }
 
@@ -988,7 +988,7 @@ namespace GlimmerGrove.Content
         public const int Insects = 0;
 
         /// <summary>
-        /// The Infinite lane's medley — one body from each of the four chapter casts,
+        /// The Infinite lane's medley - one body from each of the four chapter casts,
         /// dealt across the twelve slots. See <see cref="MedleyCast"/>.
         /// </summary>
         public const int Medley = 1;
@@ -1032,7 +1032,7 @@ namespace GlimmerGrove.Content
         ///
         /// <b>A chapter's cast is arithmetic on its ordinal, exactly as its map and its skies are</b>
         /// (invariant 7c). Two entries, so the third siege chapter draws the insects again and the
-        /// fourth the brood — which is the point rather than a shortage: <b>a chapter published next
+        /// fourth the brood - which is the point rather than a shortage: <b>a chapter published next
         /// year costs no cast at all</b>, and no chapter can ship drawing bodies nobody chose. A
         /// third pack lengthens this array and changes nothing else.
         /// </summary>
@@ -1095,7 +1095,7 @@ namespace GlimmerGrove.Content
         /// The reels one cast is made of, in a <b>fixed order</b>: four creepers, then four brutes,
         /// then four bulwarks, each in <c>WardLine.Colours</c> order.
         ///
-        /// <b>The order is the contract</b>, because <see cref="CastAddress"/> indexes into it —
+        /// <b>The order is the contract</b>, because <see cref="CastAddress"/> indexes into it -
         /// see that method for why the names live here and only here. <c>SiegeCastTests</c> pins it.
         /// </summary>
         public static IReadOnlyList<AssetRequest> CastArt(int set)
@@ -1123,8 +1123,8 @@ namespace GlimmerGrove.Content
         /// rectangle over every raider at the line (invariant 7b).
         /// </summary>
         /// <b>Three of the five swing now, and the two that do not are the two bought as flat
-        /// sheets.</b> A baked cast can always be given one — the rig has the clip and the hand
-        /// socket — so for a rendered body the question is only whether somebody cut it, where for
+        /// sheets.</b> A baked cast can always be given one - the rig has the clip and the hand
+        /// socket - so for a rendered body the question is only whether somebody cut it, where for
         /// the insects and the brood it is whether the pack drew one at all.
         public static IReadOnlyList<AssetRequest> CastSwingArt(int set)
             => set == Bones ? BoneSwings
@@ -1152,7 +1152,7 @@ namespace GlimmerGrove.Content
             // **A single slot may be empty, which is what the medley needs and no other
             // cast uses.** Two of the four families it is dealt from have no attack
             // animation in their packs at all, so six of its twelve bodies swing and six
-            // keep walking — and "keep walking" is already the answer this method gives
+            // keep walking - and "keep walking" is already the answer this method gives
             // for a whole cast with no swings, so it is the same answer one body at a
             // time. What must never happen is an address that is *not* empty and not on
             // disk: that loads as nothing, and an `Image` with a null sprite is a white
@@ -1169,8 +1169,8 @@ namespace GlimmerGrove.Content
         /// <para>
         /// <b>Indexed into <see cref="CastArt"/> rather than switched over a second copy of the
         /// names</b>, and that is the whole point of this method. The view used to carry its own
-        /// switch of twelve literals per cast — thirty-six names written down twice, once to
-        /// <em>load</em> and once to <em>draw</em> — which is exactly the fault <c>SiegeGroundTests</c>
+        /// switch of twelve literals per cast - thirty-six names written down twice, once to
+        /// <em>load</em> and once to <em>draw</em> - which is exactly the fault <c>SiegeGroundTests</c>
         /// exists to police for the ten grounds: two switches disagreeing load one thing and draw
         /// another, and an <c>Image</c> with a null sprite is a <b>white rectangle</b> rather than a
         /// blank (invariant 7b), over every raider on the hill, with every gate green.
@@ -1204,7 +1204,7 @@ namespace GlimmerGrove.Content
         /// colours.
         ///
         /// <b>Resident rather than scoped, and it is the safety net rather than the feature.</b>
-        /// The player's own four arrive in the screen's own hold, which is asynchronous —
+        /// The player's own four arrive in the screen's own hold, which is asynchronous -
         /// and an <c>Image</c> with a null sprite is a white rectangle rather than a blank
         /// (invariant 7b). So the fallback the line resolves to when anything at all is wrong is
         /// the one thing that can never be missing.
@@ -1323,7 +1323,7 @@ namespace GlimmerGrove.Content
         /// <summary>
         /// Whether any authored row stands the retired cog cell, and which one.
         ///
-        /// Its own method rather than a clause, because it is asked before the grid exists — a
+        /// Its own method rather than a clause, because it is asked before the grid exists - a
         /// refusal that has to run before the thing it is refusing can be parsed has nowhere else
         /// to live.
         /// </summary>
@@ -1351,7 +1351,7 @@ namespace GlimmerGrove.Content
             // **The retired cog cell is refused by name rather than by falling through.** A `*`
             // was a cog standing on the field; cogs are dropped by felled raiders now, so a body
             // carrying one was authored for a build that is gone. `ProtoGrid.TryRead` would
-            // refuse it anyway as an unknown cell — what a named refusal buys is that whoever
+            // refuse it anyway as an unknown cell - what a named refusal buys is that whoever
             // meets it is told *why* rather than left to guess which of five letters is wrong
             // (invariant 5f, the duskcap's rule).
             if (Retired(block.rows, out int row))
@@ -1431,7 +1431,7 @@ namespace GlimmerGrove.Content
         /// </para>
         /// <para>
         /// <b>The budget is turned off and must stay off.</b> A siege is lost when the last ward
-        /// falls, so a move allowance would be a second fail state — and a meter counting down to
+        /// falls, so a move allowance would be a second fail state - and a meter counting down to
         /// an ending that never happens is the fault invariant 22 names from the other side. The
         /// authored <c>budgetFactor</c> is ignored rather than honoured for the same reason
         /// <c>ProtoValidator</c> refuses one: two ways to say one thing is how they come to

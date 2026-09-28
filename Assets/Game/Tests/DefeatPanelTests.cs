@@ -7,8 +7,8 @@ namespace GlimmerGrove.Tests
     /// The defeat panel's action stack, which is the arithmetic a screenshot cannot check.
     ///
     /// <para>
-    /// The panel can now take five shapes — try again; wait; wait and watch; wait and pay; wait
-    /// and both — and until the third way out was added its height was two hand-written
+    /// The panel can now take five shapes - try again; wait; wait and watch; wait and pay; wait
+    /// and both - and until the third way out was added its height was two hand-written
     /// constants with the button offsets under them written out one at a time. That is exactly
     /// the arrangement <c>PanelStack</c> was lifted out of a panel that had been drawing its
     /// last paragraph 78 units into its own close button, in English, on the one aspect ratio
@@ -20,7 +20,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// Nothing overlaps in any shape the panel can take.
         ///
-        /// Structurally guaranteed by a cursor — but that is a claim about the implementation,
+        /// Structurally guaranteed by a cursor - but that is a claim about the implementation,
         /// and this is the property. A row placed by an absolute offset would pass a compile
         /// and fail this.
         /// </summary>
@@ -61,7 +61,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// A player who can still play is never sold a way to play.
         ///
-        /// Not a layout rule — it is the reason a defeat is not an advertisement, and it is
+        /// Not a layout rule - it is the reason a defeat is not an advertisement, and it is
         /// asserted here because this is the one place that decides whether the controls are
         /// drawn at all.
         /// </summary>
@@ -141,8 +141,8 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The free-glade line clears the near-miss line above it when both are drawn.
         ///
-        /// The two coexist — a run can be both close and free, and the early glades this line
-        /// is written for are exactly where a near miss is most likely — so the line's room
+        /// The two coexist - a run can be both close and free, and the early glades this line
+        /// is written for are exactly where a near miss is most likely - so the line's room
         /// begins under the near-miss slot rather than under the ribbon.
         /// </summary>
         [Test]
@@ -158,7 +158,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// Stated as the property rather than as the number: the air above the line and the air
         /// below it are the two halves of one gap. A typed centre passes a compile and fails
-        /// this, which is what happened — the line shipped 274 down with 74 units of unused
+        /// this, which is what happened - the line shipped 274 down with 74 units of unused
         /// paper over it and 14 under it, and was reported as sitting on the try-again button.
         /// </para>
         /// </summary>
@@ -181,7 +181,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A run that was not close gives the line more room, not the same room lower down —
+        /// A run that was not close gives the line more room, not the same room lower down -
         /// the near-miss slot is reserved on every defeat and filled on few, and the empty one
         /// is the void the line used to be pushed under.
         /// </summary>

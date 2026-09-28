@@ -1,6 +1,6 @@
 // Google sign-in through ASWebAuthenticationSession, bound for GoogleSignIn.cs.
 //
-// Firebase's generic IDP path — the one FederatedOAuthProvider drives — does not work for
+// Firebase's generic IDP path - the one FederatedOAuthProvider drives - does not work for
 // google.com on iOS through the Unity/C++ SDK. It does not crash the way apple.com does; it
 // simply never comes back. The consent screen appears, the account is chosen, and the app is
 // left holding a blank web view for ever with no error on either side. Same weakness as the
@@ -11,7 +11,7 @@
 // page outside the app's process, shares the system cookie jar (so an account already signed
 // in on the device is offered rather than retyped), and hands back the redirect URL.
 //
-// No managed callback crosses the boundary — the managed side polls, for the reason
+// No managed callback crosses the boundary - the managed side polls, for the reason
 // GlimmerAppTracking and GlimmerAppleSignIn give.
 
 #import <Foundation/Foundation.h>
@@ -35,7 +35,7 @@ API_AVAILABLE(ios(13.0))
 
 // Retained for the life of the request, and so is the session itself: both are held only
 // weakly by the system, and a local would be released the moment the calling function
-// returned — the sheet would appear and answer nobody.
+// returned - the sheet would appear and answer nobody.
 static id gGlimmerGoogleAnchor  = nil;
 static id gGlimmerGoogleSession = nil;
 
@@ -63,7 +63,7 @@ extern "C" {
 // The iOS OAuth client id, read out of the GoogleService-Info.plist this app already
 // ships rather than written down a second time. Firebase's managed AppOptions does not
 // expose it, and a copy in C# is a copy that can come to disagree with the plist the same
-// tool generated — which would show up as a redirect scheme that no longer matches.
+// tool generated - which would show up as a redirect scheme that no longer matches.
 const char* GlimmerGoogleClientId() {
     static NSString* cached = nil;
 

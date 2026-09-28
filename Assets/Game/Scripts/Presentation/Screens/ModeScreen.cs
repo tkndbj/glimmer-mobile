@@ -17,7 +17,7 @@ namespace GlimmerGrove
     /// <b>Shared by inheritance rather than by a host that switches.</b> Each mode's screen is
     /// its own class and owns its own board, its own input and its own rules; what it inherits
     /// is only the furniture. That is what stops a fifth mode turning this into a file with five
-    /// branches in it — the previous arrangement was one screen holding all three games behind a
+    /// branches in it - the previous arrangement was one screen holding all three games behind a
     /// switch, which is exactly the god file that has to be avoided.
     /// </para>
     /// <para>
@@ -31,14 +31,14 @@ namespace GlimmerGrove
         public LevelId LevelId { protected get; set; }
 
         /// <summary>
-        /// The bed every board in the game plays, glades included — see
+        /// The bed every board in the game plays, glades included - see
         /// <c>PlayScreen.Track</c>, which names the same string rather than sharing a
         /// constant with this one, for <see cref="Track"/>'s own reason below.
         ///
         /// <para>
         /// <b>Cut to the map's loudness, not the old level track's.</b> Measured, the three
         /// tracks that shipped before it were not a family: <c>mus_menu</c> is -17.9 LUFS and
-        /// <c>mus_map</c> -17.2, while the retired <c>mus_play</c> was -11.9 — six decibels
+        /// <c>mus_map</c> -17.2, while the retired <c>mus_play</c> was -11.9 - six decibels
         /// hotter than everything a player heard on the way to it, so every entry into a
         /// level stepped up in volume. This one is cut to -17.5, which is between the two
         /// screens a board is entered from, so the crossfade off the map is a change of tune
@@ -48,13 +48,13 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Both level screens naming one string is what makes the transition silent.</b>
         /// <c>Audio.SwapTrack</c> is a no-op on the track already playing, so leaving a mode
-        /// for a glade does not restart the music or crossfade it into itself — it simply
+        /// for a glade does not restart the music or crossfade it into itself - it simply
         /// keeps playing. That is a property of the two names being equal, so it is worth
         /// knowing before either is changed on its own.
         /// </para>
         /// <para>
         /// <b>A literal, and it may never become a shared constant.</b> A track name resolves
-        /// through Addressables and nothing in the Editor catches a wrong one — see the note
+        /// through Addressables and nothing in the Editor catches a wrong one - see the note
         /// over <c>ShopScreen.Track</c>, which is that bug having already shipped once. What
         /// catches it is <c>Tools/verify/sfxnames.py</c>, which reads <b>literals</b>, exactly
         /// as invariant 6 makes loc keys literals and for the same reason: a name assembled
@@ -83,7 +83,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// The tint is here because a number that means something at a glance is part of what a
-        /// mode is saying — Lightweave's ink turns amber and then red — and the alternative is a
+        /// mode is saying - Lightweave's ink turns amber and then red - and the alternative is a
         /// second hook, painted from a second place, that can disagree with this one about which
         /// number it is talking about.
         /// </para>
@@ -119,7 +119,7 @@ namespace GlimmerGrove
         /// <summary>
         /// What this mode counts, in the order it should be read. One to three of them.
         ///
-        /// Asked whenever the board reports a change, and again while the header is being built —
+        /// Asked whenever the board reports a change, and again while the header is being built -
         /// so it has to answer before <see cref="Play"/> has run, with whatever a board that does
         /// not exist yet is worth.
         /// </summary>
@@ -145,8 +145,8 @@ namespace GlimmerGrove
         /// Holds the iris shut until the board exists.
         ///
         /// <para>
-        /// A mode screen builds its board from a coroutine — the chapter body has to be fetched
-        /// and the host rect has to be laid out before a grove can be sized — and until this was
+        /// A mode screen builds its board from a coroutine - the chapter body has to be fetched
+        /// and the host rect has to be laid out before a grove can be sized - and until this was
         /// here, <see cref="Flow"/> read the default <c>true</c> and opened straight away. So
         /// <see cref="OnPresented"/> ran at a moment when <c>Play</c> may not have: the lesson
         /// toast could be thrown over a screen with no board on it, and anything an override
@@ -169,7 +169,7 @@ namespace GlimmerGrove
         /// Fetches the chapter, resolves the level and builds the screen around it.
         ///
         /// <b>Named away from <c>Resolve</c> deliberately.</b> It was called that, which is also
-        /// what <see cref="RunScreen"/> calls clearing a run's stake — and a private
+        /// what <see cref="RunScreen"/> calls clearing a run's stake - and a private
         /// <c>IEnumerator Resolve()</c> here <em>hides</em> the inherited <c>void Resolve()</c>
         /// from every mode below it. The calls still compiled, still bound, and quietly built an
         /// iterator nobody ran, so a won grove never cleared its <c>RunGuard</c> marker and the
@@ -204,7 +204,7 @@ namespace GlimmerGrove
 
             // No shade, and a vignette that frames rather than darkens. The backdrops are
             // graded in daylight now (`make_chapter_art.daylight`), and a dark wash over a
-            // bright picture does not make it a calm bright picture — it makes it a dull one,
+            // bright picture does not make it a calm bright picture - it makes it a dull one,
             // which is what the .16 and .34 here were doing to every board in every mode. What
             // keeps the readouts legible is the header's own `FadeUp`, which is aimed at the
             // band they sit in rather than at the whole screen. See `BuildHeader`.
@@ -252,14 +252,14 @@ namespace GlimmerGrove
         /// <remarks>
         /// Public, and <see cref="KeyY"/> with it, because <c>RunScreen.TagFoot</c> is the
         /// arithmetic that keeps the level tag off the readouts and <c>RunHeaderTests</c> is
-        /// what holds the two to each other — <c>LevelsScreen.PerchWidth</c>'s bargain, one
+        /// what holds the two to each other - <c>LevelsScreen.PerchWidth</c>'s bargain, one
         /// screen over.
         /// </remarks>
         public const float BarHeight = 210f, ReadoutsY = 186f;
 
         /// <summary>
-        /// How far off the bar's own middle the two corner keys — and the level tag beside the
-        /// left one — are drawn. One number, so the tag cannot sit at a height the key does not.
+        /// How far off the bar's own middle the two corner keys - and the level tag beside the
+        /// left one - are drawn. One number, so the tag cannot sit at a height the key does not.
         /// </summary>
         public const float KeyY = -4f;
 
@@ -276,7 +276,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>It sits level with the header's own two keys now, and that is where the board's
         /// extra height came from.</b> It used to have a band to itself under the bar, 214 to
-        /// 334, which put its foot 34 units *below* the 300 the siege board's host begins at — so
+        /// 334, which put its foot 34 units *below* the 300 the siege board's host begins at - so
         /// on that mode the captions were drawn behind an opaque plate and had been invisible for
         /// as long as the mode had shipped, which is the half of this nobody had noticed. Moving
         /// the row up into the bar's band puts every caption back on screen **and** lets the
@@ -293,8 +293,8 @@ namespace GlimmerGrove
         /// <para>
         /// <b>And the top of it is decided by a camera rather than by taste.</b> A dynamic island
         /// reaches about 132 units down the middle of the display and the run screens deliberately
-        /// give up the top safe inset (<c>RunScreen.SafeEdges</c>), so the middle readout — which
-        /// is the one directly under it — must keep its glyphs clear of that on its own. At 56pt
+        /// give up the top safe inset (<c>RunScreen.SafeEdges</c>), so the middle readout - which
+        /// is the one directly under it - must keep its glyphs clear of that on its own. At 56pt
         /// centred on 172 they start around 152. Do not move this row up without measuring that
         /// again.
         /// </para>
@@ -316,7 +316,7 @@ namespace GlimmerGrove
         /// <c>ReadoutsY + RowHeight / 2</c> measured down from the safe area's top edge, and
         /// the shade has to clear that by a little or the gradient runs out exactly where the
         /// captions are. A typed number here is the fault <c>PanelStack</c> exists to prevent,
-        /// one screen over — a row moves and the thing meant to sit behind it does not.
+        /// one screen over - a row moves and the thing meant to sit behind it does not.
         /// </summary>
         const float ShadeDrop = ReadoutsY + RowHeight * .5f + 40f - BarHeight;
 
@@ -326,13 +326,13 @@ namespace GlimmerGrove
         /// <para>
         /// <b>A declaration rather than a flag.</b> It began as <c>bool HeaderRestart</c>, which
         /// is the first of the five booleans that turn a shared base class back into the god file
-        /// this one was split out of — the remarks above are explicit that the arrangement before
+        /// this one was split out of - the remarks above are explicit that the arrangement before
         /// it was one screen holding three games behind a switch. A mode says what its key is;
         /// nothing here branches on which mode is asking.
         /// </para>
         /// <para>
         /// The default is restart, which is the right control on a mode where restarting costs
-        /// nothing — the board goes back and so does the player. Lightweave stopped being one
+        /// nothing - the board goes back and so does the player. Lightweave stopped being one
         /// when it was dealt ink: a restart there hands back a full pot, so it is the cheapest
         /// way out of a grove going wrong and belongs one deliberate tap inside a pause menu
         /// rather than under a thumb that is already reaching across the board.
@@ -358,10 +358,10 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The level's name and its tagline used to sit here and no longer do.</b> They were
         /// the two highest things on the screen, so on a phone with a camera cutout they were
-        /// the two it took — and the inset cannot buy back what a mode has chosen to draw at the
+        /// the two it took - and the inset cannot buy back what a mode has chosen to draw at the
         /// very top of it. Neither was load-bearing: the player picked the level by name a
         /// screen ago. The tagline used to come back as a flavour line along the bottom of the
-        /// board, and that is gone too — a box on every level of every mode is furniture, and
+        /// board, and that is gone too - a box on every level of every mode is furniture, and
         /// the tips are what a board has to say. What is left is the two controls and, below
         /// them, the readouts.
         /// </para>
@@ -376,9 +376,9 @@ namespace GlimmerGrove
 
             // Rotated, so it is opaque along the top edge and gone by its bottom one. It reaches
             // `ShadeDrop` below the bar rather than the 40 it used to, and that is what pays for
-            // the backdrop no longer being dimmed as a whole: the readouts are bare text — a
+            // the backdrop no longer being dimmed as a whole: the readouts are bare text - a
             // 56pt value and a 22pt caption at 62% white, with no pill under them, unlike the
-            // glade's — so they are the one thing on this screen that needs the sky behind it
+            // glade's - so they are the one thing on this screen that needs the sky behind it
             // held down, and they are the only thing that now gets it.
             var shade = UIKit.Img("Shade", bar, Art.FadeUp(64), new Color(.02f, .04f, .08f, .58f));
             UIKit.StretchTo((RectTransform)shade.transform, 0, -ShadeDrop, 0, 0);
@@ -398,7 +398,7 @@ namespace GlimmerGrove
 
             // Beside the restart key. Built for every mode and shown only by the ones whose
             // board actually teaches something, which is RunScreen's to decide once the board
-            // has been read — a mode that declares no lessons never sees it. See
+            // has been read - a mode that declares no lessons never sees it. See
             // RunLessons.BuildKey.
             Teaching.BuildKey(bar, new Vector2(-102f, KeyY));
         }
@@ -454,7 +454,7 @@ namespace GlimmerGrove
                 if (_captions[i]) _captions[i].gameObject.SetActive(used);
                 if (!used) continue;
 
-                // Where, and whether that leaves room, is ReadoutRow's — in Domain, where a
+                // Where, and whether that leaves room, is ReadoutRow's - in Domain, where a
                 // test can hold the spacing to what it claims rather than a screenshot on one
                 // aspect ratio.
                 float x = ReadoutRow.XFor(i, count);
@@ -533,13 +533,13 @@ namespace GlimmerGrove
         /// The distinction is a heart. A defeat has already charged for the run that just ended,
         /// so putting the board back afterwards is free; <c>RestartLevel</c> abandons a run that
         /// is still live and prices it. This used to call the latter, which was harmless only
-        /// while a restart was free — the moment <see cref="RunScreen"/> started pricing it, it
+        /// while a restart was free - the moment <see cref="RunScreen"/> started pricing it, it
         /// would have taken a second heart for one loss.
         /// </summary>
         public override void RetryAfterDefeat() => Rewind();
 
         /// <summary>
-        /// A mode with no stake of its own — the lab boards, which never commit — walks away for
+        /// A mode with no stake of its own - the lab boards, which never commit - walks away for
         /// nothing, and that falls out of <c>RunScreen.ConfirmForfeit</c> rather than needing to
         /// be said here.
         /// </summary>

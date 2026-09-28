@@ -8,7 +8,7 @@ namespace GlimmerGrove.Challenges
 {
     /// <summary>
     /// One play dealt by <see cref="ChallengeLedger.Begin"/>: which level, on which day, as
-    /// which slot — and whether it has been <see cref="Spent"/> yet, which happens at the
+    /// which slot - and whether it has been <see cref="Spent"/> yet, which happens at the
     /// first move (<see cref="ChallengeLedger.Commit"/>), never at the deal.
     /// </summary>
     public sealed class ChallengePlay
@@ -97,19 +97,19 @@ namespace GlimmerGrove.Challenges
     ///
     /// <para>
     /// <b>Three kinds of number, each with the one merge rule its shape allows</b> (invariant
-    /// 11b). Today's rows are period counters — the later day wins outright, and within a shared
+    /// 11b). Today's rows are period counters - the later day wins outright, and within a shared
     /// day each genre's attempts and wins take the larger value, which is the task ledger's rule
     /// one level over. The lifetime clears are a monotonic tally per genre joined by <c>max</c>,
     /// the storable-count exception for the fifth time. A deal is one instant per tier id, when
     /// its window began, joined by <c>max</c>; the window it covers is derived from that instant
-    /// and the tier's authored length — exactly that many days of the clock — so there is one
+    /// and the tier's authored length - exactly that many days of the clock - so there is one
     /// number and nothing to disagree about (48c's shape).
     /// </para>
     /// <para>
     /// <b>What a forged file buys, field by field.</b> Today's rows buy plays, which pay nothing
     /// by themselves. The tally buys XP inside a bounded range and no currency (invariant 13's
     /// fourth clause; <see cref="ChallengeRewardRule"/>). A tier row buys a page that offers
-    /// more plays — and the coin claim for every play past the free allowance is priced by the
+    /// more plays - and the coin claim for every play past the free allowance is priced by the
     /// server against the deal <em>it</em> recorded when the gems were taken, so a tier the
     /// server never sold pays exactly the free figure. The client's copy draws the page and
     /// gates nothing that pays, which is <see cref="Events.SeasonLedger.OwnsPass"/>'s sentence.
@@ -117,20 +117,20 @@ namespace GlimmerGrove.Challenges
     /// <para>
     /// <b>A play is spent at the first move</b> (<see cref="Commit"/>), never at the deal and
     /// never at the ending. Not at the ending, or leaving a losing board before it lost would be
-    /// a free retry for ever; and not at the deal — which is where it was until 2026-09-26 —
+    /// a free retry for ever; and not at the deal - which is where it was until 2026-09-26 -
     /// because a player who opens a board, looks at it and backs out has learned nothing they
     /// could use: the calendar deals the same level again (56f), so an untouched deal is not
     /// information and charging for it read as the game stealing a play (the owner's
     /// instruction). <see cref="Begin"/> deals and <see cref="Commit"/> spends; a win or a loss
     /// commits an uncommitted play first, so nothing can be won for free. A win pays against
     /// the day and slot the play was dealt as (<see cref="ChallengePlay"/>), so a run that
-    /// crosses midnight is still paid — as the last win of the day it began, which is the day
+    /// crosses midnight is still paid - as the last win of the day it began, which is the day
     /// the server's window accepts it on.
     /// </para>
     /// <para>
     /// <b>Independent of the core game by construction.</b> Nothing here reads a level record,
-    /// a star, a heart or a ward; what it touches outside its own block is the wallet — a claim
-    /// under a derived id and a gem debit under another — and <see cref="XpBoost.Bank"/>, which
+    /// a star, a heart or a ward; what it touches outside its own block is the wallet - a claim
+    /// under a derived id and a gem debit under another - and <see cref="XpBoost.Bank"/>, which
     /// is the one multiplier on XP in the game and the only door a new XP source is allowed to
     /// use. Retuning a challenge moves nothing in <c>progression.json</c>.
     /// </para>
@@ -159,7 +159,7 @@ namespace GlimmerGrove.Challenges
         static ChallengeLedger()
         {
             // A deal is bought optimistically (`TryBuyTier` writes the date beside the debit),
-            // so the one thing that can take it back is the debit being refused — the season
+            // so the one thing that can take it back is the debit being refused - the season
             // pass's shape, for its reason (47o). The ledger says so by id; this is the listener.
             CurrencyLedger.SpendRejected += OnSpendRejected;
         }
@@ -167,7 +167,7 @@ namespace GlimmerGrove.Challenges
         // ------------------------------------------------------------- the day
         /// <summary>
         /// Brings the rows up to the trusted clock. The day turning is the one change here that
-        /// nobody makes, so it is detected on read rather than announced — a page that asks
+        /// nobody makes, so it is detected on read rather than announced - a page that asks
         /// after midnight is told, and the hub's badge repaints off the event this raises.
         /// </summary>
         static void Sync()
@@ -200,8 +200,8 @@ namespace GlimmerGrove.Challenges
         }
 
         /// <summary>
-        /// The deal running now with the most plays, or null. Two can overlap — a larger one
-        /// bought as an upgrade shares the smaller's start — and the larger governs while it
+        /// The deal running now with the most plays, or null. Two can overlap - a larger one
+        /// bought as an upgrade shares the smaller's start - and the larger governs while it
         /// runs, because an instant per tier is what the file holds.
         /// </summary>
         public static ChallengeTier HeldTier
@@ -291,7 +291,7 @@ namespace GlimmerGrove.Challenges
             => _clears.TryGetValue(ChallengeGenres.NameOf(genre), out int n) ? n : 0;
 
         /// <summary>
-        /// Levels ever cleared, every genre summed — the number the XP is a function of.
+        /// Levels ever cleared, every genre summed - the number the XP is a function of.
         ///
         /// Rows a build cannot name still count, because a genre withdrawn from the enum was
         /// played and paid for, and its clears merged across devices under the spelling; the
@@ -345,7 +345,7 @@ namespace GlimmerGrove.Challenges
         ///
         /// Saved at once rather than marked dirty: an attempt is the one thing here a player
         /// could want to lose, and a process killed on the board must find it spent on relaunch.
-        /// The row charged is today's, whatever day the play was dealt on — a board opened
+        /// The row charged is today's, whatever day the play was dealt on - a board opened
         /// before midnight and first moved after it is a play of the day it was moved on.
         /// </summary>
         public static void Commit(ChallengePlay play)
@@ -382,8 +382,8 @@ namespace GlimmerGrove.Challenges
         /// only the boost's share, through the one door a boost is allowed (<see cref="XpBoost.Bank"/>).
         /// </para>
         /// <para>
-        /// A win the day's row cannot place — the slot already won on another device and merged
-        /// in, or a play dealt on a day that has since turned — still raises the tally and still
+        /// A win the day's row cannot place - the slot already won on another device and merged
+        /// in, or a play dealt on a day that has since turned - still raises the tally and still
         /// raises the claim, because the level was cleared; what it does not do is move a row it
         /// no longer describes.
         /// </para>
@@ -503,7 +503,7 @@ namespace GlimmerGrove.Challenges
         /// A deal debit the server refused takes the deal with it.
         ///
         /// The gems are already back (the ledger dropped the entry before announcing it); what
-        /// is left is the instant the purchase wrote beside them. Only the exact purchase moves —
+        /// is left is the instant the purchase wrote beside them. Only the exact purchase moves -
         /// a window starting on a later day under the same id is a later purchase and stands.
         /// </summary>
         internal static void OnSpendRejected(string currency, string spendId)
@@ -603,7 +603,7 @@ namespace GlimmerGrove.Challenges
             into.Clear();
             if (rows == null) return;
 
-            // The cap bounds the *walk*, malformed rows included — the endless rule's reading,
+            // The cap bounds the *walk*, malformed rows included - the endless rule's reading,
             // pinned by the shared vectors: a document written past the rules' cap must not
             // cost either side an unbounded walk, and both must stop at the same row.
             int walk = rows.Length < MaxTodayRows ? rows.Length : MaxTodayRows;

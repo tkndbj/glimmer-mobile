@@ -10,13 +10,13 @@ namespace GlimmerGrove.Tests
     /// The client half of Lightfall's rule contract.
     ///
     /// <para>
-    /// The burst-and-wash rule exists twice — <c>FallBoard</c>/<c>FallSolver</c>, which is what
+    /// The burst-and-wash rule exists twice - <c>FallBoard</c>/<c>FallSolver</c>, which is what
     /// ships, and <c>Tools/verify/fall.py</c>, which is what the offline gate and the authoring
     /// scripts run because they have no Unity anywhere. Two copies of one rule drift, and a
     /// comment saying "keep these in sync" was never going to survive a year of content drops.
     /// So both run <c>Tools/verify/fall-vectors.json</c>: this file proves the C# copy matches
     /// it, and <c>content.py</c> proves the Python one does on every offline run. Invariant 9a's
-    /// shape, for a board rule rather than for money — exactly what <c>BoardVectorTests</c> does
+    /// shape, for a board rule rather than for money - exactly what <c>BoardVectorTests</c> does
     /// for the four-armed tile.
     /// </para>
     /// <para>
@@ -71,7 +71,7 @@ namespace GlimmerGrove.Tests
             /// existed.
             ///
             /// Checked rather than merely recorded, because a lens is counted by
-            /// <c>FallLayout.Motes</c> like anything else — so a copy that read glass as bare
+            /// <c>FallLayout.Motes</c> like anything else - so a copy that read glass as bare
             /// ground would agree about <c>standing</c> on a board with none and disagree
             /// silently on every board with one.
             /// </summary>
@@ -84,7 +84,7 @@ namespace GlimmerGrove.Tests
             /// Whether this case's whorls ever merge a pair that reaches white.
             ///
             /// Carried by the file rather than derived here, because deriving it would need the
-            /// search's winning line — and a coverage flag the fixture works out for itself is
+            /// search's winning line - and a coverage flag the fixture works out for itself is
             /// one the fixture can quietly stop working out.
             /// </summary>
             public bool kindles;
@@ -145,7 +145,7 @@ namespace GlimmerGrove.Tests
                 var layout = Layout(test);
                 var survey = FallSolver.Survey(layout);
 
-                string why = test.name + " — " + test.why;
+                string why = test.name + " - " + test.why;
 
                 Assert.AreEqual(test.proved, survey.Proved, why + " (proved)");
                 Assert.AreEqual(test.par, survey.Par, why + " (par)");
@@ -226,10 +226,10 @@ namespace GlimmerGrove.Tests
                                 "flood clause going away");
 
             Assert.IsTrue(glass, "no case with a lens in it, so nothing here would notice the " +
-                                 "whole mechanic going away — which would read as a chapter of " +
+                                 "whole mechanic going away - which would read as a chapter of " +
                                  "boards that simply got harder");
             Assert.IsTrue(partFull, "no case with glass authored part full, so nothing here " +
-                                    "would notice the charge being ignored at parse — which is " +
+                                    "would notice the charge being ignored at parse - which is " +
                                     "the dial the whole chapter's difficulty ramps on");
             Assert.IsTrue(empty, "no case with an empty lens, so nothing here would notice a " +
                                  "board that hands one a channel it was never given");
@@ -237,12 +237,12 @@ namespace GlimmerGrove.Tests
             Assert.IsTrue(whorl, "no case with a whorl in it, so nothing here would notice " +
                                  "the whole mechanic going away");
             Assert.IsTrue(kindles, "no case where a merge reaches white, so nothing here would " +
-                                   "notice a whorl that had stopped mixing what it drew in — " +
+                                   "notice a whorl that had stopped mixing what it drew in - " +
                                    "which is the entire mechanic");
             Assert.IsTrue(whorlPair, "no case with two whorls, so nothing here would notice a " +
                                      "board where only one could ever turn");
             Assert.IsTrue(closes, "no case where a whorl turns with nothing beside it, so " +
-                                  "nothing here would notice one that waited instead — which is " +
+                                  "nothing here would notice one that waited instead - which is " +
                                   "a whorl that can never be got rid of, on a well that can then " +
                                   "never be emptied");
             Assert.IsTrue(contested, "no case where two whorls reach the same mote, so nothing " +

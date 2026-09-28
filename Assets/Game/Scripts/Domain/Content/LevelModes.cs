@@ -6,8 +6,8 @@ namespace GlimmerGrove.Content
     /// Every way of playing this build can honour, in the order the switcher offers them.
     ///
     /// <para>
-    /// <b>This list is the only place a mode is registered.</b> Everything else — the content
-    /// mapper, the validator, the catalog index, the map's switcher — asks here rather than
+    /// <b>This list is the only place a mode is registered.</b> Everything else - the content
+    /// mapper, the validator, the catalog index, the map's switcher - asks here rather than
     /// enumerating modes it happens to know about, so a further mode is a subclass and one line
     /// and nothing else in the game has to be edited or even recompiled against a new case.
     /// </para>
@@ -15,7 +15,7 @@ namespace GlimmerGrove.Content
     /// <b>Thornwatch is first, and first is a decision rather than an accident of when things
     /// shipped.</b> This order is what the switcher offers and what a map with nothing remembered
     /// opens on (<see cref="CatalogIndex.DefaultMode"/>), so index nought is the game's front
-    /// door — the mode a new player meets before they have chosen anything. It was the classic
+    /// door - the mode a new player meets before they have chosen anything. It was the classic
     /// glade for as long as the classic glade was that mode; the glade and Lightfall are hidden
     /// now (invariant 38) and Thornwatch is what the game leads with, so it leads here.
     /// </para>
@@ -27,14 +27,14 @@ namespace GlimmerGrove.Content
     /// </para>
     /// <para>
     /// Note what this is <em>not</em>: <see cref="GameMode.Default"/> is untouched and is still
-    /// the glade. That constant answers a different question — a chapter with no <c>mode</c>
+    /// the glade. That constant answers a different question - a chapter with no <c>mode</c>
     /// field is a glade, for ever, so every chapter authored before modes existed keeps working
     /// with its file untouched. Front door and parsing default were the same answer for a long
     /// time and are two questions.
     /// </para>
     /// <para>
     /// A chapter naming a mode this build has never heard of is skipped whole and reported to
-    /// nobody — content ships ahead of builds, so an unknown mode is content from the future and
+    /// nobody - content ships ahead of builds, so an unknown mode is content from the future and
     /// the honest response is to lose that chapter rather than open it into a screen that cannot
     /// run it. That is invariant 20, and it is <see cref="Find"/> answering null.
     /// </para>
@@ -69,7 +69,7 @@ namespace GlimmerGrove.Content
         /// The mode that claims this level's authored block, or null if none does.
         ///
         /// Asked in registration order, so a level carrying two blocks is read as the earlier
-        /// mode rather than by whichever reader happened to run first — deterministic, and the
+        /// mode rather than by whichever reader happened to run first - deterministic, and the
         /// validator complains about the second block separately.
         /// </summary>
         public static LevelMode Claimant(LevelDto dto)

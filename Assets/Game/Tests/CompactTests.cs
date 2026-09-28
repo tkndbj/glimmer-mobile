@@ -12,7 +12,7 @@ namespace GlimmerGrove.Tests
     /// This suite exists for the reason <c>TweenCycleTests</c> does: the failure it guards
     /// against cannot be seen in a screenshot taken today. A formatter that overstates a
     /// balance is invisible until somebody's purse passes ten thousand, and then it shows up
-    /// as a player tapping BUY on something they cannot afford — a bug reported as "the shop
+    /// as a player tapping BUY on something they cannot afford - a bug reported as "the shop
     /// is broken", three steps from the arithmetic that caused it. So the arithmetic is run
     /// here, offline, over the values nobody has reached yet.
     /// </para>
@@ -105,7 +105,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// A comma decimal separator would make "10,1K" read as a thousands separator next to
-        /// a "1,250" price — the one misreading a currency display cannot afford. The device
+        /// a "1,250" price - the one misreading a currency display cannot afford. The device
         /// culture is whatever the player's phone is set to, so this is not hypothetical.
         /// </summary>
         [Test]
@@ -125,8 +125,8 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// Currency is never negative, but a sentinel is — <c>wallet.coins</c> is -1 on a save
-        /// that has not derived one yet — and a formatter that garbles one hides the bug
+        /// Currency is never negative, but a sentinel is - <c>wallet.coins</c> is -1 on a save
+        /// that has not derived one yet - and a formatter that garbles one hides the bug
         /// instead of showing it.
         /// </summary>
         [Test]

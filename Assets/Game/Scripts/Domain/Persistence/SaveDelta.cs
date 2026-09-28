@@ -11,7 +11,7 @@ namespace GlimmerGrove.Persistence
     /// perfectly affordable at three glades; at two thousand it is a hundred kilobytes
     /// of a player's mobile data every time the app is backgrounded, to communicate that
     /// one glade gained a star. Firestore bills per document write rather than per byte,
-    /// so this is not a cost optimisation — it is a bandwidth and latency one, and on a
+    /// so this is not a cost optimisation - it is a bandwidth and latency one, and on a
     /// phone those are the ones the player feels.
     ///
     /// It is computed by comparison rather than by tracking dirty flags. The sync
@@ -58,8 +58,8 @@ namespace GlimmerGrove.Persistence
         /// the whole thing has to be written.
         ///
         /// <para>
-        /// The same reading is taken the other way round by <c>CloudSaveService</c> — the merged
-        /// save against the <em>local</em> file it is about to replace — to say what the device
+        /// The same reading is taken the other way round by <c>CloudSaveService</c> - the merged
+        /// save against the <em>local</em> file it is about to replace - to say what the device
         /// learned from the server (<c>CloudSaveService.Learned</c>). Both answers come out of one
         /// comparison on purpose: a field this method ignores is a field neither side can notice
         /// moving, so adding one here adds it to both.
@@ -129,7 +129,7 @@ namespace GlimmerGrove.Persistence
             // sharper than the tip set's: a purchase is the one thing in this file that
             // cannot be re-derived, so a set that stayed on one phone is a companion the
             // player paid for and loses on reinstall. Compared as an ordered walk because
-            // both sides are written sorted — see CompanionLedger.
+            // both sides are written sorted - see CompanionLedger.
             if (!SameSet(remote.companionsOwned, merged.companionsOwned)) return true;
 
             // The heart containers. These travel for the companions' reason with the stakes
@@ -142,12 +142,12 @@ namespace GlimmerGrove.Persistence
 
             // The utilities. These travel for the companions' reason with one addition: a
             // utility can be bought with gems, so a row that stayed on one phone is a purchase
-            // the player made and cannot see on their other device — and *spent* has to travel
+            // the player made and cannot see on their other device - and *spent* has to travel
             // with *earned*, or the two devices would each hand back what the other used.
             if (!SameUtilities(remote.utilityStock, merged.utilityStock)) return true;
 
             // The line. Its purchases travel for the companions' reason; its arrangement travels
-            // because it is the one thing here a player can see is wrong on another device — a
+            // because it is the one thing here a player can see is wrong on another device - a
             // loadout that stayed on one phone is an evening's decisions lost on reinstall. The
             // stamp travels with the rows, or a device would push an arrangement whose date said
             // it was older than the one it just replaced.
@@ -160,7 +160,7 @@ namespace GlimmerGrove.Persistence
             if (!SameEndless(remote.endlessBest, merged.endlessBest)) return true;
             if (!SameStars(remote.wardStars, merged.wardStars)) return true;
 
-            // The daily challenges. Today's rows travel for the ad allowance's reason — the cap
+            // The daily challenges. Today's rows travel for the ad allowance's reason - the cap
             // is the only thing between a second device and a fresh set of plays; the tally
             // travels because the server derives XP from it; and a deal's date travels because a
             // deal bought on one phone is a page the other draws as free.
@@ -179,7 +179,7 @@ namespace GlimmerGrove.Persistence
             var walletB = merged.wallet ?? WalletDto.Unwritten();
             // The heart ledger, and not the count beside it. The count is derived from
             // these three, so comparing it as well would only add a way for the two
-            // answers to disagree — and comparing it *instead* would miss a refill
+            // answers to disagree - and comparing it *instead* would miss a refill
             // deadline that moved without the count moving, which is precisely the state
             // the other device needs in order to merge correctly.
             if (walletA.heartsProduced != walletB.heartsProduced) return true;
@@ -202,9 +202,9 @@ namespace GlimmerGrove.Persistence
             if (!Same(walletA.avatarId, walletB.avatarId)) return true;
 
             // The stamps behind those two, compared in their own right. A device holding
-            // the same name under a later stamp knows something the server does not — that
+            // the same name under a later stamp knows something the server does not - that
             // the name was re-chosen, and so outranks a third device still carrying the
-            // older date — and without this the merge would keep deriving that answer
+            // older date - and without this the merge would keep deriving that answer
             // locally and never send it. It settles rather than oscillates: the push
             // carries the stamp with the value, so the following sync agrees and writes
             // nothing.
@@ -212,7 +212,7 @@ namespace GlimmerGrove.Persistence
             if (walletA.avatarSetUnix != walletB.avatarSetUnix) return true;
 
             // Today's chest counters. Small, and they change several times a session, so
-            // they are compared rather than assumed — a day that rolled over on one device
+            // they are compared rather than assumed - a day that rolled over on one device
             // has to reach the other or its chests would still look unopened.
             var dailyA = remote.daily ?? new DailyStateDto();
             var dailyB = merged.daily ?? new DailyStateDto();
@@ -230,7 +230,7 @@ namespace GlimmerGrove.Persistence
             if (!SameCounts(adsA.watched, adsB.watched)) return true;
 
             // The streak's four dates. All monotonic, so a difference always means one
-            // side has seen a night the other has not — which is exactly when the other
+            // side has seen a night the other has not - which is exactly when the other
             // device needs to hear about it, since a streak that does not travel is a
             // streak that restarts on every device the player owns. The shield's date is
             // the sharpest case of that: a player who paid to be away and then opened the
@@ -246,7 +246,7 @@ namespace GlimmerGrove.Persistence
             // The tasks. Both periods' counters and claims have to travel: a counter that stays
             // on one phone is a task that reads half done on the other, and a claim that stays
             // is a chest the other device would pay a second time. Compared by walking, so the
-            // writer sorts — see TaskLedger.Write.
+            // writer sorts - see TaskLedger.Write.
             if (!SameTasks(remote.tasks, merged.tasks)) return true;
 
             // The event floors. These have to travel, and for a stronger reason than the
@@ -270,7 +270,7 @@ namespace GlimmerGrove.Persistence
         }
 
         /// <summary>
-        /// Both lists are written sorted, so a plain ordered walk is enough — and any
+        /// Both lists are written sorted, so a plain ordered walk is enough - and any
         /// difference in length is a difference in content, because the union only grows.
         /// </summary>
         static bool SameSet(string[] a, string[] b)
@@ -287,12 +287,12 @@ namespace GlimmerGrove.Persistence
         /// <summary>
         /// The utility ledgers, as an ordered walk. Both sides are written sorted by
         /// <c>UtilityStock.Write</c>, so order is part of the comparison rather than something
-        /// this has to normalise — the rule <see cref="SameUtilities"/> already follows.
+        /// this has to normalise - the rule <see cref="SameUtilities"/> already follows.
         /// </summary>
         /// <summary>
         /// Whether two ward lines are the same arrangement.
         ///
-        /// An ordered walk, because <c>WardLoadout</c> writes its rows in colour order — the
+        /// An ordered walk, because <c>WardLoadout</c> writes its rows in colour order - the
         /// property that stops an unstable order reading as changed on every launch and pushing a
         /// write for nothing, for ever.
         /// </summary>
@@ -462,7 +462,7 @@ namespace GlimmerGrove.Persistence
             && SameCounts(a?.lifetime, b?.lifetime);
 
         /// <summary>
-        /// The lifetime tally, walked in order like every other id-keyed list here — both sides
+        /// The lifetime tally, walked in order like every other id-keyed list here - both sides
         /// are written sorted (<c>LifetimeTally.Write</c>), so a walk is enough and a set
         /// comparison would only hide an unsorted writer.
         ///

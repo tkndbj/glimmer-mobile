@@ -4,7 +4,7 @@ using NUnit.Framework;
 namespace GlimmerGrove.Tests
 {
     /// <summary>
-    /// The prize panel's arithmetic — one geometry for every video that pays into a
+    /// The prize panel's arithmetic - one geometry for every video that pays into a
     /// celebration.
     ///
     /// <para>
@@ -42,7 +42,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// The height is derived from the parts, not typed beside them — driven by summing them
+        /// The height is derived from the parts, not typed beside them - driven by summing them
         /// independently, because a constant that happens to equal the sum today is
         /// indistinguishable from one that is derived until somebody inserts a row.
         /// </summary>

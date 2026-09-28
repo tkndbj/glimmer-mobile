@@ -8,7 +8,7 @@ namespace GlimmerGrove.Privacy
     /// Three states, and the third is the one that matters: <see cref="Unknown"/> is not a
     /// synonym for <see cref="Denied"/>. A user who has never been asked is a user we may
     /// still ask; one who declined is not. Collapsing the two either re-prompts somebody who
-    /// already said no — which is the thing consent law is most pointed about — or treats
+    /// already said no - which is the thing consent law is most pointed about - or treats
     /// silence as agreement, which is worse.
     /// </summary>
     public enum ConsentStatus
@@ -36,7 +36,7 @@ namespace GlimmerGrove.Privacy
         /// <summary>The prompt has not been answered yet. Apple's <c>notDetermined</c>.</summary>
         NotDetermined = 0,
 
-        /// <summary>Blocked by device policy — parental controls, MDM. Cannot be prompted.</summary>
+        /// <summary>Blocked by device policy - parental controls, MDM. Cannot be prompted.</summary>
         Restricted = 1,
 
         /// <summary>The player said no.</summary>
@@ -53,8 +53,8 @@ namespace GlimmerGrove.Privacy
     /// Everything the ad SDK needs to know about what it may do with this player's data.
     ///
     /// <para>
-    /// <b>A value, decided once and handed down.</b> The alternative — every layer asking a
-    /// consent SDK what it thinks, whenever it wants to know — is how an app ends up
+    /// <b>A value, decided once and handed down.</b> The alternative - every layer asking a
+    /// consent SDK what it thinks, whenever it wants to know - is how an app ends up
     /// initialising mediation before the answer has arrived, which is the single failure that
     /// makes the whole exercise pointless: an SDK started without consent has already decided
     /// what it may collect, and telling it afterwards does not undo the first auction. See
@@ -71,7 +71,7 @@ namespace GlimmerGrove.Privacy
     public readonly struct AdPrivacySignals : IEquatable<AdPrivacySignals>
     {
         /// <summary>
-        /// Whether the player is somewhere GDPR applies — the EEA, the UK.
+        /// Whether the player is somewhere GDPR applies - the EEA, the UK.
         ///
         /// Answered by the CMP from the device's own geography rather than guessed from a
         /// locale, because a German phone in a Turkish airport is still a German user and a
@@ -94,7 +94,7 @@ namespace GlimmerGrove.Privacy
         /// <summary>
         /// Whether this install is treated as child-directed under COPPA.
         ///
-        /// A constant today — see <see cref="AdPrivacy.ChildDirected"/> — but carried here
+        /// A constant today - see <see cref="AdPrivacy.ChildDirected"/> - but carried here
         /// rather than read at the point of use, so the day it stops being a constant there is
         /// one place that changes.
         /// </summary>
@@ -120,7 +120,7 @@ namespace GlimmerGrove.Privacy
         /// <para>
         /// Deliberately the <em>restrictive</em> answer rather than the permissive one: no
         /// consent, and GDPR assumed to apply. That costs revenue on every non-EU player until
-        /// a CMP is installed, which is exactly the right way round — the failure mode of
+        /// a CMP is installed, which is exactly the right way round - the failure mode of
         /// guessing "consented" is serving personalised ads to somebody who never agreed, and
         /// no amount of revenue makes that a good trade.
         /// </para>
@@ -140,7 +140,7 @@ namespace GlimmerGrove.Privacy
         /// </para>
         /// <para>
         /// Note what this does <b>not</b> gate: whether an ad is shown at all. A player who
-        /// declines still sees contextual ads and still earns the reward — an offer that
+        /// declines still sees contextual ads and still earns the reward - an offer that
         /// quietly stopped working after somebody exercised a legal right would be a dark
         /// pattern with a legal department attached.
         /// </para>
@@ -156,7 +156,7 @@ namespace GlimmerGrove.Privacy
         }
 
         /// <summary>
-        /// Whether the device advertising id may be used — the iOS half, which the OS
+        /// Whether the device advertising id may be used - the iOS half, which the OS
         /// enforces regardless of what any SDK is told.
         ///
         /// <see cref="TrackingStatus.NotSupported"/> is permissive because it means Android or

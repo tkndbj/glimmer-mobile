@@ -5,12 +5,12 @@ using UnityEngine.UI;
 namespace GlimmerGrove
 {
     /// <summary>
-    /// Draws a hand tracing a route — or tapping one spot — over and over, for as long as
+    /// Draws a hand tracing a route - or tapping one spot - over and over, for as long as
     /// whatever built it is alive.
     ///
     /// <para>
-    /// The route is given in the host's own space — real points on the real board, worked out
-    /// by whoever knows what is being taught — so this type holds no opinion about grids,
+    /// The route is given in the host's own space - real points on the real board, worked out
+    /// by whoever knows what is being taught - so this type holds no opinion about grids,
     /// cells or modes. All it knows is that a finger comes down at one end, travels, and lifts
     /// off at the other, and <see cref="CoachStroke"/> owns when each of those happens.
     /// </para>
@@ -36,7 +36,7 @@ namespace GlimmerGrove
     /// </summary>
     public static class CoachHand
     {
-        /// <summary>Drawn about the size of one board cell — a hand that dwarfs the grove
+        /// <summary>Drawn about the size of one board cell - a hand that dwarfs the grove
         /// obscures the very thing it is pointing at.</summary>
         const float HandSize = 156f;
 
@@ -45,7 +45,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// How thick the demonstrated line is, against a live channel's .24 of a
-        /// cell. Deliberately the same weight as the line under a real finger — the ink here is
+        /// cell. Deliberately the same weight as the line under a real finger - the ink here is
         /// pretending to be exactly that, so a different thickness would read as a different
         /// thing.
         /// </summary>
@@ -75,7 +75,7 @@ namespace GlimmerGrove
             var root = UIKit.Node("Coach", parent);
 
             // The ink is a line, not a row of dots, and that is the whole of what it is for.
-            // It used to be discs spaced along the route, which reads as a dotted trail — a
+            // It used to be discs spaced along the route, which reads as a dotted trail - a
             // *path marker*, the thing a map draws to say "go this way". What is being taught
             // here is that the player draws, so the ink has to be the mark a finger leaves: one
             // capsule per straight leg, grown from its own start, with a disc at every corner
@@ -84,7 +84,7 @@ namespace GlimmerGrove
             //
             // It also costs *fewer* objects than the dots did, and bounded by corners rather
             // than by length: an elbow is two legs however wide the grove is.
-            // Every point handed in is already a turn — the caller collapses straight runs,
+            // Every point handed in is already a turn - the caller collapses straight runs,
             // because which cells are collinear is a fact about a board and belongs where that
             // can be proved (WeaveLayout.Corners).
             int legs = route.Count - 1;
@@ -180,7 +180,7 @@ namespace GlimmerGrove
         /// The degenerate stroke, and it is <see cref="Show"/>'s argument for a mode that is
         /// tapped rather than dragged: the only thing a first-timer has to know before anything
         /// else is <em>where</em>, and a sentence pointing at a cell asks them to find the cell.
-        /// It leaves no ink at all — there is no route to remember, and the whole gesture is the
+        /// It leaves no ink at all - there is no route to remember, and the whole gesture is the
         /// press.
         /// </para>
         /// <para>

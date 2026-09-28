@@ -5,9 +5,9 @@ namespace GlimmerGrove.Modes
     ///
     /// <para>
     /// <b>Here rather than beside the paint, for <c>RippleTempo</c>'s reason.</b> Motion is the
-    /// one subsystem in this game whose failures show up only in play — a cascade that outstays
+    /// one subsystem in this game whose failures show up only in play - a cascade that outstays
     /// its welcome, a fall that reads as a lag, a chain whose length decides how long the player
-    /// waits — so the arithmetic has to be reachable without an Editor. A <c>switch</c> on a
+    /// waits - so the arithmetic has to be reachable without an Editor. A <c>switch</c> on a
     /// wave count inside a <c>MonoBehaviour</c> is the one place here nothing can be proved.
     /// </para>
     /// <para>
@@ -15,7 +15,7 @@ namespace GlimmerGrove.Modes
     /// what this class exists to enforce: a drop that sets off nine waves must not take three
     /// times as long as one that sets off three, because the reward for a big chain has to be
     /// the chain rather than the waiting. So <see cref="Cascade"/> is capped and
-    /// <see cref="Wave"/> is whatever fits inside it — a long chain plays <em>faster</em>, which
+    /// <see cref="Wave"/> is whatever fits inside it - a long chain plays <em>faster</em>, which
     /// is also what it should look like.
     /// </para>
     /// </summary>
@@ -86,7 +86,7 @@ namespace GlimmerGrove.Modes
         /// and wash, and the collapse into the gaps.
         ///
         /// Fractions rather than seconds so they cannot come to disagree with
-        /// <see cref="Wave"/> when it compresses — they are shares of whatever that answered.
+        /// <see cref="Wave"/> when it compresses - they are shares of whatever that answered.
         /// </summary>
         public const float FlashShare = .26f, BurstShare = .40f, SettleShare = .34f;
 
@@ -105,7 +105,7 @@ namespace GlimmerGrove.Modes
         /// player waiting to act is being made to wait. A shot is the opposite: it costs three
         /// drops of deliberate charging to set up, it is the loudest thing the mode does, and it
         /// is the only moment here worth stopping for. It is still bounded, and
-        /// <see cref="ShotCeiling"/> is the whole of what a cascade may spend on them — a well
+        /// <see cref="ShotCeiling"/> is the whole of what a cascade may spend on them - a well
         /// where four lenses go off does not take four times as long, it takes the same beat
         /// shared four ways, exactly as the waves themselves do.
         /// </para>
@@ -142,7 +142,7 @@ namespace GlimmerGrove.Modes
         /// How much of a throw a beam spends growing to its full length, after which it is held
         /// while it fades.
         ///
-        /// Said once here because two things read it — the view draws the beam to this fraction,
+        /// Said once here because two things read it - the view draws the beam to this fraction,
         /// and it throws the shockwave at the far end on the same beat. A second copy is a second
         /// thing that can drift into landing the arrival before the light gets there.
         /// </summary>
@@ -157,8 +157,8 @@ namespace GlimmerGrove.Modes
         /// <b>Longer than a burst and shorter than a shot, which is the mechanic's economics
         /// said in time.</b> A shot is three drops of charge going off and happens once or twice
         /// a run, so it is worth stopping the board for outright. A merge is the thing the player
-        /// spent the last several drops <em>arranging</em>, and it has to be legible — two motes
-        /// have to be seen leaving the cells they were standing in — so it cannot be given a
+        /// spent the last several drops <em>arranging</em>, and it has to be legible - two motes
+        /// have to be seen leaving the cells they were standing in - so it cannot be given a
         /// burst's beat. But there may be several in one chain, so it cannot be given a shot's
         /// either.
         /// </para>
@@ -183,7 +183,7 @@ namespace GlimmerGrove.Modes
         // ------------------------------------------------------------------ the count
         /// <summary>
         /// How briskly the running chain count pops in. Always quick, and never longer than the
-        /// wave it belongs to — on a long chain the waves are shorter than this, and a count
+        /// wave it belongs to - on a long chain the waves are shorter than this, and a count
         /// that outlasted its own wave would still be arriving as the next one landed.
         /// </summary>
         public static float CountPop(int waves)
@@ -198,7 +198,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// Deliberately so: the cascade's cap exists because the board is latched while it plays
-        /// and a player waiting to act is a player being made to wait. This is the opposite — it
+        /// and a player waiting to act is a player being made to wait. This is the opposite - it
         /// is the pay-off, it happens after the last mote has gone, and it is the only moment in
         /// the mode worth stopping for. It is still bounded, and it is the whole of what a
         /// chain's celebration may cost.

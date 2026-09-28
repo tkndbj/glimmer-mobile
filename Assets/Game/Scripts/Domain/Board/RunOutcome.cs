@@ -8,7 +8,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>Why this type exists.</b> Almost everything the game does in reaction to a
     /// player is a reaction to a run finishing: the star ledger, the reward, the daily
-    /// chest counter, the celebration, the defeat copy, analytics — and, as the game
+    /// chest counter, the celebration, the defeat copy, analytics - and, as the game
     /// grows, a streak, a variable bonus, an event track. Before this type each of those
     /// read what it needed straight off the board and the record, which works exactly
     /// until two of them disagree about what "the run" was. They already had begun to: a
@@ -18,7 +18,7 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// So the screen decides once, here, and hands the same value to everyone. That has
-    /// three consequences worth having. Consumers are <em>additive</em> — a new reaction
+    /// three consequences worth having. Consumers are <em>additive</em> - a new reaction
     /// is a new reader of an existing value, not another hand in the board's state, which
     /// is what keeps the cost of the next feature flat. Nothing downstream can reach back
     /// into a live <see cref="Puzzle"/> that has since been restarted, which is a real
@@ -34,13 +34,13 @@ namespace GlimmerGrove
     /// </summary>
     public readonly struct RunOutcome
     {
-        /// <summary>Which glade was played. Permanent id — see <see cref="LevelId"/>.</summary>
+        /// <summary>Which glade was played. Permanent id - see <see cref="LevelId"/>.</summary>
         public readonly LevelId Level;
 
         /// <summary>True when every lamp was lit.</summary>
         public readonly bool Won;
 
-        /// <summary>Stars this run scored. Always 0 on a loss — a defeat is not a worse clear.</summary>
+        /// <summary>Stars this run scored. Always 0 on a loss - a defeat is not a worse clear.</summary>
         public readonly int Stars;
 
         /// <summary>Turns actually taken.</summary>
@@ -59,7 +59,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// The player's best move count before this run, or 0 when they had never cleared
-        /// it. Zero means "no record", not "a perfect run" — the same convention the save
+        /// it. Zero means "no record", not "a perfect run" - the same convention the save
         /// file uses, so the two cannot disagree.
         /// </summary>
         public readonly int PreviousBest;
@@ -80,7 +80,7 @@ namespace GlimmerGrove
         /// How many turns still separated the board from a finished glade, or -1 when that
         /// could not be known. Zero on a win.
         ///
-        /// An upper bound — see <see cref="Puzzle.TurnsToSolution"/> — so a small number
+        /// An upper bound - see <see cref="Puzzle.TurnsToSolution"/> - so a small number
         /// here is a promise that can be kept and never a flattering guess.
         /// </summary>
         public readonly int TurnsToSolution;
@@ -95,7 +95,7 @@ namespace GlimmerGrove
         /// Wall-clock seconds from the board appearing to the run resolving.
         ///
         /// <b>Not the player's time.</b> This includes staring at an untouched board, and on
-        /// a phone it includes being interrupted — so it describes how long the screen was
+        /// a phone it includes being interrupted - so it describes how long the screen was
         /// open and nothing else. It exists for analytics, which wants exactly that. Anything
         /// shown to a player or written to a record wants <see cref="Moves"/>.
         /// </summary>
@@ -109,7 +109,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>It is not a theoretical minimum, and the copy must never call it one.</b> A
         /// glade is won when every lamp is lit, which can happen with spare conduits left
-        /// pointing anywhere — so a player can and does finish in fewer turns than this by
+        /// pointing anywhere - so a player can and does finish in fewer turns than this by
         /// finding a shorter path than the one the level was authored with. This is exactly
         /// what <see cref="Puzzle.TurnsToSolution"/> documents about itself, and it is why
         /// the reading has three cases rather than two: over it, on it, and under it. The
@@ -145,8 +145,8 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// This is the factory a second mode uses, and it is what let one exist at all. Every
-        /// field of this type is a plain number about what a player did — turns taken, how many
-        /// of the things wanted lit up, how long it took — and none of it is about conduits. The
+        /// field of this type is a plain number about what a player did - turns taken, how many
+        /// of the things wanted lit up, how long it took - and none of it is about conduits. The
         /// <see cref="Puzzle"/> overloads below simply read those numbers off a board; a hollow
         /// reads them off a cascade. So the victory panel, the defeat panel, the near-miss line,
         /// the record and the analytics are the ones the classic mode already had, rather than
@@ -154,7 +154,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// <paramref name="target"/> is the three-star threshold in whatever the mode counts,
-        /// and <paramref name="route"/> is the best a perfect run could have managed — turns to
+        /// and <paramref name="route"/> is the best a perfect run could have managed - turns to
         /// the authored solution on a board, the fewest sparks that finish a hollow.
         /// </para>
         /// </summary>
@@ -183,7 +183,7 @@ namespace GlimmerGrove
                               board.LampsLit, board.LampCount, hintsUsed, seconds, route);
 
         /// <summary>
-        /// A run lost. No stars, no record and no reward — <c>PlayerProgress</c> never
+        /// A run lost. No stars, no record and no reward - <c>PlayerProgress</c> never
         /// hears about this, and the fields that describe a clear are left at their
         /// "never" values rather than at anything a reader could mistake for a result.
         /// </summary>
@@ -200,7 +200,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Refused after a crumbled conduit, and only there. That is not squeamishness about
-        /// that ending — it is that the number is not sound there. A crumbled conduit takes
+        /// that ending - it is that the number is not sound there. A crumbled conduit takes
         /// its own owed turns out of the board with it, so the count over what survives reads
         /// <em>lower</em> than the truth, and a defeat screen that tells a player they were
         /// one turn away when they were four is the exact failure the upper bound was chosen
@@ -222,8 +222,8 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Two turns, and the threshold is doing real work at that size. The effect this
-        /// draws on is a genuine one — a loss that registers as nearly a win drives a
-        /// retry far harder than a plain loss — but it survives only while the claim stays
+        /// draws on is a genuine one - a loss that registers as nearly a win drives a
+        /// retry far harder than a plain loss - but it survives only while the claim stays
         /// rare and true. Widen it to five and every defeat says "so close", which is how
         /// a player learns to stop reading the line; keep it at two, where
         /// <see cref="TurnsToSolution"/> is a bound they could verify by restarting and
@@ -258,7 +258,7 @@ namespace GlimmerGrove
         /// </summary>
         public int TurnsOverRoute => HasRoute ? Moves - Route : 0;
 
-        /// <summary>Cleared in exactly the authored route's turns — no turn wasted.</summary>
+        /// <summary>Cleared in exactly the authored route's turns - no turn wasted.</summary>
         public bool MatchedRoute => HasRoute && Moves == Route;
 
         /// <summary>
@@ -267,7 +267,7 @@ namespace GlimmerGrove
         /// <para>
         /// The rarest thing this panel can say, and the reason <see cref="Route"/> is
         /// documented as beatable. The player lit every lamp without bothering to straighten
-        /// conduits the author's own solution turned — they did not follow the intended path,
+        /// conduits the author's own solution turned - they did not follow the intended path,
         /// they found a better one.
         /// </para>
         /// </summary>
@@ -287,7 +287,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// <b>That is why a personal best no longer qualifies on its own.</b> It used to, and
-        /// the argument was sound while this bought a whole panel — a player who has just
+        /// the argument was sound while this bought a whole panel - a player who has just
         /// played their own best game deserves to be shown how it measured up, at whatever
         /// standard they are currently at. But the sentence available to a best that was still
         /// ninety turns over the route is "56 turns from a perfect route", printed beside a

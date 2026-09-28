@@ -12,14 +12,14 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// Every companion has a still portrait; a few also have the flipbook they use as a
-    /// board critter. Motion is spent only where it is looked at — the hero on the
-    /// profile and the hub's top bar — while a grid of thirty companions draws stills.
+    /// board critter. Motion is spent only where it is looked at - the hero on the
+    /// profile and the hub's top bar - while a grid of thirty companions draws stills.
     /// Thirty flipbooks is thirty folders of forty frames; thirty portraits is 1.4 MB.
     /// </para>
     /// <para>
     /// Screens showing the whole roster take a hold through <see cref="Open"/> and dispose it
     /// when they go, so the portraits live exactly as long as somebody is drawing them. The
-    /// worn companion is deliberately outside that bargain — see
+    /// worn companion is deliberately outside that bargain - see
     /// <see cref="Profile.WarmWornAvatar"/>.
     /// </para>
     /// </summary>
@@ -67,7 +67,7 @@ namespace GlimmerGrove
         /// <b>A hold rather than a named scope, and the marker interface is gone with it.</b>
         /// Three screens draw the roster and any of them can hand over to any other, so a
         /// leaving screen used to ask "does the one replacing me draw these too?" by reading
-        /// <c>Flow.Current</c> against an <c>IDrawsCompanionArt</c> marker — a question that has
+        /// <c>Flow.Current</c> against an <c>IDrawsCompanionArt</c> marker - a question that has
         /// to be re-answered every time a screen is added, and that was wrong twice. Counting
         /// answers it for every pair at once, including pairs nobody has written yet: the
         /// incoming screen has already taken its hold by the time the outgoing one lets go.
@@ -75,7 +75,7 @@ namespace GlimmerGrove
         /// <para>
         /// The caller repaints from <paramref name="onReady"/>, which is the whole point of the
         /// shape: the load is asynchronous, a screen is built in the frame it is asked for, and
-        /// without a repaint the first paint is the only one — exactly how a picker ends up
+        /// without a repaint the first paint is the only one - exactly how a picker ends up
         /// showing blanks for every companion but the one the boot preload happened to warm.
         /// </para>
         /// </summary>
@@ -87,7 +87,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// The reveal and the unlock panels used to open the whole roster to draw a single face
-        /// — thirty portraits for one, on a panel that can be raised over any screen in the
+        /// - thirty portraits for one, on a panel that can be raised over any screen in the
         /// game. Nothing about a hold made that necessary; it was the only shape the named scope
         /// offered, because a scope was all-or-nothing and a second one asking for less would
         /// have replaced the first.

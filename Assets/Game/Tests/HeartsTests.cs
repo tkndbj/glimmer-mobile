@@ -88,7 +88,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The anti-drift property. Reading the state repeatedly must be identical to
-        /// reading it once at the end — otherwise every HUD tick would shave the timer.
+        /// reading it once at the end - otherwise every HUD tick would shave the timer.
         /// </summary>
         [Test]
         public void ReadingRepeatedlyDoesNotDrift()
@@ -155,7 +155,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The clock is a floor, not a drain. A surplus has to survive any amount of time
-        /// passing — the failure this guards against is a catch-up loop that "corrects"
+        /// passing - the failure this guards against is a catch-up loop that "corrects"
         /// somebody back down to five.
         /// </summary>
         [Test]
@@ -174,7 +174,7 @@ namespace GlimmerGrove.Tests
         /// <see cref="Hearts.Spend"/> asks <c>NextRefillUnix</c> rather than comparing to
         /// the cap. While a surplus is held the stored deadline idles in the past; if the
         /// spend that finally drops the player under the cap resumed from that stale value,
-        /// the very next read would pay a heart the player never waited for — and repeating
+        /// the very next read would pay a heart the player never waited for - and repeating
         /// it would turn a surplus into an unlimited supply.
         /// </summary>
         [Test]
@@ -233,7 +233,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// A sync is pull → join → push, so the join runs <em>before</em> the local value
-        /// has ever been uploaded. Under the old rule — the smaller stored count wins —
+        /// has ever been uploaded. Under the old rule - the smaller stored count wins -
         /// the stale zero won, the zero was then pushed, and both sides agreed on nothing.
         /// Reproduced live on 2026-08-14, and it is what a timer refill met every single
         /// time it was followed by the app being backgrounded.
@@ -273,7 +273,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The failure mode in full: syncing repeatedly against a snapshot that never
-        /// learns anything. The old rule drained the player to zero and kept them there —
+        /// learns anything. The old rule drained the player to zero and kept them there -
         /// the timer would deliver a heart, the next foreground would take it away, and no
         /// amount of waiting could ever put one on screen.
         /// </summary>
@@ -296,7 +296,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// A device at the cap carries a refill deadline that has already paid out and is
         /// therefore idle. Taking the larger of the two must not push the other device's
-        /// pending heart away — and it cannot, because the deadline only ever moves to one
+        /// pending heart away - and it cannot, because the deadline only ever moves to one
         /// period past a refill that has already happened.
         /// </summary>
         [Test]
@@ -343,7 +343,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// Two devices that each spend independently: neither loses its own spend, and
-        /// the merge cannot mint one back. It is deliberately not the <em>sum</em> — with
+        /// the merge cannot mint one back. It is deliberately not the <em>sum</em> - with
         /// no shared history there is nothing that distinguishes "two runs each" from
         /// "one device heard about the other's run", and charging for both would be the
         /// mirror of the bug being fixed. Forgiving at most a cap's worth of hearts across
@@ -375,7 +375,7 @@ namespace GlimmerGrove.Tests
             var states = new System.Collections.Generic.List<Hearts>();
 
             // The whole holding range, not a sample of it. Grants stack fifty deep now, so
-            // this is 459 states and ~210k pairs — cheap, because a join is three
+            // this is 459 states and ~210k pairs - cheap, because a join is three
             // comparisons. What is *not* cheap is an assertion message: an interpolated
             // string is built before the assert runs, whether or not it fails, so passing
             // one per pair would mean nearly a million Hearts.ToString() calls. The
@@ -409,7 +409,7 @@ namespace GlimmerGrove.Tests
         // ------------------------------------------------------ the v7 upgrade
         /// <summary>
         /// A pre-v8 save holds a count and no history. Read on its own it is simply that
-        /// many hearts, spent nothing — the only reading available, and the one that keeps
+        /// many hearts, spent nothing - the only reading available, and the one that keeps
         /// what the player was holding.
         /// </summary>
         [Test]
@@ -447,7 +447,7 @@ namespace GlimmerGrove.Tests
     /// <summary>
     /// The same rules seen through the save file, which is where they actually run and
     /// where the loss actually happened. <see cref="Hearts.Join"/> being correct is not
-    /// worth much if <see cref="SaveMerge"/> reads the wrong fields into it — and during
+    /// worth much if <see cref="SaveMerge"/> reads the wrong fields into it - and during
     /// the upgrade it is reading two files written by two different builds.
     /// </summary>
     public sealed class HeartMergeTests
@@ -496,7 +496,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// A surplus collected past the refill cap has to survive a sync like anything
         /// else, and the mirror written for older clients has to carry it. It is the same
-        /// <c>max</c> that protects an ordinary refill — the point of the test is that
+        /// <c>max</c> that protects an ordinary refill - the point of the test is that
         /// nothing in the file path re-imposes the cap the ledger deliberately does not.
         /// </summary>
         [Test]
@@ -517,7 +517,7 @@ namespace GlimmerGrove.Tests
         /// The upgrade itself, and the moment the old bug did its damage: a device that
         /// has just installed v8 still holds a v7 file, and the cloud document was last
         /// written by a v7 build too. Neither side has a ledger, so the count is all there
-        /// is — and the larger one wins, which repairs a player the old rule had drained
+        /// is - and the larger one wins, which repairs a player the old rule had drained
         /// rather than preserving the drain.
         /// </summary>
         [Test]
@@ -541,7 +541,7 @@ namespace GlimmerGrove.Tests
             var upgrading = PreLedger(HeartRules.RefillCap, 0);
 
             Assert.AreEqual(0, upgrading.wallet.heartsProduced,
-                            "the field really is zero — that is the case being defended against");
+                            "the field really is zero - that is the case being defended against");
 
             Assert.AreEqual(HeartRules.RefillCap, HeartsIn(SaveMerge.Join(upgrading, PreLedger(HeartRules.RefillCap, 0))));
             Assert.AreEqual(HeartRules.RefillCap, HeartsIn(SaveMerge.Join(upgrading, WithLedger(5, 0, 0))));
@@ -623,7 +623,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The delta decides whether a sync writes anything at all, so it has to notice a
-        /// ledger that moved — including the case where a refill landed and the count did
+        /// ledger that moved - including the case where a refill landed and the count did
         /// not change because the player spent one in the same window.
         /// </summary>
         [Test]
@@ -642,8 +642,8 @@ namespace GlimmerGrove.Tests
     }
 
     /// <summary>
-    /// The clock guard. A backwards jump is ordinary on a real device — an NTP
-    /// correction, a timezone fix — and without the guard it would strand a refill
+    /// The clock guard. A backwards jump is ordinary on a real device - an NTP
+    /// correction, a timezone fix - and without the guard it would strand a refill
     /// deadline in the future and show a countdown that grows.
     /// </summary>
     public sealed class GameClockTests

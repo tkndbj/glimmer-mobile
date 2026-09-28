@@ -21,20 +21,20 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>Every slot in the catalog is drawn, including the empty ones.</b> Hiding what a player
-    /// is not holding would make the bar change width between runs and — worse — would hide the
+    /// is not holding would make the bar change width between runs and - worse - would hide the
     /// only place the game ever says these things exist. An empty slot is the shop, which is the
     /// moment somebody has decided they want one: <c>HomesteadBuyOverlay</c>'s argument that a
     /// short balance keeps a live button, one step earlier.
     /// </para>
     /// <para>
     /// <b>Arming is a mode, and it is exclusive and reversible.</b> Tapping an armed slot
-    /// disarms it, tapping another moves the arming, and the board is told either way — because
+    /// disarms it, tapping another moves the arming, and the board is told either way - because
     /// a targeting state the player cannot leave is a run they have to lose to escape.
     /// </para>
     /// <para>
     /// <b>A cooling slot is drawn counting down and takes no tap at all, and that is the whole
     /// of the explanation.</b> A sweep over the cell with the seconds on it is the idiom every
-    /// action bar in the genre uses, so it needs no sentence — and a button that visibly refuses
+    /// action bar in the genre uses, so it needs no sentence - and a button that visibly refuses
     /// is better than one that accepts a tap and does nothing, which is what a toast on top of
     /// an interactive cell would have been. It is <see cref="Cooling"/> that owns the clock;
     /// this only draws it and refuses on it (see <see cref="UtilityCooldown"/> for why nothing
@@ -56,7 +56,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// Kept in step with <c>Tools/make_utility_art.py</c>'s <c>TRAY_H</c>, <c>CELL</c> and
-        /// <c>SLOTS</c> by hand — the shelf is one sprite at a fixed size, so the numbers have to
+        /// <c>SLOTS</c> by hand - the shelf is one sprite at a fixed size, so the numbers have to
         /// agree or the cells sit off the plate.
         /// </para>
         /// </summary>
@@ -67,8 +67,8 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>A ceiling rather than the inset itself, and the difference is 70 points of board.</b>
-        /// The bar used to hang off the safe layer, so an iPhone's home-indicator strip — 94 units
-        /// of it — sat *below* the shelf as a band of backdrop with nothing in it, which is what
+        /// The bar used to hang off the safe layer, so an iPhone's home-indicator strip - 94 units
+        /// of it - sat *below* the shelf as a band of backdrop with nothing in it, which is what
         /// was reported from a device: a gap at the foot of the screen. Honouring the inset in
         /// full would fill that band with plate and give the board back nothing, because the cells
         /// would stay exactly where they are; giving it up in full would put a cell's rim on the
@@ -87,7 +87,7 @@ namespace GlimmerGrove
         public static float Foot => Mathf.Min(SafeArea.Bottom, MostFoot);
 
         /// <summary>
-        /// The whole bar, measured from the bottom of the <em>display</em> — what
+        /// The whole bar, measured from the bottom of the <em>display</em> - what
         /// <see cref="Build"/> makes its rect.
         ///
         /// It hangs off <c>View.Content</c> rather than off the safe layer for the reason the
@@ -102,7 +102,7 @@ namespace GlimmerGrove
         ///
         /// <b>Read rather than assumed, because the two are not the same number.</b> A screen
         /// insetting its host by <see cref="Height"/> would leave the display's own foot under the
-        /// board twice — once here and once in the safe layer — and lose it off the bottom of the
+        /// board twice - once here and once in the safe layer - and lose it off the bottom of the
         /// board. On a display with nothing in the way both answers are <see cref="Shelf"/>.
         /// </summary>
         public static float Room => Mathf.Max(0f, Height - SafeArea.Bottom);
@@ -112,13 +112,13 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>Five, and three of them have something in them today.</b> A bar sized to the catalog
-        /// would move every slot under a player's thumb the day a fourth utility shipped — the
+        /// would move every slot under a player's thumb the day a fourth utility shipped - the
         /// muscle memory for "the mending is the middle one" is worth more than the empty cells
         /// cost. It is also honest: the two on the right are where the next two go.
         /// </para>
         /// <para>
         /// A catalog longer than this draws its first five. That is a content mistake rather than
-        /// a state to design for — <c>ContentValidation</c> is where it is caught — and drawing
+        /// a state to design for - <c>ContentValidation</c> is where it is caught - and drawing
         /// what fits beats drawing off the end of the shelf.
         /// </para>
         /// </summary>
@@ -139,8 +139,8 @@ namespace GlimmerGrove
         /// (<c>Tools/make_utility_art.slot</c>), so the well a cell can actually draw in runs
         /// y ∈ [-77, +79] and x ∈ [-83, +83]. At these figures the picture takes [-14, +74] and
         /// the caption [-69, -21], which leaves both inside the well and seven units between them.
-        /// A <c>UIKit.Label</c> that overflows is not clipped — it keeps drawing, out over the
-        /// cell beside it (the toast's lesson, invariant 37n) — so the caption is
+        /// A <c>UIKit.Label</c> that overflows is not clipped - it keeps drawing, out over the
+        /// cell beside it (the toast's lesson, invariant 37n) - so the caption is
         /// <see cref="UIKit.Shrinkable"/> as well, and a language that needs two lines gets
         /// them rather than a sentence across the shelf.
         /// </para>
@@ -191,7 +191,7 @@ namespace GlimmerGrove
         /// <summary>Which utility is armed, or null. Set only through <see cref="Arm"/>.</summary>
         public UtilityItem Armed { get; private set; }
 
-        /// <summary>Raised when a utility is armed, with the item — or null when disarmed.</summary>
+        /// <summary>Raised when a utility is armed, with the item - or null when disarmed.</summary>
         public Action<UtilityItem> Aiming { get; set; }
 
         /// <summary>Raised when an empty slot is tapped, so the screen can offer the shop.</summary>
@@ -202,7 +202,7 @@ namespace GlimmerGrove
         ///
         /// The screen owns this and sets it from whatever it already uses to decide the board is
         /// playable, so the bar cannot come to disagree with the board about whether a run is
-        /// under way — which is the second thing a screen would otherwise have to remember.
+        /// under way - which is the second thing a screen would otherwise have to remember.
         /// </summary>
         public bool Live
         {
@@ -222,7 +222,7 @@ namespace GlimmerGrove
         /// Builds the bar into a host, filling its bottom edge.
         ///
         /// Built once per screen rather than rebuilt on every change: <c>GridView</c>'s rule
-        /// (invariant 16d) at the smallest possible scale — a repaint that destroys and rebuilds
+        /// (invariant 16d) at the smallest possible scale - a repaint that destroys and rebuilds
         /// its cells replays their entrance, so a bar that flashed on every use would be a bar
         /// that flashed on every use.
         /// </summary>
@@ -239,7 +239,7 @@ namespace GlimmerGrove
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = new Vector2(0f, Height);
 
-            // The shelf itself, stretched over the whole bar — the display's own foot included,
+            // The shelf itself, stretched over the whole bar - the display's own foot included,
             // which is what stops the strip under the cells reading as a gap. One sprite rather
             // than a nine-slice because nothing here writes a sprite border, and stretching it is
             // safe because it is a flat plate: a lit line along the top, a face, and a shaded lip.
@@ -260,7 +260,7 @@ namespace GlimmerGrove
 
             // Detached first. Build is called once per screen today, but a subscription that
             // depends on that staying true is a subscription that silently doubles the day
-            // somebody rebuilds a bar — and `Changed` fires on every chest opened anywhere.
+            // somebody rebuilds a bar - and `Changed` fires on every chest opened anywhere.
             UtilityLedger.Changed -= Paint;
             UtilityLedger.Changed += Paint;
 
@@ -317,7 +317,7 @@ namespace GlimmerGrove
 
             // Shrinkable, because the ceiling is a hundred. At nine this was one glyph in a
             // 60-unit disc and a fixed 34 was right; three digits at 34 overflow a badge that
-            // small, and a `UIKit.Label` that overflows is not clipped — it simply keeps
+            // small, and a `UIKit.Label` that overflows is not clipped - it simply keeps
             // drawing, out over the cell beside it (the toast's lesson, on a badge).
             slot.Count = UIKit.Shrinkable(
                 UIKit.Label("Count", slot.Badge.transform, "0", 34, Pal.Cream,
@@ -333,7 +333,7 @@ namespace GlimmerGrove
             // round.** Every action bar in the genre darkens the part still to wait, which works
             // because those bars are drawn on something lit. This one is not: the well is
             // deliberately the darkest thing on the shelf (invariant 39d), so ink over ink says
-            // nothing at all — measured, the wedge was invisible on three of the four icons.
+            // nothing at all - measured, the wedge was invisible on three of the four icons.
             // Light is what this cell has room for, which is invariant 37m's rule about a ward
             // arriving on a widget: a state that has *happened* reads as brighter, never dimmer.
             slot.Sweep = UIKit.Img("Sweep", slot.Button.transform, Art.S("Ui/Utility/slot"),
@@ -343,7 +343,7 @@ namespace GlimmerGrove
 
             // From the top and clockwise, which is the direction every action bar in the genre
             // sweeps. `fillAmount` is what is *left*, so the wedge shrinks away rather than
-            // growing — see `Sweep()`.
+            // growing - see `Sweep()`.
             slot.Sweep.fillOrigin = (int)Image.Origin360.Top;
             slot.Sweep.fillClockwise = true;
             slot.Sweep.enabled = false;
@@ -352,7 +352,7 @@ namespace GlimmerGrove
 
             // **Outlined, because it is the one label here drawn over two grounds.** The
             // middle of a cooling cell is pale on one side of the wedge and near-black on the
-            // other, so cream alone reads on half of it — and which half moves as the seconds
+            // other, so cream alone reads on half of it - and which half moves as the seconds
             // run out.
             slot.Clock = UIKit.Shrinkable(
                 UIKit.Titled("Clock", slot.Button.transform, string.Empty, 56, Pal.Cream,
@@ -363,13 +363,13 @@ namespace GlimmerGrove
 
             // **The caption under an empty cell, and it is the one thing on this bar that says
             // out loud what a tap does.** An empty slot has always been the shop
-            // (see <see cref="Tap"/>), and it said so only by being dim — which is a state
+            // (see <see cref="Tap"/>), and it said so only by being dim - which is a state
             // rather than an invitation, so the one route to buying more was a picture with
             // nothing on it. It is drawn over the well rather than under the cell because
             // there is no room under the cell: the shelf leaves twenty-two units either side
             // of a slot, and a `UIKit.Label` that overflows is not clipped (invariant 37n).
             //
-            // Built for every sellable slot and shown by `Paint`, never rebuilt — invariant
+            // Built for every sellable slot and shown by `Paint`, never rebuilt - invariant
             // 16d's distinction, which is why the picture is *moved* between its two places
             // rather than the cell being made again.
             if (item.ForSale)
@@ -392,8 +392,8 @@ namespace GlimmerGrove
             if (!_live || slot?.Item == null) return;
 
             // **Cooling wins over empty**, so a cell counting down never opens the shop under
-            // the player's thumb. It cannot be reached anyway — a cooling slot is drawn
-            // uninteractable — and it is written down because the two states can overlap: the
+            // the player's thumb. It cannot be reached anyway - a cooling slot is drawn
+            // uninteractable - and it is written down because the two states can overlap: the
             // use that started the cooldown may have been the last one held.
             if (!Cooling.Ready(slot.Item)) return;
 
@@ -429,7 +429,7 @@ namespace GlimmerGrove
         /// <summary>
         /// Redraws every slot from the ledger.
         ///
-        /// <b>A redraw and never a rebuild</b> — invariant 16d's distinction: this is raised by
+        /// <b>A redraw and never a rebuild</b> - invariant 16d's distinction: this is raised by
         /// an event, so building cells here would replay their entrance every time a chest was
         /// opened on another screen.
         /// </summary>
@@ -458,7 +458,7 @@ namespace GlimmerGrove
 
                 // **The picture stays bright while a cell is cooling, and that is what makes
                 // the sweep visible at all.** The first cut faded it and let the wedge darken
-                // the cell — which says nothing, because the well is deliberately the darkest
+                // the cell - which says nothing, because the well is deliberately the darkest
                 // thing on the bar (invariant 39d) and there is nothing left to take away. A
                 // veil needs something lit to veil, so what is dimmed is only what is *empty*
                 // and the wedge is drawn over a picture at full strength. Caught by
@@ -466,9 +466,9 @@ namespace GlimmerGrove
                 slot.Face.color = held > 0 ? Color.white : new Color(1f, 1f, 1f, .36f);
 
                 // **The caption, and the picture moving to make room for it.** Shown only when
-                // the cell is empty *and* the thing can actually be bought — a chest-only
+                // the cell is empty *and* the thing can actually be bought - a chest-only
                 // utility invited to a shop it cannot be had from would be the panel lying
-                // before it opened — and never while the cell is cooling, because the clock is
+                // before it opened - and never while the cell is cooling, because the clock is
                 // drawn across the same middle at font 56 and two readouts over one cell are
                 // two readouts nobody can read (invariant 37u, on a slot). The two states can
                 // genuinely overlap: the use that started the cooldown may have been the last
@@ -484,7 +484,7 @@ namespace GlimmerGrove
                 Sweep(slot);
 
                 // A slot with nothing in it stays *interactable* while the bar is live, because
-                // it is the shop. What dims is the picture, not the control — a disabled button
+                // it is the shop. What dims is the picture, not the control - a disabled button
                 // over the one route to buying more teaches the player the feature is broken,
                 // which is `HomesteadBuyOverlay`'s argument for keeping a short balance live.
                 slot.Group.alpha = _live ? 1f : .40f;
@@ -532,7 +532,7 @@ namespace GlimmerGrove
         /// unrepresentable rather than merely unlikely.
         /// </para>
         /// <para>
-        /// A cell is repainted in full only on the frame something became usable again — the
+        /// A cell is repainted in full only on the frame something became usable again - the
         /// edge rather than the poll, which is <c>SiegeView.Charge</c>'s rule about a ward's
         /// rank; every other frame moves two numbers on the cells that are counting.
         /// </para>

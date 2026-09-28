@@ -17,8 +17,8 @@ namespace GlimmerGrove.Tests
     /// it (<see cref="ADropOpensAWhorlWhateverColourItIs"/>), the pair is mixed by the mode's own
     /// arithmetic (<see cref="AWhorlMixesThePairBesideItIntoOne"/>), it draws light and nothing
     /// else (<see cref="AWhorlDrawsLightAndNothingElse"/>), it closes rather than waiting when
-    /// there is nothing to take (<see cref="AWhorlWithNothingBesideItClosesAndIsGone"/>), and —
-    /// the two that keep the wave free of a reading order — a mote already leaving is never drawn
+    /// there is nothing to take (<see cref="AWhorlWithNothingBesideItClosesAndIsGone"/>), and -
+    /// the two that keep the wave free of a reading order - a mote already leaving is never drawn
     /// in (<see cref="AMoteThatIsBurstingIsNeverAlsoDrawnIn"/>) and a mote two whorls both reach
     /// is let go by both (<see cref="AMoteTwoWhorlsBothReachIsLetGoByBoth"/>).
     /// </para>
@@ -27,9 +27,9 @@ namespace GlimmerGrove.Tests
     /// the reason is the most useful thing in it.</b> The third chapter first shipped a
     /// <em>mirror</em> that turned a lens's beam ninety degrees, and then a <em>wick</em> that
     /// washed one authored colour into the four cells beside it. Every fixture passed both times.
-    /// Both were solvable, correctly par'd, <c>ways</c> was tight and <c>greedy</c> lost — and
+    /// Both were solvable, correctly par'd, <c>ways</c> was tight and <c>greedy</c> lost - and
     /// both came back from one session of play as the same complaint: they were the lens again.
-    /// The mirror had no event of its own; the wick had one, and no <em>decision</em> in it — its
+    /// The mirror had no event of its own; the wick had one, and no <em>decision</em> in it - its
     /// colour was the author's and its trigger was free, so the player never chose anything about
     /// it. <b>A decoration passes every reading this repository takes</b>, which is why
     /// <see cref="FallBoard.Kindled"/> exists and why
@@ -87,7 +87,7 @@ namespace GlimmerGrove.Tests
         /// The two predicates that had to be <em>narrowed</em> for this mechanic are the ones
         /// with teeth, and each would have been a silent failure: <see cref="FallCell.IsMote"/>
         /// read "occupied and not glass" and <see cref="FallCell.Wants"/> read "everything this
-        /// cell lacks", so a whorl read as a mote wanting all three — a wash beside one would
+        /// cell lacks", so a whorl read as a mote wanting all three - a wash beside one would
         /// have poured colour into a cell that holds none, a drop onto it would have been
         /// swallowed, and a whorl would have drawn in another whorl.
         /// </para>
@@ -110,7 +110,7 @@ namespace GlimmerGrove.Tests
 
             Assert.AreEqual(FallCell.WhorlLetter, FallCell.Letter(cell));
             Assert.AreEqual(FallCell.WhorlLetter, FallCell.Letter(cell | FallCell.Lit),
-                            "an open whorl writes as an ordinary one — the flag is state rather " +
+                            "an open whorl writes as an ordinary one - the flag is state rather " +
                             "than content, and it cannot be authored");
         }
 
@@ -145,7 +145,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// <b>The valve, and it is a rule rather than a convenience.</b> A whorl is otherwise
         /// only reached by a chain, so without this a player who cleared every mote around one
-        /// would be left tapping at a board that could not be finished and would not end — which
+        /// would be left tapping at a board that could not be finished and would not end - which
         /// is exactly the state the lens shipped with and had to have a valve added for after a
         /// player reported it (invariant 26f). Here it is the rule from the start, which is why
         /// <c>FallVerdict</c> needs no clause about whorls at all.
@@ -179,7 +179,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// <b>This is the whole mechanic, and it is the mode's own arithmetic on a pair of
-        /// operands it never had.</b> Every other rule here adds a <em>colour</em> to a cell — a
+        /// operands it never had.</b> Every other rule here adds a <em>colour</em> to a cell - a
         /// drop adds one, a wash adds one, a beam adds three. Nothing else combines two
         /// <em>motes</em>, so a yellow and a blue that were each a drop away from white are none.
         /// </para>
@@ -284,7 +284,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// <b>The other half of the valve.</b> A whorl that <em>waited</em> for a pair could never
         /// be got rid of on a board that had none, and a well holding one could then never be
-        /// emptied — invariant 20g's state, arrived at by a rule nobody could see. It also makes
+        /// emptied - invariant 20g's state, arrived at by a rule nobody could see. It also makes
         /// being early a real mistake with a real cost, which is what makes the timing a decision.
         /// </para>
         /// </summary>
@@ -311,7 +311,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// <b>The only symmetric answer available, and that is the argument for it.</b> Giving it
         /// to one of them would be a reading order, in the one method this whole class is arranged
-        /// to keep free of one — and a board that settles differently depending on which cell was
+        /// to keep free of one - and a board that settles differently depending on which cell was
         /// scanned first is a divergence between two runtimes that nothing here could see.
         /// </para>
         /// <para>
@@ -381,7 +381,7 @@ namespace GlimmerGrove.Tests
             Assert.IsTrue(leftIsBursting,
                           "the cell on its left is bursting on this very wave");
             Assert.AreEqual(-1, fuse.Left,
-                            "so it is not also drawn in — a cell cannot both go off and be taken");
+                            "so it is not also drawn in - a cell cannot both go off and be taken");
             Assert.AreEqual(whorl + 1, fuse.Right, "while the cell on its right is");
         }
 
@@ -393,7 +393,7 @@ namespace GlimmerGrove.Tests
         /// The lens's <c>aim</c> is geometry of the authored position and warns rather than
         /// refuses, because a well collapses under a chain and a lens fires from wherever it has
         /// fallen to. A whorl's <em>columns</em> are not like that: it draws from the two beside
-        /// it, and the column it stands in is fixed for its whole life — so one authored against
+        /// it, and the column it stands in is fixed for its whole life - so one authored against
         /// a wall can never merge a pair whatever the well does. That is the one thing about this
         /// mechanic a validator can prove rather than measure.
         /// </para>
@@ -420,7 +420,7 @@ namespace GlimmerGrove.Tests
         /// says so in words about the board rather than about a search.
         ///
         /// A whorl is always removable and emits no light whatever, so it gives back only what it
-        /// drew in — a well with no mote in it has nothing to draw and nothing to cook, and the
+        /// drew in - a well with no mote in it has nothing to draw and nothing to cook, and the
         /// glass in it is there for ever.
         /// </summary>
         [Test]

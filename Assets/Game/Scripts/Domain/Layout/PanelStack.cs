@@ -11,7 +11,7 @@ namespace GlimmerGrove.Layout
     /// which <c>ReadoutRow</c> and <c>RippleBand</c> have already earned twice: whether two
     /// things on a screen overlap is arithmetic, and arithmetic inside a <c>MonoBehaviour</c>
     /// is arithmetic nothing can check. It became worth separating the moment the section count
-    /// stopped being fixed — a height that varies with content is a layout with cases in it,
+    /// stopped being fixed - a height that varies with content is a layout with cases in it,
     /// and a case nobody exercises is a case nobody has looked at.
     /// </para>
     /// <para>
@@ -25,7 +25,7 @@ namespace GlimmerGrove.Layout
     /// <para>
     /// Every number is in canvas reference units measured <em>down</em> from the panel's top
     /// edge, which is the direction a panel is read in and the opposite of the sign
-    /// <c>UIKit.Box</c> takes — a caller negates once, at the point of placement.
+    /// <c>UIKit.Box</c> takes - a caller negates once, at the point of placement.
     /// </para>
     /// </summary>
     public static class PanelStack
@@ -44,7 +44,7 @@ namespace GlimmerGrove.Layout
         /// The 15 units between the heading's foot and the paragraph's head are deliberately
         /// tighter than the air between sections: a heading and the paragraph under it are one
         /// answer, and spacing them like two would make the panel read as ten things rather
-        /// than five. It is also where the room for <see cref="FootGap"/> came from — see there
+        /// than five. It is also where the room for <see cref="FootGap"/> came from - see there
         /// for why the foot needed it more.
         /// </para>
         /// </summary>
@@ -60,7 +60,7 @@ namespace GlimmerGrove.Layout
         /// five sections spend nearly all of it. A paragraph that needs more room can only get
         /// it sideways. Measured: at 900 wide the longest line on the panel resolved to 22pt in
         /// a five-section box against 25pt in the four-section one it replaced; at 960 it is
-        /// within a point of it, and the worst case — a translation half again as long — lands
+        /// within a point of it, and the worst case - a translation half again as long - lands
         /// on exactly the size it always did.
         /// </para>
         /// <para>
@@ -75,7 +75,7 @@ namespace GlimmerGrove.Layout
         /// How far from the section's left edge the text column starts, and how wide it is.
         ///
         /// The column clears the seat rather than being centred on the section, so a heading
-        /// and its paragraph share one left edge and the glyphs form a column of their own —
+        /// and its paragraph share one left edge and the glyphs form a column of their own -
         /// which is what lets somebody find the one answer they came for without reading the
         /// panel.
         /// </summary>
@@ -109,7 +109,7 @@ namespace GlimmerGrove.Layout
         /// visible only in a render. A section is followed by another section's glyph, which is
         /// a small disc on a pale ground; the last one is followed by a solid coloured button
         /// the width of the panel, and the same clear air reads as half as much against it. And
-        /// <c>UIKit.Shrinkable</c> is Unity's best-fit, which is approximate — a paragraph it
+        /// <c>UIKit.Shrinkable</c> is Unity's best-fit, which is approximate - a paragraph it
         /// judges to fit can still spill a few units past its box, so the foot has to absorb
         /// what the arithmetic alone would call exact.
         /// </para>
@@ -123,7 +123,7 @@ namespace GlimmerGrove.Layout
         /// How far the title ribbon stands proud of the panel's top edge.
         ///
         /// <c>ModalView.MakePanel</c> hangs a 130-unit ribbon 22 above the top edge, pivoted at
-        /// centre like everything else here — so a panel measured to the canvas without this is
+        /// centre like everything else here - so a panel measured to the canvas without this is
         /// a panel whose title is the first thing off the screen, which is the one part nobody
         /// can do without.
         /// </summary>
@@ -141,7 +141,7 @@ namespace GlimmerGrove.Layout
         /// phone, so <b>no display produces 1440 any more</b> and the tightest is a phone at
         /// <see cref="CanvasFit.PhoneFloor"/>. Left as a literal it would have gone on refusing
         /// panels against a shape nothing is drawn on, which is a stale ceiling in a fit check
-        /// — worse than no fit check, because it reads as having been measured.
+        /// - worse than no fit check, because it reads as having been measured.
         /// </para>
         /// </summary>
         public const float TightestCanvas = CanvasFit.ShortestCanvas;
@@ -154,8 +154,8 @@ namespace GlimmerGrove.Layout
         /// not exist.</b> A modal is centred on the canvas, so its top edge sits half its own
         /// height above the middle and the ribbon another <see cref="TitleOverhang"/> above
         /// that: the binding constraint is <c>H/2 + overhang ≤ canvas/2</c>. Checking
-        /// <c>H + overhang ≤ canvas</c> instead — the obvious reading, and the one written
-        /// first — passes panels whose title is drawn off the top of a tablet, because it
+        /// <c>H + overhang ≤ canvas</c> instead - the obvious reading, and the one written
+        /// first - passes panels whose title is drawn off the top of a tablet, because it
         /// silently spends the clear air under the panel on a problem that is entirely above
         /// it.
         /// </para>
@@ -169,7 +169,7 @@ namespace GlimmerGrove.Layout
         /// How tall a panel holding this many sections and one button has to be.
         ///
         /// Derived rather than authored, because the alternative is a number somebody types
-        /// once and never revisits when a section is added — which is exactly what this
+        /// once and never revisits when a section is added - which is exactly what this
         /// replaced. Nought sections still leaves room for the button.
         /// </summary>
         public static float HeightFor(int sections)
@@ -194,7 +194,7 @@ namespace GlimmerGrove.Layout
         /// <para>
         /// It answers about the <em>count</em>. That sections clear each other at all is a fact
         /// about the constants above rather than about any caller, so it is asserted by
-        /// <c>PanelStackTests</c> instead — a comparison of two compile-time constants folds to
+        /// <c>PanelStackTests</c> instead - a comparison of two compile-time constants folds to
         /// a literal here and the compiler rightly calls the other branch unreachable.
         /// </para>
         /// </summary>
@@ -247,7 +247,7 @@ namespace GlimmerGrove.Layout
         /// <summary>
         /// The most sections this shape can hold before the shortest canvas refuses them.
         ///
-        /// Not a limit anybody hits today — it is what a test asserts against, so that adding
+        /// Not a limit anybody hits today - it is what a test asserts against, so that adding
         /// the section that would not fit fails on a machine rather than on a tablet.
         /// </summary>
         public static int Most

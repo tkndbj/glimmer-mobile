@@ -12,14 +12,14 @@ namespace GlimmerGrove
     /// Same brief as <see cref="TasksInfoOverlay"/>, and the same two rules. It answers only
     /// what the page in front of it leaves genuinely unanswerable, because a panel that
     /// restates the screen is a panel players learn to skip. And <b>every number in it is
-    /// read from the season rather than written into the copy</b> — an author retunes a
+    /// read from the season rather than written into the copy</b> - an author retunes a
     /// ladder by editing <c>manifest.json</c>, with no build and no review, so a figure typed
     /// into a sentence here would be wrong within one content push and nothing would catch it.
     /// </para>
     /// <para>
     /// The three are chosen by what a season gets asked about. <b>Where marks come from</b>
-    /// is the one rule nothing on this page can show — the chests that grow it are opened on
-    /// another screen — and a player who does not know it is a player watching a bar that
+    /// is the one rule nothing on this page can show - the chests that grow it are opened on
+    /// another screen - and a player who does not know it is a player watching a bar that
     /// never moves. <b>That the window stops the growing but never takes a chest away</b> is
     /// the reassurance a countdown creates and cannot answer. And <b>what the pass is</b>, on
     /// the page selling it.

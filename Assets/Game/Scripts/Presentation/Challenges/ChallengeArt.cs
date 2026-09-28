@@ -19,13 +19,13 @@ namespace GlimmerGrove
     /// <c>Art/Challenge/</c>, cut by <c>Tools/make_pairs_art.py</c> and added to the same hold
     /// for that genre only (56m). Push's keeper - a little cannon out of the same turret kit as
     /// the posts - is <c>Art/Challenge/push_keeper</c>, cut by <c>Tools/make_push_art.py</c> and
-    /// held for Push alone. Everything else — a pad, a wall, a ring — is procedural
+    /// held for Push alone. Everything else - a pad, a wall, a ring - is procedural
     /// (<c>Art</c>).
     /// </para>
     /// <para>
     /// <b>Names are written out at the call, one per line</b>, so <c>artnames.py</c> can hold
     /// every one of them to disk. The raider reels are the one built address, and they are
-    /// built by <c>SiegeMode.CastAddress</c> — the same one copy the siege draws from.
+    /// built by <c>SiegeMode.CastAddress</c> - the same one copy the siege draws from.
     /// </para>
     /// </summary>
     public static class ChallengeArt
@@ -48,7 +48,7 @@ namespace GlimmerGrove
         public static string GenreMarkKey(ChallengeGenre genre) => "challenge_" + ChallengeGenres.NameOf(genre);
 
         /// <summary>
-        /// The crowned chest on the list page's deal band — the shop pack's, cut by the same
+        /// The crowned chest on the list page's deal band - the shop pack's, cut by the same
         /// tool as the genre marks, at the owner's instruction on 2026-09-23. Global for the
         /// genre marks' reason. Null until the address is synced, which the band draws as
         /// nothing rather than as a white rectangle (7b).
@@ -58,8 +58,8 @@ namespace GlimmerGrove
         public const string ChestKey = "challenge_chest";
 
         /// <summary>
-        /// The stone a deal's row wears on the sheet, keyed on the deal's <em>rung</em> — its
-        /// place in the authored order, counted from one — rather than on its id: a retune
+        /// The stone a deal's row wears on the sheet, keyed on the deal's <em>rung</em> - its
+        /// place in the authored order, counted from one - rather than on its id: a retune
         /// that renames a deal keeps its stone, and a deal added at the top takes the next
         /// picture (7c's shape). Null past the pictures that ship, which a row draws as nothing.
         /// </summary>

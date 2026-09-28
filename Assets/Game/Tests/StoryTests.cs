@@ -8,8 +8,8 @@ namespace GlimmerGrove.Tests
     /// What a level says while it is played, and the two rules that keep it from becoming noise.
     ///
     /// <para>
-    /// Pure Domain, so it runs in the offline runner. The half that cannot run there — a chapter
-    /// body's <c>story</c> block surviving <c>JsonUtility</c>'s nested arrays — was proved in the
+    /// Pure Domain, so it runs in the offline runner. The half that cannot run there - a chapter
+    /// body's <c>story</c> block surviving <c>JsonUtility</c>'s nested arrays - was proved in the
     /// Editor against the shipped chapter instead (three levels, 7/8/8 beats, every cue and line
     /// count as authored), because a fixture that needs the Editor is a fixture the offline
     /// runner skips on the way past.
@@ -83,7 +83,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// A speaker names a folder of frames, so a name nothing recognises is a portrait that
-        /// does not load — and a missing sprite draws as a white rectangle rather than as nothing
+        /// does not load - and a missing sprite draws as a white rectangle rather than as nothing
         /// (invariant 7b). That is why the cast is a list a gate can walk.
         /// </summary>
         [Test]

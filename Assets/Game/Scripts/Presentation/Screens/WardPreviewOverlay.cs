@@ -10,14 +10,14 @@ using UnityEngine.UI;
 namespace GlimmerGrove
 {
     /// <summary>
-    /// What a turret is, and what it looks like firing — the panel behind every tap on the loadout
+    /// What a turret is, and what it looks like firing - the panel behind every tap on the loadout
     /// shelf, held or not.
     ///
     /// <para>
     /// <b>One panel for both, which is the change.</b> Tapping a held turret used to stand it on
     /// the line immediately and tapping an unheld one opened a price; so the only turrets a player
     /// could ever *see* were the ones they had already bought, and the decision the shop is asking
-    /// them to make — is this worth nine thousand credits — was being made from a thumbnail. A
+    /// them to make - is this worth nine thousand credits - was being made from a thumbnail. A
     /// preview costs the held case one extra tap and is worth it: standing a turret is still one
     /// tap from here, and what it buys is that the nineteen effects are visible before they are
     /// paid for rather than after.
@@ -30,7 +30,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>Everything here is asked about the seat that raised it.</b> A turret is bought for one
     /// colour rather than for the line (<c>WardHolding</c>), so the same panel over the same
-    /// turret is a purchase on blue and an EQUIP on red — which is why <see cref="Colour"/> is
+    /// turret is a purchase on blue and an EQUIP on red - which is why <see cref="Colour"/> is
     /// handed in rather than looked up, and why the stage behind the button fires in it.
     /// </para>
     /// <para>
@@ -56,7 +56,7 @@ namespace GlimmerGrove
         /// Which of the line's four colours the shelf was filling when this was raised.
         ///
         /// <b>Handed in rather than looked up</b>, because the panel has no business knowing which
-        /// screen opened it — and it is why the turret here wears the colour of the cell the player
+        /// screen opened it - and it is why the turret here wears the colour of the cell the player
         /// just tapped, and fires in it.
         /// </summary>
         public int Colour { get; set; }
@@ -66,7 +66,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// <b>Its height is derived from the last band rather than typed</b>, so adding one is a
-        /// band and not two numbers that have to be kept in step — which is how a panel comes to
+        /// band and not two numbers that have to be kept in step - which is how a panel comes to
         /// draw its own button off the bottom edge.
         /// </summary>
         public const float PanelW = 880f, PanelH = ActTop + ActBand + 118f;
@@ -75,11 +75,11 @@ namespace GlimmerGrove
         /// The stage's own box, and the cell its contents are multiples of.
         ///
         /// <b>The cell is a real board's</b>, so a bolt, a flash and an impact are drawn here at
-        /// the size a phone draws them on the hill — which is the whole point of showing them.
+        /// the size a phone draws them on the hill - which is the whole point of showing them.
         /// </summary>
         const float StageW = 800f, StageH = 640f, StageCell = 104f;
 
-        /// <summary>Its own scope, never the line's — see <see cref="WardFiringStage"/>.</summary>
+        /// <summary>Its own scope, never the line's - see <see cref="WardFiringStage"/>.</summary>
         const string PreviewScope = "ward_preview";
 
         /// <summary>
@@ -89,7 +89,7 @@ namespace GlimmerGrove
         /// <b>Middles, because <c>UIKit.Box</c> pivots at centre whatever it is anchored to.</b>
         /// Written as top edges the first time, the stage's six hundred and forty units were
         /// centred where its top was meant to be and it drew straight through the description and
-        /// the status line above it — measured on the built panel, which is the only thing that
+        /// the status line above it - measured on the built panel, which is the only thing that
         /// could have said so. It is the same arithmetic <c>render_home.py</c> had to learn about
         /// its own mirror (invariant 44d).
         /// </para>
@@ -102,7 +102,7 @@ namespace GlimmerGrove
         /// What it hits for and what it can take, under the stage.
         ///
         /// <b>Below the thing firing rather than above it</b>, because the order a player reads
-        /// this panel in is what it looks like, then what it does, then what it costs — and the
+        /// this panel in is what it looks like, then what it does, then what it costs - and the
         /// figures are the last question, asked once the effect has been watched. The band is
         /// <see cref="WardStatBars.Height"/> and never a number typed twice.
         /// </summary>
@@ -114,7 +114,7 @@ namespace GlimmerGrove
         ///
         /// <b>Directly under the bars on purpose.</b> A star is bought for what it does to those
         /// two numbers, so the thing being paid for and the thing it changes are read in one
-        /// glance — a ladder above the description would be a decoration on a card instead.
+        /// glance - a ladder above the description would be a decoration on a card instead.
         /// </summary>
         const float StarsH = 62f;
         const float StarsTop = StatTop + WardStatBars.Height + 10f;
@@ -126,7 +126,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>A held turret needs two answers and the panel only ever offered one</b>, which is how
         /// it came to be impossible to equip anything. A turret starts at one star, so there is
-        /// always a next star to sell — and the held branch offered that star and stopped, so every
+        /// always a next star to sell - and the held branch offered that star and stopped, so every
         /// turret a player owned and had not stood showed <c>UPGRADE</c> and nothing else. The
         /// loadout's whole purpose was unreachable, and every gate was green, because each of the
         /// two branches is correct and nothing anywhere asks whether their union covers the state.
@@ -134,7 +134,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The band is reserved for two and a single key is centred in it</b>, rather than the
         /// panel growing when a second is wanted. What a held turret offers changes while the panel
-        /// is open — buying it makes it held, upgrading it to the top takes the star away — so a
+        /// is open - buying it makes it held, upgrading it to the top takes the star away - so a
         /// height derived from the state would be a modal that resizes under the finger.
         /// </para>
         /// </summary>
@@ -149,7 +149,7 @@ namespace GlimmerGrove
         const float ActLower = ActTop + ActH + ActGap + ActH * .5f;
 
         // The panel is parchment, so it is written in ink rather than in the cream the board uses
-        // — `WardBuyOverlay`'s note, and the same measured accents.
+        // - `WardBuyOverlay`'s note, and the same measured accents.
         static readonly Color Ink = new Color(.36f, .25f, .18f);
         static readonly Color Short = new Color(.58f, .31f, .06f);
         static readonly Color Held = new Color(.18f, .42f, .21f);
@@ -163,7 +163,7 @@ namespace GlimmerGrove
         /// The equip key: the second answer a held turret owes, and the one that was missing.
         ///
         /// <b>Its own button rather than a caption the first one switches to</b>, because the two
-        /// are not alternatives — a turret a player owns and has not stood can be upgraded *and*
+        /// are not alternatives - a turret a player owns and has not stood can be upgraded *and*
         /// equipped, and offering one of those at a time is offering neither.
         /// </summary>
         Btn _stand;
@@ -214,7 +214,7 @@ namespace GlimmerGrove
             // model's and do not move when a balance does, so this is deliberately not in
             // `Paint`.
             // **Kept rather than drawn and forgotten.** It was a one-shot builder, so the bars
-            // never carried a turret's stars and never moved when one was bought — `Paint` writes
+            // never carried a turret's stars and never moved when one was bought - `Paint` writes
             // them now, which is also what makes an upgrade visible the instant it lands.
             _bars = WardStatBars.Build(panel, StatMid, PanelW - 150f, Ink);
 
@@ -332,13 +332,13 @@ namespace GlimmerGrove
         /// Whether a key carrying a price is shut: drawn, and refusing the finger.
         ///
         /// <b>A credit shortfall shuts the key and a gem one does not, which is <c>Act</c>'s own
-        /// split reaching the drawing.</b> A gem price has a shelf to open — the key does
-        /// something real the moment it is pressed, so it stays live and green — where credits
+        /// split reaching the drawing.</b> A gem price has a shelf to open - the key does
+        /// something real the moment it is pressed, so it stays live and green - where credits
         /// are earned by playing and there is nothing here to sell, so the only answer the key
         /// has is a refusal. What the player needs is on the status line above it either way:
         /// the shortfall, in figures.
         ///
-        /// <b>Said once because two keys ask it</b> — the turret's price and the star's. It
+        /// <b>Said once because two keys ask it</b> - the turret's price and the star's. It
         /// was three while the lower key could sell a copy of a legendary (invariant 42k); that
         /// key never carries a price now, and a turret is bought per seat like everything else.
         /// </summary>
@@ -348,7 +348,7 @@ namespace GlimmerGrove
         /// <summary>
         /// The glyph beside a price.
         ///
-        /// <b>The coin is a reel, not a sprite</b> — credits have no still picture in this UI,
+        /// <b>The coin is a reel, not a sprite</b> - credits have no still picture in this UI,
         /// only the <c>Ui/Coin</c> flipbook, so clearing the sprite for a credit price would leave
         /// an <c>Image</c> with none, which is a white rectangle rather than a coin (invariant 7b).
         /// Said once because two branches draw a price now: buying the turret, and buying its next
@@ -410,7 +410,7 @@ namespace GlimmerGrove
 
             PaintLadder();
 
-            // The figures a player actually plays with, stars and all — and rewritten on every
+            // The figures a player actually plays with, stars and all - and rewritten on every
             // repaint, so buying a star moves them where the player is looking.
             _bars?.Set(Stood, WardLedger.Catalog);
 
@@ -423,7 +423,7 @@ namespace GlimmerGrove
             //
             // **The reset is the refusals' colour, not the affirmative's.** The three walls and
             // the EQUIP key fall through to it, and a green wall reads as a key that will do
-            // something — so the branches that really do something say so (`Skins.Affirm`) and
+            // something - so the branches that really do something say so (`Skins.Affirm`) and
             // everything else keeps the orange it already had.
             Skin(Skins.Buy);
 
@@ -433,23 +433,23 @@ namespace GlimmerGrove
                                   || rise.State == WardUpgradeState.Short);
 
             // **Which keys are offered is a rule with a name**, swept over every state a turret can
-            // be in (`WardPreviewTests`) — because what went wrong here was not a wrong branch, it
+            // be in (`WardPreviewTests`) - because what went wrong here was not a wrong branch, it
             // was two correct branches whose union left a state with no answer at all.
             //
             // **Held on this seat is the whole question again.** It carried a fourth state while
-            // a legendary was bought outright — held here and standable nowhere — and a turret is
+            // a legendary was bought outright - held here and standable nowhere - and a turret is
             // bought per seat again, so owning one on this colour is owning the seat (42k).
             var keys = WardPreviewKeys.For(held, Standing, rises);
 
             // **The equip key is the second answer, and it is shown for every turret the player
             // owns.** It is what says where this turret already stands, and it is the only way to
-            // move it — a held turret with a star left to sell used to offer the star and nothing
+            // move it - a held turret with a star left to sell used to offer the star and nothing
             // else, which made the loadout unreachable.
             //
             // EQUIPPED pays nothing, moves nothing and only closes the panel, so it wears the one
             // pill on this panel that is not an offer; EQUIP wears the orange, which keeps the
             // affirmative green for the thing that costs. **Neither of them ever asks for money**
-            // — it carried the price of a copy while a legendary was bought outright (42k) — so
+            // - it carried the price of a copy while a legendary was bought outright (42k) - so
             // both are always live, where the upper key greys on a shortfall.
             if (_stand != null)
             {
@@ -465,7 +465,7 @@ namespace GlimmerGrove
                         _standPill.sprite = Art.S("Ui/" + (keys.Equipped ? Skins.Settled
                                                                          : Skins.Buy));
 
-                    // Centred, because there is no coin on this key to leave room for — see
+                    // Centred, because there is no coin on this key to leave room for - see
                     // `PriceShift`, which the upper one still needs.
                     _standLabel.rectTransform.anchoredPosition = new Vector2(0f, _lift);
                 }
@@ -519,8 +519,8 @@ namespace GlimmerGrove
 
                 case WardPurchaseState.LevelLocked:
                     // **The one wall left, and the key says the level rather than LOCKED.** There
-                    // was a second refusal above this — the rung below it on the shelf, named in
-                    // a sentence — and it is gone with the sequential unlock (`WardLedger`). A
+                    // was a second refusal above this - the rung below it on the shelf, named in
+                    // a sentence - and it is gone with the sequential unlock (`WardLedger`). A
                     // live-looking key over a wall is worse than a plain one, so this keeps the
                     // orange the reset gave it.
                     _status.text = Loc.Format("ui.loadout.level_note", offer.RequiredLevel);
@@ -562,7 +562,7 @@ namespace GlimmerGrove
         /// Stands this turret on its colour's seat, or closes when it is already standing.
         ///
         /// <b>Its own handler rather than a branch of the other one.</b> Equipping and upgrading
-        /// are two things a player can do to one turret, not two readings of one button — which is
+        /// are two things a player can do to one turret, not two readings of one button - which is
         /// the whole of what went wrong: the upgrade branch returned first, so a turret with a star
         /// left to sell could never be stood, and every turret starts with one.
         /// </summary>
@@ -585,7 +585,7 @@ namespace GlimmerGrove
         /// <summary>
         /// The upper button: buy the next star, pay for the turret, or say why neither is on offer.
         ///
-        /// <b>A short balance is answered rather than refused</b> — the gem shelf stacks over this
+        /// <b>A short balance is answered rather than refused</b> - the gem shelf stacks over this
         /// panel and steps out when the gems land, which is <c>GemShopOverlay</c>'s own rule. A
         /// credit shortfall has no shelf to open, so it says the number and nothing else: credits
         /// are earned by playing and there is nothing here to sell.
@@ -606,7 +606,7 @@ namespace GlimmerGrove
                 {
                     // **A panel of its own, because an upgrade is a decision with a number on
                     // either side of it.** What a star costs is one figure and what it buys is
-                    // two more, and a player deciding needs all three at once — on this panel they
+                    // two more, and a player deciding needs all three at once - on this panel they
                     // would be a fourth thing under a stage, a description and a status line.
                     var turret = Model;
                     int seat = Colour;
@@ -650,8 +650,8 @@ namespace GlimmerGrove
             }
 
             // **Bought, and then it gets out of the way.** This panel used to stay open and
-            // celebrate in place — the price pill became EQUIP, waves left the turret, confetti
-            // fell — on the argument that what was paid for is the thing firing behind the
+            // celebrate in place - the price pill became EQUIP, waves left the turret, confetti
+            // fell - on the argument that what was paid for is the thing firing behind the
             // button. Played, that read as a flourish on a shop panel rather than as an unlock,
             // which is the note `CompanionUnlockOverlay` already carries about its own history:
             // a transaction panel is the wrong place for a payoff, because it is still wearing
@@ -659,7 +659,7 @@ namespace GlimmerGrove
             // the payoff, and it ends on EQUIP so nobody has to come back here for it.
             //
             // The coin is the money leaving; what the turret arriving sounds like belongs to the
-            // ceremony about to play it — `HomesteadBuyOverlay`'s split, for its reason.
+            // ceremony about to play it - `HomesteadBuyOverlay`'s split, for its reason.
             Audio.Sfx("coin", .6f);
 
             Changed?.Invoke();
@@ -672,7 +672,7 @@ namespace GlimmerGrove
             {
                 // Nothing to give up by hand any more, and the deletion is the point. This
                 // used to release the preview's scope here, by name, because `Object.Destroy`
-                // lands at the end of the frame — so this panel's own release ran *after* the
+                // lands at the end of the frame - so this panel's own release ran *after* the
                 // reveal below had already asked for the same turret, and a scope claimed
                 // nothing another scope owned, so the reveal watched its art freed underneath
                 // it. Counting makes the ordering irrelevant: the reveal takes its own hold

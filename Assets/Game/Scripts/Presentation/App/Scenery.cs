@@ -15,7 +15,7 @@ namespace GlimmerGrove
         /// darken different things: the shade is flat and costs the whole picture the same,
         /// where the vignette costs the corners several times what it costs the middle. A
         /// screen whose content is a centred column can afford a heavy one; a screen whose
-        /// backdrop <em>is</em> the mood — the season pass, whose art is a sunrise — cannot,
+        /// backdrop <em>is</em> the mood - the season pass, whose art is a sunrise - cannot,
         /// and passing 0 there is what lets it keep its own sky. The default is what every
         /// screen built before the parameter existed was already getting.
         /// </para>
@@ -86,7 +86,7 @@ namespace GlimmerGrove
         /// <b>It is drawn where the art was lit from, not where it looks nice.</b> The grove's
         /// pieces were all rendered by one rig (<c>Tools/make_grove_art.py</c>, deleted with the
         /// Grovement on 2026-09-21), and that rig's key projected onto this screen's axes as
-        /// .996 up and .078 right — all but straight overhead, leaning a hair right. **The
+        /// .996 up and .078 right - all but straight overhead, leaning a hair right. **The
         /// number outlived the tool and is still the right one**, because it is what every other
         /// piece of art on this screen was lit to match. So the offset here is that ratio and
         /// not a taste: a sun drawn on the opposite side from the one the models are lit by is the
@@ -114,14 +114,14 @@ namespace GlimmerGrove
             const float H = Boot.RefHeight;
 
             // Where the disc stands, and it is **not** the top of the screen. Every screen
-            // that carries this also carries a header fade — a gradient 268 units deep plus
-            // whatever the notch has taken — so a sun drawn against the top edge is a sun
+            // that carries this also carries a header fade - a gradient 268 units deep plus
+            // whatever the notch has taken - so a sun drawn against the top edge is a sun
             // drawn behind the only thing on the sky that is not the sky. This clears the
             // deepest that fade gets (268 + a tall cutout) and nothing more, so the sun is as
             // high as it can be and still be a sun rather than a smudge under the banner.
             const float Rise = H * .25f;
 
-            // Sideways, from the centre. See above — `key . right / key . up`, and nothing
+            // Sideways, from the centre. See above - `key . right / key . up`, and nothing
             // else: this is where the models were lit from, not where it looks best.
             var at = new Vector2(H * .078f, -Rise);
 
@@ -140,13 +140,13 @@ namespace GlimmerGrove
         // -------------------------------------------------------------------- the kit
         /// <summary>
         /// The quiet ground every screen that is not the hub stands on: a flat blue scattered
-        /// with the game's own confetti — hearts, stars, crowns, leaves — all of it within a
+        /// with the game's own confetti - hearts, stars, crowns, leaves - all of it within a
         /// shade or two of the ground itself.
         ///
         /// <para>
         /// <b>Separate from <see cref="Room"/> on purpose, and the difference is what each
         /// screen is for.</b> The hub is a place: one object stands in the middle of it and the
-        /// painting is composed around that. A board, a profile or a shop shelf is a *list* —
+        /// painting is composed around that. A board, a profile or a shop shelf is a *list* -
         /// its whole surface is plates and rows, and a composed picture behind one is a picture
         /// nobody can see any of. So this is texture rather than scenery: enough that the screen
         /// is not a flat fill, never enough to be looked at.
@@ -164,7 +164,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Named rather than passed as a literal</b>, because an address typed at a call
         /// site is invisible to <c>artnames.py</c> the moment anything builds it (invariant 7)
-        /// — and because these are the two ends of a decision rather than two strings: a
+        /// - and because these are the two ends of a decision rather than two strings: a
         /// second ground is the only thing that separates the ranked lane from the ladder
         /// beside it, so the day there is a third it wants to be in this list and not spread
         /// across three screens.
@@ -200,7 +200,7 @@ namespace GlimmerGrove
             //
             // **`Bg/plain` and `Bg/hub_room` are the same picture today**, at the owner's
             // instruction: every screen is the one blue wall, so the hub and the pages off it
-            // read as one place. They are still two addresses, and deliberately — that is the
+            // read as one place. They are still two addresses, and deliberately - that is the
             // seam that lets the hub be re-cut as somewhere without touching six list screens,
             // and it has been used once already. What it costs while they agree is one
             // full-screen texture resident twice, which is about two thirds of a megabyte.
@@ -223,7 +223,7 @@ namespace GlimmerGrove
         /// <b>It is a picture again, and this one was drawn for the job rather than cut out of
         /// a pack.</b> The three that came before were a forest, a machine room and a slice of
         /// a level map, and each was a picture of somewhere <em>else</em> with an interface put
-        /// on top; this one is composed around the thing the screen actually holds — a lit
+        /// on top; this one is composed around the thing the screen actually holds - a lit
         /// plinth, dead centre, with the eye led to it by a stair, a ring on the floor and a
         /// shaft of light. The companion stands on the plinth and the plates stand either side
         /// of the light.
@@ -284,7 +284,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>It came off `ModalView.MakePanel` because the owner liked it there.</b> That was
         /// the one place in the game a heading was a real cloth ribbon rather than a wooden
-        /// plaque with brown lettering on it — the shape this UI drew before it had a kit, and
+        /// plaque with brown lettering on it - the shape this UI drew before it had a kit, and
         /// the one four screens still had at the top of them. So the ribbon is the heading now,
         /// and the panel and the screens draw the same object.
         /// </para>
@@ -297,11 +297,11 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// <paramref name="caption"/> narrows the word's own box where something else has to
-        /// fit beside it — the glade map's two chapter chevrons sit inside the ribbon's width,
+        /// fit beside it - the glade map's two chapter chevrons sit inside the ribbon's width,
         /// so its title gets less room than the ribbon has.
         /// </para>
         /// <para>
-        /// The caption is kept to one line and shrunk to fit rather than trusted to be short — three of the four are
+        /// The caption is kept to one line and shrunk to fit rather than trusted to be short - three of the four are
         /// translated nouns and the fourth is a chapter name authored per drop. Returns the
         /// ribbon, so a caller can pop it or hang a chevron off it.
         /// </para>
@@ -356,8 +356,8 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// How tall each rail draws. The kit's own proportions at this canvas width — 1330x80
-        /// and 1333x95 taken to 1080 — so the notch keeps its shape.
+        /// How tall each rail draws. The kit's own proportions at this canvas width - 1330x80
+        /// and 1333x95 taken to 1080 - so the notch keeps its shape.
         /// </summary>
         public const float RailTopH = 65f;
         public const float RailFootH = 77f;
@@ -475,7 +475,7 @@ namespace GlimmerGrove
 
             // The box has to allow for the arc, and the stars have to be centred inside it.
             // It used to be exactly `size` tall whether or not the middle star was lifted, so
-            // an arced row's real extent ran from -size/2 to +size/2 + lift — the group sat
+            // an arced row's real extent ran from -size/2 to +size/2 + lift - the group sat
             // half a lift high, and on the victory panel that was enough to push the middle
             // star into the ribbon above it. Rows without an arc are unaffected: the lift is
             // zero and every number below is what it always was.

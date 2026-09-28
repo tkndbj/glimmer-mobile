@@ -14,7 +14,7 @@ namespace GlimmerGrove.Modes
         public bool Alive = true;
 
         /// <summary>
-        /// What this turret holds when it is whole — its own, not the mode's.
+        /// What this turret holds when it is whole - its own, not the mode's.
         ///
         /// <b>Read once when the ward is built and then asked by everything that repairs or draws
         /// it.</b> A mending, a rally and the health bar all used the mode's constant, which was
@@ -55,7 +55,7 @@ namespace GlimmerGrove.Modes
         /// <b>A second countdown rather than a second meaning for <see cref="Dark"/>, because the
         /// two are opposites and a player has to be able to tell them apart.</b> A douse takes the
         /// fuel with the seconds and is answered by pouring more in; a bind takes only the seconds
-        /// and pouring is not an answer — what goes in <em>banks</em> and lets go when the chain
+        /// and pouring is not an answer - what goes in <em>banks</em> and lets go when the chain
         /// does. Folded into one field, a surge would silently lift a shackle
         /// (<c>SiegeBoard.Surge</c> clears <see cref="Dark"/> on purpose) and the one boss whose
         /// whole verb is "this cannot be bought back" would be answerable for eight gems.
@@ -67,7 +67,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>Handed in rather than looked up, and never null.</b> A board that reached into a
-        /// static for the loadout would be a board no test could put a second line in front of —
+        /// static for the loadout would be a board no test could put a second line in front of -
         /// and <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c> has to prove every rung is
         /// holdable with the <em>weakest</em> line a player could bring, which is the only version
         /// of that proof worth having.
@@ -101,7 +101,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <b>Its figures are read once, here</b>, exactly as its capacity always was: a bolt's
         /// weight and a chassis's health are properties of what is standing, not questions to ask
-        /// a ledger mid-run — and a ledger can move under a run when a sync lands.
+        /// a ledger mid-run - and a ledger can move under a run when a sync lands.
         /// </summary>
         public SiegeWard(int colour, Wards.WardBuild build)
         {
@@ -169,7 +169,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>One predicate rather than two</b>, because "may I shoot this" and "for how much" are
-        /// one question under the lock — and the raider overload below is where the one exception
+        /// one question under the lock - and the raider overload below is where the one exception
         /// to it lives.
         /// </para>
         /// <para>
@@ -202,15 +202,15 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>The raider rather than its colour, and this is the door every played bolt goes
-        /// through.</b> One rule on the hill is not a fact about a colour — a boss is answered by
-        /// the whole line whatever it wears (<see cref="SiegeTuning.EveryWardReaches"/>) — and a
+        /// through.</b> One rule on the hill is not a fact about a colour - a boss is answered by
+        /// the whole line whatever it wears (<see cref="SiegeTuning.EveryWardReaches"/>) - and a
         /// caller that asked the colour overload would put that rule back in the one place it must
         /// not be: spread across the two sites that aim and the one that fires.
         /// </para>
         /// <para>
         /// <b>The better of the two readings, never their sum.</b> A ward whose own colour the
         /// boss happens to be wearing reaches it in full rather than at a boss's baseline, and
-        /// every other ward still lands the un-doubled bolt — so no turret is ever worse against a
+        /// every other ward still lands the un-doubled bolt - so no turret is ever worse against a
         /// boss than the free one (invariant 42).
         /// </para>
         /// </summary>
@@ -227,7 +227,7 @@ namespace GlimmerGrove.Modes
 
         /// <summary>
         /// Whether a bolt from this ward lands on <paramref name="at"/> at its full doubled
-        /// weight — what the view draws in gold and what <c>SiegeTuning.PerfectMatch</c> counts.
+        /// weight - what the view draws in gold and what <c>SiegeTuning.PerfectMatch</c> counts.
         ///
         /// <b>Its own colour and nothing else</b>, which is what keeps the double the thing a
         /// player is <em>told</em> about by the board: a duel answered with the wrong colour still
@@ -261,13 +261,13 @@ namespace GlimmerGrove.Modes
         /// <b>A stored charge rather than a full tube, and the difference is the whole feature.</b>
         /// It shipped as "the tube is full" and was <em>unusable</em>: a ward fires the instant it
         /// has fuel and a target, so the only way to reach the brim was for its colour to be off
-        /// the hill — and an overcharge over an empty hill has nothing to throw at. Reported after
+        /// the hill - and an overcharge over an empty hill has nothing to throw at. Reported after
         /// one session as exactly that: <em>it is impossible to use</em>.
         /// </para>
         /// <para>
         /// <b>So a full tube <em>converts</em>.</b> The fuel comes out of the tube and goes in here,
         /// the tube carries on filling for ordinary bolts, and the charge waits until it is thrown.
-        /// That is what the owner asked for — <em>it stays even if the turret starts shooting</em> —
+        /// That is what the owner asked for - <em>it stays even if the turret starts shooting</em> -
         /// and it is also what keeps the thing free of par: the fuel that became a charge can never
         /// also be fired as bolts, so an overcharge moves damage the player already matched for and
         /// conjures none (invariant 39).
@@ -281,7 +281,7 @@ namespace GlimmerGrove.Modes
         /// <b>A chained ward is not, and that is what makes a bind take the seconds rather than
         /// the tempo.</b> A shackle that left the tap live would be answered by spending whatever
         /// was banked the moment it landed, which turns "this ward is offline for six seconds"
-        /// into "press the button you were going to press anyway" — invariant 5d, on the one boss
+        /// into "press the button you were going to press anyway" - invariant 5d, on the one boss
         /// whose entire verb is the seconds. The charge is kept, not lost: it is there when the
         /// chain comes off.
         /// </summary>
@@ -297,7 +297,7 @@ namespace GlimmerGrove.Modes
         /// </para>
         /// <para>
         /// The overflow is <em>carried</em> rather than dropped, so a cascade that fills a tube and
-        /// a half leaves the half in the tube. At the cap the tube clamps exactly as it always did —
+        /// a half leaves the half in the tube. At the cap the tube clamps exactly as it always did -
         /// charges are bounded and fuel is not a leak.
         /// </para>
         /// </summary>
@@ -353,7 +353,7 @@ namespace GlimmerGrove.Modes
         /// Puts this ward out: what a blightcaller's spell does when it lands.
         ///
         /// It takes the fuel <em>and</em> the seconds, because taking only one of the two is not
-        /// a mechanic — emptying a full ward it is about to fire from costs nothing a moment
+        /// a mechanic - emptying a full ward it is about to fire from costs nothing a moment
         /// later, and smothering a ward with nothing in it costs nothing at all.
         /// </summary>
         public void Snuff()
@@ -370,7 +370,7 @@ namespace GlimmerGrove.Modes
         /// <b>Fuel and never a charge, which is the whole difference.</b> <see cref="Fill"/> is
         /// the door fuel arrives through and it banks a charge for every whole tube, because
         /// that is what a match earning one means. This is a tube handed over full so the ward
-        /// keeps firing — the tutorial's closing sweep is its only caller — and a banked charge
+        /// keeps firing - the tutorial's closing sweep is its only caller - and a banked charge
         /// there would be a lit button on a board nobody is playing any more.
         /// </para>
         /// <para>
@@ -391,7 +391,7 @@ namespace GlimmerGrove.Modes
         /// <see cref="Snuff"/> the difference is the whole of the difference between the two
         /// bosses: a douse empties the tube and a bind leaves it exactly as full as it was, still
         /// filling, still banking a charge when it brims. So the fuel a player pours into a
-        /// chained ward is not wasted and is not available either — which is the decision
+        /// chained ward is not wasted and is not available either - which is the decision
         /// (invariant 26h), and the reason no utility answers this.
         /// </summary>
         public void Shackle() => Bound = SiegeTuning.ShacklerBind;
@@ -502,8 +502,8 @@ namespace GlimmerGrove.Modes
         /// fresh pile really landed.
         ///
         /// <b>Refused on a post already buried, never set back to full.</b> It was "set, never
-        /// added" for the hourglass's reason — a taller pile is a post no amount of tapping
-        /// reaches — and a set is now a refusal for a second one: rubble runs out on the clock
+        /// added" for the hourglass's reason - a taller pile is a post no amount of tapping
+        /// reaches - and a set is now a refusal for a second one: rubble runs out on the clock
         /// (<see cref="SiegeTuning.ColossusBury"/>), so a boulder that re-set a standing pile
         /// would hold a post off the line for longer than that ceiling, and the ceiling is the
         /// whole of what makes a burial a beat rather than a wall. The boulder still lands its
@@ -529,7 +529,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>The remainder is carried rather than dropped</b> (<c>Settling +=</c>), so a coarse
         /// step of the clock takes as many pieces as it has earned and a burial is never
-        /// stretched by the frame rate — the same reason <see cref="Fill"/> carries its
+        /// stretched by the frame rate - the same reason <see cref="Fill"/> carries its
         /// overflow.
         /// </para>
         /// </summary>

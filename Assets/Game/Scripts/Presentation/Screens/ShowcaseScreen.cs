@@ -13,7 +13,7 @@ namespace GlimmerGrove
     /// can put up, with nothing else on the screen.
     ///
     /// <para>
-    /// <b>It is the real mode with a player beside it</b> — <see cref="TutorialScreen"/>'s
+    /// <b>It is the real mode with a player beside it</b> - <see cref="TutorialScreen"/>'s
     /// shape, with the two panels replaced by a director. The board is <c>SiegeView</c> over
     /// <c>SiegeBoard</c>, dealt from <see cref="SiegeShowcase"/>; the hand is
     /// <see cref="ShowcaseHand"/>; every move the hand makes reaches the board through the door
@@ -27,7 +27,7 @@ namespace GlimmerGrove
     /// caption on the hill (<c>SiegeView.Muted</c>) and no margin round the board: a recording
     /// wants the fight and nothing that would have to be cropped out. The hardware key leaves.
     /// <b>The ending is the run's own defeat</b>, at the owner's instruction after the first
-    /// recording — the line goes, the board shakes and reddens, and the hand withdraws. A
+    /// recording - the line goes, the board shakes and reddens, and the hand withdraws. A
     /// watcher is meant to feel the wall going. The board is tuned to lose
     /// (<c>SiegeShowcase.Tough</c>) and the fixture holds it to losing.
     /// </para>
@@ -65,7 +65,7 @@ namespace GlimmerGrove
         /// rhythm by <c>Hurry / Think</c> while the boss stands, which is this rule and not a
         /// copy of it: the colossus buries turrets faster than an unhurried line digs them out,
         /// so a recording whose hand did not quicken for the boss would stall the fight and
-        /// lose a turret — measured, not argued, and the reason the two are one constant.
+        /// lose a turret - measured, not argued, and the reason the two are one constant.
         /// </para>
         /// </summary>
         public const float Think = 1.4f, Hurry = .9f;
@@ -104,7 +104,7 @@ namespace GlimmerGrove
         /// A bomb the board refused, and until when the hand leaves it alone.
         ///
         /// <c>SiegeShowcase.Fuse</c> asks the board's own refusals before a tap, so this is
-        /// belt and braces for the half-second between the reading and the hand arriving —
+        /// belt and braces for the half-second between the reading and the hand arriving -
         /// a raider that dies in flight leaves a bomb the tap would refuse, and a refused bomb
         /// stays where it is. A person who tapped a bomb that did nothing moves on.
         /// </summary>
@@ -243,7 +243,7 @@ namespace GlimmerGrove
         /// <b>One loop, one question a pass: what would a good player do right now.</b> Rubble
         /// first (a buried turret is a turret not firing), then a cog lying on the hill, then a
         /// bomb standing under something, then a full tube with a crowd to throw at, and only
-        /// then a swap — and a swap only once the field is at rest and the thinking time has
+        /// then a swap - and a swap only once the field is at rest and the thinking time has
         /// passed. Every answer is <c>SiegeShowcase</c>'s reading of the board and every act is
         /// the hand doing it, so the loop itself decides nothing.
         /// </para>
@@ -376,7 +376,7 @@ namespace GlimmerGrove
 
             yield return _hand.Release(.18f);
 
-            // A move the board refused — the field moved under a slow reach — costs the player
+            // A move the board refused - the field moved under a slow reach - costs the player
             // a beat, which is what it costs a thumb.
             if (!landed) yield return new WaitForSecondsRealtime(.3f);
         }
@@ -435,8 +435,8 @@ namespace GlimmerGrove
         /// <summary>
         /// The run is over. The hand withdraws and the board is left as it stands.
         ///
-        /// <b>Nothing is drawn over a defeat</b>, on purpose: the board's own ruin — the shake,
-        /// the red flash, the fallen posts — is the ending, and a panel over it would be the
+        /// <b>Nothing is drawn over a defeat</b>, on purpose: the board's own ruin - the shake,
+        /// the red flash, the fallen posts - is the ending, and a panel over it would be the
         /// thing a watcher reads instead of the wall going. A victory, which the board is tuned
         /// never to reach, is left equally bare so a mis-tuned run cannot congratulate itself.
         /// </summary>

@@ -12,7 +12,7 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// <b>The failure this guards is silent and it shipped once.</b> A chapter's mode lives in
     /// <c>manifest.json</c>, and the first second-mode chapter to be adopted by <c>Sync Manifest</c>
-    /// went in without it — so it was indexed as a glade chapter, and every other check in the
+    /// went in without it - so it was indexed as a glade chapter, and every other check in the
     /// pipeline passed: the levels parsed, the boards were proved solvable, the strings resolved,
     /// the art resolved, the build went green. The only symptom was one line in a log saying the
     /// chapter opened on the wrong chapter's stars, because <c>LevelUnlock.GateFor</c> looks for
@@ -35,7 +35,7 @@ namespace GlimmerGrove.Tests
                 new LevelLayout(2, 1, Rows), LevelTuning.Default(3),
                 new LevelPresentation(new Vector2(.3f, .3f), null, null, null));
 
-        /// <summary>A field, built the way content builds one — the smallest there is.</summary>
+        /// <summary>A field, built the way content builds one - the smallest there is.</summary>
         static LevelDefinition Prism(string id)
         {
             Assert.IsTrue(ProtoGrid.TryRead(new[] { "Rg@", "rrb", "b.g" }, 3, 3,

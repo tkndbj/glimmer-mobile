@@ -30,7 +30,7 @@ namespace GlimmerGrove.Social
     /// <b>Why a policy rather than a Firestore trigger.</b> The obvious server-side design
     /// watches <c>players/{uid}</c> and rebuilds the card whenever the save is written. That
     /// is a function invocation per sync per player, for ever, on the busiest write path in
-    /// the game — and a sync is raised by a star, a heart, a chest and a streak night, none
+    /// the game - and a sync is raised by a star, a heart, a chest and a streak night, none
     /// of which change anything a visitor can see. A card is worth rebuilding a handful of
     /// times a week. So the client asks, only when the part of the grove a stranger can see
     /// has actually moved, and the server still recomputes everything it publishes: the
@@ -43,7 +43,7 @@ namespace GlimmerGrove.Social
     /// from the save pushed <em>last</em> time, and the fingerprint then noted as published
     /// stopped the real one ever being sent. Every request here therefore carries the
     /// revision the server's document had when it was made, and a reply that reports an
-    /// older one is <see cref="Stale"/> — the one outcome the old design could not see.
+    /// older one is <see cref="Stale"/> - the one outcome the old design could not see.
     /// </para>
     /// <para>
     /// <b>A player who never asks is simply not on the board.</b> That is the whole exploit
@@ -55,7 +55,7 @@ namespace GlimmerGrove.Social
     /// opened the Infinite lane, and a card for each of them is a document, a write and a row
     /// in a sample for a keeper with nothing on it. <see cref="WorthPublishing"/> gates it,
     /// which also keeps the published distribution to keepers who have actually played the
-    /// lane — see <see cref="GroveRankTable"/> for why that population is the one that means
+    /// lane - see <see cref="GroveRankTable"/> for why that population is the one that means
     /// anything.
     /// </para>
     /// <para>
@@ -80,7 +80,7 @@ namespace GlimmerGrove.Social
         public const float FirstRetrySeconds = 15f;
 
         /// <summary>
-        /// The longest gap between retries. Ten minutes — twice
+        /// The longest gap between retries. Ten minutes - twice
         /// <c>SyncScheduler.MaxRetrySeconds</c>, because nothing about a stale card costs the
         /// player anything, whereas a save that has not reached the server is progress at
         /// risk. Retrying this as hard as a sync would spend a battery on a leaderboard row.
@@ -92,8 +92,8 @@ namespace GlimmerGrove.Social
         /// answer is accepted.
         ///
         /// <para>
-        /// A stale reply should be impossible — the request is made after the sync that put
-        /// the save there, and the database reads its own writes — so one is a bug or an
+        /// A stale reply should be impossible - the request is made after the sync that put
+        /// the save there, and the database reads its own writes - so one is a bug or an
         /// outage, and the right response is to push again and ask again. But a refusal that
         /// will still be true tomorrow must never be retried for ever (invariant 13a), and
         /// "the server reports a revision below ours" could be exactly that: a document
@@ -109,8 +109,8 @@ namespace GlimmerGrove.Social
         /// Whether a card is worth putting on a board at all.
         ///
         /// <para>
-        /// <b>One way to qualify, since the Grovement went.</b> This used to be two clauses —
-        /// a grove worth at least a credit, or a wave on the Infinite lane — and the second was
+        /// <b>One way to qualify, since the Grovement went.</b> This used to be two clauses -
+        /// a grove worth at least a credit, or a wave on the Infinite lane - and the second was
         /// added because somebody could hold out forty waves having never bought a single fence.
         /// The first clause is now unreachable by construction rather than merely unmet: there
         /// is no grove to be worth anything, so it has been removed instead of left standing as
@@ -141,7 +141,7 @@ namespace GlimmerGrove.Social
         /// The fingerprint the in-flight publish carries.
         ///
         /// Held because the pending mark is consumed when the call <em>starts</em>, so a
-        /// failure has to be able to put back exactly what it took — see <see cref="Failed"/>.
+        /// failure has to be able to put back exactly what it took - see <see cref="Failed"/>.
         /// </summary>
         string _inFlightFingerprint = string.Empty;
 
@@ -169,15 +169,15 @@ namespace GlimmerGrove.Social
         /// Takes a fingerprint remembered from a previous launch as already published.
         ///
         /// <para>
-        /// Without it, the first publish request of every session is a write — because a fresh
+        /// Without it, the first publish request of every session is a write - because a fresh
         /// policy knows nothing about the board and cannot tell "unchanged since yesterday"
         /// from "never sent". That is one document write per player per launch, for ever, for
         /// a grove that has not moved. With it, a relaunch costs nothing at all, which is the
         /// commonest case by a wide margin.
         /// </para>
         /// <para>
-        /// It is only ever adopted, never asserted: if the remembered value is wrong — a
-        /// publish that failed after the note was written, a card removed on the server — the
+        /// It is only ever adopted, never asserted: if the remembered value is wrong - a
+        /// publish that failed after the note was written, a card removed on the server - the
         /// cost is one stale card until the next real change, and the daily ranking job reads
         /// whatever is there. That is the right way round for a value nothing can verify.
         /// </para>
@@ -202,14 +202,14 @@ namespace GlimmerGrove.Social
         /// <paramref name="serverRevision"/> is the revision the server's document carries
         /// now, from the sync that made this request; the publish is asked to prove it read
         /// that revision or later. Nought means the caller could not know, and nothing is
-        /// then proved — never pass nought to skip the proof on purpose.
+        /// then proved - never pass nought to skip the proof on purpose.
         /// </para>
         /// </summary>
         public void Request(string fingerprint, long serverRevision, bool worthPublishing)
         {
             fingerprint = fingerprint ?? string.Empty;
 
-            // Nothing worth showing yet. Not a refusal to be retried — the next request
+            // Nothing worth showing yet. Not a refusal to be retried - the next request
             // carrying something reaches here on its own.
             if (!worthPublishing) return;
 
@@ -266,7 +266,7 @@ namespace GlimmerGrove.Social
         /// <para>
         /// For an account switch. The fingerprint describes <em>an account's</em> card, so
         /// carrying one across a switch would let the incoming account's identical-looking
-        /// grove suppress its own first publish — and the incoming player would find
+        /// grove suppress its own first publish - and the incoming player would find
         /// themselves absent from the board with nothing to do about it. Invariant 17's
         /// discipline: anything keyed to an account is dropped when the account changes.
         /// </para>
@@ -308,7 +308,7 @@ namespace GlimmerGrove.Social
             // Consumed here rather than on the reply. That is the whole of why a purchase made
             // while a call is in flight survives it: the reply clears nothing, so a request
             // that arrived after this line is still owed when the reply lands. Getting this
-            // backwards is what lost a keeper's name for a year — see SyncScheduler.Started —
+            // backwards is what lost a keeper's name for a year - see SyncScheduler.Started -
             // and GrovePublishPolicyTests caught it here on the first run.
             if (action == GrovePublishAction.Withdraw)
             {
@@ -328,7 +328,7 @@ namespace GlimmerGrove.Social
 
         /// <summary>
         /// It reached the server and was built from the save asked for. <paramref name="fingerprint"/>
-        /// is what was sent — passed back rather than remembered, so a request that arrived
+        /// is what was sent - passed back rather than remembered, so a request that arrived
         /// mid-flight is not mistaken for the one that was published.
         /// </summary>
         public void Succeeded(string fingerprint)
@@ -352,7 +352,7 @@ namespace GlimmerGrove.Social
         /// this device had just settled with it.
         ///
         /// <para>
-        /// Returns true when the work is kept and will be tried again after a backoff — the
+        /// Returns true when the work is kept and will be tried again after a backoff - the
         /// caller should also ask for a sync, since the one thing that can put the document
         /// right is another push. Returns false once <see cref="MaxStaleRetries"/> have been
         /// spent: the reply is then taken as the publish (exactly as <see cref="Succeeded"/>
@@ -379,7 +379,7 @@ namespace GlimmerGrove.Social
         /// <summary>
         /// It did not reach the server, so the work is still owed and further away.
         ///
-        /// The pending mark was consumed when the call started, so this puts it back — unless
+        /// The pending mark was consumed when the call started, so this puts it back - unless
         /// something newer has already asked for the opposite, in which case restoring it
         /// would resurrect a withdrawal over an opt-in the player has since made.
         /// </summary>
@@ -409,7 +409,7 @@ namespace GlimmerGrove.Social
         }
 
         /// <summary>
-        /// The server refused, permanently, for a reason that will still be true next time —
+        /// The server refused, permanently, for a reason that will still be true next time -
         /// an unpublishable name, an account with no save to publish.
         ///
         /// <para>
@@ -461,7 +461,7 @@ namespace GlimmerGrove.Social
         /// Read by the caller immediately after <see cref="Tick"/> hands back
         /// <see cref="GrovePublishAction.Publish"/>, and handed straight back to
         /// <see cref="Succeeded"/>. A property of its own rather than reusing
-        /// <see cref="WantedFingerprint"/>, which a request arriving a moment later moves —
+        /// <see cref="WantedFingerprint"/>, which a request arriving a moment later moves -
         /// and a reply then credited to the wrong fingerprint would mark a grove published
         /// that never was.
         /// </summary>

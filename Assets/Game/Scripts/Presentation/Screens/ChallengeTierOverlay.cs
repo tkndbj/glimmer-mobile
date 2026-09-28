@@ -6,8 +6,8 @@ using UnityEngine.UI;
 namespace GlimmerGrove
 {
     /// <summary>
-    /// The challenge deals: one row per tier the file sells — its stone, its name, what it
-    /// allows, how long it runs and what it costs — and a key to buy it.
+    /// The challenge deals: one row per tier the file sells - its stone, its name, what it
+    /// allows, how long it runs and what it costs - and a key to buy it.
     ///
     /// <para>
     /// <b>It wears the victory panel's frame</b>, at the owner's instruction on 2026-09-23 and
@@ -32,8 +32,8 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>An upgrade is priced as the difference and the row says so</b> (56h): under a running
-    /// deal a bigger row's key carries the difference alone — a figure and the gem, at the
-    /// owner's instruction — and the note under the sentence says it is the difference and that
+    /// deal a bigger row's key carries the difference alone - a figure and the gem, at the
+    /// owner's instruction - and the note under the sentence says it is the difference and that
     /// the current deal's days carry over, because a price with no explanation reads as a
     /// discount somebody will look for again tomorrow. The price is <see cref="ChallengeLedger.PriceOf"/>'s and is derived,
     /// never typed here.
@@ -41,7 +41,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>The refusals are said, not swallowed.</b> A deal already running says so; a smaller
     /// one under a larger says a better deal is running; and the one refusal worth sending
-    /// somewhere — too few gems — names the figure, because a player short of gems is a player
+    /// somewhere - too few gems - names the figure, because a player short of gems is a player
     /// one screen away from having them.
     /// </para>
     /// </summary>
@@ -172,7 +172,7 @@ namespace GlimmerGrove
             }
 
             // The price is derived: the full figure, or the difference under a running smaller
-            // deal — in which case the note under the sentence says what the figure is and what
+            // deal - in which case the note under the sentence says what the figure is and what
             // carries. Two keys for the two figures, so a translation may still word them apart.
             var upgrades = ChallengeLedger.Upgrades(tier);
             int price = under ? tier.Gems : ChallengeLedger.PriceOf(tier);
@@ -180,7 +180,7 @@ namespace GlimmerGrove
                                               : Loc.Format("ui.challenges.buy", price);
 
             // The caption is the figure and the gem after it is the word (`Btn.IconTrails`),
-            // which is how every other price in this game says which currency it is — the
+            // which is how every other price in this game says which currency it is - the
             // season pass key's shape. TextButton makes the label shrinkable itself.
             UIKit.TextButton("Buy", t, under ? Skins.Shut : Skins.Gem, caption, 36, KeySize,
                              new Vector2(1f, .5f), keyPos, () => Buy(tier),

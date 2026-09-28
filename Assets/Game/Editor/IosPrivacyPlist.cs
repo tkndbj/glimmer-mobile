@@ -13,8 +13,8 @@ namespace GlimmerGrove.EditorTools
     /// <para>
     /// <b>Why this is a build step rather than a Player Settings field.</b> Unity has no field
     /// for <c>NSUserTrackingUsageDescription</c>, so the only alternatives are editing
-    /// <c>Info.plist</c> by hand after every build — which is a step somebody forgets on
-    /// shipping week, exactly as this project has already learned twice — or a post-processor.
+    /// <c>Info.plist</c> by hand after every build - which is a step somebody forgets on
+    /// shipping week, exactly as this project has already learned twice - or a post-processor.
     /// It is also not optional: iOS refuses to present the tracking prompt at all when the key
     /// is missing, and the failure is silent. The dialog never appears, every player is
     /// non-consented, and the build passes review with iOS ad revenue quietly near zero.
@@ -24,7 +24,7 @@ namespace GlimmerGrove.EditorTools
     /// merely restates the dialog ("this app would like to track you") is a documented
     /// rejection. It has to say what the player gets. This one says the two true things: it
     /// keeps the game free, and it is the difference between a relevant ad and a random one.
-    /// It must be translated for every language the store listing supports — that is an
+    /// It must be translated for every language the store listing supports - that is an
     /// <c>InfoPlist.strings</c> file per locale in the Xcode project, and it is deliberately
     /// <em>not</em> generated here, because the loc keys in this game are gated by a build
     /// check and a string invented at build time would slip past it.
@@ -41,8 +41,8 @@ namespace GlimmerGrove.EditorTools
     /// value is exactly the second-source-of-truth problem this codebase keeps refusing, so the
     /// resolution is deliberate rather than incidental: <b>leave the plugin's "User Tracking
     /// Usage Description" field empty</b> and this is the only writer. The order makes that
-    /// safe either way — the plugin uses the default callback order of 1 and this one declares
-    /// 100, so this runs last and wins — but a filled-in field there would be a setting
+    /// safe either way - the plugin uses the default callback order of 1 and this one declares
+    /// 100, so this runs last and wins - but a filled-in field there would be a setting
     /// somebody changed and watched do nothing, which is worse than a conflict that errors.
     /// </para>
     /// <para>
@@ -88,7 +88,7 @@ namespace GlimmerGrove.EditorTools
             // Export compliance, declared here rather than answered by hand on every upload.
             //
             // App Store Connect asks the encryption question for each build, and answering it
-            // in the console is a step somebody performs while trying to ship — which is
+            // in the console is a step somebody performs while trying to ship - which is
             // exactly when a wrong answer is cheapest to give and most expensive to have
             // given. Declaring it in the binary means the question stops being asked and the
             // answer lives in version control where a diff shows it changing.
@@ -96,14 +96,14 @@ namespace GlimmerGrove.EditorTools
             // False is the correct answer for this game, and the reason is narrow enough to
             // write down: the exemption covers an app whose only cryptography is the HTTPS
             // its platform provides, plus standard hashing that is not used to protect data
-            // in transit. Everything here fits — Firebase and the ad SDKs talk TLS through
+            // in transit. Everything here fits - Firebase and the ad SDKs talk TLS through
             // the OS, SaveChecksum and the daily-chest roll are FNV-1a and xorshift over
             // local data, and SHA-256 appears once, on the Sign in with Apple nonce, which
             // is a replay guard rather than a cipher. Nothing in this app implements or
             // bundles an encryption algorithm of its own.
             //
-            // If that ever stops being true — a bundled cipher, an encrypted save, a custom
-            // secure channel — this line has to change with it, because it is a declaration
+            // If that ever stops being true - a bundled cipher, an encrypted save, a custom
+            // secure channel - this line has to change with it, because it is a declaration
             // to a regulator rather than a convenience.
             plist.root.SetBoolean("ITSAppUsesNonExemptEncryption", false);
 
@@ -119,7 +119,7 @@ namespace GlimmerGrove.EditorTools
             // What it costs: collection then depends entirely on AnalyticsSetup.Push() running,
             // so a break there measures nothing rather than measuring too much. That is the
             // right way round for a consent gate and the wrong way round for a retention test,
-            // which is why the enable path is checked on a device — "[Analytics] collection
+            // which is why the enable path is checked on a device - "[Analytics] collection
             // enabled" in the log on any launch where consent is granted.
             plist.root.SetBoolean("FIREBASE_ANALYTICS_COLLECTION_ENABLED", false);
 
@@ -138,19 +138,19 @@ namespace GlimmerGrove.EditorTools
         /// Unity copies a native plugin into the generated project but does not link the system
         /// frameworks it calls into, and <c>ATTrackingManager</c> lives in one that is not linked
         /// by default. Without this the build fails at the very end, in the linker, with
-        /// undefined symbols for <c>_OBJC_CLASS_$_ATTrackingManager</c> — after twenty minutes of
+        /// undefined symbols for <c>_OBJC_CLASS_$_ATTrackingManager</c> - after twenty minutes of
         /// compiling, and with an error that names Apple's class rather than our file.
         /// </para>
         /// <para>
         /// <b>Weakly linked</b>, deliberately. The framework arrived in iOS 14 and the plugin
         /// guards every call behind an availability check, so a weak link lets the app launch on
         /// anything older with the symbol simply absent. A strong link would refuse to load the
-        /// binary at all on those devices — a crash on start rather than a feature that is
+        /// binary at all on those devices - a crash on start rather than a feature that is
         /// quietly unavailable.
         /// </para>
         /// <para>
         /// Added to the <c>UnityFramework</c> target rather than the app target, because that is
-        /// where Unity puts native plugins in a modern generated project — the app target is a
+        /// where Unity puts native plugins in a modern generated project - the app target is a
         /// thin shell that loads it.
         /// </para>
         /// </summary>

@@ -9,8 +9,8 @@ namespace GlimmerGrove.Content
     ///
     /// This is the half of the catalog that is always resident, and it is built from
     /// the manifest alone. That is the decision that makes content scale: the boot
-    /// path needs to answer "what exists, in what order, in which chapter" — to total
-    /// stars, to derive XP, to find where the player is up to — and none of those
+    /// path needs to answer "what exists, in what order, in which chapter" - to total
+    /// stars, to derive XP, to find where the player is up to - and none of those
     /// questions need a grid, a backdrop or a par. Reading one small file answers all
     /// of them, so launching the game costs the same at chapter one hundred as at
     /// chapter one.
@@ -117,7 +117,7 @@ namespace GlimmerGrove.Content
         ///
         /// <para>
         /// <b>The front door and the top of the list are one answer on purpose.</b> They were
-        /// briefly two — this read "the classic mode when the catalog has it, else the first" —
+        /// briefly two - this read "the classic mode when the catalog has it, else the first" -
         /// and two answers means a map that opens on one mode while the control above it offers
         /// a different one first, which is a difference nobody could explain and nothing would
         /// have caught. Which mode leads is decided once, in <see cref="LevelModes"/>, and read
@@ -128,7 +128,7 @@ namespace GlimmerGrove.Content
         /// That constant answers a question about <em>parsing</em>: a chapter with no
         /// <c>mode</c> field is a glade, for ever, so that every chapter authored before modes
         /// existed keeps working with its file untouched. This one answers a question about
-        /// <em>this catalog</em>, and the two part company twice over — the front door is
+        /// <em>this catalog</em>, and the two part company twice over - the front door is
         /// Thornwatch now, and the classic mode can have no chapters at all (every glade chapter
         /// disabled from a config push, a client rolled back, a drop that has not downloaded). A
         /// screen that took the parsing answer would open onto a mode with nothing in it, which
@@ -222,7 +222,7 @@ namespace GlimmerGrove.Content
         ///
         /// Index knowledge for a stronger reason than the companion roster is: an event's
         /// reward is derived from the star ledger, so every place that computes credits
-        /// needs the whole calendar — including events that closed months ago, which still
+        /// needs the whole calendar - including events that closed months ago, which still
         /// pay what they paid. A calendar that only held live events would take currency
         /// away from a player the day one ended.
         /// </summary>
@@ -237,7 +237,7 @@ namespace GlimmerGrove.Content
         /// <para>
         /// <b>An authored season beats a derived one, and that precedence is stated rather than
         /// emergent.</b> A repeating season covers the whole calendar from its start onward, so
-        /// any dated season a manifest also carries necessarily overlaps it — and the useful
+        /// any dated season a manifest also carries necessarily overlaps it - and the useful
         /// reading is that the hand-written one wins, because it is the more specific thing and
         /// the only reason to author it is to interrupt the rotation. The alternative, refusing
         /// the overlap, would make "run a one-off event this December" impossible without taking
@@ -253,14 +253,14 @@ namespace GlimmerGrove.Content
         }
 
         /// <summary>
-        /// The season an id names — authored or derived — or null.
+        /// The season an id names - authored or derived - or null.
         ///
         /// <para>
         /// <b>This is how a season the player still holds an unopened chest from stays
         /// reachable.</b> <see cref="Events"/> is the authored calendar and cannot list a
         /// recurrence, so a closed cycle exists only as an id in somebody's save; without a
         /// reader that can turn that id back into a season, the chest it holds would be
-        /// unreachable — which is exactly what invariant 47c promises never happens
+        /// unreachable - which is exactly what invariant 47c promises never happens
         /// ("a rung reached before a season closed stays claimable").
         /// </para>
         /// <para>
@@ -352,7 +352,7 @@ namespace GlimmerGrove.Content
 
         /// <summary>
         /// Zero-based position within its own mode's play order, or -1. Use this for display
-        /// numbering and for nothing else — never persist it. Position moves when a chapter is
+        /// numbering and for nothing else - never persist it. Position moves when a chapter is
         /// inserted; a <see cref="LevelId"/> never does.
         /// </summary>
         public int OrderOf(LevelId id) => _levelOrder.TryGetValue(id, out int i) ? i : -1;

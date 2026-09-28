@@ -11,7 +11,7 @@ namespace GlimmerGrove.Privacy
     /// Google's User Messaging Platform, behind <see cref="IConsentGateway"/>.
     ///
     /// <para>
-    /// Compiled only when the Google Mobile Ads package is installed — <c>GLIMMER_UMP</c>
+    /// Compiled only when the Google Mobile Ads package is installed - <c>GLIMMER_UMP</c>
     /// comes from this assembly's <c>versionDefines</c>, never from Player Settings, for the
     /// reason <c>GLIMMER_ADDRESSABLES</c> already documents: a Player Settings define is per
     /// build target, so one added on Standalone is silently absent on Android and iOS. For a
@@ -23,7 +23,7 @@ namespace GlimmerGrove.Privacy
     /// prompt cannot do, and each is disqualifying on its own. It cannot tell whether this
     /// player is in the EEA or the UK, so it must either interrupt everybody on earth or
     /// nobody. It cannot write the IAB TCF consent string, which is the thing every mediation
-    /// adapter actually reads — so the networks would go on treating a consenting player as
+    /// adapter actually reads - so the networks would go on treating a consenting player as
     /// non-consented and the revenue the exercise exists to protect would not arrive. And
     /// Google's EU User Consent Policy requires a certified CMP for publishers serving Google
     /// demand, which this game will be as soon as AdMob is in the waterfall.
@@ -39,7 +39,7 @@ namespace GlimmerGrove.Privacy
     /// <para>
     /// <b>A network call is bounded and a person is not, and the two are never inside one
     /// wait.</b> The first version wrapped "load the form and show it and wait for the answer"
-    /// in a single fifteen-second timeout — so a reviewer who read the form for sixteen
+    /// in a single fifteen-second timeout - so a reviewer who read the form for sixteen
     /// seconds, or whose form loaded slowly, found the gateway giving up underneath them:
     /// <see cref="AdPrivacy.ResolveAsync"/> moved on to Apple's tracking prompt, which landed
     /// on top of the consent form still on screen, and after "Ask App Not to Track" the form
@@ -56,11 +56,11 @@ namespace GlimmerGrove.Privacy
         /// <summary>
         /// How long to wait for Google's servers before giving up and running unpersonalised.
         ///
-        /// A boot path may not wait indefinitely on a network call — the failure a player sees
+        /// A boot path may not wait indefinitely on a network call - the failure a player sees
         /// would be a splash screen that never ends, which is worse than any amount of lost ad
         /// revenue. Fifteen seconds is far beyond a healthy round trip and far short of a
-        /// player deciding the game is broken. It bounds the two network calls here — the
-        /// consent-info refresh and the form load — and nothing else.
+        /// player deciding the game is broken. It bounds the two network calls here - the
+        /// consent-info refresh and the form load - and nothing else.
         /// </summary>
         const int TimeoutMilliseconds = 15_000;
 
@@ -77,7 +77,7 @@ namespace GlimmerGrove.Privacy
                 TagForUnderAgeOfConsent = AdPrivacy.ChildDirected,
             };
 
-            // Only ever set in a development build, and only when a test device is listed —
+            // Only ever set in a development build, and only when a test device is listed -
             // ConsentDebug is compiled out entirely otherwise, so a store build has no debug
             // settings to attach. Without this the form cannot be seen from outside the EEA,
             // which means it cannot be tested at all from here. See ConsentDebug.
@@ -91,13 +91,13 @@ namespace GlimmerGrove.Privacy
                     TestDeviceHashedIds = devices,
                 };
 
-                Debug.LogWarning($"[Privacy] consent debug is ON — forcing EEA for " +
+                Debug.LogWarning($"[Privacy] consent debug is ON - forcing EEA for " +
                                  $"{devices.Count} test device(s). This cannot ship: the whole " +
                                  "block is compiled out of a release build.");
 
                 // Cached state beats a forced geography, every time. UMP stores its decision on
                 // the device, so the first launch on a Turkish network writes NotRequired and
-                // every later run is answered from that — the override is applied, ignored, and
+                // every later run is answered from that - the override is applied, ignored, and
                 // nothing in any log says why. Clearing it is what makes the debug geography
                 // mean anything. Debug-only: resetting a real player would re-prompt somebody
                 // who had already answered.
@@ -108,7 +108,7 @@ namespace GlimmerGrove.Privacy
                 }
             }
 
-            // A refresh that fails leaves the question open — Read() would say Unknown, and
+            // A refresh that fails leaves the question open - Read() would say Unknown, and
             // Restricted says the same thing without pretending the SDK was consulted. Open is
             // what AdPrivacy needs to hear: it means Apple's prompt waits for a launch on which
             // the form can actually be shown first.
@@ -137,7 +137,7 @@ namespace GlimmerGrove.Privacy
             if (!CanRevisit) return Read();
 
             // The options form is opened by the player from Settings, so unlike the boot-path
-            // form it is never in a race with Apple's prompt — the tracking answer was read
+            // form it is never in a race with Apple's prompt - the tracking answer was read
             // long ago. It still waits for the person rather than a clock, because a form that
             // is dismissed and then read back as "no change" has thrown their decision away.
             var dismissed = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -178,7 +178,7 @@ namespace GlimmerGrove.Privacy
         /// Deliberately not <c>LoadAndShowConsentFormIfRequired</c>, which the SDK offers and
         /// the first version used: its one callback fires when the form is <em>dismissed</em>,
         /// so there is no moment at which a caller can tell "still fetching" from "on screen,
-        /// being read" — and those two want opposite treatment. Loading and showing as two
+        /// being read" - and those two want opposite treatment. Loading and showing as two
         /// calls is what makes the load bounded and the show not.
         /// </para>
         /// </summary>
@@ -190,7 +190,7 @@ namespace GlimmerGrove.Privacy
             {
                 // The console problem named above: UMP has placed this player inside the EEA
                 // and has nothing published to show them. Nothing to wait for; the question
-                // stays open and Apple's prompt stays unasked, which is the right pairing —
+                // stays open and Apple's prompt stays unasked, which is the right pairing -
                 // with no GDPR consent there is nothing lawful to do with a device id anyway.
                 Debug.LogWarning("[Privacy] UMP requires a consent form and has none to show; " +
                                  "nothing is published for this app in the AdMob console. " +
@@ -206,7 +206,7 @@ namespace GlimmerGrove.Privacy
 
         /// <summary>
         /// Fetches the form, bounded by <see cref="TimeoutMilliseconds"/>. Returns null on a
-        /// failure, a timeout or a cancellation — and a form that arrives after the timeout is
+        /// failure, a timeout or a cancellation - and a form that arrives after the timeout is
         /// left in the completed task and never shown, because by then the caller has moved
         /// on and "shown late" is the exact sequence Apple refused.
         /// </summary>
@@ -236,7 +236,7 @@ namespace GlimmerGrove.Privacy
         /// <summary>
         /// Puts a loaded form on screen and waits for the person to answer it. No timeout,
         /// deliberately: the only thing that can end this is their tap, or the process being
-        /// cancelled out from under it. Nothing else in the game waits on this — mediation and
+        /// cancelled out from under it. Nothing else in the game waits on this - mediation and
         /// measurement start when it returns, which is the order they are required to start
         /// in, and the splash never did wait.
         /// </summary>
@@ -261,7 +261,7 @@ namespace GlimmerGrove.Privacy
         /// A callback that never fires is the failure mode worth defending against here: it is
         /// indistinguishable from a slow one, and the difference between the two is a game
         /// that starts and a game that does not. Only ever wrapped round a call whose other
-        /// end is a server — never round a form, see <see cref="Show"/>.
+        /// end is a server - never round a form, see <see cref="Show"/>.
         /// </summary>
         static async Task<bool> Bounded(Task<bool> work, string what, CancellationToken cancellation)
         {
@@ -280,7 +280,7 @@ namespace GlimmerGrove.Privacy
         /// <summary>
         /// Awaits a form's dismissal with no clock on it, honouring only cancellation. The
         /// registration completes the wait rather than throwing, because a cancelled boot is
-        /// not an error in the consent flow — it is the process going away.
+        /// not an error in the consent flow - it is the process going away.
         /// </summary>
         static async Task Dismissal(Task<bool> dismissed, CancellationToken cancellation)
         {
@@ -297,7 +297,7 @@ namespace GlimmerGrove.Privacy
         ///
         /// <para>
         /// <b>Two questions, and they are not the same one.</b> Whether the law applies is
-        /// <see cref="PrivacyOptionsRequirementStatus"/> — UMP only requires an ongoing
+        /// <see cref="PrivacyOptionsRequirementStatus"/> - UMP only requires an ongoing
         /// privacy control where a jurisdiction demands one, which is precisely the EEA and
         /// the UK, so it is a better answer than any geography we could look up ourselves.
         /// Whether the player agreed is <see cref="ConsentInformation.CanRequestAds"/> against
@@ -307,14 +307,14 @@ namespace GlimmerGrove.Privacy
         /// <b>The honest limit of this reading.</b> "Can request ads" is coarser than "agreed
         /// to personalisation": a player who consents to storage but refuses profiling
         /// satisfies it. The exact per-purpose truth lives in the TCF string, and the networks
-        /// that care read the string rather than this boolean — so being coarse here costs
+        /// that care read the string rather than this boolean - so being coarse here costs
         /// nothing that matters and buys not shipping a TCF parser in a game client. Where it
         /// errs it errs towards <em>less</em> personalisation than the player allowed, never
         /// more.
         /// </para>
         /// <para>
         /// <b>An <see cref="ConsentStatus.Unknown"/> here means the question is still open</b>
-        /// — a form owed and not yet answered — and <see cref="AdPrivacy.ResolveAsync"/> reads
+        /// - a form owed and not yet answered - and <see cref="AdPrivacy.ResolveAsync"/> reads
         /// it as "do not ask Apple yet". <c>Required</c> after this method is exactly that
         /// state: the form failed to load, failed to show, or was never published.
         /// </para>

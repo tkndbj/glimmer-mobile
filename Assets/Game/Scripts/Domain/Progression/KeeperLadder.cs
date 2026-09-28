@@ -11,7 +11,7 @@ namespace GlimmerGrove.Progression
     /// </summary>
     public static class KeeperLadderLimits
     {
-        /// <summary>The first level anybody can buy — nobody starts below 1.</summary>
+        /// <summary>The first level anybody can buy - nobody starts below 1.</summary>
         public const int LowestLevel = 2;
 
         /// <summary>The most the ladder may reach. Well under the curve's own cap.</summary>
@@ -42,7 +42,7 @@ namespace GlimmerGrove.Progression
     }
 
     /// <summary>
-    /// What buying a keeper level costs — the rule behind invariant 57.
+    /// What buying a keeper level costs - the rule behind invariant 57.
     ///
     /// <para>
     /// <b>A keeper level is derived from XP, and XP is derived from play</b> (invariant 9). A
@@ -50,8 +50,8 @@ namespace GlimmerGrove.Progression
     /// <em>entitlement</em>, a count of purchases, stored on the wallet document no client can
     /// write and mirrored into the save as a monotonic integer joined by <c>max</c>
     /// (<c>WalletDto.keeperLevelsBought</c>). The effective level a player stands at is the
-    /// earned level plus that count, everywhere in the game — every gate, every honorific, the
-    /// published card and the public profile — with exactly one exception: <b>the rank ladder
+    /// earned level plus that count, everywhere in the game - every gate, every honorific, the
+    /// published card and the public profile - with exactly one exception: <b>the rank ladder
     /// reads the earned level alone</b> (<c>LiveRankSource.KeeperLevel</c>, <c>rungOf</c>),
     /// because a badge is a reading of play and a badge for sale is worth nothing to the people
     /// who earned theirs.
@@ -60,7 +60,7 @@ namespace GlimmerGrove.Progression
     /// <b>The price is a function of the level reached</b>, drawn between a few anchors: on the
     /// straight line between two anchors of one currency, flat at the lower anchor between two
     /// of different currencies. The arithmetic is integer and rounds half up, and it exists three
-    /// times — here, in <c>keeper.ts</c>, and in <c>Tools/make_keeper_vectors.py</c>, which writes
+    /// times - here, in <c>keeper.ts</c>, and in <c>Tools/make_keeper_vectors.py</c>, which writes
     /// the vectors both runtimes are held to. A drift is a purchase refused as underpaid, which
     /// the client drops with its level, so it is loud rather than silent; the vectors are there
     /// so it is never seen at all.
@@ -83,7 +83,7 @@ namespace GlimmerGrove.Progression
             _anchors = anchors ?? Array.Empty<KeeperAnchor>();
         }
 
-        /// <summary>The ladder that sells nothing — the default, and what a broken block resolves to.</summary>
+        /// <summary>The ladder that sells nothing - the default, and what a broken block resolves to.</summary>
         public static readonly KeeperLadder Empty = new KeeperLadder(0, Array.Empty<KeeperAnchor>());
 
         /// <summary>The highest level sold. Nought when nothing is.</summary>
@@ -99,7 +99,7 @@ namespace GlimmerGrove.Progression
         public int First => _anchors.Length > 0 ? _anchors[0].Level : 0;
 
         /// <summary>
-        /// What reaching <paramref name="level"/> costs, or false when that level is not sold —
+        /// What reaching <paramref name="level"/> costs, or false when that level is not sold -
         /// below the first anchor, above <see cref="Top"/>, or on a ladder that sells nothing.
         /// </summary>
         public bool PriceFor(int level, out string currency, out long price)
@@ -141,8 +141,8 @@ namespace GlimmerGrove.Progression
         ///
         /// Written out once so the three copies can be compared line for line: the numerator is
         /// doubled and the denominator added before one division, which is round-half-up with no
-        /// float anywhere in it. <paramref name="b"/> is never below <paramref name="a"/> — the
-        /// reader refuses a band whose price falls — so the numerator is never negative and the
+        /// float anywhere in it. <paramref name="b"/> is never below <paramref name="a"/> - the
+        /// reader refuses a band whose price falls - so the numerator is never negative and the
         /// division truncates toward the answer rather than away from it.
         /// </summary>
         public static long Between(long a, long b, long step, long steps)
@@ -173,7 +173,7 @@ namespace GlimmerGrove.Progression
         /// Reads the optional <c>keeperLevels</c> block. Never throws and never returns null:
         /// anything wrong is named in <paramref name="problems"/> and the ladder resolves to
         /// <see cref="Empty"/>, because a price ladder with a hole in it is a purchase refused by
-        /// the server and taken back — so the whole block is refused rather than one corner
+        /// the server and taken back - so the whole block is refused rather than one corner
         /// repaired. A content mistake fails a build and never a session.
         /// </summary>
         public static KeeperLadder Resolve(KeeperLadderDto dto, List<string> problems)

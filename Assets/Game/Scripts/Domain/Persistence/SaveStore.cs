@@ -10,14 +10,14 @@ namespace GlimmerGrove.Persistence
     /// <para>
     /// Three members, and it exists for one reason: <see cref="SaveService"/> is the seam the
     /// whole cloud sync runs through, and while it held a concrete <see cref="SaveStore"/>
-    /// nothing above it could be tested without <c>JsonUtility</c> and a real directory — which
+    /// nothing above it could be tested without <c>JsonUtility</c> and a real directory - which
     /// meant the account switch, the merge adoption and every ordering they depend on could only
     /// be proved with the Editor open. Those are the parts of this project whose failures are
     /// unrecoverable, so "prove it, do not assert it" needs them runnable offline.
     /// </para>
     /// <para>
     /// It deliberately does <b>not</b> abstract the thing that makes <see cref="SaveStore"/>
-    /// worth having — the atomic write, the backup rotation, the corrupt-file recovery. That is
+    /// worth having - the atomic write, the backup rotation, the corrupt-file recovery. That is
     /// a filesystem behaviour, it is tested against a real filesystem in <c>SaveStoreTests</c>,
     /// and a second implementation of it would be a second thing to get wrong. This is a seam
     /// for the layers above, not a strategy.
@@ -33,7 +33,7 @@ namespace GlimmerGrove.Persistence
     /// <summary>
     /// Reads and writes the save file on disk.
     ///
-    /// Replaces PlayerPrefs, which has no atomic write, no backup and — on Android —
+    /// Replaces PlayerPrefs, which has no atomic write, no backup and - on Android -
     /// a habit of losing its XML if the process dies at the wrong moment. Losing two
     /// hundred levels of progress is the fastest route to a one-star review, so every
     /// write goes to a temporary file, the previous good copy is rotated to a backup,

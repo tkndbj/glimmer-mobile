@@ -8,7 +8,7 @@ namespace GlimmerGrove.Store
     /// <para>
     /// <b>Here rather than beside the screen, for <c>ChapterMap</c>'s reason</b> (invariant 8a):
     /// a shelf carrying a placement this build has retired is a card that silently stops being
-    /// drawn — <c>AdRewardTable.Offer</c> answers <see cref="AdOffer.None"/> for an id it does
+    /// drawn - <c>AdRewardTable.Offer</c> answers <see cref="AdOffer.None"/> for an id it does
     /// not carry, the row count drops by one, and every other gate in this project stays green
     /// while a shelf quietly loses its free spot. That is checkable arithmetic over two tables,
     /// and arithmetic inside a <c>MonoBehaviour</c> is arithmetic nothing can check.
@@ -23,7 +23,7 @@ namespace GlimmerGrove.Store
     /// </para>
     /// <para>
     /// <b>Three shelves deliberately have none.</b> Gems and bundles are what real money buys
-    /// and no video pays either — a placement that paid gems would be an ad competing with the
+    /// and no video pays either - a placement that paid gems would be an ad competing with the
     /// shelf it stands on. The kit is priced in gems for the same reason. The two placements
     /// that are <em>not</em> here at all, the victory bonus and the hint, are offered at the
     /// moment they are wanted rather than from a storefront, which is where their whole value
@@ -51,7 +51,7 @@ namespace GlimmerGrove.Store
         /// Every placement this shelf stands, in the order they are drawn.
         ///
         /// <para>
-        /// <b>A list rather than one, because a shelf can honestly have two free offers</b> — and
+        /// <b>A list rather than one, because a shelf can honestly have two free offers</b> - and
         /// the sort is what says so: everything is ordered cheapest first and nothing is cheaper
         /// than nothing, so every video belongs at the front whether there is one or three. The
         /// supplies shelf stands two, a refill and an XP boost, which are different enough that
@@ -59,7 +59,7 @@ namespace GlimmerGrove.Store
         /// </para>
         /// <para>
         /// Order here is the order on the shelf. The refill stays first because it is the one
-        /// with a natural trigger — somebody on this tab is usually out of hearts.
+        /// with a natural trigger - somebody on this tab is usually out of hearts.
         /// </para>
         /// </summary>
         public static string[] All(StoreShelf shelf)

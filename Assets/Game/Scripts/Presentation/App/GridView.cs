@@ -10,8 +10,8 @@ namespace GlimmerGrove
     /// for whatever row it has been given.
     ///
     /// <para>
-    /// The split is the whole design. A cell is <b>built once</b> — its plate, its edge, its
-    /// image, its two labels — and then <b>bound many times</b>, so scrolling and switching
+    /// The split is the whole design. A cell is <b>built once</b> - its plate, its edge, its
+    /// image, its two labels - and then <b>bound many times</b>, so scrolling and switching
     /// shelves cost a handful of assignments rather than a teardown and a rebuild. That is
     /// what makes a four-hundred-piece catalog draw exactly as fast as a forty-piece one, and
     /// it is what stops a repaint from restarting every entrance animation on screen.
@@ -37,7 +37,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>Why this exists.</b> Every grid in the game built one <c>GameObject</c> tree per
     /// item and destroyed the lot on every repaint. At forty pieces that is invisible; at four
-    /// hundred it is four hundred subtrees — several thousand objects — created to show the
+    /// hundred it is four hundred subtrees - several thousand objects - created to show the
     /// nine that fit on a phone, and destroyed again the moment anything changed. The shop's
     /// asset scopes were already bounded by one shelf, so <em>memory</em> scaled; the object
     /// count did not, and that is the half that shows up as a stutter on the tab a player
@@ -47,7 +47,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>And why it is not just a performance fix.</b> Rebuilding is also what made a repaint
     /// visible: every cell entered with a pop from scale zero, so a screen that repainted
-    /// twice — once when the shelf changed and once when its art arrived — played that
+    /// twice - once when the shelf changed and once when its art arrived - played that
     /// entrance twice, which is exactly the flicker players reported. Here a repaint is
     /// <see cref="Refresh"/>: the same objects, rebound, with no animation and no scroll jump.
     /// The entrance is spent once, on <see cref="Show"/>, where it means "this is a different
@@ -107,7 +107,7 @@ namespace GlimmerGrove
                                       float padTop = 12f, float padBottom = 40f)
         {
             // Something must catch the drag, or a flick that starts on a gap between cells does
-            // nothing at all — a scroll view is only as reliable as its dead space.
+            // nothing at all - a scroll view is only as reliable as its dead space.
             var catcher = viewport.gameObject.AddComponent<Image>();
             catcher.color = new Color(0f, 0f, 0f, 0f);
             catcher.raycastTarget = true;
@@ -150,8 +150,8 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// For a <em>different</em> list: a new shelf, a filter, the first paint. It resets the
-        /// scroll — a shop that opens a tab halfway down is a shop that has hidden its own first
-        /// row — and it lets the cells enter with the staggered pop that says the page changed.
+        /// scroll - a shop that opens a tab halfway down is a shop that has hidden its own first
+        /// row - and it lets the cells enter with the staggered pop that says the page changed.
         /// When the same list is merely redrawn, call <see cref="Refresh"/> instead.
         /// </para>
         /// </summary>
@@ -165,7 +165,7 @@ namespace GlimmerGrove
             Resize();
 
             // Straight to the content rather than through verticalNormalizedPosition, which a
-            // ScrollRect resolves against bounds it recomputes in its own LateUpdate — so in
+            // ScrollRect resolves against bounds it recomputes in its own LateUpdate - so in
             // the frame the content is resized it is read against the *old* height. That cost
             // this project a whole screen once; see HomesteadScreen.
             _content.anchoredPosition = Vector2.zero;
@@ -181,7 +181,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// The same objects, in the same places, at the same scroll position, with no entrance
-        /// — because this is what an <em>event</em> triggers: art arriving, a purchase landing,
+        /// - because this is what an <em>event</em> triggers: art arriving, a purchase landing,
         /// a run finishing somewhere else and changing what is held. Every one of those used to
         /// destroy and rebuild the grid, which is why the shop flickered and why a player who
         /// bought something lost their place in it.
@@ -203,7 +203,7 @@ namespace GlimmerGrove
         /// it exactly as they were.
         ///
         /// <para>
-        /// For an owner whose grid does not fill a fixed hole — the invite page's board sits
+        /// For an owner whose grid does not fill a fixed hole - the invite page's board sits
         /// under a band that is 196 units tall in one state and nothing in another, so the
         /// window grows and shrinks under a list that has not changed at all.
         /// <see cref="Window"/> would notice by itself on its next <c>Update</c>, which is one
@@ -218,8 +218,8 @@ namespace GlimmerGrove
 
             Resize();
 
-            // The content may now be shorter than the offset it is sitting at — the band above
-            // it grew — and a ScrollRect only eases that back over the following frames.
+            // The content may now be shorter than the offset it is sitting at - the band above
+            // it grew - and a ScrollRect only eases that back over the following frames.
             float most = Mathf.Max(0f, _content.sizeDelta.y - _viewport.rect.height);
             float at = _content.anchoredPosition.y;
             if (at < 0f || at > most)
@@ -233,7 +233,7 @@ namespace GlimmerGrove
         /// list is long enough to allow it.
         ///
         /// <para>
-        /// <b>Here rather than in the owner, for the reason this type exists</b> — "an owner
+        /// <b>Here rather than in the owner, for the reason this type exists</b> - "an owner
         /// that reaches in and moves the content is fighting the window arithmetic". A caller
         /// that set <c>content.anchoredPosition</c> itself would leave the realised window
         /// describing the rows at the top, and <see cref="Window"/> would not correct it until
@@ -293,7 +293,7 @@ namespace GlimmerGrove
             _lastRow = last;
 
             // Retire first, so a cell scrolling off the top is available to the row arriving at
-            // the bottom in the same pass — otherwise a fast flick allocates a screenful.
+            // the bottom in the same pass - otherwise a fast flick allocates a screenful.
             _retiring.Clear();
             foreach (var pair in _live)
             {
@@ -347,7 +347,7 @@ namespace GlimmerGrove
             // The entrance belongs to the first screenful of a new list and to nothing else. A
             // row realised by scrolling has already been "entered" by the scroll itself, and one
             // realised a second later by a stray repaint would pop for no reason a player could
-            // name — which is the flicker this whole type exists to remove.
+            // name - which is the flicker this whole type exists to remove.
             if (_animate && Time.unscaledTime - _shownAt < .05f)
                 Tween.Pop(root, 0f, .42f, .03f * Mathf.Min(index, 12));
 

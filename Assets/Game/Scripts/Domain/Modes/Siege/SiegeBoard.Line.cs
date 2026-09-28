@@ -10,7 +10,7 @@ namespace GlimmerGrove.Modes
     /// <para>
     /// <b>Every one of these is an addition to a bolt that has already landed at full strength,
     /// and that is the load-bearing rule of the whole loadout.</b> A siege's par is
-    /// <c>SiegeTuning.Par</c> — the hill's health over the most one match could ever be worth —
+    /// <c>SiegeTuning.Par</c> - the hill's health over the most one match could ever be worth -
     /// and it is computed against the baseline bolt. A turret that hit <em>softer</em> would push
     /// three stars out of reach of whoever chose it, which is a grade decided by a purchase and
     /// the one thing invariant 39 refuses outright. A turret that hits harder only makes par
@@ -39,7 +39,7 @@ namespace GlimmerGrove.Modes
         /// <b>Extra hits are reported as ordinary bolts marked <c>Extra</c></b> rather than as a
         /// record of their own. The view already knows how to draw a bolt arriving from a ward at
         /// a raider, and a second kind of record would be a second drawing path that could come to
-        /// disagree with it — which is how a mode ends up with an effect nobody can tell from
+        /// disagree with it - which is how a mode ends up with an effect nobody can tell from
         /// another. The flag exists so the view can draw a splash smaller than the shot that
         /// caused it, and for no other reason.
         /// </para>
@@ -130,7 +130,7 @@ namespace GlimmerGrove.Modes
         /// The nearest raiders after the one a chain turret hit.
         ///
         /// <b>Nearest by how far down the hill they are</b>, which is what the view can draw as an
-        /// arc going somewhere legible — and what makes a chain worth more the more raiders are
+        /// arc going somewhere legible - and what makes a chain worth more the more raiders are
         /// bunched, which is the shape that tells it apart from a splash.
         /// </summary>
         void Arc(SiegeWard ward, int index, SiegeRaider target, int damage, int extra)
@@ -238,7 +238,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>The last instalment is paid on the beat the burn ends</b> rather than waiting for a
         /// boundary that will never come. Without it an ember whose seconds ran out mid-interval
-        /// would silently keep whatever it had accumulated — a turret paying less than the number
+        /// would silently keep whatever it had accumulated - a turret paying less than the number
         /// on its card, in a way no arithmetic anywhere else could see.
         /// </para>
         /// </summary>
@@ -271,7 +271,7 @@ namespace GlimmerGrove.Modes
                 if (raider.Sear > 0f && !ended) continue;
 
                 // **`+=` rather than `=`**, so a frame long enough to cross a boundary does not
-                // push the next one a whole interval into the future — which on a slow phone
+                // push the next one a whole interval into the future - which on a slow phone
                 // would make a burn pay fewer instalments than on a fast one, the very drift the
                 // carried remainder exists to refuse.
                 if (!ended) raider.Sear += SiegeTuning.BurnTick;

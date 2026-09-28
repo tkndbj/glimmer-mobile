@@ -8,7 +8,7 @@ namespace GlimmerGrove.Layout
     /// <b>The panel has four heights, which is why this is arithmetic and not a constant.</b> A
     /// player short of gems gets a line telling them so; one with a heart in hand gets a button
     /// to restart instead of paying. Both are optional and they combine, so the panel is one of
-    /// four sizes — and the version of this that lived as absolute offsets in the overlay drew
+    /// four sizes - and the version of this that lived as absolute offsets in the overlay drew
     /// its explanatory note straight through the line above it on exactly one of the branches.
     /// That is the failure <c>PanelStack</c> exists because of, and this is the same rule for a
     /// panel that stacks buttons rather than sections.
@@ -16,7 +16,7 @@ namespace GlimmerGrove.Layout
     /// <para>
     /// <b>The banner counts against the panel twice over.</b> A modal is centred, so its top
     /// edge is half its own height above the middle, the title ribbon stands
-    /// <c>PanelStack.TitleOverhang</c> above that, and the word stands above the ribbon — so the
+    /// <c>PanelStack.TitleOverhang</c> above that, and the word stands above the ribbon - so the
     /// binding constraint is <c>H/2 + overhang + gap + banner ≤ canvas/2</c>. The obvious
     /// reading (everything ≤ canvas) is wrong by half the panel and passes layouts whose word is
     /// drawn off the top of a tablet, which is precisely the mistake <c>PanelStack.TallestPanel</c>
@@ -35,7 +35,7 @@ namespace GlimmerGrove.Layout
         /// <para>
         /// <b>One row rather than four, and that is the whole of what this panel says.</b> It
         /// was a large figure, a line explaining what buying it did, a line saying what the
-        /// player was holding and — sometimes — a line saying it was not enough: four rows to
+        /// player was holding and - sometimes - a line saying it was not enough: four rows to
         /// carry one idea, and reported from play as too much to read at the moment somebody has
         /// just lost. A sentence with the number inside it says the same thing once, and can be
         /// set large enough that it is actually read.
@@ -72,7 +72,7 @@ namespace GlimmerGrove.Layout
         /// <para>
         /// <b>Sequenced rather than simultaneous, and slower than it first shipped.</b> The two
         /// happening at once reads as a header sliding into place above a form; one after the
-        /// other reads as a sentence — <em>this happened, so: this question</em>. The first cut
+        /// other reads as a sentence - <em>this happened, so: this question</em>. The first cut
         /// ran the rise a third of a second after the pop and was reported as too fast to
         /// register, which is the failure a celebration and a defeat share: the beat is the
         /// content, and there is nothing else on screen competing for it.
@@ -87,7 +87,7 @@ namespace GlimmerGrove.Layout
         public const float PanelEnter = .36f;
 
         /// <summary>
-        /// Where the banner rests, measured up from the middle of the screen — clear of the
+        /// Where the banner rests, measured up from the middle of the screen - clear of the
         /// panel's own top edge and of the ribbon standing proud of it.
         /// </summary>
         public static float BannerCentre(float panelHeight)

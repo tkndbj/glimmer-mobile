@@ -25,7 +25,7 @@ namespace GlimmerGrove.Tasks
     /// <para>
     /// <b>Editing the slate moves the rotation</b>, and that is accepted rather than hidden:
     /// a content push that adds a task re-deals every period after it, and the server only
-    /// <em>logs</em> a claim for a task that the current slate would not have dealt (13a) —
+    /// <em>logs</em> a claim for a task that the current slate would not have dealt (13a) -
     /// the bound on a claim is the per-period allowance, never the rotation.
     /// </para>
     /// </summary>
@@ -65,7 +65,7 @@ namespace GlimmerGrove.Tasks
     /// built-in table and a client that has it reads an older file and does the same.
     /// </para>
     /// <para>
-    /// <b>Refused whole on a structural fault, degraded on an unknown</b> — the split
+    /// <b>Refused whole on a structural fault, degraded on an unknown</b> - the split
     /// <see cref="DailyChestTable.Resolve"/> draws. A tier with no floor, a task naming a
     /// tier that does not exist, or a duplicated id is a table that would pay something it
     /// cannot describe, so the built-in one stands; a task naming a goal this build has never
@@ -116,7 +116,7 @@ namespace GlimmerGrove.Tasks
         /// The tasks dealt for one period key, in dealt order.
         ///
         /// Retired tasks are out of the rotation before the indices are taken, so retiring
-        /// one re-deals the periods after it exactly as adding one does — the honest reading
+        /// one re-deals the periods after it exactly as adding one does - the honest reading
         /// of "the slate changed", and the reason the server never refuses on the rotation.
         /// </summary>
         public List<TaskDefinition> Active(TaskPeriod period, int key)
@@ -242,7 +242,7 @@ namespace GlimmerGrove.Tasks
             if (problems == null) problems = new List<string>();
 
             // Absent is not an error. JsonUtility instantiates the block whether or not the
-            // file wrote one, so "absent" is a block with none of its arrays — a value a real
+            // file wrote one, so "absent" is a block with none of its arrays - a value a real
             // one cannot hold, which is the fixed shape for a serialised class field.
             if (dto == null || !dto.IsAuthored) return Default;
 

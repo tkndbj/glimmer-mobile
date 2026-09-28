@@ -7,7 +7,7 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// It exists because the question used to be answered by a board's own <c>Locked</c> flag,
-    /// which several things write — and one of them is an animation scheduled before anybody
+    /// which several things write - and one of them is an animation scheduled before anybody
     /// knew a lesson was going to be shown. A first-timer's tip latched the board when the
     /// screen was presented, the intro sweep unlatched it a beat later, and the countdown ran
     /// for as long as the player took to read a lesson they are only ever offered once. Nothing
@@ -15,7 +15,7 @@ namespace GlimmerGrove.Tests
     /// </para>
     /// <para>
     /// So what is pinned here is the property that makes the shape safe rather than merely
-    /// different — that no caller can free a run somebody else is still holding, in any order,
+    /// different - that no caller can free a run somebody else is still holding, in any order,
     /// however many times it says so.
     /// </para>
     /// </summary>
@@ -60,7 +60,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The exact sequence the screen runs, and the reason the two lines are in the order
         /// they are: taking the second reason before releasing the first means the run is never
-        /// free for even one frame — and on a mode whose start edge is polled, one frame of free
+        /// free for even one frame - and on a mode whose start edge is polled, one frame of free
         /// is the edge itself.
         /// </summary>
         [Test]
@@ -151,7 +151,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// <c>RunHold.Covered</c> is written by <c>RunScreen</c>'s frame from
         /// <c>Flow.Covered</c> rather than by the panels, so it is taken and released far more
-        /// often than any of the others — every frame, for as long as anything is over the
+        /// often than any of the others - every frame, for as long as anything is over the
         /// board. That is only sound because a reason cannot free another one: a shop panel
         /// closing over a board a lesson is still holding must leave the run held, and a lesson
         /// ending under a shop panel must too.
@@ -190,7 +190,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// Every reason names itself, because two that collided would be one reason wearing two
-        /// names — and the second release would free a run the first was still holding.
+        /// names - and the second release would free a run the first was still holding.
         /// </summary>
         [Test]
         public void NoTwoReasonsShareAName()

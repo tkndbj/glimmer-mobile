@@ -13,26 +13,26 @@ namespace GlimmerGrove
     /// rather than one per mode.</b> Both halves of that matter. Every mode has a fail state
     /// and every fail state costs the player something, so what an exit costs has been
     /// <see cref="RunScreen"/>'s and never a mode's since Lightweave shipped a restart that was
-    /// free (<c>RunStakeTests</c>) — two copies here would be two prices, two idempotency keys
+    /// free (<c>RunStakeTests</c>) - two copies here would be two prices, two idempotency keys
     /// and two chances to charge somebody for a board that was still lost. But the stake is
     /// already a responsibility, and bolting a second economy onto the class that carries it is
     /// how a base class becomes the thing nobody dares change. So the rule lives once, and it
     /// lives here.
     /// </para>
     /// <para>
-    /// <b>What a mode contributes is only what a mode alone can know</b> — the unit it measures
+    /// <b>What a mode contributes is only what a mode alone can know</b> - the unit it measures
     /// its allowance in, how much of it has to be restored before a bought unit is a usable one,
     /// and how to hand it over. Not the price, not the panel, not the debit.
     /// </para>
     /// <para>
     /// <b>It never charges without a tap.</b> If a grant somehow left the run still lost, the
     /// mode's fail state fires again and the player is <em>asked again</em> rather than silently
-    /// billed — so the worst case of a mispriced continue is an offer nobody takes, not money
+    /// billed - so the worst case of a mispriced continue is an offer nobody takes, not money
     /// nobody agreed to.
     /// </para>
     /// <para>
     /// It holds the screen, which is a <c>MonoBehaviour</c>, so <c>if (_run)</c> is Unity's own
-    /// lifetime check — the reason <see cref="RunScreen"/> is a base class rather than an
+    /// lifetime check - the reason <see cref="RunScreen"/> is a base class rather than an
     /// interface, kept. See <see cref="StillOnScreen"/> for why that check is not enough on its
     /// own here.
     /// </para>
@@ -78,7 +78,7 @@ namespace GlimmerGrove
         /// <c>GLIMMER_IAP</c> is defined, so the Editor's fake store counts and the buy-gems
         /// branch is reachable there. (<c>AdOfferOverlay</c> says otherwise in a comment; it is
         /// describing a build without the package.) What the Editor cannot do is <em>grant</em>
-        /// — a fake purchase never reaches <c>redeemPurchase</c>, so the gems never arrive and
+        /// - a fake purchase never reaches <c>redeemPurchase</c>, so the gems never arrive and
         /// this panel never closes itself. The full loop needs a device build.
         /// </para>
         /// </summary>
@@ -90,11 +90,11 @@ namespace GlimmerGrove
         /// <para>
         /// <paramref name="lose"/> is what the mode used to do the moment it was beaten: charge
         /// the heart, write the record, put the defeat panel up. It runs unchanged, only later
-        /// — and it runs on every path that is not a completed purchase, including the two no
+        /// - and it runs on every path that is not a completed purchase, including the two no
         /// button knows about: the hardware back key, and this panel being destroyed with the
         /// screen. <c>ContinueOverlay</c> reports from <c>OnDestroy</c> for that reason, the way
         /// <c>AdOfferOverlay</c> does. The one report deliberately dropped is one arriving after
-        /// this screen has already been replaced — see <see cref="StillOnScreen"/>.
+        /// this screen has already been replaced - see <see cref="StillOnScreen"/>.
         /// </para>
         /// </summary>
         /// <param name="lose">
@@ -113,7 +113,7 @@ namespace GlimmerGrove
             //
             // Invariant 24 read from the other end. A mode's opening levels are free because the
             // worst moment to meet the gate that stops somebody playing is while they are still
-            // working out what the verb is — and the worst moment to meet a *price* is the same
+            // working out what the verb is - and the worst moment to meet a *price* is the same
             // moment, one step further in. A glade already finished is the other free clause and
             // falls out identically: losing it costs nothing, so an offer to save it is an offer
             // to sell something that was never at stake. Both of those are exactly the runs the
@@ -146,7 +146,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Not <c>_run != null</c>, which is not enough here.</b> The offer reports from
         /// <c>OnDestroy</c> so that it is heard however it closed, and <c>Flow.Go</c> destroys
-        /// every modal and the outgoing screen in the same call — both at the end of the frame,
+        /// every modal and the outgoing screen in the same call - both at the end of the frame,
         /// in no defined order. So a report can arrive after the next screen has already been
         /// built, and a defeat panel raised then would land over it. <c>Flow.Current</c> is
         /// reassigned <em>synchronously</em> inside the swap, which makes it the one reading

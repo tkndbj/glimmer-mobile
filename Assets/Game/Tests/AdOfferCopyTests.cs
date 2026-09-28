@@ -9,7 +9,7 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// <b>Written because it did not.</b> <c>TitleKey</c> ended in a bare
-    /// <c>: "ui.ads.hearts_title"</c> — a default that is a real answer — so the day a fifth
+    /// <c>: "ui.ads.hearts_title"</c> - a default that is a real answer - so the day a fifth
     /// placement shipped, tapping the free XP boost in the shop raised a panel headed "Out of
     /// hearts" over a reward card correctly showing an XP boost. Reported from play, in exactly
     /// those words: <i>"when I tap on XP ad, it pops refill hearts modal"</i>.
@@ -18,7 +18,7 @@ namespace GlimmerGrove.Tests
     /// <b>The grant was never wrong</b>, which is the only reason this was a copy bug and not a
     /// payment one: the watch button carries the placement id and the table resolves the reward
     /// from it, so the panel lied about something the machinery underneath had right. That is
-    /// the shape invariant 44e describes — a fall-through is wrong in a way nothing throws over.
+    /// the shape invariant 44e describes - a fall-through is wrong in a way nothing throws over.
     /// </para>
     /// </summary>
     public sealed class AdOfferCopyTests
@@ -83,7 +83,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// A placement the table does not carry still takes its title from what it is known to
-        /// pay rather than from hearts — the fall-through that caused this, made harmless.
+        /// pay rather than from hearts - the fall-through that caused this, made harmless.
         /// </summary>
         [Test]
         public void AnUnpublishedPlacementFallsBackToItsKindRatherThanToHearts()

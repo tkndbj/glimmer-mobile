@@ -5,7 +5,7 @@ using GlimmerGrove.Content;
 namespace GlimmerGrove.Notifications
 {
     /// <summary>
-    /// Which reminders this game sends, at what hours, and how many a day — content, with a
+    /// Which reminders this game sends, at what hours, and how many a day - content, with a
     /// working built-in table behind it.
     ///
     /// <para>
@@ -19,13 +19,13 @@ namespace GlimmerGrove.Notifications
     /// <para>
     /// <b>It reaches no server, and that is worth saying plainly</b>, because every other
     /// block in that file does. Nothing here is adjudicated, nothing is paid and nothing is
-    /// claimed — a notification is a thing a phone says to its owner — so
+    /// claimed - a notification is a thing a phone says to its owner - so
     /// <c>seed-config.mjs</c> does not publish it and <c>firestore.rules</c> has nothing to
     /// learn. The push path for this block is the remote-content one
     /// (<c>ContentConfig.RemoteBaseUrl</c>), which is the same path a chapter takes.
     /// </para>
     /// <para>
-    /// <b>Refused whole on a structural fault, degraded on an unknown</b> — the split
+    /// <b>Refused whole on a structural fault, degraded on an unknown</b> - the split
     /// <c>DailyChestTable.Resolve</c> draws. A table with no live rows, a duplicated kind or
     /// an hour outside the day would send nothing or send it at three in the morning, so the
     /// built-in one stands; a row naming a kind this build has never heard of is a newer
@@ -72,7 +72,7 @@ namespace GlimmerGrove.Notifications
         /// <b>This is what buys a three-week reach out of a budget that only ever allowed one
         /// week.</b> The binding constraint is iOS's pending-notification ceiling, and a flat
         /// three a day spends it in three weeks' worth of allowance in seven days. Tapering
-        /// costs nothing and roughly triples how long a lapsed player stays reachable — which
+        /// costs nothing and roughly triples how long a lapsed player stays reachable - which
         /// matters because the player worth reminding is precisely the one who has not opened
         /// the game, and past the horizon this scheme is simply silent.
         /// </para>
@@ -90,7 +90,7 @@ namespace GlimmerGrove.Notifications
         /// What a day past the taper may hold. One, and deliberately not content.
         ///
         /// A dial here would be a second way to spend the same ceiling, and the ceiling is the
-        /// thing a content push must not be able to overrun — see <see cref="HorizonDays"/>.
+        /// thing a content push must not be able to overrun - see <see cref="HorizonDays"/>.
         /// </summary>
         public const int TaperPerDay = 1;
 
@@ -101,7 +101,7 @@ namespace GlimmerGrove.Notifications
         /// The most notifications a plan built from this table can ever hold.
         ///
         /// Computed rather than assumed, because with a taper it is no longer
-        /// <c>perDay x horizon</c> — and the number it is checked against is enforced by
+        /// <c>perDay x horizon</c> - and the number it is checked against is enforced by
         /// silence on iOS, so getting the arithmetic wrong here fails nothing and loses the
         /// back half of the schedule on one platform.
         /// </summary>
@@ -119,7 +119,7 @@ namespace GlimmerGrove.Notifications
         /// <para>
         /// <b>This is the number that has to survive the player it is for.</b> Notifications
         /// are armed when the app is backgrounded and nothing can run afterwards, so the
-        /// horizon is exactly how long somebody may stay away and still be reminded — past it
+        /// horizon is exactly how long somebody may stay away and still be reminded - past it
         /// this scheme is simply silent, which is the one thing a server-side push could do
         /// that this cannot.
         /// </para>
@@ -142,15 +142,15 @@ namespace GlimmerGrove.Notifications
         /// The slate that ships inside the build.
         ///
         /// <para>
-        /// The shape is the design. <b>Everything above the line is news</b> — something
-        /// changed while the player was away and it is waiting for them — and those carry
+        /// The shape is the design. <b>Everything above the line is news</b> - something
+        /// changed while the player was away and it is waiting for them - and those carry
         /// short cooldowns because the thing they are about really did happen again.
         /// <b>Everything below it is an invitation</b>, true whenever anybody cares to say
         /// it, and those carry long cooldowns because a sentence that is always true gets
         /// stale the second time it is read.
         /// </para>
         /// <para>
-        /// The one that is always true — <see cref="NotificationKind.GroveIdle"/> — is last
+        /// The one that is always true - <see cref="NotificationKind.GroveIdle"/> - is last
         /// on purpose and on a two-day cooldown, so it fills a gap rather than filling the
         /// week. That is what makes the daily count *vary*: on a quiet day the planner
         /// genuinely finds nothing for the third slot and leaves it empty.
@@ -164,7 +164,7 @@ namespace GlimmerGrove.Notifications
                 Row(NotificationKind.StreakRisk,   NotificationSlot.Evening,    90, 1),
                 // Two days rather than one, and it is the only cooldown here chosen against
                 // *staleness* rather than against frequency. A waiting chest really does go on
-                // waiting — the sentence never stops being true — so at a one-day gap a player
+                // waiting - the sentence never stops being true - so at a one-day gap a player
                 // who stays away gets the identical morning seven times. Alternating it with
                 // the daily slate is what keeps the morning worth reading.
                 Row(NotificationKind.ChestWaiting, NotificationSlot.Morning,    80, 2),
@@ -179,7 +179,7 @@ namespace GlimmerGrove.Notifications
             },
             // 09:30, 13:30, 19:30 local. The morning one is after the commute rather than
             // during it, the afternoon one is the lull, and the evening one is before the
-            // hour anybody would call late — see NotificationWindow for the floor and ceiling
+            // hour anybody would call late - see NotificationWindow for the floor and ceiling
             // these are held to.
             new[] { 9 * 60 + 30, 13 * 60 + 30, 19 * 60 + 30 },
             perDay: 3,
@@ -205,7 +205,7 @@ namespace GlimmerGrove.Notifications
         /// <summary>
         /// Reads the <c>notifications</c> block, or leaves the built-in table standing.
         ///
-        /// Handed the whole block rather than its rows — <c>WardCatalog.Resolve</c>'s shape —
+        /// Handed the whole block rather than its rows - <c>WardCatalog.Resolve</c>'s shape -
         /// so a DTO built by hand, which is what every test and every offline caller writes,
         /// cannot be dereferenced through.
         /// </summary>
@@ -259,7 +259,7 @@ namespace GlimmerGrove.Notifications
             if (!anyLive)
                 faults.Add("notifications block enables nothing; the built-in slate ships " +
                            "instead. To send nothing at all, the player's own switch is the " +
-                           "control — see NotificationOptIn");
+                           "control - see NotificationOptIn");
 
             if (faults.Count > 0)
             {

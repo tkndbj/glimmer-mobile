@@ -10,12 +10,12 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// <b>The rule this file guards was opt-in for a year and nobody noticed.</b> Whether a run
-    /// may advance at all — the board is built, nothing is over it, the opening transition is
-    /// done, no lesson is being read — used to be asked by each mode calling
+    /// may advance at all - the board is built, nothing is over it, the opening transition is
+    /// done, no lesson is being read - used to be asked by each mode calling
     /// <c>RunScreen.Tick</c> from its own <c>Update</c>. Three modes out of four never called
     /// it. Nothing broke, because each of them latched its own board for its own reasons, but
     /// the guarantee the funnel exists to give was being given by one screen out of four, and
-    /// two of the three would accept input while the iris was still opening — long enough to
+    /// two of the three would accept input while the iris was still opening - long enough to
     /// commit a run, and be charged a heart for it, before the player had seen the board.
     /// </para>
     /// <para>
@@ -27,7 +27,7 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// <b>What is left is the half no language can express.</b> Unity dispatches <c>Update</c>
     /// to the most-derived declaration only, so a mode that declares one silently replaces
-    /// <c>RunScreen</c>'s and takes the run's frame with it — no error, no warning, and a board
+    /// <c>RunScreen</c>'s and takes the run's frame with it - no error, no warning, and a board
     /// that simply never hears whether it is allowed to run. That is the same hazard two members
     /// sharing a name caused when <c>ModeScreen</c>'s <c>Resolve</c> coroutine hid the stake's
     /// <c>Resolve</c> and a won grove was charged for at the next launch. This is the check for
@@ -71,7 +71,7 @@ namespace GlimmerGrove.Tests
 
                 Assert.IsNull(update,
                               screen.Name + " declares its own Update, which Unity dispatches " +
-                              "*instead of* RunScreen's — so this run never hears whether it is " +
+                              "*instead of* RunScreen's - so this run never hears whether it is " +
                               "allowed to advance. Override Running(bool) instead; it is called " +
                               "every frame with the answer.");
             }
@@ -98,7 +98,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// <c>RunHold.Covered</c> is taken and released from here by polling
-        /// <c>Flow.Covered</c> — that is what holds a run behind a shop panel, a receipt or
+        /// <c>Flow.Covered</c> - that is what holds a run behind a shop panel, a receipt or
         /// anything else raised over it. Moving that out to the panels is the shape this whole
         /// file exists to refuse, and losing the base's <c>Update</c> would take it with it.
         /// </para>
@@ -111,7 +111,7 @@ namespace GlimmerGrove.Tests
 
             Assert.IsNotNull(update,
                              "RunScreen no longer declares Update, so nothing asks once a frame " +
-                             "whether this run may advance — and nothing holds a run behind a " +
+                             "whether this run may advance - and nothing holds a run behind a " +
                              "panel standing over it (RunHold.Covered)");
 
             Assert.IsTrue(update.IsPrivate,

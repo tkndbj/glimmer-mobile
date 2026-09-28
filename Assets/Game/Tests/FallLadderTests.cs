@@ -12,7 +12,7 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// <b>A well authors a board and a procession and nothing that can be graded</b>, so
-    /// everything a player is measured against is a property of <c>FallSolver</c> — par, the two
+    /// everything a player is measured against is a property of <c>FallSolver</c> - par, the two
     /// star lines and the supply the run is dealt. A change to the burst-and-wash rule therefore
     /// silently re-grades the whole chapter. Nothing else here can notice that: every board would
     /// still be solvable, so <c>Validate Content</c> would still pass; the chapter would simply
@@ -22,12 +22,12 @@ namespace GlimmerGrove.Tests
     /// So it is pinned twice over, exactly as the other modes' are.
     /// <see cref="TheLadderStillMeasuresWhatItWasAuthoredFor"/> runs the shipped solver against
     /// the numbers the sweep measured, and <see cref="TheShippedChapterAuthorsExactlyThisLadder"/>
-    /// proves the content file still holds those boards. Either half alone is half a guard — the
+    /// proves the content file still holds those boards. Either half alone is half a guard - the
     /// first would pass while the chapter authored something else entirely, and the second would
     /// pass while the solver measured something else entirely.
     /// </para>
     /// <para>
-    /// <b>Par is deliberately not the ladder.</b> It wanders — 2, 2, 3, 5, 4, 5, 6, 6, 6, 6 —
+    /// <b>Par is deliberately not the ladder.</b> It wanders - 2, 2, 3, 5, 4, 5, 6, 6, 6, 6 -
     /// because par is length rather than difficulty, which is the same thing every glade chapter
     /// does with its own. What climbs is what is standing in the well, how little headroom it
     /// leaves, and whether a player who never looks ahead survives it.
@@ -141,7 +141,7 @@ namespace GlimmerGrove.Tests
         {
             for (int i = 1; i < Ladder.Length; i++)
             {
-                // One rung is allowed to be a shade lighter than the one before — a chapter that
+                // One rung is allowed to be a shade lighter than the one before - a chapter that
                 // only ever climbs reads as a treadmill, which is the same argument that keeps
                 // par from being monotonic. What is refused is a step backwards.
                 Assert.GreaterOrEqual(Ladder[i].Motes, Ladder[i - 1].Motes - 1,
@@ -169,8 +169,8 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// Invariant 5d, counted. Thoughtlessness clears the opening wells — that is what
-        /// teaching the verb looks like — and stops working before the chapter is half over.
+        /// Invariant 5d, counted. Thoughtlessness clears the opening wells - that is what
+        /// teaching the verb looks like - and stops working before the chapter is half over.
         /// </summary>
         [Test]
         public void APlayerWhoNeverLooksAheadStopsWinningEarly()
@@ -219,7 +219,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// Invariant 26c. A drop onto bare ground makes a fresh pure mote, so a procession short
-        /// of a channel can be walked into a position no amount of play recovers from — and on
+        /// of a channel can be walked into a position no amount of play recovers from - and on
         /// the opening well, which has no supply, that is a board that can be neither won nor
         /// lost.
         /// </summary>
@@ -265,7 +265,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// A wasted drop costs one from the supply and leaves a pure mote that still has to be
         /// cooked, so it is worth about two. Four drops of room is therefore two mistakes, and
-        /// the whole chapter is held to it — including, and especially, the short wells at the
+        /// the whole chapter is held to it - including, and especially, the short wells at the
         /// start, which is where the multiplicative budget it replaced gave the least room and
         /// where the complaint came from.
         /// </para>

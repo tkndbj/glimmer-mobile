@@ -11,14 +11,14 @@ namespace GlimmerGrove
     /// <para>
     /// Added by <c>Boot.BuildCanvas</c>; there is no reason to add one by hand. It exists at all
     /// because the answer is a function of the screen and the screen changes while the app is
-    /// running — a tablet is resized in split view, a foldable is opened, and Android reports a
+    /// running - a tablet is resized in split view, a foldable is opened, and Android reports a
     /// different size for a frame or two after a rotation. A width assigned once in
     /// <c>BuildCanvas</c> would be right on every device that never changes shape and silently
     /// wrong on the ones that do, which is <c>SafeAreaFitter</c>'s argument one layer down.
     /// </para>
     /// <para>
     /// The check is two integer comparisons a frame, and the assignment happens only when the
-    /// display really moved — <c>CanvasScaler</c> marks the canvas dirty on every write to
+    /// display really moved - <c>CanvasScaler</c> marks the canvas dirty on every write to
     /// <c>referenceResolution</c>, so writing the same number each frame would rebuild the whole
     /// interface sixty times a second for nothing.
     /// </para>

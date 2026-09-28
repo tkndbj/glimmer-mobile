@@ -13,12 +13,12 @@ namespace GlimmerGrove.EditorTools
     ///
     /// <para>
     /// <b>Why a check rather than trust.</b> The External Dependency Manager owns
-    /// <c>pod install</c> and it is the only thing that should run it — a second caller would be
+    /// <c>pod install</c> and it is the only thing that should run it - a second caller would be
     /// a second source of truth for which pods are installed, which is the mistake this codebase
     /// refuses everywhere else. But EDM4U's step is also the one most likely to fail on a fresh
     /// machine (see <see cref="MacToolPath"/>), and its failure is invisible in the place people
     /// look: the Xcode project is written, is complete, and opens. What is missing is the
-    /// <c>.xcworkspace</c> — and a developer who opens <c>Unity-iPhone.xcodeproj</c> instead gets
+    /// <c>.xcworkspace</c> - and a developer who opens <c>Unity-iPhone.xcodeproj</c> instead gets
     /// a project that compiles for twenty minutes and then fails in the linker with undefined
     /// symbols for the ad SDKs, an error that names Apple's frameworks rather than CocoaPods.
     /// So: one owner, and a proof that the owner ran. "Making an error unlikely is not the same
@@ -27,7 +27,7 @@ namespace GlimmerGrove.EditorTools
     /// <para>
     /// <b>Ordered last on purpose.</b> At 200 this runs after EDM4U's pod install (order 4) and
     /// after <see cref="IosPrivacyPlist"/> (order 100), so what it inspects is the finished
-    /// article. Note that it can only report a step that *ran and did nothing* — Unity abandons
+    /// article. Note that it can only report a step that *ran and did nothing* - Unity abandons
     /// the remaining callbacks when an earlier one throws, so a hard CocoaPods failure surfaces
     /// as that exception instead. Both are loud; neither is silent, which is the whole point.
     /// </para>
@@ -81,7 +81,7 @@ namespace GlimmerGrove.EditorTools
                 return;
             }
 
-            Debug.Log($"[iOS] open {Path.GetFileName(workspace)} — {installed} pods installed");
+            Debug.Log($"[iOS] open {Path.GetFileName(workspace)} - {installed} pods installed");
         }
     }
 }

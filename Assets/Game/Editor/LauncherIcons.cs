@@ -15,7 +15,7 @@ namespace GlimmerGrove.EditorTools
     /// <summary>
     /// Puts the app icon into PlayerSettings, and proves it stayed there.
     ///
-    /// The icons themselves are generated — <c>Tools/make_launcher_icons.py</c> derives
+    /// The icons themselves are generated - <c>Tools/make_launcher_icons.py</c> derives
     /// every shape below from one authored image, so re-skinning the app is a re-run of
     /// that script and a click of "Apply Launcher Icons", not thirty-seven drag-and-drops
     /// into the inspector. This file is what turns the files on disk into settings.
@@ -26,11 +26,11 @@ namespace GlimmerGrove.EditorTools
     /// on that instead, which is why it runs at the end of <see cref="Apply"/>.
     ///
     /// The icon kinds are named rather than discovered, because Android's Round and
-    /// Legacy kinds are indistinguishable at runtime — same slot sizes, same layer count —
+    /// Legacy kinds are indistinguishable at runtime - same slot sizes, same layer count -
     /// and guessing between them would put a circle where a rounded square belongs.
     ///
     /// Naming them costs a reference to the Android and iOS module assemblies, and those
-    /// are <b>not</b> present on every machine that can build this game — which this file
+    /// are <b>not</b> present on every machine that can build this game - which this file
     /// used to claim. A Mac set up to build only iOS has no Android module, and
     /// <c>AndroidPlatformIconKind</c> then does not exist as a type, so the whole file
     /// fails to compile and takes the Editor into safe mode on a fresh clone. Each half is
@@ -40,13 +40,13 @@ namespace GlimmerGrove.EditorTools
     /// being <em>build target</em> defines rather than module ones, because the target
     /// cannot be selected without the module: if the define is set the assembly is there.
     /// The cost is that icons are applied for the active platform only, which is why
-    /// <see cref="Apply"/> says so out loud rather than quietly doing half the job — an
+    /// <see cref="Apply"/> says so out loud rather than quietly doing half the job - an
     /// unset icon becomes a default Unity logo on a store listing, and that is exactly the
     /// failure this file exists to prevent.
     ///
     /// Icons deliberately live outside <c>Assets/Game/Art</c>. Everything under that
     /// folder is forced to a UI sprite by <c>ArtImportRules</c> and swept into an
-    /// Addressables group by <c>AddressablesMigration</c>; an app icon is neither — it is
+    /// Addressables group by <c>AddressablesMigration</c>; an app icon is neither - it is
     /// consumed by the build pipeline, never loaded through <c>AssetLibrary</c>.
     /// </summary>
     public static class LauncherIcons
@@ -79,8 +79,8 @@ namespace GlimmerGrove.EditorTools
 #endif
 
 #if UNITY_ANDROID
-            // Android 8 and up — every device this game supports, AndroidMinSdkVersion is
-            // 26 — draws the adaptive pair and ignores the other two kinds. Layer order is
+            // Android 8 and up - every device this game supports, AndroidMinSdkVersion is
+            // 26 - draws the adaptive pair and ignores the other two kinds. Layer order is
             // background first, foreground second; swapping them hides the character.
             Assign(NamedBuildTarget.Android, AndroidPlatformIconKind.Adaptive,
                    new[] { background, foreground });
@@ -96,7 +96,7 @@ namespace GlimmerGrove.EditorTools
 #endif
 
             // Said plainly, because the half that was skipped is invisible otherwise and
-            // the symptom — a default Unity logo on one store's listing — turns up weeks
+            // the symptom - a default Unity logo on one store's listing - turns up weeks
             // later in a review queue. Switch platform and run this again.
 #if !UNITY_ANDROID
             Debug.LogWarning("[Glimmer] Android launcher icons were NOT applied: this Editor " +
@@ -146,7 +146,7 @@ namespace GlimmerGrove.EditorTools
                 }
             }
 
-            foreach (var slot in unset) Debug.LogError("[Glimmer] unset launcher icon — " + slot);
+            foreach (var slot in unset) Debug.LogError("[Glimmer] unset launcher icon - " + slot);
 
             Debug.Log(unset.Count == 0
                 ? $"[Glimmer] all {total} launcher icon slot(s) assigned"
@@ -176,7 +176,7 @@ namespace GlimmerGrove.EditorTools
         /// The platforms this Editor can actually be asked about.
         ///
         /// Built rather than declared, because <see cref="Validate"/> must not report an
-        /// unset icon for a platform whose module is not installed — that would be an error
+        /// unset icon for a platform whose module is not installed - that would be an error
         /// about something the machine cannot fix, on every fresh clone.
         /// </summary>
         static (NamedBuildTarget, PlatformIconKind[])[] Slots
@@ -205,7 +205,7 @@ namespace GlimmerGrove.EditorTools
         {
             var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
             if (texture == null)
-                Debug.LogError($"[Glimmer] missing launcher icon {path} — " +
+                Debug.LogError($"[Glimmer] missing launcher icon {path} - " +
                                "run 'python Tools/make_launcher_icons.py' from the repo root");
             return texture;
         }

@@ -14,14 +14,14 @@ namespace GlimmerGrove.Challenges
     /// permanent id.
     /// </para>
     /// <para>
-    /// <b>The shape</b> (invariant 56f). Each day every row of a genre is given a rank — a hash
-    /// of the genre, the row's id and the day — and the day's sequence is the rows in rank
+    /// <b>The shape</b> (invariant 56f). Each day every row of a genre is given a rank - a hash
+    /// of the genre, the row's id and the day - and the day's sequence is the rows in rank
     /// order: slot nought is the best-ranked row, slot one the next, and so on round the ring.
     /// The row that <em>yesterday's</em> ranking put first is moved to the end of the ring, so
     /// two days open on the same level about once in <c>n²</c> days rather than once in <c>n</c>
-    /// — one day in ten thousand at a hundred levels. That is what gives the three things the
+    /// - one day in ten thousand at a hundred levels. That is what gives the three things the
     /// owner asked for at once: everybody plays the same levels in the same order, the order
-    /// looks random from day to day, and <b>adding a level re-deals nothing</b> — a new row takes
+    /// looks random from day to day, and <b>adding a level re-deals nothing</b> - a new row takes
     /// its own rank on each day and the others keep theirs; the only knock-on is the day after
     /// one the new row opens, whose exclusion moves.
     /// </para>
@@ -34,8 +34,8 @@ namespace GlimmerGrove.Challenges
     /// stability on 2026-09-23. <c>content.py</c> prints the expected days to see every level.
     /// </para>
     /// <para>
-    /// <b>The hash is arithmetic the server could repeat</b> — FNV-1a over a spelt subject, all
-    /// 32-bit (invariant 9c's shape) — though no server does: a level is content the device
+    /// <b>The hash is arithmetic the server could repeat</b> - FNV-1a over a spelt subject, all
+    /// 32-bit (invariant 9c's shape) - though no server does: a level is content the device
     /// holds, and what the server prices is the count of wins, never which board was won.
     /// </para>
     /// <para>
@@ -89,7 +89,7 @@ namespace GlimmerGrove.Challenges
         /// Yesterday's opener is its <em>raw</em> best-ranked row rather than its dealt opener,
         /// so the question stops after one day back instead of recursing to the beginning of
         /// time. The dealt opener differs from the raw one only when yesterday itself had to
-        /// move a row, and in that one case the exclusion misses — a repeat about one day in
+        /// move a row, and in that one case the exclusion misses - a repeat about one day in
         /// <c>n²</c> rather than one in <c>n</c>, which is the price of a rule with no memory.
         /// </summary>
         static ChallengeDefinition[] Ring(IReadOnlyList<ChallengeDefinition> rows, ChallengeGenre genre, int day)
@@ -108,12 +108,12 @@ namespace GlimmerGrove.Challenges
         }
 
         /// <summary>
-        /// The rows of a genre in rank order for a day. A tie on the hash — one in four
-        /// billion — breaks on the id, so the order is total and the same on every device.
+        /// The rows of a genre in rank order for a day. A tie on the hash - one in four
+        /// billion - breaks on the id, so the order is total and the same on every device.
         ///
         /// <b>The day goes first in the subject and the hash is finalised</b>, and both are
         /// load-bearing: FNV-1a alone folds each character into the low bits and leaves the high
-        /// bits — the ones a comparison is decided by — nearly where the previous character put
+        /// bits - the ones a comparison is decided by - nearly where the previous character put
         /// them, so with the day appended last, consecutive days ranked the same row first four
         /// days in five. Mixed through <see cref="Mix"/>, the rank is a fresh draw each day.
         /// </summary>

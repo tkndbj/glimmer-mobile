@@ -9,8 +9,8 @@ namespace GlimmerGrove
     /// that dips with it, packed until the chests overlap.
     ///
     /// <para>
-    /// <b>Two screens draw this row</b> — the hub's Tasks &amp; Bonuses box and the tasks page's
-    /// own ladder — and a pack is a shape rather than a picture, so the arithmetic lives here
+    /// <b>Two screens draw this row</b> - the hub's Tasks &amp; Bonuses box and the tasks page's
+    /// own ladder - and a pack is a shape rather than a picture, so the arithmetic lives here
     /// and each screen builds its own widgets from the answer. Two copies would be two answers
     /// to a question settled once, which is the argument the interface kit itself rests on
     /// (invariant 44).
@@ -18,7 +18,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>The grandest chest takes the crest.</b> That is the whole of what makes a pack a
     /// pack: both screens exist to advertise the best thing on the ladder, and a plain
-    /// left-to-right ladder puts that chest on an end — drawn smallest, and half behind its
+    /// left-to-right ladder puts that chest on an end - drawn smallest, and half behind its
     /// neighbour. Seats are handed out tallest first, so a fifth tier joins a balanced row
     /// rather than needing a second arrangement, and a tie between two equal seats goes to the
     /// right so the row still reads as climbing before it steps back.
@@ -44,7 +44,7 @@ namespace GlimmerGrove
         /// <b>It cannot be trimmed, which is why these exist.</b> The ceremony hands this icon
         /// over to the reel, and an icon trimmed to its alpha against a reel that is not is a
         /// chest that jumps the moment one is opened. So a pack is laid out in <em>drawn</em>
-        /// heights and converted once, by <see cref="Seat.Box"/> and <see cref="Seat.Anchor"/> —
+        /// heights and converted once, by <see cref="Seat.Box"/> and <see cref="Seat.Anchor"/> -
         /// a row packed edge to edge off the sprite's own box would stand a quarter of a chest
         /// apart and float a quarter of a chest high.
         /// </para>
@@ -97,7 +97,7 @@ namespace GlimmerGrove
         /// <param name="dip">How much lower than the ends the crest stands.</param>
         /// <param name="floor">Where an end chest's feet are, from the host's middle.</param>
         /// <param name="overlap">
-        /// How far a chest pushes into its neighbour, as a fraction of the narrower of the two —
+        /// How far a chest pushes into its neighbour, as a fraction of the narrower of the two -
         /// and <b>negative for a row that stands apart</b>, which is the same arithmetic with one
         /// sign and is what the two callers really differ by: the hub's box is a picture of a
         /// pack, while every chest on the tasks page is a button, and buttons that overlap are
@@ -118,7 +118,7 @@ namespace GlimmerGrove
             // and two seats that ought to tie do tie (see the remarks on the class). The range
             // is rescaled onto the nearest and furthest seats the row actually *has*, which is
             // what makes `tall` and `shortest` mean what they say: an even row has no seat in
-            // the middle, so dividing by `n - 1` alone leaves its crest short of `tall` — and
+            // the middle, so dividing by `n - 1` alone leaves its crest short of `tall` - and
             // for a row of two it leaves *every* seat at `shortest`, an arch with no crest in
             // it at all.
             int near = (n - 1) % 2;

@@ -16,7 +16,7 @@ namespace GlimmerGrove.EditorTools
     /// <b>This exists because of one default that is wrong for us and silent about it:
     /// Android discards every scheduled notification when the device restarts.</b>
     /// <c>RescheduleOnDeviceRestart</c> is off out of the box, and with it off a phone reboot
-    /// wipes the whole seven-day schedule — which is not rebuilt until the player next opens
+    /// wipes the whole seven-day schedule - which is not rebuilt until the player next opens
     /// the game, and the player whose schedule matters is precisely the one who is not opening
     /// it. Nothing reports this: the build succeeds, the notifications work in a test that
     /// never reboots, and the loss shows up as retention that is quietly worse than it should
@@ -26,7 +26,7 @@ namespace GlimmerGrove.EditorTools
     /// <para>
     /// <b>Exact alarms stay off, deliberately.</b> Android 12 gates <c>SCHEDULE_EXACT_ALARM</c>
     /// behind a user grant and Android 13's <c>USE_EXACT_ALARM</c> is reserved for alarm clocks
-    /// and calendars — Google rejects apps that claim it for anything else, and a reminder is
+    /// and calendars - Google rejects apps that claim it for anything else, and a reminder is
     /// exactly the "anything else" it is written to exclude. Inexact means the OS may hold a
     /// notification back to batch it with others, which for "your hearts are full" is a
     /// difference nobody can perceive and a store-review risk nobody needs.
@@ -36,7 +36,7 @@ namespace GlimmerGrove.EditorTools
     /// step somebody has to remember on shipping week will be forgotten, and this one is
     /// invisible when it is. The setting lives in <c>ProjectSettings/</c> rather than in a file
     /// this repository writes, so it is asserted every build instead of being checked in and
-    /// hoped for — a fresh clone, a second machine and a reset of Project Settings all land in
+    /// hoped for - a fresh clone, a second machine and a reset of Project Settings all land in
     /// the same place.
     /// </para>
     /// </summary>
@@ -60,7 +60,7 @@ namespace GlimmerGrove.EditorTools
             if (target == BuildTarget.Android || target == BuildTarget.iOS)
                 Debug.LogWarning("[Glimmer] com.unity.mobile.notifications is not installed, so " +
                                  "this build sends no reminders at all. That is a working game " +
-                                 "and a silent one — see invariant 50.");
+                                 "and a silent one - see invariant 50.");
 #else
             if (target != BuildTarget.Android) return;
 

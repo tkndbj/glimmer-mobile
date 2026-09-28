@@ -5,7 +5,7 @@ namespace GlimmerGrove.Social
     ///
     /// <para>
     /// <b>Two, because a keeper puts two things in front of strangers.</b> A <b>name</b>, which
-    /// is the one piece of free text in this game, and a <b>grovement</b> — 784 tiles of ground
+    /// is the one piece of free text in this game, and a <b>grovement</b> - 784 tiles of ground
     /// sold with walls, gates and fences. <c>GroveCard</c>'s own remarks used to say an
     /// arrangement could not be offensive, because every piece is an id from a catalog we ship;
     /// that was true of the handful of pre-placed dots the grove began as and stopped being true
@@ -16,7 +16,7 @@ namespace GlimmerGrove.Social
     /// </para>
     /// <para>
     /// <b>The ordinals reach analytics and the names reach the wire</b>, so neither may be
-    /// renumbered or respelled — a report is recorded against a collection named after the
+    /// renumbered or respelled - a report is recorded against a collection named after the
     /// subject, and changing the string orphans every report filed under the old one and resets
     /// a threshold somebody had already reached. <see cref="ReportSubjects.Wire"/> is the one
     /// place the spelling lives.
@@ -47,7 +47,7 @@ namespace GlimmerGrove.Social
         /// <b><see cref="ReportSubject.Grove"/> is held and this list is the whole of the
         /// hold</b>, exactly as <c>NavBar.Order</c> holds a tab: nothing in this build draws a
         /// grovement, so a key offering to report one would file a report about a picture
-        /// nobody can see. The enum member, the wire spelling and the loc key all stay — they
+        /// nobody can see. The enum member, the wire spelling and the loc key all stay - they
         /// are permanent for invariant 1's reason, the server still accepts the subject, and
         /// every report already filed against it still counts toward its own threshold. The
         /// panel's height is the sum of what this table holds, so it re-measures itself.
@@ -61,9 +61,9 @@ namespace GlimmerGrove.Social
         ///
         /// <para>
         /// <c>Mechanic.Retired</c>'s shape, arriving on a report subject: a member missing from
-        /// <see cref="All"/> is either something nobody can ever file a report about — the
+        /// <see cref="All"/> is either something nobody can ever file a report about - the
         /// fault invariant 40a describes, where a whole mechanic shipped that no level ever sent
-        /// — or a deliberate hold, and the two are indistinguishable from the enum alone.
+        /// - or a deliberate hold, and the two are indistinguishable from the enum alone.
         /// Naming it here makes it the second, and leaves <c>KeeperReportTests</c> refusing any
         /// member that is in neither list.
         /// </para>
@@ -83,7 +83,7 @@ namespace GlimmerGrove.Social
         /// The loc key for the button that reports this subject.
         ///
         /// Derived from the member rather than written out at the call site, so a third subject
-        /// is one enum member, one string and one row in the table — <c>KeeperTitle.KeyFor</c>'s
+        /// is one enum member, one string and one row in the table - <c>KeeperTitle.KeyFor</c>'s
         /// shape, and the reason nothing here concatenates a key from anything a player typed.
         ///
         /// <b>One string, not two.</b> Each subject used to carry an explanatory note under its

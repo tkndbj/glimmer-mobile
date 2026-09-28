@@ -9,7 +9,7 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// <b>Everything here is cut from one bought interface kit</b>
-    /// (<c>Tools/make_hud_kit_art.py</c>) — rails, plates, troughs, caps, pills,
+    /// (<c>Tools/make_hud_kit_art.py</c>) - rails, plates, troughs, caps, pills,
     /// squares, the hero's lander and the world they all stand in. It is the cartoon UI kit:
     /// saturated two-tone faces inside one heavy navy keyline, ribbons with tails, discs in a
     /// white ring. Two kits have worn these names before it and the names did not move either
@@ -17,20 +17,20 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>What was wrong with the last one is worth keeping, because it is not about that
-    /// kit.</b> Its plates were a cream rim around the ground colour — card interiors within a
-    /// few points of the backdrop — so nothing on either screen read as an object standing on
+    /// kit.</b> Its plates were a cream rim around the ground colour - card interiors within a
+    /// few points of the backdrop - so nothing on either screen read as an object standing on
     /// anything, and one rim of one width on every surface left no hierarchy either. Behind it
     /// all was a flat near-black wash with no world in it. **A screen made of outlines on a
     /// void is boring however well each outline is drawn.** What replaced it is opaque navy
     /// plates with a material of their own, over a bright illustrated world, with gold, green
-    /// and orange as the only saturated things on top — so the contrast is a property of the
+    /// and orange as the only saturated things on top - so the contrast is a property of the
     /// art rather than something a rim is asked to buy.
     /// </para>
     ///
     /// <para>
     /// <b>The colour names did not move and that is the method.</b> <c>btn_green</c> has meant
     /// "do the thing" since this UI was written, <c>btn_red</c> "leave", <c>sq_dark</c> "not a
-    /// control right now" — so those names were already roles, and ninety-odd call sites were
+    /// control right now" - so those names were already roles, and ninety-odd call sites were
     /// already naming a role. Re-cutting what the names *point at* moved the whole app onto the
     /// kit in one commit with no sweep, nothing missed, and one <c>git checkout</c> to undo.
     /// The names that are new are the ones the kit brought pieces the game had never had:
@@ -40,7 +40,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>This absorbed <c>ShopSkins</c>, which is what that class said would happen.</b> Its
     /// note read "rolling the kit out is then moving names from here to there, rather than
-    /// rebuilding anything" — the storefront was where the look was judged worth changing
+    /// rebuilding anything" - the storefront was where the look was judged worth changing
     /// first, and it is now every screen's look, so there is one table again.
     /// </para>
     ///
@@ -70,7 +70,7 @@ namespace GlimmerGrove
         /// <b>Orange, and it stays orange under this kit for the reason it became orange
         /// under the last one.</b> The merge kit cuts its squares orange and every other
         /// colour on them is a rotation of that, so orange is what this family is actually
-        /// drawn in — a mint square in the corner was the one control on the screen wearing a
+        /// drawn in - a mint square in the corner was the one control on the screen wearing a
         /// colour nothing else wore, which a render showed as two glowing chips above a dark
         /// room. <c>sq_aqua</c> is still cut and still named by two call sites; it is simply
         /// no longer what this role means.
@@ -79,7 +79,7 @@ namespace GlimmerGrove
         public const string Aside = "sq_orange";
 
         /// <summary>
-        /// Not a control. An off switch, a streak night that has not come round yet — the only
+        /// Not a control. An off switch, a streak night that has not come round yet - the only
         /// things allowed to wear the disabled colour on purpose.
         /// </summary>
         public const string Resting = "sq_dark";
@@ -98,7 +98,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>One colour across every shelf, where it used to key on the shelf.</b> It had to
         /// before, because the card underneath was the shelf's colour and a yellow bar on a
-        /// yellow frame is a button that disappears — the one control on a card that must
+        /// yellow frame is a button that disappears - the one control on a card that must
         /// never be hard to find. Every card is now the kit's navy (<see cref="Card"/>), so
         /// the price is orange on navy on all five shelves and the contrast is a property of
         /// the kit rather than a table somebody has to keep right.
@@ -110,7 +110,7 @@ namespace GlimmerGrove
         public const string Gem = "btn_violet";
 
         /// <summary>
-        /// The key that does the thing a panel exists for, whether or not it costs — the turret
+        /// The key that does the thing a panel exists for, whether or not it costs - the turret
         /// preview's UPGRADE and its price, and the upgrade panel's own.
         ///
         /// <para>
@@ -123,7 +123,7 @@ namespace GlimmerGrove
         /// <b>The same green as <see cref="Settled"/> today, and the two are not the same
         /// thing.</b> That one says <em>this is already so</em> and this one says <em>do it</em>,
         /// and a player who taps one turret that is for sale and the next one that is equipped
-        /// sees one colour meaning both — which is precisely the confusion <see cref="Settled"/>
+        /// sees one colour meaning both - which is precisely the confusion <see cref="Settled"/>
         /// was split off to end. It stands because the owner asked for green on the keys they
         /// press and nothing yet asks these two to be told apart; the day something does, the one
         /// to move is <see cref="Settled"/>, because it is the dead key and <c>btn_gray</c> and
@@ -141,7 +141,7 @@ namespace GlimmerGrove
         /// <b>Named because <c>btn_green</c> has meant "do the thing" everywhere else since this
         /// UI was written, and this is the one place it does not.</b> Left on <see cref="Buy"/>
         /// it was the price pill, so a turret already standing on the line shouted exactly as
-        /// loudly as a nine-thousand-credit one — and the two states a player is actually
+        /// loudly as a nine-thousand-credit one - and the two states a player is actually
         /// choosing between, <em>equip this</em> and <em>this is equipped</em>, were drawn
         /// identically. Green is what this UI already spends on <em>you have this</em>
         /// (<c>Pal.Mint</c> on the grove shelf's held line); this raises it off a status line
@@ -151,7 +151,7 @@ namespace GlimmerGrove
         public const string Settled = "btn_green";
 
         /// <summary>
-        /// The hub's affirmative — the one control on that screen a player is meant to press.
+        /// The hub's affirmative - the one control on that screen a player is meant to press.
         /// Its own mould rather than a colour name, because #FFC83D is not one of the eight
         /// the pill family is re-cut in and a tint on a green sprite cannot reach it.
         /// </summary>
@@ -159,7 +159,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// A key that is drawn because the thing behind it is worth wanting, and cannot be
-        /// pressed yet — the Infinite lane's BATTLE before its keeper wall is met.
+        /// pressed yet - the Infinite lane's BATTLE before its keeper wall is met.
         ///
         /// <para>
         /// <b>A role rather than a colour, and a role rather than a tint.</b>
@@ -171,7 +171,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Distinct from <see cref="Resting"/>, which is not a control at all.</b> That one
         /// is an off switch or a streak night not yet come round; this is a button a player is
-        /// meant to press — later. It still takes a tap, because a control that says nothing
+        /// meant to press - later. It still takes a tap, because a control that says nothing
         /// when it is pressed is indistinguishable from a broken one: what it answers with is
         /// the wall.
         /// </para>
@@ -180,14 +180,14 @@ namespace GlimmerGrove
 
         // -------------------------------------------------------- the hub's feature plates
         /// <summary>
-        /// The fill every feature plate on the hub carries — sampled off <see cref="Card"/>,
+        /// The fill every feature plate on the hub carries - sampled off <see cref="Card"/>,
         /// which is the keeper card at the top of the same screen. One navy for everything
         /// that is a plate, so the column reads as one object rather than as three.
         /// </summary>
         public static readonly Color Plate = new Color(0.031f, 0.122f, 0.271f, 1f);   // #081F45
 
         /// <summary>
-        /// The three bright plates the hub's feature boxes are drawn on — the Battle key's own
+        /// The three bright plates the hub's feature boxes are drawn on - the Battle key's own
         /// mould, sliced on both axes so it can be any size, in three hues.
         ///
         /// <para>
@@ -195,7 +195,7 @@ namespace GlimmerGrove
         /// not the colour.</b> A bought mould carries a two-tone face, a highlight along its
         /// top edge and a keyline that turns with the hue; a drawn rectangle carries none of
         /// those and no amount of tinting gives it one. That keyline is also why nothing traces
-        /// a border round these any more — the sprite has one, and a second outline at a radius
+        /// a border round these any more - the sprite has one, and a second outline at a radius
         /// the sprite does not have is a halo a hair off the shape it follows.
         /// </para>
         /// </summary>
@@ -209,7 +209,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>It is a card, not a fourth hue, and it is what every reward row in this game is
-        /// drawn on</b> — the tasks page, the streak board, the season ladder and the invite
+        /// drawn on</b> - the tasks page, the streak board, the season ladder and the invite
         /// board. All four used <see cref="Card"/> (the invite board was missed by the first
         /// sweep and joined them after the owner played it), which draws a row as a container
         /// and nothing else: no lit top
@@ -219,7 +219,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// Cut from <see cref="PlateBlue"/>'s own hue and saturation with nothing but a
-        /// <c>dim</c> — which keeps hue and HSV saturation exactly, so this really is that
+        /// <c>dim</c> - which keeps hue and HSV saturation exactly, so this really is that
         /// colour and a re-cut that moves the profile's boxes moves these with them. <b>How far
         /// down was chosen by looking and the first answer was wrong</b>: halved, it reads as a
         /// muted steel rather than as a darker blue. At .72 the face lands at (7, 111, 178),
@@ -263,13 +263,13 @@ namespace GlimmerGrove
 
         /// <summary>
         /// What every screen stands on. One flat blue, chosen dark enough that
-        /// <see cref="Plate"/> reads as a thing standing on it — see <c>Scenery.Room</c>.
+        /// <see cref="Plate"/> reads as a thing standing on it - see <c>Scenery.Room</c>.
         /// </summary>
         public static readonly Color Sky = new Color(0.055f, 0.204f, 0.392f, 1f);      // #0E3464
 
         // ------------------------------------------------------------------- the rails
         /// <summary>
-        /// The bar across the top of a screen, and the one across the foot of it — one long
+        /// The bar across the top of a screen, and the one across the foot of it - one long
         /// navy trough cut from the kit, the foot one flipped. Flipped rather than cut twice,
         /// because the trough is lit along its top edge: a foot rail that is not flipped is lit
         /// on the edge facing away from the screen.
@@ -278,7 +278,7 @@ namespace GlimmerGrove
         /// <b>A rail is the quietest thing on a screen</b>, which is why it is the kit's one
         /// genuinely dark piece taken further down rather than any of its coloured bars. It
         /// frames content, so anything it does beyond marking the edge is competing with what
-        /// it frames — the last kit put a saturated cyan slab across the top and another across
+        /// it frames - the last kit put a saturated cyan slab across the top and another across
         /// the foot, and they were the loudest things on either screen.
         /// </para>
         /// </summary>
@@ -301,13 +301,13 @@ namespace GlimmerGrove
         public const string Panel = "Hud/panel";
 
         /// <summary>
-        /// A card — the same plate sunk further, which is what a product stands in: a product
+        /// A card - the same plate sunk further, which is what a product stands in: a product
         /// in the shop, a feature box on the hub.
         ///
         /// <para>
         /// Cut at native size, which is invariant 44a in the easy direction for once. This
         /// kit's corner is 16 pixels on a 400-pixel source, so it draws as 16 units on a
-        /// 474-unit card and nothing has to be scaled down to keep a middle to stretch — where
+        /// 474-unit card and nothing has to be scaled down to keep a middle to stretch - where
         /// the last kit's 107-pixel frame would have eaten 211 units of that card.
         /// </para>
         /// </summary>
@@ -316,7 +316,7 @@ namespace GlimmerGrove
         /// <summary>
         /// A hole rather than a thing standing on the screen: an avatar's seat, an empty shop
         /// cell, a chest's socket. The kit's own navy chip, which is the one piece in it that
-        /// is already drawn inset — every kit says "inset" by being darker than what stands on
+        /// is already drawn inset - every kit says "inset" by being darker than what stands on
         /// it, and this is the only one that shipped a piece already that dark.
         /// </summary>
         public const string Slot = "Hud/slot";
@@ -329,7 +329,7 @@ namespace GlimmerGrove
         /// <b>This is the first kit that did not have to be sunk to be readable.</b> Two in a
         /// row drew their readouts <em>cream</em>, their own screens being light ones, so the
         /// sprite they shipped was cream under <see cref="Pal.Cream"/> with an outline doing
-        /// all the work — the yellow-bar-on-a-yellow-card fault, arriving through the art. This
+        /// all the work - the yellow-bar-on-a-yellow-card fault, arriving through the art. This
         /// pack writes light numbers on dark troughs exactly as this game does, so the piece
         /// arrives right and `welled` is not called on it at all.
         /// </para>
@@ -340,7 +340,7 @@ namespace GlimmerGrove
         /// What goes <em>in</em> a trough: a rank bar, a chest track, an event's progress.
         ///
         /// <para>
-        /// Cut near-white with the kit's two-tone shading kept, so the call site tints it —
+        /// Cut near-white with the kit's two-tone shading kept, so the call site tints it -
         /// <c>Image.color</c> is a multiply, so one white fill takes every colour this UI
         /// spends and keeps the lighter top half that makes it read as a filled tube rather
         /// than a block of colour. One sprite instead of a colour per bar, and a bar that
@@ -379,13 +379,13 @@ namespace GlimmerGrove
 
         // -------------------------------------------------------------------- the caps
         /// <summary>
-        /// A nav tab's face, lit and unlit — and a shop tab's, which is the same control
+        /// A nav tab's face, lit and unlit - and a shop tab's, which is the same control
         /// asking the same question one level down.
         ///
         /// <para>
         /// <b>The glyph is never the kit's.</b> Its buttons carry coins, bins and speakers,
         /// which name nothing in this game, so what ships is the kit's blank face wearing the
-        /// icons this UI already owns — the lit and unlit pair off one mould, which is exactly
+        /// icons this UI already owns - the lit and unlit pair off one mould, which is exactly
         /// what a tab needs. That is what stops a restyle quietly renaming five destinations.
         /// </para>
         /// </summary>
@@ -396,7 +396,7 @@ namespace GlimmerGrove
         // ------------------------------------------------------------------- the marks
         /// <summary>
         /// The "+" on the end of a readout, which is what makes it read as a control. Neither
-        /// pack has a plus anywhere, so this is the kit's own square with one drawn on it —
+        /// pack has a plus anywhere, so this is the kit's own square with one drawn on it -
         /// still one image rather than a square plus a glyph, and still the kit's own keyline
         /// beside the trough's rim.
         /// </summary>
@@ -411,7 +411,7 @@ namespace GlimmerGrove
 
         // The kit also draws a notification dot, a tick, a padlock, a pair of arrows and a
         // flat plate, and none of them is cut. Nothing here draws one, and an addressed sprite
-        // nothing asks for is still built into the bundle and still decoded at every launch —
+        // nothing asks for is still built into the bundle and still decoded at every launch -
         // which is the judgement this file's own `jelly_*` entry was deleted over. Adding one
         // back is a line here and a line in `make_hud_kit_art.KIT`.
 
@@ -422,7 +422,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>The lander is the one piece taken from the tower-defence pack</b>, and the only
-        /// thing any of the three has that is a place to <em>stand</em> — the cartoon kit is a
+        /// thing any of the three has that is a place to <em>stand</em> - the cartoon kit is a
         /// sheet of chrome and has no ground in it at all. It is that pack's level-select
         /// node, painted to the kit's gold <em>and then sunk</em>, so it is a ring round a
         /// warmer middle rather than a flat disc: left flat at that size a gold disc under a
@@ -446,7 +446,7 @@ namespace GlimmerGrove
         /// translucent wash and every card interior was within a few points of it, so the
         /// ground colour <em>was</em> the screen. The world here is an opaque picture and
         /// every plate is opaque over it, so this is what shows for one frame on a cold boot
-        /// and past the picture's edge on a tall device — and it is the keyline's own navy so
+        /// and past the picture's edge on a tall device - and it is the keyline's own navy so
         /// that a screen which stops short of the world still stands on the kit's colour.
         /// </para>
         /// </summary>
@@ -456,7 +456,7 @@ namespace GlimmerGrove
         public static readonly Color Band = new Color(.055f, .148f, .318f, 1f);
 
         /// <summary>
-        /// What a button that cannot be pressed is tinted by — owned, included, pending,
+        /// What a button that cannot be pressed is tinted by - owned, included, pending,
         /// mid-purchase.
         ///
         /// <para>
@@ -478,7 +478,7 @@ namespace GlimmerGrove
         /// Three coloured frames across five shelves was how a shelf said which one it was,
         /// and it cost the storefront its material: five saturated blocks of colour side by
         /// side read as five different games rather than as one shop. The kit gives every card
-        /// one teal plate, which is what a vending machine looks like — so the shelf is said by
+        /// one teal plate, which is what a vending machine looks like - so the shelf is said by
         /// the *lit tab*, which the old dark chips could not say at all, and by a coloured
         /// light under the goods, which is where a player is already looking.
         /// </para>

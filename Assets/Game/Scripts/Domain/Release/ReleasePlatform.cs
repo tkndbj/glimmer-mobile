@@ -11,14 +11,14 @@ namespace GlimmerGrove.Release
     /// <see cref="Application.platform"/></b>, and that is the difference between a feature that
     /// can be exercised before it ships and one that cannot. <c>Application.platform</c> in the
     /// Editor is the <em>Editor's</em> platform, so a gate keyed on it answers "neither store"
-    /// on the one machine anybody can try it on — the wall would first be seen working on a
+    /// on the one machine anybody can try it on - the wall would first be seen working on a
     /// device, which for a wall is far too late. <c>UNITY_ANDROID</c> and <c>UNITY_IOS</c> are
     /// set by the active build target, in the Editor as well as in the player, so switching the
     /// target is how this gets tested. On a device the two agree by construction.
     /// </para>
     /// <para>
     /// <b>Anything else answers nothing, and nothing means no wall.</b> A desktop build has no
-    /// store to be sent to, so a forced update there would be a dead end by definition — the
+    /// store to be sent to, so a forced update there would be a dead end by definition - the
     /// same reasoning <see cref="ReleaseRequirement.HasDoor"/> applies one layer down.
     /// </para>
     /// </summary>
@@ -27,7 +27,7 @@ namespace GlimmerGrove.Release
         /// <summary>
         /// The document key. These are wire spellings: the seeder writes them and
         /// <c>config/release</c> is keyed on them, so renaming one silently stops every device
-        /// on that platform finding its own block — a wall that quietly lifts rather than one
+        /// on that platform finding its own block - a wall that quietly lifts rather than one
         /// that quietly falls, which is the safe direction and still wrong.
         /// </summary>
         public const string Android = "android";
@@ -57,7 +57,7 @@ namespace GlimmerGrove.Release
         /// which the process already knows, so an Android device is never left facing a wall
         /// with no door even if the document is bare. An App Store listing is addressed by a
         /// numeric Apple id that is minted by App Store Connect and is derivable from nothing
-        /// in the build — so on iOS the published link is the only answer there is, and a block
+        /// in the build - so on iOS the published link is the only answer there is, and a block
         /// without one is refused rather than guessed at
         /// (<see cref="ReleaseRequirement.IsEnforceable"/>).
         /// </para>

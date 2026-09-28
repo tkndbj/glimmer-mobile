@@ -7,8 +7,8 @@ namespace GlimmerGrove.Release
     ///
     /// <para>
     /// <b>There is one build number in this game and this is it.</b> Two things compare against
-    /// it — a chapter's <c>minAppVersion</c>, which hides content a shipped client cannot draw,
-    /// and <see cref="ReleaseGate"/>, which stops an install that is too old to run at all — and
+    /// it - a chapter's <c>minAppVersion</c>, which hides content a shipped client cannot draw,
+    /// and <see cref="ReleaseGate"/>, which stops an install that is too old to run at all - and
     /// a second copy of the arithmetic would let those two disagree about what version a device
     /// is. The parse used to live as a private helper on <c>Boot</c>, where neither the gate nor
     /// a test could reach it.
@@ -33,7 +33,7 @@ namespace GlimmerGrove.Release
         /// The scheme is <c>major x 10000 + minor x 100 + patch</c>, so <c>1.100.0</c> and
         /// <c>2.0.0</c> are the same integer. Nobody ships a hundredth patch, but a version
         /// that silently sorts as a <em>different release</em> is exactly the class of fault
-        /// this project refuses to leave to luck — and the direction it fails in is the bad
+        /// this project refuses to leave to luck - and the direction it fails in is the bad
         /// one, since a build that reads as newer than it is walks straight through the gate.
         /// Refused rather than clamped: a clamp would make two real versions equal, which is
         /// the same bug wearing a check's clothes.
@@ -42,13 +42,13 @@ namespace GlimmerGrove.Release
         public const int SegmentCeiling = 99;
 
         /// <summary>
-        /// Turns "1.4.2" into 10402. False when the string is not a version at all — empty, or
+        /// Turns "1.4.2" into 10402. False when the string is not a version at all - empty, or
         /// with a major segment that is not a number, or with a segment out of range.
         ///
         /// <para>
         /// A missing minor or patch reads as nought, so "1" and "1.0.0" are the same build, and
         /// a fourth segment is ignored. <b>A segment that is not a plain number is refused
-        /// rather than salvaged</b> — "1.4.2-beta" has no answer here, and inventing one would
+        /// rather than salvaged</b> - "1.4.2-beta" has no answer here, and inventing one would
         /// be this file guessing at a convention nobody has written down. The refusal is loud
         /// (see <see cref="Running"/>) because the thing it disables is a safety gate, and a
         /// gate that cannot fail is not a gate.
@@ -92,7 +92,7 @@ namespace GlimmerGrove.Release
         /// <para>
         /// <b>Nought is reported as an error, once.</b> Everything that compares against this
         /// treats nought as "do not gate this device", which is the only safe answer and is
-        /// also completely silent on a phone — the forced-update wall would simply never
+        /// also completely silent on a phone - the forced-update wall would simply never
         /// appear, on every install, and every gate in this repository would stay green. The
         /// log line is the one thing that can say so.
         /// </para>
@@ -113,7 +113,7 @@ namespace GlimmerGrove.Release
                     Debug.LogError(
                         $"[Release] Application.version '{Application.version}' is not a " +
                         "major.minor.patch number, so this build cannot be compared against a " +
-                        "published one — the update gate is inert for this install. Fix " +
+                        "published one - the update gate is inert for this install. Fix " +
                         "bundleVersion in Player Settings.");
                 }
 

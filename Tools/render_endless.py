@@ -49,9 +49,11 @@ W = K.W
 SHORT_H = int(K.W * 1.75)
 
 # --------------------------------------------------------------- EndlessHubLayout
-POINTS = 3
+POINTS = 4
 
-# The hero: a starburst, a gold medallion carrying the wave, and a ribbon naming it.
+# The hero block: since 2026-09-28 the keeper's rank badge on a burst, its name on the plate.
+# The medal - a starburst, a gold medallion carrying the wave, and a plate naming it - is the
+# same block drawn whole at RECORD_SCALE under the lines.
 HERO_H = 284.0 + 78.0 / 2      # `EndlessHubLayout.HeroHeight`: derived from the plate
 BURST_SIZE = 310.0
 DISC_SIZE = 222.0
@@ -59,16 +61,19 @@ DISC_DOWN = 155.0                  # the disc's centre: half the burst, so nothi
 RIBBON_W, RIBBON_H = 360.0, 78.0
 RIBBON_DOWN = 284.0
 
-# The panel: three rows, each a framed icon and a sentence.
+# The panel: four rows, each a framed icon and a sentence.
 PANEL_W = 840.0
 PANEL_PAD = 16.0
-ROW_H, ROW_GAP = 90.0, 6.0
+ROW_H, ROW_GAP = 70.0, 6.0
 PANEL_H = PANEL_PAD * 2 + ROW_H * POINTS + ROW_GAP * (POINTS - 1)
-SLOT_SIZE, ICON_SIZE = 88.0, 68.0
+SLOT_SIZE, ICON_SIZE = 68.0, 52.0
 
 BUTTON_W, BUTTON_H = 620.0, 178.0
 
-HERO_GAP, PANEL_GAP = 24.0, 34.0
+RECORD_SCALE = .62             # `EndlessHubLayout.RecordScale`
+RECORD_H = HERO_H * RECORD_SCALE
+HERO_GAP, RECORD_GAP, BUTTON_GAP = 24.0, 20.0, 26.0
+MIN_SCALE = .78                # `EndlessHubLayout.MinScale`
 
 #: Where the column sits in a band with room to spare: a little above centre.
 #: A tall phone's slack has to go somewhere, and the foot is where a screen wants
@@ -78,8 +83,14 @@ HEAD_CLEAR = 36.0
 
 HERO_CENTRE = HERO_H / 2
 PANEL_CENTRE = HERO_H + HERO_GAP + PANEL_H / 2
-BUTTON_CENTRE = HERO_H + HERO_GAP + PANEL_H + PANEL_GAP + BUTTON_H / 2
+RECORD_CENTRE = HERO_H + HERO_GAP + PANEL_H + RECORD_GAP + RECORD_H / 2
+BUTTON_CENTRE = HERO_H + HERO_GAP + PANEL_H + RECORD_GAP + RECORD_H + BUTTON_GAP + BUTTON_H / 2
 COLUMN_H = BUTTON_CENTRE + BUTTON_H / 2
+
+
+def scale_in(band):
+    """`EndlessHubLayout.ScaleIn`: whole where it fits, shrunk to the band, never below the floor."""
+    return 1.0 if band >= COLUMN_H else max(MIN_SCALE, band / COLUMN_H)
 
 
 def row_centre(i):
@@ -95,7 +106,7 @@ def row_centre(i):
 #: An int is a pack index and a string is a path under `Assets/Game/Art`, because the third
 #: mark is a sprite this game already draws everywhere else and re-cutting it from a pack would
 #: be the mirror drawing a picture the screen does not.
-ICONS = [90, 84, "Ui/ic_heart"]
+ICONS = ["Ui/ic_endless", "Ui/ic_surge", "Ui/ic_heart", "Ui/ad_coin"]   # `EndlessHub.Marks`
 ART = REPO / "Assets" / "Game" / "Art"
 ICON_PACK = Path(r"C:\Users\Digikey\Downloads\craftpix-net-629015-100-skill-icons-pack-for-rpg")
 
@@ -288,6 +299,38 @@ def icon(n):
 
 
 # --------------------------------------------------------------- the column
+def rung_of(held):
+    """The rung the hero draws and whether it is earned: `EndlessHub.HeroRank`."""
+    rungs = (json.loads(TABLE.read_text(encoding="utf-8")).get("ranks") or {}).get("rungs") or []
+    if not rungs:
+        return None, False
+    earned = 0 < held <= len(rungs)
+    return (rungs[held - 1] if earned else rungs[0]), earned
+
+
+def rank_hero(sheet, top, held):
+    """`EndlessHub.Rank`: the badge in the medal's own box on a gold burst, its name on the plate."""
+    rung, earned = rung_of(held)
+    if rung is None:
+        return
+    cx, cy = W / 2, top + DISC_DOWN
+
+    # Two warm halos and no burst: the spiked burst read as a second outline round the badge.
+    K.paste(sheet, K.glow(BURST_SIZE * 1.6, 2.1, K.SUN, 0.20), cx, cy)
+    K.paste(sheet, K.glow(BURST_SIZE * 1.16, 2.1, K.SUN, 0.45), cx, cy)
+
+    art = REPO / "Assets" / "Game" / "Art" / "Ui" / "Rank" / ("%s.png" % rung["id"])
+    if art.exists():
+        K.paste(sheet, K.fit(Image.open(art).convert("RGBA"), (BURST_SIZE, BURST_SIZE)), cx, cy)
+
+    K.paste(sheet, K.skin("Hud/trough", RIBBON_W, RIBBON_H), cx, top + RIBBON_DOWN)
+    name = (loc("rank.%s.name" % rung["id"], rung["id"]) if earned
+            else loc("ui.ranks.unranked", "Unranked")).upper()
+    px = K.shrunk(sheet, name, cx, top + RIBBON_DOWN, RIBBON_W - 40, RIBBON_H, 34, 22,
+                  fill=K.GOLD if earned else K.CREAM, outline=3)
+    print("  hero rank: %-22r at %dpx (floor 22)" % (name, px))
+
+
 def hero(sheet, top, played, wave, standing=0):
     """The record, drawn as the thing this lane is about rather than as a line of text."""
     cx = W / 2
@@ -347,7 +390,8 @@ def points(sheet, top):
         if tile is not None:
             K.paste(sheet, tile, left + PANEL_PAD + 12 + SLOT_SIZE / 2, cy)
 
-        say = loc("track.infinite.point%d" % (i + 1), "...")
+        say = (loc("track.infinite.point%d" % (i + 1), "...")
+               .replace("{0}", loc("ui.endless.xp", "XP")).replace("{1}", loc("ui.endless.coins", "Coins")))
         x = left + PANEL_PAD + 12 + SLOT_SIZE + 26
         room = PANEL_W - (x - left) - PANEL_PAD - 12
 
@@ -457,22 +501,35 @@ def screen(h, played=True, modes=False, wall=0, standing=0, boost=0, rank=3):
 
     foot = header_foot(modes)
     band = h - foot - HEAD_CLEAR - SHELF
-    top = foot + HEAD_CLEAR + max(0.0, (band - COLUMN_H) * LIFT)
+    scale = scale_in(band)
+    top = foot + HEAD_CLEAR + max(0.0, (band - COLUMN_H * scale) * LIFT)
 
-    hero(sheet, top, played, 12, standing)
-    points(sheet, top)
-    battle(sheet, top, wall)
+    # The column is drawn whole on its own layer and scaled about its top edge, which is
+    # `EndlessHub.Column`'s one node doing the same.
+    layer = Image.new("RGBA", (W, int(COLUMN_H + 200)), (0, 0, 0, 0))
+    rank_hero(layer, 100, rank)
+    points(layer, 100)
+    record = Image.new("RGBA", (W, int(HERO_H + 200)), (0, 0, 0, 0))
+    hero(record, 100, played, 12, standing)
+    record = record.resize((int(W * RECORD_SCALE), int(record.height * RECORD_SCALE)), Image.LANCZOS)
+    layer.alpha_composite(record, (int((W - record.width) / 2),
+                                   int(100 + RECORD_CENTRE - RECORD_H / 2 - 100 * RECORD_SCALE)))
+    battle(layer, 100, wall)
+    if scale < 1.0:
+        layer = layer.resize((int(W * scale), int(layer.height * scale)), Image.LANCZOS)
+    sheet.alpha_composite(layer, (int((W - layer.width) / 2), int(top - 100 * scale)))
 
     header(sheet, modes, boost, rank)
     shelf(sheet, h)
 
+    print("  column drawn at x%.3f (floor %.2f)" % (scale, MIN_SCALE))
     print("  canvas %dx%d   band %.0f   column %.0f   air %.0f above, %.0f below"
-          % (W, h, band, COLUMN_H, (band - COLUMN_H) * LIFT,
-             (band - COLUMN_H) * (1 - LIFT)))
+          % (W, h, band, COLUMN_H * scale, (band - COLUMN_H * scale) * LIFT,
+             (band - COLUMN_H * scale) * (1 - LIFT)))
 
-    if COLUMN_H > band:
+    if COLUMN_H * scale > band + .5:
         print("  !! the column is %.0f taller than the band - the button is behind the shelf"
-              % (COLUMN_H - band))
+              % (COLUMN_H * scale - band))
 
     return sheet.convert("RGB")
 

@@ -35,7 +35,7 @@ namespace GlimmerGrove.Analytics
     public sealed class AppsFlyerSink : IAnalyticsSink
     {
         /// <summary>
-        /// Set once the SDK has been started. Before that, forwarding is a no-op — the SDK
+        /// Set once the SDK has been started. Before that, forwarding is a no-op - the SDK
         /// would accept the call and discard it, which is the same outcome with more noise.
         /// </summary>
         public bool Started { get; set; }
@@ -49,7 +49,7 @@ namespace GlimmerGrove.Analytics
             switch (eventName)
             {
                 // A finished level is this game's install-quality signal. There is no ordinal
-                // in the event and deliberately none invented here — a position is a fact about
+                // in the event and deliberately none invented here - a position is a fact about
                 // a catalog that changes under a player (invariant 1 exists because nothing may
                 // key on where a level sits), so the level's own permanent id is sent instead
                 // and a campaign is targeted at the id it cares about.
@@ -76,7 +76,7 @@ namespace GlimmerGrove.Analytics
                 //
                 // af_purchase, because it would have to be sent without a revenue figure.
                 // `store_purchase_granted` carries the product id and what was granted, and no
-                // price: StoreService never sees one — the decimal and the currency code live on
+                // price: StoreService never sees one - the decimal and the currency code live on
                 // StoreProductInfo, which the backend builds and the grant path does not keep.
                 // A purchase event with no revenue does not merely omit the number, it reports
                 // the sale as worth nothing, so every dashboard computing return on ad spend
@@ -86,7 +86,7 @@ namespace GlimmerGrove.Analytics
                 //
                 // af_tutorial_completion, because this game has no tutorial to complete. It
                 // teaches continuously, one lesson at the moment the board first demonstrates
-                // the rule (37bk), so there is no single moment the standard event would name —
+                // the rule (37bk), so there is no single moment the standard event would name -
                 // and pointing it at an arbitrary one of the thirty-five would put a wrong
                 // answer into a vocabulary other people read.
             }

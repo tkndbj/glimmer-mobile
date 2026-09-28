@@ -25,7 +25,7 @@ namespace GlimmerGrove
         /// Which of the cell's strands each arm belongs to, in the order the arms were built.
         ///
         /// Always 0 off a crossing, which is what lets one painting routine serve both kinds
-        /// of tile — a crossing is the only tile that can be answering two colours at once,
+        /// of tile - a crossing is the only tile that can be answering two colours at once,
         /// and it answers them along arms that were already being tinted one at a time.
         /// </summary>
         readonly List<int> _armStrand = new List<int>(4);
@@ -37,7 +37,7 @@ namespace GlimmerGrove
         /// Each arm's resting base colour, in the order the arms were built.
         ///
         /// One per arm rather than one per tile because a briar's thorned arms rest darker
-        /// than its open ones — and <see cref="RestoreFragility"/> puts the base colours back
+        /// than its open ones - and <see cref="RestoreFragility"/> puts the base colours back
         /// after a restart, which without this would quietly repaint a closed way as an open
         /// one and leave the tile drawing a rule it does not follow.
         /// </summary>
@@ -95,7 +95,7 @@ namespace GlimmerGrove
             // Arms are authored against the solved mask; the rotor maps them to play space.
             //
             // On a crossing they are built under-strand first, so the other pair draws across
-            // it — and the tile deliberately gets no hub. The hub disc is what this board means
+            // it - and the tile deliberately gets no hub. The hub disc is what this board means
             // by "these arms are joined", so leaving it off is not a decoration missing, it is
             // the rule stated in the vocabulary the player already reads.
             float hub = thick * 1.72f;
@@ -110,7 +110,7 @@ namespace GlimmerGrove
                 // line serves both because the painting only ever asks it one question: what
                 // energy does this arm carry? On a crossing it is the second flow. On a briar
                 // there is no second flow, so a closed way is put on a strand the tile does
-                // not have — and Puzzle.EnergyOn answers 0 for a strand that does not exist,
+                // not have - and Puzzle.EnergyOn answers 0 for a strand that does not exist,
                 // which is exactly the right answer for a way with thorns across it. Nothing
                 // below needs to know which of the two it is drawing.
                 int shutBy = crossing ? cell.cross : briar ? cell.gate : 0;
@@ -181,7 +181,7 @@ namespace GlimmerGrove
         ///
         /// Only a crossing has an opinion: its under-strand goes down first so the other pair
         /// draws over the top of it. Everything else is simply north to west, exactly as it
-        /// always was — the ordering is a fact about one tile, so it lives in one method
+        /// always was - the ordering is a fact about one tile, so it lives in one method
         /// rather than as a branch inside the build loop.
         /// </summary>
         static IEnumerable<int> ArmOrder(Cell cell)
@@ -216,7 +216,7 @@ namespace GlimmerGrove
         /// On the rotor rather than the fixture, which is the whole drawing: a tap turns the
         /// tile and the thorns visibly sweep off the two ways they were closing and onto the
         /// other two. Nothing else on this board moves an obstacle, so the rule shows itself
-        /// on the first tile the player tries — which is what the lesson can only describe.
+        /// on the first tile the player tries - which is what the lesson can only describe.
         /// </para>
         /// <para>
         /// Set out along the arm rather than at the hub. A mark at the centre would sit where
@@ -313,16 +313,16 @@ namespace GlimmerGrove
         /// How strongly a sleeping critter's ring states the colour it is waiting for.
         ///
         /// <para>
-        /// It is the board's only standing instruction — a player reads every demand off these
-        /// rings before touching a conduit — and at the .55 it shipped at, it was reported as
+        /// It is the board's only standing instruction - a player reads every demand off these
+        /// rings before touching a conduit - and at the .55 it shipped at, it was reported as
         /// hard to pick out against a graded backdrop. Lifted rather than recoloured: the hue
         /// is the answer and must not drift, so the only thing that may move is how loudly it
         /// is said. It stays well under the lit ring's full alpha, because the gap between the
         /// two is what separates "wanted" from "fed" at a glance.
         /// </para>
         /// <para>
-        /// Named here because it is asserted twice — once when the ring is built and once
-        /// every time the lamp is repainted — and two numbers that have to agree is the shape
+        /// Named here because it is asserted twice - once when the ring is built and once
+        /// every time the lamp is repainted - and two numbers that have to agree is the shape
         /// this project keeps paying for.
         /// </para>
         /// </summary>
@@ -341,7 +341,7 @@ namespace GlimmerGrove
         /// <para>
         /// That second half is the part that teaches. The ring used to stay cream whatever
         /// fed it, which made cream look like a fifth colour rather than the absence of one
-        /// — invisible while every critter on a board was unfussy, and confusing on the
+        /// - invisible while every critter on a board was unfussy, and confusing on the
         /// first board where one sat beside a fussy neighbour. Letting it take the colour it
         /// was given means the rule is demonstrated by the first conduit the player turns,
         /// in any language, with nothing to read.
@@ -366,7 +366,7 @@ namespace GlimmerGrove
         /// tile, and one pip per root along the bottom of it.
         ///
         /// <para>
-        /// Rope rather than a hue, and the same rope for every root — see <see cref="Pal.Rope"/>.
+        /// Rope rather than a hue, and the same rope for every root - see <see cref="Pal.Rope"/>.
         /// Identity is carried by the pips instead, which is slower to read than a colour
         /// and is meant to be: the fast answer is tapping the tile and watching its partners
         /// move, and the pips are for planning the turn before spending it.
@@ -448,7 +448,7 @@ namespace GlimmerGrove
         /// <summary>
         /// The conduit gives way: it drops out of the board and leaves a gap.
         ///
-        /// The tile is not destroyed, only emptied — <see cref="Puzzle.Used"/> already
+        /// The tile is not destroyed, only emptied - <see cref="Puzzle.Used"/> already
         /// reports it gone, so nothing downstream needs to know, and keeping the object
         /// means a restart can put it back without rebuilding the grid.
         /// </summary>
@@ -501,7 +501,7 @@ namespace GlimmerGrove
         /// Deliberately gentle, and deliberately not the same as a blast: nothing here
         /// was the player's mistake in particular, so the grove goes to sleep rather
         /// than being destroyed. Depth staggers it, so the dark spreads outward from
-        /// wherever the light was weakest — the same choreography as waking, run
+        /// wherever the light was weakest - the same choreography as waking, run
         /// backwards.
         /// </summary>
         public void Gutter()
@@ -531,7 +531,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>It has to clear the caches, and that is the whole of it.</b>
         /// <see cref="ApplyEnergy"/> is guarded on <c>_shownEnergy</c> and <c>_shownHalo</c>
-        /// precisely so that repainting an unchanged board costs nothing — and
+        /// precisely so that repainting an unchanged board costs nothing - and
         /// <see cref="Gutter"/> tints every layer to dead without touching either, because it
         /// is a farewell rather than a state. So the model and the caches agree, the picture
         /// does not, and a plain <c>ApplyEnergy</c> here would return having done nothing at
@@ -562,7 +562,7 @@ namespace GlimmerGrove
         /// <summary>
         /// A tile answers the press, not the release. A click needs the finger to lift on the
         /// same tile it landed on and to have travelled less than the event system's drag
-        /// threshold in between — ten pixels, which on a 500-dpi phone is half a millimetre —
+        /// threshold in between - ten pixels, which on a 500-dpi phone is half a millimetre -
         /// so a tap that rolled slightly, or lifted over the gap between two tiles, was a tap
         /// the glade never heard. Nothing on a board is cancelled by sliding off it, so the
         /// press is the whole gesture, and a turn lands the frame the finger does.
@@ -580,7 +580,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Snap back to a given rotation, used when the level is restarted. Also mends
-        /// a crumbled conduit — a retry rewinds the model, and the view has to follow
+        /// a crumbled conduit - a retry rewinds the model, and the view has to follow
         /// it all the way.
         /// </summary>
         public void ResetTo(int rot)
@@ -669,8 +669,8 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Extracted because the fanfare needs the same answer, and reading it off the
         /// layer would have been wrong.</b> A surge takes the arm somewhere bright and has to
-        /// put it back, and the obvious way to know where back is — the colour the layer is
-        /// wearing when the pulse arrives — is a colour still being tweened towards from the
+        /// put it back, and the obvious way to know where back is - the colour the layer is
+        /// wearing when the pulse arrives - is a colour still being tweened towards from the
         /// turn that won the glade. Superseding that tween would then strand the arm at
         /// whatever fraction it had reached, for ever, on the one board where the player is
         /// looking hardest. Derived from the model instead, so a pulse lands the arm exactly
@@ -720,7 +720,7 @@ namespace GlimmerGrove
                 // art is missing, deliberately, so that a failed bundle draws blank rather
                 // than throwing. Indexing it unchecked turned that into
                 // an IndexOutOfRangeException raised out of a tween callback in the middle
-                // of BoardView.Build — a half-drawn, unplayable board instead of a critter
+                // of BoardView.Build - a half-drawn, unplayable board instead of a critter
                 // nobody can see. Found by building a board with the art unloaded.
                 if (!lit && _book)
                 {
@@ -760,7 +760,7 @@ namespace GlimmerGrove
         /// <summary>Slow travelling shimmer so live conduits feel like flowing light.</summary>
         void Update()
         {
-            // The fanfare drives arm width itself, and this writes it every frame — so the
+            // The fanfare drives arm width itself, and this writes it every frame - so the
             // idle shimmer has to stand down or the surge simply never appears. See
             // <see cref="Festive"/>.
             if (Festive || _shownEnergy <= 0 || _armLit.Count == 0) return;
@@ -780,11 +780,11 @@ namespace GlimmerGrove
         /// Whether the board's own celebration owns this tile's painting.
         ///
         /// <para>
-        /// Set once, by <c>BoardView.Celebrate</c>, and never cleared — the only ways out of a
+        /// Set once, by <c>BoardView.Celebrate</c>, and never cleared - the only ways out of a
         /// solved board are the victory panel and leaving the screen. It exists because
         /// <see cref="Update"/> writes every lit arm's width every frame for the idle shimmer,
         /// which would fight the surge for the same value and win, forty times a second. The
-        /// alternative — folding the surge into the shimmer as an amplitude — was tried and is
+        /// alternative - folding the surge into the shimmer as an amplitude - was tried and is
         /// worse: it makes an idle effect carry a beat of a sequence it knows nothing about.
         /// </para>
         /// </summary>
@@ -795,8 +795,8 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Light arriving is the one gesture in this mode that must never be symmetrical. An
-        /// even rise and fall reads as a thing being <em>faded</em> in and out — deliberate,
-        /// applied from outside — where a sharp attack and a slow tail reads as something that
+        /// even rise and fall reads as a thing being <em>faded</em> in and out - deliberate,
+        /// applied from outside - where a sharp attack and a slow tail reads as something that
         /// happened and is now dying away, which is what the player is being told: the light
         /// got here.
         /// </para>
@@ -818,14 +818,14 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>This is the whole of why the celebration is worth having.</b> A sweep laid across
-        /// the board — left to right, or outward from the middle — is a decoration that could
+        /// the board - left to right, or outward from the middle - is a decoration that could
         /// play over any grid. Walking the light out along the network the player just finished
         /// wiring is the board <em>showing them what they built</em>: the route it takes is the
         /// route they made, and a glade solved a different way lights up differently.
         /// </para>
         /// <para>
         /// Every layer is returned to <see cref="ArmRest"/> rather than to whatever it was
-        /// wearing, and it runs on the <c>tint</c> channel deliberately — so a repaint still in
+        /// wearing, and it runs on the <c>tint</c> channel deliberately - so a repaint still in
         /// flight from the winning turn is superseded rather than racing this, and lands where
         /// it was going anyway.
         /// </para>
@@ -896,7 +896,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The heart-crystal's share of the surge — the one tile the light leaves rather than
+        /// The heart-crystal's share of the surge - the one tile the light leaves rather than
         /// arrives at, so it flares hardest and throws sparks.
         ///
         /// The idle breath is killed rather than run alongside: both write the same scale, and
@@ -930,12 +930,12 @@ namespace GlimmerGrove
         /// <summary>
         /// A critter answering the light that just reached it: it flinches where it stands,
         /// puts a ring out in its own colour and throws sparks. <b>It does not leave the
-        /// ground</b> — see <see cref="Cheer"/>, which owns the sequence's only jump.
+        /// ground</b> - see <see cref="Cheer"/>, which owns the sequence's only jump.
         ///
         /// <para>
         /// <b>It rides the surge rather than following it</b>, which is the difference between
         /// the wave <em>waking</em> the critters and merely preceding them. So the order the
-        /// grove comes alive in is the order the light reaches it in — a fact about the board
+        /// grove comes alive in is the order the light reaches it in - a fact about the board
         /// the player solved, and different every glade. That is carried entirely by
         /// <paramref name="delay"/>: the moment lands because it is on the beat the light
         /// arrives, never because of how big the gesture is.
@@ -954,15 +954,15 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The wake used to jump too, and that was wrong.</b> The reasoning for it was that
         /// the surge teaches the player to read a leap as "this critter is awake", so the finale
-        /// would be that same sentence said by the whole grove at once — which only works while
+        /// would be that same sentence said by the whole grove at once - which only works while
         /// it is recognisably the same sentence. In play it is not read that way at all: two
         /// leaps a second apart from the same creature read as <em>one gesture stuttering</em>,
         /// exactly as the confetti firing on the board and again on the panel did, and for the
         /// same reason. Repeating a gesture does not reinforce it, it spends it.
         /// </para>
         /// <para>
-        /// So the two moments are now two different gestures. The wake is a flinch in place —
-        /// a squash, a shiver, a ring and sparks — which says <em>the light got to me</em>
+        /// So the two moments are now two different gestures. The wake is a flinch in place -
+        /// a squash, a shiver, a ring and sparks - which says <em>the light got to me</em>
         /// without leaving the tile; the leap is saved for the bloom, where it is the one thing
         /// the whole grove does together. Losing the first jump costs the surge nothing, because
         /// what made that moment legible was never the height: it was arriving on the beat the
@@ -984,7 +984,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The shared body of the two: a ring, a squash, a shiver, sparks and twinkles — plus a
+        /// The shared body of the two: a ring, a squash, a shiver, sparks and twinkles - plus a
         /// leap, when it is asked for one.
         ///
         /// <para>
@@ -1007,11 +1007,11 @@ namespace GlimmerGrove
                 if (rise > 0f)
                 {
                     // The channel is killed *before* the rest value is read, and that ordering
-                    // is the whole of it — <see cref="Tween.Punch"/>'s remarks. Only the bloom
+                    // is the whole of it - <see cref="Tween.Punch"/>'s remarks. Only the bloom
                     // leaps now, so nothing can actually be in flight here; it is kept because
                     // a gesture that reads its target's resting value is one call site away
                     // from superseding itself at any time, and the failure is silent and
-                    // permanent — a critter left hanging above its own tile for the rest of the
+                    // permanent - a critter left hanging above its own tile for the rest of the
                     // run.
                     Tween.KillChannel(_fixture, "leap");
                     var home = _fixture.anchoredPosition;
@@ -1144,7 +1144,7 @@ namespace GlimmerGrove
         /// <see cref="Art.Glint"/> rather than <see cref="Art.Spark"/> on purpose: the sparks
         /// thrown by <c>Burst</c> are already in the air at this moment, and the two shapes
         /// exist so that debris and a catch of light can be told apart at a glance rather than
-        /// by size — see the remarks on <c>Art.Glint</c>.
+        /// by size - see the remarks on <c>Art.Glint</c>.
         /// </summary>
         void Glints(Color colour, int count, float spread)
         {
@@ -1180,8 +1180,8 @@ namespace GlimmerGrove
         /// The old victory sweep: everything flares once, ordered by distance.
         ///
         /// <para>
-        /// <b>Kept, and no longer called by the glade.</b> It is one beat — every tile brightens
-        /// and settles — which is what the celebration was in its entirety, and
+        /// <b>Kept, and no longer called by the glade.</b> It is one beat - every tile brightens
+        /// and settles - which is what the celebration was in its entirety, and
         /// <see cref="Surge"/> replaces it with a wave that travels. It stays because it is the
         /// right size for a board that has to acknowledge something without making a moment of
         /// it, which is what a second mode reusing this tile would want.

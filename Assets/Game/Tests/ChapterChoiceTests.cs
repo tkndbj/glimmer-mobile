@@ -11,7 +11,7 @@ namespace GlimmerGrove.Tests
     /// The bug this exists to stop is quiet: every way back to the map except the chapter
     /// arrows arrives with no chapter, so the fallback is what a player actually meets after
     /// every single level. Get the recall wrong in the forgiving direction and they are
-    /// returned to the newest chapter after replaying an early one — the original complaint —
+    /// returned to the newest chapter after replaying an early one - the original complaint -
     /// and wrong in the other direction and the map opens on a chapter that is not in the lane
     /// the switcher is showing, whose own arrows then lead somewhere else.
     /// </para>
@@ -25,14 +25,14 @@ namespace GlimmerGrove.Tests
     {
         /// <summary>
         /// The stored key, written down so that renaming it is a deliberate act with a failing
-        /// test in front of it — a rename silently forgets where every player on the device
-        /// was — and so this fixture has an honest way to tidy up after itself.
+        /// test in front of it - a rename silently forgets where every player on the device
+        /// was - and so this fixture has an honest way to tidy up after itself.
         /// </summary>
         const string GladeKey = "glimmer_map_chapter_glade";
         const string PrismKey = "glimmer_map_chapter_prism";
 
         /// <summary>
-        /// <c>ModeChoice</c>'s key, cleared here for the same reason the two above are — and it
+        /// <c>ModeChoice</c>'s key, cleared here for the same reason the two above are - and it
         /// caught something real. Without it, "nothing is remembered" is not a state this fixture
         /// can reach: the Editor's own <c>PlayerPrefs</c> hold whichever mode the last map opened
         /// on, and a case about the fallback quietly tests the remembered value instead.
@@ -82,7 +82,7 @@ namespace GlimmerGrove.Tests
             // for the account that wrote it and wrong for every other, which is why a phone
             // that switched account used to open the map where the previous one left it.
             // Asserting the bare string here was true before that stamp existed, and this case
-            // had been red in the Editor ever since — a suite nobody can run green is a suite
+            // had been red in the Editor ever since - a suite nobody can run green is a suite
             // that hides the next real failure.
             Assert.AreEqual("c02_two", MapMemory.Read(GladeKey));
         }
@@ -115,7 +115,7 @@ namespace GlimmerGrove.Tests
         {
             ChapterChoice.Write(Catalog().FindChapter(ChapterId.Parse("c01_one")));
 
-            // Same id, different lane — a re-filed chapter after a content drop. Opening the
+            // Same id, different lane - a re-filed chapter after a content drop. Opening the
             // glade map on it would put the header, the arrows and the switcher in three
             // different modes at once.
             var moved = new CatalogIndexBuilder();
@@ -160,8 +160,8 @@ namespace GlimmerGrove.Tests
         /// The map opens on the first row of the switcher, and the two are one answer.
         ///
         /// <para>
-        /// They were briefly two — the catalog's default preferred the classic mode where the
-        /// switcher led with whatever the registry led with — and two answers means a map opening
+        /// They were briefly two - the catalog's default preferred the classic mode where the
+        /// switcher led with whatever the registry led with - and two answers means a map opening
         /// on one mode while the control above it offers a different one first. Nothing else in
         /// the suite would notice, because each half is individually correct.
         /// </para>

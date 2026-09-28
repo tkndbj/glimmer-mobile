@@ -30,7 +30,7 @@ namespace GlimmerGrove.Referral
     /// <b>Every number here is adjudicated on the server, and this copy only draws.</b> The
     /// same block is published as <c>config/progression.referral</c> by <c>seed-config.mjs</c>,
     /// and the server judges a claim against <em>its</em> copy. That is what lets the referral
-    /// pay currency without a claim id in the save — the whole state is server-owned
+    /// pay currency without a claim id in the save - the whole state is server-owned
     /// (invariant 51).
     /// </para>
     /// <para>

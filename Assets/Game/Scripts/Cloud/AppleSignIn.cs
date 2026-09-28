@@ -17,12 +17,12 @@ namespace GlimmerGrove.Cloud
     ///
     /// <para>
     /// <b>Why this exists at all.</b> The design note this project shipped with said Firebase
-    /// drives the OAuth flow itself, so neither Apple's nor Google's plugin is a dependency —
+    /// drives the OAuth flow itself, so neither Apple's nor Google's plugin is a dependency -
     /// one path, both providers, both platforms. That is true for Google on both platforms and
     /// for Apple on Android, and it is false for Apple on iOS. FirebaseAuth's generic IDP path
     /// does not merely fail there, it calls <c>fatalError</c>:
     /// <c>"Sign in with Apple is not supported via generic IDP; You must use the Apple SDK for
-    /// Sign in with Apple."</c> A Swift <c>fatalError</c> is not an exception — no managed
+    /// Sign in with Apple."</c> A Swift <c>fatalError</c> is not an exception - no managed
     /// <c>catch</c> runs, the process is killed, and the player sees the game vanish the
     /// instant they tap the button. Nothing in a build or a validator can see it, because the
     /// refusal lives inside Apple's framework and only fires on a device.
@@ -42,7 +42,7 @@ namespace GlimmerGrove.Cloud
     /// which is why this returns both rather than letting a caller pair them up.
     /// </para>
     /// <para>
-    /// No managed callback crosses into native — the plugin is polled, for the reason
+    /// No managed callback crosses into native - the plugin is polled, for the reason
     /// <c>AppTrackingPrompt</c> gives: a managed function pointer held across a native
     /// callback needs a static <c>MonoPInvokeCallback</c> and is a documented way to crash
     /// under IL2CPP.
@@ -72,7 +72,7 @@ namespace GlimmerGrove.Cloud
             /// <summary>
             /// Apple's authorization code, which Firebase requires alongside the identity
             /// token. Firebase's parameter for it is named <c>accessToken</c>, which is why it
-            /// is easy to believe Apple has no use for it — and a credential without it is
+            /// is easy to believe Apple has no use for it - and a credential without it is
             /// refused with the same message a malformed token gets.
             /// </summary>
             public readonly string AuthorizationCode;
@@ -108,7 +108,7 @@ namespace GlimmerGrove.Cloud
         ///
         /// <para>
         /// There is deliberately no timeout. The sheet is modal and owns the screen until it is
-        /// answered or dismissed, and both of those report — a timeout could only fire while a
+        /// answered or dismissed, and both of those report - a timeout could only fire while a
         /// player was still reading it, and would leave the native side about to write a result
         /// nobody is waiting for.
         /// </para>
@@ -162,7 +162,7 @@ namespace GlimmerGrove.Cloud
         ///
         /// <para>
         /// Firebase answers a bad Apple credential with <c>"Invalid OAuth response from
-        /// apple.com"</c> and nothing else — the same sentence whether the nonce disagrees, the
+        /// apple.com"</c> and nothing else - the same sentence whether the nonce disagrees, the
         /// audience is a different app, or the token has expired. Each of those has a different
         /// repair and none of them is visible from the managed side, so this decodes the JWT and
         /// says which one it is. It costs one log line on a path taken once or twice in the life
@@ -222,7 +222,7 @@ namespace GlimmerGrove.Cloud
         /// <summary>
         /// One string claim out of a JSON payload, without pulling in a parser.
         ///
-        /// Deliberately crude — this reads a diagnostic, never a decision, and every claim it
+        /// Deliberately crude - this reads a diagnostic, never a decision, and every claim it
         /// looks for is a flat string. Anything that needs to be trusted is verified by Firebase
         /// against Apple's public keys, which is the only place that check belongs.
         /// </summary>
@@ -246,7 +246,7 @@ namespace GlimmerGrove.Cloud
         /// A fresh random nonce.
         ///
         /// Drawn from a cryptographic generator rather than <see cref="UnityEngine.Random"/>,
-        /// because this value is the replay protection — a predictable one is the same as none.
+        /// because this value is the replay protection - a predictable one is the same as none.
         /// The character set is deliberately URL-safe so nothing downstream has to escape it.
         /// </summary>
         static string NewNonce(int length = 32)

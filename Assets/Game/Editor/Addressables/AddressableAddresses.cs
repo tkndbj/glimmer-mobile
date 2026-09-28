@@ -9,8 +9,8 @@ namespace GlimmerGrove.EditorTools
     /// The one place that knows how an asset on disk maps to an address, and which
     /// group that address belongs in.
     ///
-    /// Everything else in the Addressables tooling — the importer hook, the repair
-    /// sweep, the build-time audit — reads its answers from here. That matters because
+    /// Everything else in the Addressables tooling - the importer hook, the repair
+    /// sweep, the build-time audit - reads its answers from here. That matters because
     /// the three have to agree exactly: a hook that files an asset one way and an audit
     /// that expects another would report a project as sound while shipping it broken.
     ///
@@ -30,7 +30,7 @@ namespace GlimmerGrove.EditorTools
 
         /// <summary>
         /// Companion portraits. Their own bundle rather than the global one because the
-        /// whole roster is wanted on one screen and nowhere else — putting them in the
+        /// whole roster is wanted on one screen and nowhere else - putting them in the
         /// global group would decode every companion at launch to show a picker most
         /// sessions never open, and would grow that cost with every content drop.
         /// </summary>
@@ -94,7 +94,7 @@ namespace GlimmerGrove.EditorTools
         /// label is exactly the address the code asks for.
         ///
         /// Read back from <see cref="AssetManifest"/> rather than listed here. A hand
-        /// written copy would fall out of step the moment a critter variant was added —
+        /// written copy would fall out of step the moment a critter variant was added -
         /// the constant would go up, the manifest would ask for the new folder, and the
         /// label nobody remembered to add would leave it unloadable.
         /// </summary>
@@ -118,7 +118,7 @@ namespace GlimmerGrove.EditorTools
 
             // The chest reels, for the turrets' reason: a scope asks for them and no chapter
             // does, so a set built from the global and chapter lists would leave four reels
-            // importing as loose sprites with no label — addressed, audited green and
+            // importing as loose sprites with no label - addressed, audited green and
             // completely unloadable (37at).
             foreach (var request in AssetManifest.ChestAssets(ProgressionRules.Table.Tasks))
                 if (request.Kind == AssetKind.SpriteSet) folders.Add(request.Address);
@@ -129,7 +129,7 @@ namespace GlimmerGrove.EditorTools
             // A frame folder is a fact about the art on disk: these reels have no notion of a
             // folder, so each needs a label, and a folder that never gets one imports as loose
             // sprites that cannot be loaded at all. Built from the chapters alone that question
-            // gets answered by whatever a chapter happens to ask for — and a mode may hand back a
+            // gets answered by whatever a chapter happens to ask for - and a mode may hand back a
             // different cast depending on which chapter is asking (`SiegeMode.ArtFor`), which in
             // the Editor is decided by a catalog index that is not necessarily loaded.
             //

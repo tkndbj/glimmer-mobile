@@ -6,7 +6,7 @@ namespace GlimmerGrove.Modes
     /// <para>
     /// <b>The ladder is here rather than in the view for the reason every other rule is.</b> A
     /// <c>switch</c> inside a <c>MonoBehaviour</c> is the one place in this project nothing can
-    /// be proved, and this one decides both what a player is told and how loud it is said — the
+    /// be proved, and this one decides both what a player is told and how loud it is said - the
     /// two things a celebration can most easily get wrong in opposite directions. Shouting on
     /// every burst is noise nobody reads after ten minutes; staying silent on a six-wave chain
     /// wastes the best thing the mode does.
@@ -15,7 +15,7 @@ namespace GlimmerGrove.Modes
     /// <b>A single burst is not a chain and is deliberately not counted.</b> Most drops that do
     /// anything at all burst exactly one mote, so a count starting at one would put a number on
     /// the screen almost every turn and mean nothing by the second level. The count starts where
-    /// the wash reached something — which is the thing actually worth noticing — and the *name*
+    /// the wash reached something - which is the thing actually worth noticing - and the *name*
     /// starts one rung above that again.
     /// </para>
     /// <para>
@@ -70,7 +70,7 @@ namespace GlimmerGrove.Modes
         /// How big the running count is drawn, in points, for the wave that has just landed.
         ///
         /// It climbs with the wave rather than with the chain's final length, because the number
-        /// appears while the chain is still running and nobody knows how it ends — which is the
+        /// appears while the chain is still running and nobody knows how it ends - which is the
         /// whole tension of watching one. Capped so a runaway chain does not draw a number
         /// wider than the well.
         /// </summary>

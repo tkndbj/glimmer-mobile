@@ -9,9 +9,9 @@ namespace GlimmerGrove.Tests
     /// carries it until the server confirms it.
     ///
     /// This is the half of the economy that has to be right for the daily chests to be
-    /// safe to ship. The client may never raise its own granted baseline — that is the
+    /// safe to ship. The client may never raise its own granted baseline - that is the
     /// field an attacker wants, and the reason the security rules make the wallet
-    /// document server-only — so an award opened offline lands here instead, carrying an
+    /// document server-only - so an award opened offline lands here instead, carrying an
     /// id derived from what earned it.
     ///
     /// The derived id is what makes everything else fall out: a chest claimed on two
@@ -107,7 +107,7 @@ namespace GlimmerGrove.Tests
         /// Why the day is in the id and the night alone is not enough.
         ///
         /// A night number is relative to <c>startDay</c>, and <c>startDay</c> moves under a
-        /// merge — <c>max</c> of the two devices' — so one evening can be night five on one
+        /// merge - <c>max</c> of the two devices' - so one evening can be night five on one
         /// phone and night four on another. Keyed on the night, those would be two awards
         /// and the player would be paid twice. Keyed on the calendar day they collapse to
         /// one, which is the property invariant 10a is about.
@@ -225,7 +225,7 @@ namespace GlimmerGrove.Tests
             var ledger = Fresh();
             ledger.TryAward(Id(20315, 0), 240, T0, Reason, out _);
 
-            // The server answered, but about nothing in particular — no ids came back.
+            // The server answered, but about nothing in particular - no ids came back.
             ledger.ApplyServerState(grantedBaseline: 1000, spentBaseline: 0,
                                     confirmedSpendIds: null, confirmedThroughUnix: T0 + 10_000,
                                     earnedFloor: 0, confirmedGrantIds: null);

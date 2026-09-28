@@ -9,7 +9,7 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// The rule this exists to keep is the one the information panel broke silently: its height
     /// was a hand-written number, a fourth section was added, and the last paragraph had been
-    /// drawn through the close button ever since. Nothing could catch it — a compile cannot see
+    /// drawn through the close button ever since. Nothing could catch it - a compile cannot see
     /// a coordinate, a validator does not read Presentation, and a screenshot on one aspect
     /// ratio shows a paragraph that happens to be short enough in English.
     /// </para>
@@ -78,7 +78,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The panel is drawn with its title standing proud of it, and the canvas matches on
-        /// width — so a 4:3 tablet in portrait is the shortest screen this game is ever drawn
+        /// width - so a 4:3 tablet in portrait is the shortest screen this game is ever drawn
         /// on and the only one worth measuring against.
         /// </summary>
         [Test]
@@ -92,7 +92,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The ceiling counts the title's overhang <b>twice</b>, and the first version of it
-        /// counted once — which passes a panel whose title is drawn off the top of a tablet.
+        /// counted once - which passes a panel whose title is drawn off the top of a tablet.
         /// </summary>
         [Test]
         public void TheCeilingIsHalfTheCanvasBecauseAPanelIsCentred()
@@ -112,7 +112,7 @@ namespace GlimmerGrove.Tests
             Assert.LessOrEqual(PanelStack.TextLeft + PanelStack.TextWidth,
                                PanelStack.Width - PanelStack.HostInset);
             Assert.LessOrEqual(PanelStack.Width, CanvasFit.PhoneWidth,
-                               "and the panel inside the narrowest canvas, which is a phone's — "
+                               "and the panel inside the narrowest canvas, which is a phone's - "
                                + "a tablet's is wider, never narrower");
         }
 

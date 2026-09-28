@@ -19,7 +19,7 @@ namespace GlimmerGrove.Tests
     /// </para>
     /// <para>
     /// Read through <c>TestJson</c> and located without <c>Application.dataPath</c>, so the
-    /// whole fixture runs offline (invariant 29e) — the reason <c>EndlessRewardTests</c> gives.
+    /// whole fixture runs offline (invariant 29e) - the reason <c>EndlessRewardTests</c> gives.
     /// </para>
     /// </summary>
     public sealed class ChallengeRewardTests
@@ -81,11 +81,11 @@ namespace GlimmerGrove.Tests
                 var save = SaveOf(TestJson.Children(map, "rows"));
 
                 long clears = ChallengeLedger.LifetimeClearsIn(save);
-                Assert.AreEqual(TestJson.Long(map, "clears"), clears, name + " — clears");
+                Assert.AreEqual(TestJson.Long(map, "clears"), clears, name + " - clears");
 
                 long xp = Rule(TestJson.Child(map, "config")).XpFor(clears);
 
-                Assert.AreEqual(TestJson.Long(map, "xp"), xp, name + " — xp");
+                Assert.AreEqual(TestJson.Long(map, "xp"), xp, name + " - xp");
             }
         }
 
@@ -172,9 +172,9 @@ namespace GlimmerGrove.Tests
                 Assert.IsNotNull(target, name + " names a tier the vector table does not hold");
 
                 int price = ChallengeAllowance.Price(tiers, held, TestJson.Long(map, "now"), target, out var upgraded);
-                Assert.AreEqual(TestJson.Int(map, "price"), price, name + " — price");
+                Assert.AreEqual(TestJson.Int(map, "price"), price, name + " - price");
                 Assert.AreEqual(TestJson.Str(map, "upgrades", string.Empty), upgraded == null ? string.Empty : upgraded.Id,
-                                name + " — upgrades");
+                                name + " - upgrades");
             }
         }
     }

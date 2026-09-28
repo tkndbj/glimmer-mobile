@@ -14,17 +14,17 @@ namespace GlimmerGrove
         bool _locked;
 
         /// <summary>
-        /// Whether the board is refusing input — the raise animation, a hint's reveal, the
+        /// Whether the board is refusing input - the raise animation, a hint's reveal, the
         /// pause menu, a panel raised over the run, the win and defeat sequences.
         ///
         /// <para>
         /// <b>It raises <see cref="OnChanged"/>, and that is not a convenience.</b> Every
-        /// control that depends on it — the undo button, the hint button, the clock's own
-        /// start edge — is recomputed from that event, so a latch that moved silently was a
+        /// control that depends on it - the undo button, the hint button, the clock's own
+        /// start edge - is recomputed from that event, so a latch that moved silently was a
         /// control left in whatever state it happened to be in when the last turn was taken.
         /// The hint shipped exactly that bug: the reveal locks the board, every tween along
         /// the way raises <see cref="OnChanged"/> while it is still locked, and the unlatch
-        /// at the end raised nothing — so the hint and undo buttons stayed dead for the rest
+        /// at the end raised nothing - so the hint and undo buttons stayed dead for the rest
         /// of the run unless the player happened to turn a tile. The same hole sat under the
         /// entry animation and under every panel that latches the board.
         /// </para>
@@ -60,7 +60,7 @@ namespace GlimmerGrove
         /// <b>Separate from <see cref="OnSolved"/> because the two are seconds apart, and the
         /// run stops being owed for at the first of them.</b> A run is written down as owed
         /// (<c>RunGuard</c>) from the moment it is committed until the screen resolves it, and
-        /// the screen used to resolve when the panel was raised — so for the whole length of
+        /// the screen used to resolve when the panel was raised - so for the whole length of
         /// the celebration the board was won and the ledger still said the player was in the
         /// middle of a run. A process killed there charged a heart at the next launch for a
         /// glade they had finished, and backing out of the screen forfeited it, which took the
@@ -156,7 +156,7 @@ namespace GlimmerGrove
         /// <para>
         /// Asked separately from <see cref="Hint"/> because the two refusals are different
         /// questions with different answers, and only one of them costs anything. This one
-        /// is "there is nothing left to point at" — every turnable tile is already where the
+        /// is "there is nothing left to point at" - every turnable tile is already where the
         /// solution wants it, which happens on a board finished but for its rooted stubs.
         /// Whether the <em>player</em> can afford a hint is not a fact about a board and is
         /// decided by <c>PlayScreen</c> against the account pool.
@@ -165,7 +165,7 @@ namespace GlimmerGrove
         public bool CanHint => Accepting && P.NextHint() >= 0;
 
         /// <summary>
-        /// Whether the board is taking input at all — not latched, not in the middle of its
+        /// Whether the board is taking input at all - not latched, not in the middle of its
         /// own celebration, and not already lost.
         ///
         /// <para>
@@ -310,7 +310,7 @@ namespace GlimmerGrove
         /// whole discovery mechanism: nothing else on this board ever answers a tap
         /// somewhere else, so a player who has not read the tip still learns the rule from
         /// their first tap rather than from losing a run to it. The model has already
-        /// turned them by the time this runs — <see cref="Puzzle.Turn"/> owns the taproot —
+        /// turned them by the time this runs - <see cref="Puzzle.Turn"/> owns the taproot -
         /// so this is strictly the view catching up, and a tile the model refused to turn
         /// is skipped here on the same test.
         /// </para>
@@ -336,7 +336,7 @@ namespace GlimmerGrove
         ///
         /// Losing the glade rather than merely breaking it is what gives the mechanic
         /// teeth. While a crumble only damaged the board, the answer was always to press
-        /// restart — free, instant, and no reason ever to count turns. Now the count is
+        /// restart - free, instant, and no reason ever to count turns. Now the count is
         /// the whole point, and validation guarantees the solution never needs the turn
         /// that breaks it.
         /// </summary>
@@ -384,7 +384,7 @@ namespace GlimmerGrove
         /// <b>The escalation.</b> Two of them, and they compose. Within a single turn the
         /// lamps that wake climb a pentatonic ladder, so lighting four at once is a phrase
         /// rather than four copies of one sound. Across turns, each consecutive turn that
-        /// wakes anything lifts that whole ladder — so a player who is solving a section
+        /// wakes anything lifts that whole ladder - so a player who is solving a section
         /// cleanly hears themselves getting somewhere, and one who is flailing hears the
         /// pitch drop back. Neither costs the player anything or is worth anything: this
         /// is entirely feedback, which is the only honest place for escalation of this
@@ -426,7 +426,7 @@ namespace GlimmerGrove
 
             // The board itself answers a real cascade. Scaled by how many woke rather than
             // fired flat, so the difference between one lamp and four is felt and not only
-            // heard — and skipped entirely on a win, where Celebrate has a much larger
+            // heard - and skipped entirely on a win, where Celebrate has a much larger
             // version of the same gesture a moment later.
             if (woken.Count >= 2 && !P.Won)
             {
@@ -440,8 +440,8 @@ namespace GlimmerGrove
         /// <summary>
         /// The turns ran out with the glade still dark.
         ///
-        /// Quieter than a detonation on purpose. There is nothing to point at — the
-        /// player did not do a wrong thing, they did too many nearly-right ones — so
+        /// Quieter than a detonation on purpose. There is nothing to point at - the
+        /// player did not do a wrong thing, they did too many nearly-right ones - so
         /// the light simply gutters rather than exploding, and the overlay does the
         /// explaining.
         /// </summary>
@@ -479,11 +479,11 @@ namespace GlimmerGrove
         /// defeat panel for a reason that is not aesthetic: the panel draws a scrim over
         /// the board, so by the time it exists there is nothing left to point at. The only
         /// window where the player can be shown the answer is the second the lights are
-        /// going out — which is also, conveniently, the second it lands hardest.
+        /// going out - which is also, conveniently, the second it lands hardest.
         /// </para>
         /// <para>
         /// It fires only when <see cref="Puzzle.TurnsToSolution"/> is a small number it can
-        /// stand behind — an upper bound, so a pulse on one tile is a promise that one turn
+        /// stand behind - an upper bound, so a pulse on one tile is a promise that one turn
         /// would genuinely have done it. That honesty is load-bearing. The effect works
         /// because a loss that registers as nearly a win drives another attempt far harder
         /// than a plain loss does, and it keeps working only while the player cannot catch
@@ -527,8 +527,8 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>The choreography is the board's own shape, and that is the point of it.</b> What
-        /// this replaced was one beat — every tile brightening at a delay proportional to its
-        /// depth — which is a sweep, and a sweep could be played over any grid at all. Walking
+        /// this replaced was one beat - every tile brightening at a delay proportional to its
+        /// depth - which is a sweep, and a sweep could be played over any grid at all. Walking
         /// the light along the network shows the player <em>the thing they just built</em>: the
         /// route is the route they wired, the order the critters wake in is the order their
         /// solution feeds them, and two players who finish the same glade differently get
@@ -536,8 +536,8 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// <b>Every duration comes from <see cref="GladeFanfare"/>.</b> The sequence's length is
-        /// a function of the board — a fifteen-ring grove has more to walk than a four-ring one
-        /// — so it is exactly the shape that turns into a wait without a bound, and bounds
+        /// a function of the board - a fifteen-ring grove has more to walk than a four-ring one
+        /// - so it is exactly the shape that turns into a wait without a bound, and bounds
         /// written as constants beside the paint are bounds nothing can check. See the remarks
         /// there and <c>GladeFanfareTests</c>.
         /// </para>
@@ -574,7 +574,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// The held breath. The grove draws in slightly and dims, which is the only moment in
-        /// the mode where the board gets quieter — see <see cref="GladeFanfare.Hush"/> for why
+        /// the mode where the board gets quieter - see <see cref="GladeFanfare.Hush"/> for why
         /// a celebration needs somewhere to arrive from.
         /// </summary>
         void Hush()
@@ -595,7 +595,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Bucketed by <see cref="Puzzle.Depth"/>, which is steps from the nearest crystal along
-        /// the live network — so this is not a distance across the screen and two tiles side by
+        /// the live network - so this is not a distance across the screen and two tiles side by
         /// side can be many rings apart. That is the whole reading: the wave goes the way the
         /// light goes.
         /// </para>
@@ -636,7 +636,7 @@ namespace GlimmerGrove
                     if (!tile.IsLamp) continue;
 
                     // A beat after the light gets there, so the flinch reads as an answer to it
-                    // rather than as the same event drawn twice. It does not leap — the one
+                    // rather than as the same event drawn twice. It does not leap - the one
                     // jump in the sequence belongs to the bloom, see TileView.Cheer.
                     tile.Wake(delay + ring * .4f);
 
@@ -659,7 +659,7 @@ namespace GlimmerGrove
         /// <para>
         /// The shockwaves are hung on <see cref="Flow.Effects"/> rather than on the floor, so
         /// they pass <em>over</em> the grove. Behind it they would be hidden by the floor plate
-        /// on every board wide enough to matter, which is every board — the one place a ring is
+        /// on every board wide enough to matter, which is every board - the one place a ring is
         /// worth drawing is across the thing it is celebrating. The rays are the opposite and go
         /// behind, because a fan of light over the critters would wash out the leap.
         /// </para>
@@ -720,7 +720,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// The fan of light behind the grove. A child of the floor, so it draws over the plate
-        /// and under the tiles — the grove is lit from behind rather than covered.
+        /// and under the tiles - the grove is lit from behind rather than covered.
         /// </summary>
         void Glory()
         {
@@ -773,7 +773,7 @@ namespace GlimmerGrove
 
             var before = CaptureLit();
 
-            // wear: false — undo rewinds the rotation but never mends a conduit. The
+            // wear: false - undo rewinds the rotation but never mends a conduit. The
             // cost of having explored is the whole point of a fragile board.
             P.Turn(i, -1, wear: false);
             P.Moves = Mathf.Max(0, P.Moves - 1);
@@ -793,21 +793,21 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>It charges no moves.</b> It used to add two, back when a hint was three per
-        /// glade handed back at every board — the move cost was the only price a hint had,
+        /// glade handed back at every board - the move cost was the only price a hint had,
         /// because the allowance itself cost nothing. A hint is now spent from an
         /// account-wide pool that refills on a clock, so the hint <em>is</em> the price, and
-        /// charging moves as well is two punishments for one decision — the second of them
+        /// charging moves as well is two punishments for one decision - the second of them
         /// invisible until the victory panel counts a star the player did not know they had
         /// lost.
         /// </para>
         /// <para>
         /// The pool is not touched here. <c>PlayScreen</c> checks it before calling and
-        /// spends after this returns true, so a board with nothing to give — see
-        /// <see cref="CanHint"/> — cannot cost anybody a hint.
+        /// spends after this returns true, so a board with nothing to give - see
+        /// <see cref="CanHint"/> - cannot cost anybody a hint.
         /// </para>
         /// <para>
         /// <paramref name="revealed"/> fires on the beat the reveal finishes and the board
-        /// is handed back, and only then — anything raised while the tiles are still turning
+        /// is handed back, and only then - anything raised while the tiles are still turning
         /// would land on a latched board with a stopped clock.
         /// </para>
         /// </summary>
@@ -843,7 +843,7 @@ namespace GlimmerGrove
             }
             // The board comes back and the caller is told, in that order, on the one beat
             // the whole reveal ends on. `Locked` raises OnChanged for us, so the bar
-            // repaints itself; `revealed` is for what the board cannot know — that this was
+            // repaints itself; `revealed` is for what the board cannot know - that this was
             // the player's last hint, which is worth an offer while their hand is still on
             // the button. It runs owned by this component, so a screen torn down mid-reveal
             // simply never hears.
@@ -868,14 +868,14 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// It does not touch the budget. Turns are the model's business
-        /// (<c>Puzzle.Grant</c>) and this is the view catching up — which is also why it is
+        /// (<c>Puzzle.Grant</c>) and this is the view catching up - which is also why it is
         /// safe to call before or after the grant lands. What it will not do is revive a board
         /// that is still out of turns: the model would raise the ending again on the next tap,
         /// and a screen that let that happen would be selling a continue that did not.
         /// </para>
         /// <para>
         /// The undo history is deliberately kept. A turn taken back is a turn refunded, so it
-        /// can only ever move the count away from the limit — the same reasoning
+        /// can only ever move the count away from the limit - the same reasoning
         /// <see cref="Undo"/> already states about not re-checking the budget.
         /// </para>
         /// </summary>
@@ -895,7 +895,7 @@ namespace GlimmerGrove
 
             Audio.SfxVaried("whoosh", .45f);
 
-            // Each tile's own caches are what Gutter left disagreeing with the model — see
+            // Each tile's own caches are what Gutter left disagreeing with the model - see
             // TileView.Relight. Ordered by depth by ApplyEnergy itself, so the grove comes
             // back the way it went out.
             foreach (var t in _tiles) if (t) t.Relight();

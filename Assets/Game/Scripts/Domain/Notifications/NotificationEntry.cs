@@ -7,7 +7,7 @@ namespace GlimmerGrove.Notifications
     /// <para>
     /// <b>There is no text on it.</b> The copy is derived from the kind's permanent id
     /// (<see cref="NotificationKinds.TitleKey"/>), so a row can never disagree with the string
-    /// table and a content push can never ship an untranslated sentence — see the note on
+    /// table and a content push can never ship an untranslated sentence - see the note on
     /// <see cref="NotificationKinds"/> for why that line is where it is.
     /// </para>
     /// <para>
@@ -16,7 +16,7 @@ namespace GlimmerGrove.Notifications
     /// Three slots a day over a seven-day horizon is twenty-one picks; without a per-kind
     /// cooldown the same three sentences fire at the same three times every day for a week,
     /// which is exactly how a player learns to swipe the whole app away. With it, a slot that
-    /// finds no eligible candidate is simply left <em>empty</em> — which is where "two to
+    /// finds no eligible candidate is simply left <em>empty</em> - which is where "two to
     /// three a day" comes from: it is an outcome of the cooldowns rather than a quota
     /// somebody has to keep the table consistent with.
     /// </para>

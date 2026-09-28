@@ -11,7 +11,7 @@ namespace GlimmerGrove.Tests
     /// The client half of the public boards' shared contract.
     ///
     /// <para>
-    /// The public form of a keeper's name is derived in two places — here, so the game can
+    /// The public form of a keeper's name is derived in two places - here, so the game can
     /// draw it offline, and in <c>functions/src/grove.ts</c>, so a forged save cannot rank.
     /// Two implementations of one rule drift, and this one drifts silently: nothing crashes,
     /// nothing is refused, and a player simply sees one spelling on their own screen and a
@@ -23,7 +23,7 @@ namespace GlimmerGrove.Tests
     /// <b>The worth half went with the Grovement on 2026-09-21.</b> <c>worthCases</c>,
     /// <c>starCases</c> and <c>starLadder</c> are still in the vector file and are still run
     /// by the server's half, because <c>groveWorth</c> is still deployed and still reads the
-    /// saves it already holds — what is gone is the client that computed a second opinion.
+    /// saves it already holds - what is gone is the client that computed a second opinion.
     /// There is nothing to pair any more, so nothing here pairs it.
     /// </para>
     /// </summary>
@@ -42,7 +42,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// <b><c>JsonUtility</c> does not survive these strings, and the failure is silent.</b>
         /// It truncated <c>Fern‮Willow</c> at the escape, so <c>stored</c> came back as
-        /// four characters while <c>public</c> came back whole — which reads exactly like a bug
+        /// four characters while <c>public</c> came back whole - which reads exactly like a bug
         /// in the sanitiser and is not one. The bidi and zero-width cases are the most
         /// important ones in the file, so the encoding they are carried in has to be the
         /// boring one. The server half reads the strings and asserts they agree with these
@@ -114,7 +114,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The collision key is the id of the document that holds a reservation, so the two
         /// halves folding differently would make the client read one document and the server
-        /// write another — a wrong hint rather than a duplicate name, because the transaction
+        /// write another - a wrong hint rather than a duplicate name, because the transaction
         /// is still the authority, but invisible from either side alone. That is what these
         /// cases are for; `Ｆｅｒｎ`, `İzmir` and `ﬁre` are the ones no reading catches.
         /// </summary>
@@ -133,7 +133,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// Every name the server would reserve is one this client calls publishable, and the
-        /// reverse — because the panel refuses a name locally rather than spending a read on
+        /// reverse - because the panel refuses a name locally rather than spending a read on
         /// it, and a client that let through something the server would not reserve would show
         /// somebody a name as free and then refuse to save it.
         ///
@@ -284,7 +284,7 @@ namespace GlimmerGrove.Tests
         [Test]
         public void AGroveWorthNothingIsNotToldItIsBehindEverybody()
         {
-            // Zero is not in the population the deciles describe — see GroveRankTable — and
+            // Zero is not in the population the deciles describe - see GroveRankTable - and
             // "you are behind everybody" is the one thing a progress screen must never say.
             var table = new GroveRankTable(1000,
                 new long[] { 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000 });

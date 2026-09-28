@@ -20,7 +20,7 @@ namespace GlimmerGrove
     /// Launch screen: the cover, and a bar under the word.
     ///
     /// <para>
-    /// The bar tracks genuine work — every sprite, clip and generated texture the game needs is
+    /// The bar tracks genuine work - every sprite, clip and generated texture the game needs is
     /// pulled into memory here, so the first tap on PLAY never stutters.
     /// </para>
     ///
@@ -31,7 +31,7 @@ namespace GlimmerGrove
     /// walking a spline to a cottage door as the load ran. Every part of it was real work and
     /// none of it was the picture the game is sold with. A launch screen is the one place a
     /// player meets the game before playing it, and the strongest thing to put there is the
-    /// art it is sold with — the same frame that stands on the store page — rather than a
+    /// art it is sold with - the same frame that stands on the store page - rather than a
     /// second, necessarily weaker composition of the same world. What went with it is the whole
     /// apparatus: <c>Parallax</c>, <c>MistDrift</c>, the sleeping residents, the spline, the
     /// flare, and the three <c>splash_*</c> layers <c>Tools/make_splash_art.py</c> used to cut.
@@ -39,8 +39,8 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// <b>It is a still, and the moving version of it has been withdrawn.</b> The key art used to
-    /// be laid over with a four-second clip of itself out of <c>StreamingAssets</c> — same frame,
-    /// so the handover was invisible — and what that cost was a platform decoder, a texture the
+    /// be laid over with a four-second clip of itself out of <c>StreamingAssets</c> - same frame,
+    /// so the handover was invisible - and what that cost was a platform decoder, a texture the
     /// size of the display, a release path that had to be idempotent because it was reached two
     /// ways, and four megabytes in every build, all on the one screen guaranteed to be built at
     /// every launch and never returned to. The picture is the picture. Everything below is placed
@@ -51,14 +51,14 @@ namespace GlimmerGrove
     /// <para>
     /// <b>What the player meets first is not this screen but the curtain over it.</b> The black
     /// plate this screen already used to cover its own settling frames now carries the publisher
-    /// card — see <see cref="StudioIdent"/> — so the ident costs the launch nothing: the content
+    /// card - see <see cref="StudioIdent"/> - so the ident costs the launch nothing: the content
     /// loader runs underneath it, and the curtain lifts when the card is finished rather than on
     /// the first frame that holds still.
     /// </para>
     ///
     /// <para>
     /// <b>The wordmark is in the texture, so the bar's place is arithmetic.</b> There is no
-    /// rect to measure and nothing at runtime that knows where the lettering ends — see
+    /// rect to measure and nothing at runtime that knows where the lettering ends - see
     /// <see cref="SplashCover"/>, which owns the fit and the clearance and is tested, because a
     /// number typed by eye against one phone is wrong on every other one and wrong invisibly.
     /// This screen asks it every frame rather than once: iOS reports its safe area a frame or
@@ -68,7 +68,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>Nothing the bar is made of waits on the load.</b> The trough, the fill, the sheen and
     /// the head are generated shapes, so the screen is complete in the frame it is built even
-    /// though the picture itself is a delivered sprite — and if that sprite is somehow not
+    /// though the picture itself is a delivered sprite - and if that sprite is somehow not
     /// there, the night sky behind it is generated too, which is the difference between a dark
     /// screen and a white one.
     /// </para>
@@ -91,7 +91,7 @@ namespace GlimmerGrove
         /// <b><see cref="MinimumShow"/> is counted from the moment the curtain lifts, not from
         /// the moment the screen is built</b>, and that is the whole of what the ident changed
         /// here. Counted from the build it would be spent behind the publisher card, so on a warm
-        /// device the loading screen would appear and be gone inside half a second — a bar the
+        /// device the loading screen would appear and be gone inside half a second - a bar the
         /// player never sees fill, which is worse than no bar. It is shorter than it was for the
         /// same reason: the launch now carries two beats and only one of them used to exist.
         /// </para>
@@ -115,8 +115,8 @@ namespace GlimmerGrove
         /// a full-brightness illustration in one frame. Reported, correctly, as too sudden.
         /// </para>
         /// <para>
-        /// It is a curtain lifted rather than the content faded, so it is black specifically —
-        /// the colour that was already there — instead of "whatever happens to be behind the
+        /// It is a curtain lifted rather than the content faded, so it is black specifically -
+        /// the colour that was already there - instead of "whatever happens to be behind the
         /// canvas". Half a second: long enough to read as a fade and short enough that it is
         /// finished well inside <see cref="MinimumShow"/>, so it costs the launch nothing.
         /// </para>
@@ -128,7 +128,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// The curtain is not only a fade, it is also the cover over the one or two frames in
-        /// which the canvas has not finished telling anybody how big it is — a scale factor
+        /// which the canvas has not finished telling anybody how big it is - a scale factor
         /// that arrives at the end of the first frame, an orientation some Android devices
         /// report as landscape before they lock to portrait. Lifting on the first frame shows
         /// that settling; lifting when nothing has moved since the last frame shows a picture
@@ -149,8 +149,8 @@ namespace GlimmerGrove
         /// <para>
         /// <c>#002C95</c> is measured off the frame rather than picked: the top row averages
         /// exactly that. It is seen on any canvas tall enough that the capped zoom leaves a band
-        /// of sky above the picture — which, with this frame's wide wordmark, is every phone
-        /// taller than about 19:9 — and behind the picture if the sprite is missing altogether.
+        /// of sky above the picture - which, with this frame's wide wordmark, is every phone
+        /// taller than about 19:9 - and behind the picture if the sprite is missing altogether.
         /// <b>Re-measure all three whenever the cover is re-cut</b>; a join that is nearly right
         /// is a seam, and a seam across the top of the launch screen is the one place there is
         /// nothing else to look at.
@@ -193,12 +193,12 @@ namespace GlimmerGrove
             // Under everything: the picture's own sky, continued. On most phones it is entirely
             // covered and never seen; on the tallest ones it is the band above the picture that
             // the capped zoom leaves open (see SplashCover.WordMargin), and if the sprite is
-            // missing altogether it is the whole screen — which is the difference between a
+            // missing altogether it is the whole screen - which is the difference between a
             // launch that looks dim for a moment and one that flashes white.
             UIKit.Img("Sky", Content, Art.Gradient(SkyJoin, SkyMid, SkyTop, 256), Color.white);
 
             // Claimed before it is fetched, so the synchronous load lands in something this
-            // screen holds rather than in the global set — see AssetHold.Claim. Without it a
+            // screen holds rather than in the global set - see AssetHold.Claim. Without it a
             // full-screen texture stays resident for the life of the process, for a screen
             // nobody sees twice.
             _art = AssetLibrary.Hold("splash");
@@ -206,7 +206,7 @@ namespace GlimmerGrove
 
             // The publisher card's mark, on the same scope and claimed in the same breath. It is
             // claimed here rather than in StudioIdent because a scope has to own an address
-            // *before* anything asks for it, and the curtain is built after this method — so a
+            // *before* anything asks for it, and the curtain is built after this method - so a
             // claim made where the card is built would be a claim made too late, and the mark
             // would go into the global set and stay there for the life of the process.
             _art.Claim(AssetManifest.IdentWord);
@@ -214,7 +214,7 @@ namespace GlimmerGrove
             var sprite = AssetLibrary.Sprite(AssetManifest.SplashBackdrop);
             if (sprite == null) return;
 
-            // The picture again, upside down, standing on its own top edge — so the sky above
+            // The picture again, upside down, standing on its own top edge - so the sky above
             // the band's join is the picture's own sky continued, exactly, rather than a colour
             // chosen to look like it. Row nought meets row nought, so there is no seam to get
             // right. Only ever visible on a canvas the capped zoom left a band on; it sits off
@@ -227,7 +227,7 @@ namespace GlimmerGrove
             // …and a wash over it that comes up from nothing at the join to solid sky at the
             // top, because a mirror is only sky for the first hundred units: above that it
             // starts handing back upside-down mace. The middle stop is high (.87 rather than
-            // .5) on purpose — a straight ramp is still 20% transparent a third of the way up,
+            // .5) on purpose - a straight ramp is still 20% transparent a third of the way up,
             // which is exactly where the ghost is.
             _veil = UIKit.Img("Veil", Content, Art.Gradient(Pal.A(SkyJoin, 0f), Pal.A(SkyJoin, .87f),
                                                             SkyJoin, 128),
@@ -257,13 +257,13 @@ namespace GlimmerGrove
         /// <b>The sheen and the head are what make a stalled bar readable.</b> Progress here is
         /// genuine, so it moves in steps and can sit still for a second on a cold device while
         /// a chapter body is read. A bar that only moves when the number does is
-        /// indistinguishable from a bar that has died — so the two things that never stop are
+        /// indistinguishable from a bar that has died - so the two things that never stop are
         /// the ones a player reads as "still working", and they cost nothing because neither
         /// touches the load.
         /// </para>
         /// <para>
         /// The sheen lives inside a <see cref="RectMask2D"/> on the fill, so it is clipped to
-        /// however much of the bar is lit and can never be seen running along the empty part —
+        /// however much of the bar is lit and can never be seen running along the empty part -
         /// which is the version that reads as a barber's pole rather than as light.
         /// </para>
         /// </summary>
@@ -278,8 +278,8 @@ namespace GlimmerGrove
             // **The bar used to be able to rely on the picture behind it and can no longer.** It
             // stands at the foot of the canvas and the bottom eighth of this cover is deep
             // shadow, so on every phone this draws over something already black and is invisible.
-            // It is not invisible on a canvas squarer than about 5:4 — a foldable opened, a
-            // tablet in split view — where the crop needed to keep the wordmark on screen lifts
+            // It is not invisible on a canvas squarer than about 5:4 - a foldable opened, a
+            // tablet in split view - where the crop needed to keep the wordmark on screen lifts
             // the picture far enough that the bar lands on lit rock and grass instead. Measured:
             // the bar sits at 0.96 of the picture's height on a phone and 0.68 on a 1:1 canvas.
             //
@@ -318,7 +318,7 @@ namespace GlimmerGrove
             _sheenRT = (RectTransform)_sheen.transform;
 
             // Outside the mask, so it stands proud of the trough's end rather than being cut
-            // off by it — the head of the light, not part of the fill.
+            // off by it - the head of the light, not part of the fill.
             _head = UIKit.Img("Head", _barRT, Art.Glow(64, 1.7f), Pal.A(Pal.Radiance, .85f),
                               new Vector2(56f, 56f), new Vector2(0f, .5f), Vector2.zero);
             _headRT = (RectTransform)_head.transform;
@@ -326,7 +326,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// The black the app launches on, and the publisher card standing on it. Built last so it
-        /// is over everything — the fade is of the whole screen arriving, bar included, not of
+        /// is over everything - the fade is of the whole screen arriving, bar included, not of
         /// the artwork alone.
         ///
         /// <para>
@@ -356,7 +356,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The canvas's own scale is watched as well as the layout, and it is the half that
         /// matters.</b> Everything this screen positions is in canvas units, so a scale factor
-        /// that arrives late does not change a single number here — it rescales what has
+        /// that arrives late does not change a single number here - it rescales what has
         /// already been drawn, which is the whole interface arriving oversized and settling.
         /// `Boot` now forces the scaler to apply before anything is built, so this should never
         /// fire; it is here because "should never" is not a thing to hand a launch screen, and
@@ -370,7 +370,7 @@ namespace GlimmerGrove
             bool steady = _fitSettled && Mathf.Approximately(scale, _lastScale);
             _lastScale = scale;
 
-            // The card is the floor, and it is far longer than <see cref="CurtainHold"/> — so the
+            // The card is the floor, and it is far longer than <see cref="CurtainHold"/> - so the
             // settling this method was written to hide is now over before anybody could see it,
             // and the timeout below has stopped being the thing that decides when the curtain
             // goes. It is kept because it still answers the question it was asked: a device that
@@ -381,7 +381,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Starts the fade, once — see <see cref="CurtainHold"/> for when, and
+        /// Starts the fade, once - see <see cref="CurtainHold"/> for when, and
         /// <see cref="StudioIdent"/> for what has to have finished first.
         ///
         /// <para>
@@ -425,8 +425,8 @@ namespace GlimmerGrove
             // factor on `Canvas.willRenderCanvases`, which runs after every `Update` in the
             // frame, and this screen is built inside the same frame the canvas is *created* in
             // (see `Boot.Run`). So the first thing `Content.rect` ever reports is not the
-            // canvas the player is about to see — it is raw device pixels, or the rect's own
-            // default — and a full-bleed picture fitted to it is laid out for the wrong shape
+            // canvas the player is about to see - it is raw device pixels, or the rect's own
+            // default - and a full-bleed picture fitted to it is laid out for the wrong shape
             // and then snaps to the right one a frame later. That snap is the launch reading as
             // a lurch: the picture arrives stretched sideways and settles. It is invisible on a
             // 1080-wide phone, where the wrong answer and the right one happen to coincide,
@@ -434,7 +434,7 @@ namespace GlimmerGrove
             //
             // There is nothing to measure. The scaler is width-matched (`Boot.BuildCanvas`), so
             // the canvas is *always* `Boot.CanvasWidth` across and its height is the display's
-            // aspect times that width — a pure function of `Screen`, correct in the first frame
+            // aspect times that width - a pure function of `Screen`, correct in the first frame
             // and in every frame after it. The same division converts the safe area, which
             // `SafeArea` would otherwise divide by a scale factor that has not been set yet. The
             // app is portrait-locked (`defaultScreenOrientation: 0`), so this answer does not
@@ -444,7 +444,7 @@ namespace GlimmerGrove
             // canvas is widened on anything squarer than a phone (`Layout.CanvasFit`), so the
             // design width and the drawn width are no longer the same number. Reading the design
             // one here would lay the key art out for a 1080-wide canvas and then draw it on a
-            // 1620-wide one — the launch arriving stretched and settling, which is the exact
+            // 1620-wide one - the launch arriving stretched and settling, which is the exact
             // failure the paragraph above exists to prevent, moved onto a different device.
             // ------------------------------------------------------------------------------
             if (Screen.width <= 0 || Screen.height <= 0) return;
@@ -505,7 +505,7 @@ namespace GlimmerGrove
 
             if (!_lifting) HoldCurtainUntilNothingMoves();
 
-            // The card's neon, driven from here because StudioIdent is not a behaviour — it is
+            // The card's neon, driven from here because StudioIdent is not a behaviour - it is
             // built onto the curtain rather than owning a node of its own, so there is nothing
             // for Unity to send a message to. A no-op once the curtain has gone.
             _ident?.Tick();
@@ -518,7 +518,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Moves the fill to wherever the load has got to and keeps the two things that do not
-        /// depend on it — the sheen and the head's breath — running.
+        /// depend on it - the sheen and the head's breath - running.
         /// </summary>
         void DrawBar()
         {
@@ -555,7 +555,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>This is the only sound the launch screen makes.</b> The screen it replaced chimed
-        /// once per stop, pitched up the scale — eight of them inside two seconds, which is not
+        /// once per stop, pitched up the scale - eight of them inside two seconds, which is not
         /// a melody, and it was the first thing anybody said about it. A launch screen is two
         /// and a half seconds long and the music is already playing; one arrival is all the
         /// punctuation it can carry.
@@ -585,7 +585,7 @@ namespace GlimmerGrove
         /// <summary>
         /// Content first, because it names the chapters; then the shared chrome; then
         /// only the art of the chapter the player is actually about to see. Nothing
-        /// here grows as the catalog does — the fiftieth chapter costs the same to
+        /// here grows as the catalog does - the fiftieth chapter costs the same to
         /// launch as the first.
         /// </summary>
         IEnumerator Run()
@@ -616,19 +616,19 @@ namespace GlimmerGrove
             // more on a cold cellular connection, and a shop whose cards are blank for that
             // second is a shop players back out of. It also picks up anything bought on a
             // previous launch and never credited, which is the recovery path for a purchase
-            // interrupted by a crash — the one thing here worth starting early even if
+            // interrupted by a crash - the one thing here worth starting early even if
             // nobody ever opens the tab. Started after the content has loaded, because the
             // list of products to ask about comes out of it.
 
             // The population's move counts, for the one line on the victory panel that
             // compares a player to everybody else. It is the most disposable request the
-            // game makes — no sign-in, no writes, and an outcome nothing waits on — which
+            // game makes - no sign-in, no writes, and an outcome nothing waits on - which
             // is why it is started here and never checked again.
             CloudSaveService.BeginStatsRefresh();
 
             // Whether this build is still one the deployment allows to be played. Fire and
-            // forget like everything else on this list and for the same rule — nothing between
-            // tapping the icon and playing may wait on a network — which costs nothing here,
+            // forget like everything else on this list and for the same rule - nothing between
+            // tapping the icon and playing may wait on a network - which costs nothing here,
             // because a device that has been walled before enforces it from the frame the hub
             // draws without asking anybody. Only the first launch on a stale build waits for
             // this, and the wall lands on the hub a moment later (see UpdateGate).
@@ -637,8 +637,8 @@ namespace GlimmerGrove
             StoreService.BeginConnect();
 
             // Consent, then mediation, in that order and never the other one. This is the
-            // only thing on the splash that can put a dialog in front of the player — the
-            // CMP's form, and on iOS Apple's tracking prompt — and it is here rather than in
+            // only thing on the splash that can put a dialog in front of the player - the
+            // CMP's form, and on iOS Apple's tracking prompt - and it is here rather than in
             // Boot because neither belongs before the first scene has loaded. Nothing waits
             // on it: the offer buttons light up when readiness arrives, which is what
             // RewardedAds.Changed is for. See RewardedAds.StartAsync for why the order is
@@ -647,7 +647,7 @@ namespace GlimmerGrove
 
             // Against the reveal rather than against the build, so a launch is the card and then
             // a bar somebody can actually watch fill. A device still holding the curtain has
-            // `_revealedAt` at its sentinel and waits here, which is the correct answer — there
+            // `_revealedAt` at its sentinel and waits here, which is the correct answer - there
             // is no honest way to finish a loading screen nobody has seen.
             while (_revealedAt < 0f || Time.unscaledTime - _revealedAt < MinimumShow
                    || _shown < .999f) yield return null;
@@ -680,15 +680,15 @@ namespace GlimmerGrove
             if (task.IsFaulted) Debug.LogException(task.Exception);
 
             // **Nothing else is warmed here, and what used to be is the worn companion.** It
-            // was one 45 KB portrait *pinned* into the global set — which is to say never
-            // freed — so that the hub's first frame had it. No reachable screen draws a
+            // was one 45 KB portrait *pinned* into the global set - which is to say never
+            // freed - so that the hub's first frame had it. No reachable screen draws a
             // companion now: the hub's seat, the profile's medallion and every board row wear
             // a rank badge, and those are already in `GlobalAssets` above for the map's own
             // readout. Warming it would be resident memory bought and never spent.
         }
 
         /// <summary>
-        /// The art of whichever chapter the player will land in — usually the first,
+        /// The art of whichever chapter the player will land in - usually the first,
         /// or wherever they left off. Every other chapter's art stays on disk.
         /// </summary>
         IEnumerator LoadOpeningChapter()
@@ -697,7 +697,7 @@ namespace GlimmerGrove
 
             // The catalog's own default rather than the classic mode: with every glade chapter
             // disabled the classic one has no levels at all, and both of these would answer
-            // nothing — so the one chapter body the game reads at launch would be no chapter,
+            // nothing - so the one chapter body the game reads at launch would be no chapter,
             // and the player would meet the map with its art still on disk.
             var opening = catalog.Index != null ? catalog.Index.DefaultMode : GameMode.Default;
 
@@ -762,7 +762,7 @@ namespace GlimmerGrove
             // have only just arrived: the Android channel is named with a player-facing string,
             // so it waits on the loc table, and the slate the planner reads rides in
             // `progression.json`, so it waits on the rules above. Binding does not schedule
-            // anything and does not ask the player anything — it registers the channel, reads
+            // anything and does not ask the player anything - it registers the channel, reads
             // what the OS already allows and finds out whether this launch came from a tap.
             // The schedule itself is written when the app is backgrounded (`Boot.Pump`), which
             // is the only moment the state it has to be built from is final.
@@ -777,7 +777,7 @@ namespace GlimmerGrove
     /// The generated shapes the splash warms up.
     ///
     /// The list of *delivered* assets used to live here too, hardcoded down to the
-    /// individual backdrop names — which meant every content drop needed someone to
+    /// individual backdrop names - which meant every content drop needed someone to
     /// remember to edit this screen. That list now comes from
     /// <see cref="AssetManifest"/>, derived from the catalog.
     /// </summary>

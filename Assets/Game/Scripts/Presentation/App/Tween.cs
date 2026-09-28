@@ -75,8 +75,8 @@ namespace GlimmerGrove
         /// Whether this is still going: not killed, not superseded on its channel, and not
         /// finished.
         ///
-        /// For a caller holding a tween it must not restart — an idle breath under a recycled
-        /// cell, say — which needs to be able to tell "still breathing" from "ended while I was
+        /// For a caller holding a tween it must not restart - an idle breath under a recycled
+        /// cell, say - which needs to be able to tell "still breathing" from "ended while I was
         /// not looking". Without it the only honest guard is a flag the caller keeps, and a
         /// flag cannot see a <c>KillChannel</c> raised by somebody else.
         /// </summary>
@@ -195,7 +195,7 @@ namespace GlimmerGrove
         /// <para>
         /// Two null checks that mean different things, and the order is the whole of it.
         /// <c>UnityEngine.Object</c> overloads <c>==</c> to answer null for an object that
-        /// has been <em>destroyed</em> as well as for one that was never set — so
+        /// has been <em>destroyed</em> as well as for one that was never set - so
         /// <c>owner != null</c> is false in exactly the case this exists to catch, and the
         /// guard it used to be written as could never fire once. The managed
         /// <see cref="object.ReferenceEquals"/> is the only way to ask "was an owner
@@ -205,7 +205,7 @@ namespace GlimmerGrove
         /// What that cost: every tween whose owner had been destroyed went on running to
         /// completion and calling its <c>OnDone</c>, for the life of the game, against the
         /// class's own promise to die with its owner. The <c>apply</c> bodies here all guard
-        /// their target, so the motion was harmless and invisible — the callbacks do not,
+        /// their target, so the motion was harmless and invisible - the callbacks do not,
         /// and a payout chip destroyed mid-flight still landed seven tokens on a glyph that
         /// no longer existed. Passing an owner is opt-in, so a caller that passes one is
         /// asking for this and had not been getting it.
@@ -215,13 +215,13 @@ namespace GlimmerGrove
         /// Fixing it changed behaviour at every call site that passes an owner, so the
         /// <c>OnDone</c> chains were walked once and the answer is worth keeping: <b>none of
         /// them needs to outlive its owner</b>. Almost all are cosmetic and already guard
-        /// their target — destroy a spent ring, start a breathe, rehome a button. Three carry
+        /// their target - destroy a spent ring, start a breathe, rehome a button. Three carry
         /// state, and each is safe for its own reason rather than by luck:
         /// <list type="bullet">
         /// <item><description>
         /// <c>Overlays.Close</c> hangs <c>Flow.Dismiss</c> and the caller's continuation off a
         /// scale owned by <c>Panel</c>. The only thing that destroys Panel mid-close is
-        /// <c>Flow.Go</c>'s swap — which clears <c>_modals</c> itself, so the missed Dismiss is
+        /// <c>Flow.Go</c>'s swap - which clears <c>_modals</c> itself, so the missed Dismiss is
         /// a no-op, and which sets <c>Busy</c> first, so a missed <c>Flow.Go</c> continuation
         /// would have been refused anyway. Skipping it is if anything more correct than
         /// firing a second navigation into the first.
@@ -251,7 +251,7 @@ namespace GlimmerGrove
         }
 
         // Clamped before anything reads them, because the phase arithmetic in Tick is only
-        // as sound as the step handed to it — see TweenCycle.MaxStep for why the frame after
+        // as sound as the step handed to it - see TweenCycle.MaxStep for why the frame after
         // a resume is not a frame's worth of time.
         void Update() => Tick(TweenCycle.Step(Time.unscaledDeltaTime),
                               TweenCycle.Step(Time.deltaTime));
@@ -262,7 +262,7 @@ namespace GlimmerGrove
         /// <para>
         /// Split from <see cref="Update"/> for <c>RunScreen.Tick</c>'s reason, and it is not
         /// a tidying. <see cref="TweenCycle"/> made the phase arithmetic provable offline, and
-        /// that left exactly one rule in this file untestable — the one that decides whether a
+        /// that left exactly one rule in this file untestable - the one that decides whether a
         /// tween <em>runs at all</em>. It was wrong for the life of the game (see
         /// <see cref="Orphaned"/>), and a test of the predicate alone would not have caught it,
         /// because the predicate was never the part that was broken: the wiring was. A test
@@ -295,7 +295,7 @@ namespace GlimmerGrove
                 // The wrap, the loop count and the phase all live in TweenCycle, which is
                 // plain arithmetic over no Unity types and is therefore the one part of the
                 // animation system the test suite can run a thousand frames of offline. It
-                // is the code that ships, not a description of it — this went wrong once
+                // is the code that ships, not a description of it - this went wrong once
                 // already and nothing but motion could have caught it.
                 var frame = TweenCycle.Advance(t.elapsed, step, t.duration, t.loops, t.pingPong);
 
@@ -322,12 +322,12 @@ namespace GlimmerGrove
         //
         // Every shorthand answers a null target with a finished tween rather than a throw, and
         // that is a rule rather than defensiveness. These are called from click handlers, so an
-        // exception here does not merely skip an animation — it abandons whatever the handler
+        // exception here does not merely skip an animation - it abandons whatever the handler
         // was doing halfway. ModalView.Close() is the case that proved it: it fades the content
         // out, scales the panel, and dismisses the view in the scale's OnDone, so a throw on the
         // middle line left an invisible view still eating every touch on the screen. The ones
         // that could throw were the ones reading their target's current value to interpolate
-        // from — Scale, Move, Rotate and RotateBy; the rest already guarded. The null tween
+        // from - Scale, Move, Rotate and RotateBy; the rest already guarded. The null tween
         // still completes, so an OnDone chained onto one of them runs and the sequence finishes.
         public static Tw Scale(Transform tr, Vector3 to, float dur, Easing ease = null)
         {
@@ -519,7 +519,7 @@ namespace GlimmerGrove
 
                 // **It fades in rather than starting mid-breath, and that is what a phase costs
                 // if you do not.** A phase exists to stop a row of things breathing in lockstep,
-                // and `sin(phase)` is not zero — so every caller passing one used to snap its
+                // and `sin(phase)` is not zero - so every caller passing one used to snap its
                 // target to a different size on the frame the breath began. One control doing
                 // that is a twitch nobody sees; a *board* doing it is thirty flowers each
                 // jumping to a size of their own in one frame, which is what "the background

@@ -8,15 +8,15 @@ namespace GlimmerGrove
 {
     /// <summary>
     /// The daily challenge's victory panel: the run's own design (<see cref="VictoryFrame"/>
-    /// — the green window, the crown over a banner, the light behind), carrying what the
+    /// - the green window, the crown over a banner, the light behind), carrying what the
     /// clear paid and nothing about the day's allowance.
     ///
     /// <para>
     /// <b>The same panel the ladder shows, by the owner's instruction (2026-09-24)</b>: a
     /// player who clears a challenge should be met by the victory they know, not by a
     /// sentence over a scrim. What is <em>not</em> here is everything that belongs to a
-    /// level rather than to a puzzle — no stars, no route, no record, no rank, no chapter
-    /// opened, no streak — because a challenge has none of them (invariant 56). And no
+    /// level rather than to a puzzle - no stars, no route, no record, no rank, no chapter
+    /// opened, no streak - because a challenge has none of them (invariant 56). And no
     /// "1 / 2 plays left": the allowance is the list page's business, and a countdown on a
     /// celebration reads as a bill.
     /// </para>
@@ -24,7 +24,7 @@ namespace GlimmerGrove
     /// <b>The payout is <see cref="Payout"/>, exactly as the victory panel's.</b> The XP chip
     /// and the coin chip fly their tokens out of the crest rather than out of a star row,
     /// because that is what there is to fly them from; the boost line under them says what
-    /// part of the XP a running boost paid, for the reason <c>WinOverlay.BoostXp</c> gives —
+    /// part of the XP a running boost paid, for the reason <c>WinOverlay.BoostXp</c> gives -
     /// a multiplier nobody sees is one nobody buys.
     /// </para>
     /// <para>

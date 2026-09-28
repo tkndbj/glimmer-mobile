@@ -20,7 +20,7 @@ namespace GlimmerGrove.Store
         None = 0,
 
         /// <summary>
-        /// No store SDK in this build. The shop is not drawn at all — see
+        /// No store SDK in this build. The shop is not drawn at all - see
         /// <see cref="NullStoreBackend"/>.
         /// </summary>
         Unavailable,
@@ -51,7 +51,7 @@ namespace GlimmerGrove.Store
         AlreadyOwned,
 
         /// <summary>
-        /// The payment itself failed — declined card, parental controls, insufficient
+        /// The payment itself failed - declined card, parental controls, insufficient
         /// funds, an unauthorised device. Nothing was charged.
         /// </summary>
         PaymentFailed,
@@ -71,7 +71,7 @@ namespace GlimmerGrove.Store
         AwaitingGrant,
 
         /// <summary>
-        /// The store is holding the purchase until somebody else approves it — Apple's Ask
+        /// The store is holding the purchase until somebody else approves it - Apple's Ask
         /// to Buy, or a Play payment method that settles later.
         ///
         /// <para>
@@ -134,7 +134,7 @@ namespace GlimmerGrove.Store
     /// already-formatted string in the player's own currency, with the right symbol on the
     /// right side of the number and the right number of decimal places for their locale.
     /// Building that from a number and a currency code is a mistake every project makes
-    /// once — there is no correct client-side rule for it, the stores hand it over already
+    /// once - there is no correct client-side rule for it, the stores hand it over already
     /// done, and drawing anything else is both wrong and a review risk.
     /// </para>
     /// </summary>
@@ -152,7 +152,7 @@ namespace GlimmerGrove.Store
         /// The price as a number, for analytics only.
         ///
         /// Revenue reporting needs a figure it can sum; a display needs
-        /// <see cref="Price"/>. Never draw this — it has no currency symbol, no locale and
+        /// <see cref="Price"/>. Never draw this - it has no currency symbol, no locale and
         /// no rounding rule, and it is a decimal because a double cannot hold money.
         /// </summary>
         public decimal PriceValue;
@@ -174,7 +174,7 @@ namespace GlimmerGrove.Store
     /// <para>
     /// The word to hold on to is <b>unfinished</b>. Both stores keep re-delivering a
     /// transaction until the app confirms it, and that is not a nuisance to be worked
-    /// around — it is the entire reason a purchase cannot be lost to a dropped connection,
+    /// around - it is the entire reason a purchase cannot be lost to a dropped connection,
     /// a crash, or a battery running out between the payment sheet and the grant. So
     /// nothing here is confirmed until our own server has said the currency is in the
     /// account, and the ordering of those two steps is the whole safety property of this
@@ -184,7 +184,7 @@ namespace GlimmerGrove.Store
     /// Google Play adds a deadline to that: an unacknowledged purchase is <b>automatically
     /// refunded after three days</b>. Confirming is what acknowledges it, so a device that
     /// is offline for a long weekend after buying something gets its money back rather than
-    /// its gems — correct, and the reason the retry here is aggressive rather than polite.
+    /// its gems - correct, and the reason the retry here is aggressive rather than polite.
     /// </para>
     /// </summary>
     public sealed class StorePurchase
@@ -223,7 +223,7 @@ namespace GlimmerGrove.Store
     /// Exactly the bargain <c>ICloudSaveBackend</c> and <c>IAdProvider</c> already make,
     /// and for a sharper version of their reason. The parts of this feature most likely to
     /// be wrong are the ordering of redeem-then-confirm, the retry policy, and what the
-    /// shop says in each of nine states — and not one of those needs a store, a device, or
+    /// shop says in each of nine states - and not one of those needs a store, a device, or
     /// a real card to exercise. Keeping the SDK behind an interface is what lets all of it
     /// be proved offline, on a machine with no Editor open.
     /// </para>
@@ -233,7 +233,7 @@ namespace GlimmerGrove.Store
     /// </para>
     /// <list type="number">
     /// <item><b>Never confirm a transaction this game has not granted.</b> Confirming is
-    /// the irrevocable half — it tells the store the goods were delivered, and on Google it
+    /// the irrevocable half - it tells the store the goods were delivered, and on Google it
     /// is what stops the automatic refund. A transaction confirmed before the server
     /// granted is a purchase the player paid for and can never be given.</item>
     /// <item><b>Report every completed transaction, including ones from a previous
@@ -266,7 +266,7 @@ namespace GlimmerGrove.Store
         /// Connects and fetches metadata for exactly these products.
         ///
         /// Both stores answer only for the ids they were asked about, so a product missing
-        /// from this list has no price and cannot be bought — which is why the list comes
+        /// from this list has no price and cannot be bought - which is why the list comes
         /// from the catalog rather than being written out here.
         /// </summary>
         Task<StoreResult> ConnectAsync(IReadOnlyList<StoreProductRequest> products,
@@ -277,7 +277,7 @@ namespace GlimmerGrove.Store
 
         /// <summary>
         /// Opens the payment sheet. The result is delivered through
-        /// <see cref="PurchasePending"/> or <see cref="PurchaseFailed"/>, never returned —
+        /// <see cref="PurchasePending"/> or <see cref="PurchaseFailed"/>, never returned -
         /// the sheet outlives the call, and on Android it outlives the process.
         /// </summary>
         StoreResult Buy(string productId);
@@ -303,8 +303,8 @@ namespace GlimmerGrove.Store
     /// <para>
     /// Reports unavailable rather than pretending to work. That is the same call
     /// <c>NullAdProvider</c> and <c>NullCloudBackend</c> make and it is worth restating
-    /// here, because the tempting alternative — a fake store that grants instantly so the
-    /// shop can be clicked through in the Editor — is a debug faucet in the one screen
+    /// here, because the tempting alternative - a fake store that grants instantly so the
+    /// shop can be clicked through in the Editor - is a debug faucet in the one screen
     /// where a debug faucet is indistinguishable from a compromise. If a fake is ever
     /// wanted, it belongs behind a define that no build can carry.
     /// </para>

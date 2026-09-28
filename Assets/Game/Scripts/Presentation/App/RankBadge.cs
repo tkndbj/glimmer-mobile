@@ -10,11 +10,11 @@ namespace GlimmerGrove
     /// explains every one of them.
     ///
     /// <para>
-    /// <b>A readout, which is to say watched rather than drawn</b> — invariant 44j's rule, which
+    /// <b>A readout, which is to say watched rather than drawn</b> - invariant 44j's rule, which
     /// is about a balance and is about this for the same reason. A rank moves while this screen
     /// is standing: a run finishes and returns to the map, a merge lands another device's
     /// battles, a content push retunes the ladder under a player who is looking at it. Built as
-    /// a snapshot it would be a photograph — correct when the map opened and quietly wrong from
+    /// a snapshot it would be a photograph - correct when the map opened and quietly wrong from
     /// then on, which compiles, draws, and passes every fixture because nothing moves during a
     /// test. So it subscribes to <see cref="RankLedger.Changed"/> and repaints.
     /// </para>
@@ -31,8 +31,8 @@ namespace GlimmerGrove
     /// blank corner invites nobody. <b>It draws it solid</b>, at the owner's instruction: the
     /// faded stand-in read as art that had failed to load rather than as a rank not yet earned,
     /// which is the very reading <see cref="RankLook.Ghost"/>'s own remark makes about a faded
-    /// card. What says <em>not yet</em> here is the word under it — <c>Unranked</c>, in a
-    /// quieter cream than a rank's gold — which is one solid thing instead of one faint one.
+    /// card. What says <em>not yet</em> here is the word under it - <c>Unranked</c>, in a
+    /// quieter cream than a rank's gold - which is one solid thing instead of one faint one.
     /// The profile's medallion and the ranks page's hero still ghost theirs; only the map's
     /// corner changed.
     /// </para>
@@ -159,7 +159,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// A rung reached while the map is standing: a rank moved by something that is not a
-        /// run — a season chest claimed, a merge landing another device's play, a content push.
+        /// run - a season chest claimed, a merge landing another device's play, a content push.
         /// A pop and a halo rather than a modal, because nothing was claimed and there is
         /// nothing to dismiss.
         ///
@@ -167,16 +167,16 @@ namespace GlimmerGrove
         /// <b>The sentence is <see cref="RankCeremony"/>'s when it is going to say it</b>, which
         /// since the ceremony shipped is nearly always: a rung reached anywhere gets its
         /// ceremony at the end of the next run. Two announcements of one promotion is one
-        /// announcement too many, and the quieter of the two is the one that gives way — the
+        /// announcement too many, and the quieter of the two is the one that gives way - the
         /// toast would also spoil the ceremony, which is the whole reason the order matters
         /// rather than merely the count.
         /// </para>
         /// <para>
         /// <b>The pop and the halo stay either way.</b> This is a readout (invariant 44j) and a
         /// readout draws the truth the moment the truth moves; what it gives up is the
-        /// <em>telling</em>, not the drawing. And when the ceremony is not going to speak — a
+        /// <em>telling</em>, not the drawing. And when the ceremony is not going to speak - a
         /// build with nothing hooked, a ladder retune, a reading that belongs to another account
-        /// — the toast is still the only thing that would say so, so it is asked rather than
+        /// - the toast is still the only thing that would say so, so it is asked rather than
         /// deleted.
         /// </para>
         /// </summary>
@@ -201,7 +201,7 @@ namespace GlimmerGrove
         /// Draws the state: which badge, whether it is earned, and what it is called.
         ///
         /// Raised by the subscription, so it must be cheap and must never assume it is being
-        /// called because something changed — every screen's readouts repaint when a merge
+        /// called because something changed - every screen's readouts repaint when a merge
         /// lands. The guard is the badge's own id plus whether it is held, which is the whole
         /// of what is drawn.
         /// </summary>
@@ -236,8 +236,8 @@ namespace GlimmerGrove
         /// </summary>
         /// <summary>
         /// <b>Twice the size it was cut at, at the owner's instruction.</b> A rank badge is a
-        /// silhouette rather than a face — the argument <c>LeaderboardScreen</c> makes for a
-        /// 132-unit badge on a 176-unit row — so at 92 in a corner the seven of them were one
+        /// silhouette rather than a face - the argument <c>LeaderboardScreen</c> makes for a
+        /// 132-unit badge on a 176-unit row - so at 92 in a corner the seven of them were one
         /// smudge, and the one thing the map could say about a keeper said nothing. The width is
         /// what bounds the growth: the block is centred on <c>LevelsScreen.CornerX</c>, which is
         /// 96 from the safe area's own edge, so a box wider than 192 hangs a centred rank name

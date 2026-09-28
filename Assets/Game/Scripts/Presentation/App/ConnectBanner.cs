@@ -12,7 +12,7 @@ namespace GlimmerGrove
     /// <b>Why it has to be a banner and not a refusal on a control.</b> A chest is rolled from
     /// the account id so the server can recompute it, so before the first sign-in there is
     /// nothing honest to open (<see cref="Progression.RewardSeed.IsAdjudicable"/>). Both pages
-    /// already said so — the tasks page in a row's hint, the season in a toast on a rung tap —
+    /// already said so - the tasks page in a row's hint, the season in a toast on a rung tap -
     /// and on the install where it matters most <b>neither of them ever spoke</b>: a hint hangs
     /// off a task that is <em>ready</em> and a fresh account has finished nothing, and a season
     /// rung needs marks, which come only from chests. The page a new player actually meets was
@@ -24,7 +24,7 @@ namespace GlimmerGrove
     /// <b>Shown while the gate is shut, which is once in an account's life.</b> Not "once per
     /// session" and not dismissible: the condition is <em>never having been online</em>, and it
     /// ends permanently the first time a device reaches the network for a few seconds. So the
-    /// banner is its own expiry — there is nothing to remember, nothing stored, and no way for
+    /// banner is its own expiry - there is nothing to remember, nothing stored, and no way for
     /// it to come back and nag somebody who has already done what it asks.
     /// </para>
     /// <para>
@@ -37,7 +37,7 @@ namespace GlimmerGrove
     {
         /// <summary>
         /// The plate's height. Two lines of a translated sentence at the floor size, with the
-        /// mark beside them — <c>UIKit.Shrinkable</c> truncates what will not fit and does it
+        /// mark beside them - <c>UIKit.Shrinkable</c> truncates what will not fit and does it
         /// silently (invariant 19n), so the box is sized for the worst case rather than for
         /// English.
         /// </summary>
@@ -51,13 +51,13 @@ namespace GlimmerGrove
         ConnectBanner(RectTransform root) => _root = root;
 
         /// <summary>
-        /// Builds it at <paramref name="y"/> — a downward offset from the top of the stack, the
+        /// Builds it at <paramref name="y"/> - a downward offset from the top of the stack, the
         /// way every other band on these two pages is placed.
         ///
         /// <para>
         /// Amber, because it is news rather than an alarm: the same register as the shop's
         /// unreachable line and the streak board's CONNECT ONCE pill, and deliberately not the
-        /// rose this game uses for something that has gone wrong. Nothing here has gone wrong —
+        /// rose this game uses for something that has gone wrong. Nothing here has gone wrong -
         /// the player simply has not been online yet.
         /// </para>
         /// <para>

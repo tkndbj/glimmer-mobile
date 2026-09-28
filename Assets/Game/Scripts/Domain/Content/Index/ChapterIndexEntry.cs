@@ -8,7 +8,7 @@ namespace GlimmerGrove.Content
     /// which glades belong to it.
     ///
     /// Deliberately holds no art, no colours and no grids. Those live in the chapter
-    /// body, which is only read when the player actually enters the chapter — the
+    /// body, which is only read when the player actually enters the chapter - the
     /// whole point of splitting the two is that this half can describe a five hundred
     /// chapter game in a few kilobytes and still be parsed on every launch.
     /// </summary>
@@ -50,8 +50,8 @@ namespace GlimmerGrove.Content
         /// asks for none.
         ///
         /// <b>Index knowledge for <see cref="Track"/>'s reason</b>: <c>LevelUnlock</c> answers
-        /// what is open for a whole lane at a time — at launch, and again every time the map is
-        /// drawn — so a wall the index could not see would be one no screen could draw without
+        /// what is open for a whole lane at a time - at launch, and again every time the map is
+        /// drawn - so a wall the index could not see would be one no screen could draw without
         /// pulling a chapter body in behind it. It is authored in the manifest
         /// (<c>ManifestChapterDto.minKeeperLevel</c>) rather than derived, because nothing about
         /// a chapter's levels implies how much of the game should be behind it.
@@ -60,7 +60,7 @@ namespace GlimmerGrove.Content
 
         /// <summary>
         /// Derived from the id by convention, so a chapter names itself once. The body
-        /// may still override it, but the index needs a name before the body is read —
+        /// may still override it, but the index needs a name before the body is read -
         /// a chapter carousel must be able to label a chapter it has never opened.
         /// </summary>
         public string NameKey => ChapterDefinition.DefaultNameKey(Id);

@@ -11,7 +11,7 @@ namespace GlimmerGrove.Modes
     /// authors what is standing there and what is coming; how much a match is worth and how hard
     /// a bolt lands are facts about the <em>mode</em>, so a retune is one edit and cannot leave
     /// two levels disagreeing about what a gem does. Par is derived from them, so moving one of
-    /// these moves every star line in the mode at once — which is correct, and is why they are
+    /// these moves every star line in the mode at once - which is correct, and is why they are
     /// here where that is obvious rather than spread over a board and a view.
     /// </para>
     /// </summary>
@@ -21,8 +21,8 @@ namespace GlimmerGrove.Modes
         public const int MinRun = 3;
 
         /// <summary>
-        /// How often a refilled gem is made to <em>settle</em> — to land somewhere it is not
-        /// already part of a run — in hundredths. <b>The one dial on how freely this board
+        /// How often a refilled gem is made to <em>settle</em> - to land somewhere it is not
+        /// already part of a run - in hundredths. <b>The one dial on how freely this board
         /// chains.</b>
         ///
         /// <para>
@@ -36,13 +36,13 @@ namespace GlimmerGrove.Modes
         /// <b>A dial rather than a switch, because both ends are wrong.</b> Measured over a played
         /// field: at 0 the board chains on <b>39%</b> of matches and clears 6.4 gems on each; at
         /// 100 it chains on <b>8%</b> and clears 3.7. The first is a payoff nobody earned
-        /// (invariant 5d — it rejects no play, so it says nothing about any); the second is a mode
+        /// (invariant 5d - it rejects no play, so it says nothing about any); the second is a mode
         /// with nothing to set up.
         /// </para>
         /// <para>
         /// <b>Turning it down is the only honest way to make this board chain more.</b> A chain is
-        /// gems, gems are fuel and fuel is bolts, so every other route to the same feeling —
-        /// heavier bolts, weaker raiders — changes what a match <em>delivers</em> rather than what
+        /// gems, gems are fuel and fuel is bolts, so every other route to the same feeling -
+        /// heavier bolts, weaker raiders - changes what a match <em>delivers</em> rather than what
         /// it <em>does</em>, and moves par, both star lines and every utility's charge with it.
         /// This number moves none of them.
         /// </para>
@@ -54,7 +54,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>Two fuel a gem against a bolt's one, which is the whole of "the wards should shoot
-        /// more".</b> It was one each and a bolt cost one, so a gem was exactly a bolt — an
+        /// more".</b> It was one each and a bolt cost one, so a gem was exactly a bolt - an
         /// identity nothing said out loud and that <see cref="PerfectMatch"/> quietly depended on.
         /// Doubling it and halving <see cref="ShotDamage"/> is the same match delivering the same
         /// damage as <em>twice as many, half as heavy</em> bolts: a fed ward stays alight for
@@ -63,7 +63,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>Subdividing the fuel unit rather than making a bolt cost half is what keeps the rank
         /// ladder exact.</b> A rank is ten per cent less fuel a bolt
-        /// (<see cref="FuelShotTenths"/>), which at a base of ten tenths is 10, 9, 8, 7, 6 — five
+        /// (<see cref="FuelShotTenths"/>), which at a base of ten tenths is 10, 9, 8, 7, 6 - five
         /// exact integers. Halving the bolt to five tenths would make the same ladder 5, 4, 4, 3, 3
         /// after truncation, so two pairs of ranks would buy nothing and the 2.33× a rank-four ward
         /// is worth would quietly stop being true. Everything measured in <em>fuel</em> doubles
@@ -79,7 +79,7 @@ namespace GlimmerGrove.Modes
         /// <summary>
         /// The most fuel a ward holds. A big match tops it up rather than banking.
         ///
-        /// <b>In fuel, so it doubled with the unit</b> — it is fourteen <em>gems</em>' worth
+        /// <b>In fuel, so it doubled with the unit</b> - it is fourteen <em>gems</em>' worth
         /// before and after, which is what it was chosen as and what a player experiences.
         /// </summary>
         public const float WardCapacity = 28f;
@@ -138,7 +138,7 @@ namespace GlimmerGrove.Modes
         /// <b>And it stayed at .22 when a bolt's damage halved, which is the whole of what that
         /// change was for.</b> A gem bought two bolts (<see cref="FuelPerGemTenths"/>) and each
         /// was worth half (<see cref="ShotDamage"/>), so at an unchanged cadence a fed ward
-        /// <em>kept firing for twice as long</em> — which is what "see them shoot more" means.
+        /// <em>kept firing for twice as long</em> - which is what "see them shoot more" means.
         /// Halving this as well was tried then and undoes exactly that: the same bolts go through
         /// the same window twice as densely and a ward stops firing when it always did, so there
         /// is nothing more to watch. <b>The rate is what makes a ward's fire last; the fuel is
@@ -147,24 +147,24 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>What that cost is peak damage, and the levels paid it rather than this number.</b>
         /// Bolts a second times damage a bolt is the line's output, so half-weight bolts at that
-        /// cadence was half the <em>peak</em> — which barely touches attrition (a ward lit twice
+        /// cadence was half the <em>peak</em> - which barely touches attrition (a ward lit twice
         /// as long kills a marching column better, because less of each burst is spent as
         /// overkill) and bites hard on an emergency, where one big health pool has to be answered
         /// at once. Measured through <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c>, and it
         /// moved three things in three different directions: a duel got dearer
         /// (<c>s01_warlordsgate</c> wanted more hill and got it), a long attrition rung got
         /// <em>safer</em> until nothing reached its line at all (<c>s01_thornsiege</c>, two more
-        /// brutes), and the rule-test fixture — the one siege in this project that sent a boss and
-        /// dealt no cogs — stopped being holdable, and now deals them like every shipped rung.
+        /// brutes), and the rule-test fixture - the one siege in this project that sent a boss and
+        /// dealt no cogs - stopped being holdable, and now deals them like every shipped rung.
         /// </para>
         /// <para>
         /// <b>It is .44 now, because the owner's next verdict was that the mode reads as super
-        /// fast paced — and what paid for it is the exact inverse of the change above rather than
+        /// fast paced - and what paid for it is the exact inverse of the change above rather than
         /// a cut to the line's output.</b> Slowing this <em>alone</em> was measured first and is
         /// not available: fuel still buys the same damage but it arrives later, and the raiders do
         /// not wait, so the line's damage a second falls with the cadence. <b>At .24 the
-        /// warbringer rung was lost outright</b> — the hill unclear after ten minutes and every
-        /// ward down — because a boss that shells the line every nine seconds grinds it for as
+        /// warbringer rung was lost outright</b> - the hill unclear after ten minutes and every
+        /// ward down - because a boss that shells the line every nine seconds grinds it for as
         /// long as the fight lasts, and a slower line makes the fight last longer. That is a
         /// difficulty change, and a large one, which is not what "shoot a little slower" asks for.
         /// </para>
@@ -186,7 +186,7 @@ namespace GlimmerGrove.Modes
         /// Moving this on its own moves the line's output and is a chapter retune; moving it
         /// against the fuel unit is free. And note what it costs the view: at .44 a bolt lands
         /// before the next one leaves (<c>SiegeView.LongestFlight</c> is .40), so a ward no longer
-        /// holds two in the air — which is the picture the change was asked for.
+        /// holds two in the air - which is the picture the change was asked for.
         /// </para>
         /// </summary>
         public const float FireEvery = .44f;
@@ -204,7 +204,7 @@ namespace GlimmerGrove.Modes
         /// slower without shooting weaker.</b> A bolt costing two fuel is half as many bolts out
         /// of the same tube; paired with <see cref="ShotDamage"/> doubling and
         /// <see cref="FireEvery"/> doubling, a match delivers the same damage over the same
-        /// seconds through half the bolts. <b>A multiple of ten is not optional</b> — a rank is
+        /// seconds through half the bolts. <b>A multiple of ten is not optional</b> - a rank is
         /// ten per cent off this (<see cref="FuelShotTenths"/>), so a base that is not a multiple
         /// of ten truncates and some of the four cogs a player spends buy nothing, which is the
         /// failure the subdivision above existed to avoid.
@@ -220,12 +220,12 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>Twenty rather than two, and every raider's health went up by the same ten, so not
-        /// one graded number moved.</b> Par is <see cref="Par"/> — health over
-        /// <see cref="PerfectMatch"/> — and both sides of that division scaled together, so every
+        /// one graded number moved.</b> Par is <see cref="Par"/> - health over
+        /// <see cref="PerfectMatch"/> - and both sides of that division scaled together, so every
         /// shipped level's par, both its star lines and every utility's charge came out
         /// identical. What the scale buys is the one thing the old numbers could not represent: a
         /// <b>ten per cent</b> step. A ward that gains a rank fires for <c>ShotDamage * 11 / 10</c>,
-        /// which at two is two and at twenty is twenty-two — so the upgrade the cogs pay for is
+        /// which at two is two and at twenty is twenty-two - so the upgrade the cogs pay for is
         /// exact integer arithmetic rather than a float three code generators round three ways
         /// (see <c>LevelTuning</c>, and this project's own hard-won note about
         /// <c>Mathf.CeilToInt(45 * 1.20f)</c>).
@@ -236,21 +236,21 @@ namespace GlimmerGrove.Modes
         /// same match delivered the same damage over twice as many bolts and a fed ward stayed
         /// alight for twice as long. <see cref="PerfectMatch"/> was unmoved, so par, both star
         /// lines and every utility's charge were unmoved with it. Ten was the floor for the ten
-        /// per cent step — at ten the ladder is 10, 11, 12, 13, 14, exact and with no room under
-        /// it — so anything that halved it again had to give the rank ladder a finer unit first.
+        /// per cent step - at ten the ladder is 10, 11, 12, 13, 14, exact and with no room under
+        /// it - so anything that halved it again had to give the rank ladder a finer unit first.
         /// </para>
         /// <para>
         /// <b>And twenty again, because the verdict after that was that the mode reads as super
         /// fast paced.</b> A bolt is twice as heavy, costs twice the fuel
         /// (<see cref="FuelPerShotTenths"/>) and leaves at twice the interval
         /// (<see cref="FireEvery"/>), so the wards fire half as often for exactly the same output
-        /// — which is the only way to slow the shooting down that is not a chapter retune. See
+        /// - which is the only way to slow the shooting down that is not a chapter retune. See
         /// <see cref="FireEvery"/> for what slowing the cadence on its own cost.
         /// </para>
         /// <para>
         /// <b>A bolt's weight and a bolt's cost have to move together, and that is the trap
         /// here.</b> Moving this one alone changes what a match delivers and so halves or doubles
-        /// every par in the mode, with each number still looking perfectly plausible — which is
+        /// every par in the mode, with each number still looking perfectly plausible - which is
         /// the identity <see cref="PerfectMatch"/> exists to say out loud.
         /// </para>
         /// </summary>
@@ -271,14 +271,14 @@ namespace GlimmerGrove.Modes
         /// spend: a duel was fought by a quarter of the player's loadout, at a quarter of what a
         /// match delivers, against the biggest number in the mode. Reported as the fight being a
         /// grind, and it is the same arithmetic <see cref="BossHealth"/> has always warned about
-        /// from the other end — every point of boss pushes the three-star line further from real
+        /// from the other end - every point of boss pushes the three-star line further from real
         /// play, because par assumes a match lands in full and a duel could not.
         /// </para>
         /// <para>
         /// <b>So a boss is answered by the whole line, and its colour decides the <em>double</em>
         /// rather than the permission.</b> A ward of its own colour still hits it twice as hard
         /// (<see cref="WeakMultiplier"/>) and every other ward lands
-        /// <see cref="OffColourTenths"/> — the un-doubled bolt, which is what a wrong-colour hit
+        /// <see cref="OffColourTenths"/> - the un-doubled bolt, which is what a wrong-colour hit
         /// has been worth everywhere in this mode since before the lock. Which colour to feed a
         /// duel is therefore still a decision with a wrong answer (invariant 26h), and the player
         /// reads it off the board rather than out of a panel: the right colour's numbers come up
@@ -294,7 +294,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>Every boss but one, and the exception is a whole fight rather than a special
         /// case.</b> An <see cref="SiegeKind.Ironclad"/> answers false here, so three of the four
-        /// wards will not fire at it at all — which is this rule read backwards and is the only
+        /// wards will not fire at it at all - which is this rule read backwards and is the only
         /// thing its verb consists of. See that kind for why the fuel those wards hold is not
         /// lost, and why par is untouched by it.
         /// </para>
@@ -319,7 +319,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <b>Derived from <see cref="WeakMultiplier"/> rather than typed, because it is not a
         /// second number.</b> A full hit is the doubled one, so five tenths of it is exactly the
-        /// ordinary un-doubled bolt — the same thing a wrong-colour bolt was worth against
+        /// ordinary un-doubled bolt - the same thing a wrong-colour bolt was worth against
         /// everything on the hill before the lock arrived. Written as the division so the two can
         /// never come apart: a mode that doubled by three would want a third of a hit here, and a
         /// hard-coded five would silently become a buff.
@@ -331,7 +331,7 @@ namespace GlimmerGrove.Modes
         /// What a bolt of the <em>wrong</em> colour is worth against a shield, in tenths.
         ///
         /// <para>
-        /// <b>Halved, and its own colour is not reduced at all</b> — which is what makes this the
+        /// <b>Halved, and its own colour is not reduced at all</b> - which is what makes this the
         /// only raider on the hill whose answer is a colour rather than a quantity. Against a
         /// creeper the difference between the right ward and any other is
         /// <see cref="WeakMultiplier"/>: two to one. Against a bulwark it is <b>four</b> to one,
@@ -342,7 +342,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>The shield is pierced rather than worn down</b>, deliberately. A shield with its own
         /// health would be a second bar on a raider that already has one, and the player's answer
-        /// to it would be "shoot it more" — which is what every other raider already asks for.
+        /// to it would be "shoot it more" - which is what every other raider already asks for.
         /// Piercing keeps the whole mechanic in the one decision this mode is about.
         /// </para>
         /// </summary>
@@ -408,7 +408,7 @@ namespace GlimmerGrove.Modes
 
         /// <summary>
         /// What a bolt from <paramref name="build"/> at <paramref name="rank"/> takes off
-        /// <paramref name="kind"/> — the turret's own weight with its upgrades in it.
+        /// <paramref name="kind"/> - the turret's own weight with its upgrades in it.
         /// </summary>
         public static int DamageTo(SiegeKind kind, int rank, bool weak, Wards.WardBuild build)
             => build.Model == null
@@ -457,7 +457,7 @@ namespace GlimmerGrove.Modes
 
         /// <summary>
         /// A bulwark: slower than a creeper and much slower than a brute, so the shield is paid
-        /// for in the one currency this mode measures in — time on the hill.
+        /// for in the one currency this mode measures in - time on the hill.
         ///
         /// <b>Slower is the whole price, and it is a real one.</b> A raider that is hard to kill
         /// and quick would be a wave the player simply cannot answer; one that is hard to kill and
@@ -499,14 +499,14 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>The bound that makes <see cref="Wards.WardAbility.Stun"/> an ability rather than a
         /// lock.</b> A fuelled ward gets a bolt away every <see cref="FireEvery"/> seconds, which
-        /// is shorter than either stun on the shelf — so without a rest a stun turret would stop
+        /// is shorter than either stun on the shelf - so without a rest a stun turret would stop
         /// its own colour for the whole run, and a raid that cannot reach the line is a fail state
         /// that rejects nothing (invariant 5d).
         /// </para>
         /// <para>
         /// <b>Measured from the moment a stun lands, so the rest is always the walking it
-        /// interrupts plus this.</b> That is what keeps the duration the family's ladder — half a
-        /// second buys a third of the clock and a whole one buys half — where a rest measured any
+        /// interrupts plus this.</b> That is what keeps the duration the family's ladder - half a
+        /// second buys a third of the clock and a whole one buys half - where a rest measured any
         /// other way would hand both rungs the same share and leave the dearer one buying nothing
         /// (invariant 37ax).
         /// </para>
@@ -522,7 +522,7 @@ namespace GlimmerGrove.Modes
         /// what a burn is worth over its own seconds is <c>rate x seconds</c> whether it is handed
         /// over in two hundred slivers or in six instalments. What the frame spelling *did* cost
         /// was the drawing: every tick was reported as a bolt, so an ember turret drew a complete
-        /// shot — recoil, muzzle flash, comet, impact — some thirty times a second out of one
+        /// shot - recoil, muzzle flash, comet, impact - some thirty times a second out of one
         /// barrel, which is what "they shoot like a machine gun" was. The rate was never the
         /// fault and must not be reached for.
         /// </para>
@@ -534,7 +534,7 @@ namespace GlimmerGrove.Modes
         /// </para>
         /// <para>
         /// <b>The shortest burn on the shelf is three seconds</b> (<c>ember</c>, extent 30), so
-        /// the cheapest rung still pays six times — a cadence that only paid twice would make the
+        /// the cheapest rung still pays six times - a cadence that only paid twice would make the
         /// *first* rung of the family read as a single delayed hit.
         /// </para>
         /// </summary>
@@ -566,7 +566,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>Both halves of one upgrade, and they multiply rather than add.</b> A rank-four ward
         /// hits for forty per cent more and gets a bolt out of six tenths rather than ten, so the
-        /// same match is worth <em>2.33 times</em> as much damage through it — which is why a
+        /// same match is worth <em>2.33 times</em> as much damage through it - which is why a
         /// level built around cogs has to send considerably more hill than one that is not, and
         /// why <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c> is run over every rung of the
         /// chapter rather than over the first.
@@ -600,7 +600,7 @@ namespace GlimmerGrove.Modes
 
         /// <summary>
         /// The same, for a turret whose bolt is <paramref name="powerHundredths"/> of the baseline
-        /// — its model's weight with its stars already multiplied in.
+        /// - its model's weight with its stars already multiplied in.
         ///
         /// <para>
         /// <b>One division, at the end.</b> The rank, the model's weight and the star ladder are
@@ -635,7 +635,7 @@ namespace GlimmerGrove.Modes
             // **A share of the base rather than a subtraction from it**, which is the same five
             // numbers while the base is ten tenths and stops being so the moment it is not. It
             // read `FuelPerShotTenths - rank * RankFuelTenths`, which says "a tenth less" and
-            // really meant "one tenth of a fuel less" — true only at a base of ten, and silently
+            // really meant "one tenth of a fuel less" - true only at a base of ten, and silently
             // a five per cent step once a bolt cost two fuel. As a proportion it is 10, 9, 8, 7, 6
             // at a base of ten and 20, 18, 16, 14, 12 at a base of twenty, both exact, and it is
             // the rule this constant is named for rather than an arithmetic coincidence of one
@@ -647,17 +647,17 @@ namespace GlimmerGrove.Modes
         public static float FuelShot(int rank) => FuelShotTenths(rank) / 10f;
 
         /// <summary>
-        /// What one bolt costs when it lands at <paramref name="share"/> tenths of a full hit —
+        /// What one bolt costs when it lands at <paramref name="share"/> tenths of a full hit -
         /// a prism reaching its partner, or any ward answering a boss of another colour.
         ///
         /// <para>
         /// <b>A part-weight bolt costs a part of the fuel, and that is what makes "strictly
         /// additive" true rather than nearly true.</b> A ward with nothing of its own on the hill
-        /// does not lose the fuel it is holding — it <em>banks</em> it, which is the half of this
+        /// does not lose the fuel it is holding - it <em>banks</em> it, which is the half of this
         /// loop the breather exists for. So a half-weight shot at full price is not a free extra
         /// hit at all: it is the player's fuel converted at half the rate it would have been worth
         /// a few seconds later, and the line spends it on their behalf. Measured on the shipped
-        /// chapters, that is exactly what it cost — firing at a boss for half a hit at full price
+        /// chapters, that is exactly what it cost - firing at a boss for half a hit at full price
         /// took Thornwatch from 81 held runs of 90 to 78 and Broodmarch on a kitted line from 84
         /// to 81, on a change meant to <em>help</em>.
         /// </para>
@@ -672,7 +672,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>What the share still decides is the <em>rate</em>, which is the only currency a mode
         /// on a clock has.</b> A ward fires on <see cref="FireEvery"/> whatever it is holding, so
-        /// the right colour takes a boss down twice as fast as a wrong one — the decision survives
+        /// the right colour takes a boss down twice as fast as a wrong one - the decision survives
         /// in full, and it is the half a player under a clock actually feels.
         /// </para>
         /// </summary>
@@ -699,7 +699,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>A cog is dropped by a raider that died rather than dealt into the field, and the
         /// deadline is what makes taking one a decision.</b> On the field it was a blocker in the
-        /// player's own space, taken by a match beside it — which made it one more thing to solve
+        /// player's own space, taken by a match beside it - which made it one more thing to solve
         /// in the one place the player was already looking. On the hill it is treasure in the
         /// enemy's space with a clock on it, so the one reliable pull there is (greed) points at
         /// the half of the screen nobody was watching. It is the oldest answer in this genre:
@@ -718,7 +718,7 @@ namespace GlimmerGrove.Modes
         /// How much of a cog's life is left when it starts warning that it is going.
         ///
         /// A third, so the warning is a third of the window rather than a flicker at the end of
-        /// it — a player who looks up on the beat it starts blinking still has four seconds.
+        /// it - a player who looks up on the beat it starts blinking still has four seconds.
         /// </summary>
         public const float CogFading = CogLies / 3f;
 
@@ -728,12 +728,12 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>A window rather than a chance, and the difference is the whole of why this number
-        /// exists in this shape.</b> It shipped as a rate — twelve in a thousand, rolled per dealt
-        /// gem — which is uniform in aggregate and useless here, because <em>this stream is
+        /// exists in this shape.</b> It shipped as a rate - twelve in a thousand, rolled per dealt
+        /// gem - which is uniform in aggregate and useless here, because <em>this stream is
         /// deterministic</em>. A rate means a geometric gap, a geometric gap is sometimes long, and
         /// a long one on a shipped board is not bad luck that evens out: it is the same board
         /// dealing the same nothing to every player who ever opens it. Measured, that is exactly
-        /// what happened — <c>s01_stonewatch</c>, the rung that <em>introduces</em> the prism, put
+        /// what happened - <c>s01_stonewatch</c>, the rung that <em>introduces</em> the prism, put
         /// its first charm at deal 351 against a run that ends at about 324, so the mechanic, its
         /// picture and its lesson shipped to a player who could never meet them (invariant 40a).
         /// It was reported as "I only saw one".
@@ -756,7 +756,7 @@ namespace GlimmerGrove.Modes
         /// <b>A hundred and twenty-eight, measured against the one thing it trades with.</b> More
         /// charms is an easier mode, and the hold simulation prices that exactly: at 64 a chapter
         /// deals five to thirteen a run, <c>s01_bramblerun</c> finishes with the line
-        /// <em>untouched</em> at every rhythm — a fail state that rejects nothing (invariant 5d) —
+        /// <em>untouched</em> at every rhythm - a fail state that rejects nothing (invariant 5d) -
         /// and Broodmarch pulls level with Thornwatch, which is two chapters that stop being two
         /// chapters. At 96 the untouched rung is still untouched. At 128 nothing is unlosable,
         /// the chapters stay a chapter apart, every gate holds, and a cleared run is dealt
@@ -764,8 +764,8 @@ namespace GlimmerGrove.Modes
         /// </para>
         /// <para>
         /// <b>A hundred and twelve, and it is the floor rather than a preference.</b> The owner
-        /// played it and said the charms were too rare — <em>I think they are super rare, or I'm
-        /// just unlucky and haven't seen them much</em> — which is a reading rather than a rate,
+        /// played it and said the charms were too rare - <em>I think they are super rare, or I'm
+        /// just unlucky and haven't seen them much</em> - which is a reading rather than a rate,
         /// and it had <em>two</em> causes. The first was the drawing: a charmed gem was one of the
         /// four with a white glyph printed on it, and a charm went off in a reel borrowed from
         /// something that happens eighteen times a second, so a player could meet three in a run
@@ -774,20 +774,20 @@ namespace GlimmerGrove.Modes
         /// </para>
         /// <para>
         /// <b>This half is the rate, and it was swept rather than picked.</b> Every step was run
-        /// through the chapter gates — the only instrument this mode has (invariant 37j) — and the
+        /// through the chapter gates - the only instrument this mode has (invariant 37j) - and the
         /// wall is sharp: at <b>96</b> <c>s01_blackmarch</c> finishes with the line
         /// <em>untouched</em> at all nine rhythms, which is a fail state that rejects nothing
         /// (invariant 5d), <em>and</em> both shelf gates fall under their authored floor, because
         /// three free payoffs a run that do not scale with the line flatten the one ladder anybody
         /// pays for (invariant 37cg). At <b>104</b> Broodmarch stops being harder than Thornwatch
-        /// — 88 of 90 against 84 — which is two chapters that stop being two chapters. At
+        /// - 88 of 90 against 84 - which is two chapters that stop being two chapters. At
         /// <b>112</b> every gate holds, and a cleared run is dealt <b>two to nine, mean four, and
         /// never fewer than two</b>.
         /// </para>
         /// <para>
         /// <b>So this is as many as the mode can carry without being retuned</b>, and the honest
         /// next move if it is still not enough is not this number: it is to pay for the charms
-        /// somewhere — a wave, a health surge, a star line — rather than to let a gate go red.
+        /// somewhere - a wave, a health surge, a star line - rather than to let a gate go red.
         /// </para>
         /// </summary>
         public const int CharmWithin = 112;
@@ -800,7 +800,7 @@ namespace GlimmerGrove.Modes
         /// <b>The window bounded the gap between two charms and left the gap before the first one
         /// exactly as long, which is the half of invariant 37ci that was not fixed.</b> The first
         /// charm falls at <c>Avalanche(seed) % CharmWithin</c>, so a run can be a whole window old
-        /// before it meets one — and that window is measured in <em>gems</em>, where an early rung
+        /// before it meets one - and that window is measured in <em>gems</em>, where an early rung
         /// deals very few: <c>s01_firstwatch</c> is par 14, which is about 77 gems for the whole
         /// run, so most of its seeds deal their first charm after the level has ended. The rate
         /// over a long stream was right the whole time; what was wrong is that a <em>run</em> is
@@ -814,9 +814,9 @@ namespace GlimmerGrove.Modes
         /// drawn from the same window whatever that window is.
         /// </para>
         /// <para>
-        /// <b>A half, and it is the floor rather than a preference — the same wall
+        /// <b>A half, and it is the floor rather than a preference - the same wall
         /// <see cref="CharmWithin"/> hit.</b> A gap uniform in 1..<em>n</em> averages <em>n</em>/2,
-        /// so this moves the expected first charm from 56 gems to 28 — about ten matches earlier —
+        /// so this moves the expected first charm from 56 gems to 28 - about ten matches earlier -
         /// and bounds it at 56 where it was 112. Every gap after it is unchanged, which is why it
         /// costs a fraction of what the same felt increase costs on the rate.
         /// <b>Swept, like everything else in this mode</b> (invariant 37j): at a <b>third</b>
@@ -834,7 +834,7 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public const int CharmOpening = 2;
 
-        /// <summary>The window the first charm of a run falls in — see <see cref="CharmOpening"/>.</summary>
+        /// <summary>The window the first charm of a run falls in - see <see cref="CharmOpening"/>.</summary>
         public static int CharmFirstWithin => CharmWithin / CharmOpening < 1 ? 1 : CharmWithin / CharmOpening;
 
         /// <summary>
@@ -843,8 +843,8 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>There is no damage figure here, and its absence is the design.</b> A stormglass is
-        /// fired by the <em>line</em> — every standing ward at every raider, at each ward's own
-        /// bolt weight (see <c>SiegeBoard.Volley</c>) — so what it is worth is decided by the
+        /// fired by the <em>line</em> - every standing ward at every raider, at each ward's own
+        /// bolt weight (see <c>SiegeBoard.Volley</c>) - so what it is worth is decided by the
         /// turrets a player bought, the ranks their cogs paid for and how much of the line is still
         /// standing. A flat figure was the first shape and is quietly corrosive: damage that does
         /// not scale with the shelf flattens the one ladder in this mode anybody pays for
@@ -946,14 +946,14 @@ namespace GlimmerGrove.Modes
         /// <b>How long a charm is drawn for is not a number, and that is the correction.</b>
         ///
         /// <para>
-        /// This used to be <c>CharmFor</c>, a single figure the view was "given" — and its own
+        /// This used to be <c>CharmFor</c>, a single figure the view was "given" - and its own
         /// remarks claimed the beat that took a charm was <em>held</em> for it, which nothing
         /// anywhere did. As well: this clock does not stop for a cascade, so a beat held on the
         /// view's side is a beat of free hill, and every chapter's difficulty would have become a
         /// function of an animation constant.
         /// </para>
         /// <para>
-        /// <b>What replaced it is a hold and a slowdown taken together</b> — <c>SiegeView.Dilate</c>
+        /// <b>What replaced it is a hold and a slowdown taken together</b> - <c>SiegeView.Dilate</c>
         /// scales the seconds handed to <see cref="SiegeBoard.Advance"/> for exactly the window the
         /// fall is held for, so the board waits and the hill waits with it. The model is handed
         /// fewer seconds rather than the same seconds later, which is what makes it free: a run
@@ -978,7 +978,7 @@ namespace GlimmerGrove.Modes
         /// <b>Fifteen, then seventeen, because the owner's verdict was that the mode reads as
         /// super fast paced.</b> Every non-boss march went up by the same seventh
         /// (<see cref="BruteMarch"/>, <see cref="BulwarkMarch"/>, <see cref="BomberMarch"/>), so
-        /// the hill keeps its shape and only its speed moves — a brute is still the thing that is
+        /// the hill keeps its shape and only its speed moves - a brute is still the thing that is
         /// slow because it is heavy, and a bulwark is still the slowest thing that is not a boss.
         /// <b>A boss's march is deliberately not in that list</b>: a warlord's entrance is timed
         /// against its own cadence and the quiet before it (<see cref="BossAfter"/>), and it was
@@ -987,7 +987,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>A seventh is close to the ceiling, and what stops it is invariant 5d rather than
         /// taste.</b> A slower column spends longer under the wards, so more of it dies before it
-        /// arrives — and a hill that never reaches the line is a fail state that rejects nothing,
+        /// arrives - and a hill that never reaches the line is a fail state that rejects nothing,
         /// which would leave the rung playing as a jewel board with scenery over it. Measured
         /// across the whole chapter and nine player rhythms: at this pace every rung past the
         /// teaching ones still draws blood at some rhythm, and <b>at a third slower
@@ -1004,7 +1004,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>A creeper's numbers exactly, and that is the measurement rather than a preference.</b>
-        /// Nothing about fighting one is different — it walks, it swings, it dies — so what it is
+        /// Nothing about fighting one is different - it walks, it swings, it dies - so what it is
         /// worth killing has to be set by what it <em>leaves</em>: a bomb pays a firepot's 440 back
         /// to a player who spends it well, and a raider costing much more than a creeper's 200
         /// turns a gift into a toll. Measured over the whole chapter at nine player rhythms, a
@@ -1027,7 +1027,7 @@ namespace GlimmerGrove.Modes
         /// What a bomb takes off everything in its reach when it is tapped.
         ///
         /// <para>
-        /// <b>A firepot's, and read from the same place a firepot's is read</b> — the utility
+        /// <b>A firepot's, and read from the same place a firepot's is read</b> - the utility
         /// catalog is content, so this is the one number here that is deliberately <em>not</em> a
         /// constant: <c>SiegeScreen</c> hands the board the published magnitude. What is here is
         /// the fallback for a build with no store configured at all, and it is the shipped
@@ -1045,7 +1045,7 @@ namespace GlimmerGrove.Modes
         /// <summary>
         /// How far a bomb's blast reaches, in boxes of the hill's targeting grid.
         ///
-        /// <b>The firepot's plus, said once</b> — <see cref="BlastReach"/> — so what a bomb takes
+        /// <b>The firepot's plus, said once</b> - <see cref="BlastReach"/> - so what a bomb takes
         /// and what a firepot takes cannot come apart. A player who has used one knows the other.
         /// </summary>
         public static int BombReach => BlastReach;
@@ -1074,7 +1074,7 @@ namespace GlimmerGrove.Modes
         /// <b>A boss has to be worth a fight rather than a raider with a bigger number.</b> At two
         /// thousand it is four brutes standing still, which under the ordinary play
         /// <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c> models is a duel of a little under
-        /// half a minute — long enough that the player has to keep choosing the right colour under
+        /// half a minute - long enough that the player has to keep choosing the right colour under
         /// fire, short enough that the last stretch of a two-minute level is not a grind.
         /// </para>
         /// <para>
@@ -1089,11 +1089,11 @@ namespace GlimmerGrove.Modes
         /// burns it and par is as honest over a duel as it is over a wave.
         /// </para>
         /// <para>
-        /// <b>Which is what paid for the fifteen per cent these four went up by</b> — 1800, 1100,
+        /// <b>Which is what paid for the fifteen per cent these four went up by</b> - 1800, 1100,
         /// 2400 and 3200 before it, scaled together so every relationship the four were tuned on
         /// survives to the point. Measured over the ninety-run sweep at the health below:
         /// Thornwatch holds 80 of 90 against a floor of 78, Broodmarch 66 on the starter line and
-        /// 81 one rung up, and the two mid-chapter bosses are held at 7 of 9 — the same readings
+        /// 81 one rung up, and the two mid-chapter bosses are held at 7 of 9 - the same readings
         /// the smaller bosses gave, which is the whole claim. <b>There is no more room than that:
         /// at a quarter more the finale fell from 5 of 9 to 3.</b>
         /// </para>
@@ -1106,7 +1106,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>A kind rather than a bigger number, and what makes it one is that all three of these
         /// move together.</b> It carries a little under twice a warlord's health, it throws half as
-        /// often again, and each spell takes nearly twice as much off a ward — so it is not
+        /// often again, and each spell takes nearly twice as much off a ward - so it is not
         /// answered by doing what beat a warlord for longer. It stops <em>further up</em> the
         /// hill, which is the half a player feels first: there is more ground between it and the
         /// line, so the wards have longer to work on it, and that is the compensation for
@@ -1115,7 +1115,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>Its ceiling is <see cref="BossHealth"/>'s ceiling and it is the tighter of the
         /// two.</b> Par is honest over a duel now that the whole line answers one
-        /// (<see cref="EveryWardReaches"/>), so what bounds this is not the arithmetic any more —
+        /// (<see cref="EveryWardReaches"/>), so what bounds this is not the arithmetic any more -
         /// it is the sweep. The finale is the rung this chapter is already hardest at: at 3650 an
         /// unhurried player holds it at 5 of 9 rhythms, and at 4000 that falls to 3.
         /// <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c> is the only instrument that can
@@ -1131,7 +1131,7 @@ namespace GlimmerGrove.Modes
         /// Seconds between one omen and the next, and the cliff either side of it is sharp.
         ///
         /// <b>It was 3.4 while an omen only took health, and a sunder is a second cost on the same
-        /// spell</b> — every rank it knocks off the line is ten per cent of a turret's damage and
+        /// spell</b> - every rank it knocks off the line is ten per cent of a turret's damage and
         /// ten per cent of its fuel, compounding for the rest of the duel, and none of that is
         /// visible to par (invariant 37w). Measured on the shipped finale through
         /// <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c>, which is the only instrument that
@@ -1170,7 +1170,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>It attacks the thing the chapter taught rather than the thing every boss attacks.</b>
         /// A cog is the one upgrade a player <em>earns</em> in this mode (invariant 37w), so the
-        /// finale is the one fight where where those cogs went is a question with a wrong answer —
+        /// finale is the one fight where where those cogs went is a question with a wrong answer -
         /// pour every one into a single turret and the overlord can take the whole investment off
         /// it, and a mending cannot put a rank back. It is bounded at nought by
         /// <see cref="SiegeWard.Sunder"/> and never touches health beyond
@@ -1194,7 +1194,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>It puts a ward <em>out</em>.</b> Its spell empties the fuel a ward is holding and
-        /// smothers it for <see cref="Douse"/> seconds, in which it cannot fire at all — so what
+        /// smothers it for <see cref="Douse"/> seconds, in which it cannot fire at all - so what
         /// it costs is not the line's health but the player's <em>work</em>, and it is the one
         /// boss whose answer is not a mending. The decision it asks is the mode's own decision
         /// (which colour is worth feeding next) under a constraint that moves every few seconds,
@@ -1204,8 +1204,8 @@ namespace GlimmerGrove.Modes
         /// </para>
         /// <para>
         /// <b>Taking no health is what makes it the boss a chapter opens with.</b> It teaches the
-        /// tell — the light gathering on it, the tether reaching for the ward it has chosen, the
-        /// second and a bit to react in — without the punishment a warlord's version carries, so a
+        /// tell - the light gathering on it, the tether reaching for the ward it has chosen, the
+        /// second and a bit to react in - without the punishment a warlord's version carries, so a
         /// player meets the shape of a boss fight
         /// before they meet its cost. It is also why <c>ModeValidator.Threatens</c> stopped
         /// counting "there is a boss" as a threat: a level whose only threat were this could not
@@ -1236,7 +1236,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>It roars, and the roar does two things.</b> It takes <see cref="WarbringerCast"/>
-        /// off every ward still standing — not one ward, all of them — and it sets every raider on
+        /// off every ward still standing - not one ward, all of them - and it sets every raider on
         /// the hill charging at <see cref="Rally"/> times its own pace for
         /// <see cref="RallyFor"/> seconds. That is a different verb from the other three: a warlord
         /// and an overlord pick one ward and hit it hard, so the line comes down unevenly and the
@@ -1247,7 +1247,7 @@ namespace GlimmerGrove.Modes
         /// <b>It used to walk to the line, and that was withdrawn after play.</b> The design was
         /// that it took <em>ground</em>: each roar lunged it further down the hill until it arrived
         /// and swung with its hands, which made the fight a countdown rather than a duel. What it
-        /// actually produced was a boss that spent most of the level walking — reported as "it
+        /// actually produced was a boss that spent most of the level walking - reported as "it
         /// takes forever to move down and start doing its damage, because it keeps moving
         /// downwards". <b>A boss standing still is not a limitation of this mode, it is the shape
         /// of the fight</b>: every one of them holds the middle of the hill where nothing can reach
@@ -1255,13 +1255,13 @@ namespace GlimmerGrove.Modes
         /// being somewhere else. So it holds like the rest and the ground it used to take is gone.
         /// </para>
         /// <para>
-        /// <b>The rally half survives and is why it still comes early</b> — see
+        /// <b>The rally half survives and is why it still comes early</b> - see
         /// <see cref="RestBefore"/>. A roar over an empty hill would be half a mechanic doing
         /// nothing, which is invariant 5d: the whole point of a rally is that there is something to
         /// rally.
         /// </para>
         /// <para>
-        /// <b>It adds no health to the hill, so par does not move</b> — which is exactly why the
+        /// <b>It adds no health to the hill, so par does not move</b> - which is exactly why the
         /// only instrument that can say whether it is tuned is
         /// <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c> (invariant 37j). A warbringer that
         /// is too strong shows up there as a line that falls and nowhere else at all.
@@ -1286,7 +1286,7 @@ namespace GlimmerGrove.Modes
         /// <see cref="WarbringerCast"/> every four and a half seconds is 0.89 health a second off
         /// the line, which sits where the rung does: a warlord takes 1.20 and an overlord 2.50, so
         /// rungs 5, 8 and 10 climb. <b>At the old scale</b> it was once 6 seconds for 2, which is
-        /// 1.33 — <em>more</em> than that scale's finale — and measured on the shipped rung it left
+        /// 1.33 - <em>more</em> than that scale's finale - and measured on the shipped rung it left
         /// an unhurried player on 6 of 56 (the chapter's bloodiest line, one rung before its
         /// climax, which is the ramp inverted).
         /// <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c> is the only thing that can see any
@@ -1309,7 +1309,7 @@ namespace GlimmerGrove.Modes
         /// What one roar takes off <em>every</em> standing ward.
         ///
         /// <b>Small, because it lands four times.</b> One off a four-ward line is four health a
-        /// roar against a warlord's three, which is more in total and much less per ward — so the
+        /// roar against a warlord's three, which is more in total and much less per ward - so the
         /// line comes down flat rather than one turret at a time, and no single mending answers it.
         /// Spread damage is the weaker shape for the same total, which is the right side to err on
         /// for the rung before the finale.
@@ -1330,12 +1330,12 @@ namespace GlimmerGrove.Modes
         /// finished with one ward standing out of four, which is a rung that is lost by anybody
         /// having a worse afternoon. At 1.55, with a longer quiet in front of it
         /// (<see cref="CrowdAfter"/>), the same player finishes with three and the line down
-        /// to 38 of 56 — bled hard, which is what a penultimate rung should feel like.
+        /// to 38 of 56 - bled hard, which is what a penultimate rung should feel like.
         /// </summary>
         public const float Rally = 1.55f;
 
         /// <summary>
-        /// Seconds a roar lasts. Two roars never stack — the later one restarts it.
+        /// Seconds a roar lasts. Two roars never stack - the later one restarts it.
         ///
         /// <b>It has to be shorter than <see cref="WarbringerCastEvery"/>, and that is a rule
         /// rather than a preference.</b> At 5 seconds against the old cadence of 9 the hill charged
@@ -1356,7 +1356,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>Between the blightcaller and the warlord, and for the blightcaller's reason.</b> It
         /// takes no ward health at all, so it rides the last authored wave rather than walking on
-        /// alone (<see cref="EndangersTheLine"/>) — and a boss riding a wave is fought while its
+        /// alone (<see cref="EndangersTheLine"/>) - and a boss riding a wave is fought while its
         /// escort is still walking, so it cannot carry a duel's health without turning its rung
         /// into one. 1,500 is a fifth over a blightcaller's, which is the room a chapter three rung
         /// wants over a chapter two one.
@@ -1378,7 +1378,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <b>Slower than every other boss, because what it takes has to have time to accumulate.</b>
         /// A cog drops on a kill and a bomb on a bomber's kill, so the thing this spell is aimed at
-        /// is produced by play at a few a wave — at a warlord's 2.5 seconds it would eat an empty
+        /// is produced by play at a few a wave - at a warlord's 2.5 seconds it would eat an empty
         /// hill nine times out of ten, which is invariant 5d's decoration wearing a boss's body.
         /// At six it lands about four times over a rung and each one has something to take.
         /// </summary>
@@ -1394,7 +1394,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>Dearer than an overlord, and it has to be read together with what it raises.</b> A
         /// duel against this one is 4,000 of boss plus <see cref="Raises"/> x
-        /// <see cref="RaiseSize"/> creepers, which par counts in full — so the rung is priced at
+        /// <see cref="RaiseSize"/> creepers, which par counts in full - so the rung is priced at
         /// what the whole fight costs rather than at what the body does, and a player who kills it
         /// early is paid for it by a par that overstated them.
         /// </para>
@@ -1428,12 +1428,12 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>The cap is what keeps par arithmetic, and it is the load-bearing half of this
         /// mechanic.</b> Par in this mode is the hill's health over the most one match could
-        /// deliver (invariant 37a) — a number that can be computed off the file. A boss that could
+        /// deliver (invariant 37a) - a number that can be computed off the file. A boss that could
         /// add bodies for as long as it lived would make the hill's health a function of how the
         /// player played, which is not a thing a level can be graded against: three stars would
         /// mean something different for every run. So the total is fixed, the level's par counts
         /// every one of the twelve whether they are raised or not, and a run that kills the
-        /// bonecaller before its third raise is a run par overstated — which is the direction
+        /// bonecaller before its third raise is a run par overstated - which is the direction
         /// invariant 22 says to err in.
         /// </para>
         /// <para>
@@ -1466,7 +1466,7 @@ namespace GlimmerGrove.Modes
         /// A smite lands a number on a ward and a raise puts bodies on the hill; a chain is a
         /// state, and a state is only legible if the thing that caused it is visibly the thing
         /// that caused it. Standing well back with a drawn bow is what says <em>that</em> is where
-        /// this came from — and it is also honest about the fight, because a shackler is answered
+        /// this came from - and it is also honest about the fight, because a shackler is answered
         /// last and is meant to be answered last.
         /// </summary>
         public const float ShacklerHold = .68f;
@@ -1481,7 +1481,7 @@ namespace GlimmerGrove.Modes
         /// mechanic.</b> A bind that is re-thrown before the last one has run out is a colour held
         /// off the hill for the whole fight, which is invariant 5d from the other side: a fail
         /// state that rejects nothing, because there is no play that answers it. The gap is what
-        /// the player is being sold — see <c>SiegeRuleTests</c>, which holds the two apart rather
+        /// the player is being sold - see <c>SiegeRuleTests</c>, which holds the two apart rather
         /// than trusting this comment.
         /// </summary>
         public const float ShacklerCastEvery = 7f;
@@ -1508,9 +1508,9 @@ namespace GlimmerGrove.Modes
         /// <b>Because its aegis multiplies the time rather than the damage, and only one of those
         /// two is in par.</b> Three of the four wards will not fire at it
         /// (<see cref="EveryWardReaches"/>), so the fuel they hold reaches it only through an
-        /// overcharge the player has to bank and throw. Par is unmoved by that — every bolt and
+        /// overcharge the player has to bank and throw. Par is unmoved by that - every bolt and
         /// every charge that does land lands at full weight, which is exactly what
-        /// <see cref="PerfectMatch"/> assumes — but the <em>clock</em> is not, and this mode's fail
+        /// <see cref="PerfectMatch"/> assumes - but the <em>clock</em> is not, and this mode's fail
         /// state is a clock (invariant 37b). A finale at an overlord's 3,650 behind an aegis is a
         /// duel long enough for its escort to take the line apart while the player is doing
         /// everything right.
@@ -1518,7 +1518,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>Which is the same trade the bonecaller's note describes and pointing the other
         /// way</b>: that one buys length with bodies par can count, and this one buys difficulty
-        /// with a rule par cannot see — so the number has to come down to pay for it. Where it
+        /// with a rule par cannot see - so the number has to come down to pay for it. Where it
         /// lands is a measurement, not an argument: <c>SiegeRuleTests</c> sweeps the chapter.
         /// </para>
         /// </summary>
@@ -1539,14 +1539,14 @@ namespace GlimmerGrove.Modes
         /// <b>Under a warlord's, and that is the aegis being paid for twice over.</b> The fight is
         /// already long by construction; a finale that also hit like an overlord would be a rung
         /// decided by whether the player happened to have banked a charge. What makes it a finale
-        /// is <em>which</em> ward it hits — see <c>SiegeBoard.Wanted</c>.
+        /// is <em>which</em> ward it hits - see <c>SiegeBoard.Wanted</c>.
         /// </summary>
         public const int IroncladCast = 2;
 
         /// <summary>
         /// Where the raised come up, as a march reading.
         ///
-        /// <b>At the top of the hill, exactly where a wave musters</b> — not beside the boss. A
+        /// <b>At the top of the hill, exactly where a wave musters</b> - not beside the boss. A
         /// group that appeared at the bonecaller's feet would be four creepers already halfway to
         /// the line with no time to answer them, which reads as the game placing raiders rather
         /// than sending them. Nought is where every wave in this mode starts.
@@ -1559,7 +1559,7 @@ namespace GlimmerGrove.Modes
         /// <b>It never reaches the line, and that is the whole shape of the fight.</b> Everything
         /// else on this hill is answered by killing it before it arrives; a warlord walks to the
         /// middle of the hill, stands there, and hits the line from where nothing can stop it
-        /// except the wards themselves. So the pressure it applies cannot be outrun — it can only
+        /// except the wards themselves. So the pressure it applies cannot be outrun - it can only
         /// be out-damaged, which is what makes the last wave a duel rather than a longer wave.
         /// </summary>
         public const float BossHold = .46f;
@@ -1568,10 +1568,10 @@ namespace GlimmerGrove.Modes
         /// Seconds it would take to cross the whole hill. It only walks <see cref="BossHold"/> of
         /// it, so the entrance a player actually watches is a little under six seconds.
         ///
-        /// <b>It was 22, then 13, and it is 7 — the owner has now asked for it faster twice.</b> A
+        /// <b>It was 22, then 13, and it is 7 - the owner has now asked for it faster twice.</b> A
         /// creeper crosses the whole hill in fifteen; there was no reason for a boss to be slower
         /// per unit of ground than the smallest thing on the board except that slow reads as heavy
-        /// — and past a few seconds it stops reading as heavy and starts reading as a wait. What
+        /// - and past a few seconds it stops reading as heavy and starts reading as a wait. What
         /// carries the weight instead is its size, its own frames and the shake it arrives with.
         /// <c>SiegeRuleTests.AWarlordWalksOnBeforeItStands</c> holds the entrance under
         /// <b>four</b> seconds now, so the number cannot drift back.
@@ -1579,7 +1579,7 @@ namespace GlimmerGrove.Modes
         /// <b>All four bosses moved together and the entrances stay in the order the sizes are
         /// in</b>, because the ladder a player reads is size-then-weight: the blightcaller walks on
         /// in about 4.1 seconds, the warlord in 3.2, the overlord in 3.0 and the warbringer in 2.7.
-        /// Halving these is not free — a boss on its ground is a boss casting, so every one of them
+        /// Halving these is not free - a boss on its ground is a boss casting, so every one of them
         /// now opens fire three to four seconds earlier, which is why this went back through
         /// <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c> like every other pacing change
         /// (37s).
@@ -1593,8 +1593,8 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>He sends his raiders first and comes himself after them</b>, which is the pacing the
         /// finale wants and is also the one place this mode's own wave rule needed an exception.
-        /// Invariant 37k's shortcut still applies — a player who has cleared the hill gets the
-        /// warlord at once rather than standing about — so what this longer clock buys is entirely
+        /// Invariant 37k's shortcut still applies - a player who has cleared the hill gets the
+        /// warlord at once rather than standing about - so what this longer clock buys is entirely
         /// for the player who is <em>behind</em>: it stops a duel being stacked on top of a wave
         /// still swinging at the line, which is two fail states arriving together and reads as
         /// being cheated rather than as being outpaced.
@@ -1609,10 +1609,10 @@ namespace GlimmerGrove.Modes
         /// <b>It came back down from 34 to 28 for the same verdict that shortened
         /// <see cref="BossMarch"/>, and that is not free.</b> The warlord now opens fire about
         /// eleven seconds earlier, which is eleven seconds of it overlapping the tail of the last
-        /// wave — measured, an unhurried player finishes with 15 of the line's 56 rather than 21.
+        /// wave - measured, an unhurried player finishes with 15 of the line's 56 rather than 21.
         /// <b>A pacing change is a difficulty change</b> (37s said the same thing about the fuel
         /// flight), and this one is the level getting tighter rather than the boss getting
-        /// stronger. If it plays too tight, <see cref="BossCastEvery"/> is the constant to move —
+        /// stronger. If it plays too tight, <see cref="BossCastEvery"/> is the constant to move -
         /// not this one, which is what the player asked for.
         /// </para>
         /// </summary>
@@ -1683,7 +1683,7 @@ namespace GlimmerGrove.Modes
         /// Seconds between one boulder and the next.
         ///
         /// <para>
-        /// <b>Longer than a burial lasts a ward, on purpose</b> — the shackler's rule
+        /// <b>Longer than a burial lasts a ward, on purpose</b> - the shackler's rule
         /// (<c>AShacklersChainAlwaysRunsOutBeforeTheNextOne</c>) reaches this boss too, and it
         /// reaches it for a harder reason than pacing: a boulder that outlasts its own cadence
         /// is a line that buries one post at a time until none of them answers, and a hill with
@@ -1691,7 +1691,7 @@ namespace GlimmerGrove.Modes
         /// player who cannot fire. That is a stalemate rather than a fight, and it is what this
         /// pairing refuses by arithmetic: at the fastest pace a phase can set
         /// (<see cref="PhasePaceHundredths"/>) a burial's ceiling is still under one cadence, so
-        /// one post at a time is the most this boss can hold and the line always answers — held
+        /// one post at a time is the most this boss can hold and the line always answers - held
         /// by <c>ABuriedLineAlwaysHasPostsLeftStanding</c> rather than by this note.
         /// Measured through <c>EveryShippedBossRungIsAFight</c>: at 5.5 and 6400
         /// health the finale fell at no rhythm, because every beat spent digging is a beat the
@@ -1700,7 +1700,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>It came up from 6 as <see cref="ColossusCast"/> doubled, and the pair is the
         /// point.</b> The owner's reading was that a boulder <em>hits very low</em>, and the
-        /// answer to that is not more damage a second — at 4 a blow every 6 seconds the finale
+        /// answer to that is not more damage a second - at 4 a blow every 6 seconds the finale
         /// fell at none of nine rhythms, which is the wall this gate exists to refuse. A heavier
         /// blow thrown less often reads as the biggest body on the hill and holds the rung where
         /// it was: measured, 2 of 9 at both (2, 6) and (4, 7.5), and 1 of 9 at (3, 6), (4, 7) and
@@ -1716,7 +1716,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>Rubble runs out on the clock, and the reason is the one failure a mechanic may
         /// never have: it stopped being a fight.</b> A burial used to end only when the player
-        /// dug it out, so a line nobody dug was a line that went quiet post by post — and with
+        /// dug it out, so a line nobody dug was a line that went quiet post by post - and with
         /// every post buried the boss had nothing left to aim at and held its cast for ever
         /// (<see cref="CastRetry"/>). Neither side could act: reported from play as
         /// <em>I cannot shoot and he does not attack</em>. The clock is what makes that
@@ -1727,8 +1727,8 @@ namespace GlimmerGrove.Modes
         /// player's hands in the mechanic: a piece slips off by itself every
         /// <see cref="RubblePiece"/> seconds and a tap takes one off at once, so digging is
         /// still the difference between a post that is back in a breath and one that is back in
-        /// four. That is a burial keeping its verb — attention, the currency this mode's clock
-        /// prices (37bl) — and losing only the part of it that could wall a run.
+        /// four. That is a burial keeping its verb - attention, the currency this mode's clock
+        /// prices (37bl) - and losing only the part of it that could wall a run.
         /// </para>
         /// </summary>
         public const float ColossusBury = 4f;
@@ -1737,10 +1737,10 @@ namespace GlimmerGrove.Modes
         /// What one boulder takes off the ward it lands on.
         ///
         /// <b>Doubled from 2 on the owner's reading that it hit far too lightly</b>, and paid for
-        /// with <see cref="ColossusCastEvery"/> rather than taken free — see that note for the
+        /// with <see cref="ColossusCastEvery"/> rather than taken free - see that note for the
         /// nine-rhythm sweep behind the pair. Four of a ward's <see cref="WardHealth"/> 14 is the
-        /// heaviest base figure any boss here lands — only a drain goes past it, and only by
-        /// what the player was holding (<see cref="ThundererDrain"/>) — which is what the biggest
+        /// heaviest base figure any boss here lands - only a drain goes past it, and only by
+        /// what the player was holding (<see cref="ThundererDrain"/>) - which is what the biggest
         /// body on the hill should land.
         /// </summary>
         public const int ColossusCast = 4;
@@ -1939,7 +1939,7 @@ namespace GlimmerGrove.Modes
         /// had left its hand: a fed line lands about 230 damage a second on a lone boss, and the
         /// overcharges banked through the quiet in front of one deliver more in an instant than
         /// any boss stands with. Every gate was green, because nothing measured how long a boss
-        /// lived — the hold simulation scored a run <em>better</em> for killing it faster
+        /// lived - the hold simulation scored a run <em>better</em> for killing it faster
         /// (<c>SiegeRuleTests.EveryShippedBossRungIsAFight</c> is the instrument now, and every
         /// chapter's boss rungs go through it).
         /// </para>
@@ -1957,8 +1957,8 @@ namespace GlimmerGrove.Modes
         /// </para>
         /// <para>
         /// <b>It was an invulnerability for exactly one build, and that is the fault this shape
-        /// exists to fix.</b> A guard in front of every stand is arithmetically the same promise —
-        /// the fight's floor is <see cref="BossPhases"/> × <see cref="PhaseLeast"/> either way —
+        /// exists to fix.</b> A guard in front of every stand is arithmetically the same promise -
+        /// the fight's floor is <see cref="BossPhases"/> × <see cref="PhaseLeast"/> either way -
         /// but it spends the promise on the player's own turrets: for three to four seconds out
         /// of every stand the line stood lit, fed and doing nothing, which reads as the game
         /// being broken rather than as the boss being tough. Reported from play as exactly that,
@@ -1983,7 +1983,7 @@ namespace GlimmerGrove.Modes
         /// Quiet between a stand opening and the spell that opens it being decided.
         ///
         /// <b>Short, because the floor is the wait.</b> It replaced a wake of 3.4 seconds that was
-        /// the whole of a player's warning before the first spell — and was also the window in
+        /// the whole of a player's warning before the first spell - and was also the window in
         /// which a boss died having done nothing. The warning is the walk-in now, which the boss
         /// spends untouchable and the view spends on its arrival; what is left is the beat between
         /// the roar and the throw, and the tell (<see cref="BossTell"/>) still sits on top of it.
@@ -2018,7 +2018,7 @@ namespace GlimmerGrove.Modes
         /// that frame let a player who had banked every charge take a third of the boss the same
         /// instant, three times over, and an ironclad on its own rung fell in 7.6 seconds having
         /// done everything the rules promised. So a stand holds at least this long whatever the
-        /// line does, and three of them are the shortest a fight can be — about ten seconds
+        /// line does, and three of them are the shortest a fight can be - about ten seconds
         /// standing, plus the walk in, which is the floor <c>SiegeRuleTests</c> holds the shipped
         /// rungs to.
         /// </para>
@@ -2038,7 +2038,7 @@ namespace GlimmerGrove.Modes
         /// the stand's opening spell has landed and <see cref="PhaseLeast"/> has passed, whichever
         /// is later. A boss that finds nothing to aim at retries every <see cref="CastRetry"/>
         /// (every ward already dark, every one already chained) and must not hold a boss up for
-        /// as long as that lasts, so the floor lifts here whatever happened — and a bonecaller
+        /// as long as that lasts, so the floor lifts here whatever happened - and a bonecaller
         /// that has spent its raises settles at once, because a floor in front of a spell that
         /// will never be thrown is a wall (invariant 5d).
         /// </summary>
@@ -2049,7 +2049,7 @@ namespace GlimmerGrove.Modes
         /// stood with <paramref name="maxHealth"/>. Nought for the last phase.
         ///
         /// <b>Integer arithmetic and thirds from the top</b>, so two devices agree about the
-        /// frame a phase turns on (the runtimes disagree about floats — CLAUDE.md).
+        /// frame a phase turns on (the runtimes disagree about floats - CLAUDE.md).
         /// </summary>
         public static int PhaseFloor(int maxHealth, int phase)
             => phase >= BossPhases - 1 ? 0
@@ -2107,13 +2107,13 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>Short, and it is a retry rather than a cadence.</b> A cast that finds no target
         /// used to spend a whole <see cref="CastEveryFor"/> on nothing, because the timer was
-        /// re-armed before the target was known — on a blightcaller, whose spell already takes no
+        /// re-armed before the target was known - on a blightcaller, whose spell already takes no
         /// health, that is a boss standing silent for four and a half seconds and is how "it
         /// attacks and my turrets lose nothing" came to be true.
         /// </para>
         /// <para>
         /// It can only ever make a spell arrive <em>sooner than it would have</em> and never more
-        /// often than the cadence, because a cast that lands re-arms in full — so nothing about
+        /// often than the cadence, because a cast that lands re-arms in full - so nothing about
         /// a level's tuning moves except that a boss stops wasting its turns.
         /// </para>
         /// </summary>
@@ -2148,12 +2148,12 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>It went from ten to fourteen when the warlord arrived, and that is a fact about the
         /// shape of a level rather than about how hard one should be.</b> At ten the shipped siege
-        /// ended within seconds of the line coming down — which is the right texture for a level
+        /// ended within seconds of the line coming down - which is the right texture for a level
         /// whose last wave is its climax, and the wrong one for a level that has a duel *after*
         /// its last wave: measured, the run was lost with two raiders left, the line falling to
         /// brutes that used to be the finale. A longer level needs a line that can carry a leak
         /// into the next phase, and the compensation is that a leak now bleeds for longer rather
-        /// than that the level got easier — an unhurried player still finishes 43% down
+        /// than that the level got easier - an unhurried player still finishes 43% down
         /// (<c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c>, invariant 37j).
         /// </para>
         /// </summary>
@@ -2178,7 +2178,7 @@ namespace GlimmerGrove.Modes
         /// How much <paramref name="model"/> can take before it falls.
         ///
         /// <b>Read once when the ward is built</b>, exactly as its capacity is
-        /// (<see cref="CapacityOf"/>), and held on the ward as <c>SiegeWard.Full</c> — so a
+        /// (<see cref="CapacityOf"/>), and held on the ward as <c>SiegeWard.Full</c> - so a
         /// mending, a rally and the health bar all ask the ward rather than the mode's constant.
         /// Every one of those three used to read <see cref="WardHealth"/> directly, which was
         /// right while every turret held the same, and would have quietly capped a tough turret's
@@ -2233,22 +2233,22 @@ namespace GlimmerGrove.Modes
         /// <b>Clearing the hill buys a breather rather than the next wave, and that is the one
         /// place in this mode a player is allowed to think.</b> The muster used to fire the
         /// instant nothing was left walking, on the sound argument that a hill which waits is no
-        /// pressure at all — and the cost of it was that playing <em>well</em> was rewarded with
+        /// pressure at all - and the cost of it was that playing <em>well</em> was rewarded with
         /// more pressure, immediately, for ever. A real-time game does not remove thinking time,
         /// it schedules it: every game of this shape alternates a wave and a lull, and the lull is
         /// where the next wave is prepared for. Without one there was no moment in which a
         /// decision could be made, so the only affordable algorithm was "first match my eye lands
-        /// on" — which is exactly what the mode played as.
+        /// on" - which is exactly what the mode played as.
         /// </para>
         /// <para>
         /// <b>It shortens a quiet and may never lengthen one.</b> <see cref="BetweenWaves"/> is
         /// still the ceiling and the clock still never lets up, so being ahead is rewarded with a
-        /// short rest rather than a long one — 37k's finding kept, with the half that made it
+        /// short rest rather than a long one - 37k's finding kept, with the half that made it
         /// unplayable taken out.
         /// </para>
         /// <para>
         /// <b>Eight, then six, then four, cut twice from play.</b> Four is under two matches at an
-        /// ordinary rhythm — long enough to read the forecast and put one colour up, and short
+        /// ordinary rhythm - long enough to read the forecast and put one colour up, and short
         /// enough that a cleared hill never reads as the game waiting. <see cref="BetweenWaves"/>
         /// came down with the first cut (26 → 23) and stayed: a hill that still holds raiders is
         /// not a quiet, so the two are paced separately.
@@ -2256,7 +2256,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>And what makes the rest worth having is that fuel banks in it.</b> A ward only ever
         /// fires at a colour it is strong against (<c>SiegeBoard.Aim</c>), so an empty hill is a
-        /// line that holds everything it is given — which is what turns a lull into a stockpile
+        /// line that holds everything it is given - which is what turns a lull into a stockpile
         /// and the forecast (<see cref="SiegeForecast"/>) into something a player can act on.
         /// </para>
         /// </summary>
@@ -2275,7 +2275,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>A lone boss walks down the middle rather than down a dealt lane</b>, because where
-        /// it stands is not a fact anybody should have to hunt for — it is the largest thing on
+        /// it stands is not a fact anybody should have to hunt for - it is the largest thing on
         /// the board and it stays put for the rest of the run, so a dealt lane would put it over a
         /// ward on some devices and off the edge of the hill on others.
         /// </para>
@@ -2285,7 +2285,7 @@ namespace GlimmerGrove.Modes
         /// player looks for a boss, so a second one arriving there would be two enormous bodies in
         /// one column. It is a rule here rather than a conditional inside <c>Muster</c> so that
         /// <c>SiegeView</c> and <c>Tools/render_siege.py</c> can draw the same hill the board is
-        /// playing — the drawn thing and the played thing being one pair of integers is invariant
+        /// playing - the drawn thing and the played thing being one pair of integers is invariant
         /// 33g, and it is what lets a picture answer whether a pair reads as a climax.
         /// </para>
         /// </summary>
@@ -2337,13 +2337,13 @@ namespace GlimmerGrove.Modes
         /// the least forgiving: a raider is drawn a little over a box tall and walks the whole time
         /// the finger is travelling, so a tap that was right when it was aimed can be a box out by
         /// the time it lands. That came back from play as <em>"it says there is nothing there, and
-        /// I tapped the thing"</em> — and the player was right, because what they were tapping was
+        /// I tapped the thing"</em> - and the player was right, because what they were tapping was
         /// a picture and what the rule read was a point.
         /// </para>
         /// <para>
         /// <b>A plus rather than a two-by-two block</b>, because a block has to lean somewhere. Four
-        /// boxes cannot be centred on one, so a block needs an anchor rule — which way it goes, and
-        /// what it does against an edge — and that is a rule the player has to learn about a thing
+        /// boxes cannot be centred on one, so a block needs an anchor rule - which way it goes, and
+        /// what it does against an edge - and that is a rule the player has to learn about a thing
         /// whose whole job is to land where they pointed. A plus is centred by construction, forgives
         /// a miss by the same amount in every direction, and near an edge simply burns fewer boxes
         /// rather than sliding somewhere nobody aimed.
@@ -2351,7 +2351,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>It cannot buy a grade, and that is arithmetic rather than a judgement.</b> A firepot is
         /// charged <c>ceil(absorbed / PerfectMatch)</c> matches (invariant 39), so a wider blast that
-        /// catches three raiders instead of one is charged for three raiders — the exchange rate
+        /// catches three raiders instead of one is charged for three raiders - the exchange rate
         /// prices the change by itself and neither star line moves. What it buys is forgiveness,
         /// which costs the player nothing and the run nothing.
         /// </para>
@@ -2379,7 +2379,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>In the rules rather than in the view, because a firepot has to hit what a player can
         /// see.</b> This is the same class of number as <see cref="BossTell"/> and
-        /// <see cref="SwapFor"/> — a fact about the drawing that a rule reads — and it is here for
+        /// <see cref="SwapFor"/> - a fact about the drawing that a rule reads - and it is here for
         /// the reason invariant 33g gives about the haul-road: the thing that is drawn and the
         /// thing that is played have to be one fact, and the cheapest way to guarantee that is for
         /// there to be only one. <c>SiegeView</c> reads it; nothing else may hold a second copy.
@@ -2395,7 +2395,7 @@ namespace GlimmerGrove.Modes
         /// <remarks>
         /// <b>The blightcaller is the smallest of the four, and 2.6 was too small.</b> It is the
         /// first boss a chapter shows and the only one that takes no health, so it should not
-        /// arrive with the finale's silhouette — but a render put it beside a creeper and it read
+        /// arrive with the finale's silhouette - but a render put it beside a creeper and it read
         /// as one: its frame is a floating eye with a long tail under it, so a third of its height
         /// is not body at all, where every other boss here fills its own frame.
         /// <br/><b>A bulwark is drawn bigger than a brute</b>, because the one thing a player has
@@ -2457,11 +2457,11 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>The one number that reconciles a body measured in cells with a grid measured in
-        /// rows, and it is a floor rather than a measurement — deliberately.</b> How deep the hill
+        /// rows, and it is a floor rather than a measurement - deliberately.</b> How deep the hill
         /// is depends on the screen: the field is laid out to the width and the hill takes what is
         /// left, so measured across the phone shapes this game ships to it runs from about three
         /// cells on a 4:3 tablet to five and a half on a 20:9 phone. A body of a fixed height in
-        /// cells therefore covers a different number of rows on every device — which is why a
+        /// cells therefore covers a different number of rows on every device - which is why a
         /// constant row count (this used to be <c>RowsOf</c>, answering three for every boss) was
         /// only ever right on one screen, and was mean by a whole row on two of them.
         /// </para>
@@ -2472,7 +2472,7 @@ namespace GlimmerGrove.Modes
         /// looking at; a hit box smaller than the picture costs them the item and tells them
         /// nothing was there. Only one of those is a bug report, and it is the one this replaced.
         /// It cannot reach the economy either, because a firepot is charged for what it absorbs
-        /// (invariant 39) — a more generous blast bills more matches and buys no better a grade.
+        /// (invariant 39) - a more generous blast bills more matches and buys no better a grade.
         /// </para>
         /// </summary>
         const float ShallowestHill = 3f;
@@ -2482,7 +2482,7 @@ namespace GlimmerGrove.Modes
         /// the raider is standing.
         ///
         /// <b>Centred, because that is where the body is drawn.</b> A raider's node is the middle
-        /// of its picture rather than its feet — the old rule counted rows <em>upward</em> from the
+        /// of its picture rather than its feet - the old rule counted rows <em>upward</em> from the
         /// node on the belief that the node was the feet, so the band it caught sat about a row
         /// above the thing on the screen.
         ///
@@ -2503,7 +2503,7 @@ namespace GlimmerGrove.Modes
         /// <b>A boss spans the hill and everything else fits its own lane</b>, and both halves are
         /// facts about the art rather than opinions. The cast reels are cut to a fixed height and
         /// whatever width the animation's box came out as, so how wide a boss draws is a property
-        /// of the pack rather than a decision — measured across the six shipped reels, a frame runs
+        /// of the pack rather than a decision - measured across the six shipped reels, a frame runs
         /// from 0.61 of its own height to 1.17 of it, which at three and a half cells tall is
         /// anywhere between two and four cells <em>wide</em>. Tapping the arm of a thing that fills
         /// the screen and being told nothing is there is the loudest form of this bug, and it was
@@ -2516,7 +2516,7 @@ namespace GlimmerGrove.Modes
         /// <b>Stated in lanes rather than measured off the sprite</b>, for invariant 16i's reason:
         /// a size measured off whatever art happened to have loaded is a size that is wrong before
         /// the art arrives and wrong again the day the art is re-cut. A lane count can only ever be
-        /// generous — a boss really is somewhere between three and four lanes wide, so five is the
+        /// generous - a boss really is somewhere between three and four lanes wide, so five is the
         /// forgiveness <see cref="ShallowestHill"/> argues for, said in the other axis.
         /// </para>
         /// </summary>
@@ -2552,7 +2552,7 @@ namespace GlimmerGrove.Modes
         /// <paramref name="lane"/> at <paramref name="march"/>.
         ///
         /// <para>
-        /// <b>The box is on the raider when the box is pointing at it</b> — the middle of the box
+        /// <b>The box is on the raider when the box is pointing at it</b> - the middle of the box
         /// against the body's own extent, not any overlap at all. The looser test reads well and
         /// is wrong on this hill: it is four rows deep and a creeper is over a row tall, so a body
         /// poking a tenth of a row into its neighbour would make that neighbour a hit, and with
@@ -2586,7 +2586,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>These are drawing numbers living in the rules, and that is deliberate.</b> A swap
-        /// resolves in an instant and its animation takes the better part of a second — the gems
+        /// resolves in an instant and its animation takes the better part of a second - the gems
         /// swap, they burst, motes fly up to the line. Fuel credited at the *instant of the swap*
         /// therefore reaches the wards before the player has seen anything leave the field, and
         /// what that looks like is a turret killing a raider before the gems it was paid for have
@@ -2595,7 +2595,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// So fuel is <b>in flight</b>: <see cref="Swap"/> books it and <see cref="Advance"/>
         /// lands it, on the schedule the view really draws. Putting the schedule here rather than
-        /// in the view is what stops the two drifting — a mote that arrives before or after its
+        /// in the view is what stops the two drifting - a mote that arrives before or after its
         /// fuel does is the same bug again, and there is no gate that could see it.
         /// </para>
         /// </summary>
@@ -2611,20 +2611,20 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>This is the one lever a fourth, fifth and sixth chapter has, and it is health rather
         /// than headcount because the hill fills up.</b> Everything else a chapter can vary is
-        /// composition — more raiders, more brutes, more shields, more waves — and by the third
+        /// composition - more raiders, more brutes, more shields, more waves - and by the third
         /// chapter that is already four-wave rungs with two shields in them. Counts stop being
         /// available long before difficulty does.
         /// </para>
         /// <para>
         /// <b>What it really costs the player is the clock, which is why it works here.</b> A hill
         /// with half again the health walks the same distance in the same time, so the line has to
-        /// kill faster to hold the same ground — and killing faster is exactly what a bought
+        /// kill faster to hold the same ground - and killing faster is exactly what a bought
         /// turret does. It does <em>not</em> make three stars harder: par is the hill's health over
         /// what a match delivers, so par rises with it and the star lines rise with par. Stars are
         /// a separate decision and a separate number (invariant 22).
         /// </para>
         /// <para>
-        /// <b>Health only — a blow is left alone.</b> Surging what a swing costs would shorten the
+        /// <b>Health only - a blow is left alone.</b> Surging what a swing costs would shorten the
         /// line's life at the same time as lengthening the hill's, which is two pressures wearing
         /// one number and would make a chapter step feel like a cliff.
         /// </para>
@@ -2641,7 +2641,7 @@ namespace GlimmerGrove.Modes
         /// What a chapter at this ordinal deals, in tenths of the plain figure.
         ///
         /// <b>Mirrored by <c>Tools/verify/siege.py</c> and written into each body by the chapter
-        /// tool</b>, which is what lets the board carry it — see <c>SiegeDto.tough</c>.
+        /// tool</b>, which is what lets the board carry it - see <c>SiegeDto.tough</c>.
         /// </summary>
         public static int ToughnessFor(int ordinal)
         {
@@ -2689,7 +2689,7 @@ namespace GlimmerGrove.Modes
         /// <summary>The most a body may be surged, so a mistyped body cannot ship an unkillable hill.</summary>
         public const int MostTough = 40;
 
-        /// <summary>Whether this kind is one of the six bosses — the things that stand and cast.</summary>
+        /// <summary>Whether this kind is one of the six bosses - the things that stand and cast.</summary>
         public static bool IsBoss(SiegeKind kind)
             => kind == SiegeKind.Boss || kind == SiegeKind.Overlord
             || kind == SiegeKind.Blightcaller || kind == SiegeKind.Warbringer
@@ -2705,7 +2705,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>Four verbs rather than four numbers, and that is the whole of what makes them four
         /// bosses.</b> A chapter shipped two of these told apart by their health, their cadence
-        /// and their hue, and it read — correctly — as one fight with the dial moved. So each one
+        /// and their hue, and it read - correctly - as one fight with the dial moved. So each one
         /// takes a different thing: <see cref="SiegeSpell.Smite"/> takes a ward's <em>health</em>,
         /// <see cref="SiegeSpell.Douse"/> takes its <em>fire</em>,
         /// <see cref="SiegeSpell.Rally"/> takes the player's <em>clock</em>, and
@@ -2736,20 +2736,20 @@ namespace GlimmerGrove.Modes
              : SiegeSpell.Smite;
 
         /// <summary>
-        /// Whether this boss's spell touches the ward line at all — which is <b>not</b> the same
+        /// Whether this boss's spell touches the ward line at all - which is <b>not</b> the same
         /// question as <see cref="AimsAtAWard"/>, and the gap between them is exactly one boss.
         ///
         /// <para>
         /// <b>A roar aims at no ward and reaches every one of them.</b> It is booked as four
         /// records, one per post, so everything that draws at a post runs for a rally and must
-        /// not run for a devour or a raise — those two land on the hill the player has been
+        /// not run for a devour or a raise - those two land on the hill the player has been
         /// killing over and never come near the line.
         /// </para>
         /// <para>
         /// <b>It exists so that a drawing can refuse rather than carry a dead arm.</b>
         /// <c>SiegeView.Aftermath</c> paints what a spell leaves on a *post*; a devour and a raise
         /// reach it only if somebody moves an early return in <c>Smite</c>, at which point they
-        /// would fall into its <c>default</c> — the overlord's fan — and throw lightning between
+        /// would fall into its <c>default</c> - the overlord's fan - and throw lightning between
         /// four turrets that had not been touched. That is precisely what they did for two
         /// chapters. Two arms breaking on nothing would fix it and leave unreachable code
         /// defended by a comment; asking one named rule at the top fixes it and says why.
@@ -2767,7 +2767,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <b>A warbringer's is not</b>, and that is the one clause the cast/flight/land spine
         /// needed for a fourth boss: a roar is thrown at the hill, so its flight carries no ward
-        /// and everything downstream — the tell, <c>Arrive</c>, the view's ring — asks this rather
+        /// and everything downstream - the tell, <c>Arrive</c>, the view's ring - asks this rather
         /// than testing an index nobody set.
         /// </summary>
         public static bool AimsAtAWard(SiegeKind kind)
@@ -2781,7 +2781,7 @@ namespace GlimmerGrove.Modes
             // index a slot nobody set.
             // **A bind and an aegis are both listed nowhere, which is the point.** A chain has
             // to land on something and an ironclad's strike is the thing its aegis is drawn by,
-            // so both aim — and both pick their ward by a rule of their own
+            // so both aim - and both pick their ward by a rule of their own
             // (`SiegeBoard.Wanted`) rather than by taking whatever a smite would have taken.
             // **A wane is the second spell here aimed at no ward**, for the rally's reason
             // and by a different rule: it strikes every post that has been idle, so there is
@@ -2794,7 +2794,7 @@ namespace GlimmerGrove.Modes
         }
 
         /// <summary>
-        /// Whether a cast of this spell carries a ward index at all — the third question beside
+        /// Whether a cast of this spell carries a ward index at all - the third question beside
         /// <see cref="AimsAtAWard"/> and <see cref="ReachesTheLine"/>, and the one the board asks.
         ///
         /// <para>
@@ -2804,13 +2804,13 @@ namespace GlimmerGrove.Modes
         /// whole hill and a wane strikes every idle post, and each is booked as one record per
         /// post at the landing rather than at one ward chosen in advance. So the board never asks
         /// <c>SiegeBoard.Wanted</c> about either, and never holds either back for having found
-        /// nothing to aim at — a wane on a line that is fully fed lands and does nothing, which is
+        /// nothing to aim at - a wane on a line that is fully fed lands and does nothing, which is
         /// its verb, not a retry.
         /// </para>
         /// <para>
         /// It is written down because the board named the rally alone for six chapters, so the
-        /// seventh's wane was handed a ward by <c>Wanted</c>'s default arm — an index its landing
-        /// never read — while the rule beside it said the opposite. <c>SiegeArtTests</c> holds the
+        /// seventh's wane was handed a ward by <c>Wanted</c>'s default arm - an index its landing
+        /// never read - while the rule beside it said the opposite. <c>SiegeArtTests</c> holds the
         /// three predicates to one shape: carrying is exactly aiming or not reaching the line, and
         /// the spells that reach without aiming are the two named there and no third.
         /// </para>
@@ -2886,7 +2886,7 @@ namespace GlimmerGrove.Modes
         /// <summary>
         /// What one of this boss's spells takes off a ward's health.
         ///
-        /// <b>Nought for the blightcaller, and that is not an omission</b> — it takes a ward's
+        /// <b>Nought for the blightcaller, and that is not an omission</b> - it takes a ward's
         /// fire rather than its health, so asking what a mending is worth against it has the answer
         /// "nothing". The warbringer's number is per ward and lands on <em>all</em> of them
         /// (<see cref="WarbringerCast"/>), which is why it is the smallest of the three.
@@ -2941,7 +2941,7 @@ namespace GlimmerGrove.Modes
         /// <summary>
         /// What one swing at the line costs a ward.
         ///
-        /// <b>A boss swings at nothing</b>, because none of the four reaches the line — what they
+        /// <b>A boss swings at nothing</b>, because none of the four reaches the line - what they
         /// cost the line is their spell, from where they stand. The warbringer briefly was the
         /// exception, and holding the middle is what it was changed back to.
         /// </summary>
@@ -2973,7 +2973,7 @@ namespace GlimmerGrove.Modes
         /// Whether this boss can bring a ward down at all, given long enough.
         ///
         /// <b>One of the four cannot.</b> A blightcaller takes fuel and never health, so a level
-        /// whose only threat were one could not be lost — which is what
+        /// whose only threat were one could not be lost - which is what
         /// <c>ModeValidator.Threatens</c> asks rather than assuming that a boss is by definition
         /// dangerous. It was two while the warbringer took ground instead of health.
         /// </summary>
@@ -2985,12 +2985,12 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>Asked of the spell, never of the kind, and that is what this predicate is for.</b>
         /// It was written out as <c>kind == SiegeKind.Warbringer</c> inside
-        /// <see cref="RestBefore"/> — correct for the warbringer, whose rally charges the hill and
-        /// so needs a hill — and it silently left the <em>blightcaller</em> on the long quiet.
+        /// <see cref="RestBefore"/> - correct for the warbringer, whose rally charges the hill and
+        /// so needs a hill - and it silently left the <em>blightcaller</em> on the long quiet.
         /// A douse takes a ward's <em>fire</em>, and fire is worth exactly what there is to burn:
         /// arriving onto a hill somebody has already cleared, it takes fuel that was going to
         /// nothing, and the whole boss reads as a thing that attacks and does not hurt. That was
-        /// reported from play twice — once on the endless lane, where the answer was an escort
+        /// reported from play twice - once on the endless lane, where the answer was an escort
         /// (invariant 43), and once on this chapter's third rung, where the answer was supposed
         /// to be this and never was.
         /// </para>
@@ -3025,7 +3025,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>Per spell rather than per kind, and the two exceptions point opposite ways for the
         /// same reason.</b> Invariant 37t made the quiet before a <em>warlord</em> longer than any
-        /// other so that a duel is never stacked on a wave still swinging at the line — two fail
+        /// other so that a duel is never stacked on a wave still swinging at the line - two fail
         /// states arriving together read as being cheated. A warbringer and a blightcaller want
         /// precisely the opposite, and <see cref="WantsACrowd"/> is why: a rally over an empty
         /// hill and a douse over an empty hill are both a mechanic that rejects nothing (invariant
@@ -3035,7 +3035,7 @@ namespace GlimmerGrove.Modes
         /// <b>And a boss that cannot bring a ward down gets the ordinary quiet</b>, because it is
         /// not a wave of its own at all: <c>SiegeLayout</c> stands it at the head of the last
         /// authored wave, so what this is being asked about is that wave rather than a duel. That
-        /// is the answer a shorter quiet could not give — <c>SiegeBoard.Muster</c> sends the next
+        /// is the answer a shorter quiet could not give - <c>SiegeBoard.Muster</c> sends the next
         /// wave the moment the hill is clear (invariant 37k), so a player who is ahead of the
         /// clock meets a lone boss however long the quiet is.
         /// </para>
@@ -3053,7 +3053,7 @@ namespace GlimmerGrove.Modes
         /// and worth dousing.
         ///
         /// <b>Shorter than <see cref="BetweenWaves"/> and much shorter than
-        /// <see cref="BossAfter"/></b>, which is the whole of why it is a number of its own — see
+        /// <see cref="BossAfter"/></b>, which is the whole of why it is a number of its own - see
         /// <see cref="RestBefore"/>. It was 14, which with a rally of 1.9 cost an unhurried player
         /// three of four wards; 17 with a rally of 1.55 leaves three standing on a line bled to 38
         /// of 56. Neither number was reasoned about.
@@ -3068,7 +3068,7 @@ namespace GlimmerGrove.Modes
         /// Gems an ordinary match clears, cascades included, in tenths.
         ///
         /// <para>
-        /// <b>Measured, not reasoned about — and the first version of this number was reasoned
+        /// <b>Measured, not reasoned about - and the first version of this number was reasoned
         /// about and wrong.</b> Par was <c>health / (3 gems x damage)</c> on the argument that a
         /// match clears at least three, so no run of fewer matches could deliver the health: a
         /// floor. It is not one, because a match on a full field <em>cascades</em>, and the gems a
@@ -3113,7 +3113,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>Bolts, not gems, and that was an identity rather than a rule.</b> It read
         /// <c>gems x damage x 2</c>, which is only the same thing while a gem buys exactly one
-        /// bolt — true for as long as a gem was worth one fuel and a bolt cost one, and silently
+        /// bolt - true for as long as a gem was worth one fuel and a bolt cost one, and silently
         /// load-bearing under every par, every star line and every utility charge in the mode. The
         /// moment a gem was worth two (<see cref="FuelPerGemTenths"/>) that formula would have
         /// halved what a match delivers and doubled every par in the chapter, with each number
@@ -3134,12 +3134,12 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>Arithmetic rather than a search, and it is a genuine floor.</b> A match puts at most
-        /// <see cref="PerfectMatch"/> damage into the hill — three gems, every one of them spent
-        /// as a bolt, every bolt landing on a raider of that ward's own colour — so no run of
+        /// <see cref="PerfectMatch"/> damage into the hill - three gems, every one of them spent
+        /// as a bolt, every bolt landing on a raider of that ward's own colour - so no run of
         /// fewer matches than this can have destroyed what the level sends. Everything a good
         /// player does beyond that is free upside the count does not model: a four-match is worth
         /// more than a three, and a cascade fuels a second ward for no move at all. That is the
-        /// right direction for a floor to be wrong in — three stars stays reachable, which is the
+        /// right direction for a floor to be wrong in - three stars stays reachable, which is the
         /// failure invariant 22 says never to ship (a band nothing can land in).
         /// </para>
         /// <para>
@@ -3149,12 +3149,12 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>And a level that deals cogs loosens it further, deliberately.</b> A rank-four ward
         /// turns a match into 2.33 times what <see cref="PerfectMatch"/> assumes, so on such a
-        /// level this is not even the floor it is elsewhere — it over-states the matches a good
+        /// level this is not even the floor it is elsewhere - it over-states the matches a good
         /// run needs, which keeps three stars reachable and is the direction invariant 22 says to
         /// err in. Modelling ranks here was the alternative and is worse: it would have to guess
         /// how many cogs a player takes and which turret they spend them on, and a par built on a
         /// guess about play is a par nobody can check. What checks it instead is somebody playing
-        /// it — <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c>, run over every rung.
+        /// it - <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c>, run over every rung.
         /// </para>
         /// </summary>
         public static int Par(SiegeLayout layout)
@@ -3170,7 +3170,7 @@ namespace GlimmerGrove.Modes
                     // **Surged, because the hill really is.** Par is what the level sends over what
                     // one match delivers, so a chapter whose raiders carry half again the health
                     // and whose par did not move would grade every run against a hill it is not
-                    // fighting — three stars unreachable for the whole chapter, with every number
+                    // fighting - three stars unreachable for the whole chapter, with every number
                     // in the file plausible.
                     var surge = layout.SurgeOf(w);
                     health += Shared(surge.Health(HealthOf(kind)), layout.ShareAt(w, i));

@@ -1067,7 +1067,7 @@
     },
     {
       "key": "lesson.siege_weaver.body",
-      "text": "It stops on the hill and locks your gems. A locked gem cannot be moved and cannot line up — kill the weaver and every web burns off."
+      "text": "It stops on the hill and locks your gems. A locked gem cannot be moved and cannot line up - kill the weaver and every web burns off."
     },
     {
       "key": "lesson.siege_weaver.title",
@@ -2167,7 +2167,7 @@
     },
     {
       "key": "mode.prism.nodrag",
-      "text": "Lanterns and sleeping critters do not move — <b>gems</b> do. Drag one onto the gem beside it and the two trade places."
+      "text": "Lanterns and sleeping critters do not move - <b>gems</b> do. Drag one onto the gem beside it and the two trade places."
     },
     {
       "key": "mode.prism.tagline",
@@ -2239,7 +2239,7 @@
     },
     {
       "key": "mode.siege.nodrag",
-      "text": "Gems are dragged, not tapped — pull one onto the gem beside it. Line three of a colour up and that ward opens fire."
+      "text": "Gems are dragged, not tapped - pull one onto the gem beside it. Line three of a colour up and that ward opens fire."
     },
     {
       "key": "mode.siege.overlord",
@@ -2295,7 +2295,7 @@
     },
     {
       "key": "notify.tasks_weekly.body",
-      "text": "Weekly tasks are live — a Royal Chest is on the line."
+      "text": "Weekly tasks are live - a Royal Chest is on the line."
     },
     {
       "key": "notify.tasks_weekly.title",
@@ -2999,7 +2999,7 @@
     },
     {
       "key": "ui.ads.none_left_today",
-      "text": "No videos left today — the count resets at midnight."
+      "text": "No videos left today - the count resets at midnight."
     },
     {
       "key": "ui.ads.opening",
@@ -3375,7 +3375,7 @@
     },
     {
       "key": "ui.companion.locked_level",
-      "text": "Reach keeper level {0} first — you are level {1}."
+      "text": "Reach keeper level {0} first - you are level {1}."
     },
     {
       "key": "ui.companion.not_for_sale",
@@ -3383,7 +3383,7 @@
     },
     {
       "key": "ui.companion.short",
-      "text": "{0} coins to go — you have {1}."
+      "text": "{0} coins to go - you have {1}."
     },
     {
       "key": "ui.companion.title",
@@ -3479,11 +3479,11 @@
     },
     {
       "key": "ui.defeat.free_glade",
-      "text": "One of the free levels — no heart was spent. Try it as often as you like."
+      "text": "One of the free levels - no heart was spent. Try it as often as you like."
     },
     {
       "key": "ui.defeat.free_replay",
-      "text": "You have finished this level before, so replaying it is free — no heart, however it goes."
+      "text": "You have finished this level before, so replaying it is free - no heart, however it goes."
     },
     {
       "key": "ui.defeat.free_watch",
@@ -3707,7 +3707,7 @@
     },
     {
       "key": "ui.forfeit.leave_body",
-      "text": "This run has begun, so leaving it costs a heart — the same as running out of turns. The glade will be waiting exactly as you found it."
+      "text": "This run has begun, so leaving it costs a heart - the same as running out of turns. The glade will be waiting exactly as you found it."
     },
     {
       "key": "ui.forfeit.leave_go",
@@ -3727,7 +3727,7 @@
     },
     {
       "key": "ui.forfeit.restart_body",
-      "text": "This run has begun, so starting again costs a heart — the same as running out of turns. You will get a fresh board and a fresh count."
+      "text": "This run has begun, so starting again costs a heart - the same as running out of turns. You will get a fresh board and a fresh count."
     },
     {
       "key": "ui.forfeit.restart_go",
@@ -3795,7 +3795,7 @@
     },
     {
       "key": "ui.hearts.stack",
-      "text": "Videos, chests and streak nights stack past {0} — hold up to {1}."
+      "text": "Videos, chests and streak nights stack past {0} - hold up to {1}."
     },
     {
       "key": "ui.hearts.title",
@@ -4175,7 +4175,7 @@
     },
     {
       "key": "ui.mark.info_tracks_body",
-      "text": "Reach a rung and both its chests open up. The left one is everybody's; the right one needs the Keeper's Pass, and it always holds a better chest than the left. There are {0} kinds of chest — tap one on Tasks & Bonuses to see what it holds."
+      "text": "Reach a rung and both its chests open up. The left one is everybody's; the right one needs the Keeper's Pass, and it always holds a better chest than the left. There are {0} kinds of chest - tap one on Tasks & Bonuses to see what it holds."
     },
     {
       "key": "ui.mark.info_tracks_title",
@@ -4183,7 +4183,7 @@
     },
     {
       "key": "ui.mark.info_window_body",
-      "text": "Marks stop counting when the watch closes. Chests do not — anything you have reached stays here until you open it, however long that takes."
+      "text": "Marks stop counting when the watch closes. Chests do not - anything you have reached stays here until you open it, however long that takes."
     },
     {
       "key": "ui.mark.info_window_title",
@@ -4383,7 +4383,7 @@
     },
     {
       "key": "ui.profile.mismatch_hint",
-      "text": "Your last account change did not finish. Nothing is lost — tap to choose an account."
+      "text": "Your last account change did not finish. Nothing is lost - tap to choose an account."
     },
     {
       "key": "ui.profile.name_checking",
@@ -5207,7 +5207,7 @@
     },
     {
       "key": "ui.streak.info_cycle_body",
-      "text": "Nothing stops. Your count keeps climbing and never resets while you keep playing — the board simply begins the same {0} nights over. The night after the {0}th pays {1}, exactly as the very first night did."
+      "text": "Nothing stops. Your count keeps climbing and never resets while you keep playing - the board simply begins the same {0} nights over. The night after the {0}th pays {1}, exactly as the very first night did."
     },
     {
       "key": "ui.streak.info_cycle_nothing",
@@ -5219,7 +5219,7 @@
     },
     {
       "key": "ui.streak.info_earn_body",
-      "text": "Finish a level on any day and that night is yours — winning is not required, only finishing. The flame goes out only if a whole day passes with nothing finished at all. Come back here and tap the glowing night to take what it holds."
+      "text": "Finish a level on any day and that night is yours - winning is not required, only finishing. The flame goes out only if a whole day passes with nothing finished at all. Come back here and tap the glowing night to take what it holds."
     },
     {
       "key": "ui.streak.info_earn_title",
@@ -5235,7 +5235,7 @@
     },
     {
       "key": "ui.streak.kept_waiting",
-      "text": "{0} days running — a reward is waiting"
+      "text": "{0} days running - a reward is waiting"
     },
     {
       "key": "ui.streak.needs_connection",
@@ -5423,7 +5423,7 @@
     },
     {
       "key": "ui.time.stars_still_run",
-      "text": "Your time keeps counting — stars still go by the clock."
+      "text": "Your time keeps counting - stars still go by the clock."
     },
     {
       "key": "ui.tip.anylight.body",
@@ -5659,7 +5659,7 @@
     },
     {
       "key": "ui.tip.prism_drag.body",
-      "text": "Drag a gem onto the one next to it and the two <b>trade places</b>.\n\nA lantern lights only the gems of <b>its own colour</b> that are touching it — and that colour runs on through every matching gem beside them. Line one up all the way to a sleeping critter and it wakes."
+      "text": "Drag a gem onto the one next to it and the two <b>trade places</b>.\n\nA lantern lights only the gems of <b>its own colour</b> that are touching it - and that colour runs on through every matching gem beside them. Line one up all the way to a sleeping critter and it wakes."
     },
     {
       "key": "ui.tip.prism_drag.title",
@@ -5667,7 +5667,7 @@
     },
     {
       "key": "ui.tip.prism_vein.body",
-      "text": "Nothing is ever used up here. Gems do not burst and do not fall — the board you are dealt is the board you finish on.\n\nSo the light is not stored: it is wherever the matching gems happen to be <b>right now</b>. Pull a gem out of a lit line and that line goes out again."
+      "text": "Nothing is ever used up here. Gems do not burst and do not fall - the board you are dealt is the board you finish on.\n\nSo the light is not stored: it is wherever the matching gems happen to be <b>right now</b>. Pull a gem out of a lit line and that line goes out again."
     },
     {
       "key": "ui.tip.prism_vein.title",
@@ -5715,7 +5715,7 @@
     },
     {
       "key": "ui.tip.siege_lance.body",
-      "text": "Match this one and it takes its whole row and its whole column with it.\n\nEvery gem it clears still feeds its own turret — so spring it where the colours you want are lined up."
+      "text": "Match this one and it takes its whole row and its whole column with it.\n\nEvery gem it clears still feeds its own turret - so spring it where the colours you want are lined up."
     },
     {
       "key": "ui.tip.siege_lance.title",
@@ -5723,7 +5723,7 @@
     },
     {
       "key": "ui.tip.siege_prism.body",
-      "text": "A rainbow gem has no colour of its own.\n\nMatch it with any three and it counts as that colour — so you choose which turret gets fed."
+      "text": "A rainbow gem has no colour of its own.\n\nMatch it with any three and it counts as that colour - so you choose which turret gets fed."
     },
     {
       "key": "ui.tip.siege_prism.title",
@@ -5739,7 +5739,7 @@
     },
     {
       "key": "ui.tip.siege_storm.body",
-      "text": "Match this one and your whole line fires at everything on the hill at once — twice at whatever wears its colour.\n\nIt is worth what is standing there, so wait for a crowd."
+      "text": "Match this one and your whole line fires at everything on the hill at once - twice at whatever wears its colour.\n\nIt is worth what is standing there, so wait for a crowd."
     },
     {
       "key": "ui.tip.siege_storm.title",
@@ -5747,7 +5747,7 @@
     },
     {
       "key": "ui.tip.siege_furnace.body",
-      "text": "Match this one and the turret of its colour is charged to the brim.\n\nTap the bolt on that turret to throw the whole charge — so match the colour of the turret you want loaded."
+      "text": "Match this one and the turret of its colour is charged to the brim.\n\nTap the bolt on that turret to throw the whole charge - so match the colour of the turret you want loaded."
     },
     {
       "key": "ui.tip.siege_furnace.title",
@@ -5843,7 +5843,7 @@
     },
     {
       "key": "ui.utility.no_room",
-      "text": "No room for more — {0} is the most you can carry."
+      "text": "No room for more - {0} is the most you can carry."
     },
     {
       "key": "ui.utility.no_target",
@@ -6027,7 +6027,7 @@
     },
     {
       "key": "ui.win.route_info",
-      "text": "The groove's route is how many turns this glade was built around. Winning only needs every lamp lit, so conduits you never touch can stay as they are — which is how a run can come in shorter."
+      "text": "The groove's route is how many turns this glade was built around. Winning only needs every lamp lit, so conduits you never touch can stay as they are - which is how a run can come in shorter."
     },
     {
       "key": "ui.win.route_you",

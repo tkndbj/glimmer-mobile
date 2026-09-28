@@ -16,7 +16,7 @@ namespace GlimmerGrove.Tests
     /// <summary>
     /// The client half of the shared reward contract.
     ///
-    /// Earned currency is derived in two places — here in C# so the game works offline,
+    /// Earned currency is derived in two places - here in C# so the game works offline,
     /// and again in TypeScript on the server so a forged save can be caught rather than
     /// merely disbelieved. Two implementations of one rule drift; the comments saying
     /// "keep these in sync" were never going to survive eighteen months of content
@@ -40,14 +40,14 @@ namespace GlimmerGrove.Tests
             /// <summary>
             /// Synthetic on purpose, and separate from <see cref="progression"/>'s own
             /// daily block. What is under contract is the generator, not this month's
-            /// drop rates — retuning the shipped table must not turn these red.
+            /// drop rates - retuning the shipped table must not turn these red.
             /// </summary>
             public DailyChestDto dailyChestConfig;
 
             public DailyVectorCase[] dailyChestCases;
 
             /// <summary>
-            /// The task chest's own tiers and cases — a chest seeded from a subject rather
+            /// The task chest's own tiers and cases - a chest seeded from a subject rather
             /// than a day. Synthetic for <see cref="dailyChestConfig"/>'s reason: what is under
             /// contract is the seeding, not this season's ladder.
             /// </summary>
@@ -59,7 +59,7 @@ namespace GlimmerGrove.Tests
             /// The golden picker's own vectors: (account, level) to a percentage. The
             /// bands live inside <see cref="progression"/> rather than beside them,
             /// because unlike a chest's drop table the multiplier is part of the credit
-            /// derivation itself — the same table has to be in force for the end-to-end
+            /// derivation itself - the same table has to be in force for the end-to-end
             /// cases below to mean anything.
             /// </summary>
             public GoldenVectorCase[] goldenCases;
@@ -67,7 +67,7 @@ namespace GlimmerGrove.Tests
             /// <summary>
             /// The streak ladder's own vectors, and a synthetic ladder to run them against
             /// for the reason <see cref="dailyChestConfig"/> is synthetic: what is under
-            /// contract is the lookup — the lap, and the per-kind clamp — not the rewards
+            /// contract is the lookup - the lap, and the per-kind clamp - not the rewards
             /// this season happens to pay.
             /// </summary>
             public StreakDto streakLadder;
@@ -75,7 +75,7 @@ namespace GlimmerGrove.Tests
             public StreakVectorCase[] streakCases;
 
             /// <summary>
-            /// The streak chest's own tiers and cases — a chest seeded from a subject, like a
+            /// The streak chest's own tiers and cases - a chest seeded from a subject, like a
             /// task's, with the night's own calendar day and the night in it. Synthetic for
             /// <see cref="dailyChestConfig"/>'s reason.
             /// </summary>
@@ -84,7 +84,7 @@ namespace GlimmerGrove.Tests
             public StreakChestVectorCase[] streakChestCases;
 
             /// <summary>
-            /// The season chest's own tiers and cases — a chest seeded from a subject, like a
+            /// The season chest's own tiers and cases - a chest seeded from a subject, like a
             /// task's, with the season, the track and the rung in it. Synthetic for
             /// <see cref="dailyChestConfig"/>'s reason.
             ///
@@ -223,7 +223,7 @@ namespace GlimmerGrove.Tests
             public string name;
 
             /// <summary>
-            /// Seeds the golden bonus. Absent — which JsonUtility reads as empty — means
+            /// Seeds the golden bonus. Absent - which JsonUtility reads as empty - means
             /// no account, and therefore no bonus, which is what every case written before
             /// the bonus existed relies on.
             /// </summary>
@@ -243,8 +243,8 @@ namespace GlimmerGrove.Tests
 
             /// <summary>
             /// When the glade was first cleared. Only the event track reads it, and only
-            /// to ask whether the clear falls inside a window; absent — which JsonUtility
-            /// reads as zero — is 1970 and therefore inside no window any event authors.
+            /// to ask whether the clear falls inside a window; absent - which JsonUtility
+            /// reads as zero - is 1970 and therefore inside no window any event authors.
             /// </summary>
             public long firstClearedUnix;
         }
@@ -269,7 +269,7 @@ namespace GlimmerGrove.Tests
         static ProgressionTable TableFrom(VectorFile file)
         {
             // Round-tripped through the real reader rather than constructed directly, so
-            // the vectors also exercise override resolution — which is itself part of
+            // the vectors also exercise override resolution - which is itself part of
             // what the two implementations have to agree on.
             var problems = new List<string>();
             string json = JsonUtility.ToJson(file.progression);
@@ -279,11 +279,11 @@ namespace GlimmerGrove.Tests
 
             // The vector file's progression block carries the reward curve and the golden
             // bands, and deliberately not the daily chests, the ad payouts or the streak
-            // ladder — those have vector sets of their own (dailyChestConfig, streakLadder)
+            // ladder - those have vector sets of their own (dailyChestConfig, streakLadder)
             // read through their own resolvers a few methods below, so duplicating them here
             // would be a second copy for a drop to put out of step with the first. The reader
             // notes each absent block and falls back, which is correct behaviour and not a
-            // problem with these vectors — so the three notes are expected and everything else
+            // problem with these vectors - so the three notes are expected and everything else
             // is still a failure.
             //
             // Filtered rather than asserted-empty because asserting empty is what this did,
@@ -322,15 +322,15 @@ namespace GlimmerGrove.Tests
         /// True for the reader's note that a block this vector file does not carry was absent.
         ///
         /// Matched on the exact sentences rather than on a substring of one of them, so a
-        /// <em>malformed</em> block — which produces a different sentence about the same
-        /// section — still fails. See <see cref="TableFrom"/>.
+        /// <em>malformed</em> block - which produces a different sentence about the same
+        /// section - still fails. See <see cref="TableFrom"/>.
         /// </summary>
         static bool IsAbsentBlockNote(string problem)
             => problem == "daily block lists no chests; using the built-in table"
             || problem == "ads block lists no placements; using the built-in table"
             || problem == "streak block lists no rungs; using the built-in ladder"
             // The same note for the two blocks added since: neither is part of the reward
-            // curve these vectors pin, and both have gates of their own — the content checks
+            // curve these vectors pin, and both have gates of their own - the content checks
             // walk the utility catalog and the ward roster and error on an entry whose art or
             // loc keys do not resolve. Carrying them here would be a second copy for a retune
             // to put out of step with the first, which is the whole reason the daily, ad and
@@ -345,7 +345,7 @@ namespace GlimmerGrove.Tests
             || problem == "tasks block lists no chest tiers; using the built-in table"
             || problem == "notifications block enables nothing; the built-in slate ships "
                         + "instead. To send nothing at all, the player's own switch is the "
-                        + "control — see NotificationOptIn";
+                        + "control - see NotificationOptIn";
 
         static IChapterMap ChaptersFrom(VectorFile file)
         {
@@ -400,7 +400,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The golden picker, against the file both halves read.
         ///
-        /// The multiplier is not a decoration on top of the reward rule — it is inside the
+        /// The multiplier is not a decoration on top of the reward rule - it is inside the
         /// credit derivation, so the server recomputes it on every sync. A disagreement
         /// here is a balance that moves after a sync, in front of a player, for no reason
         /// they can see. <c>GoldenTests</c> pins the same numbers without a JSON reader,
@@ -425,7 +425,7 @@ namespace GlimmerGrove.Tests
 
             Assert.IsEmpty(failures,
                            "the client no longer matches the shared golden vectors. Every one of these " +
-                           "is a glade somebody has been paid for — see invariant 9c.\n" +
+                           "is a glade somebody has been paid for - see invariant 9c.\n" +
                            string.Join("\n", failures));
         }
 
@@ -575,8 +575,8 @@ namespace GlimmerGrove.Tests
             Assert.Greater(file.streakCases.Length, 0);
 
             // Read through the real reader, so the vectors exercise the clamp and the
-            // refusals as well as the lookup. Problems are expected here — the ladder
-            // deliberately overreaches on two nights — but the table must still build.
+            // refusals as well as the lookup. Problems are expected here - the ladder
+            // deliberately overreaches on two nights - but the table must still build.
             //
             // The tiers a chest night names are the vector file's own synthetic ones, which
             // is what keeps this a test of the *lookup*: the shipped tiers can be retuned,
@@ -607,7 +607,7 @@ namespace GlimmerGrove.Tests
 
             Assert.IsEmpty(failures,
                            "the client no longer matches the shared streak vectors. Every one of " +
-                           "these is a night somebody is paid for — the server grants the amount " +
+                           "these is a night somebody is paid for - the server grants the amount " +
                            "and this is what the board promised.\n" + string.Join("\n", failures));
         }
 
@@ -668,7 +668,7 @@ namespace GlimmerGrove.Tests
                                              "inherits", "pay nothing", "golden" })
             {
                 Assert.IsTrue(all.Contains(required),
-                              $"the vectors no longer cover '{required}' — that is a case where the two " +
+                              $"the vectors no longer cover '{required}' - that is a case where the two " +
                               "implementations could silently disagree");
             }
         }
@@ -680,7 +680,7 @@ namespace GlimmerGrove.Tests
         /// A chest is rolled twice: here so the reward can be shown and spent while
         /// offline, and again in <c>functions/src/daily.ts</c> so the grant can be
         /// adjudicated without believing the client's number. If the two ever disagree, a
-        /// player watches a balance change after a sync — which is the worst thing an
+        /// player watches a balance change after a sync - which is the worst thing an
         /// economy can do in front of somebody, and the hardest to explain afterwards.
         ///
         /// Every constant behind this is part of the contract: the FNV basis and prime,
@@ -715,7 +715,7 @@ namespace GlimmerGrove.Tests
             Assert.IsEmpty(failures,
                            "the client no longer rolls chests the way the server does. If this change " +
                            "was intended, update firebase/shared/reward-vectors.json and make the same " +
-                           "change in firebase/functions/src/daily.ts — otherwise the server will grant " +
+                           "change in firebase/functions/src/daily.ts - otherwise the server will grant " +
                            "a different amount than the game showed.\n" + string.Join("\n", failures));
         }
 
@@ -746,7 +746,7 @@ namespace GlimmerGrove.Tests
             Assert.IsTrue(hasFixed, "the daily vectors no longer cover a chest with no bonus slot");
             Assert.IsTrue(hasMerging,
                           "the daily vectors no longer cover a chest whose floor and bonus share a " +
-                          "kind — that is the case where the client would award one id twice and pay " +
+                          "kind - that is the case where the client would award one id twice and pay " +
                           "half of what the server grants");
         }
 
@@ -794,7 +794,7 @@ namespace GlimmerGrove.Tests
                            "the client no longer rolls task chests the way the server does. If this " +
                            "change was intended, regenerate firebase/shared/reward-vectors.json with " +
                            "Tools/make_task_vectors.py and make the same change in " +
-                           "firebase/functions/src/tasks.ts — otherwise the server will grant a " +
+                           "firebase/functions/src/tasks.ts - otherwise the server will grant a " +
                            "different amount than the game showed.\n" + string.Join("\n", failures));
         }
 
@@ -845,18 +845,18 @@ namespace GlimmerGrove.Tests
                            "the client no longer rolls season chests the way the server does. If this " +
                            "change was intended, regenerate firebase/shared/reward-vectors.json with " +
                            "Tools/make_mark_vectors.py and make the same change in " +
-                           "firebase/functions/src/season.ts — otherwise the server will grant a " +
+                           "firebase/functions/src/season.ts - otherwise the server will grant a " +
                            "different amount than the game showed.\n" + string.Join("\n", failures));
         }
 
         /// <summary>
         /// The one trap a season's seeding has that a task's does not: <b>two tracks at one
-        /// rung</b>. Same account, same season, same goal — and they have to draw from
+        /// rung</b>. Same account, same season, same goal - and they have to draw from
         /// different streams, or one claim would collect both columns.
         ///
         /// <para>
         /// Compared over <em>all</em> of a subject's tiers rather than tier by tier, because a
-        /// chest with no randomness in it — the synthetic <c>silver</c> is a flat four gems —
+        /// chest with no randomness in it - the synthetic <c>silver</c> is a flat four gems -
         /// rolls the same whatever the seed, correctly. A whole subject's worth of rolls is
         /// where a shared stream would show.
         /// </para>
@@ -914,7 +914,7 @@ namespace GlimmerGrove.Tests
         /// The vector file's synthetic chest tiers, read through the real band reader.
         ///
         /// Shared by the three subject-seeded chest tests and by the streak ladder's own
-        /// lookup, because they all name the same four ids — and because a tier table built
+        /// lookup, because they all name the same four ids - and because a tier table built
         /// twice in one file is two tables that can disagree about what "gold" holds.
         /// </summary>
         static Dictionary<string, ChestTier> VectorTiers(TaskTierDto[] rows)
@@ -976,7 +976,7 @@ namespace GlimmerGrove.Tests
                            "the client no longer rolls streak chests the way the server does. If " +
                            "this change was intended, regenerate firebase/shared/reward-vectors.json " +
                            "with Tools/make_streak_vectors.py and make the same change in " +
-                           "firebase/functions/src/streak.ts — otherwise the server will grant a " +
+                           "firebase/functions/src/streak.ts - otherwise the server will grant a " +
                            "different amount than the game showed.\n" + string.Join("\n", failures));
         }
 

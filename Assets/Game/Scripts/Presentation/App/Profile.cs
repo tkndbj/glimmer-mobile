@@ -9,7 +9,7 @@ namespace GlimmerGrove
     /// <summary>
     /// The read model the home screen paints: level, grove progress and balances.
     ///
-    /// Nothing is stored here — it is a view over <see cref="PlayerProgression"/>,
+    /// Nothing is stored here - it is a view over <see cref="PlayerProgression"/>,
     /// <see cref="Wallet"/> and the live catalog. Keeping it as a facade means the HUD
     /// has one place to ask, while progression, persistence and content each stay
     /// responsible for their own part.
@@ -27,14 +27,14 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Separate from <see cref="CompanionLedger.Changed"/> because the two are different
-        /// facts — which companions are <em>held</em>, and which one is being <em>worn</em> —
+        /// facts - which companions are <em>held</em>, and which one is being <em>worn</em> -
         /// and a purchase moves them one after the other rather than together. That order is
         /// what makes this necessary: <see cref="TryBuyAvatar"/> buys and then wears, and
         /// <c>TryBuy</c> raises the ledger's event before the wear has happened, so every
         /// screen listening to it repainted with the *previous* companion still shown as worn
         /// and nothing told it to look again. A player who bought a friend was left looking at
         /// a gold ring around the one they used to wear until they left the screen and came
-        /// back — the same bug the ledger's event was added to kill, one field over.
+        /// back - the same bug the ledger's event was added to kill, one field over.
         /// </para>
         /// <para>
         /// So this fires from the one place a choice is recorded, and both roster screens
@@ -82,7 +82,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// The denominator is dropped rather than kept, because "8/5" is a fraction that
-        /// reads as a bug — and the number it would be over is not a maximum anyway, it is
+        /// reads as a bug - and the number it would be over is not a maximum anyway, it is
         /// the point the clock stops helping. Below the cap it stays, because that is where
         /// it means something: it is the distance the timer still has to travel. Written
         /// once here so the hub, the gate and anything drawn later cannot disagree about it.
@@ -91,7 +91,7 @@ namespace GlimmerGrove
         public static string HeartsLabel() => HeartsLabel(Hearts);
 
         /// <summary>
-        /// The same label for a count that is not the current one — what the pill said a
+        /// The same label for a count that is not the current one - what the pill said a
         /// moment ago, or what it will say once the coin in the air has landed.
         ///
         /// An overload rather than a defaulted parameter, for the reason
@@ -107,7 +107,7 @@ namespace GlimmerGrove
         ///
         /// Hours get "7h 42m" and the last hour gets a ticking "42:15". A refill period
         /// of eight hours would otherwise render as "480:00", which is not a duration
-        /// anybody can feel — and the seconds only earn their place once they are close
+        /// anybody can feel - and the seconds only earn their place once they are close
         /// enough to be worth watching.
         /// </summary>
         public static string Countdown(long seconds)
@@ -128,8 +128,8 @@ namespace GlimmerGrove
         /// The same clock, for a wait that can run into days.
         ///
         /// <para>
-        /// <see cref="Countdown"/> is right for everything it was written for — a heart, a
-        /// chest reset, the hours a streak has left — because none of those can exceed a day.
+        /// <see cref="Countdown"/> is right for everything it was written for - a heart, a
+        /// chest reset, the hours a streak has left - because none of those can exceed a day.
         /// An event window can be ninety, and hours do not fold: a fortnight's event opened on
         /// its first morning reads "ends in 335h 12m", which is a number a person has to do
         /// arithmetic on before it means anything.
@@ -165,7 +165,7 @@ namespace GlimmerGrove
 
         public static int HintCount => Wallet.Hints.Count;
 
-        /// <summary>Where the hint timer stops — the denominator, and not a maximum.</summary>
+        /// <summary>Where the hint timer stops - the denominator, and not a maximum.</summary>
         public static int MaxHints => Wallet.MaxHints;
 
         /// <summary>Whether the player has a hint to spend.</summary>
@@ -183,7 +183,7 @@ namespace GlimmerGrove
 
         // -- companion ----------------------------------------------------------
         /// <summary>
-        /// The companion on the profile, resolved against the roster — so a save
+        /// The companion on the profile, resolved against the roster - so a save
         /// naming one this build does not ship still draws something.
         /// </summary>
         public static AvatarDefinition Avatar => AvatarCatalog.Resolve(Wallet.AvatarId);
@@ -193,14 +193,14 @@ namespace GlimmerGrove
         /// has not reached, so the screen cannot be the only thing enforcing the rule.
         ///
         /// Warms the new companion's art before returning, into the global cache rather
-        /// than any screen's scope — the hub shows it long after the profile is closed,
+        /// than any screen's scope - the hub shows it long after the profile is closed,
         /// and a portrait freed with the picker would leave a hole in the top bar.
         /// </summary>
         public static bool TryWearAvatar(string avatarId)
         {
             var chosen = AvatarCatalog.Find(avatarId);
 
-            // The whole rule — reached by level *or* bought. Asking AvatarCatalog directly
+            // The whole rule - reached by level *or* bought. Asking AvatarCatalog directly
             // here is what would refuse a companion the player had just paid for.
             if (!CompanionLedger.IsHeld(chosen, Rank)) return false;
 
@@ -240,7 +240,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Keeps the worn companion's art resident — <b>for the grove alone</b>, which is held.
+        /// Keeps the worn companion's art resident - <b>for the grove alone</b>, which is held.
         ///
         /// <para>
         /// <b>No longer called from the boot path.</b> It pinned one portrait into the global
@@ -292,7 +292,7 @@ namespace GlimmerGrove
         /// <summary>
         /// How much of the catalog's stars this player holds, 0..1.
         ///
-        /// The chests that used to sit on this no longer do — the home panel is the daily
+        /// The chests that used to sit on this no longer do - the home panel is the daily
         /// one now, and lifetime stars move three times in a whole playthrough, which is
         /// not a thing a daily loop can be hung on. This stays because completion is a
         /// real number worth showing; it is the profile's record card that shows it.

@@ -7,8 +7,8 @@ namespace GlimmerGrove.Modes
     ///
     /// <para>
     /// <b>The one question this mode cannot answer from the desk.</b> A siege puts two things in
-    /// front of one pair of eyes — a gem field the hands live on, and a hill that walks whether
-    /// anybody watches it or not — and the fault it came back with was <em>"I barely look up"</em>
+    /// front of one pair of eyes - a gem field the hands live on, and a hill that walks whether
+    /// anybody watches it or not - and the fault it came back with was <em>"I barely look up"</em>
     /// (invariant 37bl). Every instrument this project has reads the model: the hold simulation,
     /// <c>ways</c>, a contact sheet, a render. None of them can see where a person is looking, and
     /// no amount of reasoning settles it. So it is measured.
@@ -16,7 +16,7 @@ namespace GlimmerGrove.Modes
     /// <para>
     /// <b>Three readings, each a decision the hill offers and the board can score.</b> A bomb is
     /// left standing where a bomber died and goes off where it stands, so the decision is
-    /// <em>when</em> (40i) — and how long one lies there unnoticed is the sharpest single number
+    /// <em>when</em> (40i) - and how long one lies there unnoticed is the sharpest single number
     /// here. A cog is a rank the player has to reach for before it is trampled, so one that times
     /// out is one nobody saw. And a boss walks in wearing a colour: whether the ward of that colour
     /// was fuelled when it arrived says whether the hill was read ahead of time or reacted to.
@@ -25,7 +25,7 @@ namespace GlimmerGrove.Modes
     /// <b>Counted rather than streamed, and reported once at the end of a run.</b> A telemetry
     /// event per bomb would be a stream nobody reads and a cost that scales with play; what is
     /// wanted is a figure per run, which is also the shape every other reading in this project
-    /// takes. Nothing here is a game rule — no code outside the recording sites may branch on it —
+    /// takes. Nothing here is a game rule - no code outside the recording sites may branch on it -
     /// so the whole feature is this file plus five one-line calls, and removing it is removing
     /// them.
     /// </para>
@@ -80,7 +80,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// Over the tapped ones alone, deliberately. A bomb still standing when the run ended has
-        /// no wait yet — folding it in at its current age would report a shorter average the
+        /// no wait yet - folding it in at its current age would report a shorter average the
         /// longer it was ignored, which inverts the measurement. What that bomb is evidence of is
         /// counted instead, as the gap between <see cref="BombsDropped"/> and
         /// <see cref="BombsTapped"/>.
@@ -116,7 +116,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>The stormglass is what this is really for, and it is the same question a bomb
         /// asks.</b> A stormglass is worth what is standing on the hill when it goes, so *when* to
-        /// match it is the whole decision (40i, on the player's own board this time) — and a run
+        /// match it is the whole decision (40i, on the player's own board this time) - and a run
         /// where they are sprung the instant they land is a run by somebody who has not met the
         /// mechanic. Counted for all three, because the answer only means anything against the two
         /// whose timing genuinely does not matter.
@@ -124,7 +124,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>Dealt and sprung are both counted, because they come apart.</b> A charm on the board
         /// when the run ends was never spent, and the gap between the two is exactly the evidence
-        /// of that — the same shape <see cref="BombsDropped"/> and <see cref="BombsTapped"/> take,
+        /// of that - the same shape <see cref="BombsDropped"/> and <see cref="BombsTapped"/> take,
         /// and for the same reason.
         /// </para>
         /// </summary>
@@ -179,8 +179,8 @@ namespace GlimmerGrove.Modes
         /// Two cells exchanging everything they carry.
         ///
         /// <b>Its own method rather than two <see cref="CharmMoved"/> calls, and it has to be
-        /// exactly self-inverse.</b> <c>SiegeBoard.Trade</c> is called twice by every trial swap —
-        /// once to try a move and once to put the field back — so anything it does here is done
+        /// exactly self-inverse.</b> <c>SiegeBoard.Trade</c> is called twice by every trial swap -
+        /// once to try a move and once to put the field back - so anything it does here is done
         /// and undone on every drag the player rejects. An exchange is its own inverse; a pair of
         /// one-way moves is not, because the first would overwrite what the second needs.
         /// </summary>

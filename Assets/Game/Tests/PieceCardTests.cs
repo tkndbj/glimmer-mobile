@@ -7,7 +7,7 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// The grove's shop and its picker offer the same catalog, and until <see cref="PieceCard"/>
-    /// existed they drew it two ways — the shop in the interface kit's card, the picker in a
+    /// existed they drew it two ways - the shop in the interface kit's card, the picker in a
     /// drawn box with a traced outline, which is the shape this UI used before it had a kit. The
     /// two are one design now, and these are the two things that would silently make them two
     /// again: the design's own numbers drifting, and the scaling stopping being a scaling.
@@ -15,7 +15,7 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// Arithmetic only, and deliberately so: every method here answers a number before anything
     /// is built, which is what lets a card be proved without a canvas. What it cannot see is
-    /// whether the card <em>looks</em> right, and no gate in this project can — that is what a
+    /// whether the card <em>looks</em> right, and no gate in this project can - that is what a
     /// render is for.
     /// </para>
     /// </summary>
@@ -48,7 +48,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// The picture riding at a fixed height inside a shrunken plate is the exact fault the
-        /// shop's own note records — a band of empty plate under the picture and none above it —
+        /// shop's own note records - a band of empty plate under the picture and none above it -
         /// and it is invisible at the size the numbers were tuned at, because at that size
         /// everything is right by construction.
         /// </para>
@@ -74,7 +74,7 @@ namespace GlimmerGrove.Tests
         /// <c>ArtCentre</c> is measured down from the plate's top edge and the plate's own
         /// height is measured from the cell, so the two are only guaranteed to agree while the
         /// arithmetic that placed them does. A picture hanging off the top of its card is the
-        /// shape of fault a scaling gets wrong — right in proportion, wrong in fact — and it is
+        /// shape of fault a scaling gets wrong - right in proportion, wrong in fact - and it is
         /// invisible at the size the numbers were tuned at, where everything is right by
         /// construction.
         /// </para>

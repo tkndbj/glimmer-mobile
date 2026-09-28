@@ -12,7 +12,7 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// <b>This exists for <c>SiegeBandTests</c>' reason and it caught the same class of fault.</b>
     /// <c>Tools/render_siege.py</c> draws whatever canvas it is given and drew neither of these
-    /// at all, so what shipped was a wave banner floating up <em>through</em> a chain banner —
+    /// at all, so what shipped was a wave banner floating up <em>through</em> a chain banner -
     /// about 1.4 cells of shared row on a 19.5:9 phone, a 16:9 sheet and a tablet alike. Each
     /// number was individually reasonable; the pair was wrong everywhere, because one was
     /// measured from the ward line and the other from the hill's foot and those two anchors move
@@ -92,8 +92,8 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// The chain keeps the place invariant 37k gave it — the empty run of hill just above
-        /// the turrets — and the ladder is stacked on top of that rather than instead of it.
+        /// The chain keeps the place invariant 37k gave it - the empty run of hill just above
+        /// the turrets - and the ladder is stacked on top of that rather than instead of it.
         /// </summary>
         [Test]
         public void TheChainBannerStillStandsJustAboveTheWardLine()
@@ -113,7 +113,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// <b>Tall only, and deliberately so.</b> A short board leaves the hill less room than
-        /// one of these captions needs, let alone two — so no arrangement fits there and
+        /// one of these captions needs, let alone two - so no arrangement fits there and
         /// clamping would only put them back on top of each other, which is what the sweep above
         /// exists to stop. Stated the same way <c>SiegeBandTests</c> states the hill being the
         /// biggest band, so the next person to read a wide render is not surprised by it.
@@ -122,7 +122,7 @@ namespace GlimmerGrove.Tests
         /// <b>Which display that is has moved, and it is the opposite of where anybody would
         /// look.</b> It was the 4:3 tablet, at 3.15 cells of hill; capping the field to a phone's
         /// width (invariant 37cc) gives a tablet 5.6 cells and both banners fit there now. What
-        /// is left is the squarest <em>phone</em> — the 16:9 iPhone SE at 4.0 cells, which this
+        /// is left is the squarest <em>phone</em> - the 16:9 iPhone SE at 4.0 cells, which this
         /// change did not touch and which no cap can help, because its hill is short for the
         /// honest reason that its display is.
         /// </para>
@@ -152,14 +152,14 @@ namespace GlimmerGrove.Tests
         /// the hold is the answer.</b> The band is pinned to the middle of the hill because that
         /// is where a player is told to look during a breather, and it is three cells tall
         /// against a hill of six; the banner rises from the ward line and floats up into it. On
-        /// the shapes this mode is played at they share between 1.3 and 2.2 cells of row — which
+        /// the shapes this mode is played at they share between 1.3 and 2.2 cells of row - which
         /// came back from play as a boss's name drawn through the gem counts, because a boss
         /// falling clears the hill and that is the same frame the breather starts.
         /// </para>
         /// <para>
         /// So this asserts the clash rather than its absence. If somebody re-seats the band one
         /// day and this fails, the right repair is to read
-        /// <c>SiegeView.BandShows</c> and decide whether the hold is still buying anything —
+        /// <c>SiegeView.BandShows</c> and decide whether the hold is still buying anything -
         /// not to re-tune a number until this goes green.
         /// </para>
         /// </summary>
@@ -183,7 +183,7 @@ namespace GlimmerGrove.Tests
         /// And the hold itself: the band is never drawn on a frame a banner is.
         ///
         /// <para>
-        /// <b>Swept rather than looked at</b>, which is this file's whole bargain — a render
+        /// <b>Swept rather than looked at</b>, which is this file's whole bargain - a render
         /// draws one frame of one shape, and what went wrong here was a pairing that only
         /// happens for two seconds after a boss falls.
         /// </para>
@@ -237,7 +237,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// <b>Measured against the ceiling rather than against the constant</b>, so the sweep
-        /// says the same thing if the swell is ever retuned — <c>Pop</c> of a hairline is the
+        /// says the same thing if the swell is ever retuned - <c>Pop</c> of a hairline is the
         /// most it will ever answer, whatever that is.
         /// </para>
         /// </summary>
@@ -291,7 +291,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// <b>Invariant 44e, on the one moment that exists to say "this is not the thing you
         /// fought last time".</b> <c>SiegeView.BossKey</c> ends in a <c>default</c> arm that
-        /// returns the warlord's key, which is a real answer — so a boss added without a key of
+        /// returns the warlord's key, which is a real answer - so a boss added without a key of
         /// its own walks on under another boss's name, in the right colour, at the right size,
         /// with every other gate green. Two of them shared one banner once already, while the mode
         /// had two bosses, and the entry that fixed it is the one this checks.

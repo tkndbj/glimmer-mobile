@@ -13,7 +13,7 @@ namespace GlimmerGrove.Content.Sources
     /// waits on the network to start, it reads whatever the last refresh left here
     /// and pulls the next update in the background. Writes go through a temporary
     /// file so a process killed mid-write leaves the old copy intact rather than a
-    /// truncated one — a half-written chapter would be worse than a stale chapter.
+    /// truncated one - a half-written chapter would be worse than a stale chapter.
     /// </summary>
     public sealed class CacheContentSource : IWritableContentSource
     {

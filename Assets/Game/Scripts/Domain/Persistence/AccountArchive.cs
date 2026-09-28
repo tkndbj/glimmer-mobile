@@ -13,7 +13,7 @@ namespace GlimmerGrove.Persistence
     /// <b>Why this exists.</b> Switching accounts used to be a replacement: the local save was
     /// wiped and the incoming account's grove was downloaded over it. That makes the switch a
     /// network operation with no undo, and every step after the sign-in a place it can strand
-    /// somebody — which is exactly what shipped. A player switching between two of their own
+    /// somebody - which is exactly what shipped. A player switching between two of their own
     /// Google accounts met "signed in, but that grove could not be loaded", then a panel saying
     /// their phone was signed in as somebody else, then a destructive prompt offering to
     /// discard twenty-six glades. Every one of those sentences was produced by a failure to
@@ -25,8 +25,8 @@ namespace GlimmerGrove.Persistence
     /// <b>The fix is to stop making the switch depend on that read.</b> A grove that is leaving
     /// is copied here first, and a grove that is arriving is restored from here if this device
     /// has seen it before. Both are local, both are instant, and neither can fail for a reason
-    /// the player has to understand. The server copy is then folded in by the ordinary sync — a
-    /// pull, a monotonic join and a push, retried with a backoff like every other sync — so a
+    /// the player has to understand. The server copy is then folded in by the ordinary sync - a
+    /// pull, a monotonic join and a push, retried with a backoff like every other sync - so a
     /// switch made in a lift finishes as a switch and catches up when the doors open, rather
     /// than reporting an error about a grove that was never in danger.
     /// </para>
@@ -36,8 +36,8 @@ namespace GlimmerGrove.Persistence
     /// <see cref="SaveService.SwitchTo"/> and never joined with another; the identity travels
     /// inside the file, so a slot that does not name the account being asked for is discarded
     /// rather than adopted. <c>AccountGate</c> is unchanged and still guards every push. What
-    /// changes is that its refusal now has a local repair — archive what is here, restore what
-    /// the session is — instead of being a dead end the player has to read about.
+    /// changes is that its refusal now has a local repair - archive what is here, restore what
+    /// the session is - instead of being a dead end the player has to read about.
     /// </para>
     /// <para>
     /// It is deliberately a cache, not a backup. Evicting the least recently used slot loses a
@@ -51,7 +51,7 @@ namespace GlimmerGrove.Persistence
         bool Has(string userId);
 
         /// <summary>
-        /// The archived grove, or null. Reading does not remove it — the caller deletes it
+        /// The archived grove, or null. Reading does not remove it - the caller deletes it
         /// only once it has been adopted, so a process death between the two costs nothing.
         /// </summary>
         SaveFileDto Read(string userId);
@@ -72,7 +72,7 @@ namespace GlimmerGrove.Persistence
     /// design of this class. The atomic write, the backup rotation, the corrupt-file recovery
     /// and the checksum are the parts of persistence that are hard to get right, they are
     /// already right, and they are already tested against a real filesystem in
-    /// <c>SaveStoreTests</c>. A second copy of them would be a second thing to get wrong —
+    /// <c>SaveStoreTests</c>. A second copy of them would be a second thing to get wrong -
     /// invariant 5b's lesson in the file with the least reason to relearn it.
     /// </para>
     /// <para>
@@ -89,7 +89,7 @@ namespace GlimmerGrove.Persistence
         /// How many groves this device keeps a copy of.
         ///
         /// Bounded because it is a cache and a device shared by a family is an ordinary thing.
-        /// Six is generous against the real use — a player and their second account — and an
+        /// Six is generous against the real use - a player and their second account - and an
         /// eviction costs a copy rather than a grove, because a switch pushes the outgoing
         /// grove to the server before it fills a slot.
         /// </summary>
@@ -166,7 +166,7 @@ namespace GlimmerGrove.Persistence
         /// <summary>
         /// FNV-1a over the id's UTF-8 bytes, in hex. The same hash the chest roll uses, for the
         /// same reason: it is short, it needs no dependency, and it is stable across runtimes
-        /// and builds — a folder name that changed with the .NET version would orphan every
+        /// and builds - a folder name that changed with the .NET version would orphan every
         /// archive on the device the day the engine was upgraded.
         /// </summary>
         internal static string Key(string userId)
@@ -223,7 +223,7 @@ namespace GlimmerGrove.Persistence
     /// An archive that keeps nothing.
     ///
     /// The default, so that <see cref="SaveService"/> is never holding null and a caller that
-    /// forgot to supply one degrades to the old behaviour — a switch that downloads — rather
+    /// forgot to supply one degrades to the old behaviour - a switch that downloads - rather
     /// than throwing. Tests that are not about the archive use it too.
     /// </summary>
     public sealed class NullAccountArchive : IAccountArchive

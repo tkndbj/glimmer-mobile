@@ -8,13 +8,13 @@ namespace GlimmerGrove.Content
     /// The catalog the game is currently playing, read from anywhere.
     ///
     /// Publishing swaps a whole immutable catalog in one assignment, so a screen can
-    /// never observe a half-applied content update — it either sees the old world or
+    /// never observe a half-applied content update - it either sees the old world or
     /// the new one.
     ///
     /// The conveniences here are all index questions, which are always answerable
     /// without touching a file. Anything needing a level's grid or art goes through
     /// <see cref="LevelAsync"/> and is therefore honest about the fact that it may have
-    /// to read one — a screen that wants a board can await; a screen that wants a name
+    /// to read one - a screen that wants a board can await; a screen that wants a name
     /// or a position in the order never has to.
     /// </summary>
     public static class GameContent

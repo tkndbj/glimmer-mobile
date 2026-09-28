@@ -11,7 +11,7 @@ namespace GlimmerGrove.Tasks
     /// <para>
     /// <b>The same counted verbs as the task slates, at a third cadence.</b> A day and a week
     /// are windows that reset and deal a slate; "for ever" is a window that does neither, so it
-    /// is not a <see cref="TaskPeriod"/> and deliberately not a member of that enum — the
+    /// is not a <see cref="TaskPeriod"/> and deliberately not a member of that enum - the
     /// rotation, the reset clock and every claim id are facts about a window that ends. What it
     /// shares is the registry: one hook in <see cref="TaskLedger.Note"/> feeds both, so every
     /// call site that already reports a verb reports it here too, and a verb added for a future
@@ -28,13 +28,13 @@ namespace GlimmerGrove.Tasks
     /// <b>It rides inside the existing <c>tasks</c> map</b>, which is invariant 12a's other
     /// half: <c>hasOnly</c> is an allow-list over the <em>top level</em> of the document, so a
     /// key added inside a map already listed there costs no <c>firestore.rules</c> release and
-    /// has no deploy ordering at all — an old ruleset accepts it and a new one bounds it. That
+    /// has no deploy ordering at all - an old ruleset accepts it and a new one bounds it. That
     /// is also why it is not a section of its own, and the reason it belongs here rather than
     /// beside the ranks that read it.
     /// </para>
     /// <para>
     /// <b>It buys nothing.</b> Currency derives from the star ledger and from nothing else
-    /// (invariant 9), so a forged row moves a badge and never a balance — invariant 13's fourth
+    /// (invariant 9), so a forged row moves a badge and never a balance - invariant 13's fourth
     /// clause, which is what makes a client-written count safe here at all. The <see
     /// cref="Ceiling"/> is the bound that keeps a forged one inside an honest range.
     /// </para>
@@ -79,13 +79,13 @@ namespace GlimmerGrove.Tasks
         /// feature.</b> A counter that starts at nought on the day it ships tells a player who
         /// has cleared sixty glades that they have played no battles, and every rung asking
         /// about play is then a wall in front of exactly the players who earned it. Some of
-        /// these facts are already provable from records the save has always kept — a cleared
-        /// glade is a run that was played and won — so the reading is <c>max(counted, proved)</c>
+        /// these facts are already provable from records the save has always kept - a cleared
+        /// glade is a run that was played and won - so the reading is <c>max(counted, proved)</c>
         /// and the tally only ever has to carry what nothing else can.
         /// </para>
         /// <para>
         /// It stays monotone, which is what makes it legal at all: both halves only rise, so
-        /// their maximum does too. And it is a <em>reading</em> rather than a write — nothing
+        /// their maximum does too. And it is a <em>reading</em> rather than a write - nothing
         /// seeds the stored row from the floor, so no device ever pushes a number it did not
         /// count, and the merge has nothing new to decide (invariant 14a's floor, as a floor
         /// rather than as a payment).
@@ -111,8 +111,8 @@ namespace GlimmerGrove.Tasks
         /// <para>
         /// Every entry here is a <em>lower bound</em> that is true by construction rather than
         /// an estimate: a glade cannot be cleared without a run being played and won, and the
-        /// waves in <c>endlessBest</c> are waves that were seen off. A verb with no such proof —
-        /// a raider felled, a charm sprung — answers nought and is counted from the day this
+        /// waves in <c>endlessBest</c> are waves that were seen off. A verb with no such proof -
+        /// a raider felled, a charm sprung - answers nought and is counted from the day this
         /// ships, which is honest and is why the shipped ladder leans on the ones that are
         /// provable.
         /// </para>
@@ -196,7 +196,7 @@ namespace GlimmerGrove.Tasks
                 // An unknown goal is dropped rather than carried, exactly as a period's is: it
                 // is a row a newer build wrote and this one cannot count. Dropping it costs
                 // that build its count on this device, which the other device's `max` still
-                // holds — and unlike a companion or a purchase, nothing here is confiscated,
+                // holds - and unlike a companion or a purchase, nothing here is confiscated,
                 // because a count buys nothing (invariant 13's fourth clause).
                 var goal = TaskGoals.Parse(row.goal);
                 if (goal == TaskGoal.None) continue;

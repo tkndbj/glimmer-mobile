@@ -66,7 +66,7 @@ namespace GlimmerGrove
         /// <para>
         /// <see cref="TitleRow"/> is the room <see cref="CardTitle"/> takes; the rest are the
         /// rows themselves and the air after each. The card's height is the sum of whichever it
-        /// actually draws, so adding a row is one term here and one block there — rather than a
+        /// actually draws, so adding a row is one term here and one block there - rather than a
         /// typed height and a second place to forget.
         /// </para>
         /// </summary>
@@ -111,23 +111,23 @@ namespace GlimmerGrove
             NavBar.Build(Content, NavBar.Tab.Profile);
 
             // **The medallion is a readout, so it is watched rather than drawn** (invariant
-            // 44j, about a rank rather than a balance — `RankBadge` carries the argument in
+            // 44j, about a rank rather than a balance - `RankBadge` carries the argument in
             // full). A rank moves while this page is standing: a merge lands another device's
             // battles, a content push retunes the ladder under somebody looking at it. Built as
             // a snapshot it would be a photograph, correct when the profile opened and quietly
-            // wrong from then on — which compiles, draws, and passes every fixture, because
+            // wrong from then on - which compiles, draws, and passes every fixture, because
             // nothing moves during a test.
             Ranks.RankLedger.Changed += PaintBadge;
 
             // The account card is the one place in the game that says "your progress is saved
             // online", so it has to follow the account rather than whatever was true when the
             // screen opened. AccountOverlay is a modal raised over this screen and has four
-            // exits, so a callback from it reports through some of them and not others — the
+            // exits, so a callback from it reports through some of them and not others - the
             // companion screens' bug exactly. An event cannot be forgotten.
             CloudSaveService.IdentityChanged += BuildBody;
 
             // The record card is six derived figures and two of them are currency, so all six
-            // move while this screen is open — a sync applying another device's run, an ad's
+            // move while this screen is open - a sync applying another device's run, an ad's
             // credits confirmed by the server, a chest opened before the player walked in here.
             // A repaint rather than `BuildBody`, which is what `IdentityChanged` gets: a rebuild
             // replays every card's entrance, and a wallet landing is not an arrival (16d).
@@ -145,11 +145,11 @@ namespace GlimmerGrove
         /// Draws the rank the player holds into the medallion: the badge and its name.
         ///
         /// <para>
-        /// <b>The first rung, unearned, for an account below it</b> — <c>RankBadge</c>'s stance
+        /// <b>The first rung, unearned, for an account below it</b> - <c>RankBadge</c>'s stance
         /// and for its reason: a player who has not reached Cinderling is exactly the player
         /// this is for, and an empty medallion invites nobody. The badge is dimmed with
         /// <em>alpha</em> and never with a tint, because <c>Image.color</c> is a multiply and
-        /// takes a colour toward black along its own hue (invariant 44g) — these badges are
+        /// takes a colour toward black along its own hue (invariant 44g) - these badges are
         /// saturated metal and a multiply turns bronze to mud.
         /// </para>
         /// <para>
@@ -206,14 +206,14 @@ namespace GlimmerGrove
         /// <b>The outgoing body is hidden before it is destroyed.</b> <c>Destroy</c> lands at
         /// the end of the frame, so a region replaced in place is drawn over its replacement
         /// until then. This screen followed that rule where it redrew a row and did not follow
-        /// it here — and here it was worse than a flicker, because the old viewport
+        /// it here - and here it was worse than a flicker, because the old viewport
         /// was neither hidden nor destroyed: every rebuild left one behind, stacked over the
         /// live one, still carrying its invisible drag catcher. So the toggle leaked a whole
         /// page each time it was tapped and the page underneath stopped scrolling properly.
         /// </para>
         /// <para>
         /// <b>The scroll position survives.</b> A rebuild that returns somebody to the top of
-        /// the page has lost their place for a reason they did not cause — <c>GridView</c>'s
+        /// the page has lost their place for a reason they did not cause - <c>GridView</c>'s
         /// lesson, and it costs two lines here.
         /// </para>
         /// </summary>
@@ -255,7 +255,7 @@ namespace GlimmerGrove
             _stack.sizeDelta = new Vector2(0f, -_cursor + Gap);
 
             // Straight to the content rather than through verticalNormalizedPosition, which a
-            // ScrollRect resolves against bounds it recomputes in its own LateUpdate — so in
+            // ScrollRect resolves against bounds it recomputes in its own LateUpdate - so in
             // the frame the content is built it is read against nothing. GridView.Show carries
             // the same note for the same reason.
             //
@@ -311,7 +311,7 @@ namespace GlimmerGrove
         /// The hub's second door is built this way (<c>HomeScreen.BuildChallenges</c>) and this
         /// is the second of them, so the two go through one shape. A card carrying a painted
         /// banner has nothing on it to press <em>except</em> the banner, and a key drawn inside
-        /// one would be a smaller target for the only thing the card does — the tasks page's
+        /// one would be a smaller target for the only thing the card does - the tasks page's
         /// rule about a row being its own button, one size up.
         /// </para>
         /// </summary>
@@ -334,7 +334,7 @@ namespace GlimmerGrove
         {
             _cursor -= height + Gap;
 
-            // Only on the way in. A redraw leaves the card at full size — see _entered.
+            // Only on the way in. A redraw leaves the card at full size - see _entered.
             if (_entered) return;
 
             card.localScale = Vector3.zero;
@@ -359,15 +359,15 @@ namespace GlimmerGrove
             //
             // **The disc and the ring went with the companion.** A rank badge is a *seal*: it
             // carries its own rim and its own contrast (invariant 16v), which is why the map
-            // draws it bare — and a disc with a gold ring around one is two frames fighting for
+            // draws it bare - and a disc with a gold ring around one is two frames fighting for
             // the same job. Taking the frame away is also what lets the hero picture be a hero:
             // 258 where it was 196 inside the ring.
             //
             // **What the ring was not is broken, and that is worth writing down**, because the
             // first reading of it said otherwise. Measured against the badges' bounding boxes
             // the old 196 reached 110–115% of the ring's inner radius and looked like a
-            // collision; measured against their *alpha* — which is the only measurement that
-            // means anything for seven hexagons with wings — it was five lit pixels on
+            // collision; measured against their *alpha* - which is the only measurement that
+            // means anything for seven hexagons with wings - it was five lit pixels on
             // frostheart and one on auroracrest. Four of the seven sat between 94% and 101%,
             // which is tight rather than wrong. A box corner is not a picture (invariant 44d's
             // lesson, arriving through a checker rather than through a mirror).
@@ -385,11 +385,11 @@ namespace GlimmerGrove
             _badge.raycastTarget = false;
 
             // The name under the disc rather than inside it: a rung is called something and a
-            // badge that cannot be read is a puzzle — the same argument `RankBadge` makes for
+            // badge that cannot be read is a puzzle - the same argument `RankBadge` makes for
             // carrying its name on the map.
             // **Below the keeper level's disc, not beside it.** At -122 this box ran from
             // -450 to -150 and the disc hangs at -218 to -126, so a long rung name printed
-            // straight through it — measured, not eyed. -166 clears the disc's own bottom edge
+            // straight through it - measured, not eyed. -166 clears the disc's own bottom edge
             // by eight units and still leaves 36 of margin above the card's.
             _badgeName = UIKit.Shrinkable(
                 UIKit.Titled("BadgeName", card, string.Empty, 28, Pal.Gold, TextAnchor.MiddleCenter,
@@ -398,7 +398,7 @@ namespace GlimmerGrove
 
             PaintBadge();
 
-            // Still on the medallion's own box, which is the same 268 it always was — so the
+            // Still on the medallion's own box, which is the same 268 it always was - so the
             // keeper level sits exactly where it sat, whatever happened inside it.
             var levelBadge = UIKit.Img("LevelBadge", medallion, Art.Disc(128), Pal.Gold,
                                        new Vector2(92f, 92f), new Vector2(1f, 0f), new Vector2(-6f, 6f));
@@ -413,7 +413,7 @@ namespace GlimmerGrove
             //
             // **Everything on this side of the card stops at `Inside`.** The pencil and the XP
             // track both used to end at 484 against a plate whose edge is 490, which is six
-            // units — a gap that does not read as a gap, it reads as the plate having been cut
+            // units - a gap that does not read as a gap, it reads as the plate having been cut
             // short. One constant now, so the two cannot drift apart again; the name's box
             // gives up its right edge to make room, because its text is left-aligned and the
             // box's other end is where the sentence actually starts.
@@ -452,7 +452,7 @@ namespace GlimmerGrove
             // -126 while this column used to start at -128: the XP figure and the next-title
             // line both began *inside* the disc, and both sit squarely in its vertical band.
             // The column keeps its right edge (`Inside`, the same gutter the pencil stands in)
-            // and gives up its left, which is the only half that collides — widening the card
+            // and gives up its left, which is the only half that collides - widening the card
             // or moving the badge would move something that is already where it belongs.
             const float XpLeft = -64f, XpRight = Inside;
             const float XpW = XpRight - XpLeft, XpX = (XpLeft + XpRight) * .5f;
@@ -472,7 +472,7 @@ namespace GlimmerGrove
             }, fill).Delay(.35f);
 
             // White, and no outline. Both of these were dimmed cream (.72 and .5) carrying the
-            // 3-unit dark border, which on this plate is more dark mass than the stem itself —
+            // 3-unit dark border, which on this plate is more dark mass than the stem itself -
             // the two lines read as smudges rather than as sentences. The shadow stays; it is
             // what lifts a light line off the plate without thickening it.
             UIKit.Titled("XpText", card,
@@ -514,7 +514,7 @@ namespace GlimmerGrove
         /// pay would be the one lie this page could tell about money.
         /// </para>
         /// <para>
-        /// <b>It is the hub's second door, built twice</b> — the same plate, the same window
+        /// <b>It is the hub's second door, built twice</b> - the same plate, the same window
         /// cut with a <c>Mask</c>, the same cover-fit, at the owner's instruction. What it
         /// costs is the one thing that shape costs: the words are <em>painted into the
         /// picture</em>, so this control and the hub's are the only two in the game outside
@@ -524,8 +524,8 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// <b>The swell is why the picture is cut <em>smaller</em> than the window, which is the
-        /// opposite of what it looks like it should be.</b> The banner's ground is transparent —
-        /// the plate behind it is the card's colour — so a trough that pulls the art inside the
+        /// opposite of what it looks like it should be.</b> The banner's ground is transparent -
+        /// the plate behind it is the card's colour - so a trough that pulls the art inside the
         /// window exposes nothing; what the swell can do is push it <em>out</em>, and at the
         /// crest a cover-fitted banner runs 29 units past the window and the mask takes a slice
         /// off the leaves at each end. Cut at <c>1 / (1 + swell)</c> the crest is exactly the
@@ -579,7 +579,7 @@ namespace GlimmerGrove
             // behind a fixed window is the card's own light moving.
             if (art.enabled) Tween.Breathe(art.transform, BannerSwell, BannerPeriod);
 
-            // The count of chests waiting behind this door, on its top-right corner — the
+            // The count of chests waiting behind this door, on its top-right corner - the
             // hub's task pack's starburst, so the two doors that lead to chests say "there is
             // something here" in one voice. Built after the window so the mask cannot cut it.
             _inviteBadge = WaitingBadge.BurstTopRight(card.transform);
@@ -628,7 +628,7 @@ namespace GlimmerGrove
         /// <b>A reader rather than a string is what makes the repaint possible at all.</b> A
         /// tile built from <c>Profile.Coins</c> is a photograph of the moment it was built, and
         /// the alternative to keeping the question is six fields and a second copy of what each
-        /// one means — two places that can come to disagree about what "glades" counts.
+        /// one means - two places that can come to disagree about what "glades" counts.
         /// </para>
         /// <para>
         /// <b>Deliberately not registered with <see cref="ResourceSlots"/>.</b> These are record
@@ -694,7 +694,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>It reads the Endless Watch, because that is the board there is.</b> It used to
         /// read what the grove was worth, which was the figure the finest-groves board was
-        /// ordered on — and that board is <b>held</b> with the Grovement it ranks. Left as it
+        /// ordered on - and that board is <b>held</b> with the Grovement it ranks. Left as it
         /// was, this card would have printed "buy something for your grove and you will be
         /// ranked" to a player with no grove shop to reach and no board to be ranked on, which
         /// is the worst kind of stale copy: every word of it true when it was written, every
@@ -703,7 +703,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The opt-out is untouched and that is the point of keeping the card at all.</b>
         /// What it governs is whether a card is published, and a card is what <em>both</em>
-        /// boards are built from — so holding one board does not make the control less
+        /// boards are built from - so holding one board does not make the control less
         /// needed, it makes it the only way off the one that is left. Removing it with the
         /// grove's own figures would have taken away a player's only way out of a public list.
         /// </para>
@@ -712,7 +712,7 @@ namespace GlimmerGrove
         /// <b>The opt-out lives here rather than in Settings, and for the reason the account
         /// section moved here.</b> Appearing on a public list under a name is a question about
         /// <em>who the player is</em>, and burying it in a preferences panel beside the music
-        /// volume is how it stays unfound — by the people who most want it, who are exactly
+        /// volume is how it stays unfound - by the people who most want it, who are exactly
         /// the people it exists for. It sits directly above the account card because the two
         /// are one subject.
         /// </para>
@@ -732,7 +732,7 @@ namespace GlimmerGrove
             UIKit.Halo(glyph.transform, Pal.Gold, 150f, .26f);
 
             // `Waves` rather than `Table`, which is the same distribution document read on a
-            // different field — the two populations are deliberately different lengths, because
+            // different field - the two populations are deliberately different lengths, because
             // a percentile only means anything against keepers who have actually done the
             // thing (invariant 19m). Both refuse to answer under their own sample floor, and
             // `TopPercent` returning nought is what `ui.board.building` is for.
@@ -741,8 +741,8 @@ namespace GlimmerGrove
 
             // The connection case sits *under* the percentile rather than over it, which is the
             // whole of what makes it safe to add. A standing this device already has is still
-            // true in a tunnel — the distribution is a document read minutes ago and the best
-            // wave is read out of the save — so a phone with no signal must not replace a
+            // true in a tunnel - the distribution is a document read minutes ago and the best
+            // wave is read out of the save - so a phone with no signal must not replace a
             // correct number with an apology. What it may replace is the one branch that means
             // "we have no percentile for you": "the standing arrives with the next tally" is a
             // promise about a job that has not run, and offline we did not get far enough to
@@ -768,11 +768,11 @@ namespace GlimmerGrove
                              () => Flow.Go<LeaderboardScreen>());
 
             // A toggle rather than a line in a menu somewhere else, and it says which state it
-            // is in rather than which state it would move to — the ambiguity that makes every
+            // is in rather than which state it would move to - the ambiguity that makes every
             // "Disable notifications?" button in the world a coin flip.
             // The same box as the key beside it, to the unit. Two controls in one row at two
             // sizes reads as one of them having been added later, which is exactly what
-            // happened — and the caption is `Shrinkable`, so matching the larger of the two
+            // happened - and the caption is `Shrinkable`, so matching the larger of the two
             // costs the longer word nothing.
             var toggle = UIKit.TextButton("Visibility", card,
                                           Skins.Battle,
@@ -790,7 +790,7 @@ namespace GlimmerGrove
         ///
         /// <c>GameSettings</c> raises its own event and <c>GroveBoard</c> is subscribed to it,
         /// so the withdrawal or the republish happens without this method knowing anything
-        /// about either — the wiring rule this project has paid for three times.
+        /// about either - the wiring rule this project has paid for three times.
         /// </summary>
         void ToggleBoardVisibility()
         {
@@ -805,7 +805,7 @@ namespace GlimmerGrove
 
             // Asked before IsLinked, and it has to be. A device caught between two accounts
             // *is* signed in, so reading only IsLinked here would put "your progress is saved
-            // online" on the one screen a player checks when they suspect it is not — and
+            // online" on the one screen a player checks when they suspect it is not - and
             // nothing is being saved at all in that state. It is the only lie this card can
             // tell, so it is the first thing it rules out.
             bool mismatched = available && CloudSaveService.AccountMismatched;
@@ -816,8 +816,8 @@ namespace GlimmerGrove
                              : linked ? "ui.account.linked"
                              : "ui.account.guest";
 
-            // What the account is called, when the provider gave one. Display only — see
-            // CloudIdentity.Label — and absent for a guest, who has no account to name.
+            // What the account is called, when the provider gave one. Display only - see
+            // CloudIdentity.Label - and absent for a guest, who has no account to name.
             //
             // The card grows a line to hold it rather than squeezing one in, and everything
             // above the hint moves up by exactly that line. Reserving the room unconditionally
@@ -829,7 +829,7 @@ namespace GlimmerGrove
 
             // ------------------------------------------------------------------ measure
             // Every row is stacked from the card's top edge and the card is sized to hold
-            // exactly what it draws — the same arrangement AccountOverlay uses, and for its
+            // exactly what it draws - the same arrangement AccountOverlay uses, and for its
             // reason: this card grows a line when the provider names the account, so a typed
             // height is a height that ends up printing a sentence through a button. It already
             // did: the guest hint was drawn tight against the button under it.
@@ -848,7 +848,7 @@ namespace GlimmerGrove
             // Centred, and there is deliberately no key glyph beside it any more. The icon sat
             // in the left margin with a coloured halo behind it and pushed every line on the
             // card off-centre to make room, so the one sentence a player opens this screen to
-            // read — whether their grove is safe — was the only thing on the profile that was
+            // read - whether their grove is safe - was the only thing on the profile that was
             // not centred. The status colour already says everything the halo said.
             UIKit.Titled("Status", card, Loc.Get(statusKey), 34,
                          !available ? new Color(1f, .95f, .86f, .6f) : linked ? Pal.Mint : Pal.Rose,
@@ -886,8 +886,8 @@ namespace GlimmerGrove
             if (!available) return;
 
             // btn_orange for the unfinished-switch state rather than btn_red. Red is the
-            // deletion's colour now, and two red buttons on one card — one that fixes an
-            // account and one that destroys it — is the worst possible place for that
+            // deletion's colour now, and two red buttons on one card - one that fixes an
+            // account and one that destroys it - is the worst possible place for that
             // ambiguity.
             UIKit.TextButton("Manage", card, mismatched ? "btn_orange" : linked ? "btn_blue" : "btn_green",
                              Loc.Get(mismatched ? "ui.profile.fix"
@@ -903,8 +903,8 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>It is off the account card now, and the point of that is what it is no longer
-        /// beside.</b> That card is about protecting a grove — its heading, its status line and
-        /// its one button all say so — and the control that destroys the grove was standing on
+        /// beside.</b> That card is about protecting a grove - its heading, its status line and
+        /// its one button all say so - and the control that destroys the grove was standing on
         /// it, eighteen units under the control that saves it. Two buttons on one plate read as
         /// two answers to one question, which is exactly the shape a misfire wants. Down here it
         /// is its own question, asked on its own, after everything else the page has to say.
@@ -912,13 +912,13 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The bottom of the page rather than the bottom of the display.</b> A red key pinned
         /// over the nav bar would be the most permanent thing on the screen and would follow the
-        /// player past every card — and this page is a scroller, so "the bottom" is a place
+        /// player past every card - and this page is a scroller, so "the bottom" is a place
         /// somebody arrives at rather than a place they are held. Both stores require this to be
         /// <em>reachable</em>; neither asks for it to be in the way.
         /// </para>
         /// <para>
         /// <b>No plate under it.</b> Every other row here is a card because a card is what groups
-        /// things, and there is one thing here — a plate holding one small red button would
+        /// things, and there is one thing here - a plate holding one small red button would
         /// draw more attention to it than the button does.
         /// </para>
         /// <para>
@@ -927,7 +927,7 @@ namespace GlimmerGrove
         /// this page rather than moving into Settings for the reason the account row does: this
         /// is the one page in the game about <em>who the player is</em>, and burying the control
         /// that ends an account three taps deep in a preferences panel is how the last one
-        /// stayed unfound — and, for this one, how a review gets refused.
+        /// stayed unfound - and, for this one, how a review gets refused.
         /// </para>
         /// </summary>
         void BuildDeleteRow()
@@ -935,7 +935,7 @@ namespace GlimmerGrove
             if (!AccountDeletion.Offered(CloudSaveService.IsAvailable)) return;
 
             // A gap of its own on top of the stack's own, so it plainly is not part of the card
-            // above it — the one thing this control must never read as is the next row down.
+            // above it - the one thing this control must never read as is the next row down.
             _cursor -= Gap;
 
             var button = UIKit.TextButton("Delete", _stack, "btn_red", Loc.Get("ui.profile.delete"), 26,

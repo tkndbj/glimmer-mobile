@@ -16,10 +16,10 @@ namespace GlimmerGrove
     ///
     /// One chapter at a time is the load-bearing decision. It bounds the node count
     /// and the loaded texture count by a chapter's size rather than by the size of
-    /// the catalog, so the map costs the same at chapter fifty as at chapter one —
+    /// the catalog, so the map costs the same at chapter fifty as at chapter one -
     /// no virtualisation, no pooling, no cleverness required. Arrows either side of
-    /// the name plaque step between chapters — forward even into a locked one, which
-    /// is how the ladder stays visible — and the screen opens on the chapter of
+    /// the name plaque step between chapters - forward even into a locked one, which
+    /// is how the ladder stays visible - and the screen opens on the chapter of
     /// this mode the player was last looking at, falling back to wherever they are up to.
     /// </summary>
     public sealed class LevelsScreen : View
@@ -47,7 +47,7 @@ namespace GlimmerGrove
         /// Which ladder of that mode this map is showing.
         ///
         /// <b><see cref="Mode"/> one level finer, and it obeys the same rule</b>: a chapter's own
-        /// lane always wins, because a chapter belongs to exactly one — so opening one is choosing
+        /// lane always wins, because a chapter belongs to exactly one - so opening one is choosing
         /// a lane whether or not anybody said so. Unset falls back to what the player last looked
         /// at in this mode.
         /// </summary>
@@ -124,7 +124,7 @@ namespace GlimmerGrove
         /// <summary>
         /// The map is the one screen that cannot finish building inside <c>Build</c>: it needs
         /// its chapter's body read and that chapter's art resident, and on a chapter the player
-        /// has not opened before neither is in hand. So it tells the transition to stay shut —
+        /// has not opened before neither is in hand. So it tells the transition to stay shut -
         /// see <see cref="View.Ready"/>.
         ///
         /// <para>
@@ -137,14 +137,14 @@ namespace GlimmerGrove
         bool _built;
 
         /// <summary>
-        /// Whether this screen has actually put something under the header yet — a map or a hub.
+        /// Whether this screen has actually put something under the header yet - a map or a hub.
         ///
         /// <b>Separate from <see cref="_built"/>, which means "stop holding the transition".</b>
         /// Every way out of <see cref="BuildChapter"/> sets that, including the two that give up,
         /// because a chapter that failed to load must still be shown; this one says there is
         /// something worth teaching over. <see cref="Teach"/> used to ask <see cref="_layout"/>,
         /// which was the same question for as long as the only thing this screen could draw was a
-        /// map — and would have silently stopped teaching the loadout and the track pill on the
+        /// map - and would have silently stopped teaching the loadout and the track pill on the
         /// one lane where the track pill is the only way back.
         /// </summary>
         bool _drawn;
@@ -154,7 +154,7 @@ namespace GlimmerGrove
         ///
         /// <see cref="HeaderUnderside"/> is the constant version and is what Domain's map geometry
         /// is held to; this is the measured one, and the two differ by a whole pill whenever both
-        /// switchers are shown. Only <see cref="BuildHub"/> reads it — the map does not care,
+        /// switchers are shown. Only <see cref="BuildHub"/> reads it - the map does not care,
         /// because it scrolls underneath.
         /// </summary>
         float _headerFoot = HeaderUnderside;
@@ -165,8 +165,8 @@ namespace GlimmerGrove
         /// <summary>
         /// Drawn size of a map node, and where a glyph has to sit inside one to land on
         /// the disc's white face rather than on its rim. Derived from the art via
-        /// <see cref="UIKit.NodeFaceLift"/> so the three glyphs that ride a node — the
-        /// glade number, the onward chevron and the sealed teaser's question mark — cannot
+        /// <see cref="UIKit.NodeFaceLift"/> so the three glyphs that ride a node - the
+        /// glade number, the onward chevron and the sealed teaser's question mark - cannot
         /// drift apart the way three hand-tuned offsets did.
         /// </summary>
         public const float NodeSize = 196f;
@@ -191,8 +191,8 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// One tile rather than one per mode, which is what it used to be. A perch is now a
-        /// fact about a *place* rather than about a mode — it appears only where a painting
-        /// has water under the chain, which today is `map1` and nothing else — so choosing it
+        /// fact about a *place* rather than about a mode - it appears only where a painting
+        /// has water under the chain, which today is `map1` and nothing else - so choosing it
         /// per mode would be choosing it for a map that is shared by every mode's first
         /// chapter anyway. Grass-topped with a pale skirt, because that is what `map1`'s own
         /// islets are drawn as and the skirt reads as surf against the current.
@@ -208,7 +208,7 @@ namespace GlimmerGrove
         /// <para>
         /// Nought on the ground, because a node standing on the painting stands where it is
         /// placed. On a perch it has to clear the tile's own top face, which is the number
-        /// <c>ModeLook.PerchLift</c> used to carry per mode — one tile now, so one number.
+        /// <c>ModeLook.PerchLift</c> used to carry per mode - one tile now, so one number.
         /// Read in one place so the disc, the halo behind it, the teaser's seal and the shadow
         /// under all of them cannot come apart: four hand-written offsets is how the shadow
         /// once came to stay put while the disc moved.
@@ -223,7 +223,7 @@ namespace GlimmerGrove
         /// A node's footprint and the name plate under it, and where each hangs from the
         /// node's centre. Public because <see cref="ChapterMap"/> carries the same shape as
         /// the footprint another glade's standing mark has to clear (<c>BodyHalfWidth</c>,
-        /// <c>BodyBelow</c>, <c>BodyAbove</c>), and Domain cannot read these — so
+        /// <c>BodyBelow</c>, <c>BodyAbove</c>), and Domain cannot read these - so
         /// <c>ChapterMapTests</c> reads both and holds them to each other.
         /// </summary>
         public const float NodeWidth = 360f;
@@ -247,7 +247,7 @@ namespace GlimmerGrove
         /// <summary>
         /// Seconds between one glade popping in and the next, and the longest the whole
         /// arrival is allowed to take. The step shrinks as a chapter grows rather than
-        /// the entrance growing with it — at a flat 0.11s a thirty glade chapter would
+        /// the entrance growing with it - at a flat 0.11s a thirty glade chapter would
         /// still be assembling itself three seconds after the player arrived.
         /// </summary>
         const float PopStagger = .11f;
@@ -322,13 +322,13 @@ namespace GlimmerGrove
             StartCoroutine(BuildChapter());
 
             // The day's population lands once a session, from the cloud, on its own schedule.
-            // Usually that is long before anybody opens a map — but when it is not, this is
+            // Usually that is long before anybody opens a map - but when it is not, this is
             // the screen the promotion is visible on, so it repaints rather than waiting for
             // the player to leave the chapter and come back.
             PlayerProgress.RanksChanged += RepaintRanks;
 
-            // And the other device's play lands the same way — a sync after the splash, on a
-            // schedule of its own — onto a map that was drawn from the local file a second
+            // And the other device's play lands the same way - a sync after the splash, on a
+            // schedule of its own - onto a map that was drawn from the local file a second
             // earlier. See OnLearned.
             CloudSaveService.Learned += OnLearned;
         }
@@ -345,7 +345,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>Why this exists.</b> The map is built from the local file the moment the chapter
-        /// body is in hand, and the first sync of a launch is fire-and-forget from the splash —
+        /// body is in hand, and the first sync of a launch is fire-and-forget from the splash -
         /// so on a second phone the pull lands a second <em>after</em> the map is drawn, and
         /// a glade cleared on the first phone stood as unplayed until the player left the
         /// chapter and came back. Found on the owner's own two phones on 2026-09-22.
@@ -354,7 +354,7 @@ namespace GlimmerGrove
         /// <b>Everything that reads the save is redrawn, and every piece is redrawn whole.</b>
         /// A node's skin, its number, its halo, its pointer and its standing are all readings
         /// of one record, and the tap on it captures <c>unlocked</c> in a closure that no
-        /// repaint can reach — so a node is taken down and built again in its old place in the
+        /// repaint can reach - so a node is taken down and built again in its old place in the
         /// sibling order (a halo is wider than its disc, so order is what decides whose light
         /// draws over whose, 44mc). Nothing arrives: no pop, no stagger, because a merge landing
         /// is not the map opening and a chain of discs springing in a second time reads as a
@@ -364,7 +364,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// <b>Not on <c>PlayerProgress.Reloaded</c>, and that is the whole point.</b> That fires
-        /// on every adopt, which is every sync, which is every foreground — invariant 44m. Only
+        /// on every adopt, which is every sync, which is every foreground - invariant 44m. Only
         /// <see cref="CloudSaveService.Learned"/> can say the save under this screen is now
         /// different from the one it was drawn from. And not before the chapter is drawn: a
         /// merge landing mid-load is read by the build that follows, for free.
@@ -453,7 +453,7 @@ namespace GlimmerGrove
             // backdrops and strips are actually released.
             //
             // *Awaited*, and that is the whole of it. This used to be started and dropped
-            // on the floor, so the map was drawn on the same frame the load began — and
+            // on the floor, so the map was drawn on the same frame the load began - and
             // the map strips live in this scope, so Art.S returned null for every one of
             // them and BuildMapArt skipped them all. The chapter opened onto nothing but
             // the shade layer. It was invisible for as long as there was one chapter: the
@@ -462,7 +462,7 @@ namespace GlimmerGrove
             // the first thing in the game that asks for art it does not already hold.
             //
             // Awaiting rather than repainting on arrival because *everything* below needs
-            // it — strips, scenery, and the backdrop each glade will want. A repaint would
+            // it - strips, scenery, and the backdrop each glade will want. A repaint would
             // be four subscriptions to cover one wait that is normally already over.
             var art = AssetLibrary.EnsureChapterAsync(_body);
             while (!art.IsCompleted) yield return null;
@@ -490,7 +490,7 @@ namespace GlimmerGrove
             _drawn = true;
 
             // Ready the moment the map exists, not once it has finished arriving. The nodes
-            // pop in over about a second and that entrance is the point — it should play
+            // pop in over about a second and that entrance is the point - it should play
             // while the iris opens, the way it always did on a chapter whose art was already
             // resident. Waiting for it would replace one abrupt cut with a long stare at a
             // slate disc.
@@ -513,7 +513,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The chrome above and below it is unchanged, and that is the whole shape of the
         /// change.</b> The back key, the plaque, the star count, the "i", the two switchers and
-        /// the loadout shelf are all still what they were — a player has arrived at the same
+        /// the loadout shelf are all still what they were - a player has arrived at the same
         /// screen and switched which ladder it is showing, so the furniture has to stay put. What
         /// is swapped is the middle: the scroller, the painting, the trails, the discs and the
         /// teaser, none of which have anything to say about a lane holding one level.
@@ -521,7 +521,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The level is the lane's first and the gate is asked exactly as a node asks it</b>,
         /// so the key on the hub and a disc on a map refuse for the same reasons and with the
-        /// same sentence — <see cref="Open"/> owns both, and <see cref="GateLine"/> owns the
+        /// same sentence - <see cref="Open"/> owns both, and <see cref="GateLine"/> owns the
         /// words. A lane whose one chapter carries a keeper wall is the only gate this screen
         /// can meet here (a lane of one chapter has nothing behind it to ask for stars), and the
         /// key wears it rather than disappearing: this screen is the lane's advertisement as
@@ -570,7 +570,7 @@ namespace GlimmerGrove
 
             // Behind the chrome, and this is not cosmetic. The header is built in Build()
             // because it is index knowledge and must not wait on a file, while the scroller
-            // cannot exist until the chapter body has resolved a layout — so the viewport is
+            // cannot exist until the chapter body has resolved a layout - so the viewport is
             // always the *younger* sibling, and uGUI draws younger siblings in front. Left
             // alone it covered the back key, the chapter banner and the star count with an
             // opaque map, and its own invisible drag-catcher swallowed every tap meant for
@@ -582,7 +582,7 @@ namespace GlimmerGrove
 
             // **The foot is reserved when a loadout bar is standing in it.** The bar is opaque
             // and fills the width, so a viewport left full-screen would put the first glade of
-            // every chapter behind it — and a map is scrolled to the bottom by default. `FootRoom`
+            // every chapter behind it - and a map is scrolled to the bottom by default. `FootRoom`
             // already carries the safe-area inset, so this is right on a phone with a home
             // indicator and unchanged on one without.
             _viewport.offsetMin = new Vector2(0f, FootRoom);
@@ -594,19 +594,19 @@ namespace GlimmerGrove
 
             // How much larger than its authored width the map is being drawn.
             //
-            // A chapter's map is a *painting* — a column of strips a fixed number of units
-            // across, with every glade, trail and prop placed as a fraction of it — and until
+            // A chapter's map is a *painting* - a column of strips a fixed number of units
+            // across, with every glade, trail and prop placed as a fraction of it - and until
             // there was a tablet the canvas was that width exactly, so the question never came
             // up. It does now: `Layout.CanvasFit` widens the canvas on anything squarer than a
             // phone, and a strip drawn at its authored 1080 in a 1620-unit canvas is a painting
             // with 270 units of nothing down each side and glades that no longer stand on it.
-            // Stretching the strips instead is worse — that is the same painting 50% wider than
+            // Stretching the strips instead is worse - that is the same painting 50% wider than
             // it was drawn.
             //
             // So the whole map is scaled uniformly to the width it is given, which costs
             // nothing anywhere else: every position on it is already a fraction. Exactly 1 on
             // every phone, so this is a no-op on everything that ships today. The glade discs
-            // are deliberately *not* scaled with it — they are controls rather than scenery, and
+            // are deliberately *not* scaled with it - they are controls rather than scenery, and
             // a control that stays the size it was on a canvas that grew is a control that has
             // got smaller, which is the whole point of the widening.
             _mapScale = Mathf.Max(1f, Boot.CanvasWidth / ChapterMap.Width);
@@ -694,7 +694,7 @@ namespace GlimmerGrove
         /// One glade's disc, name and standing, in its seat on the painting.
         /// </summary>
         /// <param name="arriving">
-        /// Whether this node is part of the map opening — popped in on the chain's stagger — or
+        /// Whether this node is part of the map opening - popped in on the chain's stagger - or
         /// a redraw of one already standing, which lands at full size at once. See
         /// <see cref="OnLearned"/>.
         /// </param>
@@ -722,7 +722,7 @@ namespace GlimmerGrove
             btn.GetComponent<Image>().preserveAspect = true;
 
             // A glade has its own voice: Open() plays `unlock` when it lets you in, and
-            // deliberately nothing when it does not — a refusal here is carried by the
+            // deliberately nothing when it does not - a refusal here is carried by the
             // node's shake and its toast, because the game has no rejection sound. Either
             // way the generic click would be a second sound saying less than the first.
             btn.ClickSfx = null;
@@ -772,7 +772,7 @@ namespace GlimmerGrove
         /// </summary>
         /// <remarks>
         /// The pointer hangs 178 units above its disc, which is where the next glade's name
-        /// plate sits on a tight stretch of road — and a node built later draws over one built
+        /// plate sits on a tight stretch of road - and a node built later draws over one built
         /// earlier, so the pointer bobbed behind the LOCKED plate of the glade after it. The
         /// node is raised above every other rather than the pointer being lifted out of it,
         /// so it still pops in, bobs and retires with the disc it points at.
@@ -846,8 +846,8 @@ namespace GlimmerGrove
         /// What a shut gate says.
         ///
         /// <para>
-        /// One string used in three places — the signpost at the end of a chain, the refusal a
-        /// padlocked glade gives and the key on a lane's hub — because they are the same
+        /// One string used in three places - the signpost at the end of a chain, the refusal a
+        /// padlocked glade gives and the key on a lane's hub - because they are the same
         /// sentence, and a player who read one and then tapped another would otherwise be told
         /// two different things about one rule. Falls back to the plain "locked" line for a gate
         /// with no chapter behind it and no wall of its own, which is a catalog nobody can reach
@@ -871,13 +871,13 @@ namespace GlimmerGrove
         /// A node standing on the map, with a contact shadow under it.
         ///
         /// <para>
-        /// <b>It used to be a floating island tile</b> — a rock sprite with a soft drop shadow
-        /// below it, bobbing — and the packs these paintings come from are advertised the
+        /// <b>It used to be a floating island tile</b> - a rock sprite with a soft drop shadow
+        /// below it, bobbing - and the packs these paintings come from are advertised the
         /// other way round, with the disc sitting on the road the picture already draws. The
         /// tile was doing real work: a node's position was a serpentine spaced down the map
         /// (<c>Tools/chapters/mapart.py</c>), which ignores the painting entirely, so the tile
         /// brought its own ground and it did not matter that a glade stood over a river or a
-        /// rooftop. Taking it away is therefore not a deletion — it is paid for by
+        /// rooftop. Taking it away is therefore not a deletion - it is paid for by
         /// <c>Tools/make_map_seats.py</c>, which reads the ground out of each painting and
         /// seats the chain on it.
         /// </para>
@@ -888,8 +888,8 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// The shadow stays and is the whole of what plants the disc. It hangs off the disc
-        /// rather than off the node — a shadow at a fixed y is a smudge left behind the moment
-        /// anything stands the disc somewhere else — and it is shallower and tighter than the
+        /// rather than off the node - a shadow at a fixed y is a smudge left behind the moment
+        /// anything stands the disc somewhere else - and it is shallower and tighter than the
         /// tile's was, because it is cast onto ground a few units under the disc rather than
         /// onto a map a tile's height below it.
         /// </para>
@@ -925,7 +925,7 @@ namespace GlimmerGrove
         /// Directly above the disc rather than pinned to a corner of it, and that is a
         /// collision decision rather than a taste one. <c>mapX</c>/<c>mapY</c> are authored,
         /// and <see cref="ChapterMap"/> proves nodes do not overlap using the perch's own
-        /// footprint — so a mark that grew sideways could be validated as clear and still
+        /// footprint - so a mark that grew sideways could be validated as clear and still
         /// touch its neighbour on somebody's phone. This stays inside the 360×420 perch and
         /// reaches less far up than the pointer already does, so it adds nothing the build
         /// gate is not already checking.
@@ -937,7 +937,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Pinned by the bottom rather than the middle so the gap above the disc is the same
-        /// whether the pill carries one line or two — anchoring the centre made the shorter
+        /// whether the pill carries one line or two - anchoring the centre made the shorter
         /// pill float further away, which read as two different components rather than one in
         /// two states. It grows upward instead, and the tall shape still finishes inside the
         /// 420px perch that <see cref="ChapterMap"/> already proves does not collide.
@@ -946,8 +946,8 @@ namespace GlimmerGrove
         /// <remarks>
         /// This pill is the <em>crown</em> <see cref="ChapterMap"/> carries
         /// (<c>CrownHalfWidth</c>, <c>CrownBottom</c>, <c>CrownTop</c>), and
-        /// <c>ChapterMapValidator</c> refuses any perch — a glade's or the end-of-chapter
-        /// marker's — whose body would stand on it. It used to guarantee only the disc's 220px,
+        /// <c>ChapterMapValidator</c> refuses any perch - a glade's or the end-of-chapter
+        /// marker's - whose body would stand on it. It used to guarantee only the disc's 220px,
         /// which is how the marker came to sit on the tenth glade's standing in every mode's
         /// first chapter. Resize the pill here and <c>ChapterMapTests</c> says which of the
         /// Domain numbers no longer covers it.
@@ -955,10 +955,10 @@ namespace GlimmerGrove
         /// <remarks>
         /// The two-line width is measured, not chosen. "You are in the top 25%" generates
         /// 358px in <c>GameFont</c> at 32pt, so the inner line box has to clear that or
-        /// <see cref="UIKit.Shrinkable"/> folds it — which is what wrapping means here, since
+        /// <see cref="UIKit.Shrinkable"/> folds it - which is what wrapping means here, since
         /// best-fit only shrinks text that fails <em>vertically</em>. At 392 the box was 356
         /// and the standing wrapped by two pixels. 408 leaves 14px, which also covers the
-        /// widest record line with room to spare — that used to be "108 turns · 12:04" at
+        /// widest record line with room to spare - that used to be "108 turns · 12:04" at
         /// 245px, and a record has carried no time since invariant 22.
         /// </remarks>
         public const float RankMarkBottom = 106f;
@@ -972,7 +972,7 @@ namespace GlimmerGrove
         /// part that was not a choice.</b> A mark beside a disc lives in the same rectangle
         /// <see cref="ChapterMap"/> already proves clear (<c>CrownHalfWidth</c>, 204 either
         /// side), and every unit of badge past that is a unit the collision rule has to grow
-        /// by — which re-derives <c>mapart.SEATS</c> and moves nodes on chapters nobody asked
+        /// by - which re-derives <c>mapart.SEATS</c> and moves nodes on chapters nobody asked
         /// about. Measured against the shipped seats: at 204 nothing on any map breaks, at 240
         /// eight seats across three maps do. So the badge runs from the disc's edge to the
         /// crown's, and the only number that moved in Domain is <c>CrownBottom</c>, which had
@@ -999,7 +999,7 @@ namespace GlimmerGrove
         /// <para>
         /// Both lines are anchored at the pill's centre with an explicit offset, never to its
         /// top or bottom edge. <see cref="UIKit.Box"/> always pivots at the centre, so an
-        /// edge-anchored box reaches half its own height <em>past</em> that edge — which is
+        /// edge-anchored box reaches half its own height <em>past</em> that edge - which is
         /// exactly how both of these ended up hanging out of the pill.
         /// </para>
         /// </summary>
@@ -1015,7 +1015,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Drawn from the save, never from <see cref="Social.GroveStats"/>, which is what
-        /// makes it instant and available offline — see <see cref="LevelRecord.BestRank"/>
+        /// makes it instant and available offline - see <see cref="LevelRecord.BestRank"/>
         /// for why a stored standing is the honest one here. An unranked glade draws nothing
         /// at all rather than an empty frame: most of a catalog is unranked on any given day,
         /// and a row of blanks would turn the absence into the message.
@@ -1023,7 +1023,7 @@ namespace GlimmerGrove
         /// <para>
         /// Colour carries the tier, because three identical pills reading different numbers
         /// are three things to compare rather than one thing to notice. Gold is reserved for
-        /// the top tier for the reason the companion reveal reserves it — it is what this UI
+        /// the top tier for the reason the companion reveal reserves it - it is what this UI
         /// already means by "best", so spending it lower devalues every other use of it.
         /// </para>
         /// </summary>
@@ -1169,7 +1169,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>A trophy and not a star</b>, which matters more than it looks. The node's own
-        /// disc is already <c>node_s1</c>/<c>s2</c>/<c>s3</c> — its art *is* the star rating —
+        /// disc is already <c>node_s1</c>/<c>s2</c>/<c>s3</c> - its art *is* the star rating -
         /// so a star sitting 100px above it would be the same symbol counting a different
         /// thing, and a player would reasonably read a gold star on the badge as a fourth
         /// star on the glade. A trophy is rank vocabulary and collides with nothing. It is
@@ -1180,7 +1180,7 @@ namespace GlimmerGrove
         /// <para>
         /// The rim is cream on every tier. Ringing a bronze medal in bronze makes the rim
         /// disappear, which is the same mistake the feature beacon made travelling gold out
-        /// of gold — the contrast has to come from somewhere that is not the tier colour.
+        /// of gold - the contrast has to come from somewhere that is not the tier colour.
         /// </para>
         /// </summary>
         static void Medal(Transform parent, Color ink, bool top)
@@ -1212,7 +1212,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// The table is fetched once a session and normally lands before the player ever
-        /// reaches a map, so this is the uncommon path — but it is the one where a player who
+        /// reaches a map, so this is the uncommon path - but it is the one where a player who
         /// has just been promoted is looking at the very screen that says so, and a screen
         /// that draws asynchronous data has to repaint when it arrives.
         /// </para>
@@ -1287,7 +1287,7 @@ namespace GlimmerGrove
             UIKit.IconButton("Back", Safe, Skins.Nav, "ic_left", Vector2.one * CornerSize,
                              new Vector2(0f, 1f), new Vector2(CornerX, CornerY), () => Flow.Go<HomeScreen>());
 
-            // **The rank this keeper holds, directly under the back key — and on the ranked lane
+            // **The rank this keeper holds, directly under the back key - and on the ranked lane
             // only**, at the owner's instruction. This screen draws the chapter map and the
             // Infinite hub with one set of chrome, so it used to cover both with one call; what
             // that got wrong is that the ordinary ladder is a chapter map, and a rank is not a
@@ -1298,16 +1298,16 @@ namespace GlimmerGrove
             // fed by every lane and there is nothing per-lane about the readout, so what is
             // per-lane is the corner it sits in, which is this screen's business.
             //
-            // **First in the column because it is the one that is always there** — on this lane.
+            // **First in the column because it is the one that is always there** - on this lane.
             // The boost clock takes itself off screen when no window is running, so putting it
             // above this would leave a hole between the back key and the badge on every session
-            // where nobody has watched a video — a gap that reads as a layout fault rather than
+            // where nobody has watched a video - a gap that reads as a layout fault rather than
             // as an absence. Stable things above transient ones.
             bool ranked = !Lane.IsMain;
             if (ranked)
                 RankBadge.Attach(this, Safe, new Vector2(0f, 1f), new Vector2(CornerX, RankY));
 
-            // The XP boost's clock, under the badge — or in the badge's own seat on a lane that
+            // The XP boost's clock, under the badge - or in the badge's own seat on a lane that
             // draws no badge, because a control that hangs where a missing neighbour used to be
             // is the hole the paragraph above is about, from the other end.
             //
@@ -1317,7 +1317,7 @@ namespace GlimmerGrove
             BoostReadout.Attach(this, Safe, new Vector2(0f, 1f),
                                 new Vector2(CornerX, ranked ? BoostY : ColumnOnlyY));
 
-            // What a glade pays, and under what rule — the one thing this screen is full of
+            // What a glade pays, and under what rule - the one thing this screen is full of
             // and cannot draw. A node shows its stars and says nothing about what the stars
             // were worth, or what a second run at a glade already three-starred is worth,
             // which is the question the map invites and the victory panel answers only once.
@@ -1329,7 +1329,7 @@ namespace GlimmerGrove
 
             string title = _entry != null ? Loc.Get(_entry.NameKey) : Loc.Get("ui.levels.title");
 
-            // A lane of one chapter — the Infinite lane — carves no chevron into the plaque, so
+            // A lane of one chapter - the Infinite lane - carves no chevron into the plaque, so
             // its name may use the cloth the chevrons would have taken. Asked of the same
             // neighbours `BuildChapterArrows` asks, so the two cannot disagree.
             bool chevrons = _entry != null
@@ -1361,13 +1361,13 @@ namespace GlimmerGrove
             //
             // The corner rather than the column: a count and the "i" beside it are both
             // *readings* of the chapter and neither is a way through the map, so they belong
-            // in the same stack — which leaves the centre line a control column, plaque then
+            // in the same stack - which leaves the centre line a control column, plaque then
             // switcher, with nothing standing between the name and the thing that changes
             // what the name is naming.
             //
             // **And only on a laddered lane, because a count is a reading of *progress through
             // a chapter*.** The Infinite lane is one level that never ends, so its chapter
-            // total is three and its count never moves off whatever the best run scored — a
+            // total is three and its count never moves off whatever the best run scored - a
             // pill saying "2 / 3" for the life of the account, on the one lane whose whole
             // reading is the wave number the hub already draws two hundred units high. The
             // guard is `Laddered` rather than a test on the level count for that type's own
@@ -1403,13 +1403,13 @@ namespace GlimmerGrove
             // **What the header column actually spent, which `HeaderUnderside` does not say.**
             // That constant is the bottom of the *mode* switcher's slot; the track switcher is
             // drawn under it when both are shown, 136 units further down. A map never noticed,
-            // because a map scrolls under its own header — the hub's column is placed against it
+            // because a map scrolls under its own header - the hub's column is placed against it
             // and would be drawn through the pill on any catalog carrying two modes.
             _headerFoot = _tracks != null ? -laneY + TrackSwitch.PillHeight * .5f
                                           : HeaderUnderside;
 
             // **The line, reachable from the map and from nowhere else.** It is set once and used
-            // by every rung (`WardLoadout`), so it does not belong on a board — and the map is
+            // by every rung (`WardLoadout`), so it does not belong on a board - and the map is
             // where somebody is about to choose a level, which is the moment they would want to
             // change what they are taking into it. Drawn only for a mode that has a line at all,
             // so a mode without one never carries a control that does nothing.
@@ -1418,7 +1418,7 @@ namespace GlimmerGrove
             // control said the feature existed and nothing about what was in it, so the one screen
             // where somebody is about to choose a level told them nothing about what they were
             // choosing it with. The bar shows the four turrets and the five kits, and opens the
-            // shelf when it is tapped — so the button came out rather than sitting beside it.
+            // shelf when it is tapped - so the button came out rather than sitting beside it.
             if (Mode == GameMode.Siege)
             {
                 _kit = LoadoutBar.Build(Content, () => Flow.Go<LoadoutScreen>());
@@ -1426,7 +1426,7 @@ namespace GlimmerGrove
             }
 
             // Above the bar when there is one, because the hint is about the map and the bar is
-            // not part of it — and not drawn at all on a lane that has no map, where "swipe to
+            // not part of it - and not drawn at all on a lane that has no map, where "swipe to
             // see more" is an instruction pointing at nothing.
             if (!Lane.Laddered) return;
 
@@ -1444,14 +1444,14 @@ namespace GlimmerGrove
         /// <remarks>
         /// <para>
         /// They used to sit at the vertical middle of the two screen edges, where they were
-        /// two floating controls with nothing to say what they stepped through — a map is
+        /// two floating controls with nothing to say what they stepped through - a map is
         /// dragged vertically, so an arrow halfway up its side reads as being about the map
         /// rather than about the chapter. On the plaque they are what the name is
         /// <em>for</em>: <c>&lt; THE SHALLOWS &gt;</c> needs no label and no lesson.
         /// </para>
         /// <para>
         /// <b>Inside the plaque, not beside it.</b> Two square nav buttons flanking it were
-        /// tried first and read as chrome — a third and fourth control on a header row that
+        /// tried first and read as chrome - a third and fourth control on a header row that
         /// already has a back key and a star count, competing with the plaque instead of
         /// belonging to it. A chevron cut in the same ink as the name, inside the same piece
         /// of wood, is one object that says "there is more of this either way". It also
@@ -1464,12 +1464,12 @@ namespace GlimmerGrove
         /// chapter draws padlocked and <see cref="Open"/> already refuses one, so the worst a
         /// browsing player can do is see what they are working towards. Hiding it made the
         /// last chapter of the catalog look like the last chapter of the game, which is the
-        /// opposite of what a ladder is for. The lock badge is what keeps that honest — the
+        /// opposite of what a ladder is for. The lock badge is what keeps that honest - the
         /// arrow works, so it is not drawn as a dead control, but it says where it goes.
         /// </para>
         /// <para>
         /// Built from <see cref="BuildHeader"/> rather than after the body loads, because
-        /// which chapters exist either side of this one is index knowledge — the same reason
+        /// which chapters exist either side of this one is index knowledge - the same reason
         /// the name and the star count do not wait on a file.
         /// </para>
         /// </remarks>
@@ -1492,7 +1492,7 @@ namespace GlimmerGrove
         const float ChevronX = 180f, NameWidth = 246f, OpenNameWidth = 340f;
 
         /// <summary>
-        /// The two corner keys — back on the left, "i" on the right — as one set of numbers,
+        /// The two corner keys - back on the left, "i" on the right - as one set of numbers,
         /// because the star count is now stacked under the second of them and a typed copy of
         /// where that corner is would stop agreeing with it the first time either key moved.
         /// </summary>
@@ -1504,7 +1504,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Half the key's height plus half the readout's is what turns a gap between two
-        /// controls of different sizes into a gap between their <em>faces</em> — the same
+        /// controls of different sizes into a gap between their <em>faces</em> - the same
         /// arithmetic <see cref="StarsY"/> and <see cref="ModesY"/> do, and the reason this is
         /// a derived constant rather than the subtraction written at the call site. It shipped
         /// without the second half once: <c>UIKit.Box</c> always pivots at centre, so the
@@ -1520,7 +1520,7 @@ namespace GlimmerGrove
         /// The top of the left-hand column: one gap under the back key's own bottom edge.
         ///
         /// Half the key's height plus the gap, which is every other seat's arithmetic and for
-        /// its reason — `UIKit.Box` always pivots at centre, so a gap between two controls of
+        /// its reason - `UIKit.Box` always pivots at centre, so a gap between two controls of
         /// different sizes is only a gap between their <em>faces</em> once both halves are in
         /// it. Every height below is read from the widget rather than typed, so re-cutting one
         /// cannot leave the map placing it against the size it used to be.
@@ -1553,7 +1553,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Both numbers are derived from the corner key above it for the reason
-        /// <see cref="ModesY"/> is derived from <see cref="BannerY"/> — the two are one stack,
+        /// <see cref="ModesY"/> is derived from <see cref="BannerY"/> - the two are one stack,
         /// and half the key's height plus half the pill's is what turns a gap between two
         /// controls of different sizes into a gap between their <em>faces</em>.
         /// </para>
@@ -1586,7 +1586,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// Half the plaque's height plus half the switcher's is what turns a gap between two
-        /// controls of different sizes into a gap between their <em>faces</em> — the trap
+        /// controls of different sizes into a gap between their <em>faces</em> - the trap
         /// <c>UIKit.Corner</c> records, in a stack rather than in a corner. The switcher's height
         /// is read from <see cref="ModeSwitch.PillHeight"/> rather than typed here, so resizing
         /// the control cannot leave the map placing it against the size it used to be.
@@ -1627,7 +1627,7 @@ namespace GlimmerGrove
         /// The ink the chapter chevrons are cut in. White, at the owner's direction: the
         /// ribbon is orange cloth since the kit restyle (44) and the name on it is cream over a
         /// dark outline, so the wood-brown these were carved in read as a stain on the cloth
-        /// rather than a mark beside the lettering. The name does not read this — it is
+        /// rather than a mark beside the lettering. The name does not read this - it is
         /// coloured by <see cref="Scenery.TitleRibbon"/>.
         /// </summary>
         static readonly Color BannerInk = Color.white;
@@ -1655,7 +1655,7 @@ namespace GlimmerGrove
         /// box around it, rather than the glyph being a label on a button. A chevron on a
         /// button skin would be a control sitting on the plaque; this is a mark carved into
         /// it. The box is 84×112 because the mark is small and a target has to be reachable
-        /// with a thumb — the two sizes are unrelated on purpose.
+        /// with a thumb - the two sizes are unrelated on purpose.
         /// </remarks>
         void Chevron(string name, string glyph, float side, ChapterIndexEntry chapter, bool unlocked)
         {
@@ -1670,12 +1670,12 @@ namespace GlimmerGrove
             box.gameObject.AddComponent<Btn>().Setup(() => GoToChapter(target));
 
             // Bold, and the same shadow the name carries, because it is lettering on the
-            // same plaque rather than a symbol placed on top of one — at the book weight it
+            // same plaque rather than a symbol placed on top of one - at the book weight it
             // read as a stray punctuation mark beside a heavy title.
             //
             // Dimmed when it leads somewhere still locked, and that is the whole marking it
             // gets. A padlock badge was tried and is wrong here: the plaque is 148px tall
-            // and already carries a name, so a second glyph beside the chevron is clutter —
+            // and already carries a name, so a second glyph beside the chevron is clutter -
             // and the chevron is not disabled, it genuinely goes there. Dimmed only to .68,
             // because on the first chapter this is the *only* thing offering the rest of the
             // game, and fading the one invitation to look ahead defeats the point of it.
@@ -1690,7 +1690,7 @@ namespace GlimmerGrove
             // banner, which lines up their line boxes and still reads wrong: a chevron's ink
             // sits about the font's maths axis while capitals run from the baseline to the
             // cap height, so the mark drew 6.5px low beside the name. Measured rather than
-            // nudged, because the name shrinks to fit — THE SHALLOWS renders at 34, not the
+            // nudged, because the name shrinks to fit - THE SHALLOWS renders at 34, not the
             // 40 it asks for, and a longer translation lands smaller still, so any constant
             // here would be right for one chapter and wrong for the next.
             box.anchoredPosition = new Vector2(box.anchoredPosition.x, InkMid(_name) - InkMid(mark));
@@ -1708,8 +1708,8 @@ namespace GlimmerGrove
         /// rather than a number somebody liked.
         ///
         /// <para>
-        /// The layout generator is used rather than the render one — the same one
-        /// <c>preferredWidth</c> and <c>preferredHeight</c> read — so measuring never
+        /// The layout generator is used rather than the render one - the same one
+        /// <c>preferredWidth</c> and <c>preferredHeight</c> read - so measuring never
         /// disturbs what is on screen.
         /// </para>
         /// </remarks>
@@ -1746,8 +1746,8 @@ namespace GlimmerGrove
         /// <summary>
         /// The first chapter of a lane, for a lane with nothing remembered.
         ///
-        /// <c>LevelUnlock.CurrentChapter</c> walks the ordinary ladder alone — it is about where a
-        /// player is <em>up to</em>, and a lane whose waves never stop has no such place — so a
+        /// <c>LevelUnlock.CurrentChapter</c> walks the ordinary ladder alone - it is about where a
+        /// player is <em>up to</em>, and a lane whose waves never stop has no such place - so a
         /// second lane falls back to its own first chapter instead of to the main track's.
         /// </summary>
         ChapterIndexEntry FirstOf(GameMode mode, GameTrack lane)
@@ -1869,7 +1869,7 @@ namespace GlimmerGrove
 
             // **Nothing here asks whether something else is speaking, and it used to twice.**
             // A player is returned to this screen after every run, so the launch chest, the
-            // streak and an event card all greet them here — and giving up in front of one meant
+            // streak and an event card all greet them here - and giving up in front of one meant
             // the lesson was skipped for that visit each time. `ScreenLessons.Show` waits for a
             // clear screen instead, which is the rule `RunLessons.ShowLesson` already followed:
             // the panel a player asked for goes first and the lesson follows it.
@@ -1934,7 +1934,7 @@ namespace GlimmerGrove
             //
             // **And offered from the ordinary ladder alone.** The lesson's whole sentence is
             // *there is another lane and this pill is how you reach it*, so a player standing on
-            // the Infinite hub has already been told it by having got there — the pill is the
+            // the Infinite hub has already been told it by having got there - the pill is the
             // only door in. Raised there anyway it says "tap here to play Normal" over the
             // control the player used a second ago, which reads as the game explaining the tap it
             // just watched. It is **held over rather than spent**, so somebody who arrives by the
@@ -2023,13 +2023,13 @@ namespace GlimmerGrove
                 return;
             }
             // The gate. Checked on the way in rather than on the way out of a defeat,
-            // so a player is never dropped into a glade they cannot afford to lose —
+            // so a player is never dropped into a glade they cannot afford to lose -
             // being told at the door is a wait, being told at the blast is a wasted run.
             //
             // A free run walks straight past it, and it has to: a glade that costs nothing to
             // lose cannot coherently be refused for lack of something to lose. That is a mode's
-            // opening glades — where the one player this door would shut out is the one who has
-            // just met the mode — and every glade this player has already finished, which is
+            // opening glades - where the one player this door would shut out is the one who has
+            // just met the mode - and every glade this player has already finished, which is
             // the door standing open on the whole of what somebody has beaten while their
             // hearts fill. See HeartStake.
             //

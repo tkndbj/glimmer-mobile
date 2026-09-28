@@ -11,7 +11,7 @@ namespace GlimmerGrove
     /// <para>
     /// This exists for one reason: a reward that lands somewhere is worth more than a
     /// reward that is merely granted. The daily chest's prizes fly out of the panel and
-    /// into the hub's own heart, coin and gem pills — which means the overlay has to know
+    /// into the hub's own heart, coin and gem pills - which means the overlay has to know
     /// where those pills are, and the overlay belongs to a different view entirely.
     /// </para>
     /// <para>
@@ -23,7 +23,7 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>Entries are allowed to go stale and nothing needs to clean them up.</b>
-    /// Registration overwrites, and every read tests the Unity object first — so a slot
+    /// Registration overwrites, and every read tests the Unity object first - so a slot
     /// belonging to a screen that has since been destroyed simply fails to resolve, and
     /// the caller falls back to paying with no flight at all. That is the correct
     /// behaviour anyway: if the pill is not on screen there is nowhere to fly to.
@@ -35,7 +35,7 @@ namespace GlimmerGrove
         /// The currencies that have a permanent home on the hub.
         ///
         /// Written out rather than reused from <c>ChestDropKind</c>, which is a Domain
-        /// type describing what a chest can contain — a list that already includes one
+        /// type describing what a chest can contain - a list that already includes one
         /// entry with no readout (the heart boost is a timer, not a balance) and will grow
         /// with the drop table rather than with the HUD.
         /// </summary>
@@ -46,7 +46,7 @@ namespace GlimmerGrove
             /// <summary>What tokens fly into, and what punches when one arrives.</summary>
             public RectTransform Icon;
 
-            /// <summary>The readout. May be counted up as tokens land — see <see cref="Land"/>.</summary>
+            /// <summary>The readout. May be counted up as tokens land - see <see cref="Land"/>.</summary>
             public Text Number;
 
             /// <summary>The soft light behind the icon, brightened on each arrival.</summary>
@@ -56,8 +56,8 @@ namespace GlimmerGrove
             /// What that light sits at when nothing is landing on it.
             ///
             /// Captured from the glow itself rather than assumed, because the two rows that
-            /// register are drawn differently — the hub's pills carry a wide halo and the
-            /// shop's a narrower one — and a flare that returned to a number this file made
+            /// register are drawn differently - the hub's pills carry a wide halo and the
+            /// shop's a narrower one - and a flare that returned to a number this file made
             /// up would leave whichever row disagreed permanently brighter or dimmer than it
             /// was built.
             /// </summary>
@@ -66,7 +66,7 @@ namespace GlimmerGrove
             /// <summary>The currency's colour, for sparks and the flash.</summary>
             public Color Tint;
 
-            /// <summary>How this currency writes a number — abbreviated, or "3/5" for hearts.</summary>
+            /// <summary>How this currency writes a number - abbreviated, or "3/5" for hearts.</summary>
             public Func<long, string> Format;
 
             public bool Alive => Icon != null && Number != null;
@@ -83,8 +83,8 @@ namespace GlimmerGrove
                                     Color tint, Func<long, string> format)
         {
             // A new row is a payout-free row, and this is the only cleanup a claim needs. A
-            // cascade whose panel is destroyed mid-flight — the player navigating away while
-            // coins are in the air — never reaches Release, and a claim left standing would
+            // cascade whose panel is destroyed mid-flight - the player navigating away while
+            // coins are in the air - never reaches Release, and a claim left standing would
             // freeze the pill of whatever screen came next. It cannot outlive the row it was
             // made against, because the row is rebuilt on every navigation and the only screen
             // that can start a payout is the one drawing the row.
@@ -101,7 +101,7 @@ namespace GlimmerGrove
         /// What this currency's readout would say if it were drawn right now.
         ///
         /// Here rather than beside whichever panel is paying, because "which balance does the
-        /// heart pill show" is a fact about the row and two answers to it could disagree —
+        /// heart pill show" is a fact about the row and two answers to it could disagree -
         /// which is exactly how a reward would count up to the wrong figure.
         /// </summary>
         public static long Balance(Kind kind)
@@ -122,8 +122,8 @@ namespace GlimmerGrove
         /// A payout rewinds a pill to what it read before the reward was granted and walks it
         /// forward one token at a time, so for a second or two the number on screen is
         /// deliberately behind the balance. The hub repaints on every wallet change, and a
-        /// change landing in that window — an ad's credits arriving from the server is exactly
-        /// one — would jump the pill to the true figure and the next token would drag it back
+        /// change landing in that window - an ad's credits arriving from the server is exactly
+        /// one - would jump the pill to the true figure and the next token would drag it back
         /// down. So the screen asks through <see cref="Repaint"/> and is refused, while the
         /// payout writes through <see cref="Show"/> and is not.
         /// </para>
@@ -133,7 +133,7 @@ namespace GlimmerGrove
         /// <summary>Gives the readout back to whoever draws it.</summary>
         public static void Release(Kind kind) => Claimed[(int)kind] = false;
 
-        /// <summary>True while a payout owns this readout — see <see cref="Claim"/>.</summary>
+        /// <summary>True while a payout owns this readout - see <see cref="Claim"/>.</summary>
         public static bool IsPaying(Kind kind) => Claimed[(int)kind];
 
         /// <summary>
@@ -159,8 +159,8 @@ namespace GlimmerGrove
         /// Rewinds a readout to what it said before a reward was banked.
         ///
         /// <para>
-        /// Needed because a chest is granted the moment it is opened — deliberately, so a
-        /// player who kills the app mid-animation has still opened it — and the hub rebuilds
+        /// Needed because a chest is granted the moment it is opened - deliberately, so a
+        /// player who kills the app mid-animation has still opened it - and the hub rebuilds
         /// its pills the instant the wallet changes. By the time the prizes are on screen the
         /// number behind the scrim is already the new one, so tokens would fly into a total
         /// that had nothing left to add. The player has not seen it yet (the scrim was over

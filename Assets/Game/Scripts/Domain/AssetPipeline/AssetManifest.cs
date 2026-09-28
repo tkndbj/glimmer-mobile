@@ -44,7 +44,7 @@ namespace GlimmerGrove.AssetPipeline
         /// and each mode's board art would go from chapter-scoped to resident for the whole
         /// session on every device (invariant 7b). It would also weld the modes together, and
         /// this project withdraws modes often enough that being able to delete one without
-        /// touching another is worth a folder — which is exactly what deleting Budburst,
+        /// touching another is worth a folder - which is exactly what deleting Budburst,
         /// Hollowmarch and Emberforge cost.
         /// </para>
         /// </summary>
@@ -116,10 +116,10 @@ namespace GlimmerGrove.AssetPipeline
         /// their recoil reels, and their shelf thumbnails.
         ///
         /// <b>For the Editor only.</b> The audit has to know these exist or it calls eighty
-        /// sprites unused and then says nothing when one goes missing — which is the grove
+        /// sprites unused and then says nothing when one goes missing - which is the grove
         /// catalog's own argument (<see cref="AllGroveAssets"/>), and it has a sharper edge here:
         /// a missing turret draws a white rectangle two cells tall on the object a player looks at
-        /// for a whole run. Nothing at runtime should call this — a run loads four turrets
+        /// for a whole run. Nothing at runtime should call this - a run loads four turrets
         /// (<c>WardLine.Art</c>) and the shelf loads twenty thumbnails.
         /// </summary>
         public static List<AssetRequest> AllWardAssets(Wards.WardCatalog catalog)
@@ -158,7 +158,7 @@ namespace GlimmerGrove.AssetPipeline
 
                 // Its projectile, flash and impact, in all four ward colours. A model with no
                 // ability of its own throws the shared elemental reels instead, which the mode's own
-                // cast already names — asking for them here would be a second claim on an address
+                // cast already names - asking for them here would be a second claim on an address
                 // the global set owns (invariant 7b).
                 if (!model.OwnShot) continue;
 
@@ -236,7 +236,7 @@ namespace GlimmerGrove.AssetPipeline
         /// <summary>
         /// Every chest tier's opening reel, for the screens that open one and for the Editor's
         /// sweeps. Read from the table rather than listed, so a fifth tier added by content is
-        /// labelled, audited and loaded without anyone editing this — and a tier whose reel was
+        /// labelled, audited and loaded without anyone editing this - and a tier whose reel was
         /// never cut fails the audit rather than drawing a white rectangle over the ceremony.
         /// </summary>
         public static List<AssetRequest> ChestAssets(Tasks.TaskTable table)
@@ -257,14 +257,14 @@ namespace GlimmerGrove.AssetPipeline
         /// <para>
         /// <b>Built from the rung's id</b> (<c>RankDefinition.Icon</c>) for <c>ChestTier</c>'s
         /// reason: anything holding a rank can draw it without reading the ladder. The price is
-        /// that <c>artnames.py</c> cannot see one of these — a built address is invisible to a
-        /// call-site scan — so <c>check_ranks</c> in <c>content.py</c> is what holds every rung's
+        /// that <c>artnames.py</c> cannot see one of these - a built address is invisible to a
+        /// call-site scan - so <c>check_ranks</c> in <c>content.py</c> is what holds every rung's
         /// badge to disk, and the Editor's own audit picks them up here.
         /// </para>
         /// <para>
         /// <b>Global rather than scoped</b>, and the map decides it, exactly as it decides the
         /// Infinite hub's three marks: the badge is drawn in the map's chrome, which is one of the
-        /// first screens a session touches, and it changes while that screen is standing — an
+        /// first screens a session touches, and it changes while that screen is standing - an
         /// account that crosses a rung on the run it just finished comes back to a map that has to
         /// draw the new badge on the frame it arrives. A scope would be a white rectangle there
         /// (invariant 7b), and seven 256-pixel badges are not worth a scope's two failure modes.
@@ -296,13 +296,13 @@ namespace GlimmerGrove.AssetPipeline
         /// must hold for the whole session; this is a full-screen texture for the one screen
         /// nobody ever returns to, so the launch screen claims it into a scope of its own and
         /// drops it on the way out (<c>AssetHold.Claim</c>). It is named here anyway
-        /// because this is the one place that knows what the game loads — an address the
+        /// because this is the one place that knows what the game loads - an address the
         /// manifest does not name is one the audit calls dead weight, and one the build gate
         /// cannot prove resolves.
         /// </para>
         /// <para>
-        /// There was a clip beside it once — the same frame, moving, streamed from
-        /// <c>StreamingAssets</c> by URL — and it is gone: a platform decoder, a display-sized
+        /// There was a clip beside it once - the same frame, moving, streamed from
+        /// <c>StreamingAssets</c> by URL - and it is gone: a platform decoder, a display-sized
         /// texture and four megabytes of build, on the one screen built at every launch and
         /// returned to never. See <c>SplashScreen</c>.
         /// </para>
@@ -312,7 +312,7 @@ namespace GlimmerGrove.AssetPipeline
         /// <summary>
         /// The publisher card's wordmark, baked from Orbitron by
         /// <c>Tools/make_ident_art.py</c>. White throughout, with the letters in its alpha,
-        /// because the launch screen draws it twice — as the lettering, and as the mask that
+        /// because the launch screen draws it twice - as the lettering, and as the mask that
         /// clips the neon sweep to it.
         ///
         /// <para>
@@ -338,7 +338,7 @@ namespace GlimmerGrove.AssetPipeline
             "ribbon_green", "ribbon_red", "ribbon_cyan", "ribbon_orange",
             // `jelly_*` used to be here: four moulded caps the nav bar wore, and nothing else
             // in the game ever drew one. The bar wears the interface kit's caps now, so all
-            // four are gone from the project rather than left addressed — an addressed sprite
+            // four are gone from the project rather than left addressed - an addressed sprite
             // nothing draws is still built into the bundle and still decoded at every launch.
             "star_full", "star_empty", "padlock", "badge_star", "shield",
             "btn_green", "btn_blue", "btn_orange", "btn_red", "btn_aqua", "btn_violet", "btn_gray", "btn_dark",
@@ -352,7 +352,7 @@ namespace GlimmerGrove.AssetPipeline
             // The shop's rewarded-video pictures, one per reward a placement can pay.
             // **Global rather than scoped**, because the shelf that draws them is the first
             // thing a player sees when they open the shop and an `Image` with no sprite is a
-            // white rectangle rather than a blank (invariant 7b) — on a card whose whole job is
+            // white rectangle rather than a blank (invariant 7b) - on a card whose whole job is
             // to be taken. They carry their own play mark, so `ShopArt.PaintAd` draws nothing
             // over them; a placement with no picture here still gets the composed heap.
             "ad_coin", "ad_heart", "ad_xp",
@@ -392,17 +392,17 @@ namespace GlimmerGrove.AssetPipeline
 
             // The hall of ranks' furniture (`RankKit`, cut from the owner's bought UI kit by
             // `Tools/make_rank_kit_art.py`): the requirement board, one line's row, a rail
-            // seat, the board's title tab, the ordinal's chip, and the swords beside "Defeat N
+            // seat, the ordinal's chip, and the swords beside "Defeat N
             // raiders". **Listed by hand rather than derived**, so `artnames.py` can see them;
             // `RankLadderTests` walks `RankKit.All` against this list and against disk. Global
             // because the page is one tap from the map's badge and a seat with nothing under it
             // is a white rectangle under every badge on the rail (7b).
-            "Rank/kit_board", "Rank/kit_row", "Rank/kit_seat", "Rank/kit_tab", "Rank/kit_chip",
+            "Rank/kit_board", "Rank/kit_row", "Rank/kit_seat", "Rank/kit_chip",
             "Rank/ic_raiders",
 
             // The map's boost clock, under the back key. Global because the map is one of the
             // first screens a session touches and the readout appears the moment a window opens
-            // under it — a scoped mark would be a white rectangle on the frame it arrived
+            // under it - a scoped mark would be a white rectangle on the frame it arrived
             // (invariant 7b).
             "ic_boost_up",
 
@@ -410,14 +410,14 @@ namespace GlimmerGrove.AssetPipeline
             // this is the clearest case in the list: the wall is raised over whatever
             // screen the player is standing on, by a poll that knows nothing about which
             // scopes are held, so a mark filed with any one screen would be asked for on
-            // screens that do not hold it — and an `Image` with no sprite is a white
+            // screens that do not hold it - and an `Image` with no sprite is a white
             // rectangle (invariant 7b) on the one panel a player cannot dismiss.
             "ic_update",
 
             // The season's crest (`SeasonCrest.Watch`, cut by `Tools/make_season_crest.py`).
             // **Global rather than scoped**, and the hub decides it: the season box is drawn on
             // the first screen after the splash, before any screen scope exists, so a crest
-            // filed with the season page would be asked for by the box that opens it — and an
+            // filed with the season page would be asked for by the box that opens it - and an
             // `Image` with no sprite is a white rectangle rather than a blank (invariant 7b).
             "ic_season",
             "seal_gold", "crest_gold", "bar_track", "bar_fill",
@@ -426,7 +426,7 @@ namespace GlimmerGrove.AssetPipeline
             // (`make_siege_art.HUB_ICONS`). **Global rather than scoped to the mode whose lane
             // draws them**, and it is the map screen that decides it: the hub is drawn there, and
             // the chapter scope is what the map loads *for the chapter*, so an icon filed with the
-            // mode would be asked for on a screen that may not hold it yet — and an `Image` with
+            // mode would be asked for on a screen that may not hold it yet - and an `Image` with
             // no sprite is a white rectangle rather than a blank (invariant 7b). Three 96-pixel
             // tiles are not worth a scope's two failure modes.
             "ic_endless", "ic_surge", "ic_rank",
@@ -462,7 +462,7 @@ namespace GlimmerGrove.AssetPipeline
             // built into the bundle and preloaded at every launch.
             "Win/crown", "Win/shield", "Win/banner", "Win/window",
 
-            // The storefront's two money ladders — one painted picture per rung — plus the
+            // The storefront's two money ladders - one painted picture per rung - plus the
             // pouch, which is only the coins tab's glyph. Every other card is still composed
             // from art already on this list: a heart pack and a heart container out of the
             // game's own heart and three of the potion bottles, so the shop's whole art order
@@ -484,7 +484,7 @@ namespace GlimmerGrove.AssetPipeline
             // rather than laziness: this is what a *screen* is built out of, so it is wanted by
             // the first screen after the splash and by every screen after that. A scope would
             // spend a frame loading on every navigation a player makes, and what an `Image`
-            // with no sprite draws while it waits is a white rectangle (invariant 7b) — here
+            // with no sprite draws while it waits is a white rectangle (invariant 7b) - here
             // that would be the whole hub.
             //
             // The pill and square controls are *not* on this list and do not need to be: they
@@ -503,20 +503,20 @@ namespace GlimmerGrove.AssetPipeline
 
             // The two painted banners, each drawn on the kit's blue plate and each the whole
             // of the control it is (`HomeScreen.BuildChallenges`, `ProfileScreen.BuildInviteCard`).
-            // **Global for the same reason as the line above it** — one is on the first screen
+            // **Global for the same reason as the line above it** - one is on the first screen
             // after the splash and the other is one tap from every screen in the game, and an
             // `Image` whose sprite has not arrived is a white rectangle rather than a blank
             // (invariant 7b), which here would be a 900-unit white bar across a card.
             //
             // Both are 2048x768 sources capped to 1024 by the `/Art/Ui/` folder rule, so the
-            // pair costs about 350 KB resident at ASTC 6x6 — which is what makes global the
+            // pair costs about 350 KB resident at ASTC 6x6 - which is what makes global the
             // cheap answer rather than the lazy one.
             "challenges", "refer",
 
             // The task chests, closed, and the goal glyphs the shared icon set has no picture
             // for. Global for the streak flame's reason: the hub draws all four chests on the
             // first screen after the splash, and an `Image` whose sprite has not arrived is a
-            // white rectangle (invariant 7b). The *opening* reels are not here — they are a
+            // white rectangle (invariant 7b). The *opening* reels are not here - they are a
             // scope of their own (ChestAssets), because sixty-eight frames are only ever
             // wanted while a chest is being opened.
             "Chest/wood", "Chest/silver", "Chest/gold", "Chest/royal",
@@ -529,7 +529,7 @@ namespace GlimmerGrove.AssetPipeline
         /// <para>
         /// <b>Nine of the ten <c>rock_*</c> perches are gone from here and still on disk.</b> A
         /// node stands on the painting now rather than on a floating tile of its own, and a
-        /// preloaded picture nothing draws is resident memory for the life of the game — which
+        /// preloaded picture nothing draws is resident memory for the life of the game - which
         /// is the cost that matters and the one this pays. The PNGs, their <c>.meta</c> guids
         /// and their Addressables rows are kept until the change has been seen on a device.
         /// </para>
@@ -539,7 +539,7 @@ namespace GlimmerGrove.AssetPipeline
         /// draws, so those nodes keep a tile under them (<c>LevelsScreen.PerchArt</c>). It is
         /// global rather than a chapter's, exactly as the rest of this row is: the map's
         /// furniture is wanted by whichever chapter is open, and an <c>Image</c> whose sprite
-        /// has not arrived is a white rectangle (invariant 7b) — over the sea, on the first
+        /// has not arrived is a white rectangle (invariant 7b) - over the sea, on the first
         /// chapter of the game.
         /// </para>
         /// </summary>
@@ -568,11 +568,11 @@ namespace GlimmerGrove.AssetPipeline
             "streak_sky", "streak_ground", "streak_deco",
             "event_sky", "event_ground", "event_deco",
 
-            // The hub and the storefront's own room, drawn rather than composed of layers —
+            // The hub and the storefront's own room, drawn rather than composed of layers -
             // hence one name where the others come in threes. See `Scenery.Room`.
             "hub_room",
 
-            // And the quiet ground behind every screen that is a list rather than a place —
+            // And the quiet ground behind every screen that is a list rather than a place -
             // the storefront, the boards, the profile and the tasks page.
             // See `Scenery.Plain`.
             "plain",
@@ -608,7 +608,7 @@ namespace GlimmerGrove.AssetPipeline
             list.Add(AssetRequest.SpriteSet($"{ArtRoot}Fx/Victory"));
 
             // **The retired Budburst asked for no explosion art at all, and that is the third
-            // answer to it.** Two cuts from a licensed VFX pack were shipped and thrown away —
+            // answer to it.** Two cuts from a licensed VFX pack were shipped and thrown away -
             // the first took the pack's shader utility maps by mistake, the second was a correct
             // cut of a smoke plume and still read as dust on a puzzle grid. The whole set is
             // generated (`Art.Flash`, `Wave`, `Glint`, `Bolt`), so there is nothing here to
@@ -630,7 +630,7 @@ namespace GlimmerGrove.AssetPipeline
             // The rank badges, off the live ladder. Here rather than in `UiSprites` because the
             // ladder is content and the addresses are built from it, which is what lets a rung
             // added by a content push be addressed, audited and preloaded without anyone editing
-            // this file — the bargain `ChestAssets` makes, applied to the global set. What a
+            // this file - the bargain `ChestAssets` makes, applied to the global set. What a
             // content push still cannot do is ship the picture, which is `check_ranks`' job.
             list.AddRange(RankAssets(Progression.ProgressionRules.Table.Ranks));
 
@@ -640,7 +640,7 @@ namespace GlimmerGrove.AssetPipeline
 
         // The streak page used to bring its own set with it: a camp of isometric blocks,
         // one sprite per night plus a clearing to stand them on, derived from the ladder
-        // length so a retune would not need code. It is gone with the scene it drew — the
+        // length so a retune would not need code. It is gone with the scene it drew - the
         // board is built from the same jelly squares and glyphs the rest of the UI uses,
         // which is one fewer set of art to keep in step with the reward table, and the
         // sprites it did need are in UiSprites above where the audit can see them.
@@ -655,7 +655,7 @@ namespace GlimmerGrove.AssetPipeline
         /// into a hold when a roster screen opens and
         /// dropped when it closes, which is the same bargain chapter art makes.
         ///
-        /// Derived from the roster, never hand-listed — a companion added by a content
+        /// Derived from the roster, never hand-listed - a companion added by a content
         /// drop is loadable without anyone editing this file.
         /// </summary>
         public static List<AssetRequest> CompanionAssets(IEnumerable<AvatarDefinition> roster)
@@ -677,7 +677,7 @@ namespace GlimmerGrove.AssetPipeline
         /// The one companion the player is wearing, for the hub and the profile hero.
         ///
         /// Its animated set is requested when it has one, because the worn companion is
-        /// the single place the game can afford a flipbook — and it is already global
+        /// the single place the game can afford a flipbook - and it is already global
         /// art, since board critters use the same sets.
         /// </summary>
         public static List<AssetRequest> WornCompanionAssets(AvatarDefinition companion)
@@ -696,7 +696,7 @@ namespace GlimmerGrove.AssetPipeline
         /// level inside it overrides. Read from the content, never hand-listed.
         ///
         /// It takes a loaded <see cref="ChapterBody"/> rather than a catalog because a
-        /// chapter's art is only ever needed at the moment its body is read — both are
+        /// chapter's art is only ever needed at the moment its body is read - both are
         /// scoped to entering that chapter, and asking for a body here would hide a
         /// file read inside a method that looks like a lookup.
         /// </summary>

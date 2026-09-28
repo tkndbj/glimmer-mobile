@@ -14,8 +14,8 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// <b>Shared by inheritance, exactly as <c>ModeScreen</c> shares the chrome.</b> Each of the
-    /// five draws something completely different — a cairn, a network of channels, a wall of
-    /// marks, an arbour, a warren — but every one of them is a rectangle of cells on a dark
+    /// five draws something completely different - a cairn, a network of channels, a wall of
+    /// marks, an arbour, a warren - but every one of them is a rectangle of cells on a dark
     /// plate that takes taps, animates in waves, and finishes with either a celebration or a
     /// board going out. Writing those five times is five places for "a run may only be decided
     /// once" to stop being true.
@@ -81,14 +81,14 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b><see cref="Playable"/> minus <see cref="Busy"/>, and the difference is the whole
-        /// point.</b> <c>Busy</c> means "the board is resolving" — gems are falling, a cascade is
-        /// running — which is a fact about the <em>field</em> and a perfectly good reason to refuse
+        /// point.</b> <c>Busy</c> means "the board is resolving" - gems are falling, a cascade is
+        /// running - which is a fact about the <em>field</em> and a perfectly good reason to refuse
         /// a swap. It is no reason at all to refuse a finger that has gone somewhere else: a cog
         /// lying on the hill and a bomb standing on it are not on the board, and the model resolved
         /// them the instant the swap landed. Only the drawing is still catching up.
         /// </para>
         /// <para>
-        /// <b>Reported from play as exactly that</b> — <em>I cannot collect cogs or press bombs
+        /// <b>Reported from play as exactly that</b> - <em>I cannot collect cogs or press bombs
         /// while chain reactions are happening.</em> A cascade is half a second and the biggest
         /// ones are longer, so a mode whose hill is walking the whole time was taking the player's
         /// hands away at the moment most worth acting in.
@@ -128,7 +128,7 @@ namespace GlimmerGrove
         /// mode built on this shape until the Iron Quarry laid its board out in squares, so this
         /// was a fact; a quarry floor is drawn in isometry, and the only thing that had to move
         /// for it was where a cell is. Nothing in <see cref="ProtoRun"/>, <c>ProtoSearch</c> or
-        /// any mode's own rules knows or could know — a board is a rectangle of characters
+        /// any mode's own rules knows or could know - a board is a rectangle of characters
         /// whichever way it is painted.
         /// </para>
         /// <para>
@@ -191,8 +191,8 @@ namespace GlimmerGrove
             _committed = false;
 
             // **And handed back, which is the half that was missing.** Every way a run ends
-            // latches this board — `Settle` latches it, and the screen's `Concede` and `Lose`
-            // each latch it again before their panel goes up — so a rebuild that left the flag
+            // latches this board - `Settle` latches it, and the screen's `Concede` and `Lose`
+            // each latch it again before their panel goes up - so a rebuild that left the flag
             // alone produced a fresh board behind a latch belonging to a run that no longer
             // existed. It is `FallView`'s bug, reported from play there and fixed there, and this
             // class inherited the shape without the fix: run out of moves, decline the offer,
@@ -241,7 +241,7 @@ namespace GlimmerGrove
         /// The plate's own skin: a rounded panel, unless a mode has something stacked under it.
         ///
         /// A property rather than a constant because a board that meets another surface has to
-        /// square off the edge that meets it — see <see cref="Art.RoundTop"/> — and which edge
+        /// square off the edge that meets it - see <see cref="Art.RoundTop"/> - and which edge
         /// that is, if any, is a fact about the screen rather than about the board.
         /// </summary>
         protected virtual Sprite PlateSkin => Art.Round(34);
@@ -320,7 +320,7 @@ namespace GlimmerGrove
         /// Charges the run for a utility that landed, in the unit the mode is graded in.
         ///
         /// <b>Every mode goes through here and none of them touches <see cref="Run"/> directly</b>
-        /// — <see cref="Took"/>'s rule, for the resource that costs real money to replace. What
+        /// - <see cref="Took"/>'s rule, for the resource that costs real money to replace. What
         /// the charge is worth is the mode's (see <c>SiegeUtility</c>); what this owns is that it
         /// happens exactly once and that the run notices.
         /// </summary>
@@ -333,7 +333,7 @@ namespace GlimmerGrove
         /// <summary>
         /// Marks the run as touched and repaints. The half <see cref="Took"/> and
         /// <see cref="Charged"/> share, written once so the two cannot drift about what
-        /// committing means — which is the flag a heart is charged against.
+        /// committing means - which is the flag a heart is charged against.
         /// </summary>
         void Commit()
         {
@@ -349,7 +349,7 @@ namespace GlimmerGrove
         /// <summary>
         /// Reads the verdict and ends the run if it says so.
         ///
-        /// Called at the end of every move's animation and after a continue is granted — never
+        /// Called at the end of every move's animation and after a continue is granted - never
         /// mid-cascade, because a board halfway through a collapse is not a board anybody should
         /// be judged on.
         /// </summary>
@@ -406,7 +406,7 @@ namespace GlimmerGrove
         /// <para>
         /// Moves by default, because that is what every board on this shape counts and it is the
         /// only thing the allowance can be topped up with. A mode whose fail state is not its
-        /// allowance overrides it — Thornwatch's continue puts the ward line back up and the
+        /// allowance overrides it - Thornwatch's continue puts the ward line back up and the
         /// allowance never moves, since it has none. Note what a subclass must <em>not</em> touch
         /// either way: <c>ProtoBudget.Spent</c> is the grade (invariant 23).
         /// </para>
@@ -417,7 +417,7 @@ namespace GlimmerGrove
         /// Re-reads the verdict after a grant, so a board that is somehow still lost raises its
         /// fail state again instead of stranding the player on a dead board.
         ///
-        /// A hook only because a siege reads its verdict differently — see
+        /// A hook only because a siege reads its verdict differently - see
         /// <c>SiegeView.Judge</c>, which does not ask whether the first move has landed, because
         /// there the hill walks whether or not anybody has touched a gem.
         /// </summary>
@@ -429,7 +429,7 @@ namespace GlimmerGrove
         ///
         /// <b>No fanfare on the screen's side.</b> This sounds <c>win</c> and then waits a beat
         /// before handing control back, so a second copy on the panel would be the same clip twice
-        /// a third of a second apart — a flam and six decibels, not a bigger celebration.
+        /// a third of a second apart - a flam and six decibels, not a bigger celebration.
         /// </summary>
         protected virtual IEnumerator Triumph()
         {

@@ -7,8 +7,8 @@ namespace GlimmerGrove.Localization
     /// <summary>
     /// One language's strings, immutable once built.
     ///
-    /// Tables travel the same road as level content — the same JSON, the same source
-    /// chain, the same cache — so shipping a new language is a content drop rather
+    /// Tables travel the same road as level content - the same JSON, the same source
+    /// chain, the same cache - so shipping a new language is a content drop rather
     /// than an app update.
     /// </summary>
     public sealed class LocTable

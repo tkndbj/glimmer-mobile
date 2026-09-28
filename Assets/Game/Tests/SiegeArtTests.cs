@@ -12,7 +12,7 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// <b>Invariant 37z has always had two halves and only one of them was checked.</b> "A boss is
     /// a way of fighting, and telling two apart by a hue is not telling them apart at all" is
-    /// enforced on the <em>rules</em> by `SiegeRuleTests` — each boss takes something different —
+    /// enforced on the <em>rules</em> by `SiegeRuleTests` - each boss takes something different -
     /// and on the <em>bodies</em> by `SiegeCastTests`, which refuses two casts sharing a reel. The
     /// third half is the spell, and nothing asked about it. Three of the eight shipped sharing one
     /// pair of reels: a warbringer's roar, worn by a gravemaw in green and a bonecaller in white.
@@ -40,7 +40,7 @@ namespace GlimmerGrove.Tests
         /// author rather than from a list written out here.
         ///
         /// <b>A ninth boss has to arrive in this fixture by itself</b>, or the fixture is a
-        /// record of what somebody remembered in 2026 and a new boss can share reels freely —
+        /// record of what somebody remembered in 2026 and a new boss can share reels freely -
         /// which is exactly how the last two got here.
         /// </summary>
         static IEnumerable<SiegeKind> Bosses()
@@ -60,7 +60,7 @@ namespace GlimmerGrove.Tests
         /// The one that shipped: no two bosses may name the same picture.
         ///
         /// <b>Over the whole scope rather than over the spell reels alone</b>, because a body and
-        /// a spell fail the same way and a boss is only ever met once — a player who fights a
+        /// a spell fail the same way and a boss is only ever met once - a player who fights a
         /// gravemaw on rung five and a bonecaller on rung ten has no way to compare them side by
         /// side, so a shared reel does not read as a bug. It reads as the game having one boss.
         /// </summary>
@@ -92,7 +92,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// <b>The seventh chapter's two bosses wear the first chapter's bodies</b>, at the
-        /// owner's instruction on 2026-09-22 — their own cut was drawn side-on. Only the body
+        /// owner's instruction on 2026-09-22 - their own cut was drawn side-on. Only the body
         /// and its cast reel are shared, and only between these two pairs by name; each spell is
         /// still its own drawing, which is what the rule above is about.
         /// </summary>
@@ -139,7 +139,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// <b>A warbringer aims at no ward and reaches every one of them</b>, which is the whole
         /// gap between <see cref="SiegeTuning.AimsAtAWard"/> and
-        /// <see cref="SiegeTuning.ReachesTheLine"/> — one boss, and the one that used to be the
+        /// <see cref="SiegeTuning.ReachesTheLine"/> - one boss, and the one that used to be the
         /// sole named case in every clause that needed either of them. Writing the pair down here
         /// is what stops a ninth boss being classified by whichever clause it happens to fall
         /// through: `Leaving` asks the first (does it lay its muzzle flat on the ground?) and
@@ -172,7 +172,7 @@ namespace GlimmerGrove.Tests
                 // The third predicate is the board's, and it is held to the other two: a cast
                 // carries a ward exactly when it is aimed at one, or when it never reaches the
                 // line and so takes the freshest for its smite (a devour, a raise). What reaches
-                // the line without aiming — a roar, a wane — is booked per post at the landing
+                // the line without aiming - a roar, a wane - is booked per post at the landing
                 // and carries nothing. A spell that breaks this is one `SiegeBoard.Wanted` will
                 // be asked about with no arm to answer, which is what the wane was for a chapter.
                 Assert.That(carries, Is.EqualTo(aims || !reaches),
@@ -184,7 +184,7 @@ namespace GlimmerGrove.Tests
             }
 
             // Named rather than counted. The count was 1 for six chapters and the seventh made
-            // it 2 — and a count that moved was a warning about every clause that said "the
+            // it 2 - and a count that moved was a warning about every clause that said "the
             // warbringer", which is what an audit of those clauses found (`SiegeBoard.Clock`
             // handed the wane a ward it never read). A list names the exceptions so that a
             // third spell of this shape fails by name, and its author reads this before
@@ -204,7 +204,7 @@ namespace GlimmerGrove.Tests
         /// <b>Both directions, because both have cost something.</b> A missing flight is a white
         /// rectangle crossing the hill; an unused one is a reel addressed frame by frame with no
         /// label, impossible to load as a reel at all, and built into a bundle for the life of
-        /// the game — which is what `roar` was until the audit reported it as dead weight in as
+        /// the game - which is what `roar` was until the audit reported it as dead weight in as
         /// many words. `SiegeTuning.AimsAtAWard` is the one place that rule lives.
         /// </summary>
         [Test]

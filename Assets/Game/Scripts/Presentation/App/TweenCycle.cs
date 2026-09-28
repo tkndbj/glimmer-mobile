@@ -9,14 +9,14 @@ namespace GlimmerGrove
     /// <c>PlayScreen</c>: it holds no Unity types and no statics, so it can be run a
     /// thousand simulated frames at a time in the test suite without an Editor. That
     /// matters more here than it looks. This is the only piece of the game whose failures
-    /// are invisible in a screenshot and obvious in motion — the bug it was extracted to
+    /// are invisible in a screenshot and obvious in motion - the bug it was extracted to
     /// fix had every <c>Loop(-1, true)</c> in the game snapping back at the end of its
     /// period for over a year, and no compile, no validator and no reviewer's eye had
     /// anything to say about it.
     /// </para>
     /// <para>
     /// It is the arithmetic the game actually runs, not a description of it. Proving a
-    /// copy would prove nothing — see the note on <c>ProgressionLedger</c> for what it
+    /// copy would prove nothing - see the note on <c>ProgressionLedger</c> for what it
     /// costs to keep one rule in two places on purpose, and this one has no reason to be.
     /// </para>
     /// </summary>
@@ -28,7 +28,7 @@ namespace GlimmerGrove
         /// <para>
         /// Here for the reason <c>RunScreen.MaxTick</c> is, and it is the same fact about the
         /// same clock: <c>Time.deltaTime</c> is capped by <c>maximumDeltaTime</c> and
-        /// <c>Time.unscaledDeltaTime</c> — which every tween here runs on — is not. So the
+        /// <c>Time.unscaledDeltaTime</c> - which every tween here runs on - is not. So the
         /// first frame after the app is resumed carries however long the player was away,
         /// and the first frame after a long asset load carries the load.
         /// </para>
@@ -76,7 +76,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>A ping-pong's cycle is two durations long.</b> It runs out over the first and
         /// back over the second, so the half it is in has to be read from where it sits
-        /// inside the pair. Wrapping at a single duration — which this used to do — meant
+        /// inside the pair. Wrapping at a single duration - which this used to do - meant
         /// <c>elapsed</c> never reached the second half at all, the return was unreachable,
         /// and every ping-pong in the game was a sawtooth that snapped back at the end of
         /// each period. On the hub that was the backdrop light dropping in one frame every
@@ -86,7 +86,7 @@ namespace GlimmerGrove
         /// <b>Every whole cycle a step covered is drained at once</b>, not one of them per
         /// frame. Draining one leaves a large step's surplus sitting in <c>elapsed</c> for
         /// as many frames as it takes to work off, and the phase is read straight off
-        /// <c>elapsed</c> — so a single large step used to swing a full cycle <em>per
+        /// <c>elapsed</c> - so a single large step used to swing a full cycle <em>per
         /// frame</em> for a good half second afterwards. <see cref="Step"/> bounds what a
         /// frame can hand in and this bounds what a frame can leave behind; both are
         /// wanted, because a clamp cannot help a loop shorter than <see cref="MaxStep"/>.
@@ -94,7 +94,7 @@ namespace GlimmerGrove
         /// </summary>
         /// <param name="elapsed">Time into the current cycle before this step.</param>
         /// <param name="step">Seconds to advance by. Pass it through <see cref="Step"/> first.</param>
-        /// <param name="duration">One traverse, in seconds. Assumed positive — <c>Tween.Run</c> floors it.</param>
+        /// <param name="duration">One traverse, in seconds. Assumed positive - <c>Tween.Run</c> floors it.</param>
         /// <param name="loops">Cycles still owed: 0 for a one-shot, -1 for forever.</param>
         /// <param name="pingPong">Whether the tween returns rather than restarting.</param>
         public static Frame Advance(float elapsed, float step, float duration, int loops, bool pingPong)

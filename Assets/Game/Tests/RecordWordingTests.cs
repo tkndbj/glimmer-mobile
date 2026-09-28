@@ -13,8 +13,8 @@ namespace GlimmerGrove.Tests
     /// This is the check that was missing when the clock went (invariant 22). A record used to
     /// read "31 turns · 2:14", so both stems carried a second placeholder;
     /// <c>RunWording.RecordKey</c> dropped the timed forms and the table kept the timed text.
-    /// After that every record line in the game — the mark above a cleared node on the map and
-    /// the victory panel's own run — printed the literal "{0} turns · {1}". Nothing existing
+    /// After that every record line in the game - the mark above a cleared node on the map and
+    /// the victory panel's own run - printed the literal "{0} turns · {1}". Nothing existing
     /// could see it: <c>Loc.Format</c> catches the <see cref="FormatException"/> a missing
     /// argument raises and hands the pattern back, which is the right behaviour on a player's
     /// screen and is also what made this silent; the keys themselves all resolve, so invariant
@@ -23,8 +23,8 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// It reads the shipped table rather than a fixture, because the fault was in the table, and
     /// it walks <see cref="LevelModes.All"/> rather than naming stems, so a fifth mode is covered
-    /// by existing here. <c>Tools/verify/loc.py</c> holds the general half — that a literal
-    /// <c>Loc.Format</c> call site passes as many arguments as its string asks for — which this
+    /// by existing here. <c>Tools/verify/loc.py</c> holds the general half - that a literal
+    /// <c>Loc.Format</c> call site passes as many arguments as its string asks for - which this
     /// call site escapes, since its key is computed from the level's mode.
     /// </para>
     /// <para>

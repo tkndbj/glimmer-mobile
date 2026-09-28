@@ -23,7 +23,7 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>The vein is a permanent highlight and not an effect.</b> A link between two lit gems
-    /// is a node that stays on the board for as long as the two of them are lit — so the player
+    /// is a node that stays on the board for as long as the two of them are lit - so the player
     /// can always read what is connected to what, and a swap that <em>breaks</em> a vein is
     /// visible as the light going out of it rather than as nothing happening. That is the one
     /// thing this mode has instead of a resource meter: light is not stored, it is read off the
@@ -32,7 +32,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>The board replays a log rather than reconstructing one.</b> <see cref="PrismFlare"/>
     /// comes back naming the two cells that moved, every gem that took light <em>in flood order
-    /// out of its lantern</em>, every gem that lost it and every critter that woke — so nothing
+    /// out of its lantern</em>, every gem that lost it and every critter that woke - so nothing
     /// here works out what a swap must have done (invariant 30i). That flood order is what makes
     /// the run outward possible at all; recomputing it here would be exactly the arithmetic no
     /// par, no <c>ways</c>, no validator and no content gate can ever see going wrong.
@@ -217,7 +217,7 @@ namespace GlimmerGrove
         ///
         /// <b>Bare ground gets a tile too, drawn dark.</b> It is the only thing on this board
         /// that shapes a vein, so it has to be visible as a <em>place the light cannot go</em>
-        /// rather than as a hole in the picture — and a board of scattered tiles on nothing reads
+        /// rather than as a hole in the picture - and a board of scattered tiles on nothing reads
         /// as a rendering fault.
         /// </summary>
         void Moss()
@@ -341,7 +341,7 @@ namespace GlimmerGrove
         /// The ring of light a sleeping critter is drawn under.
         ///
         /// A slow cold breath rather than a colour, because a critter here wants <em>light</em>
-        /// and not a particular colour — the lantern carries the colour, and drawing one on the
+        /// and not a particular colour - the lantern carries the colour, and drawing one on the
         /// critter would be promising a rule the board does not have.
         /// </summary>
         void Asleep(Piece piece)
@@ -402,7 +402,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>A lit gem is bigger, brighter and wears a halo; an unlit one is none of those.</b>
         /// Three differences rather than one, because the board's whole question is which gems
-        /// are on the line — and a difference of tint alone is a difference only some people can
+        /// are on the line - and a difference of tint alone is a difference only some people can
         /// see, which is the same rule the four silhouettes exist for.
         /// </para>
         /// </summary>
@@ -437,7 +437,7 @@ namespace GlimmerGrove
         /// Whether a bar of light belongs between these two touching cells, and what colour.
         ///
         /// Two lit gems of the same vein, or a lantern and a gem its own colour is lighting.
-        /// Everything else is dark — including two gems of a colour no lantern is reaching,
+        /// Everything else is dark - including two gems of a colour no lantern is reaching,
         /// which is the whole point: matching is not enough, the line has to come from somewhere.
         /// </summary>
         bool Wants(int a, int b, out Color tint)
@@ -467,7 +467,7 @@ namespace GlimmerGrove
         /// <summary>
         /// Brings every link on the board into step with the veins, all at once.
         ///
-        /// Used on a repaint — a rebuild after a continue, or the board arriving — where nothing
+        /// Used on a repaint - a rebuild after a continue, or the board arriving - where nothing
         /// should animate. A move draws its own links one at a time instead, which is the whole
         /// point of the mode's one animation.
         /// </summary>
@@ -778,8 +778,8 @@ namespace GlimmerGrove
         /// Four beats, in this order and for these reasons. The two gems <b>slide</b> past each
         /// other, which is the beat the finger is waiting on and the only one that is about the
         /// input. Anything the swap <b>put out</b> goes dark next, before the good news, because
-        /// a cost shown after a reward is a cost nobody reads. The vein then <b>runs</b> — cell
-        /// by cell, outward from the lantern, on a rising note — which is the mode's payoff and
+        /// a cost shown after a reward is a cost nobody reads. The vein then <b>runs</b> - cell
+        /// by cell, outward from the lantern, on a rising note - which is the mode's payoff and
         /// gets the biggest drawing in it. And only then do the <b>critters wake</b>, because
         /// those are consequences and a consequence drawn at the same instant as its cause reads
         /// as one event.
@@ -809,7 +809,7 @@ namespace GlimmerGrove
             }
 
             // The run. One cell at a time, outward from the lantern, because the log is in flood
-            // order — which is the whole reason the board hands one back rather than being asked
+            // order - which is the whole reason the board hands one back rather than being asked
             // to work it out here (invariant 30i).
             int step = 0;
             for (int i = 0; i < log.Deeds.Count; i++)
@@ -823,7 +823,7 @@ namespace GlimmerGrove
                 yield return new WaitForSeconds(Step);
             }
 
-            // Anything the one-at-a-time walk could not reach — a link between two cells that
+            // Anything the one-at-a-time walk could not reach - a link between two cells that
             // were both already lit and have only now become neighbours. Idempotent, so it puts
             // nothing back that the walk already drew.
             Relink(true);
@@ -843,7 +843,7 @@ namespace GlimmerGrove
         /// <summary>
         /// Two gems changing places, drawn as two gems changing places.
         ///
-        /// They cross rather than teleport, and the one under the finger goes over the top —
+        /// They cross rather than teleport, and the one under the finger goes over the top -
         /// which is what makes a swap read as the player's own move rather than as the board
         /// rearranging itself.
         /// </summary>
@@ -919,7 +919,7 @@ namespace GlimmerGrove
         /// A critter waking: the husk breaks open and it goes home over the top of the field.
         ///
         /// The bloom flare rather than the warm one when the light that reached it came from more
-        /// than one gem away — which is the one place this mode says out loud that a long vein is
+        /// than one gem away - which is the one place this mode says out loud that a long vein is
         /// a bigger achievement than a short one. Written out as two calls rather than one
         /// indexed by a flag, so <c>artnames.py</c> holds both to disk.
         /// </summary>
@@ -985,7 +985,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>It takes frames rather than a key</b>, so every caller writes
         /// <c>Boom(Blaze("flare_bloom"), …)</c> and the literal lands in a manifest wrapper's own
-        /// first argument — the one shape <c>Tools/verify/artnames.py</c> can hold to disk.
+        /// first argument - the one shape <c>Tools/verify/artnames.py</c> can hold to disk.
         /// </para>
         /// </summary>
         void Boom(Sprite[] frames, Vector2 where, float size)

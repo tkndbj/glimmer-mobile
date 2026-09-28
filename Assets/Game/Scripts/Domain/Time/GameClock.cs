@@ -40,7 +40,7 @@ namespace GlimmerGrove
     /// The offset is learned on each successful sync and applied to the local clock,
     /// so the reading stays smooth and monotonic between syncs instead of jumping
     /// whenever the network is available. It is trusted because a player who moves
-    /// their device clock moves the *reading* and the *offset* together — the
+    /// their device clock moves the *reading* and the *offset* together - the
     /// corrected value does not budge.
     /// </summary>
     public sealed class ServerAnchoredClock : IGameClock
@@ -66,7 +66,7 @@ namespace GlimmerGrove
     /// The clock the game reads, plus the guard that stops it running backwards.
     ///
     /// <see cref="NowUnix"/> never returns a value lower than one it has already
-    /// returned. That is not paranoia about cheating — a backwards jump is ordinary on
+    /// returned. That is not paranoia about cheating - a backwards jump is ordinary on
     /// a real device (an NTP correction, a manual timezone fix) and without the guard
     /// it would strand a refill timer in the future, leaving a player staring at a
     /// countdown that grows. Rolling *forward* is the exploit, and only a trusted

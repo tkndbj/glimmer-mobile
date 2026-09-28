@@ -6,7 +6,7 @@ namespace GlimmerGrove.Layout
         /// <summary>The coin's centre, and how wide across it is drawn.</summary>
         public readonly float CoinCentre, CoinSize;
 
-        /// <summary>The figure's centre — one <c>Payout</c> chip, under the coin.</summary>
+        /// <summary>The figure's centre - one <c>Payout</c> chip, under the coin.</summary>
         public readonly float AmountCentre;
 
         /// <summary>The one button's centre.</summary>
@@ -30,7 +30,7 @@ namespace GlimmerGrove.Layout
     /// The prize panel's geometry: what a video actually paid, handed over.
     ///
     /// <para>
-    /// <b>One geometry for every placement that pays into a celebration</b>, which is now two —
+    /// <b>One geometry for every placement that pays into a celebration</b>, which is now two -
     /// the bonus wheel's multiplied credits, and the hearts a lost run is given back. They are
     /// the same three rows carrying different currencies, so a second set of numbers would be a
     /// second thing to keep under <see cref="PanelStack.TallestPanel"/> and a second place for a
@@ -42,14 +42,14 @@ namespace GlimmerGrove.Layout
     /// arithmetic, and arithmetic inside a <c>MonoBehaviour</c> is arithmetic nothing can
     /// check. This panel is three rows and every one of them is drawn every time, so the height
     /// is a single derivation and <c>PrizePanelTests</c> holds it under
-    /// <see cref="PanelStack.TallestPanel"/> — the shortest canvas this game is drawn on, with
+    /// <see cref="PanelStack.TallestPanel"/> - the shortest canvas this game is drawn on, with
     /// the title ribbon's overhang counted at both ends because a modal is centred.
     /// </para>
     /// <para>
     /// Every number is a <b>centre</b>, including the ones a reader might expect to be a top.
     /// That is not a style preference: <c>UIKit.Box</c> pivots every box centrally whatever it
     /// is anchored to, so a row described as a top and handed to the overlay as a position is
-    /// drawn half its own height too high — which is exactly what
+    /// drawn half its own height too high - which is exactly what
     /// <see cref="WheelPanel.StatusHeight"/>'s row did for as long as the wheel existed, while
     /// its own test passed on the arithmetic the panel did not use.
     /// </para>
@@ -72,7 +72,7 @@ namespace GlimmerGrove.Layout
         /// A <c>Payout</c> chip is 112 tall whatever it is carrying, so the height is that
         /// rather than a guess at it. The foot is wider than the air above the figure because
         /// what follows is a solid coloured button the width of the panel, and the same gap
-        /// reads as half as much against one — <c>PanelStack.FootGap</c>'s reason.
+        /// reads as half as much against one - <c>PanelStack.FootGap</c>'s reason.
         /// </para>
         /// </summary>
         public const float AmountHeight = 112f, AmountFoot = 40f;

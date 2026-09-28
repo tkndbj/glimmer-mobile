@@ -10,13 +10,13 @@ namespace GlimmerGrove.EditorTools
     ///
     /// Every other reader in the game walks the manifest, and that is right: the
     /// manifest is the authority on what the game contains, and the boot path must
-    /// never list a directory — on Android it could not anyway, since StreamingAssets
+    /// never list a directory - on Android it could not anyway, since StreamingAssets
     /// is inside the APK and only reachable through <c>UnityWebRequest</c>.
     ///
     /// But walking only the manifest leaves one blind spot, and it is a bad one. A
     /// chapter file nobody added to the manifest is not skipped with a warning; it is
     /// never looked at. It validates green, it audits green, it builds green, and it
-    /// ships as nothing at all — the author's fortnight of work simply is not in the
+    /// ships as nothing at all - the author's fortnight of work simply is not in the
     /// game, and no tool says a word. <c>Create Chapter Template</c> used to end by
     /// asking somebody to remember the manifest step, which is the same bet this
     /// project already lost once over asset registration.

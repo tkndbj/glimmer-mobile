@@ -42,9 +42,9 @@ namespace GlimmerGrove.Challenges
 
     /// <summary>
     /// Bolts a move earned for one turret. <see cref="Banks"/> says what happens to a bolt with
-    /// nothing of its colour on the hill: it waits on the ward (a burst — a merge, a pair —
+    /// nothing of its colour on the hill: it waits on the ward (a burst - a merge, a pair -
     /// is paid in full whenever a target comes), or it is spent into the air (a
-    /// <em>steady</em> fire — the glade's lit critter, Push's seated gem — which is paid again
+    /// <em>steady</em> fire - the glade's lit critter, Push's seated gem - which is paid again
     /// next turn anyway).
     /// </summary>
     public readonly struct ChallengeFeed
@@ -125,7 +125,7 @@ namespace GlimmerGrove.Challenges
     /// </para>
     /// <para>
     /// <b>Three answers every genre must give</b> (MODES.md 20j): whether it is solved, whether
-    /// it can no longer be solved, and — through <see cref="Apply"/> — that every input either
+    /// it can no longer be solved, and - through <see cref="Apply"/> - that every input either
     /// moves something one way or is refused, so nothing can stall.
     /// </para>
     /// </summary>

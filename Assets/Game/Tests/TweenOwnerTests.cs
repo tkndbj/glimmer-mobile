@@ -4,7 +4,7 @@ using UnityEngine;
 namespace GlimmerGrove.Tests
 {
     /// <summary>
-    /// A tween dies with its owner — the one sentence <see cref="Tw"/> has always carried,
+    /// A tween dies with its owner - the one sentence <see cref="Tw"/> has always carried,
     /// and for the life of the game it was not true.
     ///
     /// <para>
@@ -19,7 +19,7 @@ namespace GlimmerGrove.Tests
     /// That is invisible in almost every case, which is why it survived: the <c>apply</c>
     /// bodies all guard their own target, so the motion simply stops. The callbacks do not.
     /// It surfaced as a NullReferenceException per token when a payout chip was dismissed
-    /// with coins still in the air — <c>Payout.Land</c> landing them on a glyph that no
+    /// with coins still in the air - <c>Payout.Land</c> landing them on a glyph that no
     /// longer existed. Same shape as the <see cref="TweenCycleTests"/> bug and the same
     /// lesson: this subsystem's failures are invisible in a screenshot, so the rule has to
     /// be a thing that can be asserted rather than a thing that was reasoned about.
@@ -51,8 +51,8 @@ namespace GlimmerGrove.Tests
         [Test]
         public void NoOwnerAtAllIsNotOrphaned()
         {
-            // An untethered tween is a legitimate thing to ask for — most callers here pass
-            // no owner — so "nobody said" must never be read as "the owner has gone".
+            // An untethered tween is a legitimate thing to ask for - most callers here pass
+            // no owner - so "nobody said" must never be read as "the owner has gone".
             Assert.IsFalse(Tween.Orphaned(null));
         }
 

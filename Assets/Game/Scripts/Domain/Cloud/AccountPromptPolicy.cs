@@ -14,7 +14,7 @@ namespace GlimmerGrove.Cloud
 
         /// <summary>
         /// Real money became currency. The highest-value trigger, and the only one where the
-        /// thing at risk cannot be earned back by playing again — see the class comment.
+        /// thing at risk cannot be earned back by playing again - see the class comment.
         /// </summary>
         Purchase,
     }
@@ -26,7 +26,7 @@ namespace GlimmerGrove.Cloud
     /// <b>Why this is a policy and not two if statements.</b> An anonymous account dies with
     /// the installation: the credential lives in the app's own storage and no server can mint
     /// it again, so a reinstall, a wipe or a lost phone takes the uid and everything keyed on
-    /// it. For progress that is bad. For <em>money</em> it is worse and differently shaped —
+    /// it. For progress that is bad. For <em>money</em> it is worse and differently shaped -
     /// gems and credits granted by <c>redeemPurchase</c> are server-owned currency keyed on
     /// that uid, and a receipt is recorded globally against
     /// <c>receipts/{store}__{transactionId}</c>, so a fresh installation presenting the same
@@ -38,7 +38,7 @@ namespace GlimmerGrove.Cloud
     /// </para>
     /// <para>
     /// <b>It never blocks a purchase, and that is the design rather than a concession.</b>
-    /// The shop already argues the general case — the payment sheet <em>is</em> the
+    /// The shop already argues the general case - the payment sheet <em>is</em> the
     /// confirmation, and a panel of ours in front of it is a tap for a question about to be
     /// asked properly a second later. An OAuth consent screen is worse than a panel: it
     /// backgrounds the app in the middle of a decision, and a player who declines it has been
@@ -51,7 +51,7 @@ namespace GlimmerGrove.Cloud
     /// <para>
     /// <b>Two budgets, one spacing, and the split matters.</b> The counts are per trigger so
     /// that a player who buys gems in their first week cannot burn the chapter nudge's
-    /// allowance — those two asks reach different populations and neither should starve the
+    /// allowance - those two asks reach different populations and neither should starve the
     /// other. The quiet period is shared, because it answers a different question: not "have
     /// we made this case yet" but "how often may this game interrupt somebody", and the answer
     /// to that cannot depend on which subsystem is doing the interrupting. Without a shared
@@ -64,13 +64,13 @@ namespace GlimmerGrove.Cloud
     /// rather than read off a facade, so this stays a pure function of its arguments and a test
     /// can pass whatever pacing it wants without touching global state. The caller passes the
     /// live table, which is what makes a config push take effect on the next ask rather than on
-    /// the next launch. A budget of zero is legal and switches a trigger off — the lever that
+    /// the next launch. A budget of zero is legal and switches a trigger off - the lever that
     /// matters if the modal turns out to cost more conversion than it protects.
     /// </para>
     /// <para>
     /// <b>It holds no clock and reaches nothing.</b> Handed the time and the account's state,
     /// exactly as <c>SyncScheduler</c> and <c>RunScreen.Tick</c> are handed theirs, so the whole
-    /// policy runs in the offline test suite — which matters here more than usual, because
+    /// policy runs in the offline test suite - which matters here more than usual, because
     /// every state it is about (a live SDK session, a real purchase, a device that has been
     /// away for two days) is one the Editor never reaches. Persisting the counts is the
     /// caller's job, for <c>GrovePublishPolicy</c>'s reason: what a device has shown a person
@@ -134,8 +134,8 @@ namespace GlimmerGrove.Cloud
             if (!available || linked || mismatched) return false;
             if (OffersMade(trigger) >= BudgetFor(rules, trigger)) return false;
 
-            // Note the direction test. A clock that has moved backwards — a player changing the
-            // device date, or a first launch before network time arrives — leaves a stamp in
+            // Note the direction test. A clock that has moved backwards - a player changing the
+            // device date, or a first launch before network time arrives - leaves a stamp in
             // the future, and a plain subtraction would then be negative, read as "inside the
             // quiet period", and suppress every prompt for the life of the installation.
             // Treating a future stamp as expired heals it: the next offer writes `now` over it,
@@ -151,7 +151,7 @@ namespace GlimmerGrove.Cloud
         /// shared quiet period.
         ///
         /// <para>
-        /// Called when the panel is <b>raised</b>, never when it is answered — the rule
+        /// Called when the panel is <b>raised</b>, never when it is answered - the rule
         /// <c>SyncScheduler.Started</c> and <c>GrovePublishPolicy</c> both follow, for the same
         /// reason. An ask recorded on the reply is an ask that was not recorded when the player
         /// killed the app, backed out, or took a phone call, and a budget that only decrements
@@ -173,7 +173,7 @@ namespace GlimmerGrove.Cloud
         /// Deliberately <b>not</b> subject to either budget or the quiet period, because it is
         /// not an interruption: it costs no tap, asks no question and takes nothing away, so
         /// the argument for rationing a modal does not reach it. It is also what lets the modal
-        /// be as rare as it is — a player who declines every prompt still sees, every single
+        /// be as rare as it is - a player who declines every prompt still sees, every single
         /// time they look at a shelf priced in money, that this purchase is tied to one phone.
         /// </para>
         /// </summary>

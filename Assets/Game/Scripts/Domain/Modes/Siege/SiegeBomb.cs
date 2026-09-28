@@ -6,7 +6,7 @@ namespace GlimmerGrove.Modes
     /// <para>
     /// <b>A box rather than a point, and that is the whole of what makes it tappable.</b> The hill
     /// is already divided into <c>SiegeTuning.Lanes</c> by <c>SiegeTuning.BlastRows</c> boxes for a
-    /// firepot's targeting, and a bomb is aimed at by the same finger against the same grid — so
+    /// firepot's targeting, and a bomb is aimed at by the same finger against the same grid - so
     /// it is stored as one of those boxes and every reader agrees about where it is. A raw march
     /// would leave the drawing and the tap test each doing their own arithmetic on it, which is
     /// exactly the disagreement invariant 39k records.

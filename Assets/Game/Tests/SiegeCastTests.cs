@@ -7,8 +7,8 @@ using NUnit.Framework;
 namespace GlimmerGrove.Tests
 {
     /// <summary>
-    /// The five casts a siege can draw — four a chapter picks from and the Infinite lane's
-    /// medley — and the ways a cast can silently stop being drawable.
+    /// The five casts a siege can draw - four a chapter picks from and the Infinite lane's
+    /// medley - and the ways a cast can silently stop being drawable.
     ///
     /// <para>
     /// <b>This is <c>SiegeGroundTests</c>'s question asked of the raiders.</b> A rung's ground is
@@ -16,7 +16,7 @@ namespace GlimmerGrove.Tests
     /// bodies rather than one and there are five of them. What that fixture records applies here
     /// unchanged: if what a chapter <em>loads</em> and what the board <em>draws</em> come apart, an
     /// <c>Image</c> with a null sprite is a <b>white rectangle</b> rather than a blank (invariant
-    /// 7b) — over every raider on the hill, on one chapter, with every other gate green. The
+    /// 7b) - over every raider on the hill, on one chapter, with every other gate green. The
     /// address would be real, registered, audited and even loaded, by a different chapter.
     /// </para>
     /// <para>
@@ -102,7 +102,7 @@ namespace GlimmerGrove.Tests
         /// **What a cast draws is what that cast loads.** The comparison this fixture is for.
         ///
         /// Every address <see cref="SiegeMode.CastAddress"/> can answer with has to be one of the
-        /// reels in the same cast's own array — which is true by construction today and is checked
+        /// reels in the same cast's own array - which is true by construction today and is checked
         /// anyway, because the construction is an index and an index is exactly what a re-ordered
         /// array breaks.
         /// </summary>
@@ -180,7 +180,7 @@ namespace GlimmerGrove.Tests
         /// </para>
         /// <para>
         /// <b>And every slot is dealt from the cast its own square names</b>, which is what stops
-        /// the walk and the swing coming from different families — a body that loaded one
+        /// the walk and the swing coming from different families - a body that loaded one
         /// family's walk and another's swing would change into a different animal at the ward
         /// line.
         /// </para>
@@ -234,7 +234,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// **A chapter's cast is arithmetic on its ordinal**, so a chapter published next year
-        /// costs no cast at all — invariant 7c, which is the same rule the map and the skies follow.
+        /// costs no cast at all - invariant 7c, which is the same rule the map and the skies follow.
         /// </summary>
         [Test]
         public void AChapterPastTheLastCastWrapsRatherThanDrawingNothing()
@@ -257,7 +257,7 @@ namespace GlimmerGrove.Tests
         /// The four chapters this game ships draw <b>different</b> casts, and the Infinite lane
         /// draws the medley.
         ///
-        /// <b>The fact, not the arithmetic</b> — the arithmetic is checked above, and this is what a
+        /// <b>The fact, not the arithmetic</b> - the arithmetic is checked above, and this is what a
         /// reader actually wants to know. It is also what catches a re-ordered
         /// <see cref="SiegeMode.MainCasts"/>, which would leave every test above green.
         /// </summary>
@@ -344,7 +344,7 @@ namespace GlimmerGrove.Tests
         /// A chapter this catalog has never heard of answers with a cast that is certainly on disk.
         ///
         /// <c>CatalogIndex.ChapterOrderOf</c> reports -1 for one, and the honest answer to "which
-        /// cast" is never "none" — an empty answer is twelve white rectangles.
+        /// cast" is never "none" - an empty answer is twelve white rectangles.
         /// </summary>
         [Test]
         public void AnUnknownChapterStillDrawsACast()
@@ -356,7 +356,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// **A cast that swings names one reel per body, in the same order it names its walks**
-        /// — or names none at all, or, in exactly one case, names nothing for a body whose pack
+        /// - or names none at all, or, in exactly one case, names nothing for a body whose pack
         /// drew no attack.
         ///
         /// <para>
@@ -370,7 +370,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// <b>The gap is the medley's</b> and it is honest rather than convenient: two of the
         /// four families it is dealt from have no attack animation in their packs, so six of its
-        /// twelve bodies keep walking at the line — which is exactly what those two chapters do
+        /// twelve bodies keep walking at the line - which is exactly what those two chapters do
         /// today. <c>CastSwing</c> answering empty is already the "this does not swing" reply for
         /// a whole cast; this is the same reply one body at a time.
         /// </para>
@@ -437,7 +437,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <b>The one way this could be wrong and still pass everything above</b>: a swing table
         /// pointed at the walks would index, load and draw, and what it would look like is the
-        /// cast that <em>has</em> an attack animation not playing it — the exact fault the reels
+        /// cast that <em>has</em> an attack animation not playing it - the exact fault the reels
         /// were cut to fix, shipped green.
         /// </summary>
         [Test]
@@ -483,7 +483,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// Every cast reel is addressed under this mode's own art, so it lands in Thornwatch's
-        /// Addressables group rather than in the global set — which is what bounds memory by what is
+        /// Addressables group rather than in the global set - which is what bounds memory by what is
         /// on screen (invariant 7b) instead of by how many casts the game has ever shipped.
         /// </summary>
         [Test]
@@ -503,7 +503,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <b>This is the fault invariant 37at was found by, written down as a test.</b> A reel the
         /// mode's whole-art answer never names is one that ships addressed, grouped, built into a
-        /// bundle and <em>impossible to load</em> — twelve <c>No Location found for Key=…</c> lines
+        /// bundle and <em>impossible to load</em> - twelve <c>No Location found for Key=…</c> lines
         /// and a hill of health bars floating over nothing. It went unnoticed because every gate
         /// there was walked the manifest, and the manifest never asked for that cast.
         /// </summary>

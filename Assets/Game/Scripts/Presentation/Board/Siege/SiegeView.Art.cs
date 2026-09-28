@@ -15,7 +15,7 @@ namespace GlimmerGrove
     /// Every sprite and reel this board draws, and the one place a key is written down.
     ///
     /// <para>
-    /// <b>Every name is a literal</b> — <c>Tools/verify/artnames.py</c> reads the literal at a
+    /// <b>Every name is a literal</b> - <c>Tools/verify/artnames.py</c> reads the literal at a
     /// lookup's call site, so a key assembled from an index is a name nothing checks, and this
     /// mode has already paid for that once (a white rectangle two cells wide, found by a player).
     /// </para>
@@ -44,7 +44,7 @@ namespace GlimmerGrove
         public int Rung { get; set; }
 
         /// <summary>
-        /// The address of the ground a rung is fought over — the same answer
+        /// The address of the ground a rung is fought over - the same answer
         /// <see cref="SiegeMode.Ground"/> gives, said in the assembly that draws it.
         ///
         /// <para>
@@ -56,7 +56,7 @@ namespace GlimmerGrove
         /// <b>It answers an address rather than a sprite so that it can be compared.</b> The two
         /// switches have to agree or a chapter loads one floor while the board asks for another,
         /// which draws a white rectangle over the whole hill on one rung with every gate green
-        /// (invariant 7b) — <c>SiegeGroundTests</c> is what stops that, and it can only make the
+        /// (invariant 7b) - <c>SiegeGroundTests</c> is what stops that, and it can only make the
         /// comparison if the answer is a string rather than something needing a loaded scope.
         /// </para>
         /// </summary>
@@ -87,7 +87,7 @@ namespace GlimmerGrove
         /// A flipbook widget, or <b>null</b> when its frames are not there.
         ///
         /// An <c>Image</c> with a null sprite is a white rectangle rather than a blank (invariant
-        /// 7b), so the widget is not built until the frames are in hand — missing art then costs
+        /// 7b), so the widget is not built until the frames are in hand - missing art then costs
         /// the thing it draws and never costs a white square over the board.
         /// </summary>
         static Image Book(Sprite[] frames, string name, RectTransform parent, Vector2 size,
@@ -129,7 +129,7 @@ namespace GlimmerGrove
         /// What colour a ward burns, as the board paints it.
         ///
         /// <b>Public because <c>WardFiringStage</c> asks it</b>, and that widget draws a turret
-        /// firing outside a board — a second table of these four would be a second answer to a
+        /// firing outside a board - a second table of these four would be a second answer to a
         /// question invariant 37f settles by there being exactly one.
         /// </summary>
         public static Color TintOf(int colour)
@@ -179,7 +179,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>A gem of its own rather than a mark worn over one</b>, which is the correction this
-        /// pair exists for — see <c>SiegeMode.Cast</c> for the sentence that bought it. A lance is
+        /// pair exists for - see <c>SiegeMode.Cast</c> for the sentence that bought it. A lance is
         /// a stellated star and a stormglass a vortex orb, each cut in all four gem colours, so a
         /// charmed cell is a <em>different stone</em> and is still unmistakably the colour it is
         /// worth (invariant 37f, and 34f's rule that pieces differ in silhouette as well as hue).
@@ -188,14 +188,14 @@ namespace GlimmerGrove
         /// <b>Null for the prism and for no charm at all, and that is the right shape rather than
         /// a gap in one.</b> A prism is not a colour, so it has no per-colour face to pick: it is
         /// already a face in <see cref="GemArt"/>, reached through <c>PrismColour</c>. A
-        /// <c>default</c> that answered one of these would be invariant 44e's fault exactly — the
+        /// <c>default</c> that answered one of these would be invariant 44e's fault exactly - the
         /// next charm added would fall through it and ship wearing somebody else's stone.
         /// </para>
         /// <para>
         /// <b>Every name is a literal at the point it is looked up</b>, which is invariant 6's
         /// rule for loc keys read across to art: <c>Tools/verify/artnames.py</c> reads the string
         /// off the call site, so a name built from a charm and a colour would be eight pictures
-        /// nothing checks — and a white rectangle two cells wide is where that ends (7b).
+        /// nothing checks - and a white rectangle two cells wide is where that ends (7b).
         /// </para>
         /// </summary>
         static Sprite CharmFace(int colour, SiegeCharm charm)
@@ -258,7 +258,7 @@ namespace GlimmerGrove
         /// <summary>
         /// The reel a charm detonates in, in the colour it was <b>paid</b>.
         ///
-        /// <b>Its own bake rather than the ward impact it used to borrow</b> — see
+        /// <b>Its own bake rather than the ward impact it used to borrow</b> - see
         /// <c>SiegeShotBake.Charms</c> for the measurement. Keyed on the colour it was paid and
         /// never on the letter underneath, which is what makes it the payoff rather than
         /// decoration: a prism is drawn colourless and is worth the run it completed, so the burst
@@ -295,7 +295,7 @@ namespace GlimmerGrove
         ///
         /// <b>Its own number rather than sharing the cog's -1</b>, which is what
         /// <c>SiegeBoard.ColourAt</c> answers for both: a cog and a sack are the two cells of this
-        /// field that are not colours, and they are opposite things — one is a prize the player is
+        /// field that are not colours, and they are opposite things - one is a prize the player is
         /// reaching for and the other is dead weight. A view that could not tell them apart would
         /// draw the wrong one, which is a mechanic reading as its opposite.
         /// </summary>
@@ -316,7 +316,7 @@ namespace GlimmerGrove
         /// A ward's body. Four models rather than four paint jobs.
         ///
         /// <para>
-        /// <b>No colour is baked into the art</b> — the sprite is a bare turret and the colour it
+        /// <b>No colour is baked into the art</b> - the sprite is a bare turret and the colour it
         /// burns is <see cref="Coat"/>, applied here to the same <c>Pal</c> entry the gems and the
         /// raiders take theirs from. So the four cannot drift apart, and a ward, its bullets, its
         /// muzzle flash and the gems that feed it are one colour by construction rather than by
@@ -361,13 +361,13 @@ namespace GlimmerGrove
         /// <para>
         /// <b>A ladder of metals, so a rank is read at a glance rather than read as a number.</b>
         /// The five-tier turret ladder used to carry the rank in the <em>silhouette</em>
-        /// (invariant 37w) and twenty player-chosen models cannot — the silhouette belongs to the
+        /// (invariant 37w) and twenty player-chosen models cannot - the silhouette belongs to the
         /// choice now. A plinth under the turret was tried and thrown away: invariant 37y already
         /// records that a turret's foot is behind the field's plate on every screen this mode is
         /// drawn at, so what went there was invisible on the board and only a render said so.
         /// </para>
         /// <para>
-        /// <b>Steel, bronze, silver, gold, white-hot</b> — a ladder anybody has seen before, and
+        /// <b>Steel, bronze, silver, gold, white-hot</b> - a ladder anybody has seen before, and
         /// climbing in <em>value</em> as well as in hue so it survives a player who cannot
         /// separate two of the colours. The number stays on top of it: the tint says "this one is
         /// better" and the digit says by how much.
@@ -452,8 +452,8 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The turret decides the shape and the ward decides the colour</b>, which is the
         /// division that let nineteen bought turrets each get an effect of their own. A model with
-        /// an ability throws a reel named after its own id — a crescent that cuts, an arrow that
-        /// runs a lane, a wisp that drains — baked in each of the four ward colours; a model with
+        /// an ability throws a reel named after its own id - a crescent that cuts, an arrow that
+        /// runs a lane, a wisp that drains - baked in each of the four ward colours; a model with
         /// no ability throws the shared elemental reels the starter has always thrown
         /// (<c>WardModel.ShotFor</c>). Nothing here is tinted: invariant 37l's rule is that a
         /// multiply can only darken, so what a reel is worn in has to be what was baked into it.
@@ -465,7 +465,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// <b>Built rather than written out as a literal</b>, which <c>Tools/verify/artnames.py</c>
-        /// cannot check — the same bargain <c>WardModel.ArtFor</c> already strikes and for the same
+        /// cannot check - the same bargain <c>WardModel.ArtFor</c> already strikes and for the same
         /// reason (invariant 42). What replaces the literal is stronger: the roster is content, so
         /// <c>ContentValidation</c> and <c>content.py</c> both walk it and error on a model whose
         /// reels are not on disk, which catches a missing bake and a misspelled id at once.
@@ -498,7 +498,7 @@ namespace GlimmerGrove
             {
                 // A sun, and the biggest thing on the board. **A fact about the effect rather
                 // than about the rung or the id**: the shelf was re-rung (invariant 37ax) without
-                // moving this, and the sun itself then moved from `prism` to `apex` (37ay) — and
+                // moving this, and the sun itself then moved from `prism` to `apex` (37ay) - and
                 // the scale went with the picture, because what wants the room is the sun.
                 case "apex": return 1.55f;
                 // The top of the whole shelf, and a corona rather than a ball: a ring of fire
@@ -540,11 +540,11 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// One number for the raiders, the wards, their bullets and their muzzle flashes, because
-        /// all four are answering the same question — <em>which of the board's colours is this</em>
-        /// — and four numbers would be four answers.
+        /// all four are answering the same question - <em>which of the board's colours is this</em>
+        /// - and four numbers would be four answers.
         /// </para>
         /// <para>
-        /// <b>It is a multiply, so it can only ever darken</b> — which is fine for the cast,
+        /// <b>It is a multiply, so it can only ever darken</b> - which is fine for the cast,
         /// whose art is bright and whose colour only has to be legible, and was not fine for the
         /// wards. Pulled the whole way to a saturated <c>Pal</c> entry a turret came back dark
         /// ("too dim"); lifted toward white first it came back pastel. The wards therefore carry a
@@ -559,7 +559,7 @@ namespace GlimmerGrove
         ///
         /// <b>Read rather than assumed, and it is the only thing here that is.</b> Invariant 16i
         /// says a piece's drawn <em>size</em> is authored and never measured off the loaded sprite,
-        /// so a tile laid out before its art arrives is not laid out around a placeholder — and
+        /// so a tile laid out before its art arrives is not laid out around a placeholder - and
         /// that is exactly what <paramref name="tall"/> is. What cannot be authored is the shape a
         /// cutting tool happened to give an animation's bounding box, which is a fact about the
         /// picture. Answers a square when the frames are not in hand, so a missing reel costs the
@@ -578,7 +578,7 @@ namespace GlimmerGrove
         {
             // **Four bosses, four bodies, four packs.** Every name here is written out at the
             // lookup rather than built from the kind, which is what keeps
-            // `Tools/verify/artnames.py` able to hold all twelve reels to what is on disk — a
+            // `Tools/verify/artnames.py` able to hold all twelve reels to what is on disk - a
             // table of strings would be twelve names nothing checks (invariant 7's rule read into
             // the gate that enforces it).
             switch (raider.Kind)
@@ -605,14 +605,14 @@ namespace GlimmerGrove
             // **A body per colour, which is what removing the tint bought.** It used to be
             // three creeper models handed out on `Colour % 3`, so two of the four colours shared a
             // body and the only thing separating them was a wash that has now gone. Four bodies
-            // means the silhouette says the colour on its own — which is the half of the rule a
+            // means the silhouette says the colour on its own - which is the half of the rule a
             // player who cannot separate red from green depends on.
             //
             // **One set rather than two, and that is the insect roster's size rather than a change
             // of mind.** A chapter used to draw one of two twelve-body casts by its ordinal, out
             // of eighty-three characters across nine monster, alien and robot packs. The raid is
             // insects now, the one pack on this machine that draws any holds fifteen, and the four
-            // bosses take four of them — so there is exactly one cast and no arithmetic to do. A
+            // bosses take four of them - so there is exactly one cast and no arithmetic to do. A
             // second insect pack buys the second set back for one table in
             // `make_siege_art.RAIDER_SET` and nothing here.
             // **The two that work on the field rather than on the line, and they are one set
@@ -651,7 +651,7 @@ namespace GlimmerGrove
         /// <summary>
         /// What this raider swings at the ward line, or <b>null</b> when its cast drew none.
         ///
-        /// <b>Null is an ordinary answer and not a failure</b> — the insects and the brood have no
+        /// <b>Null is an ordinary answer and not a failure</b> - the insects and the brood have no
         /// attack animation in their packs, so their bodies keep walking where they stand exactly
         /// as they always have, and <b>six of the Infinite lane's twelve</b> are dealt from those
         /// two and answer the same way one body at a time (<c>SiegeMode.MedleySwings</c>). Asking
@@ -668,7 +668,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Which cast this level draws — one of <see cref="SiegeMode.Insects"/>,
+        /// Which cast this level draws - one of <see cref="SiegeMode.Insects"/>,
         /// <see cref="SiegeMode.Brood"/> or <see cref="SiegeMode.Medley"/>.
         ///
         /// <para>
@@ -691,7 +691,7 @@ namespace GlimmerGrove
         ///
         /// <b>The number itself lives in <see cref="SiegeTuning.TallOf"/>, in the rules.</b> A
         /// firepot has to hit the body a player can see, so how big that body is stopped being a
-        /// fact only the view knew — see the rule's own remarks, and invariant 33g for why a
+        /// fact only the view knew - see the rule's own remarks, and invariant 33g for why a
         /// drawn thing and a played thing may not be two facts that agree.
         /// </summary>
         static float TallOf(SiegeRaider raider) => SiegeTuning.TallOf(raider.Kind);
@@ -699,7 +699,7 @@ namespace GlimmerGrove
         /// <summary>
         /// Where a raider carries its health bar and its colour, as a fraction of its own height.
         ///
-        /// <b>Over the head for a raider, and nowhere near a warlord</b> — see
+        /// <b>Over the head for a raider, and nowhere near a warlord</b> - see
         /// <see cref="Crown"/> for where a warlord's goes and why it had to leave its body.
         /// </summary>
         static float ReadoutAt(SiegeRaider raider) => .58f;
@@ -713,7 +713,7 @@ namespace GlimmerGrove
         /// something three cells tall: three renders put it outside the board's top edge (two
         /// widgets that had come loose), then on the ward line's own health bars (two readouts
         /// overlapping, which is two readouts nobody can read), and each time the answer was to
-        /// make the warlord smaller — until it was barely taller than the turrets it was supposed
+        /// make the warlord smaller - until it was barely taller than the turrets it was supposed
         /// to be looming over.
         /// </para>
         /// <para>
@@ -764,7 +764,7 @@ namespace GlimmerGrove
         /// <b>One set rather than four, graded to a colour no ward and no gem wears.</b> The
         /// elemental double is a rule about bolts going <em>into</em> a raider, so a spell coming
         /// out of one that wore one of the board's four colours would be saying something the
-        /// rules do not mean — a player would reasonably read it as "this hurts the blue ward
+        /// rules do not mean - a player would reasonably read it as "this hurts the blue ward
         /// more". See <c>SiegeShotBake</c>.
         /// </summary>
         /// <summary>
@@ -773,7 +773,7 @@ namespace GlimmerGrove
         /// The one place the four are not four: a roar is aimed at no ward, so it has no flight
         /// and its flight reel is never loaded (<c>SiegeMode.Bosses</c>). Answering null rather
         /// than a reel nothing scoped in is what keeps a missing address from ever being asked
-        /// for — an <c>Image</c> with no sprite is a white rectangle (invariant 7b).
+        /// for - an <c>Image</c> with no sprite is a white rectangle (invariant 7b).
         /// </summary>
         static Sprite[] SpellArt(SiegeKind kind)
         {
@@ -826,7 +826,7 @@ namespace GlimmerGrove
         /// own, which is invariant 37z's fault said about the drawing rather than about the fight:
         /// what the three have in common is that they are aimed at no ward, and that is a fact
         /// about the *rule* rather than about what the spell looks like. They have their own now
-        /// (<c>SiegeShotBake.Maw</c>, <c>.Crypt</c>) — a ring that closes for a maw, a spectral
+        /// (<c>SiegeShotBake.Maw</c>, <c>.Crypt</c>) - a ring that closes for a maw, a spectral
         /// bloom for a raise, and the roar's shockwave left to the roar.
         /// </summary>
         static Sprite[] SpellMuzzleArt(SiegeKind kind)
@@ -878,7 +878,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The elemental double is a rule about bolts going <em>into</em> a raider</b>, so a
         /// spell coming <em>out</em> of one in one of the board's four colours would be saying
-        /// something the rules do not mean — a player would reasonably read it as "this hurts the
+        /// something the rules do not mean - a player would reasonably read it as "this hurts the
         /// blue ward more". <c>Pal</c>'s board set has exactly four entries that are none of
         /// <c>Poppy</c>, <c>Mint</c>, <c>Azure</c> or <c>Amber</c>, and the four bosses take one
         /// each.
@@ -886,7 +886,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Colour is the weakest of the three things that tell them apart, and it is here for
         /// completeness rather than as the answer.</b> A hex is a teal wisp, a smite a violet orb,
-        /// a roar a white ring and an omen a magenta sun — different shapes, different sizes and
+        /// a roar a white ring and an omen a magenta sun - different shapes, different sizes and
         /// different <em>effects on the line</em>, which is what a player actually reads. Teal
         /// against the blue gem is the closest pair of hues in the mode, which is exactly why the
         /// hex is the one drawn as a trailing wisp rather than as anything round.
@@ -905,7 +905,7 @@ namespace GlimmerGrove
                 // archer and an ironclad is a man with an axe, so what they throw is iron and
                 // dust: `Dormant` is the unpowered slate, which is the only thing in this palette
                 // that reads as *metal*, and a slam's dust is the same colourless `Radiance` a
-                // roar is — pressure has no hue, and the two are two chapters apart. Neither can
+                // roar is - pressure has no hue, and the two are two chapters apart. Neither can
                 // be read as "this hurts the red ward more", which is the whole constraint.
                 case SiegeKind.Shackler: return Pal.Dormant;
                 case SiegeKind.Ironclad: return Pal.Radiance;
@@ -960,7 +960,7 @@ namespace GlimmerGrove
         /// under it.
         ///
         /// A fully rounded plate over a square shelf leaves two notches at the join, and at the
-        /// bottom of a board they read as a gap rather than as two things meeting — which is what
+        /// bottom of a board they read as a gap rather than as two things meeting - which is what
         /// they are. This is the only mode with something under its board.
         /// </summary>
         protected override Sprite PlateSkin => Art.RoundTop(34);

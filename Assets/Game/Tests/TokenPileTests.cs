@@ -44,7 +44,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The lean is symmetric too. It was not: the arrangement this replaced dropped every
-        /// second token, which is only a symmetric rule when the count is odd — so a pile of
+        /// second token, which is only a symmetric rule when the count is odd - so a pile of
         /// four came out heavier on one side and a pile of five did not, from one expression.
         /// </summary>
         [Test]

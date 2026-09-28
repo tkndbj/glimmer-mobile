@@ -23,7 +23,7 @@ namespace GlimmerGrove.Challenges
     /// <para>
     /// <b>The rule: a move that costs a turn feeds the line and walks the hill; the move that
     /// solves the puzzle wins before the hill walks; a line with no ward standing loses.</b>
-    /// Nothing else. There is no clock, no move allowance and no score — how many turns a
+    /// Nothing else. There is no clock, no move allowance and no score - how many turns a
     /// solution took is the only reading, and it is printed by the fixture rather than graded
     /// (nothing here reaches a save, a ledger, XP or credits, by the owner's instruction that
     /// a challenge never touches the core game).

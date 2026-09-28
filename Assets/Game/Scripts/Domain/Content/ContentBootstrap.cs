@@ -57,7 +57,7 @@ namespace GlimmerGrove.Content
         }
 
         /// <summary>
-        /// Starts a background pull of newer content. Fire and forget by design — the
+        /// Starts a background pull of newer content. Fire and forget by design - the
         /// result lands in the cache and is picked up on the next launch, so nothing
         /// in the running session has to wait on it or handle its failure.
         /// </summary>

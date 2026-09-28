@@ -16,7 +16,7 @@ namespace GlimmerGrove.Tests
     /// must survive being merged across devices in any order any number of times, which is
     /// invariant 11b and is proved against plain integers. A utility must never be able to improve
     /// a run's <em>grade</em>, which is invariant 39 and is the reason nothing about them is
-    /// adjudicated — proved as arithmetic over <c>SiegeTuning</c>'s own exchange rate rather than
+    /// adjudicated - proved as arithmetic over <c>SiegeTuning</c>'s own exchange rate rather than
     /// asserted about one board. And a utility must never be charged for unless it landed, which
     /// is invariant 23's rule about a continue that does not continue, applied to a consumable
     /// somebody may have paid gems for.
@@ -118,7 +118,7 @@ namespace GlimmerGrove.Tests
         /// The inexactness the join buys, stated as a test so nobody 'fixes' it into addition.
         ///
         /// Two devices offline from the same five, spending two and three, merge to three spent
-        /// rather than five — two uses forgiven. Adding them would not be idempotent, so a
+        /// rather than five - two uses forgiven. Adding them would not be idempotent, so a
         /// re-uploaded save or a sync retried after a dropped reply would charge them again, which
         /// is the failure that actually loses a player something they paid gems for.
         /// </summary>
@@ -280,7 +280,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// Invariant 39, as arithmetic. <c>PerfectMatch</c> is the most one match can ever
         /// deliver, so <c>ceil(damage / PerfectMatch)</c> is the fewest matches that could have
-        /// delivered the same — which makes the charge a floor on what the utility saved.
+        /// delivered the same - which makes the charge a floor on what the utility saved.
         /// </summary>
         [Test]
         public void AUtilityIsChargedTheFewestMatchesThatCouldHaveDoneTheSameWork()
@@ -309,7 +309,7 @@ namespace GlimmerGrove.Tests
 
                 Assert.GreaterOrEqual(charged * SiegeTuning.PerfectMatch, damage,
                     $"{damage} damage was charged {charged} matches, which could not have "
-                    + "delivered it — a player could buy a star");
+                    + "delivered it - a player could buy a star");
             }
         }
 
@@ -328,7 +328,7 @@ namespace GlimmerGrove.Tests
         // =================================================================== the board
         static SiegeLayout Field()
         {
-            // Four colours, four wards, one small wave — enough to have something to burn and a
+            // Four colours, four wards, one small wave - enough to have something to burn and a
             // line to mend, and small enough that nothing here depends on a shipped level.
             var rows = new[]
             {
@@ -782,12 +782,12 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// A ward with less than half a pour's room is refused, because an item spent for a
-        /// tenth of its effect is an item spent for nothing — and the charge is the whole pour
+        /// tenth of its effect is an item spent for nothing - and the charge is the whole pour
         /// whatever lands, so it would also be over-charged.
         ///
         /// <para>
         /// <b>"Full" means the tube <em>and</em> the charge rack</b>, which is what the overcharge
-        /// changed. A full tube with a charge still to bank has somewhere for a pour to go — and
+        /// changed. A full tube with a charge still to bank has somewhere for a pour to go - and
         /// what it buys there is worth more than the fuel was, so refusing it would refuse the item
         /// at the one moment it is most valuable.
         /// </para>
@@ -845,7 +845,7 @@ namespace GlimmerGrove.Tests
             foreach (var ward in board.Wards) { ward.Health = 0; ward.Alive = false; }
 
             // **Not `Stranded`, which this asked until a continue could raise a fallen line.**
-            // That predicate answers "would a purchase rescue this", and the answer is now yes —
+            // That predicate answers "would a purchase rescue this", and the answer is now yes -
             // which is precisely why it is the wrong question here: what a utility must not land
             // on is a run that has already ended, and that is `AnyMove`.
             Assert.IsFalse(board.AnyMove);
@@ -874,7 +874,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// Two utilities in one chest are two rewards. Folding them on kind alone would grant one
-        /// id twice and the other never — the fault <c>ChestDefinition.Merge</c> already avoids
+        /// id twice and the other never - the fault <c>ChestDefinition.Merge</c> already avoids
         /// for two credit bands, one field wider.
         /// </summary>
         [Test]
@@ -963,7 +963,7 @@ namespace GlimmerGrove.Tests
 
             foreach (var item in UtilityCatalog.Default.Items)
                 Assert.IsTrue(declared.Contains(AssetPipeline.AssetManifest.ArtRoot + item.Art),
-                    $"'{item.Id}' draws '{item.Art}', which AssetManifest does not name — it "
+                    $"'{item.Id}' draws '{item.Art}', which AssetManifest does not name - it "
                     + "would be a white rectangle on the bar (invariant 7b)");
         }
 

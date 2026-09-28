@@ -9,8 +9,8 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// <b>This exists because a render can only look at one shape at a time.</b>
     /// <c>Tools/render_siege.py</c> is the instrument for everything about this board that no
-    /// number can see — whether the hill reads, whether a fuel tube has fallen behind the field's
-    /// plate — and it draws whatever canvas it is given. That is how the ward line came to be able
+    /// number can see - whether the hill reads, whether a fuel tube has fallen behind the field's
+    /// plate - and it draws whatever canvas it is given. That is how the ward line came to be able
     /// to collapse to one and a quarter cells on a 4:3 while every phone it was ever looked at on
     /// was fine: each picture was correct, and nothing swept the shapes between them.
     /// </para>
@@ -28,7 +28,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// Nothing shorter than about 900, because below that the field alone is more than half
         /// the board and <c>MaxGemBand</c>'s clamp is what decides the layout rather than the
-        /// ratio — a different question from the one this fixture asks, and not a shape any
+        /// ratio - a different question from the one this fixture asks, and not a shape any
         /// display in this game's two store listings has.
         /// </para>
         /// </summary>
@@ -79,8 +79,8 @@ namespace GlimmerGrove.Tests
         /// <b>Tall only, and that is a fact worth having written down rather than a fudged
         /// threshold.</b> The field's height is fixed by the width, so the shorter the display the
         /// more of the board it is: on the 16:9 sheet the render draws by default the field really
-        /// is the largest band, at 48% against the hill's 37%. No phone is that shape — a 19.5:9
-        /// display gives the board about 1750 units — but a small tablet is, which is what this
+        /// is the largest band, at 48% against the hill's 37%. No phone is that shape - a 19.5:9
+        /// display gives the board about 1750 units - but a small tablet is, which is what this
         /// says out loud so the next person to read a wide render is not surprised by it.
         /// </para>
         /// </summary>

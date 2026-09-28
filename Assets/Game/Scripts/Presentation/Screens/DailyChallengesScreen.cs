@@ -13,16 +13,16 @@ namespace GlimmerGrove
     /// <para>
     /// <b>A card is a genre, not a row</b> (invariant 56f). A genre deals one level a play,
     /// rotating through its rows day by day, so the thing a player chooses is the kind of
-    /// puzzle and the level is the calendar's answer — the card names today's level under the
+    /// puzzle and the level is the calendar's answer - the card names today's level under the
     /// genre's own name so the two are not confused, and every player on the same day sees
     /// the same name. Adding a level to a genre changes nothing here; adding a genre is a
     /// build (56a) and adds a card.
     /// </para>
     /// <para>
     /// <b>Everything on a card is painted, never drawn</b> (44j's rule about readouts): the
-    /// plays left, the badge and the deal band all move without anybody tapping — a deal
+    /// plays left, the badge and the deal band all move without anybody tapping - a deal
     /// bought on the sheet, a day turning while the page stands, a sync arriving with plays
-    /// spent on another phone — so the page listens to <see cref="ChallengeLedger.Changed"/>
+    /// spent on another phone - so the page listens to <see cref="ChallengeLedger.Changed"/>
     /// and repaints, cells and band alike, rather than being rebuilt.
     /// </para>
     /// <para>
@@ -40,7 +40,7 @@ namespace GlimmerGrove
         /// <summary>
         /// The deal band: a plate as wide as the cards under it, the crowned chest on its left
         /// (<see cref="ChallengeArt.Chest"/>), the allowance in the middle and the key to the
-        /// sheet on its right. Re-cut on 2026-09-23 at the owner's instruction — the chest, the
+        /// sheet on its right. Re-cut on 2026-09-23 at the owner's instruction - the chest, the
         /// larger type and the width all landed together, and the rule line that used to stand
         /// above it is gone: the board teaches that rule on the first move.
         /// </summary>
@@ -161,7 +161,7 @@ namespace GlimmerGrove
                              new Vector2(DealTextX + lineW * .5f, 0f), 2f, 2f, wrap: true),
                 18);
 
-            // Green (`Skins.Affirm`, the kit's own green pill — a tint cannot reach the season
+            // Green (`Skins.Affirm`, the kit's own green pill - a tint cannot reach the season
             // screen's mint on an orange sprite, 44g), because on an orange plate the orange
             // Buy key vanished into its own ground.
             _dealKey = UIKit.TextButton("Deals", band.transform, Skins.Affirm, Loc.Get("ui.challenges.deals").ToUpperInvariant(),

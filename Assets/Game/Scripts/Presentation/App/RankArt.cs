@@ -19,7 +19,7 @@ namespace GlimmerGrove
     /// <b>An id this build has never heard of draws nothing at all, and that is the whole
     /// reason this file exists.</b> A badge address is built from a rung id (invariant 7c's
     /// shape, and <c>RankDefinition.Icon</c>), so an unknown id composes an address as happily
-    /// as a known one and hands <c>Art.S</c> a name with nothing behind it — which is a white
+    /// as a known one and hands <c>Art.S</c> a name with nothing behind it - which is a white
     /// rectangle where a badge should be (invariant 7b), on a hundred rows at once. That is
     /// not a hypothetical: a newer content pack can add a rung, and the server publishes what
     /// it derived rather than what any particular client ships. So the id is resolved through
@@ -29,14 +29,14 @@ namespace GlimmerGrove
     /// <b>Empty is the ordinary answer, not a fault.</b> Every account below the first rung
     /// publishes no rung at all, as does every card written before the server learned to derive
     /// one. Both arrive here as an empty string and both draw as an absent badge rather than as
-    /// a placeholder — a keeper who has not earned one has not earned one, and saying so with a
+    /// a placeholder - a keeper who has not earned one has not earned one, and saying so with a
     /// greyed picture of somebody else's badge would be a sentence the row does not mean.
     /// </para>
     /// </summary>
     public static class RankArt
     {
         /// <summary>
-        /// The rung an id names, or null when this build does not carry it — which covers an
+        /// The rung an id names, or null when this build does not carry it - which covers an
         /// empty id, an unknown one, and a build whose content has no ladder at all.
         /// </summary>
         public static RankDefinition Rung(string rungId)

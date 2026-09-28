@@ -13,7 +13,7 @@ namespace GlimmerGrove.Localization
     ///
     /// The cost of retrofitting localisation grows with the content: extracting three
     /// levels' worth of strings is free, extracting three hundred is a week. So the
-    /// rule holds from the first level — content stores keys, never sentences, and
+    /// rule holds from the first level - content stores keys, never sentences, and
     /// this resolves them.
     ///
     /// A missing key falls back to English, then to the key itself. It never returns

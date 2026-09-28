@@ -15,15 +15,17 @@ namespace GlimmerGrove.Cloud
     /// One cycle, always the same three steps: pull what the server has, join it with
     /// what this device has, push the result. Never "download and replace", never
     /// "upload and replace", and never a prompt asking the player which of their two
-    /// saves to delete — <see cref="SaveMerge"/> exists precisely so that question does
+    /// saves to delete - <see cref="SaveMerge"/> exists precisely so that question does
     /// not have to be asked.
     ///
     /// Nothing here is ever on the boot path. A sync runs in the background after the
-    /// splash and again when the app is backgrounded, and a failure is a logged warning
-    /// rather than anything the player sees. A puzzle game that will not start because
-    /// a server is unreachable has traded a real failure for an imaginary one.
+    /// splash, when the app comes back, and shortly after anything the device owes the
+    /// server; leaving the app is a departure rather than a sync (see
+    /// <c>CloudSaveService.Departure.cs</c>). A failure is a logged warning rather than
+    /// anything the player sees. A puzzle game that will not start because a server is
+    /// unreachable has traded a real failure for an imaginary one.
     /// </summary>
-    public static class CloudSaveService
+    public static partial class CloudSaveService
     {
         static ICloudSaveBackend _backend = new NullCloudBackend();
         static int _syncing;
@@ -32,7 +34,7 @@ namespace GlimmerGrove.Cloud
 
         /// <summary>
         /// When to ask the deployment what it requires of this build. Separate from
-        /// <see cref="_schedule"/> because the two answer opposite questions — that one is about
+        /// <see cref="_schedule"/> because the two answer opposite questions - that one is about
         /// work this device owes the server and backs off when the server is failing, this one
         /// is about a fact the device needs and asks <em>more</em> often when it has not got it.
         /// </summary>
@@ -42,14 +44,14 @@ namespace GlimmerGrove.Cloud
         public static event Action Synced;
 
         /// <summary>
-        /// Raised by a sync that has left the server holding the save it carries — and by
+        /// Raised by a sync that has left the server holding the save it carries - and by
         /// nothing else.
         ///
         /// <para>
         /// <see cref="Synced"/> is the broad "the account or the save moved" signal, and it is
         /// also raised by a switch, a link, a purchase and a deletion, none of which pushed
-        /// anything. Anything the server derives from the pushed document — the public card,
-        /// the name reservation — must hang on this one, because asking after
+        /// anything. Anything the server derives from the pushed document - the public card,
+        /// the name reservation - must hang on this one, because asking after
         /// <see cref="Synced"/> was how the card came to be built from last session's save
         /// for the life of the account. The receipt says which save, and which revision the
         /// server will report having read; see <see cref="SyncReceipt"/>.
@@ -58,15 +60,15 @@ namespace GlimmerGrove.Cloud
         public static event Action<SyncReceipt> Settled;
 
         /// <summary>
-        /// Raised by a sync whose merge brought this device something it did not have — a
-        /// glade cleared on another phone, a purchase made there, a name chosen there — and by
+        /// Raised by a sync whose merge brought this device something it did not have - a
+        /// glade cleared on another phone, a purchase made there, a name chosen there - and by
         /// nothing else. The delta says what moved, read the way <see cref="SaveDelta"/> reads a
         /// push: the level ids whose record changed, and whether anything outside the ledger did.
         ///
         /// <para>
-        /// <see cref="Synced"/> cannot carry this, because it is raised by every sync — including
+        /// <see cref="Synced"/> cannot carry this, because it is raised by every sync - including
         /// the overwhelmingly common one, on every foreground, that brings back exactly what the
-        /// device already holds — and every ledger raises <c>Changed</c> on every adopt for the
+        /// device already holds - and every ledger raises <c>Changed</c> on every adopt for the
         /// same reason. A screen drawn from the save and redrawn on either of those redraws
         /// itself for nothing every time the app comes back (invariant 44m). What a screen wants
         /// to know is whether the save under it is now different from the one it was drawn from,
@@ -85,14 +87,14 @@ namespace GlimmerGrove.Cloud
 
         /// <summary>
         /// Raised when <em>which</em> account this device is, or <em>how</em> it is signed in,
-        /// has changed — a silent anonymous sign-in, a provider linked, an account switched, a
+        /// has changed - a silent anonymous sign-in, a provider linked, an account switched, a
         /// mismatch opening or closing.
         ///
         /// <para>
         /// This exists because every screen that says something about the account samples
         /// <see cref="IsLinked"/> once, in <c>Build</c>, and nothing used to tell any of them
-        /// when that answer moved. The panel that changes it has several exits — two providers,
-        /// a corner cross, the scrim, the back key — so a callback from the panel fires from
+        /// when that answer moved. The panel that changes it has several exits - two providers,
+        /// a corner cross, the scrim, the back key - so a callback from the panel fires from
         /// some of them and not others, which is exactly the bug the companion screens hit when
         /// a purchase reported only through the "wear" button. An event cannot be forgotten.
         /// </para>
@@ -108,7 +110,7 @@ namespace GlimmerGrove.Cloud
         public static bool IsSyncing => Volatile.Read(ref _syncing) != 0;
 
         /// <summary>
-        /// True only once a permanent provider is attached — never for an anonymous
+        /// True only once a permanent provider is attached - never for an anonymous
         /// account, however well it is syncing.
         ///
         /// Worth stating because the mistake is easy and the consequence is not: an
@@ -122,7 +124,7 @@ namespace GlimmerGrove.Cloud
         /// What the account this device is signed in as is called, empty if it has no name.
         ///
         /// <para>
-        /// For display only — see <see cref="CloudIdentity.Label"/>. It is what makes switching
+        /// For display only - see <see cref="CloudIdentity.Label"/>. It is what makes switching
         /// between two of one person's own accounts a thing they can be sure they did: without
         /// it, both sides of the switch say "your progress is saved online" and neither says
         /// which grove is on the phone.
@@ -136,7 +138,7 @@ namespace GlimmerGrove.Cloud
         /// True while this device is authenticated as one account and holding another's save.
         ///
         /// <para>
-        /// Nothing syncs in this state and nothing may — see <see cref="AccountGate"/> — so it
+        /// Nothing syncs in this state and nothing may - see <see cref="AccountGate"/> - so it
         /// has to be visible rather than logged. A player here is signed in, so every screen
         /// that reads <see cref="IsLinked"/> would otherwise tell them their grove is backed
         /// up while it is not being backed up at all, which is the one lie this game's account
@@ -158,10 +160,10 @@ namespace GlimmerGrove.Cloud
         /// </para>
         /// <para>
         /// Cleared glades are the headline, and the purchased sets are here because they are
-        /// the parts that are <em>not</em> recoverable by playing again — everything else in
+        /// the parts that are <em>not</em> recoverable by playing again - everything else in
         /// the save is derived from the star ledger and comes back with it. The turret line and
         /// the heart containers are the two that cost something a player would mind: gems and
-        /// real money. The grove's sets are deliberately not asked — the Grovement is held and
+        /// real money. The grove's sets are deliberately not asked - the Grovement is held and
         /// nothing about an account is decided by it any more.
         /// </para>
         /// <para>
@@ -189,7 +191,7 @@ namespace GlimmerGrove.Cloud
         /// session and one set of credentials, so a second backend would be a second thing to
         /// authenticate and a second dark path to keep working in a build with no Firebase.
         /// The boards are a separate <em>service</em> because they must never sit on the
-        /// critical path of a sync — see <c>GroveBoard</c> — but they are not a separate
+        /// critical path of a sync - see <c>GroveBoard</c> - but they are not a separate
         /// connection.
         /// </para>
         /// </summary>
@@ -198,7 +200,7 @@ namespace GlimmerGrove.Cloud
         // ------------------------------------------------------------ the latch
         /// <summary>
         /// Claims the sync latch. Held by a sync, and equally by anything that changes
-        /// <em>which account this device is</em> — linking a provider, or adopting the
+        /// <em>which account this device is</em> - linking a provider, or adopting the
         /// account one already belongs to.
         ///
         /// <para>
@@ -208,7 +210,7 @@ namespace GlimmerGrove.Cloud
         /// so <c>Boot.Pump.OnApplicationPause</c> fires <see cref="BeginSync"/> at the
         /// exact moment the sign-in completes and <see cref="CloudState"/> is being
         /// rewritten. The sync then addresses one account holding the other's
-        /// credentials, and the rules refuse it — <i>both</i> directions, since
+        /// credentials, and the rules refuse it - <i>both</i> directions, since
         /// <c>isOwner(uid)</c> gates reads too.
         /// </para>
         ///
@@ -216,19 +218,20 @@ namespace GlimmerGrove.Cloud
         /// Observed live on 2026-08-13: a burst of PERMISSION_DENIED on every pull and
         /// push immediately after adopting an account, clearing itself once the racing
         /// cycle finished. Nothing was lost, because the identity change had already
-        /// committed and the next clean sync agreed with it — but it logged at error
+        /// committed and the next clean sync agreed with it - but it logged at error
         /// level, which this file reserves for a write the client believed was valid.
         /// </para>
         /// </summary>
-        static bool TryClaim() => Interlocked.CompareExchange(ref _syncing, 1, 0) == 0;
+        static bool TryClaim(int holder = LatchSync)
+            => Interlocked.CompareExchange(ref _syncing, holder, LatchFree) == LatchFree;
 
-        static void Release() => Volatile.Write(ref _syncing, 0);
+        static void Release() => Volatile.Write(ref _syncing, LatchFree);
 
         /// <summary>
         /// Waits for the latch rather than refusing the moment it is busy.
         ///
         /// A sync starts every time the app is foregrounded, which is precisely when a
-        /// player opens the account screen and taps a provider — so failing fast here
+        /// player opens the account screen and taps a provider - so failing fast here
         /// would turn "a background sync happened to be in flight" into "something went
         /// wrong", which is the exact failure this whole change set exists to remove. A
         /// cycle is one pull and one push, so the wait is short and the alternative is
@@ -242,11 +245,11 @@ namespace GlimmerGrove.Cloud
 
             for (int waited = 0; waited < TimeoutMs; waited += PollMs)
             {
-                if (TryClaim()) return true;
+                if (TryClaim(LatchIdentity)) return true;
                 await Task.Delay(PollMs, cancellation);
             }
 
-            return TryClaim();
+            return TryClaim(LatchIdentity);
         }
 
         // ---------------------------------------------------------------- sync
@@ -265,10 +268,10 @@ namespace GlimmerGrove.Cloud
         /// Asks for the server to be brought up to date shortly, rather than now.
         ///
         /// <para>
-        /// For changes a player makes deliberately and expects to keep — their name,
-        /// their companion. Everything else rides the next background sync, which is
-        /// right for progress that will change again in a minute anyway and wrong for a
-        /// choice made once. Debounced, so a burst is one write, and retried with a
+        /// For changes a player makes deliberately and expects to keep - a purchase, a
+        /// claim, a finished run, their name. Everything else the device owes is asked for
+        /// with <see cref="RequestSyncEventually"/>, which is right for progress that will
+        /// change again in a minute anyway. Debounced, so a burst is one write, and retried with a
         /// backoff, so making the change on a train still reaches the server when the
         /// train leaves the tunnel. See <see cref="SyncScheduler"/>.
         /// </para>
@@ -298,14 +301,14 @@ namespace GlimmerGrove.Cloud
 
         /// <summary>
         /// Drives the scheduler. Called every frame by <c>Boot.Pump</c>, which is also
-        /// where connectivity is read — <c>Application.internetReachability</c> is a
+        /// where connectivity is read - <c>Application.internetReachability</c> is a
         /// Presentation-side concern, and the policy is deliberately testable without it.
         ///
         /// <para>
         /// <paramref name="deltaSeconds"/> is elapsed time handed in a frame at a time,
         /// never two readings of a wall clock, for the reason <c>RunScreen.Tick</c> gives: the
-        /// device's clock can jump — a timezone, an NTP correction, a player winding it
-        /// forward for a daily chest — and a retry timer driven by one would either fire
+        /// device's clock can jump - a timezone, an NTP correction, a player winding it
+        /// forward for a daily chest - and a retry timer driven by one would either fire
         /// in a storm or never fire again.
         /// </para>
         /// </summary>
@@ -325,7 +328,7 @@ namespace GlimmerGrove.Cloud
             Social.GroveBoard.Tick(deltaSeconds, networkReachable);
 
             // And the deployment's own word on whether this build may still be played. Here for
-            // the boards' reason — one clock, one wiring point — and deliberately *after* the
+            // the boards' reason - one clock, one wiring point - and deliberately *after* the
             // availability guard: with no backend there is nothing to ask, and the gate holding
             // whatever it already holds is the correct behaviour rather than a degraded one.
             // Best-effort like everything else on this line; a read that never lands leaves a
@@ -351,7 +354,7 @@ namespace GlimmerGrove.Cloud
         ///
         /// <para>
         /// Every operation that moves the account calls <c>NoteIdentity</c> directly, so this
-        /// poll is not what makes the feature work — it is what makes it impossible to break.
+        /// poll is not what makes the feature work - it is what makes it impossible to break.
         /// The SDK can also change identity without being asked (a token refresh that fails, a
         /// provider revoked on the device, a restore), and this file has recorded twice now
         /// that a step somebody has to remember at a new call site is a step that gets
@@ -376,8 +379,8 @@ namespace GlimmerGrove.Cloud
         ///
         /// <para>
         /// The first sample is recorded silently. There is nothing meaningful to announce about
-        /// the state the game booted in — anything built after it reads the current values in
-        /// its own <c>Build</c> — and raising there would fire the event before <c>Boot</c> has
+        /// the state the game booted in - anything built after it reads the current values in
+        /// its own <c>Build</c> - and raising there would fire the event before <c>Boot</c> has
         /// finished wiring, at the one moment a subscriber is most likely to be half-built.
         /// </para>
         /// </summary>
@@ -419,19 +422,15 @@ namespace GlimmerGrove.Cloud
 
         /// <summary>
         /// Clears any backoff, because something has happened that plausibly fixes
-        /// whatever the last failure was — the app being foregrounded, or an account
+        /// whatever the last failure was - the app being foregrounded, or an account
         /// being linked. Does not itself ask for a sync; the caller is about to.
         /// </summary>
         public static void ResetBackoff() => _schedule.Settled();
 
         static async Task RunScheduledSyncAsync()
         {
-            var result = await SyncAsync();
-
-            // The sync holding the latch may have taken its snapshot before the change
-            // this attempt was about, so the work is still owed and is asked for again.
-            // That sync reports its own outcome, which is what clears the in-flight mark.
-            if (result.Failure == CloudFailure.Busy) _schedule.Request();
+            // A Busy answer is asked for again inside SyncAsync, for every caller.
+            await SyncAsync();
         }
 
         /// <summary>
@@ -439,7 +438,7 @@ namespace GlimmerGrove.Cloud
         ///
         /// <para>
         /// Separate from the sync and deliberately so. It needs no sign-in, it writes
-        /// nothing, it touches no save file, and nothing anywhere waits on it — the worst
+        /// nothing, it touches no save file, and nothing anywhere waits on it - the worst
         /// case of it never completing is one sentence not appearing on a victory panel.
         /// Folding it into <see cref="SyncAsync"/> would put a read nobody needs on the
         /// critical path of the one operation a player's progress depends on.
@@ -475,7 +474,7 @@ namespace GlimmerGrove.Cloud
         /// Started from the splash beside <see cref="BeginStatsRefresh"/>, for exactly its
         /// reason and with exactly its ordering: <b>nothing between tapping the icon and playing
         /// is allowed to wait on a network</b>. A device that has been told before enforces what
-        /// it was told from the frame the hub draws, with no round trip at all — which is what
+        /// it was told from the frame the hub draws, with no round trip at all - which is what
         /// makes the launch path unchanged and the wall instant for everybody it has ever been
         /// applied to. Only a first launch on a stale build sees the hub for a moment first, and
         /// there is no honest way to avoid that without putting a network call in front of every
@@ -501,7 +500,7 @@ namespace GlimmerGrove.Cloud
         /// The two moments this exists for are opposite and both matter. A device that launched
         /// with no signal has never been told anything, and coming back is often the first
         /// moment it can be. A device that is <em>already</em> walled out has been sent to a
-        /// store and is coming back from it — either updated, in which case this is a fresh
+        /// store and is coming back from it - either updated, in which case this is a fresh
         /// process and none of this runs, or not, in which case the wall is still standing and
         /// still correct.
         /// </para>
@@ -509,7 +508,7 @@ namespace GlimmerGrove.Cloud
         public static void ReleaseResumed() => _release.Resumed();
 
         /// <summary>
-        /// Reads the requirement and hands it to <see cref="Release.ReleaseGate"/> — but only
+        /// Reads the requirement and hands it to <see cref="Release.ReleaseGate"/> - but only
         /// when the read actually succeeded.
         ///
         /// <para>
@@ -521,7 +520,7 @@ namespace GlimmerGrove.Cloud
         /// </para>
         /// <para>
         /// The cadence afterwards is short while a wall is up, because that is the state a
-        /// rolled-back requirement has to reach — see <c>ReleaseWatch.RetrySeconds</c>.
+        /// rolled-back requirement has to reach - see <c>ReleaseWatch.RetrySeconds</c>.
         /// </para>
         /// </summary>
         public static async Task<CloudResult> RefreshReleaseAsync(CancellationToken cancellation = default)
@@ -568,12 +567,19 @@ namespace GlimmerGrove.Cloud
             var result = await RunOnceAsync(cancellation);
 
             // Every sync feeds the scheduler, however it was started. A failure is exactly
-            // what the retry exists for — the sync fired when the app was backgrounded is
+            // what the retry exists for - the sync fired when the app was backgrounded is
             // the one most likely to be interrupted, and before this nothing ever tried it
-            // again — and a success is the only thing that clears a backoff. Contention is
+            // again - and a success is the only thing that clears a backoff. Contention is
             // neither, and is the one outcome that must not be counted.
             if (result.Ok) _schedule.Succeeded();
             else if (result.Failure != CloudFailure.Busy) _schedule.Failed();
+
+            // Contention is not a failure, but the work it turned away is still owed: the sync
+            // or departure holding the way may have taken its snapshot before the change this
+            // attempt was about. Asked for again whoever started this one - the foreground's
+            // sync used to be dropped here outright, which is harmless only while nothing else
+            // can be out when the app comes back.
+            else _schedule.Request();
 
             return result;
         }
@@ -584,7 +590,7 @@ namespace GlimmerGrove.Cloud
         /// refuses everything if they do not.
         ///
         /// <para>
-        /// The decision is <see cref="AccountGate.Decide"/> — a pure function, tested offline,
+        /// The decision is <see cref="AccountGate.Decide"/> - a pure function, tested offline,
         /// deliberately not inlined here. What this adds is only the plumbing: which call to
         /// make for each verdict, and the rule that the answer is re-decided against whatever
         /// that call returns rather than assumed.
@@ -592,7 +598,7 @@ namespace GlimmerGrove.Cloud
         /// <para>
         /// Note which sign-in is used where. A save that names nobody may
         /// <see cref="ICloudSaveBackend.SignInAsync"/>, which will create an anonymous account
-        /// — that is a first launch, and it is the only moment in the life of an account when
+        /// - that is a first launch, and it is the only moment in the life of an account when
         /// creating one is right. A save that already names somebody may only
         /// <see cref="ICloudSaveBackend.ResumeAsync"/>, which creates nobody. The two used to
         /// be one call, and the difference is a player's grove.
@@ -620,8 +626,8 @@ namespace GlimmerGrove.Cloud
                                            : await _backend.SignInAsync(cancellation);
             if (!result.Ok) return result;
 
-            // An empty answer from Resume is not a failure of the call — the SDK is up and
-            // nobody is signed in — but it is a refusal of this sync, because the account the
+            // An empty answer from Resume is not a failure of the call - the SDK is up and
+            // nobody is signed in - but it is a refusal of this sync, because the account the
             // save belongs to is not available to push to. Retryable, and the account screen's
             // provider buttons are the way a player fixes it deliberately.
             if (!identity.IsValid)
@@ -656,7 +662,7 @@ namespace GlimmerGrove.Cloud
         /// <b>Forward is the only direction this can be finished in, and that is a fact about
         /// how the two sides are written rather than a preference.</b> Firebase persists its
         /// signed-in user the moment it signs in, and this device only ever becomes a different
-        /// account because somebody tapped a provider and chose one — there is no other way for
+        /// account because somebody tapped a provider and chose one - there is no other way for
         /// the session to move. So a disagreement means the authentication got further than the
         /// file did: a process death, a crash, or a write that failed between the two. Carrying
         /// on to the account the player actually chose is what they asked for, and it costs
@@ -676,7 +682,7 @@ namespace GlimmerGrove.Cloud
         /// <paramref name="repair"/> is false on exactly one path, and it is the money one. A
         /// store receipt is redeemed against whichever account is authorised, so repairing
         /// first would move a purchase made under one account onto another that happened to be
-        /// signed in — a window that is only a few seconds wide and is a support case with a
+        /// signed in - a window that is only a few seconds wide and is a support case with a
         /// proof of purchase attached when it opens. Refusing there costs nothing at all: both
         /// stores re-deliver an unfinished transaction for ever, and the next sync will have
         /// repaired the device long before the retry.
@@ -688,7 +694,7 @@ namespace GlimmerGrove.Cloud
 
             // Note what is deliberately not here: RunGuard.Resolve. A switch clears the
             // in-flight run marker because the run belongs to the player who was playing it,
-            // and this path can only be reached by a switch that died before it finished — so
+            // and this path can only be reached by a switch that died before it finished - so
             // the marker is from the previous session and Boot.Claim has already charged and
             // cleared it, before anything could ask for a sync. Calling it here would take a
             // heart from whichever run happens to be open now.
@@ -718,8 +724,8 @@ namespace GlimmerGrove.Cloud
         ///
         /// <para>
         /// The latch is held by the caller, so this talks to the backend directly. It creates
-        /// no account — <see cref="ICloudSaveBackend.SignInWithCredentialAsync"/> resolves the
-        /// credential to whoever already owns that identity — which is what keeps invariant 17
+        /// no account - <see cref="ICloudSaveBackend.SignInWithCredentialAsync"/> resolves the
+        /// credential to whoever already owns that identity - which is what keeps invariant 17
         /// intact: no anonymous account is minted, no provider is attached to one, and no grove
         /// is re-owned. In the ordinary case the uid that comes back *is* the save's own and
         /// nothing on this device is touched at all.
@@ -727,7 +733,7 @@ namespace GlimmerGrove.Cloud
         /// <para>
         /// <b>A different uid is reported, never acted on.</b> It means the player signed in as
         /// somebody else, which is a switch away from a grove this device could not push (there
-        /// was no session to push it with) — so it lands in the ordinary mismatched state the
+        /// was no session to push it with) - so it lands in the ordinary mismatched state the
         /// account panel already knows how to offer a switch from, with the outgoing grove
         /// still on disk. Deciding it here would be this button quietly doing what the Switch
         /// button exists to ask about.
@@ -769,12 +775,17 @@ namespace GlimmerGrove.Cloud
             if (!IsAvailable) return CloudResult.Failed(CloudFailure.Offline, "no cloud backend");
             if (!SaveService.IsLoaded) return CloudResult.Failed(CloudFailure.Error, "save not loaded");
 
+            // A departure still on the wire from the last pause is this device's own push, and
+            // two of them racing is a revision refused for nothing. Busy, and asked for again.
+            if (IsDeparting)
+                return CloudResult.Failed(CloudFailure.Busy, "a departure is still out");
+
             if (!TryClaim())
                 return CloudResult.Failed(CloudFailure.Busy, "a sync is already running");
 
             // Anything asked for before this point is about to be sent, so the request is
-            // consumed here. One arriving after it — a rename made while the push is in
-            // flight — survives, because it is a fresh request against a snapshot that
+            // consumed here. One arriving after it - a rename made while the push is in
+            // flight - survives, because it is a fresh request against a snapshot that
             // never contained it.
             _schedule.Started();
 
@@ -811,7 +822,7 @@ namespace GlimmerGrove.Cloud
             // Every failure stops the sync, and a refused read most of all. This line used to
             // let a `Rejected` pull through as "nothing on the server", which turned the push
             // below into a full overwrite of whatever the server held with whatever this
-            // device held — on a fresh install, an empty grove over a full one. A missing
+            // device held - on a fresh install, an empty grove over a full one. A missing
             // document is not a failure (the backend answers success with no snapshot), so
             // there is no honest reason left for a failed read to be treated as one.
             var (pull, snapshot) = await _backend.PullAsync(userId, cancellation);
@@ -829,7 +840,7 @@ namespace GlimmerGrove.Cloud
                 remote = snapshot.Save;
                 merged = SaveMerge.Join(local, remote);
 
-                // What the other device knew and this one did not — measured against the local
+                // What the other device knew and this one did not - measured against the local
                 // file before it is replaced. The delta below is the same reading taken the other
                 // way round, about the server; this one is about the device, and it is the only
                 // moment either can be taken.
@@ -840,7 +851,7 @@ namespace GlimmerGrove.Cloud
                 SaveService.Adopt(merged);
                 PlayerProgression.Invalidate();
 
-                // And say so, before the push for the same reason — what was learned is on the
+                // And say so, before the push for the same reason - what was learned is on the
                 // device now whatever the network does next.
                 if (!learned.IsEmpty) Raise(Learned, learned);
             }
@@ -853,11 +864,12 @@ namespace GlimmerGrove.Cloud
                 // and a chunk of the player's data to say nothing, and backgrounding the
                 // app is by far the most common moment a sync runs.
                 await ReconcileWalletAsync(userId, cancellation);
+                Agree(userId, merged);
                 CloudState.MarkSynced(SaveSchema.NowUnix());
                 SaveService.Flush();
                 Raise(Synced);
 
-                // The document is the remote one, so its revision is the remote's — the join
+                // The document is the remote one, so its revision is the remote's - the join
                 // above gave `merged` one higher, and a publish proved against that would be
                 // refused by a server that has done nothing wrong.
                 Raise(Settled, new SyncReceipt(merged, remote?.cloud?.revision ?? 0L, pushed: false));
@@ -868,6 +880,7 @@ namespace GlimmerGrove.Cloud
             if (!push.Ok) return push;
 
             await ReconcileWalletAsync(userId, cancellation);
+            Agree(userId, merged);
 
             CloudState.MarkSynced(SaveSchema.NowUnix());
             SaveService.Flush();
@@ -883,7 +896,7 @@ namespace GlimmerGrove.Cloud
         ///
         /// Worth offering after a chapter is cleared rather than on first launch. An
         /// anonymous account lives and dies with the installation, so a player who
-        /// reinstalls before linking loses everything they had — and a player asked to
+        /// reinstalls before linking loses everything they had - and a player asked to
         /// sign in before they have played anything mostly declines, which leaves them
         /// exposed to exactly that.
         ///
@@ -908,7 +921,7 @@ namespace GlimmerGrove.Cloud
                 // if the session has gone. On a save that already names an account that is
                 // the leak this file exists to prevent, wearing a friendly name: the grove
                 // would be re-owned by the new account and pushed into it on the next sync.
-                // It is reachable — a linked player whose session is lost reads as a guest
+                // It is reachable - a linked player whose session is lost reads as a guest
                 // (IsLinked asks the SDK, which has nobody), so the panel offers exactly
                 // this button.
                 //
@@ -918,13 +931,13 @@ namespace GlimmerGrove.Cloud
                 // first means the junk account is never created and the provider is never
                 // moved. AccountGate's answer for (owned save, no session) is Resume, which
                 // creates nobody and reports honestly, and the player's route back is the
-                // account panel — which is where they already are.
+                // account panel - which is where they already are.
                 var authorised = await AuthoriseAsync(cancellation);
 
                 // The one refusal above that a player cannot act on, and the one this button
                 // is supposed to be the answer to.
                 //
-                // A save that names an account may only Resume, which creates nobody — so a
+                // A save that names an account may only Resume, which creates nobody - so a
                 // device whose Firebase session has gone (a reinstall, cleared app data, a
                 // revoked token) is refused `Unauthenticated` for ever: every sync stops, every
                 // board read is denied by the security rules because there is no `request.auth`
@@ -938,7 +951,7 @@ namespace GlimmerGrove.Cloud
                 // resolves the credential to whichever account already owns that identity, so
                 // the ordinary case lands back on the uid the save already names and the
                 // session is simply restored. A different uid is a genuine disagreement and is
-                // reported as one rather than resolved here — the grove on this device was
+                // reported as one rather than resolved here - the grove on this device was
                 // never pushed, so a swap is not this button's decision to make.
                 if (!authorised.Ok)
                 {
@@ -956,8 +969,8 @@ namespace GlimmerGrove.Cloud
                 if (result.Failure == CloudFailure.AlreadyLinkedElsewhere) return result;
                 if (!result.Ok) return result;
 
-                // Linking keeps the uid — that is the entire difference between linking and
-                // signing in — so this agrees with the save in every case that is working
+                // Linking keeps the uid - that is the entire difference between linking and
+                // signing in - so this agrees with the save in every case that is working
                 // properly, and CloudState.SignIn is a no-op. It is checked anyway because
                 // the one case where it would not agree is the one that costs a grove, and
                 // a belt here is one line.
@@ -977,8 +990,8 @@ namespace GlimmerGrove.Cloud
             }
 
             // Released first: SyncAsync claims the latch itself, and by this point the
-            // identity has settled, so a sync arriving now — including the one the
-            // consent screen's foreground fires — sees a consistent account.
+            // identity has settled, so a sync arriving now - including the one the
+            // consent screen's foreground fires - sees a consistent account.
             await SyncAsync(cancellation);
             return CloudResult.Success;
         }
@@ -989,8 +1002,8 @@ namespace GlimmerGrove.Cloud
         /// <para>
         /// <b>The one thing this does that adopting does not is the first thing it does:</b> it
         /// pushes the outgoing grove to the server and refuses to go any further if that push
-        /// does not land. A switch is a reversible act — the player signs back in and their
-        /// grove is there — and it is only reversible because of that step. Without it, "switch
+        /// does not land. A switch is a reversible act - the player signs back in and their
+        /// grove is there - and it is only reversible because of that step. Without it, "switch
         /// account" is "discard whatever this device has played since its last sync", which is
         /// a very different button wearing the same word.
         /// </para>
@@ -1007,7 +1020,7 @@ namespace GlimmerGrove.Cloud
         /// <para>
         /// <b>Switching back is free.</b> The grove being left is archived on this device as
         /// well as pushed, so returning to it later restores from disk and needs no network at
-        /// all — which is what makes moving between two accounts an ordinary thing to do rather
+        /// all - which is what makes moving between two accounts an ordinary thing to do rather
         /// than a download each way.
         /// </para>
         /// </summary>
@@ -1024,7 +1037,7 @@ namespace GlimmerGrove.Cloud
         ///
         /// <para>
         /// The local save is replaced rather than merged, and that is deliberate. Merging
-        /// the two would look generous — the glades really were cleared by this person —
+        /// the two would look generous - the glades really were cleared by this person -
         /// but the wallets cannot come with it: currency was granted and spent separately
         /// against each account, and folding one device's unconfirmed debits into the
         /// other's balance charges a player for something they already paid for. Merging
@@ -1038,13 +1051,13 @@ namespace GlimmerGrove.Cloud
         /// is not an oversight. The account being left here is an anonymous one; pushing its
         /// grove would file it under a uid that is about to become unreachable for ever, which
         /// costs a round trip to achieve nothing. The player was told what it costs and said
-        /// yes — that is the whole difference between this and a switch.
+        /// yes - that is the whole difference between this and a switch.
         /// </para>
         /// <para>
         /// It is still archived locally, because that is free and the alternative is deleting
         /// something on a player's own device to save a few hundred kilobytes. Nothing offers
-        /// a way back to it — an anonymous account cannot be signed into again once the session
-        /// has moved — so the copy is a courtesy for a support case, never a promise, and the
+        /// a way back to it - an anonymous account cannot be signed into again once the session
+        /// has moved - so the copy is a courtesy for a support case, never a promise, and the
         /// panel says as much before the second tap.
         /// </para>
         /// </summary>
@@ -1057,7 +1070,7 @@ namespace GlimmerGrove.Cloud
         ///
         /// <para>
         /// <see cref="SyncAsync"/> answers <see cref="CloudFailure.Busy"/> the instant the latch
-        /// is held, which is right for a background sync — a second one has nothing to add —
+        /// is held, which is right for a background sync - a second one has nothing to add -
         /// and wrong for both of the syncs a switch runs, because there it becomes a sentence
         /// on screen. The securing one would say "we could not save your grove" about a grove
         /// that is being saved right now; the catch-up one would say "your grove will load once
@@ -1066,7 +1079,7 @@ namespace GlimmerGrove.Cloud
         /// </para>
         /// <para>
         /// It is <see cref="ClaimAsync"/>'s reasoning applied one level up, and the same budget.
-        /// Only contention is retried — a real failure is reported at once, because waiting out
+        /// Only contention is retried - a real failure is reported at once, because waiting out
         /// ten seconds to repeat an answer already known is worse than giving it.
         /// </para>
         /// </summary>
@@ -1088,7 +1101,7 @@ namespace GlimmerGrove.Cloud
 
         /// <summary>
         /// Which of the two reasons a device has for becoming a different account. They differ
-        /// in exactly one thing — whether the outgoing grove is pushed to the server first —
+        /// in exactly one thing - whether the outgoing grove is pushed to the server first -
         /// which is the decision worth naming rather than passing as a bare flag.
         /// </summary>
         enum BecomeMode
@@ -1104,14 +1117,14 @@ namespace GlimmerGrove.Cloud
         /// Becomes the account a credential names.
         ///
         /// <para>
-        /// One method for both routes in, because they differ in exactly one decision — whether
-        /// the outgoing grove is pushed to the server first — and everything after that
+        /// One method for both routes in, because they differ in exactly one decision - whether
+        /// the outgoing grove is pushed to the server first - and everything after that
         /// decision is the part where a mistake loses somebody's account. Two copies of it
         /// would be two chances to get the order below wrong.
         /// </para>
         /// <para>
         /// <b>The order is the design: secure, authenticate, swap, catch up.</b> It used to be
-        /// secure, authenticate, <em>fetch</em>, replace — and the fetch is what made the
+        /// secure, authenticate, <em>fetch</em>, replace - and the fetch is what made the
         /// switch breakable. Reading the incoming grove over the network was the step that
         /// decided whether the switch happened at all, and it ran in the frame after an OAuth
         /// browser handed control back: the process has just been foregrounded, the database
@@ -1120,9 +1133,9 @@ namespace GlimmerGrove.Cloud
         /// its owner so in a sentence nobody could act on.
         /// </para>
         /// <para>
-        /// The swap is local now (<see cref="SaveService.SwitchTo"/>) — the outgoing grove is
+        /// The swap is local now (<see cref="SaveService.SwitchTo"/>) - the outgoing grove is
         /// archived under its own account and the incoming one restored from this device if it
-        /// has been played here before — so once the credential is in hand the switch is
+        /// has been played here before - so once the credential is in hand the switch is
         /// finished and cannot stop halfway. The server is asked afterwards, by an ordinary
         /// sync, which pulls and joins exactly as it does on any launch and retries on a
         /// backoff if it cannot. Its failure no longer undoes anything; it only decides which
@@ -1147,7 +1160,7 @@ namespace GlimmerGrove.Cloud
             // ------------------------------------------------------------------- secure
             // Kept, and it is now the only step that can refuse a switch. The grove is archived
             // on this device a moment later either way, so this is not what stops it being lost
-            // here — it is what keeps the promise the button makes about *another* device: sign
+            // here - it is what keeps the promise the button makes about *another* device: sign
             // in over there and it is waiting. A phone that switches away offline and is then
             // reinstalled would have nothing to fetch, which is the one loss left, and one
             // round trip is a cheap way to make it unreachable.
@@ -1196,7 +1209,7 @@ namespace GlimmerGrove.Cloud
                 // The published card, the cached boards and the fingerprint that says what is
                 // already on the board all belong to the outgoing account. Kept, the incoming
                 // player's grove would look already-published and never reach the board at
-                // all — invariant 17's discipline applied to a cache.
+                // all - invariant 17's discipline applied to a cache.
                 Social.GroveBoard.Forget();
 
                 // outgoingIsSafe, and both modes earn it differently. A switch got here only
@@ -1227,8 +1240,8 @@ namespace GlimmerGrove.Cloud
 
             // ----------------------------------------------------------------- catch up
             // Not housekeeping and not the switch either. It creates the document for an
-            // account that has never played, reconciles the wallet for one that has, and —
-            // when this device has no archive of theirs — is where their grove actually
+            // account that has never played, reconciles the wallet for one that has, and -
+            // when this device has no archive of theirs - is where their grove actually
             // arrives. Its failure does not undo anything: the account has changed, the
             // previous grove is archived here and on the server, and the scheduler retries.
             var sync = await SyncPatientlyAsync(cancellation);
@@ -1250,7 +1263,7 @@ namespace GlimmerGrove.Cloud
         /// Brings the local wallet in line with the server's.
         ///
         /// Two halves, and both run every sync. Pending debits are offered up for
-        /// confirmation — resubmitting one the server has already seen is harmless and
+        /// confirmation - resubmitting one the server has already seen is harmless and
         /// expected, which is exactly what the idempotency key buys and why this needs
         /// no memory of what it has sent. Then the balances are read back, because a
         /// purchase made on another device has to arrive here even when this one has
@@ -1263,7 +1276,7 @@ namespace GlimmerGrove.Cloud
             // Awards first, debits second. A daily chest opened offline should be able to
             // pay for the spend that followed it, and submitting them the other way round
             // would present the server with a debit against a balance it has not yet
-            // credited — refused, and then retried forever.
+            // credited - refused, and then retried forever.
             var awards = new List<GrantEntryDto>();
             foreach (var ledger in Wallet.Ledgers)
                 foreach (var entry in ledger.PendingGrants)
@@ -1279,8 +1292,8 @@ namespace GlimmerGrove.Cloud
                 }
             }
 
-            // Each debit is sent with its ledger's currency. The record itself carries none —
-            // a ledger holds one currency — and the server prices by it, so a gem debit sent
+            // Each debit is sent with its ledger's currency. The record itself carries none -
+            // a ledger holds one currency - and the server prices by it, so a gem debit sent
             // under another name is either refused (a pass) or taken from the wrong balance.
             var pending = new List<SpendSubmission>();
             foreach (var ledger in Wallet.Ledgers)
@@ -1328,7 +1341,7 @@ namespace GlimmerGrove.Cloud
             // The same gate as a sync, and if anything it matters more here: this is the one
             // call that turns real money into currency, and crediting it to whichever account
             // happened to be signed in is a support case with a receipt attached. Hence
-            // repair: false — a sync in this state completes the account change the player
+            // repair: false - a sync in this state completes the account change the player
             // asked for, which is right for progress and wrong for a payment made under the
             // account being left. Refusing costs nothing: both stores re-deliver an unfinished
             // transaction for ever, and by the retry the device has repaired itself.
@@ -1349,7 +1362,7 @@ namespace GlimmerGrove.Cloud
 
         /// <summary>
         /// The same gate a purchase redemption passes before it is allowed to move money,
-        /// for a call outside this class that pays into the ledgers — a referral chest,
+        /// for a call outside this class that pays into the ledgers - a referral chest,
         /// which the server pays on request (invariant 51). <c>repair: false</c> for
         /// <see cref="RedeemPurchaseAsync"/>'s reason: a device caught between two accounts
         /// must not have another account's balances adopted into this one's ledgers.
@@ -1389,7 +1402,7 @@ namespace GlimmerGrove.Cloud
                     state.RejectedGrantIds,
                     state.RejectedSpendIds);
 
-                // Refunded heart containers. Applied from whichever rows carry them — the
+                // Refunded heart containers. Applied from whichever rows carry them - the
                 // list is an account fact repeated per currency row, and the ledger's own
                 // union makes applying it several times the same as applying it once.
                 //
@@ -1399,7 +1412,7 @@ namespace GlimmerGrove.Cloud
                 // and a permanent upgrade that outlived its refund would be exactly that.
                 HeartContainerLedger.ApplyServerRevocations(state.RevokedContainers);
 
-                // Where the bonus wheel has got to. Applied from whichever rows carry it — the
+                // Where the bonus wheel has got to. Applied from whichever rows carry it - the
                 // position is an account fact repeated per currency row, and the stand only ever
                 // moves forward, so applying it several times is applying it once.
                 //
@@ -1426,7 +1439,7 @@ namespace GlimmerGrove.Cloud
 
         // ---------------------------------------------------------------- deleting
         /// <summary>
-        /// Deletes this device's account — on the server, and then on the device.
+        /// Deletes this device's account - on the server, and then on the device.
         ///
         /// <para>
         /// <b>Server first, device second, and never the other way round.</b> The local grove
@@ -1434,13 +1447,13 @@ namespace GlimmerGrove.Cloud
         /// refused call leaves a player with an empty phone and a full account, which is the
         /// one outcome here that is worse than the deletion failing. So nothing local is
         /// touched until the server has said the account is gone, and every failure this can
-        /// report is a failure that changed nothing at all — which is what
+        /// report is a failure that changed nothing at all - which is what
         /// <see cref="AccountDeletion.Untouched"/> promises the panel.
         /// </para>
         /// <para>
         /// <b>Under the sync latch for the whole of it.</b> A sync is pull → join → push, and
         /// one already in flight would push the grove back into a document this call is in the
-        /// middle of deleting — recreating <c>players/{uid}</c> seconds after it went, under a
+        /// middle of deleting - recreating <c>players/{uid}</c> seconds after it went, under a
         /// uid nothing can ever authenticate as again. That is the orphan the server's own
         /// ordering cannot prevent, because it is the client that causes it. Holding the latch
         /// across the erase and the swap closes it.
@@ -1449,14 +1462,14 @@ namespace GlimmerGrove.Cloud
         /// <b>What the device is left as.</b> A fresh anonymous account with an empty grove,
         /// minted by the backend as part of the call. Not "signed out": there is no sign-in
         /// screen in this game, so a device holding no account at all would be a state nothing
-        /// else in the codebase knows how to draw — see <c>AccountOverlay</c> on why there is
+        /// else in the codebase knows how to draw - see <c>AccountOverlay</c> on why there is
         /// deliberately no sign-out button. A player who deletes their account is not leaving
         /// the game, they are starting it again.
         /// </para>
         /// </summary>
         /// <param name="credential">
         /// The provider to re-authenticate against before deleting, for an account that has
-        /// one — see <see cref="AccountDeletion.Verdict.Reauthenticate"/>. Left invalid for a
+        /// one - see <see cref="AccountDeletion.Verdict.Reauthenticate"/>. Left invalid for a
         /// guest, who has no provider and must not be locked out of their own deletion for it.
         /// </param>
         public static async Task<DeleteResult> DeleteAccountAsync(
@@ -1470,8 +1483,8 @@ namespace GlimmerGrove.Cloud
                                            "save not loaded");
 
             // Read from the session rather than from the save, because the session is what the
-            // server will authenticate the call as. If the two disagree the backend refuses —
-            // it compares them itself — and that refusal is the right answer: a device caught
+            // server will authenticate the call as. If the two disagree the backend refuses -
+            // it compares them itself - and that refusal is the right answer: a device caught
             // between two accounts must not be allowed to guess which one to destroy.
             string doomed = _backend.CurrentIdentity.UserId;
             if (string.IsNullOrEmpty(doomed))
@@ -1485,8 +1498,8 @@ namespace GlimmerGrove.Cloud
             try
             {
                 // --------------------------------------------------------- prove it is them
-                // Inside the latch and before anything is removed. A refusal here — a closed
-                // sheet, the wrong account, no network — has cost nothing at all, which is
+                // Inside the latch and before anything is removed. A refusal here - a closed
+                // sheet, the wrong account, no network - has cost nothing at all, which is
                 // what lets every failure this method reports say "nothing has been deleted"
                 // and be telling the truth.
                 string appleCode = null;
@@ -1517,7 +1530,7 @@ namespace GlimmerGrove.Cloud
                 SaveService.EraseAccount(doomed);
 
                 // Whoever the backend signed this device in as while it was deleting. Empty
-                // only if that sign-in failed — a flat network at the wrong moment — in which
+                // only if that sign-in failed - a flat network at the wrong moment - in which
                 // case the save simply names nobody until the next launch picks an account up,
                 // which is precisely the state a first install is in.
                 string fresh = _backend.CurrentIdentity.UserId;

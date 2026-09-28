@@ -18,13 +18,13 @@ namespace GlimmerGrove
     /// three things this drop is: cream, it enriches; amber, it heightens and costs a row of
     /// headroom; red, it comes to rest on the brim and very probably ends the run. If it would
     /// light a mote all the way to white the ghost pulses. That preview is the whole reason this
-    /// verb works where tapping a cell did not — and it stops at the <em>spark</em>. How far the
+    /// verb works where tapping a cell did not - and it stops at the <em>spark</em>. How far the
     /// chain runs is never previewed, because that is the thinking.
     /// </para>
     /// <para>
     /// <b>The board says what it knows.</b> A mote one channel from white wears a halo in the
     /// colour it is waiting for, so the well reads as a landscape of things that are nearly
-    /// ready rather than as a grid of dots — and the brim band reddens as the stack climbs into
+    /// ready rather than as a grid of dots - and the brim band reddens as the stack climbs into
     /// it. Both are facts a careful player could work out by squinting; drawing them is what
     /// makes the mode legible in the second it takes to choose a column, which is all the time
     /// a thumb-driven game gets.
@@ -66,7 +66,7 @@ namespace GlimmerGrove
         public Action Finishing { get; set; }
 
         /// <summary>
-        /// The band this well is drawn in — how much of the host the tray takes, and how large
+        /// The band this well is drawn in - how much of the host the tray takes, and how large
         /// it is drawn.
         ///
         /// <para>
@@ -82,12 +82,12 @@ namespace GlimmerGrove
         public bool Locked { get; set; }
 
         /// <summary>
-        /// The run has not been allowed to begin yet — the half of the answer no mode can see.
+        /// The run has not been allowed to begin yet - the half of the answer no mode can see.
         ///
         /// <para>
         /// Written only by <c>FallScreen</c>, from <c>RunScreen.Tick</c>, and it is a second
         /// latch rather than more uses of <see cref="Locked"/> on purpose. <see cref="Locked"/>
-        /// has several writers — every panel that goes over this board — and a board held for
+        /// has several writers - every panel that goes over this board - and a board held for
         /// two reasons has to be able to release them independently, or the one that writes
         /// <c>false</c> last cancels the other. That is the exact bug <c>RunHold</c> exists
         /// because of, one screen over: an intro animation unlatched a board a first-timer's
@@ -129,14 +129,14 @@ namespace GlimmerGrove
         int _hovered = -1, _ghostKey = int.MinValue;
 
         /// <summary>
-        /// One cell's widget: the body, the sheen over it, the halo round it, and — when the cell
-        /// is glass rather than light — the four-point glint inside it.
+        /// One cell's widget: the body, the sheen over it, the halo round it, and - when the cell
+        /// is glass rather than light - the four-point glint inside it.
         ///
         /// <para>
         /// One pooled widget for both rather than two pools, because a lens is a mote in every
         /// way that matters to this file: it stands in a cell, it falls when the well collapses,
         /// it is drawn, and it is given back when it goes. What differs is the sprite, the tint
-        /// and one extra child, and <see cref="Paint"/> switches between them — so gravity, the
+        /// and one extra child, and <see cref="Paint"/> switches between them - so gravity, the
         /// pool and the collapse have no idea the distinction exists.
         /// </para>
         /// </summary>
@@ -280,7 +280,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// One tall button per column rather than a button per cell. A column is the unit of
-        /// decision, so it should be the unit of touch — asking a thumb to hit one cell of a
+        /// decision, so it should be the unit of touch - asking a thumb to hit one cell of a
         /// ten-row well is asking it to be a mouse.
         /// </summary>
         void BuildColumns()
@@ -331,8 +331,8 @@ namespace GlimmerGrove
                                   new Vector2(560f, 132f), new Vector2(.5f, .5f), Vector2.zero);
 
             // Scaled rather than re-laid-out on a shorter tray, which is the legend's bargain
-            // one band down: everything below sits at a fixed offset on this plate — the queue
-            // at -196 and -78, the count at +150 — so a second set of coordinates would be a
+            // one band down: everything below sits at a fixed offset on this plate - the queue
+            // at -196 and -78, the count at +150 - so a second set of coordinates would be a
             // second layout to keep in step. Exactly 1 on every phone.
             plate.transform.localScale = Vector3.one * Band.TrayScale;
             UIKit.Img("Edge", plate.transform, Art.RoundOutline(28, 3f), new Color(1, 1, 1, .12f),
@@ -417,7 +417,7 @@ namespace GlimmerGrove
             facet.gameObject.SetActive(false);
 
             // The whorl's two pieces, off until a well turns out to stand one. Built here
-            // rather than on demand for the facet's reason — a board that holds a whorl should
+            // rather than on demand for the facet's reason - a board that holds a whorl should
             // not be allocating objects in the middle of the cascade it holds it for.
             //
             // Their own children rather than the body itself: the body's transform *is* the
@@ -432,7 +432,7 @@ namespace GlimmerGrove
             // And the arms, which are the *rule* drawn on the board: a whorl takes the cells to
             // its left and its right and nothing else, and no amount of spiral says so. A
             // sibling of the swirl rather than a child of it, because the swirl turns and these
-            // must not — an arrow that spins is pointing nowhere.
+            // must not - an arrow that spins is pointing nowhere.
             var arms = UIKit.Img("Arms", body.transform, Art.Inward(96),
                                  new Color(1, 1, 1, 0f), Vector2.one * _size * 1.34f,
                                  new Vector2(.5f, .5f), Vector2.zero);
@@ -519,7 +519,7 @@ namespace GlimmerGrove
         /// Puts what is drawn back in step with what the board holds, instantly and without
         /// animating anything.
         ///
-        /// <c>Show</c> animates and <c>Refresh</c> does not — this is a Refresh, and it is used
+        /// <c>Show</c> animates and <c>Refresh</c> does not - this is a Refresh, and it is used
         /// for the two moments there is nothing to replay: the board arriving and a restart.
         /// </summary>
         void Sync()
@@ -556,7 +556,7 @@ namespace GlimmerGrove
         /// colours arrive at once and the player has to do the colour arithmetic anyway to work
         /// out which of them the mote in their hand is any use to. Asked against the procession
         /// instead, the board lights up as <em>this</em> drop's opportunities and goes dark
-        /// again as the queue moves on — so the tray and the well are one thing to look at
+        /// again as the queue moves on - so the tray and the well are one thing to look at
         /// rather than two, and what is drawn is exactly the question being decided.
         /// </para>
         /// <para>
@@ -611,7 +611,7 @@ namespace GlimmerGrove
         /// Re-asks every mote whether the next drop would finish it.
         ///
         /// Raised when the procession moves rather than only when the board does, because the
-        /// board can be perfectly still and the answer still change — which is the whole reason
+        /// board can be perfectly still and the answer still change - which is the whole reason
         /// the halo is drawn against the tray.
         /// </summary>
         void PaintHalos()
@@ -700,8 +700,8 @@ namespace GlimmerGrove
             int row = Run.Board.Landing(colour, column);
             if (row < 0) { HideGhost(); return; }
 
-            // Everything the ghost says, in one integer. Update asks every frame — the board
-            // moves under a held finger — and rebuilding it unconditionally would restart the
+            // Everything the ghost says, in one integer. Update asks every frame - the board
+            // moves under a held finger - and rebuilding it unconditionally would restart the
             // ring's pulse on every one of them, which draws as a ring that never moves.
             int key = ((column * 16 + row) * 8 + colour) * 2 + (Run.Supply.Spent & 1);
             if (key == _ghostKey) return;
@@ -722,7 +722,7 @@ namespace GlimmerGrove
             // description, so it wins over the rest: a drop that comes to rest on the brim is
             // very probably the end of the run, and it is the one thing the player must not do
             // by accident. Glass is next, because "this fills the lens" is the one outcome a
-            // player has no other way to predict — it is why they can never be stranded, and a
+            // player has no other way to predict - it is why they can never be stranded, and a
             // valve nobody can see is a valve nobody uses.
             var ring = brim ? Pal.Rose : charges ? Pal.Glass : enriches ? Pal.Cream : Pal.Amber;
 
@@ -738,7 +738,7 @@ namespace GlimmerGrove
             if (!bursts) return;
 
             // A drop that lights a mote all the way to white is worth saying out loud. How far
-            // the chain then runs is not shown, and must not be — that is the thinking.
+            // the chain then runs is not shown, and must not be - that is the thinking.
             var pulse = _ghostRing;
             Tween.Run(.42f, Ease.InOutSine, t =>
             {
@@ -792,7 +792,7 @@ namespace GlimmerGrove
             }
 
             // The tray moves the instant the mote leaves it, so the procession is honest about
-            // what is coming while the drop is still in the air — and the board re-reads itself
+            // what is coming while the drop is still in the air - and the board re-reads itself
             // against the new one, because what a halo means has just changed.
             PaintTray();
             PaintHalos();
@@ -841,7 +841,7 @@ namespace GlimmerGrove
             {
                 // Whatever it landed on takes the light: the falling widget is handed back and
                 // the thing already standing there changes, which is what actually happened. The
-                // hand-back is the half that matters — a widget nothing hands back is a widget
+                // hand-back is the half that matters - a widget nothing hands back is a widget
                 // nothing owns, and `_at` is the only thing that can ever move it again.
                 Give(falling);
 
@@ -854,7 +854,7 @@ namespace GlimmerGrove
                     // second copy of it here (invariant 9a, at the smallest scale it appears at).
                     // It is also the only correct one: a lens two channels short *trembles*, on a
                     // looping tween that writes `localScale`, so a punch beside it would be two
-                    // tweens on one value — `ChargeGlass` kills the tremble before it punches,
+                    // tweens on one value - `ChargeGlass` kills the tremble before it punches,
                     // pops every pip the arrival lit, and climbs the note one-of-three,
                     // two-of-three, which is what the player is actually being told.
                     if (FallCell.IsLens(_shown[index]))
@@ -868,7 +868,7 @@ namespace GlimmerGrove
                         Ripple(to, Pal.EnergyColour(_shown[index]), _size * 2.1f, .42f);
 
                         // A bloop, never a bell. This is the commonest good thing that happens in
-                        // the mode — every other drop enriches — and `chime` put a metal dong
+                        // the mode - every other drop enriches - and `chime` put a metal dong
                         // under it, which is the one material a well of light is not made of.
                         // `free` is `menu`'s block of wood struck a fifth up, and it is the
                         // *upper* note of a pair: the mote that only stacked (below) plays the
@@ -940,7 +940,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>Bounded, and the rate gives way.</b> <c>FallTempo.Cascade</c> caps the whole chain,
-        /// so a nine-wave run plays faster rather than longer — the reward for a big chain has to
+        /// so a nine-wave run plays faster rather than longer - the reward for a big chain has to
         /// be the chain rather than the waiting, and the board is latched for exactly as long as
         /// this takes.
         /// </para>
@@ -1051,7 +1051,7 @@ namespace GlimmerGrove
                     if (mote == null) continue;
 
                     // A cell a beam delivered to has already been shown where its light came
-                    // from, at rather more length than a streak would — and the shot is a whole
+                    // from, at rather more length than a streak would - and the shot is a whole
                     // beat later than the burst, so its colour must not land early. Everything
                     // else keeps the ordinary wash's own beat. That is "nothing is drawn before
                     // its cause" for this mode.
@@ -1112,7 +1112,7 @@ namespace GlimmerGrove
 
                 // The count climbs as the chain runs, one number per wave, so the player
                 // watches it grow rather than being told afterwards how big it was. A single
-                // burst is not a chain and says nothing at all — see FallChain.
+                // burst is not a chain and says nothing at all - see FallChain.
                 if (FallChain.Counts(waves)) ShowCount(step.Wave, waves);
 
                 yield return new WaitForSecondsRealtime(burst);
@@ -1196,7 +1196,7 @@ namespace GlimmerGrove
         /// <b>It appears while the chain is still running, which is the whole point.</b> A total
         /// printed at the end is a report; a number climbing under your thumb is the thing
         /// actually happening, and nobody watching x3 land knows yet whether there is an x4. How
-        /// far up the ladder each one sits — its size and its colour — is <c>FallChain</c>'s, in
+        /// far up the ladder each one sits - its size and its colour - is <c>FallChain</c>'s, in
         /// Domain, because a switch on a wave count inside a <c>MonoBehaviour</c> is the one
         /// place here nothing can be proved.
         /// </para>
@@ -1244,7 +1244,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>It replaced confetti, and that is a better trade than it sounds.</b> Confetti says
         /// "something good happened" and says it identically for a two-chain and a six. A word
-        /// that climbs — and a number that climbed to reach it — says <em>how</em> good, which is
+        /// that climbs - and a number that climbed to reach it - says <em>how</em> good, which is
         /// the only part worth watching twice.
         /// </para>
         /// </summary>
@@ -1325,7 +1325,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// How a chain is coloured as it climbs. Cream, gold, amber, rose, and white-hot at the
-        /// top — a ramp that reads as heat rather than as five arbitrary colours.
+        /// top - a ramp that reads as heat rather than as five arbitrary colours.
         /// </summary>
         static Color ChainTint(int tier)
         {
@@ -1368,8 +1368,8 @@ namespace GlimmerGrove
         /// Moves the widgets the model says moved, and reassigns which cell each one draws.
         ///
         /// <para>
-        /// The reassignment is the important half. A widget is not tied to a cell — it is what
-        /// is currently drawing one — so a mote that slides two rows keeps its own object,
+        /// The reassignment is the important half. A widget is not tied to a cell - it is what
+        /// is currently drawing one - so a mote that slides two rows keeps its own object,
         /// keeps whatever tween is on it and simply belongs to a different index afterwards.
         /// That is what makes the collapse read as things falling rather than as a board being
         /// redrawn.
@@ -1480,7 +1480,7 @@ namespace GlimmerGrove
         /// <b>The silhouette carries the fact that it is not a mote, and the pips carry the
         /// puzzle.</b> Every other cell here is a bright saturated circle, so glass is hollow and
         /// pale and cold (<c>Pal.Glass</c>) and wears the one mark on this board that points four
-        /// ways — which is the shape of what it does when it goes off. What the rim alone cannot
+        /// ways - which is the shape of what it does when it goes off. What the rim alone cannot
         /// say is <em>which colour it is still waiting for</em>, and that is the whole of the
         /// decision: three pips in R, G and B, lit for what it holds and dark for what it wants.
         /// A player reads "needs blue" off the board at a glance, exactly as the halo on a mote
@@ -1522,7 +1522,7 @@ namespace GlimmerGrove
                               : Pal.A(Pal.EnergyColour(charge), .20f);
 
             // Never ripe. A halo says "the next drop finishes this", and no drop ever finishes a
-            // lens — only light that has already travelled does.
+            // lens - only light that has already travelled does.
             glass.Halo.gameObject.SetActive(false);
             glass.Halo.color = new Color(1, 1, 1, 0f);
 
@@ -1577,20 +1577,20 @@ namespace GlimmerGrove
         /// <para>
         /// <b>A fourth silhouette, and it had to be one.</b> A mote is a filled disc and a lens
         /// is a rim with a glint inside it, so a whorl drawn as either would read as a dim one of
-        /// those. It carries no colour at all — it holds no channels, and painting it in one
-        /// would promise cooking that can never happen — so what tells it apart is <em>shape</em>
+        /// those. It carries no colour at all - it holds no channels, and painting it in one
+        /// would promise cooking that can never happen - so what tells it apart is <em>shape</em>
         /// and <em>motion</em>: it is the only thing on a settled board that turns.
         /// </para>
         /// <para>
         /// <b>The arms are the rule, drawn.</b> A whorl takes the cells to its left and its right
-        /// and nothing else, and there is no way at all to read that off a spiral — invariant
+        /// and nothing else, and there is no way at all to read that off a spiral - invariant
         /// 20g's complaint, and the cheapest possible answer to it. They point inward because it
         /// pulls; the lens is the thing here that throws.
         /// </para>
         /// <para>
         /// <b>Open is a different picture, not a brighter one.</b> A whorl that has taken light
         /// turns on the very next wave, so the one frame between those two is the only warning
-        /// the player gets that the pair they arranged is about to be spent — it stops drifting,
+        /// the player gets that the pair they arranged is about to be spent - it stops drifting,
         /// snaps wide and holds, and the arms brighten to say which two cells are going.
         /// </para>
         /// </summary>
@@ -1619,7 +1619,7 @@ namespace GlimmerGrove
             whorl.Body.color = Pal.A(tint, open ? .96f : .74f);
             whorl.Sheen.color = Pal.A(tint, open ? .30f : .10f);
 
-            // Never ripe: no drop and no wash ever *finishes* a whorl — they open it, which is a
+            // Never ripe: no drop and no wash ever *finishes* a whorl - they open it, which is a
             // different thing, and a halo here would say the next drop completes it.
             whorl.Halo.gameObject.SetActive(false);
             whorl.Halo.color = new Color(1, 1, 1, 0f);
@@ -1643,13 +1643,13 @@ namespace GlimmerGrove
 
             if (open)
             {
-                // Armed. It turns on the next wave, so it stops drifting and stands wide open —
+                // Armed. It turns on the next wave, so it stops drifting and stands wide open -
                 // the one still, bright thing on a board that is otherwise all motion.
                 srt.localScale = Vector3.one * 1.18f;
                 return;
             }
 
-            // Phased off the cell index rather than rolled — for the lens glint's reason: a
+            // Phased off the cell index rather than rolled - for the lens glint's reason: a
             // random phase differs between a board being built and the same board restarted, and
             // two runs of one well that turn differently is a difference nobody can name and
             // everybody notices.
@@ -1689,7 +1689,7 @@ namespace GlimmerGrove
         /// <summary>
         /// The three pips: lit for a channel the glass holds, dark for one it still wants.
         ///
-        /// Built once and rebound, for <c>GridView</c>'s reason — a well is up to a hundred cells
+        /// Built once and rebound, for <c>GridView</c>'s reason - a well is up to a hundred cells
         /// and a cascade recharges several of them, so three objects per lens that are recoloured
         /// beats three destroyed and remade in the middle of the one animation this chapter is
         /// for.
@@ -1732,15 +1732,15 @@ namespace GlimmerGrove
         /// <b>This is two thirds of what the player actually does, and it used to be drawn as
         /// nothing.</b> Filling a lens is three drops apart; if only the shot were animated, the
         /// two drops that paid for it would land on the board as silence. So a charge is a small
-        /// version of the big moment — a ring closing inward, the pip springing in, the rim
-        /// taking the colour — and the note climbs, so the player hears one-of-three and
+        /// version of the big moment - a ring closing inward, the pip springing in, the rim
+        /// taking the colour - and the note climbs, so the player hears one-of-three and
         /// two-of-three without counting.
         /// </para>
         /// <para>
         /// <b><paramref name="taken"/> is a mask rather than a channel, and on one arrival it is
         /// all three.</b> A burst beside the glass hands over the drop's one colour; another
         /// lens's beam hands over white and fills it outright. So every pip in the mask is popped
-        /// rather than one worked out from a channel — the version that did the latter answered
+        /// rather than one worked out from a channel - the version that did the latter answered
         /// "blue" for white, lit one pip of three and pitched the note as though a lens two drops
         /// away had just gone off.
         /// </para>
@@ -1753,7 +1753,7 @@ namespace GlimmerGrove
             int filled = CountChannels(charge);
 
             // A ring closing onto the glass rather than a streak into it. Where the light came
-            // from is already drawn — by the burst beside it, or by the beam that carried it —
+            // from is already drawn - by the burst beside it, or by the beam that carried it -
             // and a second line saying the same thing is the clutter Budburst's bolt was.
             Circle(where, Pal.EnergyColour(taken), _size * 2.3f, run * 1.1f);
 
@@ -1776,7 +1776,7 @@ namespace GlimmerGrove
 
             Burst.Sparks(_fx, where, Pal.EnergyColour(taken), 5, 120f, 9f, run * 1.6f);
 
-            // One of three, two of three — and the top of the run when a beam filled it outright,
+            // One of three, two of three - and the top of the run when a beam filled it outright,
             // which is the loudest a charge is allowed to be before the shot itself.
             Audio.Sfx("lit", .42f, .92f + filled * .16f);
         }
@@ -1788,7 +1788,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Four gestures, not eight.</b> Budburst's burst was rebuilt from petals, rays,
         /// embers, a backlight and a prism ring, and came back as "a meshed up random animation"
-        /// — the lesson being that a premium moment is a few things done properly, all of them
+        /// - the lesson being that a premium moment is a few things done properly, all of them
         /// round and soft-edged, rather than a pile of kinds. So: it <b>gathers</b> (the glass
         /// draws in and goes white while the well dims and a ring closes onto it), it
         /// <b>strikes</b> (a white core, a flash, a shake), it <b>throws</b> (its beams, drawn
@@ -1797,7 +1797,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The dim is what makes it read as an event rather than a bigger burst.</b> Nothing
         /// else in this mode darkens the well, so the first frame of a gather is already unlike
-        /// every other frame the player has seen — which is worth more than any amount added on
+        /// every other frame the player has seen - which is worth more than any amount added on
         /// top of the explosion itself.
         /// </para>
         /// </summary>
@@ -1882,7 +1882,7 @@ namespace GlimmerGrove
             Tween.Run(seconds, Ease.OutQuad, t =>
             {
                 if (!shade) return;
-                // Up quickly, held, and away — the hold is what the beams are drawn against.
+                // Up quickly, held, and away - the hold is what the beams are drawn against.
                 float a = t < .22f ? t / .22f : t > .74f ? (1f - t) / .26f : 1f;
                 shade.color = new Color(0f, 0f, 0f, a * .46f);
             }, shade).OnDone(() => { if (shade) Destroy(shade.gameObject); });
@@ -1965,13 +1965,13 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The fringe is the one idea here that is about a lens rather than about an
         /// explosion.</b> Light through glass comes apart, so the beam is drawn as three strands
-        /// that do not quite agree — red one side, blue the other, white down the middle. It
+        /// that do not quite agree - red one side, blue the other, white down the middle. It
         /// costs two extra capsules and it is the difference between "a bright line" and "light
         /// being refracted", which is the whole of what the object is.
         /// </para>
         /// <para>
         /// <b>It grows from its source rather than appearing whole.</b> The pivot is moved to the
-        /// base of the capsule so length is the only thing animated — growing a centre-pivoted
+        /// base of the capsule so length is the only thing animated - growing a centre-pivoted
         /// bar would have it reaching backwards out of the lens at the same rate it reaches
         /// forwards. And a beam that reached nothing is drawn exactly as far as it went, one cell
         /// outside the wall: three drops of charge spent on nothing is a decision that went
@@ -1993,7 +1993,7 @@ namespace GlimmerGrove
             float width = _size * .26f;
 
             // The fringes *diverge*. They leave the glass together and fan apart by a couple
-            // of degrees as they go, so the further the shot travels the wider the split — which
+            // of degrees as they go, so the further the shot travels the wider the split - which
             // is what light through a prism actually does, and is the difference between a beam
             // with coloured edges and a beam that is visibly being refracted. Two degrees is
             // enough to read across five cells and small enough that a one-cell shot still looks
@@ -2060,7 +2060,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The wind-up, and the mechanic is unreadable without it.</b> A whorl turns on the
         /// wave <em>after</em> the one that opened it, so this is the only instant in which the
-        /// player can see which pair is going — and the pair is the whole of what they spent the
+        /// player can see which pair is going - and the pair is the whole of what they spent the
         /// last several drops arranging. It is deliberately small: the payoff is the merge.
         /// </para>
         /// </summary>
@@ -2087,7 +2087,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>The motes are drawn <em>travelling</em>, and that is the whole of it.</b> Every
-        /// other event in this mode happens where it stands — a burst goes off in its own cell, a
+        /// other event in this mode happens where it stands - a burst goes off in its own cell, a
         /// wash changes a neighbour in place, a beam crosses ground nothing is standing on. This
         /// one <em>moves two things</em>, so it is the one animation here that has to be a
         /// journey; drawn as a flash and a repaint it would be indistinguishable from two motes
@@ -2096,7 +2096,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>What comes back is the whorl's own widget, repainted.</b> Not a new one: the merged
         /// mote stands exactly where the whorl stood, so reusing it is what makes the board's
-        /// index right with no second bookkeeping path — and it costs the pool nothing in the
+        /// index right with no second bookkeeping path - and it costs the pool nothing in the
         /// middle of a cascade.
         /// </para>
         /// <para>
@@ -2241,7 +2241,7 @@ namespace GlimmerGrove
 
             var rt = (RectTransform)img.transform;
 
-            // UIKit.Box always pivots at centre, so this is set after the fact — and the position
+            // UIKit.Box always pivots at centre, so this is set after the fact - and the position
             // after that, because moving the pivot moves the rect under it.
             rt.pivot = new Vector2(.5f, 0f);
             rt.anchoredPosition = at;
@@ -2284,7 +2284,7 @@ namespace GlimmerGrove
         // ------------------------------------------------------------------ endings
         /// <summary>
         /// Reads the run and reports it, once. Called on the edges that can end one and never
-        /// from a poll — this is the same argument <c>RippleScreen.OnChanged</c> makes, and it
+        /// from a poll - this is the same argument <c>RippleScreen.OnChanged</c> makes, and it
         /// matters more here because the verdict walks the board.
         /// </summary>
         void Settle()
@@ -2305,7 +2305,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The well is empty. The brim line — the thing the whole run was about not touching —
+        /// The well is empty. The brim line - the thing the whole run was about not touching -
         /// comes apart, which is the one flourish this mode has that no other could.
         /// </summary>
         IEnumerator Triumph()
@@ -2334,12 +2334,12 @@ namespace GlimmerGrove
 
         /// <summary>
         /// A mote came to rest above the brim. Said on the board, in the place the rule lives,
-        /// before the panel arrives — so a player knows what they did rather than being told.
+        /// before the panel arrives - so a player knows what they did rather than being told.
         /// </summary>
         IEnumerator Overflow()
         {
             // A low thud rather than breaking glass. The shatter was the same sample the
-            // offer panel was playing a beat later, so a flood arrived as two crashes — and one
+            // offer panel was playing a beat later, so a flood arrived as two crashes - and one
             // crash for "you stacked a mote too high" is already more punishment noise than the
             // mistake deserves. The shake and the red line are the report; this is its weight.
             Audio.Sfx("pop", .55f, .55f);
@@ -2369,7 +2369,7 @@ namespace GlimmerGrove
         /// <summary>
         /// Keeps the ghost honest while a finger is held still.
         ///
-        /// The board moves underneath a held finger — a cascade lands, the procession advances —
+        /// The board moves underneath a held finger - a cascade lands, the procession advances -
         /// so a ghost drawn once at the moment of touch would go on promising a landing that is
         /// no longer where it says.
         /// </summary>
@@ -2394,7 +2394,7 @@ namespace GlimmerGrove
         public RectTransform BrimAnchor => _brimBand ? (RectTransform)_brimBand.transform : null;
 
         /// <summary>
-        /// A mote the player can be shown, for a lesson that has to ring one — the ripest thing
+        /// A mote the player can be shown, for a lesson that has to ring one - the ripest thing
         /// on the board, which is what the lesson about cooking is actually about.
         /// </summary>
         public RectTransform RipeAnchor
@@ -2419,7 +2419,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// A lens to point a lesson at, or null on a well that stands none — which is every well
+        /// A lens to point a lesson at, or null on a well that stands none - which is every well
         /// of the first chapter, and is exactly why the lesson is conditional on this.
         /// </summary>
         public RectTransform LensAnchor
@@ -2449,7 +2449,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// A whorl to point a lesson at, or null on a well that stands none — which is every
+        /// A whorl to point a lesson at, or null on a well that stands none - which is every
         /// well of the first two chapters.
         ///
         /// <para>
@@ -2506,7 +2506,7 @@ namespace GlimmerGrove
     /// Pointer enter and exit, which <c>Btn</c> does not report.
     ///
     /// It is what lets a column show its ghost while a finger is held over it and take it away
-    /// when the finger leaves — on a touch screen that is a drag across the well, which is
+    /// when the finger leaves - on a touch screen that is a drag across the well, which is
     /// exactly how somebody chooses a column.
     /// </summary>
     public sealed class Hover : MonoBehaviour,

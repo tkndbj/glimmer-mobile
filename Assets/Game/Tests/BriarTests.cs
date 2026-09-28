@@ -13,7 +13,7 @@ namespace GlimmerGrove.Tests
     /// splits a cell into two strands, where a briar leaves the graph alone and changes only
     /// <em>which of a tile's arms conduct</em>. What it buys is the one thing arms cannot buy.
     /// All four of a briar's neighbours mate it at every angle, so nothing about the
-    /// pipe-fitting settles it and only colour or the dark can — which is exactly the property
+    /// pipe-fitting settles it and only colour or the dark can - which is exactly the property
     /// <c>Tools/verify/difficulty.py</c> counts, and the property twenty-two of the game's
     /// first thirty glades turned out not to have anywhere.
     /// </para>
@@ -24,7 +24,7 @@ namespace GlimmerGrove.Tests
     /// briar. A briar whose thorns close nothing off is a tile the player cannot place and has
     /// no reason to place either way. And a briar's shut arms mate straight across the divide
     /// between the light and an island of dark, which is the one thing that could ever make
-    /// <see cref="Puzzle.TurnsToSolution"/> generous — see
+    /// <see cref="Puzzle.TurnsToSolution"/> generous - see
     /// <see cref="AMisturnedBriarThatLightsTheDarkIsCountedAsADistance"/>, which is the whole
     /// reason <c>Puzzle.Matters</c> has a second clause.
     /// </para>
@@ -197,8 +197,8 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A briar carries one flow, not two. The drawing leans on this — a closed way is put
-        /// on a strand the tile does not have, so it can never light — and so does every rule
+        /// A briar carries one flow, not two. The drawing leans on this - a closed way is put
+        /// on a strand the tile does not have, so it can never light - and so does every rule
         /// that asks a cell for an exact colour.
         /// </summary>
         [Test]
@@ -255,7 +255,7 @@ namespace GlimmerGrove.Tests
         /// Before briars it could not happen. Joining the light to a network the solution
         /// leaves dark needs a mated pair of arms, the authored solution mates none across
         /// that divide, so one of the two tiles always had to be a lit one turned off its
-        /// solution — and lit tiles were already counted. A briar's shut arms mate straight
+        /// solution - and lit tiles were already counted. A briar's shut arms mate straight
         /// across it, so the tile that leaks the light can be one the solution leaves dark,
         /// and the near-miss line would have told a player they had finished a glade that
         /// would not settle.
@@ -284,7 +284,7 @@ namespace GlimmerGrove.Tests
         // `LevelValidator.CheckDecidableTiles` asks one question of every four-armed tile:
         // turn it one step off its solution, and does the glade still finish? These four
         // drive it from both sides, and two of them are the cases the check it replaced got
-        // wrong — a rule with no failing case is not a rule, and a rule whose failing cases
+        // wrong - a rule with no failing case is not a rule, and a rule whose failing cases
         // are only the ones it already handled is not a fix.
 
         [Test]
@@ -402,8 +402,8 @@ namespace GlimmerGrove.Tests
         public void BriarsOnOneTaprootMustAgree()
         {
             // A straight briar reads as itself every half turn round and a twisted one only
-            // every whole turn, so one of each — the straight one authored a turn out, the
-            // twisted one already right — can never both be right at the same moment.
+            // every whole turn, so one of each - the straight one authored a turn out, the
+            // twisted one already right - can never both be right at the same moment.
             var report = LevelValidator.Validate(Level(new[]
             {
                 "*E#R/0 @WS#A/0 .",

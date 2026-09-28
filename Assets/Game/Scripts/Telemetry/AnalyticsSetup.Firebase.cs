@@ -23,7 +23,7 @@ namespace GlimmerGrove.Analytics
     /// <b>Nothing here may touch the SDK until the dependency check has settled</b>, and that is
     /// not a tidiness rule. Firebase refuses <em>any</em> call made while
     /// <c>CheckAndFixDependenciesAsync</c> is in flight, and the refusal lands on whoever else
-    /// was starting up — this file once broke sign-in and leaderboards outright, and the error
+    /// was starting up - this file once broke sign-in and leaderboards outright, and the error
     /// it produced named the cloud backend. So the check is shared through
     /// <see cref="FirebaseReady"/>, and the consent answer is <em>held</em> until it returns
     /// rather than applied when it arrives.
@@ -93,19 +93,19 @@ namespace GlimmerGrove.Analytics
         /// <para>
         /// Gated on personalisation rather than on a signal of its own, because this project
         /// has one consent answer and no analytics-specific question in it. That is the
-        /// conservative mapping — it will refuse measurement in the EEA for anyone who
-        /// declines ads — and the right fix when EEA numbers are wanted is a second signal
+        /// conservative mapping - it will refuse measurement in the EEA for anyone who
+        /// declines ads - and the right fix when EEA numbers are wanted is a second signal
         /// from the CMP, never a looser reading of this one.
         /// </para>
         /// <para>
         /// <b>The signals are taken from the event rather than read back off
         /// <c>AdPrivacy</c>.</b> <c>ResolveAsync</c> raises <c>Changed</c> and sets
         /// <c>IsResolved</c> on the line <em>after</em> it, so a handler that asks the flag is
-        /// told the answer has not arrived — during the one call that carries it. Both halves
+        /// told the answer has not arrived - during the one call that carries it. Both halves
         /// of this file did exactly that and both failed the same silent way: attribution was
         /// initialised and never started, and analytics collection stayed off for the life of
         /// the session, with the SDK logs showing a healthy startup either way. What made it
-        /// invisible is that the miss leaves no trace at all — there is no error, no retry and
+        /// invisible is that the miss leaves no trace at all - there is no error, no retry and
         /// no second event, because consent is answered once.
         /// </para>
         /// </summary>

@@ -5,17 +5,26 @@ using UnityEngine.UI;
 namespace GlimmerGrove
 {
     /// <summary>
-    /// The furniture the hall of ranks is built from: five plates cut from the owner's bought
-    /// 2D Mobile Game UI Kit and one icon, by <c>Tools/make_rank_kit_art.py</c>, plus the
-    /// icon every requirement line wears.
+    /// The furniture the hall of ranks is built from: four plates cut from the owner's bought
+    /// UI kits and one icon, by <c>Tools/make_rank_kit_art.py</c>, plus the icon every
+    /// requirement line wears.
     ///
     /// <para>
-    /// <b>Why a kit, and why this one.</b> The page's furniture was drawn procedurally — a
-    /// round-rect chip, a round-rect pill, a plate with a generated rim, capsule links — and
+    /// <b>The board is the cartoon kit's notice board since 2026-09-28</b> - the owner called
+    /// the 300Mind kit's cyan panel bad, and the cartoon kit is the one every plate in the game
+    /// is cut from (invariant 44). Its ribbon is lifted off by the tool so the board stretches,
+    /// and the title is written on <see cref="Skins.Title"/> instead, which also withdrew the
+    /// kit's hanging tab. Its slice is four measured sides: <see cref="BoardCap"/> and
+    /// <see cref="BoardPlinth"/> are those sides, mirrored here for the layout.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>Why a kit, and why this one.</b> The page's furniture was drawn procedurally - a
+    /// round-rect chip, a round-rect pill, a plate with a generated rim, capsule links - and
     /// then cut from stone tiles, and the owner rejected both on 2026-09-27: neither looked
     /// like a game. What was asked for instead, in so many words, was a <em>proper board</em>
-    /// for "what it asks", the ranked badges in proper seats, and a picture on every line —
-    /// a star beside "Earn N stars" — with no ticks. The kit the owner bought has all of it:
+    /// for "what it asks", the ranked badges in proper seats, and a picture on every line -
+    /// a star beside "Earn N stars" - with no ticks. The kit the owner bought has all of it:
     /// a notched panel, a dark bar, a rimmed square, a hanging tab, a pill.
     /// </para>
     ///
@@ -23,14 +32,14 @@ namespace GlimmerGrove
     /// <b>Every piece is pre-scaled by the tool and drawn 1:1.</b> The kit is cut for a
     /// 3118-wide sheet; each piece is scaled to the size this page draws it at and its
     /// nine-slice border measured after (invariant 44a), so an <c>Image</c> here is an
-    /// ordinary sliced image with no multiplier — the border in the sprite is the border on
+    /// ordinary sliced image with no multiplier - the border in the sprite is the border on
     /// screen.
     /// </para>
     ///
     /// <para>
     /// <b>A line's icon is the measure's, and the measure is content</b> (52a). The table
-    /// below keys on <see cref="RankMeasure.Id"/> — the permanent id <c>progression.json</c>
-    /// names a line by — so a retune that changes a rung's lines redraws with the right
+    /// below keys on <see cref="RankMeasure.Id"/> - the permanent id <c>progression.json</c>
+    /// names a line by - so a retune that changes a rung's lines redraws with the right
     /// pictures and a measure this build has no picture for wears the trophy rather than a
     /// white rectangle (7b). Every picture but the swords is art the game already ships.
     /// </para>
@@ -48,12 +57,22 @@ namespace GlimmerGrove
         public const string Board = "Rank/kit_board";
         public const string Row = "Rank/kit_row";
         public const string Seat = "Rank/kit_seat";
-        public const string Tab = "Rank/kit_tab";
         public const string Chip = "Rank/kit_chip";
         public const string Raiders = "Rank/ic_raiders";
 
+        /// <summary>
+        /// The board's top and bottom slice as the tool measured them (<c>kit_board.png.meta</c>'s
+        /// <c>w</c> and <c>y</c>): the riveted cap the title rides on and the plinth under the
+        /// cream. Pixels are units, because the tool pre-scales the board to be drawn 1:1.
+        /// <c>RankLadderTests</c> holds these two to the meta.
+        /// </summary>
+        public const float BoardCap = 73f, BoardPlinth = 77f;
+
+        /// <summary>How far in from the board's side the cream starts, in the same units.</summary>
+        public const float BoardSide = 36f;
+
         /// <summary>Every address this page adds, for the gate that holds them to disk.</summary>
-        public static readonly string[] All = { Board, Row, Seat, Tab, Chip, Raiders };
+        public static readonly string[] All = { Board, Row, Seat, Chip, Raiders };
 
         /// <summary>What stands in for a piece the Editor has not addressed yet.</summary>
         static string Fallback(string piece)
@@ -62,7 +81,6 @@ namespace GlimmerGrove
             {
                 case Board: return Skins.Panel;
                 case Row: return Skins.Trough;
-                case Tab: return Skins.Title;
                 case Raiders: return "ic_battle";
                 default: return Skins.Slot;
             }

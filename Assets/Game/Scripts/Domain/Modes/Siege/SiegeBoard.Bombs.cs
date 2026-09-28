@@ -32,7 +32,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <b>Set from the published firepot rather than read from a constant</b>, because how
         /// hard a firepot hits is content (<c>UtilityCatalog</c>) and a bomb has to hit for
-        /// exactly the same — the player is told it is a firepot, and two numbers that mean one
+        /// exactly the same - the player is told it is a firepot, and two numbers that mean one
         /// thing is two numbers that can drift. <see cref="SiegeTuning.BombDamage"/> is the
         /// fallback for a build that has never seen a store.
         /// </summary>
@@ -43,15 +43,15 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>Called from <see cref="Fell"/> and nowhere else</b>, which is the whole reason it is
-        /// safe: a raider dies in four ways — a bolt, a firepot, a storm and a beam that overkills
-        /// it — and a drop hung off any one of them is a drop the other three do not do. That is
+        /// safe: a raider dies in four ways - a bolt, a firepot, a storm and a beam that overkills
+        /// it - and a drop hung off any one of them is a drop the other three do not do. That is
         /// the rule the retired give-back kept, and it is the only part of that machine worth
         /// keeping.
         /// </para>
         /// <para>
         /// <b>At the box it died in, not at the point.</b> A bomb is tapped, and what a player taps
         /// is one of the twenty boxes the hill is already divided into for a firepot
-        /// (<c>SiegeTuning.Lanes</c> by <c>BlastRows</c>) — so it is stored as a box and the view
+        /// (<c>SiegeTuning.Lanes</c> by <c>BlastRows</c>) - so it is stored as a box and the view
         /// draws it at the middle of one. Storing a raw march would mean the drawing and the tap
         /// test each doing their own arithmetic on it, which is invariant 39k's own bug waiting to
         /// be written a second time.
@@ -85,7 +85,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>It goes off where it stands, at once.</b> There is nothing to aim: a bomb is already
         /// somewhere, and asking the player to pick a target after tapping it would be asking them
-        /// to choose twice for one decision — the decision is <em>when</em>, and the answer is on
+        /// to choose twice for one decision - the decision is <em>when</em>, and the answer is on
         /// the hill in front of them.
         /// </para>
         /// <para>
@@ -111,7 +111,7 @@ namespace GlimmerGrove.Modes
             _bombs.RemoveAt(at);
 
             // After the refusal above, so a tap that caught nothing is not counted as one the
-            // player made — the bomb is still standing and the decision has not been taken.
+            // player made - the bomb is still standing and the decision has not been taken.
             Attention.BombTapped(id);
 
             return absorbed;
@@ -152,7 +152,7 @@ namespace GlimmerGrove.Modes
             Attention.RaiderFelled(raider.Boss);
 
             // **The corpse itself, so a raider that lived less than one step can still be
-            // drawn** — see <see cref="SiegeReport.Felled"/>. It is booked at the one door for
+            // drawn** - see <see cref="SiegeReport.Felled"/>. It is booked at the one door for
             // the same reason the cog is: a kill that forgot to say so is a body the view never
             // hears about, and there is no second list it could be recovered from.
             _report.Felled.Add(raider);

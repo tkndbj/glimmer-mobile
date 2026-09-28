@@ -37,7 +37,7 @@ namespace GlimmerGrove.Progression
     /// This is the heart of the progression design, and it is a pure function on
     /// purpose. Nothing accumulates: a player's XP is recomputed from the records
     /// they hold every time it is asked for. That single decision is what makes the
-    /// system survive the things that break accumulators —
+    /// system survive the things that break accumulators -
     ///
     /// <list type="bullet">
     /// <item>replaying a glade awards nothing, because the record did not improve</item>
@@ -50,7 +50,7 @@ namespace GlimmerGrove.Progression
     /// <b>This rule exists twice.</b> The server re-derives credits from the same
     /// records in <c>firebase/functions/src/progression.ts</c>, which is what lets a
     /// forged save be caught rather than merely disbelieved. The two are held together
-    /// by <c>firebase/shared/reward-vectors.json</c>, which both sides run as a test —
+    /// by <c>firebase/shared/reward-vectors.json</c>, which both sides run as a test -
     /// so a change to one that is not mirrored in the other fails a build rather than
     /// quietly desynchronising the economy. If you change the arithmetic here, change
     /// it there, and add a vector proving what changed.
@@ -69,8 +69,8 @@ namespace GlimmerGrove.Progression
         /// What one record is worth under the given chapter's rule.
         ///
         /// <para>
-        /// <paramref name="playerKey"/> seeds the golden bonus — see
-        /// <see cref="GoldenTable"/> — and an empty one means "no account yet, pay the
+        /// <paramref name="playerKey"/> seeds the golden bonus - see
+        /// <see cref="GoldenTable"/> - and an empty one means "no account yet, pay the
         /// base". It is a parameter rather than a read of <see cref="RewardSeed"/> because
         /// this is a pure function and has to stay one: the shared vectors run it offline
         /// against fixed inputs, and a hidden dependency on the signed-in account would
@@ -78,7 +78,7 @@ namespace GlimmerGrove.Progression
         /// </para>
         /// <para>
         /// The bonus multiplies credits and never XP. Keeping XP exact is what lets a
-        /// companion unlock be promised at a rank and arrive there — a levelling curve
+        /// companion unlock be promised at a rank and arrive there - a levelling curve
         /// with variance in it turns "three ranks to go" into a guess.
         /// </para>
         /// </summary>
@@ -103,8 +103,8 @@ namespace GlimmerGrove.Progression
         /// What a run added, as the difference between the record before and after.
         /// A worse replay yields zero without needing a rule that says so.
         ///
-        /// The golden multiplier is the same on both sides of the subtraction — it belongs
-        /// to the glade, not to the run — so improving a record pays the bonus on the
+        /// The golden multiplier is the same on both sides of the subtraction - it belongs
+        /// to the glade, not to the run - so improving a record pays the bonus on the
         /// improvement and nothing on what was already banked.
         /// </summary>
         public static ProgressionTotals Delta(LevelRecord before, LevelRecord after,
@@ -120,12 +120,12 @@ namespace GlimmerGrove.Progression
         /// <b>A season pays nothing here, and that is a v28 change worth stating.</b> The
         /// old event track folded its milestones straight into this derived total, which is
         /// what let it be earned rather than granted. A season's rewards are
-        /// <em>chests</em> now, and a chest cannot be derived — its contents are a roll, and
+        /// <em>chests</em> now, and a chest cannot be derived - its contents are a roll, and
         /// the whole of what makes a roll safe is that the server re-rolls it from the same
         /// seed and pays its own answer (invariant 10a). So a season pays as a task pays: a
         /// claim with an id derived from what earned it. Nothing was taken away from anybody
         /// by the change, because the earned floor only rises
-        /// (<see cref="ProgressionStore"/>) — the same property that let three whole modes
+        /// (<see cref="ProgressionStore"/>) - the same property that let three whole modes
         /// be deleted (invariant 38).
         /// </para>
         /// </summary>

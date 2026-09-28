@@ -6,8 +6,8 @@ namespace GlimmerGrove.Content
     /// A shipped app lives for years in the wild. Some players never update, so the
     /// server will eventually be serving content newer than a client understands.
     /// The rule that makes that survivable: a client reads anything at or below its
-    /// own version, ignores fields it does not recognise, and skips — never crashes
-    /// on — anything above it.
+    /// own version, ignores fields it does not recognise, and skips - never crashes
+    /// on - anything above it.
     ///
     /// Bump <see cref="Version"/> only for a change old clients could not cope with.
     /// Adding an optional field is not such a change; removing or repurposing one is.
@@ -18,7 +18,7 @@ namespace GlimmerGrove.Content
         /// v2 moved chapter membership and order into the manifest, so the boot path
         /// reads one small file instead of every chapter body. Raised rather than made
         /// optional because a v1 manifest lists no levels at all, and a client that
-        /// tried to read one would see a game with no glades in it — a silent empty
+        /// tried to read one would see a game with no glades in it - a silent empty
         /// catalog is far worse than a clear refusal.
         ///
         /// It cost nothing to raise: remote delivery was still switched off and one
@@ -31,7 +31,7 @@ namespace GlimmerGrove.Content
         /// statement about what a client can read, and lowering one would tell every client
         /// that a file it has already cached is from the future. Only the grove body ever
         /// said v3; the manifest and the chapter bodies still say v2 and still read, because
-        /// <see cref="MinimumSupported"/> did not change — which is the whole point of having
+        /// <see cref="MinimumSupported"/> did not change - which is the whole point of having
         /// two numbers.
         /// </summary>
         public const int Version = 3;
@@ -45,7 +45,7 @@ namespace GlimmerGrove.Content
         public static string Explain(int schemaVersion)
         {
             if (schemaVersion > Version)
-                return $"needs schema v{schemaVersion}, this build reads up to v{Version} — update the app";
+                return $"needs schema v{schemaVersion}, this build reads up to v{Version} - update the app";
             if (schemaVersion < MinimumSupported)
                 return $"uses retired schema v{schemaVersion}, this build needs at least v{MinimumSupported}";
             return null;

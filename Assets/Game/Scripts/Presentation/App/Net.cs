@@ -10,7 +10,7 @@ namespace GlimmerGrove
     /// call site.</b> Three screens now say a different sentence when the phone is offline,
     /// and a fourth refuses a tap because of it. Written out four times that is four chances
     /// to spell one of them as <c>!= NetworkReachability.NotReachable</c> and one as
-    /// <c>== ReachableViaLocalAreaNetwork</c> — the second is a mobile player permanently
+    /// <c>== ReachableViaLocalAreaNetwork</c> - the second is a mobile player permanently
     /// "offline" on cellular, and it is the kind of fault that is green in every gate here
     /// because nothing in this project can turn a radio off. One reading, one polarity.
     /// </para>
@@ -18,7 +18,7 @@ namespace GlimmerGrove
     /// <b>It is a hint, not a fact, and every caller has to be written that way.</b> The OS
     /// answers about the <em>radio</em>, not about whether anything can be reached: a captive
     /// portal, an airline wifi splash page and a dead backend all report a perfectly good
-    /// connection. So this may never be used to <em>refuse</em> anything — the real answer is
+    /// connection. So this may never be used to <em>refuse</em> anything - the real answer is
     /// always whatever the request came back with. What it is for is choosing which sentence
     /// to print once something has already failed, and that is the one job it is honest at:
     /// "the boards could not be reached" and "you have no connection" are both true when the

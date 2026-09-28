@@ -11,7 +11,7 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// Everything here is arithmetic on purpose. The slice a spin lands on decides what the
-    /// server grants, so "where the wheel stops" is not a feel question — a wheel resting half
+    /// server grants, so "where the wheel stops" is not a feel question - a wheel resting half
     /// a degree into its neighbour is the panel disagreeing with the payout, and motion is the
     /// one subsystem whose faults show up only in play. <c>RewardVectorTests</c> pins the roll
     /// against the shared file the server also runs; this pins everything the vectors cannot
@@ -77,7 +77,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// The same trap the star thresholds fell into: <c>1.20f</c> is 1.20000004768…, so a
         /// float product disagrees with arithmetic wherever the exact answer lands on an
-        /// integer — and every runtime is wrong the same way, so no diff between two of them
+        /// integer - and every runtime is wrong the same way, so no diff between two of them
         /// could ever find it. JavaScript has to reproduce this exactly as well, which rules
         /// out anything wider than 32 bits in the middle.
         /// </para>
@@ -218,7 +218,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// Every slice is reachable, and no slice runs away with the wheel. Not a statistical
-        /// claim — a loose one, over a sample big enough that a picker which had collapsed onto
+        /// claim - a loose one, over a sample big enough that a picker which had collapsed onto
         /// two wedges would fail it and a healthy one never will.
         /// </summary>
         [Test]
@@ -356,7 +356,7 @@ namespace GlimmerGrove.Tests
             Assert.Greater(WheelSpin.Seconds, 1f);
             Assert.Less(WheelSpin.Seconds, 6f);
 
-            // There is deliberately no per-count duration to compare — the constant is the
+            // There is deliberately no per-count duration to compare - the constant is the
             // whole rule. This pins that it stays a constant: a reader who adds one will have
             // to delete this line and think about it.
             Assert.AreEqual(WheelSpin.Seconds, WheelSpin.Seconds);

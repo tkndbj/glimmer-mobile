@@ -9,7 +9,7 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// <b>Idle only, and that is the whole of what makes it safe.</b> Invariant 20l records a
-    /// mode whose helpers were withdrawn after play — a halo, graft links, a breathing flower —
+    /// mode whose helpers were withdrawn after play - a halo, graft links, a breathing flower -
     /// because a board that reads itself out to the player has answered the question it exists to
     /// ask. Nothing here fires while somebody is playing: it takes five seconds of a live board
     /// with nothing happening on it, which on a mode with a walking clock is not a pause for
@@ -20,7 +20,7 @@ namespace GlimmerGrove
     /// <b>It can only ever be generous, so it needs no exchange rate.</b> Invariant 39j's rule:
     /// before pricing a new limit on what a player may do, ask which way it can move a run, and
     /// only the generous direction costs a proof. A hint changes no rule, spends nothing, charges
-    /// no match and reaches neither <c>SiegeBoard</c> nor the grade — so every run playable with
+    /// no match and reaches neither <c>SiegeBoard</c> nor the grade - so every run playable with
     /// it was playable without it, and there is nothing for <c>SiegeTuning.PerfectMatch</c> to
     /// price. It is also not the <em>hint pool</em> (<c>RegenLedger</c>): that is a thing a player
     /// asks for and spends, and this is one they are given for not asking.
@@ -40,14 +40,14 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>Five seconds of <em>playable</em> board, not five seconds of screen.</b> The clock
-        /// only runs while <c>Playable</c> — so a cascade, a lesson, the pause menu and a panel
+        /// only runs while <c>Playable</c> - so a cascade, a lesson, the pause menu and a panel
         /// over the run (<c>RunHold.Covered</c>) all hold it at nought rather than counting toward
         /// it. A nudge that arrived because the player had opened the shop would be the board
         /// telling them off for reading a price.
         /// </para>
         /// <para>
         /// <b>It was four, and four was measured against the wrong thing.</b> The opening quiet is
-        /// <c>SiegeTuning.FirstWaveAfter</c> — 3.4 seconds — and the board is <c>Playable</c>
+        /// <c>SiegeTuning.FirstWaveAfter</c> - 3.4 seconds - and the board is <c>Playable</c>
         /// throughout it, because the count-in deliberately does not hold the game up
         /// (<c>SiegeView.CountIn</c>: the clock runs underneath it). So the first nudge landed six
         /// tenths of a second after GO!, on a hill the first raider had barely walked onto, which
@@ -86,7 +86,7 @@ namespace GlimmerGrove
         ///
         /// A field usually holds several legal swaps and <c>SiegeBoard.FindSwap</c> walks them in
         /// a fixed order, so asking again from the same place would ring the same two gems three
-        /// times over — which reads as the board repeating itself rather than as it helping.
+        /// times over - which reads as the board repeating itself rather than as it helping.
         /// </summary>
         int _hintFrom;
 
@@ -96,8 +96,8 @@ namespace GlimmerGrove
         /// <summary>
         /// The player did something. Clears the clock and takes any nudge off the board.
         ///
-        /// <b>Called from every door input comes through</b> — a tap on a gem, a drag, and a
-        /// utility being armed or spent — rather than from one place, because there is no one
+        /// <b>Called from every door input comes through</b> - a tap on a gem, a drag, and a
+        /// utility being armed or spent - rather than from one place, because there is no one
         /// place: this board is dragged on, tapped on and aimed at. The list is short and the
         /// failure is mild (a nudge that outstays its welcome by a beat), which is why this is a
         /// handful of call sites rather than a latch nothing can see.
@@ -124,7 +124,7 @@ namespace GlimmerGrove
         /// <b>Called before <c>Update</c>'s own <c>Live</c> gate rather than after it</b>, so a
         /// board nobody may touch resets the clock instead of freezing it. The two are not the
         /// same question: <c>Live</c> is "may the run advance" and <c>Playable</c> is "would a
-        /// finger mean anything", and it is the second one this is about — see
+        /// finger mean anything", and it is the second one this is about - see
         /// <c>SiegeView.Advancing</c> for why this mode is the one where they came apart.
         /// </summary>
         void Idle(float seconds)
@@ -162,7 +162,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Derived from the board rather than latched by the count-in, so it cannot strand
         /// the feature.</b> A flag set when the count starts and cleared when it ends is the
-        /// obvious shape and every version of it has an exit that clears nothing — a flag left
+        /// obvious shape and every version of it has an exit that clears nothing - a flag left
         /// set means a run whose hints never arrive, which is the silent half of invariant 30g's
         /// rule that anything handing out a callback must be unable to strand its caller.
         /// <c>Wave</c> is nought until the first muster and never nought again, which is the same
@@ -185,7 +185,7 @@ namespace GlimmerGrove
             var swap = _board.FindSwap(_hintFrom);
 
             // **A field with no swap on it is not a field to be quiet about, it is one about to
-            // be dealt again** — `SiegeBoard.Settle` shuffles what may move rather than letting
+            // be dealt again** - `SiegeBoard.Settle` shuffles what may move rather than letting
             // the board lock, because this mode's clock does not stop. Nothing is spent and the
             // wait starts over, so the nudge lands a moment later on the field that replaced it.
             if (!swap.Found) { _still = 0f; return; }
@@ -211,7 +211,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// <b>Cream rather than a colour</b>, because every colour on this board already means
-        /// something — four gem hues, gold for a double, violet for a boss's tell — and a fifth
+        /// something - four gem hues, gold for a double, violet for a boss's tell - and a fifth
         /// meaning "look here" would be a fifth thing to learn. Cream is this mode's own neutral.
         /// </para>
         /// </summary>

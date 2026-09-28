@@ -5,7 +5,7 @@ namespace GlimmerGrove.Content
 {
     /// <summary>
     /// What a Prismvale board is really worth: what is scattered over it, how much of it is
-    /// already lit before anybody has touched it, and — the half that matters — what the
+    /// already lit before anybody has touched it, and - the half that matters - what the
     /// <em>shortest answers</em> actually do with the lanterns.
     ///
     /// <para>
@@ -56,7 +56,7 @@ namespace GlimmerGrove.Content
         /// Gems already lit as the board is dealt.
         ///
         /// <b>Invariant 5g, counted.</b> A board dealt with most of its veins already running is
-        /// a board that starts half done — it passes every other gate, because "how much of this
+        /// a board that starts half done - it passes every other gate, because "how much of this
         /// is already finished" is a question nothing else asks. A little is good and is how the
         /// mode teaches itself without a word; a lot is a level somebody else played.
         /// </summary>
@@ -176,7 +176,7 @@ namespace GlimmerGrove.Content
         ///
         /// <para>
         /// One breadth-first walk carrying two marks along the frontier, read off the first layer
-        /// that wins — which is the shortest one, because a state is entered at its shortest
+        /// that wins - which is the shortest one, because a state is entered at its shortest
         /// depth and never again. Mirrors <c>Tools/verify/prism.py</c>'s <c>walk</c> exactly, and
         /// it is deliberately a second walk rather than a hook inside <see cref="ProtoSearch"/>:
         /// the shared search is what every mode's par comes from, and threading a per-mode

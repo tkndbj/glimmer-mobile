@@ -12,14 +12,14 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// <b>It exists because the ceiling moved.</b> A player could hold nine, so every order was
-    /// for one and there was nothing to bound — <c>UtilityLedger</c> said as much, and said why.
+    /// for one and there was nothing to bound - <c>UtilityLedger</c> said as much, and said why.
     /// At a hundred a shelf that sold one at a time would be a hundred taps, so the panel counts
     /// out loud, and a stepper is only honest if both its stops are: what there is room for, and
     /// what the gems in hand will cover. A stepper reading twelve over a button that will sell
     /// two is the panel lying about the one thing it exists to be exact about.
     /// </para>
     /// <para>
-    /// It runs against a save that never reaches a disk — <c>SaveService.LoadWith</c> takes an
+    /// It runs against a save that never reaches a disk - <c>SaveService.LoadWith</c> takes an
     /// <c>ISaveStore</c>, which is the seam <c>GroveStockPurchaseTests</c> established for
     /// exactly this. A fresh account is seeded <c>Currency.SeedGems</c>, so every case below
     /// says out loud what it is holding.
@@ -195,7 +195,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// One gem short of the total is a refusal, not a smaller order. The panel clamps the
         /// stepper to what can be paid for; the ledger's job is to refuse anything that got past
-        /// that, and to refuse it <em>before</em> taking anything — a partial delivery is the
+        /// that, and to refuse it <em>before</em> taking anything - a partial delivery is the
         /// failure invariant 23 names about a continue that does not continue.
         /// </summary>
         [Test]

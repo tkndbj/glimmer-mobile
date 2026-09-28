@@ -12,8 +12,8 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// <b>The rule is not here.</b> It is <see cref="AccountPromptPolicy"/>, in Domain, holding
-    /// no clock and no storage, because every situation it is about — a live session, a real
-    /// purchase, a device that has been away two days — is one the Editor never reaches, and a
+    /// no clock and no storage, because every situation it is about - a live session, a real
+    /// purchase, a device that has been away two days - is one the Editor never reaches, and a
     /// rule that can only be checked by playing the shipped game is a rule nobody checks. This
     /// class is the half that cannot be tested offline and therefore contains nothing worth
     /// testing: three keys, a clock reading, and a call.
@@ -22,8 +22,8 @@ namespace GlimmerGrove
     /// <b>The counts live in <c>PlayerPrefs</c> and must never move into the save.</b> What a
     /// device has shown a person is a fact about the installation, exactly like
     /// <c>RunGuard</c>'s marker and <c>GrovePublishPolicy</c>'s fingerprint. Merged across
-    /// devices it would arrive on a new phone as a reason to stay quiet — which is precisely
-    /// backwards, since a second device is a player with more to lose, not less — and it would
+    /// devices it would arrive on a new phone as a reason to stay quiet - which is precisely
+    /// backwards, since a second device is a player with more to lose, not less - and it would
     /// survive a progress wipe as a reason never to ask again.
     /// </para>
     /// </summary>
@@ -31,7 +31,7 @@ namespace GlimmerGrove
     {
         // The shipped key, kept exactly as it was. Renaming it would hand every live
         // installation a fresh allowance and ask two more times somebody who has already
-        // declined twice — the one outcome this budget exists to prevent.
+        // declined twice - the one outcome this budget exists to prevent.
         const string ChapterKey = "account_prompt_count";
         const string PurchaseKey = "account_prompt_purchases";
 
@@ -57,7 +57,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Whether a shelf priced in real money should carry its standing "not signed in"
-        /// notice. Never rationed — see <see cref="AccountPromptPolicy.ShouldWarn"/>.
+        /// notice. Never rationed - see <see cref="AccountPromptPolicy.ShouldWarn"/>.
         /// </summary>
         public static bool ShouldWarn
             => AccountPromptPolicy.ShouldWarn(CloudSaveService.IsAvailable,
@@ -87,7 +87,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <paramref name="then"/> is what the player was doing when the panel took their tap
-        /// — the victory panel's Next is the one caller that has one — and it is handed to the
+        /// - the victory panel's Next is the one caller that has one - and it is handed to the
         /// panel rather than run here, because "the ask is over" is several frames and several
         /// endings away. A caller that raised a nudge and navigated anyway would put a board
         /// behind a modal; one that navigated only on the close would drop the player's tap on
@@ -95,8 +95,8 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// The state is written through immediately rather than at the next save. This is one
-        /// of the two records in the game whose loss is invisible — nothing shows a player how
-        /// many times they have been nudged — so the only way it can be wrong is by being asked
+        /// of the two records in the game whose loss is invisible - nothing shows a player how
+        /// many times they have been nudged - so the only way it can be wrong is by being asked
         /// again, and the process most likely to die between the ask and a deferred write is
         /// the one that has just been backgrounded by an OAuth consent screen.
         /// </para>
@@ -106,7 +106,7 @@ namespace GlimmerGrove
             // A panel already up was configured by whoever raised it: Flow.Modal hands it back
             // untouched on purpose, so this ask cannot reach it and must not claim to have been
             // made. Reporting false is what keeps the caller's own continuation with the
-            // caller — the alternative loses the tap silently, which is the bug this
+            // caller - the alternative loses the tap silently, which is the bug this
             // continuation exists to fix, arriving by a different door.
             if (Flow.LiveModal<AccountOverlay>() != null) return false;
 
@@ -117,7 +117,7 @@ namespace GlimmerGrove
             // Three keys behind one flush, and deliberately *not* routed through
             // `DevicePrefs`. That class exists for a preference written on a screen's arrival,
             // which is written far more often than it changes; this is the opposite on both
-            // counts — `NoteOffered` has just moved a count and stamped the clock, so every
+            // counts - `NoteOffered` has just moved a count and stamped the clock, so every
             // value here has genuinely changed, and writing them one at a time through a
             // per-key flush would turn a single serialisation of the store into three. The
             // rule DevicePrefs owns is "do not flush what has not changed", not "never call
@@ -130,7 +130,7 @@ namespace GlimmerGrove
             // Half of the pair that makes this feature measurable at all: this counts the
             // asks, `account_linked` counts the outcomes, and `store_purchase_granted` carries
             // whether the money landed on a guest. Without the three, nobody can tell whether
-            // the panel earns its interruption or should have its budget pushed to zero — and
+            // the panel earns its interruption or should have its budget pushed to zero - and
             // the whole reason the pacing is content is so that answer can be acted on.
             Telemetry.Track("account_prompt_shown", "trigger", trigger.ToString());
 

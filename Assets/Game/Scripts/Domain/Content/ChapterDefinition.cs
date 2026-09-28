@@ -11,7 +11,7 @@ namespace GlimmerGrove.Content
     /// means publishing one more of these, and nothing that already shipped is touched.
     ///
     /// It holds what a chapter *is*, not where it sits or what belongs to it. Order and
-    /// membership are the manifest's, recorded in <see cref="ChapterIndexEntry"/> — so
+    /// membership are the manifest's, recorded in <see cref="ChapterIndexEntry"/> - so
     /// a chapter body carries no opinion about its own position, and reordering the
     /// game never means reshipping one.
     /// </summary>
@@ -46,7 +46,7 @@ namespace GlimmerGrove.Content
 
         /// <summary>
         /// Whether the end-of-chapter marker is moored on a floating tile rather than standing
-        /// on the painting. Generated with the seats, never authored — see <c>LevelDto.afloat</c>.
+        /// on the painting. Generated with the seats, never authored - see <c>LevelDto.afloat</c>.
         /// </summary>
         public readonly bool TeaserAfloat;
 

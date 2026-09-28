@@ -20,7 +20,7 @@ namespace GlimmerGrove
     /// (<see cref="ChestOddsOverlay"/>). Under it the two slates, each a heading with its
     /// own clock and a row per dealt task. A row is a picture of one
     /// <see cref="TaskDefinition"/> in one <see cref="TaskState"/>: counting, ready, or
-    /// paid — and the whole row is the button when it is ready, because a small chip
+    /// paid - and the whole row is the button when it is ready, because a small chip
     /// inside it would be a smaller target for the same action and there is nothing else
     /// on a row to tap by mistake (the streak page's rule).
     /// </para>
@@ -28,8 +28,8 @@ namespace GlimmerGrove
     /// <b>Built once, repainted from the ledger.</b> A counter moving is a redraw, not a
     /// new list, so <see cref="Repaint"/> writes the bar and the state onto rows that
     /// already exist and replays no entrance (<c>CRAFT.md</c>: Show animates, Refresh does
-    /// not). The one thing a repaint cannot do is change <em>which</em> tasks are dealt —
-    /// that happens at midnight — so when the dealt ids differ from the built ones the
+    /// not). The one thing a repaint cannot do is change <em>which</em> tasks are dealt -
+    /// that happens at midnight - so when the dealt ids differ from the built ones the
     /// page rebuilds whole, which is the honest answer to a different slate.
     /// </para>
     /// <para>
@@ -61,12 +61,12 @@ namespace GlimmerGrove
         /// <para>
         /// The kit's fill is documented as a white sprite and is not one: it runs from a warm
         /// off-white at the top (241, 240, 233) down to (188, 181, 166), and <c>Image.color</c>
-        /// is a <b>multiply</b> (invariant 37l) — so whatever is written here is not the colour
+        /// is a <b>multiply</b> (invariant 37l) - so whatever is written here is not the colour
         /// the bar comes out, it is the colour the multiply <em>needs</em> to land on one.
         /// `Pal.Gold` over it lands on a <b>brown</b> across the bottom two thirds, where a bar
         /// spends most of its area, and `Pal.Amber` lands a shade redder and softer than an
         /// orange bar wants. So this is pre-divided rather than named, and it is the one number
-        /// on this screen that may not be reasoned about — only drawn.
+        /// on this screen that may not be reasoned about - only drawn.
         /// </para>
         /// <para>
         /// <b>The other half of it is height, and that took a swatch sheet to find.</b> The
@@ -74,7 +74,7 @@ namespace GlimmerGrove
         /// the size a bar is actually drawn <em>every</em> version of that reads worse: a
         /// highlight over a 20-unit bar covers half of it and washes the colour out, and lifting
         /// the tint toward white takes the chroma with it (44g's rule, from the other end). What
-        /// works is a saturated tint drawn <b>taller in its trough</b> — 26 of the trough's 30
+        /// works is a saturated tint drawn <b>taller in its trough</b> - 26 of the trough's 30
         /// rather than 20, because at that size the dark border was a third of what the eye was
         /// averaging. The gloss is deliberately absent rather than merely turned down, and
         /// <c>render_tasks.py</c> is where a colour question gets settled here.
@@ -84,7 +84,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// And what it turns when it is full. Pre-divided for <see cref="BarOrange"/>'s reason
-        /// — `Pal.Mint` straight lands washy beside the orange — and a <em>colour</em> rather
+        /// - `Pal.Mint` straight lands washy beside the orange - and a <em>colour</em> rather
         /// than a second readout, because the bar is already saying the same thing with its
         /// length: the change is what makes a glance at the list enough.
         /// </summary>
@@ -113,7 +113,7 @@ namespace GlimmerGrove
             ///
             /// <para>
             /// It used to be the <c>TaskState</c> this row was last drawn in, compared against
-            /// <c>Ready</c> — which was the same answer for as long as "ready" and "offerable"
+            /// <c>Ready</c> - which was the same answer for as long as "ready" and "offerable"
             /// were the same thing, and stopped being one when a chest began waiting on an
             /// account id. A row that turned ready with no account never lit, correctly, and
             /// then could never light: the state had not moved, so the transition that starts
@@ -155,8 +155,8 @@ namespace GlimmerGrove
             // `BuildConnectBanner` would never overwrite because it returns early.
             _connect = null;
 
-            // The profile's ground rather than the hub's. `Scenery.Room` is a *place* — it was
-            // a painted forest, then a plaza — and this page is a list of plates laid over the
+            // The profile's ground rather than the hub's. `Scenery.Room` is a *place* - it was
+            // a painted forest, then a plaza - and this page is a list of plates laid over the
             // whole width of it, so the picture was only ever visible in the gaps between rows.
             // `Scenery.Plain` is a uniform pattern that is a *ground*, which is what a page made
             // of furniture wants under it, and it carries no parallax and no vignette for the
@@ -233,7 +233,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>The banner and the pills changed places.</b> The page led with its wallet and
-        /// named itself underneath, which is the arrangement a shop wants — on a page whose
+        /// named itself underneath, which is the arrangement a shop wants - on a page whose
         /// subject is what there is to <em>do</em>, the first thing read should be what the page
         /// is. The pills keep every other property they had: they are still what
         /// <c>RewardFlight</c> lands a chest's tokens on, and a page that pays currency still
@@ -241,7 +241,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// The name takes the corner buttons' row rather than a row of its own, because the
-        /// ribbon is taller than they are and the corners are empty beside it — the whole swap
+        /// ribbon is taller than they are and the corners are empty beside it - the whole swap
         /// costs the page nothing in height. The subtitle stays with the banner it explains.
         /// </para>
         /// </summary>
@@ -249,15 +249,15 @@ namespace GlimmerGrove
         /// The standing "connect once" plate, under the chest box and above the slates.
         ///
         /// <para>
-        /// <b>Under the chests on purpose.</b> The box is what the plate is *about* — those are
-        /// the chests that cannot be opened yet — so the sentence sits directly beneath the
+        /// <b>Under the chests on purpose.</b> The box is what the plate is *about* - those are
+        /// the chests that cannot be opened yet - so the sentence sits directly beneath the
         /// pictures it explains, where the ladder's own "tap a chest" line already lives. Above
         /// the slates, because the slates scroll and a note about why nothing can be claimed
         /// must not be something a player has to scroll to find.
         /// </para>
         /// <para>
         /// <b>Built only while the gate is shut</b>, which decides the offset the list below
-        /// starts at. The only transition is the one that takes it away — see
+        /// starts at. The only transition is the one that takes it away - see
         /// <see cref="ConnectBanner.Show"/>.
         /// </para>
         /// </summary>
@@ -304,7 +304,7 @@ namespace GlimmerGrove
 
             // **This page registered all three and repainted none of them.** A chest's tokens
             // land here through `RewardFlight`, which writes the readout itself, so the one
-            // path anybody exercises looked right — and every other way the wallet moves (an
+            // path anybody exercises looked right - and every other way the wallet moves (an
             // ad's credits confirmed by the server, a sync applying another device's day, a
             // heart landing on its timer) left the pill showing a figure from whenever the page
             // was opened.
@@ -339,7 +339,7 @@ namespace GlimmerGrove
 
         // --------------------------------------------------------------- ladder
         /// <summary>
-        /// The chests, as the pack the hub draws (<see cref="ChestPack"/>) — a symmetric arch
+        /// The chests, as the pack the hub draws (<see cref="ChestPack"/>) - a symmetric arch
         /// with the grandest at the crest, packed until they overlap, each one tappable for its
         /// odds. The ladder is the "bonuses" half of the page's name: it is what there is, where
         /// the slates are what to do about it.
@@ -347,7 +347,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>It used to be four icons spread evenly across the plate with their names under
         /// them, and the rebuild cost the names.</b> A packed row has no room for four captions
-        /// — measured, they overlap by a third and print as one run of letters — and four
+        /// - measured, they overlap by a third and print as one run of letters - and four
         /// captions is not what the chests are for anyway. What replaces them is one line saying
         /// the row can be tapped, which is the thing the old version never said and the only
         /// reason a player would ever discover the odds panel at all.
@@ -361,7 +361,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The pack has one entrance and it belongs to the plate.</b> Each chest used to pop
         /// in on a stagger of its own, <em>inside</em> a plate that was popping at the same time,
-        /// so four springs with overshoot were nested in a fifth — and on a ready chest the
+        /// so four springs with overshoot were nested in a fifth - and on a ready chest the
         /// breathe made it a third tween on the same property. What a player saw was the row
         /// loading twice. One pop on the box brings the whole pack in together, which is what the
         /// hub's card has always done with the same arithmetic.
@@ -425,7 +425,7 @@ namespace GlimmerGrove
 
                     // **Started here and not a line earlier, which is what the flicker was.**
                     // A breathe writes `localScale` every frame from the size it captured when
-                    // it began, and a pop writes `localScale` every frame from nought — two
+                    // it began, and a pop writes `localScale` every frame from nought - two
                     // tweens on one property, on separate channels so neither kills the other,
                     // so the chest was drawn at the pop's size on one frame and at full size on
                     // the next for the whole half-second the pack came in. It read exactly as
@@ -487,7 +487,7 @@ namespace GlimmerGrove
 
             // Every finished row's light lives here, and this node is built first so all of
             // them are **under every card**. A pool hung off a row's own card would have to be
-            // either a child — which draws over the card it is meant to light — or a sibling
+            // either a child - which draws over the card it is meant to light - or a sibling
             // inserted beside it, which draws over the row above, because a light worth seeing
             // reaches further than the fourteen units between two rows.
             var lights = UIKit.Node("Lights", list);
@@ -626,13 +626,13 @@ namespace GlimmerGrove
             // not a bullet point), and it was the smallest picture on a row whose glyph, bar and
             // two lines of text are all about it.
             //
-            // <b>`ChestTall` is a *drawn* height, converted by `ChestPack` — which is what the
+            // <b>`ChestTall` is a *drawn* height, converted by `ChestPack` - which is what the
             // old numbers were not.</b> A closed chest is frame nought of its opening reel, so a
             // 176x244 sprite carries the lid's headroom: a box typed straight at 96x133 drew a
             // chest 84 units tall, a third smaller than the box said, and hung it 21 units below
             // where the anchor claimed it was. The hub, the streak board and the pack at the top
             // of this very page all convert; this one row did not. 128 drawn is half again what
-            // was really there, and the sprite's box round it is 202 tall — which fits inside
+            // was really there, and the sprite's box round it is 202 tall - which fits inside
             // `RowH` because a third of that box's height is headroom above the lid.
             const float ChestTall = 156f;
             const float ChestX = -112f;
@@ -663,7 +663,7 @@ namespace GlimmerGrove
             row.Seal = (RectTransform)seal.transform;
             row.Seal.gameObject.SetActive(false);
 
-            // The rim, on the card's own edge and over everything on it — the half of the holy
+            // The rim, on the card's own edge and over everything on it - the half of the holy
             // light that has to be a child, because a light drawn *behind* a card the kit cuts
             // opaque is a light with a hole in the middle of it.
             row.Rim = UIKit.Img("Rim", row.Root, Art.RoundOutline(30, 7f), Pal.A(Pal.Sun, 0f));
@@ -719,7 +719,7 @@ namespace GlimmerGrove
             float fill01 = Mathf.Clamp01(done / (float)task.Target);
 
             // Orange while it is counting, green the moment it is full. Only on the paint that
-            // *changed* it, or a tint restarts on every counter that moves — and instantly the
+            // *changed* it, or a tint restarts on every counter that moves - and instantly the
             // first time, because a page opened on a finished task should find it already green
             // rather than watch it arrive.
             bool full = done >= task.Target;
@@ -760,18 +760,18 @@ namespace GlimmerGrove
 
             // Still a button while the chest is held up, deliberately. Tapping it is what
             // raises the sentence explaining why (see Claim), and a row that simply stopped
-            // responding would be the broken button invariant 16o is about — the hint under it
+            // responding would be the broken button invariant 16o is about - the hint under it
             // says the same thing, but a player whose finger is already moving reads the toast.
             if (row.Tap) row.Tap.gameObject.SetActive(ready);
 
             // **The light says "this one is yours to take", so it may only be drawn where that
             // is true.** A finished task whose chest is waiting on an account id is ready and
             // not offerable, and lighting it would be the page asking for a tap it is about to
-            // answer with an apology — the same rule the streak board's halo follows.
+            // answer with an apology - the same rule the streak board's halo follows.
             bool offerable = ready && TaskLedger.CanClaim;
 
             // The chest lights and breathes only when it can be taken, and only starts
-            // doing so on the paint that made it offerable — a breathe restarted on every
+            // doing so on the paint that made it offerable - a breathe restarted on every
             // repaint is a chest that jumps each time a counter moves.
             if (offerable && !row.Lit)
             {
@@ -803,13 +803,13 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Two pieces rather than one, because a card is opaque.</b> A glow behind the kit's
         /// navy plate is a glow with a card-shaped hole punched out of the middle of it, and a
-        /// glow in front of it washes out everything written on the row — so the light outside
+        /// glow in front of it washes out everything written on the row - so the light outside
         /// the card is a pool and the light on the card is its edge. Together they read as one
         /// thing lit from behind.
         /// </para>
         /// <para>
         /// <b>It breathes rather than flashing.</b> There can be six of these on the page at
-        /// once — every task on both slates can be finished and unclaimed at midnight — so
+        /// once - every task on both slates can be finished and unclaimed at midnight - so
         /// anything sharper than a slow swell is six things flashing at a player who is trying
         /// to read a list, which is 37h's rule about the one ward that may flash.
         /// </para>
@@ -853,8 +853,8 @@ namespace GlimmerGrove
 
         // -------------------------------------------------------------- claiming
         /// <summary>
-        /// Opens the chest. The ceremony claims it — the grant happens at the start of the
-        /// overlay, not here — so a row is only ever asked whether it is still ready, and a
+        /// Opens the chest. The ceremony claims it - the grant happens at the start of the
+        /// overlay, not here - so a row is only ever asked whether it is still ready, and a
         /// second device that got there first is answered by the overlay closing itself.
         /// </summary>
         void Claim(Row row)

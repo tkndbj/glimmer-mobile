@@ -56,7 +56,7 @@ namespace GlimmerGrove.Events
         /// <summary>
         /// Longest window a content file may author, in days.
         ///
-        /// Ninety. The point of a season is that it ends — a "limited time" that outlives
+        /// Ninety. The point of a season is that it ends - a "limited time" that outlives
         /// the player's interest in it is just content with a countdown attached, and a
         /// window authored with a typo'd year would be exactly that.
         /// </summary>
@@ -78,7 +78,7 @@ namespace GlimmerGrove.Events
         ///
         /// <b>Contract with the server</b>: <c>season.ts</c>'s <c>SEASON_ID</c> is
         /// <c>^[a-z0-9_]{1,64}$</c>, and an id longer than that is refused there while parsing
-        /// perfectly here — a claim left unconfirmed for ever with every file correct. It
+        /// perfectly here - a claim left unconfirmed for ever with every file correct. It
         /// matters most for a repeating season, whose id is a stem plus a cycle number, because
         /// that is the one id a human does not write out in full.
         /// </summary>
@@ -99,7 +99,7 @@ namespace GlimmerGrove.Events
     /// </para>
     /// <para>
     /// <b>The pass tier may be absent, and that is a real state rather than a degenerate
-    /// one</b> — a season authored with no premium product has forty free rungs and no
+    /// one</b> - a season authored with no premium product has forty free rungs and no
     /// second column, and a rung on a season that <em>has</em> a product but leaves one of
     /// its own premium slots empty is refused by the reader, because a paid column with a
     /// hole in it is a player looking at what they bought and seeing nothing.
@@ -163,15 +163,15 @@ namespace GlimmerGrove.Events
     ///
     /// <para>
     /// <b>Why this exists.</b> The hardest retention number in a puzzle game is the
-    /// thirty-day one, and it is not a design problem — it is a calendar problem. A player
+    /// thirty-day one, and it is not a design problem - it is a calendar problem. A player
     /// who has finished the chapters has nothing to come back for until the next drop, and
     /// a drop is weeks away. A season is the cheapest possible answer: it gives what the
     /// player already does a second meaning for six weeks, and it puts something on the
     /// calendar to come back to.
     /// </para>
     /// <para>
-    /// <b>It is content, entirely.</b> A season is rows in <c>manifest.json</c> — a window,
-    /// a mark, a product and a ladder of tier names — so running one is a content push, with
+    /// <b>It is content, entirely.</b> A season is rows in <c>manifest.json</c> - a window,
+    /// a mark, a product and a ladder of tier names - so running one is a content push, with
     /// no build, no store review and no code. That is the whole architectural claim, and it
     /// is the reason this type holds no behaviour beyond reading its own fields: the moment
     /// a season needs a code change to run, the cadence that makes seasons work stops being
@@ -184,7 +184,7 @@ namespace GlimmerGrove.Events
     /// and the season went with them, and it could never have worked for a returning player
     /// anyway, because a first clear happens once and a finite catalog runs out. Marks come
     /// from claimed chests (<see cref="ChestTier.Marks"/>), which every mode feeds and no
-    /// mode owns — so a season now survives a mode being deleted, exactly as the star ledger
+    /// mode owns - so a season now survives a mode being deleted, exactly as the star ledger
     /// does (invariant 20a).
     /// </para>
     /// <para>
@@ -203,7 +203,7 @@ namespace GlimmerGrove.Events
         /// <summary>
         /// The mark this season wears, or empty for the default.
         ///
-        /// A name the client resolves to something it can draw, never an art path — see
+        /// A name the client resolves to something it can draw, never an art path - see
         /// <c>ManifestEventDto.icon</c> for why that distinction is the only one that
         /// survives contact with the asset pipeline. Domain deliberately does not know
         /// which names exist: that is a question about what has been drawn, and the answer
@@ -241,7 +241,7 @@ namespace GlimmerGrove.Events
         /// This season's name: derived from its id, unless the season's id is itself derived.
         ///
         /// <para>
-        /// The default is the rule a level's name follows — invariant 5a — and for the same
+        /// The default is the rule a level's name follows - invariant 5a - and for the same
         /// reason: it is what lets anything holding a season id name it without reading the
         /// manifest entry back. An authored, dated season takes that path and nothing about it
         /// has changed.
@@ -250,7 +250,7 @@ namespace GlimmerGrove.Events
         /// <b>A repeating season cannot, and the exception is exactly that narrow.</b>
         /// <see cref="SeasonCycle"/> mints its ids from the clock, so there is no moment at
         /// which a human could have written <c>ui.event.watch_0037.name</c> into a string table
-        /// that ships inside the app — the key would resolve to nothing and the hub's largest
+        /// that ships inside the app - the key would resolve to nothing and the hub's largest
         /// card would carry an empty banner. Such a season is handed a key out of a pool that
         /// wraps (<see cref="SeasonCycle.NameKeyFor"/>), and it is handed it <b>at construction
         /// by the thing that minted the id</b>, so the two can never be sourced separately and
@@ -279,7 +279,7 @@ namespace GlimmerGrove.Events
             return left < 0 ? 0 : left;
         }
 
-        /// <summary>The last rung's goal — finishing the track. 0 when there is none.</summary>
+        /// <summary>The last rung's goal - finishing the track. 0 when there is none.</summary>
         public int FinalGoal => Milestones.Count == 0 ? 0 : Milestones[Milestones.Count - 1].Goal;
 
         /// <summary>

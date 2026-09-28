@@ -120,7 +120,7 @@ namespace GlimmerGrove.Challenges
     ///
     /// <para>
     /// <b>The reader is the gate.</b> Everything a row can get wrong is refused here, by name,
-    /// with the id in the message — an unknown genre, a wave naming a colour the line has no
+    /// with the id in the message - an unknown genre, a wave naming a colour the line has no
     /// turret for, a board whose rows disagree about their width, a genre missing the field it
     /// plays on. The Editor validator, <c>content.py</c> and the offline test all run this same
     /// <see cref="TryBuild"/>, so there is exactly one opinion about whether a row is fit to
@@ -129,7 +129,7 @@ namespace GlimmerGrove.Challenges
     /// <para>
     /// <b>A genre is a ladder of rows</b> (<see cref="RowsOf"/>), kept in authored order. The
     /// calendar deals one of them a slot (<see cref="ChallengeCalendar"/>), so adding a level to
-    /// a genre is a row appended to this file and nothing else — a build, a gate and the server
+    /// a genre is a row appended to this file and nothing else - a build, a gate and the server
     /// all learn of it through the same reader.
     /// </para>
     /// <para>
@@ -280,7 +280,7 @@ namespace GlimmerGrove.Challenges
         ///
         /// <b>Returns false when the file is unusable</b> (wrong version, no line, a duplicated
         /// id, a deal ladder that does not climb) and true with problems listed when individual
-        /// rows were dropped — a bad row costs that challenge, never the slate.
+        /// rows were dropped - a bad row costs that challenge, never the slate.
         /// </summary>
         public static bool TryBuild(ChallengeTableDto dto, out ChallengeTable table, List<string> problems)
         {
@@ -343,7 +343,7 @@ namespace GlimmerGrove.Challenges
             table = new ChallengeTable(line, freePlays, tiers, rewards, rows.ToArray());
 
             // The economy gate (56k): the largest deal's daily maximum, across every genre the
-            // file ships, is held under a ceiling — a fifth genre or a raised rate is otherwise a
+            // file ships, is held under a ceiling - a fifth genre or a raised rate is otherwise a
             // silent multiplication of what the mode pays. Named as a problem so the build gate
             // fails; the slate is still usable, because the bound is about money already
             // adjudicated per claim and not about a board.
@@ -378,7 +378,7 @@ namespace GlimmerGrove.Challenges
         ///
         /// <b>A ladder that does not climb is unusable</b>, for the season's reason about a paid
         /// column with a hole in it (47b): a deal is "more plays for more gems", and two rows
-        /// where the dearer one gives fewer plays — or the same — is a page that sells a worse
+        /// where the dearer one gives fewer plays - or the same - is a page that sells a worse
         /// thing for more money. Every row must beat the free figure, ids must be unique and
         /// key-shaped, and the price, the plays and the days are each bounded.
         /// </summary>

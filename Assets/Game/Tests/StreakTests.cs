@@ -13,20 +13,20 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// Three of these matter more than the rest. The <b>merge</b> is the reason a streak is
-    /// stored as dates rather than as a count — see invariant 11b, and hearts, which learned
-    /// it the expensive way — so what is pinned here is that it is a real join: idempotent,
+    /// stored as dates rather than as a count - see invariant 11b, and hearts, which learned
+    /// it the expensive way - so what is pinned here is that it is a real join: idempotent,
     /// order-independent, and incapable of resurrecting a streak that was genuinely broken.
     /// The <b>lap</b> is what makes the ladder agree with the board it has always been drawn
     /// on: night eight pays night one, for ever, because a streak has no end and a ladder
     /// does. And the <b>shield</b> is the newest and the easiest to get wrong in a way nobody
-    /// would notice — it must keep a streak across days nobody played and buy <em>no</em>
+    /// would notice - it must keep a streak across days nobody played and buy <em>no</em>
     /// nights, which is the difference between a retention feature and a currency printer.
     /// </para>
     /// </summary>
     public sealed class StreakTests
     {
-        // A day key in the range real players have. The absolute value never matters —
-        // every rule here is about differences — but using 0 or 1 would collide with the
+        // A day key in the range real players have. The absolute value never matters -
+        // every rule here is about differences - but using 0 or 1 would collide with the
         // "never played" sentinel and prove nothing.
         const int Day = 20_500;
 
@@ -67,7 +67,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The reader, given the tiers the shipped content resolves against.
         ///
-        /// A chest rung names an id out of the tasks block, so the reader takes a lookup —
+        /// A chest rung names an id out of the tasks block, so the reader takes a lookup -
         /// which is what lets a ladder be proved against a synthetic ladder of tiers as well
         /// as against the shipped one.
         /// </summary>
@@ -180,8 +180,8 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// Every stored field only ever rises. That is the property the merge rests on —
-        /// see invariant 11b — so it is checked against advancing rather than assumed.
+        /// Every stored field only ever rises. That is the property the merge rests on -
+        /// see invariant 11b - so it is checked against advancing rather than assumed.
         ///
         /// <para>
         /// Only over <em>coherent</em> pairs, and the restriction is a real precondition
@@ -192,7 +192,7 @@ namespace GlimmerGrove.Tests
         /// </para>
         /// <para>
         /// Swept over shields as well, because the shield is the one thing that can move the
-        /// <em>start</em> of a run that is continuing — and a start that moved the wrong way
+        /// <em>start</em> of a run that is continuing - and a start that moved the wrong way
         /// would be a merge that silently lengthens a streak on every sync.
         /// </para>
         /// </summary>
@@ -225,8 +225,8 @@ namespace GlimmerGrove.Tests
         // --------------------------------------------------------------- shield
         //
         // The shield is a window of days the streak survives without being played. Its whole
-        // promise has an exact shape — a fixed span from the day it was bought, which playing
-        // does not extend — and the way it goes wrong is not a crash: it is a streak that
+        // promise has an exact shape - a fixed span from the day it was bought, which playing
+        // does not extend - and the way it goes wrong is not a crash: it is a streak that
         // quietly credits nights nobody played, which would sell a week of chests for a
         // hundred and twenty gems.
 
@@ -262,7 +262,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// Getting this wrong is not a visible bug. It is six chests handed over for one
-        /// purchase, with every gate green and every number plausible — and because a night
+        /// purchase, with every gate green and every number plausible - and because a night
         /// is a claim, it would be six chests the server would pay for.
         /// </para>
         /// </summary>
@@ -281,7 +281,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// The floor is a <em>day</em>, and every night's day has just slid — so it has to
+        /// The floor is a <em>day</em>, and every night's day has just slid - so it has to
         /// slide with them. Without this a protected player comes back to nights they have
         /// already been paid for sitting on the board asking to be paid again.
         /// </summary>
@@ -339,7 +339,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// "At risk" is "doing nothing today loses it", which is <em>not</em> the same as "no
-        /// shield covers tomorrow" — and the difference is the last day of a window.
+        /// shield covers tomorrow" - and the difference is the last day of a window.
         ///
         /// <para>
         /// Yesterday always counts, so a window ending tonight still leaves tomorrow to play.
@@ -389,7 +389,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The case the whole representation exists for. One device holds a six-day
         /// streak; the other broke it and started again today. Taking the later start is
-        /// what stops the stale device resurrecting a streak the player really did lose —
+        /// what stops the stale device resurrecting a streak the player really did lose -
         /// and streak rewards escalate, so resurrecting one is not a cosmetic mistake.
         /// </summary>
         [Test]
@@ -436,7 +436,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The collected floor merges the same way the dates do, and in the same direction:
         /// the device that has paid more out wins. It can cost a player a night neither
-        /// device had collected, which is the safe error — the other one pays a night
+        /// device had collected, which is the safe error - the other one pays a night
         /// twice, and two devices granting the same chest is the failure the whole
         /// representation exists to make impossible.
         /// </summary>
@@ -462,7 +462,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The rule that makes the ladder a lap rather than a staircase, and the one the
         /// board has always assumed. A player on night forty is the most engaged player the
-        /// game has, and the previous behaviour — repeating the last rung for ever — meant
+        /// game has, and the previous behaviour - repeating the last rung for ever - meant
         /// a tile labelled "night 8" paid night 7's reward, which is the board and the
         /// table telling that player two different things.
         /// </summary>
@@ -528,7 +528,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// Currency is allowed on the ladder, and this is the test that says so deliberately
-        /// rather than by omission. What makes it safe is not on this side at all — a night
+        /// rather than by omission. What makes it safe is not on this side at all - a night
         /// is claimed under an id derived from its calendar day, and the server grants from
         /// its own copy of the ladder against a floor no client can write. See
         /// <c>StreakTable</c> and <c>functions/src/streak.ts</c>.
@@ -777,7 +777,7 @@ namespace GlimmerGrove.Tests
         //
         // Rewards are handed over when the player taps a night rather than applied when
         // the run ends, so a third date records how far that has got. The risk it adds is
-        // exactly one: paying a night twice. Everything below is aimed at that — the
+        // exactly one: paying a night twice. Everything below is aimed at that - the
         // migration off the build that paid automatically, the floor a lapsed streak
         // leaves behind, and the rule that only the oldest waiting night may be taken.
 
@@ -799,8 +799,8 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// <b>Only the oldest waiting night may be taken, and that is what paying a chest
-        /// cost.</b> The floor is a floor — taking night three would take one and two with it
-        /// — which was invisible while every rung was a figure and is not once a rung opens a
+        /// cost.</b> The floor is a floor - taking night three would take one and two with it
+        /// - which was invisible while every rung was a figure and is not once a rung opens a
         /// ceremony: a sweep would grant three chests behind one animation, which is the
         /// "reward that arrives while a panel is up" failure this game has already made twice.
         /// </summary>
@@ -828,7 +828,7 @@ namespace GlimmerGrove.Tests
         /// sitting on the board glowing.
         ///
         /// Run against an authored ladder rather than the shipped one, because every night
-        /// of the shipped ladder pays — which is a tuning decision that could change back
+        /// of the shipped ladder pays - which is a tuning decision that could change back
         /// tomorrow, and this rule must not quietly stop being tested when it does.
         /// </summary>
         [Test]
@@ -938,7 +938,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// Starting a new run seeds the floor to the day before it. That is what stops a
         /// streak the player let lapse from handing over its uncollected nights days
-        /// later, and — because a day key is a five-figure number — it is also what keeps
+        /// later, and - because a day key is a five-figure number - it is also what keeps
         /// a live file's floor away from the zero that means "pre-v10".
         /// </summary>
         [Test]
@@ -975,8 +975,8 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The whole first run, night by night: nothing is ever pre-collected, and no
         /// night is ever offered twice. Exhaustive rather than sampled, because the two
-        /// off-by-one errors available here — seeding to today instead of yesterday, and
-        /// counting the floor as inclusive or not — both show up on exactly one night.
+        /// off-by-one errors available here - seeding to today instead of yesterday, and
+        /// counting the floor as inclusive or not - both show up on exactly one night.
         /// </summary>
         [Test]
         public void EveryNightOfAFirstStreakIsOfferedExactlyOnce()
@@ -1018,7 +1018,7 @@ namespace GlimmerGrove.Tests
         //
         // The dates only started travelling when the ladder started paying money. Before
         // that a streak lived and died on one handset, which is why a player's flame
-        // restarted on their tablet — a real bug that hid behind a merge nothing fed.
+        // restarted on their tablet - a real bug that hid behind a merge nothing fed.
 
         static SaveFileDto SaveWith(StreakStateDto streak)
             => new SaveFileDto
@@ -1036,7 +1036,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// A night earned since the last sync has to make the push non-empty, or the delta
-        /// says "nothing to send" and the dates never leave the device — which is the state
+        /// says "nothing to send" and the dates never leave the device - which is the state
         /// the feature was already in, silently, for as long as it has existed.
         ///
         /// The shield is the sharpest case: a player who paid to be away and then opened the
@@ -1095,7 +1095,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The bug the lap exists to prevent. A board pinned to the lap the streak is
         /// *currently* on drops night seven off the bottom of the screen the moment night
-        /// eight arrives — the reward is still owed, still counted by the badge, and there
+        /// eight arrives - the reward is still owed, still counted by the badge, and there
         /// is no longer a tile to tap. Paging to the oldest uncollected night instead means
         /// nothing can be stranded.
         /// </summary>
@@ -1123,7 +1123,7 @@ namespace GlimmerGrove.Tests
         /// night seven. Before the tap the window is lap one, because that is where the oldest
         /// thing owed is; after it the window is lap two, because night eight is now the
         /// oldest. It is a different set of rows rather than different words on the same ones,
-        /// which is why <c>StreakScreen</c> asks this question rather than repainting — a page
+        /// which is why <c>StreakScreen</c> asks this question rather than repainting - a page
         /// that only repainted would leave the player looking at seven collected nights with
         /// nothing to tap and their reward apparently gone.
         /// </para>
@@ -1173,8 +1173,8 @@ namespace GlimmerGrove.Tests
         /// Three weeks, collected as a player actually would, asserting the property the
         /// whole feature rests on: from the second night on there is always exactly one
         /// night waiting, it always pays something, and it is always on the board that is
-        /// being drawn. Twenty-one days because the failure this catches — a night falling
-        /// between laps — only exists at the seams, and there are two of them.
+        /// being drawn. Twenty-one days because the failure this catches - a night falling
+        /// between laps - only exists at the seams, and there are two of them.
         /// </summary>
         [Test]
         public void EveryNightOfThreeWeeksIsOnTheBoardAndPays()
@@ -1201,7 +1201,7 @@ namespace GlimmerGrove.Tests
                 int pending = First(start, last, floor, today, Ladder);
 
                 // A night the ladder leaves blank simply has nothing waiting on it. The
-                // shipped ladder pays on every night, so this does not fire today — but
+                // shipped ladder pays on every night, so this does not fire today - but
                 // asking rather than hardcoding is what stops the walk silently skipping
                 // nights if a future lap leaves one empty.
                 if (!Ladder.Rung(night).IsValid)
@@ -1226,7 +1226,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// The same walk with a shield in the middle of it — a fortnight of play, a week
+        /// The same walk with a shield in the middle of it - a fortnight of play, a week
         /// away under cover, and then play again. The count has to carry on from where it
         /// was, every night has to be offered exactly once, and no night may be offered for
         /// a day nobody played.

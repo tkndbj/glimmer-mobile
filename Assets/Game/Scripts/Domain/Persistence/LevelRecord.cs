@@ -31,7 +31,7 @@ namespace GlimmerGrove.Persistence
         /// as percent-of-keepers-slower. Zero means never ranked.
         ///
         /// <para>
-        /// <b>Only ever promoted</b>, which is the whole design — see
+        /// <b>Only ever promoted</b>, which is the whole design - see
         /// <see cref="Promote"/>. It is the one thing in this record that is not a fact
         /// about the player's own play but about a population, and a population moves. The
         /// merge is therefore <c>max</c> like every other mergeable number in this file,
@@ -41,7 +41,7 @@ namespace GlimmerGrove.Persistence
         /// </para>
         /// <para>
         /// It buys nothing. A forged value wears a band on a map node and pays no
-        /// currency, which is what makes it safe to store client-side at all — the same
+        /// currency, which is what makes it safe to store client-side at all - the same
         /// test invariant 15 applies to a companion entitlement.
         /// </para>
         /// </summary>
@@ -55,14 +55,14 @@ namespace GlimmerGrove.Persistence
         /// Nothing produces a new value: the countdown was removed, so a run is graded and
         /// recorded on turns alone (<see cref="Content.LevelTuning.StarsFor"/>). The field
         /// stays because deleting it would be the one change to a save field that is not free
-        /// — it is on the wire in both directions of <c>FirestoreSaveMapper</c>, and a client
+        /// - it is on the wire in both directions of <c>FirestoreSaveMapper</c>, and a client
         /// that still writes a key the reader has forgotten is how a rollback loses data
         /// rather than a field. Keeping it costs one int per cleared glade and keeps every
         /// device, deployed or rolled back, agreeing about the document's shape (invariant
         /// 12a, and the same call invariant 16h made for <c>homesteadOwned</c>).
         /// </para>
         /// <para>
-        /// It is still merged — smaller wins, zero is absent — so times already earned survive
+        /// It is still merged - smaller wins, zero is absent - so times already earned survive
         /// a sync and a reinstall rather than being quietly dropped by the build that stopped
         /// measuring them. Nothing reads it: the record shown on a map node and the population
         /// a player is ranked against are both move counts.
@@ -109,8 +109,8 @@ namespace GlimmerGrove.Persistence
         /// <para>
         /// Note the order: the run is folded <em>first</em> and the standing is taken over
         /// the new <c>bestMoves</c>, never over this run's move count. A replay that came
-        /// nowhere near the record would otherwise be ranked on its own merits and — since
-        /// a standing only rises — simply achieve nothing, quietly, on the one path that
+        /// nowhere near the record would otherwise be ranked on its own merits and - since
+        /// a standing only rises - simply achieve nothing, quietly, on the one path that
         /// exists to capture it. Doing it inside the transform is what stops a call site
         /// getting that order wrong.
         /// </para>

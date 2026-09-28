@@ -11,13 +11,13 @@ namespace GlimmerGrove.Notifications
     /// function of the day (invariant 45b), a streak is a pair of day numbers, a season is a
     /// calendar window. So every reminder this game wants to send can be *derived on the
     /// phone*, which means there is no token to store, no fan-out job to run and no
-    /// per-player-per-day server bill — the same bargain invariant 14 strikes for rewards,
+    /// per-player-per-day server bill - the same bargain invariant 14 strikes for rewards,
     /// collected again. At ten million players a daily fan-out is tens of millions of
     /// document reads a day for ever; this is nought, for ever.
     /// </para>
     /// <para>
     /// <b>What that costs is the one thing local notifications cannot do:</b> a genuine
-    /// broadcast — "a new chapter is live", "double rewards this weekend" — is not derivable
+    /// broadcast - "a new chapter is live", "double rewards this weekend" - is not derivable
     /// from anything on the device, so it is not here. That is a real gap and it has a real
     /// answer that is also free (FCM *topic* messages, which Google fans out with no token
     /// storage and no per-device work); it is deliberately not built, because an unused push
@@ -26,7 +26,7 @@ namespace GlimmerGrove.Notifications
     /// </para>
     /// <para>
     /// <b>The ordinals reach analytics on every notification ever opened, so this enum is
-    /// append-only</b> and a retired kind is kept rather than deleted — the same rule
+    /// append-only</b> and a retired kind is kept rather than deleted - the same rule
     /// <c>DefeatReason</c> and <c>ChestDropKind</c> live under. The *strings* in
     /// <see cref="NotificationKinds"/> are what name loc keys and what a content file
     /// authors, so they are permanent for invariant 1's reason as well.
@@ -81,8 +81,8 @@ namespace GlimmerGrove.Notifications
     /// under what a content push can do.</b> It can switch a kind off, reorder the ladder,
     /// move the hours and change how often one repeats; it cannot write a new sentence,
     /// because a sentence has to be translated and translations ship in the build. That is
-    /// exactly invariant 39c's split — "an icon is not content, so adding a utility is a
-    /// build" — said about words: <b>a sentence is not content, so adding a notification is
+    /// exactly invariant 39c's split - "an icon is not content, so adding a utility is a
+    /// build" - said about words: <b>a sentence is not content, so adding a notification is
     /// a build; which ones are sent, and when, is content.</b>
     /// </para>
     /// </summary>
@@ -108,7 +108,7 @@ namespace GlimmerGrove.Notifications
         ///
         /// Written out rather than derived from the enum member's name, because
         /// <c>ToString</c> on an enum is a reflection call whose answer would change the day
-        /// somebody renamed a member — and a renamed member would silently re-point every
+        /// somebody renamed a member - and a renamed member would silently re-point every
         /// loc key and orphan the analytics series (invariant 1).
         /// </summary>
         public static string Id(NotificationKind kind)
@@ -135,8 +135,8 @@ namespace GlimmerGrove.Notifications
         ///
         /// Answering <c>None</c> rather than throwing is what lets a newer content pack reach
         /// an older build: a row naming a kind it does not know is dropped by name, exactly as
-        /// <c>TaskTable</c> drops a task naming an unknown goal. The opposite — refusing the
-        /// whole table — would mean one new notification takes every notification down.
+        /// <c>TaskTable</c> drops a task naming an unknown goal. The opposite - refusing the
+        /// whole table - would mean one new notification takes every notification down.
         /// </summary>
         public static NotificationKind Parse(string id)
         {

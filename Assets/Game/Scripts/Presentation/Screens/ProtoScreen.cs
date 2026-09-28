@@ -26,12 +26,12 @@ namespace GlimmerGrove
     /// are, what its readouts are called, and the one sentence the board cannot say for itself.
     /// </para>
     /// <para>
-    /// Everything about the ending goes through <c>RunLedger</c> — the record, the daily chests,
-    /// the streak, the reward and the analytics — so this screen holds no second copy of what a
+    /// Everything about the ending goes through <c>RunLedger</c> - the record, the daily chests,
+    /// the streak, the reward and the analytics - so this screen holds no second copy of what a
     /// finished run does. That is invariant 20b's whole demand of a mode: bring your own board,
     /// share the run. The five that shipped on it cost the save file no schema version, no merge
     /// rule and no server work between them, because a prototype level is an ordinary level with
-    /// its own permanent id (invariant 20a) — which is also why withdrawing four of them cost
+    /// its own permanent id (invariant 20a) - which is also why withdrawing four of them cost
     /// none of those things either.
     /// </para>
     /// </summary>
@@ -126,7 +126,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Asks, every frame, whether this run may be under way at all — and puts the answer on
+        /// Asks, every frame, whether this run may be under way at all - and puts the answer on
         /// the board. The board is live from the frame it exists, so without this a player could
         /// move while the iris was still opening, which is a run they were charged for and never
         /// saw begin.
@@ -176,7 +176,7 @@ namespace GlimmerGrove
         /// is left to go with, and how well it has gone.
         ///
         /// The allowance is the only one that is coloured, because it is the only one that can end
-        /// the run — and the thresholds come from <see cref="ProtoBudget.Pressure"/> rather than
+        /// the run - and the thresholds come from <see cref="ProtoBudget.Pressure"/> rather than
         /// from a comparison written here, so they are fractions of this board's own allowance and
         /// a test can hold them to what they claim.
         /// </summary>
@@ -202,7 +202,7 @@ namespace GlimmerGrove
             into.Add(new Readout(Loc.Get("mode.cap.best"), run == null ? "0" : run.Best.ToString()));
         }
 
-        /// <summary>Which slot the allowance sits in — what a lesson about it rings.</summary>
+        /// <summary>Which slot the allowance sits in - what a lesson about it rings.</summary>
         const int MovesReadout = 1;
 
         // ------------------------------------------------------------------ the stake
@@ -222,7 +222,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Puts the board back as it was authored. What a restart costs is
-        /// <c>RunScreen.RestartLevel</c>'s, which asks before this runs — a mode never gets at the
+        /// <c>RunScreen.RestartLevel</c>'s, which asks before this runs - a mode never gets at the
         /// price.
         /// </summary>
         protected override void Rewind()
@@ -269,14 +269,14 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>A hook rather than a constant, because the sentence a player reads is on the other
-        /// end of it.</b> Every board on this shape reaches the same *reading* — no move left —
+        /// end of it.</b> Every board on this shape reaches the same *reading* - no move left -
         /// but they reach it for reasons that want different words and that analytics has to be
         /// able to tell apart. A prototype board ran out of *board*; a Thornwatch line fell while
         /// the hill was still full, and "nothing left to do" over that reads as a bug.
         /// </para>
         /// <para>
         /// The two also differ in whether a purchase helps, which is <c>IProtoBoard.Stranded</c>'s
-        /// answer and not this one's — a cairn with nothing left to pull is beyond rescue, and a
+        /// answer and not this one's - a cairn with nothing left to pull is beyond rescue, and a
         /// fallen line is put back up by a continue. So this panel is reached on a siege only when
         /// that offer was declined, or never made because the run was free.
         /// </para>
@@ -292,7 +292,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Moves, everywhere but one lane.</b> Every board on this shape is graded on something
         /// the player <em>spends</em>, so fewer is better and par is a floor. A run that can never
-        /// be won has nothing to spend against — what it is graded on is how far it got — so a
+        /// be won has nothing to spend against - what it is graded on is how far it got - so a
         /// mode with such a lane answers with that instead, and the direction inverts with it
         /// (<c>LevelTuning.Climbs</c>).
         /// </para>
@@ -306,12 +306,12 @@ namespace GlimmerGrove
         /// <summary>
         /// Called once with the graded count, before anything is recorded.
         ///
-        /// The hook a mode uses to keep a reading of its own — an endless lane's high-water wave
+        /// The hook a mode uses to keep a reading of its own - an endless lane's high-water wave
         /// and its lifetime tally, both floors rather than grades, with nowhere else to live.
         ///
         /// <b>A mode may pay XP from in here</b>, and it does not have to say so: <see cref="Solve"/>
         /// reads <c>PlayerProgression.EndlessXp</c> either side of this call and hands the
-        /// difference to the ledger. That keeps this class mode-blind — it never learns what was
+        /// difference to the ledger. That keeps this class mode-blind - it never learns what was
         /// banked, only that the derived total moved.
         ///
         /// <b>A mode may also pay credits from in here, and that one it has to say</b>, through
@@ -329,7 +329,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>It says, it does not pay.</b> The money is already banked by the time this is
-        /// called — this is how the run tells the panel about it, and a mode that banks without
+        /// called - this is how the run tells the panel about it, and a mode that banks without
         /// reporting is a player who was paid and never told, which is exactly the fault this
         /// exists to close.
         /// </para>
@@ -352,7 +352,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Separate from <see cref="Finished"/>, which a win alone reaches and which is handed
-        /// the graded count. What a mode wants here is the other ending too — a reading taken
+        /// the graded count. What a mode wants here is the other ending too - a reading taken
         /// only from runs that were won is a reading of the players who did not need it.
         /// </para>
         /// </summary>
@@ -362,8 +362,8 @@ namespace GlimmerGrove
         /// How much allowance has to be restored before a bought move is a usable move.
         ///
         /// Nought whenever an offer is honest at all, and that is not the same as "always nought".
-        /// A board that has run out of allowance always has a legal move — running out of
-        /// <em>board</em> is checked first and is a different ending — so any move at all is a
+        /// A board that has run out of allowance always has a legal move - running out of
+        /// <em>board</em> is checked first and is a different ending - so any move at all is a
         /// playable move. What a shortfall would otherwise have covered is handled by refusing
         /// outright instead: a board that can be proved unfinishable is one no purchase rescues.
         /// </summary>
@@ -464,7 +464,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The run reached a fail state. The offer first, the defeat only if it is declined —
+        /// The run reached a fail state. The offer first, the defeat only if it is declined -
         /// nothing below runs until the player has said no, which is what keeps a continued run
         /// from being recorded as a loss, counted towards a chest or charged a heart.
         /// </summary>
@@ -530,7 +530,7 @@ namespace GlimmerGrove
         ///
         /// <b>Declared, not shown.</b> What goes up, in what order, and whether this particular
         /// player has met any of it is <c>RunScreen</c>'s to arrange. This says only what the board
-        /// holds — which is what lets the review key in the header work at all, since a list
+        /// holds - which is what lets the review key in the header work at all, since a list
         /// filtered by "never seen" is empty exactly when somebody asks to be reminded.
         /// </summary>
         protected internal override void Lessons(List<Lesson> into)
@@ -569,7 +569,7 @@ namespace GlimmerGrove
         protected internal override float LessonDelay => ProtoView.Entrance + .15f;
 
         /// <summary>
-        /// Holds the board while a lesson is up, and hands it back afterwards — but never to a run
+        /// Holds the board while a lesson is up, and hands it back afterwards - but never to a run
         /// that ended underneath the panel.
         /// </summary>
         protected internal override void Latch(bool latched)

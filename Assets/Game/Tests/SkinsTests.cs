@@ -12,7 +12,7 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// <b>It exists because a constant is invisible to <c>Tools/verify/artnames.py</c>.</b>
-    /// That gate reads <em>literals</em> at a call site — <c>Art.S("Ui/ic_gem")</c> — which is
+    /// That gate reads <em>literals</em> at a call site - <c>Art.S("Ui/ic_gem")</c> - which is
     /// exactly what a named skin is not, so a typo in this table resolves to nothing and draws
     /// a <b>white rectangle</b> (invariant 7b) with every offline gate green. The count that
     /// check prints of names that are *built rather than written* is the only thing that
@@ -23,12 +23,12 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// It is the same shape as the check <c>artnames.py</c> makes and not a second copy of it:
     /// that one holds a literal to what is on <em>disk</em>, this one holds a constant to what
-    /// the <em>manifest preloads</em> — and the manifest's own entries are literals, so they
+    /// the <em>manifest preloads</em> - and the manifest's own entries are literals, so they
     /// are already held to disk. The two together are what make the chain complete.
     /// </para>
     /// <para>
     /// <b>The table is walked by reflection rather than listed.</b> A hand-written list is a
-    /// second copy of <see cref="Skins"/> that goes stale the moment somebody adds a piece —
+    /// second copy of <see cref="Skins"/> that goes stale the moment somebody adds a piece -
     /// and the failure of a stale list here is silent, because a skin nobody checked is
     /// exactly the skin that draws nothing.
     /// </para>
@@ -67,7 +67,7 @@ namespace GlimmerGrove.Tests
             // one thing the walk cannot check about itself. The floor is deliberately well below
             // any plausible size of the table rather than close to its current one: it is asking
             // "did reflection work", not "is the table still this big", and a floor set at the
-            // count of the day fails the first time somebody removes a skin — which it did, on
+            // count of the day fails the first time somebody removes a skin - which it did, on
             // the same afternoon, when six pieces nothing drew were taken out.
             Assert.Greater(checked_, 12, "Skins is walked by reflection and came back nearly "
                                          + "empty - the walk is broken, not the table");
@@ -77,8 +77,8 @@ namespace GlimmerGrove.Tests
         /// That no two shelves in the storefront are told apart by nothing.
         ///
         /// <para>
-        /// The restyle took the coloured card frames away — every card is the kit's one teal
-        /// plate now — so what says which shelf a player is on is the lit tab and the coloured
+        /// The restyle took the coloured card frames away - every card is the kit's one teal
+        /// plate now - so what says which shelf a player is on is the lit tab and the coloured
         /// light under the goods. This is that second half held to its job: two shelves sharing
         /// an accent would be two shelves whose cards are pixel-identical, which is the fault
         /// the old three-frames-across-five-shelves table had and got away with only because

@@ -12,7 +12,7 @@ namespace GlimmerGrove
     /// Merge: an authored board of gems and rocks, a gem per cell in the colour of its rank
     /// with the rank's value written on it. <b>A drag on a gem slides that gem and nothing
     /// else</b> (<see cref="MergePuzzle"/>), so every move is one gem travelling and the rest
-    /// of the board standing still — the owner's objection to the 2048 board it replaced was
+    /// of the board standing still - the owner's objection to the 2048 board it replaced was
     /// exactly that everything moved at once (2026-09-27).
     ///
     /// <para>

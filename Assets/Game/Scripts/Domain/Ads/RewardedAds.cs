@@ -31,7 +31,7 @@ namespace GlimmerGrove.Ads
         CoolingDown,
 
         /// <summary>
-        /// The reward would be wasted — hearts at full, and nothing to top up. Offering
+        /// The reward would be wasted - hearts at full, and nothing to top up. Offering
         /// anyway would take thirty seconds of someone's life in exchange for nothing.
         /// </summary>
         NothingToGain,
@@ -47,7 +47,7 @@ namespace GlimmerGrove.Ads
     /// Whether an offer can be made, and what to say when it cannot.
     ///
     /// Carries the seconds left on a cooldown so the panel can count down rather than
-    /// simply refusing — a disabled button with no explanation is how a player concludes
+    /// simply refusing - a disabled button with no explanation is how a player concludes
     /// the feature is broken.
     /// </summary>
     public readonly struct AdOfferStatus
@@ -72,7 +72,7 @@ namespace GlimmerGrove.Ads
     ///
     /// <para>
     /// Shaped exactly like <see cref="DailyChests"/>, because it is the same problem seen
-    /// from a different angle — a repeatable award, bounded per day, that has to survive a
+    /// from a different angle - a repeatable award, bounded per day, that has to survive a
     /// reset nobody runs, a merge nobody supervises and a clock nobody controls. What
     /// differs is the one thing that matters: a chest's contents can be recomputed by the
     /// server from (account, day, index), and an ad's cannot. Nothing about "this player
@@ -81,7 +81,7 @@ namespace GlimmerGrove.Ads
     /// <para>
     /// <b>Hearts and boosts are applied locally; currency is only ever claimed.</b> A heart
     /// is clamped at the holding ceiling and a boost expires, so the worst a forged one buys
-    /// is a few runs somebody would otherwise have waited for — not worth a round trip. That
+    /// is a few runs somebody would otherwise have waited for - not worth a round trip. That
     /// stays true now that hearts stack past the refill cap: the bound moved from five to
     /// fifty, and neither number is worth a server's opinion. Currency is
     /// the thing that can be bought with real money and therefore the thing an attacker
@@ -126,8 +126,8 @@ namespace GlimmerGrove.Ads
             // ask the player anything at all. See the note there.
             _installed = provider != null;
 
-            // A new provider is a new start. Without this a second Install — a test, and one
-            // day a runtime swap to another mediation SDK — would inherit the first one's
+            // A new provider is a new start. Without this a second Install - a test, and one
+            // day a runtime swap to another mediation SDK - would inherit the first one's
             // latch and never be initialised at all.
             _started = false;
 
@@ -147,7 +147,7 @@ namespace GlimmerGrove.Ads
         /// calling three things in a row. A mediation SDK started before it has been told what
         /// it may collect has already decided, and has already run an auction on that decision;
         /// a signal applied afterwards changes the next request and cannot undo the first. Put
-        /// somewhere a caller can get the order wrong, it eventually is wrong — so the order
+        /// somewhere a caller can get the order wrong, it eventually is wrong - so the order
         /// lives here, once, and the caller has one thing to call.
         /// </para>
         /// <para>
@@ -159,13 +159,13 @@ namespace GlimmerGrove.Ads
         /// <para>
         /// Started from the splash rather than from <c>Boot</c>, for the reason the store
         /// connection is: this is a network round trip, and it may also put a native dialog on
-        /// screen — neither belongs before the first scene has loaded. Nothing waits on it.
+        /// screen - neither belongs before the first scene has loaded. Nothing waits on it.
         /// </para>
         /// </summary>
         public static async Task StartAsync(CancellationToken cancellation = default)
         {
             // Both conditions before the latch, and the order is the point. Nothing installed
-            // means nothing to consent to and therefore nobody to ask — a consent form and
+            // means nothing to consent to and therefore nobody to ask - a consent form and
             // Apple's prompt in front of a player on a build that cannot show a single ad is
             // the most annoying possible way to collect an answer nothing will ever use. But
             // latching *before* that check would make the refusal permanent: one call with no
@@ -178,7 +178,7 @@ namespace GlimmerGrove.Ads
             // No ConfigureAwait(false) anywhere on this path, and it is not an oversight.
             // Unity's main thread carries a SynchronizationContext, so a plain await resumes
             // on it; ConfigureAwait(false) resumes on the thread pool instead, and everything
-            // below this line ends up calling into JNI — SetMetaData, SetGDPRConsent, Init.
+            // below this line ends up calling into JNI - SetMetaData, SetGDPRConsent, Init.
             // JNI from an unattached background thread throws, and because BeginStart fires
             // this off as `_ = StartAsync()` the exception lands in a task nobody observes
             // and disappears. Mediation then simply never starts, with nothing in the log.
@@ -189,10 +189,10 @@ namespace GlimmerGrove.Ads
             provider.ApplyPrivacy(signals);
 
             // Subscribed *after* the first application, deliberately. Resolving raises
-            // Changed, so subscribing first means the opening consent reaches the SDK twice —
+            // Changed, so subscribing first means the opening consent reaches the SDK twice -
             // once through the event and once through the line above it. Harmless in effect
             // and wrong in fact: it is three redundant native calls on every launch, and it
-            // makes the one sequence worth being able to read — privacy, then init — say
+            // makes the one sequence worth being able to read - privacy, then init - say
             // something else. From here on the subscription carries only what its name says,
             // which is a player changing their mind.
             AdPrivacy.Changed += OnPrivacyChanged;
@@ -207,7 +207,7 @@ namespace GlimmerGrove.Ads
         /// The continuation is <b>observed</b> rather than discarded, which matters more than
         /// it looks: an unobserved faulted task is how a failure here becomes invisible. The
         /// first version wrote <c>_ = StartAsync()</c>, an exception on the first JNI call went
-        /// nowhere, and the symptom was an ad system that quietly did not exist — no offers, no
+        /// nowhere, and the symptom was an ad system that quietly did not exist - no offers, no
         /// error, nothing in the log to search for.
         /// </para>
         /// </summary>
@@ -224,7 +224,7 @@ namespace GlimmerGrove.Ads
                 catch (Exception e)
                 {
                     // Logged and swallowed. Ads failing to start must never take the game with
-                    // them — every offer already renders an honest refusal when the provider is
+                    // them - every offer already renders an honest refusal when the provider is
                     // not ready, which is exactly the state this leaves behind.
                     Debug.LogError($"[Ads] mediation failed to start: {e}");
                 }
@@ -235,8 +235,8 @@ namespace GlimmerGrove.Ads
         /// A withdrawal, or a change of mind, reaching the SDK.
         ///
         /// Applied to whichever provider is installed <em>now</em> rather than to one captured
-        /// when the subscription was made, because a test — and, one day, a runtime swap to a
-        /// second mediation SDK — replaces it underneath.
+        /// when the subscription was made, because a test - and, one day, a runtime swap to a
+        /// second mediation SDK - replaces it underneath.
         /// </summary>
         static void OnPrivacyChanged(Privacy.AdPrivacySignals signals) => _provider.ApplyPrivacy(signals);
 
@@ -250,7 +250,7 @@ namespace GlimmerGrove.Ads
         /// Whether this placement can be offered right now, and why not when it cannot.
         ///
         /// <para>
-        /// The order of the checks is the order the answers matter in. Content first —
+        /// The order of the checks is the order the answers matter in. Content first -
         /// a placement the table does not carry is switched off and nothing else is worth
         /// computing. Then the caps, which are ours and knowable offline. Then readiness,
         /// which is the network's and changes by itself. A panel that reported "no fill"
@@ -291,7 +291,7 @@ namespace GlimmerGrove.Ads
         /// <para>
         /// Distinct from <see cref="CanOffer"/>, and the distinction is the difference
         /// between a feature players understand and one they think is broken. A button that
-        /// vanishes during its cooldown teaches nobody anything — the player who watched a
+        /// vanishes during its cooldown teaches nobody anything - the player who watched a
         /// video a minute ago simply finds the option gone and concludes it was a one-off.
         /// Drawn and disabled with "another video in 0:32" on it, the same state teaches the
         /// rule in one glance.
@@ -322,7 +322,7 @@ namespace GlimmerGrove.Ads
         /// Whether the reward would actually land.
         ///
         /// <para>
-        /// Only hearts can be wasted — every other kind accumulates — and since hearts
+        /// Only hearts can be wasted - every other kind accumulates - and since hearts
         /// stack past the refill cap they are now very nearly in that company too. The test
         /// is the <em>ceiling</em>, not the five a timer stops at: a player at a full bar
         /// who watches a video keeps what it paid, which is the whole point of offering it
@@ -338,7 +338,7 @@ namespace GlimmerGrove.Ads
         static bool WouldBenefit(AdOffer offer)
         {
             // Hearts stack well past the refill cap, so this only bites at the holding
-            // ceiling — a rare state, and one where another heart really would evaporate.
+            // ceiling - a rare state, and one where another heart really would evaporate.
             if (offer.Kind == ChestDropKind.Hearts) return !Wallet.Hearts.IsAtCeiling;
 
             // Hints have no headroom at all: the shipped ceiling equals the refill cap, so
@@ -368,14 +368,14 @@ namespace GlimmerGrove.Ads
         /// verification callback arrives, and that callback identifies the player by the
         /// account id the client handed the SDK before the video started. With no account
         /// there is no id to hand over, so the callback would arrive naming nobody and the
-        /// claim would sit unconfirmed forever — the player would watch an ad, see coins,
+        /// claim would sit unconfirmed forever - the player would watch an ad, see coins,
         /// and lose them on the next sync.
         /// </para>
         /// <para>
         /// Hearts and boosts are deliberately <em>not</em> gated: they are applied by this
         /// client and never adjudicated, so there is nothing for an account to be needed
-        /// for. That asymmetry is the whole reason the defeat offer — the one with a real
-        /// trigger, and the one a brand-new player meets first — keeps working on a very
+        /// for. That asymmetry is the whole reason the defeat offer - the one with a real
+        /// trigger, and the one a brand-new player meets first - keeps working on a very
         /// first launch with no network.
         /// </para>
         /// <para>
@@ -398,7 +398,7 @@ namespace GlimmerGrove.Ads
         /// </para>
         /// <para>
         /// A continue banks nothing. Its thirty seconds are spent inside the run that
-        /// granted them and are gone when that run resolves, so there is no faucet to pace —
+        /// granted them and are gone when that run resolves, so there is no faucet to pace -
         /// the only thing repetition accumulates is elapsed time on a clock that is grading
         /// the player against par. Pacing it would also be actively wrong at the one moment
         /// it is offered: the run is frozen on a lost board while the panel is up, so a
@@ -409,7 +409,7 @@ namespace GlimmerGrove.Ads
         /// Note what this is <b>not</b> keyed on. Not the placement id, which would make the
         /// rule a list somebody has to remember to extend, and not "is it currency", which
         /// would exempt hearts as well. It is keyed on the one property that actually
-        /// justifies the exemption — see <see cref="ChestDropKinds.IsTransient"/>.
+        /// justifies the exemption - see <see cref="ChestDropKinds.IsTransient"/>.
         /// </para>
         /// </summary>
         static bool Paced(AdOffer offer) => !ChestDropKinds.IsTransient(offer.Kind);
@@ -454,7 +454,7 @@ namespace GlimmerGrove.Ads
         /// <para>
         /// Called only with a result the provider reported as <see cref="AdOutcome.Rewarded"/>.
         /// Returns the drop that was applied, so the caller can show it, or an invalid drop
-        /// when nothing was paid — which happens when the cap moved underneath the view
+        /// when nothing was paid - which happens when the cap moved underneath the view
         /// (a config push mid-ad) or when the impression does not match the placement.
         /// </para>
         /// <para>
@@ -484,7 +484,7 @@ namespace GlimmerGrove.Ads
 
             // An unpaced offer does not start the shared cooldown either. Counting the view
             // but stamping the clock would let a continue silently pace the *other*
-            // placements — a player who saved a run would come out of it to find the home
+            // placements - a player who saved a run would come out of it to find the home
             // screen's coin offer counting down at them for no reason they could see.
             if (Paced(offer)) _lastWatchedUnix = now;
 
@@ -512,7 +512,7 @@ namespace GlimmerGrove.Ads
         /// something nobody would bother forging.
         /// </para>
         /// <para>
-        /// Currency is <b>not</b> credited — not even as a claim. This is the one place the
+        /// Currency is <b>not</b> credited - not even as a claim. This is the one place the
         /// ad path diverges from the chest path, and the reason is that the client has
         /// nothing to key a claim on. A chest's award id is derived from facts both sides
         /// can compute; an ad's would have to be derived from the impression, and no
@@ -529,8 +529,8 @@ namespace GlimmerGrove.Ads
 
             // **The one kind whose *track* depends on who is paying, so it is decided here.**
             // An XP boost has two windows: a watched one, metered by a cooldown derived from its
-            // own deadline, and a bought one with no cooldown. A view opens the watched window —
-            // that is what the cooldown exists to meter — while a chest gifting the same kind
+            // own deadline, and a bought one with no cooldown. A view opens the watched window -
+            // that is what the cooldown exists to meter - while a chest gifting the same kind
             // opens the bought one, which is `BankedDrop`'s case below. Routing both through the
             // shared switch would put every gift on the metered track and silently move the
             // cooldown, which is precisely what `XpBoost.WatchedReadyAt` cannot survive.
@@ -545,7 +545,7 @@ namespace GlimmerGrove.Ads
                 return;
             }
 
-            // Everything banked — hearts, a boost, a hint, a utility — is applied by one
+            // Everything banked - hearts, a boost, a hint, a utility - is applied by one
             // shared switch rather than by a copy here. This one used to be that copy, and
             // it was the *correct* half of a pair that had drifted: the chest's had no hint
             // case at all. See BankedDrop.
@@ -631,7 +631,7 @@ namespace GlimmerGrove.Ads
         ///
         /// Sorted by placement id, and that is not tidiness. <see cref="SaveChecksum"/>
         /// hashes the serialised file, so an array whose order depended on dictionary
-        /// internals would produce a different checksum for identical state — making every
+        /// internals would produce a different checksum for identical state - making every
         /// launch look like a change, writing a file that did not need writing and sending
         /// a sync with nothing in it. It is also what lets <c>SaveDelta</c> compare the two
         /// with an ordered walk, the same way the tip list is compared.
@@ -652,7 +652,7 @@ namespace GlimmerGrove.Ads
         /// Folds a stored array into a map, keeping the larger count for a repeated id.
         ///
         /// A duplicate is a malformed file rather than two allowances, and the larger value
-        /// is the conservative reading — the one that cannot be produced by editing the
+        /// is the conservative reading - the one that cannot be produced by editing the
         /// file to win back a spent view.
         /// </summary>
         static void Absorb(Dictionary<string, int> into, AdViewCountDto[] counts)
@@ -674,7 +674,7 @@ namespace GlimmerGrove.Ads
         /// Joins two devices' ad counters.
         ///
         /// <para>
-        /// The later day wins outright, exactly as it does for chests — an older day's
+        /// The later day wins outright, exactly as it does for chests - an older day's
         /// counters describe a day that is over. Within a shared day every count takes the
         /// <em>larger</em> value, which is the conservative direction here for a different
         /// reason than it is for chests: an allowance is consumable, and taking the smaller

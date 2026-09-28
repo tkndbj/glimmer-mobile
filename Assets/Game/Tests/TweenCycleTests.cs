@@ -10,12 +10,12 @@ namespace GlimmerGrove.Tests
     /// year every <c>Loop(-1, true)</c> in the game snapped back at the end of its period
     /// instead of easing back, and the reverse branch that was supposed to do the easing was
     /// unreachable code. It compiled, it validated, it shipped, and it was reported from play
-    /// as "the background seems to flicker a little" — because a wrong number here is not a
+    /// as "the background seems to flicker a little" - because a wrong number here is not a
     /// wrong pixel, it is a wrong <em>motion</em>, and nothing but running it catches that.
     /// </para>
     /// <para>
-    /// Every case drives <see cref="TweenCycle"/> the way <c>Tween.Update</c> drives it — a
-    /// step at a time, feeding the previous frame's state back in — so what is proved here is
+    /// Every case drives <see cref="TweenCycle"/> the way <c>Tween.Update</c> drives it - a
+    /// step at a time, feeding the previous frame's state back in - so what is proved here is
     /// the sequence the player would have seen, not a single call.
     /// </para>
     /// </summary>
@@ -124,15 +124,15 @@ namespace GlimmerGrove.Tests
         {
             var phases = Play(3.4f, -1, true, 400, firstStep: 120f);
 
-            // From the second frame on — the first is allowed to land wherever a clamped
-            // step puts it — nothing may move faster than it does in steady state.
+            // From the second frame on - the first is allowed to land wherever a clamped
+            // step puts it - nothing may move faster than it does in steady state.
             Assert.Less(LargestJump(phases, 1), Frame / 3.4f * 1.5f,
                         "a resume left surplus time to burn off over the frames after it");
         }
 
         /// <summary>
         /// The clamp alone is not enough and the wrap alone is not enough, so this drives a
-        /// loop shorter than <see cref="TweenCycle.MaxStep"/> with an enormous step — the
+        /// loop shorter than <see cref="TweenCycle.MaxStep"/> with an enormous step - the
         /// case where a clamped step still covers whole cycles.
         /// </summary>
         [Test]
@@ -143,7 +143,7 @@ namespace GlimmerGrove.Tests
             foreach (float p in phases) Assert.That(p, Is.InRange(0f, 1f));
 
             // Whatever the surplus was, it is gone by the next frame rather than draining
-            // one cycle at a time — so the tween is running normally immediately.
+            // one cycle at a time - so the tween is running normally immediately.
             var after = TweenCycle.Advance(0f, TweenCycle.Step(3600f), .1f, -1, true);
             Assert.Less(after.Elapsed, .2f, "surplus was left in elapsed to burn off later");
         }
@@ -161,7 +161,7 @@ namespace GlimmerGrove.Tests
         // ----------------------------------------------------------- the other modes
 
         /// <summary>
-        /// A plain loop is meant to saw — <c>HomeScreen</c>'s beacon ring is written that way
+        /// A plain loop is meant to saw - <c>HomeScreen</c>'s beacon ring is written that way
         /// on purpose, so that it rests between steps. The fix must not have turned every
         /// loop into a ping-pong.
         /// </summary>

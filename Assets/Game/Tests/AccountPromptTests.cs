@@ -11,9 +11,9 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// Run offline, and the type is shaped the way it is so that they can be. Every situation
-    /// this policy is about is one the Editor never reaches — a live SDK session, a real
+    /// this policy is about is one the Editor never reaches - a live SDK session, a real
     /// purchase, a device that has been away for two days, a player who changed the system
-    /// clock — so a rule that could only be exercised by playing the shipped game is a rule
+    /// clock - so a rule that could only be exercised by playing the shipped game is a rule
     /// nobody would ever exercise. <c>SyncScheduler</c>'s bargain and <c>TweenCycle</c>'s
     /// reason.
     /// </para>
@@ -39,7 +39,7 @@ namespace GlimmerGrove.Tests
         static int PurchaseBudget => Shipped.PurchaseBudget;
         static long QuietSeconds => Shipped.QuietSeconds;
 
-        /// <summary>An anonymous, healthy, backed-by-a-server device — the only state that asks.</summary>
+        /// <summary>An anonymous, healthy, backed-by-a-server device - the only state that asks.</summary>
         static bool Ask(AccountPromptPolicy policy, AccountPromptTrigger trigger, long now,
                         AccountPromptRuleTable rules = null)
             => policy.ShouldOffer(trigger, rules ?? Shipped,
@@ -83,7 +83,7 @@ namespace GlimmerGrove.Tests
         [Test]
         public void ADeviceCaughtBetweenTwoAccountsIsNeverAsked()
         {
-            // A player here *is* signed in, so the guest copy would be false — and the profile
+            // A player here *is* signed in, so the guest copy would be false - and the profile
             // card is already telling them the thing that actually matters.
             var policy = Guest();
 
@@ -181,7 +181,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// A stamp in the future must not silence the prompt for the life of the installation.
         ///
-        /// The obvious implementation — <c>now - last &lt; Quiet</c> — is negative here, reads as
+        /// The obvious implementation - <c>now - last &lt; Quiet</c> - is negative here, reads as
         /// "inside the quiet period", and never recovers, because nothing ever writes a smaller
         /// stamp while every ask is refused. A player only has to change their device date once.
         /// </summary>
@@ -234,7 +234,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// A live installation that has already declined twice must not be handed a fresh
-        /// allowance — which is why <c>AccountPrompts</c> keeps the shipped PlayerPrefs key.
+        /// allowance - which is why <c>AccountPrompts</c> keeps the shipped PlayerPrefs key.
         /// </summary>
         [Test]
         public void AnInstallationThatAlreadySpentTheChapterBudgetIsNotAskedAgain()
@@ -278,7 +278,7 @@ namespace GlimmerGrove.Tests
         // ------------------------------------------------------------- the published pacing
         /// <summary>
         /// An absent block is not an error. A client that predates the field keeps the pacing
-        /// that shipped inside it — every optional block in this file works that way.
+        /// that shipped inside it - every optional block in this file works that way.
         /// </summary>
         [Test]
         public void AnAbsentBlockKeepsTheShippedPacing()
@@ -305,7 +305,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The lever the whole block exists for: if the modal costs more conversion than the
         /// protection is worth, a push turns it off without a store review. Zero must therefore
-        /// be a value an author can write and not be mistaken for "said nothing" — which is why
+        /// be a value an author can write and not be mistaken for "said nothing" - which is why
         /// the DTO's sentinel is -1.
         /// </summary>
         [Test]
@@ -321,7 +321,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// The bound whose absence is a hostile game rather than a mistuning — a file saying
+        /// The bound whose absence is a hostile game rather than a mistuning - a file saying
         /// "ask every time" would put a modal in front of every purchase for every guest, with
         /// no app update to roll back.
         /// </summary>
@@ -338,7 +338,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// Zero hours would let two triggers land back to back, which is the failure the shared
-        /// clock exists to prevent — and it is reachable by a typo rather than by a decision,
+        /// clock exists to prevent - and it is reachable by a typo rather than by a decision,
         /// which is exactly why it is clamped rather than honoured.
         /// </summary>
         [Test]
@@ -381,7 +381,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The table reaches the ask and nothing else. A guest is a guest whatever the pacing
-        /// says, so switching every trigger off must not also take the bar off the shelf — that
+        /// says, so switching every trigger off must not also take the bar off the shelf - that
         /// is the standing half of the warning and the reason the modal can be rare.
         /// </summary>
         [Test]
@@ -402,9 +402,9 @@ namespace GlimmerGrove.Tests
         /// can see.
         ///
         /// <para>
-        /// This project has twice shipped a field that reached a DTO and stopped there —
+        /// This project has twice shipped a field that reached a DTO and stopped there -
         /// `groveLandOwned` never reached the mapper, `unlockCost` never reached the manifest
-        /// writer — and both were invisible because everything either side of the gap kept
+        /// writer - and both were invisible because everything either side of the gap kept
         /// working. A pacing lever that parses correctly and never reaches the ask is the same
         /// bug wearing the same disguise: it would look exactly like a lever that had been
         /// pushed and had not helped.

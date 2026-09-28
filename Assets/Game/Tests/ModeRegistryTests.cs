@@ -9,8 +9,8 @@ namespace GlimmerGrove.Tests
     /// That a mode is registered <em>whole</em>.
     ///
     /// <para>
-    /// A way of playing is declared in two halves — <see cref="LevelMode"/> for its rules and
-    /// <c>ModeLook</c> for its screen and its perch — because Domain may never reference
+    /// A way of playing is declared in two halves - <see cref="LevelMode"/> for its rules and
+    /// <c>ModeLook</c> for its screen and its perch - because Domain may never reference
     /// Presentation. Two halves means a mode can be added to one and forgotten in the other, and
     /// the failure is quiet: a mode with no look routes to the classic screen and opens a level
     /// it cannot play; a look with no rules draws a switcher entry for a mode no chapter can
@@ -187,7 +187,7 @@ namespace GlimmerGrove.Tests
         public void EveryModeHasALookOfItsOwn()
         {
             // ModeLooks.Of falls back to the classic look rather than throwing, which is right
-            // at run time — a map with an odd-looking node beats a map that will not open — and
+            // at run time - a map with an odd-looking node beats a map that will not open - and
             // exactly why it needs a test: without one, a mode registered in Domain and
             // forgotten in Presentation is invisible until somebody notices the wrong rock.
             foreach (var mode in LevelModes.All)

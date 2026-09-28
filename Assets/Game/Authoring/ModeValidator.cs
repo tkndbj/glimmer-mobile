@@ -9,8 +9,8 @@ namespace GlimmerGrove.Content
     ///
     /// <para>
     /// <b>A mode is now declared three times, and the third one is this.</b> What it <em>is</em>
-    /// lives in <see cref="LevelMode"/> (Domain — its rules, its parser, its tuning). What it
-    /// <em>looks like</em> lives in <c>ModeLook</c> (Presentation — its screen, its perch, its
+    /// lives in <see cref="LevelMode"/> (Domain - its rules, its parser, its tuning). What it
+    /// <em>looks like</em> lives in <c>ModeLook</c> (Presentation - its screen, its perch, its
     /// colour), split off because Domain may never reference Presentation. This is the same split
     /// made once more for the same kind of reason: a mode's checks run on a build machine and
     /// never on a phone, so they belong in an assembly no player installs.
@@ -18,7 +18,7 @@ namespace GlimmerGrove.Content
     /// <para>
     /// <b>It was a <c>virtual</c> on <see cref="LevelMode"/>, and that one word shipped the whole
     /// validator.</b> <c>LevelValidator</c> is six hundred lines that prove a board is solvable,
-    /// that its arms mate, that its taproots bind, that its star bands are landable — none of
+    /// that its arms mate, that its taproots bind, that its star bands are landable - none of
     /// which a player's device has any use for, because content is proved on the machine that
     /// builds it. It could not move while it was reached through a member of a class the runtime
     /// does use: the authoring entry point called into the mode, and the mode called back into
@@ -32,7 +32,7 @@ namespace GlimmerGrove.Content
     /// <em>validator</em> must never fall back to anything, because the fallback would be
     /// "validated nothing" and would be indistinguishable, on every screen and in every log, from
     /// content that passed. So <see cref="LevelValidator.Validate"/> reports it, and
-    /// <c>ModeValidatorTests</c> refuses a build where any shipped mode is missing one — the
+    /// <c>ModeValidatorTests</c> refuses a build where any shipped mode is missing one - the
     /// check exists because the failure is silent, which is the same reason invariant 20h exists
     /// one file over.
     /// </para>
@@ -89,7 +89,7 @@ namespace GlimmerGrove.Content
 
     /// <summary>
     /// Lightfall. A well is authored rather than generated, so unlike a weave everything here is
-    /// in the file — but whether it can be <em>emptied</em> is not, and that is what most of
+    /// in the file - but whether it can be <em>emptied</em> is not, and that is what most of
     /// this proves.
     ///
     /// <para>
@@ -109,14 +109,14 @@ namespace GlimmerGrove.Content
         /// <para>
         /// <b>These are about the <em>player's</em> device, not about this one.</b>
         /// <see cref="FallSolver.NodeBudget"/> is a quarter of a million because it has to make a
-        /// genuinely hard board <em>provable</em> — a board it cannot prove is a board with no
+        /// genuinely hard board <em>provable</em> - a board it cannot prove is a board with no
         /// par, and everything a player is graded against derives from par. These two are the
         /// separate question of what that proof costs where it is actually paid: once per level,
         /// on the phone, when somebody opens it (invariant 26d).
         /// </para>
         /// <para>
         /// Measured rather than guessed. Forty thousand positions is about twenty milliseconds
-        /// of desktop .NET, so a few tens on a phone running IL2CPP — invisible behind a screen
+        /// of desktop .NET, so a few tens on a phone running IL2CPP - invisible behind a screen
         /// transition. A hundred and twenty thousand is about sixty-five, so a quarter of a
         /// second on a phone, which is a pause somebody notices on the way into a level and is
         /// therefore refused rather than warned about. The cost is not linear in anything an
@@ -128,7 +128,7 @@ namespace GlimmerGrove.Content
         const int NodeWarning = 40_000, NodeCeiling = 120_000;
 
         /// <summary>
-        /// Above this many shortest solutions, the board is not deciding much — see
+        /// Above this many shortest solutions, the board is not deciding much - see
         /// <see cref="FallSurvey.Ways"/> and invariant 5d.
         /// </summary>
         const int TooManyWays = 400;
@@ -149,7 +149,7 @@ namespace GlimmerGrove.Content
 
                 issues.Add(new LevelIssue(LevelIssueSeverity.Error,
                     $"there is a mote standing in column {x} of the brim row, which is the row " +
-                    "that ends the run — this level begins lost"));
+                    "that ends the run - this level begins lost"));
                 break;
             }
 
@@ -180,7 +180,7 @@ namespace GlimmerGrove.Content
             // Every channel, not merely every channel the board wants *now*, and the
             // difference is a well that can be neither won nor lost. A drop that lands on bare
             // ground puts a fresh pure mote in the well, and that mote wants the two channels it
-            // does not hold — so a procession of two colours can be walked into a position no
+            // does not hold - so a procession of two colours can be walked into a position no
             // amount of play recovers from. On a well with a supply that is a loss, which is
             // survivable; on the opening well, which is authored without one, it is a board that
             // sits there for ever refusing to end. Invariant 20g's state, reached by arithmetic.
@@ -191,19 +191,19 @@ namespace GlimmerGrove.Content
                 int absent = Energy.All & ~layout.Deal.Channels;
                 issues.Add(new LevelIssue(LevelIssueSeverity.Error,
                     $"this procession never deals {Energy.Letter(absent)}, so a mote that ends " +
-                    "up wanting it could never be finished — and a drop onto bare ground makes " +
+                    "up wanting it could never be finished - and a drop onto bare ground makes " +
                     "one. A deal has to carry all three channels"));
             }
 
             // Glass is only ever removed by light reaching it, and light only ever comes from a
-            // burst — so a well with no mote in it can never charge a lens and can never lose
+            // burst - so a well with no mote in it can never charge a lens and can never lose
             // one. The search below proves it unwinnable, but only after spending the whole node
             // budget failing to, and it says so in words about a search rather than in words
             // about the board.
             //
             // A whorl counts on the wrong side of this rather than being left out of it, and the
-            // reason is worth stating: a whorl is always *removable* — a drop opens one and one
-            // with nothing beside it closes — but it emits no light whatever. It gives back the
+            // reason is worth stating: a whorl is always *removable* - a drop opens one and one
+            // with nothing beside it closes - but it emits no light whatever. It gives back the
             // motes it drew in, so a well holding only glass and whorls has nothing to draw and
             // nothing to cook, and the glass in it is there for ever.
             if (layout.Lenses > 0 && layout.Lenses + layout.Whorls == layout.Motes)
@@ -214,7 +214,7 @@ namespace GlimmerGrove.Content
                     "got rid of"));
 
             // Room above par is `spare`, in drops, so a budgetFactor on a well is a number
-            // that does nothing. Refused rather than ignored, for ChapterDto.order's reason —
+            // that does nothing. Refused rather than ignored, for ChapterDto.order's reason -
             // and refused rather than honoured, because two ways to say one thing is how they
             // come to disagree. A negative factor still means "cannot be lost", which is not an
             // override and is what the first well in the game is authored with.
@@ -232,7 +232,7 @@ namespace GlimmerGrove.Content
                 issues.Add(new LevelIssue(LevelIssueSeverity.Error,
                     $"this well could not be proved inside {FallSolver.NodeBudget} positions " +
                     $"(it looked at {survey.Nodes}) or within {FallSolver.MaxDrops} drops. It " +
-                    "may be unsolvable, or simply too big to prove — either way it cannot ship, " +
+                    "may be unsolvable, or simply too big to prove - either way it cannot ship, " +
                     "because the player's device runs the same search to work out par"));
                 return;
             }
@@ -241,7 +241,7 @@ namespace GlimmerGrove.Content
             {
                 issues.Add(new LevelIssue(LevelIssueSeverity.Error,
                     "no sequence of drops empties this well without flooding it, so nobody can " +
-                    "finish it — every arrangement was searched and none won"));
+                    "finish it - every arrangement was searched and none won"));
                 return;
             }
 
@@ -251,13 +251,13 @@ namespace GlimmerGrove.Content
                     "a level may cost. The player's device runs this same search when somebody " +
                     "opens the level, so this is about a quarter of a second of nothing " +
                     "happening on the way in. Cost goes as the column count to the power of " +
-                    "par, so the cheapest fixes are a narrower well or a shorter answer — " +
+                    "par, so the cheapest fixes are a narrower well or a shorter answer - " +
                     "start it fuller rather than making it bigger"));
             else if (survey.Nodes > NodeWarning)
                 issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
                     $"proving this well took {survey.Nodes} positions against the " +
-                    $"{NodeWarning} a level is expected to cost. It ships — the refusal is " +
-                    $"at {NodeCeiling} — but the player's device runs this same search when " +
+                    $"{NodeWarning} a level is expected to cost. It ships - the refusal is " +
+                    $"at {NodeCeiling} - but the player's device runs this same search when " +
                     "somebody opens the level"));
 
             // The same three-line check every mode with a fail line gets. Shared rather than
@@ -270,17 +270,17 @@ namespace GlimmerGrove.Content
             if (survey.Ways > TooManyWays)
                 issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
                     $"{survey.Ways} different sequences of {survey.Par} drops empty this well, " +
-                    "so almost any tidy play wins and the procession is deciding nothing — " +
+                    "so almost any tidy play wins and the procession is deciding nothing - " +
                     "fill it fuller, mix the colours less neatly, or shorten the deal"));
 
             // Reported rather than gated. On a chapter's opening levels thoughtlessness is
-            // supposed to work — that is what teaching the verb looks like — so this is a
+            // supposed to work - that is what teaching the verb looks like - so this is a
             // reading for the author, and a chapter's ladder is where it stops being true.
             if (survey.Greedy >= 0 && survey.Greedy <= level.Tuning.MoveBudget && survey.Par > 3)
                 issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
                     $"a player who never looks ahead empties this well in {survey.Greedy} drops " +
                     $"against a supply of {level.Tuning.MoveBudget}, so it can be cleared by " +
-                    "always taking the biggest burst going — fine early in a chapter, and worth " +
+                    "always taking the biggest burst going - fine early in a chapter, and worth " +
                     "knowing later in one"));
 
             // Invariant 5d, counted, for the one object in this mode that is not made of light.
@@ -295,8 +295,8 @@ namespace GlimmerGrove.Content
             // only fired by a lens another lens strikes, and where a lens has fallen to by then
             // is not a position any cheap check can enumerate.
             //
-            // Geometry of the authored position rather than a proof — a well collapses under a
-            // chain, so a lens fires from wherever it has fallen to — so it is said out loud
+            // Geometry of the authored position rather than a proof - a well collapses under a
+            // chain, so a lens fires from wherever it has fallen to - so it is said out loud
             // rather than refused. Note what needs no check at all: a lens can only leave the
             // well by firing, so a board the search proves emptiable is a board where every lens
             // on it is filled and fired. Glass cannot go uncharged and ship.
@@ -308,7 +308,7 @@ namespace GlimmerGrove.Content
                     "the same without the glass. Stand a lens on the floor with its light across " +
                     "a gap, or looking into a blob the wash cannot reach"));
 
-            // Invariant 5d, counted, for the object the third chapter is built on — and unlike
+            // Invariant 5d, counted, for the object the third chapter is built on - and unlike
             // the lens's `aim` this one is exact rather than geometry, because **gravity never
             // moves a whorl sideways**. A whorl draws in the cells to its left and its right, so
             // the two columns it can ever draw from are the two it is authored between, whatever
@@ -319,8 +319,8 @@ namespace GlimmerGrove.Content
             //
             // A warning rather than a refusal, because moving one mote inward is a real if small
             // effect and the first board of a chapter may legitimately carry one as scenery. The
-            // reading that actually condemns a board is `kindled` — how often a merge reached
-            // white along a shortest solution — and that needs the search's winning line, which
+            // reading that actually condemns a board is `kindled` - how often a merge reached
+            // white along a shortest solution - and that needs the search's winning line, which
             // is what `Tools/verify/fall.py` and the ladder fixtures report.
             int walled = 0;
             for (int at = 0; at < layout.Count; at++)
@@ -334,7 +334,7 @@ namespace GlimmerGrove.Content
             if (walled > 0)
                 issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
                     $"{walled} of this well's {layout.Whorls} whorl(s) stand against a wall, and " +
-                    "gravity never moves a whorl sideways — so those can only ever draw in one " +
+                    "gravity never moves a whorl sideways - so those can only ever draw in one " +
                     "mote and can never merge a pair, which is the whole of what a whorl is for. " +
                     "Stand them at least one column in"));
 
@@ -344,7 +344,7 @@ namespace GlimmerGrove.Content
             if (layout.Headroom <= 0)
                 issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
                     "the fill reaches the row below the brim, so the very first careless drop " +
-                    "on the tallest column ends the run — deliberate on a finale, a mistake " +
+                    "on the tallest column ends the run - deliberate on a finale, a mistake " +
                     "anywhere else"));
         }
     }
@@ -380,7 +380,7 @@ namespace GlimmerGrove.Content
     /// over a position that pretends to be one.
     /// </para>
     /// <para>
-    /// So these are all <em>certainties</em> — things provable about the file rather than
+    /// So these are all <em>certainties</em> - things provable about the file rather than
     /// measurements of play. The one reading that is not provable here is the one the mode has to
     /// be judged on by somebody playing it: whether par is a line a good run can land under. That
     /// is on the owed list rather than in this file, because no check can answer it.
@@ -620,7 +620,7 @@ namespace GlimmerGrove.Content
         ///
         /// <para>
         /// <b>One question per spell, because the four take four different things.</b> Invariant
-        /// 5d is usually asked of a board — does this mechanic reject any arrangement — and a boss
+        /// 5d is usually asked of a board - does this mechanic reject any arrangement - and a boss
         /// is the one object here placed by the *level* rather than dealt, so the same question is
         /// asked of what the level surrounds it with. Every one of these is a warning: a chapter's
         /// first rung may legitimately carry a boss as the thing being taught rather than the
@@ -794,7 +794,7 @@ namespace GlimmerGrove.Content
         ///
         /// <para>
         /// <b>Two blows a raider, and the one it used to count was wrong.</b> The first version
-        /// counted a single blow each and called itself conservative — "a level this names really
+        /// counted a single blow each and called itself conservative - "a level this names really
         /// cannot be lost". It is not: a raider that reaches the line goes on swinging every
         /// <see cref="SiegeTuning.BlowEvery"/> until something kills it, so eight creepers standing
         /// at an unfed line are worth several times what one blow each counts. The old bar named
@@ -802,8 +802,8 @@ namespace GlimmerGrove.Content
         /// is played.
         /// </para>
         /// <para>
-        /// Two is a floor that is actually a floor — a raider that arrives at all gets a second
-        /// swing in unless the ward it walked to is already firing at it — and what genuinely
+        /// Two is a floor that is actually a floor - a raider that arrives at all gets a second
+        /// swing in unless the ward it walked to is already firing at it - and what genuinely
         /// measures the threat is <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c>, which plays
         /// every rung and fails on a line that finishes untouched (invariant 37j).
         /// </para>
@@ -818,7 +818,7 @@ namespace GlimmerGrove.Content
             //
             // **Two of the four bosses are not**, and that is the clause a fourth boss bought. A
             // blightcaller takes fuel and a warbringer takes time; neither can bring a ward down,
-            // so a level whose only threat were one of them could not be lost at all — which is
+            // so a level whose only threat were one of them could not be lost at all - which is
             // invariant 5d asked of a fail state, and exactly the reading "there is a boss, so the
             // line is in danger" would have got wrong in silence.
             foreach (var boss in layout.BossKinds)
@@ -954,7 +954,7 @@ namespace GlimmerGrove.Content
     /// sequence of swaps finishes this board" is true and useless; "the critter at row 3 column 5
     /// stands in a run of gems no lantern touches, so nothing that happens anywhere on this board
     /// could ever reach it" is the sentence that names the thing to move. The refusals about the
-    /// board's opening state — no critter, no lantern, a vein already touching a sleeper — live in
+    /// board's opening state - no critter, no lantern, a vein already touching a sleeper - live in
     /// the mode's own reader, because a player's build runs that reader and must not open a board
     /// that cannot be played.
     /// </para>
@@ -977,8 +977,8 @@ namespace GlimmerGrove.Content
         /// <b>Invariant 5g, which was found on glades and applies here word for word.</b> A board
         /// dealt with most of its veins already running starts half done, and nothing else would
         /// notice: it is still solvable, still correctly par'd and still fully validated. A
-        /// little is the opposite of a fault — one lit gem beside each lantern is how this mode
-        /// teaches itself without a sentence — so this is generous and is a warning.
+        /// little is the opposite of a fault - one lit gem beside each lantern is how this mode
+        /// teaches itself without a sentence - so this is generous and is a warning.
         /// </para>
         /// <para>
         /// A fraction rather than a count, because a board with forty gems and one with fourteen
@@ -991,7 +991,7 @@ namespace GlimmerGrove.Content
         /// Lanterns standing against no gem at all before it is worth saying so.
         ///
         /// One is scenery and nobody minds. Several is a board that looks far richer than it
-        /// plays — a lantern is the brightest thing on the field, so a walled-off one reads as a
+        /// plays - a lantern is the brightest thing on the field, so a walled-off one reads as a
         /// route that is not there.
         /// </summary>
         const int TooManyIdle = 1;
@@ -1012,8 +1012,8 @@ namespace GlimmerGrove.Content
                 int cell = marooned[0];
                 issues.Add(new LevelIssue(LevelIssueSeverity.Error,
                     $"the critter at row {cell / layout.Width} column {cell % layout.Width} " +
-                    "stands in a run of gems that no lantern is touching — or against no gem at " +
-                    "all — so nothing that happens anywhere on this board could ever wake it. " +
+                    "stands in a run of gems that no lantern is touching - or against no gem at " +
+                    "all - so nothing that happens anywhere on this board could ever wake it. " +
                     "Which cells hold gems never changes, so no arrangement fixes this: move the " +
                     "critter, move a lantern, or fill in the bare ground between them"));
             }
@@ -1032,7 +1032,7 @@ namespace GlimmerGrove.Content
             if (reading.Gems > 0 && reading.Dealt * 100 > reading.Gems * DealtLitPercent)
                 issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
                     $"{reading.Dealt} of this board's {reading.Gems} gems are already lit as it " +
-                    $"is dealt, which is over {DealtLitPercent}% of it — so the player is handed " +
+                    $"is dealt, which is over {DealtLitPercent}% of it - so the player is handed " +
                     "a board somebody else has half finished. A gem or two beside each lantern " +
                     "is how the mode teaches itself; a whole vein is a level already played"));
 

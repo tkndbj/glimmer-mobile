@@ -12,7 +12,7 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// Split from the board's own rules for <c>RippleRun</c>'s reason. All of this lived inside
     /// <c>FallBoard</c> once, and one change turned that class into a puzzle model with an
-    /// economy and a fail state in it — after which none of the three could be proved without
+    /// economy and a fail state in it - after which none of the three could be proved without
     /// building a well. Every case here is integers.
     /// </para>
     /// </summary>
@@ -200,7 +200,7 @@ namespace GlimmerGrove.Tests
         /// A run is never ended early, even when it is provably unwinnable.
         ///
         /// <para>
-        /// The proof is available and used to end the run here — a yellow wants blue, the two
+        /// The proof is available and used to end the run here - a yellow wants blue, the two
         /// motes still coming are red and green, so nothing anybody does can empty this well.
         /// It was reported from play as a run ending while the tray still had motes in it, which
         /// reads as the game deciding on the player's behalf. So the board stays open and the
@@ -304,7 +304,7 @@ namespace GlimmerGrove.Tests
         /// <b>Two copies of the numbers on purpose, and it is <c>BriarTests</c>' bargain.</b>
         /// The vector file is the contract between the shipping rule and
         /// <c>Tools/verify/fall.py</c>, and <c>FallVectorTests</c> is what proves the C# side of
-        /// it — but that needs the Editor, because <c>JsonUtility</c> is a native call. These run
+        /// it - but that needs the Editor, because <c>JsonUtility</c> is a native call. These run
         /// on every offline compile, so the rule is checked without anybody opening Unity, and a
         /// green run there means all of it agrees.
         /// </para>
@@ -366,14 +366,14 @@ namespace GlimmerGrove.Tests
 
         // ------------------------------------------------------------------ the room to err
         /// <summary>
-        /// A well's budget is par plus a count of wasted drops, not a multiple of par — and the
+        /// A well's budget is par plus a count of wasted drops, not a multiple of par - and the
         /// difference is a bug that reached a player.
         ///
         /// <para>
         /// A wrong drop here is permanent <em>and</em> makes the board worse: the wasted mote
         /// lands in the well and has to be cooked to white like everything else, so one mistake
         /// costs about two drops rather than one. Against <c>par x 1.60</c> that left the second
-        /// level of the chapter with two drops of room — exactly one mistake — and it was
+        /// level of the chapter with two drops of room - exactly one mistake - and it was
         /// reported from play as "one wrong fall and it says out of turns".
         /// </para>
         /// </summary>

@@ -11,8 +11,8 @@ namespace GlimmerGrove.Tests
     /// <b>This exists for <c>WardRevealTests</c>' reason and it is the same poor substitute.</b>
     /// There is a render for the hub, the shop, the siege and Prismvale, and each of them has
     /// caught faults every numeric gate was green through; there is none for a modal ceremony. So
-    /// the one class of fault that would otherwise ship unseen here — a caption drawn through the
-    /// thing above it, a band off the canvas — is checked as edges. If this screen ever gets a
+    /// the one class of fault that would otherwise ship unseen here - a caption drawn through the
+    /// thing above it, a band off the canvas - is checked as edges. If this screen ever gets a
     /// render, that is the better instrument.
     /// </para>
     /// </summary>
@@ -81,7 +81,7 @@ namespace GlimmerGrove.Tests
         {
             // The mark is written in the column outside the bars' own host, which only exists
             // because that host is narrower than the canvas. A wider host would put a "+12"
-            // off the side of the screen, and nothing but this would say so — see
+            // off the side of the screen, and nothing but this would say so - see
             // `WardUpgradeRevealOverlay.Mark`.
             const float MarkX = 74f, MarkW = 128f;
 
@@ -94,7 +94,7 @@ namespace GlimmerGrove.Tests
         public void TheStarFallsIntoTheSlotItWasBoughtFor()
         {
             // The ceremony aims at `WardStarRow.XOf` rather than at arithmetic of its own, so what
-            // is pinned is that the row really puts its stars there — which is what stops the
+            // is pinned is that the row really puts its stars there - which is what stops the
             // falling star landing beside the one it becomes the day the size or the gap moves.
             float size = WardUpgradeRevealOverlay.StarSize;
             float width = WardStarRow.Width(size);

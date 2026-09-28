@@ -12,8 +12,8 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// The planner is a pure function of a snapshot and a table, which is what makes this
     /// possible and is the reason it was built that way: the part of a reminder system that
-    /// actually fails — the pacing, the ordering, the quiet hours, a sentence that has stopped
-    /// being true by the time somebody reads it — is arithmetic here rather than something you
+    /// actually fails - the pacing, the ordering, the quiet hours, a sentence that has stopped
+    /// being true by the time somebody reads it - is arithmetic here rather than something you
     /// find out about from a review.
     /// </para>
     /// <para>
@@ -87,7 +87,7 @@ namespace GlimmerGrove.Tests
         // ---------------------------------------------------------------- the day
         /// <summary>
         /// Nothing is ever scheduled while somebody is asleep. The hours are content and can be
-        /// retuned by a push, so this is asked of the plan rather than of the table — a slate
+        /// retuned by a push, so this is asked of the plan rather than of the table - a slate
         /// that moved an hour past the bound would otherwise fail nothing.
         /// </summary>
         [Test]
@@ -132,7 +132,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// Two to three a day is the brief, and it has to hold on the player who has
-        /// <em>everything</em> waiting — that is the one whose day the table could fill.
+        /// <em>everything</em> waiting - that is the one whose day the table could fill.
         /// </summary>
         [Test]
         public void NoDayEverHoldsMoreThanTheTableAllows()
@@ -257,7 +257,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A streak is nagged about on exactly the day it can still be saved — never a day
+        /// A streak is nagged about on exactly the day it can still be saved - never a day
         /// later, when it has already broken and the sentence is a lie.
         /// </summary>
         [Test]
@@ -297,7 +297,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// Hearts that were already full when the player closed the game are not news that
-        /// evening — they were holding them an hour ago.
+        /// evening - they were holding them an hour ago.
         /// </summary>
         [Test]
         public void AFullHeartBarIsNotNewsOnTheDayItWasSeen()
@@ -320,7 +320,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// The quiet player — nothing waiting, no streak, no season, no boards — still hears
+        /// The quiet player - nothing waiting, no streak, no season, no boards - still hears
         /// from the game, and hears from it less often than the busy one. That gap is the whole
         /// of what "two to three a day" means here: it is an outcome of the cooldowns rather
         /// than a quota anybody enforces.
@@ -357,7 +357,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// An id this build has never heard of is dropped rather than throwing, because a
-        /// newer content pack reaching an older client is ordinary — and refusing the whole
+        /// newer content pack reaching an older client is ordinary - and refusing the whole
         /// table would mean one new reminder takes every reminder down.
         /// </summary>
         [Test]

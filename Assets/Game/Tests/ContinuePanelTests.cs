@@ -11,7 +11,7 @@ namespace GlimmerGrove.Tests
     /// tall beside a panel that had just grown a fourth button, and <see cref="ContinuePanel"/>'s
     /// own check refused it: ten units off the top of a 4:3 canvas. Every number involved was
     /// individually reasonable, which is exactly the failure <c>PanelStack</c> and
-    /// <c>WheelPanel</c> both record — the second of those had the arithmetic <em>and</em> a test
+    /// <c>WheelPanel</c> both record - the second of those had the arithmetic <em>and</em> a test
     /// and still drew a row through its neighbour, because one number in its stack meant
     /// something other than what the rest meant.
     /// </para>
@@ -35,14 +35,14 @@ namespace GlimmerGrove.Tests
             float needed = ContinuePanel.Tallest * .5f + ContinuePanel.BannerOverhang;
 
             Assert.LessOrEqual(needed, PanelStack.TightestCanvas * .5f,
-                               "the obvious reading — everything under one canvas — is wrong by " +
+                               "the obvious reading - everything under one canvas - is wrong by " +
                                "half the panel, and passes layouts whose word is off the top of " +
                                "a tablet");
 
             // The two readings differ by half the clear air under the panel, and stating it as
             // an equality is what keeps this case honest whatever either number becomes. It
             // used to be stated as "the loose reading would have passed this very panel", which
-            // was true by 10 units and is not any more — and what moved is not the panel. It is
+            // was true by 10 units and is not any more - and what moved is not the panel. It is
             // the canvas: `CanvasFit` widened the shortest display this game is drawn on from a
             // 4:3 tablet's 1440 to 1890, so every modal in the game gained 450 units of budget
             // it does not spend.
@@ -52,7 +52,7 @@ namespace GlimmerGrove.Tests
 
             Assert.Less(strict, loose,
                         "the halved reading has to be the tighter of the two, or it is not the " +
-                        "check — it would be the mistake it replaced wearing the same name");
+                        "check - it would be the mistake it replaced wearing the same name");
 
             Assert.AreEqual((PanelStack.TightestCanvas - ContinuePanel.Tallest) * .5f,
                             loose - strict, .001f,

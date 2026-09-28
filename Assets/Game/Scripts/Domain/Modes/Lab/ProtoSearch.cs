@@ -30,7 +30,7 @@ namespace GlimmerGrove.Modes
 
         /// <summary>
         /// How many moves are indexable from this position. Indices are stable for one position
-        /// and mean nothing across two — a mode is free to number its moves however it likes, so
+        /// and mean nothing across two - a mode is free to number its moves however it likes, so
         /// long as <see cref="Play"/> agrees with this about how many there are.
         /// </summary>
         public abstract int MoveCount { get; }
@@ -43,7 +43,7 @@ namespace GlimmerGrove.Modes
         /// <b>A move that changes nothing must answer null</b>, not a copy. That is the whole of
         /// what keeps the search finite: a no-op move is a self-edge, and a self-edge in a
         /// breadth-first walk is a level the frontier never leaves. It is also the rule the modes
-        /// themselves are built on — a tap that would achieve nothing is refused out loud rather
+        /// themselves are built on - a tap that would achieve nothing is refused out loud rather
         /// than swallowed, so the player is never charged for it either.
         /// </para>
         /// </summary>
@@ -54,7 +54,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>It must cover everything a rule reads and nothing else.</b> Too little and the
-        /// search calls two different boards the same board, which under-reports par — the
+        /// search calls two different boards the same board, which under-reports par - the
         /// direction that hands out stars nobody earned. Too much (a move counter, an animation
         /// hint) and states that really are identical never merge, which is a search that runs
         /// out of budget on a board a player finishes in four taps.
@@ -68,7 +68,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// Used only by <see cref="ProtoSearch.Careless"/>, which is the reading that asks
         /// whether a board can be finished by taking the biggest thing on offer every time. Zero
-        /// for every move — the default — makes that reading meaningless rather than wrong, which
+        /// for every move - the default - makes that reading meaningless rather than wrong, which
         /// is the honest answer for a mode where nothing on the board looks bigger than anything
         /// else.
         /// </para>
@@ -89,7 +89,7 @@ namespace GlimmerGrove.Modes
         /// The difficulty reading every mode in this game is authored against, and it reads the
         /// same way here as it does everywhere else: one means the board has exactly one answer
         /// and has to be solved rather than played, and a large number means the arms decide it
-        /// rather than the player (invariant 5d). Which end warns is the mode's business — a mode
+        /// rather than the player (invariant 5d). Which end warns is the mode's business - a mode
         /// commissioned to be easy warns at the bottom (invariant 20k).
         /// </para>
         /// <para>
@@ -126,7 +126,7 @@ namespace GlimmerGrove.Modes
     ///
     /// <para>
     /// <b>Breadth-first rather than iterative deepening, and only because these modes are
-    /// monotone.</b> Groovekeeper deepened iteratively because its board <em>grew</em> — two
+    /// monotone.</b> Groovekeeper deepened iteratively because its board <em>grew</em> - two
     /// orderings of the same tiles were two boards, so the frontier grew like permutations and
     /// keeping a layer alive was not affordable. Nothing here adds anything to a board, so two
     /// orderings that remove the same things reach the same state and merge, and a layer stays
@@ -145,7 +145,7 @@ namespace GlimmerGrove.Modes
     {
         /// <summary>
         /// Positions this will expand before giving up. Matches <c>KeeperSolver</c>'s, because it
-        /// is the same promise about the same moment — the beat between tapping a node and the
+        /// is the same promise about the same moment - the beat between tapping a node and the
         /// board arriving.
         /// </summary>
         public const int NodeBudget = 90_000;
@@ -167,7 +167,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// A board that is already finished answers par nought and <see cref="ProtoAnswer.Proved"/>
-        /// true — which every validator here reads as a refusal, because a level nobody has to
+        /// true - which every validator here reads as a refusal, because a level nobody has to
         /// play is a node on a map that opens onto a celebration.
         /// </para>
         /// </summary>

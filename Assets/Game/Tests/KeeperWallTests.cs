@@ -18,7 +18,7 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// <b>What makes it dangerous is that it can only be wrong in one direction and silently.</b>
     /// A wall set too high is a lane padlocked for the life of the build with every file correct
-    /// — which is why the content gates measure it against what the shipped catalog can pay for —
+    /// - which is why the content gates measure it against what the shipped catalog can pay for -
     /// and a wall the unlock rule never reaches is a lane that reads as gated and is not. This
     /// fixture pins the second; <c>ContentValidation.ValidateKeeperWalls</c> and
     /// <c>content.py</c> pin the first.
@@ -208,7 +208,7 @@ namespace GlimmerGrove.Tests
         public void TheWallIsAskedEvenThoughNothingStandsBeforeThatLevel()
         {
             // **The regression this fixture is really for.** `IsUnlocked` used to answer true for
-            // any level with nothing before it, before anything looked at a gate — harmless while
+            // any level with nothing before it, before anything looked at a gate - harmless while
             // the only gate was on the chapter behind, because a lane's first chapter has none.
             // On a lane of one chapter of one level that shortcut is every board there is, so the
             // wall would have been dead code on the only lane that has one.
@@ -249,8 +249,8 @@ namespace GlimmerGrove.Tests
         public void ALaneAlreadyRunIsNeverTakenBack()
         {
             // The only case here with live players in it, and the one that needed a second
-            // ledger. An endless run is never *cleared* — it leaves a wave count and nothing
-            // else — so asking `PlayerProgress.IsCleared` alone would padlock the lane under
+            // ledger. An endless run is never *cleared* - it leaves a wave count and nothing
+            // else - so asking `PlayerProgress.IsCleared` alone would padlock the lane under
             // somebody who had already played it the day a wall was put in front of it. That is
             // exactly what the monotonic clause exists to prevent, arriving through the one lane
             // that does not write the ledger it reads.

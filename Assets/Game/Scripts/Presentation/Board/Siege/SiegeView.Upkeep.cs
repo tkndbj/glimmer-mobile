@@ -40,7 +40,7 @@ namespace GlimmerGrove
         /// <b>Its own rather than <c>ProtoView.Settle</c></b>, and for one reason: the base asks
         /// whether the first move has landed, because everywhere else a run cannot be lost before
         /// it has been played. Here the hill walks whether or not anybody has touched a gem, so a
-        /// player who watches the wards fall without moving has genuinely lost — and a run that
+        /// player who watches the wards fall without moving has genuinely lost - and a run that
         /// simply never ended would be worse than either.
         /// </summary>
         /// <summary>
@@ -49,7 +49,7 @@ namespace GlimmerGrove
         /// <para>
         /// This mode has no move meter to top up (invariant 37b), so the base's <c>Run.Grant</c>
         /// would be a no-op on an unbounded budget and the board would come back exactly as lost
-        /// as it went in — a charge for nothing. What is bought is
+        /// as it went in - a charge for nothing. What is bought is
         /// <c>SiegeBoard.Rally</c>: every fallen turret up at full health, keeping the rank its
         /// cogs bought, with the hill standing exactly where it stood.
         /// </para>
@@ -79,8 +79,8 @@ namespace GlimmerGrove
 
             // **A run may not be told it is over while the field is still coming apart**, which
             // is the same rule `_felling` makes about a death, one layer out. A swap resolves in
-            // the model the instant it lands — every beat of the cascade, all of its fuel and
-            // every bolt that fuel will ever buy — while the drawing of it runs for a second or
+            // the model the instant it lands - every beat of the cascade, all of its fuel and
+            // every bolt that fuel will ever buy - while the drawing of it runs for a second or
             // more, and the hill keeps walking underneath (`Advancing` deliberately ignores
             // `Busy`, see `SiegeView.Clock`). So a cascade whose third beat empties the hill was
             // winning the run with two beats still to play, and what a player met was the
@@ -103,14 +103,14 @@ namespace GlimmerGrove
                 // panel was up before anything came apart, so the player was told they had won
                 // and never saw the thing they beat. Then the same about a firepot and a storm,
                 // which are the two ways a player lands the killing blow with their own hand and
-                // so the two most worth watching. The win is already decided — this only holds
+                // so the two most worth watching. The win is already decided - this only holds
                 // the *telling* of it, and `Update` re-asks every frame, so nothing can be
                 // stranded by it.
                 //
                 // It is a countdown rather than a callback for the reason `Fall` is five
                 // staggered explosions rather than one: a death is a handful of tweens with no
                 // single end, and a latch that outlives the last of them is the only version that
-                // cannot end early. `Update` counts it down (`Watching`), not this branch — a hold
+                // cannot end early. `Update` counts it down (`Watching`), not this branch - a hold
                 // only ticked while the run is won would be armed by the first creeper and still
                 // standing when the last one died.
                 if (_felling > 0f) return;

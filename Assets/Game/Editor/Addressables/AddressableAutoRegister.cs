@@ -11,7 +11,7 @@ namespace GlimmerGrove.EditorTools
     ///
     /// This exists because the previous arrangement was a menu item, and a menu item is
     /// a thing a person has to remember on the week a chapter ships. It was forgotten
-    /// once already in this project's history — the splash screen used to hardcode
+    /// once already in this project's history - the splash screen used to hardcode
     /// "play_0, play_1, play_2" and every content drop needed someone to edit a screen.
     /// Marking assets by hand is the same failure wearing different clothes: the file
     /// imports, the content validates, the build succeeds, and the chapter ships with
@@ -45,7 +45,7 @@ namespace GlimmerGrove.EditorTools
             if (settings == null) return;   // project has not been set up yet; the sweep will do it
 
             // Ownership needs the catalog, which needs the content to parse. During a
-            // broad reimport that may not be readable yet — in which case everything
+            // broad reimport that may not be readable yet - in which case everything
             // lands in the global group and the next sweep or audit corrects it.
             var bodies = SafeChapterBodies();
             var ownership = AddressableAddresses.ChapterOwnership(bodies);

@@ -11,13 +11,13 @@ namespace GlimmerGrove.Modes
     /// was correct for a score attack and impossible for a level: par cannot be derived from a
     /// board whose future is random, so a level could author no goal, no budget and no star
     /// line, and two players on the same glade were not playing the same glade. Deleting the
-    /// generator also deletes a whole class of divergence — a deal that differs between .NET,
+    /// generator also deletes a whole class of divergence - a deal that differs between .NET,
     /// Mono and IL2CPP is Lightweave's generator float bug wearing a different hat (see *Hard-won facts*), and this
     /// one would have been invisible because nothing was checking.
     /// </para>
     /// <para>
     /// <b>It cycles, and that is load-bearing rather than a convenience.</b> A run may be
-    /// handed more drops than the author wrote — a continue does exactly that — so
+    /// handed more drops than the author wrote - a continue does exactly that - so
     /// <see cref="At"/> must answer for any index rather than running off the end into a
     /// colour nobody chose. Cycling is also the honest reading of what the tray shows: a well
     /// deals the same procession over and over, and a player who has watched one lap knows
@@ -136,7 +136,7 @@ namespace GlimmerGrove.Modes
     ///
     /// <para>
     /// <b>Everything a Lightfall level authors, and nothing else.</b> No par, no star line, no
-    /// budget — those are derived from this by <see cref="FallSolver"/> and <c>LevelTuning</c>,
+    /// budget - those are derived from this by <see cref="FallSolver"/> and <c>LevelTuning</c>,
     /// for invariant 5's reason: a typed par can drift from the board it claims to describe,
     /// and the drift has no symptom. One too high hands three stars to a careless run for ever;
     /// one too low makes them unreachable; and neither is visible in the file that caused it.
@@ -144,7 +144,7 @@ namespace GlimmerGrove.Modes
     /// <para>
     /// <b>Row nought is the brim.</b> The well is drawn with a hard line under its top row, and
     /// a mote that comes to rest above that line has flooded it. So the fill may never touch
-    /// row nought — the validator refuses one that does — and <see cref="Headroom"/> counts the
+    /// row nought - the validator refuses one that does - and <see cref="Headroom"/> counts the
     /// safe rows a careless drop may still spend.
     /// </para>
     /// </summary>
@@ -248,7 +248,7 @@ namespace GlimmerGrove.Modes
         /// The difficulty dial that has nothing to do with size or length: a well filled to
         /// within two rows of the brim makes every wasted mote frightening, and one filled
         /// halfway leaves the supply as the only thing that binds. A chapter's ladder is board
-        /// size, what is standing in it and this — and every graded number falls out of the
+        /// size, what is standing in it and this - and every graded number falls out of the
         /// three (invariant 5d: a rule that rejects no arrangement is decoration, so the
         /// arrangements have to be rejected by something authored).
         /// </para>
@@ -360,7 +360,7 @@ namespace GlimmerGrove.Modes
                         // content written for a build that no longer exists, and reading it as a
                         // mote would put a cell on the board no rule here knows what to do with.
                         error = "'" + c + "' at row " + y + " column " + x + " is a wick, and " +
-                                "the wick was withdrawn — it was the lens again with the colour " +
+                                "the wick was withdrawn - it was the lens again with the colour " +
                                 "changed, and nothing about it was the player's decision. What " +
                                 "stands in that slot now is '" + FallCell.WhorlLetter + "', a " +
                                 "whorl, which draws the motes either side of it together and " +

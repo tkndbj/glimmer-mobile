@@ -15,7 +15,7 @@ namespace GlimmerGrove
     /// what makes the hill something to watch rather than something to glance at.
     /// </para>
     /// <para>
-    /// <b>It goes off at once.</b> There is nothing to aim — the bomb is already somewhere, and
+    /// <b>It goes off at once.</b> There is nothing to aim - the bomb is already somewhere, and
     /// asking the player to pick a target after tapping it would be asking them to choose twice
     /// for one decision. The decision is <em>when</em>.
     /// </para>
@@ -39,8 +39,8 @@ namespace GlimmerGrove
         ///
         /// <b>The screen owns it, for <c>Fire</c>'s reason</b>: what a blast is worth in matches is
         /// invariant 39's arithmetic and what it costs the grade is the run's, and neither is a
-        /// board's business. A bomb differs from a firepot in exactly one way — it spends no stock
-        /// — so it gets a hook of its own rather than a flag inside the one every owned utility
+        /// board's business. A bomb differs from a firepot in exactly one way - it spends no stock
+        /// - so it gets a hook of its own rather than a flag inside the one every owned utility
         /// goes through.
         /// </summary>
         public System.Func<int, List<SiegeStrike>, SiegeUse> Blew { get; set; }
@@ -49,8 +49,8 @@ namespace GlimmerGrove
         /// Draws a bomb arriving where a bomber has just died.
         ///
         /// <para>
-        /// <b>It lands as wreckage rather than as a prize</b> — it drops the last of the way,
-        /// bounces, and the hill shakes — because what just happened is that something the player
+        /// <b>It lands as wreckage rather than as a prize</b> - it drops the last of the way,
+        /// bounces, and the hill shakes - because what just happened is that something the player
         /// killed came apart. The <em>prize</em> reading is carried by what it then does: it sits
         /// there pulsing in its own colour, which is the one thing on the hill that moves while
         /// nothing else is happening.
@@ -159,7 +159,7 @@ namespace GlimmerGrove
 
             Charged(use.Matches);
 
-            // **The firepot's own drawing, because it is the firepot's own blast** — the same
+            // **The firepot's own drawing, because it is the firepot's own blast** - the same
             // scorch over the same boxes, the same burst, the same clip. A player who has thrown
             // one knows what this looks like, and a second explosion for one effect is a second
             // thing to learn about something they already know.
@@ -167,8 +167,8 @@ namespace GlimmerGrove
 
             // **The same door a firepot goes through**, which is what it was missing: `Hurt`
             // draws the damage and `Landed` is what takes the dead off the hill. Reported from a
-            // device — tap the bomb that kills the last raiders of a level and they stand there
-            // under the victory panel — and see `Settled` for why that is a method rather than
+            // device - tap the bomb that kills the last raiders of a level and they stand there
+            // under the victory panel - and see `Settled` for why that is a method rather than
             // three lines each of these call sites remembers.
             Landed(_strikes);
 

@@ -13,7 +13,7 @@ namespace GlimmerGrove.Events
         /// Whether this account may take anything off this track at all.
         ///
         /// Always true of the free track. True of the paid one only for somebody holding the
-        /// season's pass — see <see cref="EventLedger.Opens"/>, which is where that is decided
+        /// season's pass - see <see cref="EventLedger.Opens"/>, which is where that is decided
         /// for every reading in the game.
         /// </summary>
         public readonly bool Open;
@@ -93,7 +93,7 @@ namespace GlimmerGrove.Events
         /// a closed season's box on the hub.
         ///
         /// A track this account cannot claim from contributes nothing, so for a player without
-        /// the pass this is the free column alone — see <see cref="SeasonTrackProgress.Waiting"/>.
+        /// the pass this is the free column alone - see <see cref="SeasonTrackProgress.Waiting"/>.
         /// </summary>
         public int Waiting => Free.Waiting + Pass.Waiting;
 
@@ -124,7 +124,7 @@ namespace GlimmerGrove.Events
     /// <para>
     /// <b>A pure function of its arguments, and that is the point.</b> Nothing here reads the
     /// live save, the live catalog or the clock, so the whole of a season's reward reasoning
-    /// can be run against a table — which is what <c>MarkVectorTests</c> and the shared
+    /// can be run against a table - which is what <c>MarkVectorTests</c> and the shared
     /// vectors do on both sides of the client/server pair. <see cref="SeasonLedger"/> is the
     /// one type that hands it the live state.
     /// </para>
@@ -133,15 +133,15 @@ namespace GlimmerGrove.Events
     /// grown before they are used.</b> That clamp is the whole of the security property on
     /// the client side: the floors are written by the client, and clamping them here means
     /// the most an edited one can do is take early what the season was going to pay anyway.
-    /// The server applies its own, stronger bound — a rung is paid once per account for the
-    /// life of the season, and the pass track additionally needs a receipt it verified —
+    /// The server applies its own, stronger bound - a rung is paid once per account for the
+    /// life of the season, and the pass track additionally needs a receipt it verified -
     /// see <c>firebase/functions/src/season.ts</c> and invariant 13.
     /// </para>
     /// <para>
     /// <b>Whether the paid track is open is an argument like the floors are, and every
     /// reading takes it.</b> It was once asked only at the moment of claiming, so
     /// <see cref="ProgressOf"/> reported rungs waiting on a track the same type would refuse
-    /// to pay from — two answers to one question, and the drawing read the wrong one. There is
+    /// to pay from - two answers to one question, and the drawing read the wrong one. There is
     /// one predicate now (<see cref="Opens"/>) and both entry points run it.
     /// </para>
     /// <para>
@@ -240,8 +240,8 @@ namespace GlimmerGrove.Events
         ///
         /// <b>Never trusted above the marks.</b> A floor is a record of what has been asked
         /// for, and one that outruns the play behind it is either a merge from a device that
-        /// was further along on a season it also has fewer marks for — impossible, since both
-        /// only rise and both merge by <c>max</c> — or an edited file. Either way the honest
+        /// was further along on a season it also has fewer marks for - impossible, since both
+        /// only rise and both merge by <c>max</c> - or an edited file. Either way the honest
         /// reading is the smaller.
         /// </summary>
         static int Clamp(int floor, int marks)

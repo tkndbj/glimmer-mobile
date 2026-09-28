@@ -31,7 +31,7 @@ namespace GlimmerGrove
         /// it runs <em>after</em> <c>SiegeBoard.Advance</c>, which musters, walks and fires in one
         /// call and then sweeps the dead out of its own list. A ward with nothing to shoot at
         /// holds its cooldown at nought, so the whole line is loaded and waiting the moment a wave
-        /// steps out — and on a line strong enough to fell a raider in one bolt that is not a rare
+        /// steps out - and on a line strong enough to fell a raider in one bolt that is not a rare
         /// interleaving, it is every raider of every wave. <c>Follow</c> then never saw one of
         /// them alive and on the hill, so no widget existed, so <see cref="Bolt"/> returned
         /// without drawing the shot, <see cref="Reap"/> found nothing to blow apart, and the only
@@ -41,14 +41,14 @@ namespace GlimmerGrove
         /// <b>Minted here and left for <see cref="Reap"/> to take down in the same frame</b>,
         /// rather than drawing a death directly: a death is a body coming apart and this mode has
         /// exactly one drawing of that. So the body is stood where it fell, shown at once, and
-        /// dies at the end of the frame like any other — which also arms <c>_felling</c>, so a
+        /// dies at the end of the frame like any other - which also arms <c>_felling</c>, so a
         /// run won on one of these kills waits for the burst exactly as it waits for every other.
         /// </para>
         /// <para>
         /// <b>Nothing is minted twice.</b> A raider that was on the screen already has its widget
         /// and is skipped; one the board has finished with cannot come back, because ids are
         /// minted from a counter that only climbs (<c>SiegeBoard._minted</c>). Kills made outside
-        /// <c>Advance</c> never reach this list at all — see <see cref="SiegeReport.Felled"/>.
+        /// <c>Advance</c> never reach this list at all - see <see cref="SiegeReport.Felled"/>.
         /// </para>
         /// </summary>
         void Unseen(IReadOnlyList<SiegeRaider> felled)
@@ -81,7 +81,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// <b>Killing the channels rather than only writing the values</b>, because an entrance
-        /// still in flight would paint straight back over them on the next frame — the fade owns
+        /// still in flight would paint straight back over them on the next frame - the fade owns
         /// the group and the pop owns the transform, so both are named. Everything that survives
         /// its entrance is already here, so this is a no-op on the ordinary path.
         /// </para>
@@ -131,7 +131,7 @@ namespace GlimmerGrove
             //
             // **One set of numbers for every cast, which is what withdrawing the baked one
             // bought back.** A KayKit humanoid rendered at this board's 22° was the other thing
-            // entirely — its feet were at the bottom edge of the picture, so it needed a contact
+            // entirely - its feet were at the bottom edge of the picture, so it needed a contact
             // shadow most of a half-height down and carried a second set of constants and a
             // branch to choose between them. Every body this mode draws now is a flat cut from a
             // bought sheet, head-on or from above, and the skeletons have been shipping on these
@@ -149,10 +149,10 @@ namespace GlimmerGrove
             // **A raider is drawn in its own paint, and the wash and the coat that used to
             // say its colour are gone.** They were a wash behind the body and a 62% multiply over
             // it, on the argument that the packs draw monsters in colours that have nothing to do
-            // with this board's four — which was true and was fixed at the wrong end. `Image.color`
+            // with this board's four - which was true and was fixed at the wrong end. `Image.color`
             // is a multiply, so a coat can only ever *darken*: what it produced was four
             // silhouettes of the same value with a hint of hue, and the drawing every one of these
-            // packs is actually good at — highlights, shading, a face — was thrown away to say one
+            // packs is actually good at - highlights, shading, a face - was thrown away to say one
             // bit of information. Reported from play as exactly that, and it is the same finding
             // the ward line already made one folder over.
             //
@@ -193,7 +193,7 @@ namespace GlimmerGrove
 
             // A warlord comes on *walking* and stands still once it is in place; everything else
             // is walking for its whole life, so its one reel is both. **A boss that has a walk of
-            // its own opens in it**, because the first thing it ever does is the walk on — see
+            // its own opens in it**, because the first thing it ever does is the walk on - see
             // `Mob.Walking` for the three seconds this was drawing standing still.
             mob.Playing = mob.Walking ?? mob.Idle;
 
@@ -204,7 +204,7 @@ namespace GlimmerGrove
             {
                 mob.Body.color = Color.white;
 
-                // **Sized by its own height, with the width following the picture** — never fitted
+                // **Sized by its own height, with the width following the picture** - never fitted
                 // into a square. Every cast reel is cut to a fixed height and whatever width the
                 // animation's box came out as (`make_siege_art.cast_frames`), so a square box with
                 // `preserveAspect` fits the *wider* ones by width and draws them short: measured
@@ -225,7 +225,7 @@ namespace GlimmerGrove
                 // on in a real walk cycle and then *stops* is the one body here for which both
                 // halves of that are wrong: while it walks the sine is a second gait fighting the
                 // baked one, and while it holds the middle of the hill it is a three-cell figure
-                // standing perfectly still and bouncing — which is what "when he is standing
+                // standing perfectly still and bouncing - which is what "when he is standing
                 // still, it moves up and down" was, and it was the only vertical motion in the
                 // picture. Measured on the shipped reels: the stand's frames differ from each
                 // other by 2.2 mean pixel levels against 30-37 for every other body reel, so the
@@ -345,7 +345,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The reel a boss walks on in, and <b>null</b> for a boss whose pack drew only one —
+        /// The reel a boss walks on in, and <b>null</b> for a boss whose pack drew only one -
         /// which today is every one of them.
         ///
         /// <para>
@@ -353,14 +353,14 @@ namespace GlimmerGrove
         /// are cut from flat packs whose bodies cycle in place, so each one's single reel is its
         /// walk and its stand at once and <c>Mob.Playing</c> falls through to the idle. Three of
         /// them were rendered out of rigged 3D until the bake was withdrawn, and a rendered body
-        /// really does stand still when it arrives — so this is the one place that would have to
+        /// really does stand still when it arrives - so this is the one place that would have to
         /// change if a boss ever gets a walk of its own again, and it is one line.
         /// </para>
         /// <para>
         /// <b>What it must not become is a fallback to the idle.</b> Answering the stand here
         /// would make <c>SiegeView.Clock</c>'s "is it walking" question unanswerable, and the
         /// thing that would look like is a boss holding the middle of the hill playing the reel
-        /// it walked on in with — invariant 37u's fault, which is what <c>Mob.Walking</c> was
+        /// it walked on in with - invariant 37u's fault, which is what <c>Mob.Walking</c> was
         /// added to fix.
         /// </para>
         /// </summary>
@@ -371,11 +371,11 @@ namespace GlimmerGrove
         /// <para>
         /// <b>And it is the walk's cadence too, which is a decision rather than an oversight.</b>
         /// The obvious thing is to derive the step rate from the ground speed so the feet cannot
-        /// slip — and the arithmetic says not to: this hill is about seven cells deep and a boss
+        /// slip - and the arithmetic says not to: this hill is about seven cells deep and a boss
         /// crosses the whole of it in <c>SiegeTuning.BossMarch</c> seconds, which is a shade under
         /// one cell a second, while the body walking it is drawn <em>three and a half cells
         /// tall</em>. A human stride carries about nine tenths of its own height, so a foot-locked
-        /// cadence here is one cycle every three and a third seconds — <b>3.6 frames a second</b>,
+        /// cadence here is one cycle every three and a third seconds - <b>3.6 frames a second</b>,
         /// which does not read as a heavy walk, it reads as slow motion. The board draws its cast
         /// far larger than their speed implies and every game of this shape does; the genre's own
         /// answer is a natural cadence and some slip, and the complaint this is fixing was that
@@ -406,7 +406,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The power is what decides whether this reads as a shadow or as a smudge, and it is
         /// the number that has been wrong twice.</b> <c>Art.Glow</c> is <c>(1 - distance)</c>
-        /// raised to a power, so a <em>high</em> power fades from its own middle outward — at the
+        /// raised to a power, so a <em>high</em> power fades from its own middle outward - at the
         /// cubic it was first asked for, an eighth of its peak half way out, which at this size is
         /// nothing anybody can see. Dropping it to 1.4 made it visible and came straight back from
         /// play as <b>cloudy</b>, which is the same reading one step on: a profile that ramps the
@@ -420,7 +420,7 @@ namespace GlimmerGrove
         /// reaches visibly almost to the edge of its rect where a steep one dies two thirds of the
         /// way, so going from 1.4 to 0.25 means shrinking the rect by about a third to put the
         /// same amount of dark on the ground. Picked by drawing the candidates under a real insect
-        /// on the palest floor this mode has and on the brightest — the step darker than this
+        /// on the palest floor this mode has and on the brightest - the step darker than this
         /// reads as a hole in the grass.
         /// </para>
         /// </summary>
@@ -433,14 +433,14 @@ namespace GlimmerGrove
         /// shares one canvas with its cast reel so that it cannot change size when it throws
         /// (<c>make_siege_art.one_canvas</c>), and that reel rises, so the frame is taller than the
         /// body standing in it. Everything the view places is placed against the <em>frame</em>, so
-        /// without this a boss's shadow sits a third further out than its raiders' do — which is
+        /// without this a boss's shadow sits a third further out than its raiders' do - which is
         /// the same fault this whole rule exists to fix, one kind further in.
         /// </summary>
         static float BodyFill(bool boss) => boss ? .72f : .94f;
 
         /// <summary>
         /// Where a body of this drawn height puts its feet, measured from the middle of its own
-        /// node — which is the ground everything standing under it is placed on.
+        /// node - which is the ground everything standing under it is placed on.
         ///
         /// <para>
         /// <b>One answer, because there are now three callers.</b> <c>Hatch</c> puts the shadow
@@ -464,7 +464,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Remembering is the whole job.</b> <c>Flipbook.Attach</c> re-starts a reel from frame
         /// nought, so a caller that attached the wanted reel every frame would draw frame nought
-        /// for ever — a walk cycle that never takes a step, which is the fault this method exists
+        /// for ever - a walk cycle that never takes a step, which is the fault this method exists
         /// to fix, arrived at from the other side. <see cref="Mob.Playing"/> is what lets
         /// <see cref="Follow"/> ask the question sixty times a second and answer it once.
         /// </para>
@@ -496,7 +496,7 @@ namespace GlimmerGrove
         /// Only a warlord has one, and it is the cast: <see cref="Follow"/> runs every frame and
         /// would otherwise put the idle back on the frame after a spell started.
         ///
-        /// <b>Named away from <c>Busy</c> deliberately</b> — that is <c>ProtoView</c>'s latch for a
+        /// <b>Named away from <c>Busy</c> deliberately</b> - that is <c>ProtoView</c>'s latch for a
         /// cascade still falling, and a second member of the same name in one hierarchy is what
         /// <c>ModeScreen.Prepare</c> was renamed to avoid.
         /// </summary>
@@ -522,11 +522,11 @@ namespace GlimmerGrove
         /// Takes down the widgets of raiders that are dead.
         ///
         /// <para>
-        /// <b>Dead, not <em>forgotten</em> — and the difference was a bug the player met.</b> It
+        /// <b>Dead, not <em>forgotten</em> - and the difference was a bug the player met.</b> It
         /// used to reap a widget whose raider the model had swept out of its list, which is the
         /// same question only while every kill happens inside <c>SiegeBoard.Advance</c>: the
         /// sweep is the last thing that method does, so a bolt's kill is gone by the time this
-        /// runs. A <em>utility</em> kills outside <c>Advance</c> — no sweep has run, the raider
+        /// runs. A <em>utility</em> kills outside <c>Advance</c> - no sweep has run, the raider
         /// is still in the list with <c>Alive</c> false, so this skipped it. Ordinarily the next
         /// frame put it right; on the killing blow it never came, because <see cref="Judge"/>
         /// ends the run in the same breath and <c>Update</c> stops with it. What shipped was a
@@ -566,7 +566,7 @@ namespace GlimmerGrove
 
             // **A death is watched, so the body has to be there to watch.** A raider felled
             // during its own entrance would otherwise come apart at whatever fraction of alpha
-            // and size the arrival had reached — see <see cref="Shown"/>.
+            // and size the arrival had reached - see <see cref="Shown"/>.
             Shown(mob);
 
             if (mob.Boss) { Fall(mob, at); return; }
@@ -594,7 +594,7 @@ namespace GlimmerGrove
         ///
         /// <b>The largest thing that happens in this mode, and it is drawn as a run rather than as
         /// one bang.</b> A boss that vanished in the same puff a creeper does would be the whole
-        /// fight paying out in a tenth of a second — which is invariant 20m's rule about a payoff
+        /// fight paying out in a tenth of a second - which is invariant 20m's rule about a payoff
         /// asked of the one moment the player has been working toward for half a minute. Five
         /// explosions walking outward, then the shape going down.
         /// </summary>
@@ -611,13 +611,13 @@ namespace GlimmerGrove
         /// Seconds left of <em>something</em> coming apart, or nought.
         ///
         /// <para>
-        /// <b>The one thing in this mode allowed to hold the ending up</b> — see
+        /// <b>The one thing in this mode allowed to hold the ending up</b> - see
         /// <see cref="Judge"/>. It was a boss's alone, on the reasoning that everything else a
         /// run ends on is already on the screen when the verdict lands. That is true of a ward
         /// falling and false of a raider: a killing blow decides the run in the frame it lands,
         /// and the death it caused is a burst and a third of a second of tween that has not
         /// started yet. Reported from play about a firepot and a storm, which are the two ways a
-        /// player can land that blow themselves — so it is the two moments in this mode most
+        /// player can land that blow themselves - so it is the two moments in this mode most
         /// worth watching, and both of them were being covered by a panel.
         /// </para>
         /// <para>
@@ -650,7 +650,7 @@ namespace GlimmerGrove
         /// <summary>
         /// Holds the ending for at least this long, and never shortens a hold already running.
         ///
-        /// <b>The larger of the two, always</b> — a boss and three creepers going off together is
+        /// <b>The larger of the two, always</b> - a boss and three creepers going off together is
         /// one event that lasts as long as its longest part, and taking the newer figure would
         /// let a creeper dying a frame after the warlord cut the warlord's death short.
         /// </summary>
@@ -662,7 +662,7 @@ namespace GlimmerGrove
         /// <summary>
         /// Counts the hold down. Called once a frame by the clock, whether or not the run is won.
         ///
-        /// Named away from <c>Fade</c> deliberately — this file fades half a dozen widgets and a
+        /// Named away from <c>Fade</c> deliberately - this file fades half a dozen widgets and a
         /// method of that name here would read as one more of them.
         /// </summary>
         void Watching(float dt)

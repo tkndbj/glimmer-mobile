@@ -11,7 +11,7 @@ namespace GlimmerGrove.Tests
     /// A defeat screen that says "one turn from it" is the strongest single sentence in
     /// the game for getting a player to try again, and it works on a mechanism that is
     /// easy to abuse: a loss that registers as nearly a win is retried far more often than
-    /// a plain one. The line is therefore only worth having while it is <em>true</em> —
+    /// a plain one. The line is therefore only worth having while it is <em>true</em> -
     /// the moment a player restarts, counts, and finds they were four turns away, the
     /// sentence stops being information and becomes a tell.
     /// </para>
@@ -52,7 +52,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The load-bearing one. Every other test here is about not overstating; this is
-        /// the promise the number actually makes to the player — that the turns it counts
+        /// the promise the number actually makes to the player - that the turns it counts
         /// are turns that would have won.
         /// </summary>
         [Test]
@@ -88,8 +88,8 @@ namespace GlimmerGrove.Tests
 
         // ------------------------------------------------------------- refusals
         /// <summary>
-        /// A crumbled conduit takes its own owed turns out of the board with it — see
-        /// <see cref="Puzzle.Used"/> — so any count over what survives reads *lower* than
+        /// A crumbled conduit takes its own owed turns out of the board with it - see
+        /// <see cref="Puzzle.Used"/> - so any count over what survives reads *lower* than
         /// the truth. That is the one direction the bound may not fail in, so it declines
         /// to answer instead.
         /// </summary>
@@ -120,7 +120,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// Not squeamishness about the other ending — the number is simply not sound
+        /// Not squeamishness about the other ending - the number is simply not sound
         /// there, for the reason <see cref="ABrokenSolutionCannotBeMeasured"/> pins. This
         /// board's own count happens to be intact because the conduit that broke was
         /// decoration, and the answer is still no: the panel cannot tell the difference,
@@ -160,8 +160,8 @@ namespace GlimmerGrove.Tests
 
         // --------------------------------------------------------- the value type
         /// <summary>
-        /// A loss is not a worse clear. Nothing downstream — a reward, a streak, an event
-        /// track — may read a star or a record off one, so the fields that describe a
+        /// A loss is not a worse clear. Nothing downstream - a reward, a streak, an event
+        /// track - may read a star or a record off one, so the fields that describe a
         /// clear stay at their "never" values rather than at anything mistakable.
         /// </summary>
         [Test]
@@ -180,7 +180,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The first clear of a glade has no record to beat, and zero means "never
-        /// cleared" rather than "cleared perfectly" — the same convention the save file
+        /// cleared" rather than "cleared perfectly" - the same convention the save file
         /// uses, so the two cannot disagree about what a fresh player's best is.
         /// </summary>
         [Test]

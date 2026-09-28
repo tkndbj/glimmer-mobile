@@ -18,7 +18,7 @@ namespace GlimmerGrove.Notifications
         /// <summary>Refused, or switched off in the OS settings afterwards.</summary>
         Denied,
 
-        /// <summary>This platform has no notifications at all — the Editor, a desktop build.</summary>
+        /// <summary>This platform has no notifications at all - the Editor, a desktop build.</summary>
         Unsupported,
     }
 
@@ -37,8 +37,8 @@ namespace GlimmerGrove.Notifications
     /// </para>
     /// <para>
     /// <b>The OS answer and the player's switch are two different facts and both are needed.</b>
-    /// A player who refused the system dialog cannot be asked again by us — both platforms
-    /// show it once per install — so the in-game switch has to be able to say "yes please"
+    /// A player who refused the system dialog cannot be asked again by us - both platforms
+    /// show it once per install - so the in-game switch has to be able to say "yes please"
     /// while the OS still says no, and the settings panel is then obliged to send them to the
     /// OS rather than lying about what its own toggle did.
     /// </para>
@@ -50,7 +50,7 @@ namespace GlimmerGrove.Notifications
         ///
         /// Renaming it silently opts every existing player back in, which on a feature whose
         /// whole failure mode is annoying people is worse than it sounds. Written down so the
-        /// rename is a deliberate act — <c>ReleaseGate.Key</c>'s note, for the same reason.
+        /// rename is a deliberate act - <c>ReleaseGate.Key</c>'s note, for the same reason.
         /// </summary>
         const string Key = "glimmer.notify.on";
 
@@ -71,7 +71,7 @@ namespace GlimmerGrove.Notifications
         public static bool Allowed => Wanted && Permission == NotificationPermission.Granted;
 
         /// <summary>
-        /// Whether asking the OS is worth doing. False once it has answered either way —
+        /// Whether asking the OS is worth doing. False once it has answered either way -
         /// a second request is a no-op on both platforms, and treating it as one is how a
         /// "grant notifications" button comes to do nothing with no explanation.
         /// </summary>
@@ -82,7 +82,7 @@ namespace GlimmerGrove.Notifications
         ///
         /// Not through <c>DevicePrefs</c>, which only wraps strings, and not needing
         /// to be: the rule that class owns is <em>do not flush what has not changed</em>, and
-        /// the guard above is that rule — this is a writer that only ever writes a real
+        /// the guard above is that rule - this is a writer that only ever writes a real
         /// change, which is the exemption its own note grants <c>RunGuard</c>.
         /// </summary>
         public static void SetWanted(bool on)

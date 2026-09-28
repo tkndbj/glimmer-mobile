@@ -10,7 +10,7 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// Both are arithmetic and both would otherwise have lived in a <c>MonoBehaviour</c>, which
     /// is the one place in this project nothing can be proved. The legend's geometry is
-    /// <c>ChapterMap</c>'s argument for the fifth time — whether two things on a screen overlap
+    /// <c>ChapterMap</c>'s argument for the fifth time - whether two things on a screen overlap
     /// is a sum, and every time it was a paragraph instead the paragraph was wrong.
     /// </para>
     /// </summary>
@@ -54,7 +54,7 @@ namespace GlimmerGrove.Tests
         {
             // Both shapes, not the one that shipped. The short band is the whole reason this
             // file has a second case at all: it moves the legend, its size and the floor above
-            // it together, and the failure it can produce — a legend drawn under the tray — is
+            // it together, and the failure it can produce - a legend drawn under the tray - is
             // one nothing else here could see.
             foreach (bool shortCanvas in new[] { false, true })
             {
@@ -72,7 +72,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The shipped band, stated as itself. A short display is allowed to differ; a phone is
-        /// not, and this is the case that says so — the tablet change was made under exactly
+        /// not, and this is the case that says so - the tablet change was made under exactly
         /// that promise.
         /// </summary>
         [Test]
@@ -90,7 +90,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// What the short band is <em>for</em>: a 6x10 well is bound by height, so the furniture
         /// under it is charged straight to the cell. The numbers below are the shape reported
-        /// from an iPad — 350 of header, the band, the tray, and 24 of home indicator — and what
+        /// from an iPad - 350 of header, the band, the tray, and 24 of home indicator - and what
         /// is asserted is that the change is worth making and does not go so far that a legend
         /// or a tray stops being legible.
         /// </summary>
@@ -112,7 +112,7 @@ namespace GlimmerGrove.Tests
 
             // Nothing is scaled away to the point of being unreadable. A short display is a
             // physically large one, so what looks small as a fraction of the screen is still
-            // larger in the hand than the phone it was tuned on — but only within reason.
+            // larger in the hand than the phone it was tuned on - but only within reason.
             Assert.GreaterOrEqual(squat.LegendScale, .6f);
             Assert.GreaterOrEqual(squat.TrayScale, .6f);
             Assert.LessOrEqual(squat.LegendScale, 1f);
@@ -127,7 +127,7 @@ namespace GlimmerGrove.Tests
             foreach (bool shortCanvas in new[] { false, true })
                 Assert.LessOrEqual(FallBand.Of(shortCanvas).LegendWidth, usable,
                                    "the outer recipes run off the narrowest canvas this game " +
-                                   "is drawn on, which is a phone's — a widened one is never " +
+                                   "is drawn on, which is a phone's - a widened one is never " +
                                    "narrower, so this is the case that binds");
         }
 
@@ -211,7 +211,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The count rides inside the cascade's own budget, so a chain still cannot outstay the
         /// ceiling that keeps the board from freezing. The word is the one beat allowed outside
-        /// it — and it is bounded too.
+        /// it - and it is bounded too.
         /// </summary>
         [Test]
         public void TheCelebrationIsBoundedHoweverFarAChainRuns()

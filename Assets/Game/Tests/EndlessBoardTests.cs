@@ -17,7 +17,7 @@ namespace GlimmerGrove.Tests
     /// ledger records it, the record asks for a sync, the sync's receipt builds a card
     /// carrying the wave, the wave reaches the card's <em>fingerprint</em> so a publish is
     /// judged owed, and the publish gate lets a keeper with nothing else through. Break any
-    /// one and nothing throws, nothing logs and no gate goes red — a player simply holds out
+    /// one and nothing throws, nothing logs and no gate goes red - a player simply holds out
     /// further than anybody alive and never appears on the list they did it for. That is
     /// invariant 19j's fault arriving through a field instead of a stale read.
     /// </para>
@@ -95,7 +95,7 @@ namespace GlimmerGrove.Tests
         public void TheSaveIsReadTheWayTheServerReadsIt()
         {
             // Mirrors `bestWave` in functions/src/grove.ts. A publish is judged on the file
-            // the server holds, so this is the reading that decides whether one is owed —
+            // the server holds, so this is the reading that decides whether one is owed -
             // and if the two sides disagree, the device asks for a publish the server's card
             // will not match, for ever.
             Assert.AreEqual(31, EndlessLedger.BestIn(
@@ -108,7 +108,7 @@ namespace GlimmerGrove.Tests
         [Test]
         public void TheWaveIsBoundedOnBothSidesOfThePublish()
         {
-            // Not a clamp on a derivation — there is nothing to derive it from — but the one
+            // Not a clamp on a derivation - there is nothing to derive it from - but the one
             // defence a public number has when the server cannot recompute it. The ceiling
             // must be the same on the card, in the ledger and in `MAX_WAVE`.
             Assert.AreEqual(EndlessLedger.MaxWave, EndlessLedger.BestIn(Saved(("a", 1000000))));
@@ -171,7 +171,7 @@ namespace GlimmerGrove.Tests
             var nothing = new GroveCard("uid", "Fern", 4, 0, 1L);
             var wave = new GroveCard("uid", "Fern", 4, 17, 1L);
 
-            // The bar is still a bar — an account that has played nothing is a document, a
+            // The bar is still a bar - an account that has played nothing is a document, a
             // write and a row in the decile sample for a keeper with nothing to show. What
             // changed on 2026-09-21 is that there is one way over it rather than two: the
             // grove's worth used to be the other, and there is no grove.
@@ -182,7 +182,7 @@ namespace GlimmerGrove.Tests
 
         // ------------------------------------------------------------ the standing
         /// <summary>
-        /// Nine wave counts and a sample big enough to mean them — what a night's job publishes.
+        /// Nine wave counts and a sample big enough to mean them - what a night's job publishes.
         /// </summary>
         static GroveRankPublication Published(int samples, params long[] deciles)
             => new GroveRankPublication(GroveRankTable.None,
@@ -194,7 +194,7 @@ namespace GlimmerGrove.Tests
         {
             GroveRanks.Publish(Published(4000, 2, 4, 6, 8, 10, 12, 14, 16, 18));
 
-            // Higher is better, exactly as grove worth is — the same table used twice rather
+            // Higher is better, exactly as grove worth is - the same table used twice rather
             // than copied or given a flag.
             Assert.AreEqual(GroveRankTable.MinRank, GroveRanks.Waves.TopPercent(400));
             Assert.AreEqual(GroveRankTable.MaxRank, GroveRanks.Waves.TopPercent(1));
@@ -207,7 +207,7 @@ namespace GlimmerGrove.Tests
         [Test]
         public void AWaveNobodyCanBeMeasuredAgainstSaysNothing()
         {
-            // Never published at all — a first launch, an offline build, a game whose first day
+            // Never published at all - a first launch, an offline build, a game whose first day
             // it is. This is the state the board ships in and it must not invent a percentile.
             Assert.AreEqual(-1, GroveRanks.Waves.TopPercent(40));
 
@@ -229,7 +229,7 @@ namespace GlimmerGrove.Tests
             string unplayed = EndlessHub.CaptionFor(0);
             Assert.AreEqual(unplayed, EndlessHub.CaptionFor(-4));
 
-            // Run, but nothing to stand against yet — which is every player on the day this
+            // Run, but nothing to stand against yet - which is every player on the day this
             // ships, and every player with no backend.
             string label = EndlessHub.CaptionFor(23);
             Assert.AreNotEqual(unplayed, label);
@@ -247,7 +247,7 @@ namespace GlimmerGrove.Tests
             // `Loc.Get` echoes the key back and every one of these would read as a missing
             // string. That question belongs to `Tools/verify/loc.py`, which resolves every
             // key-shaped literal in the source against `loc/en.json` and fails the build on one
-            // that is absent (invariant 6) — a fixture asserting it here would be testing the
+            // that is absent (invariant 6) - a fixture asserting it here would be testing the
             // harness.
             foreach (string line in new[] { unplayed, label, standing }) Assert.IsNotEmpty(line);
         }
@@ -256,7 +256,7 @@ namespace GlimmerGrove.Tests
         public void ACardBuiltFromASaveCarriesThatSavesWave()
         {
             // The card a publish is judged on is built from the file the server holds, never
-            // from the live ledger — a run finished while a push was in flight is on the
+            // from the live ledger - a run finished while a push was in flight is on the
             // device and not on the server. So a ledger holding more than the save must not
             // leak into the fingerprint, or the device marks a card published that was never
             // built from what it is looking at.

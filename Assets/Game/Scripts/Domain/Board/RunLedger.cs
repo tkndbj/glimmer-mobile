@@ -37,13 +37,13 @@ namespace GlimmerGrove
     /// bring a whole screen and must share everything about being a run, and this is that
     /// sharing made real: the record, the daily chests, the streak, the reward and the analytics
     /// are counted here or nowhere. A second mode with its own copy would be a second place a
-    /// loss can stop feeding the streak, or a win can stop paying — and the failure is silent,
+    /// loss can stop feeding the streak, or a win can stop paying - and the failure is silent,
     /// because a mode that pays nothing looks exactly like a mode nobody plays.
     /// </para>
     /// <para>
     /// It also owns an ordering that was a comment before it was a rule. The
     /// <see cref="RunOutcome"/> is built <em>before</em> the record is folded in, because half
-    /// of what it describes — the previous best, whether this was a first clear — stops being
+    /// of what it describes - the previous best, whether this was a first clear - stops being
     /// true the moment it is. Reading the record afterwards produces a panel that says "new
     /// best" never, or "first clear" always, depending on which way round the caller got it.
     /// Having one caller-proof order is most of why this exists.
@@ -91,7 +91,7 @@ namespace GlimmerGrove
             ///
             /// <para>
             /// Carried apart from the total rather than folded into it, because a multiplier the
-            /// player cannot see is one they have no reason to buy — the victory panel prints
+            /// player cannot see is one they have no reason to buy - the victory panel prints
             /// "+N" beside the base figure. Nought whenever no window is open, which is also what
             /// a build with the boost withdrawn reports, so a panel reading it needs no second
             /// question.
@@ -107,7 +107,7 @@ namespace GlimmerGrove
             ///
             /// <para>
             /// Answered here rather than by the victory panel because it is a
-            /// <em>transition</em>, and by the time a panel is built the transition is over —
+            /// <em>transition</em>, and by the time a panel is built the transition is over -
             /// the record has been folded in and the gate simply reads open, which is
             /// indistinguishable from a gate that was already open an hour ago. That is the
             /// same trap the streak's <c>Advanced</c> exists to avoid, so it is answered the
@@ -115,7 +115,7 @@ namespace GlimmerGrove
             /// ordering.
             /// </para>
             /// <para>
-            /// It is news rather than a reward — nothing is granted, nothing is stored and
+            /// It is news rather than a reward - nothing is granted, nothing is stored and
             /// nothing is claimed. A player who never sees this line finds the chapter open on
             /// the map, which is why it is safe for it to be a line on a panel that can be
             /// skipped.
@@ -147,7 +147,7 @@ namespace GlimmerGrove
             public readonly bool HeartCharged;
 
             /// <summary>
-            /// What the run was priced at, and if nothing, why — a free opening or a glade this
+            /// What the run was priced at, and if nothing, why - a free opening or a glade this
             /// player had already finished. See <see cref="HeartStake"/>.
             ///
             /// <para>
@@ -162,7 +162,7 @@ namespace GlimmerGrove
             /// the panel prints a sentence about it, and a panel that says "one of the free
             /// levels" over the fortieth glade of a chapter somebody has finished is a panel
             /// nobody believes twice. It is told rather than working the reason out again for
-            /// <see cref="Loss"/>'s standing reason — a second reading, taken later, able to
+            /// <see cref="Loss"/>'s standing reason - a second reading, taken later, able to
             /// disagree with the first.
             /// </para>
             /// </summary>
@@ -173,7 +173,7 @@ namespace GlimmerGrove
             ///
             /// <b>Not the same as the run having been free.</b> A watch on a lane with no ladder
             /// is bought at the gate (<see cref="HeartPrice.Entry"/>), so it answers true here
-            /// and cost a heart all the same — which is exactly what the panel has to say rather
+            /// and cost a heart all the same - which is exactly what the panel has to say rather
             /// than draw a row of hearts reporting a charge that did not happen.
             /// </summary>
             public bool WasFree => !HeartStake.PaidAtEnding(Price);
@@ -195,7 +195,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// The reward is the difference between the record before and the record after, not a
-        /// payout for the run — so a replay that does not beat the old result is worth nothing,
+        /// payout for the run - so a replay that does not beat the old result is worth nothing,
         /// and that falls out of the subtraction rather than needing a rule anybody has to
         /// remember. It is also why the order above matters.
         /// </para>
@@ -220,8 +220,8 @@ namespace GlimmerGrove
             PlayerProgress.RecordRun(level.Id, stars, moves, tuning.Climbs);
 
             // Counted here and in the loss, which are the two places a run actually ends.
-            // PlayerProgress hears about wins only — a defeat is not a worse clear, it simply
-            // did not happen — so there is no single hook further down to hang this on, and
+            // PlayerProgress hears about wins only - a defeat is not a worse clear, it simply
+            // did not happen - so there is no single hook further down to hang this on, and
             // pretending otherwise would silently stop counting losses.
             Tasks.TaskLedger.RecordRun(run);
             var streak = Record();
@@ -231,7 +231,7 @@ namespace GlimmerGrove
             LevelAnalytics.TrackCompleted(level, moves, stars, hintsUsed, seconds, run.FirstClear);
 
             // The other half of the reading. Only a chapter that was shut a moment ago is news,
-            // and only the chapter directly after this one can have moved — a gate counts the
+            // and only the chapter directly after this one can have moved - a gate counts the
             // stars of the chapter behind it and nothing else.
             var opened = !wasOpen && LevelUnlock.GateAfter(index, chapter).IsOpen
                 ? index.ChapterNeighbour(chapter, +1)
@@ -239,7 +239,7 @@ namespace GlimmerGrove
 
             // The star ledger's XP plus whatever else this run earned. Nought on every board but
             // the Infinite lane, and passed in rather than asked for here because this ledger is
-            // mode-blind (invariant 20a) — what it is told is "this run also earned N", not which
+            // mode-blind (invariant 20a) - what it is told is "this run also earned N", not which
             // mode it came from. See `ProtoScreen.Solve`, which measures it either side of the
             // fold exactly as `ChapterOpened` above is measured.
             long xp = reward.Xp + (bonusXp > 0L ? bonusXp : 0L);
@@ -252,7 +252,7 @@ namespace GlimmerGrove
 
             // **The one place XP is multiplied.** Every source above is totalled first and boosted
             // once, so a boost cannot be applied twice to one run and a source added later is
-            // boosted without being taught anything — which is the whole of what `XpBoost.Bank`
+            // boosted without being taught anything - which is the whole of what `XpBoost.Bank`
             // is for. It banks the bonus as it computes it, because XP is derived and a boost is
             // not: there is no running total for a multiplier to scale, so the bonus has to be
             // remembered at the moment it is earned (invariant 9's exception, see `XpBoost`).
@@ -274,14 +274,14 @@ namespace GlimmerGrove
         /// whether or not anything was owed.
         ///
         /// <para>
-        /// <paramref name="price"/> is <c>RunScreen.Price</c> — what this run was staked at,
+        /// <paramref name="price"/> is <c>RunScreen.Price</c> - what this run was staked at,
         /// which is free for a mode's opening glades and for any glade the player has already
         /// finished (<see cref="HeartStake"/>). It is <b>told</b> rather than worked out here, and that
         /// is the whole of the ordering: the answer is latched at the instant the run became
         /// owed for, so a content push landing mid-run cannot turn a board the player was told
         /// was free into one they are charged for on the way out of it. Asking again here
         /// would be a second reading of one run's price, taken later than the first and able to
-        /// disagree with it — which is the shape invariant 9a exists to refuse, and which the
+        /// disagree with it - which is the shape invariant 9a exists to refuse, and which the
         /// forfeit path next door had already got right.
         /// </para>
         /// <para>
@@ -294,7 +294,7 @@ namespace GlimmerGrove
         /// <para>
         /// No star, no record and no reward: a defeat is not a worse clear, it simply did not
         /// happen, and <c>PlayerProgress</c> never hears about it. It still counts as a run for
-        /// the chests and the streak, because it cost a heart — a daily loop that only rewards
+        /// the chests and the streak, because it cost a heart - a daily loop that only rewards
         /// winning takes hearts from exactly the players who most need what the chests hold.
         /// </para>
         /// <para>
@@ -314,7 +314,7 @@ namespace GlimmerGrove
                                       lit, wanted, hintsUsed, seconds, route);
 
             // Only a price paid at the *ending*. A watch bought at the gate has already paid, and
-            // charging here would take a second heart for one run — see HeartPrice.Entry.
+            // charging here would take a second heart for one run - see HeartPrice.Entry.
             bool charged = HeartStake.PaidAtEnding(price) && Wallet.TrySpendHeart();
             int left = Wallet.Hearts.Count;
 
@@ -330,7 +330,7 @@ namespace GlimmerGrove
         /// Feeds the streak and reports what happened, so the panel that follows can say so.
         ///
         /// Measured either side of the call rather than read from an event, because the panel
-        /// needs the answer synchronously — it is built on the next line — and an event handler
+        /// needs the answer synchronously - it is built on the next line - and an event handler
         /// would have to stash the result somewhere for it to be found again. Two reads of a
         /// derived number is the cheapest correct version.
         /// </summary>

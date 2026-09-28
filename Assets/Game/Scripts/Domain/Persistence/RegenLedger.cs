@@ -7,7 +7,7 @@ namespace GlimmerGrove.Persistence
     ///
     /// <para>
     /// A value rather than a delegate, because the period is asked for once per refill
-    /// inside a catch-up loop that runs on every HUD tick — a closure there would allocate
+    /// inside a catch-up loop that runs on every HUD tick - a closure there would allocate
     /// per read, and the whole reason this arithmetic is worth extracting is that it is on
     /// the hot path of two resources rather than one.
     /// </para>
@@ -60,7 +60,7 @@ namespace GlimmerGrove.Persistence
     /// </summary>
     public readonly struct RegenBounds
     {
-        /// <summary>Where the clock stops. Not a maximum — see <see cref="Ceiling"/>.</summary>
+        /// <summary>Where the clock stops. Not a maximum - see <see cref="Ceiling"/>.</summary>
         public readonly int RefillCap;
 
         /// <summary>
@@ -95,7 +95,7 @@ namespace GlimmerGrove.Persistence
     /// <para>
     /// <b>This is the arithmetic, and it exists once.</b> Hearts had it first and hints are
     /// the second caller; the two differ in their numbers, in whether anything can shorten
-    /// their clock, and in what a file written before either existed looks like — and in
+    /// their clock, and in what a file written before either existed looks like - and in
     /// nothing else. Writing the walk, the spend and the join out a second time is exactly
     /// the mistake invariant 5b names: five copies of "is this tile solved" were each
     /// correct until a tile appeared that one of them had not been written for. A merge
@@ -108,7 +108,7 @@ namespace GlimmerGrove.Persistence
     /// about a refill, so every rule over the pair is wrong somewhere: taking the larger
     /// hands back what somebody spent, so two devices refill each other for free, and
     /// taking the smaller deletes what somebody earned. Hearts shipped with the smaller and
-    /// destroyed a refill on every sync — see invariant 11b. The fault is the
+    /// destroyed a refill on every sync - see invariant 11b. The fault is the
     /// representation, not the comparison.
     /// </para>
     /// <para>
@@ -117,7 +117,7 @@ namespace GlimmerGrove.Persistence
     /// <c>Produced - Spent</c>, derived exactly as XP and credits are (invariant 9).
     /// </para>
     /// <para>
-    /// Two invariants hold at every moment and — this is the part that matters — are
+    /// Two invariants hold at every moment and - this is the part that matters - are
     /// <em>preserved by the join</em>, which is what makes the merge total rather than
     /// merely usually-right. Writing <c>C</c> for <see cref="RegenBounds.HardCeiling"/>:
     /// </para>
@@ -126,15 +126,15 @@ namespace GlimmerGrove.Persistence
     /// </code>
     /// <para>
     /// The left half survives because a device cannot spend what it never produced, so
-    /// <c>max(spentA, spentB)</c> is some <c>spentX ≤ producedX ≤ max(produced)</c> — the
+    /// <c>max(spentA, spentB)</c> is some <c>spentX ≤ producedX ≤ max(produced)</c> - the
     /// merged count can never go negative. The right half survives because
     /// <c>producedA ≤ spentA + C</c> and <c>producedB ≤ spentB + C</c> together give
-    /// <c>max(produced) ≤ max(spent) + C</c> — the merged count can never exceed the
+    /// <c>max(produced) ≤ max(spent) + C</c> - the merged count can never exceed the
     /// ceiling. A player therefore cannot lose one to a sync and cannot gain one either,
     /// for any number of devices merging in any order any number of times.
     /// </para>
     /// <para>
-    /// The type has no clock of its own — every method takes <c>now</c>. That is what lets
+    /// The type has no clock of its own - every method takes <c>now</c>. That is what lets
     /// the whole rule be tested at arbitrary times without waiting eight hours, and what
     /// keeps the question of <em>whose</em> time it is (see <see cref="GameClock"/>) out of
     /// the rule entirely.
@@ -154,16 +154,16 @@ namespace GlimmerGrove.Persistence
         /// <para>
         /// Deliberately <b>not</b> cleared on reaching the cap. A field that is zeroed when
         /// full is not monotonic, so it cannot be merged with <c>max</c>, so the merge would
-        /// need a special case for "0 means no timer" — and a special case in a join is a
+        /// need a special case for "0 means no timer" - and a special case in a join is a
         /// rule that has stopped being a join. It idles in the past instead, and a spend
         /// moves it forward. Zero survives only as the bottom of the lattice: "this timer
         /// has never started", which any real timestamp beats.
         /// </para>
         /// <para>
-        /// It is bounded above by <c>now + one period</c> on any honest device — a refill
+        /// It is bounded above by <c>now + one period</c> on any honest device - a refill
         /// sets it to (the moment it landed) + period and a spend that drops the player
         /// below the cap sets it to now + period, and neither looks further ahead than that
-        /// — so taking the larger of two cannot push the next one more than one period
+        /// - so taking the larger of two cannot push the next one more than one period
         /// away. What a screen should draw is <see cref="NextDueUnix"/>, which hides the
         /// idle value.
         /// </para>
@@ -177,7 +177,7 @@ namespace GlimmerGrove.Persistence
             // Both invariants restated rather than assumed. This is the only door into the
             // type, and the values behind it may have come from a truncated file, a support
             // tool, or a build that has not shipped yet. The permanent bound, never the
-            // published one — this clamp runs on every read of every save, so anything it
+            // published one - this clamp runs on every read of every save, so anything it
             // depends on must be something no content file can move underneath it.
             long floor = Spent;
             long ceiling = Spent + (hardCeiling < 1 ? 1 : hardCeiling);
@@ -203,7 +203,7 @@ namespace GlimmerGrove.Persistence
 
         /// <summary>
         /// When the next one arrives, or 0 when the player is at or above the refill cap
-        /// and no timer is running — the number a HUD should draw.
+        /// and no timer is running - the number a HUD should draw.
         ///
         /// Derived rather than stored, which is the whole trick: the screen still gets its
         /// "no timer" sentinel, and the merge never sees one.
@@ -229,14 +229,14 @@ namespace GlimmerGrove.Persistence
             // alone is what keeps repeated reads from writing the save file.
             //
             // Somebody holding more than the cap sits here too, and holds their surplus for
-            // as long as they like — the clock is a floor, not a drain. The idle deadline is
+            // as long as they like - the clock is a floor, not a drain. The idle deadline is
             // then a stale past timestamp for however long the surplus lasts; that is safe
             // because the only way back under the cap is Spend, which restarts it.
             if (IsRefilled(bounds.RefillCap)) return this;
 
             var period = bounds.Period;
 
-            // No deadline below the cap means the timer was never started — a file written
+            // No deadline below the cap means the timer was never started - a file written
             // before this pool existed, or one repaired by a merge. Start it now rather than
             // granting immediately, which would pay for time nobody waited.
             long due = DueUnix > 0 ? DueUnix : now + period.At(now);
@@ -279,7 +279,7 @@ namespace GlimmerGrove.Persistence
             // 0 for anybody at or above it, so somebody spending down from eight restarts
             // the timer on the spend that takes them to four and not on the three before it.
             // That is also what makes the idle deadline safe to leave in the past while a
-            // surplus is held — the stale value is never the one a timer resumes from. An
+            // surplus is held - the stale value is never the one a timer resumes from. An
             // already-running timer is left where it is: a second spend must not push the
             // first refill further away.
             long pending = current.NextDueUnix(bounds.RefillCap);
@@ -289,7 +289,7 @@ namespace GlimmerGrove.Persistence
         }
 
         /// <summary>
-        /// Grants extras the player did not wait for — a chest, a streak night, a watched
+        /// Grants extras the player did not wait for - a chest, a streak night, a watched
         /// video, a server correction.
         ///
         /// <para>
@@ -297,7 +297,7 @@ namespace GlimmerGrove.Persistence
         /// <see cref="RegenBounds.Ceiling"/>. The gap between those two numbers is the
         /// feature: somebody at a full bar who opens a chest keeps what they were given
         /// instead of watching it evaporate. A pool that sets the two equal has opted out of
-        /// that, and then a grant at full is refused rather than half-paid — which is why an
+        /// that, and then a grant at full is refused rather than half-paid - which is why an
         /// offer has to ask <see cref="IsAtCeiling"/> before it is ever made.
         /// </para>
         /// <para>
@@ -320,7 +320,7 @@ namespace GlimmerGrove.Persistence
 
         /// <summary>
         /// Joins two devices' ledgers. Idempotent, commutative and associative, like every
-        /// other merge in this save file — and, unlike a stored count, lossless.
+        /// other merge in this save file - and, unlike a stored count, lossless.
         ///
         /// <para>
         /// Three <c>max</c>es and no special cases, which is the point. Every field is a
@@ -329,7 +329,7 @@ namespace GlimmerGrove.Persistence
         /// the other missed, one that has spent more has played a run the other missed, and
         /// a later deadline is the one that has already paid out. There is nothing here for
         /// a stale snapshot to overwrite, so it does not matter whether the two sides are
-        /// genuine peers or one is simply out of date — which is what the old rule had to
+        /// genuine peers or one is simply out of date - which is what the old rule had to
         /// guess at, and got wrong.
         /// </para>
         /// </summary>
@@ -343,7 +343,7 @@ namespace GlimmerGrove.Persistence
         /// <summary>
         /// Compares the ledger, not the count.
         ///
-        /// Two states can show the same number and differ in what has to be written —
+        /// Two states can show the same number and differ in what has to be written -
         /// reaching the cap advances <see cref="DueUnix"/> without moving
         /// <see cref="Count"/>, and losing that would leave a device merging against a
         /// deadline it had already passed. Callers deciding whether to save must ask this

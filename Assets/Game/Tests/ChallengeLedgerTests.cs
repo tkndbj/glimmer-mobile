@@ -9,7 +9,7 @@ namespace GlimmerGrove.Tests
 {
     /// <summary>
     /// The daily challenges' foundation: the rotation, the allowance, the deals, the payout
-    /// and the merge — everything the owner asked to be settled before the slate grows.
+    /// and the merge - everything the owner asked to be settled before the slate grows.
     ///
     /// <para>
     /// Five things are under contract. Every player on one day deals the same level, and slot
@@ -217,7 +217,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The deal band's chest and one stone per shipped deal are preloaded and on disk. A
         /// stone is keyed on its rung (<c>ChallengeArt.DealMark</c>), so this is the gate that
-        /// asks for a fourth picture the day a fourth deal is authored — nothing else can, since
+        /// asks for a fourth picture the day a fourth deal is authored - nothing else can, since
         /// the address is built and <c>artnames.py</c> cannot see it.
         /// </summary>
         [Test]
@@ -681,7 +681,7 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(2, later.today.Length);
             Assert.AreEqual(1, later.today[1].attempts, "yesterday's rows do not carry over");
 
-            // A malformed row — wins past attempts — is read as attempts raised, never as free plays.
+            // A malformed row - wins past attempts - is read as attempts raised, never as free plays.
             var odd = ChallengeLedger.Join(new ChallengeStateDto
             {
                 day = Day, today = new[] { new ChallengeDayDto { genre = "pairs", attempts = 0, wins = 3 } },

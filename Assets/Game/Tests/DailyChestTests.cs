@@ -17,7 +17,7 @@ namespace GlimmerGrove.Tests
     /// exactly once, however many devices claim it and however often a reply is lost.
     /// And the day must roll over without anything having to fire at midnight.
     ///
-    /// The fourth property — that this rolls chests identically to the server — is not
+    /// The fourth property - that this rolls chests identically to the server - is not
     /// here. It lives in <see cref="RewardVectorTests"/>, against the shared vectors,
     /// because a test that only proved the client agreed with itself would be exactly
     /// the test that lets the two halves drift.
@@ -89,7 +89,7 @@ namespace GlimmerGrove.Tests
                         total++;
                     }
 
-            // Not an exact count — that would be a change-detector. The point is that the
+            // Not an exact count - that would be a change-detector. The point is that the
             // generator is not collapsing everything onto a handful of outcomes, which a
             // broken seed absolutely would.
             Assert.Greater(seen.Count, total / 4,
@@ -117,7 +117,7 @@ namespace GlimmerGrove.Tests
         /// The case that would otherwise pay a player half of what the server grants.
         ///
         /// A chest whose floor and whose bonus are both credits produces two drops of one
-        /// kind, and both would carry the id <c>daily:{day}:{chest}:credits</c> — so the
+        /// kind, and both would carry the id <c>daily:{day}:{chest}:credits</c> - so the
         /// second award is refused as a duplicate of the first. The server sums them.
         /// Merging at the source is what keeps the two halves talking about one number.
         /// </summary>
@@ -196,7 +196,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The odds shown to the player have to be the odds the generator actually uses,
         /// or the disclosure is a decoration. Checked statistically over a wide sample
-        /// with a loose tolerance — the point is that a 70/30 table is not behaving like
+        /// with a loose tolerance - the point is that a 70/30 table is not behaving like
         /// a 50/50 one, not that the modulo has no bias.
         /// </summary>
         [Test]
@@ -486,7 +486,7 @@ namespace GlimmerGrove.Tests
                                     new Dictionary<Content.LevelId, Social.LevelStats>()));
 
             /// <summary>
-            /// Nothing to say about releases, and a failure rather than "nothing is required" —
+            /// Nothing to say about releases, and a failure rather than "nothing is required" -
             /// see <c>NullCloudBackend.ReadReleaseAsync</c>. A double that answered success here
             /// would clear a standing update wall on behalf of a fixture that is about something
             /// else entirely.
@@ -520,7 +520,7 @@ namespace GlimmerGrove.Tests
         ///
         /// A chest is seeded from the account id so the server can recompute it. Before
         /// the first sign-in there is no account id, and no scheme can invent one the
-        /// server would agree with — so the chest waits rather than paying out a number
+        /// server would agree with - so the chest waits rather than paying out a number
         /// the server will overrule.
         /// </summary>
         [Test]

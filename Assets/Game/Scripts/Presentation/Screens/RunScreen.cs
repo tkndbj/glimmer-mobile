@@ -54,7 +54,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The board is the reason.</b> It is the largest control in the game and it is sized
         /// from what the header leaves, so every canvas unit the top inset takes is taken off the
-        /// puzzle — on a phone with a deep cutout that is the difference between a comfortable
+        /// puzzle - on a phone with a deep cutout that is the difference between a comfortable
         /// board and a cramped one, on the one screen a player spends their whole session on.
         /// The home indicator is left alone, because the bottom of a board is board.
         /// </para>
@@ -62,13 +62,13 @@ namespace GlimmerGrove
         /// <b>What it costs is stated plainly rather than argued away.</b> The top inset on a
         /// deep-cutout phone is around 120 canvas units (141 device pixels over a scale of
         /// 1.19 on an iPhone 13 Pro Max), and the header's keys sit 50 units below the top of
-        /// their bar — so they do move up into the status strip. They stay on visible,
+        /// their bar - so they do move up into the status strip. They stay on visible,
         /// pressable screen: a sensor housing is centred and the keys are at the two ears,
         /// which is where a phone's own clock and battery live. If a future device puts
         /// something across the whole width up there, this is the one line to take back.
         /// </para>
         /// <para>
-        /// Declared here rather than per mode for this class's usual reason — a rule about what
+        /// Declared here rather than per mode for this class's usual reason - a rule about what
         /// a run screen looks like, written once, is one that cannot come to differ between the
         /// glade and the weave.
         /// </para>
@@ -79,7 +79,7 @@ namespace GlimmerGrove
         public abstract void RetryAfterDefeat();
 
         /// <summary>
-        /// Hands the level back after a panel that latched it — unless something else is still
+        /// Hands the level back after a panel that latched it - unless something else is still
         /// holding it.
         ///
         /// <para>
@@ -87,13 +87,13 @@ namespace GlimmerGrove
         /// used to answer it, and every answer was the same two lines with the mode's own name
         /// for its board: "unlock it, unless the run is already over". A copy per mode is what
         /// the stake above was taken apart for, and this is a smaller version of the same
-        /// hazard — the mode already declares <see cref="Latch"/>, which is that sentence
+        /// hazard - the mode already declares <see cref="Latch"/>, which is that sentence
         /// exactly, so the second copy was only ever an opportunity for the two to drift.
         /// </para>
         /// <para>
         /// <b>A board a lesson is holding is not handed back.</b> That clause is what this
         /// method was made concrete for. A lesson is scheduled on a timer, so a player can open
-        /// the pause menu in the beat before the first tip appears — and the menu's every exit
+        /// the pause menu in the beat before the first tip appears - and the menu's every exit
         /// runs through here (<c>PauseOverlay.OnDestroy</c>, deliberately, so no exit can forget
         /// to). Without the clause, closing that menu unlocks a board a tip is about to be drawn
         /// over, with a hole cut in its dim around the very tile it is pointing at. The rule the
@@ -115,13 +115,13 @@ namespace GlimmerGrove
         /// <para>
         /// <b>It is here because it was written twice and the two copies drifted.</b> Each mode
         /// used to carry its own <c>Commit</c>, <c>Resolve</c>, <c>Forfeit</c> and
-        /// <c>ConfirmForfeit</c> — four near-identical methods about charging players a heart,
+        /// <c>ConfirmForfeit</c> - four near-identical methods about charging players a heart,
         /// which is precisely what the remarks on this class already said must not happen. They
         /// did not stay identical: one guarded a closing cascade and the other did not, and,
         /// worse, <b>Lightweave's restart never called its copy at all</b>. A restart there was
         /// free, which on a mode whose fail state is a pot of ink that a restart refills meant
         /// the fail state could be walked out of for nothing. It was reported from play, and no
-        /// compile, validator or test could have said so — because the rule was not anywhere, it
+        /// compile, validator or test could have said so - because the rule was not anywhere, it
         /// was in two places and missing from a third.
         /// </para>
         /// <para>
@@ -137,7 +137,7 @@ namespace GlimmerGrove
         HeartPrice? _price;
 
         /// <summary>
-        /// What this screen's level costs, and if it costs nothing, why — a mode's free
+        /// What this screen's level costs, and if it costs nothing, why - a mode's free
         /// opening, or a glade this player has already finished. See <see cref="HeartStake"/>.
         ///
         /// <para>
@@ -146,7 +146,7 @@ namespace GlimmerGrove
         /// <em>not</em> tied to <see cref="Commit"/> and <see cref="Resolve"/>: a screen plays
         /// one level, a restart and a retry play it again, and the price cannot move between
         /// those. Tying it to the run's own lifecycle was tried and is wrong in a way nothing
-        /// would have caught — both modes call <c>Resolve</c> a few lines <em>before</em>
+        /// would have caught - both modes call <c>Resolve</c> a few lines <em>before</em>
         /// <c>RunLedger.Loss</c>, on purpose, so that a crash mid-defeat cannot charge twice.
         /// A stake cleared by <c>Resolve</c> therefore reads "free" at the exact moment the
         /// heart is taken, and every lost glade in the game becomes free. It compiles, it
@@ -154,13 +154,13 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// <b>The latch is one-way: free is remembered, charged is not.</b> Both clauses can
-        /// move underneath a screen — the window is content and a push can land mid-run, and the
+        /// move underneath a screen - the window is content and a push can land mid-run, and the
         /// replay clause turns over the instant a glade is first cleared, which is something
         /// that happens in the middle of this screen's own life. Only one of those directions is
         /// dangerous. A board the player was told was free must never become one they are
         /// charged for on the way out of it, so a free answer is kept for ever; a charged one
         /// becoming free costs nobody anything and is the honest reading of a rule that has just
-        /// changed in the player's favour — which is what makes a first clear followed by a
+        /// changed in the player's favour - which is what makes a first clear followed by a
         /// restart on the same screen free, rather than charged by a value latched before the
         /// win. And it is still one answer rather than several: the ledger is <em>told</em> this
         /// (<c>RunLedger.Loss</c>'s <c>price</c>) instead of working it out again later, which
@@ -173,7 +173,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// <b>The latch is written as "anything but charged", which is what makes a watch bought
-        /// at the gate latch too</b> (<see cref="HeartPrice.Entry"/>) — and it has to. That price
+        /// at the gate latch too</b> (<see cref="HeartPrice.Entry"/>) - and it has to. That price
         /// has already taken its heart by the time any ending reads it, so a content push turning
         /// the lane back into an ordinary charged one mid-watch would charge a second heart for
         /// one run. Both directions of every other clause are unchanged.
@@ -192,7 +192,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Whether this screen's level is one somebody pays a heart for — the bool half of
+        /// Whether this screen's level is one somebody pays a heart for - the bool half of
         /// <see cref="Price"/>, and what every exit is priced from.
         ///
         /// <para>
@@ -203,8 +203,8 @@ namespace GlimmerGrove
         /// <para>
         /// <b>"Costs a heart", never "is charged at the ending"</b>, and the two stopped being
         /// the same question when a lane bought at the gate shipped (<see cref="HeartPrice.Entry"/>).
-        /// Everything this answers is about whether anything is at stake — whether a continue is
-        /// worth selling, and whether walking away is worth asking about — and a watch already
+        /// Everything this answers is about whether anything is at stake - whether a continue is
+        /// worth selling, and whether walking away is worth asking about - and a watch already
         /// paid for is at stake in exactly the way a charged glade is. What is <em>owed</em> is
         /// <see cref="OwedAtEnding"/>, which is a different question with a different answer.
         /// </para>
@@ -212,7 +212,7 @@ namespace GlimmerGrove
         protected internal bool Staked => HeartStake.Costs(Price);
 
         /// <summary>
-        /// Whether a heart is still owed for this run — the half <see cref="Staked"/> used to
+        /// Whether a heart is still owed for this run - the half <see cref="Staked"/> used to
         /// carry on its own, split out when a price paid at the gate arrived.
         ///
         /// <para>
@@ -220,7 +220,7 @@ namespace GlimmerGrove
         /// marker a crash leaves behind (<see cref="Commit"/>), the abandonment
         /// (<see cref="Forfeit"/>) and the defeat (<c>RunLedger.Loss</c>, told the price rather
         /// than asking). A watch bought at the gate answers false to all three, which is what
-        /// makes every way out of it free — including the one no screen ever sees.
+        /// makes every way out of it free - including the one no screen ever sees.
         /// </para>
         /// </summary>
         protected internal bool OwedAtEnding => HeartStake.PaidAtEnding(Price);
@@ -236,12 +236,12 @@ namespace GlimmerGrove
         /// <b>Here rather than in each header, because there are two of them.</b> The glade
         /// builds its own top bar and the other four share <c>ModeScreen.BuildHeader</c>, so a
         /// tag written twice is two screens that can come to disagree about which number a run
-        /// is — which is the one thing it may not do, since the map draws the same number on the
+        /// is - which is the one thing it may not do, since the map draws the same number on the
         /// node the player just tapped.
         /// </para>
         /// <para>
         /// <b>And it is that number, not a new one.</b> <c>CatalogIndex.OrderOf</c> is a position
-        /// inside the level's own lane — its mode <em>and</em> its track — which is what the map's
+        /// inside the level's own lane - its mode <em>and</em> its track - which is what the map's
         /// node reads, so the second chapter of a mode carries on counting where the first left
         /// off and an endless lane counts from one again. It is display only and is never
         /// persisted (invariant 1); a level the catalog has never heard of draws nothing at all
@@ -251,7 +251,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>It sits at the key's own height, and that is what keeps it off the readouts.</b>
         /// A header's middle is empty and its readout row is level with its keys (invariant 37an),
-        /// so there is no horizontal room here at all — a row of two reaches within 45 units of
+        /// so there is no horizontal room here at all - a row of two reaches within 45 units of
         /// where this tag ends, and a row of three overlaps it outright. What separates them is
         /// the band: the tag is short and hangs from the key's centre, so its foot
         /// (<see cref="TagFoot"/>) sits above the first thing drawn under the bar.
@@ -302,7 +302,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Whether this run has already reached an ending, however it is spelled by the mode —
+        /// Whether this run has already reached an ending, however it is spelled by the mode -
         /// a glade calls it finished, a weave counts the closing cascade too.
         ///
         /// A run that is over is never forfeited on the way out of it: leaving a grove that has
@@ -314,14 +314,14 @@ namespace GlimmerGrove
         protected abstract void Rewind();
 
         /// <summary>
-        /// Writes an abandonment down, with whatever numbers this mode measures progress in —
+        /// Writes an abandonment down, with whatever numbers this mode measures progress in -
         /// a glade counts turns, a weave counts critters woken.
         /// </summary>
         protected abstract void NoteAbandoned(string reason);
 
         /// <summary>
         /// Notes on disk that the run is now owed for, so the process dying does not make it
-        /// free. See <c>RunGuard</c> — <c>Boot</c> charges anything still written down at the
+        /// free. See <c>RunGuard</c> - <c>Boot</c> charges anything still written down at the
         /// next launch.
         /// </summary>
         protected void Commit()
@@ -334,7 +334,7 @@ namespace GlimmerGrove
 
             // No marker for a free run, and that is the whole of what makes the crash path
             // right. The marker exists so a process that dies mid-run is charged at the next
-            // launch, and Boot claims it before any content has loaded — so nothing there
+            // launch, and Boot claims it before any content has loaded - so nothing there
             // could ask whether the glade was free. Not writing one says it in the only place
             // that still knows.
             //
@@ -347,8 +347,8 @@ namespace GlimmerGrove
             //
             // **This method is the one place in the game that means "the run is now owed for"**,
             // which is why the charge is here and not at a door. There are four doors into a run
-            // — the hub's key, the defeat panel's retry, the restart key and the way back from a
-            // continue — and three of them never touch PlayRoute, so a charge written at the
+            // - the hub's key, the defeat panel's retry, the restart key and the way back from a
+            // continue - and three of them never touch PlayRoute, so a charge written at the
             // gate would be a charge written three more times or forgotten three times. This runs
             // once per attempt, whichever door opened it, because the view clears its own
             // committed flag every time it deals a board.
@@ -362,7 +362,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// The run reached an ending and has been accounted for. Every path that finishes one
-        /// calls it — a win, a defeat, or an abandonment the player agreed to.
+        /// calls it - a win, a defeat, or an abandonment the player agreed to.
         ///
         /// Missing one costs a player a heart they did not owe on their next launch, so it is
         /// deliberately cheap and idempotent rather than conditional.
@@ -380,7 +380,7 @@ namespace GlimmerGrove
         /// <para>
         /// Note what it does <em>not</em> do. A defeat also counts a run towards the daily
         /// chests and feeds the streak; a forfeit counts towards neither. Those are for runs
-        /// that were <em>finished</em>, won or lost, and a withdrawn run was not — which is also
+        /// that were <em>finished</em>, won or lost, and a withdrawn run was not - which is also
         /// what keeps the restart button from being the fastest way to bank three chests.
         /// </para>
         /// </summary>
@@ -388,14 +388,14 @@ namespace GlimmerGrove
         {
             if (!Committed) return;
 
-            // A free run — a mode's opening, or a glade already finished — is walked away from
+            // A free run - a mode's opening, or a glade already finished - is walked away from
             // for nothing, and it still reaches NoteAbandoned: what a run cost is an economy
             // question, and whether somebody left one is a fact worth counting whatever it cost.
 
             NoteAbandoned(reason);
 
             // What is *owed*, not what the run cost. A watch bought at the gate is walked away
-            // from for nothing, exactly as it is lost for nothing — the heart went out when it
+            // from for nothing, exactly as it is lost for nothing - the heart went out when it
             // began, and taking a second one here would price leaving it at twice the price of
             // playing it out.
             if (OwedAtEnding) Wallet.TrySpendHeart();
@@ -408,13 +408,13 @@ namespace GlimmerGrove
         ///
         /// On an uncommitted run, an already-finished one, one of a mode's free openings or a
         /// glade the player has already cleared there is nothing to charge, so it does the thing
-        /// immediately — a confirmation over a free action is friction that teaches players to
+        /// immediately - a confirmation over a free action is friction that teaches players to
         /// dismiss the one that is not free.
         ///
         /// <para>
         /// <b>The two exits stopped costing the same thing when a lane bought at the gate
         /// shipped</b> (<see cref="HeartPrice.Entry"/>), so they are priced apart. <em>Leaving</em>
-        /// such a watch takes nothing — its heart went out when it began — so it is walked out of
+        /// such a watch takes nothing - its heart went out when it began - so it is walked out of
         /// without a panel, exactly as a free glade is. <em>Restarting</em> one takes a heart all
         /// the same, because the fresh watch is bought at the gate like every other, so it is
         /// still asked about. For every other price the two answers are identical and nothing
@@ -428,7 +428,7 @@ namespace GlimmerGrove
             // A free run is walked out of without being asked about, for the same reason an
             // uncommitted one is: a confirmation over an action that costs nothing is friction
             // that teaches players to dismiss the one that does. That covers a mode's opening
-            // glades and every glade this player has already finished — going back to a board
+            // glades and every glade this player has already finished - going back to a board
             // you beat and thinking better of it is the commonest free exit there is, and being
             // stopped by a panel warning about a heart nobody is taking is how a player learns
             // the warning means nothing. It is still forfeited, so the abandonment is written
@@ -463,8 +463,8 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>Split out from <see cref="RestartLevel"/> so that the decision can be proved
-        /// without a screen.</b> The telling needs a canvas — a sound and a line over the board
-        /// — and the answer needs a price, a commitment and a wallet, which is the half worth
+        /// without a screen.</b> The telling needs a canvas - a sound and a line over the board
+        /// - and the answer needs a price, a commitment and a wallet, which is the half worth
         /// pinning. It is also the half a mode's chrome could paint a key from, if a dead key
         /// ever turns out to read better than a key that says why.
         /// </para>
@@ -473,7 +473,7 @@ namespace GlimmerGrove
         /// cleared mid-screen is free to restart the moment it is beaten (that latch is one-way
         /// on purpose); <see cref="Committed"/>, so a board nobody has touched is priced like an
         /// entry rather than like two; and the wallet <em>now</em>, never a count snapshotted
-        /// when the screen was built — a heart can land from the clock, a chest, a streak night
+        /// when the screen was built - a heart can land from the clock, a chest, a streak night
         /// or a watched video while somebody is sitting on a board.
         /// </para>
         /// </summary>
@@ -487,7 +487,7 @@ namespace GlimmerGrove
         /// <b>A restart abandons a run and begins another, so it is priced like any other
         /// abandonment</b> and asked about the same way. Not sealed by the language but by
         /// having nothing to override: a mode supplies <see cref="Rewind"/> and cannot get at
-        /// the decision. That is deliberate — this is the exact method Lightweave shipped
+        /// the decision. That is deliberate - this is the exact method Lightweave shipped
         /// unpriced.
         /// </para>
         /// </summary>
@@ -496,8 +496,8 @@ namespace GlimmerGrove
             // The gate, and it has to be here rather than only at the map. A restart abandons
             // one run and begins another, so it is two answers with a charge between them, and
             // only the first was ever asked. The consequence was not a rounding error: at nought
-            // hearts the abandonment silently takes nothing — Wallet.TrySpendHeart reports
-            // "already out" rather than refusing — so the board came back, free, as often as
+            // hearts the abandonment silently takes nothing - Wallet.TrySpendHeart reports
+            // "already out" rather than refusing - so the board came back, free, as often as
             // anybody cared to tap. The one rule in this game that can stop somebody playing was
             // walked straight past by the key in the header.
             //
@@ -521,19 +521,19 @@ namespace GlimmerGrove
         /// <para>
         /// <b>A panel of ours rather than <c>OutOfHeartsOverlay</c>, and that is not a stylistic
         /// choice.</b> That panel navigates to the shop, and it self-closes the moment
-        /// <c>Profile.CanPlay</c> reads true — both of which are correct where it is raised
+        /// <c>Profile.CanPlay</c> reads true - both of which are correct where it is raised
         /// today, because nothing is standing behind it there. Here a committed run is. Leaving
         /// this screen through <c>Flow.Go</c> abandons that run <em>without resolving it</em>, so
         /// the marker <c>RunGuard</c> wrote stays on disk and charges a heart at the next launch
         /// for a run nobody finished; and the refusal a player most often meets is the one where
         /// they hold a heart and would have nothing left for the fresh board, which is a state
-        /// that panel closes itself on while the restart is still refused. Invariant 23's rule —
+        /// that panel closes itself on while the restart is still refused. Invariant 23's rule -
         /// bring the shelf to them, never navigate out from under a run.
         /// </para>
         /// <para>
         /// <b>The board is latched behind it, exactly as it is behind the forfeit
         /// confirmation.</b> A refusal is that question answered no without having been asked,
-        /// so it holds the board the same way — and <see cref="RestartGateOverlay"/> hands it
+        /// so it holds the board the same way - and <see cref="RestartGateOverlay"/> hands it
         /// back from its own <c>OnDestroy</c>, which is <c>PauseOverlay</c>'s rule: a panel with
         /// several exits reports through none of them reliably, so the safe outcome has to be
         /// the default and the hand-off has to be the thing somebody declares.
@@ -549,7 +549,7 @@ namespace GlimmerGrove
         {
             // No refusal noise in front of it, deliberately. The map's refused node does not
             // make one either, and a buzz ahead of a panel whose whole job is to offer a way
-            // forward reads as a scolding — the defeat panel's tone rule, which is that a gate
+            // forward reads as a scolding - the defeat panel's tone rule, which is that a gate
             // that has just stopped somebody playing has nothing to gain by also telling them
             // off. The key's own click and the panel arriving are the answer.
             Latch(true);
@@ -647,17 +647,17 @@ namespace GlimmerGrove
         /// <para>
         /// <b>It is held from construction and released here, never by a mode.</b> Both modes
         /// used to find the start edge by polling their own board's latch, which is a boolean
-        /// several things write — and the one that wrote last was an animation. A first-timer's
+        /// several things write - and the one that wrote last was an animation. A first-timer's
         /// tip latched the board at the moment the screen was presented; the board's intro
         /// sweep, scheduled earlier from a different object, unlatched it a beat later; and the
         /// countdown then ran for as long as the player took to read a lesson they are only
-        /// ever shown once. On the weave the leak was smaller and had the same cause — a grove
+        /// ever shown once. On the weave the leak was smaller and had the same cause - a grove
         /// is playable from the frame it is built, so the clock ran for the whole of the iris
         /// opening over it, before the player had seen anything.
         /// </para>
         /// <para>
         /// So the answer is a latch nothing else writes, and the modes ask it <em>in addition
-        /// to</em> their own — a board that is still animating is not playable either, and that
+        /// to</em> their own - a board that is still animating is not playable either, and that
         /// stays their business. See <see cref="RunHold"/> for why a leak here is the safe
         /// direction.
         /// </para>
@@ -671,7 +671,7 @@ namespace GlimmerGrove
         /// <b>Not elapsed real time.</b> It only advances on frames <see cref="Tick"/> allowed,
         /// so a paused run, a panel over the board, a lesson still being read and a
         /// backgrounded app all contribute nothing. Nothing grades a run on this and nothing
-        /// stores it — the countdown is gone and a glade is scored on turns alone
+        /// stores it - the countdown is gone and a glade is scored on turns alone
         /// (<c>LevelTuning.StarsFor</c>). What is left is the one question a mode still has to
         /// ask of it: has the player been sitting on this board long enough that leaving it is
         /// walking away from a run rather than glancing at one. See <c>PlayScreen.Commit</c>.
@@ -682,7 +682,7 @@ namespace GlimmerGrove
         /// <summary>
         /// The most any single frame may contribute, in seconds.
         ///
-        /// A quarter second is four frames at 15fps — longer than any hitch a running game
+        /// A quarter second is four frames at 15fps - longer than any hitch a running game
         /// produces, and short enough that a resume, a long asset load or a breakpoint in the
         /// Editor cannot arrive as one enormous <c>deltaTime</c> and commit a run the player
         /// never touched.
@@ -700,7 +700,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Abstract rather than virtual, and that is the whole of the fix.</b> This began as
         /// <c>Tick(playable)</c>, a method each mode was expected to call every frame from its
-        /// own <c>Update</c> — which is the same "remember to consult the latch" shape it was
+        /// own <c>Update</c> - which is the same "remember to consult the latch" shape it was
         /// written to replace, with the remembering moved one step. Three modes out of four
         /// never called it and nothing anywhere noticed, because a funnel you have to remember
         /// to walk into is not a funnel. A default would have kept that: a mode that answered
@@ -711,7 +711,7 @@ namespace GlimmerGrove
         protected internal abstract bool Runnable { get; }
 
         /// <summary>
-        /// Told, every frame, whether this run is actually running — both halves answered.
+        /// Told, every frame, whether this run is actually running - both halves answered.
         ///
         /// <para>
         /// What a mode does with it is its own business and differs: a board sets the latch that
@@ -728,7 +728,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>A mode must never declare its own <c>Update</c>.</b> Unity dispatches the message
         /// to the most-derived declaration only, so one on a subclass silently replaces this and
-        /// takes the run's frame with it — the same hazard two members sharing a name caused
+        /// takes the run's frame with it - the same hazard two members sharing a name caused
         /// when <c>ModeScreen</c>'s <c>Resolve</c> coroutine hid <see cref="Resolve"/> and a won
         /// grove was charged for at the next launch. The compiler cannot catch it, so
         /// <c>RunFrameTests</c> does.
@@ -736,7 +736,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>A panel over the board holds the run, and it is answered here rather than by the
         /// panels.</b> Every modal in this game can end up over a run, so a rule each of them
-        /// had to remember would be the shape <see cref="RunHold"/> exists to remove — and it
+        /// had to remember would be the shape <see cref="RunHold"/> exists to remove - and it
         /// would be missing from whichever one was written next. Polled rather than raised,
         /// because this is already the one place that asks every frame and the reading is a
         /// glance at the top of a stack that is never more than three deep;
@@ -767,13 +767,13 @@ namespace GlimmerGrove
         /// <para>
         /// <paramref name="playable"/> is the mode's own half of the answer, and it stays the
         /// mode's business: a board still flying in, a cascade playing out, a panel over the
-        /// top. This one adds the half no mode can see — whether the run has been allowed to
+        /// top. This one adds the half no mode can see - whether the run has been allowed to
         /// begin at all.
         /// </para>
         /// </summary>
         /// <summary>
         /// <b>Private, and that is the enforcement.</b> A mode cannot advance its own run,
-        /// because it cannot reach the method that would let it — which is what "funnel" has to
+        /// because it cannot reach the method that would let it - which is what "funnel" has to
         /// mean if it is to mean anything. See <see cref="Update"/>.
         /// </summary>
         bool Tick(bool playable)
@@ -796,7 +796,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Everything, not only what is new.</b> A mode used to filter this against
         /// <see cref="TipLedger"/> itself, which was correct while the opening sequence was the
-        /// only reader — and stopped being correct the moment a second one arrived. The review
+        /// only reader - and stopped being correct the moment a second one arrived. The review
         /// button asks the same question and wants the opposite answer: the player pressing it
         /// has by definition already seen every lesson on the board, so a list filtered by
         /// "never met" is empty exactly when they are asking. So a mode declares what its board
@@ -806,7 +806,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// Filled rather than returned so a mode that teaches nothing allocates nothing, and
-        /// asked at moments when the board exists and can be pointed at — once when the screen
+        /// asked at moments when the board exists and can be pointed at - once when the screen
         /// is presented, and again each time the review is opened, because a restart rebuilds
         /// the very tiles a lesson rings and a list cached across one would point at destroyed
         /// transforms. A mode resolves its own targets here: the scan lives in Domain and knows
@@ -819,8 +819,8 @@ namespace GlimmerGrove
         /// Whether this run could take a lesson panel over it right now.
         ///
         /// <para>
-        /// The opening sequence never asks — nothing else can be happening at the moment a
-        /// screen is presented — but the review button is a live control sitting in the header
+        /// The opening sequence never asks - nothing else can be happening at the moment a
+        /// screen is presented - but the review button is a live control sitting in the header
         /// for the whole run, and a board mid-celebration or mid-cascade is latched by something
         /// that will hand it back itself. Teaching over the top of that would end with
         /// <see cref="Latch"/> unlatching a board its own animation still owns. A mode answers
@@ -841,7 +841,7 @@ namespace GlimmerGrove
         /// <para>
         /// Called exactly once each way, from the two edges of the teaching sequence, so no
         /// mode has to pair them itself. An implementation must refuse to hand back a board
-        /// whose run has already ended — a lesson dismissed over a finished board must not
+        /// whose run has already ended - a lesson dismissed over a finished board must not
         /// make it live again.
         /// </para>
         /// </summary>

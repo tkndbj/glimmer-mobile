@@ -10,7 +10,7 @@ namespace GlimmerGrove.Content.Sources
     ///
     /// The boot order is cache then bundled, so downloaded content shadows what
     /// shipped in the build without either knowing about the other. Ordering is the
-    /// whole policy — there is no merging, no partial override and no ambiguity
+    /// whole policy - there is no merging, no partial override and no ambiguity
     /// about which copy of a chapter won.
     /// </summary>
     public sealed class LayeredContentSource : IContentSource

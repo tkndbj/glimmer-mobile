@@ -4,9 +4,9 @@ using UnityEngine.UI;
 namespace GlimmerGrove
 {
     /// <summary>
-    /// The victory panel's furniture — the fit layer, the fan and bloom behind, the green
+    /// The victory panel's furniture - the fit layer, the fan and bloom behind, the green
     /// window, the light pooling under its top edge, and the crest of a crown over a banner
-    /// carrying one word — built once here for every panel that wears it.
+    /// carrying one word - built once here for every panel that wears it.
     ///
     /// <para>
     /// <b>Two screens made of the same furniture get one builder</b> (invariant 44d's shape,
@@ -18,14 +18,14 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>Everything animated is built at scale nought and left there.</b> The panel, the crown,
-    /// the banner and the word are each a beat in the caller's own <c>Cue</c> — the victory
-    /// panel lands its word after the stars, the deal sheet after the banner — so the frame
+    /// the banner and the word are each a beat in the caller's own <c>Cue</c> - the victory
+    /// panel lands its word after the stars, the deal sheet after the banner - so the frame
     /// decides nothing about timing. A panel rebuilt in place (<c>ModalView.Rebuild</c>) sets
     /// them to one with <see cref="Settle"/> rather than replaying an entrance.
     /// </para>
     /// <para>
     /// <b>It never runs off the screen.</b> The canvas is width-matched at 1080, so its height
-    /// is whatever the device's aspect makes it — 1920 on a 16:9 phone, 2400 on a tall one and
+    /// is whatever the device's aspect makes it - 1920 on a 16:9 phone, 2400 on a tall one and
     /// 1440 on a 4:3 tablet. A panel whose height depends on what it says cannot be laid out
     /// against a fixed screen, so the whole block is fitted; see <see cref="Fit"/>.
     /// </para>
@@ -37,7 +37,7 @@ namespace GlimmerGrove
         /// The panel, and how far the crown reaches above its top edge.
         ///
         /// <para>
-        /// The crest deliberately breaks the frame — a crown over a banner sitting <em>on</em>
+        /// The crest deliberately breaks the frame - a crown over a banner sitting <em>on</em>
         /// the panel rather than inside it is what stops a tall rectangle reading as a
         /// rectangle. <see cref="CrestReach"/> is what the fit has to allow for, so it is a
         /// constant rather than something measured: the art is fixed and a measured version
@@ -61,7 +61,7 @@ namespace GlimmerGrove
         /// Where the crest's two pieces sit, measured from the panel's top edge.
         ///
         /// The crown is lifted until its base rests on the banner's top edge rather than
-        /// sinking into it — at 88 it sat inside the ribbon and read as one lumpy shape.
+        /// sinking into it - at 88 it sat inside the ribbon and read as one lumpy shape.
         /// Raising it costs <see cref="CrestReach"/> the same 26px; the two move together.
         /// </summary>
         public const float CrownY = 114f, BannerY = -30f;
@@ -81,7 +81,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// The width is measured the same way. At the face's own middle the red runs 231 source
-        /// pixels wide — 362 drawn — so a box of 430 let a long translation run out over the
+        /// pixels wide - 362 drawn - so a box of 430 let a long translation run out over the
         /// folds. <see cref="UIKit.Shrinkable"/> then keeps it inside 356 rather than letting it
         /// spill, which for a word this short only ever affects a translation.
         /// </para>
@@ -96,7 +96,7 @@ namespace GlimmerGrove
         /// <summary>The scaled layer everything sits in; a caller's own furniture goes here too.</summary>
         public RectTransform Fit { get; private set; }
 
-        /// <summary>The window, and its transform — what <c>ModalView</c> calls <c>Backing</c> and <c>Panel</c>.</summary>
+        /// <summary>The window, and its transform - what <c>ModalView</c> calls <c>Backing</c> and <c>Panel</c>.</summary>
         public Image Backing { get; private set; }
         public RectTransform Panel { get; private set; }
 
@@ -108,7 +108,7 @@ namespace GlimmerGrove
         /// <summary>
         /// Builds the frame under <paramref name="content"/>, sized <paramref name="panelH"/>
         /// tall, with <paramref name="word"/> on the banner. <paramref name="width"/> is the
-        /// window's, <see cref="PanelWidth"/> unless a caller asks — the deal sheet stands
+        /// window's, <see cref="PanelWidth"/> unless a caller asks - the deal sheet stands
         /// wider than the victory panel because its rows carry a stone, a sentence and a price
         /// side by side, and the crest is the same size on either.
         /// </summary>
@@ -170,7 +170,7 @@ namespace GlimmerGrove
             frame.Banner.preserveAspect = true;
             frame.Banner.transform.localScale = Vector3.zero;
 
-            // Lifted onto the ribbon's flat face rather than centred on the sprite — see WordLift.
+            // Lifted onto the ribbon's flat face rather than centred on the sprite - see WordLift.
             frame.Word = UIKit.Titled("Word", frame.Banner.transform, word, 58,
                                       Pal.Cream, TextAnchor.MiddleCenter, WordBox,
                                       new Vector2(.5f, .5f), new Vector2(0f, WordLift), 5f, 5f);
@@ -195,14 +195,14 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// A layer between the scrim and the panel, scaled so the whole block — crest included
-        /// — fits the screen it landed on.
+        /// A layer between the scrim and the panel, scaled so the whole block - crest included
+        /// - fits the screen it landed on.
         ///
         /// <para>
         /// <b>Why a layer rather than a scale on the panel itself.</b> The panel is what
         /// <c>ModalView.Close</c> scales out, and it does so to an absolute value; a panel
         /// resting at 0.94 would visibly <em>grow</em> on the way out. Everything that animates
-        /// a child — <see cref="Tween.Pop"/>, <see cref="Tween.Punch"/> — writes absolute local
+        /// a child - <see cref="Tween.Pop"/>, <see cref="Tween.Punch"/> - writes absolute local
         /// scales too. Keeping the fit on a parent means every one of those numbers stays what
         /// it was written as.
         /// </para>

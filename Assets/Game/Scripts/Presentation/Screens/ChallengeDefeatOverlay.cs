@@ -9,16 +9,16 @@ namespace GlimmerGrove
     /// <summary>
     /// The daily challenge's defeat panel: the run's own paper panel and ribbon
     /// (<see cref="ModalView.MakePanel"/>), the line's own title and reason, and the two ways
-    /// out — without the hearts, because a challenge has none to lose.
+    /// out - without the hearts, because a challenge has none to lose.
     ///
     /// <para>
     /// <b>The run's <c>DefeatOverlay</c> is a heart panel</b>: its stack is decided by whether a
     /// heart was charged, whether one is left, and whether a video or a purchase can put one
     /// back, and it rebuilds on the wallet. None of that exists here (invariant 56: no hearts,
     /// no continue, no reward path), so standing that panel would mean feeding it a heart
-    /// price for a run that has no price. What is shared instead is the <em>design</em> — the
+    /// price for a run that has no price. What is shared instead is the <em>design</em> - the
     /// same panel builder, the same measurements (<see cref="DefeatPanel"/>, with nothing on
-    /// offer), the same button skins in the same seats — so a player who has lost on the
+    /// offer), the same button skins in the same seats - so a player who has lost on the
     /// ladder recognises this at a glance.
     /// </para>
     /// <para>
@@ -44,8 +44,8 @@ namespace GlimmerGrove
             MakePanel(new Vector2(DefeatPanel.Width, stack.Height),
                       Loc.Get("ui.defeat.wards_title"), dismissOnScrim: false);
 
-            // Why, in the sentence the siege says about a fallen line — it is the same line,
-            // fed the same way — in the seat the run's panel keeps for its free-run sentence.
+            // Why, in the sentence the siege says about a fallen line - it is the same line,
+            // fed the same way - in the seat the run's panel keeps for its free-run sentence.
             UIKit.Shrinkable(Body("Why", Loc.Get("ui.defeat.wards_reason"),
                                   -DefeatPanel.FreeCentre(false), DefeatPanel.FreeHeight, Pal.Moss), 22);
 

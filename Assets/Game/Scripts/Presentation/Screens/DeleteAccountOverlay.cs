@@ -12,7 +12,7 @@ using UnityEngine.UI;
 namespace GlimmerGrove
 {
     /// <summary>
-    /// "Delete this account?" — the third confirmation in a game that deliberately has two.
+    /// "Delete this account?" - the third confirmation in a game that deliberately has two.
     ///
     /// <para>
     /// <b>Why it earns one.</b> <c>ForfeitOverlay</c> guards the act that costs a heart and
@@ -20,13 +20,13 @@ namespace GlimmerGrove
     /// both is that a confirmation belongs on what cannot be undone from the screen that did
     /// it. Nothing else in this game qualifies as completely as this does. There is no store
     /// to re-deliver it, no archive to restore it from and no support path that can bring it
-    /// back — the server is asked to erase the account precisely so that nobody, including us,
+    /// back - the server is asked to erase the account precisely so that nobody, including us,
     /// holds a copy afterwards.
     /// </para>
     /// <para>
     /// <b>The copy is the feature.</b> Everything here is written to be read by somebody who
     /// is about to lose years of play, so it names what goes rather than gesturing at it, and
-    /// every failure sentence ends with "nothing has been deleted" — which is a promise
+    /// every failure sentence ends with "nothing has been deleted" - which is a promise
     /// <c>CloudSaveService.DeleteAccountAsync</c> actually keeps: the local save is not
     /// touched until the server has confirmed, so every outcome except
     /// <see cref="AccountDeletion.Outcome.Deleted"/> genuinely changed nothing. That is
@@ -34,7 +34,7 @@ namespace GlimmerGrove
     /// hedging.
     /// </para>
     /// <para>
-    /// <b>The affirmative is red, second, and the safe answer takes the resting position</b> —
+    /// <b>The affirmative is red, second, and the safe answer takes the resting position</b> -
     /// <c>ReportNameOverlay</c>'s layout rather than <c>ForfeitOverlay</c>'s, for its reason:
     /// the cheap answer here is to walk away, so walking away gets the green. It is also the
     /// same rule that puts the free way back above the paid one on the defeat panel; a
@@ -43,8 +43,8 @@ namespace GlimmerGrove
     /// right to object to.
     /// </para>
     /// <para>
-    /// <b>The second tap is spent only where there is something to lose</b> — a cleared glade,
-    /// read off <c>PlayerProgress.ClearedCount</c> — which is
+    /// <b>The second tap is spent only where there is something to lose</b> - a cleared glade,
+    /// read off <c>PlayerProgress.ClearedCount</c> - which is
     /// <c>AccountOverlay.ConfirmAdopt</c>'s rule word for word: arming a button over an empty
     /// account is what teaches a player to tap through it on a full one.
     /// </para>
@@ -58,7 +58,7 @@ namespace GlimmerGrove
             Warning,
 
             /// <summary>
-            /// Confirmed, and the account has a provider on it — so the provider is asked to
+            /// Confirmed, and the account has a provider on it - so the provider is asked to
             /// vouch for whoever is holding the phone before anything is removed. See
             /// <see cref="AccountDeletion.Verdict.Reauthenticate"/>.
             /// </summary>
@@ -146,7 +146,7 @@ namespace GlimmerGrove
 
             // Said on every account, whether or not this one has ever paid. A player who has
             // bought nothing loses nothing by reading it, and one who has must not find out
-            // afterwards — a receipt is recorded against its transaction globally and can never
+            // afterwards - a receipt is recorded against its transaction globally and can never
             // be redeemed again under a new account, so this is the one loss no amount of
             // playing earns back.
             Fit(Line("Purchases", Loc.Get("ui.delete.purchases"), 25,
@@ -166,7 +166,7 @@ namespace GlimmerGrove
             {
                 // Both offered rather than only the one this account was linked with. Which
                 // provider it is is not a fact this panel holds, and guessing wrong would put a
-                // dead button in front of somebody mid-deletion — where picking the wrong one
+                // dead button in front of somebody mid-deletion - where picking the wrong one
                 // costs nothing at all, because a credential belonging to another account is
                 // refused by Firebase's own mismatch check with the session left exactly as it
                 // was. See ICloudSaveBackend.ReauthenticateAsync.
@@ -247,7 +247,7 @@ namespace GlimmerGrove
                 Tween.Shake((RectTransform)_deleteButton, 9f, .3f);
 
                 // Disarmed on a timer, so a panel left open on a table cannot be finished by
-                // somebody walking past it — and so the second tap is always a deliberate one
+                // somebody walking past it - and so the second tap is always a deliberate one
                 // rather than the tail of a double tap on the first.
                 Tween.After(3.2f, () => { if (this != null) _armed = false; }, this);
                 return;
@@ -266,8 +266,8 @@ namespace GlimmerGrove
                     return;
 
                 default:
-                    // Unreachable from a drawn control — the profile card asks
-                    // AccountDeletion.Offered before it draws the button at all — and answered
+                    // Unreachable from a drawn control - the profile card asks
+                    // AccountDeletion.Offered before it draws the button at all - and answered
                     // rather than thrown, because a panel that can be opened by a deep link or
                     // a stale screen should say something true instead of crashing.
                     Say("ui.delete.failed", Pal.Rose);
@@ -288,7 +288,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Reports one attempt. Every branch but the first left the account exactly as it was,
-        /// and says so — see <see cref="AccountDeletion.Untouched"/>.
+        /// and says so - see <see cref="AccountDeletion.Untouched"/>.
         /// </summary>
         IEnumerator Run(Task<DeleteResult> task)
         {
@@ -311,8 +311,8 @@ namespace GlimmerGrove
 
                 Say("ui.delete.done", new Color(.44f, .32f, .24f, .95f));
 
-                // Home rather than back to the profile. Everything that screen draws — the
-                // keeper, the record, the companions, the boards, the account — belongs to an
+                // Home rather than back to the profile. Everything that screen draws - the
+                // keeper, the record, the companions, the boards, the account - belongs to an
                 // account that no longer exists, and rebuilding it in place would be five
                 // cards quietly resetting themselves in front of somebody. The hub is where a
                 // fresh save starts.
@@ -370,7 +370,7 @@ namespace GlimmerGrove
             if (_busy || _finished) return true;    // mid-flight, or already gone; swallow it
 
             // Backing out of the provider stage returns to the question rather than out of the
-            // panel — it is a step in, so back is a step out of it. AccountOverlay's reading,
+            // panel - it is a step in, so back is a step out of it. AccountOverlay's reading,
             // and the one a hardware key is expected to have.
             if (_stage == Stage.Verifying)
             {

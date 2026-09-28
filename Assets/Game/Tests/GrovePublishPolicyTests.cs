@@ -12,7 +12,7 @@ namespace GlimmerGrove.Tests
     /// invocation per player per sync for ever and looks identical to not doing so; dropping a
     /// change made while a call was in flight loses a purchase from the board and looks
     /// identical to a slow network. So it holds no clock, no socket and no Unity types, and it
-    /// is proved a thousand simulated seconds at a time — <c>SyncScheduler</c>'s bargain, and
+    /// is proved a thousand simulated seconds at a time - <c>SyncScheduler</c>'s bargain, and
     /// <c>TweenCycle</c>'s reason.
     /// </para>
     /// </summary>
@@ -112,7 +112,7 @@ namespace GlimmerGrove.Tests
             policy.Request("b", 1L, true);
 
             // The reply is for the *old* fingerprint, and saying so is what stops the new work
-            // being cleared by the success of a call that never carried it — SyncScheduler's
+            // being cleared by the success of a call that never carried it - SyncScheduler's
             // rule, and the reason a rename used to be lost to one unlucky second.
             policy.Succeeded("a");
 
@@ -197,7 +197,7 @@ namespace GlimmerGrove.Tests
 
             Assert.AreEqual(GrovePublishAction.None, Settle(policy));
 
-            // Coming back does not fire on the same frame — reachability flips somewhat before
+            // Coming back does not fire on the same frame - reachability flips somewhat before
             // an interface carries traffic, and attempting then buys one guaranteed failure.
             policy.NetworkChanged(true);
             Assert.AreEqual(GrovePublishAction.None, policy.Tick(0f));
@@ -403,8 +403,8 @@ namespace GlimmerGrove.Tests
             policy.Request("a", 41L, true);
             Settle(policy);
 
-            // The server built the card from an older save. Worth trying again — once the
-            // caller has pushed again — and never worth recording as published.
+            // The server built the card from an older save. Worth trying again - once the
+            // caller has pushed again - and never worth recording as published.
             Assert.IsTrue(policy.Stale());
             Assert.IsTrue(policy.HasWork);
             Assert.AreEqual(string.Empty, policy.PublishedFingerprint);

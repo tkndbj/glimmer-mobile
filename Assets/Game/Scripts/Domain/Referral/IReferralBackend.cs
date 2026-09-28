@@ -95,7 +95,7 @@ namespace GlimmerGrove.Referral
     public interface IReferralBackend
     {
         /// <summary>
-        /// Reads the account's referral state, minting a code on first ask — and settling the
+        /// Reads the account's referral state, minting a code on first ask - and settling the
         /// invitee's milestone on the server if the save it holds shows the chapter cleared.
         /// </summary>
         Task<(CloudResult result, ReferralReply reply)> ReadReferralAsync(
@@ -117,14 +117,14 @@ namespace GlimmerGrove.Referral
         /// <summary>
         /// Watches for "this account's referral state moved", and calls
         /// <paramref name="onChanged"/> when it does. Answers null when this backend cannot
-        /// watch — no Firestore, signed out — which the caller must cope with rather than
+        /// watch - no Firestore, signed out - which the caller must cope with rather than
         /// require.
         /// </summary>
         /// <remarks>
         /// <para>
         /// <b>It carries no state, and that is the design rather than a shortcut.</b> The
         /// document being watched holds a counter and nothing else, because the document that
-        /// holds the real answer — <c>referrals/{uid}</c> — is deliberately unreadable by any
+        /// holds the real answer - <c>referrals/{uid}</c> - is deliberately unreadable by any
         /// client: it names the referrer, and a code owner's names every invitee, which is more
         /// than this feature ever promised anybody (see <c>firestore.rules</c>). So a listener
         /// learns only *that* something moved and the reply still comes from
@@ -132,7 +132,7 @@ namespace GlimmerGrove.Referral
         /// state is. No server rule is copied onto the client to disagree with later.
         /// </para>
         /// <para>
-        /// <b>What it does hand over is the counter's value</b> — the document's <c>rev</c>,
+        /// <b>What it does hand over is the counter's value</b> - the document's <c>rev</c>,
         /// <c>0</c> for a document that does not exist yet (an account nothing has ever
         /// happened to), and <see cref="ReferralState.UnknownFeed"/> when the document could
         /// not be read. That number says nothing about the account; what it lets the ledger do

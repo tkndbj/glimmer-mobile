@@ -9,22 +9,22 @@ namespace GlimmerGrove.Modes
     /// <para>
     /// <b>It exists because the colour lock has one honest cost, and this is the answer to it.</b>
     /// A ward that only ever fires at its own colour banks whatever it is given while that colour
-    /// is off the hill — which is the whole of what makes fuel a resource — and the mirror of that
+    /// is off the hill - which is the whole of what makes fuel a resource - and the mirror of that
     /// is fuel with nowhere to go: a colour that never comes is a quarter of the board matched for
     /// nothing. Tapping the tube turns it into damage on <em>anything</em>, so no match is ever
     /// dead. It is also the relief valve for the lock's other cost, a lane whose ward has fallen.
     /// </para>
     /// <para>
     /// <b>It is free of par by construction, and that is arithmetic rather than a policy.</b> What
-    /// it delivers is exactly what the tube would have delivered as ordinary own-colour bolts —
+    /// it delivers is exactly what the tube would have delivered as ordinary own-colour bolts -
     /// every bolt it holds, at that ward's own weight, doubled as an own-colour hit is
     /// (<see cref="SiegeTuning.PerfectMatch"/> already assumes precisely that of every gem). So a
     /// player who overcharges has moved damage they had already matched for, never conjured any:
     /// neither star line can move, and invariant 39's exchange rate has nothing to charge.
     /// </para>
     /// <para>
-    /// <b>What it buys is <em>when</em> and <em>where</em></b> — a burst now instead of a trickle
-    /// later, aimed at a colour this ward could never otherwise touch — and it can be wrong, which
+    /// <b>What it buys is <em>when</em> and <em>where</em></b> - a burst now instead of a trickle
+    /// later, aimed at a colour this ward could never otherwise touch - and it can be wrong, which
     /// is what makes it a decision (invariant 26h): a tube dumped on a creeper is a tube not
     /// standing ready for the brute three beats behind it.
     /// </para>
@@ -39,7 +39,7 @@ namespace GlimmerGrove.Modes
         /// <b>One reading, asked by the thing that draws the control and by the thing that
         /// answers it</b> (<c>SiegeView.Ready</c> and <see cref="Overcharge"/>), which is the
         /// whole of the fix for a tap that worked sometimes and not others. The tube's own
-        /// readiness — a charge banked, not chained, not buried — was all the view ever asked,
+        /// readiness - a charge banked, not chained, not buried - was all the view ever asked,
         /// so a lit, pulsing, tappable button quietly refused whenever there was nothing on the
         /// hill it could hurt. A duel is exactly that hill: one body, and a body that is
         /// untouchable on the walk in and resting on its stand's floor when the line is ahead of
@@ -47,7 +47,7 @@ namespace GlimmerGrove.Modes
         /// is precisely what it was.
         /// </para>
         /// <para>
-        /// <b>A control that is live and silently refuses is one nobody learns</b> — so the
+        /// <b>A control that is live and silently refuses is one nobody learns</b> - so the
         /// refusal moves into the drawing, where the player can see it coming, and the two can
         /// never disagree because there is only one answer to disagree about.
         /// </para>
@@ -61,7 +61,7 @@ namespace GlimmerGrove.Modes
         /// <b>Every reason a tap can be refused that is not about the hill</b>, in one place: a
         /// post that does not exist, a tube that is not armed, and a rank whose arithmetic leaves
         /// no whole bolt in a charge. Split out so <see cref="CanOvercharge"/> answers exactly
-        /// what <see cref="Overcharge"/> will do rather than most of it — a control that is lit
+        /// what <see cref="Overcharge"/> will do rather than most of it - a control that is lit
         /// and then refuses is the fault this pair exists to close, so "lit" and "lands" have to
         /// be the same sentence.
         /// </summary>
@@ -89,7 +89,7 @@ namespace GlimmerGrove.Modes
         /// </para>
         /// <para>
         /// <b>It carries a blast rather than landing on one body</b>, so a line that has been
-        /// banking through a quiet is worth watching when it lets go — and because a relief valve
+        /// banking through a quiet is worth watching when it lets go - and because a relief valve
         /// that answered one raider would not answer a lane.
         /// </para>
         /// <para>
@@ -134,7 +134,7 @@ namespace GlimmerGrove.Modes
         /// wherever this ward's colour is not the answer.
         ///
         /// <b>Separate from <see cref="Blast"/></b>, because a firepot is a bought thing with no
-        /// colour and this is a particular turret's fuel — so a bulwark this ward cannot answer
+        /// colour and this is a particular turret's fuel - so a bulwark this ward cannot answer
         /// soaks it exactly as it soaks that ward's splash.
         /// </summary>
         int Unleash(SiegeWard ward, int lane, int row, int damage, List<SiegeStrike> into)
@@ -198,7 +198,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>This is where the bulwark's shield went, and it had to go somewhere.</b> Its rule
         /// was "only your own colour cuts me", which was a real decision while a bolt merely
-        /// preferred its own colour — and became true of <em>every</em> raider the moment the lock
+        /// preferred its own colour - and became true of <em>every</em> raider the moment the lock
         /// arrived, so the soak stopped being reachable on a primary hit at all and the shield was
         /// decoration (invariant 5d) on the one raider whose whole identity it was.
         /// </para>

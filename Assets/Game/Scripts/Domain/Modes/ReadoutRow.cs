@@ -7,13 +7,13 @@ namespace GlimmerGrove.Modes
     /// <b>Here rather than beside the row, for <c>ChapterMap</c>'s reason</b> (invariant 8a):
     /// whether two things on a screen overlap is arithmetic, and arithmetic inside a
     /// <c>MonoBehaviour</c> is arithmetic nothing can check. It became worth separating the
-    /// moment the row stopped always holding three — a count that varies is a spacing rule with
+    /// moment the row stopped always holding three - a count that varies is a spacing rule with
     /// cases in it, and a case nobody exercises is a case nobody has looked at.
     /// </para>
     /// <para>
     /// Reference units from the centre of the row, which is what <c>UIKit.Box</c> takes. A
     /// readout is <see cref="Width"/> wide whatever is written in it, because the text shrinks
-    /// to fit rather than growing (<c>UIKit.Shrinkable</c>) — so overlap is decided by the
+    /// to fit rather than growing (<c>UIKit.Shrinkable</c>) - so overlap is decided by the
     /// spacing alone and can be settled here, once, for every mode.
     /// </para>
     /// </summary>
@@ -35,7 +35,7 @@ namespace GlimmerGrove.Modes
         /// <b>It matters because the row moved up beside them.</b> The readouts used to sit in a
         /// band of their own below the header bar, so the only question about their spacing was
         /// each other's; they are level with the bar's own two keys now, which bought the board
-        /// sixty-odd units of height and made this a second question — and one that nothing on
+        /// sixty-odd units of height and made this a second question - and one that nothing on
         /// screen would answer, because a number drawn over a button is still perfectly legible
         /// and is simply somebody's tap going somewhere else.
         /// </para>
@@ -98,7 +98,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>Width-dependent, which is why it is asked separately from <see cref="IsClear"/>.</b>
         /// The slots are placed from the row's middle and the keys from its edges, so the gap
-        /// between them is the only thing on this row that shrinks as the display narrows — and
+        /// between them is the only thing on this row that shrinks as the display narrows - and
         /// the narrowest this canvas ever is is its own reference width. Everything wider is
         /// slack.
         /// </para>

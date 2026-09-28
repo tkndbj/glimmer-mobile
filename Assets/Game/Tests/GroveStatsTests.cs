@@ -10,7 +10,7 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// This is the only number in the game that is about other people, which makes it the
-    /// only one a player cannot check. Everything else — a star, a reward, a streak — they
+    /// only one a player cannot check. Everything else - a star, a reward, a streak - they
     /// can verify by playing again; "faster than 70% of keepers" they have to take on
     /// trust. So the arithmetic has to be defensible and the refusals have to be real: a
     /// percentile over a dozen players is noise wearing a fact's clothes, and the players
@@ -111,7 +111,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// Drawn upward only. Told they are ahead, a player plays more; told they are
-        /// behind, a good share stop — and the ones who stop are disproportionately the
+        /// behind, a good share stop - and the ones who stop are disproportionately the
         /// ones who were already struggling. Both readings are true; this is a decision
         /// about which true things belong on a victory screen.
         /// </summary>
@@ -153,7 +153,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// Replaced wholesale rather than merged. A glade that has dropped out of a later
-        /// publish has dropped out for a reason — retired, or a job that read fewer saves —
+        /// publish has dropped out for a reason - retired, or a job that read fewer saves -
         /// and leaving the old figure behind would have it claiming to be current.
         /// </summary>
         [Test]

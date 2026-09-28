@@ -6,14 +6,14 @@ using UnityEngine.UI;
 namespace GlimmerGrove
 {
     /// <summary>
-    /// A turret arriving — the ceremony a player meets the moment they have paid for one.
+    /// A turret arriving - the ceremony a player meets the moment they have paid for one.
     ///
     /// <para>
     /// <b>It exists because the first attempt was a flourish on a shop panel and read as one.</b>
     /// The purchase used to celebrate itself in place: the price pill became EQUIP, a ring of
     /// waves left the turret and some confetti fell over the panel that had just taken nine
     /// thousand credits. Every piece of that was individually fine and the whole was not a
-    /// payoff — which is exactly the note <c>CompanionUnlockOverlay</c> already carries about its
+    /// payoff - which is exactly the note <c>CompanionUnlockOverlay</c> already carries about its
     /// own history, <em>a transaction panel is the wrong place for a payoff, because it is still
     /// wearing the furniture of a decision the player has already made</em>. The preview panel
     /// hands over to this and gets out of the way, which is the companion flow, arrived at the
@@ -23,15 +23,15 @@ namespace GlimmerGrove
     /// <b>What makes it a turret's ceremony rather than a companion's is that it fires.</b> A
     /// companion is a portrait and the reveal's job is to show it; a turret is a <em>verb</em>,
     /// and the thing bought is the projectile and the arrangement of raiders its ability is
-    /// about. So the middle of this screen is <see cref="WardFiringStage"/> — the shipped one,
-    /// drawing through the board's own anchors and scales — running its volley on a loop under
+    /// about. So the middle of this screen is <see cref="WardFiringStage"/> - the shipped one,
+    /// drawing through the board's own anchors and scales - running its volley on a loop under
     /// the fanfare. A reveal that stood a still picture of a turret would be hiding the one
     /// thing that was paid for.
     /// </para>
     /// <para>
     /// <b>The room wears the seat's colour, not a rarity's.</b> A turret is bought for one of
     /// the line's four colours (<c>WardHolding</c>), and which one is the fact a player most
-    /// needs carried out of this screen — so the sky, the fans, the waves and the rim are all
+    /// needs carried out of this screen - so the sky, the fans, the waves and the rim are all
     /// <c>SiegeView.TintOf(Colour)</c>, and <see cref="Chroma"/> is built around it rather than
     /// looked up from a tier. The tier decides how <em>loud</em> the room is and nothing else.
     /// </para>
@@ -48,7 +48,7 @@ namespace GlimmerGrove
         ///
         /// A property rather than a field, because <see cref="WardModel"/> is not
         /// <c>[Serializable]</c> and a public field earns a warning about serialisation that will
-        /// never happen — <c>WardPreviewOverlay.Model</c>'s note.
+        /// never happen - <c>WardPreviewOverlay.Model</c>'s note.
         /// </summary>
         public WardModel Model { get; set; }
 
@@ -63,13 +63,13 @@ namespace GlimmerGrove
         /// The plate, and the stage standing on it.
         ///
         /// <b>The cell is a board's</b>, so the bolt, the flash and the impact are drawn at the
-        /// proportions a phone draws them on the hill — which is the whole point of showing them
+        /// proportions a phone draws them on the hill - which is the whole point of showing them
         /// rather than a picture of a turret.
         /// </summary>
         const float PlateW = 760f, PlateH = 700f, StageW = 700f, StageH = 640f, StageCell = 112f;
 
         /// <summary>
-        /// Where each band sits, stated as a <em>middle</em> — <c>UIKit.Box</c> pivots at centre
+        /// Where each band sits, stated as a <em>middle</em> - <c>UIKit.Box</c> pivots at centre
         /// whatever it is anchored to, which is the arithmetic <c>WardPreviewOverlay</c> already
         /// records getting wrong once and drawing a stage straight through two captions.
         ///
@@ -88,8 +88,8 @@ namespace GlimmerGrove
         /// How tall each of those bands is drawn.
         ///
         /// <b>Named rather than typed at the call site, so the spacing above can be checked.</b>
-        /// Nothing in this project can look at this screen — there is no render for it and every
-        /// numeric gate reads the model — so the one class of fault that would otherwise ship
+        /// Nothing in this project can look at this screen - there is no render for it and every
+        /// numeric gate reads the model - so the one class of fault that would otherwise ship
         /// unseen is a caption drawn through the thing above it. <c>WardRevealTests</c> walks
         /// these edges; it is a poor substitute for a picture and it is what there is.
         /// </summary>
@@ -101,7 +101,7 @@ namespace GlimmerGrove
         const float VignetteAlpha = CeremonySky.VignetteAlpha, FanAlpha = .32f, Fan2Alpha = .22f, GlowAlpha = .44f;
 
         /// <summary>
-        /// Its own hold, never the board's — <see cref="WardFiringStage"/>'s
+        /// Its own hold, never the board's - <see cref="WardFiringStage"/>'s
         /// rule, and its reason: a live board's four turrets must not be released because a
         /// celebration closed.
         /// </summary>
@@ -155,7 +155,7 @@ namespace GlimmerGrove
         /// roster: half of this shelf is priced in gems and half in credits, and six hundred
         /// gems does not compare with nine thousand credits in either direction. Sorting the
         /// two together would put the dearest turrets in the game at the bottom of the ladder
-        /// wearing tier one — the mistake <c>GroveLand.NextForSale</c> made and paid for.
+        /// wearing tier one - the mistake <c>GroveLand.NextForSale</c> made and paid for.
         /// <c>WardModel.Order</c> is authored and runs cheapest-first <em>inside</em> each
         /// currency, so the rung is the one comparable thing there is.
         /// </para>
@@ -171,7 +171,7 @@ namespace GlimmerGrove
         {
             if (model == null || model.IsStarter) return 1;
 
-            // The ladder as it is authored, read off the roster rather than typed — so a drop
+            // The ladder as it is authored, read off the roster rather than typed - so a drop
             // that lengthens it still lands its turrets across all five tiers instead of bunching
             // them at the bottom, and a shelf selling in two currencies gets a rung per currency
             // rather than one ladder measured in two kinds of money that do not compare.
@@ -203,8 +203,8 @@ namespace GlimmerGrove
         /// The room's three-colour scheme, built around the seat rather than looked up.
         ///
         /// <b><see cref="Chroma.Of"/> answers a rarity and this room is answering a colour.</b>
-        /// The scheme's job is the same — a tint, a partner to cross it with, an accent and a
-        /// deep to sit it all on — so the struct is right and only the way in differs. The
+        /// The scheme's job is the same - a tint, a partner to cross it with, an accent and a
+        /// deep to sit it all on - so the struct is right and only the way in differs. The
         /// partner is a quarter-turn round the wheel so the two fans cross in two hues rather
         /// than one, and the deep is the tint taken almost to black, which is what keeps a red
         /// room red in its corners instead of grey.
@@ -234,7 +234,7 @@ namespace GlimmerGrove
             // Shared with the rank ceremony and the upgrade one (`CeremonySky`), which is why it
             // is not the seat's own deep hue any more: all three stood their subject on a
             // near-black room and all three came back as *so dark*. **The seat's colour has not
-            // gone anywhere** — the fans, the waves, the glow and the rim below are still
+            // gone anywhere** - the fans, the waves, the glow and the rim below are still
             // `SiegeView.TintOf(Colour)`, which is what this screen's remarks are about; what
             // changed is the ground it is lit against, not the light.
             _sky = CeremonySky.Ground(Content, Skip);
@@ -245,7 +245,7 @@ namespace GlimmerGrove
 
             // Last, so it holds the aurora and the fireflies in too. Tinted with the room
             // rather than with ink, or the corners end up the one grey thing on a coloured
-            // screen — see `CeremonySky.VignetteInk`, which is where that now lives.
+            // screen - see `CeremonySky.VignetteInk`, which is where that now lives.
             _vignette = CeremonySky.Veil(Content);
 
             _fan = UIKit.Img("Fan", Content, Art.Rays(512, 10 + _tier * 4), Pal.A(_tint, 0f),
@@ -267,8 +267,8 @@ namespace GlimmerGrove
             _glow.raycastTarget = false;
         }
 
-        // Where the three masses of light sit. A composition rather than a scatter — one high
-        // and left, one across the middle, one low — so the frame is lit unevenly, the way a
+        // Where the three masses of light sit. A composition rather than a scatter - one high
+        // and left, one across the middle, one low - so the frame is lit unevenly, the way a
         // place is. CompanionRevealOverlay's table, and its reasoning.
         static readonly Vector2[] AuroraHome = { new Vector2(-360f, 620f), new Vector2(400f, 120f), new Vector2(-250f, -600f) };
         static readonly float[] AuroraSize = { 1180f, 980f, 1240f };
@@ -290,7 +290,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// One blob's endless wander. Both axes are whole multiples of the loop, or the drift
-        /// snaps back every time the tween wraps — which on something this large is the most
+        /// snaps back every time the tween wraps - which on something this large is the most
         /// visible thing on screen.
         /// </summary>
         void Drift(int index)
@@ -359,7 +359,7 @@ namespace GlimmerGrove
                               new Vector2(0f, RuleH), new Vector2(.5f, .5f), new Vector2(0f, RuleY));
             _rule.raycastTarget = false;
 
-            // What it *does*, in the roster's own words — the reason one turret is worth more
+            // What it *does*, in the roster's own words - the reason one turret is worth more
             // than another, and the one caption here a player has not already read on the shelf.
             _note = UIKit.Shrinkable(
                 UIKit.Titled("Note", Content, Loc.Get(Model.NoteKey), 38, Pal.A(Pal.Cream, .88f),
@@ -394,7 +394,7 @@ namespace GlimmerGrove
         void BuildButtons()
         {
             // Green, not the price pill. `Skins.Buy` is orange because it means *this costs
-            // something*; nothing here does — the money has already changed hands, and this key
+            // something*; nothing here does - the money has already changed hands, and this key
             // only stands the turret on the seat. Wearing a price pill it would be asking for a
             // second payment, which is precisely the confusion `Skins.Settled`'s own note is
             // about (44: the colour names are roles, so the wrong role is a lie).
@@ -427,14 +427,14 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Three movements: the room gathers, it breaks, and the turret is standing there
-        /// firing. The pause before the break is the whole trick — take it out and the reveal
+        /// firing. The pause before the break is the whole trick - take it out and the reveal
         /// becomes an announcement.
         /// </para>
         /// <para>
         /// <b>One sound, on the break.</b> The companion reveal shipped ringing on all six of
         /// its beats and played back as a pile-up rather than as a fanfare; this is the same
         /// class of moment and gets the same treatment. It is deliberately not <c>unlock</c>,
-        /// which is a rising bell phrase — C5, G5, C6 — and reads as a dong laid over a picture
+        /// which is a rising bell phrase - C5, G5, C6 - and reads as a dong laid over a picture
         /// that is not a bell.
         /// </para>
         /// </summary>
@@ -486,7 +486,7 @@ namespace GlimmerGrove
                 Burst.Confetti(Content, 40 + _tier * 22);
 
                 // The plate arrives with the bang and the turret stands up inside it. The
-                // stage's own white-out is off, because the screen is already white — two
+                // stage's own white-out is off, because the screen is already white - two
                 // flashes a frame apart is one flash with a seam in it.
                 Tween.Pop(_plateRt, .18f, .78f);
                 _stage?.Claim(whiteOut: false);
@@ -602,7 +602,7 @@ namespace GlimmerGrove
         ///
         /// <b>A mechanism rather than a bell</b>, which is the shelf's own note: standing a
         /// turret is an action a player takes several times in a row and one tap to undo, where
-        /// the fanfare is what an earning sounds like — and the earning already sounded.
+        /// the fanfare is what an earning sounds like - and the earning already sounded.
         /// </summary>
         void Act()
         {
@@ -627,7 +627,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// One pass of assignments rather than a second choreography, which is only possible
-        /// because every element already exists — the beats reveal things rather than build
+        /// because every element already exists - the beats reveal things rather than build
         /// them. That agreement is exactly what a skip path normally gets wrong. Pending beats
         /// are killed by owner; <see cref="Cue"/> schedules every one of them against this
         /// component, which is what makes them cancellable as a group.
@@ -674,7 +674,7 @@ namespace GlimmerGrove
             if (_dismiss) { _dismiss.alpha = 1f; _dismiss.blocksRaycasts = true; }
 
             // The drift is owned by each blob rather than by this view, so KillAll never touched
-            // it — but the aurora's fade was this view's and has just been assigned instead.
+            // it - but the aurora's fade was this view's and has just been assigned instead.
             _settled = true;
         }
 

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace GlimmerGrove.Content
 {
     /// <summary>
-    /// Every level the game knows about — its shape always, its contents on request.
+    /// Every level the game knows about - its shape always, its contents on request.
     ///
     /// The catalog is two halves with different costs, and this is the façade that
     /// keeps callers from having to care which half they are touching:
@@ -20,7 +20,7 @@ namespace GlimmerGrove.Content
     /// is bounded by a constant rather than by the size of the catalog.</item>
     /// </list>
     ///
-    /// This type deliberately contains no logic of its own — ordering lives in
+    /// This type deliberately contains no logic of its own - ordering lives in
     /// <see cref="CatalogIndex"/>, reading in <see cref="ChapterLoader"/>, and the
     /// keep-or-drop rule in <see cref="ChapterResidency"/>. It exists so the fifteen
     /// call sites that had a catalog before still have one, and so that swapping any of
@@ -65,7 +65,7 @@ namespace GlimmerGrove.Content
         /// Raised when reading a chapter body turns up something wrong. Lazy loading
         /// means these arrive on entering a chapter rather than at boot, so there has
         /// to be somewhere for them to go that is not a decision made inside a data
-        /// type — <c>ContentBootstrap</c> subscribes and logs.
+        /// type - <c>ContentBootstrap</c> subscribes and logs.
         /// </summary>
         public event Action<string> ProblemReported;
 
@@ -133,7 +133,7 @@ namespace GlimmerGrove.Content
 
         /// <summary>
         /// The chapter's body if it happens to be loaded already. For call sites that
-        /// genuinely cannot await — never as a substitute for entering a chapter
+        /// genuinely cannot await - never as a substitute for entering a chapter
         /// properly, which is what puts the body there in the first place.
         /// </summary>
         public bool TryResidentChapter(ChapterId id, out ChapterBody body)
@@ -150,7 +150,7 @@ namespace GlimmerGrove.Content
 
         /// <summary>
         /// Bodies that happen to be loaded, in index order rather than in whatever order
-        /// they were read. Deterministic on purpose — the Editor tools that group assets
+        /// they were read. Deterministic on purpose - the Editor tools that group assets
         /// and validate content iterate this, and a run whose output depends on dictionary
         /// ordering is a run that cannot be diffed.
         /// </summary>

@@ -9,7 +9,7 @@ namespace GlimmerGrove.Tests
 {
     /// <summary>
     /// Whorlwater, Lightfall's third chapter: that its ten wells still ask what they were authored
-    /// to ask, and — the case that matters most here —
+    /// to ask, and - the case that matters most here -
     /// <see cref="EveryWellsWhorlsActuallyDecideSomething"/>.
     ///
     /// <para>
@@ -17,7 +17,7 @@ namespace GlimmerGrove.Tests
     /// every fixture passed both times.</b> The first cut brought a <em>mirror</em> that turned a
     /// lens's beam ninety degrees; the second brought a <em>wick</em> that washed one authored
     /// colour into the four cells beside it. Both were solvable, correctly par'd, <c>ways</c> was
-    /// tight, <c>greedy</c> lost, the vectors agreed and the ladder held — and both came back from
+    /// tight, <c>greedy</c> lost, the vectors agreed and the ladder held - and both came back from
     /// one session of play as the lens again. <b>A decoration passes every other reading this
     /// repository takes.</b> So <see cref="FallBoard.Kindled"/> counts merges that reached white
     /// along a shortest line, and a board where that is nought is a board the whorls are
@@ -194,7 +194,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// <b>The claim this chapter exists for, and the one two mechanics before it failed.</b> A
         /// whorl earns its place only if the pair it draws in <em>completes</em> something no
-        /// single drop could have — so every shortest solution is replayed here and the merges are
+        /// single drop could have - so every shortest solution is replayed here and the merges are
         /// counted. Nought kindled is the answer that condemns a board.
         ///
         /// <para>
@@ -206,7 +206,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// And it is the <em>strict</em> reading. <c>fused</c> counts whorls that drew in a pair;
         /// <c>kindled</c> counts those whose union reached white. Two yellows drawn together make
-        /// a yellow — a tidier board, deciding nothing — where a yellow and a blue make a burst
+        /// a yellow - a tidier board, deciding nothing - where a yellow and a blue make a burst
         /// the player arranged and could not have bought with any single drop.
         /// </para>
         /// </summary>
@@ -226,7 +226,7 @@ namespace GlimmerGrove.Tests
 
                 Assert.Greater(kindled, 0,
                     rung.Id + " never merges a pair that reaches white, so every whorl on it " +
-                    "could be replaced with bare ground and the board would still play — which " +
+                    "could be replaced with bare ground and the board would still play - which " +
                     "is exactly what was wrong with the two mechanics this chapter replaced");
             }
         }
@@ -237,13 +237,13 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// <b>Over all of them rather than the first one found, and that is not tidiness.</b>
         /// <c>ways</c> is rarely one, so whichever winning line a breadth-first walk happens to
-        /// reach first is arbitrary among several — and an author tuning a board against an
+        /// reach first is arbitrary among several - and an author tuning a board against an
         /// arbitrary one is tuning against a coin toss. The claim being made is that the best
         /// shortest play uses the whorls, which is the claim a player can actually meet.
         /// </para>
         /// <para>
         /// It mirrors <c>fall.best_merges</c> exactly, which is why both are ranked on
-        /// <c>kindled</c> first and <c>fused</c> second (invariant 9a — the two copies have to
+        /// <c>kindled</c> first and <c>fused</c> second (invariant 9a - the two copies have to
         /// agree about which line is "best", not only about how to count one).
         /// </para>
         /// </summary>
@@ -327,7 +327,7 @@ namespace GlimmerGrove.Tests
         /// has to plan around and it is the dial this chapter's difficulty actually rides on.
         ///
         /// <para>
-        /// <b>Par is not the spine and must not be</b> — it is length, and it wanders here on
+        /// <b>Par is not the spine and must not be</b> - it is length, and it wanders here on
         /// purpose (invariant 26e's neighbour: the fail line is a count of drops, so a longer
         /// board is not a tighter one). The opening is four motes and the finale twenty-six.
         /// </para>
@@ -374,7 +374,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// <b>A player who never looks ahead clears none of these but the first.</b> This is the
-        /// mode's third chapter, so the teaching is behind us — except on the one board that is
+        /// mode's third chapter, so the teaching is behind us - except on the one board that is
         /// teaching, where thoughtlessness is <em>supposed</em> to work: that is what meeting a
         /// verb looks like.
         /// </summary>

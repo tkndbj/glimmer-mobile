@@ -15,21 +15,21 @@ namespace GlimmerGrove.Tests
     /// Every test here is about an ordering. The arithmetic in this feature is trivial; what is
     /// not trivial is that the outgoing grove reaches the server <em>before</em> anything is
     /// handed over, and that nothing local is destroyed until the replacement is in hand. Both
-    /// are invisible in a screenshot, both look fine in the Editor — which never authenticates
-    /// — and both are unrecoverable when wrong, because the thing they lose is somebody's
+    /// are invisible in a screenshot, both look fine in the Editor - which never authenticates
+    /// - and both are unrecoverable when wrong, because the thing they lose is somebody's
     /// account.
     /// </para>
     /// <para>
     /// They run offline, against an in-memory <see cref="ISaveStore"/> and a scripted backend,
     /// and that was worth a small seam in production code to get. What these assert is which
-    /// grove is on the device and which account owns it — in-memory state — while the disk
+    /// grove is on the device and which account owns it - in-memory state - while the disk
     /// round trip they used to drag in is <c>SaveStoreTests</c>' subject and is covered there
     /// against a real filesystem. Paying for a temporary directory here bought nothing except
     /// <c>JsonUtility</c>, which is what kept the most consequential tests in the project
     /// behind somebody remembering to open the Editor.
     /// </para>
     /// <para>
-    /// Two of them still need it — the two that complete a whole switch, because that path
+    /// Two of them still need it - the two that complete a whole switch, because that path
     /// clears the in-flight run marker and <c>RunGuard</c> is <c>PlayerPrefs</c> by design.
     /// They say so when skipped.
     /// </para>
@@ -102,7 +102,7 @@ namespace GlimmerGrove.Tests
         /// are about is <em>which grove is on the device and which account owns it</em>, and
         /// the disk round trip that answers it is <c>AccountArchiveTests</c>' subject, against
         /// a real filesystem. Keeping the object it was handed rather than copying it is
-        /// deliberate and safe — <c>SaveService.Snapshot</c> builds a fresh file every call, so
+        /// deliberate and safe - <c>SaveService.Snapshot</c> builds a fresh file every call, so
         /// nothing here is ever holding a reference the game is still writing through.
         /// </summary>
         internal sealed class MemoryArchive : IAccountArchive
@@ -141,7 +141,7 @@ namespace GlimmerGrove.Tests
         /// Puts this device on an account with one glade behind it, and a sync history.
         ///
         /// Arranged through <see cref="SaveService.Adopt"/> rather than by poking the pieces,
-        /// because that is the one door a save actually arrives through — and it is what puts a
+        /// because that is the one door a save actually arrives through - and it is what puts a
         /// revision and a sync mark on the file, which is half of what the wipe has to drop.
         /// </summary>
         void SignedInAs(string userId, string glade = "c01_first_light")
@@ -183,7 +183,7 @@ namespace GlimmerGrove.Tests
         /// pointed at the wrong account it merges two strangers' saves and overwrites one.
         ///
         /// <para>
-        /// The device no longer <em>stops</em> when the two disagree — it finishes the account
+        /// The device no longer <em>stops</em> when the two disagree - it finishes the account
         /// change locally and carries on, which is what removed the state a player could sit
         /// stranded in. So this asserts the leak directly rather than by proxy: whatever
         /// reaches the other account's document, it is not this grove.
@@ -207,7 +207,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The other half of the same rule: with no session at all, a save that names an account
         /// must not have a fresh anonymous one minted for it. That account could never match, so
-        /// the device would be refused for ever — see <c>AccountGateTests</c>.
+        /// the device would be refused for ever - see <c>AccountGateTests</c>.
         /// </summary>
         [Test]
         public void ASaveThatNamesAnAccountNeverHasANewOneMintedForIt()
@@ -226,7 +226,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// Linking attaches a provider to whichever account the session is, and the backend
         /// will create one to attach it to. On a save that already names an account that is
-        /// the same leak wearing a friendly name — so the provider must never be reached at
+        /// the same leak wearing a friendly name - so the provider must never be reached at
         /// all, which is why this asserts on the backend rather than on the outcome.
         /// </summary>
         [Test]
@@ -248,11 +248,11 @@ namespace GlimmerGrove.Tests
         /// The state the rule above leaves behind, and the one a real device was found in.
         ///
         /// <para>
-        /// A save that names an account may only Resume, which creates nobody — so a device
+        /// A save that names an account may only Resume, which creates nobody - so a device
         /// whose session has gone is refused for ever: every sync stops, every board read is
         /// denied by the security rules for want of a `request.auth`, and the account panel
         /// reports "you are not signed in" over a control that is refused before it reaches the
-        /// provider. It is reachable without doing anything unusual — Android's Auto Backup
+        /// provider. It is reachable without doing anything unusual - Android's Auto Backup
         /// restores Firebase's persisted session onto a reinstall, encrypted against a key that
         /// is regenerated per install, so the SDK holds no user while the save still names the
         /// old account.
@@ -261,8 +261,8 @@ namespace GlimmerGrove.Tests
         /// Signing <em>in</em> with the provider is the way out and is safe for exactly the
         /// reason linking is not: it attaches nothing and invents nothing, so the account the
         /// credential already owns is the account that comes back. This asserts the whole of
-        /// that — the session is restored, the provider was never attached, and no account was
-        /// created — because the first two would pass on a path that quietly did the third.
+        /// that - the session is restored, the provider was never attached, and no account was
+        /// created - because the first two would pass on a path that quietly did the third.
         /// </para>
         /// </summary>
         [Test]
@@ -284,8 +284,8 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The same tap, by somebody who picked a different entry out of the provider's account
-        /// chooser. It is a switch away from a grove this device could never push — there was no
-        /// session to push it with — so it is reported rather than performed: deciding it here
+        /// chooser. It is a switch away from a grove this device could never push - there was no
+        /// session to push it with - so it is reported rather than performed: deciding it here
         /// would be this button quietly doing what the Switch button exists to ask about.
         /// </summary>
         [Test]
@@ -321,7 +321,7 @@ namespace GlimmerGrove.Tests
         // ================================================================== the loss
         /// <summary>
         /// The promise the button makes. If the outgoing grove cannot be put somewhere safe, the
-        /// switch does not happen at all — no sign-in, no wipe, nothing.
+        /// switch does not happen at all - no sign-in, no wipe, nothing.
         /// </summary>
         [Test]
         public void AGroveThatCannotBeSavedIsNotSwitchedAwayFrom()
@@ -341,15 +341,15 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// <b>The report this whole change came from.</b> A player switching between two of
-        /// their own Google accounts could not read the incoming grove — one document, in the
-        /// frame after an OAuth browser handed control back — and the old flow treated that as
+        /// their own Google accounts could not read the incoming grove - one document, in the
+        /// frame after an OAuth browser handed control back - and the old flow treated that as
         /// a failed switch: the device stayed authenticated as one account holding the other's
         /// save, stopped syncing, and said so.
         ///
         /// <para>
         /// The fetch is not part of the switch any more. What this pins is every half of that:
         /// the account did change, nothing is stranded, the grove that left is still on the
-        /// phone, and the screen is told it does not yet know what the incoming account has —
+        /// phone, and the screen is told it does not yet know what the incoming account has -
         /// which is the one thing it must not guess, because "starting a new grove" would be a
         /// lie told to somebody with three chapters behind them.
         /// </para>
@@ -411,7 +411,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// Switching back needs the credential and nothing else — no document read, no server
+        /// Switching back needs the credential and nothing else - no document read, no server
         /// at all. Arranged by killing the incoming account's pull outright, which under the
         /// previous design was exactly the failure that produced the report.
         /// </summary>
@@ -502,7 +502,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// A sync already running is not a grove that could not be saved, and the difference
         /// is a sentence on screen. One starts on every foreground, which is exactly when a
-        /// player opens the account panel — so reporting contention as a refusal would make
+        /// player opens the account panel - so reporting contention as a refusal would make
         /// the commonest moment to switch the likeliest one to be told it had failed.
         ///
         /// <para>
@@ -520,7 +520,7 @@ namespace GlimmerGrove.Tests
             // The only test here with a genuine suspension in it, and the only one that has to
             // say anything about threads. Unity's Editor installs a SynchronizationContext on
             // the main thread, so every `await` in the flow posts its continuation back to a
-            // thread this test is about to block by waiting — which is a deadlock, not a
+            // thread this test is about to block by waiting - which is a deadlock, not a
             // failure of the rule. Every other case in this file completes synchronously and
             // never notices. Dropped for the duration and restored after; nothing on the path
             // touches a GameObject, which is what makes that safe.
@@ -558,7 +558,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// It is repaired without anybody being told now, and forward is the only direction it
-        /// can be repaired in — the session only ever moves because a player chose an account,
+        /// can be repaired in - the session only ever moves because a player chose an account,
         /// and Firebase persists that choice before this code sees it, so a disagreement means
         /// the authentication got further than the file did.
         /// </para>
@@ -600,7 +600,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The one path that must still refuse, and it is the money one. A receipt is redeemed
         /// against whichever account is authorised, so repairing first would move a purchase
-        /// made under one account onto another — a support case with a proof of purchase
+        /// made under one account onto another - a support case with a proof of purchase
         /// attached. Refusing costs nothing: both stores re-deliver an unfinished transaction
         /// for ever, and by the retry the next sync has repaired the device anyway.
         /// </summary>
@@ -648,13 +648,13 @@ namespace GlimmerGrove.Tests
 
         // ============================================================== the local swap
         // Everything here calls SaveService.SwitchTo directly, which is where the switch
-        // actually happens now — no backend, no network, and nothing about it that could not
+        // actually happens now - no backend, no network, and nothing about it that could not
         // be run in an aeroplane. That is the point of the redesign and it is what makes
         // these the cheapest tests in the feature to keep honest.
 
         /// <summary>
         /// Out and back, on a device with no network at all. This is the shape of the thing a
-        /// player asked for — two of their own accounts on one phone — and neither direction
+        /// player asked for - two of their own accounts on one phone - and neither direction
         /// costs a document read.
         /// </summary>
         [Test]
@@ -670,7 +670,7 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(Mine, CloudState.UserId);
             Assert.AreEqual("c01_first_light", GladeOnDevice(), "and this one is exactly as it was left");
 
-            // Counted off the records, so it holds with no content catalog loaded — which is
+            // Counted off the records, so it holds with no content catalog loaded - which is
             // the state this fixture is in and, for a moment after launch, the state a real
             // device is in. Read through PlayerProgression instead it comes back zero, and the
             // panel greets somebody's twenty-six glades with "here is a new grove".
@@ -680,7 +680,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The revision and the sync mark describe a conversation with one account's document.
-        /// Carried into another they are worse than meaningless — a revision invented against
+        /// Carried into another they are worse than meaningless - a revision invented against
         /// somebody else's history is precisely the input a backend using it for optimistic
         /// concurrency must not be given.
         /// </summary>
@@ -727,7 +727,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// A backend that does what the test tells it to and records what it was asked.
         ///
-        /// Deliberately records <em>order</em> as well as counts — the whole feature is an
+        /// Deliberately records <em>order</em> as well as counts - the whole feature is an
         /// ordering, so a fake that only counted calls would pass every test in this file while
         /// handing a grove away before saving it.
         /// </summary>
@@ -758,7 +758,7 @@ namespace GlimmerGrove.Tests
 
             /// <summary>
             /// Which account cannot be read. Per-account rather than a flag, because the
-            /// securing sync pulls too — a blanket failure stops the switch at step one and
+            /// securing sync pulls too - a blanket failure stops the switch at step one and
             /// the test would pass while proving the wrong thing.
             /// </summary>
             public string PullFailsFor;
@@ -812,11 +812,20 @@ namespace GlimmerGrove.Tests
                 return Task.FromResult((CloudResult.Success, new CloudIdentity(Session, true)));
             }
 
+            /// <summary>
+            /// Makes every document call genuinely asynchronous, the way the real SDK is: it
+            /// completes on another thread, so whoever awaited it resumes through their own
+            /// synchronisation context. The default completes synchronously, which is right for
+            /// the switch tests and hides exactly the fault <c>CloudDepartureTests</c> is about.
+            /// </summary>
+            public bool Asynchronous;
+
             public async Task<(CloudResult result, CloudSnapshot snapshot)> PullAsync(
                 string userId, CancellationToken c = default)
             {
                 var held = _held;
-                if (held != null) await held.Task;
+                if (held != null) await held.Task.ConfigureAwait(false);
+                if (Asynchronous) await Task.Delay(5).ConfigureAwait(false);
 
                 if (userId == PullFailsFor)
                     return (CloudResult.Failed(CloudFailure.Offline), CloudSnapshot.Missing);
@@ -828,14 +837,15 @@ namespace GlimmerGrove.Tests
                             : CloudSnapshot.Missing);
             }
 
-            public Task<CloudResult> PushAsync(string userId, SaveFileDto snapshot, SaveDelta delta,
-                                               CancellationToken c = default)
+            public async Task<CloudResult> PushAsync(string userId, SaveFileDto snapshot, SaveDelta delta,
+                                                     CancellationToken c = default)
             {
-                if (PushFails) return Task.FromResult(CloudResult.Failed(CloudFailure.Offline));
+                if (Asynchronous) await Task.Delay(5).ConfigureAwait(false);
+                if (PushFails) return CloudResult.Failed(CloudFailure.Offline);
 
-                Pushes++;
-                Remote[userId] = snapshot;
-                return Task.FromResult(CloudResult.Success);
+                Interlocked.Increment(ref Pushes);
+                lock (Remote) Remote[userId] = snapshot;
+                return CloudResult.Success;
             }
 
             static Task<(CloudResult, List<CloudWalletState>)> NoWallet()
@@ -844,11 +854,25 @@ namespace GlimmerGrove.Tests
             public Task<(CloudResult result, List<CloudWalletState> wallets)> ReadWalletAsync(
                 string u, CancellationToken c = default) => NoWallet();
 
+            /// <summary>Every debit and claim id offered to the server, in the order offered.</summary>
+            public readonly List<string> SpendIdsOffered = new List<string>();
+            public readonly List<string> AwardIdsOffered = new List<string>();
+
             public Task<(CloudResult result, List<CloudWalletState> wallets)> SubmitSpendsAsync(
-                string u, IReadOnlyList<SpendSubmission> s, CancellationToken c = default) => NoWallet();
+                string u, IReadOnlyList<SpendSubmission> s, CancellationToken c = default)
+            {
+                lock (SpendIdsOffered)
+                    foreach (var spend in s) SpendIdsOffered.Add(spend.Spend.id);
+                return NoWallet();
+            }
 
             public Task<(CloudResult result, List<CloudWalletState> wallets)> SubmitAwardsAsync(
-                string u, IReadOnlyList<GrantEntryDto> a, CancellationToken c = default) => NoWallet();
+                string u, IReadOnlyList<GrantEntryDto> a, CancellationToken c = default)
+            {
+                lock (AwardIdsOffered)
+                    foreach (var award in a) AwardIdsOffered.Add(award.id);
+                return NoWallet();
+            }
 
             public Task<(CloudResult result, List<CloudWalletState> wallets, CloudRedemption redemption)>
                 RedeemPurchaseAsync(string u, PurchaseReceipt r, CancellationToken c = default)
@@ -860,7 +884,7 @@ namespace GlimmerGrove.Tests
                 => Task.FromResult((CloudResult.Success, new Dictionary<Content.LevelId, Social.LevelStats>()));
 
             /// <summary>
-            /// Nothing to say about releases, and a failure rather than "nothing is required" —
+            /// Nothing to say about releases, and a failure rather than "nothing is required" -
             /// see <c>NullCloudBackend.ReadReleaseAsync</c>. A double that answered success here
             /// would clear a standing update wall on behalf of a fixture that is about something
             /// else entirely.
@@ -873,7 +897,7 @@ namespace GlimmerGrove.Tests
             // ------------------------------------------------------------- deletion
             public int Reauths;
 
-            /// <summary>Set to make the provider refuse — a closed sheet, or the wrong account.</summary>
+            /// <summary>Set to make the provider refuse - a closed sheet, or the wrong account.</summary>
             public CloudFailure ReauthFails = CloudFailure.None;
 
             /// <summary>What a successful Apple re-authentication hands back.</summary>
@@ -916,7 +940,7 @@ namespace GlimmerGrove.Tests
                 SaveStillLoadedAtDelete = PlayerProgress.ClearedCount > 0;
 
                 // The real backend refuses when the session has moved out from under the
-                // caller, and the refusal is the safety property — so the fake refuses too.
+                // caller, and the refusal is the safety property - so the fake refuses too.
                 if (!string.Equals(Session, userId, StringComparison.Ordinal))
                     return Task.FromResult(CloudResult.Failed(CloudFailure.AccountMismatch,
                                                               "session is not the account"));

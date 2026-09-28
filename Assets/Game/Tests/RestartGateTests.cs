@@ -18,13 +18,13 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// <b>Why this fixture exists.</b> <c>RestartGateOverlay</c> holds the board latched while it
-    /// is up and releases it from <c>OnDestroy</c> — unless it declared a hand-off, in which case
+    /// is up and releases it from <c>OnDestroy</c> - unless it declared a hand-off, in which case
     /// whatever it handed the run on to takes the latch instead. That is <c>PauseOverlay</c>'s
     /// rule, and it is wrong in two directions with two different symptoms, neither of which any
     /// compile, validator or screenshot can see. Declare a hand-off and let nothing take the
     /// board over, and the player is left on a grove that never thaws: every control dead, the
     /// run neither over nor running. Fail to declare one and the board is <em>resumed under the
-    /// question standing over it</em> — because <c>Close</c>'s continuation runs before
+    /// question standing over it</em> - because <c>Close</c>'s continuation runs before
     /// <c>Destroy</c> lands, so <c>RestartLevel</c> re-latches first and <c>OnDestroy</c> then
     /// unlatches behind it, leaving a live, tappable board under a modal.
     /// </para>
@@ -32,14 +32,14 @@ namespace GlimmerGrove.Tests
     /// <b>It builds the real panel rather than reasoning about it.</b> Nothing else here had ever
     /// run this code: the gate's arithmetic is proved offline against plain integers
     /// (<c>HeartStakeTests</c>) and its answer at a screen with a real wallet is proved next door
-    /// (<c>RunStakeLifecycleTests</c>), but the panel itself — its <c>Build</c>, its latch, its
-    /// hand-off — had only been read. <c>Flow.Init</c> and <c>View.Init</c> are both
+    /// (<c>RunStakeLifecycleTests</c>), but the panel itself - its <c>Build</c>, its latch, its
+    /// hand-off - had only been read. <c>Flow.Init</c> and <c>View.Init</c> are both
     /// <c>internal</c>, and Presentation's <c>InternalsVisibleTo</c> is what makes standing the
     /// whole thing up here possible at all.
     /// </para>
     /// <para>
     /// Editor-only, like <c>BudCanvasTests</c> and for the same reason: the subject is Unity's own
-    /// object lifetime — when <c>OnDestroy</c> runs relative to everything else — and a faked pair
+    /// object lifetime - when <c>OnDestroy</c> runs relative to everything else - and a faked pair
     /// would prove the arithmetic rather than the thing that actually goes wrong.
     /// </para>
     /// </summary>
@@ -112,7 +112,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// <b>Dismissing what this fixture raised is not enough, and that is worth stating.</b>
         /// A panel leaves the stack in <c>Flow.Dismiss</c>, which <c>Close</c> only reaches from
-        /// its exit tween's completion — and edit mode runs no tweens, so every panel this
+        /// its exit tween's completion - and edit mode runs no tweens, so every panel this
         /// fixture closes stays in the list for ever. <c>LiveModal</c> cannot find them either,
         /// because it skips anything already leaving. Left alone they are dead entries in a
         /// static list every other fixture shares, which is precisely the kind of debt that
@@ -128,7 +128,7 @@ namespace GlimmerGrove.Tests
         public void Stand()
         {
             // Flow is a static, so what it was holding is taken and handed back rather than
-            // assumed — the offline runner promises no order and other fixtures share the
+            // assumed - the offline runner promises no order and other fixtures share the
             // process. Only Init's four public roots can be restored; the iris and the flash it
             // also builds are private and are never asked for here.
             _canvasBefore = Flow.Canvas;
@@ -170,7 +170,7 @@ namespace GlimmerGrove.Tests
         public void Strike()
         {
             // Every panel this fixture put on the stack comes off it, whether or not it was
-            // closing — see Stack(). Walked against the snapshot rather than by type, so a
+            // closing - see Stack(). Walked against the snapshot rather than by type, so a
             // panel raised indirectly (a forfeit confirmation the door itself put up) is caught
             // as surely as one this fixture named.
             var stack = Stack();
@@ -232,7 +232,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// Puts the wallet at exactly this many hearts. Spent down and granted back up, which is
-        /// the only pair of doors it offers — there is deliberately no setter on a heart count.
+        /// the only pair of doors it offers - there is deliberately no setter on a heart count.
         /// </summary>
         static void Holding(int hearts)
         {
@@ -247,7 +247,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// Through reflection because <c>Update</c> is a Unity message rather than an API, and
-        /// edit mode does not tick <c>MonoBehaviour</c>s — so a test that wanted the panel to
+        /// edit mode does not tick <c>MonoBehaviour</c>s - so a test that wanted the panel to
         /// notice a heart landing would otherwise have to wait for a frame that never comes.
         /// Calling it is exactly what the engine does.
         /// </para>
@@ -266,7 +266,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// <b>Edit mode dispatches no <c>MonoBehaviour</c> messages at all</b> unless a script
-        /// asks for them with <c>[ExecuteAlways]</c>, and this one has no business asking — so
+        /// asks for them with <c>[ExecuteAlways]</c>, and this one has no business asking - so
         /// <c>DestroyImmediate</c> alone tears the object down without <c>OnDestroy</c> ever
         /// running. That is worth stating plainly because it is a trap that produces
         /// <em>passing</em> tests: a case asserting the board was <em>not</em> handed back is
@@ -306,7 +306,7 @@ namespace GlimmerGrove.Tests
         [Test]
         public void ARefusedRestartRaisesTheOfferAndHoldsTheBoardBehindIt()
         {
-            // The whole panel is built here for the first time anywhere — so this case is as
+            // The whole panel is built here for the first time anywhere - so this case is as
             // much "Build does not throw" as it is about the latch, and both are worth having.
             var panel = Refused(0);
 
@@ -334,7 +334,7 @@ namespace GlimmerGrove.Tests
             // Every way out that is not the way onward: KEEP PLAYING, the scrim, the hardware
             // back key, and the screen underneath being torn down with this still open. All four
             // arrive at OnDestroy, which is the whole reason the safe outcome lives there rather
-            // than on the buttons — a panel with several exits reports through none of them
+            // than on the buttons - a panel with several exits reports through none of them
             // reliably.
             var panel = Refused(0);
             int from = _probe.Latches.Count;
@@ -350,7 +350,7 @@ namespace GlimmerGrove.Tests
         {
             // The other direction, and the one with the subtler symptom. Close's continuation
             // runs before Destroy lands, so RestartLevel has already re-latched by the time
-            // OnDestroy fires — an undeclared hand-off would unlatch behind it and leave a live,
+            // OnDestroy fires - an undeclared hand-off would unlatch behind it and leave a live,
             // tappable board under the question standing over it.
             var panel = Refused(0);
 
@@ -373,16 +373,16 @@ namespace GlimmerGrove.Tests
         public void ThePanelWaitsWhileSomethingIsStackedOverIt()
         {
             // Flow.IsTopModal, and it is not defensive. The hearts land the instant a video
-            // finishes — seconds before the celebration over this panel has been collected — so
+            // finishes - seconds before the celebration over this panel has been collected - so
             // without it this closes out from under PrizeOverlay and puts a forfeit confirmation
             // up behind somebody's confetti. Driven with a real second modal rather than a mock,
             // because what is being tested is Flow's own idea of what is on top.
             var panel = Refused(0);
 
-            // Stacked *before* the hearts land, which is the order the real case happens in — a
+            // Stacked *before* the hearts land, which is the order the real case happens in - a
             // celebration is standing over this panel and the hearts were banked by the redeem
             // behind it. Writing it the other way round is what found this: granting first fires
-            // PlayerProgression.Changed, the rescue redraws the panel, and Build calls Paint —
+            // PlayerProgression.Changed, the rescue redraws the panel, and Build calls Paint -
             // so the gate was noticed as lifted through a route that has nothing to do with the
             // frame, and the case proved nothing about being covered.
             var over = Flow.Modal<ForfeitOverlay>(v =>
@@ -404,7 +404,7 @@ namespace GlimmerGrove.Tests
             Tick(panel);
             Assert.IsFalse(panel.IsLeaving, "and again on its next frame while still covered");
 
-            // Flow.Dismiss ends a panel the way the game does, with Object.Destroy — which is
+            // Flow.Dismiss ends a panel the way the game does, with Object.Destroy - which is
             // correct in a build and *refused* in edit mode, where it logs an error and does
             // nothing. Hence the DestroyImmediate underneath it, which is what actually removes
             // the object here. The expectation is what stops NUnit failing the case on that
@@ -424,8 +424,8 @@ namespace GlimmerGrove.Tests
         [Test]
         public void TheOfferGoesBackThroughTheDoorRatherThanRewindingTheBoard()
         {
-            // Hearts arriving do not imply the gate has lifted — a rescue of one heart to a
-            // player holding none leaves a charged restart still refused — so the panel re-enters
+            // Hearts arriving do not imply the gate has lifted - a rescue of one heart to a
+            // player holding none leaves a charged restart still refused - so the panel re-enters
             // RestartLevel rather than calling the mode's rewind. Here it lifts, and what proves
             // the door was used rather than bypassed is that no board was put back without the
             // player being asked: a restart is one of the three confirmations in this game.

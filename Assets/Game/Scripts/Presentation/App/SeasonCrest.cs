@@ -22,7 +22,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>The live crest is a bought sprite and the generated ones are what is left.</b> A
     /// generated emblem costs nothing to register and nothing to scope, which is <see
-    /// cref="Art.Gem"/>'s bargain and is why the rest of this file draws rather than loads —
+    /// cref="Art.Gem"/>'s bargain and is why the rest of this file draws rather than loads -
     /// and it buys a picture nobody drew. The crest a season actually wears is on the first
     /// screen after the splash and on a page selling a pass, so it is cut from the interface
     /// kit like every other surface either screen is made of; <see cref="Watch"/> records what
@@ -44,7 +44,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The string is permanent and the picture behind it is not.</b> A manifest names a
         /// crest, so this name is content that has shipped; what it <em>looks like</em> is a
-        /// decision this file owns and has already changed once — it was a ring of twelve pips
+        /// decision this file owns and has already changed once - it was a ring of twelve pips
         /// filling clockwise, and the owner rejected it on sight. Re-pointing a crest costs
         /// nothing and renaming one is a content push, so the name stays.
         /// </para>
@@ -123,7 +123,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>A bought sprite rather than a generated shape, and the owner rejected the
         /// generated one on sight.</b> What stood here was a dark band carrying twelve pips
-        /// that lit clockwise round a growing core — every part of it real, correct, and drawn
+        /// that lit clockwise round a growing core - every part of it real, correct, and drawn
         /// by nobody, which beside a card cut from a licensed kit reads as a placeholder
         /// (invariant 49h, which the update wall's mark paid for first). It is cut by
         /// `Tools/make_season_crest.py`, out of the same kit every plate on both screens is cut
@@ -132,14 +132,14 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// <b>It ignores both arguments, and only one of those is free.</b> The tint is a
-        /// painted piece's own — a colour multiply over a gold crown on a violet plate gives a
+        /// painted piece's own - a colour multiply over a gold crown on a violet plate gives a
         /// muddy one, which is `FeatureCard`'s finding said about an emblem instead of a plate.
         /// The progress is the real trade: the pips filled as the ladder filled, which the
         /// crown cannot do. What buys it back is that <em>both</em> callers already print the
         /// count and draw a bar directly under the crest, so the reading was being made twice
         /// and only one of the two was drawn by an artist. A crest says which season this is;
-        /// the bar says how far through it the player is. The other shape — a crest lit as the
-        /// track fills — is what invariant 37m refuses from the other end: it is dim on the
+        /// the bar says how far through it the player is. The other shape - a crest lit as the
+        /// track fills - is what invariant 37m refuses from the other end: it is dim on the
         /// first frame of every season anybody opens.
         /// </para>
         /// <para>

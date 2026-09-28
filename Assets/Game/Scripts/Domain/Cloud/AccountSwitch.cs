@@ -7,9 +7,9 @@ namespace GlimmerGrove.Cloud
     /// <b>There is no outcome here for "signed in but the grove could not be loaded", and its
     /// absence is the point.</b> That used to be the most likely way a switch ended: the
     /// download was part of the switch, so a dropped connection in the seconds after an OAuth
-    /// consent screen — which is the moment the process has just been foregrounded and the
+    /// consent screen - which is the moment the process has just been foregrounded and the
     /// database stream has just been re-authenticated, so by some distance the most fragile
-    /// moment in the whole app — left the device authenticated as one player and holding
+    /// moment in the whole app - left the device authenticated as one player and holding
     /// another's save, with nothing to do about it but read a warning. Since
     /// <c>SaveService.SwitchTo</c> the switch is finished locally before the network is asked
     /// for anything, so it cannot stop halfway. What is left is three ways of arriving and two
@@ -19,7 +19,7 @@ namespace GlimmerGrove.Cloud
     public enum SwitchOutcome
     {
         /// <summary>
-        /// Nothing happened and nothing changed — a bad argument, no backend, a sync holding
+        /// Nothing happened and nothing changed - a bad argument, no backend, a sync holding
         /// the latch, or a consent screen the player closed. Safe to offer again immediately.
         /// </summary>
         Refused,
@@ -39,7 +39,7 @@ namespace GlimmerGrove.Cloud
         SameAccount,
 
         /// <summary>
-        /// Signed in, and that account's grove is on the screen — restored from this device if
+        /// Signed in, and that account's grove is on the screen - restored from this device if
         /// it had been played here before, fetched if not.
         /// </summary>
         Adopted,
@@ -51,13 +51,13 @@ namespace GlimmerGrove.Cloud
         Started,
 
         /// <summary>
-        /// Signed in, and this device has nothing of theirs yet — but the server has not been
+        /// Signed in, and this device has nothing of theirs yet - but the server has not been
         /// reached, so it cannot say whether they have a grove elsewhere.
         ///
         /// <para>
         /// A success, not a failure: the account changed, the previous grove is archived here
         /// and on the server, and the next sync fills this one in. It exists so the screen can
-        /// avoid the one sentence that would be a lie — telling somebody with three chapters
+        /// avoid the one sentence that would be a lie - telling somebody with three chapters
         /// behind them that they are starting fresh, because a train went into a tunnel.
         /// </para>
         /// </summary>
@@ -81,8 +81,8 @@ namespace GlimmerGrove.Cloud
         /// How much progress is on the device now, for a screen that wants to say so.
         ///
         /// Read after the switch settled rather than out of a server reply, because the two can
-        /// differ — a grove restored from this device's own archive never came from a reply at
-        /// all — and what a player wants confirmed is what they are about to be looking at.
+        /// differ - a grove restored from this device's own archive never came from a reply at
+        /// all - and what a player wants confirmed is what they are about to be looking at.
         /// </summary>
         public readonly int ClearedGlades;
 

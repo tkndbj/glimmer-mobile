@@ -12,7 +12,7 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// <b>A rank went public, and that is what this fixture is about.</b> While a badge was only
     /// ever drawn on the player's own map it was derived on the device and stored nowhere
-    /// (invariant 52) — worth nothing to forge, because nobody else could see it. It is on a
+    /// (invariant 52) - worth nothing to forge, because nobody else could see it. It is on a
     /// board row and a public profile now, so invariant 19a governs it: the server derives its
     /// own answer from the save it reads itself (<c>rungOf</c> in <c>functions/src/ranks.ts</c>),
     /// and the client derives one too, because reaching a rung has to mark the card as owing a
@@ -20,7 +20,7 @@ namespace GlimmerGrove.Tests
     /// </para>
     /// <para>
     /// <b>A drift between the two is completely silent.</b> Nothing throws, nothing is refused
-    /// and no gate anywhere goes red — a keeper simply wears one badge on their own map and a
+    /// and no gate anywhere goes red - a keeper simply wears one badge on their own map and a
     /// different one on everybody else's screen, for ever, and the only instrument that could
     /// find it is somebody looking at both. So both sides run
     /// <c>firebase/shared/grove-vectors.json</c>, written by a third implementation in
@@ -28,7 +28,7 @@ namespace GlimmerGrove.Tests
     /// other half. Invariant 9a, for a badge.
     /// </para>
     /// <para>
-    /// <b>Everything here runs offline</b> — the file is read through <see cref="TestJson"/>
+    /// <b>Everything here runs offline</b> - the file is read through <see cref="TestJson"/>
     /// rather than <c>JsonUtility</c> and located without <c>Application.dataPath</c>, both of
     /// which are engine <c>ECall</c>s that would have <c>Tools/verify/tests.py</c> report this as
     /// "needs the Editor" and walk past it. That is invariant 29e, and it matters more here than
@@ -177,7 +177,7 @@ namespace GlimmerGrove.Tests
             }
 
             // A case may carry its own ladder; most climb the shared one. `ContainsKey` rather
-            // than "is the list empty", because an empty ladder is one of the cases — it is a
+            // than "is the list empty", because an empty ladder is one of the cases - it is a
             // build whose content has no `ranks` block, and it must hold nothing rather than
             // silently fall back to the shared ladder. The generator had exactly that bug.
             var ladder = map.ContainsKey("ladder")
@@ -199,7 +199,7 @@ namespace GlimmerGrove.Tests
         /// The ladder a case climbs, built through the shipped reader rather than around it.
         ///
         /// A vector proved against a ladder the fixture assembled proves nothing about the one a
-        /// player's content produces — <c>EndlessRewardTests.ConfigCase.AsTable</c>'s argument,
+        /// player's content produces - <c>EndlessRewardTests.ConfigCase.AsTable</c>'s argument,
         /// and the reason every rung here goes through <see cref="RankLadder.Resolve"/>.
         /// </summary>
         static RankLadder Resolve(Case c)
@@ -244,7 +244,7 @@ namespace GlimmerGrove.Tests
         /// <para>
         /// <b>This is the disagreement a player would actually be looking at.</b> The vectors
         /// hold the client to the server; this holds the client to itself, and the failure it
-        /// catches is the one that shows up on one screen of a single device — a map badge and a
+        /// catches is the one that shows up on one screen of a single device - a map badge and a
         /// profile medallion that do not match, with a sync in between and nothing to blame.
         /// </para>
         /// <para>
@@ -317,7 +317,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A catalog that has not loaded yet reads as nought rather than throwing — the map
+        /// A catalog that has not loaded yet reads as nought rather than throwing - the map
         /// draws before the splash has finished on a slow device, and a card built in that
         /// window must publish no rung rather than take the publish down with it.
         /// </summary>

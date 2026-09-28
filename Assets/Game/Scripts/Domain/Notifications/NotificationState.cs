@@ -7,7 +7,7 @@ namespace GlimmerGrove.Notifications
     ///
     /// <para>
     /// <b>This struct is the whole reason the scheme is free.</b> A notification can only be
-    /// scheduled *ahead* — nothing runs on the device once the app is gone — so the planner
+    /// scheduled *ahead* - nothing runs on the device once the app is gone - so the planner
     /// must answer, now, whether a sentence will be true at 19:30 four days from now. That is
     /// only possible for facts that are a pure function of (what the save says now, the wall
     /// clock), and every field below is one: a refill is a due time, a task slate is a
@@ -18,7 +18,7 @@ namespace GlimmerGrove.Notifications
     /// <para>
     /// <b>The rule that keeps it honest is the one about arguments.</b> A notification's text
     /// is baked when it is scheduled and read up to a week later, so any number inside it
-    /// must be a function of the *fire* instant and never of the *schedule* instant — "play
+    /// must be a function of the *fire* instant and never of the *schedule* instant - "play
     /// today to keep night 12" is correct when written and a lie four days on. Every string
     /// this game ships is therefore argument-free, and this note is what the next person adds
     /// one against.
@@ -41,7 +41,7 @@ namespace GlimmerGrove.Notifications
         /// Slots are hours of the player's own day and everything else in this game is UTC
         /// (<c>DailyRules</c>), so the two have to be bridged somewhere and this is the only
         /// number that does it. <b>A daylight-saving change inside the horizon shifts the
-        /// remaining slots by an hour</b>, because the offset is captured once — which is
+        /// remaining slots by an hour</b>, because the offset is captured once - which is
         /// accepted rather than solved: the plan is rebuilt every time the app is
         /// backgrounded, so the error lasts until the player next opens the game, and an
         /// hour's drift on a reminder is not worth carrying a timezone database for.
@@ -54,7 +54,7 @@ namespace GlimmerGrove.Notifications
         ///
         /// Nought is a real answer and not an absent one, which is why the predicate treats
         /// it separately rather than comparing against it: hearts that were already full when
-        /// the player put the game down are not news that evening — they were holding them.
+        /// the player put the game down are not news that evening - they were holding them.
         /// </summary>
         public readonly long HeartsFullUnix;
 
@@ -130,13 +130,13 @@ namespace GlimmerGrove.Notifications
                 // quality of the feature.</b> Written as "the bar is full at this instant" it
                 // is true of every day after the refill completes, so a player who stays away
                 // for a week is told their hearts are full on seven consecutive afternoons in
-                // identical words — which is how an app gets muted. Bounded to one day it says
+                // identical words - which is how an app gets muted. Bounded to one day it says
                 // the thing on the day it happened and then stops, and the plan naturally
                 // thins out the longer somebody is away. A game that nags harder the longer
                 // you ignore it is a game you uninstall.
                 //
                 // If the bar was already full when they put the phone down, the "event" is the
-                // next day rather than an instant that has passed — they were holding a full
+                // next day rather than an instant that has passed - they were holding a full
                 // bar an hour ago, so it is not news that evening.
                 case NotificationKind.HeartsFull:
                     if (HeartsFullUnix > 0L)
@@ -163,7 +163,7 @@ namespace GlimmerGrove.Notifications
                         && !DailyStreak.ShieldCovers(ShieldFromDay, day, ShieldDays);
 
                 // A waiting night does not expire, so this stays true until they come and
-                // take it — which is the point.
+                // take it - which is the point.
                 case NotificationKind.ChestWaiting:
                     return StreakChestWaiting;
 

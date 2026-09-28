@@ -19,11 +19,11 @@ namespace GlimmerGrove
     /// Kept beside the overlay rather than on <see cref="ChestDropKind"/> because a
     /// sprite path is a Presentation fact and Domain is not allowed to hold one. The
     /// loc keys are written out in an array rather than assembled from the kind's id,
-    /// so the build's string checker can see every one of them — a key that only exists
+    /// so the build's string checker can see every one of them - a key that only exists
     /// at runtime is a key nothing can verify.
     ///
     /// <para>
-    /// Every glyph here carries its own colour and is drawn white — never tinted. The
+    /// Every glyph here carries its own colour and is drawn white - never tinted. The
     /// heart boost used to break that rule: it was <c>ic_power</c>, the standard on/off
     /// symbol, washed in aqua, which named the wrong thing twice. The glyph said "power
     /// button" and the colour said nothing, so the one reward on the streak ladder a
@@ -34,7 +34,7 @@ namespace GlimmerGrove
     public static class RewardArt
     {
         /// <summary>
-        /// One key per <see cref="ChestDropKind"/>, indexed by the enum's own value — so the
+        /// One key per <see cref="ChestDropKind"/>, indexed by the enum's own value - so the
         /// order here is the enum's order and not a preference. The empty slot at index 5 is
         /// the retired <c>RunTime</c>: its value is frozen because the daily chest vectors key
         /// on it (invariant 9c), nothing can produce it any more, and an empty string is what
@@ -70,7 +70,7 @@ namespace GlimmerGrove
         /// <summary>
         /// The catalog entry a drop names, or null when this build has never heard of it.
         ///
-        /// <b>A published chest table can name a utility a client does not have</b> — the band
+        /// <b>A published chest table can name a utility a client does not have</b> - the band
         /// reader proves an item id is *present* and cannot prove the catalog knows it, which is
         /// invariant 20's "content from the future" arriving through the daily chest. Every
         /// answer here has to survive that, and none of them may survive it by returning null to
@@ -95,7 +95,7 @@ namespace GlimmerGrove
 
                 // Radiance rather than a fifth hue. Time is the one prize here that is not a
                 // resource with a pill on the hub, so giving it a colour of its own would put
-                // a sixth entry in a vocabulary the player has learned has five — and cream-
+                // a sixth entry in a vocabulary the player has learned has five - and cream-
                 // white is what this UI already means by "not one of the coloured things".
                 case ChestDropKind.RunTime: return Pal.Radiance;
 
@@ -113,7 +113,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// A heart boost answers <c>Hearts</c> rather than nothing, and that is the whole
-        /// judgement in this method. It changes no balance — it is a timer — but it is a
+        /// judgement in this method. It changes no balance - it is a timer - but it is a
         /// thing that happened *to the hearts*, so flying it into the heart pill says
         /// exactly what it does. Landing it nowhere would leave one prize on the panel
         /// that the collect animation quietly ignored, which is the sort of gap a player
@@ -132,7 +132,7 @@ namespace GlimmerGrove
                 // RunTime and Hints fall through to false deliberately, and unlike a heart
                 // boost neither is a near miss. A boost answers Hearts because it is a thing
                 // that happened to the hearts; seconds on the run in progress are not a balance
-                // at all, and a hint — though it is banked — has no pill on the hub either,
+                // at all, and a hint - though it is banked - has no pill on the hub either,
                 // only a badge on a button that lives on the play screen. Neither panel that
                 // pays one uses the collect animation, so nothing is left looking ungiven.
                 default: slot = ResourceSlots.Kind.Credits; return false;
@@ -145,7 +145,7 @@ namespace GlimmerGrove
         /// running <see cref="Flipbook"/> to twenty transient tokens is twenty components
         /// animating themselves for half a second each to say what one still frame says.
         ///
-        /// Falls back to a tinted disc by the same argument <see cref="Glyph"/> makes —
+        /// Falls back to a tinted disc by the same argument <see cref="Glyph"/> makes -
         /// an <c>Image</c> with no sprite is a white rectangle, and a handful of white
         /// rectangles crossing the screen is how a player discovers the art had not loaded.
         /// </summary>
@@ -171,12 +171,12 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Null for credits, which use the spinning coin flipbook instead — and for nothing else.
+        /// Null for credits, which use the spinning coin flipbook instead - and for nothing else.
         ///
         /// <para>
         /// <b>That is a contract rather than an observation.</b> Every caller passes what comes
         /// back straight into a <c>UIKit.Img</c> and then leans on <see cref="Glyph"/>, which
-        /// only ever fills in for credits — so a null returned for any other kind is not a
+        /// only ever fills in for credits - so a null returned for any other kind is not a
         /// missing decoration, it is a <b>white rectangle</b> where the prize should be
         /// (invariant 7b). That is exactly what a utility drop drew for as long as this switch
         /// had no case for one.
@@ -184,7 +184,7 @@ namespace GlimmerGrove
         /// </summary>
         public static Sprite Icon(ChestDropKind kind, string item)
         {
-            // Generated, not addressed — see Art.Dial. This one is drawn at the instant a run
+            // Generated, not addressed - see Art.Dial. This one is drawn at the instant a run
             // is lost, which is the worst moment in the game to show a white square because a
             // sprite had not finished loading.
             if (kind == ChestDropKind.RunTime) return Art.Dial(128);
@@ -200,8 +200,8 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>Split out of <see cref="Icon"/> so something can check it.</b> A sprite cannot be
-        /// asserted offline — nothing is loaded, so every lookup answers null whatever the table
-        /// says — but an *address* can be held to what <c>AssetManifest</c> preloads, which is
+        /// asserted offline - nothing is loaded, so every lookup answers null whatever the table
+        /// says - but an *address* can be held to what <c>AssetManifest</c> preloads, which is
         /// `SkinsTests`' bargain and the same one for the same reason. It costs the four
         /// literals that used to sit at an <c>Art.S</c> call, which <c>artnames.py</c> could
         /// read; `RewardArtTests` checks all of them and every utility besides, which is what
@@ -220,20 +220,20 @@ namespace GlimmerGrove
                 // The boost's own wordmark rather than the keeper ladder's star, which is what
                 // it *multiplies* and not what it is: a star beside "50% XP Boost for 2h" reads
                 // as a rung being paid out. Resident in `AssetManifest`, so it cannot arrive
-                // late and be drawn as a white rectangle (invariant 7b) — and it is the same
+                // late and be drawn as a white rectangle (invariant 7b) - and it is the same
                 // picture the shelf's own card draws, so the panel and the card that opened it
                 // agree. It is wide where every other mark here is square, which is a fact the
                 // callers size their box against; see `AdOfferOverlay.BuildRewardCard`.
                 case ChestDropKind.XpBoost: return "Ui/ic_xp_boost";
 
                 // The item's own picture, which is the one the action bar and the shelf already
-                // draw (`UtilityItem.Art`) — and `AssetManifest` names all four, so it is
+                // draw (`UtilityItem.Art`) - and `AssetManifest` names all four, so it is
                 // resident rather than scoped and cannot arrive late.
                 //
                 // **A gift when this build does not know the item.** A published table can name
                 // a utility from a newer build, and the one thing that may not happen then is
                 // the white rectangle `Icon`'s remarks describe. `ic_gift` is resident, reads as
-                // "a prize" and never as a bug — and the grant stays honest either way, because
+                // "a prize" and never as a bug - and the grant stays honest either way, because
                 // `UtilityLedger.Grant` refuses an id the catalog has never heard of.
                 case ChestDropKind.Utility:
                     var held = Item(item);
@@ -249,7 +249,7 @@ namespace GlimmerGrove
         ///
         /// The units matter more here than they look. A boost's amount is hours and a
         /// continue's is seconds, so both would read as a quantity of *something* without
-        /// them — "+24" beside a clock face is a fine way to promise twenty-four minutes.
+        /// them - "+24" beside a clock face is a fine way to promise twenty-four minutes.
         /// </summary>
         public static string Amount(ChestDrop drop)
             => drop.Kind == ChestDropKind.HeartBoost || drop.Kind == ChestDropKind.XpBoost
@@ -264,14 +264,14 @@ namespace GlimmerGrove
         /// Credits are the one kind with no sprite: they are a spinning flipbook, and
         /// <see cref="Icon"/> returns null for them. That makes every caller that draws a
         /// reward responsible for the same three lines, and the moment a third one appeared
-        /// — the streak board, once its ladder started paying credits — the second one had
+        /// - the streak board, once its ladder started paying credits - the second one had
         /// already drifted: <c>AdOfferOverlay</c> attached the flipbook without checking
         /// whether its frames were resident.
         /// </para>
         /// <para>
         /// That check is the whole reason this is worth centralising. Art loads
         /// asynchronously by scope (invariant 7b), and an <c>Image</c> with no sprite is a
-        /// white rectangle rather than a blank — so a hundred-pixel white square in the
+        /// white rectangle rather than a blank - so a hundred-pixel white square in the
         /// middle of a reward reveal is how a caller discovers the frames had not arrived.
         /// The fallback is a tinted disc, which reads as a coin at a glance and never as a
         /// bug.
@@ -294,7 +294,7 @@ namespace GlimmerGrove
     /// <para>
     /// The whole overlay exists for about four seconds and does one job: make a number
     /// arriving in a ledger feel like something happening. It is built as a sequence
-    /// rather than a state machine because it is one — anticipation, release, reveal —
+    /// rather than a state machine because it is one - anticipation, release, reveal -
     /// and each beat is scheduled off the last so retiming the middle does not require
     /// re-deriving every delay after it.
     /// </para>
@@ -320,7 +320,7 @@ namespace GlimmerGrove
         /// The chest this opens and how to claim it. Set by the caller before Build.
         ///
         /// A <see cref="ChestClaim"/> rather than the thing that earned it, because this
-        /// panel's only interest in a task or a season rung is which tier it pays — see
+        /// panel's only interest in a task or a season rung is which tier it pays - see
         /// that type for why a second copy of this ceremony was the alternative.
         /// </summary>
         [System.NonSerialized] public ChestClaim Claim;
@@ -386,7 +386,7 @@ namespace GlimmerGrove
 
             if (!Claim.TryClaim(out _drops))
             {
-                // Beaten to it — another device synced the claim in, or the period rolled
+                // Beaten to it - another device synced the claim in, or the period rolled
                 // over between the tap and this frame. Nothing to show and nothing lost.
                 //
                 // Dismissed next frame rather than here: Build() runs inside Flow.Modal
@@ -478,7 +478,7 @@ namespace GlimmerGrove
         /// Three escalating knocks from inside the lid.
         ///
         /// Each one is louder, higher, harder and brighter than the last. The escalation
-        /// is doing all of the work — three identical thumps read as a loading spinner.
+        /// is doing all of the work - three identical thumps read as a loading spinner.
         /// </summary>
         void ScheduleThumps()
         {
@@ -660,7 +660,7 @@ namespace GlimmerGrove
             }
 
             // Shrinkable: this line grows with the number of options and again with
-            // translation, and it is a disclosure — a disclosure that runs off the side
+            // translation, and it is a disclosure - a disclosure that runs off the side
             // of the screen is not one.
             _chrome.Add((RectTransform)UIKit.Shrinkable(
                 UIKit.Titled("Odds", Content, ChestOddsOverlay.OddsLine(Claim.Tier.Chest), 21,
@@ -688,7 +688,7 @@ namespace GlimmerGrove
         /// Pays the chest into the screen underneath: every prize breaks into a handful of
         /// tokens, they arc into their own resource pill, and each landing steps that pill's
         /// number. The cascade itself is <see cref="RewardFlight"/>. If no pill can be
-        /// resolved this degrades to closing — a reward already banked must never depend on
+        /// resolved this degrades to closing - a reward already banked must never depend on
         /// an animation being able to run.
         /// </summary>
         void Collect()
@@ -701,7 +701,7 @@ namespace GlimmerGrove
             // Both platforms show their notification prompt exactly once per install, so there
             // is a single chance to ask and the question is worth what the player is holding
             // when it arrives. Here they have just opened a chest and there is demonstrably
-            // another one tomorrow — which is the whole of what a reminder promises. Asked on
+            // another one tomorrow - which is the whole of what a reminder promises. Asked on
             // the splash instead it would arrive before the player had seen a chest, a task or
             // a streak, and a refusal there can never be taken back from inside the app.
             //
@@ -724,7 +724,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Clears everything that is not a prize, the scrim included — the page's pills are
+        /// Clears everything that is not a prize, the scrim included - the page's pills are
         /// under it, and a token cannot be seen landing on something that is not visible.
         /// </summary>
         void FadeChrome()
@@ -759,7 +759,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Swallowed once the payout has started. Everything is already banked, so leaving
-        /// early costs the player nothing — but <see cref="ModalView.Close"/> fades the whole
+        /// early costs the player nothing - but <see cref="ModalView.Close"/> fades the whole
         /// content group, and the tokens are in it, so the back key would delete the animation
         /// mid-flight and leave the pills rewound to their old figures until the page next
         /// rebuilt them.

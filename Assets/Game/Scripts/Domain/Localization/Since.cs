@@ -8,7 +8,7 @@ namespace GlimmerGrove.Localization
     /// <para>
     /// <b>It exists because a picture of somebody else's grove is never "now".</b> A visited
     /// grove is drawn from a card the server rebuilt the last time its owner's device synced,
-    /// which can be minutes or days ago — and a visitor with no way to tell has no way to
+    /// which can be minutes or days ago - and a visitor with no way to tell has no way to
     /// distinguish "this keeper has not played since Tuesday" from "this game is showing me the
     /// wrong thing". That second reading is the one that was reported, and it is the expensive
     /// one: a feature a player has decided is broken stops being opened. Every other state on
@@ -17,7 +17,7 @@ namespace GlimmerGrove.Localization
     /// </para>
     /// <para>
     /// <b>Four units and no more.</b> Seconds are noise on something that is rebuilt when a
-    /// device happens to sync, and anything past days is a grove nobody is tending — both ends
+    /// device happens to sync, and anything past days is a grove nobody is tending - both ends
     /// are answered better by the coarse word than by a precise one.
     /// </para>
     /// <para>
@@ -34,7 +34,7 @@ namespace GlimmerGrove.Localization
         /// Younger than this and it is simply "just now".
         ///
         /// Ninety seconds rather than sixty so the first minute does not tick over while
-        /// somebody is looking at it — a readout that changes under the eye reads as a
+        /// somebody is looking at it - a readout that changes under the eye reads as a
         /// countdown, and this is a fact rather than a clock.
         /// </summary>
         public const long JustNowSeconds = 90L;
@@ -64,7 +64,7 @@ namespace GlimmerGrove.Localization
         /// <para>
         /// A stamp of nought and a stamp in the future both answer empty rather than guessing.
         /// The first is a card from before the server recorded when it built one, and the
-        /// second is a device whose clock is behind the server's — neither is a state to
+        /// second is a device whose clock is behind the server's - neither is a state to
         /// describe, and a caller that draws an empty string draws nothing, which is the right
         /// amount to say about a fact nobody has.
         /// </para>

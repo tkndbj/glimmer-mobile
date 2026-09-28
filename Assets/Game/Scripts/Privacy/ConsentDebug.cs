@@ -8,7 +8,7 @@ namespace GlimmerGrove.Privacy
     /// <para>
     /// <b>Why this has to exist.</b> The form is shown only to players UMP places in the EEA
     /// or the UK, judged from the device's own network. Everywhere else it correctly shows
-    /// nothing — which is indistinguishable, from the developer's chair, from an integration
+    /// nothing - which is indistinguishable, from the developer's chair, from an integration
     /// that is broken. Without a way to force the geography, the one feature in this game
     /// whose entire purpose is regulatory compliance would ship having never been seen
     /// working, and the first people to test it would be European players.
@@ -22,11 +22,11 @@ namespace GlimmerGrove.Privacy
     /// </para>
     /// <para>
     /// <b>Using it.</b> Run a development build once with <see cref="Devices"/> empty. UMP
-    /// logs a line naming the hashed id of the device it did not recognise — search the log
+    /// logs a line naming the hashed id of the device it did not recognise - search the log
     /// for <c>gad_has_consent_for_cookies</c> or the SDK's "Use ConsentDebugSettings" warning,
     /// which prints it verbatim. Paste that id below, rebuild, and the form appears as it
     /// would in Frankfurt. The id is a salted hash of the advertising identifier, so it is not
-    /// a secret and it identifies a device rather than a person — but it changes when the
+    /// a secret and it identifies a device rather than a person - but it changes when the
     /// advertising id is reset.
     /// </para>
     /// </summary>
@@ -42,10 +42,10 @@ namespace GlimmerGrove.Privacy
         public static readonly IReadOnlyList<string> Devices = new string[]
         {
             // The Galaxy S25 the game is tested on. UMP printed this itself, in logcat, on the
-            // first run that did not list it — search for "addTestDeviceHashedId". It changes
+            // first run that did not list it - search for "addTestDeviceHashedId". It changes
             // when the device's advertising id is reset.
             // The Galaxy S25 the game is tested on. UMP prints this itself, in logcat, on any
-            // run where no debug list is supplied — search for "addTestDeviceHashedId". It
+            // run where no debug list is supplied - search for "addTestDeviceHashedId". It
             // changes when the device's advertising id is reset, and UMP goes silent once any
             // list is given, so re-reading it means emptying this for one run.
             "B0CD5E3D523D6F09BB69C756CCC73A86",
@@ -72,21 +72,21 @@ namespace GlimmerGrove.Privacy
         /// <b>Turn this on to see the form, and off to prove it was remembered.</b> Those are
         /// two different tests and only one of them can run at a time, which is the whole
         /// reason this is a switch rather than a companion to <see cref="ForceEea"/>. On, the
-        /// form is drawn on every launch — correctly, because the state it would have been
+        /// form is drawn on every launch - correctly, because the state it would have been
         /// answered from has just been thrown away. Off is what asks the question that
         /// actually matters: a player who consented once is never interrupted again.
         /// </para>
         /// <para>
         /// <b>It has to exist, because without it the forced geography appears not to work at
         /// all</b>, which cost an evening. UMP caches its decision on the device: the first
-        /// launch — before any debug settings existed — evaluated a Turkish network, stored
+        /// launch - before any debug settings existed - evaluated a Turkish network, stored
         /// <c>NotRequired</c>, and every later run was served that cached answer no matter
         /// what geography was forced. The symptom is indistinguishable from a wrong device id
         /// or an unpublished message, and no log says "this came from cache". So the order is:
         /// on for one run to reach the form, then off for ever after.
         /// </para>
         /// <para>
-        /// Only ever true alongside <see cref="IsActive"/>, so it cannot reach a player — and
+        /// Only ever true alongside <see cref="IsActive"/>, so it cannot reach a player - and
         /// it must not, because resetting a real player's consent would silently re-prompt
         /// somebody who had already answered. That is also the failure this resting state
         /// mimics: a debug build that re-prompts every launch is exactly what a release build

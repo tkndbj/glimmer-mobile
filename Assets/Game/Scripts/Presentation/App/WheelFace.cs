@@ -14,7 +14,7 @@ namespace GlimmerGrove
     /// table mapping 500% to gold would be a second place the ladder is written down, and the
     /// day content retunes the top slice to 400 the wheel would quietly lose its best colour
     /// with nothing to show for it. Rank keeps the ramp meaning "this is the good one" whatever
-    /// the numbers are — the same reason <c>ModeLook</c> exists rather than a switch on a mode
+    /// the numbers are - the same reason <c>ModeLook</c> exists rather than a switch on a mode
     /// id, one folder over.
     /// </para>
     /// <para>
@@ -31,7 +31,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The top rung is deliberately not gold.</b> Gold is what the rim, the hub and the
         /// lamps are made of, so a gold jackpot slice is the one prize on the wheel with nothing
-        /// to stand against — and <c>Pal.Gold</c> and <c>Pal.Sun</c> differ by seven parts in a
+        /// to stand against - and <c>Pal.Gold</c> and <c>Pal.Sun</c> differ by seven parts in a
         /// hundred, which wasted a rung of a six-rung ramp on a colour nobody could tell from
         /// its neighbour. <c>Pal.Bloom</c> is the only tint in this palette that cannot be
         /// mistaken for the frame, and "the rare one is the odd colour out" is a convention
@@ -62,7 +62,7 @@ namespace GlimmerGrove
         /// colour, while two rungs of the ramp are never reached at all. A wheel whose slices
         /// cannot be ranked by eye has no reason to be coloured. Counting distinct figures
         /// instead means the <em>n</em>th best prize gets the <em>n</em>th colour, whatever the
-        /// numbers are — so a content push that changes the ladder cannot flatten the picture.
+        /// numbers are - so a content push that changes the ladder cannot flatten the picture.
         /// </para>
         /// <para>
         /// Quadratic in the slice count, which is at most twelve, and asked once per wedge when
@@ -90,8 +90,8 @@ namespace GlimmerGrove
                 if (other < percent) below++;
             }
 
-            // A flat wheel would divide by nothing. It cannot reach here — the reader refuses
-            // one — and the fallback is the calm end rather than the loud one anyway.
+            // A flat wheel would divide by nothing. It cannot reach here - the reader refuses
+            // one - and the fallback is the calm end rather than the loud one anyway.
             if (distinct <= 1) return Ramp[0];
 
             int rank = below * (Ramp.Length - 1) / (distinct - 1);
@@ -104,8 +104,8 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Blended toward the panel's dark, never multiplied.</b> The first cut scaled every
         /// channel by a fifth, which produced eight near-black wedges under a gold rim; raising
-        /// the factor fixed the blues and greens and left the two warm rungs — the two <em>best
-        /// prizes</em> — as olive mud, because scaling a saturated yellow toward zero is exactly
+        /// the factor fixed the blues and greens and left the two warm rungs - the two <em>best
+        /// prizes</em> - as olive mud, because scaling a saturated yellow toward zero is exactly
         /// how olive is made. A lerp keeps the hue and moves only the value, so a gold stays
         /// gold and a pink stays pink at any depth. Both faults were invisible in every check
         /// and obvious in the first rendered frame, which is what <c>Tools/render_wheel.py</c>
@@ -113,7 +113,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// <b>The alternation is now slight, because the spokes do that job.</b> It exists
-        /// because the ramp cannot promise a different hue for every position — two neighbours
+        /// because the ramp cannot promise a different hue for every position - two neighbours
         /// can legitimately land on one colour, and without something between them they read as
         /// one wide slice. Doing it with depth alone meant taking a rung down far enough to
         /// separate it, and far enough is where a yellow becomes khaki. A drawn boundary
@@ -134,20 +134,20 @@ namespace GlimmerGrove
     /// <b>A widget rather than part of its panel</b>, for the reason <c>GridView</c> and
     /// <c>ProductCard</c> are: the panel around it is already the offer, the ad, five honest
     /// refusals and a payout, and a screen that has grown a fourth responsibility has grown one
-    /// too many. What is here is exactly the part that could be dropped into a second use — an
-    /// event wheel, a seasonal one — without carrying an ad table with it.
+    /// too many. What is here is exactly the part that could be dropped into a second use - an
+    /// event wheel, a seasonal one - without carrying an ad table with it.
     /// </para>
     /// <para>
     /// <b>It owns no timing of its own.</b> Every number about how it moves comes from
     /// <see cref="WheelSpin"/> in Domain, which is tested offline: where the wheel must come to
     /// rest, how far it travels, the curve it travels on and how many pegs have gone past at a
-    /// given angle. That is not tidiness — the resting angle <em>is</em> the payout, so a wheel
+    /// given angle. That is not tidiness - the resting angle <em>is</em> the payout, so a wheel
     /// stopping half a degree into its neighbour is the panel disagreeing with what the server
     /// is about to grant, and motion is the one subsystem whose faults show up only in play.
     /// </para>
     /// <para>
     /// <b>Every part of it is generated art.</b> An <c>Image</c> whose sprite has not arrived is
-    /// a white rectangle, and this is the most ceremonial object in the game — a white square
+    /// a white rectangle, and this is the most ceremonial object in the game - a white square
     /// where the prize should be is worse here than anywhere else. It also belongs to no chapter,
     /// so delivered art for it would sit in the global group and be loaded by every screen in
     /// the game for the use of one.
@@ -190,7 +190,7 @@ namespace GlimmerGrove
         /// <paramref name="baseAmount"/> is what the placement pays flat; every figure on the
         /// rim is that amount through its slice's multiplier, so the wheel prints real credits
         /// rather than a ratio the player has to do arithmetic on. The multiplier is printed
-        /// too, small, under the figure — it is what makes the wheel legible as a ladder.
+        /// too, small, under the figure - it is what makes the wheel legible as a ladder.
         /// </summary>
         public static WheelFace Attach(RectTransform host, BonusWheel wheel, int baseAmount,
                                        float diameter)
@@ -235,7 +235,7 @@ namespace GlimmerGrove
                 var wedge = UIKit.Img("W" + i, _rotor, wedgeSprite, WheelPaint.Seat(tint, i),
                                       Vector2.one * diameter, new Vector2(.5f, .5f), Vector2.zero);
 
-                // Negative Z is clockwise, and the sprite is drawn pointing straight up — so
+                // Negative Z is clockwise, and the sprite is drawn pointing straight up - so
                 // this puts slice i's own centre line at (i + ½) steps clockwise from the
                 // pointer. WheelSpin.Rest is the exact inverse of it, which is what makes the
                 // wheel stop where the seed said it would.
@@ -265,7 +265,7 @@ namespace GlimmerGrove
         /// <para>
         /// The box is measured from the wedge's own arc so a twelve-slice wheel shrinks its
         /// captions rather than overlapping them, and both are <see cref="UIKit.Shrinkable"/>
-        /// on top of that — a translated thousands separator is wider in some languages than in
+        /// on top of that - a translated thousands separator is wider in some languages than in
         /// English, and there is no room here for it to spill into.
         /// </para>
         /// </summary>
@@ -288,7 +288,7 @@ namespace GlimmerGrove
             //
             // A cream chip with dark text on it, rather than tinted text on the wedge. The
             // wedge is already the slice's own colour, so a badge painted in that colour is the
-            // one thing on the wheel guaranteed to have nothing to sit against — which is
+            // one thing on the wheel guaranteed to have nothing to sit against - which is
             // exactly how the first cut drew it, and it disappeared on every slice at once.
             // Inverting it also stops the badge and the figure reading as the same label twice.
             float chipW = Mathf.Min(width * .72f, 118f);
@@ -310,7 +310,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Trailing zeroes are trimmed rather than formatted away, so the badge reads "x3"
-        /// instead of "x3.0" — and the decimal point comes from the culture, because a comma
+        /// instead of "x3.0" - and the decimal point comes from the culture, because a comma
         /// is the decimal separator across most of the markets this ships in.
         /// </para>
         /// </summary>
@@ -330,7 +330,7 @@ namespace GlimmerGrove
         /// real work: two neighbouring slices can land on one colour, because the ramp has six
         /// rungs and a wheel may have twelve. Separating those by shading alone means taking one
         /// of them far enough down to tell apart, and far enough is where a saturated yellow
-        /// becomes khaki — so the wheel's two best prizes were the two that suffered. A drawn
+        /// becomes khaki - so the wheel's two best prizes were the two that suffered. A drawn
         /// boundary separates any pair at any depth and costs one image per slice.
         /// </para>
         /// <para>
@@ -361,7 +361,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The rim, and the lamps set into it — one on every boundary, so the lamps and the
+        /// The rim, and the lamps set into it - one on every boundary, so the lamps and the
         /// slice edges are the same thing rather than two decorations that nearly line up.
         /// </summary>
         void BuildRim(RectTransform host, float diameter, int count, float step)
@@ -385,7 +385,7 @@ namespace GlimmerGrove
                 var bulb = UIKit.Img("L" + i, host, Art.Disc(64), new Color(1f, .97f, .84f, .95f),
                                      Vector2.one * lamp, new Vector2(.5f, .5f), at);
 
-                // Out of phase around the rim, so the lamps chase rather than blink together —
+                // Out of phase around the rim, so the lamps chase rather than blink together -
                 // one bounded cycle per lamp rather than a sequencer anybody has to drive.
                 Tween.Value(1f, .35f, 1.1f, v => { if (bulb) bulb.color = new Color(1f, .97f, .84f, v); },
                             Ease.InOutSine, bulb.gameObject)
@@ -423,7 +423,7 @@ namespace GlimmerGrove
         /// The pointer, hung above the rim and pivoted at its own tip.
         ///
         /// Pivoting at the tip is what makes the kick read as a peg pushing it aside rather than
-        /// as the whole marker sliding — the same reason the coaching hand pivots at its
+        /// as the whole marker sliding - the same reason the coaching hand pivots at its
         /// fingertip and not at its centre.
         /// </summary>
         void BuildPointer(RectTransform host, float diameter)
@@ -451,8 +451,8 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>The wind-up returns to exactly zero before the spin begins</b>, which looks like
-        /// one movement and is deliberately two. The alternative — starting the spin from the
-        /// loaded angle — would put the whole travel nine degrees out, and the resting angle is
+        /// one movement and is deliberately two. The alternative - starting the spin from the
+        /// loaded angle - would put the whole travel nine degrees out, and the resting angle is
         /// not decoration here: it is which slice the server is about to pay for.
         /// </para>
         /// </summary>
@@ -568,7 +568,7 @@ namespace GlimmerGrove
         // ------------------------------------------------------------ the payoff
         /// <summary>
         /// Lights the slice that won and dims the rest, so the answer is unmistakable on a
-        /// still frame — which is what a player takes a screenshot of.
+        /// still frame - which is what a player takes a screenshot of.
         /// </summary>
         public void Celebrate(int index)
         {
@@ -604,7 +604,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// The winning wedge, for whoever wants to throw sparks out of it or fly a reward from
-        /// it. Null when the wheel has not been built, which a caller must handle — a payout
+        /// it. Null when the wheel has not been built, which a caller must handle - a payout
         /// that depends on an animation being able to run is a payout that can be lost.
         /// </summary>
         public RectTransform Won(int index)

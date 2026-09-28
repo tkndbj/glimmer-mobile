@@ -11,8 +11,8 @@ namespace GlimmerGrove
     /// The charms: the stone a charmed gem is, and what each of them looks like going off.
     ///
     /// <para>
-    /// <b>Its own file because a charm is drawn in three places at once</b> — on the gem, across
-    /// the field, and up at the ward line — where every other thing on this board belongs to one
+    /// <b>Its own file because a charm is drawn in three places at once</b> - on the gem, across
+    /// the field, and up at the ward line - where every other thing on this board belongs to one
     /// of those. Folding it into <c>SiegeView.Field</c> would have put the hill's half of a
     /// stormglass inside the file about the jewels.
     /// </para>
@@ -26,13 +26,13 @@ namespace GlimmerGrove
     /// <para>
     /// <b>The whole of this file is the second cut, and the first one's verdict was one word.</b>
     /// What was wrong was not one number; it was four things, and only one of them was a taste.
-    /// <b>One</b>: a charmed gem was an ordinary gem with a white glyph printed on it — answered
+    /// <b>One</b>: a charmed gem was an ordinary gem with a white glyph printed on it - answered
     /// by cutting a different stone in the same colour (<c>CharmFace</c>). <b>Two</b>: a charm
     /// detonated in <c>hit_{c}</c>, the ward impact, which is framed at 192 pixels because a lit
-    /// line lands eighteen of them a second — drawn here at four and a half cells, so the biggest
+    /// line lands eighteen of them a second - drawn here at four and a half cells, so the biggest
     /// moment on the field was a small reel blown up two and a half times
     /// (<c>SiegeShotBake.Charms</c>). <b>Three</b>: <see cref="Shockwave"/>'s third argument is a
-    /// <em>scale</em>, and every call in this file passed it <c>Cell * n</c> — so every charm fired
+    /// <em>scale</em>, and every call in this file passed it <c>Cell * n</c> - so every charm fired
     /// a ring scaled to five hundred times a cell, which is a white flash over the whole screen
     /// rather than an impact. <b>Four</b>: the beam a lance drew was a still gradient bar, and the
     /// volley a stormglass loosed came out of the turrets rather than out of the gem.
@@ -49,7 +49,7 @@ namespace GlimmerGrove
         ///
         /// <b>A shade larger, because both charmed cuts are pointed or round where the four are
         /// broad.</b> Fitted to the same box a star and an orb draw visibly smaller than the stones
-        /// beside them, which would say a charm is a lesser gem — and it is the opposite. The art
+        /// beside them, which would say a charm is a lesser gem - and it is the opposite. The art
         /// tool already cuts them at 0.94 of their canvas against a plain gem's 0.88; this is the
         /// other half of the same correction, applied where the cell is measured.
         /// </summary>
@@ -58,7 +58,7 @@ namespace GlimmerGrove
         /// <summary>
         /// Raised the first time each kind of charm is put on this field, with the kind.
         ///
-        /// <b>Once a run and once a kind</b>, because what it is for is a lesson — and a lesson
+        /// <b>Once a run and once a kind</b>, because what it is for is a lesson - and a lesson
         /// holds the board (<c>RunHold.Teaching</c>), so one raised on every refill would stop a
         /// siege dead every few seconds. The screen decides what to do with it; this only says
         /// that one has arrived (invariant 6a).
@@ -85,7 +85,7 @@ namespace GlimmerGrove
         /// <b>Called by <c>Repaint</c> and by nothing else</b>, because a repaint <em>is</em> the
         /// board settling: it dresses and places every cell, so by the time this runs the gem a
         /// lesson has to ring is in its socket at its final position. Every other path that could
-        /// raise one — the mint, the fall, the cascade — has the gem in the air.
+        /// raise one - the mint, the fall, the cascade - has the gem in the air.
         /// </summary>
         void Flush()
         {
@@ -109,7 +109,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// A gem carrying this kind of charm, <b>standing in its own socket</b>, for a lesson to
-        /// ring — or null when none is.
+        /// ring - or null when none is.
         ///
         /// <para>
         /// <b>Asked at the moment the tip goes up rather than remembered</b>, which is
@@ -119,8 +119,8 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// <b>And settled, which is the half that is easy to leave out.</b> A gem on this board is
-        /// falling most of the time — a refill is minted above the field and moved into its socket
-        /// over the next third of a second — so the board holding a charm at a cell says nothing
+        /// falling most of the time - a refill is minted above the field and moved into its socket
+        /// over the next third of a second - so the board holding a charm at a cell says nothing
         /// about where its picture is. A ring drawn round a gem in the air is a ring that starts
         /// beside the board and then slides, which is worse than no ring at all. The announcement
         /// is already deferred to a repaint (<see cref="Flush"/>); this is the same rule said where
@@ -157,14 +157,14 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The face is the charm, which is what changed.</b> A lance and a stormglass are
         /// <em>gems of their own</em> in the colour they are worth, so what this does to a gem that
-        /// gains one is swap its sprite — not hang a glyph off it. When the charm goes the plain
+        /// gains one is swap its sprite - not hang a glyph off it. When the charm goes the plain
         /// face comes back, which is the case a mark never had to handle and this does: a cascade
         /// can leave a charm's colour standing where the charm itself has been taken.
         /// </para>
         /// <para>
         /// <b>The halo is minted lazily and then kept</b>, exactly as the weaver's web was: most
         /// cells never carry a charm, and a field that does gains and loses them all run. It is a
-        /// child of the gem, so it falls with it and nothing has to keep a second list in step —
+        /// child of the gem, so it falls with it and nothing has to keep a second list in step -
         /// which is the same bargain the board strikes by carrying <c>_charms</c> through
         /// <c>Collapse</c>.
         /// </para>
@@ -253,7 +253,7 @@ namespace GlimmerGrove
         /// The soft breathing a charmed gem does while it is standing there.
         ///
         /// <b>On the halo and never on the gem</b>, so a charm is the one thing on this field that
-        /// moves while nobody is playing — which is what makes the eye find it — without the jewel
+        /// moves while nobody is playing - which is what makes the eye find it - without the jewel
         /// under it changing size, because a gem that grows and shrinks is a gem whose socket the
         /// player is no longer sure about.
         /// </summary>
@@ -282,7 +282,7 @@ namespace GlimmerGrove
         ///
         /// <b>It exists so the gems come apart in the order the light reaches them.</b>
         /// <c>SiegeBeat.Cleared</c> is a list and the view used to stagger it by <em>index</em>,
-        /// which for an ordinary match is exactly right — three touching cells in any order look
+        /// which for an ordinary match is exactly right - three touching cells in any order look
         /// the same. A lance takes a whole row and a whole column at once, and index order across
         /// that is an arbitrary scatter: what the player has to see is a beam leaving the stone and
         /// the row failing behind it. So the beat asks <see cref="ClearDelay"/> instead, and it
@@ -293,7 +293,7 @@ namespace GlimmerGrove
         /// <summary>
         /// How long the wavefront takes to cross one cell.
         ///
-        /// <b>Two and a half times what it was, and the beat waits for it</b> — see
+        /// <b>Two and a half times what it was, and the beat waits for it</b> - see
         /// <see cref="_holdUntil"/>. Eight cells at this is .60s of travel, which is long enough to
         /// watch a row fail from one end to the other rather than long enough to notice that it
         /// did.
@@ -301,12 +301,12 @@ namespace GlimmerGrove
         const float WaveStep = .075f;
 
         /// <summary>
-        /// The moment the board may refill, as a real-time stamp — or a stamp in the past.
+        /// The moment the board may refill, as a real-time stamp - or a stamp in the past.
         ///
         /// <para>
         /// <b>A real hold, paired with a real slowdown, which is what makes it affordable.</b> The
         /// first cut of the charms documented a hold and never implemented one, and the note
-        /// afterwards said it must never be implemented — because this clock does not stop for a
+        /// afterwards said it must never be implemented - because this clock does not stop for a
         /// cascade, so a beat held a second longer is a second of free hill. That argument is
         /// answered rather than repeated: <see cref="Dilate"/> slows the run's own clock for
         /// exactly the same window, so the board is held and the hill is held with it. The model
@@ -315,11 +315,11 @@ namespace GlimmerGrove
         /// <para>
         /// <b>A deadline rather than a duration, and that is not a style choice.</b> A stormglass
         /// books its volley <c>FuelLands</c> into the future, so how long the fall must wait is not
-        /// known when the stone goes off — it is known when the bolts arrive, which is a frame or
+        /// known when the stone goes off - it is known when the bolts arrive, which is a frame or
         /// twenty later and often while the beat is already waiting. A duration taken once and
         /// counted down cannot be extended from there; a deadline can, and an extension that
         /// arrives after everything has finished is simply a time already past. It also means an
-        /// empty hill — a stormglass matched with nothing to shoot at — holds the board for the
+        /// empty hill - a stormglass matched with nothing to shoot at - holds the board for the
         /// charge alone rather than for a barrage that never happens.
         /// </para>
         /// <para>
@@ -345,7 +345,7 @@ namespace GlimmerGrove
         ///
         /// <b>Bounded by what the beat is holding for rather than by the beat.</b> The fall used
         /// to start halfway through a <c>SiegeTuning.BeatFor</c>, so a wavefront that ran past that
-        /// was gems shattering into cells already refilling — which is why this used to clamp at
+        /// was gems shattering into cells already refilling - which is why this used to clamp at
         /// a fifth of a second and the wave had to cross eight cells inside it. The beat now waits
         /// for <see cref="_holdUntil"/> before it refills, so the clamp is that instead: the wave
         /// may take the whole window and the board still cannot drop into it.
@@ -369,7 +369,7 @@ namespace GlimmerGrove
         /// A charm going off, drawn where it stood.
         ///
         /// <b>Handed the spark rather than the cell</b>, because a prism is paid as the colour of
-        /// the run it completed and the letter it was carrying underneath is not that colour —
+        /// the run it completed and the letter it was carrying underneath is not that colour -
         /// see <c>SiegeLayout.Runs</c>. What the player has to see is the colour they bought.
         /// </summary>
         void Sprung(SiegeSpark spark)
@@ -440,8 +440,8 @@ namespace GlimmerGrove
         /// <b>Every charm here starts with this, and it is the half that makes the payoff
         /// readable.</b> A detonation with nothing in front of it is a frame the eye arrives after;
         /// a tenth of a second of something tightening is what makes the player already be looking
-        /// at the cell when it goes. It is invariant 37ac's rule — spend the window, do not shorten
-        /// it — applied to the front of one rather than the back.
+        /// at the cell when it goes. It is invariant 37ac's rule - spend the window, do not shorten
+        /// it - applied to the front of one rather than the back.
         /// </para>
         /// <para>
         /// <b>The ring closes rather than opening</b>, which is the whole of why it reads as a
@@ -480,12 +480,12 @@ namespace GlimmerGrove
         /// framed at 192 pixels because a lit line lands eighteen of them a second; drawn here at
         /// four and a half cells it was a small picture blown up two and a half times, which is
         /// what "the animations are horrendous" is once it is measured. <c>charm_blast_{c}</c> is
-        /// baked at 320 over fourteen frames for this moment alone — see
+        /// baked at 320 over fourteen frames for this moment alone - see
         /// <c>SiegeShotBake.Charms</c>.
         /// </para>
         /// <para>
         /// <b>Eighteen frames a second rather than thirty</b>, which is the same sentence the
-        /// window answers — <em>they shouldn't be super fast so we can see them</em> — said about
+        /// window answers - <em>they shouldn't be super fast so we can see them</em> - said about
         /// the drawing rather than about the clock. Fourteen frames at 18fps is .78s of burst,
         /// against .40 at the rate a bolt's impact plays, and the board really does wait for it:
         /// the fall is held and the run's clock is slowed or stopped for the same window
@@ -544,7 +544,7 @@ namespace GlimmerGrove
         /// <b>Slower than everything else on this field, deliberately.</b> A bolt's impact runs at
         /// 30 because it has to be over before the next one lands; a charm happens a handful of
         /// times in a run and is the thing the player is meant to watch. Eighteen over fourteen
-        /// frames is .78s of burst, which is most of the window the beat is held for — and the
+        /// frames is .78s of burst, which is most of the window the beat is held for - and the
         /// window is real, because the run's own clock is slowed or stopped for exactly as long
         /// (<c>Dilate</c>).
         /// </b>
@@ -559,14 +559,14 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Three beats rather than one frame</b>, which is the whole of what makes this read as
         /// something happening. The stone charges (<see cref="Charge"/>); two beams snap open along
-        /// the cells the model took; and then the cross <em>fails</em> — a burst on every cell, in
+        /// the cells the model took; and then the cross <em>fails</em> - a burst on every cell, in
         /// order of distance from the stone, so the destruction visibly travels out from where the
         /// player put it. The gems themselves come apart on the same wavefront, because
         /// <see cref="ClearDelay"/> staggers them by distance whenever a charm sprang this beat.
         /// </para>
         /// <para>
         /// <b>The bursts are the bought pack at the size it was cut for.</b> Each cell gets a ward
-        /// impact — 192 pixels drawn at 1.7 cells, which is about native — rather than one big reel
+        /// impact - 192 pixels drawn at 1.7 cells, which is about native - rather than one big reel
         /// stretched across eight of them. That is the same finding as <see cref="Detonate"/> read
         /// the other way: the reason to bake a bigger reel for the middle is the reason not to blow
         /// the small one up along the arms.
@@ -574,7 +574,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The strokes are the cells the model took and nothing else.</b> A cross is a whole row
         /// and a whole column (<c>SiegeBoard.Cross</c>), so the drawn extent is the field's own
-        /// width and height — the drawn thing and the played thing are the same two integers,
+        /// width and height - the drawn thing and the played thing are the same two integers,
         /// which is invariant 33g at its strongest.
         /// </para>
         /// </summary>
@@ -636,7 +636,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>A fifth, which is about as far as it can go before the raiders read as frozen.</b>
         /// Under about .15 a walk cycle is visibly playing over a body that is not moving, which is
-        /// the fault a stun already had to be drawn around (<c>SiegeView.Follow</c>) — there it is
+        /// the fault a stun already had to be drawn around (<c>SiegeView.Follow</c>) - there it is
         /// answered by draining the colour out of the raider, and here there is nothing to say it
         /// with, because the hill has not been stopped, it is only slow.
         /// </para>
@@ -644,7 +644,7 @@ namespace GlimmerGrove
         const float LancePace = .22f;
 
         /// <summary>
-        /// How long a lance's whole sequence runs, in real seconds — and therefore both how long
+        /// How long a lance's whole sequence runs, in real seconds - and therefore both how long
         /// the clock is slowed and how long the beat waits before the board refills.
         ///
         /// <b>Measured off its own parts rather than typed</b>: the charge, then the wavefront
@@ -711,7 +711,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Borrowed on purpose here, where borrowing it for the middle was the bug.</b> Four
         /// elemental impacts are already cut, addressed and resident on every siege because every
-        /// bolt that lands uses one — and at 1.7 cells they are drawn at about the size they were
+        /// bolt that lands uses one - and at 1.7 cells they are drawn at about the size they were
         /// framed for. What the charm's own reel is for is the four-and-a-half-cell detonation in
         /// the middle, which is the one thing these cannot be stretched to.
         /// </para>
@@ -739,8 +739,8 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Two layers, because a tint can only darken.</b> <c>Image.color</c> is a multiply
         /// (invariant 37l), so a white sprite tinted to a gem colour is that colour everywhere and
-        /// the hot filament the art tool drew is gone. So the reel is drawn twice — a wide body in
-        /// the charm's colour and a thin core left white over it — which is the three-rung ladder
+        /// the hot filament the art tool drew is gone. So the reel is drawn twice - a wide body in
+        /// the charm's colour and a thin core left white over it - which is the three-rung ladder
         /// the strike bake already uses in a bake, done here in two draws because the length is not
         /// known until the field is measured.
         /// </para>
@@ -757,7 +757,7 @@ namespace GlimmerGrove
             Body(at, size, new Color(1f, 1f, 1f, .92f), .34f, after);
         }
 
-        /// <summary>One layer of one stroke — see <see cref="Stroke"/>.</summary>
+        /// <summary>One layer of one stroke - see <see cref="Stroke"/>.</summary>
         void Body(Vector2 at, Vector2 size, Color colour, float thick, float after)
         {
             var frames = Reel("beam");
@@ -817,10 +817,10 @@ namespace GlimmerGrove
         ///
         /// <b>Three numbers rather than one, and the middle one is the answer to the complaint.</b>
         /// The first cut opened in .16s and began fading immediately, so the stroke existed at full
-        /// brightness for exactly no time — which is a flash, not a beam. This opens fast because a
+        /// brightness for exactly no time - which is a flash, not a beam. This opens fast because a
         /// beam arriving slowly reads as a wipe, <b>holds for as long as the cross takes to fail</b>
-        /// — the row is being taken by the light, so the light has to still be there while it
-        /// happens — and goes out over a third of a second after that.
+        /// - the row is being taken by the light, so the light has to still be there while it
+        /// happens - and goes out over a third of a second after that.
         /// </summary>
         const float BeamOpen = .12f, BeamHold = .62f, BeamFade = .34f;
 
@@ -830,7 +830,7 @@ namespace GlimmerGrove
         ///
         /// <b>Remembered because the bolts arrive a tick later than the stone does.</b> The model
         /// books a stormglass's bolts exactly as it books a match's fuel (invariant 37s), so they
-        /// come through <c>SiegeReport.Charmed</c> on a later frame — by which time the gem has been
+        /// come through <c>SiegeReport.Charmed</c> on a later frame - by which time the gem has been
         /// cleared and its cell holds something else. The volley is fired <em>from the stone</em>,
         /// so the one thing the drawing needs is where the stone was.
         /// </summary>
@@ -842,7 +842,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>The arrow points the other way from the first cut, and that is the whole fix.</b> It
-        /// used to draw light leaving the field for the wards and then the wards shooting — which
+        /// used to draw light leaving the field for the wards and then the wards shooting - which
         /// is what the model does and is not what the player did. The owner's sentence was exact:
         /// <em>when a stormglass is matched, that gem shoots lasers or fireballs at the enemies on
         /// the field</em>. So the wards charge the stone (they are still what pays for it, which is
@@ -853,7 +853,7 @@ namespace GlimmerGrove
         /// <b>Nothing about the model moved.</b> Every bolt is still that ward's own bolt at that
         /// ward's own weight, carrying that ward's turret art in that ward's colour, and the gold
         /// figure on the raider still says which ward was strong against what. What changed is
-        /// where the projectile leaves from — which is a drawing, and the one drawing the player
+        /// where the projectile leaves from - which is a drawing, and the one drawing the player
         /// asked for.
         /// </para>
         /// </summary>
@@ -942,7 +942,7 @@ namespace GlimmerGrove
         /// <b>The model's own figure and never a typed one.</b> <c>SiegeBoard.Break</c> books the
         /// volley <c>FuelLands</c> into the future, exactly as it books a match's fuel, so this is
         /// how long the bolts really take to exist. Typed, the two would drift and the stone would
-        /// either fire before the charge finished or sit lit with nothing happening — which is the
+        /// either fire before the charge finished or sit lit with nothing happening - which is the
         /// same class of fault as a mote that lands out of step with its own fuel.
         /// </b>
         /// </summary>
@@ -982,7 +982,7 @@ namespace GlimmerGrove
             Thread(frames, mid, far, Cell * .11f, lean, Color.white, delay, over);
         }
 
-        /// <summary>One layer of one thread — see <see cref="Streak"/>.</summary>
+        /// <summary>One layer of one thread - see <see cref="Streak"/>.</summary>
         void Thread(Sprite[] frames, Vector2 at, float far, float thick, float lean, Color colour,
                     float delay, float over)
         {
@@ -1006,13 +1006,13 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The volley a stormglass loosed, arriving — <b>thrown by the stone</b>.
+        /// The volley a stormglass loosed, arriving - <b>thrown by the stone</b>.
         ///
         /// <para>
         /// <b>One projectile per ward and raider, flown from the gem, and that is the change.</b>
         /// The first cut drew a thin ray from each turret to each raider: fifty hairlines inside
         /// half a second, which is not a volley, it is static. Each bolt here is the ward's own
-        /// comet — the same reel that ward fires all run, at the same size — launched from where
+        /// comet - the same reel that ward fires all run, at the same size - launched from where
         /// the stone stood and landing with the same impact every other hit on this hill lands
         /// with.
         /// </para>
@@ -1020,11 +1020,11 @@ namespace GlimmerGrove
         /// <b>Gathered by which ward threw at which raider, because the model can throw twice.</b>
         /// The ward wearing the charm's colour fires <c>CharmVolleyOwn</c> times
         /// (<c>SiegeBoard.Volley</c>), and two comets down one line a frame apart are one comet at
-        /// twice the brightness — invariant 37q's flam said about a drawing. What the player has to
+        /// twice the brightness - invariant 37q's flam said about a drawing. What the player has to
         /// read is *that ward answered that raider*, once, for this much.
         /// </para>
         /// <para>
-        /// <b>The damage figures are still the board's own</b> — the same <c>Land</c> path
+        /// <b>The damage figures are still the board's own</b> - the same <c>Land</c> path
         /// every other hit on this hill goes through, so a gold number still means what it means
         /// everywhere else: this ward was strong against that.
         /// </para>
@@ -1213,15 +1213,15 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>Three rungs far apart, which is what makes a thing look <em>made of</em> light
-        /// rather than painted it</b> — the strike bake's own ladder (white core, coloured body,
+        /// rather than painted it</b> - the strike bake's own ladder (white core, coloured body,
         /// wide haze) done here in three draws because the length is not known until the hill is
         /// measured. Two would read as a thick line; one reads as a highlighter.
         /// </para>
         /// <para>
         /// <b>Snapped rather than flown, and that is the definition.</b> A projectile is a thing
         /// that travels and a laser is a thing that is suddenly there: it opens along its own
-        /// length in <see cref="BeamSnap"/> — fast enough to read as arrival rather than as a wipe
-        /// — then <em>holds</em>, which is the part that was missing, and then goes out by
+        /// length in <see cref="BeamSnap"/> - fast enough to read as arrival rather than as a wipe
+        /// - then <em>holds</em>, which is the part that was missing, and then goes out by
         /// thinning rather than by fading, because a beam that dims uniformly reads as a light
         /// being turned down and one that narrows reads as a beam closing.
         /// </para>
@@ -1229,7 +1229,7 @@ namespace GlimmerGrove
         /// <b>The reel is the lance's</b> (<c>make_siege_art.beam</c>): ten frames of a crawling
         /// filament, drawn white so the view can tint it. <c>Image.color</c> is a multiply
         /// (invariant 37l), so the white core is a second draw at full white rather than a
-        /// brighter tint — a tint can only ever darken.
+        /// brighter tint - a tint can only ever darken.
         /// </para>
         /// </summary>
         void Beam(Vector2 from, Vector2 to, Color tint)
@@ -1269,7 +1269,7 @@ namespace GlimmerGrove
                  .OnDone(() => { if (flare) Destroy(flare.gameObject); });
         }
 
-        /// <summary>One layer of one beam — see <see cref="Beam"/>.</summary>
+        /// <summary>One layer of one beam - see <see cref="Beam"/>.</summary>
         void Layer(Sprite[] frames, Vector2 at, float length, float thick, float lean, Color colour)
         {
             var img = UIKit.Img("Beam", _fx, frames[0], Pal.A(colour, 0f),
@@ -1371,14 +1371,14 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>The longest anything in this mode holds the run.</b> It is bounded by nothing in the
-        /// rules — the model booked every one of these bolts before the first was drawn, so a
+        /// rules - the model booked every one of these bolts before the first was drawn, so a
         /// slower barrage cannot kill anything later than the board already said it died, and the
         /// clock is stopped rather than merely ignored so the hill does not walk through it.
         /// </para>
         /// <para>
         /// <b>What it may not become is the ordinary case.</b> A stormglass is the rarest of three
         /// charms and only the third chapter deals it, so this is on screen once or twice in a run
-        /// — which is what buys it a second and a half. A payoff this length on anything the player
+        /// - which is what buys it a second and a half. A payoff this length on anything the player
         /// meets every few seconds would be the mode watching itself.
         /// </para>
         /// </summary>

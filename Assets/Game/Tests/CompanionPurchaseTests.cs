@@ -8,7 +8,7 @@ namespace GlimmerGrove.Tests
 {
     /// <summary>
     /// Buying a companion: the composite unlock rule, the union merge, and the two things
-    /// that must never be representable — paying twice, and losing a purchase in a sync.
+    /// that must never be representable - paying twice, and losing a purchase in a sync.
     ///
     /// <para>
     /// This is the first stored entitlement in the save file. Everything else here is either
@@ -25,7 +25,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The roster is a process-wide static, so a test that publishes one would leave it
-        /// published for whatever runs next. Snapshot and restore makes each independent —
+        /// published for whatever runs next. Snapshot and restore makes each independent -
         /// the same guard <c>ProfileTests</c> uses, and for the same reason.
         /// </summary>
         [SetUp]
@@ -104,7 +104,7 @@ namespace GlimmerGrove.Tests
         public void ReachingTheGateDoesNotRecordAPurchase()
         {
             // The level half stays derived. Writing it down as well would create a second
-            // answer that a retune could put out of step with the first — and would mean the
+            // answer that a retune could put out of step with the first - and would mean the
             // save grew every time somebody levelled up.
             AvatarCatalog.Publish(new[] { Free("monarch"), Gated("plum", 11, 0) });
             var plum = AvatarCatalog.Find("plum");
@@ -270,7 +270,7 @@ namespace GlimmerGrove.Tests
         public void AnEmptySideNeverErasesTheOther()
         {
             // The direction that matters. A second device that has bought nothing must not
-            // take a purchase off the first — which is the failure the stored hearts count
+            // take a purchase off the first - which is the failure the stored hearts count
             // shipped, in the one other place a merge could lose something.
             CollectionAssert.AreEqual(new[] { "coral" }, CompanionLedger.Join(new[] { "coral" }, null));
             CollectionAssert.AreEqual(new[] { "coral" }, CompanionLedger.Join(null, new[] { "coral" }));
@@ -343,7 +343,7 @@ namespace GlimmerGrove.Tests
         public void TheWholeSaveMergeKeepsBothDevicesPurchases()
         {
             // Through SaveMerge rather than the ledger's own Join, so the wiring is pinned
-            // too — a join nothing calls is a join that does not run.
+            // too - a join nothing calls is a join that does not run.
             var mine = File("coral");
             mine.updatedUnix = 100;
 
@@ -376,7 +376,7 @@ namespace GlimmerGrove.Tests
         public void TheShippedLadderPricesEveryGatedCompanionAndOnlyFreesTheStarter()
         {
             // Against the built-in roster, which is what a client whose content fetch failed
-            // falls back to — and which must therefore obey the same rules as the manifest.
+            // falls back to - and which must therefore obey the same rules as the manifest.
             AvatarCatalog.Publish(null);
 
             int starters = 0;

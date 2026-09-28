@@ -11,7 +11,7 @@ namespace GlimmerGrove
     /// <b>Device-local, and never in the save file.</b> It is a view preference rather than
     /// progress: it moves both ways, so it could never be joined (invariant 11b), and merged by
     /// recency it would need a stamp of its own to carry one bit that costs nothing to get
-    /// wrong — the player taps the switcher and it is right again. <c>RunGuard</c> and
+    /// wrong - the player taps the switcher and it is right again. <c>RunGuard</c> and
     /// <c>GrovePublishPolicy</c> keep their state here for the same reason.
     /// </para>
     /// </summary>
@@ -24,15 +24,15 @@ namespace GlimmerGrove
         /// the remembered one is no longer in it.
         ///
         /// <para>
-        /// The second half matters more than it looks: a mode can leave a build — a chapter
-        /// disabled, a client rolled back, content that has not downloaded yet — and a map
+        /// The second half matters more than it looks: a mode can leave a build - a chapter
+        /// disabled, a client rolled back, content that has not downloaded yet - and a map
         /// opening onto a mode with no chapters in it is a blank screen with a back arrow.
         /// </para>
         /// <para>
         /// <b>The fallback is <see cref="CatalogIndex.DefaultMode"/> rather than
         /// <see cref="GameMode.Default"/>, and that is the same rule applied to the fallback
-        /// itself.</b> The constant is a parsing answer — a chapter with no <c>mode</c> field is
-        /// a glade — and it is neither the mode this game leads with nor, once every glade
+        /// itself.</b> The constant is a parsing answer - a chapter with no <c>mode</c> field is
+        /// a glade - and it is neither the mode this game leads with nor, once every glade
         /// chapter is disabled, a mode this catalog can open at all: exactly the blank screen the
         /// clause above exists to prevent. What the catalog answers is the first row of the
         /// switcher, so a player who has never touched the control lands on what it offers first.
@@ -40,11 +40,11 @@ namespace GlimmerGrove
         /// </summary>
         public static GameMode Read(CatalogIndex index)
         {
-            // Through MapMemory, so the answer belongs to the account asking — see that class.
+            // Through MapMemory, so the answer belongs to the account asking - see that class.
             string raw = MapMemory.Read(Key);
 
             // **Nothing remembered is answered before anything is parsed, and it has to be.**
-            // `GameMode.TryParse` answers *true* for an empty string, with the glade — because a
+            // `GameMode.TryParse` answers *true* for an empty string, with the glade - because a
             // chapter with no `mode` field is a glade, for ever, and that is the question that
             // method exists to answer. Reading a stored preference through it therefore cannot
             // tell "this player has never touched the switcher" from "this player chose the
@@ -67,7 +67,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Remembers a mode. Written on the map's <em>arrival</em> rather than on the tap, so
-        /// it is set far more often than it changes — hence <see cref="DevicePrefs.WriteString"/>,
+        /// it is set far more often than it changes - hence <see cref="DevicePrefs.WriteString"/>,
         /// which does nothing at all when it already says this.
         /// </summary>
         public static void Write(GameMode mode)
@@ -84,7 +84,7 @@ namespace GlimmerGrove
     /// <para>
     /// <see cref="ModeChoice"/> one level finer, stored the same way and for the same reasons:
     /// device-local and never in the save, because it moves both ways and so could never be
-    /// joined (invariant 11b), and it costs nothing to get wrong — one tap and it is right again.
+    /// joined (invariant 11b), and it costs nothing to get wrong - one tap and it is right again.
     /// Nothing keys on it, so invariant 1 does not reach it.
     /// </para>
     /// <para>
@@ -94,7 +94,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>A hint and never an authority</b>, which is <see cref="ChapterChoice"/>'s rule: it
     /// answers the main track the moment the remembered one is not a lane this catalog has
-    /// chapters on — a rollback, a disabled chapter, a drop that has not downloaded — and the
+    /// chapters on - a rollback, a disabled chapter, a drop that has not downloaded - and the
     /// caller falls back rather than opening onto nothing.
     /// </para>
     /// </summary>
@@ -124,7 +124,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Remembers a ladder. Written on the map's <em>arrival</em> rather than on the tap, so it
-        /// is set far more often than it changes — hence <see cref="DevicePrefs.WriteString"/>,
+        /// is set far more often than it changes - hence <see cref="DevicePrefs.WriteString"/>,
         /// which does nothing at all when it already says this.
         /// </summary>
         public static void Write(GameMode mode, GameTrack track)

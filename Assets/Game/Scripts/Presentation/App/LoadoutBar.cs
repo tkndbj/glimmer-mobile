@@ -17,7 +17,7 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// <b>A readout that is also the door.</b> The map used to carry a LOADOUT button in the
-    /// bottom corner, which said the feature existed and nothing about what was in it — so the one
+    /// bottom corner, which said the feature existed and nothing about what was in it - so the one
     /// screen where somebody is about to choose a level told them nothing about what they were
     /// choosing it with. This says both: it shows the line, and tapping anywhere on it opens the
     /// shelf. The button is gone, because two doors to one room is one door too many.
@@ -32,13 +32,13 @@ namespace GlimmerGrove
     /// <para>
     /// <b>The same furniture as the action bar in a run</b> (<c>UtilityBar</c>): the same well, the
     /// same shelf, the same badge in the same corner. A kit in the corner of the map and the same
-    /// kit in the corner of a board should not be two different objects — and it costs no art.
+    /// kit in the corner of a board should not be two different objects - and it costs no art.
     /// </para>
     /// <para>
     /// <b>It bleeds to the bottom of the screen and stands its cells <c>UtilityBar.Foot</c> above
     /// it</b>, because a shelf that stops short of the edge leaves a strip of map under it that
     /// scrolls, a shelf that gives the inset up in full puts the kit row on the home indicator,
-    /// and a shelf that honours it in full is 94 units of empty plate — which is the gap that was
+    /// and a shelf that honours it in full is 94 units of empty plate - which is the gap that was
     /// reported off an iPhone. <see cref="Height"/> is what a caller must inset a scroller by; it
     /// already includes the foot.
     /// </para>
@@ -56,7 +56,7 @@ namespace GlimmerGrove
         /// <b>Packed rather than spread across the width.</b> Even shares of the whole bar put a
         /// hand's width of nothing between four cells, which reads as four things that happen to
         /// be on the same shelf rather than as a line. A fixed gap and a centred row is the
-        /// arrangement that makes them one object — and it lets the cells be as big as they should
+        /// arrangement that makes them one object - and it lets the cells be as big as they should
         /// be, which even shares could not without touching.
         /// </summary>
         const float TurretCell = 208f, KitCell = 164f;
@@ -73,7 +73,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>Named because something other than the tab needs it.</b> The bar's rect is the
-        /// shelf, and the tab is a child hung off its top edge and drawn outside it — so
+        /// shelf, and the tab is a child hung off its top edge and drawn outside it - so
         /// anything that wants the bar's <em>outline</em> rather than its rect (a lesson's ring,
         /// invariant 44d's mirror) gets a box with the one part of this control that says it is
         /// a control cut off the top. Reported from a device exactly that way: the tip pointing
@@ -82,7 +82,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// <b>Public because something other than a lesson's ring needs it now.</b> Anything placed
-        /// <em>above</em> this bar has to clear the tab rather than the plate — the endless hub's
+        /// <em>above</em> this bar has to clear the tab rather than the plate - the endless hub's
         /// key is the first thing in this game measured against the shelf from outside it
         /// (<c>EndlessHub.Band</c>).
         /// </para>
@@ -93,10 +93,10 @@ namespace GlimmerGrove
         /// What the bar is, before the display's own foot is added to it.
         ///
         /// <b>Public because it is the only half of this bar a fixture can ask about.</b>
-        /// <see cref="Height"/> reads the display's safe area, which is a native call — so a test
+        /// <see cref="Height"/> reads the display's safe area, which is a native call - so a test
         /// measuring anything against it is reported as "needs the Editor" and becomes a gate
         /// nobody runs on the way past (invariant 29e). This is a constant, and on the canvas the
-        /// tightest layout has to survive — a squarish phone, which has no home indicator — it
+        /// tightest layout has to survive - a squarish phone, which has no home indicator - it
         /// <em>is</em> the height. <c>EndlessHubTests</c> is the caller.
         /// </summary>
         public const float Bare = Pad + TurretCell + Gap + KitCell + Pad;
@@ -111,12 +111,12 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// <b><c>UtilityBar.Foot</c> rather than the whole inset, and that is a lesson this bar
-        /// was written after and did not take.</b> It honoured <c>SafeArea.Bottom</c> in full — 94
-        /// units of it on an iPhone — and every one of those units was empty shelf under the kit
+        /// was written after and did not take.</b> It honoured <c>SafeArea.Bottom</c> in full - 94
+        /// units of it on an iPhone - and every one of those units was empty shelf under the kit
         /// row, which is the *same report from the same device* the action bar had already
         /// answered: a gap at the foot of the screen. The answer there is a ceiling rather than
         /// the inset, and it is one number for both bars because they are one shelf drawn in two
-        /// places (invariant 42b) — the cells stand clear of the indicator pill and nothing else
+        /// places (invariant 42b) - the cells stand clear of the indicator pill and nothing else
         /// is spent on it.
         /// </para>
         /// </summary>
@@ -142,7 +142,7 @@ namespace GlimmerGrove
         /// <b>A rectangle rather than a number, because the caller must not do this arithmetic.</b>
         /// A screen handed <c>Overhang</c> would have to add it to a rect it did not build, in
         /// the space of an overlay it does not own, and a second caller would have to get the
-        /// same sum right again. This is an empty node — no graphic, so no raycast — stretched
+        /// same sum right again. This is an empty node - no graphic, so no raycast - stretched
         /// over the shelf and up past the tab, and it moves with the bar for free.
         /// </para>
         /// </summary>
@@ -151,7 +151,7 @@ namespace GlimmerGrove
         /// <summary>
         /// Builds the bar along the bottom of <paramref name="host"/>.
         ///
-        /// <b>Built once and repainted, never rebuilt</b> — <c>GridView</c>'s rule (invariant 16d):
+        /// <b>Built once and repainted, never rebuilt</b> - <c>GridView</c>'s rule (invariant 16d):
         /// a repaint that destroys its cells replays their entrance, and both ledgers here raise
         /// <c>Changed</c> on load and on every sync.
         /// </summary>
@@ -175,7 +175,7 @@ namespace GlimmerGrove
             // chances to miss; one surface that opens the shelf is the affordance the corner
             // button used to be, in the place a player is already looking.
             // **The kit's own navy plate**, which is what every other surface in this UI a
-            // player reads something off is drawn on (`Skins.PlateBlue`, invariant 44h) — the
+            // player reads something off is drawn on (`Skins.PlateBlue`, invariant 44h) - the
             // action bar's tray is the board's furniture and read as a different screen under a
             // map.
             var shelf = UIKit.Button("Shelf", rt, Art.S("Ui/" + Skins.PlateBlue), Vector2.zero,
@@ -198,10 +198,10 @@ namespace GlimmerGrove
 
             // **A tab on the top edge rather than a caption inside the bar.** It is the one thing
             // here that has to say *this is a control*, so it sits proud of the shelf where a tab
-            // on a folder does — and it is orange, which is this UI's own colour for a way
+            // on a folder does - and it is orange, which is this UI's own colour for a way
             // forward (`Skins.Buy`, the shop's own buy face).
             // **A button rather than a picture, and it has to be its own.** It stands *proud of*
-            // the bar's top edge, so it is outside the shelf's rect — and uGUI raycasts a rect,
+            // the bar's top edge, so it is outside the shelf's rect - and uGUI raycasts a rect,
             // not a drawing. Left as an image it was the one part of the bar that looked most like
             // a control and was the only part that answered nothing.
             var tab = UIKit.Button("Tab", rt, Art.S("Ui/" + Skins.Buy), new Vector2(TabW, TabH),
@@ -252,7 +252,7 @@ namespace GlimmerGrove
         ///
         /// <b>Never the board's own hold</b>, which belongs to whichever run is up:
         /// taking it here would release a live run's turrets when the map was left (invariant 7b's
-        /// second rule — an address owned by another scope is never re-claimed).
+        /// second rule - an address owned by another scope is never re-claimed).
         /// </summary>
         const string BarScope = "map_loadout";
 
@@ -320,7 +320,7 @@ namespace GlimmerGrove
                     kit.Face.preserveAspect = true;
                     kit.Face.raycastTarget = false;
 
-                    // Top-right, over the cell's own rim, which is where the action bar puts it —
+                    // Top-right, over the cell's own rim, which is where the action bar puts it -
                     // the corner nothing else uses.
                     kit.Badge = UIKit.Img("Badge", cell.transform, Art.Disc(96), Pal.Ink,
                                           Vector2.one * 56f, new Vector2(1f, 1f),
@@ -328,7 +328,7 @@ namespace GlimmerGrove
                     kit.Badge.raycastTarget = false;
 
                     // Shrinkable, because the ceiling is a hundred and a `UIKit.Label` that
-                    // overflows is not clipped — it keeps drawing out over the cell beside it.
+                    // overflows is not clipped - it keeps drawing out over the cell beside it.
                     kit.Count = UIKit.Shrinkable(
                         UIKit.Label("Count", kit.Badge.transform, "0", 32, Pal.Cream,
                                     TextAnchor.MiddleCenter, Vector2.one * 50f,
@@ -344,7 +344,7 @@ namespace GlimmerGrove
         /// What is standing and what is carried, now.
         ///
         /// <b>A kit nobody holds shows an empty well rather than a dimmed picture</b>, because the
-        /// question this row answers is what the player is taking in — and a greyed icon answers
+        /// question this row answers is what the player is taking in - and a greyed icon answers
         /// "what exists" instead, which is the shop's question and is asked one screen away.
         /// </summary>
         void Paint()

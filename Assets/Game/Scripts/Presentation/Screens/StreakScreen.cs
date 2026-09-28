@@ -16,7 +16,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>The page is the tasks page's page, and that is the whole of the rebuild.</b> This
     /// screen used to stand on its own night backdrop with a board of coloured jelly squares
-    /// and a floating count — a design from before this game had an interface kit, and the
+    /// and a floating count - a design from before this game had an interface kit, and the
     /// last screen still wearing it. It is the same furniture as Tasks &amp; Bonuses and The
     /// Bloom now: the kit's plates on <see cref="Scenery.Plain"/>, a title ribbon over the
     /// wallet, one hero plate carrying the number the page is graded on, one offer row, and a
@@ -27,7 +27,7 @@ namespace GlimmerGrove
     /// <b>A night pays a chest, so a night opens the same ceremony every other chest opens</b>
     /// (<see cref="ChestOverlay"/> through <see cref="ChestClaim"/>). That is what let the
     /// ladder become coins, gems and chests without this file learning anything about odds,
-    /// utilities or lids — and it is why only the <em>earliest</em> waiting night can be
+    /// utilities or lids - and it is why only the <em>earliest</em> waiting night can be
     /// taken: the collected floor is a floor, so a sweep would grant three chests behind one
     /// animation. See <see cref="DailyStreak.CollectableAt"/>.
     /// </para>
@@ -35,7 +35,7 @@ namespace GlimmerGrove
     /// <b>The shield is bought here and nowhere else.</b> A gem debit is an ordinary spend
     /// (invariant 18), so there is no store sheet, no receipt and nothing to wait on: the
     /// purchase is <see cref="DailyStreak.TryBuyShield"/> and the page repaints. What it buys
-    /// is a window of days the streak survives without being played — which is why the row
+    /// is a window of days the streak survives without being played - which is why the row
     /// that sells it turns into a row that reports it.
     /// </para>
     /// <para>
@@ -72,7 +72,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>It was a four-across grid of tiles and that was the mistake.</b> A tile is a
-        /// column of three things stacked in 240 units — a night, a picture, an amount — so
+        /// column of three things stacked in 240 units - a night, a picture, an amount - so
         /// every one of them is cramped, the reward is the size of a thumbnail, and what the
         /// night actually pays has to be squeezed into two words. A row is 1000 units with the
         /// reward on the left, a sentence in the middle and the answer on the right, which is
@@ -82,7 +82,7 @@ namespace GlimmerGrove
         /// <para>
         /// It costs a scroll. Seven rows is taller than the band under the heading on every
         /// phone, so the board opens scrolled to the night that can be taken
-        /// (<see cref="FocusOnPending"/>) rather than to the top — a page whose one action is
+        /// (<see cref="FocusOnPending"/>) rather than to the top - a page whose one action is
         /// below the fold is a page with no action on it.
         /// </para>
         /// <para>
@@ -90,7 +90,7 @@ namespace GlimmerGrove
         /// rather than a second one: the row is a picture of a prize, and at 156 with an 88
         /// reward in it the prize was the smallest thing on the card. The page already scrolls,
         /// so the change buys a bigger picture and costs nothing but how many rows a phone shows
-        /// at once. The reward grows with it — see <see cref="RewardTall"/>.
+        /// at once. The reward grows with it - see <see cref="RewardTall"/>.
         /// </para>
         /// </summary>
         const float RowH = 184f;
@@ -128,7 +128,7 @@ namespace GlimmerGrove
         /// same place when there is nothing to collect yet.
         ///
         /// <para>
-        /// <b>One width, because they are one answer in two moods</b> — the right end carries
+        /// <b>One width, because they are one answer in two moods</b> - the right end carries
         /// exactly one of them at a time, so two footprints would be the row changing shape
         /// according to what it had to say. The pill was the narrower of the two by sixteen
         /// units for no reason anybody wrote down, and those sixteen units are what the longest
@@ -143,7 +143,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>It is written down because the line is re-fitted on every repaint and the two have
-        /// to agree</b> — a fitter measuring against a width the pill does not have is a fitter
+        /// to agree</b> - a fitter measuring against a width the pill does not have is a fitter
         /// that lets the text spill anyway, which is the hero clock's rule (<see cref="ClockRoom"/>)
         /// said about the other pill on this page. This one spends its life changing between
         /// <c>TONIGHT</c>, <c>TOMORROW NIGHT</c>, <c>IN 5 NIGHTS</c> and <c>CONNECT ONCE</c>, and
@@ -179,12 +179,12 @@ namespace GlimmerGrove
         /// What <see cref="Scenery.Pill"/> really leaves its words at 340 wide: the glyph's
         /// lane comes off the height and sixteen units come off the right. Written here
         /// rather than at the call site because the clock is re-fitted on every tick and the
-        /// two have to agree — a fitter shrinking against a width the pill does not have is a
+        /// two have to agree - a fitter shrinking against a width the pill does not have is a
         /// fitter that lets the text spill anyway (the season's rule).
         ///
         /// <para>
         /// <see cref="ClockType"/> is beside it because a fit that is re-run has to start from
-        /// the size the pill was designed at, not from the size the last line left it at — this
+        /// the size the pill was designed at, not from the size the last line left it at - this
         /// pill says "a night is waiting", "2 nights are waiting", a countdown and "safe for 4
         /// more days", and each long one filed the type down a point that no short one gave
         /// back. See <see cref="UIKit.OneLineLabel"/>.
@@ -269,7 +269,7 @@ namespace GlimmerGrove
             public RectTransform Collect, Mark, Seal;
 
             /// <summary>
-            /// The turning fan, the halo and the ring that opens out of it — the whole of the
+            /// The turning fan, the halo and the ring that opens out of it - the whole of the
             /// light around a reward that can be taken.
             ///
             /// Built when a row becomes the one on offer and destroyed when it stops being it,
@@ -372,7 +372,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Whether the page is drawing a state the ledger has left behind — the one question
+        /// Whether the page is drawing a state the ledger has left behind - the one question
         /// that decides between a repaint and a redraw, asked from every place that has to
         /// decide it.
         ///
@@ -381,7 +381,7 @@ namespace GlimmerGrove
         /// taken asked only whether the lap had moved; the clock asked only whether the day
         /// had; and neither asked whether the ladder underneath them was still the same
         /// object. Every combination they each missed is a page that keeps drawing the old
-        /// lap — the board is a <em>window</em> onto one lap of the ladder, so when the window
+        /// lap - the board is a <em>window</em> onto one lap of the ladder, so when the window
         /// moves the page is a different set of rows rather than different words on the same
         /// ones, and no repaint can get there.
         /// </para>
@@ -403,8 +403,8 @@ namespace GlimmerGrove
         /// way anything here answers a change.
         ///
         /// <para>
-        /// Every path that finishes a night — a chest ceremony, a currency flight, a flight
-        /// that had nothing to throw — ends here rather than making the same choice for
+        /// Every path that finishes a night - a chest ceremony, a currency flight, a flight
+        /// that had nothing to throw - ends here rather than making the same choice for
         /// itself. That is what makes the lap roll over <b>on the night it rolls over on</b>:
         /// taking night seven while the streak stands at eight moves the window to nights
         /// 8–14, and the page that was showing 1–7 has to become a different page.
@@ -425,7 +425,7 @@ namespace GlimmerGrove
         /// <see cref="View.ClearContent"/> empties the page and drops the base class's own
         /// handle into it; what is left here is this screen's handles. They are cleared rather
         /// than left to <c>Build</c> to overwrite because not every one of them is written on
-        /// every path — the shield row builds nothing when the ladder sells no shield — so a
+        /// every path - the shield row builds nothing when the ladder sells no shield - so a
         /// field left alone is a field still pointing at a destroyed widget that a repaint
         /// will happily write to.
         /// </para>
@@ -453,11 +453,11 @@ namespace GlimmerGrove
         /// This is the one screen a player might sit on late at night watching the clock. A
         /// stale number reads as the game having already taken the streak away, and a page
         /// still showing "the flame goes out in 0h 00m" ten minutes after midnight is worse
-        /// than that — it is wrong.
+        /// than that - it is wrong.
         ///
         /// Polled every second whatever the state, not only while the streak is at risk.
         /// Midnight passes just as often for a player who has already played today, and after
-        /// it their board is a day stale — the night they kept is now the night before, and
+        /// it their board is a day stale - the night they kept is now the night before, and
         /// the reward waiting on it is drawn on the wrong tile.
         /// </summary>
         void Update()
@@ -479,7 +479,7 @@ namespace GlimmerGrove
 
         // --------------------------------------------------------------- header
         /// <summary>
-        /// The corners, the page's name, what it is, and the wallet — the tasks page's order,
+        /// The corners, the page's name, what it is, and the wallet - the tasks page's order,
         /// for its reason: the first thing read on a page about what there is to earn should
         /// be what the page is, and the pills are where <see cref="RewardFlight"/> lands a
         /// night's tokens.
@@ -516,7 +516,7 @@ namespace GlimmerGrove
                  Compact.Number(Profile.Gems), v => Compact.Number(v));
 
             // **All three, including the hearts.** This page used to watch credits and gems by
-            // hand and draw a hearts pill it never wrote to — hearts move on a refill timer
+            // hand and draw a hearts pill it never wrote to - hearts move on a refill timer
             // rather than on a spend, so it was the one of the three that could go stale while
             // somebody sat here waiting for midnight.
             WalletWatch.Attach(this, ResourceSlots.Kind.Hearts, ResourceSlots.Kind.Credits,
@@ -555,7 +555,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The count is the hero for the Infinite lane's medal's reason</b> (43b): a thing
         /// graded on one number puts that number in the middle of the screen. Under it the bar
-        /// measures the <em>lap</em> rather than the streak — a streak has no end, so a bar
+        /// measures the <em>lap</em> rather than the streak - a streak has no end, so a bar
         /// against it would be a bar that can never fill, which is the opposite of what a bar
         /// is for.
         /// </para>
@@ -602,9 +602,9 @@ namespace GlimmerGrove
 
             // The count, counted up rather than printed: it is the one number a player came to
             // see, and a number that arrives is worth a third of a second. Shrinkable because
-            // it has no ceiling — the whole point of the feature is that it does not stop.
+            // it has no ceiling - the whole point of the feature is that it does not stop.
             _count = UIKit.Shrinkable(
-                UIKit.Titled("Count", plate.transform, _days > 0 ? "0" : "—", 58, Pal.Cream,
+                UIKit.Titled("Count", plate.transform, _days > 0 ? "0" : "-", 58, Pal.Cream,
                              TextAnchor.MiddleLeft, new Vector2(300f, 72f), Left,
                              new Vector2(236f + 150f, 34f), 4f, 5f), 30);
 
@@ -652,7 +652,7 @@ namespace GlimmerGrove
 
             // The one line that changes while the page is open, so it is a pill rather than
             // loose type: a countdown ticking on bare plate reads as a glitch. Placed with
-            // `UIKit.Corner`, because `UIKit.Box` always pivots at centre — handed the margin
+            // `UIKit.Corner`, because `UIKit.Box` always pivots at centre - handed the margin
             // directly, a 340-wide pill tucked 28 units from the plate's right edge hangs 142
             // of them off it (the season's trap, and the win panel's before that).
             const float ClockW = 340f, ClockH = 54f;
@@ -678,8 +678,8 @@ namespace GlimmerGrove
         /// and the row costs nothing.
         ///
         /// <para>
-        /// The season's pass row, deliberately — a gem-priced permanent thing on a plate with
-        /// a crest, a sentence and a price — with one difference that matters. A pass is held
+        /// The season's pass row, deliberately - a gem-priced permanent thing on a plate with
+        /// a crest, a sentence and a price - with one difference that matters. A pass is held
         /// for ever, so its bought state is a single word; a shield <em>runs out</em>, so its
         /// bought state is a countdown in days, which is the whole of what the player paid for
         /// and therefore the thing the row has to say.
@@ -810,7 +810,7 @@ namespace GlimmerGrove
         /// <para>
         /// The list always scrolls, which is a change from the grid it replaces: seven rows is
         /// taller than the band under the heading on every phone this game runs on, and a
-        /// ladder is content — <see cref="StreakRules.MaxRungs"/> allows thirty — so a board
+        /// ladder is content - <see cref="StreakRules.MaxRungs"/> allows thirty - so a board
         /// sized to fit the shipped seven would be a code change waiting on a content change
         /// (invariant 4). What the grid bought was "no scroll" and what it cost was every row
         /// being a thumbnail; a list of rewards is a list.
@@ -842,7 +842,7 @@ namespace GlimmerGrove
 
             // Every waiting row's pool of light lives here, built before any card, so all of
             // them are **under every card**. A pool hung off a card would have to be either a
-            // child — which draws over the card it is meant to light — or a sibling inserted
+            // child - which draws over the card it is meant to light - or a sibling inserted
             // beside it, which draws over the row above, because a light worth seeing reaches
             // further than the twelve units between two rows (the tasks page's rule).
             var lights = UIKit.Node("Lights", nights);
@@ -877,7 +877,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// A list taller than its band starts at the top, and the top of this one is the
-        /// oldest night — which on any streak past its third day is a row that has already
+        /// oldest night - which on any streak past its third day is a row that has already
         /// been paid. The one row with something to do would then be below the fold, which
         /// makes a page whose whole point is that one tap look like a page with nothing on it.
         /// </para>
@@ -910,8 +910,8 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Everything that changes with state is written by <see cref="Paint"/>; this builds
-        /// the furniture once. The three answers the right end can carry — a <b>COLLECT</b>
-        /// key, a seal, or the night it will be earned on — are all built and only one is ever
+        /// the furniture once. The three answers the right end can carry - a <b>COLLECT</b>
+        /// key, a seal, or the night it will be earned on - are all built and only one is ever
         /// shown, which is what lets a repaint be a repaint (<c>CRAFT.md</c>: Show animates,
         /// Refresh does not).
         /// </para>
@@ -931,7 +931,7 @@ namespace GlimmerGrove
             // `Skins.PlateNavy` and not `Skins.Panel`, which is the opposite of what a *tile*
             // wanted: a plate reads as a hole at 240 square on a blue ground and reads as a row
             // at 1000 wide with a picture and a sentence on it. The tasks page and the season
-            // ladder are the same plate for the same reason — one reward row means one thing
+            // ladder are the same plate for the same reason - one reward row means one thing
             // across this game, so all three are re-cut by one name (invariant 44).
             var card = UIKit.Img("N" + night, parent, Art.S("Ui/" + Skins.PlateNavy), Color.white,
                                  new Vector2(Width, RowH), Top, new Vector2(0f, cy));
@@ -992,7 +992,7 @@ namespace GlimmerGrove
             entry.Seal = (RectTransform)seal.transform;
             entry.Seal.gameObject.SetActive(false);
 
-            // The rim, on the card's own edge and over everything on it — the half of the
+            // The rim, on the card's own edge and over everything on it - the half of the
             // light that has to be a child, because a light drawn *behind* a card the kit cuts
             // opaque is a light with a hole in the middle of it.
             entry.Rim = UIKit.Img("Rim", entry.Root, Art.RoundOutline(CardRound, 7f), Pal.A(Pal.Sun, 0f));
@@ -1015,8 +1015,8 @@ namespace GlimmerGrove
         /// <summary>
         /// What a night pays, in words. The line under the night's own number.
         ///
-        /// A chest names itself — "Royal Chest" is the whole answer, and it is the same name
-        /// the ceremony puts on its ribbon — where a figure needs its amount and its unit.
+        /// A chest names itself - "Royal Chest" is the whole answer, and it is the same name
+        /// the ceremony puts on its ribbon - where a figure needs its amount and its unit.
         /// This is the room a row buys over a tile: the grid had two words to say it in.
         /// </summary>
         static string Says(StreakRung rung)
@@ -1034,7 +1034,7 @@ namespace GlimmerGrove
         ///
         /// <b>Sized and placed in *drawn* units, through <see cref="ChestPack"/>.</b> The
         /// closed chest icon is frame nought of the opening reel, so its sprite carries the
-        /// lid's headroom — a box set straight from a height draws a chest two thirds of it and
+        /// lid's headroom - a box set straight from a height draws a chest two thirds of it and
         /// floats it high, which is a row whose reward is smaller than the gem on the row above
         /// for a reason nothing on the screen explains.
         /// </summary>
@@ -1072,7 +1072,7 @@ namespace GlimmerGrove
             icon.preserveAspect = true;
             entry.Icon = icon;
 
-            // Credits have no still sprite — they are the spinning coin — so the glyph is
+            // Credits have no still sprite - they are the spinning coin - so the glyph is
             // finished here rather than by `Icon`. Without this a credit night draws as a
             // white square, which is what an Image with no sprite actually is (invariant 7b).
             RewardArt.Glyph(icon, drop.Kind, 10f);
@@ -1092,7 +1092,7 @@ namespace GlimmerGrove
             _pending = DailyStreak.Pending;
             _playedToday = DailyStreak.PlayedToday;
 
-            if (_count && _days <= 0) _count.text = "—";
+            if (_count && _days <= 0) _count.text = "-";
 
             if (_caption)
                 _caption.text = Loc.Get(_days == 1 ? "ui.streak.day" : "ui.streak.days");
@@ -1136,7 +1136,7 @@ namespace GlimmerGrove
         /// A waiting reward first, because it is the only state with something to <em>do</em>.
         /// Then the protection, because a player who has paid for it should be told it is
         /// working every time they open the page. Then the clock, which is the only state that
-        /// is urgent — and a protected streak never reaches it, which is the whole of what was
+        /// is urgent - and a protected streak never reaches it, which is the whole of what was
         /// bought.
         /// </para>
         /// </summary>
@@ -1193,7 +1193,7 @@ namespace GlimmerGrove
         /// The shield row: what it costs, or how long is left of the one that is running.
         ///
         /// The price is content and is known offline, which is the whole of what a gem price
-        /// buys over a real-money one — the button never has to say "connecting", and there is
+        /// buys over a real-money one - the button never has to say "connecting", and there is
         /// no state in which this page can draw an offer it cannot sell.
         /// </summary>
         void RefreshShield()
@@ -1204,7 +1204,7 @@ namespace GlimmerGrove
             bool anything = _days > 0;
 
             // The glyph changes rather than going away. `UIKit.FitLabel` centres the caption
-            // and the glyph as one block on `Icon != null` — it does not read `enabled` — so
+            // and the glyph as one block on `Icon != null` - it does not read `enabled` - so
             // hiding it would leave the caption sitting left of centre with a gem's worth of
             // gap beside it. A tick is the right mark for the state anyway.
             if (_shieldBtn.Icon)
@@ -1247,7 +1247,7 @@ namespace GlimmerGrove
 
             // **A night that is owed and cannot yet be handed over.** A rung paying a chest
             // needs an account id to roll it against, because the server re-rolls the same
-            // chest from the same seed and pays what *it* gets — so before the first sign-in
+            // chest from the same seed and pays what *it* gets - so before the first sign-in
             // there is nothing honest to open (`RewardSeed.IsAdjudicable`). It is asked of the
             // rung rather than of the page, because a night paying a figure needs none of that
             // and must not be held up by it.
@@ -1255,14 +1255,14 @@ namespace GlimmerGrove
 
             // **The light comes off a row that will refuse, and this is the half that matters
             // more than the words.** The halo and the turning fan are the loudest thing on the
-            // page and the page has exactly one at a time (48i) — pointed at a tap that answers
+            // page and the page has exactly one at a time (48i) - pointed at a tap that answers
             // with an apology, they are the game asking for something it is about to refuse.
             bool lit = waiting && !blocked && tile.Night == DailyStreak.FirstPending;
 
             if (tile.Group) tile.Group.alpha = state == Night.Ahead ? .74f : 1f;
 
             // Every waiting row is a button, and every one of them takes the *earliest*
-            // waiting night — see Take. A tap that did nothing would be a broken button
+            // waiting night - see Take. A tap that did nothing would be a broken button
             // (invariant 16o), and a tap that quietly reached past an older night would be a
             // reward stranded behind a newer one.
             if (tile.Tap) tile.Tap.gameObject.SetActive(waiting);
@@ -1285,7 +1285,7 @@ namespace GlimmerGrove
                 if (text)
                 {
                     // A night still ahead says *when*, which is the one question a row that can
-                    // do nothing is still being asked — "when do I get the Royal Chest" is the
+                    // do nothing is still being asked - "when do I get the Royal Chest" is the
                     // reason somebody scrolls to the bottom of this list at all. Written out
                     // per case rather than composed, because the build gate scans the source
                     // for key-shaped literals and a concatenated key is invisible to it.
@@ -1320,14 +1320,14 @@ namespace GlimmerGrove
             if (tile.Title)
                 tile.Title.color = lit ? Pal.Gold : kept ? Pal.Mint : Pal.Cream;
 
-            // A kept night recedes without going grey — it still has to read.
+            // A kept night recedes without going grey - it still has to read.
             if (tile.Card) tile.Card.color = kept ? new Color(.90f, .94f, 1f, 1f) : Color.white;
             if (tile.Icon)
             {
                 tile.Icon.color = kept ? new Color(.84f, .88f, .94f, 1f) : Color.white;
 
                 // Re-asserted rather than assumed. A repaint is this page's drawing of a state
-                // and `enabled` is as much a part of that state as the tint beside it — the
+                // and `enabled` is as much a part of that state as the tint beside it - the
                 // collect path switched it off once and no repaint ever switched it back, which
                 // is the whole of how an icon went missing until the screen was rebuilt.
                 tile.Icon.enabled = true;
@@ -1359,22 +1359,22 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>This is what "ready" looks like, and it is deliberately more than a glow.</b> The
-        /// page has exactly one of these at a time — only the oldest waiting night may be taken
-        /// — so it can afford to be the loudest thing on the screen, and it has to be: the row
+        /// page has exactly one of these at a time - only the oldest waiting night may be taken
+        /// - so it can afford to be the loudest thing on the screen, and it has to be: the row
         /// under it is one of seven that otherwise look alike. The fan says <em>light is coming
         /// out of this</em>, which is the thing that could not be said by tinting the plate.
         /// </para>
         /// <para>
         /// <b>A third piece was here and the owner had it taken out: a gold ring that scaled
         /// out of the seat and faded as it grew, on a loop.</b> It said <em>and it is still
-        /// happening</em>, which the fan already says by turning — so what it really added was
+        /// happening</em>, which the fan already says by turning - so what it really added was
         /// a second thing moving on its own clock over a reward the player is meant to be
         /// looking at, and two sharp things on one row is the complaint this page's own copy
         /// recorded about the pool under it (see <see cref="Shine"/>). The halo and the fan are
         /// what is left; nothing else about the row moved.
         /// </para>
         /// <para>
-        /// Both are generated shapes rather than art — see <see cref="Art.Rays"/> — so the
+        /// Both are generated shapes rather than art - see <see cref="Art.Rays"/> - so the
         /// effect costs no addresses and tints to whatever the palette says. They live on one
         /// node hung <em>behind</em> the well, so a payout can throw the lot away in a single
         /// call without touching the row underneath, and so the reward itself is never drawn
@@ -1387,7 +1387,7 @@ namespace GlimmerGrove
 
             // <b>The light is held inside the card, and the card's own shape is what holds
             // it.</b> A fan 2.15 wells across is 318 units on a row 184 tall, so two thirds of
-            // what a player could see of it was drawn *outside* the plate — over the night above
+            // what a player could see of it was drawn *outside* the plate - over the night above
             // and the night below, which on a list is a light belonging to no row. The pieces
             // are not shrunk to fit, because they cannot be: `Art.Rays` is hollow in the middle
             // so the eye only ever sees the band between a quarter and three quarters of its
@@ -1397,7 +1397,7 @@ namespace GlimmerGrove
             // A <c>RectMask2D</c> would be the cheap answer and it is the wrong one: it clips to
             // a *rectangle* where this plate is rounded, so each corner leaks a square nub of
             // light outside the silhouette (44i's rule about measuring against the corner that
-            // is really there — a render found both of them). A <see cref="Mask"/> over
+            // is really there - a render found both of them). A <see cref="Mask"/> over
             // <see cref="Art.Round"/> clips to the shape itself. It is safe here for the one
             // reason a mask usually is not: the sprite is <em>generated</em>, so the compression
             // that speckles a masked texture (see the publisher card) cannot reach it.
@@ -1407,7 +1407,7 @@ namespace GlimmerGrove
             var gate = (RectTransform)clip.transform;
 
             // <b>Directly under the well, and *not* first.</b> The card is an opaque plate the
-            // kit cuts, and a sibling before it is a light with a card drawn on top of it — the
+            // kit cuts, and a sibling before it is a light with a card drawn on top of it - the
             // whole effect invisible, on the one row it exists for. (The render mirror composited
             // the ring after the card and so could not see it, which is 44d's rule about a mirror
             // with its own idea of the order.) Inserting at the well's own index puts every ray
@@ -1437,14 +1437,14 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Two pieces rather than one, because a card is opaque.</b> A glow behind the kit's
         /// navy card is a glow with a card-shaped hole punched out of the middle of it, and a
-        /// glow in front of it washes out everything written on the row — so the light outside
+        /// glow in front of it washes out everything written on the row - so the light outside
         /// the card is a pool and the light on the card is its edge. Together they read as one
         /// thing lit from behind (the tasks page's finding).
         /// </para>
         /// <para>
         /// It breathes rather than flashing (37h's rule about the one ward that may flash). It
         /// was written as the <em>slow</em> half of a pair against a ring that scaled out of the
-        /// seat on its own clock — and that ring is gone at the owner's instruction, which
+        /// seat on its own clock - and that ring is gone at the owner's instruction, which
         /// settles the pairing the other way: the pool breathes and the fan turns, and nothing
         /// on the row is sharp.
         /// </para>
@@ -1474,14 +1474,14 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>Whichever tile was tapped, the night taken is the earliest one waiting.</b> The
-        /// collected floor is a floor — taking night five would take four with it — so only
+        /// collected floor is a floor - taking night five would take four with it - so only
         /// the oldest can be handed over, and a tap on a newer one is redirected rather than
         /// swallowed: a button that does nothing is a broken button (16o), and the player gets
         /// every night they are owed by tapping the same number of times either way.
         /// </para>
         /// <para>
         /// The two shapes end differently and deliberately so. A chest night opens the
-        /// ceremony every chest in this game opens — the grant happens inside it, so a player
+        /// ceremony every chest in this game opens - the grant happens inside it, so a player
         /// who kills the app mid-reel has still collected the night. A currency night throws
         /// its tokens straight at the wallet pills, because a chest panel wrapped around a
         /// number is a lid with nothing under it.
@@ -1522,8 +1522,8 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// A chest night. The overlay claims it — the grant happens at the start of the
-        /// ceremony, not here — so the page is only ever asked whether the night is still
+        /// A chest night. The overlay claims it - the grant happens at the start of the
+        /// ceremony, not here - so the page is only ever asked whether the night is still
         /// waiting, and a second device that got there first is answered by the overlay
         /// closing itself.
         /// </summary>
@@ -1567,7 +1567,7 @@ namespace GlimmerGrove
             Flow.Flash(Pal.A(tint, 1f), .08f, .32f);
 
             // The flame answers. It is the thing the page is about and the thing the eye is
-            // already on, so a night being taken has to move it — otherwise the only feedback
+            // already on, so a night being taken has to move it - otherwise the only feedback
             // is a token landing on a pill at the top of the screen.
             if (_flame) Tween.Punch(_flame, .14f, .34f);
             if (_heroHost) Tween.Punch(_heroHost, .06f, .30f);
@@ -1576,13 +1576,13 @@ namespace GlimmerGrove
             foreach (var drop in drops) flying |= flight.Add(drop, source);
 
             // <b>The reward stays on the row.</b> This used to hide the icon the moment the
-            // flight left — "a reward that vanishes from the face it was printed on is the
-            // point" — and the icon then never came back, because nothing re-enabled it: a
+            // flight left - "a reward that vanishes from the face it was printed on is the
+            // point" - and the icon then never came back, because nothing re-enabled it: a
             // repaint writes the icon's *colour* and has never written its `enabled`, so a
             // collected night was a row with a hole in it for the life of the screen and the
             // repair was to leave the page and come back. The flight spawns its own tokens and
             // only reads this rect for a start point (`RewardFlight.Add`), so nothing here was
-            // ever consumed — the disappearance was decoration, and the seal stamped over it
+            // ever consumed - the disappearance was decoration, and the seal stamped over it
             // already says the night has been taken.
             Stamp(tile);
 

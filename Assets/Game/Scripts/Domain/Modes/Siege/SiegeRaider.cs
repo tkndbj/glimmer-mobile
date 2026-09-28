@@ -47,8 +47,8 @@ namespace GlimmerGrove.Modes
         /// Which phase of its fight this boss is in, from nought. See
         /// <see cref="SiegeTuning.BossPhases"/> for what a phase is and why there are any.
         ///
-        /// <b>State rather than an event, deliberately.</b> A phase can turn on a tap — a firepot,
-        /// a bomb, an overcharge — outside <c>Advance</c>, where nothing is reporting, so a view
+        /// <b>State rather than an event, deliberately.</b> A phase can turn on a tap - a firepot,
+        /// a bomb, an overcharge - outside <c>Advance</c>, where nothing is reporting, so a view
         /// that wanted to be told would miss half of them. A view compares this with what it last
         /// drew (a repaint is a drawing of a state, invariant 48l).
         /// </summary>
@@ -59,7 +59,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <b>Counting up rather than down, because it is read against two deadlines.</b> A stand
         /// settles at <see cref="SiegeTuning.PhaseLeast"/> once its opening spell has landed, and
-        /// at <see cref="SiegeTuning.PhaseMost"/> whatever happened — see <see cref="Settled"/>.
+        /// at <see cref="SiegeTuning.PhaseMost"/> whatever happened - see <see cref="Settled"/>.
         /// A single number that both are compared against is one clock rather than two that can
         /// come apart.
         /// </summary>
@@ -82,7 +82,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <b>On the raider rather than on the board, because the cap is a fact about the
         /// caster.</b> A lane could stand two bonecallers (<c>SiegeEndless</c> pairs bosses), and a
-        /// board-wide count would give the pair between them the allowance one was priced at —
+        /// board-wide count would give the pair between them the allowance one was priced at -
         /// which is the half of invariant 5d par could not see: the hill would hold bodies the
         /// level's own par never counted.
         /// </summary>
@@ -97,7 +97,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>One chill rather than one per ward</b>, and a fresh one <em>replaces</em> rather
         /// than stacks. Two rime turrets on one line would otherwise multiply into a raider that
-        /// never arrives, which is a fail state that rejects nothing (invariant 5d) — and the
+        /// never arrives, which is a fail state that rejects nothing (invariant 5d) - and the
         /// strongest chill wins rather than the newest, so a player is never punished for a weak
         /// turret firing a moment after a strong one.
         /// </para>
@@ -111,8 +111,8 @@ namespace GlimmerGrove.Modes
         /// nothing.
         ///
         /// <b>Its own counter rather than a chill of ten tenths</b>, and the reason is what it
-        /// stops. A chill is a rate on the march and nothing else — a slowed raider still swings
-        /// and a slowed boss still casts — where a stun takes the raider out of the raid, which is
+        /// stops. A chill is a rate on the march and nothing else - a slowed raider still swings
+        /// and a slowed boss still casts - where a stun takes the raider out of the raid, which is
         /// three rules in three different files (<c>SiegeBoard.Walk</c>, <c>Swing</c> and
         /// <c>Conjure</c>) rather than a number the march multiplies by.
         /// </summary>
@@ -148,7 +148,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <b>Armed only where a burn <em>starts</em>, which is the one thing about it that has to
         /// be right</b> (<see cref="Kindle"/>). An ember ward gets a bolt away every
-        /// <c>SiegeTuning.FireEvery</c> seconds, which is shorter than the cadence — so a counter
+        /// <c>SiegeTuning.FireEvery</c> seconds, which is shorter than the cadence - so a counter
         /// re-armed by every bolt would be pushed past its own boundary for ever and a raider
         /// under continuous fire would never take a single point of burn. That is
         /// <see cref="Stagger"/>'s trap read from the opposite side: there a refresh would make an
@@ -292,7 +292,7 @@ namespace GlimmerGrove.Modes
         /// <summary>
         /// Sets it burning, keeping the fiercer of what it already had.
         ///
-        /// <b>The cadence is armed on the edge and never on the refresh</b> — see
+        /// <b>The cadence is armed on the edge and never on the refresh</b> - see
         /// <see cref="Sear"/> for what re-arming it every bolt would cost. <see cref="Smoulder"/>
         /// is deliberately <em>not</em> cleared here: it is the fraction of a point the last tick
         /// could not pay, and dropping it on every bolt would quietly shave an ember turret's
@@ -311,7 +311,7 @@ namespace GlimmerGrove.Modes
         /// <summary>Whether fire is on it right now. What the view draws a flame off.</summary>
         public bool Alight => Alive && Burn > 0f;
 
-        /// <summary>Whether this is a boss of any of the four — the thing that stands and casts.</summary>
+        /// <summary>Whether this is a boss of any of the four - the thing that stands and casts.</summary>
         public bool Boss => SiegeTuning.IsBoss(Kind);
 
         /// <summary>Whether this is the greatest of the four.</summary>
@@ -325,7 +325,7 @@ namespace GlimmerGrove.Modes
         /// <summary>
         /// Whether it is standing at the line and swinging.
         ///
-        /// <b>A warlord never is</b>, because <see cref="Hold"/> stops it short of it — which is
+        /// <b>A warlord never is</b>, because <see cref="Hold"/> stops it short of it - which is
         /// what makes <see cref="SiegeBoard.Swing"/> need no clause about bosses at all.
         /// </summary>
         public bool AtTheLine => Alive && OnTheHill && Hold >= 1f && March >= 1f;
@@ -345,7 +345,7 @@ namespace GlimmerGrove.Modes
 
         /// <summary>
         /// Whether this stand has done what it promised: its opening spell has landed and it has
-        /// held <see cref="SiegeTuning.PhaseLeast"/> — or <see cref="SiegeTuning.PhaseMost"/> has
+        /// held <see cref="SiegeTuning.PhaseLeast"/> - or <see cref="SiegeTuning.PhaseMost"/> has
         /// passed, which is the deadline for a boss that can find nothing to throw at.
         ///
         /// <b>Never true of anything but a boss in place</b>, so every caller can ask it without
@@ -359,7 +359,7 @@ namespace GlimmerGrove.Modes
         /// The health this boss may not be taken under <em>right now</em>.
         ///
         /// <para>
-        /// <b>The stand's own threshold</b> (<see cref="SiegeTuning.PhaseFloor"/>) — and, in the
+        /// <b>The stand's own threshold</b> (<see cref="SiegeTuning.PhaseFloor"/>) - and, in the
         /// last stand, where that threshold is nought, <b>one</b> until the stand has settled. The
         /// last third would otherwise be the one stand a banked line could end the instant it
         /// opened, which is the arrangement <see cref="SiegeTuning.BossPhases"/> exists to reject
@@ -368,8 +368,8 @@ namespace GlimmerGrove.Modes
         /// </para>
         /// <para>
         /// <b>Asked as a property rather than written into a field</b>, because a floor is a
-        /// reading of the boss's own state — the phase it is in and whether that stand has settled
-        /// — and a copy of it would be a second opinion that could be a frame stale (invariant
+        /// reading of the boss's own state - the phase it is in and whether that stand has settled
+        /// - and a copy of it would be a second opinion that could be a frame stale (invariant
         /// 16x's shape, said about a fight).
         /// </para>
         /// </summary>
@@ -391,7 +391,7 @@ namespace GlimmerGrove.Modes
         /// <para>
         /// <b>The one question every source of harm asks</b>, through <c>SiegeBoard.Wound</c>,
         /// and the one question every aim asks, so a ward with nothing else to shoot at
-        /// <em>banks</em> rather than pours fuel into a thing it cannot hurt — which is the
+        /// <em>banks</em> rather than pours fuel into a thing it cannot hurt - which is the
         /// ironclad's answer (bank, then dump) made general.
         /// </para>
         /// <para>
@@ -405,7 +405,7 @@ namespace GlimmerGrove.Modes
         public bool Impervious => Boss && Alive && (Arriving || Health <= Floor);
 
         /// <summary>
-        /// The health this boss cannot be taken under in its current phase — the next phase's
+        /// The health this boss cannot be taken under in its current phase - the next phase's
         /// threshold, or nought in the last. See <see cref="SiegeTuning.PhaseFloor"/>.
         ///
         /// <b>The phase's arithmetic alone</b>, where <see cref="Floor"/> is what the rules will

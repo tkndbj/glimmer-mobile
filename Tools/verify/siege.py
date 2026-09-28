@@ -1064,7 +1064,8 @@ ENDLESS_PAIRS = ((0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3))
 #: three-star wave against the 1.4x that is the most any authored chapter ever carries. Both steps
 #: were divided by four so the 3:1 ratio is exactly what it was and only the slope moved; the
 #: per-wave hill the old ramp sent at wave twenty is the one this ramp sends at wave forty-one.
-HEALTH_STEP_TENTHS = 3
+#: **The health step alone was cut from three to one on 2026-09-28** (the owner's nerf).
+HEALTH_STEP_TENTHS = 1
 BLOW_STEP_TENTHS = 1
 
 FIRST_WAVE = 5

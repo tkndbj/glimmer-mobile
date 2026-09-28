@@ -6,7 +6,7 @@ using UnityEngine;
 namespace GlimmerGrove
 {
     /// <summary>
-    /// "What is wrong here?" — the one confirmation in this game that guards an act taken
+    /// "What is wrong here?" - the one confirmation in this game that guards an act taken
     /// against another person.
     ///
     /// <para>
@@ -14,13 +14,13 @@ namespace GlimmerGrove
     /// avoids confirmations: the payment sheet is the confirmation for a purchase, a tap that
     /// costs nothing should not ask, and a dialog people learn to dismiss is a dialog that
     /// fails when it matters. The exceptions are the acts that cannot be undone from the screen
-    /// that made them — <c>ForfeitOverlay</c> guards the one that costs a heart, and this
+    /// that made them - <c>ForfeitOverlay</c> guards the one that costs a heart, and this
     /// guards the one that reaches somebody else's account. A mistapped report is not
     /// retractable by the person who made it.
     /// </para>
     /// <para>
     /// <b>The chooser and the confirmation are one panel, and that is what keeps the count at
-    /// three.</b> A keeper puts two things in front of strangers — a name and a grovement — and
+    /// three.</b> A keeper puts two things in front of strangers - a name and a grovement - and
     /// the obvious shape is a chooser that opens a confirmation, which is two taps of ceremony
     /// for one act and teaches people to tap through the second. So each affirmative names its
     /// own subject: picking one <em>is</em> the confirmation, because nothing on this panel can
@@ -30,7 +30,7 @@ namespace GlimmerGrove
     /// <b>The copy is what stops this being a weapon, and it is one paragraph.</b> It says what
     /// a report is for and, more importantly, says what it does not do: nothing about the
     /// reported keeper changes for the reporter. Without that line the control reads as a block
-    /// button, which is what it would then be used as — and a report queue full of "I did not
+    /// button, which is what it would then be used as - and a report queue full of "I did not
     /// like their score" is a queue that hides nothing real. <b>It is said once, above both
     /// keys.</b> The keys used to carry a line each as well, which explained two self-describing
     /// words at the cost of the one sentence that actually matters having three others beside
@@ -41,7 +41,7 @@ namespace GlimmerGrove
     /// <c>ForfeitOverlay</c>'s layout on purpose: there the green "keep playing" is the
     /// affirmative because continuing is what the player wants, and here walking away is. The
     /// two reports are red, and a subject this device has already reported is drawn dead rather
-    /// than hidden — a control that disappears between one visit and the next reads as a bug,
+    /// than hidden - a control that disappears between one visit and the next reads as a bug,
     /// where a spent one reads as an answer.
     /// </para>
     /// </summary>
@@ -51,7 +51,7 @@ namespace GlimmerGrove
         /// Run with the subject the player picked. Never called on a dismissal.
         ///
         /// One callback taking a subject rather than one per subject, because a third one is
-        /// then a row in <see cref="ReportSubjects.All"/> and nothing else — the shape
+        /// then a row in <see cref="ReportSubjects.All"/> and nothing else - the shape
         /// <c>ScreenLessons</c> takes for the same reason (invariant 6a: a screen that offers
         /// several owns none of the sequencing).
         /// </summary>
@@ -71,14 +71,14 @@ namespace GlimmerGrove
         /// The room one subject takes: the button and the air after it.
         ///
         /// Named because the panel's height is the sum of what it actually draws rather than a
-        /// number somebody typed — a third subject is one row in <see cref="ReportSubjects.All"/>
+        /// number somebody typed - a third subject is one row in <see cref="ReportSubjects.All"/>
         /// and no arithmetic anywhere, which is what stops a key being printed through the one
         /// below it the day one is added. <c>AccountOverlay</c>'s measure-then-build shape.
         ///
         /// <para>
         /// <b>Each subject used to carry an explanatory line under its key and no longer does.</b>
         /// "Their name" and "Their groovement" say what they are, and the paragraph above already
-        /// says what a report is for and what it does not do — so the two notes were a third and
+        /// says what a report is for and what it does not do - so the two notes were a third and
         /// fourth sentence explaining two words each. What they cost was the panel's height and
         /// the readability of the choice itself: a key, a line, a key, a line reads as four
         /// things, where two keys read as two.
@@ -156,7 +156,7 @@ namespace GlimmerGrove
 
             // Stays live-looking but does nothing once spent, rather than vanishing: a control
             // that disappears after a tap leaves somebody wondering whether the tap registered
-            // — which is the one question this feature must not leave open, since the obvious
+            // - which is the one question this feature must not leave open, since the obvious
             // response is to report again.
             button.Interactable = !sent;
         }

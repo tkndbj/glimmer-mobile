@@ -200,6 +200,15 @@ Grove, and the bundle id can never move.
    raised only when the merge changed the local file — `Synced` and every ledger's `Changed` fire on every
    foreground (44m) — and the other half is `PlayerProgress.RecordChanged` on the trigger list, because
    the background sync starts as the process is frozen and on Android may never finish.
+11e. **Leaving the app is a departure, never a sync, and what is owed is a comparison.** A sync resumes on
+   the main thread after every `await` and Unity stops that thread on pause, so the one started there
+   pushed nothing until the player came back (a streak shield bought on one phone, missing on the other,
+   2026-09-28). `CloudSaveService.Depart` decides and snapshots on the main thread and pulls, joins, pushes
+   and offers the wallet's waiting entries on the pool; `Owes` compares every local write
+   (`SaveService.Written`, never raised by `Adopt`) against the last agreed file, so nothing has to be listed.
+   **What can still lose data is a field one of the three places forgot** - the mapper, `SaveDelta`,
+   `SaveMerge.Join` - and `SaveWiringTests` holds every field at every depth to all three by reflection;
+   a field that is deliberately not synced goes in its exemption lists with the reason written beside it.
 12. **Adding a field to `SaveFileDto` interacts with the checksum.** Bump `SaveSchema.Version`, or every
    save on every device fails at once.
 12a. **A field is not on the wire until it is in four places**: `SaveFileDto`, `SaveDelta`, the Firestore
@@ -1828,6 +1837,24 @@ Assets` and save (the keeper is addressed in `Glimmer Global`), `Audit Addresses
 `Tools/push_route.py` is gone; the tool's `--seats` replaces it. **What no gate can answer**:
 whether a 60-step hard room reads as a puzzle or a slog to a mass-market player, whether a
 cannon reads as *the thing I move*, and whether UNDO costing a turn feels fair when stuck.
+
+**The ranks board and the Endless Watch hub were re-cut on 2026-09-28 and neither has been in
+the Editor.** (1) "What it asks" stands on the **cartoon kit's notice board** (`Artboard 20`, the
+kit every HUD plate is cut from) instead of the 300Mind cyan panel: `make_rank_kit_art.py` lifts
+the board's own ribbon off (painting the measured span from a plain cap column) and measures a
+**four-sided** slice (36, 77, 37, 73), held to `RankKit.BoardCap`/`BoardPlinth`/`BoardSide` by
+`RankLadderTests`; the title rides `Hud/title` over the cap. Same address, so no sync for it -
+but **`kit_tab` was withdrawn** (PNG, meta, `UiSprites` entry and its `Glimmer Global` row
+edited out as text), so `Audit Addresses` is owed. (2) The hub's hero is the **rank badge** in
+the medal's box on its plate (watched, taps to `RanksScreen`); the best-wave medal moved under
+the lines at `EndlessHubLayout.RecordScale` (.62) and the key moved down with it. The column no
+longer fits the squarest two-pill band at full size, so it is **scaled to its band** (`ScaleIn`,
+floor `MinScale` .78: x0.96 on a 16:9 phone, x0.81 on the tightest case) and the gate asks the
+floor. The corner rank badge under the back key still draws on that lane, so the badge now shows
+twice - left for the owner to call. Offline green: `compile.py`, `EndlessHubTests` 8/8,
+`RankLadderTests` 26/26, `RankCeremonyTests`, `make_rank_kit_art.py --check`, `artnames.py`,
+`loc.py`, `render_ranks.py`, `render_endless.py` (whose rows had drifted to 3 at 90 and are 4 at
+70 again).
 
 **The ranks hall's furniture was re-cut from the owner's bought UI kit on 2026-09-27, and
 none of it has been in the Editor.** Three cuts in one day: the procedural chip, pill, rim and

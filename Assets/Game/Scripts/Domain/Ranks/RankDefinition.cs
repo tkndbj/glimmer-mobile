@@ -10,7 +10,7 @@ namespace GlimmerGrove.Ranks
     ///
     /// <para>
     /// Authored as three fields and nothing else. There is no operator, no "any of these", and
-    /// no expression — every requirement is <c>reading &gt;= target</c>, and a rung is met when
+    /// no expression - every requirement is <c>reading &gt;= target</c>, and a rung is met when
     /// all of its lines are. That is a deliberate floor rather than a first version: an
     /// expression language would be a second thing to validate, a second thing to translate and
     /// a second thing a player has to work out from a screen, and every requirement anybody has
@@ -46,7 +46,7 @@ namespace GlimmerGrove.Ranks
 
         public bool IsMet(CatalogIndex index) => Held(index) >= Target;
 
-        /// <summary>The same line read off a source — a save file, or the live ledgers.</summary>
+        /// <summary>The same line read off a source - a save file, or the live ledgers.</summary>
         public long Held(IRankSource source) => RankMeasures.Read(Measure, Scope, source);
 
         public bool IsMet(IRankSource source) => Held(source) >= Target;
@@ -57,8 +57,8 @@ namespace GlimmerGrove.Ranks
         /// <para>
         /// The target is <c>{0}</c> and the scope's own name is <c>{1}</c>, so a retune changes
         /// the sentence without touching a translation and a chapter renamed in
-        /// <c>loc/en.json</c> renames itself here. A scope this build cannot resolve — a chapter
-        /// a newer pack named, a level withdrawn from the manifest — falls back to the unscoped
+        /// <c>loc/en.json</c> renames itself here. A scope this build cannot resolve - a chapter
+        /// a newer pack named, a level withdrawn from the manifest - falls back to the unscoped
         /// sentence rather than printing a raw id at a player.
         /// </para>
         /// </summary>
@@ -114,7 +114,7 @@ namespace GlimmerGrove.Ranks
     /// goes: there is no counter to merge, no claim to adjudicate, no floor to seed and no
     /// migration to write, and the same account answers the same rank on every device and on a
     /// fresh install without a single byte of new save state. That is only sound because every
-    /// measure it is built out of is monotone (invariant 52) — a derived badge over a reading
+    /// measure it is built out of is monotone (invariant 52) - a derived badge over a reading
     /// that could fall would be a badge taken away from somebody who did nothing wrong.
     /// </para>
     /// <para>
@@ -122,12 +122,12 @@ namespace GlimmerGrove.Ranks
     /// the badge is <c>Ui/Rank/{id}</c> and the name is <c>rank.{id}.name</c>, both derived, so
     /// anything holding a rank can draw and name it without reading the ladder. Nothing in a
     /// save or on the wire holds one, so retiring a rung costs a picture and a string rather
-    /// than a spent id — but a rung that is <em>renamed</em> has to move its picture in the same
+    /// than a spent id - but a rung that is <em>renamed</em> has to move its picture in the same
     /// change, which is what <c>check_ranks</c> refuses to let anyone forget.
     /// </para>
     /// <para>
     /// <b>It pays nothing, deliberately.</b> A rank is a reading of what has already been
-    /// rewarded — stars paid credits, waves paid XP — so paying again for the same play would
+    /// rewarded - stars paid credits, waves paid XP - so paying again for the same play would
     /// be the economy counting one thing twice, and a currency the client could hand out on a
     /// figure the server cannot recompute is what invariant 13 exists to refuse. The seam if
     /// that ever changes is invariant 14a's: one monotonic integer per rung merged by
@@ -164,7 +164,7 @@ namespace GlimmerGrove.Ranks
 
         /// <summary>
         /// Whether every line of <em>this rung alone</em> is met. Holding the rung also needs
-        /// the one below it — see <see cref="RankLadder.Held"/>, which is where that is decided
+        /// the one below it - see <see cref="RankLadder.Held"/>, which is where that is decided
         /// so it cannot be decided differently twice.
         /// </summary>
         public bool IsMet(CatalogIndex index) => IsMet(new LedgerRankSource(index));

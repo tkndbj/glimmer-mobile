@@ -13,7 +13,7 @@ namespace GlimmerGrove.Challenges
     /// arms, crossings, briars, rooted tiles and taproots are all the mode's own, and "is this tile solved" is still <see cref="Puzzle.Alike"/> asked exactly once
     /// (invariant 5b). What this class adds is the fusion with the line, and it is the same
     /// sentence the pipes had: <b>a critter lit in its colour fires its turret every turn it
-    /// stays lit.</b> So the order the critters are woken in is the decision — wake the colour
+    /// stays lit.</b> So the order the critters are woken in is the decision - wake the colour
     /// whose raiders are nearest first and it fires while the rest of the glade is being
     /// built, and a tap that darkens a lit critter to fix another is a turn that colour goes
     /// quiet.
@@ -69,7 +69,7 @@ namespace GlimmerGrove.Challenges
             => new Puzzle(LevelId.None, def.Width, def.Height, LevelTuning.Default(1), cells, blends: false);
 
         /// <summary>
-        /// The cells of the solved network a critter belongs to — every conduit and crystal
+        /// The cells of the solved network a critter belongs to - every conduit and crystal
         /// whose light reaches it once the glade is finished, itself included, nearest the
         /// crystal first. Read off the solution's own components (<see cref="Puzzle.Comp"/>)
         /// rather than walked again, so it cannot disagree with the light. It is what "wake
@@ -103,7 +103,7 @@ namespace GlimmerGrove.Challenges
         public int LampsLit => Board.LampsLit;
         public int LampCount => Board.LampCount;
 
-        /// <summary>Solved the moment every critter is awake — <see cref="Puzzle.Won"/>, the mode's own word.</summary>
+        /// <summary>Solved the moment every critter is awake - <see cref="Puzzle.Won"/>, the mode's own word.</summary>
         public bool Solved => Board.Won;
 
         /// <summary>Never: nothing here crumbles, so every board stays solvable.</summary>
@@ -111,7 +111,7 @@ namespace GlimmerGrove.Challenges
 
         /// <summary>
         /// The turret a light feeds, or -1 for a colour no turret fires. R, G and B are the three
-        /// lanes of their name; <c>Y</c> (the mask R|G) is the amber lane — its own light here,
+        /// lanes of their name; <c>Y</c> (the mask R|G) is the amber lane - its own light here,
         /// shone by its own crystal, because this board never blends (<see cref="Puzzle.Blends"/>).
         /// </summary>
         public static int LaneOf(int energy)
@@ -195,7 +195,7 @@ namespace GlimmerGrove.Challenges
                     return $"glade taproot '{(char)('A' + r - 1)}' binds one conduit; a root needs at least two";
 
             // Every arm of the solved board meets an arm pointing back, so nothing is left
-            // pointing at a wall or an empty cell — the validator's rule, asked of a row.
+            // pointing at a wall or an empty cell - the validator's rule, asked of a row.
             for (int i = 0; i < cells.Length; i++)
             {
                 if (cells[i].kind == Kind.Empty) continue;
@@ -234,7 +234,7 @@ namespace GlimmerGrove.Challenges
             return null;
         }
 
-        /// <summary>The tiles still owed a turn, nearest the light first — the hint's order, for a bot.</summary>
+        /// <summary>The tiles still owed a turn, nearest the light first - the hint's order, for a bot.</summary>
         public void Owed(List<int> into) => Board.Owed(into);
     }
 }

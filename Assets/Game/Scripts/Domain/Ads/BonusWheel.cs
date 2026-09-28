@@ -11,11 +11,11 @@ namespace GlimmerGrove.Ads
         /// The floor on a slice, and the reason the whole feature is safe.
         ///
         /// <para>
-        /// A hundred percent is the placement's authored payout — what the button promised
+        /// A hundred percent is the placement's authored payout - what the button promised
         /// before there was a wheel, and what a support reply quotes. Nothing may be authored
         /// below it, so the wheel can only ever <em>add</em>: a player who spins badly is paid
         /// exactly what a flat offer would have paid them. That is <c>GoldenRules.MinPercent</c>
-        /// word for word, and for the same reason — a wheel whose worst slice bit would turn a
+        /// word for word, and for the same reason - a wheel whose worst slice bit would turn a
         /// published reward into a maximum, and a published reward that is really a maximum is
         /// a lie told in a store listing.
         /// </para>
@@ -35,7 +35,7 @@ namespace GlimmerGrove.Ads
         /// <summary>
         /// Fewest slices a wheel may have.
         ///
-        /// Below four there is no wheel — there is a coin flip drawn as one, and the spin
+        /// Below four there is no wheel - there is a coin flip drawn as one, and the spin
         /// animation becomes a claim about how much was at stake that the table cannot honour.
         /// </summary>
         public const int MinSlices = 4;
@@ -51,7 +51,7 @@ namespace GlimmerGrove.Ads
 
         /// <summary>
         /// The tag mixed into the seed, separating this table's draws from every other one
-        /// keyed to a subject. Contract with <c>functions/src/wheel.ts</c> — invariant 9c —
+        /// keyed to a subject. Contract with <c>functions/src/wheel.ts</c> - invariant 9c -
         /// and never renamed.
         /// </summary>
         public const string Tag = "wheel";
@@ -64,7 +64,7 @@ namespace GlimmerGrove.Ads
         ///
         /// <para>
         /// Written out here rather than at the call sites, because it <b>is</b> the wire
-        /// contract — <c>wheel.ts</c> builds the same string, and a difference in the separator
+        /// contract - <c>wheel.ts</c> builds the same string, and a difference in the separator
         /// re-rolls every unspun wheel in the world. The same argument
         /// <see cref="Daily.ChestRandom"/> makes about its own seed layout, one level up.
         /// </para>
@@ -96,7 +96,7 @@ namespace GlimmerGrove.Ads
     /// The wheel a won glade spins for its video bonus.
     ///
     /// <para>
-    /// <b>What this is, in one line.</b> It is not a second reward — it is
+    /// <b>What this is, in one line.</b> It is not a second reward - it is
     /// <see cref="AdPlacement.WinBonus"/>'s payout, made variable. Everything about the
     /// placement is unchanged: one video, one server-adjudicated grant, one daily cap, one
     /// entry in the published ad table. The wheel decides the multiplier and nothing else,
@@ -108,7 +108,7 @@ namespace GlimmerGrove.Ads
     /// prize the server has to be told about, and invariant 10d is exactly why it cannot be
     /// told: LevelPlay 9 carries no per-impression token from the phone to the verification
     /// callback, so "the client says it won a thousand" is not evidence of anything. What the
-    /// server <em>can</em> do is recompute — the daily chest's trick, invariant 9c — and a
+    /// server <em>can</em> do is recompute - the daily chest's trick, invariant 9c - and a
     /// multiplier over an amount it already publishes is the smallest thing there is to
     /// recompute. So the slice is a pure function of (account, day, spin index), and the
     /// number the phone draws is the number the callback grants, arrived at independently.
@@ -116,7 +116,7 @@ namespace GlimmerGrove.Ads
     /// <para>
     /// <b>Why the odds are uniform, and why that is a feature.</b> Every slice is the same
     /// size and every slice is equally likely, so the odds are one-in-<em>n</em> and can be
-    /// printed on the panel — the property invariant 10b protects for the daily chest, and for
+    /// printed on the panel - the property invariant 10b protects for the daily chest, and for
     /// the same reason: a weighted wheel drawn with equal slices is a lie the picture tells,
     /// and it is the specific lie loot-box regulation exists to catch. The variance lives in
     /// the ladder of multipliers, where a player can see all of it at once.
@@ -125,8 +125,8 @@ namespace GlimmerGrove.Ads
     /// <b>A spin cannot be re-rolled, and that falls out of the seed rather than being
     /// enforced.</b> Backing out of the panel, force-quitting mid-animation, or coming back an
     /// hour later all recompute the same slice from the same three inputs, so there is nothing
-    /// to shop for. What advances the index is a <em>paid</em> spin — a view the server
-    /// granted — and the server is what counts them; see <see cref="WheelStand"/>.
+    /// to shop for. What advances the index is a <em>paid</em> spin - a view the server
+    /// granted - and the server is what counts them; see <see cref="WheelStand"/>.
     /// </para>
     /// </summary>
     public sealed class BonusWheel
@@ -149,7 +149,7 @@ namespace GlimmerGrove.Ads
         public float ChanceEach => _slices.Length == 0 ? 0f : 100f / _slices.Length;
 
         /// <summary>
-        /// The mean multiplier in hundredths — what the placement really pays now.
+        /// The mean multiplier in hundredths - what the placement really pays now.
         ///
         /// Rounded rather than truncated: this figure is printed by the build gate against a
         /// tuned economy, and a systematic half-percent downward bias in a validator is a
@@ -193,7 +193,7 @@ namespace GlimmerGrove.Ads
         /// <c>DailyChests.CanOpen</c> makes and for the same reason: before the first sign-in
         /// the client would roll against a device id while the server re-rolled against the
         /// uid, and the two would disagree about money. A caller that gets -1 must show no
-        /// wheel at all rather than substituting a slice — see <see cref="WheelStand.IsOpen"/>.
+        /// wheel at all rather than substituting a slice - see <see cref="WheelStand.IsOpen"/>.
         /// </para>
         /// </summary>
         public int Landing(string playerKey, int dayKey, int spinIndex)
@@ -232,7 +232,7 @@ namespace GlimmerGrove.Ads
         /// was a wheel, so a quarter of spins are "the old reward" and nobody is ever worse
         /// off; the middle is a gentle spread; and one slice in eight is a figure worth telling
         /// somebody about. The mean is 218.75%, which is why <c>win_bonus</c>'s daily cap moved
-        /// from twelve to six in the same drop — the day's ceiling is very nearly where it was
+        /// from twelve to six in the same drop - the day's ceiling is very nearly where it was
         /// and every individual video is worth more than twice what it was. Fewer, better
         /// videos, which is this project's whole position on advertising.
         /// </para>
@@ -240,7 +240,7 @@ namespace GlimmerGrove.Ads
         /// <b>The authored order is the drawn order</b>, which is why this list is interleaved
         /// rather than sorted: two neighbouring slices carrying the same figure make a wheel
         /// look like it has fewer prizes than it has, and the player reads that as the rim
-        /// being padded. A derived shuffle was considered and dropped — it would put a
+        /// being padded. A derived shuffle was considered and dropped - it would put a
         /// permutation between "the slice the seed picked" and "the wedge under the pointer",
         /// which is one more mapping between a roll and a payout than this feature can afford.
         /// <c>ContentValidation</c> warns when a published table puts two equal figures side by
@@ -310,7 +310,7 @@ namespace GlimmerGrove.Ads
                 if (slice.percent < WheelRules.MinPercent)
                 {
                     problems.Add($"ads wheel slice {i} pays {slice.percent}%, below " +
-                                 $"{WheelRules.MinPercent}%. The wheel may only ever add — a slice " +
+                                 $"{WheelRules.MinPercent}%. The wheel may only ever add - a slice " +
                                  "under 100 would pay less than the flat offer the button promised");
                     return None;
                 }
@@ -327,7 +327,7 @@ namespace GlimmerGrove.Ads
 
             // Invariant 5d's complaint, applied to a reward table: a wheel every slice of which
             // pays the same is not a cheap wheel, it is a spin animation in front of a fixed
-            // number — and the player finds out on their second spin. Refused rather than
+            // number - and the player finds out on their second spin. Refused rather than
             // warned about, because the flat offer says the same thing in one tap fewer.
             if (!anyBonus)
             {

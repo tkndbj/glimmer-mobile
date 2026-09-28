@@ -18,8 +18,8 @@ namespace GlimmerGrove.Persistence
     /// nothing, and merging A into B gives the same answer as merging B into A, so it
     /// does not matter how many devices sync in what order or how often.
     ///
-    /// Preferences are the exception. Muting the music is not monotonic — it is an
-    /// instruction, and the most recent one is the one the player meant — so settings
+    /// Preferences are the exception. Muting the music is not monotonic - it is an
+    /// instruction, and the most recent one is the one the player meant - so settings
     /// and the display name take the newer file's value. That is last-writer-wins
     /// applied only where losing the other value is what the player asked for.
     /// </summary>
@@ -78,17 +78,17 @@ namespace GlimmerGrove.Persistence
                 ads = Ads.RewardedAds.Join(mine.ads, other.ads),
 
                 // Two dates, both taken at their larger value, and the length derived from
-                // the pair rather than stored — which is the only reason a streak is
+                // the pair rather than stored - which is the only reason a streak is
                 // mergeable at all. See invariant 11b and DailyStreak, which owns the rule
                 // for the reason the two above it do.
                 streak = Daily.DailyStreak.Join(mine.streak, other.streak),
 
                 // The later period outright, and within a shared period the larger count per
-                // goal and the union of the claims — the daily counters' rule, one level up.
+                // goal and the union of the claims - the daily counters' rule, one level up.
                 // The rule lives with the feature for the reason the ones above it do.
                 tasks = Tasks.TaskLedger.Join(mine.tasks, other.tasks),
 
-                // A floor per event, unioned by id and taken at its larger value — the
+                // A floor per event, unioned by id and taken at its larger value - the
                 // fourth thing in this file shaped that way, and the rule lives with the
                 // feature for the reason the three above it do.
                 events = Events.SeasonLedger.Join(mine.events, other.events),
@@ -108,7 +108,7 @@ namespace GlimmerGrove.Persistence
                 // The heart containers, both halves, and both are unions for the same
                 // reason: a purchase cannot be undone by anything a device knows about, and
                 // neither can a refund. Keeping the revocations monotonic is what makes the
-                // pair converge — two devices that disagree about a refunded container end
+                // pair converge - two devices that disagree about a refunded container end
                 // up holding the same answer whatever order they merge in, which "the newer
                 // device is right" could never promise. See HeartContainerLedger.
                 heartContainersOwned = HeartContainerLedger.Join(mine.heartContainersOwned,
@@ -152,7 +152,7 @@ namespace GlimmerGrove.Persistence
 
         // -------------------------------------------------------------- levels
         /// <summary>
-        /// Per level, the best of each measure independently — the same rule
+        /// Per level, the best of each measure independently - the same rule
         /// <see cref="LevelRecord.WithRun"/> applies to a run, for the same reason: a
         /// player can beat their star rating on one device and their move count on
         /// another, and both results are real.
@@ -196,7 +196,7 @@ namespace GlimmerGrove.Persistence
                     // population that moves, so two devices that ranked the same move count
                     // months apart hold different honest answers. The larger is the one that
                     // knows the player at their best, and it is the only rule that makes
-                    // this a join — see invariant 11b. Absent reads as zero, which no real
+                    // this a join - see invariant 11b. Absent reads as zero, which no real
                     // standing can be, so a device on an older build contributes nothing
                     // rather than clearing a band the other device earned.
                     bestRank = Math.Max(existing.bestRank, record.bestRank),
@@ -277,8 +277,8 @@ namespace GlimmerGrove.Persistence
                 coins = newer.coins,
                 gems = newer.gems,
 
-                // Hearts join as a ledger — everything produced, everything spent, both
-                // taken at their larger value — so a grant and a spend both survive and
+                // Hearts join as a ledger - everything produced, everything spent, both
+                // taken at their larger value - so a grant and a spend both survive and
                 // neither device can mint. Owned by Hearts.Join so the merge and the game
                 // cannot disagree about what a heart is.
                 //
@@ -295,8 +295,8 @@ namespace GlimmerGrove.Persistence
                 heartsNextRefillUnix = hearts.NextRefillUnix,
 
                 // The later deadline, where the count above takes the smaller. A boost
-                // cannot be minted by two devices refilling each other — it comes from a
-                // chest whose award is already deduplicated by its own derived id — so
+                // cannot be minted by two devices refilling each other - it comes from a
+                // chest whose award is already deduplicated by its own derived id - so
                 // the conservative rule would only ever cut short a boost the player has.
                 heartBoostUntilUnix = Hearts.JoinBoost(mine.heartBoostUntilUnix,
                                                        other.heartBoostUntilUnix),
@@ -305,7 +305,7 @@ namespace GlimmerGrove.Persistence
                 // lifetime total both only ever rise, so the join has nothing to decide and is the
                 // same answer whichever order two devices sync in (invariant 11b). What a `max`
                 // costs on the earned total is that two devices playing offline contribute the
-                // larger figure rather than the sum — the same bargain `endlessBest` makes, and
+                // larger figure rather than the sum - the same bargain `endlessBest` makes, and
                 // the alternative is a server round trip per payment.
                 xpBoostWatchedUntilUnix = Hearts.JoinBoost(mine.xpBoostWatchedUntilUnix,
                                                            other.xpBoostWatchedUntilUnix),
@@ -322,7 +322,7 @@ namespace GlimmerGrove.Persistence
                 keeperLevelsBought = mine.keeperLevelsBought > other.keeperLevelsBought
                                    ? mine.keeperLevelsBought : other.keeperLevelsBought,
 
-                // Hints join exactly as hearts do, and through the same arithmetic — see
+                // Hints join exactly as hearts do, and through the same arithmetic - see
                 // RegenLedger.Join. There is no legacy shape to rebase from here, because a
                 // hint allowance was never written to a save file at all: it was three per
                 // glade, handed back at every board.
@@ -366,15 +366,15 @@ namespace GlimmerGrove.Persistence
         /// <see cref="SaveService.Snapshot"/> stamps it with the current moment, and the
         /// cloud sync merges against a snapshot, so the local side was newer in every
         /// comparison it ever took part in. "The newest choice wins" therefore meant
-        /// "this device wins", and the damage ran the one way that matters — a phone that
+        /// "this device wins", and the damage ran the one way that matters - a phone that
         /// had never been renamed pushed its default over a name chosen on a tablet, and a
         /// fresh install overwrote the name it had just downloaded. Per-field stamps
         /// (schema v15) make the comparison mean what it says.
         /// </para>
         ///
         /// <para>
-        /// Still a join. It is a maximum over a total order — a real value beats an absent
-        /// one, then the later stamp wins, then ordinal order settles a tie — so it is
+        /// Still a join. It is a maximum over a total order - a real value beats an absent
+        /// one, then the later stamp wins, then ordinal order settles a tie - so it is
         /// idempotent and gives the same answer whichever device runs it, which is what
         /// <see cref="Join"/> promises. The empty test comes first and outranks the stamps
         /// because empty is never something a player asked for: nothing in the game can
@@ -394,7 +394,7 @@ namespace GlimmerGrove.Persistence
             if (mineAt != otherAt)
                 return mineAt > otherAt ? (mine, Stamp(mineAt)) : (other, Stamp(otherAt));
 
-            // Same moment, two different values — two devices renamed inside one second,
+            // Same moment, two different values - two devices renamed inside one second,
             // or, far more likely, both files predate the stamps and carry zero. Ordinal
             // order is not a better answer, only a *stable* one, and stability is what
             // keeps the join commutative: an arbitrary choice that depended on argument
@@ -412,22 +412,22 @@ namespace GlimmerGrove.Persistence
         ///
         /// <para>
         /// Where both sides carry a v8 ledger the rule is <see cref="Hearts.Join"/> and
-        /// nothing else — kept there rather than here so the merge cannot drift from what
+        /// nothing else - kept there rather than here so the merge cannot drift from what
         /// the game believes a heart is.
         /// </para>
         /// <para>
         /// A pre-v8 side carries a count and no history, which is not a ledger and cannot
         /// be joined with one directly: its <c>spent</c> would read as zero and every
         /// heart the modern side had spent would come back. So it is rebased onto the
-        /// modern side's <c>spent</c> first — see <see cref="Hearts.Observation"/> — and
+        /// modern side's <c>spent</c> first - see <see cref="Hearts.Observation"/> - and
         /// the join then resolves to whichever side holds more. Generous, bounded by the
         /// cap, and confined to the upgrade window; the alternative is deleting hearts
         /// from whichever device happened to update second, which is the bug this whole
         /// change exists to end.
         /// </para>
         /// <para>
-        /// When neither side has a ledger — a device's first sync after updating, against
-        /// a cloud document a pre-v8 build last wrote — both rebase onto zero and the
+        /// When neither side has a ledger - a device's first sync after updating, against
+        /// a cloud document a pre-v8 build last wrote - both rebase onto zero and the
         /// larger count wins. That is deliberately the generous direction: it is the exact
         /// moment the old rule did its damage, so it is the moment worth repairing rather
         /// than preserving.
@@ -436,7 +436,7 @@ namespace GlimmerGrove.Persistence
         static Hearts JoinedHearts(WalletDto mine, WalletDto other)
         {
             // > 0, never >= 0. An absent field deserialises as zero, so a ledger has to be
-            // recognisable by a value no absent one can hold — see WalletDto.heartsProduced.
+            // recognisable by a value no absent one can hold - see WalletDto.heartsProduced.
             bool mineHasLedger = mine.heartsProduced > 0;
             bool otherHasLedger = other.heartsProduced > 0;
 
@@ -465,21 +465,21 @@ namespace GlimmerGrove.Persistence
         /// <para>
         /// Simpler than the heart join by exactly one case, and the missing case is the
         /// point: hints have no pre-ledger shape to rebase from, because an allowance was
-        /// never stored — it was three per glade, handed back at every board, so a file
+        /// never stored - it was three per glade, handed back at every board, so a file
         /// written before this feature holds no opinion about hints rather than a stale one.
         /// </para>
         /// <para>
         /// So a side with no ledger contributes <see cref="Hints.Full"/>, which is what that
         /// device is about to seed itself with anyway (see <c>Wallet.ReadHints</c>). Both
         /// sides absent is the ordinary case on the first sync after this ships, and the
-        /// answer is a full pool — generous, bounded by the cap, and worth nothing to forge,
+        /// answer is a full pool - generous, bounded by the cap, and worth nothing to forge,
         /// since a hint pays no currency and buys no advantage a restart does not.
         /// </para>
         /// </summary>
         static Hints JoinedHints(WalletDto mine, WalletDto other)
         {
             // > 0, never >= 0. An absent field deserialises as zero, so a ledger has to be
-            // recognisable by a value no absent one can hold — see WalletDto.hintsProduced.
+            // recognisable by a value no absent one can hold - see WalletDto.hintsProduced.
             bool mineHasLedger = mine.hintsProduced > 0;
             bool otherHasLedger = other.hintsProduced > 0;
 
@@ -499,7 +499,7 @@ namespace GlimmerGrove.Persistence
         /// A pre-v8 side's count, expressed against the ledger it is being joined with.
         ///
         /// An unwritten count holds no opinion, so it rebases to exactly the other side
-        /// rather than to empty — otherwise a wallet section that was never written would
+        /// rather than to empty - otherwise a wallet section that was never written would
         /// read as a player who had spent everything.
         /// </summary>
         static Hearts RebasedOnto(WalletDto legacy, Hearts ledger)

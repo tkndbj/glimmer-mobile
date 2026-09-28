@@ -29,7 +29,7 @@ namespace GlimmerGrove.Notifications
         /// <para>
         /// <b>iOS's own limit is 64 and it is enforced by silence.</b> <c>UNUserNotificationCenter</c>
         /// keeps the 64 soonest pending requests and drops the rest without an error, a log
-        /// line or a callback — so a horizon that overflowed it would be a schedule that
+        /// line or a callback - so a horizon that overflowed it would be a schedule that
         /// worked in every test, on every Android device, and quietly stopped a week out on
         /// iPhone. Sixty leaves room for the platform's own and makes the overflow an
         /// arithmetic fault a content gate can refuse rather than a thing somebody discovers.
@@ -42,7 +42,7 @@ namespace GlimmerGrove.Notifications
         ///
         /// <para>
         /// A player who has just closed the game does not need telling about it twenty
-        /// minutes later — they were *here*. It also covers the ordinary case of somebody
+        /// minutes later - they were *here*. It also covers the ordinary case of somebody
         /// backgrounding the app to answer a message and coming straight back, which would
         /// otherwise fire a reminder over their own session.
         /// </para>

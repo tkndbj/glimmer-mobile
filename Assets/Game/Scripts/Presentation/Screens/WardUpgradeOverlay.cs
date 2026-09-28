@@ -14,7 +14,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>Its own panel because an upgrade is a decision with a number on either side of it.</b>
     /// What a star costs is one figure and what it adds is two more, and somebody deciding needs
-    /// all three at once — on the preview panel they would be a fourth thing under a stage, a
+    /// all three at once - on the preview panel they would be a fourth thing under a stage, a
     /// description and a status line, which is how a shop comes to sell something nobody
     /// understood. It is <c>HomesteadBuyOverlay</c>'s split: browse on one screen, decide on
     /// another.
@@ -26,8 +26,8 @@ namespace GlimmerGrove
     /// at once is the one reading that needs neither.
     /// </para>
     /// <para>
-    /// <b>It never celebrates in place.</b> A transaction panel is the wrong place for a payoff —
-    /// <c>WardPreviewOverlay</c>'s own note about why it stopped doing exactly that — so this one
+    /// <b>It never celebrates in place.</b> A transaction panel is the wrong place for a payoff -
+    /// <c>WardPreviewOverlay</c>'s own note about why it stopped doing exactly that - so this one
     /// closes and <see cref="WardUpgradeRevealOverlay"/> is the ceremony.
     /// </para>
     /// </summary>
@@ -46,7 +46,7 @@ namespace GlimmerGrove
 
         /// <summary>
         /// The bands, stated as middles because <c>UIKit.Box</c> pivots at centre whatever it is
-        /// anchored to — <c>WardPreviewOverlay</c>'s own recorded trap.
+        /// anchored to - <c>WardPreviewOverlay</c>'s own recorded trap.
         /// </summary>
         const float StarsTop = 132f, StarsH = 86f, StarsMid = StarsTop + StarsH * .5f;
         const float NoteTop = 238f, NoteH = 62f, NoteMid = NoteTop + NoteH * .5f;
@@ -107,7 +107,7 @@ namespace GlimmerGrove
             BuildButton(panel);
             Paint();
 
-            // A balance can move while this is open — a sync, a reward landing — so the key is
+            // A balance can move while this is open - a sync, a reward landing - so the key is
             // repainted from the ledgers rather than latched when the panel was drawn.
             PlayerProgression.Changed += Paint;
             WardStarLedger.Changed += Paint;
@@ -160,7 +160,7 @@ namespace GlimmerGrove
                 _coin.enabled = false;
 
                 // Live, and said here rather than left to the last repaint: this key closes the
-                // panel and costs nothing, so it is never the shut one — and a panel reopened
+                // panel and costs nothing, so it is never the shut one - and a panel reopened
                 // over a turret that has since topped out would otherwise keep the dead pill.
                 _act.Interactable = true;
                 _pill.sprite = Art.S("Ui/" + Skins.Settled);
@@ -176,7 +176,7 @@ namespace GlimmerGrove
             _note.text = Loc.Format("ui.loadout.upgrade_to", next.Stars);
 
             // Repainting always restores the standing colour, so a refusal fading back to the
-            // shortfall — and a sync landing the credits mid-refusal — both leave one line.
+            // shortfall - and a sync landing the credits mid-refusal - both leave one line.
             _status.color = Short;
             _status.text = offer.Shortfall > 0
                 ? Loc.Format("ui.shop.short_coins", offer.Shortfall)
@@ -187,7 +187,7 @@ namespace GlimmerGrove
 
             // **Shut when the credits are not there**, which is `WardPreviewOverlay.Shut`'s rule
             // said on the panel that actually charges. A star is only ever a credit price, so
-            // there is no shelf to open and nothing this key could do but refuse — and at the
+            // there is no shelf to open and nothing this key could do but refuse - and at the
             // owner's instruction (2026-09-21) a grey key does not take the tap either, so the
             // shortfall on the status line is the whole of the answer now. `Refuse` stays as the
             // guard behind it: a dead key is a drawing, and `Act` may not trust a drawing.
@@ -196,7 +196,7 @@ namespace GlimmerGrove
             _act.Interactable = !shut;
             _pill.sprite = Art.S("Ui/" + (shut ? Skins.Shut : Skins.Affirm));
 
-            // **The coin is a reel, not a sprite** — credits have no still picture in this UI, only
+            // **The coin is a reel, not a sprite** - credits have no still picture in this UI, only
             // the `Ui/Coin` flipbook, so an `Image` with the sprite cleared is a white rectangle
             // rather than a coin (invariant 7b).
             Flipbook.Attach(_coin, "Ui/Coin", 11f);
@@ -217,7 +217,7 @@ namespace GlimmerGrove
         /// The status line carries the shortfall from the moment the panel opens, which is
         /// standing information: a player who presses the key anyway has asked a question, and a
         /// sound with nothing moving on screen reads as the button being broken rather than as a
-        /// refusal. So the line becomes the blunt sentence, in red, punched — and the key shakes,
+        /// refusal. So the line becomes the blunt sentence, in red, punched - and the key shakes,
         /// because the key is where the finger is and the line is not.
         /// </para>
         /// <para>
@@ -262,8 +262,8 @@ namespace GlimmerGrove
 
             if (!offer.CanBuy)
             {
-                // A credit shortfall has no shelf to open — credits are earned by playing and
-                // there is nothing here to sell — so it says so and refuses in place.
+                // A credit shortfall has no shelf to open - credits are earned by playing and
+                // there is nothing here to sell - so it says so and refuses in place.
                 Refuse();
                 return;
             }
@@ -273,7 +273,7 @@ namespace GlimmerGrove
             if (!WardUpgrade.TryBuy(Model, Seat)) return;
 
             // The coin is the money leaving; what the turret getting stronger sounds like belongs
-            // to the ceremony about to play it — `WardPreviewOverlay`'s split, for its reason.
+            // to the ceremony about to play it - `WardPreviewOverlay`'s split, for its reason.
             Audio.Sfx("coin", .6f);
 
             var model = Model;

@@ -12,7 +12,7 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// <see cref="CloudSaveService.Learned"/> is what lets a screen drawn from the save repaint
-    /// when another device has moved it — and the second half is the half with teeth, for
+    /// when another device has moved it - and the second half is the half with teeth, for
     /// invariant 44m's reason: a sync runs on every foreground and the overwhelmingly common one
     /// brings back exactly what the device already holds. An event raised then would redraw
     /// every listening screen every time the app came back, which is the fault
@@ -89,7 +89,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The other direction. This device is ahead of the server, so the sync pushes and the
-        /// device learned nothing — the merge is what the device already had.
+        /// device learned nothing - the merge is what the device already had.
         /// </summary>
         [Test]
         public void ASyncThatOnlyPushesAnnouncesNothing()
@@ -133,7 +133,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A record that moved without a new glade — a better run of one already cleared — is
+        /// A record that moved without a new glade - a better run of one already cleared - is
         /// still news, and it is the same id that names it.
         /// </summary>
         [Test]

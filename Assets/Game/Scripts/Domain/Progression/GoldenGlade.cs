@@ -11,7 +11,7 @@ namespace GlimmerGrove.Progression
         /// The floor on a band, and the reason the whole feature is safe.
         ///
         /// A hundred percent is the ordinary payout. Nothing may be authored below it, so
-        /// the bonus can only ever <em>add</em> — it is never a tax dressed as a prize, and
+        /// the bonus can only ever <em>add</em> - it is never a tax dressed as a prize, and
         /// no player is ever quietly paid less for a glade than the reward rule says. That
         /// is not only decency: an economy where the base is a maximum and the roll is a
         /// deduction is one where the published reward is a lie, and the published reward
@@ -29,8 +29,8 @@ namespace GlimmerGrove.Progression
         public const int MaxBands = 12;
 
         /// <summary>
-        /// The stream this table draws on. Part of the wire contract with the server —
-        /// see invariant 9c — and never renumbered.
+        /// The stream this table draws on. Part of the wire contract with the server -
+        /// see invariant 9c - and never renumbered.
         /// </summary>
         public const int Stream = 0;
 
@@ -65,7 +65,7 @@ namespace GlimmerGrove.Progression
     /// The golden: a glade that quietly pays more than it should.
     ///
     /// <para>
-    /// <b>What this is for.</b> Every other reward in the game is exactly predictable — a
+    /// <b>What this is for.</b> Every other reward in the game is exactly predictable - a
     /// glade is worth what the table says, every time. That is fair, legible, and, as a
     /// piece of reinforcement, weak: a reward the player can compute before they earn it
     /// stops registering as a reward at all. What does not habituate is variance. So a
@@ -75,7 +75,7 @@ namespace GlimmerGrove.Progression
     /// </para>
     /// <para>
     /// <b>Why this shape and not a roll at the end of the run.</b> The obvious
-    /// implementation — draw a number when the glade is finished — is one this codebase
+    /// implementation - draw a number when the glade is finished - is one this codebase
     /// cannot have. Currency the client decides is currency the server has to be told
     /// about, which means a claim; a claim needs an id the server can recompute; and to
     /// recompute a per-run roll the server would need to trust an attempt counter that
@@ -84,8 +84,8 @@ namespace GlimmerGrove.Progression
     /// </para>
     /// <para>
     /// Seeding from <b>(account, level)</b> avoids all of it. Earned credits are already
-    /// derived from the star ledger and recomputed by the server on every sync — invariant
-    /// 9 — so a multiplier that is a pure function of the account and the level id simply
+    /// derived from the star ledger and recomputed by the server on every sync - invariant
+    /// 9 - so a multiplier that is a pure function of the account and the level id simply
     /// becomes part of that derivation. Nothing is claimed, nothing is granted, nothing is
     /// stored, and the server arrives at the same number from the same two facts. It also
     /// cannot be farmed: the bonus belongs to the glade, so replaying it pays nothing, and
@@ -123,7 +123,7 @@ namespace GlimmerGrove.Progression
         ///
         /// <para>
         /// Four in five glades pay exactly what the reward rule says, which is what keeps
-        /// the rule honest and the bonus a bonus. The tail is deliberately long and thin —
+        /// the rule honest and the bonus a bonus. The tail is deliberately long and thin -
         /// a one-in-a-hundred fivefold glade is the one a player remembers and mentions,
         /// and it costs the economy about four percent on average, which is inside the
         /// noise of any tuning pass.
@@ -141,12 +141,12 @@ namespace GlimmerGrove.Progression
         /// What multiplier this player's copy of this glade pays, as a percentage.
         ///
         /// <para>
-        /// Returns 100 — the ordinary reward, no bonus — when there is no account to seed
+        /// Returns 100 - the ordinary reward, no bonus - when there is no account to seed
         /// from. That is the same refusal <c>DailyChests.CanOpen</c> makes and for the same
         /// reason: before the first sign-in the client would roll against a device id while
         /// the server re-rolled against the uid, and the two would disagree about money.
         /// Paying the base until an account exists is the direction that cannot cost
-        /// anybody anything — the earned floor means the number can only rise afterwards.
+        /// anybody anything - the earned floor means the number can only rise afterwards.
         /// </para>
         /// </summary>
         public int PercentFor(string playerKey, LevelId level)

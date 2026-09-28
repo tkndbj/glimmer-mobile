@@ -3,6 +3,7 @@ using GlimmerGrove.Content;
 using GlimmerGrove.Layout;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Progression;
+using GlimmerGrove.Ranks;
 using GlimmerGrove.Social;
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,20 +11,28 @@ using UnityEngine.UI;
 namespace GlimmerGrove
 {
     /// <summary>
-    /// What the map draws for a lane that has no ladder: the record as a medal, a plate of three
-    /// lines saying what the lane is, and the key that starts it.
+    /// What the map draws for a lane that has no ladder: the keeper's rank badge, a plate of
+    /// lines saying what the lane is, the record as a medal, and the key that starts it.
+    ///
+    /// <para>
+    /// <b>The rank took the middle on 2026-09-28</b>, at the owner's instruction: the badge a
+    /// keeper holds stands where the best-wave medal stood, at its size and on its plate, and the
+    /// medal moved under the lines, above the key, drawn whole at
+    /// <see cref="EndlessHubLayout.RecordScale"/>. The paragraph below about the record being the
+    /// hero is the history of the medal, kept because it is why the medal is a medal.
+    /// </para>
     ///
     /// <para>
     /// <b>It exists because the map was drawing the wrong picture, not because the map was
-    /// wrong.</b> A chapter map is a painting of a <em>chain</em> — strips of island, a trail of
-    /// drifting dots, a disc per level and a sealed teaser capping the run — and every one of
+    /// wrong.</b> A chapter map is a painting of a <em>chain</em> - strips of island, a trail of
+    /// drifting dots, a disc per level and a sealed teaser capping the run - and every one of
     /// those says "there is more of this further along". The Infinite lane has one level and
     /// nothing after it (<c>GameTrack.Laddered</c>), so all of that drew a column of scenery with
     /// a single node loose on it and a teaser promising a chapter that will never exist.
     /// </para>
     /// <para>
     /// <b>The record is the hero, and the first cut of this screen got that wrong.</b> It made an
-    /// emblem the subject and printed the furthest wave as a line of text underneath — which is
+    /// emblem the subject and printed the furthest wave as a line of text underneath - which is
     /// this screen with the one number the lane is graded on buried in a caption. A lane played
     /// for how far it got should put how far you got in the middle of it.
     /// </para>
@@ -32,13 +41,13 @@ namespace GlimmerGrove
     /// marks sit in the kit's own seats, because text and icons floating on a patterned ground
     /// read as a settings page: the first cut did exactly that and was rejected on sight. Every
     /// plate, seat, disc and burst here is the interface kit the whole game is drawn in
-    /// (invariant 44) — what is bought from outside it is three <em>pictures</em>, which is the
+    /// (invariant 44) - what is bought from outside it is three <em>pictures</em>, which is the
     /// one thing the kit has nothing to say about.
     /// </para>
     /// <para>
     /// <b>Where things sit is <see cref="EndlessHubLayout"/>'s and not this file's</b> (invariant
     /// 8a's seventh instance; see <c>PanelStack</c>), and what it looks like is
-    /// <c>Tools/render_endless.py</c>'s — which caught the emblem's ring standing outside its own
+    /// <c>Tools/render_endless.py</c>'s - which caught the emblem's ring standing outside its own
     /// box, a caption plate drawn at a third of the width asked for, and a band that had
     /// understated the header by 136 units.
     /// </para>
@@ -51,7 +60,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Whole addresses in a table, and the table is held to the manifest by a test.</b>
         /// <c>Tools/verify/artnames.py</c> reads literals off a call site and a name assembled
-        /// there — <c>Art.S("Ui/" + mark)</c> — is a fragment it can never check, which on a
+        /// there - <c>Art.S("Ui/" + mark)</c> - is a fragment it can never check, which on a
         /// missing sprite is a white rectangle rather than a blank (invariant 7b). This is
         /// <c>Skins</c>' own answer to the same problem: name them in one place and close the
         /// chain with reflection instead (<c>EndlessHubTests.TheHubsMarksAreGlobalArt</c>).
@@ -63,8 +72,8 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// <b><c>ic_rank</c> is no longer read here.</b> The boards line it opened was the one
-        /// thing on this screen the medal directly above already says — the nameplate becomes a
-        /// standing the moment a distribution exists — and the plate holds three rows and not
+        /// thing on this screen the medal directly above already says - the nameplate becomes a
+        /// standing the moment a distribution exists - and the plate holds three rows and not
         /// four (<see cref="EndlessHubLayout.Points"/>), so saying what a watch costs had to take
         /// a seat rather than add one. The sprite is still cut, still global and now drawn by
         /// nothing, which invariant 8d says is a withdrawal owed rather than a state to leave.
@@ -82,7 +91,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Three states, in order of how much they know. A lane **never run** has no record, so
-        /// the plate names its absence and the disc carries an empty star — "best wave 0" is a
+        /// the plate names its absence and the disc carries an empty star - "best wave 0" is a
         /// bad score where a player who has never run has no score (43a). A lane **run** with no
         /// published distribution yet says what the number *is*. And a lane run where the
         /// distribution has arrived says where that number *stands*, which is strictly more: the
@@ -91,8 +100,8 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// <b>The string is short because the plate is a fixed trough</b>, and that was measured
-        /// rather than guessed: "TOP 12%" draws on one line at the full 34px — the same weight as
-        /// the label it replaces, so the plate looks identical either way — where "TOP 12% OF
+        /// rather than guessed: "TOP 12%" draws on one line at the full 34px - the same weight as
+        /// the label it replaces, so the plate looks identical either way - where "TOP 12% OF
         /// WATCHERS" only fits by wrapping to two lines, which `UIKit.Shrinkable` sets
         /// `VerticalWrapMode.Truncate` on and would therefore have **clipped to "TOP 12% OF"** on
         /// a device. `render_endless.py --standing` is what found that; no numeric gate can see
@@ -103,7 +112,7 @@ namespace GlimmerGrove
         /// <b>It never invents a percentile.</b> `GroveRankTable` refuses to answer below
         /// <see cref="GroveRankTable.MinimumSamples"/>, so on the day the board ships this reads
         /// BEST WAVE for everybody and quietly becomes a standing once enough keepers have run
-        /// the lane — which is also what it does offline, with no backend, and on a first launch.
+        /// the lane - which is also what it does offline, with no backend, and on a first launch.
         /// </para>
         /// </summary>
         public static string CaptionFor(int best)
@@ -134,7 +143,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// <b>It is also what pays for the read.</b> The distribution is one public document
-        /// asked for once a session and never again — so the screen that is about to draw a
+        /// asked for once a session and never again - so the screen that is about to draw a
         /// standing is the screen that asks for it, and a player who never opens this lane never
         /// pays. That is the same bargain <c>LeaderboardScreen</c> makes, and the reason neither
         /// is asked for at boot: one document per session per player is a real bill at ten
@@ -160,8 +169,8 @@ namespace GlimmerGrove
                 // has already been asked and succeeded.
                 GroveBoard.BeginRanksRefresh();
 
-                // The table may already be loaded — arriving here from the boards screen, or on
-                // a second visit — in which case `Changed` will never fire again.
+                // The table may already be loaded - arriving here from the boards screen, or on
+                // a second visit - in which case `Changed` will never fire again.
                 Repaint();
             }
 
@@ -184,7 +193,7 @@ namespace GlimmerGrove
         ///
         /// <b>Handed in rather than read off a constant, because the constant is wrong for this.</b>
         /// <c>LevelsScreen.HeaderUnderside</c> is the bottom of the <em>mode</em> switcher's slot,
-        /// and the track switcher is drawn under it when both are shown — 136 units further down.
+        /// and the track switcher is drawn under it when both are shown - 136 units further down.
         /// A map never noticed, because a map scrolls under its own header; a column placed against
         /// one does. Only the screen knows which pills it drew.
         /// </param>
@@ -199,11 +208,11 @@ namespace GlimmerGrove
         /// <b>Handed in rather than composed here, and that is the same rule as
         /// <c>HeaderRow</c>'s.</b> <c>LevelsScreen.GateLine</c> is the one place a shut gate is
         /// turned into words, because the map's signpost, the refusal a padlocked disc gives and
-        /// this key are the same sentence — and a player who read one and then met another
+        /// this key are the same sentence - and a player who read one and then met another
         /// saying something different would have been told two things about one rule.
         /// </param>
         /// <returns>
-        /// The column — everything drawn from the save — so the screen can take it down and
+        /// The column - everything drawn from the save - so the screen can take it down and
         /// draw it again when a sync moves the save under it. See <see cref="Column"/>.
         /// </returns>
         public static RectTransform Build(RectTransform safe, RectTransform ground, MonoBehaviour owner,
@@ -214,14 +223,14 @@ namespace GlimmerGrove
 
             // **Behind everything the header already put down.** `BuildHeader` runs first (it is
             // index knowledge and must not wait on a file), so its fade and the safe layer are
-            // older siblings and uGUI draws younger ones in front — the same trap the map's own
+            // older siblings and uGUI draws younger ones in front - the same trap the map's own
             // viewport records, arriving on the screen that replaced it.
             var art = UIKit.Node("HubArt", ground);
             art.SetAsFirstSibling();
 
             // **The one place a track has a ground of its own.** The ladder draws its
             // chapter's painted map; this lane has no map to draw, so the wall is what says
-            // which of the two you are standing in — and it has to be read off `lane` rather
+            // which of the two you are standing in - and it has to be read off `lane` rather
             // than assumed, because this screen is reached through a switcher that moves both
             // ways and nothing here would notice if it were ever built for the ladder.
             Scenery.Plain(art, lane == GameTrack.Infinite ? Scenery.WallRanked
@@ -236,7 +245,7 @@ namespace GlimmerGrove
         /// <para>
         /// Split from the ground so it can be drawn <em>again</em>. The medal reads the best
         /// wave once and the key captures whether the lane is open once, and both are facts a
-        /// sync can move while the screen is standing — a run held on the other phone, a
+        /// sync can move while the screen is standing - a run held on the other phone, a
         /// keeper wall cleared there. The ground is not a drawing of anything the save says, so
         /// it is built once and stays; this is rebuilt whole rather than patched, because the
         /// key's closure over <c>unlocked</c> cannot be patched (invariant 48l: a repaint is a
@@ -254,9 +263,21 @@ namespace GlimmerGrove
 
             var host = UIKit.Node("Hub", safe);
 
-            Medal(host, owner, level, top);
-            Lines(host, lane, top);
-            Battle(host, unlocked, wall, open, top);
+            // **One node holding the column, scaled about its top edge** to the band it is given
+            // (`EndlessHubLayout.ScaleIn`): whole on any phone with room, and never below the
+            // floor on the squarest one. Every piece is placed against the column's own top, so
+            // the scale is the only thing that differs between phones.
+            var column = UIKit.Node("Column", host);
+            column.anchorMin = column.anchorMax = new Vector2(.5f, 1f);
+            column.pivot = new Vector2(.5f, 1f);
+            column.sizeDelta = new Vector2(ChapterMap.Width, EndlessHubLayout.Height);
+            column.anchoredPosition = new Vector2(0f, -top);
+            column.localScale = Vector3.one * EndlessHubLayout.ScaleIn(band);
+
+            Rank(column);
+            Lines(column, lane, 0f);
+            Record(column, owner, level);
+            Battle(column, unlocked, wall, open, 0f);
 
             return host;
         }
@@ -267,14 +288,14 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>The canvas is asked of <c>Boot</c> rather than measured off a rect</b>, because a
-        /// screen built in the same frame as the canvas can trust neither its rect nor its scale —
+        /// screen built in the same frame as the canvas can trust neither its rect nor its scale -
         /// <c>Boot.CanvasHeight</c> is a pure function of <c>Screen</c> and is right on the first
         /// frame.
         /// </para>
         /// <para>
         /// <b>The shelf is counted as what it reaches <em>into the safe layer</em>, and its tab is
         /// counted with it.</b> The bar hangs off the full-bleed layer and its lower part is the
-        /// display's own foot, which the safe layer has already given up — subtracting the whole of
+        /// display's own foot, which the safe layer has already given up - subtracting the whole of
         /// it would charge that inset twice. What must <em>not</em> be left out is
         /// <c>LoadoutBar.Overhang</c>: the bar's rect is the shelf and its orange tab is drawn
         /// outside it, so a key measured against the rect alone is a key the tab can reach.
@@ -288,13 +309,142 @@ namespace GlimmerGrove
             return safe - headerFoot - EndlessHubLayout.HeadClear - shelf;
         }
 
+        // ------------------------------------------------------------------ the rank
+        /// <summary>
+        /// The rank this keeper holds, as the hero: the badge in the medal's own box, lit from
+        /// behind, with its name on the medal's plate - and a way to the
+        /// page that says what the next one asks.
+        ///
+        /// <para>
+        /// <b>Watched, not drawn</b> (<see cref="HeroRank"/>, invariant 44j's reason as
+        /// <see cref="RankBadge"/> gives it): a rank moves while this screen stands. <b>An account
+        /// below the first rung sees the first rung, solid, over "Unranked"</b> - the corner
+        /// badge's rule, for the corner badge's reason. An empty ladder draws nothing.
+        /// </para>
+        /// </summary>
+        static void Rank(RectTransform column)
+        {
+            var seat = UIKit.Box("Rank", column,
+                                 new Vector2(EndlessHubLayout.BurstSize, EndlessHubLayout.HeroHeight),
+                                 new Vector2(.5f, 1f), new Vector2(0f, -EndlessHubLayout.HeroCentre));
+
+            float badgeY = EndlessHubLayout.HeroCentre - EndlessHubLayout.DiscDown;
+
+            // **Light rather than the medal's burst.** A rank badge is a winged silhouette and the
+            // spiked burst behind it read as a second outline round the first (render_endless.py);
+            // two warm halos say *lit* without drawing a shape of their own.
+            UIKit.Halo(seat, Pal.Sun, EndlessHubLayout.BurstSize * 1.6f, .20f, new Vector2(0f, badgeY));
+            UIKit.Halo(seat, Pal.Sun, EndlessHubLayout.BurstSize * 1.16f, .45f, new Vector2(0f, badgeY));
+
+            var mark = UIKit.Img("Badge", seat, null, Color.white,
+                                 Vector2.one * EndlessHubLayout.BurstSize,
+                                 new Vector2(.5f, .5f), new Vector2(0f, badgeY));
+            mark.preserveAspect = true;
+            mark.raycastTarget = false;
+
+            var plate = UIKit.Img("Plate", seat, Art.S("Ui/Hud/trough"), Color.white,
+                                  new Vector2(EndlessHubLayout.PlateWidth, EndlessHubLayout.PlateHeight),
+                                  new Vector2(.5f, .5f),
+                                  new Vector2(0f, EndlessHubLayout.HeroCentre - EndlessHubLayout.PlateDown));
+            if (plate != null) plate.type = Image.Type.Sliced;
+
+            var name = UIKit.Titled("Name", plate != null ? plate.transform : seat.transform,
+                                    string.Empty, 34, Pal.Gold, TextAnchor.MiddleCenter,
+                                    new Vector2(EndlessHubLayout.PlateWidth - 40f,
+                                                EndlessHubLayout.PlateHeight), default, default,
+                                    3f, 3f);
+            UIKit.Shrinkable(name, 22);
+            name.raycastTarget = false;
+
+            // The whole block is the target, as the corner badge's is.
+            var tap = UIKit.Button("Tap", seat, Art.Pixel,
+                                   new Vector2(EndlessHubLayout.BurstSize, EndlessHubLayout.HeroHeight),
+                                   new Vector2(.5f, .5f), Vector2.zero, OpenRanks);
+            tap.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0f);
+
+            seat.gameObject.AddComponent<HeroRank>().Watch(mark, plate, name);
+
+            seat.localScale = Vector3.zero;
+            Tween.Pop(seat, 0f, .62f, .08f);
+        }
+
+        static void OpenRanks()
+        {
+            if (Flow.HasModal || Flow.Busy) return;
+            Flow.Go<RanksScreen>();
+        }
+
+        /// <summary>
+        /// Keeps the hero's badge and name true while the screen stands. On the node, for
+        /// <see cref="Standing"/>'s reason: it dies with what it draws.
+        /// </summary>
+        sealed class HeroRank : MonoBehaviour
+        {
+            Image _mark, _plate;
+            Text _name;
+
+            public void Watch(Image mark, Image plate, Text name)
+            {
+                _mark = mark;
+                _plate = plate;
+                _name = name;
+                Repaint();
+            }
+
+            void OnEnable()
+            {
+                RankLedger.Changed += Repaint;
+                Repaint();
+            }
+
+            void OnDisable() => RankLedger.Changed -= Repaint;
+
+            void Repaint()
+            {
+                if (_mark == null) return;
+
+                var ladder = RankLedger.Ladder;
+                var held = ladder.IsEmpty ? null : RankLedger.Held;
+                var rung = ladder.IsEmpty ? null : held ?? ladder.At(1);
+                bool drawn = rung != null;
+
+                if (_plate != null) _plate.enabled = drawn;
+                if (_name != null) _name.enabled = drawn;
+
+                // A rung whose badge this build cannot resolve draws nothing rather than a white
+                // rectangle (invariant 7b, `RankArt`'s rule).
+                _mark.sprite = drawn ? Art.S(rung.Icon) : null;
+                _mark.enabled = _mark.sprite != null;
+                if (!drawn || _name == null) return;
+
+                _name.text = (held != null ? rung.Name : Loc.Get("ui.ranks.unranked")).ToUpperInvariant();
+                _name.color = held != null ? Pal.Gold : Pal.A(Pal.Cream, .62f);
+            }
+        }
+
+        // ------------------------------------------------------------------ the record
+        /// <summary>
+        /// The medal, under the lines: the whole of it, drawn at
+        /// <see cref="EndlessHubLayout.RecordScale"/> by a node that holds the scale, so the medal
+        /// itself is built at the size every constant describes and pops to one as it always did.
+        /// </summary>
+        static void Record(RectTransform column, MonoBehaviour owner, LevelDefinition level)
+        {
+            var holder = UIKit.Box("Record", column,
+                                   new Vector2(EndlessHubLayout.BurstSize, EndlessHubLayout.HeroHeight),
+                                   new Vector2(.5f, 1f), new Vector2(0f, -EndlessHubLayout.RecordCentre));
+            holder.localScale = Vector3.one * EndlessHubLayout.RecordScale;
+
+            Medal(holder, owner, level);
+        }
+
         // ------------------------------------------------------------------ the medal
         /// <summary>
         /// The furthest wave this lane has ever been held to, drawn as the thing it is: a medal.
         ///
         /// <para>
         /// <b>Two states and neither of them is a nought.</b> "Best wave 0" is a bad score and what
-        /// a player who has never run this lane has is not a bad score, it is no score — so an
+        /// a player who has never run this lane has is not a bad score, it is no score - so an
         /// unplayed medal is the kit's own <em>empty</em> star on a dark cap, which is a thing to
         /// earn rather than a number to be ashamed of. A dash was tried first and read as a
         /// missing character.
@@ -305,16 +455,15 @@ namespace GlimmerGrove
         /// plate are global, so nothing here can arrive as a white rectangle.
         /// </para>
         /// </summary>
-        static void Medal(RectTransform host, MonoBehaviour owner, LevelDefinition level, float top)
+        static void Medal(RectTransform holder, MonoBehaviour owner, LevelDefinition level)
         {
             int best = BestOf(level);
             bool held = best > 0;
 
-            var seat = UIKit.Box("Medal", host,
+            var seat = UIKit.Box("Medal", holder,
                                  new Vector2(EndlessHubLayout.BurstSize,
                                              EndlessHubLayout.HeroHeight),
-                                 new Vector2(.5f, 1f),
-                                 new Vector2(0f, -(top + EndlessHubLayout.HeroCentre)));
+                                 new Vector2(.5f, .5f), Vector2.zero);
 
             // Everything in the medal is placed against the *disc's* centre rather than the
             // block's, because the block is taller than the burst: the plate hangs off its foot.
@@ -363,7 +512,7 @@ namespace GlimmerGrove
 
             // The nameplate under it. A sliced trough rather than the kit's ribbon: `ribbon_orange`
             // is taller than it is wide and a caption plate is the other way round, so fitting one
-            // here drew it at a third of the width asked for — which only a render could see.
+            // here drew it at a third of the width asked for - which only a render could see.
             var plate = UIKit.Img("Plate", seat, Art.S("Ui/Hud/trough"), Color.white,
                                   new Vector2(EndlessHubLayout.PlateWidth,
                                               EndlessHubLayout.PlateHeight),
@@ -380,7 +529,7 @@ namespace GlimmerGrove
                                        3f, 3f);
 
             // A standing is half again as long as the label it can replace, and the plate is a
-            // fixed trough — so the *caption* shrinks rather than the plate growing, which is
+            // fixed trough - so the *caption* shrinks rather than the plate growing, which is
             // what keeps this a string change and not a layout one. `render_endless.py` is what
             // says whether 22 is still readable at that width.
             UIKit.Shrinkable(caption, 22);
@@ -389,8 +538,9 @@ namespace GlimmerGrove
             // has nothing to wait for, so it neither subscribes nor pays for the read.
             if (held && caption) caption.gameObject.AddComponent<Standing>().Watch(caption, best);
 
+            // After the lines, since 2026-09-28: the medal is read under them now.
             seat.localScale = Vector3.zero;
-            Tween.Pop(seat, 0f, .62f, .08f);
+            Tween.Pop(seat, 0f, .62f, .30f);
         }
 
         // ------------------------------------------------------------------ the lines
@@ -474,23 +624,23 @@ namespace GlimmerGrove
         ///
         /// <b>The same on purpose.</b> This is the second place in the game a player presses to
         /// begin, and a second design for it would be a second answer to "what does starting look
-        /// like" — the rule <c>ProductCard</c> records about the two shops, asked of a button.
+        /// like" - the rule <c>ProductCard</c> records about the two shops, asked of a button.
         ///
         /// <para>
         /// <b>Behind a wall it is the same key wearing the wall, never a missing key.</b> A lane
         /// nobody can enter yet still draws its medal, its lines and its way in, because this
-        /// screen is the lane's advertisement as well as its door — hiding the control is
+        /// screen is the lane's advertisement as well as its door - hiding the control is
         /// <c>WardShelf</c>'s mistake (invariant 42a), where a shop that only shows what you
         /// already have is asking for a decision it will not show you. What changes is three
         /// things and no geometry: the mould (<see cref="Skins.Shut"/>), the glyph (a padlock)
-        /// and the caption, <b>which names the level rather than saying LOCKED</b> — invariant
+        /// and the caption, <b>which names the level rather than saying LOCKED</b> - invariant
         /// 42e, because one word says a player cannot have this and not what would change that.
         /// </para>
         /// <para>
         /// <b>Nothing invites a press that will be refused.</b> The sheen already knew that; the
         /// halo and the breath did not, and a gold-lit key that pulses is an invitation whatever
         /// the sprite under it says. <b>And it is still pressable</b>, because the refusal is how
-        /// the wall gets said out loud — a control that swallows a tap is a broken button
+        /// the wall gets said out loud - a control that swallows a tap is a broken button
         /// (invariant 16o).
         /// </para>
         /// </summary>

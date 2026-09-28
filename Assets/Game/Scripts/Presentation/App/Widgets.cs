@@ -16,14 +16,14 @@ namespace GlimmerGrove
         public Image Icon;
 
         /// <summary>
-        /// The one sound this button makes, or null for a control that has its own voice —
+        /// The one sound this button makes, or null for a control that has its own voice -
         /// the streak rung that plays <c>unlock</c>, the companion the player pokes, the
         /// nav tab you are already standing on.
         ///
         /// <para>
         /// <b>One sound, on the way down.</b> A tap used to make two, a <c>press</c> as the
         /// finger landed and a <c>click</c> as it lifted, and the pair was never heard as
-        /// tactile depth — it was heard as a button that stutters. Down rather than up
+        /// tactile depth - it was heard as a button that stutters. Down rather than up
         /// because that is the frame the squash starts on, so the sound and the movement
         /// are the same event; firing on release put the audio a reaction-time behind the
         /// animation and gave the whole interface a lag it did not have.
@@ -46,8 +46,8 @@ namespace GlimmerGrove
         /// The size the caption was built at, before any fitting shrank it.
         ///
         /// Kept so a re-fit measures from the original every time rather than from whatever
-        /// the last one left behind. Without it a button whose caption changes repeatedly —
-        /// an ad button counting down, which repaints every frame — would ratchet its own
+        /// the last one left behind. Without it a button whose caption changes repeatedly -
+        /// an ad button counting down, which repaints every frame - would ratchet its own
         /// text smaller and never come back up.
         /// </summary>
         public int LabelSize;
@@ -57,7 +57,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Set through <see cref="UIKit.OneLine"/> and honoured by <see cref="UIKit.FitLabel"/>,
-        /// which is what makes it survive <see cref="SetCaption"/> — a flag the caller had to
+        /// which is what makes it survive <see cref="SetCaption"/> - a flag the caller had to
         /// re-apply after every caption change is a flag that is wrong for most of a
         /// countdown's life.
         /// </para>
@@ -69,11 +69,11 @@ namespace GlimmerGrove
         /// front of it.
         ///
         /// <para>
-        /// A leading glyph is a label on the action — the play triangle on WATCH, the gem on
-        /// a gem price — and reads as part of the verb. A trailing one is a <em>unit</em> on
+        /// A leading glyph is a label on the action - the play triangle on WATCH, the gem on
+        /// a gem price - and reads as part of the verb. A trailing one is a <em>unit</em> on
         /// the number the caption ends with: "BUY FOR 4,500 ⬤" says which coin, the same way
         /// the shop's price faces do. The two are different jobs, so which one a button wants
-        /// is a property of the button and not of whoever last repainted it — otherwise a
+        /// is a property of the button and not of whoever last repainted it - otherwise a
         /// caption change through <see cref="SetCaption"/> would silently move the glyph back
         /// to the front, which is the trap <see cref="OneLine"/> exists for one line up.
         /// </para>
@@ -90,7 +90,7 @@ namespace GlimmerGrove
         /// The pair is what makes this worth a method rather than an assignment: a button
         /// carrying a glyph has to be re-measured whenever its caption changes, and a
         /// caller that has to remember a second call is a caller that will eventually
-        /// forget one — these captions are countdowns, so the failure would be a glyph that
+        /// forget one - these captions are countdowns, so the failure would be a glyph that
         /// drifts off centre as the clock ticks. Returns whether anything actually changed,
         /// so a per-frame paint can skip the mesh rebuild on the frames that read the same.
         /// </para>
@@ -349,7 +349,7 @@ namespace GlimmerGrove
             img.color = new Color(1, 1, 1, 0.004f);
 
             // Decoration, and it sits on top of whatever it decorates. On a button that
-            // costs nothing — the press bubbles up to the Btn on the parent — but on
+            // costs nothing - the press bubbles up to the Btn on the parent - but on
             // anything whose tap target is a *sibling* below it, a raycasting sheen
             // swallows the tap and the element silently stops working.
             img.raycastTarget = false;
@@ -392,8 +392,8 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The split between this and <see cref="Attach"/> is the same one
         /// <c>GridView</c> draws between <c>Show</c> and <c>Refresh</c>, and it exists for
-        /// the same report.</b> Attaching is an <em>event</em> — a burst, a cast, a piece
-        /// arriving — so it restarts from frame nought, which is what a caller firing an
+        /// the same report.</b> Attaching is an <em>event</em> - a burst, a cast, a piece
+        /// arriving - so it restarts from frame nought, which is what a caller firing an
         /// effect means. A recycled cell being rebound is a <em>redraw</em>: the shop grid, the
         /// picker grid and every tile of the grove floor rebind on any event that touches the
         /// ledger, the layout or the wallet, and a sync landing raises three of those a few
@@ -405,7 +405,7 @@ namespace GlimmerGrove
         /// Only a <b>looping</b> reel is left alone, and that is the whole of the rule: a loop
         /// is a state and a one-shot is an event, so a caller replaying a burst still gets its
         /// burst. A reel that has finished, one that was stopped, and a stack of more than one
-        /// are all replaced rather than adopted — the second of those is what
+        /// are all replaced rather than adopted - the second of those is what
         /// <see cref="Attach"/>'s own note is about, and this must not quietly keep it.
         /// </para>
         /// </summary>
@@ -481,7 +481,7 @@ namespace GlimmerGrove
         public static Flipbook Attach(Image img, Sprite[] frames, float fps = 24f, bool loop = true)
         {
             // One flipbook per image, always. Attaching over a running one used to be the
-            // caller's job, and the callers did it with GetComponent — which finds the *first*
+            // caller's job, and the callers did it with GetComponent - which finds the *first*
             // flipbook, so two repaints in one frame (a placement's event and the art's arrival
             // landing together) left the second one running. It went on painting its frames
             // into an image that had since been re-sized and re-sprited for a different piece:

@@ -9,7 +9,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>This is <see cref="SafeArea"/>'s argument about a different intruder.</b> A cutout
     /// takes the top of the display and never moves; a keyboard takes the bottom, arrives when
-    /// a field is focused and goes again — but the measurement is the same measurement and the
+    /// a field is focused and goes again - but the measurement is the same measurement and the
     /// trap is the same trap. <see cref="TouchScreenKeyboard.area"/> is reported in device
     /// pixels, everything here is laid out in canvas units, and dividing by the canvas's own
     /// scale factor is the step a hand-tuned margin skips. A constant chosen to clear one
@@ -18,8 +18,8 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>Only the height is read, and that is deliberate.</b> The rect's origin has meant
-    /// different things on the two platforms across Unity versions — y measured from the top on
-    /// one and from the bottom on the other — and a reading that is upside down puts a panel off
+    /// different things on the two platforms across Unity versions - y measured from the top on
+    /// one and from the bottom on the other - and a reading that is upside down puts a panel off
     /// the top of the screen rather than merely in the wrong place. A height needs no origin,
     /// and the one fact a soft keyboard cannot disagree about is that it grows from the bottom
     /// edge. So the height is the whole of what this asks for.
@@ -36,14 +36,14 @@ namespace GlimmerGrove
     {
         /// <summary>
         /// A keyboard covering more of the display than this is not a keyboard, it is a bad
-        /// reading — the shape a resized activity or a mid-animation query produces. Refused
+        /// reading - the shape a resized activity or a mid-animation query produces. Refused
         /// rather than clamped: a clamp would still shove the panel most of the way up, and
         /// being wrong by a whole screen is worse than being wrong by a keyboard.
         /// </summary>
         const float MaxShare = .85f;
 
         /// <summary>
-        /// How far above the keyboard a lifted panel sits. Air rather than a seam — a panel
+        /// How far above the keyboard a lifted panel sits. Air rather than a seam - a panel
         /// whose bottom edge touches the keyboard's top reads as being under it.
         /// </summary>
         public const float Margin = 40f;
@@ -100,7 +100,7 @@ namespace GlimmerGrove
     /// <para>
     /// <b>It never pushes the head off the top.</b> The lift is capped by the room above the
     /// panel, so on a display too short to hold the panel and the keyboard at once the panel
-    /// stops against the top edge instead of climbing out of sight — which is also the honest
+    /// stops against the top edge instead of climbing out of sight - which is also the honest
     /// answer if a platform ever reports a keyboard taller than the space there is.
     /// </para>
     /// <para>
@@ -113,7 +113,7 @@ namespace GlimmerGrove
     [DisallowMultipleComponent]
     public sealed class KeyboardLift : MonoBehaviour
     {
-        /// <summary>How fast the slide settles — about a fifth of a second, which is roughly what a keyboard takes.</summary>
+        /// <summary>How fast the slide settles - about a fifth of a second, which is roughly what a keyboard takes.</summary>
         const float Rate = 14f;
 
         /// <summary>Under this many units of difference the slide is finished, rather than approaching for ever.</summary>

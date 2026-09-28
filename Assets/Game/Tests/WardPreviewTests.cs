@@ -11,13 +11,13 @@ namespace GlimmerGrove.Tests
     /// <b>This fixture exists because of a bug no gate could have caught.</b> The panel offered one
     /// key and chose what it said: for a turret the player owned it sold the next star, and only
     /// fell back to standing it when there was none left. A turret starts at one star, so there was
-    /// always one left — and every turret a player owned and had not stood offered <c>UPGRADE</c>
+    /// always one left - and every turret a player owned and had not stood offered <c>UPGRADE</c>
     /// and nothing else. There was no way to equip a second turret at all, and the compile, the
     /// content gates, the art gates and 1,757 tests were green throughout, because every branch is
     /// correct and nothing asks whether their union covers the states.
     /// </para>
     /// <para>
-    /// So what is asserted is the <em>property</em> rather than the branches — see
+    /// So what is asserted is the <em>property</em> rather than the branches - see
     /// <see cref="WardPreviewKeys"/>.
     /// </para>
     /// </summary>
@@ -29,8 +29,8 @@ namespace GlimmerGrove.Tests
         /// sale.
         ///
         /// <b>It is unconditional again.</b> While the legendary band was bought outright, held
-        /// stopped implying standable — a turret could be owned on a seat with no copy free for
-        /// it — and the lower key had to be able to sell that copy (invariant 42k). A turret is
+        /// stopped implying standable - a turret could be owned on a seat with no copy free for
+        /// it - and the lower key had to be able to sell that copy (invariant 42k). A turret is
         /// bought per seat again, so owning one here <em>is</em> owning this seat.
         /// </summary>
         [Test]
@@ -121,7 +121,7 @@ namespace GlimmerGrove.Tests
         /// The panel fits the shortest canvas this game is drawn on, title and all.
         ///
         /// <b>Asserted because it just grew.</b> The key band is two keys tall now whether or not
-        /// both are shown, which is what stops the panel resizing under a finger — and a panel
+        /// both are shown, which is what stops the panel resizing under a finger - and a panel
         /// measured against nothing is a panel that draws its own button off the bottom edge, which
         /// is the mistake <c>WardPreviewOverlay.PanelH</c>'s own remark names.
         /// </summary>

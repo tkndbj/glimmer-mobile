@@ -11,7 +11,7 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// Three properties carry it. It is <b>per utility and per run</b>, so nothing about it
-    /// reaches the save file — a count of seconds goes both ways and is exactly what invariant
+    /// reaches the save file - a count of seconds goes both ways and is exactly what invariant
     /// 11b refuses a merge. It is <b>advanced by the caller</b> rather than read off a wall
     /// clock, which is what stops a cooldown being paid off by opening a panel. And it can
     /// <b>only ever refuse a use</b>, which is why invariant 39 needs no arithmetic here: every
@@ -73,7 +73,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// <b>A utility authoring no cooldown is never held back</b>, which is what makes an
-        /// absent field mean "as the bar behaved before this existed" — the shape every optional
+        /// absent field mean "as the bar behaved before this existed" - the shape every optional
         /// number here takes, because <c>JsonUtility</c> writes a nought into a field an older
         /// file never had.
         /// </summary>
@@ -224,7 +224,7 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// <b>Refused rather than clamped</b>, because the only way to write a number this far
-        /// out is to have written it in another unit — ten seconds typed as ten thousand
+        /// out is to have written it in another unit - ten seconds typed as ten thousand
         /// milliseconds is an item usable once a raid, which plays as a broken bar rather than
         /// as a retune somebody meant. A clamp would hide exactly the mistake worth failing a
         /// build over.
@@ -251,7 +251,7 @@ namespace GlimmerGrove.Tests
 
         // =================================================================== what ships
         /// <summary>
-        /// The bar in force really does cool, and its items disagree about how long — which is
+        /// The bar in force really does cool, and its items disagree about how long - which is
         /// the whole point of the feature. A stormcall that came back as fast as a firepot would
         /// simply be the strongest tap on the bar, and holding a hundred of anything would make
         /// every wave the same answer given as fast as a thumb moves.

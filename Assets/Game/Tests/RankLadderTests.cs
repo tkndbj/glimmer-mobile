@@ -22,7 +22,7 @@ namespace GlimmerGrove.Tests
     /// </para>
     ///
     /// <para>
-    /// Those two are pinned hardest. <b>A rank can never fall</b> (invariant 52) — every measure
+    /// Those two are pinned hardest. <b>A rank can never fall</b> (invariant 52) - every measure
     /// is monotone, so more play can only ever move somebody up, and a rank being <em>derived</em>
     /// rather than stored is only sound because of it. And <b>the ladder is consecutive</b>: the
     /// held rung is the top of an unbroken run from the bottom, so an authoring slip cannot hand
@@ -30,7 +30,7 @@ namespace GlimmerGrove.Tests
     /// </para>
     /// <para>
     /// Everything here runs offline: the ladder is built from DTOs by hand, so nothing needs
-    /// <c>JsonUtility</c>, a content file or <c>Application.dataPath</c> — invariant 29e's rule,
+    /// <c>JsonUtility</c>, a content file or <c>Application.dataPath</c> - invariant 29e's rule,
     /// because a fixture only the Editor can run is not a guard on the rule it pins.
     /// </para>
     /// </summary>
@@ -116,7 +116,7 @@ namespace GlimmerGrove.Tests
         {
             // The offline gate carries its own copy of this list (`content.py`'s RANK_DERIVED
             // and RANK_MEASURES), because it has no C# to ask. A measure added here and not
-            // there is a rung the gate waves through — which is the one direction that matters,
+            // there is a rung the gate waves through - which is the one direction that matters,
             // since the gate is what proves a shipped ladder can be climbed at all.
             var expected = new[]
             {
@@ -177,7 +177,7 @@ namespace GlimmerGrove.Tests
         /// <c>best_wave</c> scope names something that ships.
         ///
         /// Pinned because the index keeps <em>three</em> orderings and only one of them is flat
-        /// — a lane cannot chain into another lane — so "is this level in the catalog" and "is
+        /// - a lane cannot chain into another lane - so "is this level in the catalog" and "is
         /// this level next" are different questions with different answers.
         /// </summary>
         [Test]
@@ -210,7 +210,7 @@ namespace GlimmerGrove.Tests
             var index = Catalog();
             Holding(("one_a", 3), ("one_b", 2), ("two_a", 1));
 
-            // Nothing has been counted — this is an account older than the feature — and three
+            // Nothing has been counted - this is an account older than the feature - and three
             // cleared glades are three runs that happened and three that were won.
             Assert.AreEqual(0, LifetimeTally.Counted(TaskGoal.Runs), "nothing counted");
             Assert.AreEqual(3L, LifetimeTally.Count(TaskGoal.Runs), "three clears are three runs");
@@ -261,7 +261,7 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(7, by[TaskGoals.Bosses]);
 
             // Commutative and idempotent, which is what makes it a join rather than a decision
-            // (invariant 11b) — a merge that depended on which device asked would converge on
+            // (invariant 11b) - a merge that depended on which device asked would converge on
             // different answers on two phones.
             var back = LifetimeTally.Join(other, mine).ToDictionary(r => r.goal, r => r.count);
             CollectionAssert.AreEquivalent(by, back);
@@ -360,7 +360,7 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(3, ladder.OrdinalHeld(index), "everything met");
 
             // The one thing a player can do that looks like going backwards: replay a glade and
-            // score worse. Records are bests, so the ledger does not move — which is the whole
+            // score worse. Records are bests, so the ledger does not move - which is the whole
             // reason a derived badge is safe (invariant 52).
             Holding(("one_a", 3), ("one_b", 3));
             Assert.AreEqual(3, ladder.OrdinalHeld(index), "a worse replay changes nothing");
@@ -472,7 +472,7 @@ namespace GlimmerGrove.Tests
         ///
         /// <para>
         /// <b>A fixture rather than a content gate, and that was learned the hard way.</b> The
-        /// Editor's validator asked this first, against <c>AssetManifest.GlobalAssets()</c> —
+        /// Editor's validator asked this first, against <c>AssetManifest.GlobalAssets()</c> -
         /// which reads the <em>published</em> table, and nothing publishes the shipped one
         /// during validation, so it reported all seven badges undeclared on a file that was
         /// correct. Here the table is published deliberately, so the question is about the
@@ -511,7 +511,7 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The furniture the hall is built from (<c>RankKit</c>) is in the global preload set
         /// and on disk. The addresses are constants, so <c>artnames.py</c> reads them off the
-        /// manifest list rather than off a call site — and nothing but this holds the
+        /// manifest list rather than off a call site - and nothing but this holds the
         /// constants to that list: a piece renamed in one place and not the other is a white
         /// rectangle under every badge on the rail (invariant 7b). The icon table is walked
         /// too, so a measure that names a picture the game does not ship fails here rather
@@ -526,7 +526,7 @@ namespace GlimmerGrove.Tests
 
             string root = System.IO.Path.Combine(TestJson.RepoRoot(), "Assets", "Game", "Art", "Ui");
 
-            Assert.AreEqual(6, RankKit.All.Length);
+            Assert.AreEqual(5, RankKit.All.Length);
             foreach (var piece in RankKit.All)
             {
                 Assert.IsTrue(declared.Contains(AssetPipeline.AssetManifest.Ui(piece)),
@@ -547,6 +547,27 @@ namespace GlimmerGrove.Tests
             }
             Assert.AreEqual("star_full", RankKit.IconFor(RankMeasures.Parse("stars")).address,
                             "a star beside 'Earn N stars', at the owner's instruction");
+        }
+
+        /// <summary>
+        /// <b>The board's cap and plinth are the slice its meta carries.</b> The page places the
+        /// title ribbon on the cap and starts the first line under it off
+        /// <c>RankKit.BoardCap</c>, and ends the last above the plinth off
+        /// <c>RankKit.BoardPlinth</c> - so a re-cut that moved the slice without the constants
+        /// would write a line across the cap, with every other gate green.
+        /// </summary>
+        [Test]
+        public void TheBoardsCapAndPlinthAreTheSliceItsMetaCarries()
+        {
+            string meta = System.IO.File.ReadAllText(System.IO.Path.Combine(
+                TestJson.RepoRoot(), "Assets", "Game", "Art", "Ui", RankKit.Board + ".png.meta"));
+            var m = System.Text.RegularExpressions.Regex.Match(
+                meta, @"spriteBorder: \{x: (\d+), y: (\d+), z: (\d+), w: (\d+)\}");
+            Assert.IsTrue(m.Success, "kit_board.png.meta carries no spriteBorder");
+
+            Assert.AreEqual(RankKit.BoardSide, float.Parse(m.Groups[1].Value), "the board's side slice moved");
+            Assert.AreEqual(RankKit.BoardPlinth, float.Parse(m.Groups[2].Value), "the board's plinth slice moved");
+            Assert.AreEqual(RankKit.BoardCap, float.Parse(m.Groups[4].Value), "the board's cap slice moved");
         }
 
         [Test]

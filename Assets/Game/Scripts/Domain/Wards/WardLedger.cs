@@ -12,7 +12,7 @@ namespace GlimmerGrove.Wards
         /// <summary>Affordable, unheld and for sale. The only state a buy button is live in.</summary>
         Ready,
 
-        /// <summary>Already held — handed over free, or bought earlier.</summary>
+        /// <summary>Already held - handed over free, or bought earlier.</summary>
         AlreadyHeld,
 
         /// <summary>The roster puts no price on it and it is not free either. Nothing to offer.</summary>
@@ -33,8 +33,8 @@ namespace GlimmerGrove.Wards
         /// gate used to belong to a credit price alone, so half the shelf could be taken in any
         /// order by anybody holding gems.
         ///
-        /// <b>And it is now the <em>only</em> wall.</b> There was a fourth state here — a rung was
-        /// sealed until the one below it on the shelf was held — and it is gone at the owner's
+        /// <b>And it is now the <em>only</em> wall.</b> There was a fourth state here - a rung was
+        /// sealed until the one below it on the shelf was held - and it is gone at the owner's
         /// decision (<c>WardCatalog.LadderProblem</c>): reaching the level is the whole of what
         /// opens a turret, so a player buys what they have earned in whatever order they like.
         /// </summary>
@@ -96,7 +96,7 @@ namespace GlimmerGrove.Wards
     /// </para>
     /// <para>
     /// <b>Owning a turret is not money</b>, so a forged entry buys a silhouette and never an
-    /// advantage that reaches a public number — every ability is an addition to a bolt and the
+    /// advantage that reaches a public number - every ability is an addition to a bolt and the
     /// grove's score does not read the line. That is what makes a client-held entitlement safe
     /// here where a stored <em>amount</em> would not be (invariant 15's own argument).
     /// </para>
@@ -144,7 +144,7 @@ namespace GlimmerGrove.Wards
         /// <b>And there is no longer a turret exempt from it.</b> A legendary was bought outright
         /// and held on every seat by one payment for three days (invariant 42k); it is bought per
         /// seat now, like the twenty under it, so this rule is asked of the whole shelf with no
-        /// band in it. The bare-id test below stays and is now only ever <em>legacy</em> — a file
+        /// band in it. The bare-id test below stays and is now only ever <em>legacy</em> - a file
         /// from before colours existed, or one holding a legendary bought under the old rule,
         /// neither of which may be confiscated.
         /// </para>
@@ -266,8 +266,8 @@ namespace GlimmerGrove.Wards
             // **`Row` rather than `Key`, and the two answer the same thing today.** `Row` is
             // where a holding's spelling is decided, and it decided differently for the legendary
             // band for three days (`WardHolding.CopyMark`): a bare row, held on all four seats by
-            // one payment. It is one rule again — a seat is what is bought, on every rung of this
-            // shelf — and this is the call site that would have to move if that stopped being
+            // one payment. It is one rule again - a seat is what is bought, on every rung of this
+            // shelf - and this is the call site that would have to move if that stopped being
             // true.
             return Pay(model, WardHolding.Row(model, colour), offer, colour.ToString(),
                        keeperLevel);
@@ -303,7 +303,7 @@ namespace GlimmerGrove.Wards
 
             // **The seat, on every turret including a legendary.** It carried "any" for the band
             // while a legendary was bought outright, which is a column that answers one thing for
-            // twenty turrets and another for ten — and the question this event is asked is "which
+            // twenty turrets and another for ten - and the question this event is asked is "which
             // colours do people buy for", which a legendary now has an honest answer to.
             Telemetry.Track("ward_bought", "ward", model.Id, "colour", seat,
                             "cost", offer.Cost, "currency", offer.Currency, "level", keeperLevel);
@@ -343,7 +343,7 @@ namespace GlimmerGrove.Wards
         ///
         /// <b>No early return for an empty side</b>, which is <c>CompanionLedger.Join</c>'s trap:
         /// handing one array straight back would skip the sort, and <c>SaveDelta</c> walks these
-        /// in order — so an unsorted file joined against nothing would read as changed on every
+        /// in order - so an unsorted file joined against nothing would read as changed on every
         /// launch and push a write for nothing, for ever.
         /// </summary>
         public static string[] Join(string[] mine, string[] other)

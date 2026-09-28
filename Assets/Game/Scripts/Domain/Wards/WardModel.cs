@@ -8,12 +8,12 @@ namespace GlimmerGrove.Wards
     ///
     /// <para>
     /// <b>Its id is permanent and invariant 1 reaches it</b>, because the save keys both halves of
-    /// the feature on it — the set of turrets a player has bought, and which one they have put on
+    /// the feature on it - the set of turrets a player has bought, and which one they have put on
     /// each colour. Renaming one confiscates a purchase; reusing one hands somebody a turret they
     /// never bought.
     /// </para>
     /// <para>
-    /// <b>Everything a player can see about it is derived from that id</b> — the name, the line
+    /// <b>Everything a player can see about it is derived from that id</b> - the name, the line
     /// under it, the picture and the reel it fires with are all <c>ward.{id}.name</c>,
     /// <c>ward.{id}.note</c> and <c>Siege/Wards/{id}_{colour}</c>. That is invariant 5a's rule:
     /// anything holding an id can draw the turret without reading the catalog it came from, and no
@@ -24,8 +24,8 @@ namespace GlimmerGrove.Wards
     /// grove's.</b> Credits are what the game pays out for playing, so a credit price is a
     /// <em>reward</em> and carries a keeper level with it; gems are bought or earned slowly, so a
     /// gem price is a <em>shortcut</em> and asks nothing but the gems. That is invariant 15a's
-    /// shape — the level gate is permission to pay rather than a second way to be handed the thing
-    /// — and 16j's, where the same floor is priced two ways up one ladder.
+    /// shape - the level gate is permission to pay rather than a second way to be handed the thing
+    /// - and 16j's, where the same floor is priced two ways up one ladder.
     /// </para>
     /// </summary>
     public sealed class WardModel
@@ -40,12 +40,12 @@ namespace GlimmerGrove.Wards
         /// How strong the ability is, in tenths of whatever it measures: tenths of a baseline bolt
         /// for the ones that deal damage, tenths of a march for frost, tenths of a fuel unit for
         /// siphon, tenths of a capacity for a beacon, tenths of a bolt bitten deeper into plating
-        /// for a rend — and for a prism alone it is not tenths at all but a <em>count</em>, of how
+        /// for a rend - and for a prism alone it is not tenths at all but a <em>count</em>, of how
         /// many colours besides its own it is strong against.
         ///
         /// <b>Tenths throughout, and never a float.</b> Everything this multiplies ends up in a
         /// graded number, and a threshold decided by a float is a number three code generators
-        /// round three ways — this project has paid for that once already
+        /// round three ways - this project has paid for that once already
         /// (<c>Mathf.CeilToInt(45 * 1.20f)</c>).
         /// </summary>
         public readonly int Magnitude;
@@ -64,8 +64,8 @@ namespace GlimmerGrove.Wards
         /// What this turret's bolt is worth, in tenths of the baseline one.
         ///
         /// <para>
-        /// <b>Ten is the floor and the data cannot express less</b> — <see cref="Power"/> clamps
-        /// it — which is the same rule <see cref="WardAbility"/> is built around, moved onto the
+        /// <b>Ten is the floor and the data cannot express less</b> - <see cref="Power"/> clamps
+        /// it - which is the same rule <see cref="WardAbility"/> is built around, moved onto the
         /// one number that could otherwise break it. A siege's par is the hill's health over
         /// <c>SiegeTuning.PerfectMatch</c>, computed against the <em>baseline</em> bolt, so a
         /// turret that hit softer would need more matches than par assumes and push three stars
@@ -76,7 +76,7 @@ namespace GlimmerGrove.Wards
         /// <b>So a roster where turrets differ in damage is built upward from the baseline, never
         /// down from an average.</b> What a player reads as "the mortar hits softer than the
         /// cleaver" is the mortar sitting <em>at</em> the floor while the cleaver stands above it
-        /// — the same spread on the card, and no level's par moves. Above only ever makes par
+        /// - the same spread on the card, and no level's par moves. Above only ever makes par
         /// over-state what a good run needs, which is the direction invariant 22 says to err in
         /// and what invariant 37w already accepted when cogs shipped.
         /// </para>
@@ -91,7 +91,7 @@ namespace GlimmerGrove.Wards
         /// reaches nothing that is graded: par is counted in matches, the star lines are multiples
         /// of par, and what a run is worth does not ask whether the line survived comfortably. So
         /// a turret may be bought that hits harder and falls sooner, and a player who stands four
-        /// of them has made a choice they can be wrong about — which is what invariant 26h asks of
+        /// of them has made a choice they can be wrong about - which is what invariant 26h asks of
         /// anything on this shelf.
         /// </para>
         /// <para>
@@ -145,14 +145,14 @@ namespace GlimmerGrove.Wards
         /// <b>Two consequences of one fact, which is why it is one field.</b> Every other turret
         /// is drawn in its seat's colour and fires only at that colour (<see cref="ArtFor"/>,
         /// <c>SiegeWard.ReachTenths</c>); a legendary is the negation of both at once, and
-        /// spelling it twice is two predicates that can come to disagree — which is precisely how
+        /// spelling it twice is two predicates that can come to disagree - which is precisely how
         /// <c>IsStarter</c> was got wrong (invariant 16j: "free" was <c>Cost &lt;= 0</c> until a
         /// second currency arrived).
         /// </para>
         /// <para>
         /// <b>There was a third and it is gone: it was bought once rather than once per seat</b>
         /// (invariant 42k). That was a rule about a <em>purchase</em> riding on a fact about a
-        /// picture, and it read across as the band standing free on seats nobody had paid for —
+        /// picture, and it read across as the band standing free on seats nobody had paid for -
         /// then, patched with copies, as four turrets sharing one star ladder. A legendary is
         /// bought for a seat like everything else on the shelf (<see cref="WardHolding.Row"/>);
         /// what it still ignores is the colour lock on the hill, which is what the band is for.
@@ -171,7 +171,7 @@ namespace GlimmerGrove.Wards
         /// is the hill's health over a perfect match computed against the baseline bolt
         /// (<see cref="PowerTenths"/>): a turret that reaches every colour only ever fires bolts
         /// it would otherwise not have fired, so a run ends sooner and par over-states what a good
-        /// one needs — the direction invariant 22 says to err in. Nothing about a star line moves.
+        /// one needs - the direction invariant 22 says to err in. Nothing about a star line moves.
         /// </para>
         /// </summary>
         public readonly bool Legendary;
@@ -183,7 +183,7 @@ namespace GlimmerGrove.Wards
         /// because what a reader at an address wants to know is "is this one picture or four" and
         /// what a reader at the hill wants to know is "does the colour lock hold". Two names, one
         /// fact, and the day they stop being one fact there is a place to say so. <b>A third
-        /// reader used to ask it and no longer does</b> — a holding's spelling, which was the
+        /// reader used to ask it and no longer does</b> - a holding's spelling, which was the
         /// wrong question for this field to be answering (invariant 42k).
         /// </summary>
         public bool Colourless => Legendary;
@@ -235,16 +235,16 @@ namespace GlimmerGrove.Wards
         /// <para>
         /// <b>Built rather than written out as a literal, which is the one place this project
         /// allows that and says why.</b> <c>Tools/verify/artnames.py</c> reads literals off a call
-        /// site, so a built name is a name it cannot check — and twenty models times four colours
+        /// site, so a built name is a name it cannot check - and twenty models times four colours
         /// is eighty literals nobody would keep in step with the catalog anyway. What replaces the
         /// literal is a stronger gate rather than a weaker one: the roster is <em>content</em>, so
         /// <c>ContentValidation</c> and <c>content.py</c> both walk it and error on a model whose
-        /// addresses <c>AssetManifest</c> cannot name — which catches a missing picture and a
+        /// addresses <c>AssetManifest</c> cannot name - which catches a missing picture and a
         /// misspelled id at once, where a literal only ever catches the second.
         /// </para>
         /// <para>
         /// <b>A legendary answers one address for every colour</b>, because it wears none
-        /// (<see cref="Legendary"/>) — one picture and one recoil rather than four of each. Every
+        /// (<see cref="Legendary"/>) - one picture and one recoil rather than four of each. Every
         /// caller here already takes a colour and none of them has to learn about it, which is the
         /// whole reason the decision lives on the model: the board, the shelf, the preview stage
         /// and both content gates all ask this and get the right answer without a branch.
@@ -259,14 +259,14 @@ namespace GlimmerGrove.Wards
 
         /// <summary>
         /// The one turret that draws the shared <c>shot_{colour}</c> reels rather than four of its
-        /// own — a fireball, in whichever colour its ward burns.
+        /// own - a fireball, in whichever colour its ward burns.
         ///
         /// <para>
         /// <b>It was four different elements and the owner had it made one.</b> The set began as
         /// fire, venom, ice and lightning, one per ward colour, which was right while the
         /// <em>starter</em> threw them: a line of four starters put four silhouettes in the air at
         /// once. Once the set moved onto a bought turret only this model drew it, so the four never
-        /// appeared together except on a player who had bought the same turret for all four seats —
+        /// appeared together except on a player who had bought the same turret for all four seats -
         /// where they read as four unrelated weapons wearing one name. Reported off the preview
         /// panel as the red Breaker doing a different animation from the orange one. See
         /// <c>SiegeShotBake.Shots</c>.
@@ -279,8 +279,8 @@ namespace GlimmerGrove.Wards
         /// elements is a <em>rend</em> turret today and nothing about a model says so.
         ///
         /// <b>Named outright, because it stopped being derivable.</b> It used to be read off the
-        /// ability — a turret with no ability has nothing to depict, so it fired what the colour
-        /// fired — and that was honest for exactly as long as the starter was the only model
+        /// ability - a turret with no ability has nothing to depict, so it fired what the colour
+        /// fired - and that was honest for exactly as long as the starter was the only model
         /// without one. The owner moved the elemental set onto a bought turret and gave the
         /// starter a single effect of its own, and no property of a model tells you that: it is a
         /// decision about art, so it is written down as one rather than smuggled into a predicate
@@ -290,7 +290,7 @@ namespace GlimmerGrove.Wards
         /// <b>Never <see cref="IsStarter"/>, whatever the roster looks like on the day.</b> That
         /// is invariant 16j's trap: "free" was <c>Cost &lt;= 0</c> for a year and the day a second
         /// currency arrived every gem-priced thing in the game read as free. Under that spelling a
-        /// roster handing out a second free turret would silently take its projectile away — and
+        /// roster handing out a second free turret would silently take its projectile away - and
         /// it would be wrong today in any case, since the turret with the elemental set is one
         /// somebody pays credits for.
         /// </para>
@@ -308,8 +308,8 @@ namespace GlimmerGrove.Wards
         ///
         /// <para>
         /// <b>Per turret <em>and</em> per colour, which is dearer than it looks and was settled by
-        /// looking rather than by arithmetic.</b> A bleached reel — white, with all its brightness
-        /// in coverage — would cost a quarter as much and could be worn in any colour by one
+        /// looking rather than by arithmetic.</b> A bleached reel - white, with all its brightness
+        /// in coverage - would cost a quarter as much and could be worn in any colour by one
         /// multiply. That is what this shipped as first, and held up beside the elemental fireball
         /// it was a flat smear: a multiply can only vary <em>value</em>, and what makes these
         /// effects read is variation in <em>hue</em>. Invariant 37l, met from a third direction.
@@ -352,7 +352,7 @@ namespace GlimmerGrove.Wards
 
         /// <summary>
         /// The flame a raider wears while an ember turret's fire is on it, as an
-        /// <c>Fx/Siege</c> key — one reel per <em>ward colour</em>.
+        /// <c>Fx/Siege</c> key - one reel per <em>ward colour</em>.
         ///
         /// <para>
         /// <b>Per colour and not per model, which is the one place this family differs from
@@ -365,14 +365,14 @@ namespace GlimmerGrove.Wards
         /// <para>
         /// <b>Static because a burn outlives the model that lit it.</b>
         /// <c>SiegeRaider.BurnFrom</c> names a ward, and a ward can fall while its fire is still
-        /// on the hill — so the view asks this with a colour in hand rather than with a turret,
+        /// on the hill - so the view asks this with a colour in hand rather than with a turret,
         /// which is the only thing it is ever certain of.
         /// </para>
         /// <para>
         /// <b>Not tinted from one white reel</b>, which is the correction invariant 37l records
         /// and this file already pays for at <see cref="ShotFor"/>: <c>Image.color</c> is a
         /// multiply, so it can only vary value, and what makes fire read is variation in
-        /// <em>hue</em> across its own body — a cold outer tongue, a hot middle, a white core.
+        /// <em>hue</em> across its own body - a cold outer tongue, a hot middle, a white core.
         /// A bleached flame worn in four colours is four flat smears.
         /// </para>
         /// </summary>

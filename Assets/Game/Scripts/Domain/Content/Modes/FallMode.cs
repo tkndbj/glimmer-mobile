@@ -11,7 +11,7 @@ namespace GlimmerGrove.Content
     /// <b>It authors a board and nothing that can be graded.</b> A level says how big the well
     /// is, what is standing in it and what it deals; par is the fewest drops that empty it,
     /// found by search, and the two star lines and the supply all fall out of par. So there is
-    /// no number in a level file that can come to disagree with how the level actually plays —
+    /// no number in a level file that can come to disagree with how the level actually plays -
     /// the same reason a glade omits its par, and the same reason it matters more here: a
     /// falling-piece board looks perfectly authored whether or not anybody can finish it.
     /// </para>
@@ -83,7 +83,7 @@ namespace GlimmerGrove.Content
         /// search cannot prove is content the build gate is supposed to have refused, so
         /// reaching here means an authoring bug has shipped. The safe direction is the one that
         /// cannot cheat a player: par falls back to the procession's own length, which puts both
-        /// star lines and the supply above it — so the level is winnable and generously graded
+        /// star lines and the supply above it - so the level is winnable and generously graded
         /// rather than unwinnable and correctly graded. <c>FallSetup</c> logs the id.
         /// </para>
         /// </summary>
@@ -117,14 +117,14 @@ namespace GlimmerGrove.Content
         /// <b>Five, which is two mistakes and a little.</b> A wrong drop costs one from the
         /// supply and leaves a pure mote in the well that has to be cooked to white like
         /// everything else, so a mistake is about two drops rather than one. Two is the right
-        /// number to forgive on a board where nothing is hidden — the ghost under the thumb says
+        /// number to forgive on a board where nothing is hidden - the ghost under the thumb says
         /// where the mote lands, whether it enriches and whether it bursts, so what kills a run
         /// is a misjudgement rather than a surprise, and a misjudgement is worth one more go
         /// rather than the run.
         /// </para>
         /// <para>
         /// It is the same on the second well and the tenth, deliberately. The budget is a fail
-        /// line and difficulty is the boards' job (invariant 5d) — a per-chapter ramp on the fail
+        /// line and difficulty is the boards' job (invariant 5d) - a per-chapter ramp on the fail
         /// line was tried on the glades and removed for exactly that reason.
         /// </para>
         /// </summary>
