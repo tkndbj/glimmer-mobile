@@ -365,6 +365,10 @@ namespace GlimmerGrove
             // standing while something else lands.
             _flight = RewardFlight.AfterGrant(Grant.Credits, Grant.Gems);
 
+            // And held from here, so the purse behind this panel reads what it read before the
+            // purchase until COLLECT pays it in - not the new total, rewound and counted again.
+            _flight.Hold(this);
+
             // A container has exactly one line - what the cap is now - and every currency
             // product has one per currency it granted.
             int lines = Grant.IsContainer || Grant.Product.IsEventPass

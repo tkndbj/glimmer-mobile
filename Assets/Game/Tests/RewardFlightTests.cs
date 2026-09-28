@@ -167,5 +167,44 @@ namespace GlimmerGrove.Tests
         {
             Assert.AreEqual(730L, RewardFlight.Shown(0L, 730L, 0, 0));
         }
+
+        // ------------------------------------------------------------- the hold
+        // A panel freezes the pills from the moment it opens, so a balance landing behind it
+        // (an ad's coins arriving from the server) cannot count up twice. What must never
+        // happen is a pill left frozen, so every ending releases all three.
+
+        [Test]
+        public void AHeldPanelFreezesEveryPillUntilItPays()
+        {
+            var owner = new UnityEngine.GameObject("prize");
+            try
+            {
+                var flight = RewardFlight.Begin();
+                flight.Hold(owner.transform);
+
+                for (int k = 0; k < 3; k++)
+                    Assert.IsTrue(ResourceSlots.IsPaying((ResourceSlots.Kind)k), "held: " + (ResourceSlots.Kind)k);
+
+                bool told = false;
+                flight.Play(null, () => told = true);
+
+                Assert.IsTrue(told, "the caller is let go");
+                for (int k = 0; k < 3; k++)
+                    Assert.IsFalse(ResourceSlots.IsPaying((ResourceSlots.Kind)k), "released: " + (ResourceSlots.Kind)k);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(owner);
+                for (int k = 0; k < 3; k++) ResourceSlots.Release((ResourceSlots.Kind)k);
+            }
+        }
+
+        [Test]
+        public void AFlightThatIsNeverHeldClaimsNothingUntilItPlays()
+        {
+            RewardFlight.Begin();
+            for (int k = 0; k < 3; k++)
+                Assert.IsFalse(ResourceSlots.IsPaying((ResourceSlots.Kind)k));
+        }
     }
 }

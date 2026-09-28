@@ -162,6 +162,11 @@ namespace GlimmerGrove
             // that was going to be led somewhere is led there whatever went wrong here.
             if (!Drop.IsValid || string.IsNullOrEmpty(TitleKey)) { Flow.Dismiss(this); return; }
 
+            // The pills stand at what they read before the prize from the moment this is up, so
+            // a balance landing behind the panel (a wheel's coins arrive from the server a few
+            // seconds after the video) does not count up twice. See RewardFlight.Hold.
+            Flight?.Hold(this);
+
             var stack = PrizePanel.Of();
 
             // Never dismissed by a stray tap on the scrim: this is the one screen that says

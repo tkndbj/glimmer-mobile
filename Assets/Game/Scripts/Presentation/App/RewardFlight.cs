@@ -100,8 +100,9 @@ namespace GlimmerGrove
         readonly int[] _landed = new int[3];
 
         int _thrown, _arrived;
-        bool _played, _finished;
+        bool _played, _finished, _held;
         Action _done;
+        Lease _lease;
 
         RewardFlight() { }
 
@@ -153,6 +154,59 @@ namespace GlimmerGrove
             flight._before[g] = Math.Max(0L, flight._before[g] - Math.Max(0L, gems));
 
             return flight;
+        }
+
+        /// <summary>
+        /// Freezes every pill at the snapshot from now until the payout plays, so nothing moves
+        /// behind the panel while it is up. Call it the moment the panel that will pay exists.
+        ///
+        /// <para>
+        /// Without this the pills were claimed only when COLLECT was pressed, and a balance that
+        /// moved while the panel stood - a rewarded video's coins arriving from the server a few
+        /// seconds after it closed, or a shop grant raised before its panel - repainted the pill
+        /// to the new total behind the scrim; COLLECT then rewound it and counted it up again, so
+        /// the player watched the number go up, down and up (reported on 2026-09-28).
+        /// </para>
+        /// <para>
+        /// The hold is released when the cascade finishes - or, through a lease on
+        /// <paramref name="owner"/>, whenever that panel is destroyed without playing, which is
+        /// what keeps a pill from ever standing frozen below the balance. Idempotent.
+        /// </para>
+        /// </summary>
+        public void Hold(Component owner)
+        {
+            if (_held || _finished || owner == null) return;
+            _held = true;
+
+            for (int k = 0; k < 3; k++)
+            {
+                ResourceSlots.Claim((ResourceSlots.Kind)k);
+                ResourceSlots.Show((ResourceSlots.Kind)k, _before[k]);
+            }
+
+            _lease = owner.gameObject.AddComponent<Lease>();
+            _lease.Flight = this;
+        }
+
+        /// <summary>Releases a hold whose panel went away without paying. The reward is banked
+        /// either way; this only puts the pills back on the live balance.</summary>
+        void Abandon()
+        {
+            _done = null;
+            Finish(0f);
+        }
+
+        /// <summary>Dies with the panel that holds the pills - see <see cref="Hold"/>.</summary>
+        sealed class Lease : MonoBehaviour
+        {
+            public RewardFlight Flight;
+
+            void OnDestroy()
+            {
+                var flight = Flight;
+                Flight = null;
+                flight?.Abandon();
+            }
         }
 
         /// <summary>
@@ -251,6 +305,11 @@ namespace GlimmerGrove
         {
             if (_played) return;
             _played = true;
+
+            // A hold already released by its panel going away: the pills are back on the live
+            // balance and must not be claimed again with nothing left to release them.
+            if (_finished) { done?.Invoke(); return; }
+
             _done = done;
 
             if (space == null || _items.Count == 0) { Finish(0f); return; }
@@ -416,11 +475,15 @@ namespace GlimmerGrove
             // the player may now just sit on, could be a long time.
             for (int k = 0; k < 3; k++)
             {
-                if (_tokens[k] <= 0) continue;
+                if (_tokens[k] <= 0 && !_held) continue;
                 var kind = (ResourceSlots.Kind)k;
                 ResourceSlots.Release(kind);
                 ResourceSlots.Show(kind, ResourceSlots.Balance(kind));
             }
+
+            // The panel is going; its lease must not release a hold a later payout has taken.
+            if (_lease != null) _lease.Flight = null;
+            _lease = null;
 
             var done = _done;
             _done = null;

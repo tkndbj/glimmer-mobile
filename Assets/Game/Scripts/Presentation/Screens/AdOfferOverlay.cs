@@ -636,7 +636,7 @@ namespace GlimmerGrove
             // may come back to a different screen entirely. The reward is still banked.
             if (!Living) return;
 
-            if (payment.Paid) { _flight = payment.Flight; Paid(payment.Drop); return; }
+            if (payment.Paid) { _flight = payment.Flight; _flight.Hold(this); Paid(payment.Drop); return; }
 
             _watching = false;
             _status.text = RewardedVideo.Refusal(payment);

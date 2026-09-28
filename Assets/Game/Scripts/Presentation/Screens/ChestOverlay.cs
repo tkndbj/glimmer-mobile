@@ -383,6 +383,7 @@ namespace GlimmerGrove
             // amount at collect time would rewind the pill below where it ever was. Reading
             // the balance before the grant cannot be wrong about it.
             _flight = RewardFlight.Begin();
+            _flight.Hold(this);
 
             if (!Claim.TryClaim(out _drops))
             {
