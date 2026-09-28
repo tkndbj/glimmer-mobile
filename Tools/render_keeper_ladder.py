@@ -67,6 +67,7 @@ PAD_TOP, PAD_BOTTOM = 70.0, DOCK_H + 36.0
 SWING, TURN = 118.0, 1.05        # the path's serpentine: amplitude and radians a level
 NODE, CROWN = 150.0, 200.0
 TRACK_W, TRACK_EDGE = 16.0, 32.0
+TETHER_W, TETHER_EDGE = 10.0, 22.0
 COLUMN_X = 360.0
 
 # The chest: `ChestPack`'s conventions, as the hub draws a closed chest.
@@ -239,13 +240,6 @@ def hero(sheet, standing, bought, into, need, maxed):
     TIGHT.append(("medallion number", one_line(sheet, number, CX, face_y, EMBLEM * FACE_W * .92,
                                                96, 48, fill=DARK_NUMBER, outline=0)))
 
-    if bought > 0:
-        chip = txt("ui.keeper.bought_count", bought).upper()
-        cw, ch = 196.0, 54.0
-        kx, ky = CX + EMBLEM * .56, ey - EMBLEM * .30
-        K.paste(sheet, K.round_rect(cw, ch, 27, K.MINT), kx, ky)
-        TIGHT.append(("bought chip", one_line(sheet, chip, kx, ky, cw - 24, 26, 16, fill=DARK_NUMBER, outline=0)))
-
     bar_y = ey + BAR_Y
     K.paste(sheet, K.skin("Hud/trough", BAR_W, BAR_H), CX, bar_y)
     fill_w = (BAR_W - 12) * (1.0 if maxed else (into / need if need else 1.0))
@@ -324,11 +318,24 @@ def cell(board, cy, level, standing, earned, top, tier, lad, offer, claimed, nex
         K.paste(board, K.glow(340, 1.9, K.SUN, .55 if crowned else .40), x, cy)
 
     # the chest: dim above the player, lit once reached, spent once opened
+    size = CROWN if crowned else NODE
     if tier:
         px = CX + chest_column(level)
         spent = level <= claimed
         waiting = reached and not spent
         takes = waiting and level == next_chest
+
+        # the tether from the disc's rim to the chest's near edge, in the path's colours
+        d = 1.0 if px > x else -1.0
+        x0 = x + d * size * .46
+        x1 = px - d * (CHEST_TALL * CHEST_WIDE / 2 + 8)
+        ty = cy - CHEST_Y / 2
+        layer = Image.new("RGBA", board.size, (0, 0, 0, 0))
+        dd = ImageDraw.Draw(layer)
+        core = K.GOLD if waiting else (*K.GOLD, 90) if spent else TRACK_DIM
+        dd.line([(x0, ty), (x1, ty)], fill=(16, 14, 52, 217), width=int(TETHER_EDGE))
+        dd.line([(x0, ty), (x1, ty)], fill=core if len(core) == 4 else (*core, 255), width=int(TETHER_W))
+        board.alpha_composite(layer)
         if waiting:
             K.paste(board, K.glow(int(CHEST_TALL * 1.9), 1.9, K.SUN, .55 if takes else .30), px, cy - CHEST_Y)
         shadow = K.glow(128, 1.9, (26, 5, 41), .18 if spent else .42)
@@ -344,7 +351,6 @@ def cell(board, cy, level, standing, earned, top, tier, lad, offer, claimed, nex
                       px + CHEST_TALL * CHEST_WIDE / 2, cy - CHEST_Y + CHEST_TALL / 2))
 
     # the disc
-    size = CROWN if crowned else NODE
     name = "keeper_node_crown" if crowned else "keeper_node_open" if reached else "keeper_node_locked"
     disc = icon(name, (size, size))
     if not reached and not nxt:

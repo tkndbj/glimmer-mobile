@@ -211,6 +211,27 @@ export interface WalletReply {
   keeperBought: number;
 }
 
+/** The keys `readWallet` models itself, so `carryUnknownFields` knows which to leave to it. */
+const MODELLED_WALLET_KEYS = new Set<string>([
+  ...CURRENCIES, "name", "containersRevoked", "wheel", "tasks", "endless", "challengeTiers",
+  "keeperBought", "streak", "updatedAt",
+]);
+
+/**
+ * Copies every key of the raw document that the reader does not model onto the state, so a
+ * whole-document write from this build cannot delete a field only a newer build understands.
+ * `undefined` is skipped because Firestore refuses it as a value; `updatedAt` is skipped
+ * because every writer stamps it.
+ */
+export function carryUnknownFields(raw: Record<string, unknown> | undefined, wallet: Record<string, unknown>): void {
+  if (!raw || typeof raw !== "object") return;
+  for (const [key, value] of Object.entries(raw)) {
+    if (MODELLED_WALLET_KEYS.has(key) || value === undefined) continue;
+    if (key in wallet) continue;
+    wallet[key] = value;
+  }
+}
+
 export function emptyCurrency(): CurrencyState {
   return { granted: 0, spent: 0, confirmedThroughUnix: 0, earnedFloor: 0 };
 }
@@ -301,6 +322,20 @@ export function readWallet(
   // when there is one, for the `undefined` reason above.
   const keeperBought = keeperBoughtOf(raw);
   if (keeperBought > 0) wallet.keeperBought = keeperBought;
+
+  // **Everything else the document holds, carried through untouched - and this is the rule
+  // the eight paragraphs above were each one instance of.** Every writer of this document
+  // writes it whole, so a field this function does not copy is a field the next write deletes.
+  // The paragraphs above protect the fields *this build* knows about; what they cannot protect
+  // is a field a *later* build added, written by a function that was never redeployed. That is
+  // exactly what happened on 2026-09-28: `submitSpends` learned `keeperBought` on the 27th and
+  // was deployed, `redeemPurchase` was not, and the owner's gem-pack purchase deleted the keeper
+  // level they had bought four minutes earlier (and the challenge deal bought on the 24th, the
+  // same way, four days before). Carrying every unknown key means a stale bundle can no longer
+  // delete what a newer one wrote, so adding a wallet field is no longer a redeploy of every
+  // function that writes the wallet - it is a redeploy of the one that reads the field.
+  // `updatedAt` is the one key left out, because every writer stamps it afresh.
+  carryUnknownFields(raw as Record<string, unknown> | undefined, wallet as unknown as Record<string, unknown>);
 
   // Whether this server has ever recorded currency for the account, which is what "brand new"
   // has always meant here. It used to be read off `snapshot.exists`, and that stopped being

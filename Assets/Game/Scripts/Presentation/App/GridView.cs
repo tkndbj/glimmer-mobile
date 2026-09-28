@@ -262,7 +262,43 @@ namespace GlimmerGrove
             if (_content == null || _viewport == null) return;
 
             Resize();
+            Settle();
+        }
 
+        /// <summary>
+        /// Changes how many items the list has while keeping the player's place in it.
+        ///
+        /// <para>
+        /// For a list that <em>grew or shrank under the player</em> rather than changed into a
+        /// different one: the keeper ladder gains a row when a purchase carries the player past
+        /// its last disc. <see cref="Show"/> would reset the scroll and replay the entrance, which
+        /// reads as the page snatching the ladder away the moment a level is bought - the owner's
+        /// own words on 2026-09-28 were "don't move the roadmap visually, just leave me where I
+        /// am". The rows already live are rebound, because a count change usually comes with a
+        /// state change, and rows that now fit are realised without an entrance.
+        /// </para>
+        /// </summary>
+        public void Relist(int count)
+        {
+            if (_content == null || _viewport == null) return;
+
+            _count = Mathf.Max(0, count);
+            _openPending = false;
+
+            // Retire anything past the new end before the window is recomputed, so a shrunken
+            // list does not keep a cell bound to a row that no longer exists.
+            _retiring.Clear();
+            foreach (var pair in _live) if (pair.Key >= _count) _retiring.Add(pair.Key);
+            foreach (int index in _retiring) Release(index);
+
+            Resize();
+            Settle();
+            Refresh();
+        }
+
+        /// <summary>Clamps the content back inside its bounds and re-realises the window, in place.</summary>
+        void Settle()
+        {
             // The content may now be shorter than the offset it is sitting at - the band above
             // it grew - and a ScrollRect only eases that back over the following frames.
             float most = Mathf.Max(0f, _content.sizeDelta.y - _viewport.rect.height);

@@ -44,8 +44,7 @@ namespace GlimmerGrove
     /// docked key and the level moves at once: <see cref="KeeperLedger.TryBuy"/> debits, counts
     /// and invalidates, this page hears the change and rebinds, and a refusal from the server
     /// takes it back the same way. <b>A bought level is drawn as bought</b> - a mint run of path
-    /// and the currency it was bought with on its disc - and the count sits on the medallion,
-    /// which is the transparency the owner asked for said without a sentence. A chest tap opens
+    /// and the currency it was bought with on its disc. A chest tap opens
     /// the ceremony every other chest opens (<see cref="ChestOverlay"/>), which claims it.
     /// </para>
     /// </summary>
@@ -87,6 +86,7 @@ namespace GlimmerGrove
 
         public const float NodeSize = 150f, CrownSize = 200f;
         const float TrackW = 16f, TrackEdge = 32f;
+        const float TetherW = 10f, TetherEdge = 22f;
 
         /// <summary>
         /// A milestone's chest stands in a column this far off the middle - past the path's
@@ -125,9 +125,9 @@ namespace GlimmerGrove
         RectTransform _viewport;
 
         // the hero, repainted in place
-        Text _levelNumber, _xpLine, _boughtText, _keyCaption, _keyPrice;
+        Text _levelNumber, _xpLine, _keyCaption, _keyPrice;
         Image _xpFill, _keyIcon, _keyTag, _keyGlow;
-        RectTransform _emblem, _boughtChip;
+        RectTransform _emblem;
         Btn _buy;
         int _drawnLevel = -1;
 
@@ -135,7 +135,6 @@ namespace GlimmerGrove
         readonly Dictionary<int, RowFacts> _facts = new Dictionary<int, RowFacts>();
         int _standing = 1, _earned = 1, _top, _claimed, _nextChest;
         KeeperOffer _offer;
-        bool _shown;
 
         // ------------------------------------------------------------------ build
         protected override void Build()
@@ -295,13 +294,6 @@ namespace GlimmerGrove
             _emblem.localScale = Vector3.zero;
             Tween.Pop(_emblem, 0f, .5f, .06f);
 
-            // How many of the levels were bought, as a chip on the medallion's shoulder.
-            _boughtChip = UIKit.Box("Bought", _emblem, new Vector2(196f, 54f), Centre,
-                                    new Vector2(Emblem * .56f, Emblem * .30f));
-            UIKit.Img("Plate", _boughtChip, Art.Round(27), Pal.Mint);
-            _boughtText = UIKit.Titled("T", _boughtChip, string.Empty, 26, DarkNumber, TextAnchor.MiddleCenter,
-                                       new Vector2(172f, 54f), Centre, Vector2.zero, 0f, 0f);
-
             float barY = ey - BarY;
             var track = UIKit.Img("XpTrack", Safe, Art.S("Ui/" + Skins.Trough), Color.white,
                                   new Vector2(BarW, BarH), Top, new Vector2(0f, barY));
@@ -376,17 +368,19 @@ namespace GlimmerGrove
             ReadFacts(ladder, top);
             PaintHero();
 
-            // A list whose length changed is a different list: the rows above the old top have to
-            // be realised, and a plain refresh rebinds only what is live.
-            bool relist = show || top != _top;
+            bool grew = top != _top;
             _top = top;
 
             // Opened on the level the player stands on, centred: the page is about where you are
             // before it is about where you could be. Asked of the grid rather than scrolled after
             // the present, or the first frame is the top of the ladder and the second a jump.
-            if (relist) _grid.Show(_top, animate: !_shown, openAt: IndexOf(_standing), centre: true);
+            //
+            // **And never moved again while the page stands** (the owner, 2026-09-28: "don't move
+            // the roadmap visually, just leave me where I am, I can scroll myself"). A purchase
+            // rebinds the rows in place; a ladder that gained a row is re-listed in place.
+            if (show) _grid.Show(_top, animate: true, openAt: IndexOf(_standing), centre: true);
+            else if (grew) _grid.Relist(_top);
             else _grid.Refresh();
-            _shown = true;
         }
 
         void PaintHero()
@@ -416,14 +410,8 @@ namespace GlimmerGrove
                 UIKit.OneLineLabel(_xpLine, BarW - 40f, 30, 18);
             }
 
-            int bought = KeeperLedger.Bought;
-            if (_boughtChip)
-            {
-                _boughtChip.gameObject.SetActive(bought > 0);
-                _boughtText.text = Loc.Format("ui.keeper.bought_count", bought).ToUpperInvariant();
-                UIKit.OneLineLabel(_boughtText, 172f, 26, 16);
-            }
-
+            // No "N bought" chip: the owner asked for it never to be shown (2026-09-28). A
+            // bought level is still told apart on the climb by its mint path and its coin.
             PaintKey();
         }
 
@@ -473,10 +461,12 @@ namespace GlimmerGrove
             switch (KeeperLedger.TryBuy())
             {
                 case KeeperBuy.Bought:
-                    Audio.Sfx("unlock", .9f);
+                    // The level-complete fanfare rather than the shop's unlock click, at the
+                    // owner's instruction: a level bought is a level reached.
+                    Audio.Sfx("win", .9f);
                     Scenery.Toast(Content, Loc.Format("ui.keeper.bought_toast", offer.Level), Pal.Mint, 2.2f);
-                    // The ledger's change has already repainted; bring the crowned disc into view.
-                    if (_grid) _grid.ScrollTo(IndexOf(_standing), centre: true);
+                    // The ledger's change has already repainted, in place. The ladder is not
+                    // scrolled to the new crown: the player is left where they were.
                     break;
 
                 case KeeperBuy.TooPoor:
@@ -593,6 +583,7 @@ namespace GlimmerGrove
             readonly RectTransform _discRT;
             readonly RectTransform _chestRoot;
             readonly Image _chestHalo, _chestShadow, _chest;
+            readonly Image _tetherEdge, _tetherCore;
             readonly Btn _chestTap;
             int _pulsing = -1, _breathing = -1, _bound = -1;
 
@@ -616,6 +607,13 @@ namespace GlimmerGrove
                                   new Vector2(340f, 340f), Centre, Vector2.zero);
 
                 // The path: two halves, the shade under the core, each pivoted at the disc.
+                // The tether: a short run of the same path from the disc to its chest, so the
+                // chest reads as *this level's* rather than as a picture floating beside the
+                // climb (the owner, 2026-09-28: "put a link connected between that reward and
+                // particular level"). Built before the path so both lie under the disc.
+                _tetherEdge = Tether("TetherEdge", TetherEdge);
+                _tetherCore = Tether("TetherCore", TetherW);
+
                 _edgeUp = Track("EdgeUp", TrackEdge);
                 _edgeDown = Track("EdgeDown", TrackEdge);
                 _coreUp = Track("CoreUp", TrackW);
@@ -634,6 +632,11 @@ namespace GlimmerGrove
                                    new Vector2(ChestBox * ChestPack.Aspect, ChestBox), Centre,
                                    new Vector2(0f, ChestY + ChestTall * ChestPack.Lift));
                 _chest.preserveAspect = true;
+                // The tap catcher: an invisible raycast target over the whole column. **Never
+                // handed to `Btn.Interactable`** - that setter paints the button's own Image
+                // white or grey to say "shut", which on a catcher with no sprite is a white
+                // rectangle the size of the column (7b's shape, and the "white boxes" the owner
+                // reported on 2026-09-28). Whether a tap does anything is `TapChest`'s decision.
                 var tap = UIKit.Img("Tap", _chestRoot, null, new Color(0f, 0f, 0f, 0f));
                 UIKit.StretchTo((RectTransform)tap.transform, 0, 0, 0, 0);
                 tap.raycastTarget = true;
@@ -650,6 +653,13 @@ namespace GlimmerGrove
                                        new Vector2(NodeSize, 80f), Centre, Vector2.zero, 0f, 0f);
                 _badge = UIKit.Img("Paid", _discRT, null, Color.white, new Vector2(48f, 48f), Centre, Vector2.zero);
                 _badge.preserveAspect = true;
+            }
+
+            Image Tether(string name, float height)
+            {
+                var img = UIKit.Img(name, Root, Art.Pixel, Color.white, new Vector2(10f, height), Centre, Vector2.zero);
+                ((RectTransform)img.transform).pivot = new Vector2(0f, .5f);
+                return img;
             }
 
             Image Track(string name, float width)
@@ -670,6 +680,7 @@ namespace GlimmerGrove
                 bool crowned = level == standing;
                 bool next = level == standing + 1;
                 float x = SwingOf(level);
+                float size = crowned ? CrownSize : NodeSize;
 
                 // The crowned cell sinks under its neighbours, so its beam and its fan are light
                 // falling behind the discs above rather than a sheet laid over them (44mc).
@@ -698,20 +709,38 @@ namespace GlimmerGrove
                 var tier = facts?.Chest;
                 bool chest = tier != null;
                 _chestRoot.gameObject.SetActive(chest);
+                _tetherEdge.enabled = chest;
+                _tetherCore.enabled = chest;
                 if (chest)
                 {
                     bool spent = level <= _screen._claimed;
                     bool waiting = !spent && reached;
                     bool takes = waiting && level == _screen._nextChest;
+                    float column = ChestColumn(level);
 
-                    _chestRoot.anchoredPosition = new Vector2(ChestColumn(level), 0f);
+                    // From the disc's rim to the chest's near edge, in the path's own colours:
+                    // lit while the chest is, dim above the player, faded once it is spent.
+                    float dir = column > x ? 1f : -1f;
+                    float from = x + dir * (size * .46f);
+                    float to = column - dir * (ChestTall * ChestPack.Wide * .5f + 8f);
+                    float run = Mathf.Max(0f, (to - from) * dir);
+                    foreach (var bar in new[] { _tetherEdge, _tetherCore })
+                    {
+                        var rt = (RectTransform)bar.transform;
+                        rt.pivot = new Vector2(dir > 0f ? 0f : 1f, .5f);
+                        rt.anchoredPosition = new Vector2(from, ChestY * .5f);
+                        rt.sizeDelta = new Vector2(run, rt.sizeDelta.y);
+                    }
+                    _tetherEdge.color = TrackShade;
+                    _tetherCore.color = waiting ? Pal.Gold : spent ? Pal.A(Pal.Gold, .35f) : TrackDim;
+
+                    _chestRoot.anchoredPosition = new Vector2(column, 0f);
                     _chest.sprite = Art.S(tier.Icon);
                     _chest.enabled = _chest.sprite != null;
                     _chest.color = spent ? new Color(1f, 1f, 1f, .42f) : waiting ? Color.white : Pal.A(Unlit, .95f);
                     _chestShadow.color = new Color(.10f, .02f, .16f, spent ? .18f : .42f);
                     _chestHalo.enabled = waiting;
                     _chestHalo.color = Pal.A(Pal.Sun, takes ? .55f : .30f);
-                    _chestTap.Interactable = !spent;
 
                     if (waiting && _breathing != level)
                     {
@@ -734,7 +763,6 @@ namespace GlimmerGrove
                 }
 
                 // ---------------------------------------------------------------- the disc
-                float size = crowned ? CrownSize : NodeSize;
                 _discRT.sizeDelta = Vector2.one * size;
                 _discRT.anchoredPosition = new Vector2(x, 0f);
 

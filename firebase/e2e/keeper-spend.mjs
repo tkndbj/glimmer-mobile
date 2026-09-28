@@ -103,8 +103,26 @@ if (first) {
   const r4 = await call("submitSpends", { spends: [bad] });
   check(rejectedOf(r4.body).includes(bad.id), "a malformed keeper id is refused rather than charged");
 
-  // 3. The honest purchase, when the account seed can afford it.
-  if (first.currency === "credits" && seed >= first.price) {
+  // 3. The honest purchase. The account seed cannot afford level 2, so the difference is
+  // granted through the owner's own token (the one `firestore-admin-access` documents) - a
+  // probe that never buys a level is a probe that has never seen the count persist, which is
+  // the half that failed on 2026-09-28.
+  let affordable = first.currency === "credits" && seed >= first.price;
+  if (!affordable && first.currency === "credits") {
+    try {
+      const token = execSync("gcloud auth print-access-token", { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
+      const topUp = await fetch(`${FS}/players/${uid}/private/wallet?updateMask.fieldPaths=credits.granted`, {
+        method: "PATCH", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ fields: { credits: { mapValue: { fields: { granted: { integerValue: String(first.price + seed) } } } } } }),
+      });
+      affordable = topUp.status === 200;
+      if (!affordable) console.log(`  note could not top the account up (${topUp.status}); the honest purchase is not exercised`);
+    } catch (e) {
+      console.log(`  note no owner token on this machine (${String(e).slice(0, 80)}); the honest purchase is not exercised`);
+    }
+  }
+
+  if (affordable) {
     const honest = { id: "keeper:1:2", currency: "credits", amount: first.price, unix: 1700000005, reason: "keeper_level" };
     const r5 = await call("submitSpends", { spends: [honest] });
     const row = rowOf(r5.body, "credits");
@@ -122,6 +140,36 @@ if (first) {
 
     const later = await call("getWallet", {});
     check(walletsOf(later.body).every((w) => w.keeperBought === 1), "a later wallet read still carries the count");
+
+    // 4. The count survives every other writer of the wallet document. Each of these writes
+    // it whole, and on 2026-09-28 a stale one deleted the count; the reader carries every
+    // field it does not model now, and this is the live proof that the deployed bundles do.
+    const claimed = await call("claimAwards", { awards: [] });
+    check(claimed.status === 200 && walletsOf(claimed.body).every((w) => w.keeperBought === 1),
+          "claimAwards writes the wallet whole and the count survives it", JSON.stringify(claimed.body).slice(0, 160));
+    const redeemed = await call("redeemPurchase", { store: "google", productId: "gg_gems_1", receipt: "not-a-receipt" });
+    check(redeemed.status !== 200 || walletsOf(redeemed.body).every((w) => w.keeperBought === 1),
+          "redeemPurchase, refusing a bad receipt, leaves the count in place");
+    const after = await call("getWallet", {});
+    check(walletsOf(after.body).every((w) => w.keeperBought === 1), "and the count is still one after all of them");
+
+    // 5. A count wiped by a stale writer is put back from the spend log on the next spend call.
+    try {
+      const token = execSync("gcloud auth print-access-token", { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
+      const wipe = await fetch(`${FS}/players/${uid}/private/wallet?updateMask.fieldPaths=keeperBought`, {
+        method: "PATCH", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ fields: {} }),
+      });
+      if (wipe.status === 200) {
+        const wiped = await call("getWallet", {});
+        check(walletsOf(wiped.body).every((w) => w.keeperBought === 0), "the count was wiped for the test");
+        const healed = await call("submitSpends", { spends: [honest] });
+        check(walletsOf(healed.body).every((w) => w.keeperBought === 1),
+              "resubmitting the charged debit raises the count back from the spend log", JSON.stringify(healed.body).slice(0, 160));
+      }
+    } catch (e) {
+      console.log(`  note the wipe-and-heal case needs the owner token (${String(e).slice(0, 60)})`);
+    }
   } else {
     console.log(`  note the account seed (${seed} credits) cannot afford level 2 at ${first.price} ${first.currency}; the honest purchase is not exercised`);
   }

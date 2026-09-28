@@ -316,6 +316,22 @@ export const submitSpends = onCall(callOptions, async (request): Promise<{
       if (already.exists) {
         // Seen before. The debit is already inside `spent`; confirming it again tells
         // the client to stop sending it, and changes no balance.
+        //
+        // A keeper debit that was charged is a level that is owed, so the count is raised to
+        // at least its ordinal here too (invariant 57a). The spend record is the proof of
+        // payment and the count is the entitlement, and the two came apart once: a stale
+        // `redeemPurchase` bundle wrote the wallet whole without the count on 2026-09-28,
+        // and the next purchase was refused as out of order against a level already paid
+        // for. Reading the count off the record whenever the record is seen is what makes
+        // the entitlement recoverable from the log rather than from a support ticket.
+        const charged = parseKeeperSpendId(spend.id);
+        if (charged && charged.ordinal > keeperBoughtOf(state)) {
+          logger.warn("a charged keeper debit was above the wallet's count; raising the count to it", {
+            uid, spendId: spend.id, ordinal: charged.ordinal, bought: keeperBoughtOf(state),
+          });
+          state.keeperBought = charged.ordinal;
+        }
+
         confirmed[spend.currency].push(spend.id);
         continue;
       }

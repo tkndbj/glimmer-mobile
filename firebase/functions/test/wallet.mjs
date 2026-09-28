@@ -298,5 +298,39 @@ console.log("\nthe Infinite lane's day survives a whole-document write");
   equal("and survives a second write", again.endless, { day: 20420, paid: 4200 });
 }
 
+// ------------------------------------------------------------- a field this build never heard of
+console.log("\na field this build does not model survives a whole-document write");
+{
+  // The 2026-09-28 fault, generalised: a newer bundle wrote `keeperBought` (and, four days
+  // earlier, `challengeTiers`); an older one - `redeemPurchase`, last deployed on the 21st -
+  // read the wallet with a reader that had never heard of either and wrote it back whole.
+  // The owner's gem-pack purchase deleted the keeper level they had just bought. A reader that
+  // carries every key it does not model makes that impossible for the *next* field, whichever
+  // function is stale when it lands.
+  const doc = {
+    credits: { granted: 1250, spent: 0 },
+    keeperBought: 3,
+    challengeTiers: { bronze: 20720 },
+    grove: { deniedUnix: 1700000000 },                // written by reportKeeper with merge, modelled by nobody
+    somethingFromNextMonth: { a: 1, b: ["x"] },       // a field no build today knows
+    updatedAt: "an old stamp",
+  };
+
+  const once = wholeDocumentWrite(doc);
+  equal("a known optional field is carried", once.keeperBought, 3);
+  equal("a deal is carried", once.challengeTiers, { bronze: 20720 });
+  equal("a takedown is carried", once.grove, { deniedUnix: 1700000000 });
+  equal("an unknown field is carried", once.somethingFromNextMonth, { a: 1, b: ["x"] });
+  equal("and the stamp is the writer's, never the document's", once.updatedAt, "server-timestamp");
+
+  const twice = wholeDocumentWrite(once);
+  equal("and all of it survives a second write", twice.somethingFromNextMonth, { a: 1, b: ["x"] });
+  equal("including the count", twice.keeperBought, 3);
+
+  // A modelled field the reader leaves out on purpose stays out: a count of nought is absent.
+  const bare = wholeDocumentWrite({ credits: { granted: 1250, spent: 0 }, keeperBought: 0 });
+  check(!("keeperBought" in bare), "a nought count is not written as a field", JSON.stringify(bare));
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

@@ -1630,6 +1630,18 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   four**, which also keeps another agent's in-flight source out of anything that runs.
 - **"The deploy said Successful" and "the running bundle has the fix in it" are two different facts.**
   `functions:generateDownloadUrl` fetches the deployed artifact to read back.
+- **Every function that writes the wallet document writes it *whole* from `readWallet`, so a field
+  the reader learned is deleted by any function deployed before it learned it.** On 2026-09-28
+  `redeemPurchase` (deployed the 21st) wiped `keeperBought` (learned the 27th, deployed with four
+  functions) and `challengeTiers` (learned the 23rd) off the owner's wallet on a gem-pack
+  purchase: the level bought four minutes earlier was refused as out of order and taken back,
+  and the challenge deal bought on the 24th had been silently gone for days. Since that day
+  `readWallet` **carries every key it does not model** (`carryUnknownFields`, `wallet.mjs`), so
+  a stale bundle can no longer delete what a newer one wrote, and `submitSpends` raises the
+  count from a charged `keeper:` record it has seen before. Adding a wallet field is now a
+  redeploy of the function that reads it, not of every writer - but until every writer has been
+  deployed *once* with the carry, the old rule holds. **`gcloud functions list --format="table(name,updateTime)"`
+  is how to see which bundles are stale**; `firebase functions:list` does not say.
 - **The Firebase Unity SDK's `Firebase.Functions` ships as source with its own asmdef**, so the Cloud asmdef
   must reference it explicitly, and that source needs `Google.MiniJson.dll` from the **app** package. All
   Firebase packages share one version.
@@ -1973,9 +1985,25 @@ kit is a second family beside the CraftPix interface kit (44) and only a device 
 the cyan board reads as furniture of this game or as a sticker from another; and whether the
 `ic_endless` square beside "Reach wave N" wants a rounder crop.
 
-**The keeper ladder was re-cut and given milestone chests on 2026-09-28 (57c, 57d), and none of
-it has been in the Editor, on a device or on the server.** Four things the owner reported and
-one they asked for. (1) **The buy key did nothing** - `Btn.Rehome` read the key's scale while
+**The keeper ladder was re-cut and given milestone chests on 2026-09-28 (57c, 57d); the
+server half is deployed and seeded, the client half has been on a device once and not since
+the second cut.** The owner played the first cut the same evening and reported: the chests drew
+as white boxes (the tap catcher's `Btn.Interactable` painted its spriteless Image white -
+never hand a catcher to that setter), the chest needed a link to its level (a tether of the
+path's own colours from the disc's rim to the chest, `TetherW`/`TetherEdge`, mirrored), the
+"N bought" chip had to go (gone, never shown), the purchase wanted the level-complete fanfare
+(`win`), and **two bought levels were taken back with the gems returned** - which was the
+wallet-writer fault recorded under the deploy facts above, not the keeper code: a stale
+`redeemPurchase` wiped `keeperBought` on a gem-pack purchase and the next debit was refused
+`out_of_order` against a level already paid for (`keeper:1:12`, 144 gems, 21:46; the wipe
+21:50:25; the refusal 21:50:37). Fixed at the root (`readWallet` carries unknown keys; a charged
+keeper record seen again raises the count), **every wallet writer redeployed by name**
+(`redeemPurchase`, `claimReferral`, `getWallet`, `submitSpends`, `claimAwards`, `adReward`), the
+owner's wallet repaired by hand (`keeperBought` 1, `challengeTiers.bronze` 20720, both proved
+by the spend log), and `keeper-spend.mjs` now tops the probe account up with the owner token so
+the honest purchase, a whole-write by `claimAwards`, a refused `redeemPurchase` and a
+wipe-and-heal are all exercised live. Four things the owner reported and one they asked for
+in the first cut. (1) **The buy key did nothing** - `Btn.Rehome` read the key's scale while
 its entrance pop still held it at nought, so a press squashed it away and the release found no
 button; `Btn.Enter` replaces the pair, `Rehome` refuses nought, and no debit was ever sent. (2)
 The honorific banner under the medallion and the honorific ribbons on the climb are gone. (3)
