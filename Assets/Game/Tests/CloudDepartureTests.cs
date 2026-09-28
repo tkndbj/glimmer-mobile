@@ -299,6 +299,49 @@ namespace GlimmerGrove.Tests
             Assert.IsFalse(CloudSaveService.Owes(SaveService.Snapshot()));
         }
 
+        /// <summary>
+        /// A field the server holds and the device dropped on load turned every sync into a new
+        /// one, for ever.
+        ///
+        /// <para>
+        /// <c>eventsSeeded</c> is retired in place and was never written back, while 202 live
+        /// accounts held it true (2026-09-28). The merge is <c>or</c>, so each sync brought it
+        /// back and raised <see cref="CloudSaveService.Learned"/> - the Endless screen redrew
+        /// itself on an idle phone - and the next write dropped it again, which read as owed and
+        /// asked for another sync inside a minute. Asked end to end here: one sync to meet the
+        /// server's copy, then a write, then a second sync, which must owe nothing and learn
+        /// nothing. <c>SaveWiringTests.TheDeviceHoldsWhatASyncAgreed</c> is the same rule asked
+        /// of every field.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void AFieldTheServerHoldsDoesNotMakeEverySyncANewOne()
+        {
+            var remote = SaveService.Snapshot();
+            remote.eventsSeeded = true;
+            _backend.Remote[Mine] = remote;
+
+            Assert.IsTrue(CloudSaveService.SyncAsync().Wait(5000));
+
+            int learned = 0;
+            Action<SaveDelta> heard = _ => learned++;
+            CloudSaveService.Learned += heard;
+
+            try
+            {
+                SaveService.Save();
+                Assert.IsFalse(CloudSaveService.Owes(SaveService.Snapshot()),
+                               "a write after the sync reads as owed, so the device syncs again within a minute");
+
+                Assert.IsTrue(CloudSaveService.SyncAsync().Wait(5000));
+                Assert.AreEqual(0, learned, "the second sync learned the same thing again");
+            }
+            finally
+            {
+                CloudSaveService.Learned -= heard;
+            }
+        }
+
         [Test]
         public void AChangeNobodyListedIsStillOwed()
         {

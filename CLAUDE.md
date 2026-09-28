@@ -209,6 +209,12 @@ Grove, and the bundle id can never move.
    **What can still lose data is a field one of the three places forgot** - the mapper, `SaveDelta`,
    `SaveMerge.Join` - and `SaveWiringTests` holds every field at every depth to all three by reflection;
    a field that is deliberately not synced goes in its exemption lists with the reason written beside it.
+11f. **What a sync agrees is what the device then holds.** A field the loader drops or repairs
+   differs from the agreed file on every later write, so every write owes a sync and every sync
+   re-learns it - a loop a minute, for ever, on an idle phone. `eventsSeeded` (retired in place,
+   never written back, `true` on 202 live accounts) did exactly that on the 2026-09-28 working
+   tree, seen as the Endless screen redrawing itself, and was fixed before it shipped. `SaveWiringTests.TheDeviceHoldsWhatASyncAgreed`
+   holds every field to it; **retired in place means still written**.
 12. **Adding a field to `SaveFileDto` interacts with the checksum.** Bump `SaveSchema.Version`, or every
    save on every device fails at once.
 12a. **A field is not on the wire until it is in four places**: `SaveFileDto`, `SaveDelta`, the Firestore
@@ -1826,6 +1832,17 @@ half is `Assets/Game/Scripts/Cloud/`, Firebase Unity SDK
 on a fresh clone).
 
 ## Owed
+
+**Three fixes of 2026-09-28 have been in the Editor's test runner and never on a device.**
+(1) Every modal draws on a canvas of its own (`Flow.Isolate`, `ModalCanvasTests` 4/4 in the
+Editor), so a panel's changes stop re-meshing the screen behind it - the loadout shelf
+flickered on every tap of the utility stepper. (2) The Endless hub redraws only when
+`EndlessHub.Reading` moves, and never as an arrival (`EndlessHubTests`, mutation-proved).
+(3) The sync loop of invariant 11f (`CloudDepartureTests`, `SaveWiringTests`, both
+mutation-proved). **No store release ever looped** (1.0.3 predates it): the minute-long sync on every write is
+itself from 2026-09-28 and reached only test builds; a store build only re-learns
+the flag on the syncs it already runs, which costs a redraw and nothing else. Watch on a device: the shelf behind the utility panel while stepping, and an idle Endless screen
+for a few minutes.
 
 **The stormcall and the overcharge were rebuilt as additive light on 2026-09-28 (MODES.md 37eu,
 37ev) and none of it has been in the Editor or on a device.** At the owner's instruction ("too

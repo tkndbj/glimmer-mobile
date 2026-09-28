@@ -539,17 +539,11 @@ namespace GlimmerGrove
 
             _hub = EndlessHub.Build(Safe, Content, this, Mode, Lane, level, _headerFoot, unlocked,
                                     wall, () => Open(id, unlocked));
-            _hubDrawn = HubReading(level, unlocked, wall);
+            _hubDrawn = EndlessHub.Reading.Of(level, unlocked, wall);
         }
 
-        /// <summary>
-        /// What the hub's column was last drawn from - the best wave, whether the lane is open
-        /// and the words on a shut key - as one comparable string. See <see cref="RedrawHub"/>.
-        /// </summary>
-        string _hubDrawn;
-
-        static string HubReading(LevelDefinition level, bool unlocked, string wall)
-            => EndlessHub.BestOf(level) + "|" + (unlocked ? "open" : "shut") + "|" + (wall ?? string.Empty);
+        /// <summary>What the hub's column was last drawn from. See <see cref="RedrawHub"/>.</summary>
+        EndlessHub.Reading _hubDrawn;
 
         /// <summary>
         /// The hub's column again, over the save as it is now. See <see cref="OnLearned"/>.
@@ -560,11 +554,10 @@ namespace GlimmerGrove
         /// <em>anything</em> - a lesson seen on the other phone, a heart timer, a challenge play
         /// - took the whole column down and built it again with every piece popping in from
         /// nothing, and since 2026-09-28 a sync runs within a minute of any write, so an idle
-        /// screen met one routinely. The column reads three facts off the save and nothing
-        /// else (the badge and the standing watch themselves, the lines are words), so those
-        /// three are compared first and an unchanged answer costs nothing. When one has moved,
-        /// the column is redrawn in place with no entrance, which is what <see cref="OnLearned"/>
-        /// always promised: a merge landing is not the screen opening.
+        /// screen met one routinely. What the column reads off the save is
+        /// <see cref="EndlessHub.Reading"/>, compared first, so an unchanged answer costs nothing.
+        /// When it has moved the column is redrawn in place with no entrance, which is what
+        /// <see cref="OnLearned"/> always promised: a merge landing is not the screen opening.
         /// </para>
         /// </summary>
         void RedrawHub()
@@ -576,8 +569,8 @@ namespace GlimmerGrove
             bool unlocked = LevelUnlock.IsUnlocked(_index, id);
             string wall = HubWall(id, unlocked);
 
-            string reading = HubReading(level, unlocked, wall);
-            if (_hub && string.Equals(reading, _hubDrawn, System.StringComparison.Ordinal)) return;
+            var reading = EndlessHub.Reading.Of(level, unlocked, wall);
+            if (!EndlessHub.Redraws(_hub, _hubDrawn, reading)) return;
 
             Retire(_hub);
             _hub = EndlessHub.Column(Safe, this, Lane, level, _headerFoot, unlocked,

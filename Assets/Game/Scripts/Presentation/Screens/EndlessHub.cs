@@ -131,6 +131,64 @@ namespace GlimmerGrove
             => level != null ? EndlessLedger.BestFor(level.Id) : 0;
 
         /// <summary>
+        /// Everything <see cref="Column"/> reads off the save, and nothing else: the best wave,
+        /// whether the lane is open, and the words a shut key wears.
+        ///
+        /// <para>
+        /// <b>It exists so a sync that moved nothing here redraws nothing.</b> The screen used to
+        /// take the whole column down and pop every piece back in on every sync that learned
+        /// <em>anything</em> - a lesson, a heart timer, a challenge play on the other phone - and
+        /// was reported as the Endless screen "reloading" while nobody touched it. The rank badge
+        /// and the standing watch themselves and the lines are words, so these three are the
+        /// whole of what a redraw could change. <b>Add a field here the day the column draws a
+        /// fourth fact off the save</b>, or that fact will stop repainting after a sync.
+        /// </para>
+        /// </summary>
+        public readonly struct Reading : IEquatable<Reading>
+        {
+            public readonly int Best;
+            public readonly bool Unlocked;
+
+            /// <summary>Never null: an open key carries no wall, and none is the empty string.</summary>
+            public readonly string Wall;
+
+            public Reading(int best, bool unlocked, string wall)
+            {
+                Best = best;
+                Unlocked = unlocked;
+                Wall = wall ?? string.Empty;
+            }
+
+            /// <summary>What the column would draw for this level right now.</summary>
+            public static Reading Of(LevelDefinition level, bool unlocked, string wall)
+                => new Reading(BestOf(level), unlocked, wall);
+
+            public bool Equals(Reading other)
+                => Best == other.Best && Unlocked == other.Unlocked
+                && string.Equals(Wall ?? string.Empty, other.Wall ?? string.Empty, StringComparison.Ordinal);
+
+            public override bool Equals(object obj) => obj is Reading r && Equals(r);
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    int h = Best;
+                    h = h * 31 + (Unlocked ? 1 : 0);
+                    return h * 31 + StringComparer.Ordinal.GetHashCode(Wall ?? string.Empty);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Whether a column drawn from <paramref name="drawn"/> has to be drawn again for
+        /// <paramref name="now"/>. Always when there is no column standing - a column that is
+        /// gone is never "unchanged" - and otherwise exactly when the reading moved.
+        /// </summary>
+        public static bool Redraws(bool standing, Reading drawn, Reading now)
+            => !standing || !drawn.Equals(now);
+
+        /// <summary>
         /// Keeps the nameplate's caption true while the screen is open.
         ///
         /// <para>

@@ -27,6 +27,27 @@ namespace GlimmerGrove.Persistence
         // it replaced - so nothing is announced until the adopt's own write, which is not local.
         static bool _adopting;
 
+        /// <summary>
+        /// <see cref="SaveFileDto.eventsSeeded"/>, carried from the file loaded to every file
+        /// written - the one retired-in-place field no ledger owns.
+        ///
+        /// <para>
+        /// <b>Retired in place means still written, and it was not.</b> Nothing read it and so
+        /// nothing wrote it back, so every snapshot said <c>false</c> - and 202 accounts on the
+        /// live server said <c>true</c> (2026-09-28). The merge is <c>or</c>, so every sync
+        /// brought the <c>true</c> back: the device "learned" it on every sync
+        /// (<c>CloudSaveService.Learned</c>, and the Endless screen redrew itself while nobody
+        /// touched it), then its next write said <c>false</c> again and so differed from what it
+        /// had just agreed with the server (<c>CloudSaveService.Owes</c>), which asked for
+        /// another sync within a minute - for ever, idle or not. Held here and taken from
+        /// whichever file is loaded - the merge has already joined it by <c>or</c>, and an
+        /// account swap must replace it rather than join two strangers' - so the file this
+        /// device writes is the file it agreed. <c>SaveWiringTests.TheDeviceHoldsWhatASyncAgreed</c> holds
+        /// every field to that, so the next retired field cannot be dropped the same way.
+        /// </para>
+        /// </summary>
+        static bool _eventsSeeded;
+
         public static bool IsLoaded => _loaded;
 
         /// <summary>
@@ -109,6 +130,7 @@ namespace GlimmerGrove.Persistence
             // player's evening.
             Progression.EndlessCoins.Forget();
 
+            _eventsSeeded = dto.eventsSeeded;
             ProgressionStore.LoadFrom(dto);
             CloudState.LoadFrom(dto);
 
@@ -129,6 +151,7 @@ namespace GlimmerGrove.Persistence
             _dirty = false;
             _store = null;
             _archive = new NullAccountArchive();
+            _eventsSeeded = false;
             CloudState.Reset();
         }
 
@@ -220,6 +243,7 @@ namespace GlimmerGrove.Persistence
             Challenges.ChallengeLedger.WriteInto(dto);
             ProgressionStore.WriteInto(dto);
             CloudState.WriteInto(dto);
+            dto.eventsSeeded = _eventsSeeded;
 
             return dto;
         }
@@ -282,6 +306,7 @@ namespace GlimmerGrove.Persistence
             // player's evening.
             Progression.EndlessCoins.Forget();
 
+            _eventsSeeded = dto.eventsSeeded;
             ProgressionStore.LoadFrom(dto);
             CloudState.LoadFrom(dto);
         }

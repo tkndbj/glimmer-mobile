@@ -244,5 +244,65 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(GameTrack.Infinite.PointKey(1), GameTrack.Infinite.PointKey(0));
             Assert.AreEqual(GameTrack.Infinite.PointKey(1), GameTrack.Infinite.PointKey(-3));
         }
+
+        // ------------------------------------------------------------ redrawing on a sync
+        /// <summary>
+        /// A sync that moved nothing the column draws redraws nothing.
+        ///
+        /// <b>The fault this holds</b> is the screen "reloading" while nobody touched it: every
+        /// sync that learned anything at all took the column down and popped it back in.
+        /// </summary>
+        [Test]
+        public void AnUnchangedReadingIsNotRedrawn()
+        {
+            var drawn = new EndlessHub.Reading(12, true, null);
+
+            Assert.IsFalse(EndlessHub.Redraws(true, drawn, new EndlessHub.Reading(12, true, null)));
+
+            // An open key carries no wall, and "no wall" is one answer however it was spelt.
+            Assert.IsFalse(EndlessHub.Redraws(true, drawn, new EndlessHub.Reading(12, true, string.Empty)));
+        }
+
+        /// <summary>
+        /// Each of the three facts the column draws, moved alone, is a redraw - so none of them
+        /// can be dropped from the comparison without this failing by name.
+        /// </summary>
+        [Test]
+        public void EveryFactTheColumnDrawsForcesARedraw()
+        {
+            var drawn = new EndlessHub.Reading(12, false, "REACH LEVEL 10");
+
+            Assert.IsTrue(EndlessHub.Redraws(true, drawn, new EndlessHub.Reading(13, false, "REACH LEVEL 10")),
+                          "a new best wave was not redrawn");
+            Assert.IsTrue(EndlessHub.Redraws(true, drawn, new EndlessHub.Reading(12, true, "REACH LEVEL 10")),
+                          "the lane opening was not redrawn");
+            Assert.IsTrue(EndlessHub.Redraws(true, drawn, new EndlessHub.Reading(12, false, "REACH LEVEL 11")),
+                          "a changed wall was not redrawn");
+        }
+
+        /// <summary>A column that is not standing is always drawn, whatever it last said.</summary>
+        [Test]
+        public void AMissingColumnIsAlwaysDrawn()
+        {
+            var reading = new EndlessHub.Reading(5, true, null);
+
+            Assert.IsTrue(EndlessHub.Redraws(false, reading, reading));
+            Assert.IsTrue(EndlessHub.Redraws(false, default, default));
+        }
+
+        /// <summary>Equal readings hash alike, so a reading is safe as a key anywhere.</summary>
+        [Test]
+        public void EqualReadingsHashAlike()
+        {
+            var a = new EndlessHub.Reading(40, true, null);
+            var b = new EndlessHub.Reading(40, true, string.Empty);
+
+            Assert.AreEqual(a, b);
+            Assert.AreEqual(a.GetHashCode(), b.GetHashCode());
+            // `default` skips the constructor and leaves the wall null, and must still compare.
+            Assert.AreEqual(default(EndlessHub.Reading), new EndlessHub.Reading(0, false, null));
+            Assert.AreEqual(default(EndlessHub.Reading).GetHashCode(),
+                            new EndlessHub.Reading(0, false, null).GetHashCode());
+        }
     }
 }

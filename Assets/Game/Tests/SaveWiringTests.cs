@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using GlimmerGrove.Cloud;
 using GlimmerGrove.Persistence;
+using GlimmerGrove.Progression;
 using NUnit.Framework;
 
 namespace GlimmerGrove.Tests
@@ -160,6 +161,64 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
+        /// What a sync agrees with the server is what the device then holds.
+        ///
+        /// <para>
+        /// <b>The loop this holds shut.</b> A sync records the merged file as agreed
+        /// (<c>CloudSaveService.Agree</c>) and adopts it; every later write asks whether the
+        /// device's file differs from the agreed one (<c>Owes</c>) and, if so, syncs within a
+        /// minute. A ledger that <em>changed</em> the file as it loaded it - capped a list the
+        /// merge did not, dropped a row it does not recognise, re-derived a field - would leave
+        /// the device permanently different from what it agreed, so every write would owe a sync,
+        /// every sync would pull the server's copy back and "learn" the dropped rows again
+        /// (<c>CloudSaveService.Learned</c>), and every idle player would cost a read and a
+        /// callable a minute for ever while every screen listening redrew itself. So adopting a
+        /// merged file and snapshotting it straight back must change nothing a push carries.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void TheDeviceHoldsWhatASyncAgreed()
+        {
+            SaveService.Unload();
+            EndlessCoins.UseStore(new EndlessCoins.MemoryStore());
+            SaveService.LoadWith(new AccountSwitchTests.MemoryStore(), new AccountSwitchTests.MemoryArchive());
+
+            try
+            {
+                var full = Full();
+                var merged = SaveMerge.Join(full, (SaveFileDto)Clone(full));
+
+                // The refill clocks are due in the future, as a live file's are at the moment of
+                // a sync. Left in 2023 the ledgers would catch up on load and produce a heart -
+                // which is a real event rather than drift, and is correctly owed to the server
+                // once; a test asking "does adopting change anything" must not be answered by
+                // the clock.
+                long soon = SaveSchema.NowUnix() + 3600;
+                merged.wallet.heartsDueUnix = soon;
+                merged.wallet.hintsDueUnix = soon;
+
+                SaveService.Adopt(merged);
+                var held = SaveService.Snapshot();
+
+                var drift = Leaves(merged)
+                    .Where(path => !Exempt(NotADifference, path))
+                    .Where(path => !SameAt(merged, held, path))
+                    .Select(path => path + "  (agreed " + Show(ValueAt(merged, path))
+                                    + ", held " + Show(ValueAt(held, path)) + ")")
+                    .ToList();
+
+                Assert.IsTrue(SaveDelta.Between(merged, held).IsEmpty,
+                              "adopting the merged file changed what a push carries, so every write "
+                              + "after a sync owes another one:\n  " + string.Join("\n  ", drift));
+            }
+            finally
+            {
+                SaveService.Unload();
+                EndlessCoins.UseStore(null);
+            }
+        }
+
+        /// <summary>
         /// The exemptions name real fields. A list entry left behind by a rename is an exemption
         /// for nothing - and a field that later takes the name would be exempt on arrival.
         /// </summary>
@@ -286,6 +345,18 @@ namespace GlimmerGrove.Tests
                 case "wardStars[].stars": return 3;
                 case "challenges.today[].attempts": return 2;
                 case "challenges.today[].wins": return 1;
+
+                // A level record's reader clamps both to what a run can produce (three stars,
+                // a percentile band), and no writer produces anything outside them.
+                case "levels[].stars": return 3;
+                case "levels[].bestRank": return 40;
+
+                // A streak's reader pulls a collected night back to the last day played
+                // (DailyStreak.RepairCollected); every real writer keeps it there already.
+                case "streak.startDay": return 20_000;
+                case "streak.lastPlayedDay": return 20_010;
+                case "streak.collectedThroughDay": return 20_005;
+                case "streak.shieldFromDay": return 20_008;
 
                 default: return null;
             }

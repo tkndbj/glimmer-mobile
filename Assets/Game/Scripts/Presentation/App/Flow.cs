@@ -571,7 +571,7 @@ namespace GlimmerGrove
         /// copied from the root so a panel draws exactly what it drew as a child of it.
         /// </para>
         /// </summary>
-        static void Isolate(RectTransform node)
+        internal static void Isolate(RectTransform node)
         {
             var canvas = node.gameObject.AddComponent<Canvas>();
             canvas.overrideSorting = false;
