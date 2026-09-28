@@ -93,7 +93,8 @@ namespace GlimmerGrove.Progression
                          ContinueTable carryOn, UtilityCatalog utilities,
                          WardCatalog wards, TaskTable tasks, ReferralTable referral,
                          EndlessRewardTable endless, XpBoostTable xpBoost,
-                         RankLadder ranks, KeeperLadder keeperLevels)
+                         RankLadder ranks, KeeperLadder keeperLevels,
+                         KeeperMilestoneTable keeperMilestones)
         {
             _cumulative = cumulative;
             _defaultRule = defaultRule;
@@ -116,6 +117,7 @@ namespace GlimmerGrove.Progression
             XpBoost = xpBoost ?? XpBoostTable.Default;
             Ranks = ranks ?? RankLadder.Empty;
             KeeperLevels = keeperLevels ?? KeeperLadder.Empty;
+            KeeperMilestones = keeperMilestones ?? KeeperMilestoneTable.Empty;
         }
 
         /// <summary>
@@ -175,6 +177,13 @@ namespace GlimmerGrove.Progression
         /// server was never told about is a debit refused and a level taken back.
         /// </summary>
         public KeeperLadder KeeperLevels { get; }
+
+        /// <summary>
+        /// The chests the keeper ladder pays on the way up (invariant 57d).
+        /// <see cref="KeeperMilestoneTable.Empty"/> - nothing paid - when the file carries no
+        /// block or the block names a tier the tasks block does not hold.
+        /// </summary>
+        public KeeperMilestoneTable KeeperMilestones { get; }
 
         /// <summary>
         /// The rank ladder, published with the curve for the reason every block here is and one
@@ -345,7 +354,8 @@ namespace GlimmerGrove.Progression
             endless: EndlessRewardTable.Default,
             xpBoost: XpBoostTable.Default,
             ranks: RankLadder.Empty,
-            keeperLevels: KeeperLadder.Empty);
+            keeperLevels: KeeperLadder.Empty,
+            keeperMilestones: KeeperMilestoneTable.Empty);
 
         /// <summary>Highest level this curve defines. Level 1 always exists.</summary>
         public int MaxLevel => _cumulative.Length;
@@ -645,10 +655,16 @@ namespace GlimmerGrove.Progression
                 keeperLevels = KeeperLadder.Empty;
             }
 
+            // And the chests the ladder pays on the way up (57d). Read against the tasks block,
+            // whose tiers it names, and against the curve, whose levels it names - a row on a level
+            // nobody can stand at pays nobody, and a row naming a tier nobody can price is a claim
+            // the server leaves unconfirmed for ever. Absent pays nothing.
+            var keeperMilestones = KeeperMilestoneTable.Resolve(dto.keeperMilestones, tasks, maxLevel, problems);
+
             table = Build(dto.xpToNext, dto.tailXpToNext, dto.tailXpIncrement, maxLevel,
                           defaultRule, chapterRules, daily, ads, streak, golden, hearts, hints,
                           store, prompts, chapterGate, carryOn, utilities, wards, tasks, referral,
-                          endless, xpBoost, ranks, keeperLevels);
+                          endless, xpBoost, ranks, keeperLevels, keeperMilestones);
             return true;
         }
 
@@ -664,7 +680,8 @@ namespace GlimmerGrove.Progression
                                       WardCatalog wards, TaskTable tasks,
                                       ReferralTable referral, EndlessRewardTable endless,
                                       XpBoostTable xpBoost, RankLadder ranks,
-                                      KeeperLadder keeperLevels = null)
+                                      KeeperLadder keeperLevels = null,
+                                      KeeperMilestoneTable keeperMilestones = null)
         {
             if (maxLevel < 1) maxLevel = 1;
 
@@ -684,7 +701,7 @@ namespace GlimmerGrove.Progression
             return new ProgressionTable(cumulative, defaultRule, chapterRules, daily, ads, streak,
                                         golden, hearts, hints, store, prompts,
                                         chapterGate, carryOn, utilities, wards, tasks, referral,
-                                        endless, xpBoost, ranks, keeperLevels);
+                                        endless, xpBoost, ranks, keeperLevels, keeperMilestones);
         }
     }
 }

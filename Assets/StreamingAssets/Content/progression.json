@@ -42,6 +42,28 @@
       { "level": 70, "currency": "gems", "price": 9000 }
     ]
   },
+  "keeperMilestones": {
+    "rows": [
+      { "level": 4, "tier": "silver" },
+      { "level": 8, "tier": "silver" },
+      { "level": 12, "tier": "silver" },
+      { "level": 16, "tier": "silver" },
+      { "level": 20, "tier": "gold" },
+      { "level": 24, "tier": "silver" },
+      { "level": 28, "tier": "silver" },
+      { "level": 32, "tier": "silver" },
+      { "level": 36, "tier": "silver" },
+      { "level": 40, "tier": "gold" },
+      { "level": 44, "tier": "silver" },
+      { "level": 48, "tier": "silver" },
+      { "level": 52, "tier": "silver" },
+      { "level": 56, "tier": "silver" },
+      { "level": 60, "tier": "gold" },
+      { "level": 64, "tier": "silver" },
+      { "level": 68, "tier": "silver" },
+      { "level": 70, "tier": "royal" }
+    ]
+  },
   "xpBoost": {
     "watchedPercent": 50,
     "watchedHours": 2,

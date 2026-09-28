@@ -28,6 +28,9 @@ import {
   DEFAULT_KEEPER_CURVE, KeeperCurve, derivedXp, endlessXp, keeperLevel, xpBoostXp,
 } from "./grove";
 import { challengeXp } from "./challenges";
+import { subjectSeed, Rolls } from "./random";
+import { ChestConfig, RolledDrop, rollChestWith } from "./daily";
+import { TaskConfig, TaskTier, findTier } from "./tasks";
 
 // ------------------------------------------------------------------ the ladder
 /** The two currencies a level may be priced in — the client's `Currency.Credits` / `.Gems`. */
@@ -238,4 +241,167 @@ export function keeperBoughtOf(raw: unknown): number {
   const value = (raw as { keeperBought?: unknown }).keeperBought;
   if (typeof value !== "number" || !Number.isFinite(value)) return 0;
   return Math.max(0, Math.floor(value));
+}
+
+// ------------------------------------------------------------------ the milestones
+/**
+ * The chests the keeper ladder pays on the way up - the server half of invariant 57d.
+ *
+ * A milestone is a level and a chest tier of the tasks block. The client rolls the chest from
+ * the account and the level (`KeeperMilestoneLedger.SeedFor`), banks what is not currency and
+ * claims the currency under `milestone:{level}:{currency}`; this side re-rolls the same chest
+ * from the same two facts (10a) and pays it only when the level is one the save this server
+ * holds and the wallet's bought count together prove - the same reading `publishGrove` puts on
+ * a card. A level *above* that is left unconfirmed rather than refused: a sync sends awards
+ * before debits (45d), so the purchase that reached it may be one call behind, and the earned
+ * half only ever rises. A level nobody can stand at is refused at parse.
+ */
+export interface KeeperMilestoneRow {
+  level: number;
+  tier: string;
+}
+
+export interface KeeperMilestonesConfig {
+  rows: KeeperMilestoneRow[];
+}
+
+/** `KeeperMilestoneLimits` on the client, and the seeder's own bounds. */
+export const KEEPER_MILESTONE_LOWEST_LEVEL = 2;
+export const KEEPER_MILESTONE_MAX_ROWS = 64;
+
+/** Matches `KeeperMilestoneLedger.SeedTag`. Contract (invariant 9c). */
+export const KEEPER_MILESTONE_SEED_TAG = "milestone";
+
+/** The most a milestone level may be: the curve's own hard ceiling (`ProgressionTable.MaxSupportedLevel`). */
+export const KEEPER_MILESTONE_MAX_LEVEL = 10000;
+
+/**
+ * The published milestones, or null when nothing is paid: absent, or any fault at all. The
+ * rules are `KeeperMilestoneTable.Resolve`'s - rows climb strictly from 2, each names a tier
+ * the tasks block holds, and there are at most `KEEPER_MILESTONE_MAX_ROWS` of them. Refused
+ * whole, because a row this side would not price is a claim left unconfirmed for ever.
+ */
+export function usableKeeperMilestones(raw: unknown, tasks: TaskConfig | null): KeeperMilestonesConfig | null {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const block = raw as Partial<KeeperMilestonesConfig>;
+
+  if (!Array.isArray(block.rows) || block.rows.length === 0) return null;
+  if (block.rows.length > KEEPER_MILESTONE_MAX_ROWS) return null;
+
+  const rows: KeeperMilestoneRow[] = [];
+  let last = 0;
+
+  for (const row of block.rows as Partial<KeeperMilestoneRow>[]) {
+    if (!row || typeof row !== "object") return null;
+
+    const level = whole(row.level, KEEPER_MILESTONE_MAX_LEVEL);
+    if (level === null || level < KEEPER_MILESTONE_LOWEST_LEVEL || level <= last) return null;
+    if (typeof row.tier !== "string" || !row.tier || !tasks || !findTier(tasks, row.tier)) return null;
+
+    last = level;
+    rows.push({ level, tier: row.tier });
+  }
+
+  return { rows };
+}
+
+/** The milestone at exactly `level`, or null. */
+export function milestoneAt(milestones: KeeperMilestonesConfig | null, level: number): KeeperMilestoneRow | null {
+  if (!milestones) return null;
+  return milestones.rows.find((row) => row.level === level) ?? null;
+}
+
+/** `KeeperMilestoneLedger.Subject`: the level alone. Contract. */
+export function milestoneSubject(level: number): string {
+  return `${level}`;
+}
+
+class MilestoneRandom extends Rolls {
+  constructor(playerKey: string, subject: string, stream: number) {
+    super(subjectSeed(playerKey, KEEPER_MILESTONE_SEED_TAG, subject, stream));
+  }
+}
+
+/** Everything in one milestone's chest, for one account. */
+export function rollMilestoneChest(chest: ChestConfig, playerKey: string, level: number): RolledDrop[] {
+  const subject = milestoneSubject(level);
+  return rollChestWith(chest, (stream) => new MilestoneRandom(playerKey, subject, stream));
+}
+
+/** What one milestone's chest is worth in one currency. Zero when it holds none. */
+export function milestoneChestValue(chest: ChestConfig, playerKey: string, level: number, currency: string): number {
+  let total = 0;
+  for (const drop of rollMilestoneChest(chest, playerKey, level)) {
+    if (drop.kind === currency) total += drop.amount;
+  }
+  return total;
+}
+
+// ------------------------------------------------------------------ the claim
+/** `milestone:{level}:{currency}` - minted by `GrantEntry.KeeperMilestoneId`. */
+export interface MilestoneClaim {
+  level: number;
+  currency: string;
+  /** For the shared oldest-first sort: a milestone has no calendar, so the level orders it. */
+  dayKey: number;
+}
+
+export function isMilestoneGrantId(id: string): boolean {
+  return typeof id === "string" && id.startsWith("milestone:");
+}
+
+/**
+ * Reads a milestone grant id back, or null. Strict for `parseStreakClaim`'s reason: the id is
+ * what the database keys on, so two spellings of one level would pay twice. Exactly three
+ * parts, a plain integer level from 2 up to the curve's ceiling, and a currency.
+ */
+export function parseMilestoneClaim(id: string): MilestoneClaim | null {
+  if (!isMilestoneGrantId(id) || id.length > 48) return null;
+
+  const parts = id.split(":");
+  if (parts.length !== 3) return null;
+
+  const level = strictInt(parts[1]);
+  const currency = parts[2];
+  if (level === null || level < KEEPER_MILESTONE_LOWEST_LEVEL || level > KEEPER_MILESTONE_MAX_LEVEL) return null;
+  if (!currency || currency.length > 24) return null;
+
+  if (`milestone:${level}:${currency}` !== id) return null;
+
+  return { level, currency, dayKey: level };
+}
+
+/**
+ * How a milestone claim is judged, as a pure function so `claimAwards` is one call.
+ *
+ *  - `ok`: the level is a published milestone, its tier is priceable, and the level is at or
+ *    below what the save and the wallet prove. Carries the tier.
+ *  - `unknown`: nothing this server can price *yet* - no usable milestones block, a level the
+ *    block does not name, a tier the tasks block does not hold, or a level above what is proved.
+ *    Every one of those can become true (a seed, a content push, the debit landing on the next
+ *    call, the level being earned), so the claim is left unconfirmed rather than refused (13a).
+ */
+export type MilestoneVerdict =
+  | { kind: "ok"; tier: TaskTier }
+  | { kind: "unknown"; why: string };
+
+export function judgeMilestoneClaim(
+  milestones: KeeperMilestonesConfig | null,
+  tasks: TaskConfig | null,
+  claim: MilestoneClaim,
+  earnedLevel: number,
+  bought: number
+): MilestoneVerdict {
+  const row = milestoneAt(milestones, claim.level);
+  if (!row) return { kind: "unknown", why: "no published milestone at this level" };
+
+  const tier = tasks ? findTier(tasks, row.tier) : null;
+  if (!tier) return { kind: "unknown", why: `tier '${row.tier}' is not in the tasks block` };
+
+  const proved = Math.max(1, Math.floor(earnedLevel)) + Math.max(0, Math.floor(bought));
+  if (claim.level > proved) {
+    return { kind: "unknown", why: `level ${claim.level} is above the proved level ${proved}` };
+  }
+
+  return { kind: "ok", tier };
 }

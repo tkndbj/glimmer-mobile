@@ -72,6 +72,10 @@ namespace GlimmerGrove
             TaskLedger.Changed += OnTasksChanged;
             DailyStreak.Changed += OnStreakChanged;
 
+            // The name card's badge: a milestone taken, or the level moving under it.
+            KeeperMilestoneLedger.Changed += OnKeeperChanged;
+            PlayerProgression.Changed += OnKeeperChanged;
+
             // The challenge badge repaints on the same shape of cue: a play spent, a deal
             // bought, a sync arriving with plays spent elsewhere, or the day turning under
             // the ledger's own read.
@@ -85,6 +89,8 @@ namespace GlimmerGrove
         {
             TaskLedger.Changed -= OnTasksChanged;
             DailyStreak.Changed -= OnStreakChanged;
+            KeeperMilestoneLedger.Changed -= OnKeeperChanged;
+            PlayerProgression.Changed -= OnKeeperChanged;
             ChallengeLedger.Changed -= OnChallengesChanged;
             WardLoadout.Changed -= OnLoadoutChanged;
 
@@ -98,6 +104,17 @@ namespace GlimmerGrove
             if (this == null || !_tasksPanel) return;
             PaintTasks();
         }
+
+        WaitingBadge _keeperBadge;
+
+        void OnKeeperChanged()
+        {
+            if (this == null) return;
+            PaintKeeperBadge();
+        }
+
+        /// <summary>The count of milestone chests waiting on the keeper ladder, or nothing.</summary>
+        void PaintKeeperBadge() => _keeperBadge?.Paint(KeeperMilestoneLedger.Waiting);
 
         void OnStreakChanged()
         {
@@ -242,6 +259,15 @@ namespace GlimmerGrove
             xpRT.sizeDelta = new Vector2(0f, 22f);
             float w = 432f * Profile.RankProgress;
             Tween.Run(.7f, Ease.OutCubic, t => { if (xpRT) xpRT.sizeDelta = new Vector2(w * t, 22f); }, xp).Delay(.35f);
+
+            // **What the ladder owes**, on the card's top-right corner: the count of milestone
+            // chests reached and not yet opened (invariant 57d), in the tasks pack's own starburst
+            // cut green so it reads as "collect" rather than as the tasks' gold. Built last on the
+            // card so it sits over the card's tap area, and painted rather than drawn (44j): a
+            // level moves while the hub stands (a purchase on the ladder page, a sync that brings
+            // another device's play), so it subscribes to both cues that can move the count.
+            _keeperBadge = WaitingBadge.BurstTopRight(card.transform, Pal.Mint);
+            PaintKeeperBadge();
 
             // corner buttons
             UIKit.IconButton("Settings", bar, Skins.Aside, "ic_gear", new Vector2(106f, 106f),

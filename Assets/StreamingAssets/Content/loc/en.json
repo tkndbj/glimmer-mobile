@@ -7064,6 +7064,10 @@
     {
       "key": "ui.keeper.bought_count",
       "text": "{0} bought"
+    },
+    {
+      "key": "ui.keeper.chest_locked",
+      "text": "Reach level {0} to open this chest"
     }
   ]
 }

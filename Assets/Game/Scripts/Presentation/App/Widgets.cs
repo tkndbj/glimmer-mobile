@@ -150,8 +150,35 @@ namespace GlimmerGrove
             _click?.Invoke();
         }
 
-        /// <summary>Re-read the resting scale, e.g. after an intro animation.</summary>
-        public void Rehome() => _home = transform.localScale;
+        /// <summary>
+        /// Re-read the resting scale, e.g. after an intro animation.
+        ///
+        /// <para>
+        /// <b>A scale of nought is never a resting scale, so it is refused.</b> The keeper page's
+        /// buy key once called this on the line after starting its entrance pop - while the key
+        /// was still at scale zero waiting for the pop's delay - so every press squashed it to
+        /// <c>0 x .93</c>, the release restored it to nought, and the lift's raycast found no
+        /// button under the finger: the key vanished on the tap and the click never fired. Call
+        /// it from the pop's <c>OnDone</c>, or use <see cref="Enter"/>, which does exactly that.
+        /// </para>
+        /// </summary>
+        public void Rehome()
+        {
+            var scale = transform.localScale;
+            if (scale == Vector3.zero) return;
+            _home = scale;
+        }
+
+        /// <summary>
+        /// Plays the standing entrance - a pop from nought - and re-reads the resting scale when
+        /// it lands, in one call, so no caller can read the scale a frame too early.
+        /// </summary>
+        public void Enter(float duration = .45f, float delay = 0f)
+        {
+            transform.localScale = Vector3.zero;
+            var self = this;
+            Tween.Pop(transform, 0f, duration, delay).OnDone(() => { if (self) self.Rehome(); });
+        }
     }
 
     /// <summary>Slow drifting motes of light. Pure eye candy, very cheap.</summary>

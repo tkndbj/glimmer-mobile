@@ -193,6 +193,10 @@ namespace GlimmerGrove.Cloud
                         // the boost fields' reason: one more number on the wire, no rules release.
                         { "keeperLevelsBought", (long)(dto.wallet?.keeperLevelsBought ?? 0) },
 
+                        // The highest keeper milestone chest claimed (57d), inside the map for the
+                        // same reason: one more number on the wire, no rules release.
+                        { "keeperMilestonesClaimed", (long)(dto.wallet?.keeperMilestonesClaimed ?? 0) },
+
                         // The hint ledger, whole, for the heart ledger's reason. -1 rather
                         // than 0 for the two counters, so a document written before hints
                         // existed is recognisable as holding no opinion rather than as a
@@ -523,6 +527,7 @@ namespace GlimmerGrove.Cloud
                 dto.wallet.xpBoostSurgeUntilUnix = Long(wallet, "xpBoostSurgeUntilUnix", 0);
                 dto.wallet.xpBoostEarned = Long(wallet, "xpBoostEarned", 0);
                 dto.wallet.keeperLevelsBought = (int)Long(wallet, "keeperLevelsBought", 0);
+                dto.wallet.keeperMilestonesClaimed = (int)Long(wallet, "keeperMilestonesClaimed", 0);
 
                 // -1 when the document predates the hint pool, which SaveMerge reads as "no
                 // opinion" and answers with a full pool. Defaulting to 0 would claim a real

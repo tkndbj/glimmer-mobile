@@ -93,6 +93,19 @@ namespace GlimmerGrove.Daily
             return new ChestClaim(tier, land);
         }
 
+        /// <summary>
+        /// One keeper milestone's chest, on the keeper ladder (invariant 57d). Invalid for a level
+        /// that is no milestone of the published table.
+        /// </summary>
+        public static ChestClaim ForKeeperMilestone(int level)
+        {
+            var row = Progression.KeeperMilestoneLedger.Table.At(level);
+            if (!row.IsValid) return default;
+
+            return new ChestClaim(row.Tier,
+                () => Progression.KeeperMilestoneLedger.TryCollect(level, out var drops) ? drops : null);
+        }
+
         /// <summary>One rung of a season's ladder, on one of its two tracks.</summary>
         public static ChestClaim ForSeason(GroveEvent season, EventMilestone rung, SeasonTrack track)
         {

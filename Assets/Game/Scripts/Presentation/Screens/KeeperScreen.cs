@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
-using GlimmerGrove.AssetPipeline;
-using GlimmerGrove.Content;
+using GlimmerGrove.Daily;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
-using GlimmerGrove.Wards;
+using GlimmerGrove.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -20,12 +19,13 @@ namespace GlimmerGrove
     /// top of the ladder at the top, level 1 at the foot, the level the player stands on
     /// crowned and throwing a beam at the next one. Every level is a disc on the path - the
     /// level-selection pack's three, green for reached, silver for above, crowned for here -
-    /// and what a level opens stands beside it as a picture on a pedestal (a turret off the
-    /// shelf, the Infinite lane) or hangs under it as a banner (an honorific). <b>The page says
-    /// almost nothing in words</b>, by the owner's instruction: a number on every disc, a name
-    /// under every prize, and one key. The rebuild of 2026-09-27 replaced a checklist of plates
-    /// whose icons overlapped and whose three sentences of small print said what the picture
-    /// already did.
+    /// and every few levels a <b>chest</b> stands beside the path (invariant 57d): dim above
+    /// the player, lit and breathing once reached, spent once opened, and the one thing on the
+    /// climb that can be tapped. <b>The page says almost nothing in words</b>, by the owner's
+    /// instruction: a number on every disc and one key. The rebuild of 2026-09-27 replaced a
+    /// checklist of plates; the re-cut of 2026-09-28 took the honorific banners and the turret
+    /// pedestals off it (the owner: "remove the ribbon", "remove the turrets from the sides")
+    /// and put the milestone chests where the pedestals stood.
     /// </para>
     /// <para>
     /// It is a <see cref="GridView"/> of one column (invariant 44ma), so seventy levels cost
@@ -39,13 +39,14 @@ namespace GlimmerGrove
     /// <para>
     /// <b>Every fact on the page is derived</b>: the standing level from
     /// <see cref="PlayerProgression.Level"/>, the count bought from <see cref="KeeperLedger"/>,
-    /// the prices from the published ladder, the prizes from the catalog and the manifest.
-    /// Buying is one tap on the docked key and the level moves at once:
-    /// <see cref="KeeperLedger.TryBuy"/> debits, counts and invalidates, this page hears the
-    /// change and rebinds, and a refusal from the server takes it back the same way. <b>A
-    /// bought level is drawn as bought</b> - a mint run of path and the currency it was bought
-    /// with on its disc - and the count sits on the medallion, which is the transparency the
-    /// owner asked for said without a sentence.
+    /// the prices from the published ladder, the chests from
+    /// <see cref="KeeperMilestoneLedger"/> against the same level. Buying is one tap on the
+    /// docked key and the level moves at once: <see cref="KeeperLedger.TryBuy"/> debits, counts
+    /// and invalidates, this page hears the change and rebinds, and a refusal from the server
+    /// takes it back the same way. <b>A bought level is drawn as bought</b> - a mint run of path
+    /// and the currency it was bought with on its disc - and the count sits on the medallion,
+    /// which is the transparency the owner asked for said without a sentence. A chest tap opens
+    /// the ceremony every other chest opens (<see cref="ChestOverlay"/>), which claims it.
     /// </para>
     /// </summary>
     public sealed class KeeperScreen : View
@@ -61,11 +62,10 @@ namespace GlimmerGrove
         // ------------------------------------------------------------------ the hero
         const float HeroTop = 124f;
         const float Emblem = 260f, EmblemY = 138f;
-        const float BannerW = 440f, BannerH = 118f, BannerY = 124f;
-        const float BarW = 640f, BarH = 58f, BarGap = 16f, HeroFoot = 18f;
+        const float BarW = 640f, BarH = 58f, BarY = 176f, HeroFoot = 18f;
 
         /// <summary>Where the hero ends and the climb begins, below the safe layer's top.</summary>
-        const float HeroBottom = HeroTop + EmblemY + BannerY + BannerH * .5f + BarGap + BarH + HeroFoot;
+        const float HeroBottom = HeroTop + EmblemY + BarY + BarH * .5f + HeroFoot;
 
         /// <summary>
         /// The pack disc's white face: its centre stands this fraction of the disc's size above
@@ -89,13 +89,18 @@ namespace GlimmerGrove
         const float TrackW = 16f, TrackEdge = 32f;
 
         /// <summary>
-        /// A prize stands in a column this far off the middle - past the path's widest swing
-        /// plus half a disc, so no prize can meet the path whatever the level.
+        /// A milestone's chest stands in a column this far off the middle - past the path's
+        /// widest swing plus half a disc, so no chest can meet the path whatever the level.
         /// </summary>
         public const float ColumnX = 360f;
-        const float PedestalW = 176f, PedestalH = 108f, PedestalY = -30f;
-        const float Prize = 124f, PrizeY = 26f, CaptionY = -96f, CaptionRoom = 220f;
-        const float RibbonW = 280f, RibbonH = 80f, RibbonY = -84f;
+
+        /// <summary>
+        /// The chest's <em>drawn</em> height (<see cref="ChestPack.Fill"/> of its box, the hub's
+        /// convention) and where its middle stands in the cell. Its box is <see cref="ChestBox"/>
+        /// tall, so the sprite's headroom is inside the cell and never over the disc above.
+        /// </summary>
+        public const float ChestTall = 132f, ChestY = 6f;
+        public const float ChestBox = ChestTall / ChestPack.Fill;
 
         static readonly Color SkyTop = new Color32(10, 18, 66, 255);
         static readonly Color SkyMiddle = new Color32(38, 26, 104, 255);
@@ -118,10 +123,9 @@ namespace GlimmerGrove
         // ------------------------------------------------------------------ state
         GridView _grid;
         RectTransform _viewport;
-        AssetHold _shelfArt;
 
         // the hero, repainted in place
-        Text _levelNumber, _honorific, _xpLine, _boughtText, _keyCaption, _keyPrice;
+        Text _levelNumber, _xpLine, _boughtText, _keyCaption, _keyPrice;
         Image _xpFill, _keyIcon, _keyTag, _keyGlow;
         RectTransform _emblem, _boughtChip;
         Btn _buy;
@@ -129,8 +133,9 @@ namespace GlimmerGrove
 
         /// <summary>The ladder rows read, once per repaint, so seventy binds share one walk.</summary>
         readonly Dictionary<int, RowFacts> _facts = new Dictionary<int, RowFacts>();
-        int _standing = 1, _earned = 1, _top;
+        int _standing = 1, _earned = 1, _top, _claimed, _nextChest;
         KeeperOffer _offer;
+        bool _shown;
 
         // ------------------------------------------------------------------ build
         protected override void Build()
@@ -152,25 +157,14 @@ namespace GlimmerGrove
 
             BuildDock();
             NavBar.Build(Content, NavBar.Tab.Home, onSidePage: true);
-            HoldShelfArt();
 
             Repaint(show: true);
         }
 
-        /// <summary>
-        /// The turret thumbnails live in the shop's shelf scope (invariant 7b); a pedestal drawn
-        /// before they land stands empty, and rebinds when they do.
-        /// </summary>
-        void HoldShelfArt() => Run(async token =>
-        {
-            _shelfArt = _shelfArt ?? AssetLibrary.Hold("ward_shelf");
-            await _shelfArt.LoadAsync(AssetManifest.WardShelfAssets(WardLedger.Catalog.Models), null, token);
-            if (_grid) _grid.Refresh();
-        });
-
         void OnEnable()
         {
             KeeperLedger.Changed += OnChanged;
+            KeeperMilestoneLedger.Changed += OnChanged;
             PlayerProgression.Changed += OnChanged;
             ProgressionRules.Changed += OnChanged;
         }
@@ -178,29 +172,17 @@ namespace GlimmerGrove
         void OnDisable()
         {
             KeeperLedger.Changed -= OnChanged;
+            KeeperMilestoneLedger.Changed -= OnChanged;
             PlayerProgression.Changed -= OnChanged;
             ProgressionRules.Changed -= OnChanged;
-        }
-
-        void OnDestroy()
-        {
-            _shelfArt?.Dispose();
-            _shelfArt = null;
-        }
-
-        public override void OnPresented()
-        {
-            // Open on the level the player stands on, centred: the page is about where you are
-            // before it is about where you could be. On the build frame the viewport has no
-            // height yet, so this waits for the present.
-            if (_grid) _grid.ScrollTo(IndexOf(_standing), centre: true);
         }
 
         public override bool OnBack() { Flow.Go<HomeScreen>(); return true; }
 
         void OnChanged()
         {
-            if (!_grid) return;
+            // A change can arrive from a save load during teardown; nothing to paint onto then.
+            if (this == null || !_grid) return;
             Repaint(show: false);
         }
 
@@ -285,7 +267,8 @@ namespace GlimmerGrove
         // ------------------------------------------------------------------ the hero
         /// <summary>
         /// Where the player stands: the crowned disc at the size of a medallion under a turning
-        /// fan of light, the honorific on the banner hung from it, and the XP bar.
+        /// fan of light, and the XP bar under it. The honorific banner that hung between them
+        /// is gone (the owner, 2026-09-28: "remove the ribbon"); the page's name is in the bar.
         ///
         /// <b>The XP bar is the earned level's</b> - a bought level adds a whole rung and moves
         /// no XP, so the bar keeps meaning "how far to the next level by play" whatever was
@@ -319,13 +302,7 @@ namespace GlimmerGrove
             _boughtText = UIKit.Titled("T", _boughtChip, string.Empty, 26, DarkNumber, TextAnchor.MiddleCenter,
                                        new Vector2(172f, 54f), Centre, Vector2.zero, 0f, 0f);
 
-            float by = ey - BannerY;
-            var banner = UIKit.Img("Banner", Safe, Art.S("Ui/" + Skins.Title), Color.white,
-                                   new Vector2(BannerW, BannerH), Top, new Vector2(0f, by));
-            _honorific = UIKit.Titled("Title", banner.transform, string.Empty, 40, Pal.Cream, TextAnchor.MiddleCenter,
-                                      new Vector2(BannerW * .62f, BannerH * .5f), Centre, new Vector2(0f, 10f), 3f, 3f);
-
-            float barY = by - BannerH * .5f - BarGap - BarH * .5f;
+            float barY = ey - BarY;
             var track = UIKit.Img("XpTrack", Safe, Art.S("Ui/" + Skins.Trough), Color.white,
                                   new Vector2(BarW, BarH), Top, new Vector2(0f, barY));
             _xpFill = UIKit.Img("XpFill", track.transform, Art.S("Ui/" + Skins.Fill), Pal.Mint,
@@ -371,9 +348,10 @@ namespace GlimmerGrove
             _keyPrice = UIKit.Titled("Amount", _keyTag.transform, string.Empty, 40, Pal.Cream, TextAnchor.MiddleCenter,
                                      new Vector2(TagW - 96f, TagH), Centre, new Vector2(26f, 0f), 3f, 3f);
 
-            _buy.transform.localScale = Vector3.zero;
-            Tween.Pop(_buy.transform, 0f, .45f, .18f);
-            _buy.Rehome();
+            // The entrance and the resting scale in one call (`Btn.Enter`). Reading the scale on
+            // the line after starting the pop recorded nought as the key's home, so every press
+            // squashed it to nothing and the release never found it - the buy that "did nothing".
+            _buy.Enter(.45f, .18f);
         }
 
         // ---------------------------------------------------------------- repaint
@@ -387,16 +365,28 @@ namespace GlimmerGrove
             _standing = PlayerProgression.Level.Level;
             _earned = PlayerProgression.EarnedLevel.Level;
             _offer = KeeperLedger.Next();
+            _claimed = KeeperMilestoneLedger.ClaimedThrough;
+            _nextChest = KeeperMilestoneLedger.NextWaiting;
 
-            // The page reaches the ladder's top, or the standing level if a player somehow stands
-            // above it (a retune that lowered the top), so the crowned disc is always on the page.
-            _top = Mathf.Max(ladder.Sells ? ladder.Top : _standing, _standing, 1);
+            // The page reaches the ladder's top, the last milestone, or the standing level if a
+            // player somehow stands above both (a retune that lowered the top), so the crowned
+            // disc and every chest are always on the page.
+            int top = Mathf.Max(ladder.Sells ? ladder.Top : _standing, KeeperMilestoneLedger.Table.Last, _standing, 1);
 
-            ReadFacts(ladder);
+            ReadFacts(ladder, top);
             PaintHero();
 
-            if (show) _grid.Show(_top, animate: true);
+            // A list whose length changed is a different list: the rows above the old top have to
+            // be realised, and a plain refresh rebinds only what is live.
+            bool relist = show || top != _top;
+            _top = top;
+
+            // Opened on the level the player stands on, centred: the page is about where you are
+            // before it is about where you could be. Asked of the grid rather than scrolled after
+            // the present, or the first frame is the top of the ladder and the second a jump.
+            if (relist) _grid.Show(_top, animate: !_shown, openAt: IndexOf(_standing), centre: true);
             else _grid.Refresh();
+            _shown = true;
         }
 
         void PaintHero()
@@ -411,12 +401,6 @@ namespace GlimmerGrove
                 if (_drawnLevel >= 0 && _drawnLevel != level.Level) Tween.Punch(_emblem, .16f, .4f);
                 _drawnLevel = level.Level;
             }
-            if (_honorific)
-            {
-                _honorific.text = Loc.Get(KeeperTitle.KeyFor(level.Level)).ToUpperInvariant();
-                UIKit.OneLineLabel(_honorific, BannerW * .62f, 40, 22);
-            }
-
             if (_xpFill)
             {
                 float w = (BarW - 12f) * (earned.IsMaxLevel ? 1f : earned.Progress01);
@@ -518,73 +502,35 @@ namespace GlimmerGrove
         }
 
         // ------------------------------------------------------------------ the facts
-        /// <summary>One thing a level opens, drawn on a pedestal: its picture and its name.</summary>
-        readonly struct PrizeFact
-        {
-            public readonly string Sprite, Name;
-            public PrizeFact(string sprite, string name) { Sprite = sprite; Name = name; }
-        }
-
-        /// <summary>What one level opens, and what it costs to buy. Read once per repaint.</summary>
+        /// <summary>What one level costs to buy and the chest it pays, if any. Read once per repaint.</summary>
         sealed class RowFacts
         {
             public int Level;
             public string Currency;
             public long Price;
             public bool Sold;
-            public readonly List<PrizeFact> Prizes = new List<PrizeFact>(2);
-            public string Title;                          // the honorific this level confers, or null
+            public ChestTier Chest;                      // the milestone chest this level pays, or null
         }
 
         /// <summary>
-        /// Walks the catalog, the manifest and the honorific table once, so a bind is a lookup.
-        /// The turret gate is the roster's own (<see cref="WardModel.MinLevel"/>), the lane's
-        /// wall the manifest's (<c>minKeeperLevel</c>), the honorific <see cref="KeeperTitle"/>'s
-        /// - three sources, none of them this screen's.
+        /// Walks the price ladder and the milestone table once, so a bind is a lookup. Both are
+        /// published content and neither is this screen's.
         /// </summary>
-        void ReadFacts(KeeperLadder ladder)
+        void ReadFacts(KeeperLadder ladder, int top)
         {
             _facts.Clear();
 
-            RowFacts At(int level)
+            for (int level = 1; level <= top; level++)
             {
-                if (!_facts.TryGetValue(level, out var facts))
-                {
-                    facts = new RowFacts { Level = level };
-                    facts.Sold = ladder.PriceFor(level, out facts.Currency, out facts.Price);
-                    _facts[level] = facts;
-                }
-                return facts;
+                var facts = new RowFacts { Level = level };
+                facts.Sold = ladder.PriceFor(level, out facts.Currency, out facts.Price);
+                _facts[level] = facts;
             }
 
-            for (int level = 1; level <= _top; level++) At(level);
-
-            // Turrets, by the roster's gate. A starter has no gate and no pedestal.
-            foreach (var model in WardLedger.Catalog.Models)
+            foreach (var row in KeeperMilestoneLedger.Table.Rows)
             {
-                if (model == null || model.MinLevel <= 0 || model.MinLevel > _top) continue;
-                At(model.MinLevel).Prizes.Add(new PrizeFact("Ui/" + model.Thumb, Loc.Get(model.NameKey)));
-            }
-
-            // Lanes and chapters walled behind a keeper level, by the manifest.
-            var index = GameContent.Index;
-            if (index != null)
-            {
-                var walled = new HashSet<int>();
-                foreach (var chapter in index.Chapters)
-                {
-                    if (chapter == null || chapter.MinKeeperLevel <= 0 || chapter.MinKeeperLevel > _top) continue;
-                    if (!walled.Add(chapter.MinKeeperLevel)) continue;
-                    string mark = chapter.Track.IsMain ? "Ui/crest_gold" : "Ui/ic_endless";
-                    At(chapter.MinKeeperLevel).Prizes.Add(new PrizeFact(mark, Loc.Get(chapter.NameKey)));
-                }
-            }
-
-            // Honorifics, where the title changes.
-            for (int level = 2; level <= _top; level++)
-            {
-                string key = KeeperTitle.KeyFor(level);
-                if (key != KeeperTitle.KeyFor(level - 1)) At(level).Title = Loc.Get(key);
+                if (row.Level < 1 || row.Level > top) continue;
+                _facts[row.Level].Chest = row.Tier;
             }
         }
 
@@ -594,47 +540,63 @@ namespace GlimmerGrove
         public static float SwingOf(int level) => Swing * Mathf.Sin(level * Turn);
 
         /// <summary>
-        /// Where a level's prizes stand. One stands across the page from the way the disc leans;
-        /// two stand either side of the path. A third is never drawn - no level opens more than
-        /// two things that stand on a pedestal (the honorific hangs from the disc instead).
+        /// Where a level's chest stands: across the page from the way the disc leans, so the
+        /// chest and the disc are never on the same side of the middle.
         /// </summary>
-        public static int ColumnsFor(int level, int count, float[] into)
+        public static float ChestColumn(int level)
+            => SwingOf(level) >= 0f ? -ColumnX : ColumnX;
+
+        // ------------------------------------------------------------------ the chests
+        /// <summary>
+        /// A chest was tapped. Only the earliest waiting milestone may be taken (48b), so a tap
+        /// on a later one is redirected to it rather than swallowed; one above the player says
+        /// which level opens it; one already opened says nothing, because it draws as spent.
+        /// </summary>
+        void TapChest(int level)
         {
-            float lean = SwingOf(level) >= 0f ? 1f : -1f;
-            if (count <= 0) return 0;
-            into[0] = -lean * ColumnX;
-            if (count == 1) return 1;
-            into[1] = lean * ColumnX;
-            return 2;
+            if (level <= _claimed) return;
+
+            if (level > _standing)
+            {
+                Scenery.Toast(Content, Loc.Format("ui.keeper.chest_locked", level), Pal.Gold, 2.2f);
+                return;
+            }
+
+            if (!KeeperMilestoneLedger.CanClaimChests)
+            {
+                Scenery.Toast(Content, Loc.Get("ui.chest.needs_connection"), Pal.Rose, 3f);
+                return;
+            }
+
+            int take = KeeperMilestoneLedger.NextWaiting;
+            if (take <= 0 || Flow.HasModal) return;
+
+            Audio.Sfx("collect", .6f);
+            Flow.Modal<ChestOverlay>(v => v.Claim = ChestClaim.ForKeeperMilestone(take));
         }
 
         // ------------------------------------------------------------------ the climb
         /// <summary>
-        /// One level of the climb: half the path to each neighbour, up to two prizes on
-        /// pedestals, the disc, and a banner when the level confers a title. Every field is
-        /// written on every bind (invariant 44mc) - a recycled cell that leaves a field alone
-        /// shows the previous level's answer.
+        /// One level of the climb: half the path to each neighbour, the disc, and a chest when
+        /// the level is a milestone. Every field is written on every bind (invariant 44mc) - a
+        /// recycled cell that leaves a field alone shows the previous level's answer - and the
+        /// chest's breath is keyed on the level it was started for, so a cell rebound to the same
+        /// waiting chest does not restart it and one rebound to a spent chest stops it.
         /// </summary>
         sealed class LevelCell : IGridCell
         {
             readonly KeeperScreen _screen;
             readonly Image _beam, _fan, _glow;
             readonly Image _edgeUp, _edgeDown, _coreUp, _coreDown;
-            readonly PrizeView[] _prizes = new PrizeView[2];
-            readonly Image _disc, _face, _badge, _ribbon;
-            readonly Text _number, _ribbonText;
+            readonly Image _disc, _face, _badge;
+            readonly Text _number;
             readonly RectTransform _discRT;
-            readonly float[] _columns = new float[2];
-            int _pulsing = -1;
+            readonly RectTransform _chestRoot;
+            readonly Image _chestHalo, _chestShadow, _chest;
+            readonly Btn _chestTap;
+            int _pulsing = -1, _breathing = -1, _bound = -1;
 
             public RectTransform Root { get; }
-
-            sealed class PrizeView
-            {
-                public RectTransform Root;
-                public Image Glow, Pedestal, Picture;
-                public Text Caption;
-            }
 
             public LevelCell(KeeperScreen screen, RectTransform parent)
             {
@@ -659,7 +621,26 @@ namespace GlimmerGrove
                 _coreUp = Track("CoreUp", TrackW);
                 _coreDown = Track("CoreDown", TrackW);
 
-                for (int i = 0; i < _prizes.Length; i++) _prizes[i] = BuildPrize(i);
+                // The chest, built dark: its light, its contact shadow, the closed icon, and the
+                // whole column as one button. The shadow is a sibling under the icon rather than a
+                // child, for the hub's reason - a child draws over its parent.
+                _chestRoot = UIKit.Box("Chest", Root, new Vector2(ChestBox * ChestPack.Aspect + 60f, CellH), Centre, Vector2.zero);
+                _chestHalo = UIKit.Img("Halo", _chestRoot, Art.Glow(128, 1.9f), Pal.A(Pal.Sun, .55f),
+                                       new Vector2(ChestTall * 1.9f, ChestTall * 1.9f), Centre, new Vector2(0f, ChestY));
+                _chestShadow = UIKit.Img("Shadow", _chestRoot, Art.Glow(128, 1.9f), new Color(.10f, .02f, .16f, .42f),
+                                         new Vector2(ChestTall * ChestPack.Wide * 1.30f, ChestTall * .22f), Centre,
+                                         new Vector2(0f, ChestY - ChestTall * .5f - 2f));
+                _chest = UIKit.Img("Icon", _chestRoot, null, Color.white,
+                                   new Vector2(ChestBox * ChestPack.Aspect, ChestBox), Centre,
+                                   new Vector2(0f, ChestY + ChestTall * ChestPack.Lift));
+                _chest.preserveAspect = true;
+                var tap = UIKit.Img("Tap", _chestRoot, null, new Color(0f, 0f, 0f, 0f));
+                UIKit.StretchTo((RectTransform)tap.transform, 0, 0, 0, 0);
+                tap.raycastTarget = true;
+                _chestTap = tap.gameObject.AddComponent<Btn>();
+                _chestTap.PressScale = 1f;
+                _chestTap.Setup(() => _screen.TapChest(_bound), silent: true);
+                _chestRoot.gameObject.SetActive(false);
 
                 _discRT = UIKit.Box("Disc", Root, Vector2.one * NodeSize, Centre, Vector2.zero);
                 _disc = UIKit.Img("Face", _discRT, null, Color.white);
@@ -669,11 +650,6 @@ namespace GlimmerGrove
                                        new Vector2(NodeSize, 80f), Centre, Vector2.zero, 0f, 0f);
                 _badge = UIKit.Img("Paid", _discRT, null, Color.white, new Vector2(48f, 48f), Centre, Vector2.zero);
                 _badge.preserveAspect = true;
-
-                _ribbon = UIKit.Img("Ribbon", Root, Art.S("Ui/" + Skins.Title), Color.white,
-                                    new Vector2(RibbonW, RibbonH), Centre, Vector2.zero);
-                _ribbonText = UIKit.Titled("T", _ribbon.transform, string.Empty, 30, Pal.Cream, TextAnchor.MiddleCenter,
-                                           new Vector2(RibbonW * .62f, RibbonH * .5f), Centre, new Vector2(0f, 7f), 2f, 2f);
             }
 
             Image Track(string name, float width)
@@ -683,30 +659,16 @@ namespace GlimmerGrove
                 return img;
             }
 
-            PrizeView BuildPrize(int i)
-            {
-                var p = new PrizeView { Root = UIKit.Box("Prize" + i, Root, new Vector2(CaptionRoom + 20f, CellH), Centre, Vector2.zero) };
-                p.Glow = UIKit.Img("Glow", p.Root, Art.Glow(128, 2f), Pal.A(Pal.Sun, .22f),
-                                   new Vector2(260f, 260f), Centre, new Vector2(0f, PrizeY));
-                p.Pedestal = UIKit.Img("Pedestal", p.Root, Art.S("Ui/" + Skins.Lander), Color.white,
-                                       new Vector2(PedestalW, PedestalH), Centre, new Vector2(0f, PedestalY));
-                p.Picture = UIKit.Img("Picture", p.Root, null, Color.white, Vector2.one * Prize, Centre, new Vector2(0f, PrizeY));
-                p.Picture.preserveAspect = true;
-                p.Caption = UIKit.Titled("Name", p.Root, string.Empty, 28, Pal.Cream, TextAnchor.MiddleCenter,
-                                         new Vector2(CaptionRoom, 40f), Centre, new Vector2(0f, CaptionY), 2f, 2f);
-                return p;
-            }
-
             public void Bind(int index)
             {
                 int level = _screen._top - index;
                 var facts = _screen.FactsFor(level);
                 int standing = _screen._standing, earned = _screen._earned, top = _screen._top;
+                _bound = level;
 
                 bool reached = level <= standing;
                 bool crowned = level == standing;
                 bool next = level == standing + 1;
-                bool lit = reached || next;
                 float x = SwingOf(level);
 
                 // The crowned cell sinks under its neighbours, so its beam and its fan are light
@@ -729,26 +691,46 @@ namespace GlimmerGrove
                 Half(_edgeDown, _coreDown, x, SwingOf(level - 1), -CellH, level > 1,
                      SegmentColour(level, standing, earned));
 
-                // ---------------------------------------------------------------- prizes
-                int count = facts == null ? 0 : Mathf.Min(facts.Prizes.Count, _prizes.Length);
-                ColumnsFor(level, count, _columns);
-                for (int i = 0; i < _prizes.Length; i++)
+                // ---------------------------------------------------------------- the chest
+                // Three states and every field written for each (44mc): above the player it is
+                // dim and unlit; reached and untaken it is lit, breathing and the one to tap;
+                // taken it is spent - faded, no light - so a player can see what the climb paid.
+                var tier = facts?.Chest;
+                bool chest = tier != null;
+                _chestRoot.gameObject.SetActive(chest);
+                if (chest)
                 {
-                    var p = _prizes[i];
-                    bool on = i < count;
-                    p.Root.gameObject.SetActive(on);
-                    if (!on) continue;
+                    bool spent = level <= _screen._claimed;
+                    bool waiting = !spent && reached;
+                    bool takes = waiting && level == _screen._nextChest;
 
-                    var prize = facts.Prizes[i];
-                    p.Root.anchoredPosition = new Vector2(_columns[i], 0f);
-                    p.Picture.sprite = Art.S(prize.Sprite);
-                    p.Picture.enabled = p.Picture.sprite != null;
-                    p.Picture.color = lit ? Color.white : Pal.A(Unlit, .9f);
-                    p.Pedestal.color = lit ? Color.white : Unlit;
-                    p.Glow.color = Pal.A(Pal.Sun, lit ? .22f : .08f);
-                    p.Caption.text = prize.Name.ToUpperInvariant();
-                    p.Caption.color = lit ? Pal.Cream : new Color32(190, 196, 226, 255);
-                    UIKit.OneLineLabel(p.Caption, CaptionRoom, 28, 18);
+                    _chestRoot.anchoredPosition = new Vector2(ChestColumn(level), 0f);
+                    _chest.sprite = Art.S(tier.Icon);
+                    _chest.enabled = _chest.sprite != null;
+                    _chest.color = spent ? new Color(1f, 1f, 1f, .42f) : waiting ? Color.white : Pal.A(Unlit, .95f);
+                    _chestShadow.color = new Color(.10f, .02f, .16f, spent ? .18f : .42f);
+                    _chestHalo.enabled = waiting;
+                    _chestHalo.color = Pal.A(Pal.Sun, takes ? .55f : .30f);
+                    _chestTap.Interactable = !spent;
+
+                    if (waiting && _breathing != level)
+                    {
+                        _breathing = level;
+                        Tween.KillChannel(_chest.transform, "breathe");
+                        Tween.Breathe(_chest.transform, .06f, 1.6f, level * .21f);
+                    }
+                    else if (!waiting && _breathing >= 0)
+                    {
+                        _breathing = -1;
+                        Tween.KillChannel(_chest.transform, "breathe");
+                        _chest.transform.localScale = Vector3.one;
+                    }
+                }
+                else if (_breathing >= 0)
+                {
+                    _breathing = -1;
+                    Tween.KillChannel(_chest.transform, "breathe");
+                    _chest.transform.localScale = Vector3.one;
                 }
 
                 // ---------------------------------------------------------------- the disc
@@ -782,17 +764,6 @@ namespace GlimmerGrove
                     _badge.sprite = facts != null && facts.Currency == Currency.Gems ? Art.S("Ui/ic_gem") : Art.CoinFace();
                     _badge.enabled = _badge.sprite != null;
                     ((RectTransform)_badge.transform).anchoredPosition = new Vector2(size * .36f, size * .30f);
-                }
-
-                // ---------------------------------------------------------------- the banner
-                bool titled = facts != null && !string.IsNullOrEmpty(facts.Title);
-                _ribbon.gameObject.SetActive(titled);
-                if (titled)
-                {
-                    ((RectTransform)_ribbon.transform).anchoredPosition = new Vector2(x, RibbonY);
-                    _ribbon.color = reached ? Color.white : new Color32(170, 176, 210, 255);
-                    _ribbonText.text = facts.Title.ToUpperInvariant();
-                    UIKit.OneLineLabel(_ribbonText, RibbonW * .62f, 30, 18);
                 }
 
                 // The breath on the next disc, keyed on the level it was started for (44mc).

@@ -613,7 +613,11 @@ namespace GlimmerGrove.Persistence
         ///      outright (invariant 57). A monotonic count inside the existing <c>wallet</c> map,
         ///      so no rules release (12a); absent is nought, so no migration. The version moves
         ///      for v35's reason.
-        public const int Version = 36;
+        /// v37: <see cref="WalletDto.keeperMilestonesClaimed"/> - the highest keeper milestone
+        ///      chest claimed (invariant 57d). A monotonic floor inside the existing <c>wallet</c>
+        ///      map, so no rules release (12a); absent is nought, so no migration. The version
+        ///      moves for v35's reason.
+        public const int Version = 37;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -1251,6 +1255,24 @@ namespace GlimmerGrove.Persistence
         /// </para>
         /// </summary>
         public int keeperLevelsBought;
+
+        /// <summary>
+        /// The highest keeper milestone level whose chest this account has claimed (invariant
+        /// 57d). Only ever rises; joined by <c>max</c>.
+        ///
+        /// <para>
+        /// <b>A floor, not a set.</b> Only the earliest waiting milestone may be taken (48b's
+        /// rule), so which chests are still owed is derived on every read from the level the
+        /// player stands at against this one number - a milestone added by a content push under
+        /// a player already past it is owed the moment the table arrives, with nothing here to
+        /// migrate. Absent is nought, which is what every file written before this means and what
+        /// a rolled-back client writes, so no migration and no sentinel.
+        /// </para>
+        /// <para>
+        /// It rides inside the <c>wallet</c> map, so no rules release (12a). Added in v37.
+        /// </para>
+        /// </summary>
+        public int keeperMilestonesClaimed;
 
         /// <summary>
         /// Every hint ever handed to this player - timer refills, the starting set, a

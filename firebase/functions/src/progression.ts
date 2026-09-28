@@ -19,7 +19,7 @@
  */
 
 import { logger } from "firebase-functions";
-import type { KeeperLadderConfig } from "./keeper";
+import type { KeeperLadderConfig, KeeperMilestonesConfig } from "./keeper";
 import type { RankRungConfig } from "./ranks";
 
 import type { ReferralConfig } from "./referral";
@@ -141,6 +141,14 @@ export interface ProgressionConfig {
    * level at a price nobody authored. Re-seed after any change to the block.
    */
   keeperLevels?: KeeperLadderConfig;
+
+  /**
+   * The chests the keeper ladder pays on the way up, published by the seeder out of
+   * `progression.json`'s `keeperMilestones` block (`keeper.ts`, invariant 57d). Absent pays
+   * nothing and leaves every milestone claim unconfirmed rather than refused (13a). Re-seed
+   * after any change to the block.
+   */
+  keeperMilestones?: KeeperMilestonesConfig;
 }
 
 /**

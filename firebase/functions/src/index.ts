@@ -91,9 +91,11 @@ import {
 } from "./challenges";
 import type { ChallengeClaim } from "./challenges";
 import {
-  earnedKeeperLevel, isKeeperSpendId, judgeKeeperSpend, keeperBoughtOf, parseKeeperSpendId,
-  usableKeeperLadder,
+  earnedKeeperLevel, isKeeperSpendId, isMilestoneGrantId, judgeKeeperSpend, judgeMilestoneClaim,
+  keeperBoughtOf, milestoneChestValue, parseKeeperSpendId, parseMilestoneClaim,
+  usableKeeperLadder, usableKeeperMilestones,
 } from "./keeper";
+import type { MilestoneClaim } from "./keeper";
 import {
   deriveEarned,
   loadProgressionConfig,
@@ -518,7 +520,8 @@ type CleanAward =
   | (CleanCommon & { kind: "task"; claim: TaskClaim })
   | (CleanCommon & { kind: "mark"; claim: MarkClaim })
   | (CleanCommon & { kind: "challenge"; claim: ChallengeClaim })
-  | (CleanCommon & { kind: "endless"; claim: EndlessClaim });
+  | (CleanCommon & { kind: "endless"; claim: EndlessClaim })
+  | (CleanCommon & { kind: "milestone"; claim: MilestoneClaim });
 
 export const claimAwards = onCall(callOptions, async (request): Promise<{
   wallets: WalletReply[];
@@ -664,6 +667,18 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
       return [{ ...common, kind: "endless", claim: lane, currency: lane.currency as CurrencyId }];
     }
 
+    // A keeper milestone's chest (57d): re-rolled from the account and the level, and paid only
+    // when the save and the wallet prove the level. No window - a level, once reached, stays
+    // reached - and nothing refused past the parse, because every other reason can become true.
+    if (isMilestoneGrantId(id)) {
+      const milestone = parseMilestoneClaim(id);
+      if (!milestone) { rejected.push(id); return []; }
+
+      if (!CURRENCIES.includes(milestone.currency as CurrencyId)) { rejected.push(id); return []; }
+
+      return [{ ...common, kind: "milestone", claim: milestone, currency: milestone.currency as CurrencyId }];
+    }
+
     const claim = parseDailyClaim(id);
     if (!claim) { rejected.push(id); return []; }
 
@@ -706,10 +721,15 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
     // claimed and used only to log a disagreement — see `saveSupports`. Nothing is refused
     // on it, so this is an extra read in the name of being able to explain a support
     // ticket, not part of the decision.
+    // A milestone claim is judged against the level the save proves, so the same one read is
+    // made for either kind and used for both; the common call carries neither and costs nothing.
     const wantsStreak = clean.some((award) => award.kind === "streak");
-    const saved = wantsStreak
-      ? readSavedStreak((await transaction.get(db.doc(PATHS.player(uid)))).data())
-      : null;
+    const wantsMilestone = clean.some((award) => award.kind === "milestone");
+    const saveDoc = wantsStreak || wantsMilestone
+      ? ((await transaction.get(db.doc(PATHS.player(uid)))).data() as Record<string, unknown> | undefined)
+      : undefined;
+    const saved = wantsStreak ? readSavedStreak(saveDoc) : null;
+    const provedLevel = wantsMilestone && saveDoc ? earnedKeeperLevel(saveDoc, config) : 1;
 
     // The pass entitlements the batch needs, gathered here because every read has to happen
     // before the first write. One per season rather than one per claim: a batch of forty
@@ -728,6 +748,7 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
     const ladder = usableStreakConfig((config as { streak?: unknown }).streak);
     const tasks = usableTaskConfig((config as { tasks?: unknown }).tasks);
     const challenges = usableChallengesConfig((config as { challenges?: unknown }).challenges);
+    const milestones = usableKeeperMilestones((config as { keeperMilestones?: unknown }).keeperMilestones, tasks);
 
     // Which task ids this server has paid per period. Threaded through the loop like the
     // streak floor, because a batch pays several and each one narrows the allowance.
@@ -758,6 +779,7 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
                   : award.kind === "streak" ? ladder
                   : award.kind === "task" ? tasks
                   : award.kind === "challenge" ? challenges
+                  : award.kind === "milestone" ? milestones
                   : daily;
 
       if (!table) {
@@ -920,6 +942,23 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
 
         amount = priced.amount;
         detail = { genre: award.claim.genre, win: award.claim.win, allowance: priced.allowance };
+      } else if (award.kind === "milestone") {
+        // Re-rolled from the account and the level, and paid only at or below the level the
+        // save and the wallet prove together. Left unconfirmed on every other answer, because
+        // each can become true: the debit that bought the level lands on this same sync's next
+        // call, the level is earned, or the seeder runs (13a).
+        const verdict = judgeMilestoneClaim(milestones, tasks, award.claim, provedLevel, keeperBoughtOf(state));
+
+        if (verdict.kind === "unknown") {
+          logger.info("a keeper milestone chest cannot be paid yet; leaving it unconfirmed", {
+            uid, id: award.id, level: award.claim.level, why: verdict.why,
+            earnedLevel: provedLevel, bought: keeperBoughtOf(state),
+          });
+          continue;
+        }
+
+        amount = milestoneChestValue(verdict.tier.chest, uid, award.claim.level, award.currency);
+        detail = { level: award.claim.level, tier: verdict.tier.id };
       } else if (award.kind === "endless") {
         // **Taken from the client and bounded, which is the one place in this function that
         // happens.** Every other branch above re-prices the claim from a published table; a

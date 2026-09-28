@@ -85,6 +85,14 @@ namespace GlimmerGrove
         bool _animate;
         float _shownAt;
 
+        /// <summary>
+        /// A <see cref="Show"/> that asked to open on an item before the viewport had a height.
+        /// Held until the first frame that has one; see <see cref="Show"/>.
+        /// </summary>
+        int _openAt = -1;
+        bool _openCentred;
+        bool _openPending;
+
         /// <summary>How many rows of items there are, for an owner sizing something else.</summary>
         public int RowCount => _count <= 0 ? 0 : (_count + _columns - 1) / _columns;
 
@@ -154,8 +162,20 @@ namespace GlimmerGrove
         /// row - and it lets the cells enter with the staggered pop that says the page changed.
         /// When the same list is merely redrawn, call <see cref="Refresh"/> instead.
         /// </para>
+        /// <para>
+        /// <b><paramref name="openAt"/> opens the list on one item instead of at the top</b>,
+        /// centred when <paramref name="centre"/>, for a page whose subject is somewhere down the
+        /// list - the keeper ladder, which is about where you stand before it is about the top.
+        /// It is a parameter of the show rather than a <see cref="ScrollTo"/> afterwards because
+        /// of <em>when</em> the two land: a screen is built under the iris, and on its build frame
+        /// the viewport has no height yet, so a scroll made then goes nowhere and one made on
+        /// present lands after the iris has opened - which the player sees as the list drawn at
+        /// the top and then teleporting to their row. Asked here, the grid holds the request
+        /// until the first frame the viewport has a height, moves there <em>before</em> realising
+        /// any cell, and spends the entrance on the rows the player actually sees.
+        /// </para>
         /// </summary>
-        public void Show(int count, bool animate = true)
+        public void Show(int count, bool animate = true, int openAt = -1, bool centre = true)
         {
             _count = Mathf.Max(0, count);
             _animate = animate;
@@ -173,6 +193,31 @@ namespace GlimmerGrove
 
             _firstRow = 1;
             _lastRow = 0;
+
+            _openAt = openAt >= 0 && openAt < _count ? openAt : -1;
+            _openCentred = centre;
+            _openPending = _openAt >= 0;
+
+            if (_openPending && _viewport.rect.height <= 0f) return;   // see Open
+
+            Open();
+        }
+
+        /// <summary>
+        /// Lands a pending open and realises the first window. Called by <see cref="Show"/> when
+        /// the viewport already has a height, and otherwise by the first <c>Update</c> that finds
+        /// one - which is still under the iris, so nothing is ever drawn at the top first.
+        /// </summary>
+        void Open()
+        {
+            if (_openPending)
+            {
+                _openPending = false;
+                _shownAt = Time.unscaledTime;           // the entrance is spent on these rows
+                Resize();
+                Place(_openAt, _openCentred);
+            }
+
             Window(force: true);
         }
 
@@ -251,6 +296,13 @@ namespace GlimmerGrove
         {
             if (_content == null || index < 0 || index >= _count) return;
 
+            Place(index, centre);
+            Window(force: true);
+        }
+
+        /// <summary>Moves the content so that <paramref name="index"/> is at the top of the window, or centred in it.</summary>
+        void Place(int index, bool centre)
+        {
             int row = index / _columns;
             float want = _padTop + row * _cellH;
             if (centre) want -= Mathf.Max(0f, _viewport.rect.height - _cellH) * .5f;
@@ -258,11 +310,19 @@ namespace GlimmerGrove
             float most = Mathf.Max(0f, _content.sizeDelta.y - _viewport.rect.height);
             _content.anchoredPosition = new Vector2(0f, Mathf.Clamp(want, 0f, most));
             if (_scroll) _scroll.velocity = Vector2.zero;
-
-            Window(force: true);
         }
 
-        void Update() => Window(force: false);
+        void Update()
+        {
+            if (_openPending)
+            {
+                if (_viewport.rect.height <= 0f) return;    // still no room to open into
+                Open();
+                return;
+            }
+
+            Window(force: false);
+        }
 
         // ------------------------------------------------------------- windowing
         void Resize()
@@ -347,9 +407,11 @@ namespace GlimmerGrove
             // The entrance belongs to the first screenful of a new list and to nothing else. A
             // row realised by scrolling has already been "entered" by the scroll itself, and one
             // realised a second later by a stray repaint would pop for no reason a player could
-            // name - which is the flicker this whole type exists to remove.
+            // name - which is the flicker this whole type exists to remove. The stagger counts
+            // from the first realised row rather than from row nought, so a list opened halfway
+            // down still enters top to bottom instead of all at once after a fixed wait.
             if (_animate && Time.unscaledTime - _shownAt < .05f)
-                Tween.Pop(root, 0f, .42f, .03f * Mathf.Min(index, 12));
+                Tween.Pop(root, 0f, .42f, .03f * Mathf.Min(Mathf.Max(0, index - _firstRow * _columns), 12));
 
             _live[index] = cell;
         }

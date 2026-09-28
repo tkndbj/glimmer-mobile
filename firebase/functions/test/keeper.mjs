@@ -24,6 +24,9 @@ if (!existsSync(compiled)) {
 const {
   between, earnedKeeperLevel, isKeeperSpendId, judgeKeeperSpend, keeperBoughtOf, keeperPrice,
   parseKeeperSpendId, usableKeeperLadder, KEEPER_MAX_TOP, KEEPER_MAX_ANCHORS, KEEPER_MAX_PRICE,
+  KEEPER_MILESTONE_SEED_TAG, KEEPER_MILESTONE_MAX_ROWS, isMilestoneGrantId, judgeMilestoneClaim,
+  milestoneAt, milestoneChestValue, milestoneSubject, parseMilestoneClaim, rollMilestoneChest,
+  usableKeeperMilestones,
 } = await import(pathToFileURL(compiled).href);
 
 const vectors = JSON.parse(readFileSync(join(REPO, "firebase", "shared", "grove-vectors.json"), "utf8"));
@@ -132,6 +135,79 @@ console.log("\nkeeper: the earned level is XP alone");
   equal("and a bought count on the wallet moves nothing here",
         earnedKeeperLevel({ ...played, wallet: { keeperLevelsBought: 40 } }, config),
         earnedKeeperLevel(played, config));
+}
+
+// ------------------------------------------------------------------ the milestones (57d)
+console.log("\nmilestone: the contract is the client's");
+equal("seed tag", KEEPER_MILESTONE_SEED_TAG, "milestone");
+equal("row ceiling", KEEPER_MILESTONE_MAX_ROWS, 64);
+equal("the subject is the level alone", milestoneSubject(4), "4");
+
+console.log("\nmilestone: every chest vector");
+const milestoneTiers = { tiers: (vectors.keeperMilestoneChestTiers ?? []).map((t) => ({ id: t.id, chest: t.chest })),
+                         activePerPeriod: 3, daily: [], weekly: [] };
+check(milestoneTiers.tiers.length > 0, "the vector file carries milestone chest tiers");
+const milestoneChests = new Map(milestoneTiers.tiers.map((t) => [t.id, t.chest]));
+let milestoneChestFailures = 0;
+for (const c of vectors.keeperMilestoneChestCases ?? []) {
+  const chest = milestoneChests.get(c.tier);
+  const rolled = chest ? rollMilestoneChest(chest, c.playerKey, c.level) : [];
+  const got = rolled.map((d) => `${d.kind}${d.item ? ":" + d.item : ""}=${d.amount}`).join(",");
+  const want = (c.drops ?? []).map((d) => `${d.kind}${d.item ? ":" + d.item : ""}=${d.amount}`).join(",");
+  if (got !== want) { milestoneChestFailures++; failed++; console.log(`  FAIL ${c.name}: expected ${want}, got ${got}`); }
+}
+console.log(`  ${(vectors.keeperMilestoneChestCases ?? []).length - milestoneChestFailures}/${(vectors.keeperMilestoneChestCases ?? []).length} milestone chest vector(s) ok`);
+check(milestoneSubject(4) !== milestoneSubject(5), "neighbouring levels roll apart");
+
+console.log("\nmilestone: every claim id");
+for (const s of vectors.keeperMilestoneClaimIds ?? []) {
+  const got = parseMilestoneClaim(s.id);
+  if (s.invalid) equal(`'${s.id}' is refused`, got, null);
+  else equal(`'${s.id}' reads back`, got, { level: s.level, currency: s.currency, dayKey: s.level });
+}
+check(!isMilestoneGrantId("keeper:1:4"), "a keeper debit is not a milestone grant");
+
+console.log("\nmilestone: every refused block resolves to nothing");
+for (const r of vectors.keeperMilestoneRejected ?? []) {
+  equal(r.name, usableKeeperMilestones(r.block, milestoneTiers), null);
+}
+equal("a block against no tasks table resolves to nothing", usableKeeperMilestones({ rows: [{ level: 4, tier: "wood" }] }, null), null);
+
+console.log("\nmilestone: the shipped block resolves against the shipped tiers");
+const shippedProgression = JSON.parse(readFileSync(join(REPO, "Assets", "StreamingAssets", "Content", "progression.json"), "utf8"));
+const shippedTasks = { tiers: shippedProgression.tasks.tiers, activePerPeriod: 3, daily: [], weekly: [] };
+const shippedMilestones = usableKeeperMilestones(shippedProgression.keeperMilestones, shippedTasks);
+check(shippedMilestones !== null, "progression.json's keeperMilestones block is usable");
+equal("and is the one the vectors pin", shippedMilestones?.rows, vectors.keeperMilestoneShipped?.rows);
+equal("and level 4 is a milestone", milestoneAt(shippedMilestones, 4)?.level, 4);
+equal("and level 5 is not", milestoneAt(shippedMilestones, 5), null);
+
+console.log("\nmilestone: the judgement");
+const ms = usableKeeperMilestones({ rows: [{ level: 4, tier: "wood" }, { level: 8, tier: "gold" }] }, milestoneTiers);
+const claim4 = parseMilestoneClaim("milestone:4:credits");
+const claim8 = parseMilestoneClaim("milestone:8:credits");
+const claim6 = parseMilestoneClaim("milestone:6:credits");
+equal("reached by play", judgeMilestoneClaim(ms, milestoneTiers, claim4, 4, 0).kind, "ok");
+equal("reached by purchase", judgeMilestoneClaim(ms, milestoneTiers, claim4, 1, 3).kind, "ok");
+equal("reached by both", judgeMilestoneClaim(ms, milestoneTiers, claim8, 5, 3).kind, "ok");
+equal("carries the tier", judgeMilestoneClaim(ms, milestoneTiers, claim8, 8, 0).tier?.id, "gold");
+equal("one level short is unknown, never refused", judgeMilestoneClaim(ms, milestoneTiers, claim4, 1, 2).kind, "unknown");
+equal("no milestone at that level is unknown", judgeMilestoneClaim(ms, milestoneTiers, claim6, 50, 0).kind, "unknown");
+equal("no block at all is unknown", judgeMilestoneClaim(null, milestoneTiers, claim4, 50, 0).kind, "unknown");
+equal("a tier the tasks block lost is unknown",
+      judgeMilestoneClaim(ms, { ...milestoneTiers, tiers: milestoneTiers.tiers.filter((t) => t.id !== "gold") }, claim8, 50, 0).kind, "unknown");
+equal("a negative bought count is nought", judgeMilestoneClaim(ms, milestoneTiers, claim4, 4, -9).kind, "ok");
+equal("a fractional earned level floors", judgeMilestoneClaim(ms, milestoneTiers, claim4, 3.9, 0).kind, "unknown");
+
+console.log("\nmilestone: the value is the vector's roll in one currency");
+const royalCase = (vectors.keeperMilestoneChestCases ?? []).find((c) => c.tier === "royal" && c.playerKey === "uid_abc123" && c.level === 4);
+check(royalCase !== undefined, "a royal case for uid_abc123 at level 4 exists");
+if (royalCase) {
+  const credits = (royalCase.drops.find((d) => d.kind === "credits") ?? { amount: 0 }).amount;
+  const gems = (royalCase.drops.find((d) => d.kind === "gems") ?? { amount: 0 }).amount;
+  equal("credits", milestoneChestValue(milestoneChests.get("royal"), "uid_abc123", 4, "credits"), credits);
+  equal("gems", milestoneChestValue(milestoneChests.get("royal"), "uid_abc123", 4, "gems"), gems);
+  equal("hearts, which it holds none of", milestoneChestValue(milestoneChests.get("royal"), "uid_abc123", 4, "hearts"), 0);
 }
 
 console.log(failed === 0 ? "\nkeeper: all green" : `\nkeeper: ${failed} FAILED`);

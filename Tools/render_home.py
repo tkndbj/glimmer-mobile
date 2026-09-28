@@ -67,8 +67,11 @@ CHEST_TALL, CHEST_SHORT = 188.0, 130.0
 CHEST_DIP, CHEST_FLOOR, CHEST_OVERLAP = 20.0, -92.0, .07
 
 
-def top_bar(sheet):
-    """`HomeScreen.BuildTopBar` — the player card, the avatar slot and the two corner keys."""
+def top_bar(sheet, waiting=True):
+    """`HomeScreen.BuildTopBar` — the player card, the avatar slot, the two corner keys, and the
+    green starburst on the card's top-right corner saying a keeper milestone chest is waiting
+    (invariant 57d). `waiting` is the flag, for 44l's reason: a sheet that could not draw the
+    badge could not be asked whether it clears the settings key."""
     cy = TOPBAR_Y
 
     # the card, 620x138 with its left edge 352 right of the bar's own left edge
@@ -104,6 +107,13 @@ def top_bar(sheet):
     K.paste(sheet, K.skin("Hud/trough", 440, 30), tx + 220, cy + 24)
     K.paste(sheet, K.tint(K.skin("Hud/fill", 432 * .62, 22), K.MINT),
             tx + 4 + 432 * .62 / 2, cy + 24)
+
+    # the milestone badge, top right of the card - `WaitingBadge.BurstTopRight(card, Pal.Mint)`
+    if waiting:
+        bx, by = card_cx + 620 / 2 - 46, cy - 138 / 2 + 44
+        K.paste(sheet, K.glow(190, 2.0, K.MINT, .40), bx, by)
+        K.paste(sheet, K.tint(K.skin("Hud/burst", 104, 104), K.MINT).rotate(8, resample=Image.BICUBIC), bx, by)
+        K.text(sheet, "+1", bx, by - 2, 30, fill=(43, 28, 5), outline=0)
 
     for i, glyph in enumerate(("ic_gear", "ic_info")):
         bx = W - (92 if i == 0 else 208)
@@ -588,7 +598,7 @@ def screen(paired=True, verbose=False, waiting=True):
     K.room(sheet)
     K.rail(sheet, top=True)
 
-    top_bar(sheet)
+    top_bar(sheet, waiting)
     resources(sheet)
     tasks(sheet, verbose=verbose)
     feature(sheet, paired, waiting)

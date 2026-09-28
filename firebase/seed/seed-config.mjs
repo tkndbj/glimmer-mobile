@@ -255,6 +255,7 @@ function buildProgressionConfig() {
           events: readEvents(manifest, tierIds),
           tasks,
           streak: readStreak(progression, tierIds),
+          keeperMilestones: readKeeperMilestones(progression, tierIds),
           referral: readReferral(progression, tasks.tiers.map((t) => t.id), levelChapters),
         };
       })(),
@@ -731,6 +732,42 @@ function readKeeperLevels(progression) {
 
   console.log(`  keeperLevels: levels ${anchors[0].level}..${top} for sale over ${anchors.length} anchor(s)`);
   return { top, anchors };
+}
+
+/**
+ * The chests the keeper ladder pays on the way up (invariant 57d). Every rule here is one the
+ * client's `KeeperMilestoneTable.Resolve` and the server's `usableKeeperMilestones` also
+ * enforce: rows climb strictly from level 2, each names a tier the tasks block this same run
+ * publishes, and there are at most 64 of them. A row naming a tier nobody can price is a claim
+ * `claimAwards` leaves unconfirmed for ever, which is why the tier check is here rather than
+ * somewhere the two files cannot see each other. Absent pays nothing.
+ */
+function readKeeperMilestones(progression, tierIds) {
+  const LOWEST = 2, MAX_ROWS = 64;
+  const block = progression.keeperMilestones;
+  if (!block) return undefined;
+
+  const rows = Array.isArray(block.rows) ? block.rows : [];
+  if (rows.length === 0) throw new Error("keeperMilestones carries no rows; leave the block out to pay nothing");
+  if (rows.length > MAX_ROWS) throw new Error(`keeperMilestones lists ${rows.length} rows; at most ${MAX_ROWS} are supported`);
+
+  const curveTop = Math.floor(progression.maxLevel ?? 60);
+  const out = [];
+  let last = 0;
+  rows.forEach((row, i) => {
+    const level = Math.floor(Number(row?.level));
+    if (!Number.isFinite(level) || level < LOWEST) throw new Error(`keeperMilestones row ${i} pays at level ${row?.level}, below ${LOWEST}`);
+    if (level > curveTop) throw new Error(`keeperMilestones row ${i} pays at level ${level} but the curve ends at ${curveTop}`);
+    if (level <= last) throw new Error(`keeperMilestones row ${i} pays at level ${level} after ${last}; rows must climb`);
+    if (typeof row?.tier !== "string" || !tierIds.has(row.tier)) {
+      throw new Error(`keeperMilestones row ${i} pays chest tier '${row?.tier}', which the tasks block does not define`);
+    }
+    last = level;
+    out.push({ level, tier: row.tier });
+  });
+
+  console.log(`  keeperMilestones: ${out.length} chest(s) between levels ${out[0].level} and ${last}`);
+  return { rows: out };
 }
 
 function readEndless(progression) {

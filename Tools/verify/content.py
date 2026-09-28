@@ -3255,6 +3255,96 @@ def check_keeper_levels(progression, warnings, wards=None):
     return errors, {"top": top, "coins": coins_total, "gems": gems_total}
 
 
+def check_keeper_milestones(progression, tasks, keeper, warnings):
+    """The chests the keeper ladder pays on the way up (invariant 57d). `KeeperMilestoneTable.Resolve`, offline.
+
+    Every rule here is one the reader, `keeper.ts` and the seeder also enforce - rows climb
+    strictly from level 2, stay under the curve, and every row names a tier the tasks block
+    defines - plus the two only this gate can see: that every chest stands on the page (a row
+    above the price ladder's top is a chest above the last disc), and what the ladder pays in
+    all, printed beside the daily income so a retune is judged against the money it moves.
+    """
+    LOWEST, MAX_ROWS = 2, 64
+    errors = []
+    block = progression.get("keeperMilestones")
+    if not block:
+        print("keeper milestones: none (no keeperMilestones block)")
+        return errors, None
+
+    rows = block.get("rows") or []
+    if not rows:
+        errors.append("keeperMilestones carries no rows; leave the block out to pay nothing")
+        return errors, None
+    if len(rows) > MAX_ROWS:
+        errors.append(f"keeperMilestones lists {len(rows)} rows; at most {MAX_ROWS} are supported")
+        return errors, None
+
+    tiers = {t.get("id"): t for t in (progression.get("tasks") or {}).get("tiers") or []}
+    tier_ids = list((tasks or {}).get("tiers") or [])
+    marks = (tasks or {}).get("marks") or {}
+    curve_top = progression.get("maxLevel", 1)
+    last = 0
+    for i, row in enumerate(rows):
+        where = f"keeperMilestones row {i}"
+        level, tier = (row or {}).get("level"), (row or {}).get("tier")
+        if not isinstance(level, int) or level < LOWEST or level > curve_top:
+            errors.append(f"{where} pays at level {level!r}, outside {LOWEST}..{curve_top}")
+        elif level <= last:
+            errors.append(f"{where} pays at level {level} after level {last}; rows must climb")
+        if tier not in tiers:
+            errors.append(f"{where} pays chest tier {tier!r}, which the tasks block does not define; "
+                          "a chest nobody can price is a claim the server never confirms")
+        elif tier_ids and tier == tier_ids[0]:
+            warnings.append(f"{where} pays the '{tier}' chest, the humblest tier in the game, for a "
+                            "level that took days to reach")
+        if isinstance(level, int):
+            last = max(last, level)
+    if errors:
+        return errors, None
+
+    top = (keeper or {}).get("top", 0)
+    if top and last > top:
+        errors.append(f"keeperMilestones pays at level {last} but the price ladder ends at {top}; the "
+                      "page draws the ladder's top and a chest above it stands above the last disc")
+
+    # What it pays, in all: the same expectation `daily_income` takes of a chest.
+    def expected(chest):
+        c = g = 0.0
+        for band in chest.get("guaranteed") or []:
+            mid = (band.get("min", 0) + band.get("max", 0)) * 0.5
+            if band.get("kind") == "credits":
+                c += mid
+            elif band.get("kind") == "gems":
+                g += mid
+        options = chest.get("options") or []
+        total = sum(max(1, o.get("weight", 1)) for o in options) or 1
+        for option in options:
+            mid = (option.get("min", 0) + option.get("max", 0)) * 0.5
+            share = max(1, option.get("weight", 1)) / total
+            if option.get("kind") == "credits":
+                c += mid * share
+            elif option.get("kind") == "gems":
+                g += mid * share
+        return c, g
+
+    credits = gems = 0.0
+    total_marks = 0
+    by_tier = {}
+    for row in rows:
+        c, g = expected(tiers[row["tier"]].get("chest") or {})
+        credits += c
+        gems += g
+        total_marks += marks.get(row["tier"], 0)
+        by_tier[row["tier"]] = by_tier.get(row["tier"], 0) + 1
+    gaps = [b["level"] - a["level"] for a, b in zip(rows, rows[1:])]
+    print("")
+    print(f"keeper milestones: {len(rows)} chest(s) from level {rows[0]['level']} to {last}, every "
+          f"{min(gaps) if gaps else 0}-{max(gaps) if gaps else 0} levels "
+          f"({', '.join(f'{n} {t}' for t, n in by_tier.items())}); about {credits:,.0f} credits, "
+          f"{gems:,.0f} gems and {total_marks} season marks over the whole ladder, paid once per account")
+    return errors, {"rows": len(rows), "last": last, "credits": credits, "gems": gems, "marks": total_marks}
+
+
 def check_keeper_walls(manifest, progression, warnings):
     """The keeper walls the manifest puts in front of chapters. `ContentValidation.ValidateKeeperWalls`.
 
@@ -4364,8 +4454,14 @@ def main():
     # The price of a keeper level bought outright (invariant 57). Read after the walls because a
     # bought level opens what a wall shuts, and the reader, the server and the seeder all refuse
     # the same faults - this is where a mistake fails first.
-    keeper_errors, _ = check_keeper_levels(progression, warnings)
+    keeper_errors, keeper_ladder = check_keeper_levels(progression, warnings)
     errors.extend(keeper_errors)
+
+    # The chests the ladder pays on the way up (57d). Read after the price ladder because a chest
+    # has to stand on the page the ladder draws, and after the tasks block because it names its
+    # tiers - and the reader, the server and the seeder all refuse the same faults.
+    milestone_errors, _ = check_keeper_milestones(progression, tasks, keeper_ladder, warnings)
+    errors.extend(milestone_errors)
 
     # The rank ladder. Read after the keeper walls because a rung may ask for a keeper level and
     # what the shipped content pays for is the ceiling that has just been worked out - and after

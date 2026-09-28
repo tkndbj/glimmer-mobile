@@ -1070,6 +1070,20 @@ namespace GlimmerGrove.Content
         public KeeperLadderDto keeperLevels;
 
         /// <summary>
+        /// The chests a keeper level pays on the way up (invariant 57d). Optional; see
+        /// <see cref="Progression.KeeperMilestoneTable"/>.
+        ///
+        /// <para>
+        /// Its own block beside <see cref="keeperLevels"/> rather than a field inside it, because
+        /// the two fail differently: a price ladder is refused whole and sells nothing, and a
+        /// milestone that pays a chest on a level a player *earned* must not vanish because a
+        /// price was mistyped. Published by <c>seed-config.mjs</c>, because a chest is a claim
+        /// the server re-rolls (10a) and a row it has never heard of is a claim it cannot price.
+        /// </para>
+        /// </summary>
+        public KeeperMilestonesDto keeperMilestones;
+
+        /// <summary>
         /// The rank ladder. Optional; see <see cref="Ranks.RankLadder"/>.
         ///
         /// <para>
@@ -1229,6 +1243,42 @@ namespace GlimmerGrove.Content
 
         /// <summary>What reaching <see cref="level"/> costs, in <see cref="currency"/>.</summary>
         public int price;
+    }
+
+    /// <summary>
+    /// The chests the keeper ladder pays on the way up: a few levels, each naming a chest tier
+    /// of the tasks block (invariant 57d).
+    ///
+    /// <para>
+    /// <b>Explicit rows rather than a cadence</b>, so an irregular ladder - a bigger chest every
+    /// fifth milestone, a gap where a chapter opens something of its own - is a content edit and
+    /// not a rule. A row names a <em>tier</em> and never an amount (45's rule): one published
+    /// disclosure per tier covers every milestone that pays it, the chest is rolled from the
+    /// account and the level so two devices open the same one, and the server re-rolls it from
+    /// the same two facts. Rows climb strictly; a level below 2 or above the curve is refused, and
+    /// so is a tier the tasks block does not define - the whole block, because a milestone the
+    /// server cannot price is a claim left unconfirmed for ever.
+    /// </para>
+    /// </summary>
+    [Serializable]
+    public sealed class KeeperMilestonesDto
+    {
+        /// <summary>The milestones, lowest level first.</summary>
+        public KeeperMilestoneDto[] rows;
+
+        /// <summary>Whether the file wrote this block at all; see <see cref="DailyChestEntryDto.IsAuthored"/>.</summary>
+        public bool IsAuthored => rows != null && rows.Length > 0;
+    }
+
+    /// <summary>One keeper milestone. See <see cref="KeeperMilestonesDto"/>.</summary>
+    [Serializable]
+    public sealed class KeeperMilestoneDto
+    {
+        /// <summary>The keeper level that pays it - reached by play or by purchase alike.</summary>
+        public int level;
+
+        /// <summary>The chest tier it pays, one of the tasks block's.</summary>
+        public string tier;
     }
 
     /// <summary>

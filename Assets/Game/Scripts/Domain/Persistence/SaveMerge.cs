@@ -322,6 +322,12 @@ namespace GlimmerGrove.Persistence
                 keeperLevelsBought = mine.keeperLevelsBought > other.keeperLevelsBought
                                    ? mine.keeperLevelsBought : other.keeperLevelsBought,
 
+                // The highest keeper milestone claimed (57d): a floor that only ever rises, so
+                // `max` for the count's reason one line up. A device that took a chest the other
+                // has not is simply ahead; nothing here can pay a chest twice.
+                keeperMilestonesClaimed = mine.keeperMilestonesClaimed > other.keeperMilestonesClaimed
+                                        ? mine.keeperMilestonesClaimed : other.keeperMilestonesClaimed,
+
                 // Hints join exactly as hearts do, and through the same arithmetic - see
                 // RegenLedger.Join. There is no legacy shape to rebase from here, because a
                 // hint allowance was never written to a save file at all: it was three per

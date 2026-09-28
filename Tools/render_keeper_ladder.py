@@ -3,6 +3,7 @@
 
     python Tools/render_keeper_ladder.py                       # a keeper at level 7, three levels bought
     python Tools/render_keeper_ladder.py --standing 12 --bought 0
+    python Tools/render_keeper_ladder.py --standing 9 --claimed 0   # two chests waiting, the first lit
     python Tools/render_keeper_ladder.py --standing 70          # at the top: the key is shut
     python Tools/render_keeper_ladder.py --unsold               # no ladder published: the key is shut
     python Tools/render_keeper_ladder.py --contact              # five states side by side
@@ -10,19 +11,18 @@
 **Why this exists.** Every question this page raises is a picture. Does the climb read as a
 path rising into the sky, or as a list? Can a reached disc be told from a locked one while
 scrolling? Is the crowned disc *the* disc, and is the docked key the first thing the eye lands
-on? Does a turret's name fit under its pedestal, and an honorific on the banner under its disc?
-No numeric gate here can open a PNG, and the Editor cannot photograph a `ScreenSpaceOverlay`
+on? Does a waiting chest read as *the thing to tap* against a spent one and a locked one? No
+numeric gate here can open a PNG, and the Editor cannot photograph a `ScreenSpaceOverlay`
 canvas, so the page is judged here (`CRAFT.md`).
 
-**It reads the shipped content.** The ladder, the turret gates, the lane's wall, the honorific
-floors and every string come out of `progression.json`, `manifest.json` and `loc/en.json`, so a
-retune redraws rather than going stale (invariant 44d). **Every caption is measured** against
-the box it is drawn in, and one settling at its floor is reported (19n). **Every piece of the
-climb is checked against every other** - a reward pedestal, its caption, a banner and a disc -
-because what this page was rebuilt for is that nothing on it overlaps.
+**It reads the shipped content.** The ladder, the milestones and every string come out of
+`progression.json` and `loc/en.json`, so a retune redraws rather than going stale (invariant
+44d). **Every caption is measured** against the box it is drawn in, and one settling at its
+floor is reported (19n). **Every piece of the climb is checked against every other** - a chest
+and a disc - because what this page was rebuilt for is that nothing on it overlaps.
 
 **It does not draw the tweens**: the fans turning, the halo breathing, the beam, the fill easing
-in. What it says is whether the page reads at rest.
+in, the waiting chest's breath. What it says is whether the page reads at rest.
 """
 from __future__ import annotations
 
@@ -43,7 +43,6 @@ CX = W / 2
 CONTENT = K.REPO / "Assets" / "StreamingAssets" / "Content"
 LOC = CONTENT / "loc" / "en.json"
 TABLE = CONTENT / "progression.json"
-MANIFEST = CONTENT / "manifest.json"
 
 # ------------------------------------------------------------------ KeeperScreen, mirrored
 CHROME = 92.0
@@ -55,10 +54,8 @@ EMBLEM = 260.0
 EMBLEM_Y = 138.0                 # below HERO_TOP, to the disc's centre
 FACE_LIFT = .184                 # the pack disc's face centre above its middle, of its size
 FACE_W, FACE_H = .453, .3125     # the face ellipse, of the disc's size
-BANNER_W, BANNER_H = 440.0, 118.0
-BANNER_Y = 124.0                 # below the disc's centre
 BAR_W, BAR_H = 640.0, 58.0
-BAR_GAP = 16.0
+BAR_Y = 176.0                    # below the disc's centre, to the bar's centre
 HERO_FOOT = 18.0
 
 DOCK_H = 172.0
@@ -71,23 +68,19 @@ SWING, TURN = 118.0, 1.05        # the path's serpentine: amplitude and radians 
 NODE, CROWN = 150.0, 200.0
 TRACK_W, TRACK_EDGE = 16.0, 32.0
 COLUMN_X = 360.0
-PEDESTAL_W, PEDESTAL_H = 176.0, 108.0
-PEDESTAL_Y = -30.0
-PRIZE = 124.0
-PRIZE_Y = 26.0
-CAPTION_Y = -96.0
-CAPTION_ROOM = 220.0
-RIBBON_W, RIBBON_H = 280.0, 80.0
-RIBBON_Y = -84.0
+
+# The chest: `ChestPack`'s conventions, as the hub draws a closed chest.
+CHEST_TALL, CHEST_Y = 132.0, 6.0
+CHEST_FILL = 155.0 / 244.0       # the drawn height, of the sprite's box
+CHEST_WIDE = 151.0 / 155.0       # drawn width per drawn height
+CHEST_LIFT = 38.5 / 155.0        # where the sprite's middle stands above the drawn middle, in drawn heights
+CHEST_ASPECT = 176.0 / 244.0     # the sprite's box
+CHEST_BOX = CHEST_TALL / CHEST_FILL
 
 SKY_TOP, SKY_MID, SKY_BOTTOM = (10, 18, 66), (38, 26, 104), (86, 34, 118)
 TRACK_DIM = (70, 62, 140)
-SILVER = (222, 226, 240)
+UNLIT = (150, 156, 196)
 DARK_NUMBER = (51, 41, 15)
-
-# KeeperTitle.Floors / Keys
-TITLE_FLOORS = ((0, "ui.title.seedling"), (5, "ui.title.sapling"), (10, "ui.title.keeper"),
-                (20, "ui.title.warden"), (35, "ui.title.elder"))
 
 TIGHT = []
 BOXES = []                       # (what, level, x0, y0, x1, y1) in content space, for the overlap check
@@ -100,7 +93,6 @@ def strings():
 
 LOCS = strings()
 TABLE_JSON = json.loads(TABLE.read_text(encoding="utf-8"))
-MANIFEST_JSON = json.loads(MANIFEST.read_text(encoding="utf-8"))
 
 
 def txt(key, *args):
@@ -110,20 +102,18 @@ def txt(key, *args):
     return s
 
 
-def title_key(level):
-    key = TITLE_FLOORS[0][1]
-    for floor, k in TITLE_FLOORS:
-        if level >= floor:
-            key = k
-    return key
-
-
 # ------------------------------------------------------------------ the rule, mirrored
 def ladder():
     block = TABLE_JSON.get("keeperLevels")
     if not block:
         return None
     return {"top": block["top"], "anchors": block["anchors"]}
+
+
+def milestones():
+    """`KeeperMilestoneTable`: level -> tier id, from the shipped block."""
+    block = TABLE_JSON.get("keeperMilestones") or {}
+    return {row["level"]: row["tier"] for row in block.get("rows") or []}
 
 
 def between(a, b, step, steps):
@@ -151,40 +141,14 @@ def price_of(lad, level):
                                       level - lower["level"], upper["level"] - lower["level"])
 
 
-def facts(top):
-    """`KeeperScreen.ReadFacts`: what each level opens - prizes for the pedestals, a title for
-    the banner - from the roster, the manifest and the honorific floors."""
-    out = {level: {"prizes": [], "title": None} for level in range(1, top + 1)}
-    for model in (TABLE_JSON.get("wards") or {}).get("models") or []:
-        gate = model.get("minLevel", 0)
-        if 0 < gate <= top:
-            out[gate]["prizes"].append(("Wards/" + model["id"], txt("ward.%s.name" % model["id"])))
-    seen = set()
-    for chapter in MANIFEST_JSON.get("chapters") or []:
-        wall = chapter.get("minKeeperLevel", 0)
-        if 0 < wall <= top and wall not in seen and not chapter.get("disabled"):
-            seen.add(wall)
-            out[wall]["prizes"].append(("ic_endless", txt("chapter.%s.name" % chapter["id"])))
-    for level in range(2, top + 1):
-        if title_key(level) != title_key(level - 1):
-            out[level]["title"] = txt(title_key(level))
-    return out
-
-
 def swing(level):
     """`KeeperScreen.SwingOf`: where a level's disc stands across the page."""
     return SWING * math.sin(level * TURN)
 
 
-def columns(level, count):
-    """`KeeperScreen.ColumnsFor`: one prize stands across the page from the disc's lean, two
-    stand either side of the path."""
-    lean = 1.0 if swing(level) >= 0 else -1.0
-    if count <= 0:
-        return []
-    if count == 1:
-        return [-lean * COLUMN_X]
-    return [-lean * COLUMN_X, lean * COLUMN_X]
+def chest_column(level):
+    """`KeeperScreen.ChestColumn`: across the page from the way the disc leans."""
+    return -COLUMN_X if swing(level) >= 0 else COLUMN_X
 
 
 def one_line(sheet, s, cx, cy, room, size, floor, fill=K.CREAM, outline=2, anchor="c"):
@@ -259,6 +223,7 @@ def top_bar(sheet):
 
 
 def hero(sheet, standing, bought, into, need, maxed):
+    """`KeeperScreen.BuildHero` / `PaintHero`: the medallion and the XP bar. No banner."""
     ey = HERO_TOP + EMBLEM_Y
 
     fan = K.rays(760, 16)
@@ -281,12 +246,7 @@ def hero(sheet, standing, bought, into, need, maxed):
         K.paste(sheet, K.round_rect(cw, ch, 27, K.MINT), kx, ky)
         TIGHT.append(("bought chip", one_line(sheet, chip, kx, ky, cw - 24, 26, 16, fill=DARK_NUMBER, outline=0)))
 
-    by = ey + BANNER_Y
-    K.paste(sheet, K.skin("Hud/title", BANNER_W, BANNER_H), CX, by)
-    TIGHT.append(("honorific", one_line(sheet, txt(title_key(standing)).upper(), CX, by - 10,
-                                        BANNER_W * .62, 40, 22)))
-
-    bar_y = by + BANNER_H / 2 + BAR_GAP + BAR_H / 2
+    bar_y = ey + BAR_Y
     K.paste(sheet, K.skin("Hud/trough", BAR_W, BAR_H), CX, bar_y)
     fill_w = (BAR_W - 12) * (1.0 if maxed else (into / need if need else 1.0))
     if fill_w > 4:
@@ -325,7 +285,7 @@ def dock(sheet, offer, at_top):
 
 
 # ------------------------------------------------------------------ the climb
-def cell(board, cy, level, standing, earned, top, fact, lad, offer):
+def cell(board, cy, level, standing, earned, top, tier, lad, offer, claimed, next_chest):
     """`KeeperScreen.LevelCell.Bind`, drawn onto the board at the cell's centre line."""
     x = CX + swing(level)
     reached, crowned = level <= standing, level == standing
@@ -363,24 +323,25 @@ def cell(board, cy, level, standing, earned, top, fact, lad, offer):
     if crowned or nxt:
         K.paste(board, K.glow(340, 1.9, K.SUN, .55 if crowned else .40), x, cy)
 
-    # the prizes
-    prizes = fact["prizes"][:2]
-    for (sprite, name), px in zip(prizes, columns(level, len(prizes))):
-        px = CX + px
-        lit = reached or nxt
-        K.paste(board, K.glow(260, 2.0, K.SUN, .22 if lit else .08), px, cy + PRIZE_Y)
-        ped = K.skin("Hud/lander", PEDESTAL_W, PEDESTAL_H)
-        pic = icon(sprite, (PRIZE, PRIZE))
-        if not lit:
-            ped, pic = K.tint(ped, (150, 156, 196)), K.tint(pic, (150, 156, 196), .9)
-        K.paste(board, ped, px, cy - PEDESTAL_Y)
-        K.paste(board, pic, px, cy - PRIZE_Y)
-        fill = K.CREAM if lit else (190, 196, 226)
-        size = one_line(board, name.upper(), px, cy - CAPTION_Y, CAPTION_ROOM, 28, 18, fill=fill)
-        TIGHT.append(("L%d prize" % level, size))
-        wide = min(CAPTION_ROOM, K.font(size).getlength(name.upper()))
-        BOXES.append(("prize", level, px - PEDESTAL_W / 2, cy - PRIZE_Y - PRIZE / 2, px + PEDESTAL_W / 2, cy - PEDESTAL_Y + PEDESTAL_H / 2))
-        BOXES.append(("caption", level, px - wide / 2, cy - CAPTION_Y - 18, px + wide / 2, cy - CAPTION_Y + 18))
+    # the chest: dim above the player, lit once reached, spent once opened
+    if tier:
+        px = CX + chest_column(level)
+        spent = level <= claimed
+        waiting = reached and not spent
+        takes = waiting and level == next_chest
+        if waiting:
+            K.paste(board, K.glow(int(CHEST_TALL * 1.9), 1.9, K.SUN, .55 if takes else .30), px, cy - CHEST_Y)
+        shadow = K.glow(128, 1.9, (26, 5, 41), .18 if spent else .42)
+        shadow = shadow.resize((int(CHEST_TALL * CHEST_WIDE * 1.30), int(CHEST_TALL * .22)))
+        K.paste(board, shadow, px, cy - CHEST_Y + CHEST_TALL / 2 + 2)
+        pic = icon("Chest/" + tier, (CHEST_BOX * CHEST_ASPECT, CHEST_BOX))
+        if spent:
+            pic = K.tint(pic, (255, 255, 255), .42)
+        elif not waiting:
+            pic = K.tint(pic, UNLIT, .95)
+        K.paste(board, pic, px, cy - CHEST_Y - CHEST_TALL * CHEST_LIFT)
+        BOXES.append(("chest", level, px - CHEST_TALL * CHEST_WIDE / 2, cy - CHEST_Y - CHEST_TALL / 2,
+                      px + CHEST_TALL * CHEST_WIDE / 2, cy - CHEST_Y + CHEST_TALL / 2))
 
     # the disc
     size = CROWN if crowned else NODE
@@ -402,38 +363,36 @@ def cell(board, cy, level, standing, earned, top, fact, lad, offer):
         badge = icon("ic_gem" if got and got[0] == "gems" else "Coin/f0", (48, 48))
         K.paste(board, badge, x + size * .36, cy - size * .30)
 
-    if fact["title"]:
-        ry = cy - RIBBON_Y
-        rib = K.skin("Hud/title", RIBBON_W, RIBBON_H)
-        if not reached:
-            rib = K.tint(rib, (170, 176, 210))
-        K.paste(board, rib, x, ry)
-        TIGHT.append(("L%d title" % level, one_line(board, fact["title"].upper(), x, ry - 7, RIBBON_W * .62, 30, 18)))
-        BOXES.append(("banner", level, x - RIBBON_W / 2, ry - RIBBON_H / 2, x + RIBBON_W / 2, ry + RIBBON_H / 2))
-
 
 def overlaps():
-    """Every pair of pieces from different kinds that meet on the page. The banner sits on its
-    own disc's foot by design, so that pair is allowed."""
+    """Every pair of pieces from different levels or kinds that meet on the page."""
     bad = []
     for i, a in enumerate(BOXES):
         for b in BOXES[i + 1:]:
-            if {a[0], b[0]} == {"banner", "disc"} and a[1] == b[1]:
-                continue
-            if a[0] == b[0] == "prize" or (a[1] == b[1] and {a[0], b[0]} == {"prize", "caption"}):
-                continue
             if a[2] < b[4] and b[2] < a[4] and a[3] < b[5] and b[3] < a[5]:
                 bad.append("%s L%d x %s L%d" % (a[0], a[1], b[0], b[1]))
     return bad
 
 
-def shot(standing, bought, unsold=False):
+def default_claimed(standing, table):
+    """The state a real account is most often in: every reached chest but the last one taken,
+    so the sheet shows a spent chest, a waiting one and a locked one at once."""
+    reached = [level for level in sorted(table) if level <= standing]
+    return reached[-2] if len(reached) >= 2 else 0
+
+
+def shot(standing, bought, unsold=False, claimed=None):
     lad = None if unsold else ladder()
-    top = max(lad["top"] if lad else standing, standing, 1)
+    table = milestones()
+    last = max(table) if table else 0
+    top = max(lad["top"] if lad else standing, last, standing, 1)
     earned = max(1, standing - bought)
     got = price_of(lad, standing + 1) if lad and standing < top else None
     offer = (got[0], got[1], standing + 1) if got else None
-    fx = facts(top)
+    if claimed is None:
+        claimed = default_claimed(standing, table)
+    waiting = [level for level in sorted(table) if claimed < level <= standing]
+    next_chest = waiting[0] if waiting else 0
 
     sheet = gradient(W, H)
     stars(sheet)
@@ -441,7 +400,7 @@ def shot(standing, bought, unsold=False):
     y = hero(sheet, standing, bought, 340, 1250, standing >= 70 and bought == 0)
 
     # The board: highest level at the top, level 1 at the foot, centred on the standing disc
-    # as `OnPresented` scrolls it (`GridView.ScrollTo`).
+    # as `GridView.Show(openAt:)` opens it.
     view_top, view_bottom = y, H - K.NAV_HEIGHT
     view_h = view_bottom - view_top
     index = top - standing
@@ -454,7 +413,7 @@ def shot(standing, bought, unsold=False):
         cy = PAD_TOP + i * CELL_H + CELL_H / 2 - scroll
         if cy < -CELL_H or cy > view_h + CELL_H:
             continue
-        cell(board, cy, level, standing, earned, top, fx[level], lad, offer)
+        cell(board, cy, level, standing, earned, top, table.get(level), lad, offer, claimed, next_chest)
     sheet.alpha_composite(board, (0, int(view_top)))
 
     dock(sheet, offer, lad is not None and standing >= top)
@@ -467,14 +426,15 @@ STATES = (("mid", 7, 3), ("start", 1, 0), ("gems", 12, 0), ("top", 70, 0))
 
 def audit(top):
     """Every level's cell drawn once off-screen, so the overlap check covers the whole climb
-    rather than the rows one shot happens to show."""
+    rather than the rows one shot happens to show - with every chest waiting, which is the
+    state with the most drawn on it."""
     lad = ladder()
-    fx = facts(top)
+    table = milestones()
     board = Image.new("RGBA", (W, int(PAD_TOP + top * CELL_H + PAD_BOTTOM)), (0, 0, 0, 0))
     del BOXES[:]
     for i in range(top):
         level = top - i
-        cell(board, PAD_TOP + i * CELL_H + CELL_H / 2, level, 30, 30, top, fx[level], lad, None)
+        cell(board, PAD_TOP + i * CELL_H + CELL_H / 2, level, 30, 30, top, table.get(level), lad, None, 0, 4)
     return overlaps()
 
 
@@ -482,6 +442,8 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--standing", type=int, default=7, help="the level the keeper stands at")
     ap.add_argument("--bought", type=int, default=3, help="how many of those were bought")
+    ap.add_argument("--claimed", type=int, default=None,
+                    help="the highest milestone chest already opened (default: all but the last reached)")
     ap.add_argument("--unsold", action="store_true", help="no ladder published: the key is shut")
     ap.add_argument("--contact", action="store_true", help="five states side by side")
     ap.add_argument("--out", type=Path, default=Path("out") / "keeper.png")
@@ -495,14 +457,16 @@ def main():
             sheet.paste(s.resize((cell_w, int(cell_w * H / W)), Image.LANCZOS), (i * cell_w, 0))
         out = sheet
     else:
-        out = shot(args.standing, args.bought, args.unsold)
+        out = shot(args.standing, args.bought, args.unsold, args.claimed)
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     out.save(args.out)
 
     lad = ladder()
+    table = milestones()
     print("  ladder: %s" % ("levels %d..%d over %d anchor(s)" % (lad["anchors"][0]["level"], lad["top"], len(lad["anchors"])) if lad else "not for sale"))
-    clashes = audit(lad["top"] if lad else 70)
+    print("  milestones: %d chest(s)%s" % (len(table), (", levels " + ", ".join(str(l) for l in sorted(table))) if table else ""))
+    clashes = audit(max(lad["top"] if lad else 70, max(table) if table else 0))
     print("  the whole climb: %d overlap(s)%s" % (len(clashes), ": " + ", ".join(clashes[:8]) if clashes else ""))
     floors = [(what, size) for what, size in TIGHT if size is not None and size <= 18]
     print("  %d caption(s) measured, %d at the floor%s" % (len(TIGHT), len(floors), ": " + ", ".join(w for w, _ in floors[:6]) if floors else ""))

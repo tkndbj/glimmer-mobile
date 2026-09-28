@@ -948,12 +948,37 @@ is where they are written down, not what they mean.
    owner: overlapping icons, too much small print, "looks like the other screens"): a night sky,
    a lit path winding up from level 1 at the foot to the top of the ladder, the pack's three discs
    on it (`make_keeper_art.py`: reached, locked with its padlock blanked so it carries a number,
-   crowned), prizes on pedestals beside a disc and an honorific on a banner under it - read off
-   the roster's own gate, the manifest's wall and `KeeperTitle`'s floors, never a table of its
-   own - and **one buy key docked above the nav bar**. Almost no sentences, by instruction. A cell
-   draws half the path to each neighbour, so no piece reaches into another cell;
+   crowned) and **one buy key docked above the nav bar**. Almost no sentences, by instruction. A
+   cell draws half the path to each neighbour, so no piece reaches into another cell;
    `render_keeper_ladder.py` is the mirror and **exits non-zero on any overlap on the whole
-   ladder**.
+   ladder**. The honorific banners and the turret pedestals it opened with came off on
+   2026-09-28 at the owner's instruction ("remove the ribbon", "remove the turrets from the
+   sides"); what stands beside the path now is 57d's chest. **The buy key did nothing for a
+   day, and the fault was a resting scale read at nought**: `Btn.Rehome` was called on the line
+   after the key's entrance pop started, so every press squashed it to nothing and the release
+   never found it. `Btn.Enter` is the entrance and the rehome in one call, and `Rehome` refuses
+   a scale of nought. **And the page opens on the standing row rather than scrolling to it**:
+   `GridView.Show(openAt:)` holds the request until the viewport has a height and lands it under
+   the iris, because a scroll on present is the top of the ladder drawn first and then a jump.
+57d. **A keeper level pays a chest every few levels, and the chest is a milestone the ladder
+   already knows how to pay** (built 2026-09-28, the owner: "small rewards every 3-4 levels ...
+   shouldn't disrupt the economy, but appealing"). `keeperMilestones` in `progression.json` is
+   explicit rows of `{level, tier}` naming the tasks block's tiers (45's rule: a tier, never an
+   amount), refused whole on any fault by the reader, `keeper.ts`, `seed-config.mjs` and
+   `content.py` alike; absent pays nothing. **The level is the effective level** - earned plus
+   bought - so a purchase passes a milestone exactly as play does, and the server proves it from
+   the save and the wallet together (`judgeMilestoneClaim`), leaving a claim above that level
+   *unconfirmed* rather than refused because a sync sends awards before the debit that reached
+   it (45d). The chest is rolled from the account and the level alone (`ChestSeed.ForSubject`,
+   tag `milestone`, held by `keeperMilestoneChestCases`), its currency is a claim under
+   `milestone:{level}:{currency}` (never the debit's `keeper:` prefix - two logs, two readers),
+   the rest is banked, and it feeds the season by naming a tier (47). **What the save holds is a
+   floor**: `keeperMilestonesClaimed` (v37, inside the `wallet` map, `max`), so only the earliest
+   waiting chest can be taken (48b's rule) and a milestone added under a player already past it
+   is owed the moment the table arrives. It costs about 4,000 credits and 50 gems over the whole
+   ladder, once per account, against 936 credits a day - `content.py` prints it. The hub's name
+   card wears the count in the tasks pack's starburst cut green (`WaitingBadge.BurstTopRight(card,
+   Pal.Mint)`), watched on both cues that move it.
 
 ### Consent
 
@@ -1277,10 +1302,17 @@ guess — verify offline.
   on every row and asks the four refusals. **10/10 live** (2026-09-27, the first run after the
   deploy and seed); the honest purchase runs only when the account seed can afford level 2, which
   at 1,250 against 2,000 it cannot - that half is `KeeperLevelTests` until a device buys one.
-- **The keeper ladder page:** `python Tools/render_keeper_ladder.py` (`--standing n --bought k`,
-  `--unsold`, `--contact`). It measures every caption and reads the ladder, the turret gates,
-  the lane's wall and the honorifics off the shipped files. `python Tools/make_keeper_art.py
-  --check` holds the three node discs to the pack.
+- **The keeper ladder page:** `python Tools/render_keeper_ladder.py` (`--standing n --bought k
+  --claimed c`, `--unsold`, `--contact`). It measures every caption, reads the ladder and the
+  milestones off the shipped files, and refuses a chest meeting a disc anywhere on the climb.
+  `python Tools/make_keeper_art.py --check` holds the three node discs to the pack.
+- **Keeper milestone vectors:** `python Tools/make_milestone_vectors.py --check` proves the
+  committed `keeperMilestone*` blocks in `grove-vectors.json` are what the tool draws (the chest
+  roll under the `milestone` subject, the claim ids, the refused blocks, and the shipped rows).
+  Both halves run offline: `KeeperMilestoneTests` through `TestJson` and
+  `firebase/functions/test/keeper.mjs`. It rewrites the whole document as `make_keeper_vectors.py`
+  does, so the two run in either order; **it is not in `reward-vectors.json`** because the three
+  chest tools there splice from their own marker to the end of the file.
 - **The ranks page:** `python Tools/render_ranks.py` (`--held n`, `--show n`, `--tall`, `--map`,
   `--contact`). **`--contact` is the one that matters**: it walks every rung onto the stage, so every
   name, blurb and requirement sentence is measured once per run against the band it is drawn in
@@ -1636,9 +1668,10 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
 - **Content pipeline** — levels as data, stable `LevelId`s, manifest-built `CatalogIndex`, lazy chapter
   bodies, `Content ▸ Sync Manifest`, build gate.
 - **Save** — versioned atomic file with checksum, backup rotation, corrupt-file recovery, tested
-  migrations, monotonic merge. **Save schema v36** (v33 removed the Grovement's five fields —
+  migrations, monotonic merge. **Save schema v37** (v33 removed the Grovement's five fields —
   16aa; v34 added the daily challenges; v35 the XP surge's deadline, inside the `wallet` map;
-  v36 the count of keeper levels bought, inside the `wallet` map, 57). Content schema: manifest and chapter bodies **v2**; `ContentSchema.Version` stays at **3**,
+  v36 the count of keeper levels bought, inside the `wallet` map, 57; v37 the keeper milestone
+  floor, inside the `wallet` map, 57d). Content schema: manifest and chapter bodies **v2**; `ContentSchema.Version` stays at **3**,
   which only the retired grove body ever used.
 - **Cloud** — Firebase (Firestore + Auth + Functions), anonymous by default, Apple/Google linking,
   per-account local archive for switching, debounce/backoff.
@@ -1939,6 +1972,36 @@ gate proved by mutation, `loc.py` (0 missing), `make_rank_kit_art.py --check`,
 kit is a second family beside the CraftPix interface kit (44) and only a device can say whether
 the cyan board reads as furniture of this game or as a sticker from another; and whether the
 `ic_endless` square beside "Reach wave N" wants a rounder crop.
+
+**The keeper ladder was re-cut and given milestone chests on 2026-09-28 (57c, 57d), and none of
+it has been in the Editor, on a device or on the server.** Four things the owner reported and
+one they asked for. (1) **The buy key did nothing** - `Btn.Rehome` read the key's scale while
+its entrance pop still held it at nought, so a press squashed it away and the release found no
+button; `Btn.Enter` replaces the pair, `Rehome` refuses nought, and no debit was ever sent. (2)
+The honorific banner under the medallion and the honorific ribbons on the climb are gone. (3)
+The turret and lane pedestals beside the path are gone. (4) The page opens on the standing row
+before the iris opens (`GridView.Show(openAt:)`) instead of drawing the top and jumping. (5)
+**Milestone chests**: silver every four levels, gold every twenty, royal at 70, drawn beside the
+path (dim, lit and breathing, or spent), tapped into the one chest ceremony, claimed under
+`milestone:{level}:{currency}`, floored by `keeperMilestonesClaimed` (**save v37**, inside the
+wallet map, no rules release), re-rolled and level-checked by `claimAwards`, and counted on the
+hub's name card as a green starburst. Offline green: `compile.py` (all sixteen),
+`KeeperMilestoneTests` 14/14, `KeeperLevelTests` 18/18, `SaveWiringTests`, `CloudWireTests`,
+`EndlessHubTests`, `content.py` (0 errors; it prints the ladder's worth), `loc.py` (0 missing, one
+new key `ui.keeper.chest_locked`), `artnames.py` (0/0), `make_milestone_vectors.py --check`,
+`make_keeper_vectors.py --check`, `seed-config.mjs --check` (it lists the block), the 900-odd
+function tests with the new keeper section, `render_keeper_ladder.py --contact` (0 overlaps, 0 at
+the floor), `render_home.py`. **What is owed**: (a) `firestore.rules` needs **no** release (the
+floor rides the wallet map); (b) deploy `claimAwards` by name and read the artifact back for
+`judgeMilestoneClaim`; (c) re-seed - **until the seed lands every milestone claim is left
+unconfirmed** (the chest opens, the credits show and are confirmed on the sync after the seed),
+which is the safe half of 13a and pays nobody twice; (d) the Editor's three - the two new C#
+files and the new tool have no `.meta` yet, no art was added and nothing is unaddressed; (e) a
+device: tap BUY LEVEL and watch the currency leave, open the page and watch it land on your row
+under the iris, tap a lit chest and watch the ceremony open, and check the name card's badge
+on the hub. **What no gate can answer**: whether a chest every four levels reads as a rhythm or
+as clutter on the climb, and whether the spent chest at 42% alpha reads as *taken* rather than
+as broken.
 
 **Keeper levels went on sale on 2026-09-27 (invariant 57) and none of it has been in the Editor,
 on a device or on the server.** The client half is built and green offline: `compile.py` (all

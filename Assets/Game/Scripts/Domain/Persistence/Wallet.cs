@@ -62,6 +62,11 @@ namespace GlimmerGrove.Persistence
         // class is the single writer of `dto.wallet`. `KeeperLedger` is the rule over it.
         static int _keeperBought;
 
+        // The highest keeper milestone claimed (invariant 57d): a floor, monotonic and joined by
+        // `max`. Held here for the same reason as the count above it; `KeeperMilestoneLedger` is
+        // the rule over it.
+        static int _milestonesClaimed;
+
         static Hints _hints = Hints.Full;
 
         // Empty until the player chooses, never DefaultName - see WalletDto.displayName.
@@ -153,6 +158,18 @@ namespace GlimmerGrove.Persistence
             if (count < 0) count = 0;
             if (count == _keeperBought) return;
             _keeperBought = count;
+            SaveService.MarkDirty();
+        }
+
+        // ------------------------------------------------------------- keeper milestones
+        /// <summary>The highest keeper milestone level claimed. See <c>KeeperMilestoneLedger</c>.</summary>
+        public static int KeeperMilestonesClaimed => _milestonesClaimed;
+
+        /// <summary>Raises the claimed floor, never lowering it. The join, applied locally.</summary>
+        public static void RaiseKeeperMilestonesClaimed(int level)
+        {
+            if (level <= _milestonesClaimed) return;
+            _milestonesClaimed = level;
             SaveService.MarkDirty();
         }
 
@@ -550,6 +567,7 @@ namespace GlimmerGrove.Persistence
 
             // Negative or absent is nought, for the boost fields' reason one line up.
             _keeperBought = w.keeperLevelsBought < 0 ? 0 : w.keeperLevelsBought;
+            _milestonesClaimed = w.keeperMilestonesClaimed < 0 ? 0 : w.keeperMilestonesClaimed;
 
             _hearts = ReadHearts(w).At(GameClock.NowUnix(), _heartBoostUntil);
             _hints = ReadHints(w).At(GameClock.NowUnix());
@@ -679,6 +697,7 @@ namespace GlimmerGrove.Persistence
 
                 // Keeper levels bought outright (invariant 57).
                 keeperLevelsBought = _keeperBought,
+                keeperMilestonesClaimed = _milestonesClaimed,
 
                 // The hint ledger. No derived mirror beside it, unlike hearts: a build that
                 // predates this one had nothing to read a hint count into, so there is

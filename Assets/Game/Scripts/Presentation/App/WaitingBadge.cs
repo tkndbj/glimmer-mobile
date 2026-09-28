@@ -41,8 +41,16 @@ namespace GlimmerGrove
         /// door top-right.
         /// </summary>
         public static WaitingBadge Burst(Transform card, Vector2 anchor, Vector2 pos)
+            => Burst(card, anchor, pos, Pal.Gold);
+
+        /// <summary>
+        /// The same starburst in another colour. <paramref name="tint"/> multiplies the kit's
+        /// white-drawn burst (`Hud/burst` is cut white so a tint reaches it, unlike the buttons -
+        /// invariant 44g) and lights the halo; the count stays dark ink on both.
+        /// </summary>
+        public static WaitingBadge Burst(Transform card, Vector2 anchor, Vector2 pos, Color tint)
         {
-            var burst = UIKit.Img("Waiting", card, Art.S("Ui/" + Skins.Badge), Pal.Gold,
+            var burst = UIKit.Img("Waiting", card, Art.S("Ui/" + Skins.Badge), tint,
                                   new Vector2(104f, 104f), anchor, pos);
 
             var count = UIKit.Shrinkable(
@@ -50,7 +58,7 @@ namespace GlimmerGrove
                              TextAnchor.MiddleCenter, new Vector2(80f, 50f),
                              new Vector2(.5f, .5f), new Vector2(0f, 2f), 0f, 0f), 18);
 
-            UIKit.Halo(burst.transform, Pal.Gold, 190f, .40f);
+            UIKit.Halo(burst.transform, tint, 190f, .40f);
             burst.transform.localRotation = Quaternion.Euler(0f, 0f, 8f);
             burst.gameObject.SetActive(false);
 
@@ -64,6 +72,10 @@ namespace GlimmerGrove
         /// <summary>The starburst on a card's top-right corner, where the invite door wears it.</summary>
         public static WaitingBadge BurstTopRight(Transform card)
             => Burst(card, new Vector2(1f, 1f), new Vector2(-46f, -44f));
+
+        /// <summary>The starburst on a card's top-right corner in a colour of the caller's - the hub's name card wears it green.</summary>
+        public static WaitingBadge BurstTopRight(Transform card, Color tint)
+            => Burst(card, new Vector2(1f, 1f), new Vector2(-46f, -44f), tint);
 
         /// <summary>A gold disc with the bare number, on a card's top-right corner.</summary>
         public static WaitingBadge Disc(Transform card)

@@ -343,6 +343,43 @@ namespace GlimmerGrove.Persistence
         public const string EndlessWavesReason = "endless_waves";
 
         /// <summary>
+        /// A keeper milestone's chest: <c>milestone:{level}:{currency}</c> (invariant 57d).
+        ///
+        /// <para>
+        /// Derived from what earned it, for <see cref="DailyChestId"/>'s reason: two devices
+        /// opening the chest for one level mint one string and are paid once. Parsed back by
+        /// <c>parseMilestoneClaim</c> in <c>functions/src/keeper.ts</c>, which re-rolls the chest
+        /// from the account and the level and pays it only when the level is one the save the
+        /// server holds and the wallet's bought count together prove. <b>The prefix is not the
+        /// keeper debit's</b> (<c>keeper:</c>, <see cref="SpendEntry.KeeperLevelId"/>): a grant
+        /// and a debit are two logs, and a reader of either must never mistake one for the other.
+        /// The format is a wire contract.
+        /// </para>
+        /// </summary>
+        public static string KeeperMilestoneId(int level, string currency)
+            => $"milestone:{level}:{currency}";
+
+        /// <summary>The level and the currency a milestone grant names, or false for any other id.</summary>
+        public static bool TryParseKeeperMilestoneId(string id, out int level, out string currency)
+        {
+            level = 0;
+            currency = null;
+            if (string.IsNullOrEmpty(id) || !id.StartsWith("milestone:", StringComparison.Ordinal)) return false;
+
+            var parts = id.Split(':');
+            if (parts.Length != 3) return false;
+            if (!int.TryParse(parts[1], out int l) || l <= 1 || l.ToString() != parts[1]) return false;
+            if (string.IsNullOrEmpty(parts[2])) return false;
+
+            level = l;
+            currency = parts[2];
+            return true;
+        }
+
+        /// <summary>What every keeper milestone grant records as its cause.</summary>
+        public const string KeeperMilestoneReason = "keeper_milestone";
+
+        /// <summary>
         /// One cleared daily challenge, in credits: <c>chal:{dayKey}:{genre}:{win}:{currency}</c>.
         ///
         /// <para>
