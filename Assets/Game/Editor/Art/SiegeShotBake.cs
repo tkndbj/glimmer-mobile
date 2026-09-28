@@ -511,33 +511,6 @@ namespace GlimmerGrove.EditorTools
             new Shot { Key = "spell", Prefab = "vfx_Projectile_Sun01", Hue = Pal.Foxglove };
 
         /// <summary>
-        /// What a <b>stormcall</b> drops on the hill.
-        ///
-        /// <para>
-        /// <b>The pack's third lightning rather than the one the yellow ward fires</b>, and that
-        /// is the whole reason it is its own entry. A ward's bolt goes off four or five times a
-        /// second, so it is cut small and short; a storm happens once a run and costs forty gems,
-        /// so it is baked on the <em>spell</em> path - bigger, longer, framed square with its own
-        /// tail. Sharing <c>shot_y</c> would have meant tuning the biggest moment in the mode by
-        /// the smallest, which is the mistake the firepot's sound already made once.
-        /// </para>
-        /// <para>
-        /// <b>Graded to <c>Pal.Sun</c>, which is the one effect here that is none of the four ward
-        /// colours - and that is the point rather than an oversight.</b> It read as the fourth
-        /// ward's colour while that ward was yellow; the ward is <c>Pal.Amber</c> now, and this
-        /// stayed where it was because a storm is <em>meant</em> to read as lightning rather than
-        /// as a fifth element, and the storm is not a colour rule - it hits every raider whatever
-        /// it wears. A bolt the colour of a ward would say the opposite.
-        /// </para>
-        /// </summary>
-        static readonly Shot Storm = new Shot
-        {
-            Key = "storm",
-            Path = "Assets/Mirza Beig/Lightning VFX/Prefabs/Lightning.prefab",
-            Hue = Pal.Sun,
-        };
-
-        /// <summary>
         /// What the <em>overlord</em> throws: the same class of magic, hotter and in a colour
         /// nothing else on the board wears.
         ///
@@ -824,7 +797,7 @@ namespace GlimmerGrove.EditorTools
         /// lands about eighteen of them a second - drawn by the view at four and a half cells. So
         /// the biggest moment on the field was a small reel blown up two and a half times, which is
         /// exactly what "the animations are horrendous" is when it is measured rather than argued
-        /// about. It is the <see cref="Storm"/> argument arriving a second time: <em>sharing a reel
+        /// about. It is the argument the old storm reel made, arriving a second time: <em>sharing a reel
         /// with something that happens constantly means tuning the biggest moment in the mode by
         /// the smallest</em>.
         /// </para>
@@ -1090,9 +1063,8 @@ namespace GlimmerGrove.EditorTools
         {
             Elemental = 1,      // the starter's four, and the eight spells the bosses throw
             Roster = 2,         // one effect per bought turret
-            Strike = 4,         // the stormcall, out of a different pack and graded its own way
             Charm = 8,          // the one detonation a charm goes off in, in four gem colours
-            All = Elemental | Roster | Strike | Charm,
+            All = Elemental | Roster | Charm,
         }
 
         [MenuItem("Glimmer Grove/Art/Bake Siege Projectiles", false, 30)]
@@ -1121,21 +1093,9 @@ namespace GlimmerGrove.EditorTools
         public static void BakeRoster() => Run(write: true, contact: false, parts: Parts.Roster);
 
         /// <summary>
-        /// Bakes only the stormcall's strike - see <see cref="Parts"/>.
-        ///
-        /// <b>Its own item for the same reason the roster has one.</b> It comes out of a different
-        /// bought pack, it is framed round a ground burst rather than round a flying head, and it
-        /// is graded and lit by numbers nothing else uses - so it is the one reel that gets tuned
-        /// on its own, and re-baking thirty others to look at it would rewrite art nobody asked to
-        /// change and leave <see cref="Verify"/> comparing a fresh bake against a fresh bake.
-        /// </summary>
-        [MenuItem("Glimmer Grove/Art/Bake Storm Strike", false, 35)]
-        public static void BakeStrikeOnly() => Run(write: true, contact: false, parts: Parts.Strike);
-
-        /// <summary>
         /// Bakes only the four charm detonations - see <see cref="Charms"/>.
         ///
-        /// <b>Its own item for <see cref="BakeStrikeOnly"/>'s reason.</b> These are four reels cut
+        /// <b>Its own item for <see cref="BakeElemental"/>'s reason.</b> These are four reels cut
         /// bigger and longer than anything else on the field and they are the ones being looked at;
         /// re-baking the roster's 228 to see one of them rewrites art nobody asked to change and
         /// leaves <see cref="Verify"/> comparing a fresh bake against a fresh bake.
@@ -1197,7 +1157,7 @@ namespace GlimmerGrove.EditorTools
         /// Bakes one turret's three reels and nothing else.
         ///
         /// <para>
-        /// <b>Its own entry for <see cref="BakeStrikeOnly"/>'s reason, one step finer.</b> A
+        /// <b>Its own entry for <see cref="BakeElemental"/>'s reason, one step finer.</b> A
         /// turret's effect is tuned on its own - a prefab swapped, a companion overridden, a slim
         /// applied - and re-baking the other eighteen to look at one rewrites 216 reels nobody
         /// asked to change. It also leaves <see cref="Verify"/> comparing a fresh bake against a
@@ -1238,7 +1198,6 @@ namespace GlimmerGrove.EditorTools
 
                 if ((parts & Parts.Roster) != 0) RunRoster(stage.transform, cam, made, only);
                 if ((parts & Parts.Elemental) != 0) RunElemental(stage.transform, cam, made);
-                if ((parts & Parts.Strike) != 0) RunStrike(stage.transform, cam, made);
                 if ((parts & Parts.Charm) != 0) RunCharms(stage.transform, cam, made);
 
                 Finish(made, write, contact);
@@ -1303,34 +1262,6 @@ namespace GlimmerGrove.EditorTools
                 else
                     BakeSpell(stage, cam, warlord, thrown, made);
             }
-        }
-
-        /// <summary>
-        /// The stormcall's strike, which is the only thing here out of the lightning pack.
-        ///
-        /// <para>
-        /// <b>It is baked on the *comet* path rather than the spell one, and the first cut proved
-        /// why.</b> <see cref="BakeSpell"/> frames square because the thing it was written for is
-        /// an orb; a bolt of lightning is eight to one, so framed square it came out as a thread
-        /// down the middle of a 384-square texture with ninety per cent of the frame empty -
-        /// invariant 37k's sliver exactly, and the second time this pack has produced it. What a
-        /// bolt wants is a tall narrow frame measured off its own picture.
-        /// </para>
-        /// <para>
-        /// <b>Its own step rather than a line in <see cref="RunElemental"/></b>, so that
-        /// <see cref="Parts.Strike"/> can be baked on its own: it is graded, lit, framed and
-        /// angled by numbers nothing else in this file uses, so it is the one reel that gets
-        /// tuned alone.
-        /// </para>
-        /// </summary>
-        static void RunStrike(Transform stage, Camera cam, Dictionary<string, Book> made)
-        {
-            var storm = AssetDatabase.LoadAssetAtPath<GameObject>(PathOf(Storm));
-
-            if (storm == null)
-                Debug.LogWarning($"[siege shots] {PathOf(Storm)} is not in this project - skipped.");
-            else
-                BakeStorm(stage, cam, storm, made);
         }
 
         /// <summary>
@@ -1669,233 +1600,6 @@ namespace GlimmerGrove.EditorTools
             };
 
         /// <summary>
-        /// A stormcall's bolt and the burst it leaves, cut bigger than a ward's.
-        ///
-        /// <para>
-        /// <b>The comet path with a bigger frame</b> - a ward's bolt and this are the same shape
-        /// and differ only in how often they happen, so they want the same framing and a different
-        /// size. A ward fires four or five a second and is cut to read at that rate; this goes off
-        /// once a run and is what forty gems bought, so it is taller, kept longer and framed with
-        /// more of its own trail.
-        /// </para>
-        /// <para>
-        /// <b>It is not flown.</b> A ward's bolt crosses the hill, so its speed is bent until its
-        /// tail fits the frame; a storm falls straight down onto one raider and the view draws the
-        /// sprite stretched from the top of the board to whatever it hit, so what is wanted here is
-        /// the bolt standing still and fully drawn.
-        /// </para>
-        /// </summary>
-        static void BakeStorm(Transform stage, Camera cam, GameObject prefab,
-                              Dictionary<string, Book> made)
-        {
-            // **One reel, not three, because this pack draws the whole event.** A ward's bolt is
-            // three prefabs - a flash at the barrel, a thing that flies, a burst where it lands -
-            // because it is a projectile crossing the hill. This is a *strike*: the bolt, the
-            // ground crack and the shockwave rings are one effect that happens in one place, so
-            // there is nothing to fly and nothing to fire it. It is captured standing still.
-            var book = CaptureAll(stage, cam, prefab, new[] { Strike(Storm.Hue) },
-                                  StormFrames, StormSeconds, 0f, 0f,
-                                  1f - SiegeView.StrikeAt, StormTall, NarrowestStorm, WidestStorm,
-                                  LeanestStorm, LongestStorm, comet: false, tilt: StormTilt)[0];
-
-            Tighten(book, 1f - SiegeView.StrikeAt);
-            made["storm"] = book;
-        }
-
-        /// <summary>
-        /// Trims a reel to its own picture, keeping the point it is anchored by exactly where it
-        /// is.
-        ///
-        /// <para>
-        /// <b>Because a sprite whose frame is bigger than its content cannot be reasoned about
-        /// from outside.</b> <see cref="Frame"/> sizes the world frame from the widest thing in
-        /// shot, so an effect that is wide and short - which a strike is, once its ground burst is
-        /// rendered at all - comes out in a frame a third taller than anything drawn in it. That
-        /// is invisible while a reel is only ever *drawn*: transparent padding costs nothing to
-        /// look at. It stops being invisible the moment the board has to know **where the bolt
-        /// ends**, which is what keeps a strike on the plate rather than over the status bar
-        /// (invariant 37ac). With this, a strike's picture runs from its own frame's foot to its
-        /// own frame's top and the view can size it against the room it has.
-        /// </para>
-        /// <para>
-        /// <b>It keeps the anchor rather than centring the content</b>, which is the whole
-        /// difficulty: the flash has to stay at <paramref name="head"/> of the way up, so the
-        /// frame is re-cut around *that row* and the two sides are padded to whatever the fraction
-        /// demands. Cropping to the bounding box alone would move the flash and put the strike
-        /// back where it was.
-        /// </para>
-        /// </summary>
-        static void Tighten(Book book, float head)
-        {
-            var all = book.Sheet.GetPixels32();
-            int w = book.Wide, t = book.Tall, n = book.Frames;
-
-            int minX = w, maxX = -1, minY = t, maxY = -1;
-
-            for (int f = 0; f < n; f++)
-                for (int y = 0; y < t; y++)
-                    for (int x = 0; x < w; x++)
-                    {
-                        if (all[(f * t + y) * w + x].a <= AlphaFloor) continue;
-                        if (x < minX) minX = x;
-                        if (x > maxX) maxX = x;
-                        if (y < minY) minY = y;
-                        if (y > maxY) maxY = y;
-                    }
-
-            if (maxX < minX || maxY < minY) return;
-
-            // A margin, because the alpha floor cuts the very last of a bloom and a hard edge on a
-            // halo is a line drawn across the sky.
-            minX = Mathf.Max(0, minX - Margin); maxX = Mathf.Min(w - 1, maxX + Margin);
-            minY = Mathf.Max(0, minY - Margin); maxY = Mathf.Min(t - 1, maxY + Margin);
-
-            // The row the effect is anchored by. `Roll` puts the prefab's own origin `head` of the
-            // way up whatever it renders into, so this is exact rather than measured.
-            int origin = Mathf.Clamp(Mathf.RoundToInt(head * t), 0, t - 1);
-
-            float over = Mathf.Max(1, maxY - origin) / Mathf.Max(.02f, 1f - head);
-            float under = Mathf.Max(1, origin - minY) / Mathf.Max(.02f, head);
-
-            int tall = Mathf.Max(32, Mathf.CeilToInt(Mathf.Max(over, under) / 4f) * 4);
-            int mark = Mathf.RoundToInt(head * tall);
-
-            // The rig is centred in x, so the picture is too: the frame is cut round the middle
-            // rather than round the bounding box, or a strike leans to whichever side its sparks
-            // happened to fly.
-            int reach = Mathf.Max(maxX - w / 2, w / 2 - minX) + 1;
-            int wide = Mathf.Clamp(Mathf.CeilToInt(reach / 8f) * 16, 16, w);
-
-            if (wide >= w && tall >= t) return;
-
-            var cut = new Color32[wide * tall * n];
-            var clear = new Color32(255, 255, 255, 0);
-            for (int i = 0; i < cut.Length; i++) cut[i] = clear;
-
-            for (int f = 0; f < n; f++)
-                for (int y = 0; y < tall; y++)
-                {
-                    int sy = y - mark + origin;
-                    if (sy < 0 || sy >= t) continue;
-
-                    for (int x = 0; x < wide; x++)
-                    {
-                        int sx = x - wide / 2 + w / 2;
-                        if (sx < 0 || sx >= w) continue;
-                        cut[(f * tall + y) * wide + x] = all[(f * t + sy) * w + sx];
-                    }
-                }
-
-            var sheet = new Texture2D(wide, tall * n, TextureFormat.RGBA32, false, false);
-            sheet.SetPixels32(cut);
-            sheet.Apply(false);
-
-            Object.DestroyImmediate(book.Sheet);
-            book.Sheet = sheet;
-            book.Wide = wide;
-            book.Tall = tall;
-        }
-
-        /// <summary>The alpha a pixel has to carry before <see cref="Tighten"/> counts it drawn.</summary>
-        const byte AlphaFloor = 4;
-
-        /// <summary>Pixels of air <see cref="Tighten"/> leaves round what it found.</summary>
-        const int Margin = 3;
-
-        /// <summary>How a storm's bolt is cut: taller and wider than a ward's, and held longer.</summary>
-        const int StormFrames = 20, StormTall = 512;
-        const int NarrowestStorm = 160, WidestStorm = 448;
-        const float StormSeconds = 1.0f;
-
-        /// <summary>How far from square a storm's frame may go. Wider than a bolt: it has ground.</summary>
-        const float LeanestStorm = 0.55f, LongestStorm = 3.0f;
-
-        /// <summary>
-        /// How far the rig is pitched down to bake a strike - see <see cref="Roll"/>'s tilt.
-        ///
-        /// <para>
-        /// <b>Enough that a ring on the floor is an ellipse, and not so much that the bolt is
-        /// foreshortened.</b> At nought the pack's ground crack, splat, shockwave and rings are
-        /// all edge-on hairlines and the reel is a bolt with a small star at the end of it; every
-        /// one of them is a flat quad, so what shows them is the only thing that ever could. A
-        /// strike is also the one effect here whose *ground* is part of the picture - the board
-        /// draws raiders standing on a hill, so a burst spreading around their feet is what says
-        /// the lightning arrived somewhere rather than merely existed.
-        /// </para>
-        /// </summary>
-        const float StormTilt = 26f;
-
-        /// <summary>
-        /// How a strike is graded and lit - see <see cref="Strike"/>.
-        ///
-        /// <para>
-        /// <b><c>Toward</c> is high where a ward's is a third, and the pack is why.</b>
-        /// <see cref="Toward"/> is .38 because the four elemental effects were *chosen* for
-        /// already wearing roughly the colour the ward burns, so agreeing with <c>Pal</c> is a
-        /// lean. Nothing about this pack was chosen that way: its bolt is white with cyan through
-        /// the core and a gold flare at the end, so a .38 lean left the cyan exactly where it was
-        /// - which on a device read as lightning with a green tinge in it, in an item whose own
-        /// icon draws its bolts in <c>Pal.Sun</c>.
-        /// </para>
-        /// <para>
-        /// <b>And it stops short of all the way</b>, for invariant 37p's reason: a full re-hue
-        /// takes every warm and cool note the artist drew and collapses them into one flat
-        /// colour. A fifth of the original spread is what makes a thing look *made of* a colour
-        /// rather than painted it.
-        /// </para>
-        /// <para>
-        /// <b><c>White</c> is the highest here of anywhere</b>, because a white-hot core inside a
-        /// coloured halo is not a nicety of lightning, it is what lightning <em>is</em> - and it
-        /// is the difference between the vendor's picture and a gold streak. It is safe here in a
-        /// way invariant 37f says it would not be on a ward: a strike answers to no colour rule,
-        /// so a white core cannot be read as the wrong element.
-        /// </para>
-        /// </summary>
-        const float StrikeToward = .80f, StrikeWhite = .76f, StrikeFloor = .72f;
-
-        /// <summary>
-        /// How thick a strike is drawn and how much light it spills - invariant 37af's two
-        /// numbers, which this reel was never given.
-        ///
-        /// <b>Both further than a ward's</b> (.62 and .85): a bolt is thin geometry, so the curve
-        /// has to work harder to make a body out of it, and a strike is the one effect in this
-        /// game that is allowed to light the hill around it.
-        /// </summary>
-        const float StrikeLift = .50f, StrikeBloom = 1.85f;
-
-        /// <summary>
-        /// The colour the wide half of a strike's halo is lit in - see <see cref="Recipe.Halo"/>.
-        ///
-        /// <para>
-        /// <b><c>Pal.Ember</c>, so the light goes gold at the bolt and warm in the air.</b> The
-        /// tight scale keeps <c>Pal.Sun</c> on its way to white, which is what the item's own icon
-        /// draws; the wash around it is the next colour along the board's own warm run. That is
-        /// what an incandescent thing looks like, and it is what a single-coloured halo could only
-        /// ever have made bigger.
-        /// </para>
-        /// <para>
-        /// <b>A colour the board already has</b>, rather than a red picked to match a vendor's
-        /// demo. Ember is the fire the firepot throws, so a strike and a blast agree about what
-        /// hot looks like on this hill.
-        /// </para>
-        /// </summary>
-        static Color StrikeHalo => Pal.Ember;
-
-        /// <summary>
-        /// How hard a strike's core is blown out, and from what coverage - see
-        /// <see cref="Recipe.Hot"/>.
-        ///
-        /// <para>
-        /// <b>Nearly all the way, and only at the very top.</b> The three-rung ladder this
-        /// completes is white core, gold body, ember haze, and it only reads if the rungs are far
-        /// apart: blowing out from half coverage would take the body with it and leave a pale
-        /// bolt with a gold edge, which is the mirror of the fault it fixes. Above four fifths is
-        /// the bolt's own filament and the middle of the ground burst, and nothing else.
-        /// </para>
-        /// </summary>
-        const float StrikeHot = .90f, StrikeHotFrom = .80f;
-
-        /// <summary>
         /// The warlord's spell, as the same three parts a ward's bolt is.
         ///
         /// <b>Its own method rather than a flag on <see cref="BakeOne"/></b>, because almost every
@@ -2144,34 +1848,6 @@ namespace GlimmerGrove.EditorTools
             Lift = Lift,
             Bloom = 0f,
         };
-
-        /// <summary>
-        /// One reel graded the way a <em>strike</em> is: the loudest thing this mode ever draws.
-        ///
-        /// <para>
-        /// <b>Its own recipe because it was on nobody's.</b> Invariant 37af gave every ward
-        /// projectile a bloom and an alpha curve that thickens rather than thins, on the finding
-        /// that these packs are authored to be seen through a post-processing stack and a bare
-        /// camera bakes the geometry with the light left out. <see cref="Capture"/> - which is
-        /// what the storm and the four boss spells are baked through - was never moved, so this
-        /// reel shipped with <c>Bloom = 0</c> and an exponent of <see cref="Lift"/> thinning it on
-        /// top. That is the whole of "it looks nothing like the store page": the vendor's own
-        /// demo scene carries a bloom profile, and ours rendered without one.
-        /// </para>
-        /// <para>
-        /// <b>Louder than a ward's, and that is a decision rather than a slip.</b> A ward fires
-        /// four or five bolts a second for a whole run; this goes off once, costs forty gems and
-        /// is the biggest thing on the board when it does. It is the one reel allowed to spill
-        /// more light than it draws.
-        /// </para>
-        /// </summary>
-        static Recipe Strike(Color hue)
-            => new Recipe
-            {
-                Hue = hue, Toward = StrikeToward, White = StrikeWhite, Floor = StrikeFloor,
-                Lift = StrikeLift, Bloom = StrikeBloom, Halo = StrikeHalo,
-                Hot = StrikeHot, HotFrom = StrikeHotFrom,
-            };
 
         /// <summary>
         /// How one reel is coloured: which hue it is pulled onto, and how far.

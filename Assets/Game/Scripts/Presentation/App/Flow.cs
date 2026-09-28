@@ -531,6 +531,8 @@ namespace GlimmerGrove
             if (live != null) return live;
 
             var rt = UIKit.Node(typeof(T).Name, Overlays);
+            Isolate(rt);
+
             var view = rt.gameObject.AddComponent<T>();
             configure?.Invoke(view);
             view.Init();
@@ -543,6 +545,39 @@ namespace GlimmerGrove
             Restack();
 
             return view;
+        }
+
+        /// <summary>
+        /// Gives a modal a canvas of its own, so nothing it does re-meshes the screen under it.
+        ///
+        /// <para>
+        /// <b>Reported from the loadout as the shelf flickering behind the utility panel on every
+        /// tap of its stepper.</b> Every screen and every panel was drawn by the one root canvas,
+        /// and Unity rebuilds a canvas's whole geometry whenever any <c>Graphic</c> on it changes
+        /// - so a count going from x3 to x4 re-batched every card, plate, badge and masked
+        /// thumbnail on the page underneath, twice a tap with the press tween, and for the whole
+        /// half-second of every panel's entrance. A nested canvas is a rebuild boundary: what
+        /// changes on the panel now stops at the panel, and the screen behind is not touched at
+        /// all while it is covered. <c>SiegeView</c>'s effects layer is the same decision, one
+        /// board down.
+        /// </para>
+        /// <para>
+        /// <b><c>overrideSorting</c> is left off</b>, for <c>SiegeView</c>'s reason: the panel
+        /// keeps its place in the hierarchy's draw order, so <see cref="Restack"/> still decides
+        /// what draws over what. <b>It needs a raycaster of its own</b>, because a graphic under a
+        /// nested canvas is registered with that canvas and the root's raycaster never sees it;
+        /// the event system orders hits across the two by the one global depth, so the scrim
+        /// still swallows every tap aimed at the screen behind it. The shader channels are
+        /// copied from the root so a panel draws exactly what it drew as a child of it.
+        /// </para>
+        /// </summary>
+        static void Isolate(RectTransform node)
+        {
+            var canvas = node.gameObject.AddComponent<Canvas>();
+            canvas.overrideSorting = false;
+            if (Canvas != null) canvas.additionalShaderChannels = Canvas.additionalShaderChannels;
+
+            node.gameObject.AddComponent<GraphicRaycaster>();
         }
 
         /// <summary>

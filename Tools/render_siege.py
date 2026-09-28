@@ -613,20 +613,6 @@ def loudest(name):
 HEAD_AT = 0.82
 MUZZLE_AT = 0.22
 
-#: `SiegeView.StrikeAt` - how far up its own frame a stormcall's strike lands, drawn.
-#:
-#: **This is the one of the three that had never been mirrored, and it was wrong in the game.** The
-#: reel was framed with its flash in the middle and drawn with its *centre* on the raider, so the
-#: lightning went off nearly three cells over the target's head with nothing at all where it was
-#: aimed - reported from a device as strikes landing at random spots rather than on enemies. No
-#: gate in this project opens a PNG, so this picture is the only thing that can ever say whether a
-#: strike lands on the thing it struck.
-STRIKE_AT = 0.17
-
-#: `SiegeView.StormTall` - how many cells tall a strike's whole frame is drawn.
-STORM_TALL = 5.0
-
-
 #: `SiegeView.HeadRoom` - how far behind the muzzle a bolt is drawn before it has flown anywhere,
 #: in **cells**. Small, because it is hidden under the muzzle flash rather than by being deep;
 #: see `SiegeView.Emerged`.
@@ -691,56 +677,209 @@ def aimed(sheet, im, hx, hy, wide, ux, uy, head=0.5, fill=1.0):
     sheet.alpha_composite(turned, (int(cx - turned.width / 2), int(cy - turned.height / 2)))
 
 
-def struck(sheet, cx, cy, cell, frame, plate_top):
-    """One bolt of a stormcall, landing on the raider standing at (cx, cy).
+# ------------------------------------------------------------------ the strike kit
+#: `AssetManifest.StrikeFx` - the nine masks a stormcall and an overcharge are lit with, cut by
+#: `Tools/make_strike_fx.py` (`StrikeFx`, Domain).
+STRIKE_ART = REPO / "Assets" / "Game" / "Art" / "Fx" / "Strike"
 
-    **Anchored by where it hits and never by the frame's middle**, which is the whole of what
-    `SiegeView.StrikeAt` is for - see that constant. The reel is baked with the flash near the foot
-    of the picture and the bolt filling the rest, so the sprite's centre goes below the target by
-    however far the flash sits from it.
+#: `SiegeView.StrikeOver` / `.StrikeCore` / `.StrikeJag` / `.StrikeForks` / `.GroundSquash`.
+STRIKE_OVER = 1.2
+STRIKE_CORE = 0.085
+STRIKE_JAG = 0.40
+STRIKE_FORKS = 3
+GROUND_SQUASH = 0.45
 
-    It also draws the ground the bolt lands on - a warm scorch and a ring - because that is what
-    `SiegeView.Struck` draws and a bolt with no lit ground under it is a picture of lightning
-    rather than of something being struck.
+#: `Pal.Sun` - the storm's own gold, none of the four ward colours on purpose.
+SUN = (255, 201, 60)
+
+
+def kit(name):
+    """One piece of the strike kit, or None - `SiegeView.Lit` draws nothing for a piece that is
+    not there rather than a white square (invariant 7b), and so does this."""
+    path = STRIKE_ART / (name + ".png")
+    return Image.open(path).convert("RGBA") if path.exists() else None
+
+
+def lighter(colour, k):
+    """`Color.Lerp(tint, Color.white, k)`."""
+    return tuple(int(c + (255 - c) * k) for c in colour)
+
+
+def shine(sheet, im, cx, cy, w, h, colour, alpha=1.0, angle=0.0, clip_top=None):
+    """`Additive.Lit` - a mask *added* to what is under it, scaled by its alpha, never laid over
+    it (`Blend SrcAlpha One`, `Assets/Game/Shaders/UIAdditive.shader`).
+
+    **This is the whole difference between the picture and a stamp**, and a mirror that
+    alpha-composited these pieces would show a strike the game cannot draw: two flares over each
+    other going white is what the blend does, and it is what the owner bought the pack for.
     """
-    im = blast("storm", frame)
     if im is None:
         return
-
-    # One size wherever it lands, cut off at the top of the board - `SiegeView.Bolt` and the
-    # `_strikes` layer's mask. Sizing it to the room above the target instead made a bolt on a
-    # raider half way up the hill a cell and a half long, which reads as a spark.
-    tall = cell * STORM_TALL
-    wide = tall * im.width / im.height
-    im = im.resize((max(1, int(wide)), max(1, int(tall))), Image.LANCZOS)
-    im = im.transpose(Image.FLIP_TOP_BOTTOM)
-
-    # The ground first, so the bolt and its sparks are drawn over their own light. Small: the reel
-    # carries the bright half of the burst and this is only the warm rung under it.
-    glow = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
-    g = ImageDraw.Draw(glow)
-    rx, ry = cell * 0.95, cell * 0.42
-    for k in range(7):
-        t = k / 6.0
-        g.ellipse((cx - rx * (1 - t * 0.8), cy - ry * (1 - t * 0.8),
-                   cx + rx * (1 - t * 0.8), cy + ry * (1 - t * 0.8)),
-                  fill=EMBER + (int(14 + 26 * t),))
-    sheet.alpha_composite(glow)
-
-    back = (STRIKE_AT - 0.5) * tall
-    top = int(cy + back - im.height / 2)
-
-    # The board clips it - `_strikes` carries a `RectMask2D`. Without this the picture would show
-    # a bolt over the status bar that the game does not draw, which is a mirror lying the other
-    # way round.
-    cut = int(max(0, plate_top - top))
-    if cut >= im.height:
-        return
-    if cut:
+    import numpy as np
+    im = im.resize((max(1, int(w)), max(1, int(h))), Image.LANCZOS)
+    if angle:
+        im = im.rotate(angle, Image.BICUBIC, expand=True)
+    x0, y0 = int(cx - im.width / 2), int(cy - im.height / 2)
+    if clip_top is not None and y0 < clip_top:
+        cut = int(clip_top - y0)
+        if cut >= im.height:
+            return
         im = im.crop((0, cut, im.width, im.height))
-        top += cut
+        y0 += cut
+    x1, y1 = min(sheet.width, x0 + im.width), min(sheet.height, y0 + im.height)
+    sx, sy = max(0, -x0), max(0, -y0)
+    x0, y0 = max(0, x0), max(0, y0)
+    if x1 <= x0 or y1 <= y0:
+        return
+    piece = im.crop((sx, sy, sx + (x1 - x0), sy + (y1 - y0)))
+    a = (np.asarray(piece.getchannel("A")).astype(np.float32) * alpha).astype(np.int32)
+    region = np.asarray(sheet.crop((x0, y0, x1, y1))).astype(np.int32)
+    add = np.array(colour, np.int32)[None, None, :] * a[..., None] // 255
+    region[..., :3] = np.clip(region[..., :3] + add, 0, 255)
+    sheet.paste(Image.fromarray(region.astype(np.uint8), "RGBA"), (x0, y0))
 
-    sheet.alpha_composite(im, (int(cx - im.width / 2), top))
+
+def add_layer(sheet, layer):
+    """A whole transparent layer, added rather than composited - `shine` for something drawn."""
+    import numpy as np
+    base = np.asarray(sheet).astype(np.int32)
+    top = np.asarray(layer).astype(np.int32)
+    a = top[..., 3:4]
+    base[..., :3] = np.clip(base[..., :3] + top[..., :3] * a // 255, 0, 255)
+    sheet.paste(Image.fromarray(base.astype(np.uint8), "RGBA"))
+
+
+def embers(sheet, cx, cy, cell, tint, count, reach, size, t=0.35):
+    """`SiegeView.Embers` at `t` of their flight: stars kicked up and falling back, stretched
+    along the way they are going."""
+    star = kit("star")
+    gravity = cell * 9.0
+    for _ in range(count):
+        ang = random.uniform(0, math.tau)
+        speed = reach * random.uniform(1.4, 3.2)
+        vx, vy = math.cos(ang) * speed * 0.8, math.sin(ang) * speed * 0.5 + reach * 2.2
+        life = random.uniform(0.42, 0.78)
+        s = t * life
+        # The view's y runs up and a picture's runs down.
+        x = cx + vx * s
+        y = cy - (vy * s - 0.5 * gravity * s * s)
+        v = (vx, vy - gravity * s)
+        stretch = 1.0 + math.hypot(*v) / (cell * 6.0)
+        sz = size * random.uniform(0.6, 1.4)
+        spin = math.degrees(math.atan2(v[1], v[0])) - 90
+        shine(sheet, star, x, y, sz * (1 - t * 0.7), sz * stretch * (1 - t * 0.5),
+              lighter(tint, 0.45 * (1 - t)), alpha=1 - t * t, angle=spin)
+
+
+def slam(sheet, cx, cy, cell, tint, mark, flash_cells, ring_cells, mark_cells, spark_count):
+    """The light every big landing shares - `SiegeView.Flash`, `.Ripple`, `.Answer`, `.Embers`,
+    `.Twinkles` - drawn at about a third of a second in, which is the frame it is loudest on:
+    the flare open, the first ring most of the way out, the mark just laid, the sparks in the air.
+    """
+    # The ground first (`Answer`), behind everything: the warm rung, the mark, the burst.
+    warm = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
+    ImageDraw.Draw(warm).ellipse([cx - cell * 1.3, cy - cell * 1.3 * GROUND_SQUASH,
+                                  cx + cell * 1.3, cy + cell * 1.3 * GROUND_SQUASH],
+                                 fill=EMBER + (110,))
+    add_layer(sheet, warm.filter(ImageFilter.GaussianBlur(cell * 0.25)))
+    shine(sheet, kit(mark), cx, cy, cell * mark_cells, cell * mark_cells * GROUND_SQUASH,
+          lighter(tint, 0.35), alpha=0.95, angle=random.uniform(0, 360))
+    shine(sheet, kit("wave"), cx, cy, cell * flash_cells * 0.85,
+          cell * flash_cells * 0.85 * (GROUND_SQUASH + 0.1), tint, alpha=0.45,
+          angle=random.uniform(0, 360))
+    # The rings (`Ripple`), the first most of the way out and the second behind it.
+    shine(sheet, kit("ring"), cx, cy, cell * ring_cells * 0.78, cell * ring_cells * 0.78 * GROUND_SQUASH,
+          tint, alpha=0.55)
+    shine(sheet, kit("ring"), cx, cy, cell * ring_cells * 0.42, cell * ring_cells * 0.42 * GROUND_SQUASH,
+          lighter(tint, 0.4), alpha=0.8)
+    # The flash (`Flash`): the flare, the streak across, the glint turning.
+    shine(sheet, kit("flare"), cx, cy, cell * flash_cells * 0.95, cell * flash_cells * 0.95,
+          lighter(tint, 0.25), alpha=0.9, angle=random.uniform(-14, 14))
+    streak = kit("streak")
+    if streak is not None:
+        wide = cell * flash_cells * 1.6
+        shine(sheet, streak, cx, cy, wide, wide * streak.height / streak.width, lighter(tint, 0.5),
+              alpha=0.7)
+    shine(sheet, kit("glint"), cx, cy, cell * flash_cells * 0.55, cell * flash_cells * 0.55,
+          (255, 255, 255), alpha=0.7, angle=40)
+    embers(sheet, cx, cy, cell, tint, spark_count, cell * 2.4, cell * 0.35)
+    for _ in range(4):
+        shine(sheet, kit("glint"), cx + random.uniform(-1.5, 1.5) * cell,
+              cy + random.uniform(-1.5, 1.5) * cell * GROUND_SQUASH,
+              cell * 0.5, cell * 0.5, lighter(tint, 0.6), alpha=0.8, angle=random.uniform(-40, 40))
+
+
+def struck(sheet, cx, cy, cell, seed, plate_top):
+    """One bolt of a stormcall on the raider standing at (cx, cy) - `SiegeView.Thunderbolt` on
+    the frame of its return stroke.
+
+    **Seeded, like the game's**: the channel is `Lightning.Joints` on a seed, so this and the
+    board draw the same wander for the same strike - the sign-of-y trap invariant 44d records is
+    still here (`bolt` re-derives the axis), which is why `SiegeStrikeTests` holds the landing and
+    this only holds the look. It is cut at the top of the plate the way the `_sky` layer's mask
+    cuts it: a bolt that runs off the picture is what lightning looks like.
+    """
+    random.seed(seed)
+    top = plate_top - cell * STRIKE_OVER
+    fx = cx + cell * random.uniform(-0.9, 0.9)
+
+    # The ground and the light first, so the channel is drawn over its own flash.
+    slam(sheet, cx, cy, cell, SUN, "crack", 3.4, 3.8, 2.3, 18)
+
+    # The pack's painted strand along the channel (`SiegeView.Strand`), then the drawn bolt -
+    # both added, both clipped at the plate's top.
+    strand = kit("bolt")
+    if strand is not None:
+        tall = math.hypot(fx - cx, top - cy) + cell * 0.5
+        wide = tall * 0.25
+        lean = random.uniform(0.75, 1.1)
+        im = strand.resize((max(1, int(wide * lean)), max(1, int(tall))), Image.LANCZOS)
+        if random.random() < 0.5:
+            im = im.transpose(Image.FLIP_LEFT_RIGHT)
+        ang = math.degrees(math.atan2(fx - cx, cy - top))
+        mx = cx + (fx - cx) * 0.5 - (cell * 0.3) * (fx - cx) / tall
+        my = cy + (top - cy) * 0.5 - (cell * 0.3) * (top - cy) / tall
+        shine(sheet, im, mx, my, im.width, im.height, SUN, alpha=0.85, angle=-ang, clip_top=plate_top)
+
+    layer = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
+    bolt(layer, (fx, top), (cx, cy), SUN, cell * STRIKE_CORE, cell, jag=STRIKE_JAG, forks=STRIKE_FORKS)
+    if plate_top > 0:
+        layer.paste((0, 0, 0, 0), (0, 0, layer.width, int(plate_top)))
+    add_layer(sheet, layer)
+
+
+def discharge(sheet, muzzle, target, cell, tint):
+    """`SiegeView.Discharge` on the frame the bead lands: the beam standing at full with its
+    lightning wrapped round it, the muzzle lit, and the slam on the box it was aimed at.
+
+    **The mirror picks the box** - the board aims at whatever is furthest down the hill, which a
+    still picture cannot know - so what this answers is the beam's weight, the wrap and the slam's
+    size against the hill, and never where a real overcharge would land.
+    """
+    (mx, my), (tx, ty) = muzzle, target
+    bright = lighter(tint, 0.5)
+    layer = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
+    pen = ImageDraw.Draw(layer)
+    core = cell * 0.16
+    pen.line([muzzle, target], fill=tint + (180,), width=max(2, int(core * 6.5)))
+    layer = layer.filter(ImageFilter.GaussianBlur(core * 1.6))
+    pen = ImageDraw.Draw(layer)
+    pen.line([muzzle, target], fill=tint + (242,), width=max(2, int(core * 2.4)))
+    pen.line([muzzle, target], fill=lighter(tint, 0.85) + (255,), width=max(1, int(core)))
+    for k in range(2):
+        random.seed(1000 + k)
+        bolt(layer, muzzle, target, tint, cell * 0.055, cell, jag=0.28, forks=1)
+    add_layer(sheet, layer)
+
+    # The muzzle (`Flash` at 2.1 cells) and the bead arriving.
+    shine(sheet, kit("flare"), mx, my, cell * 2.0, cell * 2.0, lighter(tint, 0.25), alpha=0.9, angle=10)
+    streak = kit("streak")
+    if streak is not None:
+        wide = cell * 2.1 * 1.6
+        shine(sheet, streak, mx, my, wide, wide * streak.height / streak.width, bright, alpha=0.7)
+    shine(sheet, kit("flare"), tx, ty, cell * 1.3, cell * 1.3, bright, alpha=1.0, angle=70)
+
+    slam(sheet, tx, ty, cell, tint, "splat", 3.2, 4.6, 3.1, 22)
 
 
 #: The face the game draws with (invariant 46a: `Fonts/GameFont` is a role). It is in the repo,
@@ -1877,7 +2016,7 @@ def board_fit(grid):
 
 def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, line=None,
          burn=None, storm=0, bombs=None, cogs=0, forecast=False, armed=(), charms=None,
-         lance=None, volley=None, stilled=None, heaved=None):
+         lance=None, volley=None, stilled=None, heaved=None, unleash=None):
     lay = layout_of(level)
     grid = lay.grid
     charms = charms or {}
@@ -2552,9 +2691,18 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
     # picture shows the strike arriving, at its loudest, and going out.
     if storm and mob:
         for i, (mx, my, _) in enumerate(mob[:storm]):
-            struck(sheet, mx, my, cell, (2, 6, 11, 8)[i % 4], at(0, hill_top)[1])
+            struck(sheet, mx, my, cell, i, at(0, span[1] * 0.5)[1])
     elif aim == "wards":
         ward_rings(sheet, span, cell, line_y, len(lay.wards), at)
+
+    # ------------------------------------------------------------------ the overcharge
+    # A tube tapped: the beam out of that ward and the slam on a box of the hill, on the frame
+    # the bead lands. The box is the ward's home lane, mid hill - the mirror's choice, since the
+    # board aims at whatever is furthest down.
+    if unleash is not None and 0 <= unleash < len(lay.wards):
+        muzzle = at(post_x(span, unleash, len(lay.wards)), line_y + cell * 1.0)
+        bx, by = box_at(span, hill_top, hill_foot, lane_home(unleash, len(lay.wards)), 1)
+        discharge(sheet, muzzle, at(bx, by), cell, TINTS[siege.LETTERS.index(lay.wards[unleash])])
 
     return sheet
 
@@ -2998,8 +3146,12 @@ def main():
     ap.add_argument("--aim", choices=("hill", "wards"),
                     help="draw a utility's targeting: the firepot's grid, or the ward rings")
     ap.add_argument("--storm", type=int, nargs="?", const=3, default=0, metavar="N",
-                    help="drop a stormcall bolt on the first N raiders - the only picture that "
-                         "says whether a strike lands on the thing it struck")
+                    help="drop a stormcall bolt on the first N raiders, on the frame of its "
+                         "return stroke - the only picture of the strike kit stacked additively "
+                         "on the hill, which is what the stormcall's whole look rests on")
+    ap.add_argument("--unleash", type=int, default=None, metavar="WARD",
+                    help="fire ward WARD's overcharge at a box of the hill, on the frame the "
+                         "bead lands - the beam, its lightning wrap and the slam")
     ap.add_argument("--alight", type=int, default=0, metavar="N",
                     help="draw the first N raiders wearing an ember turret's flame "
                          "(SiegeView.Ablaze) - the only picture that says whether a hill of "
@@ -3150,7 +3302,7 @@ def main():
                     armed=[int(x) for x in args.armed.split(",") if x.strip()],
                     charms=stood_charms(args.charms, lv), lance=stood_lance(args.lance, lv),
                     volley=stood_lance(args.volley, lv), stilled=args.stilled,
-                  heaved=args.heaved)
+                    heaved=args.heaved, unleash=args.unleash)
         if not args.no_bar:
             bar(shot, held, cooling)
         if not args.no_header:

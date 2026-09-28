@@ -1,91 +1,155 @@
+using System.Collections.Generic;
 using NUnit.Framework;
+using UnityEngine;
 
 namespace GlimmerGrove.Tests
 {
     /// <summary>
-    /// Where a stormcall's bolt lands.
+    /// Where a stormcall's bolt lands, and what shape it is.
     ///
     /// <para>
-    /// <b>This fixture exists because the answer has been wrong twice, in two different ways, and
-    /// a player found it both times.</b> The reel is baked with its flash near the foot of the
-    /// frame and the bolt filling the rest, and the board then has to put the *sprite's centre*
-    /// somewhere such that the flash ends up on the raider. First the centre went on the raider,
-    /// so the strike went off half a frame above it - reported as lightning hitting random spots
-    /// rather than enemies. Then the offset had the right shape and the wrong sign, which put the
-    /// flash 3.3 cells *below* the raider: the ward line stands about that far down, so what a
-    /// player saw was their own turrets being struck.
+    /// <b>This fixture exists because the answer was wrong twice while the strike was a baked
+    /// reel, and a player found it both times</b>: the reel's flash had to be put on the raider
+    /// by arithmetic about the frame, the sign of that arithmetic was got wrong, and what a
+    /// player saw was lightning striking their own turrets. The bolt is drawn now
+    /// (<see cref="Lightning"/>), and the guarantee is structural rather than arithmetical -
+    /// the channel's last joint <em>is</em> the target - but a guarantee nobody checks is a
+    /// comment, so it is held here against the pure joint builder, which needs no screen.
     /// </para>
     /// <para>
-    /// <b>Nothing else in this project can see it.</b> No numeric gate opens a PNG, so par, the
-    /// readings, the validators, the content check and the art audit are all green either way -
-    /// and <c>Tools/render_siege.py</c>, which is the eye for exactly this class of fault, drew
-    /// the *second* version correctly: it mirrors the same expression, but PIL's y runs down the
-    /// picture where Unity's runs up it, so the mirror agreed with itself and disagreed with the
-    /// game. **A mirror cannot check a sign it has to re-derive in the opposite axis** (invariant
-    /// 44d), which is what leaves this to a test.
-    /// </para>
-    /// <para>
-    /// <b>It asserts the consequence rather than the formula.</b> Restating
-    /// <c>targetY + tall * (.5f - StrikeAt)</c> here would agree with a wrong sign as happily as
-    /// with a right one; what is checked is where the flash comes out, worked forward from how
-    /// the sprite is actually laid out - a rectangle of height <c>tall</c> centred on the answer,
-    /// with the flash <see cref="SiegeView.StrikeAt"/> of the way up it.
+    /// <b>Nothing else in this project can see it.</b> No numeric gate opens a picture, and the
+    /// render mirror re-derives the y axis the other way up (invariant 44d), so the one thing
+    /// that can hold "the bolt lands on the thing it struck" is the shape itself.
     /// </para>
     /// </summary>
     public sealed class SiegeStrikeTests
     {
-        /// <summary>Where the flash comes out, given where the sprite's centre was put.</summary>
-        static float FlashY(float targetY, float tall)
-        {
-            float centre = SiegeView.StrikeCentre(targetY, tall);
-            float foot = centre - tall * .5f;
-            return foot + tall * SiegeView.StrikeAt;
-        }
+        static List<Vector2> Trunk(Vector2 from, Vector2 to, int seed, float cell = 130f, float jag = .4f)
+            => Lightning.Joints(from, to, cell, jag, new System.Random(seed));
 
         [Test]
-        public void AStrikeLandsOnTheThingItStruck()
+        public void AStrikeLandsOnTheThingItStruckAndLeavesWhereItCameFrom()
         {
             // Cell sizes and hill positions vary by phone, so this is asked at several, including
-            // a raider below the middle of the board - which is where the sign error hid, because
-            // at the origin both signs give the same magnitude.
-            foreach (float target in new[] { 0f, 120f, -260f, 640f })
-                foreach (float tall in new[] { 180f, 390f, 512f })
-                    Assert.That(FlashY(target, tall), Is.EqualTo(target).Within(.001f),
-                                $"a strike aimed at {target} with a {tall}-tall reel goes off at " +
-                                $"{FlashY(target, tall)}");
+            // a raider below the middle of the board - which is where the old sign error hid,
+            // because at the origin both signs give the same magnitude.
+            foreach (float targetY in new[] { 0f, 120f, -260f, 640f })
+                foreach (float cell in new[] { 90f, 130f, 170f })
+                    for (int seed = 0; seed < 6; seed++)
+                    {
+                        var from = new Vector2(37f, 1400f);
+                        var to = new Vector2(-88f, targetY);
+                        var joints = Trunk(from, to, seed, cell);
+
+                        Assert.That(joints[0], Is.EqualTo(from), "the bolt has to leave where it came from");
+                        Assert.That(joints[joints.Count - 1], Is.EqualTo(to),
+                                    $"a strike aimed at {to} with a {cell} cell landed at {joints[joints.Count - 1]}");
+                    }
         }
 
         [Test]
-        public void TheBoltIsAboveTheStrikeAndTheGroundBurstBelowIt()
+        public void TheChannelWandersOnlyBetweenItsEnds()
         {
-            // The half that says the sign is right rather than merely consistent: what is over the
-            // flash is the bolt and what is under it is the ground burst, so most of the sprite has
-            // to be above whatever was hit. Reversed, this fixture's other case still passes at
-            // target 0.
-            const float Tall = 400f;
+            const float Cell = 130f, Jag = .4f;
+            var from = new Vector2(0f, 1200f);
+            var to = new Vector2(0f, 0f);
 
-            float centre = SiegeView.StrikeCentre(0f, Tall);
-            float head = centre + Tall * .5f;
-            float foot = centre - Tall * .5f;
+            for (int seed = 0; seed < 20; seed++)
+            {
+                var joints = Trunk(from, to, seed, Cell, Jag);
 
-            Assert.That(head, Is.GreaterThan(0f), "the bolt has to run up out of the strike");
-            Assert.That(foot, Is.LessThan(0f), "the ground burst has to spread below it");
-            Assert.That(head, Is.GreaterThan(-foot * 3f),
-                        "a strike is nearly all bolt - if the two ends are close to even, the " +
-                        "reel is being drawn upside down");
+                Assert.That(joints.Count, Is.InRange(Lightning.FewestSegments + 1, Lightning.MostSegments + 1));
+
+                for (int i = 0; i < joints.Count; i++)
+                {
+                    // The line is x = 0, so the wander is |x|; pinched to nought at both ends
+                    // and never past the jag in between.
+                    Assert.That(Mathf.Abs(joints[i].x), Is.LessThanOrEqualTo(Jag * Cell + .001f),
+                                $"joint {i} of seed {seed} wandered {joints[i].x}");
+                }
+
+                // And the joints march from the start to the end rather than doubling back: a
+                // channel that folds over itself is a scribble, not a bolt.
+                for (int i = 1; i < joints.Count; i++)
+                    Assert.That(joints[i].y, Is.LessThan(joints[i - 1].y),
+                                $"joint {i} of seed {seed} doubled back");
+            }
         }
 
-        /// <summary>
-        /// The reel is flipped on the way to the screen, so the fraction the bake frames to and
-        /// the fraction the board anchors by are complements. Two constants that have to stay
-        /// that way, said once.
-        /// </summary>
         [Test]
-        public void TheFlashSitsLowInItsOwnFrame()
+        public void TheSameSeedDrawsTheSameBoltAndANewSeedANewOne()
         {
-            Assert.That(SiegeView.StrikeAt, Is.GreaterThan(0f).And.LessThan(.5f),
-                        "what is above a strike's flash is the whole bolt and what is below it is " +
-                        "only the ground burst, so the flash belongs in the lower half of the frame");
+            var from = new Vector2(12f, 900f);
+            var to = new Vector2(-40f, 60f);
+
+            var first = Trunk(from, to, 7);
+            var again = Trunk(from, to, 7);
+            var other = Trunk(from, to, 8);
+
+            Assert.That(again, Is.EqualTo(first), "two devices drawing one strike draw one channel");
+
+            bool differs = false;
+            for (int i = 1; i < first.Count - 1 && i < other.Count - 1; i++)
+                if ((first[i] - other[i]).sqrMagnitude > .01f) differs = true;
+
+            Assert.That(differs, "a re-strike down the same channel is a stamp, not lightning");
+        }
+
+        [Test]
+        public void ABranchLeavesTheTrunkAndNeverReachesTheTarget()
+        {
+            const float Cell = 130f;
+            var from = new Vector2(0f, 1200f);
+            var to = new Vector2(0f, 0f);
+            var paths = new List<List<Vector2>>();
+
+            for (int seed = 0; seed < 20; seed++)
+            {
+                Lightning.Build(paths, from, to, Cell, .4f, 3, new System.Random(seed));
+
+                Assert.That(paths.Count, Is.EqualTo(4), "a trunk and three forks");
+
+                var trunk = paths[0];
+                for (int b = 1; b < paths.Count; b++)
+                {
+                    var branch = paths[b];
+                    Assert.That(trunk, Does.Contain(branch[0]), "a branch leaves from a joint of the trunk");
+
+                    float away = Vector2.Distance(branch[branch.Count - 1], to);
+                    Assert.That(away, Is.GreaterThan(Cell * .5f),
+                                "a second line arriving where the first did reads as two bolts");
+                }
+            }
+        }
+
+        [Test]
+        public void ALeaderIsTheFirstPartOfTheChannelAndNothingElse()
+        {
+            // `Reveal` cuts the trunk by length: the leader creeps down the channel the return
+            // stroke will light, so what it draws has to be the channel's own first part and
+            // its cut end has to sit on the channel, not beside it.
+            var trunk = Trunk(new Vector2(0f, 1000f), Vector2.zero, 3);
+            var cut = new List<Vector2>();
+
+            float total = 0f;
+            for (int i = 0; i + 1 < trunk.Count; i++) total += Vector2.Distance(trunk[i], trunk[i + 1]);
+
+            foreach (float fraction in new[] { 0f, .25f, .5f, .8f, 1f })
+            {
+                Lightning.Cut(trunk, fraction, cut);
+
+                Assert.That(cut[0], Is.EqualTo(trunk[0]), "a leader starts where the bolt starts");
+                for (int i = 0; i + 1 < cut.Count; i++)
+                    Assert.That(cut[i], Is.EqualTo(trunk[i]), "a leader is the channel's own joints");
+
+                float drawn = 0f;
+                for (int i = 0; i + 1 < cut.Count; i++) drawn += Vector2.Distance(cut[i], cut[i + 1]);
+                Assert.That(drawn, Is.EqualTo(total * fraction).Within(.01f),
+                            $"a leader at {fraction} draws {drawn} of {total}");
+            }
+
+            Lightning.Cut(trunk, 1f, cut);
+            Assert.That(cut, Is.EqualTo(trunk), "whole means whole");
         }
     }
 }

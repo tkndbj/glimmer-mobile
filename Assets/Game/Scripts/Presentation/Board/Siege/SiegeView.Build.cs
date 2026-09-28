@@ -185,7 +185,7 @@ namespace GlimmerGrove
         /// reason is that this has to be testable.</b> <see cref="Scenery.Cover"/> uses the fitter
         /// because a backdrop's parent resizes under it; the hill band does not - it is one
         /// rectangle, computed once - so the fitter would buy nothing but a dependency on when
-        /// layout runs. This is <c>SiegeView.StrikeCentre</c>'s bargain for the same reason: the
+        /// layout runs. This is <c>Lightning.Joints</c>' bargain for the same reason: the
         /// arithmetic is a static a fixture can sweep, and the fixture asserts <em>the
         /// consequence</em> (it covers, and its aspect is the art's) rather than restating the
         /// formula, which would agree with a wrong one as happily as with a right one.
@@ -688,7 +688,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>A static, so a fixture can sweep it</b> - <see cref="GroundSize"/>'s bargain and
-        /// <c>SiegeView.StrikeCentre</c>'s: what a render can only look at one frame at a time, a
+        /// <c>Lightning.Joints</c>': what a render can only look at one frame at a time, a
         /// test can walk end to end. It answers nought at the top of the quiet, climbs one beat a
         /// step, and reaches <see cref="Beats"/> no later than the quiet runs out - which is the
         /// property that makes GO! and the first raider land together

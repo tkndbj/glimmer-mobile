@@ -293,12 +293,6 @@ namespace GlimmerGrove.Content
             AssetRequest.Sprite(AssetManifest.SiegeArt("web")),
             AssetRequest.Sprite(AssetManifest.SiegeArt("sack")),
 
-            // **The storm, which every siege loads whether or not the player holds one.** A
-            // utility is account-wide and can be used on any rung, so it is not a fact about a
-            // chapter the way a boss is - there is no level it could be scoped to. **One reel
-            // rather than three**: the bought pack draws the whole strike - bolt, flash, ground
-            // crack - as a single effect, so there is nothing to fire and nothing to fly.
-            AssetRequest.SpriteSet(AssetManifest.SiegeFx("storm")),
 
             AssetRequest.SpriteSet(AssetManifest.SiegeFx("boom_fire")),
             AssetRequest.SpriteSet(AssetManifest.SiegeFx("boom_smoke")),
@@ -1278,6 +1272,15 @@ namespace GlimmerGrove.Content
         {
             var list = new List<AssetRequest>(Cast);
             list.AddRange(StarterLine());
+
+            // **The strike kit, which every siege loads whether or not the player holds a
+            // stormcall.** A utility is account-wide and can be used on any rung, so it is not a
+            // fact about a chapter the way a boss is - and the overcharge, which every line has,
+            // is drawn out of the same nine pieces. Single sprites rather than a reel: the bolt is
+            // drawn at run time (`Lightning`) and the light round it is stacked (`Additive`), so
+            // what is loaded is nine masks and never a photograph of one strike (`StrikeFx`).
+            foreach (var piece in StrikeFx.All)
+                list.Add(AssetRequest.Sprite(AssetManifest.StrikeFx(piece)));
 
             if (chapter == null)
             {

@@ -535,13 +535,37 @@ namespace GlimmerGrove
 
             var id = level.Id;
             bool unlocked = LevelUnlock.IsUnlocked(_index, id);
+            string wall = HubWall(id, unlocked);
 
             _hub = EndlessHub.Build(Safe, Content, this, Mode, Lane, level, _headerFoot, unlocked,
-                                    HubWall(id, unlocked), () => Open(id, unlocked));
+                                    wall, () => Open(id, unlocked));
+            _hubDrawn = HubReading(level, unlocked, wall);
         }
 
         /// <summary>
+        /// What the hub's column was last drawn from - the best wave, whether the lane is open
+        /// and the words on a shut key - as one comparable string. See <see cref="RedrawHub"/>.
+        /// </summary>
+        string _hubDrawn;
+
+        static string HubReading(LevelDefinition level, bool unlocked, string wall)
+            => EndlessHub.BestOf(level) + "|" + (unlocked ? "open" : "shut") + "|" + (wall ?? string.Empty);
+
+        /// <summary>
         /// The hub's column again, over the save as it is now. See <see cref="OnLearned"/>.
+        ///
+        /// <para>
+        /// <b>Only when something it draws has moved, and never as an arrival.</b> Reported as
+        /// the Endless screen "reloading" while the player stared at it: every sync that learned
+        /// <em>anything</em> - a lesson seen on the other phone, a heart timer, a challenge play
+        /// - took the whole column down and built it again with every piece popping in from
+        /// nothing, and since 2026-09-28 a sync runs within a minute of any write, so an idle
+        /// screen met one routinely. The column reads three facts off the save and nothing
+        /// else (the badge and the standing watch themselves, the lines are words), so those
+        /// three are compared first and an unchanged answer costs nothing. When one has moved,
+        /// the column is redrawn in place with no entrance, which is what <see cref="OnLearned"/>
+        /// always promised: a merge landing is not the screen opening.
+        /// </para>
         /// </summary>
         void RedrawHub()
         {
@@ -550,10 +574,15 @@ namespace GlimmerGrove
 
             var id = level.Id;
             bool unlocked = LevelUnlock.IsUnlocked(_index, id);
+            string wall = HubWall(id, unlocked);
+
+            string reading = HubReading(level, unlocked, wall);
+            if (_hub && string.Equals(reading, _hubDrawn, System.StringComparison.Ordinal)) return;
 
             Retire(_hub);
             _hub = EndlessHub.Column(Safe, this, Lane, level, _headerFoot, unlocked,
-                                     HubWall(id, unlocked), () => Open(id, unlocked));
+                                     wall, () => Open(id, unlocked), arriving: false);
+            _hubDrawn = reading;
         }
 
         /// <summary>
@@ -1287,35 +1316,16 @@ namespace GlimmerGrove
             UIKit.IconButton("Back", Safe, Skins.Nav, "ic_left", Vector2.one * CornerSize,
                              new Vector2(0f, 1f), new Vector2(CornerX, CornerY), () => Flow.Go<HomeScreen>());
 
-            // **The rank this keeper holds, directly under the back key - and on the ranked lane
-            // only**, at the owner's instruction. This screen draws the chapter map and the
-            // Infinite hub with one set of chrome, so it used to cover both with one call; what
-            // that got wrong is that the ordinary ladder is a chapter map, and a rank is not a
-            // thing a chapter map says anything about. The ranked lane is where a standing is
-            // the subject, so that is where the badge and the way to its page belong.
+            // **No rank badge in this corner, on either lane**, since 2026-09-28 at the owner's
+            // instruction: the ranked lane's hub draws the rank as its hero, big and centred, and
+            // a second copy under the back key said the same thing twice. The chapter map never
+            // drew one (a rank is not a thing a chapter map says anything about).
             //
-            // **The lane is asked here rather than inside the widget** (`RankBadge`): a rank is
-            // fed by every lane and there is nothing per-lane about the readout, so what is
-            // per-lane is the corner it sits in, which is this screen's business.
-            //
-            // **First in the column because it is the one that is always there** - on this lane.
-            // The boost clock takes itself off screen when no window is running, so putting it
-            // above this would leave a hole between the back key and the badge on every session
-            // where nobody has watched a video - a gap that reads as a layout fault rather than
-            // as an absence. Stable things above transient ones.
-            bool ranked = !Lane.IsMain;
-            if (ranked)
-                RankBadge.Attach(this, Safe, new Vector2(0f, 1f), new Vector2(CornerX, RankY));
-
-            // The XP boost's clock, under the badge - or in the badge's own seat on a lane that
-            // draws no badge, because a control that hangs where a missing neighbour used to be
-            // is the hole the paragraph above is about, from the other end.
-            //
-            // It takes itself off screen when no boost is running (`BoostReadout`), which is why
-            // it is attached unconditionally rather than behind a test here: a screen that
-            // decided for itself would have to be rebuilt when a window opens under it.
-            BoostReadout.Attach(this, Safe, new Vector2(0f, 1f),
-                                new Vector2(CornerX, ranked ? BoostY : ColumnOnlyY));
+            // The XP boost's clock is the column's only tenant. It takes itself off screen when
+            // no boost is running (`BoostReadout`), which is why it is attached unconditionally
+            // rather than behind a test here: a screen that decided for itself would have to be
+            // rebuilt when a window opens under it.
+            BoostReadout.Attach(this, Safe, new Vector2(0f, 1f), new Vector2(CornerX, BoostY));
 
             // What a glade pays, and under what rule - the one thing this screen is full of
             // and cannot draw. A node shows its stars and says nothing about what the stars
@@ -1528,24 +1538,10 @@ namespace GlimmerGrove
         const float ColumnTop = CornerY - CornerSize * .5f - BoostGap;
 
         /// <summary>
-        /// Where the rank badge sits when it is drawn at all: at the top of the column, because
-        /// it is the stable one of the pair. It is drawn on the ranked lane only, which is
-        /// <see cref="ColumnOnlyY"/>'s reason for existing.
+        /// Where the boost clock sits: the top of the column, its only tenant since the corner
+        /// rank badge was withdrawn (2026-09-28).
         /// </summary>
-        const float RankY = ColumnTop - RankBadge.Height * .5f;
-
-        const float BoostY = RankY - RankBadge.Height * .5f - BoostGap - BoostReadout.Height * .5f;
-
-        /// <summary>
-        /// Where the boost clock sits on a lane that draws no rank badge: the top of the column,
-        /// which is the badge's own seat.
-        ///
-        /// <b>Written down rather than folded into <see cref="BoostY"/> with a ternary at the
-        /// call site</b>, for the reason the rest of this block exists: the two seats are one
-        /// column measured downwards from the back key, and a caller doing the arithmetic itself
-        /// is a second copy of it that stops agreeing the first time a widget is re-cut.
-        /// </summary>
-        const float ColumnOnlyY = ColumnTop - BoostReadout.Height * .5f;
+        const float BoostY = ColumnTop - BoostReadout.Height * .5f;
 
         /// <summary>
         /// Where the chapter's star count sits: under the "i", right-aligned with it, measured

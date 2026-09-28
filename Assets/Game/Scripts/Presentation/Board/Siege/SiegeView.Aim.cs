@@ -301,7 +301,7 @@ namespace GlimmerGrove
             // were laid out with, so the burst lands on the ring the player aimed at.
             var at = BoxAt(aim.Lane, aim.Row);
 
-            Scorch(aim);
+            Scorch(aim, Pal.Ember);
 
             Boom(at, Blast("boom_fire"), Cell * 3.4f);
             Burst.Sparks(_fx, at, Pal.Ember, 22, Cell * 3f, Cell * .3f);
@@ -315,8 +315,11 @@ namespace GlimmerGrove
             Audio.SfxVaried("boom", .8f);
         }
 
-        /// <summary>Every box a firepot burned, lit for a beat and gone.</summary>
-        void Scorch(SiegeAim aim)
+        /// <summary>
+        /// Every box a blast burned, lit for a beat and gone - in the firepot's ember, or in
+        /// the ward's own colour for an overcharge (<c>SiegeView.Slam</c>).
+        /// </summary>
+        void Scorch(SiegeAim aim, Color colour)
         {
             if (_fx == null) return;
 
@@ -332,7 +335,7 @@ namespace GlimmerGrove
                     if (!SiegeTuning.InBlast(aim.Lane, aim.Row, lane, row)) continue;
 
                     var pane = UIKit.Img("Scorch", _fx, Art.Round(18),
-                                         Pal.A(Pal.Ember, .55f), size);
+                                         Pal.A(colour, .55f), size);
                     pane.type = Image.Type.Sliced;
                     pane.raycastTarget = false;
                     pane.rectTransform.anchoredPosition = BoxAt(lane, row);
@@ -409,8 +412,15 @@ namespace GlimmerGrove
             Sky();
             ShakeBoard(22f);
 
-            // Not `boom`, which is the firepot's. That one is an explosion and this is not.
-            Audio.Sfx("shatter", .9f, .72f);
+            // Thunder, and its own clip: not `boom`, which is the firepot's - that one is an
+            // explosion and this is not - and not `shatter`, which is wood breaking.
+            Audio.Sfx("thunder", .95f);
+
+            // **The hill slows for the storm.** Every strike is already resolved in the rules,
+            // so what the player watches is drawing; slowing the walk under it is what the
+            // pack's own demo does (a 0.4 time scale) and is the one instrument that costs the
+            // run nothing (37cq). Eased back after the last bolt.
+            Dilate(StormPace, hits.Count * StormStep + .3f);
 
             // **Claimed before a single bolt falls.** The rules killed all of these the instant
             // the item was used, so `Reap` - which runs every frame and takes down anything dead -
@@ -445,7 +455,7 @@ namespace GlimmerGrove
         {
             for (int i = 0; i < hits.Count; i++)
             {
-                Bolt(hits[i]);
+                Bolt(hits[i], i);
                 Hurt(hits[i]);
 
                 // **Each raider dies to its own bolt.** The rules resolve the whole storm in one
@@ -518,211 +528,44 @@ namespace GlimmerGrove
             }, node).OnDone(() => { if (node) Destroy(node.gameObject); });
         }
 
-        /// <summary>One bolt of a storm, falling on one raider.</summary>
-        void Bolt(SiegeStrike hit)
+        /// <summary>
+        /// One bolt of a storm, falling on one raider - see <see cref="Thunderbolt"/>.
+        ///
+        /// <para>
+        /// <b>`MobOf`, never `Widget`.</b> A raider can only be struck once it is on the hill,
+        /// so its widget already exists - and `Widget` <em>hatches</em> one when it does not,
+        /// which on a raider this very call is about to kill would put a fresh body on the
+        /// board to be torn down again. Asking only what is already drawn cannot resurrect
+        /// anything.
+        /// </para>
+        /// <para>
+        /// <b>Seeded off the raider and its place in the storm</b>, so the same storm draws the
+        /// same channels on two devices and in the render mirror - and so no two bolts of one
+        /// storm are the same picture.
+        /// </para>
+        /// </summary>
+        void Bolt(SiegeStrike hit, int ordinal)
         {
-            // **`MobOf`, never `Widget`.** A raider can only be struck once it is on the hill, so
-            // its widget already exists - and `Widget` *hatches* one when it does not, which on a
-            // raider this very call is about to kill would put a fresh body on the board to be
-            // torn down again. Asking only what is already drawn cannot resurrect anything.
             var mob = MobOf(hit.Raider);
-            if (mob == null || mob.Node == null || _fx == null || _sky == null) return;
+            if (mob == null || mob.Node == null) return;
 
-            var at = mob.Node.anchoredPosition;
-            var frames = StormBolt;
-            if (frames == null || frames.Length == 0) return;
-
-            // **Drawn upside down, and that is a fact about the pack rather than a trick.** The
-            // bought effect is authored with its flash at the prefab's own origin and the bolt
-            // running *downward* from it, which is a strike seen from the cloud's end. This board
-            // needs the other one - the flash on the raider and the bolt trailing up out of shot -
-            // so the reel is flipped. The flip is about the sprite's centre, so a point
-            // <see cref="StrikeAt"/> of the way up the baked frame is drawn that far *down* from
-            // the top, which is the complement the bake is given.
-            //
-            // **At its own aspect.** It was stretched 2.8x across, on the argument that the pack
-            // cuts a few pixels of core inside a tall picture and a wide bolt still reads as a
-            // bolt. What a 2.8x horizontal scale actually reads as is a smear, which was reported
-            // from a device as the effect being blurry - and the thing it was compensating for is
-            // fixed where it was caused: the reel is baked with a bloom now, so the bolt is thick
-            // and lit rather than a thread that had to be stretched to be seen at all.
-            // **One size wherever it lands, and cut off at the top of the board.** Sizing it to
-            // the room above whatever it hit was tried first and is worse than the fault it
-            // fixes: a hill is about four cells deep, so a strike on a raider half way up came
-            // out a cell and a half long and read as a spark. A bolt that runs off the top of the
-            // picture is what lightning looks like - it comes from somewhere above the frame -
-            // and `_sky` is clipped to the board so it can.
-            float tall = Cell * StormTall;
-            float wide = tall * frames[0].rect.width / frames[0].rect.height;
-
-            var shaft = UIKit.Img("Bolt", _sky, frames[0], Color.white,
-                                  new Vector2(wide, tall));
-            shaft.raycastTarget = false;
-            shaft.rectTransform.localScale = new Vector3(1f, -1f, 1f);
-
-            // **Anchored by where the strike lands, never by the frame's middle** - see
-            // <see cref="StrikeCentre"/>, which is where the arithmetic and the two ways it has
-            // been wrong are written down.
-            shaft.rectTransform.anchoredPosition =
-                new Vector2(at.x, StrikeCentre(at.y, tall));
-
-            var group = UIKit.Group(shaft.rectTransform);
-            var book = Flipbook.Attach(shaft, frames, StormFps, false);
-
-            Struck(at);
-
-            // Held after the reel has run out rather than cut at its last frame: the strike fades
-            // over about a fifth of a second, and what was reported is that it is gone before it
-            // has been seen.
-            if (book != null)
-                book.OnFinished = () => Tween.Fade(group, 0f, StormLinger)
-                                             .OnDone(() => { if (shaft) Destroy(shaft.gameObject); });
-            else
-                Tween.After(1.2f, () => { if (shaft) Destroy(shaft.gameObject); });
+            Thunderbolt(mob.Node.anchoredPosition, hit.Raider * 7919 + ordinal * 104729);
         }
 
-        /// <summary>
-        /// The ground where a bolt just landed: a flash, a ring and a spray of sparks.
-        ///
-        /// <para>
-        /// <b>Drawn by the board rather than baked into the reel, because it is the half that has
-        /// to know where the hill is.</b> A reel is one rectangle of pixels at a fixed size; what
-        /// makes a strike read as having *arrived somewhere* is light thrown onto the ground under
-        /// it, and the ground is a different colour and a different size on every rung. This is
-        /// also the cheap half of the difference between the vendor's picture and ours - theirs is
-        /// a lit scene and a bolt, and a bolt on its own is a picture of lightning rather than of
-        /// something being struck.
-        /// </para>
-        /// <para>
-        /// <b>Warm rather than gold</b>, which is the same ladder the reel itself is graded on
-        /// (white core, <c>Pal.Sun</c> body, <c>Pal.Ember</c> haze): the ring and the ground flash
-        /// are the outermost rung, so they are the ember, and the sparks that fly are the middle
-        /// one. A single colour for all three is what makes a burst read as a decal.
-        /// </para>
-        /// </summary>
-        void Struck(Vector2 at)
-        {
-            if (_fx == null) return;
-
-            // The scorch on the floor: wide, warm, and gone almost at once. Behind everything
-            // else in the layer, so the bolt and its sparks are drawn over their own light.
-            // **Small, and it was not.** The first cut spread an ember glow three and a half cells
-            // across and rang a ring the same size; drawn on three raiders a third of a second
-            // apart, that is most of the hill under overlapping brown discs - which reads as the
-            // board being stained rather than as anything being struck. The reel already carries
-            // the bright half of the burst; what this adds is only the warm rung under it.
-            var scorch = UIKit.Img("Scorch", _fx, Art.Glow(128, 2.2f), Pal.A(Pal.Ember, .62f),
-                                   new Vector2(Cell * 1.7f, Cell * .72f));
-            scorch.raycastTarget = false;
-            scorch.rectTransform.anchoredPosition = at;
-            scorch.transform.SetAsFirstSibling();
-
-            Tween.Run(.34f, Ease.OutQuint, t =>
-            {
-                if (!scorch) return;
-                float k = Mathf.Lerp(.5f, 1.15f, t);
-                scorch.transform.localScale = new Vector3(k, k, 1f);
-                var c = scorch.color; c.a = .62f * (1f - t * t); scorch.color = c;
-            }, scorch).OnDone(() => { if (scorch) Destroy(scorch.gameObject); });
-
-            Shockwave(at, Pal.Ember, Cell * 1.9f, .30f);
-            Burst.Sparks(_fx, at, Pal.Sun, 14, Cell * 1.9f, Cell * .14f, .38f);
-        }
+        /// <summary>How slowly the hill walks while a storm is falling on it.</summary>
+        const float StormPace = .30f;
 
         /// <summary>
-        /// How a storm's bolt is drawn: its height in cells, how fast the reel runs and how long
-        /// it is held after it has run out.
+        /// The sky going white over the whole board for a beat, and warm for a while after.
         ///
-        /// <para>
-        /// <b>They exist because "I do not even see the lightning" was the verdict on the first
-        /// cut</b>, which was 4.6 cells tall, run at 30fps and destroyed on its last frame - a
-        /// thread on screen for six tenths of a second. Taller, slower and held is that same
-        /// bought asset made legible.
-        /// </para>
-        /// <para>
-        /// <b>A fourth number is gone and its going is the point.</b> `StormWiden` stretched the
-        /// reel 2.8x across, which is the same complaint answered in the drawing rather than at
-        /// its cause - and a horizontal scale is the one thing that cannot make a bolt brighter,
-        /// only wider and softer. The reel carries a bloom now (invariant 37af, which this reel
-        /// was never given), so there is nothing left to compensate for.
-        /// </para>
-        /// <para>
-        /// <b>And the reel runs faster than it did.</b> 15fps over eighteen frames is a bolt
-        /// standing on the hill for a second and a fifth, which reads as a picture rather than as
-        /// a strike; what makes lightning legible is that it is bright, not that it is slow.
-        /// </para>
+        /// Two layers rather than one: the white is the flash and is gone in a third of a
+        /// second; the gold under it is the sky still lit while the bolts fall, and it goes out
+        /// with the last of them. Both additive, so they lift the hill rather than veil it.
         /// </summary>
-        const float StormTall = 5.0f, StormFps = 22f, StormLinger = .34f;
-
-        /// <summary>
-        /// How far up its own frame a strike's flash sits, as a fraction of the frame's height.
-        ///
-        /// <para>
-        /// <b>Declared here and read by the bake</b> (<c>SiegeShotBake</c> references this
-        /// constant), exactly as <see cref="HeadAt"/> and <see cref="MuzzleAt"/> are: the number
-        /// that frames the render and the number that positions the sprite have to be one number,
-        /// or the strike lands somewhere the reel was never framed around. That is not a
-        /// hypothetical - this reel shipped framed at a half and drawn at a half *above* the
-        /// target, which is a strike two and a half cells wide of everything it hit.
-        /// </para>
-        /// <para>
-        /// <b>Low, because a strike is nearly all bolt.</b> What is above the flash is the whole
-        /// length of the lightning and what is below is only the ground burst it leaves, so the
-        /// flash sits near the foot of the frame and the rest is sky. It is measured from the
-        /// bottom of the frame *as drawn*; the reel is flipped on the way to the screen, so the
-        /// bake is handed the complement.
-        /// </para>
-        /// </summary>
-        public const float StrikeAt = .17f;
-
-        /// <summary>
-        /// Where the middle of a strike's sprite goes so that its flash lands on
-        /// <paramref name="targetY"/>.
-        ///
-        /// <para>
-        /// <b>A method rather than a line inside <see cref="Bolt"/>, because it has now been
-        /// wrong twice in two different ways and neither was visible to anything but a player.</b>
-        /// First it was <c>targetY + tall * .5f</c> - the frame's *centre* on the raider, so the
-        /// flash went off half a frame above it. Then it was the right shape with the wrong sign,
-        /// which put the flash <b>3.3 cells below</b> the raider: on a board where the ward line
-        /// is exactly that far down, what a player saw was lightning striking their own turrets.
-        /// </para>
-        /// <para>
-        /// <b>The sign is the whole trap, and it is the one invariant 44d already records.</b>
-        /// <c>Tools/render_siege.py</c> mirrors this and drew it correctly with the *same*
-        /// expression, because PIL's y runs down the picture where Unity's runs up it - so the
-        /// mirror agreed with itself and disagreed with the game, and the render that exists to
-        /// catch a misplaced widget confirmed a misplaced widget. **A mirror cannot check a sign
-        /// it has to re-derive in the opposite axis.** What checks this one is
-        /// <c>SiegeStrikeTests</c>, which asserts the consequence - the flash lands on the target
-        /// - rather than the formula.
-        /// </para>
-        /// <para>
-        /// The sprite is drawn from <c>centre - tall/2</c> up, and the flash sits
-        /// <see cref="StrikeAt"/> of the way up it, so the centre has to sit
-        /// <c>(.5 - StrikeAt)</c> of the frame <em>above</em> whatever was hit: what is over the
-        /// flash is the whole length of the bolt and what is under it is only the ground burst.
-        /// </para>
-        /// </summary>
-        public static float StrikeCentre(float targetY, float tall)
-            => targetY + tall * (.5f - StrikeAt);
-
-        static Sprite[] StormBolt => Blast("storm") ?? Blast("shot_y");
-
-        /// <summary>The sky going white over the whole board for a beat.</summary>
         void Sky()
         {
-            if (_fx == null) return;
-
-            var flash = UIKit.Img("Sky", _fx, Art.Round(4), Pal.A(Pal.Cream, .42f),
-                                  new Vector2(Span.x, Span.y));
-            flash.raycastTarget = false;
-            flash.rectTransform.anchoredPosition = Vector2.zero;
-            flash.transform.SetAsLastSibling();
-
-            var group = UIKit.Group(flash.rectTransform);
-            Tween.Fade(group, 0f, .38f)
-                 .OnDone(() => { if (flash) Destroy(flash.gameObject); });
+            Lightup(Pal.Cream, .55f, .32f);
+            Lightup(Pal.Sun, .22f, .9f);
         }
 
         void Hurt(SiegeStrike hit)

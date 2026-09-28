@@ -52,16 +52,13 @@ namespace GlimmerGrove.Layout
 
         // ------------------------------------------------------------------ the medal
         /// <summary>
-        /// The hero block, and the medal's own block before <see cref="RecordScale"/>: a starburst,
-        /// a medallion carrying the furthest wave, and a plate under it naming what the number is.
+        /// The medal's own block before <see cref="RecordScale"/>: a starburst, a medallion
+        /// carrying the furthest wave, and a plate under it naming what the number is.
         ///
         /// <para>
-        /// <b>The rank holds this box now, and the medal holds a smaller copy of it.</b> The record
-        /// was the hero until 2026-09-28 ("the record is what this lane is"); the owner moved the
-        /// keeper's rank badge into its place at its size, with the rank's name on the same plate,
-        /// and the medal under the lines. One block, two tenants: the badge is drawn in
-        /// <see cref="BurstSize"/> exactly where the burst was, so "the same size" is a constant
-        /// and not a second number that could drift from the first.
+        /// <b>It was the hero until 2026-09-28</b> ("the record is what this lane is"); the owner
+        /// moved the keeper's rank badge into its place and the medal under the lines. The rank
+        /// shared this box for a day and has its own now (<see cref="HeroHeight"/>).
         /// </para>
         /// <para>
         /// <b>Derived from the plate that hangs off its foot, never typed.</b> It was typed, and
@@ -69,7 +66,39 @@ namespace GlimmerGrove.Layout
         /// phone, which is the whole reason this arithmetic is not in the screen.
         /// </para>
         /// </summary>
-        public static float HeroHeight => PlateDown + PlateHeight * .5f;
+        public static float MedalHeight => PlateDown + PlateHeight * .5f;
+
+        /// <summary>The medal's own centre, inside <see cref="MedalHeight"/>.</summary>
+        public static float MedalCentre => MedalHeight * .5f;
+
+        // ------------------------------------------------------------------ the rank
+        /// <summary>
+        /// The rank's block: the badge, and its name on a plate under it.
+        ///
+        /// <para>
+        /// <b>Its own numbers since 2026-09-28, and no longer the medal's box.</b> The owner asked
+        /// for the badge bigger and centred between the RANKED pill and its name; in the medal's
+        /// box it could grow only by overlapping its own plate. The medal keeps its composition
+        /// (<see cref="MedalHeight"/>) and the rank gets a taller one.
+        /// </para>
+        /// </summary>
+        public static float HeroHeight => RankPlateDown + PlateHeight * .5f;
+
+        /// <summary>The rank badge's square, and where the rank's name plate is read.</summary>
+        public const float BadgeSize = 355f, RankPlateDown = 330f;
+
+        /// <summary>
+        /// How much of <see cref="BadgeSize"/> the tallest badge's ink fills (measured off the
+        /// seven 512 PNGs: 444 of 512 at most). The ink, not the square, is what must stand clear.
+        /// </summary>
+        public const float BadgeInk = .87f;
+
+        /// <summary>
+        /// The badge's centre, measured down from the column's top: <b>midway between the pill
+        /// above the column</b> (<see cref="HeadClear"/> over its top) <b>and the top of the
+        /// name plate</b>, so the air above the badge and below it is the same. Derived.
+        /// </summary>
+        public static float BadgeDown => (RankPlateDown - PlateHeight * .5f - HeadClear) * .5f;
 
         // ------------------------------------------------------------------ the record
         /// <summary>
@@ -79,7 +108,7 @@ namespace GlimmerGrove.Layout
         public const float RecordScale = .62f;
 
         /// <summary>The block the record takes in the column, as drawn. Derived.</summary>
-        public static float RecordHeight => HeroHeight * RecordScale;
+        public static float RecordHeight => MedalHeight * RecordScale;
 
         /// <summary>
         /// The starburst behind the medal - <b>the hero's own box</b>, never larger. See the class
@@ -132,7 +161,7 @@ namespace GlimmerGrove.Layout
 
         // ------------------------------------------------------------------ the air
         /// <summary>The gaps: under the rank, under the lines, and above the key.</summary>
-        const float HeroGap = 24f, RecordGap = 20f, ButtonGap = 26f;
+        const float HeroGap = 16f, RecordGap = 20f, ButtonGap = 26f;
 
         /// <summary>
         /// The least the column is ever drawn at. <see cref="ScaleIn"/> shrinks it to the band it
@@ -246,16 +275,25 @@ namespace GlimmerGrove.Layout
 
             // Everything the medal draws has to fit the box the stack gave it, or the column has
             // a piece standing outside the column. See the class note.
-            if (BurstSize > HeroHeight)
+            if (BurstSize > MedalHeight)
             {
-                fault = $"the starburst is {BurstSize} across in a {HeroHeight} block, so it is " +
-                        $"drawn {BurstSize - HeroHeight} outside the column";
+                fault = $"the starburst is {BurstSize} across in a {MedalHeight} block, so it is " +
+                        $"drawn {BurstSize - MedalHeight} outside the column";
                 return false;
             }
 
-            if (DiscDown + DiscSize * .5f > HeroHeight || PlateDown + PlateHeight * .5f > HeroHeight)
+            if (DiscDown + DiscSize * .5f > MedalHeight)
             {
-                fault = "the medal or its plate is drawn past the foot of the hero block";
+                fault = "the medal is drawn past the foot of its block";
+                return false;
+            }
+
+            // The badge's ink stands clear of the pill above the column and of its own plate.
+            float ink = BadgeSize * BadgeInk * .5f;
+            if (BadgeDown - ink < -HeadClear || BadgeDown + ink > RankPlateDown - PlateHeight * .5f)
+            {
+                fault = $"a {BadgeSize} badge centred {BadgeDown} down touches the pill above " +
+                        "it or the plate under it";
                 return false;
             }
 

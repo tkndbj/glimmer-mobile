@@ -254,7 +254,7 @@ namespace GlimmerGrove
         /// </summary>
         public static RectTransform Column(RectTransform safe, MonoBehaviour owner, GameTrack lane,
                                            LevelDefinition level, float headerFoot, bool unlocked,
-                                           string wall, Action open)
+                                           string wall, Action open, bool arriving = true)
         {
             if (safe == null) return null;
 
@@ -274,10 +274,10 @@ namespace GlimmerGrove
             column.anchoredPosition = new Vector2(0f, -top);
             column.localScale = Vector3.one * EndlessHubLayout.ScaleIn(band);
 
-            Rank(column);
-            Lines(column, lane, 0f);
-            Record(column, owner, level);
-            Battle(column, unlocked, wall, open, 0f);
+            Rank(column, arriving);
+            Lines(column, lane, 0f, arriving);
+            Record(column, owner, level, arriving);
+            Battle(column, unlocked, wall, open, 0f, arriving);
 
             return host;
         }
@@ -322,22 +322,22 @@ namespace GlimmerGrove
         /// badge's rule, for the corner badge's reason. An empty ladder draws nothing.
         /// </para>
         /// </summary>
-        static void Rank(RectTransform column)
+        static void Rank(RectTransform column, bool arriving)
         {
             var seat = UIKit.Box("Rank", column,
-                                 new Vector2(EndlessHubLayout.BurstSize, EndlessHubLayout.HeroHeight),
+                                 new Vector2(EndlessHubLayout.BadgeSize, EndlessHubLayout.HeroHeight),
                                  new Vector2(.5f, 1f), new Vector2(0f, -EndlessHubLayout.HeroCentre));
 
-            float badgeY = EndlessHubLayout.HeroCentre - EndlessHubLayout.DiscDown;
+            float badgeY = EndlessHubLayout.HeroCentre - EndlessHubLayout.BadgeDown;
 
             // **Light rather than the medal's burst.** A rank badge is a winged silhouette and the
             // spiked burst behind it read as a second outline round the first (render_endless.py);
             // two warm halos say *lit* without drawing a shape of their own.
-            UIKit.Halo(seat, Pal.Sun, EndlessHubLayout.BurstSize * 1.6f, .20f, new Vector2(0f, badgeY));
-            UIKit.Halo(seat, Pal.Sun, EndlessHubLayout.BurstSize * 1.16f, .45f, new Vector2(0f, badgeY));
+            UIKit.Halo(seat, Pal.Sun, EndlessHubLayout.BadgeSize * 1.6f, .20f, new Vector2(0f, badgeY));
+            UIKit.Halo(seat, Pal.Sun, EndlessHubLayout.BadgeSize * 1.16f, .45f, new Vector2(0f, badgeY));
 
             var mark = UIKit.Img("Badge", seat, null, Color.white,
-                                 Vector2.one * EndlessHubLayout.BurstSize,
+                                 Vector2.one * EndlessHubLayout.BadgeSize,
                                  new Vector2(.5f, .5f), new Vector2(0f, badgeY));
             mark.preserveAspect = true;
             mark.raycastTarget = false;
@@ -345,7 +345,7 @@ namespace GlimmerGrove
             var plate = UIKit.Img("Plate", seat, Art.S("Ui/Hud/trough"), Color.white,
                                   new Vector2(EndlessHubLayout.PlateWidth, EndlessHubLayout.PlateHeight),
                                   new Vector2(.5f, .5f),
-                                  new Vector2(0f, EndlessHubLayout.HeroCentre - EndlessHubLayout.PlateDown));
+                                  new Vector2(0f, EndlessHubLayout.HeroCentre - EndlessHubLayout.RankPlateDown));
             if (plate != null) plate.type = Image.Type.Sliced;
 
             var name = UIKit.Titled("Name", plate != null ? plate.transform : seat.transform,
@@ -358,11 +358,13 @@ namespace GlimmerGrove
 
             // The whole block is the target, as the corner badge's is.
             var tap = UIKit.Button("Tap", seat, Art.Pixel,
-                                   new Vector2(EndlessHubLayout.BurstSize, EndlessHubLayout.HeroHeight),
+                                   new Vector2(EndlessHubLayout.BadgeSize, EndlessHubLayout.HeroHeight),
                                    new Vector2(.5f, .5f), Vector2.zero, OpenRanks);
             tap.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0f);
 
             seat.gameObject.AddComponent<HeroRank>().Watch(mark, plate, name);
+
+            if (!arriving) return;
 
             seat.localScale = Vector3.zero;
             Tween.Pop(seat, 0f, .62f, .08f);
@@ -428,14 +430,15 @@ namespace GlimmerGrove
         /// <see cref="EndlessHubLayout.RecordScale"/> by a node that holds the scale, so the medal
         /// itself is built at the size every constant describes and pops to one as it always did.
         /// </summary>
-        static void Record(RectTransform column, MonoBehaviour owner, LevelDefinition level)
+        static void Record(RectTransform column, MonoBehaviour owner, LevelDefinition level,
+                           bool arriving)
         {
             var holder = UIKit.Box("Record", column,
-                                   new Vector2(EndlessHubLayout.BurstSize, EndlessHubLayout.HeroHeight),
+                                   new Vector2(EndlessHubLayout.BurstSize, EndlessHubLayout.MedalHeight),
                                    new Vector2(.5f, 1f), new Vector2(0f, -EndlessHubLayout.RecordCentre));
             holder.localScale = Vector3.one * EndlessHubLayout.RecordScale;
 
-            Medal(holder, owner, level);
+            Medal(holder, owner, level, arriving);
         }
 
         // ------------------------------------------------------------------ the medal
@@ -455,19 +458,20 @@ namespace GlimmerGrove
         /// plate are global, so nothing here can arrive as a white rectangle.
         /// </para>
         /// </summary>
-        static void Medal(RectTransform holder, MonoBehaviour owner, LevelDefinition level)
+        static void Medal(RectTransform holder, MonoBehaviour owner, LevelDefinition level,
+                          bool arriving)
         {
             int best = BestOf(level);
             bool held = best > 0;
 
             var seat = UIKit.Box("Medal", holder,
                                  new Vector2(EndlessHubLayout.BurstSize,
-                                             EndlessHubLayout.HeroHeight),
+                                             EndlessHubLayout.MedalHeight),
                                  new Vector2(.5f, .5f), Vector2.zero);
 
             // Everything in the medal is placed against the *disc's* centre rather than the
             // block's, because the block is taller than the burst: the plate hangs off its foot.
-            float discY = EndlessHubLayout.HeroCentre - EndlessHubLayout.DiscDown;
+            float discY = EndlessHubLayout.MedalCentre - EndlessHubLayout.DiscDown;
 
             UIKit.Halo(seat, held ? Pal.Sun : Pal.Slate, EndlessHubLayout.BurstSize * 1.6f, .20f,
                        new Vector2(0f, discY));
@@ -517,7 +521,7 @@ namespace GlimmerGrove
                                   new Vector2(EndlessHubLayout.PlateWidth,
                                               EndlessHubLayout.PlateHeight),
                                   new Vector2(.5f, .5f),
-                                  new Vector2(0f, EndlessHubLayout.HeroCentre
+                                  new Vector2(0f, EndlessHubLayout.MedalCentre
                                                 - EndlessHubLayout.PlateDown));
             if (plate != null) plate.type = Image.Type.Sliced;
 
@@ -538,6 +542,8 @@ namespace GlimmerGrove
             // has nothing to wait for, so it neither subscribes nor pays for the read.
             if (held && caption) caption.gameObject.AddComponent<Standing>().Watch(caption, best);
 
+            if (!arriving) return;
+
             // After the lines, since 2026-09-28: the medal is read under them now.
             seat.localScale = Vector3.zero;
             Tween.Pop(seat, 0f, .62f, .30f);
@@ -551,7 +557,7 @@ namespace GlimmerGrove
         /// <b>A row whose mark is missing still draws its sentence</b>, because a row is a sentence
         /// with a mark in front of it and not a mark with a caption.
         /// </summary>
-        static void Lines(RectTransform host, GameTrack lane, float top)
+        static void Lines(RectTransform host, GameTrack lane, float top, bool arriving)
         {
             var panel = UIKit.Img("Lines", host, Art.S("Ui/Hud/panel"), Color.white,
                                   new Vector2(EndlessHubLayout.PanelWidth,
@@ -603,6 +609,8 @@ namespace GlimmerGrove
                 UIKit.Shrinkable(says, 22);
             }
 
+            if (!arriving) return;
+
             plate.localScale = Vector3.zero;
             Tween.Pop(plate, 0f, .55f, .18f);
         }
@@ -644,7 +652,8 @@ namespace GlimmerGrove
         /// (invariant 16o).
         /// </para>
         /// </summary>
-        static void Battle(RectTransform host, bool unlocked, string wall, Action open, float top)
+        static void Battle(RectTransform host, bool unlocked, string wall, Action open, float top,
+                           bool arriving)
         {
             // **The wall's own sentence is set to fit rather than abbreviated**, because what
             // makes it worth printing is that it names the level (invariant 42e) and every
@@ -682,8 +691,14 @@ namespace GlimmerGrove
             // the sheen used to ask, which left a shut key lit and pulsing.
             if (unlocked) UIKit.Halo(play.transform, Pal.Sun, 760f, .26f);
 
+            // A redraw lands the key where it stands and goes straight to its idle state: the
+            // breath and the sheen are what a standing key does, and the pop is only an arrival.
+            if (!arriving) { Settle(); return; }
+
             play.transform.localScale = Vector3.zero;
-            Tween.Pop(play.transform, 0f, .7f, .42f).OnDone(() =>
+            Tween.Pop(play.transform, 0f, .7f, .42f).OnDone(Settle);
+
+            void Settle()
             {
                 if (!play) return;
 
@@ -692,7 +707,7 @@ namespace GlimmerGrove
 
                 Tween.Breathe(play.transform, .03f, 2.1f);
                 Sheen.Attach((RectTransform)play.transform, 3.4f);
-            });
+            }
         }
     }
 }

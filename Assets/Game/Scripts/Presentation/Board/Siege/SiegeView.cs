@@ -371,6 +371,12 @@ namespace GlimmerGrove
             /// <summary>How many overcharges are banked, drawn only when it is more than one.</summary>
             public Text Held;
 
+            /// <summary>
+            /// The unscaled instant the next idle arc may crackle off an armed glyph - see
+            /// <c>SiegeView.Crackle</c>. Below nought while the glyph is down.
+            /// </summary>
+            public float NextArc = -1f;
+
             // ------------------------------------------------------------ the rubble
             /// <summary>
             /// The pile a colossus leaves on this post: one stone drawn three times, and the

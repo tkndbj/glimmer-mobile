@@ -1238,6 +1238,18 @@ copy nothing keeps in step.
   candidate over it and re-rendering `render_home.py` / `render_tasks.py` is the whole
   instrument, and a ten-face contact sheet costs about a minute. Nunito Black and Fredoka Bold
   were each cut, installed and rejected on sight before that.
+- `Tools/make_strike_fx.py` - the strike kit: nine white coverage masks under `Art/Fx/Strike/`
+  (a painted strand, two flares, a streak, a ring, a radial burst, a crack, a star and a splat),
+  cut out of the owner's bought *Lightning VFX* pack (Mirza Beig) straight from the
+  `.unitypackage` in the Asset Store cache, with the imported `Assets/Mirza Beig/` folder as the
+  fallback source and neither needed on a fresh clone. `--check` proves the shipped PNGs are what
+  it cuts, `--contact` draws every piece twice on the hill's plate colour - once under
+  `Image.color`'s multiply and once **added three times over**, which is the stack the board
+  draws (MODES.md 37eu). **Look at the sheet, `--check` cannot**: the pack's two PSDs are named
+  the wrong way round for what they draw (`Shatter.psd` is the crack and `Ground Crack.psd` the
+  splash) and the first cut trusted the names. A texture whose alpha is flat holds its shape in
+  luminance and one whose alpha varies holds it there; the tool reads the channel, never the
+  name. The bolt itself is not in the kit: it is `Lightning.cs`, a mesh built at run time.
 - `Tools/make_burn_fx.py` - the flame a raider wears while an ember turret's fire is on it, four
   reels, one per ward colour. **The only looping reel in this mode**, and that is what made it a
   drawn effect rather than a bake: every bought projectile is an *event* played once, so nothing in

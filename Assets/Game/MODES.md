@@ -958,6 +958,41 @@ marked *(art)* are one-line pointers - the working detail is in `CRAFT.md`.
    draws in it** (`SiegeCastTests`). `MainCasts` grew by two, not one: its seventh entry writes down the
    insects Bonereach already draws, so lengthening the table moved no shipped chapter onto a new cast.
 
+37eu. **Light is added, never laid over, and a strike is a stack rather than a photograph of
+   one** (2026-09-28, the owner: the stormcall and the overcharge were "lame" and "nothing
+   like what I saw on the store"). The bought lightning pack is *additive* - every strand,
+   flare and ring is drawn `One One` over its neighbours, so six things stacked go white - and
+   the stormcall was one reel photographed off it and alpha-blended, five cells tall: a thread
+   with a star on the end. A photograph of a stack is one flat picture and `Image.color` can
+   only darken it (37l). So the pack's *pieces* ship as white coverage masks
+   (`StrikeFx`, `Art/Fx/Strike/`, `Tools/make_strike_fx.py`), drawn with the game's one
+   custom shader - `UI/Default` with `Blend SrcAlpha One`, `Additive.Lit`, always-included in
+   `GraphicsSettings` because nothing references it - round a bolt the board draws for itself:
+   `Lightning`, one mesh per layer, a jagged trunk with forks whose **last joint is the raider**
+   (`SiegeStrikeTests`, which used to hold a frame's anchoring sign and now holds the shape).
+   Three events a few hundredths apart - a dim leader creeping down, the return stroke, two
+   re-strikes down a *new* channel - because what says electricity is that the next frame is
+   unrelated; the ground answers with rings squashed to the hill (`GroundSquash`), a crack, a
+   radial burst and sparks thrown *up*; the hill slows to `StormPace` for the length of the
+   storm (37cq's instrument), and thunder is its own clip. The baked reel, its bake path
+   (`SiegeShotBake.BakeStorm`, `Parts.Strike`) and its twenty Addressables rows went with it
+   (8d). **What the additive material may draw is light** - a glow, a flare, a spark, a beam,
+   a bolt - and never a body, a plate or anything dark, because adding black adds nothing.
+37ev. **An overcharge is a discharge in the ward's own colour, and it used to borrow the
+   firepot's fireball.** A capsule from the turret and `boom_fire` was one vocabulary for two
+   things. Now: the charge *gathers* (`Gather`, motes pulled in, a ring closing on the barrel,
+   arcs crackling off it, the `charge` clip), *goes* as three additive bars opening along their
+   length from the muzzle with a bead of light running down them and two lightning arcs
+   rebuilt every few hundredths while the beam stands (`Beam`), and *lands* as the strike
+   kit's slam in the tint - the splat rather than the crack - with the blast's boxes scorched
+   in the tint (33g) and a hit-stop (`Dilate(.45, .14)`, `Slam`). **The rules resolve at the
+   tap and the drawing takes a third of a second to say so**: the killed are claimed in
+   `_striking` until the bead lands and felled then, the figures pop then, and `Judge` waits
+   (`Reckon`), which is the storm's own shape. An armed glyph *crackles* every half second or
+   so (`Crackle`) - a thing holding a charge is a thing that cannot quite hold it. The mirror
+   is `render_siege.py --unleash W`, and it picks the box, because a still cannot know which
+   raider was furthest down.
+
 **Adding a boss rung, or a boss.** A rung: author `boss: "<kind>:<colour>"` - or a duel,
 `"<kind>:<colour>+<kind>:<colour>"` (37er) - on every fifth rung, no
 other number; copy the rung into the chapter's table in `SiegeRuleTests.Chapters.cs` (`rungs.py` holds

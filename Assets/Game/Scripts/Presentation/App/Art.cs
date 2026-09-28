@@ -608,6 +608,23 @@ namespace GlimmerGrove
             });
         }
 
+        /// <summary>
+        /// A bolt's cross-section: full in the middle, falling to nothing at both edges.
+        ///
+        /// <b>Wide and four pixels tall, because it is read across and never along.</b>
+        /// <see cref="Lightning"/> maps a bolt's strip so that <c>u</c> runs from one edge of the
+        /// strip to the other and <c>v</c> sits on the middle row, so this one texture is the
+        /// falloff of every segment of every bolt whatever its width - which is what lets a
+        /// whole bolt be one mesh with soft edges rather than a chain of capsules. A higher
+        /// <paramref name="power"/> is a tighter core.
+        /// </summary>
+        public static Sprite Profile(int width = 64, float power = 1.6f)
+        {
+            float h = width * .5f;
+            return Make($"profile{width}_{power}", width, 4, (x, y) =>
+                Mathf.Pow(Mathf.Clamp01(1f - Mathf.Abs(x - h) / h), power));
+        }
+
         /// <summary>Vertical soft gradient, 1 at the bottom fading to 0 at the top.</summary>
         public static Sprite FadeUp(int h = 64)
             => Make($"fadeup{h}", 4, h, (x, y) => 1f - (y / (float)h), new Vector4(0, 0, 0, 0));

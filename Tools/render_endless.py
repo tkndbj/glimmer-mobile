@@ -54,7 +54,11 @@ POINTS = 4
 # The hero block: since 2026-09-28 the keeper's rank badge on a burst, its name on the plate.
 # The medal - a starburst, a gold medallion carrying the wave, and a plate naming it - is the
 # same block drawn whole at RECORD_SCALE under the lines.
-HERO_H = 284.0 + 78.0 / 2      # `EndlessHubLayout.HeroHeight`: derived from the plate
+MEDAL_H = 284.0 + 78.0 / 2     # `EndlessHubLayout.MedalHeight`: derived from the plate
+# The rank's own block since 2026-09-28: a bigger badge, centred between the pill above the
+# column and its name plate (`EndlessHubLayout.BadgeSize`, `RankPlateDown`, `BadgeDown`).
+BADGE_SIZE, RANK_PLATE_DOWN = 355.0, 330.0
+HERO_H = RANK_PLATE_DOWN + 78.0 / 2   # `EndlessHubLayout.HeroHeight`
 BURST_SIZE = 310.0
 DISC_SIZE = 222.0
 DISC_DOWN = 155.0                  # the disc's centre: half the burst, so nothing leaves the box
@@ -71,8 +75,8 @@ SLOT_SIZE, ICON_SIZE = 68.0, 52.0
 BUTTON_W, BUTTON_H = 620.0, 178.0
 
 RECORD_SCALE = .62             # `EndlessHubLayout.RecordScale`
-RECORD_H = HERO_H * RECORD_SCALE
-HERO_GAP, RECORD_GAP, BUTTON_GAP = 24.0, 20.0, 26.0
+RECORD_H = MEDAL_H * RECORD_SCALE
+HERO_GAP, RECORD_GAP, BUTTON_GAP = 16.0, 20.0, 26.0
 MIN_SCALE = .78                # `EndlessHubLayout.MinScale`
 
 #: Where the column sits in a band with room to spare: a little above centre.
@@ -80,6 +84,7 @@ MIN_SCALE = .78                # `EndlessHubLayout.MinScale`
 #: it - the shelf's tab stands proud of its own plate and the eye ends on the key.
 LIFT = 0.42
 HEAD_CLEAR = 36.0
+BADGE_DOWN = (RANK_PLATE_DOWN - RIBBON_H / 2 - HEAD_CLEAR) / 2
 
 HERO_CENTRE = HERO_H / 2
 PANEL_CENTRE = HERO_H + HERO_GAP + PANEL_H / 2
@@ -115,24 +120,15 @@ BANNER_W, BANNER_H, BANNER_Y = 476.0, 138.0, -142.0
 CORNER_SIZE, CORNER_X, CORNER_Y = 118.0, 96.0, -132.0
 
 # `LevelsScreen.BoostGap` and the left-hand column it measures. The column hangs off the back
-# key's bottom edge; what is in it is the rank badge and then the boost clock.
+# key's bottom edge; what is in it is the boost clock.
 BOOST_GAP = 18.0
 COLUMN_TOP = CORNER_Y - CORNER_SIZE / 2 - BOOST_GAP
 
-#: `RankBadge`'s own block, and **the reason this mirror grew one**: the badge is drawn on the
-#: ranked lane only now, so this hub is the only screen in the game that carries it and the
-#: only place its neighbours can be judged. Twice the size it was first cut at.
-RANK_MARK, RANK_NAME_H, RANK_W = 184.0, 44.0, 192.0
-RANK_H = RANK_MARK + RANK_NAME_H
-RANK_Y = COLUMN_TOP - RANK_H / 2
-
 BOOST_MARK, BOOST_LABEL, BOOST_CLOCK = 46.0, 48.0, 34.0
 BOOST_H = BOOST_MARK + BOOST_CLOCK + 2.0
-# `LevelsScreen.BoostY` — the block's *centre*, because `UIKit.Box` always pivots there. Written
-# in the screen's own shape rather than as the top edge the drawing wants, so a change to either
-# side of the pair is a change to one expression. Under the badge on this lane; on the ordinary
-# ladder it takes the badge's seat, which this file cannot draw and `render_ranks.py --map` can.
-BOOST_Y = RANK_Y - RANK_H / 2 - BOOST_GAP - BOOST_H / 2
+# `LevelsScreen.BoostY` - the block's *centre*, because `UIKit.Box` always pivots there. The
+# column's only tenant since the corner rank badge was withdrawn (2026-09-28).
+BOOST_Y = COLUMN_TOP - BOOST_H / 2
 # `LevelsScreen`'s star count is deliberately absent: it is drawn on a laddered lane only, so
 # on this one the space under the "i" is empty and the mirror has to say so.
 PILL_W, PILL_H, MODES_GAP = 372.0, 116.0, 20.0
@@ -187,39 +183,6 @@ def ring(size, thickness, colour, alpha):
     d.ellipse([1, 1, size - 2, size - 2], outline=(*colour, int(255 * alpha)),
               width=int(thickness))
     return im
-
-
-def rank_badge(sheet, held):
-    """`RankBadge` under the back key — the picture, and the rank's name under it.
-
-    **Solid in both states.** An account below the first rung is shown the first rung with the
-    word *Unranked* under it rather than an empty corner, and it is drawn at full alpha: the
-    faded stand-in read as art that had failed to load (`RankBadge`'s class remarks). What says
-    *not yet* is the word, in cream rather than a rank's gold.
-
-    Reads the shipped ladder and the shipped badges, so a retune redraws rather than going
-    stale — a mirror with its own list answers questions about a screen the game does not draw
-    (invariant 44d).
-    """
-    rungs = (json.loads(TABLE.read_text(encoding="utf-8")).get("ranks") or {}).get("rungs") or []
-    if not rungs:
-        return
-
-    rung = rungs[held - 1] if 0 < held <= len(rungs) else rungs[0]
-    art = REPO / "Assets" / "Game" / "Art" / "Ui" / "Rank" / ("%s.png" % rung["id"])
-    if not art.exists():
-        return
-
-    top = -RANK_Y - RANK_H / 2
-    K.paste(sheet, K.fit(Image.open(art).convert("RGBA"), (RANK_MARK, RANK_MARK)),
-            CORNER_X, top + RANK_MARK / 2)
-
-    earned = 0 < held <= len(rungs)
-    name = loc("rank.%s.name" % rung["id"], rung["id"]) if earned else loc("ui.ranks.unranked",
-                                                                          "Unranked")
-    px = K.shrunk(sheet, name, CORNER_X, top + RANK_MARK, RANK_W, RANK_NAME_H, 32, 18,
-                  fill=K.GOLD if earned else K.CREAM, outline=0)
-    print("  rank name '%s': settled at %dpx against a floor of 18" % (name, px))
 
 
 def boost_readout(sheet, left):
@@ -309,24 +272,24 @@ def rung_of(held):
 
 
 def rank_hero(sheet, top, held):
-    """`EndlessHub.Rank`: the badge in the medal's own box on a gold burst, its name on the plate."""
+    """`EndlessHub.Rank`: the badge on two halos, centred over its name on the plate."""
     rung, earned = rung_of(held)
     if rung is None:
         return
-    cx, cy = W / 2, top + DISC_DOWN
+    cx, cy = W / 2, top + BADGE_DOWN
 
     # Two warm halos and no burst: the spiked burst read as a second outline round the badge.
-    K.paste(sheet, K.glow(BURST_SIZE * 1.6, 2.1, K.SUN, 0.20), cx, cy)
-    K.paste(sheet, K.glow(BURST_SIZE * 1.16, 2.1, K.SUN, 0.45), cx, cy)
+    K.paste(sheet, K.glow(BADGE_SIZE * 1.6, 2.1, K.SUN, 0.20), cx, cy)
+    K.paste(sheet, K.glow(BADGE_SIZE * 1.16, 2.1, K.SUN, 0.45), cx, cy)
 
     art = REPO / "Assets" / "Game" / "Art" / "Ui" / "Rank" / ("%s.png" % rung["id"])
     if art.exists():
-        K.paste(sheet, K.fit(Image.open(art).convert("RGBA"), (BURST_SIZE, BURST_SIZE)), cx, cy)
+        K.paste(sheet, K.fit(Image.open(art).convert("RGBA"), (BADGE_SIZE, BADGE_SIZE)), cx, cy)
 
-    K.paste(sheet, K.skin("Hud/trough", RIBBON_W, RIBBON_H), cx, top + RIBBON_DOWN)
+    K.paste(sheet, K.skin("Hud/trough", RIBBON_W, RIBBON_H), cx, top + RANK_PLATE_DOWN)
     name = (loc("rank.%s.name" % rung["id"], rung["id"]) if earned
             else loc("ui.ranks.unranked", "Unranked")).upper()
-    px = K.shrunk(sheet, name, cx, top + RIBBON_DOWN, RIBBON_W - 40, RIBBON_H, 34, 22,
+    px = K.shrunk(sheet, name, cx, top + RANK_PLATE_DOWN, RIBBON_W - 40, RIBBON_H, 34, 22,
                   fill=K.GOLD if earned else K.CREAM, outline=3)
     print("  hero rank: %-22r at %dpx (floor 22)" % (name, px))
 
@@ -458,8 +421,6 @@ def header(sheet, modes, boost=0, rank=3):
     K.paste(sheet, K.skin("sq_blue", CORNER_SIZE, CORNER_SIZE), CORNER_X, -CORNER_Y)
     K.paste(sheet, K.skin("sq_orange", CORNER_SIZE, CORNER_SIZE), W - CORNER_X, -CORNER_Y)
 
-    rank_badge(sheet, rank)
-
     if boost:
         boost_readout(sheet, boost)
 
@@ -509,7 +470,7 @@ def screen(h, played=True, modes=False, wall=0, standing=0, boost=0, rank=3):
     layer = Image.new("RGBA", (W, int(COLUMN_H + 200)), (0, 0, 0, 0))
     rank_hero(layer, 100, rank)
     points(layer, 100)
-    record = Image.new("RGBA", (W, int(HERO_H + 200)), (0, 0, 0, 0))
+    record = Image.new("RGBA", (W, int(MEDAL_H + 200)), (0, 0, 0, 0))
     hero(record, 100, played, 12, standing)
     record = record.resize((int(W * RECORD_SCALE), int(record.height * RECORD_SCALE)), Image.LANCZOS)
     layer.alpha_composite(record, (int((W - record.width) / 2),

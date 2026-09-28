@@ -207,8 +207,8 @@ namespace GlimmerGrove
             // What distinguishes the two is the *treatment* rather than the art:
             // `Room` carries a dim, a vignette and a parallax and this carries none.
             //
-            // **`Bg/plain_ranked` is the same wall in the Infinite lane's purple**, scattered
-            // with crowns instead of the blue one's confetti, and it is drawn through this
+            // **`Bg/plain_ranked` is a plain purple brick wall** (the owner's own picture since
+            // 2026-09-28), the Infinite lane's colour, and it is drawn through this
             // same call for that reason: the ranked lane is not a different *kind* of screen,
             // it is the same list furniture on a ground that says which track you are on. See
             // `WallRanked` and `EndlessHub.Build`.

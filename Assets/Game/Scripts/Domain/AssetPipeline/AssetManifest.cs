@@ -223,6 +223,13 @@ namespace GlimmerGrove.AssetPipeline
         public static string SiegeFx(string key) => ArtRoot + "Fx/Siege/" + key;
 
         /// <summary>
+        /// One piece of the strike kit - the light a stormcall and an overcharge are drawn with.
+        /// The names are <see cref="StrikeFx"/>'s; the pictures are cut by
+        /// <c>Tools/make_strike_fx.py</c>.
+        /// </summary>
+        public static string StrikeFx(string key) => ArtRoot + "Fx/Strike/" + key;
+
+        /// <summary>
         /// A task chest's opening reel: <c>Chests/{tier}</c>, a folder of frames.
         ///
         /// Its own folder so the reels bundle apart from the global set
@@ -595,6 +602,7 @@ namespace GlimmerGrove.AssetPipeline
             "gem", "settle", "shot", "zap", "stand", "wear", "arrive",
             "lift", "stow", "chain",
             "rankup",
+            "thunder", "arc", "charge",
         };
 
         /// <summary>Everything the game needs before the menu appears.</summary>

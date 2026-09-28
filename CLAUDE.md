@@ -1361,6 +1361,13 @@ guess — verify offline.
   `WardPreviewOverlay`'s firing stage at its own cell, with the barrel marked, at four beats of the
   flight. **Written because that screen had no mirror at all** and is the one a player decides on a
   turret from — every question asked of it cost a device build until it existed.
+- **The strike kit:** `python Tools/make_strike_fx.py --check` proves the nine masks under
+  `Art/Fx/Strike/` are what the tool cuts from the bought lightning pack; `--contact` is the sheet,
+  additive stack beside multiply. `StrikeFxTests` holds the names in `StrikeFx` to the tool's table
+  and to the siege scope (their addresses are built, so `artnames.py` cannot see them), and
+  `SiegeStrikeTests` holds the drawn bolt's shape: it lands on the raider because its last joint
+  *is* the raider. Then `python Tools/render_siege.py --storm 3` and `--unleash 1` - the only
+  pictures of the stack on the hill, and the only ones that can say whether it reads as light.
 - **Legendary effect reels:** `python Tools/make_legend_fx.py --check` proves the thirty drawn reels are
   what the tool draws, `--contact` is the sheet to look at and `--report` prints what `fxreels.py` will
   measure. It needs no Editor, no GPU and no licensed pack.
@@ -1820,6 +1827,41 @@ on a fresh clone).
 
 ## Owed
 
+**The stormcall and the overcharge were rebuilt as additive light on 2026-09-28 (MODES.md 37eu,
+37ev) and none of it has been in the Editor or on a device.** At the owner's instruction ("too
+weak... lame", "our lightning doesn't even look close to what I saw on the store"). What landed:
+the game's first and only custom shader (`Assets/Game/Shaders/UIAdditive.shader`, `UI/Default`
+with `Blend SrcAlpha One`, registered in `GraphicsSettings`' always-included list by hand with a
+derived guid, reached through `Additive.Lit`); `Lightning`, a `MaskableGraphic` that draws a
+jagged, forked bolt as one mesh per layer with a soft cross-section (`Art.Profile`); the strike
+kit - nine masks cut from the bought Mirza Beig pack by `Tools/make_strike_fx.py` into
+`Art/Fx/Strike/` and named by `StrikeFx` (Domain), scoped by `SiegeMode.ArtFor`; the stormcall
+as leader, return stroke, two re-strikes, the painted strand, the flash, two rings, the crack,
+sparks and twinkles under a slowed hill (`SiegeView.Strike.cs`, `Thunderbolt`); the overcharge as
+gather, beam with a bead and a lightning wrap, and a slam in the ward's tint with a hit-stop
+(`SiegeView.Unleash.cs`); an idle crackle on an armed glyph; three new clips (`thunder`, `arc`,
+`charge`, rows in `sfx.tsv`, metas minted by the tool, Addressables rows written by hand in guid
+order). **Withdrawn**: the baked `storm` reel (20 frames, metas, 20 Addressables rows and its
+label), `SiegeShotBake`'s storm path and menu, `SiegeView.StrikeAt`/`StrikeCentre`. **The
+Editor's three are done** - the Editor happened to be open, so the importer hook addressed the
+nine masks on import (7a working; it also addressed the *folder*, because the tool writes the
+folder's `.meta`, and that stray `DefaultAsset` row was removed through the bridge and saved),
+the Editor compiled every new file and minted its `.meta`, `Shader.Find` answers the additive
+shader, `Audit Addresses` reads all 2,071 requested addresses resolving (the three clips' by-hand
+rows included), `Validate Art` "every texture agrees", `Validate Content` verifies all 91.
+**What is owed is the EditMode suite in the Editor and a device**, because every question that
+matters is one no gate can answer: does the additive blend read as light or as blown-out white
+in Gamma space on a bright hill (`Additive` is the one place to dim it, and the slam's splat was
+already taken down to .78 off the render); does the storm's slow-motion read as weight or as lag;
+does the overcharge's third of a second between tap and slam read as a wind-up or as input lag
+(`GatherFor` is the dial, and `Reckon` moves with it); and whether a `RectMask2D` clips a
+`MaskableGraphic` under a nested canvas exactly as it clips an `Image` (the bolt runs off the top
+of `_sky`, deliberately). Offline green: `compile.py` (all sixteen), `SiegeStrikeTests` 5/5,
+`StrikeFxTests` 4/4, `TutorialTests` 9/9, `SiegeArtTests` 4/4, `content.py` (0 errors), `loc.py`,
+`artnames.py` (0/0), `sfxnames.py`, `make_strike_fx.py --check`, `render_siege.py --storm 3` /
+`--unleash 1`.
+
+
 **Push got thirty levels, a bigger board, a cannon for a keeper and UNDO on 2026-09-27 (56o),
 and has been in the Editor but never on a device.** `d06_sokoban` was re-authored and
 `d99_sokoban`..`d127_sokoban` added: fourteen medium (6x4 and 6x5, two or three gems, par 22-32
@@ -1850,8 +1892,11 @@ the medal's box on its plate (watched, taps to `RanksScreen`); the best-wave med
 the lines at `EndlessHubLayout.RecordScale` (.62) and the key moved down with it. The column no
 longer fits the squarest two-pill band at full size, so it is **scaled to its band** (`ScaleIn`,
 floor `MinScale` .78: x0.96 on a 16:9 phone, x0.81 on the tightest case) and the gate asks the
-floor. The corner rank badge under the back key still draws on that lane, so the badge now shows
-twice - left for the owner to call. Offline green: `compile.py`, `EndlessHubTests` 8/8,
+floor. Later the same day, at the owner's instruction: the corner rank badge under the back key is
+withdrawn (the boost clock is that column's only tenant), the hero badge is 355 in a block of its
+own (`BadgeSize`, `RankPlateDown` 330, `BadgeDown` centres it between the RANKED pill and its
+plate; the medal keeps `MedalHeight`), and `Bg/plain_ranked` is the owner's plain purple brick
+wall (same address, no sync). The squarest case now draws at x0.784 against the .78 floor. Offline green: `compile.py`, `EndlessHubTests` 8/8,
 `RankLadderTests` 26/26, `RankCeremonyTests`, `make_rank_kit_art.py --check`, `artnames.py`,
 `loc.py`, `render_ranks.py`, `render_endless.py` (whose rows had drifted to 3 at 90 and are 4 at
 70 again).
