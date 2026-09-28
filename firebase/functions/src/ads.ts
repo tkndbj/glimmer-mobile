@@ -182,12 +182,11 @@ export interface AdCallbackQuery {
   /**
    * The two parameters that can name which offer was watched.
    *
-   * Both are read, and the first that names a known placement wins. LevelPlay exposes a
-   * placement name and a per-ad-unit rewarded item name, and which of them actually
-   * carries our id depends on how the ad units were filled in on the dashboard — a
-   * question that cannot be answered from outside the account. Accepting either costs one
-   * line and removes the failure where the callback arrives, names the offer in the field
-   * we did not read, and the player is silently not paid.
+   * All are read, and the first that names a known placement wins - **the ad unit's item
+   * name first**. The item name is set on the ad unit the client actually showed, so it
+   * cannot disagree with the offer; `[PLACEMENT_NAME]` is a dashboard *Placement*, and a
+   * name the dashboard does not define falls back to the app's default placement. That is
+   * what paid a watched `coin_bonus` as `heart_refill` (nought credits) on 2026-09-28.
    */
   placement?: string;
   placementName?: string;
@@ -307,7 +306,7 @@ export function verifyAdCallback(
  * default placement name, which is exactly the case worth refusing rather than guessing at.
  */
 function namedPlacement(query: AdCallbackQuery): AdPlacementId | null {
-  for (const candidate of [query.placement, query.placementName, query.itemName]) {
+  for (const candidate of [query.itemName, query.placement, query.placementName]) {
     if (candidate && AD_PLACEMENTS.includes(candidate as AdPlacementId)) {
       return candidate as AdPlacementId;
     }

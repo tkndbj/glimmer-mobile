@@ -103,10 +103,18 @@ check("itemName names the offer when placement does not",
         return verifyAdCallback({ ...q, itemName: "coin_bonus" }, KEY).ok;
       })());
 
-check("placement wins when both name a known offer",
+check("the ad unit's item name wins over a placement name that disagrees",
       (() => {
-        const q = callback({ placement: "heart_refill" });
+        // A watched coin_bonus whose dashboard placement fell back to the default one.
+        const q = callback({ placement: undefined, placementName: "heart_refill" });
         const v = verifyAdCallback({ ...q, itemName: "coin_bonus" }, KEY);
+        return v.ok && v.placement === "coin_bonus";
+      })());
+
+check("a placement name still names the offer when the item name does not",
+      (() => {
+        const q = callback({ placement: undefined, placementName: "heart_refill" });
+        const v = verifyAdCallback({ ...q, itemName: "Virtual Item" }, KEY);
         return v.ok && v.placement === "heart_refill";
       })());
 

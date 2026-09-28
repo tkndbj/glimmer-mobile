@@ -1185,6 +1185,7 @@ export const adReward = onRequest(
 
       logger.info("rewarded ad confirmed", {
         uid: verdict.uid, placement: verdict.placement, eventId: verdict.eventId, granted,
+        itemName: query.itemName, placementName: query.placementName, network: query.adNetwork,
       });
     } catch (error) {
       // A write that failed must be retried, or the player watched an ad for nothing.
