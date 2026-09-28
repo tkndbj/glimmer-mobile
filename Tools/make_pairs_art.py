@@ -272,7 +272,7 @@ def check():
         if got.shape != want.shape or np.abs(got - want).max() > 1:
             bad.append(f"{name} is not what the tool cuts")
     expected = 2 + sum(len(v) for v in GEMS.values()) + 1
-    on_disk = sorted(p.name for p in OUT.glob("*.png")) if OUT.exists() else []
+    on_disk = sorted(p.name for p in OUT.glob("pair*.png")) if OUT.exists() else []
     if len(on_disk) != expected:
         bad.append(f"{len(on_disk)} picture(s) on disk, the tool cuts {expected}")
     if not gems:

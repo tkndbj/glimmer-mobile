@@ -10,14 +10,16 @@ namespace GlimmerGrove
     /// Every picture a challenge draws, and where it comes from.
     ///
     /// <para>
-    /// <b>A challenge borrows the live mode's art, and Pairs alone cuts its own.</b> The gems,
+    /// <b>A challenge borrows the live mode's art, and Pairs and Push alone cut their own.</b> The gems,
     /// the four starter turrets, their bolt reels, the insects and the first hill are all the
     /// live mode's, resident through the same hold the tutorial takes
     /// (<c>SiegeMode.ArtFor(null)</c>), so nothing there can be a white rectangle that the siege
     /// itself would not also be (invariant 7b). Pairs deals twenty-four different stones on a
     /// card, which the siege has no picture for, so its cards and stones are
     /// <c>Art/Challenge/</c>, cut by <c>Tools/make_pairs_art.py</c> and added to the same hold
-    /// for that genre only (56m). Everything else — a pad, a wall, a ring — is procedural
+    /// for that genre only (56m). Push's keeper - a little cannon out of the same turret kit as
+    /// the posts - is <c>Art/Challenge/push_keeper</c>, cut by <c>Tools/make_push_art.py</c> and
+    /// held for Push alone. Everything else — a pad, a wall, a ring — is procedural
     /// (<c>Art</c>).
     /// </para>
     /// <para>
@@ -68,7 +70,7 @@ namespace GlimmerGrove
         public static string DealMarkKey(int rung) => "challenge_deal_" + rung;
 
         static Sprite Piece(string key) => AssetLibrary.Sprite(AssetManifest.SiegeArt(key));
-        static Sprite PairsPiece(string key) => AssetLibrary.Sprite(AssetManifest.ChallengePiece(key));
+        static Sprite Own(string key) => AssetLibrary.Sprite(AssetManifest.ChallengePiece(key));
         static Sprite[] Reel(string key) => AssetLibrary.Frames(AssetManifest.SiegeArt(key));
         static Sprite[] Blast(string key) => AssetLibrary.Frames(AssetManifest.SiegeFx(key));
 
@@ -86,10 +88,10 @@ namespace GlimmerGrove
 
         // ------------------------------------------------------------------ pairs
         /// <summary>The back every Pairs card is dealt face down under: a stone frame and a crown.</summary>
-        public static Sprite CardBack() => PairsPiece("pairs_back");
+        public static Sprite CardBack() => Own("pairs_back");
 
         /// <summary>The face a turned card shows its gem on: the same frame, cream inside.</summary>
-        public static Sprite CardFace() => PairsPiece("pairs_face");
+        public static Sprite CardFace() => Own("pairs_face");
 
         /// <summary>
         /// The stone a kind is (<see cref="PairsGems"/>), or the cursed one. The address is built
@@ -100,8 +102,19 @@ namespace GlimmerGrove
         public static Sprite PairGem(int kind)
         {
             string key = PairsGems.ArtKey(kind);
-            return PairsPiece(key);
+            return Own(key);
         }
+
+        // ------------------------------------------------------------------ push
+        /// <summary>
+        /// Push's keeper: the cannon a player walks round the board, cut barrel up and pivoted on
+        /// its hull so a quarter turn keeps it on its cell. Null until the hold lands, which the
+        /// board draws as a plain gold disc rather than as a white rectangle (7b).
+        /// </summary>
+        public static Sprite Keeper() => Own(KeeperKey);
+
+        /// <summary>The address under <c>Art/Challenge/</c>, for the preload test to hold to disk.</summary>
+        public const string KeeperKey = "push_keeper";
 
         /// <summary>The starter turret in a colour: the one line every challenge is fought on.</summary>
         public static Sprite Ward(int colour)
@@ -172,8 +185,8 @@ namespace GlimmerGrove
         /// <summary>
         /// What a challenge holds: the siege with no chapter behind it, which is the insects
         /// and the starter line, the field's gems and the shared effects - and, for Pairs
-        /// alone, its two cards and every stone it can deal, so the other three genres never
-        /// load a card they do not draw.
+        /// alone, its two cards and every stone it can deal, and for Push alone its keeper, so
+        /// no genre loads a picture it does not draw.
         /// </summary>
         public static System.Collections.Generic.List<AssetRequest> Requests(ChallengeGenre genre)
         {
@@ -184,6 +197,9 @@ namespace GlimmerGrove
             if (genre == ChallengeGenre.Pairs)
                 foreach (var key in PairsArtKeys())
                     list.Add(AssetRequest.Sprite(AssetManifest.ChallengePiece(key)));
+
+            if (genre == ChallengeGenre.Sokoban)
+                list.Add(AssetRequest.Sprite(AssetManifest.ChallengePiece(KeeperKey)));
 
             return list;
         }

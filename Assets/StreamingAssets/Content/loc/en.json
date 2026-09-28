@@ -499,11 +499,243 @@
     },
     {
       "key": "challenge.d06_sokoban.blurb",
-      "text": "Push each gem onto its pad. A seated gem fires every step."
+      "text": "Two gems, one small room. Push each onto its own pad."
     },
     {
       "key": "challenge.d06_sokoban.name",
-      "text": "Push"
+      "text": "First Shove"
+    },
+    {
+      "key": "challenge.d99_sokoban.blurb",
+      "text": "Two gems. Sometimes the way to a pad is round the back."
+    },
+    {
+      "key": "challenge.d99_sokoban.name",
+      "text": "Side Step"
+    },
+    {
+      "key": "challenge.d100_sokoban.blurb",
+      "text": "Two gems in a narrow room. Walk round before you push."
+    },
+    {
+      "key": "challenge.d100_sokoban.name",
+      "text": "Back Door"
+    },
+    {
+      "key": "challenge.d101_sokoban.blurb",
+      "text": "Plenty of room and two gems. Keep them off the walls."
+    },
+    {
+      "key": "challenge.d101_sokoban.name",
+      "text": "Open Yard"
+    },
+    {
+      "key": "challenge.d102_sokoban.blurb",
+      "text": "A gem pushed into a corner never comes out. Push with care."
+    },
+    {
+      "key": "challenge.d102_sokoban.name",
+      "text": "Corner Care"
+    },
+    {
+      "key": "challenge.d103_sokoban.blurb",
+      "text": "Two gems, two turrets. Seat one early and let it fire."
+    },
+    {
+      "key": "challenge.d103_sokoban.name",
+      "text": "Two Lanes"
+    },
+    {
+      "key": "challenge.d104_sokoban.blurb",
+      "text": "The short way traps a gem. Look for the long one."
+    },
+    {
+      "key": "challenge.d104_sokoban.name",
+      "text": "The Long Way"
+    },
+    {
+      "key": "challenge.d105_sokoban.blurb",
+      "text": "Three gems now. Plan the order before the first push."
+    },
+    {
+      "key": "challenge.d105_sokoban.name",
+      "text": "Three Colours"
+    },
+    {
+      "key": "challenge.d106_sokoban.blurb",
+      "text": "Three gems cross paths. Clear the way first."
+    },
+    {
+      "key": "challenge.d106_sokoban.name",
+      "text": "Crossroads"
+    },
+    {
+      "key": "challenge.d107_sokoban.blurb",
+      "text": "Little room to turn. Every push counts."
+    },
+    {
+      "key": "challenge.d107_sokoban.name",
+      "text": "Tight Squeeze"
+    },
+    {
+      "key": "challenge.d108_sokoban.blurb",
+      "text": "Stone splits the room. Use it, don't fight it."
+    },
+    {
+      "key": "challenge.d108_sokoban.name",
+      "text": "Pillar Hall"
+    },
+    {
+      "key": "challenge.d109_sokoban.blurb",
+      "text": "Each gem starts far from home. Untangle them."
+    },
+    {
+      "key": "challenge.d109_sokoban.name",
+      "text": "Swap Places"
+    },
+    {
+      "key": "challenge.d110_sokoban.blurb",
+      "text": "Three gems and a cluttered yard. Mind the corners."
+    },
+    {
+      "key": "challenge.d110_sokoban.name",
+      "text": "Quarry Yard"
+    },
+    {
+      "key": "challenge.d111_sokoban.blurb",
+      "text": "Walk the long way round to push from the right side."
+    },
+    {
+      "key": "challenge.d111_sokoban.name",
+      "text": "Around the Block"
+    },
+    {
+      "key": "challenge.d112_sokoban.blurb",
+      "text": "Three gems, long routes. One wrong push and you will need UNDO."
+    },
+    {
+      "key": "challenge.d112_sokoban.name",
+      "text": "Gem Vault"
+    },
+    {
+      "key": "challenge.d113_sokoban.blurb",
+      "text": "The way doubles back on itself. So will you."
+    },
+    {
+      "key": "challenge.d113_sokoban.name",
+      "text": "Switchback"
+    },
+    {
+      "key": "challenge.d114_sokoban.blurb",
+      "text": "Three gems in a crowded cellar. Think three moves ahead."
+    },
+    {
+      "key": "challenge.d114_sokoban.name",
+      "text": "Deep Cellar"
+    },
+    {
+      "key": "challenge.d115_sokoban.blurb",
+      "text": "Rock blocks the easy lines. Find the hard ones."
+    },
+    {
+      "key": "challenge.d115_sokoban.name",
+      "text": "Rockfall"
+    },
+    {
+      "key": "challenge.d116_sokoban.blurb",
+      "text": "All four colours. Every turret wants its gem."
+    },
+    {
+      "key": "challenge.d116_sokoban.name",
+      "text": "Four Winds"
+    },
+    {
+      "key": "challenge.d117_sokoban.blurb",
+      "text": "Four gems in a tall room. Order is everything."
+    },
+    {
+      "key": "challenge.d117_sokoban.name",
+      "text": "Crown Room"
+    },
+    {
+      "key": "challenge.d118_sokoban.blurb",
+      "text": "Four gems and narrow halls. Leave room to turn."
+    },
+    {
+      "key": "challenge.d118_sokoban.name",
+      "text": "Iron Hall"
+    },
+    {
+      "key": "challenge.d119_sokoban.blurb",
+      "text": "Gems crowd each other's pads. Unpick them one by one."
+    },
+    {
+      "key": "challenge.d119_sokoban.name",
+      "text": "Tangle"
+    },
+    {
+      "key": "challenge.d120_sokoban.blurb",
+      "text": "A small room holding four gems. Space is the puzzle."
+    },
+    {
+      "key": "challenge.d120_sokoban.name",
+      "text": "Treasury"
+    },
+    {
+      "key": "challenge.d121_sokoban.blurb",
+      "text": "Four gems and walls on every side. Keep a path open."
+    },
+    {
+      "key": "challenge.d121_sokoban.name",
+      "text": "Cave-in"
+    },
+    {
+      "key": "challenge.d122_sokoban.blurb",
+      "text": "Four gems tied in a knot. Loosen it slowly."
+    },
+    {
+      "key": "challenge.d122_sokoban.name",
+      "text": "Knotwork"
+    },
+    {
+      "key": "challenge.d123_sokoban.blurb",
+      "text": "Four gems and too many corners. Stay out of them."
+    },
+    {
+      "key": "challenge.d123_sokoban.name",
+      "text": "Last Corner"
+    },
+    {
+      "key": "challenge.d124_sokoban.blurb",
+      "text": "Four colours, one tight room. A true test."
+    },
+    {
+      "key": "challenge.d124_sokoban.name",
+      "text": "Grand Vault"
+    },
+    {
+      "key": "challenge.d125_sokoban.blurb",
+      "text": "Twisting halls and four gems. Look before you move."
+    },
+    {
+      "key": "challenge.d125_sokoban.name",
+      "text": "The Warren"
+    },
+    {
+      "key": "challenge.d126_sokoban.blurb",
+      "text": "Four gems jostle for space. Make room, then push."
+    },
+    {
+      "key": "challenge.d126_sokoban.name",
+      "text": "Crowded Cave"
+    },
+    {
+      "key": "challenge.d127_sokoban.blurb",
+      "text": "The hardest room here. Every step matters."
+    },
+    {
+      "key": "challenge.d127_sokoban.name",
+      "text": "Keeper's Trial"
     },
     {
       "key": "challenge.d08_glade.blurb",
@@ -5387,7 +5619,7 @@
     },
     {
       "key": "ui.tip.sokoban_push.body",
-      "text": "Swipe to walk. Walk into a gem to push it.\n\nA gem on the pad of its colour arms that turret. Seat them all to win."
+      "text": "Swipe to walk. Walk into a gem to push it.\n\nA gem on the pad of its colour arms that turret. Seat them all to win.\n\nStuck? UNDO takes a step back."
     },
     {
       "key": "ui.tip.sokoban_push.title",
@@ -6820,6 +7052,18 @@
     {
       "key": "ui.keeper.key_not_sold",
       "text": "Not for sale"
+    },
+    {
+      "key": "ui.keeper.xp_short",
+      "text": "{0} / {1} XP"
+    },
+    {
+      "key": "ui.keeper.xp_max",
+      "text": "Max level"
+    },
+    {
+      "key": "ui.keeper.bought_count",
+      "text": "{0} bought"
     }
   ]
 }

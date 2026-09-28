@@ -14,7 +14,7 @@
 **Why this exists.** `ChallengeTests` plays every row with a bot and proves it is winnable; it
 says nothing about whether the screen *reads*. Four boards share one band arithmetic
 (`ChallengeScreen.BuildBands`, `PuzzleView.Attach`, `PuzzleView.BandWanted`), and the
-questions no fixture can answer are the ones this picture is for: does a 10x6 room and a 6x3
+questions no fixture can answer are the ones this picture is for: does a 7x6 room and a 6x3
 grid both get a cell a finger can use, does the hill the board leaves give the raiders a walk
 worth watching, do the four posts line up under the four lanes, and does a strip of keys under
 a board push the board into the line. **The board is asked first and the hill takes the
@@ -74,14 +74,18 @@ FRAME_INSET, FRAME_RIM, PLATE_RIM = 10.0, 28.0, 0.34
 FRAME_SIDE = FRAME_INSET + FRAME_RIM
 #: `MergeView.LadderGap`: the air between the plate's foot and the ladder.
 LADDER_GAP = 8.0
-MAX_CELL = {"pairs": 200, "glade": 190, "merge": 200, "sokoban": 150}
+MAX_CELL = {"pairs": 200, "glade": 190, "merge": 200, "sokoban": 200}
 STRIP = {}
 #: Each view's `EdgeRows`: what a board hangs past its plate, above and below together, in cells,
-#: and `EdgeBelow`, the part of it under the plate. `MergeView.LadderRows` is the rank ladder.
+#: and `EdgeBelow`, the part of it under the plate. `MergeView.LadderRows` is the rank ladder
+#: and `SokobanView.TrayRows` the Push tray (a chip per pad and the UNDO key), the same height.
 LADDER_ROWS = 0.58
-UNDO_CELLS = 1.25  # `MergeView.UndoCells`
-EDGE_ROWS = {"merge": LADDER_ROWS}
-EDGE_BELOW = {"merge": LADDER_ROWS}
+TRAY_ROWS = 0.58
+UNDO_CELLS = 1.25  # `MergeView.UndoCells`, `SokobanView.UndoCells`
+EDGE_ROWS = {"merge": LADDER_ROWS, "sokoban": TRAY_ROWS}
+EDGE_BELOW = {"merge": LADDER_ROWS, "sokoban": TRAY_ROWS}
+#: `SokobanView.KeeperCells`: the keeper's canvas, in cells (`make_push_art.py` pivots it on its hull).
+KEEPER_CELLS = 1.5
 #: `MergeView.Dim`: an unlit rung, the gem dimmed toward the plate.
 RUNG_DIM = (117, 133, 158)
 
@@ -452,6 +456,10 @@ def puzzle(sheet, row, top, bottom, txt):
         K.text(sheet, "UNDO", kx, ly - tall * .04, int(min(tall * .34, 30)), outline=2)
 
     elif g == "sokoban":
+        # `SokobanView.Build` at rest: stone walls, a slot per floor cell, each pad a well of its
+        # colour under a ring, the gems, then the keeper - a shadow and the cannon, facing into
+        # the board (`SokobanPuzzle`'s first open side of up, right, down, left).
+        pads = []
         for i in range(cols * rws):
             ch = row["rows"][i // cols][i % cols]
             if ch == "#":
@@ -460,18 +468,51 @@ def puzzle(sheet, row, top, bottom, txt):
                 continue
             socket(i)
             if ch in "RGBY":
-                ring = K.round_rect(cell * .72, cell * .72, int(cell * .36), TINTS[LETTERS.index(ch.lower())], .9, width=int(cell * .06))
+                tint = TINTS[LETTERS.index(ch.lower())]
+                pads.append((LETTERS.index(ch.lower()), i))
+                K.paste(sheet, K.glow(cell * .86, 1.4, tint, .40), *centre(i))
+                ring = K.round_rect(cell * .74, cell * .74, int(cell * .37), tint, .9, width=int(cell * .06))
                 K.paste(sheet, ring, *centre(i))
-            if ch == "@":
-                disc = Image.new("RGBA", (int(cell * .74), int(cell * .74)), (0, 0, 0, 0))
-                ImageDraw.Draw(disc).ellipse([0, 0, disc.width - 1, disc.height - 1], fill=(*K.GOLD, 255))
-                K.paste(sheet, disc, *centre(i))
-                mark = K.fit(K.load("ic_profile")[0], (cell * .42, cell * .42))
-                K.paste(sheet, K.tint(mark, K.INK), *centre(i))
         for i in range(cols * rws):
             ch = row["gems"][i // cols][i % cols]
             if ch != ".":
-                gem(i, LETTERS.index(ch), .74)
+                gem(i, LETTERS.index(ch), .78)
+        keeper = next(i for i in range(cols * rws) if row["rows"][i // cols][i % cols] == "@")
+        kx, ky = centre(keeper)
+        shadow = Image.new("RGBA", (int(cell * .74), int(cell * .60)), (0, 0, 0, 0))
+        ImageDraw.Draw(shadow).ellipse([0, 0, shadow.width - 1, shadow.height - 1], fill=(0, 0, 0, 82))
+        K.paste(sheet, shadow, kx, ky + cell * .06)
+        body = Image.open(REPO / "Assets" / "Game" / "Art" / "Challenge" / "push_keeper.png").convert("RGBA")
+        kcx, kcy = keeper % cols, keeper // cols
+        for fx, fy, turn in ((0, -1, 0), (1, 0, -90), (0, 1, 180), (-1, 0, 90)):
+            nx, ny = kcx + fx, kcy + fy
+            if 0 <= nx < cols and 0 <= ny < rws and row["rows"][ny][nx] != "#":
+                body = body.rotate(turn, resample=Image.BICUBIC)
+                break
+        body = body.resize((int(cell * KEEPER_CELLS), int(cell * KEEPER_CELLS)), Image.LANCZOS)
+        K.paste(sheet, body, kx, ky)
+
+        # `SokobanView.Tray`: a chip per pad in lane order, all dim at rest (nothing is seated
+        # when a row opens), and the UNDO key dark at the right end (nothing to take back).
+        pads.sort()
+        tall = cell * TRAY_ROWS
+        ly = cy + rws * cell / 2 + PLATE_RIM * cell / 2 + LADDER_GAP + tall / 2
+        wide = cols * cell
+        key_w = cell * UNDO_CELLS
+        room = wide - key_w - cell * .15
+        left = cx - wide / 2 + room / 2
+        chips = max(1, len(pads))
+        pitch = min(cell * .72, room / (chips + .6))
+        gsize = min(tall * .80, pitch * .86)
+        K.paste(sheet, K.round_rect(chips * pitch + gsize * .6, tall * .92, 20, (0, 0, 0), .26), left, ly)
+        for n, (lane, _) in enumerate(pads):
+            x = left + (n - (len(pads) - 1) * .5) * pitch
+            im = K.fit(S.sprite("gem_%s" % LETTERS[lane]), (gsize, gsize))
+            K.paste(sheet, K.tint(im, RUNG_DIM, .55), x, ly)
+        kx = cx + wide / 2 - key_w / 2
+        key = K.skin("btn_blue", key_w, tall * .92)
+        K.paste(sheet, K.tint(key, (158, 168, 178), .85), kx, ly)
+        K.text(sheet, "UNDO", kx, ly - tall * .04, int(min(tall * .34, 30)), outline=2)
 
     return cell
 

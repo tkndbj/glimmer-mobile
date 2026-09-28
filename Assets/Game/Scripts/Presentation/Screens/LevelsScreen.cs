@@ -381,6 +381,7 @@ namespace GlimmerGrove
             }
 
             var levels = _layout.Levels;
+            _pointed = null;
             for (int i = 0; i < levels.Count; i++)
             {
                 if (!_nodes.TryGetValue(levels[i].Id, out var old) || !old) continue;
@@ -397,6 +398,8 @@ namespace GlimmerGrove
                 BuildChapterEnd(arriving: false);
                 if (_teaser) _teaser.SetSiblingIndex(at);
             }
+
+            RaisePointed();
 
             if (_starCount)
                 _starCount.text = $"{PlayerProgress.TotalStars(_entry)} / {PlayerProgress.MaxStars(_entry)}";
@@ -483,6 +486,7 @@ namespace GlimmerGrove
             BuildMapArt();
             BuildNodes();
             BuildChapterEnd();
+            RaisePointed();
             _drawn = true;
 
             // Ready the moment the map exists, not once it has finished arriving. The nodes
@@ -682,6 +686,7 @@ namespace GlimmerGrove
         void BuildNodes()
         {
             var levels = _layout.Levels;
+            _pointed = null;
             for (int i = 0; i < levels.Count; i++) BuildNode(levels[i], i);
         }
 
@@ -756,9 +761,28 @@ namespace GlimmerGrove
                                       new Vector2(92f, 100f), new Vector2(.5f, .5f), new Vector2(0f, 178f));
                 arrow.preserveAspect = true;
                 Tween.Bob((RectTransform)arrow.transform, 16f, 1.1f);
+                _pointed = node;
             }
 
             return node;
+        }
+
+        /// <summary>
+        /// The node wearing the pointer, or null when no glade on this map is waiting.
+        /// </summary>
+        /// <remarks>
+        /// The pointer hangs 178 units above its disc, which is where the next glade's name
+        /// plate sits on a tight stretch of road — and a node built later draws over one built
+        /// earlier, so the pointer bobbed behind the LOCKED plate of the glade after it. The
+        /// node is raised above every other rather than the pointer being lifted out of it,
+        /// so it still pops in, bobs and retires with the disc it points at.
+        /// </remarks>
+        RectTransform _pointed;
+
+        /// <summary>Stands the pointed node in front of every other node on the map.</summary>
+        void RaisePointed()
+        {
+            if (_pointed) _pointed.SetAsLastSibling();
         }
 
         /// <summary>
@@ -1305,10 +1329,17 @@ namespace GlimmerGrove
 
             string title = _entry != null ? Loc.Get(_entry.NameKey) : Loc.Get("ui.levels.title");
 
+            // A lane of one chapter — the Infinite lane — carves no chevron into the plaque, so
+            // its name may use the cloth the chevrons would have taken. Asked of the same
+            // neighbours `BuildChapterArrows` asks, so the two cannot disagree.
+            bool chevrons = _entry != null
+                         && (LevelUnlock.ChapterBefore(_index, _entry.Id) != null
+                          || LevelUnlock.ChapterAfter(_index, _entry.Id) != null);
+
             _banner = Scenery.TitleRibbon(Safe, title.ToUpperInvariant(),
                                           new Vector2(BannerWidth, BannerHeight),
                                           new Vector2(.5f, 1f), new Vector2(0f, BannerY), 40,
-                                          26f, NameWidth);
+                                          26f, chevrons ? NameWidth : OpenNameWidth);
 
             // Narrowed to `NameWidth` rather than to the ribbon's own width, because the two
             // chapter chevrons sit inside it. The hand-rolled shrink loop that used to be here
@@ -1458,7 +1489,7 @@ namespace GlimmerGrove
         /// ink everything carved into it is written in, and how much of it the name may use.
         /// </summary>
         const float BannerWidth = 476f, BannerHeight = 138f, BannerY = -142f;
-        const float ChevronX = 180f, NameWidth = 246f;
+        const float ChevronX = 180f, NameWidth = 246f, OpenNameWidth = 340f;
 
         /// <summary>
         /// The two corner keys — back on the left, "i" on the right — as one set of numbers,

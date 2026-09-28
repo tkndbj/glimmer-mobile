@@ -13,7 +13,7 @@ namespace GlimmerGrove.Challenges
         /// </summary>
         Swipe,
 
-        /// <summary>Take the last move back (Merge). Every other genre refuses it.</summary>
+        /// <summary>Take the last move back (Merge and Push). Every other genre refuses it.</summary>
         Undo,
     }
 
@@ -42,9 +42,10 @@ namespace GlimmerGrove.Challenges
 
     /// <summary>
     /// Bolts a move earned for one turret. <see cref="Banks"/> says what happens to a bolt with
-    /// nothing of its colour on the hill: it waits on the ward (a burst — a merge, a pair, a
-    /// seated gem — is paid in full whenever a target comes), or it is spent into the air
-    /// (a <em>steady</em> fire, the glade's lit critter, which is paid again next turn anyway).
+    /// nothing of its colour on the hill: it waits on the ward (a burst — a merge, a pair —
+    /// is paid in full whenever a target comes), or it is spent into the air (a
+    /// <em>steady</em> fire — the glade's lit critter, Push's seated gem — which is paid again
+    /// next turn anyway).
     /// </summary>
     public readonly struct ChallengeFeed
     {

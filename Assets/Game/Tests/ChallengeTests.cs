@@ -829,6 +829,96 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(ChallengeState.Won, push.State, "one push seats the gem");
         }
 
+        /// <summary>A board on the board's own edge: no ring of wall, and the edge refuses a step.</summary>
+        static SokobanPuzzle Push(string[] rows, string[] gems, out ChallengeRun run, int bolts = 1)
+        {
+            var problems = new List<string>();
+            var dto = Row("p", "sokoban", rows[0].Length, rows.Length, rows, new[] { "0 r3" }, hill: 9, bolts: bolts);
+            dto.gems = gems;
+            ChallengeTable.TryBuild(Table(dto), out var table, problems);
+            Assert.AreEqual(0, problems.Count, string.Join("; ", problems));
+            run = new ChallengeRun(table.Find("p"), new ChallengeLine(1, 3, 1));
+            return (SokobanPuzzle)run.Puzzle;
+        }
+
+        [Test]
+        public void TheBoardsEdgeIsAWall()
+        {
+            var push = Push(new[] { "@.R.", "...G" }, new[] { "..r.", ".g.." }, out var run);
+            Assert.AreEqual((1, 0), (push.FacingX, push.FacingY), "a keeper in a corner opens facing into the board");
+
+            Assert.IsTrue(run.Play(ChallengeInput.Swipe(0, 1)).Move.Refused, "a step off the top edge is refused");
+            Assert.IsTrue(run.Play(ChallengeInput.Swipe(-1, 0)).Move.Refused, "a step off the left edge is refused");
+            Assert.AreEqual(0, run.Turns, "a refusal costs nothing");
+            Assert.AreEqual(0, push.Keeper);
+        }
+
+        /// <summary>
+        /// <b>UNDO takes the last step back and is a turn</b> (Merge's rule): the keeper walks
+        /// home still facing the way it faced, the gem it pushed comes back with it, and the
+        /// hill walks. With nothing to take back it is refused and costs nothing.
+        /// </summary>
+        [Test]
+        public void UndoTakesTheLastStepBackAndIsATurn()
+        {
+            var push = Push(new[] { "@..R", "...G" }, new[] { ".r..", ".g.." }, out var run);
+
+            Assert.IsFalse(push.CanUndo);
+            Assert.IsTrue(run.Play(ChallengeInput.Undo()).Move.Refused, "nothing to take back");
+            Assert.AreEqual(0, run.Turns);
+
+            Assert.IsFalse(run.Play(ChallengeInput.Swipe(1, 0)).Move.Refused);
+            Assert.AreEqual(1, push.Keeper);
+            Assert.AreEqual(0, push.GemAt(2), "the red gem was pushed a cell right");
+            Assert.AreEqual((1, 0), (push.FacingX, push.FacingY));
+
+            var back = run.Play(ChallengeInput.Undo());
+            Assert.IsFalse(back.Move.Refused);
+            Assert.IsTrue(back.Walked, "an undo is a turn, so the hill walks");
+            Assert.AreEqual(2, run.Turns);
+            Assert.AreEqual(0, push.Keeper, "the keeper is home");
+            Assert.AreEqual(0, push.GemAt(1), "and the gem with it");
+            Assert.AreEqual(-1, push.GemAt(2));
+            Assert.IsTrue(push.LastUndone);
+            Assert.AreEqual((2, 1), (push.LastPushFrom, push.LastPushTo), "drawn as the gem going home");
+            Assert.AreEqual((1, 0), (push.FacingX, push.FacingY), "still facing the gem it pulled home");
+            Assert.IsFalse(push.CanUndo);
+
+            // A walk with no push is taken back as a walk.
+            run.Play(ChallengeInput.Swipe(0, -1));
+            Assert.AreEqual(4, push.Keeper);
+            run.Play(ChallengeInput.Undo());
+            Assert.AreEqual(0, push.Keeper);
+            Assert.AreEqual((-1, -1), (push.LastPushFrom, push.LastPushTo));
+        }
+
+        /// <summary>
+        /// <b>A seated gem streams</b>: it fires every step it stands on its pad and never banks,
+        /// so a gem seated early is exactly as strong as it is now (56l's rule, said of Push).
+        /// Lifted back off its pad, it fires nothing.
+        /// </summary>
+        [Test]
+        public void ASeatedGemStreamsEveryStepAndNeverBanks()
+        {
+            var push = Push(new[] { "@.R..", "....G" }, new[] { ".r...", "..g.." }, out var run, bolts: 2);
+
+            var seat = run.Play(ChallengeInput.Swipe(1, 0));
+            Assert.IsTrue(push.Seated(2));
+            Assert.AreEqual(1, seat.Move.Feeds.Count);
+            Assert.AreEqual(0, seat.Move.Feeds[0].Colour);
+            Assert.AreEqual(2, seat.Move.Feeds[0].Bolts);
+            Assert.IsFalse(seat.Move.Feeds[0].Banks, "a seated gem is a steady fire, not a burst");
+
+            var walk = run.Play(ChallengeInput.Swipe(0, -1));
+            Assert.AreEqual(1, walk.Move.Feeds.Count, "it fires on a step that pushes nothing");
+            Assert.AreEqual(0, run.Hill.Wards[0].Banked, "and nothing it fires is kept");
+
+            run.Play(ChallengeInput.Undo());
+            var lift = run.Play(ChallengeInput.Undo());
+            Assert.IsFalse(push.Seated(2));
+            Assert.AreEqual(0, lift.Move.Feeds.Count, "a gem lifted off its pad fires nothing");
+        }
+
         // ------------------------------------------------------------------ the shipped four
         // ------------------------------------------------------------------ every shipped pairs
         /// <summary>
@@ -1481,29 +1571,174 @@ namespace GlimmerGrove.Tests
             return true;
         }
 
-        [Test]
-        public void ShippedSokobanIsWonByItsAuthoredRoute()
+        // ------------------------------------------------------------------ every shipped push
+        static IReadOnlyList<ChallengeDefinition> ShippedPushes(ChallengeTable table)
         {
-            var table = Shipped();
-            var run = new ChallengeRun(table.Find("d06_sokoban"), table.Line);
+            var rows = table.RowsOf(ChallengeGenre.Sokoban);
+            Assert.Greater(rows.Count, 0, "challenges.json ships no push");
+            return rows;
+        }
 
-            // Found by breadth-first search over the authored board; the shortest route.
-            const string route = "DRRURULLDRRRRURDLDRDLLLULURRRURDD";
+        /// <summary>
+        /// A row's step-shortest route (<see cref="PushRoutes"/>, written by
+        /// <c>Tools/make_push_challenges.py</c>) played against the real rules. Returns what
+        /// every walked turn was fed and leaves the run at its end for the caller to judge.
+        /// </summary>
+        static List<ChallengeFeed[]> PlayPush(ChallengeDefinition def, ChallengeLine line, out ChallengeRun run)
+        {
+            Assert.IsTrue(PushRoutes.Shortest.TryGetValue(def.Id, out var route),
+                          $"{def.Id} has no route; run make_push_challenges.py --write");
+
+            run = new ChallengeRun(def, line);
+            var fed = new List<ChallengeFeed[]>();
 
             foreach (char step in route)
             {
-                if (run.State != ChallengeState.Playing) break;
+                Assert.AreEqual(ChallengeState.Playing, run.State, $"{def.Id}: the run ended before its route's '{step}'");
+
                 var input = step == 'U' ? ChallengeInput.Swipe(0, 1)
                           : step == 'D' ? ChallengeInput.Swipe(0, -1)
                           : step == 'L' ? ChallengeInput.Swipe(-1, 0)
                           : ChallengeInput.Swipe(1, 0);
-                Assert.IsFalse(run.Play(input).Move.Refused, $"the route's '{step}' was refused");
+                var report = run.Play(input);
+                Assert.IsFalse(report.Move == null || report.Move.Refused, $"{def.Id}: the route's '{step}' was refused");
+                if (report.Walked) fed.Add(report.Move.Feeds.ToArray());
             }
 
-            Won(run, "d06_sokoban");
+            return fed;
+        }
 
-            // The hill walks once per move except the winning one (it never gets that step).
-            Assert.AreEqual(route.Length - 1, run.Turns);
+        /// <summary>
+        /// Every row is won by its route on the last step, the hill walking once for every step
+        /// before it, and the route's line takes a blow at most. A route the tool found and the
+        /// C# refuses is the two copies of the rules disagreeing, which is what this is for.
+        /// </summary>
+        [Test]
+        public void EveryShippedPushIsWonByItsShortestRoute()
+        {
+            var table = Shipped();
+
+            foreach (var def in ShippedPushes(table))
+            {
+                PlayPush(def, table.Line, out var run);
+                Won(run, def.Id);
+
+                Assert.AreEqual(PushRoutes.Shortest[def.Id].Length - 1, run.Turns,
+                                $"{def.Id}: the hill walks once per step but the winning one");
+
+                int health = 0;
+                for (int i = 0; i < run.Hill.Wards.Count; i++) health += run.Hill.Wards[i].Health;
+                Assert.GreaterOrEqual(health, run.Hill.Wards.Count * run.Hill.Line.Health - 1,
+                                      $"{def.Id}: the route's line took more than one blow");
+            }
+
+            foreach (var id in PushRoutes.Shortest.Keys)
+                Assert.IsNotNull(table.Find(id), $"PushRoutes carries {id}, which is not shipped");
+        }
+
+        /// <summary>
+        /// <b>How slow can a player be and still win</b>, asked of Push exactly as of the glade
+        /// (<see cref="EveryShippedGladeForgivesASlowerPlayer"/>) and held to the same band: a
+        /// seated gem is a steady fire, like a lit critter, so the same <see cref="HoldsAt"/>
+        /// replays it.
+        /// </summary>
+        [Test]
+        public void EveryShippedPushForgivesASlowerPlayer()
+        {
+            var table = Shipped();
+
+            foreach (var def in ShippedPushes(table))
+            {
+                var fed = PlayPush(def, table.Line, out var run);
+                Assert.AreEqual(ChallengeState.Won, run.State, $"{def.Id} was not won by its route");
+
+                int total = fed.Count + 1;
+                int slowest = 100;
+                for (int pace = 105; pace <= 500; pace += 5)
+                {
+                    if (!HoldsAt(def, table.Line, fed, total, pace, out _)) break;
+                    slowest = pace;
+                }
+
+                Console.WriteLine($"{def.Id}: {def.Width}x{def.Height}, won in {total} step(s); a player may take " +
+                                  $"{slowest / 100f:0.00}x that on a hill of {def.Hill}");
+
+                Assert.GreaterOrEqual(slowest, SlowestPaceFloor,
+                                      $"{def.Id} is lost by a player {slowest / 100f + .05f:0.00}x the route's pace " +
+                                      "(make_push_challenges.py --write)");
+                Assert.LessOrEqual(slowest, SlowestPaceCeiling,
+                                   $"{def.Id} forgives a player {slowest / 100f:0.00}x the route's pace " +
+                                   "(make_push_challenges.py --write)");
+            }
+        }
+
+        [Test]
+        public void EveryShippedPushKeepsTheHillPeopled()
+        {
+            var table = Shipped();
+
+            foreach (var def in ShippedPushes(table))
+            {
+                var fed = PlayPush(def, table.Line, out _);
+                Assert.IsTrue(HoldsAt(def, table.Line, fed, fed.Count + 1, 100, out var crowd), $"{def.Id}: the route's line fell");
+
+                int empty = 0, standing = 0;
+                foreach (int on in crowd) { if (on == 0) empty++; standing += on; }
+                Console.WriteLine($"{def.Id}: {standing / (float)Math.Max(1, crowd.Count):0.0} raider(s) on the hill " +
+                                  $"on an average turn of {crowd.Count}");
+
+                Assert.AreEqual(0, empty, $"{def.Id}: the hill stands empty on {empty} of the route's {crowd.Count} turns");
+            }
+        }
+
+        /// <summary>A raider no gem on the board can answer is a lane nothing will ever fire down.</summary>
+        [Test]
+        public void EveryShippedPushSendsOnlyColoursItCanAnswer()
+        {
+            var table = Shipped();
+
+            foreach (var def in ShippedPushes(table))
+            {
+                var held = new HashSet<int>();
+                var push = (SokobanPuzzle)new ChallengeRun(def, table.Line).Puzzle;
+                for (int i = 0; i < push.Width * push.Height; i++)
+                    if (push.GemAt(i) >= 0) held.Add(push.GemAt(i));
+
+                foreach (var wave in def.Waves)
+                    foreach (var raider in wave.Raiders)
+                        Assert.IsTrue(held.Contains(raider.Colour),
+                                      $"{def.Id} sends a {ChallengeColours.LetterOf(raider.Colour)} raider and deals no gem of that colour");
+            }
+        }
+
+        /// <summary>
+        /// Every shipped room is drawn edge to edge - no row or column of it is solid wall - which
+        /// is what the board's size on screen was bought back with (2026-09-27): a ring of wall
+        /// round a row costs two columns and two rows of cell.
+        /// </summary>
+        [Test]
+        public void EveryShippedPushUsesItsWholeBoard()
+        {
+            foreach (var def in ShippedPushes(Shipped()))
+            {
+                for (int y = 0; y < def.Height; y++)
+                    Assert.AreNotEqual(new string('#', def.Width), def.Rows[y], $"{def.Id}: row {y} is solid wall");
+
+                for (int x = 0; x < def.Width; x++)
+                {
+                    bool solid = true;
+                    for (int y = 0; y < def.Height && solid; y++) solid = def.Rows[y][x] == '#';
+                    Assert.IsFalse(solid, $"{def.Id}: column {x} is solid wall");
+                }
+            }
+        }
+
+        [Test]
+        public void ThePushKeeperIsOnDisk()
+        {
+            string root = Path.Combine(TestJson.RepoRoot(), "Assets", "Game", "Art", "Challenge");
+            Assert.IsTrue(File.Exists(Path.Combine(root, ChallengeArt.KeeperKey + ".png")),
+                          $"'{ChallengeArt.KeeperKey}.png' is not on disk; cut it with Tools/make_push_art.py");
         }
 
         static void Won(ChallengeRun run, string id)

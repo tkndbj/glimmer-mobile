@@ -825,9 +825,11 @@ namespace GlimmerGrove.Progression
         public static readonly Mechanic GladeWake = new Mechanic("glade_wake");
 
         /// <summary>
-        /// Push's verb: swipe to walk, and a gem pushed onto the pad of its colour arms that
-        /// turret for as long as it stays there. Rings the keeper, because the sentence is
-        /// about moving it (invariant 6b). Info key only, for <see cref="PairsFlip"/>'s reason.
+        /// Push's verb: swipe to walk, a gem pushed onto the pad of its colour arms that turret
+        /// for as long as it stays there, and UNDO takes a step back. Rings the keeper, because
+        /// the sentence is about moving it (invariant 6b). Offered at a first Push's opening, as
+        /// <see cref="PairsFlip"/> is at a first Pairs', since 2026-09-27: a first-timer met a
+        /// cannon on a board of gems with nothing to say which of them moves.
         /// </summary>
         public static readonly Mechanic SokobanPush = new Mechanic("sokoban_push");
 

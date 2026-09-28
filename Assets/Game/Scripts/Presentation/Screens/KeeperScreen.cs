@@ -16,57 +16,103 @@ namespace GlimmerGrove
     /// that buys the next level outright (invariant 57).
     ///
     /// <para>
-    /// <b>One tall page you scroll down, from level 1 to the top of the ladder.</b> It is a
-    /// <see cref="GridView"/> of one column (invariant 44ma), so seventy levels cost the cells
-    /// that fit the glass and a repaint is a rebind rather than a rebuild. Each row is a node on
-    /// a spine — the level-selection pack's discs, lit for a level reached, locked for one
-    /// above, crowned for the one the player stands on — beside a plate that says what the
-    /// level opens: a turret off the shelf (the roster's own gate, so the sentence cannot drift
-    /// from the price), the Infinite lane's wall, an honorific. <b>Every fact on the page is
-    /// derived</b>: the standing level from <see cref="PlayerProgression.Level"/>, the count
-    /// bought from <see cref="KeeperLedger"/>, the prices from the published ladder, the unlocks
-    /// from the catalog and the manifest. Nothing here has its own table to go stale.
+    /// <b>A climb, not a list.</b> The page is a night sky with a lit path winding up it: the
+    /// top of the ladder at the top, level 1 at the foot, the level the player stands on
+    /// crowned and throwing a beam at the next one. Every level is a disc on the path — the
+    /// level-selection pack's three, green for reached, silver for above, crowned for here —
+    /// and what a level opens stands beside it as a picture on a pedestal (a turret off the
+    /// shelf, the Infinite lane) or hangs under it as a banner (an honorific). <b>The page says
+    /// almost nothing in words</b>, by the owner's instruction: a number on every disc, a name
+    /// under every prize, and one key. The rebuild of 2026-09-27 replaced a checklist of plates
+    /// whose icons overlapped and whose three sentences of small print said what the picture
+    /// already did.
     /// </para>
     /// <para>
-    /// <b>Buying is one tap and the level moves at once</b>: <see cref="KeeperLedger.TryBuy"/>
-    /// debits, counts and invalidates, and this page hears the change and rebinds. A refusal
-    /// from the server arrives through the same event and takes the row back the same way. The
-    /// key is drawn on the <em>next</em> row and in the hero, because a player scrolled to the
-    /// top of the ladder should not have to hunt for it.
+    /// It is a <see cref="GridView"/> of one column (invariant 44ma), so seventy levels cost
+    /// the cells that fit the glass and a repaint is a rebind. A cell draws <em>half</em> of the
+    /// path to each neighbour, so the two halves meet on the cell boundary and no piece of a
+    /// recycled cell ever reaches into another one's disc. <b>Where things stand is arithmetic
+    /// on the level</b> (<see cref="SwingOf"/>, <see cref="ColumnsFor"/>), and
+    /// <c>Tools/render_keeper_ladder.py</c> draws every cell of the whole ladder and refuses an
+    /// overlap anywhere on it.
     /// </para>
     /// <para>
-    /// <b>Transparent by the owner's instruction</b>: a bought level is drawn as bought, the
-    /// count is printed under the hero, and the one thing a bought level never moves — the
-    /// rank — is said on the page rather than discovered on the boards.
+    /// <b>Every fact on the page is derived</b>: the standing level from
+    /// <see cref="PlayerProgression.Level"/>, the count bought from <see cref="KeeperLedger"/>,
+    /// the prices from the published ladder, the prizes from the catalog and the manifest.
+    /// Buying is one tap on the docked key and the level moves at once:
+    /// <see cref="KeeperLedger.TryBuy"/> debits, counts and invalidates, this page hears the
+    /// change and rebinds, and a refusal from the server takes it back the same way. <b>A
+    /// bought level is drawn as bought</b> — a mint run of path and the currency it was bought
+    /// with on its disc — and the count sits on the medallion, which is the transparency the
+    /// owner asked for said without a sentence.
     /// </para>
     /// </summary>
     public sealed class KeeperScreen : View
     {
         public override string Track => "mus_menu";
 
-        const float ChromeSize = 92f;
-        const float BannerH = 138f;
-        const float HeroH = 300f;
-        const float NoteH = 34f;
-        const float HeadingH = 62f;
-        const float Width = 1000f;
+        /// <summary>The canvas is width-matched (<see cref="Boot.RefWidth"/>); everything here is measured across it.</summary>
+        const float PageW = 1080f;
 
-        /// <summary>One level is one row: the plate, and the gap under it.</summary>
-        public const float RowH = 156f, RowGap = 14f, CellH = RowH + RowGap;
+        // ------------------------------------------------------------------ the top bar
+        const float ChromeSize = 92f, TopY = 22f, PillW = 212f, PillH = 78f;
 
-        /// <summary>The spine the nodes stand on, and the disc that stands on it.</summary>
-        public const float SpineX = -410f, SpineW = 14f, NodeSize = 128f;
+        // ------------------------------------------------------------------ the hero
+        const float HeroTop = 124f;
+        const float Emblem = 260f, EmblemY = 138f;
+        const float BannerW = 440f, BannerH = 118f, BannerY = 124f;
+        const float BarW = 640f, BarH = 58f, BarGap = 16f, HeroFoot = 18f;
 
-        /// <summary>The plate beside the spine.</summary>
-        public const float PlateLeft = -330f, PlateRight = 500f;
-        public const float PlateW = PlateRight - PlateLeft, PlateX = (PlateLeft + PlateRight) * .5f;
+        /// <summary>Where the hero ends and the climb begins, below the safe layer's top.</summary>
+        const float HeroBottom = HeroTop + EmblemY + BannerY + BannerH * .5f + BarGap + BarH + HeroFoot;
 
-        /// <summary>The buy key at the plate's right end, and the chip that stands there otherwise.</summary>
-        public const float KeyW = 250f, KeyH = 84f, ChipW = 190f, ChipH = 46f;
+        /// <summary>
+        /// The pack disc's white face: its centre stands this fraction of the disc's size above
+        /// the sprite's middle, and it is this wide and tall. Measured off
+        /// <c>keeper_node_open</c> (the three discs share one mould).
+        /// </summary>
+        const float FaceLift = .184f, FaceW = .453f, FaceH = .3125f;
+
+        // ------------------------------------------------------------------ the dock
+        const float DockH = 172f, KeyW = 760f, KeyH = 136f, TagW = 262f, TagH = 88f;
+
+        // ------------------------------------------------------------------ the climb
+        /// <summary>One level is one band of the sky.</summary>
+        public const float CellH = 232f;
+        const float PadTop = 70f, PadBottom = DockH + 36f;
+
+        /// <summary>The path's serpentine: how far a disc swings off the middle, and how fast.</summary>
+        public const float Swing = 118f, Turn = 1.05f;
+
+        public const float NodeSize = 150f, CrownSize = 200f;
+        const float TrackW = 16f, TrackEdge = 32f;
+
+        /// <summary>
+        /// A prize stands in a column this far off the middle — past the path's widest swing
+        /// plus half a disc, so no prize can meet the path whatever the level.
+        /// </summary>
+        public const float ColumnX = 360f;
+        const float PedestalW = 176f, PedestalH = 108f, PedestalY = -30f;
+        const float Prize = 124f, PrizeY = 26f, CaptionY = -96f, CaptionRoom = 220f;
+        const float RibbonW = 280f, RibbonH = 80f, RibbonY = -84f;
+
+        static readonly Color SkyTop = new Color32(10, 18, 66, 255);
+        static readonly Color SkyMiddle = new Color32(38, 26, 104, 255);
+        static readonly Color SkyBottom = new Color32(86, 34, 118, 255);
+        static readonly Color TrackDim = new Color32(70, 62, 140, 255);
+        static readonly Color TrackShade = new Color32(16, 14, 52, 217);
+        static readonly Color Asleep = new Color32(200, 206, 232, 255);
+        static readonly Color Unlit = new Color32(150, 156, 196, 255);
+        static readonly Color FaceWhite = new Color32(252, 252, 252, 255);
+        static readonly Color DarkNumber = new Color(.20f, .16f, .06f);
+        static readonly Color SilverNumber = new Color32(70, 76, 104, 255);
 
         static readonly Vector2 Top = new Vector2(.5f, 1f);
+        static readonly Vector2 TopLeft = new Vector2(0f, 1f);
+        static readonly Vector2 TopRight = new Vector2(1f, 1f);
+        static readonly Vector2 Foot = new Vector2(.5f, 0f);
         static readonly Vector2 Left = new Vector2(0f, .5f);
-        static readonly Vector2 Right = new Vector2(1f, .5f);
         static readonly Vector2 Centre = new Vector2(.5f, .5f);
 
         // ------------------------------------------------------------------ state
@@ -75,9 +121,9 @@ namespace GlimmerGrove
         AssetHold _shelfArt;
 
         // the hero, repainted in place
-        Text _levelNumber, _honorific, _xpLine, _boughtLine, _keyLabel, _keyPrice;
-        Image _xpFill, _keyIcon;
-        RectTransform _medallion;
+        Text _levelNumber, _honorific, _xpLine, _boughtText, _keyCaption, _keyPrice;
+        Image _xpFill, _keyIcon, _keyTag, _keyGlow;
+        RectTransform _emblem, _boughtChip;
         Btn _buy;
         int _drawnLevel = -1;
 
@@ -89,26 +135,22 @@ namespace GlimmerGrove
         // ------------------------------------------------------------------ build
         protected override void Build()
         {
-            Scenery.Plain(Content);
-            Fireflies.Spawn(Content, 22, new Color(1f, .93f, .70f), 6f, 22f);
+            BuildSky();
+            BuildTopBar();
+            BuildHero();
 
-            float y = 22f;
-            y = BuildHeader(y);
-            y = BuildHero(y);
-            y = BuildNote(y);
-            y = BuildHeadings(y);
-
-            // The board. The viewport is anchored to the safe layer's foot and the nav bar's top,
-            // so a tall phone gets more rows rather than more air.
-            _viewport = UIKit.Node("Ladder", Safe);
+            // The climb. It runs down behind the dock to the nav bar, so the foot of the ladder
+            // scrolls up out from under the key rather than being cut off above it.
+            _viewport = UIKit.Node("Climb", Safe);
             _viewport.anchorMin = new Vector2(0f, 0f);
             _viewport.anchorMax = new Vector2(1f, 1f);
-            _viewport.offsetMin = new Vector2(0f, NavBar.Height + 16f);
-            _viewport.offsetMax = new Vector2(0f, -y);
+            _viewport.offsetMin = new Vector2(0f, NavBar.Height);
+            _viewport.offsetMax = new Vector2(0f, -HeroBottom);
 
-            _grid = GridView.Attach(_viewport, 1, Width, CellH, parent => new LevelCell(this, parent),
-                                    padTop: 6f, padBottom: 30f);
+            _grid = GridView.Attach(_viewport, 1, PageW, CellH, parent => new LevelCell(this, parent),
+                                    padTop: PadTop, padBottom: PadBottom);
 
+            BuildDock();
             NavBar.Build(Content, NavBar.Tab.Home, onSidePage: true);
             HoldShelfArt();
 
@@ -116,8 +158,8 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The turret thumbnails live in the shop's shelf scope (invariant 7b); a row drawn
-        /// before they land shows the plate with no picture, and rebinds when they do.
+        /// The turret thumbnails live in the shop's shelf scope (invariant 7b); a pedestal drawn
+        /// before they land stands empty, and rebinds when they do.
         /// </summary>
         void HoldShelfArt() => Run(async token =>
         {
@@ -151,7 +193,7 @@ namespace GlimmerGrove
             // Open on the level the player stands on, centred: the page is about where you are
             // before it is about where you could be. On the build frame the viewport has no
             // height yet, so this waits for the present.
-            if (_grid) _grid.ScrollTo(_standing - 1, centre: true);
+            if (_grid) _grid.ScrollTo(IndexOf(_standing), centre: true);
         }
 
         public override bool OnBack() { Flow.Go<HomeScreen>(); return true; }
@@ -162,40 +204,61 @@ namespace GlimmerGrove
             Repaint(show: false);
         }
 
-        // ------------------------------------------------------------------ chrome
-        float BuildHeader(float y)
+        /// <summary>The ladder is drawn top-down, so the highest level is row nought.</summary>
+        int IndexOf(int level) => _top - level;
+
+        // ------------------------------------------------------------------ the sky
+        /// <summary>
+        /// A night sky rather than the wall every other page stands on: a three-stop gradient,
+        /// a fixed scatter of stars twinkling out of phase, and motes drifting up. All of it
+        /// generated, so it costs no art and no address.
+        /// </summary>
+        void BuildSky()
         {
-            float cy = -(y + BannerH * .5f);
+            var sky = UIKit.Img("Sky", Content, Art.Gradient(SkyBottom, SkyMiddle, SkyTop), Color.white);
+            UIKit.StretchTo((RectTransform)sky.transform, 0, 0, 0, 0);
+
+            // A fixed seed, so every open draws the same sky and nothing on it moves between two
+            // visits but the twinkle.
+            var rnd = new System.Random(57);
+            for (int i = 0; i < 46; i++)
+            {
+                float u = .02f + (float)rnd.NextDouble() * .96f;
+                float v = .15f + (float)rnd.NextDouble() * .84f;
+                float size = 24f + (float)rnd.NextDouble() * 38f;
+                float alpha = .35f + (float)rnd.NextDouble() * .5f;
+                var star = UIKit.Img("Star", Content, Art.Glow(64, 2.6f), new Color(1f, .96f, .84f, alpha),
+                                     Vector2.one * size, new Vector2(u, v), Vector2.zero);
+                Tween.Breathe(star.transform, .35f, 1.8f + (float)rnd.NextDouble() * 2.4f, i * .9f);
+            }
+
+            Fireflies.Spawn(Content, 18, new Color(1f, .88f, .55f), 6f, 18f);
+        }
+
+        // ------------------------------------------------------------------ the top bar
+        void BuildTopBar()
+        {
+            float cy = -(TopY + ChromeSize * .5f);
 
             UIKit.IconButton("Back", Safe, Skins.Nav, "ic_left", Vector2.one * ChromeSize,
-                             new Vector2(0f, 1f), new Vector2(76f, cy), () => Flow.Go<HomeScreen>());
+                             TopLeft, new Vector2(76f, cy), () => Flow.Go<HomeScreen>());
 
-            var ribbon = Scenery.TitleRibbon(Safe, Loc.Get("ui.keeper.page_title").ToUpperInvariant(),
-                                             new Vector2(720f, BannerH), Top, new Vector2(0f, cy), 42);
-            ribbon.transform.localScale = Vector3.zero;
-            Tween.Pop(ribbon.transform, 0f, .5f, .06f);
-            y += BannerH + 4f;
+            // The page's name, in the bar rather than on a ribbon of its own: the hero is the
+            // page's headline and a second one above it would be two.
+            float left = 76f + ChromeSize * .5f + 22f;
+            float right = PageW - 40f - PillW * 2f - 16f - 20f;
+            var title = UIKit.Titled("Title", Safe, Loc.Get("ui.keeper.page_title").ToUpperInvariant(), 46, Pal.Gold,
+                                     TextAnchor.MiddleLeft, new Vector2(right - left, ChromeSize), TopLeft,
+                                     new Vector2((left + right) * .5f, cy), 3f, 3f);
+            UIKit.OneLineLabel(title, right - left, 46, 26);
 
-            UIKit.Shrinkable(
-                UIKit.Titled("Sub", Safe, Loc.Get("ui.keeper.subtitle"), 24,
-                             new Color(.86f, .90f, 1f, .78f), TextAnchor.MiddleCenter,
-                             new Vector2(880f, 32f), Top, new Vector2(0f, -(y + 16f)), 3f, 3f), 15);
-            y += 32f + 14f;
-
-            float py = -(y + ChromeSize * .5f);
-            Pill(ResourceSlots.Kind.Hearts, -232f, py, Pal.Rose, Art.S("Ui/ic_heart"),
-                 Profile.HeartsLabel(), v => Profile.HeartsLabel((int)v));
-            Pill(ResourceSlots.Kind.Credits, 0f, py, Pal.Gold, null,
-                 Compact.Number(Profile.Coins), v => Compact.Number(v));
-            Pill(ResourceSlots.Kind.Gems, 232f, py, Pal.Bloom, Art.S("Ui/ic_gem"),
+            Pill(ResourceSlots.Kind.Gems, -(40f + PillW * .5f), cy, Pal.Bloom, Art.S("Ui/ic_gem"),
                  Compact.Number(Profile.Gems), v => Compact.Number(v));
+            Pill(ResourceSlots.Kind.Credits, -(40f + PillW * 1.5f + 16f), cy, Pal.Gold, null,
+                 Compact.Number(Profile.Coins), v => Compact.Number(v));
 
-            // All three, because two of them are what this page spends and the third moves on a
-            // timer while somebody reads the ladder (invariant 44j).
-            WalletWatch.Attach(this, ResourceSlots.Kind.Hearts, ResourceSlots.Kind.Credits,
-                               ResourceSlots.Kind.Gems);
-
-            return y + ChromeSize + 16f;
+            // The two this page spends (invariant 44j).
+            WalletWatch.Attach(this, ResourceSlots.Kind.Credits, ResourceSlots.Kind.Gems);
         }
 
         /// <summary>One resource readout, registered with <see cref="ResourceSlots"/> as it is built.</summary>
@@ -203,106 +266,115 @@ namespace GlimmerGrove
                   string value, Func<long, string> format)
         {
             var bg = UIKit.Img("Pill", Safe, Art.S("Ui/" + Skins.Trough), Color.white,
-                               new Vector2(212f, 78f), Top, new Vector2(x, y));
+                               new Vector2(PillW, PillH), TopRight, new Vector2(x, y));
 
             var glow = UIKit.Img("Glow", bg.transform, Art.Glow(96, 2f), Pal.A(tint, .30f),
-                                 new Vector2(96f, 96f), Left, new Vector2(52f, 0f));
+                                 new Vector2(96f, 96f), Left, new Vector2(46f, 0f));
             var ic = UIKit.Img("Icon", bg.transform, icon, Color.white,
-                               new Vector2(52f, 52f), Left, new Vector2(52f, 0f));
+                               new Vector2(52f, 52f), Left, new Vector2(46f, 0f));
             ic.preserveAspect = true;
             if (icon == null) Flipbook.Attach(ic, "Ui/Coin", 11f);
             Tween.Breathe(ic.transform, .05f, 2.4f, x * .01f);
 
             var text = UIKit.Titled("V", bg.transform, value, 30, Pal.Cream, TextAnchor.MiddleCenter,
-                                    new Vector2(112f, 44f), Centre, new Vector2(24f, 0f), 3f, 3f);
+                                    new Vector2(118f, 44f), Centre, new Vector2(28f, 0f), 3f, 3f);
 
             ResourceSlots.Register(kind, (RectTransform)ic.transform, text, glow, tint, format);
         }
 
         // ------------------------------------------------------------------ the hero
         /// <summary>
-        /// Where the player stands: the level as a medallion, the honorific under it, the XP
-        /// bar to the next earned level, and the key that buys the next one outright.
+        /// Where the player stands: the crowned disc at the size of a medallion under a turning
+        /// fan of light, the honorific on the banner hung from it, and the XP bar.
         ///
         /// <b>The XP bar is the earned level's</b> — a bought level adds a whole rung and moves
         /// no XP, so the bar keeps meaning "how far to the next level by play" whatever was
         /// bought. Saying otherwise would be a bar that jumps to empty when you spend.
         /// </summary>
-        float BuildHero(float y)
+        void BuildHero()
         {
-            var plate = UIKit.Img("Hero", Safe, Art.S("Ui/" + Skins.Panel), Color.white,
-                                  new Vector2(Width, HeroH), Top, new Vector2(0f, -(y + HeroH * .5f)));
-            var host = plate.transform;
+            float ey = -(HeroTop + EmblemY);
 
-            // The medallion, left: a gold disc with the level in it and a halo behind it. Drawn
-            // rather than cut - the same disc the hub and the profile wear (invariant 7b).
-            _medallion = UIKit.Box("Medallion", host, new Vector2(200f, 200f), Left, new Vector2(130f, 12f));
-            UIKit.Halo(_medallion, Pal.Gold, 300f, .30f);
-            var ring = UIKit.Img("Ring", _medallion, Art.Ring(256, 14f), Pal.Gold, new Vector2(196f, 196f), Centre, Vector2.zero);
-            ring.raycastTarget = false;
-            Tween.RotateBy((RectTransform)ring.transform, 360f, 48f).Loop(-1, false);
-            UIKit.Img("Disc", _medallion, Art.Disc(256), Pal.Gold, new Vector2(164f, 164f), Centre, Vector2.zero);
-            _levelNumber = UIKit.Titled("N", _medallion, "1", 72, new Color(.30f, .20f, .05f),
-                                        TextAnchor.MiddleCenter, new Vector2(160f, 100f), Centre,
-                                        new Vector2(0f, 2f), 0f, 0f);
-            _honorific = UIKit.Shrinkable(
-                UIKit.Titled("Title", host, string.Empty, 26, Pal.Gold, TextAnchor.MiddleCenter,
-                             new Vector2(260f, 34f), Left, new Vector2(130f, -112f), 3f, 2f), 16);
+            var fan = UIKit.Img("Fan", Safe, Art.Rays(512, 16), Pal.A(Pal.Sun, .30f),
+                                new Vector2(760f, 760f), Top, new Vector2(0f, ey));
+            Tween.RotateBy((RectTransform)fan.transform, 360f, 90f).Loop(-1, false);
+            var halo = UIKit.Img("Halo", Safe, Art.Glow(128, 1.8f), Pal.A(Pal.Sun, .42f),
+                                 new Vector2(560f, 560f), Top, new Vector2(0f, ey));
+            Tween.Breathe(halo.transform, .06f, 3.2f);
 
-            // The bar, middle. The kit's trough with the kit's fill in it.
-            const float BarLeft = 260f, BarRight = 690f, BarW = BarRight - BarLeft, BarX = (BarLeft + BarRight) * .5f;
-            UIKit.Titled("Head", host, Loc.Get("ui.keeper.level_heading").ToUpperInvariant(), 26, Pal.Gold,
-                         TextAnchor.MiddleLeft, new Vector2(BarW, 34f), Left, new Vector2(BarX, 88f), 3f, 2f);
-            var track = UIKit.Img("XpTrack", host, Art.S("Ui/" + Skins.Trough), Color.white,
-                                  new Vector2(BarW, 40f), Left, new Vector2(BarX, 34f));
+            _emblem = UIKit.Box("Emblem", Safe, Vector2.one * Emblem, Top, new Vector2(0f, ey));
+            var disc = UIKit.Img("Disc", _emblem, Art.S("Ui/keeper_node_crown"), Color.white,
+                                 Vector2.one * Emblem, Centre, Vector2.zero);
+            disc.preserveAspect = true;
+            _levelNumber = UIKit.Titled("N", _emblem, "1", 96, DarkNumber, TextAnchor.MiddleCenter,
+                                        new Vector2(Emblem * FaceW * .92f, 110f), Centre,
+                                        new Vector2(0f, Emblem * FaceLift), 0f, 0f);
+            _emblem.localScale = Vector3.zero;
+            Tween.Pop(_emblem, 0f, .5f, .06f);
+
+            // How many of the levels were bought, as a chip on the medallion's shoulder.
+            _boughtChip = UIKit.Box("Bought", _emblem, new Vector2(196f, 54f), Centre,
+                                    new Vector2(Emblem * .56f, Emblem * .30f));
+            UIKit.Img("Plate", _boughtChip, Art.Round(27), Pal.Mint);
+            _boughtText = UIKit.Titled("T", _boughtChip, string.Empty, 26, DarkNumber, TextAnchor.MiddleCenter,
+                                       new Vector2(172f, 54f), Centre, Vector2.zero, 0f, 0f);
+
+            float by = ey - BannerY;
+            var banner = UIKit.Img("Banner", Safe, Art.S("Ui/" + Skins.Title), Color.white,
+                                   new Vector2(BannerW, BannerH), Top, new Vector2(0f, by));
+            _honorific = UIKit.Titled("Title", banner.transform, string.Empty, 40, Pal.Cream, TextAnchor.MiddleCenter,
+                                      new Vector2(BannerW * .62f, BannerH * .5f), Centre, new Vector2(0f, 10f), 3f, 3f);
+
+            float barY = by - BannerH * .5f - BarGap - BarH * .5f;
+            var track = UIKit.Img("XpTrack", Safe, Art.S("Ui/" + Skins.Trough), Color.white,
+                                  new Vector2(BarW, BarH), Top, new Vector2(0f, barY));
             _xpFill = UIKit.Img("XpFill", track.transform, Art.S("Ui/" + Skins.Fill), Pal.Mint,
-                                new Vector2(0f, 30f), Left, new Vector2(5f, 0f));
+                                new Vector2(0f, BarH - 12f), Left, new Vector2(6f, 0f));
             var fillRT = (RectTransform)_xpFill.transform;
             fillRT.pivot = new Vector2(0f, .5f);
-            fillRT.sizeDelta = new Vector2(0f, 30f);
-            _xpLine = UIKit.Shrinkable(
-                UIKit.Titled("XpText", host, string.Empty, 22, new Color(.86f, .90f, 1f, .85f),
-                             TextAnchor.MiddleLeft, new Vector2(BarW, 30f), Left, new Vector2(BarX, -6f), 2f, 2f), 14);
-            _boughtLine = UIKit.Shrinkable(
-                UIKit.Titled("Bought", host, string.Empty, 22, Pal.Gold, TextAnchor.MiddleLeft,
-                             new Vector2(BarW, 30f), Left, new Vector2(BarX, -40f), 2f, 2f), 14);
+            fillRT.sizeDelta = new Vector2(0f, BarH - 12f);
+            _xpLine = UIKit.Titled("XpText", track.transform, string.Empty, 30, Pal.Cream, TextAnchor.MiddleCenter,
+                                   new Vector2(BarW - 40f, BarH), Centre, Vector2.zero, 3f, 2f);
+        }
 
-            // The key, right. Repainted rather than rebuilt, so a purchase does not replay its pop.
-            _buy = UIKit.TextButton("Buy", host, Skins.Buy, string.Empty, 28, new Vector2(KeyW, 96f),
-                                    Right, new Vector2(-40f - KeyW * .5f, 22f), Buy);
-            _keyLabel = _buy.Label;
-            UIKit.OneLine(_buy, 16);
-            var priceRow = UIKit.Box("Price", host, new Vector2(KeyW, 44f), Right, new Vector2(-40f - KeyW * .5f, -48f));
-            _keyPrice = UIKit.Titled("Amount", priceRow, string.Empty, 30, Pal.Cream, TextAnchor.MiddleCenter,
-                                     new Vector2(KeyW - 60f, 44f), Centre, new Vector2(-22f, 0f), 3f, 2f);
-            _keyIcon = UIKit.Img("Icon", priceRow, null, Color.white, new Vector2(40f, 40f), Right, new Vector2(-18f, 0f));
+        // ------------------------------------------------------------------ the dock
+        /// <summary>
+        /// The one key, docked over the foot of the climb where a thumb already is, so it is
+        /// never scrolled away: the caption on the left, the price in a well on the right.
+        /// </summary>
+        void BuildDock()
+        {
+            var fade = UIKit.Img("Fade", Safe, Art.FadeUp(64), Pal.A(SkyBottom, .92f),
+                                 new Vector2(PageW + 40f, DockH + 60f), Foot,
+                                 new Vector2(0f, NavBar.Height + (DockH + 60f) * .5f));
+            fade.raycastTarget = false;
+
+            float cy = NavBar.Height + DockH * .5f;
+            _keyGlow = UIKit.Img("KeyGlow", Safe, Art.Glow(128, 2f), Pal.A(Pal.Sun, .40f),
+                                 new Vector2(KeyW * 1.2f, KeyH * 2.2f), Foot, new Vector2(0f, cy));
+            Tween.Breathe(_keyGlow.transform, .05f, 2.0f);
+
+            _buy = UIKit.Button("Buy", Safe, Art.S("Ui/" + Skins.Buy), new Vector2(KeyW, KeyH), Foot,
+                                new Vector2(0f, cy), Buy);
+            float lift = KeyH * UIKit.PillFaceLift;
+
+            float captionRoom = KeyW - 44f - TagW - 30f;
+            _keyCaption = UIKit.Titled("Caption", _buy.transform, string.Empty, 44, Pal.Cream, TextAnchor.MiddleCenter,
+                                       new Vector2(captionRoom, KeyH * .72f), Centre,
+                                       new Vector2(-KeyW * .5f + 22f + captionRoom * .5f, lift), 3f, 3f);
+
+            _keyTag = UIKit.Img("Tag", _buy.transform, Art.S("Ui/" + Skins.Trough), Color.white,
+                                new Vector2(TagW, TagH), Centre, new Vector2(KeyW * .5f - 22f - TagW * .5f, lift));
+            _keyIcon = UIKit.Img("Icon", _keyTag.transform, null, Color.white, new Vector2(56f, 56f), Left,
+                                 new Vector2(44f, 0f));
             _keyIcon.preserveAspect = true;
+            _keyPrice = UIKit.Titled("Amount", _keyTag.transform, string.Empty, 40, Pal.Cream, TextAnchor.MiddleCenter,
+                                     new Vector2(TagW - 96f, TagH), Centre, new Vector2(26f, 0f), 3f, 3f);
 
-            return y + HeroH + 10f;
+            _buy.transform.localScale = Vector3.zero;
+            Tween.Pop(_buy.transform, 0f, .45f, .18f);
+            _buy.Rehome();
         }
-
-        /// <summary>The one thing a bought level never moves, said where the key is.</summary>
-        float BuildNote(float y)
-        {
-            UIKit.Shrinkable(
-                UIKit.Titled("Note", Safe, Loc.Get("ui.keeper.rank_note"), 22,
-                             new Color(.86f, .90f, 1f, .70f), TextAnchor.MiddleCenter,
-                             new Vector2(Width - 40f, NoteH), Top, new Vector2(0f, -(y + NoteH * .5f)), 2f, 2f), 14);
-            return y + NoteH + 6f;
-        }
-
-        float BuildHeadings(float y)
-        {
-            float cy = -(y + HeadingH * .5f);
-            UIKit.Titled("LadderHead", Safe, Loc.Get("ui.keeper.ladder_heading").ToUpperInvariant(), 30, Pal.Gold,
-                         TextAnchor.MiddleLeft, new Vector2(500f, HeadingH), Top, new Vector2(-Width * .5f + 270f, cy), 3f, 3f);
-            _topLine = UIKit.Titled("TopHead", Safe, string.Empty, 24, new Color(.86f, .90f, 1f, .72f),
-                                    TextAnchor.MiddleRight, new Vector2(440f, HeadingH), Top,
-                                    new Vector2(Width * .5f - 240f, cy), 2f, 2f);
-            return y + HeadingH;
-        }
-
-        Text _topLine;
 
         // ---------------------------------------------------------------- repaint
         /// <summary>
@@ -317,13 +389,11 @@ namespace GlimmerGrove
             _offer = KeeperLedger.Next();
 
             // The page reaches the ladder's top, or the standing level if a player somehow stands
-            // above it (a retune that lowered the top), so the crowned row is always on the page.
+            // above it (a retune that lowered the top), so the crowned disc is always on the page.
             _top = Mathf.Max(ladder.Sells ? ladder.Top : _standing, _standing, 1);
 
             ReadFacts(ladder);
             PaintHero();
-
-            if (_topLine) _topLine.text = Loc.Format("ui.keeper.to_top", _top);
 
             if (show) _grid.Show(_top, animate: true);
             else _grid.Refresh();
@@ -337,27 +407,38 @@ namespace GlimmerGrove
             if (_levelNumber)
             {
                 _levelNumber.text = level.Level.ToString();
-                if (_drawnLevel >= 0 && _drawnLevel != level.Level) Tween.Punch(_medallion, .16f, .4f);
+                UIKit.OneLineLabel(_levelNumber, Emblem * FaceW * .92f, 96, 48);
+                if (_drawnLevel >= 0 && _drawnLevel != level.Level) Tween.Punch(_emblem, .16f, .4f);
                 _drawnLevel = level.Level;
             }
-            if (_honorific) _honorific.text = Loc.Get(KeeperTitle.KeyFor(level.Level));
+            if (_honorific)
+            {
+                _honorific.text = Loc.Get(KeeperTitle.KeyFor(level.Level)).ToUpperInvariant();
+                UIKit.OneLineLabel(_honorific, BannerW * .62f, 40, 22);
+            }
 
             if (_xpFill)
             {
-                const float BarW = 690f - 260f;
-                float w = (BarW - 12f) * earned.Progress01;
+                float w = (BarW - 12f) * (earned.IsMaxLevel ? 1f : earned.Progress01);
                 var rt = (RectTransform)_xpFill.transform;
-                Tween.Run(.6f, Ease.OutCubic, t => { if (rt) rt.sizeDelta = new Vector2(Mathf.Lerp(rt.sizeDelta.x, w, t), 30f); }, _xpFill);
+                Tween.Run(.6f, Ease.OutCubic, t => { if (rt) rt.sizeDelta = new Vector2(Mathf.Lerp(rt.sizeDelta.x, w, t), BarH - 12f); }, _xpFill);
             }
             if (_xpLine)
-                _xpLine.text = earned.IsMaxLevel
-                    ? Loc.Get("ui.profile.xp_max")
-                    : Loc.Format("ui.profile.xp", earned.XpIntoLevel, earned.XpForNextLevel);
+            {
+                _xpLine.text = (earned.IsMaxLevel
+                    ? Loc.Get("ui.keeper.xp_max")
+                    : Loc.Format("ui.keeper.xp_short", Compact.Number(earned.XpIntoLevel), Compact.Number(earned.XpForNextLevel)))
+                    .ToUpperInvariant();
+                UIKit.OneLineLabel(_xpLine, BarW - 40f, 30, 18);
+            }
 
             int bought = KeeperLedger.Bought;
-            if (_boughtLine)
-                _boughtLine.text = bought > 0 ? Loc.Format("ui.keeper.bought_n", bought)
-                                              : Loc.Get("ui.keeper.bought_none");
+            if (_boughtChip)
+            {
+                _boughtChip.gameObject.SetActive(bought > 0);
+                _boughtText.text = Loc.Format("ui.keeper.bought_count", bought).ToUpperInvariant();
+                UIKit.OneLineLabel(_boughtText, 172f, 26, 16);
+            }
 
             PaintKey();
         }
@@ -366,29 +447,38 @@ namespace GlimmerGrove
         {
             if (!_buy) return;
 
+            var img = _buy.GetComponent<Image>();
             if (_offer.Sold)
             {
                 _buy.Interactable = true;
-                _buy.SetCaption(Loc.Format("ui.keeper.buy", _offer.Level).ToUpperInvariant());
-                Reskin(_buy, _offer.Currency == Currency.Gems ? Skins.Gem : Skins.Buy);
+                if (img) img.sprite = Art.S("Ui/" + (_offer.Currency == Currency.Gems ? Skins.Gem : Skins.Buy));
+                _keyCaption.text = Loc.Format("ui.keeper.buy", _offer.Level).ToUpperInvariant();
+                _keyTag.gameObject.SetActive(true);
                 _keyPrice.text = Compact.Number(_offer.Price);
-                _keyIcon.enabled = true;
                 _keyIcon.sprite = _offer.Currency == Currency.Gems ? Art.S("Ui/ic_gem") : Art.CoinFace();
+                _keyIcon.enabled = _keyIcon.sprite != null;
+                _keyGlow.enabled = true;
+                UIKit.OneLineLabel(_keyPrice, TagW - 96f, 40, 22);
+                SeatCaption(KeyW - 44f - TagW - 30f, -KeyW * .5f + 22f + (KeyW - 44f - TagW - 30f) * .5f);
             }
             else
             {
                 _buy.Interactable = false;
-                _buy.SetCaption(Loc.Get(_offer.AtTop ? "ui.keeper.key_top" : "ui.keeper.key_not_sold").ToUpperInvariant());
-                Reskin(_buy, Skins.Shut);
-                _keyPrice.text = string.Empty;
-                _keyIcon.enabled = false;
+                if (img) img.sprite = Art.S("Ui/" + Skins.Shut);
+                _keyCaption.text = Loc.Get(_offer.AtTop ? "ui.keeper.key_top" : "ui.keeper.key_not_sold").ToUpperInvariant();
+                _keyTag.gameObject.SetActive(false);
+                _keyGlow.enabled = false;
+                SeatCaption(KeyW - 60f, 0f);
             }
         }
 
-        static void Reskin(Btn key, string skin)
+        /// <summary>The caption owns the whole key when there is no price, and the left of it when there is.</summary>
+        void SeatCaption(float room, float x)
         {
-            var img = key.GetComponent<Image>();
-            if (img) img.sprite = Art.S("Ui/" + skin);
+            var rt = _keyCaption.rectTransform;
+            rt.sizeDelta = new Vector2(room, rt.sizeDelta.y);
+            rt.anchoredPosition = new Vector2(x, rt.anchoredPosition.y);
+            UIKit.OneLineLabel(_keyCaption, room, 44, 24);
         }
 
         // ------------------------------------------------------------------ buying
@@ -401,8 +491,8 @@ namespace GlimmerGrove
                 case KeeperBuy.Bought:
                     Audio.Sfx("unlock", .9f);
                     Scenery.Toast(Content, Loc.Format("ui.keeper.bought_toast", offer.Level), Pal.Mint, 2.2f);
-                    // The ledger's change has already repainted; bring the crowned row into view.
-                    if (_grid) _grid.ScrollTo(_standing - 1, centre: true);
+                    // The ledger's change has already repainted; bring the crowned disc into view.
+                    if (_grid) _grid.ScrollTo(IndexOf(_standing), centre: true);
                     break;
 
                 case KeeperBuy.TooPoor:
@@ -427,7 +517,14 @@ namespace GlimmerGrove
             }
         }
 
-        // ------------------------------------------------------------------ the rows
+        // ------------------------------------------------------------------ the facts
+        /// <summary>One thing a level opens, drawn on a pedestal: its picture and its name.</summary>
+        readonly struct PrizeFact
+        {
+            public readonly string Sprite, Name;
+            public PrizeFact(string sprite, string name) { Sprite = sprite; Name = name; }
+        }
+
         /// <summary>What one level opens, and what it costs to buy. Read once per repaint.</summary>
         sealed class RowFacts
         {
@@ -435,8 +532,8 @@ namespace GlimmerGrove
             public string Currency;
             public long Price;
             public bool Sold;
-            public readonly List<string> Lines = new List<string>(3);
-            public string Thumb;                          // a turret's shelf thumbnail, or null
+            public readonly List<PrizeFact> Prizes = new List<PrizeFact>(2);
+            public string Title;                          // the honorific this level confers, or null
         }
 
         /// <summary>
@@ -462,13 +559,11 @@ namespace GlimmerGrove
 
             for (int level = 1; level <= _top; level++) At(level);
 
-            // Turrets, by the roster's gate. A starter has no gate and no line.
+            // Turrets, by the roster's gate. A starter has no gate and no pedestal.
             foreach (var model in WardLedger.Catalog.Models)
             {
                 if (model == null || model.MinLevel <= 0 || model.MinLevel > _top) continue;
-                var facts = At(model.MinLevel);
-                facts.Lines.Add(Loc.Format("ui.keeper.unlocks_turret", Loc.Get(model.NameKey)));
-                if (facts.Thumb == null) facts.Thumb = "Ui/" + model.Thumb;
+                At(model.MinLevel).Prizes.Add(new PrizeFact("Ui/" + model.Thumb, Loc.Get(model.NameKey)));
             }
 
             // Lanes and chapters walled behind a keeper level, by the manifest.
@@ -480,8 +575,8 @@ namespace GlimmerGrove
                 {
                     if (chapter == null || chapter.MinKeeperLevel <= 0 || chapter.MinKeeperLevel > _top) continue;
                     if (!walled.Add(chapter.MinKeeperLevel)) continue;
-                    At(chapter.MinKeeperLevel).Lines.Add(
-                        Loc.Format("ui.keeper.unlocks_chapter", Loc.Get(chapter.NameKey)));
+                    string mark = chapter.Track.IsMain ? "Ui/crest_gold" : "Ui/ic_endless";
+                    At(chapter.MinKeeperLevel).Prizes.Add(new PrizeFact(mark, Loc.Get(chapter.NameKey)));
                 }
             }
 
@@ -489,189 +584,263 @@ namespace GlimmerGrove
             for (int level = 2; level <= _top; level++)
             {
                 string key = KeeperTitle.KeyFor(level);
-                if (key != KeeperTitle.KeyFor(level - 1))
-                    At(level).Lines.Add(Loc.Format("ui.keeper.title_tier", Loc.Get(key)));
+                if (key != KeeperTitle.KeyFor(level - 1)) At(level).Title = Loc.Get(key);
             }
         }
 
         RowFacts FactsFor(int level) => _facts.TryGetValue(level, out var f) ? f : null;
 
-        /// <summary>The state a row is drawn in.</summary>
-        enum RowState { Reached, Bought, Standing, Next, Locked }
-
-        RowState StateOf(int level)
-        {
-            if (level == _standing) return RowState.Standing;
-            if (level < _standing) return level > _earned ? RowState.Bought : RowState.Reached;
-            return level == _standing + 1 ? RowState.Next : RowState.Locked;
-        }
+        /// <summary>Where a level's disc stands across the page: a serpentine, so the path winds.</summary>
+        public static float SwingOf(int level) => Swing * Mathf.Sin(level * Turn);
 
         /// <summary>
-        /// One level of the ladder: a node on the spine, the plate beside it. Every field is
+        /// Where a level's prizes stand. One stands across the page from the way the disc leans;
+        /// two stand either side of the path. A third is never drawn - no level opens more than
+        /// two things that stand on a pedestal (the honorific hangs from the disc instead).
+        /// </summary>
+        public static int ColumnsFor(int level, int count, float[] into)
+        {
+            float lean = SwingOf(level) >= 0f ? 1f : -1f;
+            if (count <= 0) return 0;
+            into[0] = -lean * ColumnX;
+            if (count == 1) return 1;
+            into[1] = lean * ColumnX;
+            return 2;
+        }
+
+        // ------------------------------------------------------------------ the climb
+        /// <summary>
+        /// One level of the climb: half the path to each neighbour, up to two prizes on
+        /// pedestals, the disc, and a banner when the level confers a title. Every field is
         /// written on every bind (invariant 44mc) - a recycled cell that leaves a field alone
-        /// shows the previous row's answer.
+        /// shows the previous level's answer.
         /// </summary>
         sealed class LevelCell : IGridCell
         {
             readonly KeeperScreen _screen;
-            readonly Image _spineAbove, _spineBelow, _node, _pool, _thumb, _priceIcon;
-            readonly Text _number, _title, _line1, _line2, _line3, _chipText, _price;
-            readonly Image _chip;
-            readonly Btn _buy;
-            readonly Image _plate;
+            readonly Image _beam, _fan, _glow;
+            readonly Image _edgeUp, _edgeDown, _coreUp, _coreDown;
+            readonly PrizeView[] _prizes = new PrizeView[2];
+            readonly Image _disc, _face, _badge, _ribbon;
+            readonly Text _number, _ribbonText;
+            readonly RectTransform _discRT;
+            readonly float[] _columns = new float[2];
             int _pulsing = -1;
 
             public RectTransform Root { get; }
+
+            sealed class PrizeView
+            {
+                public RectTransform Root;
+                public Image Glow, Pedestal, Picture;
+                public Text Caption;
+            }
 
             public LevelCell(KeeperScreen screen, RectTransform parent)
             {
                 _screen = screen;
 
                 Root = UIKit.Node("Level", parent);
-                Root.sizeDelta = new Vector2(Width, CellH);
+                Root.sizeDelta = new Vector2(PageW, CellH);
 
-                // The light behind the next row, first so it sits under the plate (48i).
-                _pool = UIKit.Img("Light", Root, Art.Glow(128, 1.35f), Pal.A(Pal.Sun, 0f),
-                                  new Vector2(PlateW + 160f, RowH + 140f), Centre, new Vector2(PlateX, 0f));
+                // The light first, so everything else in the cell stands in it.
+                _beam = UIKit.Img("Beam", Root, Art.S("Ui/" + Skins.Beam), Pal.A(Pal.Sun, .55f),
+                                  new Vector2(230f, 470f), Centre, Vector2.zero);
+                ((RectTransform)_beam.transform).pivot = new Vector2(.5f, 0f);
+                _fan = UIKit.Img("Fan", Root, Art.Rays(256, 12), Pal.A(Pal.Sun, .45f),
+                                 new Vector2(420f, 420f), Centre, Vector2.zero);
+                Tween.RotateBy((RectTransform)_fan.transform, 360f, 60f).Loop(-1, false);
+                _glow = UIKit.Img("Glow", Root, Art.Glow(128, 1.9f), Pal.A(Pal.Sun, 0f),
+                                  new Vector2(340f, 340f), Centre, Vector2.zero);
 
-                // The spine: two halves so the segment above the node and the one below can be
-                // lit apart - the run up to the standing level is lit, everything past it is not.
-                _spineAbove = UIKit.Img("SpineUp", Root, Art.Pixel, Color.white,
-                                        new Vector2(SpineW, CellH * .5f), new Vector2(.5f, 1f), new Vector2(SpineX, CellH * .5f));
-                _spineBelow = UIKit.Img("SpineDown", Root, Art.Pixel, Color.white,
-                                        new Vector2(SpineW, CellH * .5f), new Vector2(.5f, 0f), new Vector2(SpineX, -CellH * .5f));
+                // The path: two halves, the shade under the core, each pivoted at the disc.
+                _edgeUp = Track("EdgeUp", TrackEdge);
+                _edgeDown = Track("EdgeDown", TrackEdge);
+                _coreUp = Track("CoreUp", TrackW);
+                _coreDown = Track("CoreDown", TrackW);
 
-                _plate = UIKit.Img("Plate", Root, Art.S("Ui/" + Skins.PlateNavy), Color.white,
-                                   new Vector2(PlateW, RowH), Centre, new Vector2(PlateX, 0f));
-                var plate = _plate.transform;
+                for (int i = 0; i < _prizes.Length; i++) _prizes[i] = BuildPrize(i);
 
-                _node = UIKit.Img("Node", Root, null, Color.white, new Vector2(NodeSize, NodeSize), Centre, new Vector2(SpineX, 0f));
-                _node.preserveAspect = true;
-                _number = UIKit.Titled("N", _node.transform, string.Empty, 34, new Color(.20f, .16f, .06f),
-                                       TextAnchor.MiddleCenter, new Vector2(NodeSize, 60f), Centre, new Vector2(0f, 16f), 0f, 0f);
+                _discRT = UIKit.Box("Disc", Root, Vector2.one * NodeSize, Centre, Vector2.zero);
+                _disc = UIKit.Img("Face", _discRT, null, Color.white);
+                _disc.preserveAspect = true;
+                _face = UIKit.Img("Blank", _discRT, Art.Disc(128), FaceWhite, Vector2.one, Centre, Vector2.zero);
+                _number = UIKit.Titled("N", _discRT, string.Empty, 48, DarkNumber, TextAnchor.MiddleCenter,
+                                       new Vector2(NodeSize, 80f), Centre, Vector2.zero, 0f, 0f);
+                _badge = UIKit.Img("Paid", _discRT, null, Color.white, new Vector2(48f, 48f), Centre, Vector2.zero);
+                _badge.preserveAspect = true;
 
-                const float TextLeft = 36f;
-                _thumb = UIKit.Img("Thumb", plate, null, Color.white, new Vector2(84f, 84f), Left, new Vector2(TextLeft + 42f, 0f));
-                _thumb.preserveAspect = true;
-
-                _title = UIKit.Titled("Title", plate, string.Empty, 30, Pal.Gold, TextAnchor.MiddleLeft,
-                                      new Vector2(440f, 36f), Left, new Vector2(TextLeft + 220f, 42f), 3f, 3f);
-                _line1 = Line(plate, "L1", 8f);
-                _line2 = Line(plate, "L2", -20f);
-                _line3 = Line(plate, "L3", -48f);
-
-                // The right end: a chip, or the key. Both built, one shown.
-                _chip = UIKit.Img("Chip", plate, Art.Round(23), Pal.Gold, new Vector2(ChipW, ChipH), Right, new Vector2(-30f - ChipW * .5f, 0f));
-                _chipText = UIKit.Titled("ChipText", _chip.transform, string.Empty, 20, new Color(.30f, .20f, .05f),
-                                         TextAnchor.MiddleCenter, new Vector2(ChipW - 16f, ChipH), Centre, Vector2.zero, 0f, 0f);
-                UIKit.Shrinkable(_chipText, 12);
-
-                _buy = UIKit.TextButton("Buy", plate, Skins.Buy, string.Empty, 24, new Vector2(KeyW, KeyH),
-                                        Right, new Vector2(-30f - KeyW * .5f, 12f), () => _screen.Buy());
-                UIKit.OneLine(_buy, 14);
-                _price = UIKit.Titled("Price", plate, string.Empty, 22, Pal.Cream, TextAnchor.MiddleRight,
-                                      new Vector2(KeyW - 50f, 30f), Right, new Vector2(-30f - 46f - (KeyW - 50f) * .5f, -46f), 2f, 2f);
-                _priceIcon = UIKit.Img("PriceIcon", plate, null, Color.white, new Vector2(30f, 30f), Right, new Vector2(-30f - 20f, -46f));
-                _priceIcon.preserveAspect = true;
+                _ribbon = UIKit.Img("Ribbon", Root, Art.S("Ui/" + Skins.Title), Color.white,
+                                    new Vector2(RibbonW, RibbonH), Centre, Vector2.zero);
+                _ribbonText = UIKit.Titled("T", _ribbon.transform, string.Empty, 30, Pal.Cream, TextAnchor.MiddleCenter,
+                                           new Vector2(RibbonW * .62f, RibbonH * .5f), Centre, new Vector2(0f, 7f), 2f, 2f);
             }
 
-            static Text Line(Transform plate, string name, float y)
-                => UIKit.Shrinkable(
-                       UIKit.Titled(name, plate, string.Empty, 22, Pal.Cream, TextAnchor.MiddleLeft,
-                                    new Vector2(440f, 28f), Left, new Vector2(36f + 220f, y), 2f, 2f), 13);
+            Image Track(string name, float width)
+            {
+                var img = UIKit.Img(name, Root, Art.Pixel, Color.white, new Vector2(width, 10f), Centre, Vector2.zero);
+                ((RectTransform)img.transform).pivot = new Vector2(.5f, 0f);
+                return img;
+            }
+
+            PrizeView BuildPrize(int i)
+            {
+                var p = new PrizeView { Root = UIKit.Box("Prize" + i, Root, new Vector2(CaptionRoom + 20f, CellH), Centre, Vector2.zero) };
+                p.Glow = UIKit.Img("Glow", p.Root, Art.Glow(128, 2f), Pal.A(Pal.Sun, .22f),
+                                   new Vector2(260f, 260f), Centre, new Vector2(0f, PrizeY));
+                p.Pedestal = UIKit.Img("Pedestal", p.Root, Art.S("Ui/" + Skins.Lander), Color.white,
+                                       new Vector2(PedestalW, PedestalH), Centre, new Vector2(0f, PedestalY));
+                p.Picture = UIKit.Img("Picture", p.Root, null, Color.white, Vector2.one * Prize, Centre, new Vector2(0f, PrizeY));
+                p.Picture.preserveAspect = true;
+                p.Caption = UIKit.Titled("Name", p.Root, string.Empty, 28, Pal.Cream, TextAnchor.MiddleCenter,
+                                         new Vector2(CaptionRoom, 40f), Centre, new Vector2(0f, CaptionY), 2f, 2f);
+                return p;
+            }
 
             public void Bind(int index)
             {
-                int level = index + 1;
+                int level = _screen._top - index;
                 var facts = _screen.FactsFor(level);
-                var state = _screen.StateOf(level);
+                int standing = _screen._standing, earned = _screen._earned, top = _screen._top;
 
-                bool reached = level <= _screen._standing;
-                bool crowned = state == RowState.Standing;
-                bool next = state == RowState.Next;
+                bool reached = level <= standing;
+                bool crowned = level == standing;
+                bool next = level == standing + 1;
+                bool lit = reached || next;
+                float x = SwingOf(level);
 
-                // The spine: lit up to and including the standing level.
-                var lit = Pal.A(Pal.Gold, .95f);
-                var dim = new Color(1f, 1f, 1f, .10f);
-                _spineAbove.color = level == 1 ? Color.clear : (reached ? lit : dim);
-                _spineBelow.color = level >= _screen._top ? Color.clear : (level < _screen._standing ? lit : dim);
+                // The crowned cell sinks under its neighbours, so its beam and its fan are light
+                // falling behind the discs above rather than a sheet laid over them (44mc).
+                if (crowned) Root.SetAsFirstSibling();
 
-                // The node: the pack's three discs.
-                _node.sprite = Art.S(crowned ? "Ui/keeper_node_crown" : reached ? "Ui/keeper_node_open" : "Ui/keeper_node_locked");
-                _node.enabled = _node.sprite != null;
-                _number.text = level.ToString();
-                _number.color = reached ? new Color(.20f, .16f, .06f) : new Color(.95f, .95f, .98f);
+                // ---------------------------------------------------------------- light
+                _beam.enabled = crowned;
+                _fan.enabled = crowned;
+                ((RectTransform)_beam.transform).anchoredPosition = new Vector2(x, 0f);
+                ((RectTransform)_fan.transform).anchoredPosition = new Vector2(x, 0f);
+                ((RectTransform)_glow.transform).anchoredPosition = new Vector2(x, 0f);
+                _glow.color = Pal.A(Pal.Sun, crowned ? .55f : next ? .40f : 0f);
 
-                // The plate and its light.
-                _plate.color = reached || next ? Color.white : new Color(.72f, .76f, .84f, .92f);
-                _pool.color = Pal.A(Pal.Sun, next ? .34f : 0f);
+                // ---------------------------------------------------------------- the path
+                // The run up to the standing level is lit: gold where it was earned, mint where
+                // it was bought, so a bought level is drawn as bought.
+                Half(_edgeUp, _coreUp, x, SwingOf(level + 1), CellH, level < top,
+                     SegmentColour(level + 1, standing, earned));
+                Half(_edgeDown, _coreDown, x, SwingOf(level - 1), -CellH, level > 1,
+                     SegmentColour(level, standing, earned));
 
-                _title.text = Loc.Format("ui.keeper.level_n", level).ToUpperInvariant();
-                _title.color = crowned ? Pal.Sun : reached ? Pal.Gold : new Color(.80f, .84f, .92f);
-
-                // What the level opens, then what it costs when it has yet to be reached.
-                var lines = facts?.Lines;
-                int n = lines?.Count ?? 0;
-                _line1.text = n > 0 ? lines[0] : (reached ? Loc.Get("ui.keeper.reached")
-                                                  : facts != null && facts.Sold ? PriceLine(facts) : Loc.Get("ui.keeper.earn_it"));
-                _line2.text = n > 1 ? lines[1] : string.Empty;
-                _line3.text = n > 2 ? lines[2] : string.Empty;
-                var ink = reached ? Pal.Cream : new Color(.80f, .84f, .92f);
-                _line1.color = n > 0 ? ink : new Color(.86f, .90f, 1f, .62f);
-                _line2.color = ink;
-                _line3.color = ink;
-
-                // The thumbnail, or the space it would take.
-                var thumb = facts?.Thumb != null ? Art.S(facts.Thumb) : null;
-                _thumb.sprite = thumb;
-                _thumb.enabled = thumb != null;
-                _thumb.color = reached || next ? Color.white : new Color(1f, 1f, 1f, .55f);
-                float textX = thumb != null ? 36f + 220f : 36f + 220f - 60f;
-                ((RectTransform)_title.transform).anchoredPosition = new Vector2(textX, 42f);
-                ((RectTransform)_line1.transform).anchoredPosition = new Vector2(textX, 8f);
-                ((RectTransform)_line2.transform).anchoredPosition = new Vector2(textX, -20f);
-                ((RectTransform)_line3.transform).anchoredPosition = new Vector2(textX, -48f);
-
-                // The right end.
-                var offer = _screen._offer;
-                bool key = next && offer.Sold && offer.Level == level;
-                _buy.gameObject.SetActive(key);
-                _price.enabled = key;
-                _priceIcon.enabled = key;
-                if (key)
+                // ---------------------------------------------------------------- prizes
+                int count = facts == null ? 0 : Mathf.Min(facts.Prizes.Count, _prizes.Length);
+                ColumnsFor(level, count, _columns);
+                for (int i = 0; i < _prizes.Length; i++)
                 {
-                    _buy.SetCaption(Loc.Get("ui.keeper.buy_short").ToUpperInvariant());
-                    var img = _buy.GetComponent<Image>();
-                    if (img) img.sprite = Art.S("Ui/" + (offer.Currency == Currency.Gems ? Skins.Gem : Skins.Buy));
-                    _price.text = Compact.Number(offer.Price);
-                    _priceIcon.sprite = offer.Currency == Currency.Gems ? Art.S("Ui/ic_gem") : Art.CoinFace();
+                    var p = _prizes[i];
+                    bool on = i < count;
+                    p.Root.gameObject.SetActive(on);
+                    if (!on) continue;
+
+                    var prize = facts.Prizes[i];
+                    p.Root.anchoredPosition = new Vector2(_columns[i], 0f);
+                    p.Picture.sprite = Art.S(prize.Sprite);
+                    p.Picture.enabled = p.Picture.sprite != null;
+                    p.Picture.color = lit ? Color.white : Pal.A(Unlit, .9f);
+                    p.Pedestal.color = lit ? Color.white : Unlit;
+                    p.Glow.color = Pal.A(Pal.Sun, lit ? .22f : .08f);
+                    p.Caption.text = prize.Name.ToUpperInvariant();
+                    p.Caption.color = lit ? Pal.Cream : new Color32(190, 196, 226, 255);
+                    UIKit.OneLineLabel(p.Caption, CaptionRoom, 28, 18);
                 }
 
-                string chip = crowned ? Loc.Get("ui.keeper.here")
-                            : state == RowState.Bought ? Loc.Get("ui.keeper.bought_chip")
-                            : next && !offer.Sold && offer.AtTop ? string.Empty
-                            : string.Empty;
-                _chip.gameObject.SetActive(chip.Length > 0);
-                _chipText.text = chip.ToUpperInvariant();
-                _chip.color = crowned ? Pal.Sun : Pal.Mint;
+                // ---------------------------------------------------------------- the disc
+                float size = crowned ? CrownSize : NodeSize;
+                _discRT.sizeDelta = Vector2.one * size;
+                _discRT.anchoredPosition = new Vector2(x, 0f);
 
-                // The breath on the next row, keyed on the row it was started for (44mc).
+                _disc.sprite = Art.S(crowned ? "Ui/keeper_node_crown" : reached ? "Ui/keeper_node_open" : "Ui/keeper_node_locked");
+                _disc.enabled = _disc.sprite != null;
+                _disc.color = reached || next ? Color.white : Asleep;
+
+                // A locked disc carries a padlock on its face; the face is laid over it again so
+                // the disc can carry its number instead. Silver already says locked.
+                var faceRT = (RectTransform)_face.transform;
+                faceRT.sizeDelta = new Vector2(size * FaceW, size * FaceH);
+                faceRT.anchoredPosition = new Vector2(0f, size * FaceLift);
+                _face.enabled = !reached && _disc.enabled;
+                _face.color = next ? FaceWhite : FaceWhite * Asleep;
+
+                var numberRT = _number.rectTransform;
+                numberRT.anchoredPosition = new Vector2(0f, size * FaceLift);
+                _number.text = level.ToString();
+                _number.color = reached ? DarkNumber : SilverNumber;
+                UIKit.OneLineLabel(_number, size * FaceW * .9f, crowned ? 64 : 48, 28);
+
+                // What a bought level was bought with, on its shoulder.
+                bool paid = reached && !crowned && level > earned;
+                _badge.enabled = paid;
+                if (paid)
+                {
+                    _badge.sprite = facts != null && facts.Currency == Currency.Gems ? Art.S("Ui/ic_gem") : Art.CoinFace();
+                    _badge.enabled = _badge.sprite != null;
+                    ((RectTransform)_badge.transform).anchoredPosition = new Vector2(size * .36f, size * .30f);
+                }
+
+                // ---------------------------------------------------------------- the banner
+                bool titled = facts != null && !string.IsNullOrEmpty(facts.Title);
+                _ribbon.gameObject.SetActive(titled);
+                if (titled)
+                {
+                    ((RectTransform)_ribbon.transform).anchoredPosition = new Vector2(x, RibbonY);
+                    _ribbon.color = reached ? Color.white : new Color32(170, 176, 210, 255);
+                    _ribbonText.text = facts.Title.ToUpperInvariant();
+                    UIKit.OneLineLabel(_ribbonText, RibbonW * .62f, 30, 18);
+                }
+
+                // The breath on the next disc, keyed on the level it was started for (44mc).
                 if (next && _pulsing != level)
                 {
                     _pulsing = level;
-                    Tween.Breathe(_pool.transform, .06f, 2.0f, level * .13f);
+                    Tween.Breathe(_glow.transform, .10f, 1.8f, level * .13f);
                 }
                 else if (!next && _pulsing >= 0)
                 {
                     _pulsing = -1;
-                    Tween.KillChannel(_pool.transform, "breathe");
-                    _pool.transform.localScale = Vector3.one;
+                    Tween.KillChannel(_glow.transform, "breathe");
+                    _glow.transform.localScale = Vector3.one;
                 }
             }
 
-            static string PriceLine(RowFacts facts)
-                => Loc.Format(facts.Currency == Currency.Gems ? "ui.keeper.price_gems" : "ui.keeper.price_coins",
-                              Compact.Number(facts.Price));
+            /// <summary>Gold for a level earned, mint for one bought, nothing for one above.</summary>
+            static Color? SegmentColour(int upper, int standing, int earned)
+            {
+                if (upper > standing) return null;
+                return upper > earned ? Pal.Mint : Pal.Gold;
+            }
+
+            /// <summary>
+            /// Half the path to a neighbour, which draws the other half: from this disc to the
+            /// midpoint, which always falls on the cell's own edge.
+            /// </summary>
+            static void Half(Image edge, Image core, float x, float toX, float toY, bool exists, Color? lit)
+            {
+                edge.enabled = exists;
+                core.enabled = exists;
+                if (!exists) return;
+
+                float dx = (toX - x) * .5f, dy = toY * .5f;
+                float length = Mathf.Sqrt(dx * dx + dy * dy);
+                float angle = Mathf.Atan2(-dx, dy) * Mathf.Rad2Deg;
+
+                foreach (var bar in new[] { edge, core })
+                {
+                    var rt = (RectTransform)bar.transform;
+                    rt.anchoredPosition = new Vector2(x, 0f);
+                    rt.sizeDelta = new Vector2(rt.sizeDelta.x, length);
+                    rt.localRotation = Quaternion.Euler(0f, 0f, angle);
+                }
+
+                edge.color = TrackShade;
+                core.color = lit ?? TrackDim;
+            }
         }
     }
 }

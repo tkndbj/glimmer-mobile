@@ -21,7 +21,7 @@ namespace GlimmerGrove
     /// view at all.
     /// </para>
     /// <para>
-    /// <b>Laid out to the band, capped per cell</b>: a 6x3 grid and a 10x6 room get whatever
+    /// <b>Laid out to the band, capped per cell</b>: a 6x3 grid and a 7x6 room get whatever
     /// band the screen gives them, so the cell is whichever of width, height and
     /// <see cref="MaxCell"/> binds first, and the grid is centred in what is left above the
     /// strip. <b>The width is meant to bind</b>: <see cref="BandWanted"/> tells the screen how

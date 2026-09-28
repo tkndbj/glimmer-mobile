@@ -8267,6 +8267,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 32be04af201dcc44cb9cb843280dc229
+    m_Address: Art/Challenge/push_keeper
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 32c3bdd4b3bfb494f8696bcd7c15a9f5
     m_Address: Art/Siege/Wards/beacon_g_fire/f01
     m_ReadOnly: 0

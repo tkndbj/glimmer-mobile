@@ -929,11 +929,16 @@ is where they are written down, not what they mean.
    back, because a level sold against a ladder the server never heard of is a debit refused and
    a level taken back, which is money shown and taken away. `content.py`, the C# reader, the
    server and the seeder refuse the same faults, and `content.py` prints the dollar table.
-57c. **The page is a `GridView` of one column** (44ma), a node per level on a spine — the
-   level-selection pack's three discs (`make_keeper_art.py`: reached, locked, and the crowned
-   one stood on) beside a plate saying what the level opens, read off the roster's own gate,
-   the manifest's wall and `KeeperTitle`'s floors, never a table of its own. Opened from the
-   hub's name card and the profile's level disc. `render_keeper_ladder.py` is the mirror.
+57c. **The page is a `GridView` of one column** (44ma), drawn as a climb since 2026-09-27 (the
+   owner: overlapping icons, too much small print, "looks like the other screens"): a night sky,
+   a lit path winding up from level 1 at the foot to the top of the ladder, the pack's three discs
+   on it (`make_keeper_art.py`: reached, locked with its padlock blanked so it carries a number,
+   crowned), prizes on pedestals beside a disc and an honorific on a banner under it - read off
+   the roster's own gate, the manifest's wall and `KeeperTitle`'s floors, never a table of its
+   own - and **one buy key docked above the nav bar**. Almost no sentences, by instruction. A cell
+   draws half the path to each neighbour, so no piece reaches into another cell;
+   `render_keeper_ladder.py` is the mirror and **exits non-zero on any overlap on the whole
+   ladder**.
 
 ### Consent
 
@@ -1073,6 +1078,18 @@ is where they are written down, not what they mean.
    only the first time the board holds k — so merge-undo-merge buys nothing. **Every shipped board
    joins all its gems into one** (mass exactly the target's), which fixes the merges and makes par
    the set-up slides a board forces; that is also what makes the 0-1 search fast.
+56o. **A Push board is composed backwards, a seated gem streams, and UNDO is the way out**
+   (2026-09-27, the owner: thirty levels, "the board looks a little small", "change that person
+   icon"). A breadth-first search run *backwards* from the solved board (the keeper pulling gems
+   off their pads) makes every state it reaches solvable with its distance exactly its par, and
+   the state dealt is scored on pushes and gem switches rather than on length - a route that is
+   mostly walking is long, not hard (`Tools/make_push_challenges.py`). A seated gem is a steady
+   fire, so it **streams** (56l's reason: banked, a gem seated early emptied the hill); a push
+   into a corner is not detected, so **UNDO takes a step back and is a turn** (56n's rule). **No
+   row carries a ring of wall**: the board's edge is one, and the ring cost two columns and two
+   rows of cell. The hill is tuned up to 1.3x the route, not the glade's .7x, because a Push
+   route seats its gems late and a hill shorter than the first seat is lost before any turret
+   can fire.
 
 ### Art credits
 
@@ -1274,9 +1291,13 @@ guess — verify offline.
   the picture the owner asked for, and it is shared by three screens, so it answers for all
   three — **which matters because the two turret ceremonies have no mirror of their own** and
   are judged on a device or not at all.
-- **A Push route:** `python Tools/push_route.py --seats` derives the step-shortest route through
-  every shipped sokoban row and the move on which each colour first seats — the route constant in
-  `ChallengeTests` and the row's wave timing are both read off it, never typed. A minute or two a row.
+- **The Push levels:** `python Tools/make_push_challenges.py --check` proves every row is what its
+  draft composes, meets its tier (par, pushes, switches, every gem pushed twice), tunes inside the
+  slack band with the hill never empty, and matches `Tests/PushRoutes.cs`; `--report` prints par,
+  pushes, switches, seat order and slack; `--seats` the step each colour first seats on.
+  `ChallengeTests.EveryShippedPush*` is the authority. Re-run `--write` after any change to the
+  hill rules or a row (a full re-tune is about ten minutes). `python Tools/make_push_art.py
+  --check` holds the keeper cannon to the turret kit.
 - **The daily challenges:** `python Tools/render_challenges.py` (`--id`, `--contact`, `--phone`)
   draws every shipped row's screen at rest off `challenges.json` with the real sprites — the only
   thing that can see the bands: it found the mustered raiders standing under the readout row and
@@ -1789,6 +1810,24 @@ half is `Assets/Game/Scripts/Cloud/`, Firebase Unity SDK
 on a fresh clone).
 
 ## Owed
+
+**Push got thirty levels, a bigger board, a cannon for a keeper and UNDO on 2026-09-27 (56o),
+and has been in the Editor but never on a device.** `d06_sokoban` was re-authored and
+`d99_sokoban`..`d127_sokoban` added: fourteen medium (6x4 and 6x5, two or three gems, par 22-32
+steps, slack tuned to 1.45-1.50x) and sixteen hard (6x5, 7x5 and 7x6, three or four gems, par
+49-60, slack 1.30-1.40x), composed, proved and tuned by `Tools/make_push_challenges.py`. No row
+carries a wall ring, so a cell is 136-188 units on a 16:9 phone against the old 97. The keeper is
+`Gun03` of the merge-shooter kit (`Tools/make_push_art.py`, `Art/Challenge/push_keeper`, held
+for Push alone), turning to face its step. A seated gem now **streams** rather than banks, UNDO is
+a turn, and the tip mentions it. No server, no schema, no seed. **Done in the Editor**: `Sync All
+Assets` and save (the keeper is addressed in `Glimmer Global`), `Audit Addresses` clean,
+`Validate Content` accepts all thirty. Offline green: `compile.py` (all sixteen),
+`ChallengeTests` 54/54 (the stream and undo rules each proved by mutation), `TipTests`,
+`make_push_challenges.py --check` (30 rows, 0 faults), `content.py` (0 errors), `loc.py`,
+`artnames.py`, `make_push_art.py --check`, `render_challenges.py` on both canvases.
+`Tools/push_route.py` is gone; the tool's `--seats` replaces it. **What no gate can answer**:
+whether a 60-step hard room reads as a puzzle or a slog to a mass-market player, whether a
+cannon reads as *the thing I move*, and whether UNDO costing a turn feels fair when stuck.
 
 **The ranks hall's furniture was re-cut from the owner's bought UI kit on 2026-09-27, and
 none of it has been in the Editor.** Three cuts in one day: the procedural chip, pill, rim and
