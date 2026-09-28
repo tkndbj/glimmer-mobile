@@ -182,11 +182,13 @@ export interface AdCallbackQuery {
   /**
    * The two parameters that can name which offer was watched.
    *
-   * All are read, and the first that names a known placement wins - **the ad unit's item
-   * name first**. The item name is set on the ad unit the client actually showed, so it
-   * cannot disagree with the offer; `[PLACEMENT_NAME]` is a dashboard *Placement*, and a
-   * name the dashboard does not define falls back to the app's default placement. That is
-   * what paid a watched `coin_bonus` as `heart_refill` (nought credits) on 2026-09-28.
+   * All are read, and the first that names a known placement wins - **the placement name
+   * first**. The client shows every ad with `ShowAd(placementId)`, so `[PLACEMENT_NAME]` is
+   * exactly the offer watched, *provided the LevelPlay dashboard defines a Placement of
+   * that name*; one it does not define arrives as `DefaultRewardedVideo`, which names
+   * nothing here, and falls through. `[ITEM_NAME]` is the last resort and is not per ad
+   * unit in practice: with no placements defined, a watched `coin_bonus` arrived as
+   * `itemName: heart_refill` and paid nothing (2026-09-28).
    */
   placement?: string;
   placementName?: string;
@@ -306,7 +308,7 @@ export function verifyAdCallback(
  * default placement name, which is exactly the case worth refusing rather than guessing at.
  */
 function namedPlacement(query: AdCallbackQuery): AdPlacementId | null {
-  for (const candidate of [query.itemName, query.placement, query.placementName]) {
+  for (const candidate of [query.placement, query.placementName, query.itemName]) {
     if (candidate && AD_PLACEMENTS.includes(candidate as AdPlacementId)) {
       return candidate as AdPlacementId;
     }

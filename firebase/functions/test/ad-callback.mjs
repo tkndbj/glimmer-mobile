@@ -103,18 +103,18 @@ check("itemName names the offer when placement does not",
         return verifyAdCallback({ ...q, itemName: "coin_bonus" }, KEY).ok;
       })());
 
-check("the ad unit's item name wins over a placement name that disagrees",
+check("the placement name wins over an item name that disagrees",
       (() => {
-        // A watched coin_bonus whose dashboard placement fell back to the default one.
-        const q = callback({ placement: undefined, placementName: "heart_refill" });
-        const v = verifyAdCallback({ ...q, itemName: "coin_bonus" }, KEY);
+        // What LevelPlay sends once a Placement named coin_bonus exists.
+        const q = callback({ placement: undefined, placementName: "coin_bonus" });
+        const v = verifyAdCallback({ ...q, itemName: "heart_refill" }, KEY);
         return v.ok && v.placement === "coin_bonus";
       })());
 
-check("a placement name still names the offer when the item name does not",
+check("the default placement names nothing and falls through to the item name",
       (() => {
-        const q = callback({ placement: undefined, placementName: "heart_refill" });
-        const v = verifyAdCallback({ ...q, itemName: "Virtual Item" }, KEY);
+        const q = callback({ placement: undefined, placementName: "DefaultRewardedVideo" });
+        const v = verifyAdCallback({ ...q, itemName: "heart_refill" }, KEY);
         return v.ok && v.placement === "heart_refill";
       })());
 
