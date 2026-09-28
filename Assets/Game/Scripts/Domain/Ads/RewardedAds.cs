@@ -557,6 +557,11 @@ namespace GlimmerGrove.Ads
                 // server. Pulling rather than pushing: the sync adopts whatever the server
                 // says the balance is, which is the same path a purchase takes.
                 CloudSaveService.BeginSync();
+
+                // The callback usually lands a few seconds *after* that sync has read the
+                // balance, so watch the wallet until it does - otherwise the coins sit on the
+                // server until the next sync and the player sees nothing. See AdGrantWatch.
+                CloudSaveService.AwaitAdGrant(ChestDropKinds.CurrencyOf(drop.Kind));
             }
 
             // Anything left is transient, which is deliberately nothing and now unreachable:

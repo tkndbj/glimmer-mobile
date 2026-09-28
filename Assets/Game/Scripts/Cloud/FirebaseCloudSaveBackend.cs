@@ -37,7 +37,7 @@ namespace GlimmerGrove.Cloud
     /// </para>
     /// </summary>
     public sealed class FirebaseCloudSaveBackend : ICloudSaveBackend, Social.IGroveBoardBackend,
-                                                   Referral.IReferralBackend
+                                                   Referral.IReferralBackend, IWalletFeed
     {
         /// <summary>Must match <c>REGION</c> in the functions' config.ts.</summary>
         public const string FunctionsRegion = "europe-west1";
@@ -1676,6 +1676,31 @@ namespace GlimmerGrove.Cloud
         /// a no-op rather than a second <c>Stop</c> against native state.
         /// </para>
         /// </summary>
+        /// <summary>
+        /// Listens to this account's wallet document, which is owner-readable and written only by
+        /// the functions - so a change is always the server having granted, confirmed or refused
+        /// something. The snapshot is not read: the balances come from <c>getWallet</c> as they
+        /// always have (see <see cref="IWalletFeed"/>).
+        /// </summary>
+        public IDisposable WatchWallet(Action onChanged)
+        {
+            if (onChanged == null || _db == null) return null;
+
+            string uid = _auth?.CurrentUser?.UserId;
+            if (string.IsNullOrEmpty(uid)) return null;
+
+            try
+            {
+                var doc = PlayerDoc(uid).Collection("private").Document("wallet");
+                return new ReferralWatchHandle(doc.Listen(_ => onChanged()));
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[Cloud] could not watch the wallet: {e.Message}");
+                return null;
+            }
+        }
+
         sealed class ReferralWatchHandle : IDisposable
         {
             ListenerRegistration _registration;

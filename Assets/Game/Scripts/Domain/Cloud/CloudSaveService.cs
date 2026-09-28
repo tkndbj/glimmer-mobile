@@ -335,6 +335,10 @@ namespace GlimmerGrove.Cloud
             // standing wall standing, which is the direction that matters.
             if (_release.Tick(deltaSeconds, networkReachable)) _ = RunReleaseCheckAsync();
 
+            // A rewarded video's currency, brought onto the screen the moment the network's
+            // callback pays it rather than on the next sync. See AdGrantWatch.
+            PumpAdGrant(deltaSeconds);
+
             if (!_schedule.Tick(deltaSeconds)) return;
 
             _ = RunScheduledSyncAsync();
@@ -1435,6 +1439,81 @@ namespace GlimmerGrove.Cloud
 
             SaveService.MarkDirty();
             PlayerProgression.Invalidate();
+        }
+
+        // ------------------------------------------------------ rewarded-ad grants
+        static readonly AdGrantWatch _adGrant = new AdGrantWatch();
+        static IDisposable _walletListener;
+        static double _adGrantClock;
+
+        /// <summary>
+        /// A rewarded video paid <paramref name="currency"/> and the server is about to grant
+        /// it. Watches the wallet until the grant lands, so the balance moves on screen without
+        /// waiting for the next sync. Cheap and safe to call from anywhere on the main thread.
+        /// </summary>
+        public static void AwaitAdGrant(string currency)
+        {
+            if (!IsAvailable || string.IsNullOrEmpty(currency)) return;
+
+            _adGrant.Expect(currency, Wallet.Ledger(currency).GrantedBaseline,
+                            CloudState.UserId, _adGrantClock);
+        }
+
+        static void PumpAdGrant(float deltaSeconds)
+        {
+            _adGrantClock += deltaSeconds;
+
+            switch (_adGrant.Next(_adGrantClock, CloudState.UserId,
+                                  currency => Wallet.Ledger(currency).GrantedBaseline))
+            {
+                case AdGrantWatch.Step.Attach:
+                    StopWalletListener();
+                    _walletListener = (_backend as IWalletFeed)?.WatchWallet(_adGrant.Signal);
+                    _adGrant.Attached(_walletListener != null);
+                    break;
+
+                case AdGrantWatch.Step.Refresh:
+                    _ = RefreshWalletForAdGrantAsync();
+                    break;
+
+                case AdGrantWatch.Step.Detach:
+                    StopWalletListener();
+                    break;
+            }
+        }
+
+        static void StopWalletListener()
+        {
+            var listener = _walletListener;
+            _walletListener = null;
+
+            try { listener?.Dispose(); }
+            catch (Exception error) { Debug.LogWarning("[Cloud] wallet listener would not stop: " + error.Message); }
+        }
+
+        /// <summary>
+        /// One read of the balances. Adopted only if the account that asked is still the one
+        /// signed in when the answer lands (invariant 17, one layer down): an answer issued for
+        /// one player must never be applied to another.
+        /// </summary>
+        static async Task RefreshWalletForAdGrantAsync()
+        {
+            try
+            {
+                string uid = CloudState.UserId;
+                if (string.IsNullOrEmpty(uid)) return;
+
+                var (read, wallets) = await _backend.ReadWalletAsync(uid);
+                if (read.Ok && wallets != null && CloudState.UserId == uid) ApplyWalletStates(wallets);
+            }
+            catch (Exception error)
+            {
+                Debug.LogWarning("[Cloud] could not read the wallet for an ad grant: " + error.Message);
+            }
+            finally
+            {
+                _adGrant.Refreshed();
+            }
         }
 
         // ---------------------------------------------------------------- deleting
