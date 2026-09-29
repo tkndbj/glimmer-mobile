@@ -279,12 +279,16 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Draws the tag into <paramref name="bar"/>, level with a corner key at
-        /// <paramref name="keyY"/>. Silent on a level the catalog does not hold.
+        /// <paramref name="keyY"/>. Silent on a level the catalog does not hold, and on a lane
+        /// with no ladder: the Infinite watch is one level, so "Level 1" names a place in a
+        /// ladder it does not have (the owner, 2026-09-29) - the header's wave readout is what
+        /// that board counts.
         /// </summary>
         protected void BuildLevelTag(RectTransform bar, float keyY)
         {
             int order = GameContent.Index.OrderOf(StakeLevel);
             if (order < 0) return;
+            if (!GameContent.Index.TrackOf(StakeLevel).Laddered) return;
 
             // Left of the tag = how far a header key reaches in, plus air. `KeyReach` is already
             // Domain's statement of that reach and is already held to the key's own 118 and 102,
@@ -437,9 +441,6 @@ namespace GlimmerGrove
             // run costs anything at all; leaving ends this one and nothing else, so it is priced
             // by what is still owed for it.
             bool costs = kind == ForfeitOverlay.Kind.Restart ? Staked : OwedAtEnding;
-            if (!costs) { Forfeit(reason); then(); return; }
-
-            Latch(true);
 
             // Whether the heart on the panel's price tag is the one going out now or the one the
             // fresh run will cost. The tag says -1 either way and is true either way; what it
@@ -447,11 +448,36 @@ namespace GlimmerGrove
             // out of turns" is false on a lane where running out costs nothing.
             bool prepaid = HeartStake.PaidAtDoor(Price);
 
+            // **Leaving a watch costs no heart and is still asked** (the owner, 2026-09-29,
+            // MODES.md 43e). Its heart went out at the door, but walking out ends the run
+            // without an ending: nothing it saw off is banked, so a stray tap on the back key
+            // threw away a long watch. What the panel says is that, and no price.
+            bool watch = !costs && kind == ForfeitOverlay.Kind.Leave && prepaid;
+            if (!costs && !watch) { Forfeit(reason); then(); return; }
+
+            Latch(true);
+
+            AskForfeit(kind, watch ? ForfeitOverlay.Stakes.Watch : ForfeitOverlay.Stakes.Heart, prepaid,
+                () => { Forfeit(reason); then(); });
+        }
+
+        /// <summary>
+        /// Puts the forfeit question to the player: the panel, with <paramref name="confirm"/>
+        /// on its red key and <see cref="Resume"/> on its green one.
+        ///
+        /// <b>A seam, so the pricing above is proved without a canvas</b>: the lifecycle fixture
+        /// stands no <c>Flow</c>, and what it asks is whether the question was put and what
+        /// answering it does - never what the panel looks like.
+        /// </summary>
+        protected virtual void AskForfeit(ForfeitOverlay.Kind kind, ForfeitOverlay.Stakes stake, bool prepaid,
+                                          Action confirm)
+        {
             Flow.Modal<ForfeitOverlay>(v =>
             {
                 v.Choice = kind;
+                v.Stake = stake;
                 v.Prepaid = prepaid;
-                v.OnConfirm = () => { Forfeit(reason); then(); };
+                v.OnConfirm = confirm;
                 v.OnCancel = Resume;
             });
         }

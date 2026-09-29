@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
-"""Draws the curse: the obsidian stone on the field, the sigil a hex hangs on a body, and the front
-that carries the curse up the hill.
+"""Draws the curse: the obsidian stone on the field and the sigil a hex hangs on a body.
 
     python Tools/make_obsidian_art.py --write     # cut them
     python Tools/make_obsidian_art.py --check     # prove the shipped PNGs are what this draws
     python Tools/make_obsidian_art.py --contact   # one sheet, to look at - the gate that matters
-    python Tools/make_obsidian_art.py --report    # what Tools/verify/fxreels.py will measure
 
 **What this is for.** The ninth Thornwatch chapter deals a fifth kind of gem into its refill -
 the cursed stone the Pairs challenges already draw (`SiegeLayout.Obsidian`). It burns in no ward,
 so it is clutter; three in a line break the curse, every obsidian on the field is drawn into the
-break, and every raider on the hill is hexed (`SiegeRaider.Hexed`). Three pictures say that:
+break, and every raider on the hill is hexed (`SiegeRaider.Hexed`). Two pictures say that, and
+the rest of it is drawn by the board (`SiegeView.Obsidian`):
 
 * **`Siege/gem_obsidian.png`** - the stone. **Cut from `Art/Challenge/pair_curse.png`, the Pairs
   curse stone, and not from the licensed pack**: the owner's brief was "use the cursed gem we have
@@ -23,18 +22,16 @@ break, and every raider on the hill is hexed (`SiegeRaider.Hexed`). Three pictur
   (`Additive`, invariant 37eu) exactly as the strike kit's pieces are, so one texture serves the
   break's burst, the stamp on each body and the ring a hexed raider stands in. Two rings, a band of
   sixteen runes, a toothed wheel with three swirling arms, and a core.
-* **`Siege/hexwave/fNN.png`** - the front the curse rides up the hill on: **painted rather than
-  tinted**, `stillwave`'s and `heavefront`'s rule (a sprite lent a colour can only be that colour
-  multiplied down), so the depth carries `HEX_RAMP` and the view lends `Color.white`. And it is
-  neither of those two: the still wave is cold and crystalline, the anvil's front hot and billowing,
-  and this is **wispy and rising** - tendrils curling back off a lilac lip, with runes carried in
-  them - because a player has to tell three things that sweep the hill apart before any of them
-  has finished.
+**There was a third, `Siege/hexwave/`** - a painted front the curse rode up the hill on, twenty-four
+frames. It was the third front that hill had (an hourglass's and an anvil's are the other two) and
+came back from the owner as "not unique"; a curse reaches the hill as a **lash** now, black whips
+thrown from the break at every body standing (`SiegeView.Cursed`, `Lash`, MODES.md 37ex), which is
+a mesh and ships no picture. The reel went with its frames, its addresses and its label (8d).
 
-**Nothing here is random per frame.** The fissures and the runes are seeded once; the front rolls
-a seeded field through itself, so `--check` reproduces every byte. The palette is written down
-here because this tool has no palette to import, and `CurseLight` (the view's palette) is held to it by
-`SiegeObsidianTests`.
+**Nothing here is random.** The fissures and the runes are seeded once, so `--check` reproduces
+every byte. The palette is written down here because this tool has no palette to import, and
+`CurseLight` (the view's palette) is held to it by `SiegeObsidianTests` - including `INK`, which
+this tool paints nothing with and the view lays every whip on in.
 """
 from __future__ import annotations
 
@@ -49,7 +46,6 @@ from PIL import Image, ImageFilter
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from make_legend_fx import Sheet                                        # noqa: E402
-from make_siege_art import noisefield, ramp                             # noqa: E402
 
 REPO = Path(__file__).resolve().parent.parent
 ART = REPO / "Assets" / "Game" / "Art"
@@ -65,22 +61,14 @@ LILAC = (232, 206, 255)
 VIOLET = (168, 92, 255)
 DEEP = (70, 22, 128)
 
+#: The dark itself - `CurseLight.Ink`, what a whip and the knot it is thrown from are laid on in.
+#: Not black, which on a phone is a hole cut in the picture: the stone's own shadow.
+INK = (16, 6, 30)
+
 
 def unit(rgb):
     """A 0-255 colour as the additive kit's 0-1 energy (`make_legend_fx.Sheet` works in units)."""
     return tuple(c / 255.0 for c in rgb)
-
-#: The front, lip to tail: a white-lilac lip, the violet of the light, magenta in the rolling body
-#: and the deep indigo it trails off into. **The third temperature on the hill**: the still wave is
-#: glass going to azure, the anvil's is fire going to rust, and this is light going to night.
-HEX_RAMP = (
-    (0.00, (255, 246, 255)),
-    (0.08, (232, 206, 255)),
-    (0.22, (190, 120, 255)),
-    (0.46, (150, 70, 236)),
-    (0.72, (98, 34, 170)),
-    (1.00, (40, 12, 76)),
-)
 
 # --------------------------------------------------------------------------- the stone
 
@@ -243,89 +231,10 @@ def sigil():
     return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), "RGBA")
 
 
-# --------------------------------------------------------------------------- the front
-
-#: The front's frame and its count. **The same shape and count as `heavefront` and `stillwave`**, so
-#: `SiegeView.Wall` draws all three with one set of numbers and a reel's rate is derived from its
-#: own length (`frames.Length / over`), which is why the count is free to match.
-LONG, THICK, FRAMES = 512, 128, 24
-
-
-def hexwave():
-    """The front a broken curse rides up the hill on: a lilac lip and violet tendrils rising off it.
-
-    **Wispy and rising, which is the whole of what tells it from the other two fronts.** A still
-    wave is a flat face with graduations; an anvil's front a billowing wall of dust. This is thin
-    tendrils that *curl back* off the lip - each lobe sheared by the depth so it leans away from the
-    direction of travel - over a body that thins to nothing rather than rolling, with runes carried
-    in it. Every term varies in **both** axes (`heavefront`'s lesson: a mask built of `f(x)` is a
-    fence), and the runes come off a seeded field rather than off sines, because a product of
-    periodic functions is a lattice.
-    """
-    y, x = np.mgrid[0:THICK, 0:LONG].astype(np.float32)
-    d = y / (THICK - 1.0)               # 0 at the leading (top) edge, 1 at the trailing one
-
-    fade = LONG * 0.045
-    along = np.clip(np.minimum(x, LONG - 1 - x) / fade, 0.0, 1.0)
-
-    runes = noisefield(THICK, LONG, 4242, 7, 30)
-    wisp = noisefield(THICK, LONG, 777, 6, 28)
-
-    frames = []
-    for f in range(FRAMES):
-        u = f / (FRAMES - 1.0)
-
-        # **Tendrils: lobes that lean back as they go**, at incommensurate wavelengths, so the
-        # body has no repeating column in it.
-        curl = np.sin(x / 31.0 - d * 6.4 + u * 5.3 + wisp * 3.0)
-        drift = np.sin(x / 17.0 + d * 4.1 - u * 3.9)
-        tendril = np.clip(0.5 + 0.5 * curl, 0.0, 1.0) ** 2.2 * (0.55 + 0.45 * (drift * .5 + .5))
-
-        # How far the wisps reach behind the lip, rolling along it.
-        deep = 0.46 + 0.30 * (0.5 + 0.5 * np.sin(x / 53.0 + u * 2.2)) * (0.5 + 0.5 * wisp)
-
-        # The lip: thin, bright and uneven.
-        crest = 0.030 + 0.022 * (0.5 + 0.5 * drift)
-        lead = np.clip(1.0 - d / np.maximum(1e-3, crest), 0.0, 1.0)
-        lip = np.clip(1.0 - d / (crest + 0.10), 0.0, 1.0) ** 1.6
-
-        body = np.clip(1.0 - d / np.maximum(1e-3, deep), 0.0, 1.0) ** 1.35
-        haze = np.clip(1.0 - d, 0.0, 1.0) ** 2.3
-
-        # It gathers as it goes: thin on the first frames, full by the middle.
-        grow = min(1.0, 0.5 + 1.25 * u)
-
-        # **Runes carried in the body, rolled up through it as the reel runs**, so they rise with
-        # the curse rather than sitting in it.
-        rune = np.clip((np.roll(runes, -int(u * THICK * 0.5), axis=0) - 0.80) / 0.20,
-                       0.0, 1.0) * body
-
-        lit = np.clip(lead + lip * 0.85
-                      + body * (0.12 + 1.05 * tendril) * grow
-                      + haze * 0.38 * grow
-                      + rune * 0.95 * grow, 0.0, 1.0)
-
-        heat = np.clip(lead + lip * 0.7 + rune * 1.2, 0.0, 1.0)
-        rgb = ramp(np.clip(d / 0.90, 0.0, 1.0), HEX_RAMP)
-        rgb = rgb + (255.0 - rgb) * (0.82 * heat ** 1.8)[..., None]
-
-        a = np.zeros((THICK, LONG, 4), np.float32)
-        a[..., :3] = rgb
-        a[..., 3] = lit * along * 255.0
-        a[..., 3] = np.maximum(a[..., 3], np.maximum(lead, lip * 0.8) * along * 255.0)
-
-        frames.append(Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), "RGBA"))
-
-    return frames
-
-
 # --------------------------------------------------------------------------- the tool
 
 def build():
-    made = {"Siege/gem_obsidian.png": stone(), "Siege/hex_sigil.png": sigil()}
-    for i, frame in enumerate(hexwave()):
-        made["Siege/hexwave/f%02d.png" % i] = frame
-    return made
+    return {"Siege/gem_obsidian.png": stone(), "Siege/hex_sigil.png": sigil()}
 
 
 def raw(im):
@@ -368,25 +277,12 @@ def check(made):
     print("%d files are what this tool draws" % len(made))
 
 
-def report(made):
-    """What `Tools/verify/fxreels.py` will say of the front: ink and lit box at its loudest frame."""
-    frames = [np.asarray(made["Siege/hexwave/f%02d.png" % f], np.float32)[..., 3] / 255.0
-              for f in range(FRAMES)]
-    best = max(frames, key=lambda a: a.sum())
-    lit = best > 0.15
-    ys, xs = np.nonzero(lit)
-    wide = (xs.max() - xs.min() + 1) / best.shape[1] if len(xs) else 0.0
-    tall = (ys.max() - ys.min() + 1) / best.shape[0] if len(ys) else 0.0
-    print("  hexwave: ink %.2f%%, lit box %.1f%% x %.1f%%" % (lit.mean() * 100, wide * 100,
-                                                             tall * 100))
-
-
 def contact(made):
-    """The stone among the four jewels, the sigil on the board's dark, and the front's frames."""
+    """The stone among the four jewels, and the sigil on the board's dark."""
     from PIL import ImageDraw
 
     ground = (26, 28, 40, 255)
-    sheet = Image.new("RGBA", (1280, 760), ground)
+    sheet = Image.new("RGBA", (1280, 300), ground)
     pen = ImageDraw.Draw(sheet)
 
     x = 20
@@ -408,12 +304,6 @@ def contact(made):
     pen = ImageDraw.Draw(sheet)
     pen.text((ox, oy + SIGIL + 2), "hex_sigil (added, violet)", fill=(220, 220, 230, 255))
 
-    for i, f in enumerate((0, 6, 12, 18, 23)):
-        im = made["Siege/hexwave/f%02d.png" % f]
-        sheet.alpha_composite(im, (20 + (i % 2) * 620, 300 + (i // 2) * 150))
-        pen.text((20 + (i % 2) * 620, 300 + (i // 2) * 150 + 130), "hexwave f%02d" % f,
-                 fill=(220, 220, 230, 255))
-
     out = REPO / "Tools" / "out" / "obsidian_contact.png"
     out.parent.mkdir(parents=True, exist_ok=True)
     sheet.convert("RGB").save(out)
@@ -425,7 +315,6 @@ def main():
     ap.add_argument("--write", action="store_true")
     ap.add_argument("--check", action="store_true")
     ap.add_argument("--contact", action="store_true")
-    ap.add_argument("--report", action="store_true")
     args = ap.parse_args()
 
     made = build()
@@ -434,9 +323,7 @@ def main():
         write(made)
     if args.contact:
         contact(made)
-    if args.report:
-        report(made)
-    if args.check or not (args.write or args.contact or args.report):
+    if args.check or not (args.write or args.contact):
         check(made)
 
 

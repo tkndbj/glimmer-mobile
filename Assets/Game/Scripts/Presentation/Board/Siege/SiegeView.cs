@@ -180,6 +180,16 @@ namespace GlimmerGrove
 
             public float Marked, MarkWisp;
 
+            /// <summary>
+            /// When the whip that carries this body's curse lands on it, in real seconds, and
+            /// whether it has (<c>SiegeView.Cursed</c>). The model hexes every body on one
+            /// frame and the lash reaches them over a third of a second, so nothing of a hex is
+            /// drawn on a body before this - a drawing's delay, never a rule's.
+            /// </summary>
+            public float HexAt;
+
+            public bool Hexed;
+
 
             /// <summary>The warlord's, and null for everything else.</summary>
             public bool Boss;

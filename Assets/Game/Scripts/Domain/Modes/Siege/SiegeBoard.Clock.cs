@@ -424,13 +424,13 @@ namespace GlimmerGrove.Modes
             // lane deals two) is held back by the same clause that holds back a lone one. The
             // wave's own index nought is a boss in every shape either lane authors, but reading
             // the whole wave is the question actually being asked.
-            if (_wave > 0 && Layout.BossesIn(_wave) > 0 && HillHolds) return;
+            if (_wave > _first && Layout.BossesIn(_wave) > 0 && HillHolds) return;
 
             _rest -= dt;
 
             if (_rest > 0f)
             {
-                if (_wave == 0) return;
+                if (_wave == _first) return;
 
                 if (HillHolds) return;
 

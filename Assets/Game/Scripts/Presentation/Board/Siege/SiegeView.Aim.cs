@@ -316,8 +316,9 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Every box a blast burned, lit for a beat and gone - in the firepot's ember, or in
-        /// the ward's own colour for an overcharge (<c>SiegeView.Slam</c>).
+        /// Every box a firepot burned, lit for a beat and gone. An overcharge used to light
+        /// its own in the ward's colour and no longer draws on the ground at all - it says who
+        /// it reached with a fork of lightning to each (<c>SiegeView.Arcburst</c>).
         /// </summary>
         void Scorch(SiegeAim aim, Color colour)
         {

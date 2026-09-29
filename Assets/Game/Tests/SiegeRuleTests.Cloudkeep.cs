@@ -219,7 +219,8 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(15, SiegeTuning.ToughnessFor(6), "Bonereach moved");
             Assert.AreEqual(14, SiegeTuning.ToughnessFor(7), "Cloudkeep is not the traded 1.4");
             Assert.AreEqual(15, SiegeTuning.ToughnessFor(8), "Cogspire is not the traded 1.5");
-            Assert.AreEqual(18, SiegeTuning.ToughnessFor(9), "the ladder past the trades moved");
+            Assert.AreEqual(16, SiegeTuning.ToughnessFor(9), "Windwreck is not the traded 1.6");
+            Assert.AreEqual(19, SiegeTuning.ToughnessFor(10), "the ladder past the trades moved");
 
             foreach (var rung in Cogspire)
                 Assert.AreEqual(SiegeTuning.ToughnessFor(8), rung.Built().Tough.HealthTenths,

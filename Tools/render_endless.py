@@ -74,10 +74,12 @@ SLOT_SIZE, ICON_SIZE = 68.0, 52.0
 
 BUTTON_W, BUTTON_H = 620.0, 178.0
 
-RECORD_SCALE = .62             # `EndlessHubLayout.RecordScale`
+RECORD_SCALE = .54             # `EndlessHubLayout.RecordScale`
 RECORD_H = MEDAL_H * RECORD_SCALE
-HERO_GAP, RECORD_GAP, BUTTON_GAP = 16.0, 20.0, 26.0
-MIN_SCALE = .78                # `EndlessHubLayout.MinScale`
+# `EndlessHubLayout.CheckpointWidth/Height` - the checkpoint bar over the key (MODES.md 43f).
+CHECK_W, CHECK_H = BUTTON_W, 88.0
+HERO_GAP, RECORD_GAP, CHECK_GAP, BUTTON_GAP = 16.0, 20.0, 22.0, 14.0
+MIN_SCALE = .72                # `EndlessHubLayout.MinScale`
 
 #: Where the column sits in a band with room to spare: a little above centre.
 #: A tall phone's slack has to go somewhere, and the foot is where a screen wants
@@ -89,7 +91,8 @@ BADGE_DOWN = (RANK_PLATE_DOWN - RIBBON_H / 2 - HEAD_CLEAR) / 2
 HERO_CENTRE = HERO_H / 2
 PANEL_CENTRE = HERO_H + HERO_GAP + PANEL_H / 2
 RECORD_CENTRE = HERO_H + HERO_GAP + PANEL_H + RECORD_GAP + RECORD_H / 2
-BUTTON_CENTRE = HERO_H + HERO_GAP + PANEL_H + RECORD_GAP + RECORD_H + BUTTON_GAP + BUTTON_H / 2
+CHECK_CENTRE = HERO_H + HERO_GAP + PANEL_H + RECORD_GAP + RECORD_H + CHECK_GAP + CHECK_H / 2
+BUTTON_CENTRE = CHECK_CENTRE + CHECK_H / 2 + BUTTON_GAP + BUTTON_H / 2
 COLUMN_H = BUTTON_CENTRE + BUTTON_H / 2
 
 
@@ -409,6 +412,42 @@ def battle(sheet, top, wall=0):
     K.text(sheet, caption, cx - block / 2 + glyph.width + 14, cy, size, outline=4, anchor="l")
 
 
+def checkpoint(sheet, top, start=0, first=0):
+    """`EndlessHub.Checkpoint` - where the next run opens, over the key it speaks for.
+
+    Two faces: the blue pill naming the start once a checkpoint is open (``start``, wave one
+    included), and the shut grey pill naming what opens the first one (``first``). A table with
+    no rows draws neither, which is ``start == first == 0``.
+    """
+    if not start and not first:
+        return
+
+    cx, cy = W / 2, top + CHECK_CENTRE
+    shut = start <= 0
+
+    K.paste(sheet, K.skin("btn_gray" if shut else "btn_blue", CHECK_W, CHECK_H), cx, cy)
+
+    mark = "ic_padlock" if shut else "ic_endless"
+    glyph = K.fit(Image.open(K.UI / ("%s.png" % mark)).convert("RGBA"), (62, 62))
+
+    caption = (loc("ui.endless.checkpoint.first", "Checkpoints open at wave {0}").format(first)
+               if shut else loc("ui.endless.checkpoint.start", "Start: Wave {0}").format(start)).upper()
+
+    size = 36
+    room = CHECK_W - 40 - glyph.width - 14
+    while size > 24 and K.font(size).getlength(caption) > room:
+        size -= 1
+    wide = K.font(size).getlength(caption)
+    if size < 36:
+        print("  checkpoint bar says %r at %dpx (authored 36, floor 24)" % (caption, size))
+    if wide > room:
+        print("  !! the checkpoint bar says %.0f wide in %.0f of room at its floor" % (wide, room))
+
+    block = glyph.width + 14 + wide
+    K.paste(sheet, glyph, cx - block / 2 + glyph.width / 2, cy)
+    K.text(sheet, caption, cx - block / 2 + glyph.width + 14, cy, size, outline=3, anchor="l")
+
+
 # --------------------------------------------------------------- the furniture
 def header(sheet, modes, boost=0, rank=3):
     """`LevelsScreen.BuildHeader` - what stands above the column and is unchanged by it."""
@@ -455,7 +494,7 @@ def shelf(sheet, h):
 
 
 # --------------------------------------------------------------- the screen
-def screen(h, played=True, modes=False, wall=0, standing=0, boost=0, rank=3):
+def screen(h, played=True, modes=False, wall=0, standing=0, boost=0, rank=3, start=1, first=0):
     sheet = Image.new("RGBA", (W, h), (*K.GROUND, 255))
 
     plain(sheet, h)
@@ -475,6 +514,7 @@ def screen(h, played=True, modes=False, wall=0, standing=0, boost=0, rank=3):
     record = record.resize((int(W * RECORD_SCALE), int(record.height * RECORD_SCALE)), Image.LANCZOS)
     layer.alpha_composite(record, (int((W - record.width) / 2),
                                    int(100 + RECORD_CENTRE - RECORD_H / 2 - 100 * RECORD_SCALE)))
+    checkpoint(layer, 100, start, first)
     battle(layer, 100, wall)
     if scale < 1.0:
         layer = layer.resize((int(W * scale), int(layer.height * scale)), Image.LANCZOS)
@@ -513,6 +553,12 @@ def main():
     ap.add_argument("--rank", type=int, default=3, metavar="RUNGS",
                     help="how many rank rungs are held; 0 draws the unranked corner, which is "
                          "the state every account is in until it has earned one")
+    ap.add_argument("--start", type=int, default=1, metavar="WAVE",
+                    help="the checkpoint bar's chosen start (1 is the beginning); 0 with "
+                         "--first draws the shut face")
+    ap.add_argument("--first", type=int, default=0, metavar="BEST",
+                    help="draw the shut checkpoint bar: no checkpoint open yet, the first "
+                         "opening at this best")
     ap.add_argument("--out", type=Path, default=Path("endless.png"))
     args = ap.parse_args()
 
@@ -524,7 +570,9 @@ def main():
                  modes=args.modeswitch, wall=max(0, args.locked),
                  standing=max(0, min(99, args.standing)),
                  boost=max(0, args.boost),
-                 rank=max(0, args.rank))
+                 rank=max(0, args.rank),
+                 start=0 if args.first > 0 else max(0, args.start),
+                 first=max(0, args.first))
     args.out.parent.mkdir(parents=True, exist_ok=True)
     out.save(args.out)
     print("  wrote %s  %dx%d  - look at it" % (args.out, out.width, out.height))

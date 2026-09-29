@@ -51,6 +51,12 @@ HARD_MAX_LIFETIME_WAVES = 1_000_000
 TALLY_CEILING = 999_999_999
 MAX_STARS = 3
 
+# The daily challenge clears, mirroring `ChallengeLimits.HardMaxClears` / `HARD_MAX_CLEARS`,
+# `ChallengeLedger.MaxClearRows` / `MAX_CLEAR_ROWS` and the genre spelling's alphabet.
+HARD_MAX_CLEARS = 1_000_000
+MAX_CLEAR_ROWS = 64
+GENRE_KEY = __import__("re").compile(r"^[a-z0-9_]{1,32}$")
+
 # The catalog the cases are measured against. Deliberately small and deliberately *not* the
 # shipped one: a vector pinned to live content fails the day somebody authors a chapter, which
 # teaches everyone to edit vectors rather than to read them.
@@ -158,6 +164,23 @@ def best_wave(case, scope):
     return 0 if best <= 0 else min(best, MAX_WAVE)
 
 
+def challenge_clears(case):
+    """`ChallengeLedger.LifetimeClearsIn` / `challengeClears`: every genre's clears, summed.
+
+    A case never carries one genre twice - the device joins duplicate rows by `max` and the
+    server sums them, and which of the two a forged file meets is the challenge vectors'
+    question, not this one's.
+    """
+    total = 0
+    for row in (case.get("challenges") or [])[:MAX_CLEAR_ROWS]:
+        if not GENRE_KEY.match(row.get("genre") or ""):
+            continue
+        count = int(row.get("count") or 0)
+        if count > 0:
+            total += min(count, HARD_MAX_CLEARS)
+    return total
+
+
 def lifetime(case, goal):
     """A counted verb: the larger of what was counted and what the rest of the save proves."""
     counted = 0
@@ -177,6 +200,9 @@ def lifetime(case, goal):
         proved = walk_levels(case, "", lambda stars: 1)
     elif goal == "waves":
         proved = int(case.get("lifetimeWaves") or 0)
+    elif goal in ("challenge_plays", "challenge_wins"):
+        # A daily challenge cleared is a play spent and won (invariant 56i's tally).
+        proved = challenge_clears(case)
     else:
         proved = 0
 
@@ -221,7 +247,8 @@ def cases():
     """Every case, named for the thing it would catch if it broke."""
     out = []
 
-    def case(name, levels=None, endless=None, lifetime_rows=None, keeper=1, ladder=None):
+    def case(name, levels=None, endless=None, lifetime_rows=None, keeper=1, ladder=None,
+             challenges=None):
         entry = {
             "name": name,
             "levels": levels or [],
@@ -229,6 +256,10 @@ def cases():
             "lifetime": lifetime_rows or [],
             "keeperLevel": keeper,
         }
+
+        # Only where a case is about them, so the older cases stay as they were written.
+        if challenges:
+            entry["challenges"] = challenges
 
         # Derived from the case's own rows rather than stated. See `lifetime_waves`.
         entry["lifetimeWaves"] = lifetime_waves(entry)
@@ -359,6 +390,33 @@ def cases():
          endless=[wave("two_a", 10)], lifetime_rows=[{"goal": "waves", "count": 20}],
          ladder=waves_ladder)
 
+    # --------------------------------------------------------- the daily challenge floor
+    # The challenge ledger's per-genre clears are a lifetime record older than the two task
+    # verbs, and the floor under both: a clear is a play spent and a play won. The rows are the
+    # save's own `challenges.clears`, which each side reads through the walk its XP already uses.
+    def clears(genre, count):
+        return {"genre": genre, "count": count}
+
+    plays_ladder = [{"id": "only", "requires": [{"measure": "challenge_plays", "target": 30}]}]
+    wins_ladder = [{"id": "only", "requires": [{"measure": "challenge_wins", "target": 30}]}]
+    case("the challenge plays verb is floored by the clears, every genre summed",
+         challenges=[clears("pairs", 10), clears("merge", 20)], ladder=plays_ladder)
+    case("and so is the challenge wins verb",
+         challenges=[clears("pairs", 10), clears("glade", 12), clears("sokoban", 8)],
+         ladder=wins_ladder)
+    case("a withdrawn genre's clears still count, as its XP still does",
+         challenges=[clears("sudoku", 25), clears("pairs", 5)], ladder=wins_ladder)
+    case("clears one short hold nothing",
+         challenges=[clears("pairs", 29)], ladder=wins_ladder)
+    case("a plays tally over the clears still wins",
+         challenges=[clears("pairs", 3)],
+         lifetime_rows=[{"goal": "challenge_plays", "count": 30}], ladder=plays_ladder)
+    case("a row with a spelling no save can hold proves nothing",
+         challenges=[clears("Pairs!", 40)], ladder=wins_ladder)
+    case("the battle verbs are not floored by a challenge",
+         challenges=[clears("pairs", 50)],
+         ladder=[{"id": "only", "requires": [{"measure": "wins", "target": 1}]}])
+
     # ---------------------------------------------------------------- the tally ceiling
     ceiling_ladder = [{"id": "only",
                        "requires": [{"measure": "raiders", "target": TALLY_CEILING}]}]
@@ -395,8 +453,9 @@ COMMENT = [
     "else's. These cases are the only instrument that can see it.",
     "",
     "`rankChapters` is the catalog a case is measured against and `rankLadder` the ladder it",
-    "climbs; a case may carry its own `ladder` instead. `levels`, `endless` and `lifetime` are",
-    "the save's rows in whichever shape each side stores them, `keeperLevel` and",
+    "climbs; a case may carry its own `ladder` instead. `levels`, `endless`, `lifetime` and",
+    "(where present) `challenges` - the save's `challenges.clears` rows - are the save's rows",
+    "in whichever shape each side stores them, `keeperLevel` and",
     "`lifetimeWaves` are the two figures both sides are handed rather than derive, and `held`",
     "is the rung id both must answer — empty for an account below the first rung.",
     "",

@@ -416,7 +416,7 @@ namespace GlimmerGrove
                     mob.Body.color = raider.Flash > 0f
                                    ? Color.Lerp(Color.white, Pal.Cream, raider.Flash * 5f)
                                    : raider.Stunned || _board.Stilled ? Stunned
-                                   : raider.Cursed ? HexedBody(raider)
+                                   : raider.Cursed && mob.Hexed ? HexedBody(raider)
                                    : raider.Alight ? Scorched(raider) : Color.white;
 
                 // **A boss goes back to its own body the frame after a spell finishes, and which

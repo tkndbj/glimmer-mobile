@@ -94,6 +94,21 @@ namespace GlimmerGrove.Tests
             public bool Left;
             public void WalkAway()
                 => ConfirmForfeit(ForfeitOverlay.Kind.Leave, "back", () => Left = true);
+
+            /// <summary>
+            /// What the forfeit panel would have been asked, and its red key. Recorded rather than
+            /// raised: this fixture stands no <c>Flow</c>, and the question here is whether the
+            /// player is asked and what answering costs - never what the panel looks like.
+            /// </summary>
+            public ForfeitOverlay.Stakes? Asked;
+            public Action Confirm;
+
+            protected override void AskForfeit(ForfeitOverlay.Kind kind, ForfeitOverlay.Stakes stake,
+                                               bool prepaid, Action confirm)
+            {
+                Asked = stake;
+                Confirm = confirm;
+            }
         }
 
         const string Free = "g1", Paid = "g4", Beaten = "g5";
@@ -357,6 +372,7 @@ namespace GlimmerGrove.Tests
 
             CollectionAssert.AreEqual(new[] { "back" }, probe.Abandonments);
             Assert.IsTrue(probe.Left, "and the player still goes where they asked to go");
+            Assert.IsNull(probe.Asked, "a free glade stopped to ask - the watch's question leaked");
             Assert.IsFalse(probe.Begun, "a forfeited run is resolved whatever it cost");
         }
 
@@ -421,18 +437,25 @@ namespace GlimmerGrove.Tests
         }
 
         [Test]
-        public void WalkingOutOfAWatchIsFreeAndIsNotAskedAbout()
+        public void WalkingOutOfAWatchIsFreeButIsAskedAbout()
         {
-            // Leaving takes nothing, so it is walked out of without a panel - the same rule a
-            // glade you have already beaten is walked out of by, and for the same reason: a
-            // confirmation over a free action teaches players to dismiss the one that is not.
+            // Leaving takes no heart, and is still asked (the owner, 2026-09-29, MODES.md 43e):
+            // a left watch banks none of its waves, so a stray tap on the back key threw a long
+            // run away. The question carries no price - `Stakes.Watch` - and answering it costs
+            // exactly what it always did: nothing.
             Holding(3);
 
             var probe = On(Watch);
             probe.Begin();
             probe.WalkAway();
 
-            Assert.IsTrue(probe.Left, "leaving a watch stopped to ask about a heart nobody takes");
+            Assert.IsFalse(probe.Left, "leaving a watch walked out without asking");
+            Assert.AreEqual(ForfeitOverlay.Stakes.Watch, probe.Asked, "it was asked as a heart");
+            Assert.AreEqual(2, Wallet.Hearts.Count, "asking took a heart");
+
+            probe.Confirm();
+
+            Assert.IsTrue(probe.Left, "and the player still goes where they asked to go");
             Assert.AreEqual(2, Wallet.Hearts.Count, "walking away took a second heart");
             Assert.IsFalse(probe.Begun, "and it is still forfeited rather than left owed for");
             CollectionAssert.AreEqual(new[] { "back" }, probe.Abandonments);

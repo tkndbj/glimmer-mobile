@@ -1097,6 +1097,17 @@ namespace GlimmerGrove.Content
         public KeeperMilestonesDto keeperMilestones;
 
         /// <summary>
+        /// The Infinite lane's checkpoints (MODES.md 43f). Optional; see
+        /// <see cref="Progression.EndlessCheckpointTable"/>.
+        ///
+        /// <b>A block that reaches no server</b>, like <see cref="notifications"/>: a checkpoint
+        /// decides where a run on this device opens and pays nothing - a run is paid for the
+        /// waves it saw off - so there is nothing to adjudicate and <c>seed-config.mjs</c> does
+        /// not publish it.
+        /// </summary>
+        public EndlessCheckpointsDto endlessCheckpoints;
+
+        /// <summary>
         /// The rank ladder. Optional; see <see cref="Ranks.RankLadder"/>.
         ///
         /// <para>
@@ -1281,6 +1292,34 @@ namespace GlimmerGrove.Content
 
         /// <summary>Whether the file wrote this block at all; see <see cref="DailyChestEntryDto.IsAuthored"/>.</summary>
         public bool IsAuthored => rows != null && rows.Length > 0;
+    }
+
+    /// <summary>
+    /// The Infinite lane's checkpoints: where a run may open once a best says it has been there.
+    /// See <see cref="Progression.EndlessCheckpointTable"/>.
+    /// </summary>
+    [Serializable]
+    public sealed class EndlessCheckpointsDto
+    {
+        /// <summary>The checkpoints, earliest wave first.</summary>
+        public EndlessCheckpointDto[] rows;
+
+        /// <summary>Whether the file wrote this block at all; see <see cref="DailyChestEntryDto.IsAuthored"/>.</summary>
+        public bool IsAuthored => rows != null && rows.Length > 0;
+    }
+
+    /// <summary>One checkpoint. See <see cref="EndlessCheckpointsDto"/>.</summary>
+    [Serializable]
+    public sealed class EndlessCheckpointDto
+    {
+        /// <summary>The wave a run opens on - always the wave after a boss wave.</summary>
+        public int wave;
+
+        /// <summary>The best (waves cleared on this lane) that opens it.</summary>
+        public int unlockAt;
+
+        /// <summary>Cogs spent on every turret before the first wave: the rank each starts at.</summary>
+        public int cogs;
     }
 
     /// <summary>One keeper milestone. See <see cref="KeeperMilestonesDto"/>.</summary>

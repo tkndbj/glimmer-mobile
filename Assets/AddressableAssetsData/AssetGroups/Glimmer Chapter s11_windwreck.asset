@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Glimmer Chapter s11_windwreck
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Glimmer Chapter s11_windwreck
+  m_GUID: fba66df5c5cd6e640ae8d2b197c70c95
+  m_SerializeEntries:
+  - m_GUID: 88c42beb2e6552548af614865671cc5c
+    m_Address: Art/Map/map10_strip1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d52945628662a5d45ba818a788090d7c
+    m_Address: Art/Map/map10_strip0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d719a1fe58272f846a2134723251e32e
+    m_Address: Art/Map/map10_strip2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e37c67cbe16edf24bab0c4e27b64519c
+    m_Address: Art/Map/map10_strip3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 6c4c5f6eb57af6542b195d29840b42f2, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 68c36eb25dd9247408909bbce489a0fe, type: 2}
+    - {fileID: 11400000, guid: 2f55560613848cf468789d41cae103e5, type: 2}
+    m_SchemaDisplayOrder:
+    - Glimmer Chapter s11_windwreck_BundledAssetGroupSchema
+    - Glimmer Chapter s11_windwreck_ContentUpdateGroupSchema
+  m_IncludeInBuild: 1
+  m_IncludeInBuildMigrated: 1

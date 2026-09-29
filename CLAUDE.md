@@ -868,6 +868,12 @@ is where they are written down, not what they mean.
    long as it has requirements. **A skip rings it rather than killing it**: pending beats die
    with their owner, and a rank taken in silence because somebody was in a hurry is what a skip
    may not cost.
+52m. **A catalog-wide star line is set against the catalog the game is growing into, not the
+   one it ships** (the owner, 2026-09-29: levels are added often, so a ladder derived from today's
+   count is met by anyone who has played it). A rung above what ships is **warned, never
+   refused**; a *chapter*-scoped line and `keeper_level` still error, because those never grow.
+   A retune that lowers nobody's badge is free; raising the first two rungs would take badges
+   off live cards, which is why they were left alone.
 
 ### The tutorial
 
@@ -1145,6 +1151,15 @@ is where they are written down, not what they mean.
    against a pool it never drew on. Its own daily cap, outside the shared cooldown, and never a
    chest drop (`IsAdOnly`); the build gate counts its plays in the coin ceiling
    (`ChallengeEconomyGate`).
+56q. **A challenge feeds the task slate through two verbs of its own, and never through a
+   battle's** (the owner, 2026-09-29: `d_challenges` "play 8", win or lose, silver; `w_challenges`
+   "complete 30", royal). `challenge_plays` is noted in `ChallengeLedger.Commit` - the one place a
+   play is spent exactly once, so a forfeit, a loss and a killed process all count and an untouched
+   deal does not - and `challenge_wins` beside the clears tally in `Win`. Both are floored by the
+   lifetime clears on **both** sides (`LifetimeTally.FloorFor`, `SaveRankSource.Proved`,
+   `ranks.ts`), held by `rankCases`, so either is a retroactive rank measure. The same change
+   found `ChallengeLedger.LoadFrom` joining the clears into the last account's rather than
+   replacing them, which pushed one account's challenge XP into the next after a switch (17a).
 
 ### Art credits
 
@@ -1317,6 +1332,11 @@ guess — verify offline.
   on every row and asks the four refusals. **10/10 live** (2026-09-27, the first run after the
   deploy and seed); the honest purchase runs only when the account seed can afford level 2, which
   at 1,250 against 2,000 it cannot - that half is `KeeperLevelTests` until a device buys one.
+- **The Infinite lane's checkpoints (MODES.md 43f):** `python Tools/verify/tests.py EndlessCheckpointTests`
+  (the real wave, the head start, paid only for waves seen off, the choice as a hint; each clause
+  mutation-proved); `content.py` holds every row to the boss schedule; `python Tools/render_checkpoints.py
+  --contact` is the sheet in four states and exits non-zero on a caption at its floor;
+  `render_endless.py --start n` / `--first n` draws the bar over the key.
 - **The keeper ladder page:** `python Tools/render_keeper_ladder.py` (`--standing n --bought k
   --claimed c`, `--unsold`, `--contact`). It measures every caption, reads the ladder and the
   milestones off the shipped files, and refuses a chest meeting a disc anywhere on the climb.
@@ -1414,13 +1434,19 @@ guess — verify offline.
   `WardPreviewOverlay`'s firing stage at its own cell, with the barrel marked, at four beats of the
   flight. **Written because that screen had no mirror at all** and is the one a player decides on a
   turret from — every question asked of it cost a device build until it existed.
-- **The strike kit:** `python Tools/make_strike_fx.py --check` proves the nine masks under
+- **The strike kit:** `python Tools/make_strike_fx.py --check` proves the eight masks under
   `Art/Fx/Strike/` are what the tool cuts from the bought lightning pack; `--contact` is the sheet,
   additive stack beside multiply. `StrikeFxTests` holds the names in `StrikeFx` to the tool's table
   and to the siege scope (their addresses are built, so `artnames.py` cannot see them), and
   `SiegeStrikeTests` holds the drawn bolt's shape: it lands on the raider because its last joint
-  *is* the raider. Then `python Tools/render_siege.py --storm 3` and `--unleash 1` - the only
-  pictures of the stack on the hill, and the only ones that can say whether it reads as light.
+  *is* the raider, and so does every fork of an overcharge. Then `python Tools/render_siege.py
+  --storm 3` and `--unleash 1` - the only pictures of the stack on the hill, and the only ones
+  that can say whether it reads as light.
+- **The curse's lash:** `python Tools/render_siege.py --level s10_windmill --obsidian --cursed T`
+  draws the knot over the field, a black whip to every body standing and the round seal under
+  each body its whip has reached, T of the way through (.3 the throw, .6 the landing, 1 the hill
+  hexed). `SiegeLashTests` holds the shape offline: a whip ends on its body, and nothing is drawn
+  before it leaves or after it has gone in.
 - **Legendary effect reels:** `python Tools/make_legend_fx.py --check` proves the thirty drawn reels are
   what the tool draws, `--contact` is the sheet to look at and `--report` prints what `fxreels.py` will
   measure. It needs no Editor, no GPU and no licensed pack.
@@ -1726,15 +1752,17 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   offline by `RankCeremonyTests`.
 - **One live mode, three hidden.** **Thornwatch**: `s01_thornwatch`, `s03_broodmarch`, `s04_barrowfell`,
   `s05_ashenhold`, `s06_thundercrag`, `s07_dustcrown`, `s08_bonereach` (ten rungs each) and
-  `s09_cloudkeep` (**twenty**, a two-boss duel on every fifth, MODES.md 37eq-37et) on the ordinary
-  ladder, and `s02_endlesswatch` on an **Infinite** track beside it. The map draws no *mode* switcher and
+  `s09_cloudkeep`, `s10_cogspire` and `s11_windwreck` (**twenty** each, a two-boss duel on every
+  fifth, MODES.md 37eq-37et, 37ey, 37ez) on the ordinary ladder, and `s02_endlesswatch` on an **Infinite** track beside it. The map draws no *mode* switcher and
   does draw the **track** switcher; the ordinary ladder draws a map and the Infinite lane draws a **hub**,
   opening at **keeper level 10**. Six casts and **fourteen** boss verbs, one cast per chapter by ordinal:
   insects, the blob brood, skeletons, the **rabble** — the only cast **baked from vector** — the **wild**,
   and the **court**, both cut from the top-down unit packs. **The cast table wraps at six**, so the
   seventh chapter draws the insects again (7c's bargain, MODES.md 37em) and its two bosses are cut from
   the same head-on family the first chapter's five already are. The Infinite lane draws a **medley** of
-  the six chapter casts, so it costs no art of its own.
+  the six chapter casts, so it costs no art of its own; the eighth, ninth and tenth chapters draw the
+  **reunion**, the **gathering** and the **armada**, three more squares over the same six
+  (`SiegeMode.MainCasts`, held by `SiegeCastTests`).
 - **Fire** — the three ember turrets (`ember`, `pyre` and the legendary `pyroclast`) set what they hit
   alight, and since **2026-09-18** that is a thing you can see: a looping flame stands on the raider for
   the seconds the model authors, in the colour of the *seat* that lit it, and the burn pays twice a
@@ -1809,6 +1837,7 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
 | `s08_bonereach` | siege | 10 | 69–100 matches | the seventh chapter, and the cheapest one this mode has ever shipped: **five tenths of surge**, which is **+50% raider health against the first chapter**, and *nothing else new but the two fights* — no charm (the roster clamps at six) and no cast (the table wraps to the insects). A **harrower** on 5 (it tears a rank off a ward and drops it on the hill as a cog you can pick back up) and a **hollowking** on 10 (it strikes every post that has fired nothing since its last cast and spares every post that has been working). Draws `map7`, the dead lands |
 | `s09_cloudkeep` | siege | 20 | 50–108 matches | the eighth chapter and the first of **twenty rungs** - four islands of five, levels 71–90 - on `map8`, the sky islands, seated on the pack's own node layout read out of its PSD (`make_map_seats.ROUTES`). **A crowd at a softer surge**: four tenths (`SiegeTuning.Traded`, the owner's 40% against Bonereach's 50%) with waves of ten to fifteen. **A duel on 5, 10, 15 and 20** - two bosses at once, each at 60% of its health (37er): gravemaw + harrower, blightcaller + gorgon, thunderer + shackler, sunlord + hollowking. Draws the **reunion** cast, a second square over all six chapter casts (37et) |
 | `s10_cogspire` | siege | 20 | 64–132 matches | the ninth chapter, levels 91–110, on `map9` - the owner's clockwork islands, seated by walking the copper road (`make_map_seats.TRACES`). **The curse**: a fifth, rarer gem (the Pairs obsidian) that feeds no ward; three in a line take every stone on the field and hex every raider standing (+50% damage from everything, 6-12 s) - MODES.md 37ew-37ey. Surge 1.5 (`Traded`), 8% more raiders than Cloudkeep (mostly creepers); 27/180 held on the one-star ember line against Cloudkeep's 31; the **gathering** cast; duels warlord+warbringer, overlord+bonecaller, ironclad+colossus, gorgon+hollowking |
+| `s11_windwreck` | siege | 20 | 82–141 matches | the tenth chapter, levels 111–130, on `map10` - the owner's pirate sky islands (wrecks, a lighthouse, cannons), seated by walking the slab road (`make_map_seats.TRACES`, with `ENCLOSED` refusing the sky that passes through the slab colour). **Asks for a good line** (MODES.md 37ez): surge 1.6 (`Traded`, one tenth over Cogspire), 848 raiders (+7%), 190 brutes (+83%), 2,039 par (+20%); held 7/180 on one-star embers (Cogspire 27), 43 on three-star embers, 136 on three-star pyres; star lines (0.38, 0.52), so three stars is the strong line playing well. The curse carries on; the **armada** cast; duels warbringer+gravemaw, bonecaller+shackler, thunderer+harrower, sunlord+ironclad |
 | `s02_endlesswatch` | siege *(infinite)* | 1 | 3★ at wave 30 | waves that never stop, graded on how far it got, drawing a **medley** of every cast; **both star waves are guesses until somebody plays it**; opens at keeper level 10; **a heart to enter and none to lose** (43e) |
 
 **No level authors a difficulty number except the first glade in the game, and no chapter authors a clock.**
@@ -1831,7 +1860,7 @@ content and retunable without an app update; **re-seed after any change**. Only 
 obvious from the files are worth recording:
 
 - **Daily income is two figures and quoting the first as the whole is a mistake this file made.**
-  `content.py` prints **936 credits and 12 gems a day** for free play and prints the adverts on their own
+  `content.py` prints **953 credits and 12 gems a day** for free play (936 before the two challenge tasks joined the slates, 56q) and prints the adverts on their own
   lines below it, because an advert is opt-in. Read together, a player who watches everything collects
   about **7,160 credits a day**: 936 from chests, tasks, the streak and the season, **3,600** from
   `coin_bonus` (300 x 12) and **2,628** from `win_bonus` (200 x 6 through the wheel's 219% mean). The 936
@@ -1894,7 +1923,19 @@ on a fresh clone).
 
 ## Owed
 
-**Cogspire and the curse shipped on 2026-09-28 (MODES.md 37ew-37ey) and have never been played or swept.** Done: the Editor's three (the stone, sigil and map strips in a new `Glimmer Chapter s10_cogspire` group, `hexwave` in Global; Audit Addresses clean, Validate Content verifies all twenty, Validate Art clean) and the re-seed from a HEAD shadow (exactly the twenty `s10_*` ids added to `levelChapters`, the other three documents unchanged). **Owed: the owner's sweep** - `TheNinthChapterIsFoughtOnABoughtLine`'s floors (20 held, 10 walled) are set off one probe rather than a sweep, and `siege.STAR_FACTORS[9]` is provisional at Bonereach's (0.42, 0.56); **and a device**: whether a black stone reads as *gather me* rather than as a hole, whether the break (chains, void, burst) reads at slow motion, and whether the violet front is told apart from the hourglass's and the anvil's. The map accepts 32 record-mark overlaps (twenty rungs on four strips; `map8` accepts 15).
+**The overcharge and the curse's hill half were redrawn on 2026-09-29 (MODES.md 37ev, 37ex) and neither has been played.** At the owner's instruction: the overcharge leaves nothing on the ground (a re-struck channel of lightning, a burst of arcs, a fork to every body hurt; `splat` withdrawn), and the curse reaches the hill as a lash of black whips thrown from a knot on the board instead of as a third front (`hexwave` withdrawn), with the seal under a hexed body a whole circle. Done in the Editor: compiled, the 25 Addressables rows and the label removed through the API with the files, `Audit Addresses` reads no dead entry, the new meshes build. Offline green: `compile.py`, `SiegeLashTests` 6/6, `SiegeStrikeTests` 8/8, `StrikeFxTests` 5/5, `SiegeArtTests`, `TutorialTests`, `ShowcaseTests`, both art tools' `--check`. **Owed is a device**, and the questions are all ones no gate can answer: whether ten arms re-dealt four times read as a burst or as noise, whether a black line reads on the darkest hill (`LashCore` and the sheath in `Lash.Grow` are the dials), whether the knot hanging for the second between the break and the lash reads as *holding* or as *stuck* (`KnotWide`), and whether a round seal a body and a half wide crowds a full hill (`SealWide`).
+
+**Windwreck shipped on 2026-09-29 (MODES.md 37ez) and has never been played on a device.** Done: the Editor's three (the four `map10` strips in a new `Glimmer Chapter s11_windwreck` group; `gem_obsidian` and `hex_sigil` moved to Global by `Sync All Assets`, correctly, because two chapters now deal the curse; `Audit Addresses` resolves all 2,409, `Validate Content` has no Windwreck error, `Validate Art` clean) and the server (the twenty `s11_*` ids added to the live `levelChapters` **by field mask**, not a whole re-seed, because another agent's `progression.json` was mid-edit and half-published; all four config documents read back and diffed - nothing else moved). Offline green: `compile.py`, `TheTenthChapterAsksForAGoodLine` (the brief's four readings, floors a margin under the 2026-09-29 measurement), `EveryShippedBossRungIsAFight` (all four duels fall 4-9 of 9 on the strongest line, every boss casting at least three), `SiegeCastTests` 18/18, `SiegeObsidianTests` 17/17, `rungs.py`, `content.py`, `loc.py`, `artnames.py`, `make_map_seats.py --check`, the chapter tool's own proof against Cogspire's body. **Owed: the owner's sweep** (the floors are one measurement, as Cogspire's were), **and a device**: whether 1.6 surge with six-plus brutes a rung reads as *buy a better line* rather than as a wall (the one-star workhorse holds 7 of 180 and twelve rungs at no rhythm, by design), and whether a node on a plank bridge (seven of the twenty) reads as standing on the road. The map accepts 33 record-mark overlaps (`map9` accepts 32).
+
+**Infinite checkpoints shipped on 2026-09-29 (MODES.md 43f) and have never been in the Editor or on a device.**
+Six rows (waves 9/17/22/27/32/37, open at best 20/30/40/50/60/70, every turret 2 cogs up), a bar over the
+hub's key and a sheet on the deal sheet's frame. Client-only: no schema, no rules, no deploy, no seed.
+The hub's medal went .62 -> .54 and `EndlessHubLayout.MinScale` .78 -> .72 to make room (x0.87 on 16:9,
+x0.74 in the two-pill squarest case the catalog does not draw). Owed: the Editor's `.meta` for the four
+new C# files and the EditMode suite; then a device: pick a checkpoint, check the run opens there with
+turrets at level 3, and that the panel pays only the waves played.
+
+**Cogspire and the curse shipped on 2026-09-28 (MODES.md 37ew-37ey) and have never been played or swept.** Done: the Editor's three (the stone, sigil and map strips in a new `Glimmer Chapter s10_cogspire` group, `hexwave` in Global; Audit Addresses clean, Validate Content verifies all twenty, Validate Art clean) and the re-seed from a HEAD shadow (exactly the twenty `s10_*` ids added to `levelChapters`, the other three documents unchanged). **Owed: the owner's sweep** - `TheNinthChapterIsFoughtOnABoughtLine`'s floors (20 held, 10 walled) are set off one probe rather than a sweep, and `siege.STAR_FACTORS[9]` is provisional at Bonereach's (0.42, 0.56); **and a device**: whether a black stone reads as *gather me* rather than as a hole, whether the break (chains, void, burst) reads at slow motion (the violet front this entry used to ask about was replaced by the lash on 2026-09-29, above). The map accepts 32 record-mark overlaps (twenty rungs on four strips; `map8` accepts 15).
 
 **The daily challenges' advert play (56p, 2026-09-28): the server half is live, the client half
 needs a build.** Done: `adReward`, `claimAwards` and `getWallet` deployed by name, all three
@@ -2846,9 +2887,10 @@ measured.** Three figures are guesses and all of them are content. `best_wave` a
 watch**: `raiders` 2,500, `bosses` 30 and 60, `charms` 300 have no derived floor under them
 (52c), so they count from the day the build ships and nothing anybody has already done counts
 toward them — which is the whole reason the backbone of the ladder is stars, clears and waves,
-which are retroactive. Rank 7 asks 175 of the 183 stars that ship and 55 of 61 three-stars; both
-gates refuse anything past those, so **the top of this ladder cannot be raised again without more
-content**.
+which are retroactive. **The star lines were raised on 2026-09-29 and no longer track the
+catalog** (52m): 150 / 240 / 330 / 450 / 600 stars and 30 / 70 / 110 / 150 / 200 three-stars from
+Goldbrand up, against 393 and 131 today, so Frozencrest and Gemfire wait on more levels and
+`content.py` warns rather than refuses. Re-seeded, only `ranks` moved; `rank-badge.mjs` 11/11.
 
 **One rules clause was written ahead of its release, and released on 2026-09-21** with the cost
 audit's ruleset. `firestore.rules` bounds `tasks.lifetime` at 32 rows against

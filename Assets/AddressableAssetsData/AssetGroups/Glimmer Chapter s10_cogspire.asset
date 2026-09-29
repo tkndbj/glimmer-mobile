@@ -15,11 +15,6 @@ MonoBehaviour:
   m_GroupName: Glimmer Chapter s10_cogspire
   m_GUID: 048c86dad0f8f634db22aca741aa4407
   m_SerializeEntries:
-  - m_GUID: 16e236101f23e9c47a712d6763ee2726
-    m_Address: Art/Siege/hex_sigil
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 292912c6998541a469575e1d84579ed3
     m_Address: Art/Map/map9_strip1
     m_ReadOnly: 0
@@ -27,11 +22,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3ceb1dff22890ce4d9404236b23ddc27
     m_Address: Art/Map/map9_strip3
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6a6e1d2bcc3fb6d4d9bc06eaef70e4cc
-    m_Address: Art/Siege/gem_obsidian
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

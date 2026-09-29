@@ -2747,8 +2747,15 @@ namespace GlimmerGrove.Modes
         /// the rest of its difficulty from a bigger crowd, which is 37ef's measurement read the
         /// same way the eighth chapter read it.
         /// </para>
+        /// <para>
+        /// <b>A third row: the tenth chapter deals 1.6</b>, against the 1.8 the ladder would give
+        /// it - the owner's brief on 2026-09-29 was "a tenth more health than the ninth", and more
+        /// raiders, more brutes and more health on the hill on top of it. The step is the one
+        /// tenth asked for and no more, because every other axis of that brief is composition and
+        /// 37ef measured surge and composition together as the wall.
+        /// </para>
         /// </summary>
-        public static readonly (int Ordinal, int Tenths)[] Traded = { (7, 14), (8, 15) };
+        public static readonly (int Ordinal, int Tenths)[] Traded = { (7, 14), (8, 15), (9, 16) };
 
         /// <summary>
         /// A health figure at a share of itself, in per cent, never under one - the one place a

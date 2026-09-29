@@ -4275,8 +4275,9 @@
     "else's. These cases are the only instrument that can see it.",
     "",
     "`rankChapters` is the catalog a case is measured against and `rankLadder` the ladder it",
-    "climbs; a case may carry its own `ladder` instead. `levels`, `endless` and `lifetime` are",
-    "the save's rows in whichever shape each side stores them, `keeperLevel` and",
+    "climbs; a case may carry its own `ladder` instead. `levels`, `endless`, `lifetime` and",
+    "(where present) `challenges` - the save's `challenges.clears` rows - are the save's rows",
+    "in whichever shape each side stores them, `keeperLevel` and",
     "`lifetimeWaves` are the two figures both sides are handed rather than derive, and `held`",
     "is the rung id both must answer — empty for an account below the first rung.",
     "",
@@ -5369,6 +5370,209 @@
             {
               "measure": "waves",
               "target": 50
+            }
+          ]
+        }
+      ],
+      "held": ""
+    },
+    {
+      "name": "the challenge plays verb is floored by the clears, every genre summed",
+      "levels": [],
+      "endless": [],
+      "lifetime": [],
+      "keeperLevel": 1,
+      "challenges": [
+        {
+          "genre": "pairs",
+          "count": 10
+        },
+        {
+          "genre": "merge",
+          "count": 20
+        }
+      ],
+      "lifetimeWaves": 0,
+      "ladder": [
+        {
+          "id": "only",
+          "requires": [
+            {
+              "measure": "challenge_plays",
+              "target": 30
+            }
+          ]
+        }
+      ],
+      "held": "only"
+    },
+    {
+      "name": "and so is the challenge wins verb",
+      "levels": [],
+      "endless": [],
+      "lifetime": [],
+      "keeperLevel": 1,
+      "challenges": [
+        {
+          "genre": "pairs",
+          "count": 10
+        },
+        {
+          "genre": "glade",
+          "count": 12
+        },
+        {
+          "genre": "sokoban",
+          "count": 8
+        }
+      ],
+      "lifetimeWaves": 0,
+      "ladder": [
+        {
+          "id": "only",
+          "requires": [
+            {
+              "measure": "challenge_wins",
+              "target": 30
+            }
+          ]
+        }
+      ],
+      "held": "only"
+    },
+    {
+      "name": "a withdrawn genre's clears still count, as its XP still does",
+      "levels": [],
+      "endless": [],
+      "lifetime": [],
+      "keeperLevel": 1,
+      "challenges": [
+        {
+          "genre": "sudoku",
+          "count": 25
+        },
+        {
+          "genre": "pairs",
+          "count": 5
+        }
+      ],
+      "lifetimeWaves": 0,
+      "ladder": [
+        {
+          "id": "only",
+          "requires": [
+            {
+              "measure": "challenge_wins",
+              "target": 30
+            }
+          ]
+        }
+      ],
+      "held": "only"
+    },
+    {
+      "name": "clears one short hold nothing",
+      "levels": [],
+      "endless": [],
+      "lifetime": [],
+      "keeperLevel": 1,
+      "challenges": [
+        {
+          "genre": "pairs",
+          "count": 29
+        }
+      ],
+      "lifetimeWaves": 0,
+      "ladder": [
+        {
+          "id": "only",
+          "requires": [
+            {
+              "measure": "challenge_wins",
+              "target": 30
+            }
+          ]
+        }
+      ],
+      "held": ""
+    },
+    {
+      "name": "a plays tally over the clears still wins",
+      "levels": [],
+      "endless": [],
+      "lifetime": [
+        {
+          "goal": "challenge_plays",
+          "count": 30
+        }
+      ],
+      "keeperLevel": 1,
+      "challenges": [
+        {
+          "genre": "pairs",
+          "count": 3
+        }
+      ],
+      "lifetimeWaves": 0,
+      "ladder": [
+        {
+          "id": "only",
+          "requires": [
+            {
+              "measure": "challenge_plays",
+              "target": 30
+            }
+          ]
+        }
+      ],
+      "held": "only"
+    },
+    {
+      "name": "a row with a spelling no save can hold proves nothing",
+      "levels": [],
+      "endless": [],
+      "lifetime": [],
+      "keeperLevel": 1,
+      "challenges": [
+        {
+          "genre": "Pairs!",
+          "count": 40
+        }
+      ],
+      "lifetimeWaves": 0,
+      "ladder": [
+        {
+          "id": "only",
+          "requires": [
+            {
+              "measure": "challenge_wins",
+              "target": 30
+            }
+          ]
+        }
+      ],
+      "held": ""
+    },
+    {
+      "name": "the battle verbs are not floored by a challenge",
+      "levels": [],
+      "endless": [],
+      "lifetime": [],
+      "keeperLevel": 1,
+      "challenges": [
+        {
+          "genre": "pairs",
+          "count": 50
+        }
+      ],
+      "lifetimeWaves": 0,
+      "ladder": [
+        {
+          "id": "only",
+          "requires": [
+            {
+              "measure": "wins",
+              "target": 1
             }
           ]
         }

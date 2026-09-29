@@ -136,6 +136,13 @@ namespace GlimmerGrove.Tasks
                 case TaskGoal.Waves:
                     return EndlessLedger.LifetimeWaves;
 
+                // A daily challenge cleared is a play that was spent and won, and the clears are
+                // a lifetime tally the challenge ledger has kept per genre since the feature
+                // shipped (invariant 56i), so both verbs read their history from the first launch.
+                case TaskGoal.ChallengePlays:
+                case TaskGoal.ChallengeWins:
+                    return Challenges.ChallengeLedger.LifetimeClears;
+
                 default:
                     return 0L;
             }

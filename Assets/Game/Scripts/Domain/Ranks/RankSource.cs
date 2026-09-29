@@ -329,6 +329,10 @@ namespace GlimmerGrove.Ranks
                 case TaskGoal.Waves:
                     return EndlessLedger.LifetimeWavesIn(_save);
 
+                case TaskGoal.ChallengePlays:
+                case TaskGoal.ChallengeWins:
+                    return Challenges.ChallengeLedger.LifetimeClearsIn(_save);
+
                 default:
                     return 0L;
             }

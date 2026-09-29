@@ -176,6 +176,20 @@ namespace GlimmerGrove.Tests
                 };
             }
 
+            // The daily challenge clears, the floor under both challenge verbs. Absent on most
+            // cases, which is a save that never played one.
+            var clears = map.ContainsKey("challenges") ? TestJson.Children(map, "challenges") : new List<object>();
+            save.challenges = new ChallengeStateDto { clears = new ChallengeCountDto[clears.Count] };
+            for (int i = 0; i < clears.Count; i++)
+            {
+                var row = TestJson.Object(clears[i]);
+                save.challenges.clears[i] = new ChallengeCountDto
+                {
+                    genre = TestJson.Str(row, "genre", string.Empty),
+                    count = TestJson.Int(row, "count"),
+                };
+            }
+
             // A case may carry its own ladder; most climb the shared one. `ContainsKey` rather
             // than "is the list empty", because an empty ladder is one of the cases - it is a
             // build whose content has no `ranks` block, and it must hold nothing rather than
@@ -214,6 +228,7 @@ namespace GlimmerGrove.Tests
             Load();
             PlayerProgress.LoadFrom(new SaveFileDto());
             Tasks.LifetimeTally.Reset();
+            Challenges.ChallengeLedger.ResetForTests();
         }
 
         [TearDown]
@@ -221,6 +236,7 @@ namespace GlimmerGrove.Tests
         {
             PlayerProgress.LoadFrom(new SaveFileDto());
             Tasks.LifetimeTally.Reset();
+            Challenges.ChallengeLedger.ResetForTests();
         }
 
         // -------------------------------------------------------- the shared contract
@@ -266,6 +282,7 @@ namespace GlimmerGrove.Tests
                 PlayerProgress.LoadFrom(c.Save);
                 Tasks.LifetimeTally.Reset();
                 Tasks.LifetimeTally.LoadFrom(c.Save.tasks.lifetime);
+                Challenges.ChallengeLedger.LoadFrom(c.Save);
 
                 var ladder = Resolve(c);
 

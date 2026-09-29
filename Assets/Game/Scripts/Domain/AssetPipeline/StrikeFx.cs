@@ -3,7 +3,7 @@ using System.Collections.Generic;
 namespace GlimmerGrove.AssetPipeline
 {
     /// <summary>
-    /// The strike kit: the nine pieces of light a stormcall's bolt and an overcharge's blast are
+    /// The strike kit: the eight pieces of light a stormcall's bolt and an overcharge's burst are
     /// stacked out of, cut from the owner's bought lightning pack by
     /// <c>Tools/make_strike_fx.py</c> into <c>Art/Fx/Strike/</c>.
     ///
@@ -22,9 +22,15 @@ namespace GlimmerGrove.AssetPipeline
     /// the whole difference between these pictures and a baked photograph of them.
     /// </para>
     /// <para>
-    /// The fixture <c>SiegeArtTests.EveryStrikePieceIsCutAndScoped</c> holds this list to the
-    /// tool's and to the siege scope; a name added here is added in the tool's <c>CUTS</c> in
-    /// the same change.
+    /// The fixture <c>StrikeFxTests</c> holds this list to the tool's and to the siege scope; a
+    /// name added here is added in the tool's <c>CUTS</c> in the same change.
+    /// </para>
+    /// <para>
+    /// <b>There were nine.</b> The ninth was <c>splat</c>, a spiked splash an overcharge left on
+    /// the ground, withdrawn on 2026-09-29 with its picture and its address (invariant 8d) when
+    /// the overcharge stopped drawing on the ground at all (MODES.md 37ev). The name is not
+    /// spent - nothing stores one - but <c>StrikeFxTests.TheSplatIsGone</c> refuses the picture
+    /// coming back with nothing to draw it.
     /// </para>
     /// </summary>
     public static class StrikeFx
@@ -53,12 +59,9 @@ namespace GlimmerGrove.AssetPipeline
         /// <summary>A soft four-point star - sparks and twinkles.</summary>
         public const string Star = "star";
 
-        /// <summary>A spiked splash - the slam under an overcharge.</summary>
-        public const string Splat = "splat";
-
         public static readonly IReadOnlyList<string> All = new[]
         {
-            Bolt, Flare, Glint, Streak, Ring, Wave, Crack, Star, Splat,
+            Bolt, Flare, Glint, Streak, Ring, Wave, Crack, Star,
         };
     }
 }

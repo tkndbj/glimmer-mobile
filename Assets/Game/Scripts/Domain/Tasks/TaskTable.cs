@@ -208,6 +208,7 @@ namespace GlimmerGrove.Tasks
                 new TaskDefinition("d_bombs", TaskPeriod.Daily, TaskGoal.Bombs, 1, silver),
                 new TaskDefinition("d_utility", TaskPeriod.Daily, TaskGoal.Utilities, 1, silver),
                 new TaskDefinition("d_three", TaskPeriod.Daily, TaskGoal.ThreeStars, 1, silver),
+                new TaskDefinition("d_challenges", TaskPeriod.Daily, TaskGoal.ChallengePlays, 8, silver),
             };
 
             var weekly = new[]
@@ -222,6 +223,7 @@ namespace GlimmerGrove.Tasks
                 new TaskDefinition("w_waves", TaskPeriod.Weekly, TaskGoal.Waves, 12, gold),
                 new TaskDefinition("w_streak", TaskPeriod.Weekly, TaskGoal.Streak, 5, royal),
                 new TaskDefinition("w_cogs", TaskPeriod.Weekly, TaskGoal.Cogs, 20, silver),
+                new TaskDefinition("w_challenges", TaskPeriod.Weekly, TaskGoal.ChallengeWins, 30, royal),
             };
 
             return new TaskTable(3, new[] { wood, silver, gold, royal }, daily, weekly);

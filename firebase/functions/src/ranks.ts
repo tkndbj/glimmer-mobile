@@ -31,6 +31,7 @@
  * block would cost a keeper level (see `ProgressionConfig.endless`).
  */
 
+import { challengeClears } from "./challenges";
 import { MAX_LEVEL_ID_LENGTH } from "./progression";
 import type { ProgressionConfig } from "./progression";
 
@@ -76,6 +77,15 @@ const RUNS = "runs";
 const WINS = "wins";
 const WAVES = "waves";
 
+/**
+ * The daily challenge verbs, floored by the lifetime clears the challenge ledger has kept since
+ * that feature shipped: a clear is a play spent and a play won. Mirrors the same two cases in
+ * `LifetimeTally.FloorFor` and `SaveRankSource.Proved`, read through `challengeClears`, which is
+ * already the one reading of those rows this server owns (the challenge XP).
+ */
+const CHALLENGE_PLAYS = "challenge_plays";
+const CHALLENGE_WINS = "challenge_wins";
+
 /** One line of a rung, as `progression.json` authors it and the seeder publishes it. */
 export interface RankRequirementConfig {
   measure: string;
@@ -100,6 +110,7 @@ interface SaveRows {
   endlessBest: unknown;
   lifetime: unknown;
   lifetimeWaves: number;
+  challengeClears: number;
 }
 
 /**
@@ -134,6 +145,7 @@ export function rungOf(save: Record<string, unknown>, config: ProgressionConfig,
     endlessBest: save?.endlessBest,
     lifetime: lifetimeRows(save),
     lifetimeWaves: Math.max(0, Math.floor(Number(readings?.lifetimeWaves ?? 0)) || 0),
+    challengeClears: challengeClears(save ?? {}),
   };
 
   const raw = Number(readings?.keeperLevel ?? 1);
@@ -332,6 +344,11 @@ function lifetime(goal: string, rows: SaveRows, config: ProgressionConfig): numb
 
     case WAVES:
       proved = rows.lifetimeWaves;
+      break;
+
+    case CHALLENGE_PLAYS:
+    case CHALLENGE_WINS:
+      proved = rows.challengeClears;
       break;
 
     default:

@@ -277,8 +277,14 @@ namespace GlimmerGrove.Analytics
         /// counted independently - every run raises exactly one of these, so a filter answers
         /// it and a second event name would only divide the rows.
         /// </param>
+        /// <param name="startWave">
+        /// The wave the run opened on: one, or an endless checkpoint's (MODES.md 43f). With
+        /// <paramref name="headStart"/>, the ranks every turret stood at, it is what says whether
+        /// a checkpoint is a fair start - a checkpoint run that loses inside a wave or two is a
+        /// head start too small, and the content row is the dial.
+        /// </param>
         public static void TrackSiegeAttention(LevelDefinition level, Modes.SiegeAttention seen,
-                                               bool won)
+                                               bool won, int startWave = 1, int headStart = 0)
         {
             if (level == null || seen == null) return;
 
@@ -312,6 +318,9 @@ namespace GlimmerGrove.Analytics
                 "charms_sprung", seen.CharmsSprung,
                 "charm_held_mean", Whole(seen.MeanHeld),
                 "charm_held_longest", Whole(seen.LongestHeld),
+
+                "start_wave", startWave < 1 ? 1 : startWave,
+                "head_start", headStart < 0 ? 0 : headStart,
 
                 "seconds", Round(seen.Elapsed));
         }

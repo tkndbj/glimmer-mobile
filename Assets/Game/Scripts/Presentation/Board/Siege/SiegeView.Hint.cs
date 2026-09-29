@@ -175,7 +175,7 @@ namespace GlimmerGrove
         /// is right for the same reason: an empty hill is not a board anybody is stuck on.
         /// </para>
         /// </summary>
-        bool Opening => _board == null || _board.Wave < 1;
+        bool Opening => _board == null || !_board.Opened;
 
         /// <summary>Rings the two gems of a swap that would line something up.</summary>
         void Nudge()

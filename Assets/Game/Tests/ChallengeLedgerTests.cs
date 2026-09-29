@@ -4,6 +4,7 @@ using GlimmerGrove.Content;
 using GlimmerGrove.Daily;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
+using GlimmerGrove.Tasks;
 using NUnit.Framework;
 
 namespace GlimmerGrove.Tests
@@ -46,6 +47,7 @@ namespace GlimmerGrove.Tests
             // "needs the Editor" offline. A fresh memory store is also a fresh day's count.
             EndlessCoins.UseStore(new EndlessCoins.MemoryStore());
             ChallengeLedger.ResetForTests();
+            TaskLedger.Reset();
             Wallet.LoadFrom(new SaveFileDto());
             ProgressionStore.LoadFrom(new SaveFileDto());
             ChallengeRules.Publish(Table(3, 1));
@@ -58,6 +60,7 @@ namespace GlimmerGrove.Tests
             GameClock.Set(new DeviceClock());
             EndlessCoins.UseStore(null);
             ChallengeLedger.ResetForTests();
+            TaskLedger.Reset();
             ChallengeRules.Reset();
             Wallet.LoadFrom(new SaveFileDto());
             PlayerProgression.Invalidate();
@@ -880,6 +883,104 @@ namespace GlimmerGrove.Tests
             var f = new SaveFileDto { challenges = new ChallengeStateDto { tiers = new[] { new ChallengeTierStateDto { id = "bronze", fromUnix = 2 } } } };
             Assert.IsTrue(Changed(e, f));
             Assert.IsFalse(Changed(e, new SaveFileDto { challenges = new ChallengeStateDto { tiers = new[] { new ChallengeTierStateDto { id = "bronze", fromUnix = 1 } } } }));
+        }
+
+        // ------------------------------------------------------------- the task slate
+        /// <summary>
+        /// <b>A play is counted for the tasks once, at the move that spends it, however it ends.</b>
+        /// The daily task says "win or lose", so a play forfeited, lost or abandoned by a killed
+        /// process is a play - and a board dealt and never touched is not, because it costs the
+        /// player nothing (56g). Counting at the ending instead would miss the killed process,
+        /// and counting at the deal would pay for a look.
+        /// </summary>
+        [Test]
+        public void APlayIsCountedForTheTasksOnceAtTheMoveThatSpendsIt()
+        {
+            var looked = ChallengeLedger.Begin(ChallengeGenre.Pairs);
+            Assert.IsNotNull(looked);
+            Assert.AreEqual(0, TaskLedger.Count(TaskPeriod.Daily, TaskGoal.ChallengePlays), "a deal nobody touched is not a play");
+
+            ChallengeLedger.Commit(looked);
+            ChallengeLedger.Commit(looked);
+            Assert.AreEqual(1, TaskLedger.Count(TaskPeriod.Daily, TaskGoal.ChallengePlays), "one play, however often it is committed");
+            Assert.AreEqual(1, TaskLedger.Count(TaskPeriod.Weekly, TaskGoal.ChallengePlays), "and the week sees it too");
+
+            ChallengeLedger.Lose(looked, 4);
+            Assert.AreEqual(1, TaskLedger.Count(TaskPeriod.Daily, TaskGoal.ChallengePlays), "losing it does not count it again");
+            Assert.AreEqual(0, TaskLedger.Count(TaskPeriod.Weekly, TaskGoal.ChallengeWins), "and a loss is not a win");
+
+            // A win nobody committed first (the screen always commits; the ledger does not trust
+            // it to) is still one play and one win.
+            ChallengeLedger.Win(ChallengeLedger.Begin(ChallengeGenre.Merge));
+            Assert.AreEqual(2, TaskLedger.Count(TaskPeriod.Daily, TaskGoal.ChallengePlays));
+            Assert.AreEqual(1, TaskLedger.Count(TaskPeriod.Weekly, TaskGoal.ChallengeWins));
+            Assert.AreEqual(1, TaskLedger.Count(TaskPeriod.Daily, TaskGoal.ChallengeWins));
+        }
+
+        /// <summary>
+        /// <b>The challenge verbs count nothing of the battle's</b>: a challenge is not a run, so it
+        /// must not move "play N battles" or "win N battles" (56: tuning a challenge must never
+        /// move the core game).
+        /// </summary>
+        [Test]
+        public void AChallengeIsNotABattle()
+        {
+            ChallengeLedger.Win(ChallengeLedger.Begin(ChallengeGenre.Pairs));
+            ChallengeLedger.Lose(ChallengeLedger.Begin(ChallengeGenre.Merge), 2);
+
+            Assert.AreEqual(0, TaskLedger.Count(TaskPeriod.Daily, TaskGoal.Runs));
+            Assert.AreEqual(0, TaskLedger.Count(TaskPeriod.Daily, TaskGoal.Wins));
+            Assert.AreEqual(0, TaskLedger.Count(TaskPeriod.Weekly, TaskGoal.Runs));
+            Assert.AreEqual(0, TaskLedger.Count(TaskPeriod.Weekly, TaskGoal.Wins));
+        }
+
+        /// <summary>
+        /// <b>The lifetime reading is floored by the clears</b>, so an account that cleared
+        /// challenges before the two verbs shipped reads its history on the first launch - and the
+        /// floor comes off the same tally the XP is paid on.
+        /// </summary>
+        [Test]
+        public void TheLifetimeChallengeVerbsAreFlooredByTheClears()
+        {
+            var save = new SaveFileDto
+            {
+                challenges = new ChallengeStateDto
+                {
+                    clears = new[]
+                    {
+                        new ChallengeCountDto { genre = "pairs", count = 7 },
+                        new ChallengeCountDto { genre = "merge", count = 5 },
+                    },
+                },
+            };
+            ChallengeLedger.LoadFrom(save);
+
+            Assert.AreEqual(12, LifetimeTally.Count(TaskGoal.ChallengeWins));
+            Assert.AreEqual(12, LifetimeTally.Count(TaskGoal.ChallengePlays), "a clear is a play");
+            Assert.AreEqual(0, LifetimeTally.Counted(TaskGoal.ChallengeWins), "a floor is a reading, never a write");
+
+            ChallengeLedger.Win(ChallengeLedger.Begin(ChallengeGenre.Pairs));
+            Assert.AreEqual(13, LifetimeTally.Count(TaskGoal.ChallengeWins), "the win moves the clears the floor reads");
+        }
+
+        /// <summary>
+        /// <b>A load replaces the clears rather than joining them.</b> An account switch loads a
+        /// different account's file (17a); a tally left over from the account before would be
+        /// written into this one's save and pushed as its own XP and its own rank floor.
+        /// </summary>
+        [Test]
+        public void ALoadReplacesTheClearsOfTheAccountBefore()
+        {
+            ChallengeLedger.Win(ChallengeLedger.Begin(ChallengeGenre.Pairs));
+            ChallengeLedger.Win(ChallengeLedger.Begin(ChallengeGenre.Pairs));
+            Assert.AreEqual(2, ChallengeLedger.LifetimeClears);
+
+            ChallengeLedger.LoadFrom(new SaveFileDto());
+            Assert.AreEqual(0, ChallengeLedger.LifetimeClears, "a stranger's clears are not this account's");
+
+            var dto = new SaveFileDto();
+            ChallengeLedger.WriteInto(dto);
+            Assert.IsEmpty(dto.challenges.clears, "and nothing of them is written back");
         }
     }
 }

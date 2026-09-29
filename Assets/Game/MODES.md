@@ -978,20 +978,33 @@ marked *(art)* are one-line pointers - the working detail is in `CRAFT.md`.
    (`SiegeShotBake.BakeStorm`, `Parts.Strike`) and its twenty Addressables rows went with it
    (8d). **What the additive material may draw is light** - a glow, a flare, a spark, a beam,
    a bolt - and never a body, a plate or anything dark, because adding black adds nothing.
-37ev. **An overcharge is a discharge in the ward's own colour, and it used to borrow the
-   firepot's fireball.** A capsule from the turret and `boom_fire` was one vocabulary for two
-   things. Now: the charge *gathers* (`Gather`, motes pulled in, a ring closing on the barrel,
-   arcs crackling off it, the `charge` clip), *goes* as three additive bars opening along their
-   length from the muzzle with a bead of light running down them and two lightning arcs
-   rebuilt every few hundredths while the beam stands (`Beam`), and *lands* as the strike
-   kit's slam in the tint - the splat rather than the crack - with the blast's boxes scorched
-   in the tint (33g) and a hit-stop (`Dilate(.45, .14)`, `Slam`). **The rules resolve at the
-   tap and the drawing takes a third of a second to say so**: the killed are claimed in
-   `_striking` until the bead lands and felled then, the figures pop then, and `Judge` waits
-   (`Reckon`), which is the storm's own shape. An armed glyph *crackles* every half second or
-   so (`Crackle`) - a thing holding a charge is a thing that cannot quite hold it. The mirror
-   is `render_siege.py --unleash W`, and it picks the box, because a still cannot know which
-   raider was furthest down.
+37ev. **An overcharge is a discharge in the ward's own colour: electricity, all of it in the
+   air, and nothing left on the ground.** It borrowed the firepot's fireball first (a capsule
+   and `boom_fire`, one vocabulary for two things), and then it was a *beam* - three straight
+   bars with arcs wrapped round them - landing as the kit's splat with the blast's boxes
+   scorched under it. The splat came back from the owner on 2026-09-29 as a mark nobody wants
+   described on a game board, with the brief "it shouldn't leave a mark on the floor, it should
+   just look like a lightning". Now: the charge *gathers* (`Gather`, unchanged), *goes* as a
+   **channel** - the stormcall's grammar on its side: a dim leader from the muzzle with a bead on
+   its head, the return stroke with its forks and the pack's strand along it, and the channel
+   **re-struck down a new path every `DischargeBeat`** for as long as it stands, because a
+   thing that stands still and is switched off is a beam and a thing that is *replaced* is
+   lightning (`Channel`, `Standing`) - and *lands* as a **burst** (`Arcburst`): a bloom, a flash,
+   two shock rings that are **round** (a ring squashed to `GroundSquash` is a ring lying on the
+   floor), ten arms of lightning thrown out by sector and re-dealt four times, shorter and fewer
+   each time (`Lightning.Nova`), sparks thrown up, a hit-stop - and **a fork to every body the
+   blast hurt** (`Lightning.Fan`). **The forks are what the scorched boxes were for** (33g asked
+   of the feedback): they say who the plus reached, as electricity, and each is a trunk of its
+   own so each ends on its body (`SiegeStrikeTests`). The arms are one mesh and the forks are
+   one mesh whatever the count. `Scorch` is the firepot's alone now, `Answer` the stormcall's,
+   and the kit's ninth piece, `splat`, went with its picture and its address (8d,
+   `StrikeFxTests.TheSplatIsGone`). **The rules resolve at the tap and the drawing takes a
+   third of a second to say so**: the killed are claimed in `_striking` until the channel lands
+   and felled then, the figures pop then, and `Judge` waits (`Reckon`), which is the storm's
+   own shape - the timings did not move, so nothing timed off them did. An armed glyph
+   *crackles* every half second or so (`Crackle`). The mirror is `render_siege.py --unleash W`,
+   and it picks the box and the bodies, because a still cannot know which raider was furthest
+   down.
 
 37ew. **The ninth chapter's mechanic is a fifth kind of gem, and that is the one shape this field
    had refused twice - refused then because the glyphs did not behave like gems.** The obsidian
@@ -1017,19 +1030,39 @@ marked *(art)* are one-line pointers - the working detail is in `CRAFT.md`.
    it marks nobody, and the refusal is drawn and said.
 37ex. **The curse is drawn as light in three colours and one dark, and none of it is borrowed.**
    `Tools/make_obsidian_art.py` cuts the stone from the Pairs card's own PNG (so it runs without
-   the licensed pack) with violet fissures of light screened into its body, a white rune-circle
-   mask for the additive material, and a painted front (`hexwave`) that is the third temperature
-   on the hill - glass for the hourglass, fire for the anvil, violet night for the curse, and
-   wispy where the other two are crystalline and billowing. **The sigil is a clockwork wheel, not
+   the licensed pack) with violet fissures of light screened into its body, and a white
+   rune-circle mask for the additive material. **The sigil is a clockwork wheel, not
    a star**: every familiar star polygon is somebody's sacred sign, and a globally shipped game
    may not draw one as a *curse*. The break is the lance's shape (37cn): the clock slows
    (`Dilate`, 37cq), every pulled stone is chained to the break with lightning and dragged into a
-   gathering void, the void bursts; the front climbs off the report and stamps each body as it
-   passes; a hexed body stands in the turning sigil, washed lilac, its figures drawn lilac, and
-   the sigil gutters as the hex runs out - a state read off the model every frame (37ek).
-   `CurseLight` holds the palette to the tool (`SiegeObsidianTests`), the art is scoped to the
-   chapters that deal it (`SiegeMode.CurseArt`, 7b), and `render_siege.py --obsidian --cursed T`
-   is the mirror.
+   gathering void, the void bursts. **What reaches the hill is a lash, and it was a front**
+   (2026-09-29). The curse first rode up the hill on a painted reel (`hexwave`), which made it
+   the *third* thing that sweeps that hill after the hourglass and the anvil, told apart by its
+   colour alone - "not unique", in the owner's words. What a curse has that neither of those
+   does is a **source** and a **list**: it broke in one place on the field and it falls on
+   these bodies and no others. So the burst leaves a **knot** of dark hanging where it broke
+   (`Knotted`, which is also what joins the field's beat to the hill's, booked `FuelLands`
+   apart), and on the report the knot throws one **black whip** at every body the model marked
+   (`Cursed`, `Lash`): bowed outward so the throw opens like a hand, writhing smoothly where a
+   bolt is re-dealt, swollen at its head while it flies, standing on its body for a beat and
+   then drawn *into* it from the far end. Its last joint is its raider (`SiegeLashTests`),
+   followed every frame because the hill is slowed and not stopped. **The line is dark laid on
+   and the light round it is added** (`CurseLight.Ink`): the additive material cannot draw
+   black, and a black line with no light round it cannot be seen on a dark board. All the
+   whips are one mesh per layer, because a hill can stand thirty. **A body is hexed in the
+   drawing when its whip lands** (`Mob.HexAt` - a drawing's delay, never a rule's): the dark
+   bites, the seal is struck under it and the body flinches (`Bitten`). A curse over an empty
+   hill throws five whips that die in the air (`Fizzled`), and the banner says so. **A hexed
+   body stands in a whole circle** (`SealOf`): the seal was squashed to the hill and seated on
+   the feet, so what showed was the front half of a flat ellipse, which came back as "it
+   should be fully circle"; it is round, seated on the body's middle and wider than its longer
+   side, so the ring clears the body all the way round. It turns, breathes and gutters as the
+   hex runs out - a state read off the model every frame (37ek) - and the body is washed
+   lilac, its figures drawn lilac. The reel went with its twenty-four frames, their addresses
+   and their label (8d, `SiegeObsidianTests.TheFrontIsGone`). `CurseLight` holds the palette to
+   the tool (`SiegeObsidianTests`), the art is scoped to the chapters that deal it
+   (`SiegeMode.CurseArt`, 7b), and `render_siege.py --obsidian --cursed T` is the mirror, T
+   being how far through the lash.
 37ey. **The ninth chapter is harder by headcount and one tenth, and it re-states the duel rule
    rather than breaking it.** Cogspire (`s10_cogspire`, order 154, levels 91-110) deals 1.5
    (`Traded` row `(8, 15)`, the ladder would give 1.7) and 8% more raiders, the extra bodies
@@ -1045,6 +1078,28 @@ marked *(art)* are one-line pointers - the working detail is in `CRAFT.md`.
    centreline snapped to the copper, the chain chosen by a programme that minimises record marks
    reached over, then spreads rungs evenly along the road, bridges included) - twenty rungs on
    four strips reach over 32 marks, accepted as `map8`'s were.
+37ez. **The tenth chapter asks for a good line, and that is a measured clause rather than a
+   feeling.** Windwreck (`s11_windwreck`, order 155, levels 111-130, the owner's pirate sky
+   islands, 2026-09-29) deals 1.6 (`Traded` row `(9, 16)`, exactly one tenth over Cogspire; the
+   ladder would give 1.8), 848 raiders (+7%), 190 brutes (+83%) and 2,039 par (+20%) against
+   Cogspire - the chapter tool reads Cogspire's body through the same mirror and refuses a draft
+   that is not ahead on all three, and every ordinary rung sends at least six brutes. **Brutes
+   are the lever, and they fall on the cheap line and not the good one**: on four one-star embers
+   it holds 7 of 180 (Cogspire 27), on three-star embers 43, on four one-star pyres 88 and on
+   four three-star pyres 136 (Cogspire 140). `TheTenthChapterAsksForAGoodLine` holds those four
+   readings. **Its star lines are tighter than any chapter's (0.38, 0.52)** because par counts a
+   brute's health and a strong line kills brutes far more cheaply than par credits: at Cogspire's
+   (0.42, 0.56) the strongest line three-starred 56 of 180 here against Cogspire's 18, and at
+   these it three-stars 28 while three-star embers three-star 1 - three stars belongs to the
+   strong line playing well. **The curse carries on** (every rung deals obsidians, as the charms
+   accumulate); **the cast is the armada**, a fourth square with every family that swings dealt
+   onto the brutes and bulwarks; the four duels are four pairs nobody has fought, of eight
+   verbs. **The finale's colours are measured too**: `sunlord:y+ironclad:g` let the sunlord fall
+   after two spells on the strongest line at one rhythm, which is under the fight gate's floor;
+   `sunlord:r+ironclad:b` is the same fight at the same difficulty with every boss casting three.
+   Its map (`map10`) is walked along its road like `map9`'s, with one new rule: the dusk sky
+   passes through the slabs' own colour, so ground touching the painting's side is refused by
+   shape (`make_map_seats.ENCLOSED`) - twenty rungs reach over 33 marks, accepted as `map9`'s 32.
 
 **Adding a boss rung, or a boss.** A rung: author `boss: "<kind>:<colour>"` - or a duel,
 `"<kind>:<colour>+<kind>:<colour>"` (37er) - on every fifth rung, no
@@ -1232,4 +1287,19 @@ and its own spell row in `SiegeShotBake` (37dc); scope in `SiegeMode.Bosses`; a 
    doors into a run never touch `PlayRoute`; and it must be read **before** both free clauses, since the
    lane's one level is the first of its own lane *and* becomes a finished glade after one starred watch.
    **Leaving is free and restarting is not** - the fresh watch is bought at the gate like every other - so
-   the two exits are priced apart and the restart's confirmation carries its own sentence.
+   the two exits are priced apart and the restart's confirmation carries its own sentence. **Leaving is
+   still asked** (2026-09-29, the owner): it costs no heart, but a left watch banks nothing, so a stray tap
+   on the back key threw a long run away. `ForfeitOverlay.Stakes.Watch` says that with no price tag. And
+   the run header draws no "Level 1" on a lane with no ladder (`RunScreen.BuildLevelTag`).
+43f. **A checkpoint moves where a watch opens and pays for nothing it skipped** (2026-09-29, the owner).
+   Which checkpoints are open is **derived from the lane's best and stored nowhere** (`EndlessCheckpointTable`,
+   rows of `{wave, unlockAt, cogs}` in `progression.json`, client-only, no seed); the device keeps only the
+   *choice*, per account, as a hint re-asked against the best on every read (8b's shape). The opened wave is
+   the real one because a wave is a pure function of its number, so `SiegeStart` moves an index
+   (`SiegeBoard._first`) and stands every turret `cogs` ranks up - the cogs a walked run would have spent.
+   **Every checkpoint opens on the wave after a boss wave**, refused at read otherwise, or a run meets a
+   duel before its first cog. **The record and the grade take the absolute wave** (`WavesCleared`) and
+   **everything that pays takes `WavesThisRun`** - the tally, the day's credits and the tasks' wave counter.
+   A laddered chapter ignores a start. The run screen reads the choice once and holds it, so a restart and a
+   retry open where the run began. Held by `EndlessCheckpointTests`; drawn by `render_checkpoints.py` and
+   `render_endless.py --start/--first`.

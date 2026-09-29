@@ -62,6 +62,18 @@ namespace GlimmerGrove
         readonly List<List<Vector2>> _paths = new List<List<Vector2>>(4);
         readonly List<Vector2> _cut = new List<Vector2>(MostSegments + 2);
 
+        /// <summary>
+        /// How many of <see cref="_paths"/>, from the front, are <b>trunks</b>: drawn at the full
+        /// width, untapered, cut to <see cref="Reveal"/>, and ending on the thing they struck.
+        /// Everything after them is a <b>limb</b> - a branch or a nova's arm - tapered to a point
+        /// and drawn only once the trunks are whole.
+        ///
+        /// <b>A count rather than a flag per path</b>, because every builder here lays its
+        /// trunks first: a strike is one trunk and its forks, a fan is one trunk per target, a
+        /// nova is all limbs. One integer cannot disagree with the list it describes.
+        /// </summary>
+        int _trunks = 1;
+
         float _width = 12f;
         float _reveal = 1f;
         Sprite _profile;
@@ -92,8 +104,8 @@ namespace GlimmerGrove
         /// <summary>The trunk's joints, first to last. Empty until <see cref="Strike"/> has been called.</summary>
         public IReadOnlyList<Vector2> Trunk => _paths.Count > 0 ? _paths[0] : (IReadOnlyList<Vector2>)System.Array.Empty<Vector2>();
 
-        /// <summary>How many branches leave the trunk.</summary>
-        public int Branches => Mathf.Max(0, _paths.Count - 1);
+        /// <summary>How many limbs the bolt carries: branches off a trunk, or a nova's arms.</summary>
+        public int Branches => Mathf.Max(0, _paths.Count - Mathf.Min(_trunks, _paths.Count));
 
         public override Texture mainTexture
         {
@@ -112,6 +124,30 @@ namespace GlimmerGrove
         public void Strike(Vector2 a, Vector2 b, float cell, float jag, int forks, int seed)
         {
             Build(_paths, a, b, cell, jag, forks, new System.Random(seed));
+            _trunks = 1;
+            SetVerticesDirty();
+        }
+
+        /// <summary>
+        /// One bolt from <paramref name="from"/> to <b>each</b> of <paramref name="to"/>: what a
+        /// discharge does when it lands among several bodies. Every one of them is a trunk, so
+        /// every one ends on the thing it struck (<see cref="Spread"/>).
+        /// </summary>
+        public void Fan(Vector2 from, IReadOnlyList<Vector2> to, float cell, float jag, int seed)
+        {
+            Spread(_paths, from, to, cell, jag, new System.Random(seed));
+            _trunks = _paths.Count;
+            SetVerticesDirty();
+        }
+
+        /// <summary>
+        /// Arms thrown out of <paramref name="at"/> in every direction, each tapered to a point:
+        /// the burst of arcs where a discharge lands (<see cref="Radiate"/>).
+        /// </summary>
+        public void Nova(Vector2 at, float inner, float outer, int arms, float cell, float jag, int seed)
+        {
+            Radiate(_paths, at, inner, outer, arms, cell, jag, new System.Random(seed));
+            _trunks = 0;
             SetVerticesDirty();
         }
 
@@ -122,6 +158,7 @@ namespace GlimmerGrove
             if (other == null) { SetVerticesDirty(); return; }
 
             foreach (var path in other._paths) _paths.Add(new List<Vector2>(path));
+            _trunks = other._trunks;
             SetVerticesDirty();
         }
 
@@ -199,6 +236,55 @@ namespace GlimmerGrove
             }
         }
 
+        /// <summary>
+        /// One trunk per target into <paramref name="paths"/>, in the order the targets came.
+        ///
+        /// <b>Each is <see cref="Joints"/> and nothing more</b>, which is the whole point: the
+        /// guarantee that a bolt's last joint <em>is</em> what it struck is that builder's, so a
+        /// fan of nine inherits it nine times rather than re-deriving it once. A target standing
+        /// on the source is skipped - a bolt of no length is a dot with a mitre in it.
+        /// </summary>
+        public static void Spread(List<List<Vector2>> paths, Vector2 from, IReadOnlyList<Vector2> to,
+                                  float cell, float jag, System.Random rng)
+        {
+            paths.Clear();
+            if (to == null) return;
+
+            for (int i = 0; i < to.Count; i++)
+            {
+                if ((to[i] - from).sqrMagnitude < 1f) continue;
+                paths.Add(Joints(from, to[i], cell, jag, rng));
+            }
+        }
+
+        /// <summary>
+        /// <paramref name="arms"/> arms out of <paramref name="at"/>, dealt round the circle with
+        /// each one's angle and reach its own: every arm starts <paramref name="inner"/> from the
+        /// middle and ends somewhere between half way to <paramref name="outer"/> and all of it.
+        ///
+        /// <b>Dealt by sector rather than thrown at random</b>, so nine arms are nine directions:
+        /// angles drawn freely clump, and a burst with a bald side reads as a thing that was cut
+        /// off by the edge of something.
+        /// </summary>
+        public static void Radiate(List<List<Vector2>> paths, Vector2 at, float inner, float outer,
+                                   int arms, float cell, float jag, System.Random rng)
+        {
+            paths.Clear();
+            if (arms <= 0 || outer <= inner) return;
+
+            float turn = (float)rng.NextDouble() * Mathf.PI * 2f;
+            float sector = Mathf.PI * 2f / arms;
+
+            for (int i = 0; i < arms; i++)
+            {
+                float angle = turn + sector * (i + Mathf.Lerp(-.38f, .38f, (float)rng.NextDouble()));
+                float reach = Mathf.Lerp(inner + (outer - inner) * .5f, outer, (float)rng.NextDouble());
+
+                var away = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+                paths.Add(Joints(at + away * inner, at + away * reach, cell, jag, rng));
+            }
+        }
+
         // ------------------------------------------------------------------ the mesh
         protected override void OnPopulateMesh(VertexHelper vh)
         {
@@ -206,14 +292,18 @@ namespace GlimmerGrove
             if (_paths.Count == 0 || _width <= 0f) return;
 
             var tint = color;
+            int trunks = Mathf.Min(_trunks, _paths.Count);
 
-            // The trunk, cut to `Reveal`.
-            Cut(_paths[0], _reveal, _cut);
-            Strip(vh, _cut, _width, tint, taperEnd: false);
+            // The trunks, cut to `Reveal`.
+            for (int i = 0; i < trunks; i++)
+            {
+                Cut(_paths[i], _reveal, _cut);
+                Strip(vh, _cut, _width, tint, taperEnd: false);
+            }
 
             if (_reveal < 1f) return;
 
-            for (int i = 1; i < _paths.Count; i++)
+            for (int i = trunks; i < _paths.Count; i++)
                 Strip(vh, _paths[i], _width * BranchWidth, tint, taperEnd: true);
         }
 
@@ -246,8 +336,13 @@ namespace GlimmerGrove
         /// average of the two segments meeting there, so bends are mitred rather than notched.
         /// The mitre is capped, or a sharp bend throws a spike. Both ends are pushed out by half
         /// a width so the soft profile has room to fall off, and a tapered end narrows to a point.
+        ///
+        /// <paramref name="girth"/>, when it is given, is a width of its own for every joint as a
+        /// share of <paramref name="width"/> - which is how <see cref="Lash"/> draws a whip that
+        /// is thin at its tail and swollen at its head on this same strip.
         /// </summary>
-        static void Strip(VertexHelper vh, List<Vector2> path, float width, Color tint, bool taperEnd)
+        internal static void Strip(VertexHelper vh, List<Vector2> path, float width, Color tint,
+                                   bool taperEnd, List<float> girth = null)
         {
             int n = path.Count;
             if (n < 2) return;
@@ -276,9 +371,11 @@ namespace GlimmerGrove
                     taper = Mathf.Lerp(1f, .25f, Mathf.Clamp01((t - .55f) / .45f));
                 }
 
+                if (girth != null && i < girth.Count) taper *= girth[i];
+
                 var at = path[i];
-                if (i == 0) at -= fore * half;
-                else if (i == n - 1) at += back * half * (taperEnd ? .5f : 1f);
+                if (i == 0) at -= fore * half * (girth != null ? taper : 1f);
+                else if (i == n - 1) at += back * half * (girth != null ? taper : taperEnd ? .5f : 1f);
 
                 var off = normal * (reach * taper);
 
@@ -311,6 +408,27 @@ namespace GlimmerGrove
             {
                 if (Core == null) return;
                 Core.Strike(a, b, cell, jag, forks, seed);
+                Shared();
+            }
+
+            /// <summary>All three layers as one bolt to each target. See <see cref="Lightning.Fan"/>.</summary>
+            public void Fan(Vector2 from, IReadOnlyList<Vector2> to, float cell, float jag, int seed)
+            {
+                if (Core == null) return;
+                Core.Fan(from, to, cell, jag, seed);
+                Shared();
+            }
+
+            /// <summary>All three layers as a burst of arms. See <see cref="Lightning.Nova"/>.</summary>
+            public void Nova(Vector2 at, float inner, float outer, int arms, float cell, float jag, int seed)
+            {
+                if (Core == null) return;
+                Core.Nova(at, inner, outer, arms, cell, jag, seed);
+                Shared();
+            }
+
+            void Shared()
+            {
                 if (Sheath != null) Sheath.Follow(Core);
                 if (Halo != null) Halo.Follow(Core);
             }

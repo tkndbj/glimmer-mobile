@@ -135,7 +135,7 @@ namespace GlimmerGrove
             bolt.Strike(from, at, Cell, StrikeJag, StrikeForks, seed + 1);
             bolt.Group.alpha = 1f;
 
-            var strand = Strand(from, at, hue, seed);
+            var strand = Strand(_sky, from, at, hue, seed);
 
             Flash(at, hue, 3.4f);
             Ripple(at, hue, Cell * 3.8f, .44f, 0f);
@@ -194,15 +194,16 @@ namespace GlimmerGrove
         /// <summary>
         /// The pack's painted strand, stood along the channel: forks and tendrils the drawn
         /// bolt does not have, turned over on every re-strike so it is never the same picture
-        /// twice. Its foot sits on the target and its head runs off the top of the mask.
+        /// twice. Its foot sits on the target and its head on where the bolt came from - off
+        /// the top of the mask for a stormcall (<c>_sky</c>), the muzzle for an overcharge.
         /// </summary>
-        Image Strand(Vector2 from, Vector2 at, Color hue, int seed)
+        Image Strand(RectTransform parent, Vector2 from, Vector2 at, Color hue, int seed)
         {
             var span = from - at;
             float tall = span.magnitude + Cell * .5f;
             float wide = tall * .25f;
 
-            var strand = Lit("Strand", _sky, StrikeFx.Bolt, Pal.A(hue, StrandAlpha), new Vector2(wide, tall));
+            var strand = Lit("Strand", parent, StrikeFx.Bolt, Pal.A(hue, StrandAlpha), new Vector2(wide, tall));
             if (strand == null) return null;
 
             var rng = new System.Random(seed ^ 0x5bd1e995);
@@ -269,10 +270,15 @@ namespace GlimmerGrove
             }
         }
 
-        /// <summary>A shockwave ring on the ground, squashed to the hill, spreading and going out.</summary>
-        void Ripple(Vector2 at, Color tint, float reach, float life, float delay)
+        /// <summary>
+        /// A shockwave ring, spreading and going out: on the ground, squashed to the hill, unless
+        /// <paramref name="squash"/> says otherwise. A round one (1) is a shock in the air,
+        /// which is what an overcharge throws - it may not draw on the floor (invariant 37ev).
+        /// </summary>
+        void Ripple(Vector2 at, Color tint, float reach, float life, float delay,
+                    float squash = GroundSquash)
         {
-            var ring = Lit("Ripple", _fx, StrikeFx.Ring, Pal.A(tint, 0f), new Vector2(reach, reach * GroundSquash));
+            var ring = Lit("Ripple", _fx, StrikeFx.Ring, Pal.A(tint, 0f), new Vector2(reach, reach * squash));
             if (ring == null) return;
 
             var rt = ring.rectTransform;
@@ -289,9 +295,10 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The ground answering: a radial burst, a mark left in it (a crack or a splat) that
-        /// lingers, and the warm rung under everything. All squashed to the hill, all behind
-        /// whatever else is in the layer.
+        /// The ground answering a bolt out of the sky: a radial burst, the crack left in it
+        /// that lingers, and the warm rung under everything. All squashed to the hill, all behind
+        /// whatever else is in the layer. <b>The stormcall's alone</b> - an overcharge leaves
+        /// nothing on the ground (<c>SiegeView.Arcburst</c>).
         /// </summary>
         void Answer(Vector2 at, Color tint, float cells, string mark, float markCells,
                     float markAlpha = .95f)

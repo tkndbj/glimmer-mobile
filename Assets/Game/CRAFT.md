@@ -1238,8 +1238,9 @@ copy nothing keeps in step.
   candidate over it and re-rendering `render_home.py` / `render_tasks.py` is the whole
   instrument, and a ten-face contact sheet costs about a minute. Nunito Black and Fredoka Bold
   were each cut, installed and rejected on sight before that.
-- `Tools/make_strike_fx.py` - the strike kit: nine white coverage masks under `Art/Fx/Strike/`
-  (a painted strand, two flares, a streak, a ring, a radial burst, a crack, a star and a splat),
+- `Tools/make_strike_fx.py` - the strike kit: eight white coverage masks under `Art/Fx/Strike/`
+  (a painted strand, two flares, a streak, a ring, a radial burst, a crack and a star; the
+  ninth, a splat, was withdrawn on 2026-09-29 when the overcharge stopped drawing on the ground),
   cut out of the owner's bought *Lightning VFX* pack (Mirza Beig) straight from the
   `.unitypackage` in the Asset Store cache, with the imported `Assets/Mirza Beig/` folder as the
   fallback source and neither needed on a fresh clone. `--check` proves the shipped PNGs are what

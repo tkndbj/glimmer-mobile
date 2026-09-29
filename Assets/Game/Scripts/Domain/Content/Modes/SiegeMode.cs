@@ -33,13 +33,30 @@ namespace GlimmerGrove.Content
         /// </summary>
         readonly Wards.WardLine _line;
 
+        /// <summary>
+        /// Where a run on these rules opens: <see cref="SiegeStart.Opening"/> for every authored
+        /// level, or an endless checkpoint (MODES.md 43f). Carried on the rules rather than
+        /// handed to the board by a screen, so a restart and a retry deal the board the run
+        /// began on - both call <see cref="Fresh"/> again.
+        /// </summary>
+        public readonly SiegeStart Start;
+
         public SiegeRules(SiegeLayout layout) : this(layout, null) { }
 
-        public SiegeRules(SiegeLayout layout, Wards.WardLine line) : base(0)
+        public SiegeRules(SiegeLayout layout, Wards.WardLine line) : this(layout, line, SiegeStart.Opening) { }
+
+        SiegeRules(SiegeLayout layout, Wards.WardLine line, SiegeStart start) : base(0)
         {
             Layout = layout;
             _line = line;
+            Start = layout != null && layout.IsEndless ? start : SiegeStart.Opening;
         }
+
+        /// <summary>
+        /// The same level opened at <paramref name="start"/>. A laddered layout answers rules
+        /// that open at wave one whatever it is asked, so a start can never reach a chapter.
+        /// </summary>
+        public SiegeRules From(SiegeStart start) => new SiegeRules(Layout, _line, start);
 
         public override GameMode Mode => GameMode.Siege;
         public override ProtoGrid Grid => Layout.Grid;
@@ -54,7 +71,7 @@ namespace GlimmerGrove.Content
         /// never come to depend on whatever loadout the developer running it happens to have.
         /// </para>
         /// </summary>
-        public override IProtoBoard Fresh() => SiegeBoard.Build(Layout, _line ?? Wards.WardLoadout.Line);
+        public override IProtoBoard Fresh() => SiegeBoard.Build(Layout, _line ?? Wards.WardLoadout.Line, Start);
 
         /// <summary>
         /// Nothing to search.
@@ -987,6 +1004,44 @@ namespace GlimmerGrove.Content
         static readonly AssetRequest[] GatheringSwings = Dealt(GatheringOrder, true);
 
         /// <summary>
+        /// Which cast each of the <b>armada</b>'s twelve slots is dealt from - the tenth chapter's
+        /// cast, and the fourth square over the six chapter casts.
+        ///
+        /// <para>
+        /// <b>The table would otherwise have wrapped onto the insects</b>, which is what the tenth
+        /// entry of <see cref="MainCasts"/> says at nine entries - and the tenth chapter is the
+        /// hardest hill this mode has sent (the owner's brief, 2026-09-29: more raiders, more
+        /// brutes, more health), so a crowd of the first chapter's beetles would be exactly the
+        /// wrong thing to see there. So it is a fourth square under the gathering's four rules:
+        /// every family twice, no colour drawing one family twice, and <b>no slot drawing what the
+        /// medley, the reunion or the gathering draws in it</b>.
+        /// </para>
+        /// <para>
+        /// <b>And it is dealt heavy on purpose.</b> Of the thousand-odd squares those rules allow,
+        /// this is one of the few that puts every family with a swing - the bones, the rabble, the
+        /// wild and the court - on the brutes and the bulwarks, and the two flat-sheet families that
+        /// never swing on the creepers: the bodies that reach the line armed are the ones this
+        /// chapter sends more of. It costs no art; <c>SiegeCastTests</c> holds all four rules.
+        /// </para>
+        /// </summary>
+        static readonly int[] ArmadaOrder =
+        {
+            Brood,   Insects, Brood,   Insects,    // creepers  r g b y
+            Bones,   Bones,   Wild,    Rabble,     // brutes
+            Wild,    Court,   Rabble,  Court,      // bulwarks
+        };
+
+        /// <summary>The twelve bodies the armada draws. See <see cref="ArmadaOrder"/>.</summary>
+        static readonly AssetRequest[] ArmadaCast = Dealt(ArmadaOrder, false);
+
+        /// <summary>
+        /// What the armada swings. Its two empty entries are the creepers dealt from the insects,
+        /// which never swing - the medley's honest gap (<see cref="MedleySwings"/>) - and every
+        /// brute and bulwark swings.
+        /// </summary>
+        static readonly AssetRequest[] ArmadaSwings = Dealt(ArmadaOrder, true);
+
+        /// <summary>
         /// One of the medley's two arrays, dealt out of <see cref="MedleyOrder"/>.
         ///
         /// <b>A method rather than two initialisers</b>, so the walk and the swing cannot be
@@ -1055,8 +1110,14 @@ namespace GlimmerGrove.Content
         /// </summary>
         public const int Gathering = 8;
 
+        /// <summary>
+        /// The tenth chapter's cast: a fourth square over the six chapter casts. See
+        /// <see cref="ArmadaOrder"/>.
+        /// </summary>
+        public const int Armada = 9;
+
         /// <summary>How many casts this mode ships.</summary>
-        public const int CastSets = 9;
+        public const int CastSets = 10;
 
         /// <summary>
         /// The casts the <b>main ladder</b> draws from, in the order its chapters meet them.
@@ -1081,8 +1142,12 @@ namespace GlimmerGrove.Content
         /// than the table wrapping onto the insects, for the same reason the eighth grew by two:
         /// appending it moves no shipped chapter onto a new cast.
         /// </para>
+        /// <para>
+        /// <b>Ten, and the tenth is a fourth square</b> (<see cref="ArmadaOrder"/>) for the ninth's
+        /// reason, said once more.
+        /// </para>
         static readonly int[] MainCasts = { Insects, Brood, Bones, Rabble, Wild, Court,
-                                            Insects, Reunion, Gathering };
+                                            Insects, Reunion, Gathering, Armada };
 
         /// <summary>
         /// How many casts the main ladder draws from before it starts again.
@@ -1141,6 +1206,7 @@ namespace GlimmerGrove.Content
                 case Medley: return MedleyCast;
                 case Reunion: return ReunionCast;
                 case Gathering: return GatheringCast;
+                case Armada: return ArmadaCast;
                 case Brood: return BroodCast;
                 case Bones: return BoneCast;
                 case Rabble: return RabbleCast;
@@ -1168,6 +1234,7 @@ namespace GlimmerGrove.Content
              : set == Medley ? MedleySwings
              : set == Reunion ? ReunionSwings
              : set == Gathering ? GatheringSwings
+             : set == Armada ? ArmadaSwings
              : set == Rabble ? RabbleSwings
              : set == Wild ? WildSwings
              : set == Court ? CourtSwings : null;
@@ -1272,21 +1339,22 @@ namespace GlimmerGrove.Content
         }
 
         /// <summary>
-        /// What the curse draws (<see cref="SiegeLayout.Obsidian"/>): the stone on the field, the
-        /// sigil a hex stamps on a body and the front it rides up the hill on
-        /// (<c>Tools/make_obsidian_art.py</c>).
+        /// What the curse draws (<see cref="SiegeLayout.Obsidian"/>): the stone on the field and
+        /// the sigil a hex stamps on a body (<c>Tools/make_obsidian_art.py</c>). The lash that
+        /// carries it to the hill is a mesh and asks for nothing; the painted front it replaced
+        /// went with its reel (invariant 8d).
         ///
         /// <b>Scoped to the chapters that deal it rather than loaded with the field</b>, which is
         /// the one place this differs from the charms: a charm is dealt by every chapter past the
         /// first and by the Infinite lane, so the field's own set carries them; an obsidian is
-        /// dealt by one chapter, and art nothing else draws belongs to the scope that draws it
+        /// dealt only by the chapters from the ninth on (never by the lane or the first eight), and
+        /// art nothing else draws belongs to the scope that draws it
         /// (invariant 7b). <see cref="ArtFor"/> adds it when any rung of the chapter is cursed.
         /// </summary>
         static readonly AssetRequest[] CurseArt =
         {
             AssetRequest.Sprite(AssetManifest.SiegeArt("gem_obsidian")),
             AssetRequest.Sprite(AssetManifest.SiegeArt("hex_sigil")),
-            AssetRequest.SpriteSet(AssetManifest.SiegeArt("hexwave")),
         };
 
         public override IReadOnlyList<AssetRequest> Art
@@ -1296,7 +1364,7 @@ namespace GlimmerGrove.Content
                 var list = new List<AssetRequest>(Cast);
                 list.AddRange(StarterLine());
 
-                // The curse's three, because this is the question about what *exists* (see below).
+                // The curse's two, because this is the question about what *exists* (see below).
                 list.AddRange(CurseArt);
 
                 // **Every cast, because this is the question about what *exists*.** It is what

@@ -1745,7 +1745,8 @@ def check_utilities(progression, keys, warnings):
 #: content may not invent one: an entry naming an unknown goal is skipped by the reader
 #: exactly as a chapter naming an unknown mode is (invariant 20), and reported here.
 TASK_GOALS = {"runs", "wins", "stars", "three_stars", "matches", "raiders", "bosses",
-              "charms", "cogs", "bombs", "utilities", "waves", "streak"}
+              "charms", "cogs", "bombs", "utilities", "waves", "streak",
+              "challenge_plays", "challenge_wins"}
 
 #: A task or tier id: written into save files, claim ids and loc keys, so it is the same
 #: alphabet a level id is. Mirrors `TaskDefinition.IsValidId`.
@@ -2068,10 +2069,18 @@ def check_ranks(manifest, progression, keys, art, keeper_reach, warnings):
                     ceiling = keeper_reach
 
             if ceiling is not None and target > ceiling:
-                where = f" of '{scope}'" if scope else " in the whole catalog"
-                errors.append(f"ranks rung '{rid}' asks for {target} of '{measure}'{where}, and "
-                              f"the content that ships tops out at {ceiling}; nobody could ever "
-                              "wear this badge")
+                if scope or measure == "keeper_level":
+                    where = f" of '{scope}'" if scope else ""
+                    errors.append(f"ranks rung '{rid}' asks for {target} of '{measure}'{where}, "
+                                  f"and the content that ships tops out at {ceiling}; nobody "
+                                  "could ever wear this badge")
+                else:
+                    # A catalog-wide star line is set against the catalog the game is growing
+                    # into, not the one it ships today (invariant 52m): a chapter's own count
+                    # never moves, the catalog's moves with every drop. Said, not refused.
+                    warnings.append(f"ranks rung '{rid}' asks for {target} of '{measure}' "
+                                    f"against the {ceiling} the catalog pays today; nobody can "
+                                    "wear it until more levels ship")
 
             # The ladder has to rise on anything it asks about twice.
             below = floors.get((measure, scope))
@@ -3288,6 +3297,72 @@ def check_keeper_levels(progression, warnings, wards=None):
     return errors, {"top": top, "coins": coins_total, "gems": gems_total}
 
 
+def check_endless_checkpoints(progression, warnings):
+    """The Infinite lane's checkpoints (MODES.md 43f). `EndlessCheckpointTable.Resolve`, offline.
+
+    Every refusal the reader makes, and the one fact only a gate holding the schedule can say:
+    each checkpoint opens on the wave *after* a boss wave, asked of `siege.is_boss_wave`, the
+    same schedule `SiegeEndless.IsBossWave` runs. A block the reader refuses offers nothing on a
+    device and says so nowhere a player can see, so this is where it fails first.
+    """
+    import siege as rules
+
+    LOWEST, MAX_ROWS, MAX_WAVE, MAX_RANK = 2, 8, 9999, 4
+    errors = []
+    block = progression.get("endlessCheckpoints")
+    if not block:
+        print("endless checkpoints: none (no endlessCheckpoints block) - every run opens at wave 1")
+        return errors
+
+    rows = block.get("rows") or []
+    if not rows:
+        errors.append("endlessCheckpoints carries no rows; leave the block out to offer none")
+        return errors
+    if len(rows) > MAX_ROWS:
+        errors.append(f"endlessCheckpoints lists {len(rows)} rows; at most {MAX_ROWS} are supported, "
+                      "and the sheet is laid out for no more")
+        return errors
+
+    last_wave = last_unlock = 0
+    for i, row in enumerate(rows):
+        where = f"endlessCheckpoints row {i}"
+        row = row or {}
+        wave, unlock, cogs = row.get("wave"), row.get("unlockAt"), row.get("cogs", 0)
+
+        if not isinstance(wave, int) or wave < LOWEST or wave > MAX_WAVE:
+            errors.append(f"{where} opens on wave {wave!r}, outside {LOWEST}..{MAX_WAVE}")
+            continue
+        if not rules.is_boss_wave(wave - 1):
+            errors.append(f"{where} opens on wave {wave}, and wave {wave - 1} sends no boss; a "
+                          "checkpoint opens on the wave after a boss wave, or a run can meet a boss "
+                          "before it has picked up a cog")
+        if wave <= last_wave:
+            errors.append(f"{where} opens on wave {wave} after wave {last_wave}; rows must climb")
+        if not isinstance(unlock, int) or unlock < wave:
+            errors.append(f"{where} opens at a best of {unlock!r}, below its own wave {wave}; a "
+                          "checkpoint must be somewhere the player has been")
+        elif unlock <= last_unlock:
+            errors.append(f"{where} opens at a best of {unlock} after {last_unlock}; a later "
+                          "checkpoint must ask for more")
+        if not isinstance(cogs, int) or cogs < 0 or cogs > MAX_RANK:
+            errors.append(f"{where} spends {cogs!r} cogs on every turret, outside 0..{MAX_RANK}")
+
+        last_wave = wave
+        if isinstance(unlock, int):
+            last_unlock = unlock
+
+    if errors:
+        return errors
+
+    print("")
+    print(f"endless checkpoints: {len(rows)} - derived from the lane's best, stored nowhere, "
+          "paid for nothing (a run is paid for the waves it saw off)")
+    for row in rows:
+        print(f"       wave {row['wave']:>3}   open at best {row['unlockAt']:>3}   "
+              f"every turret {row.get('cogs', 0)} cog(s) up   skips {row['wave'] - 1} unpaid wave(s)")
+    return errors
+
+
 def check_keeper_milestones(progression, tasks, keeper, warnings):
     """The chests the keeper ladder pays on the way up (invariant 57d). `KeeperMilestoneTable.Resolve`, offline.
 
@@ -4495,6 +4570,10 @@ def main():
     # tiers - and the reader, the server and the seeder all refuse the same faults.
     milestone_errors, _ = check_keeper_milestones(progression, tasks, keeper_ladder, warnings)
     errors.extend(milestone_errors)
+
+    # The Infinite lane's checkpoints (MODES.md 43f): the reader's refusals, and each one held to
+    # the endless boss schedule, which only a gate with `siege.py` in hand can ask.
+    errors.extend(check_endless_checkpoints(progression, warnings))
 
     # The rank ladder. Read after the keeper walls because a rung may ask for a keeper level and
     # what the shipped content pays for is the ceiling that has just been worked out - and after

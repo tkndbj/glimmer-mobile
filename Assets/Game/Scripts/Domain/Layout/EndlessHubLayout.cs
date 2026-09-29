@@ -105,7 +105,7 @@ namespace GlimmerGrove.Layout
         /// The best-wave medal under the lines: the same composition the hero used to be - burst,
         /// disc, nameplate - drawn whole at this scale, so nothing about it is a second design.
         /// </summary>
-        public const float RecordScale = .62f;
+        public const float RecordScale = .54f;
 
         /// <summary>The block the record takes in the column, as drawn. Derived.</summary>
         public static float RecordHeight => MedalHeight * RecordScale;
@@ -159,16 +159,36 @@ namespace GlimmerGrove.Layout
         /// <summary>The way in. The hub's own key and the home screen's are the same size.</summary>
         public const float ButtonWidth = 620f, ButtonHeight = 178f;
 
+        // ------------------------------------------------------------------ the checkpoint
+        /// <summary>
+        /// The checkpoint bar over the key (MODES.md 43f): where the next run opens, and the way
+        /// to the sheet that changes it. <b>The key's width, so the two read as one control</b> -
+        /// the bar says where the key will take you - and a slim pill rather than a second key,
+        /// because the key is the one thing on this screen that asks to be pressed.
+        /// <para>
+        /// <b>It cost the medal a little</b>: <see cref="RecordScale"/> went .62 to .54 in the same
+        /// change, because the column was already drawn below full size on a 16:9 phone and every
+        /// unit the bar adds is a unit off every other piece.
+        /// </para>
+        /// </summary>
+        public const float CheckpointWidth = ButtonWidth, CheckpointHeight = 88f;
+
         // ------------------------------------------------------------------ the air
-        /// <summary>The gaps: under the rank, under the lines, and above the key.</summary>
-        const float HeroGap = 16f, RecordGap = 20f, ButtonGap = 26f;
+        /// <summary>
+        /// The gaps: under the rank, under the lines, under the medal, and between the checkpoint
+        /// bar and the key it speaks for - closer than the rest, because the two are one thought.
+        /// </summary>
+        const float HeroGap = 16f, RecordGap = 20f, CheckpointGap = 22f, ButtonGap = 14f;
 
         /// <summary>
         /// The least the column is ever drawn at. <see cref="ScaleIn"/> shrinks it to the band it
         /// is given and never below this; <c>EndlessHubTests</c> asks it of the shortest canvas
         /// with both switcher pills drawn, which is the tightest band this game can hand it.
+        /// <b>.78 until the checkpoint bar (2026-09-29)</b>: that case - a catalog with a second
+        /// mode, on a 7:4 phone - is not one the shipped catalog draws, and the one it does draw
+        /// holds the column at about x0.84 on the same phone.
         /// </summary>
-        public const float MinScale = .78f;
+        public const float MinScale = .72f;
 
         /// <summary>
         /// Air the column leaves under the header before it begins.
@@ -201,9 +221,12 @@ namespace GlimmerGrove.Layout
         public static float RowCentre(int index)
             => PanelPad + RowHeight * .5f + index * (RowHeight + RowGap);
 
+        public static float CheckpointCentre
+            => HeroHeight + HeroGap + PanelHeight + RecordGap + RecordHeight + CheckpointGap
+             + CheckpointHeight * .5f;
+
         public static float ButtonCentre
-            => HeroHeight + HeroGap + PanelHeight + RecordGap + RecordHeight + ButtonGap
-             + ButtonHeight * .5f;
+            => CheckpointCentre + CheckpointHeight * .5f + ButtonGap + ButtonHeight * .5f;
 
         /// <summary>How tall the whole column is. Derived, never typed.</summary>
         public static float Height => ButtonCentre + ButtonHeight * .5f;
@@ -256,9 +279,9 @@ namespace GlimmerGrove.Layout
         {
             fault = null;
 
-            float[] centres = { HeroCentre, PanelCentre, RecordCentre, ButtonCentre };
-            float[] heights = { HeroHeight, PanelHeight, RecordHeight, ButtonHeight };
-            string[] names = { "the rank", "the plate", "the record", "the button" };
+            float[] centres = { HeroCentre, PanelCentre, RecordCentre, CheckpointCentre, ButtonCentre };
+            float[] heights = { HeroHeight, PanelHeight, RecordHeight, CheckpointHeight, ButtonHeight };
+            string[] names = { "the rank", "the plate", "the record", "the checkpoint", "the button" };
 
             for (int i = 1; i < centres.Length; i++)
             {

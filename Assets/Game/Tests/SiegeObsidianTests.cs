@@ -380,11 +380,15 @@ namespace GlimmerGrove.Tests
 
         // ----------------------------------------------------------------- the content
         /// <summary>
-        /// **The curse is the ninth chapter's, and only the ninth chapter's** - no shipped rung
-        /// before it deals one, so nothing the owner signed off has moved; every rung of it does.
+        /// **The curse is taught by the ninth chapter and kept by every chapter after it** - no
+        /// shipped rung before the ninth deals one, so nothing the owner signed off has moved;
+        /// every rung of the ninth and of every chapter since does, because a mechanic a chapter
+        /// teaches is a tool the next chapter keeps, as the charms are (`SiegeCharms.Upto`).
+        /// Read off the file names: the siege chapters are numbered in ladder order (`s02`, the
+        /// Infinite lane, is under `s10` and deals none).
         /// </summary>
         [Test]
-        public void OnlyTheNinthChapterDealsTheCurse()
+        public void EveryChapterFromTheNinthDealsTheCurse()
         {
             string chapters = Path.Combine(TestJson.RepoRoot(), "Assets", "StreamingAssets",
                                            "Content", "chapters");
@@ -392,22 +396,27 @@ namespace GlimmerGrove.Tests
             foreach (string path in Directory.GetFiles(chapters, "s*.json"))
             {
                 string text = File.ReadAllText(path);
-                bool ninth = Path.GetFileNameWithoutExtension(path) == "s10_cogspire";
+                string name = Path.GetFileNameWithoutExtension(path);
+
+                // `s10_cogspire` is the ninth chapter of the ladder, so `s10` and every later
+                // number keeps the curse.
+                bool keeps = int.Parse(name.Substring(1, 2)) >= 10;
 
                 int dealt = Regex.Matches(text, "\"obsidian\"\\s*:\\s*true").Count;
                 int levels = Regex.Matches(text, "\"siege\"\\s*:").Count;
 
-                if (ninth)
-                    Assert.AreEqual(levels, dealt, "a rung of Cogspire deals no curse");
+                if (keeps)
+                    Assert.AreEqual(levels, dealt, $"a rung of {name} deals no curse");
                 else
                     Assert.AreEqual(0, dealt, $"{Path.GetFileName(path)} deals the curse");
             }
         }
 
         /// <summary>
-        /// **The view's three colours are the art tool's**: the stone's cracks, the sigil and the
-        /// front are painted by <c>Tools/make_obsidian_art.py</c> and every piece of light the view
-        /// adds is tinted from <see cref="CurseLight"/> - two copies of one palette, held together.
+        /// **The view's colours are the art tool's**: the stone's cracks and the sigil are
+        /// painted by <c>Tools/make_obsidian_art.py</c>, every piece of light the view adds is
+        /// tinted from <see cref="CurseLight"/> and every piece of dark it lays on is its ink -
+        /// two copies of one palette, held together.
         /// </summary>
         [Test]
         public void TheViewAndTheArtToolShareOnePalette()
@@ -428,6 +437,7 @@ namespace GlimmerGrove.Tests
             Same("VIOLET", CurseLight.Violet);
             Same("LILAC", CurseLight.Lilac);
             Same("DEEP", CurseLight.Deep);
+            Same("INK", CurseLight.Ink);
         }
 
         /// <summary>
@@ -441,14 +451,37 @@ namespace GlimmerGrove.Tests
 
             Assert.IsTrue(File.Exists(Path.Combine(art, "gem_obsidian.png")), "no gem_obsidian.png");
             Assert.IsTrue(File.Exists(Path.Combine(art, "hex_sigil.png")), "no hex_sigil.png");
-            Assert.IsTrue(File.Exists(Path.Combine(art, "hexwave", "f00.png")), "no hexwave reel");
 
             var names = new HashSet<string>();
             foreach (var request in new SiegeMode().Art) names.Add(request.Address);
 
-            foreach (string key in new[] { "gem_obsidian", "hex_sigil", "hexwave" })
+            foreach (string key in new[] { "gem_obsidian", "hex_sigil" })
                 Assert.IsTrue(names.Contains(AssetPipeline.AssetManifest.SiegeArt(key)),
                               $"the siege never names {key}, so it ships addressed and unloadable");
+        }
+
+        /// <summary>
+        /// The front the curse used to ride up the hill on is gone, with its twenty-four frames,
+        /// their addresses and their label (invariant 8d). A curse reaches the hill as a lash
+        /// now (<c>SiegeView.Cursed</c>, MODES.md 37ex), which is drawn and ships no picture -
+        /// so a frame of the reel coming back is dead weight in the global bundle, and a row of
+        /// it coming back with no frame behind it fails <c>BuildPlayer</c>.
+        /// </summary>
+        [Test]
+        public void TheFrontIsGone()
+        {
+            string reel = Path.Combine(TestJson.RepoRoot(), "Assets", "Game", "Art", "Siege", "hexwave");
+            Assert.IsFalse(Directory.Exists(reel), "Art/Siege/hexwave is back - nothing draws it");
+
+            foreach (var request in new SiegeMode().Art)
+                Assert.IsFalse(request.Address.Contains("hexwave"), "the siege still asks for the front");
+
+            string data = Path.Combine(TestJson.RepoRoot(), "Assets", "AddressableAssetsData");
+
+            Assert.IsFalse(File.ReadAllText(Path.Combine(data, "AssetGroups", "Glimmer Global.asset"))
+                               .Contains("Art/Siege/hexwave"), "the group still addresses the front");
+            Assert.IsFalse(File.ReadAllText(Path.Combine(data, "AddressableAssetSettings.asset"))
+                               .Contains("Art/Siege/hexwave"), "the settings still carry the front's label");
         }
     }
 }

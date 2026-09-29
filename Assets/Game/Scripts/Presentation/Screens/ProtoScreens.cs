@@ -249,6 +249,41 @@ namespace GlimmerGrove
         SiegeView _siege;
         UtilityBar _bar;
 
+        /// <summary>The rules this screen deals from, fixed at the first deal. See <see cref="Rules"/>.</summary>
+        ProtoLevelRules _rules;
+        LevelDefinition _ruled;
+
+        /// <summary>
+        /// The level's rules, opened at the checkpoint the player chose (MODES.md 43f).
+        ///
+        /// <para>
+        /// <b>Read once and held for the life of the screen</b>, so a restart and a retry open
+        /// where the run began even if something moved the choice meanwhile - a run's start is a
+        /// fact about the run. A replay from the defeat panel is a new screen and reads the
+        /// choice again, which is the same answer unless the player changed it on the hub.
+        /// </para>
+        /// <para>
+        /// <b>Asked only of an endless layout</b>: <see cref="SiegeRules.From"/> answers the
+        /// opening for anything else, so a start can never reach a chapter.
+        /// </para>
+        /// </summary>
+        protected override ProtoLevelRules Rules
+        {
+            get
+            {
+                if (Level == null) return null;
+                if (_rules != null && ReferenceEquals(_ruled, Level)) return _rules;
+
+                var rules = base.Rules;
+                if (rules is SiegeRules siege && siege.Layout != null && siege.Layout.IsEndless)
+                    rules = siege.From(EndlessCheckpoints.StartFor(Level.Id));
+
+                _rules = rules;
+                _ruled = Level;
+                return rules;
+            }
+        }
+
         /// <summary>
         /// The four turrets this run draws, held for the length of the run.
         ///
@@ -319,13 +354,17 @@ namespace GlimmerGrove
             var board = _siege != null ? _siege.Siege : null;
             if (board == null || Level == null) return;
 
-            LevelAnalytics.TrackSiegeAttention(Level, board.Attention, won);
+            // Where the run opened and how far up the line stood, so the checkpoints can be read
+            // against what they were for: a start that loses at once is a head start too small.
+            var start = Rules is SiegeRules ruled ? ruled.Start : SiegeStart.Opening;
+            LevelAnalytics.TrackSiegeAttention(Level, board.Attention, won, start.Wave, start.Ranks);
 
             // The hill's half of the tasks, beside the analytics that already read the same
             // counters: what was felled, sprung, taken and tapped, and how many matches paid
             // for it. The run's own half (finished, won, starred) is the ledger's, one call
-            // later, where every mode reports it.
-            Tasks.TaskLedger.RecordSiege(board.Attention, board.WavesCleared,
+            // later, where every mode reports it. **The waves this run saw off, never the waves
+            // a checkpoint skipped** (MODES.md 43f) - a task is a thing somebody did.
+            Tasks.TaskLedger.RecordSiege(board.Attention, board.WavesThisRun,
                                          _siege.Run != null ? _siege.Run.Spent : 0);
         }
 
@@ -398,12 +437,17 @@ namespace GlimmerGrove
             var board = _siege != null ? _siege.Siege : null;
             if (board == null) return;
 
-            EndlessLedger.Bank(Level.Id, board.WavesCleared);
+            // **Paid for the waves this run saw off, and never for the ones a checkpoint skipped**
+            // (MODES.md 43f). The best above is how far the run got and takes the absolute wave;
+            // the tally and the credits are what the run is paid, and a start at wave thirty-two
+            // that fell at once saw off nothing. `WavesThisRun` is `WavesCleared` on a run opened
+            // at wave one, so nothing that shipped before checkpoints reads differently.
+            EndlessLedger.Bank(Level.Id, board.WavesThisRun);
 
             // **And the credits, which are a claim rather than a derivation.** The XP above is a
             // pure function of the tally just banked and needs nothing here; money cannot work
             // that way, because a wave count is the one reading the server cannot recompute
-            // (`EndlessCoins`, invariants 13 and 19l). Banked from the same `WavesCleared` and in
+            // (`EndlessCoins`, invariants 13 and 19l). Banked from the same `WavesThisRun` and in
             // the same place, so the two payments can never disagree about what a run was.
             // **Reported as well as banked.** `Bank` answers what it paid, and a payment nobody
             // is told about is the fault this line was written to close: the run's credits arrive
@@ -411,7 +455,7 @@ namespace GlimmerGrove
             // ledger's own delta - which on a replay of this lane is nought, so a real payment
             // drew nothing at all. `Banked` is what carries it to the panel (invariant 44j's
             // rule about readouts, said about a payout).
-            Banked(EndlessCoins.Bank(board.WavesCleared));
+            Banked(EndlessCoins.Bank(board.WavesThisRun));
         }
 
         /// <summary>
@@ -969,8 +1013,8 @@ namespace GlimmerGrove
 
             // Nought before the first wave musters, and a run that says "wave 0" during its own
             // countdown is reading as broken rather than as early: what is true in that moment is
-            // that wave one is coming.
-            int wave = board.Wave < 1 ? 1 : board.Wave;
+            // that wave one is coming - or the checkpoint's wave, on a run opened at one.
+            int wave = board.Opened ? board.Wave : board.StartWave;
 
             // **The lemniscate rather than the count, and it is drawn rather than written.** An
             // endless lane's authored wave list is empty, so `Waves` is nought and the header read

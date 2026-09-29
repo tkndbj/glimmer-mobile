@@ -8,7 +8,7 @@ using NUnit.Framework;
 namespace GlimmerGrove.Tests
 {
     /// <summary>
-    /// The strike kit: the nine masks a stormcall and an overcharge are lit with.
+    /// The strike kit: the eight masks a stormcall and an overcharge are lit with.
     ///
     /// <para>
     /// <b>Their addresses are built from <see cref="StrikeFx"/>'s names, so
@@ -75,6 +75,22 @@ namespace GlimmerGrove.Tests
             var group = File.ReadAllText(Path.Combine(TestJson.RepoRoot(), "Assets", "AddressableAssetsData",
                                                       "AssetGroups", "Glimmer Global.asset"));
             Assert.That(group, Does.Not.Contain("Art/Fx/Siege/storm"));
+        }
+
+        [Test]
+        public void TheSplatIsGone()
+        {
+            // The ninth piece was the splash an overcharge left on the ground, withdrawn when
+            // the overcharge stopped drawing on the ground (MODES.md 37ev). Nothing draws it, so
+            // the picture coming back is resident memory in every siege for nothing (8d) - and
+            // its row coming back with no picture behind it fails `BuildPlayer`.
+            Assert.That(File.Exists(Path.Combine(Folder, "splat.png")), Is.False,
+                        "Art/Fx/Strike/splat.png is back - nothing draws it");
+            Assert.That(StrikeFx.All, Does.Not.Contain("splat"));
+
+            var group = File.ReadAllText(Path.Combine(TestJson.RepoRoot(), "Assets", "AddressableAssetsData",
+                                                      "AssetGroups", "Glimmer Global.asset"));
+            Assert.That(group, Does.Not.Contain("Art/Fx/Strike/splat"));
         }
     }
 }

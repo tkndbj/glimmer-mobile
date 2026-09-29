@@ -1034,7 +1034,9 @@ namespace GlimmerGrove
             // **A boss still speaks**, which costs nothing today and is the clause that matters
             // later: no shipped chapter stands one on its first wave, and one that did would be
             // the one arrival in this mode that must never be silent.
-            if (!boss && wave <= 0) return;
+            // Asked of the run's own first wave rather than of nought, so a run opened at a
+            // checkpoint is counted in by GO! exactly as a run opened at wave one is (43f).
+            if (!boss && wave <= _board.StartWave - 1) return;
 
             // **In white rather than in the boss's own colour**, for the reason `Foretell`
             // gives: half the cast casts in a hue darker than the hill it is announced over,

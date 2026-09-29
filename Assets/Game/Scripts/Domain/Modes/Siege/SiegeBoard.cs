@@ -171,6 +171,16 @@ namespace GlimmerGrove.Modes
         uint _hill;
 
         int _wave;
+
+        /// <summary>
+        /// The index of the first wave this run sends: nought, or a checkpoint's wave less one
+        /// (<see cref="SiegeStart"/>). Everything that used to ask "has the first wave come"
+        /// asks it of this rather than of nought, so a run opened at wave seventeen gets the same
+        /// count-in, the same guarded opening quiet and the same silent first arrival as a run
+        /// opened at wave one.
+        /// </summary>
+        readonly int _first;
+
         int _minted;
         int _felled;
         float _rest;
@@ -188,7 +198,7 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public readonly WardLine Line;
 
-        SiegeBoard(SiegeLayout layout, WardLine line)
+        SiegeBoard(SiegeLayout layout, WardLine line, SiegeStart start)
         {
             Layout = layout;
             _cells = layout.Grid.Copy();
@@ -233,6 +243,19 @@ namespace GlimmerGrove.Modes
             _worked = new bool[_wards.Length];
 
             _rest = SiegeTuning.FirstWaveAfter;
+
+            // **A checkpoint, honoured only where the waves never stop** (`SiegeStart`). The
+            // index moves and nothing else about the hill does: every wave is a pure function of
+            // its number, so wave seventeen opened here is wave seventeen walked to. The head
+            // start is the cogs a walked run would have spent, written as the rank they buy, and
+            // capped by the ward's own ladder so a table cannot stand a turret above the top.
+            if (layout.IsEndless && !start.IsOpening)
+            {
+                _first = start.Wave - 1;
+                _wave = _first;
+
+                for (int i = 0; i < _wards.Length; i++) _wards[i].Rank = start.Ranks;
+            }
         }
 
         /// <summary>
@@ -242,7 +265,14 @@ namespace GlimmerGrove.Modes
         /// mirror and every rule test plays against - the weakest line a player could bring.
         /// </summary>
         public static SiegeBoard Build(SiegeLayout layout, WardLine line = null)
-            => new SiegeBoard(layout, line);
+            => new SiegeBoard(layout, line, SiegeStart.Opening);
+
+        /// <summary>
+        /// Builds a board that opens at <paramref name="start"/> - an endless checkpoint. A
+        /// laddered layout ignores the start and opens at wave one (<see cref="SiegeStart"/>).
+        /// </summary>
+        public static SiegeBoard Build(SiegeLayout layout, WardLine line, SiegeStart start)
+            => new SiegeBoard(layout, line, start);
 
         // ------------------------------------------------------------------ the field
         public int Width => Layout.Grid.Width;
@@ -371,7 +401,16 @@ namespace GlimmerGrove.Modes
         /// explicitly guarded against, which is what makes this one honest.
         /// </para>
         /// </summary>
-        public float BeforeFirstWave => _wave > 0 ? 0f : (_rest > 0f ? _rest : 0f);
+        public float BeforeFirstWave => _wave > _first ? 0f : (_rest > 0f ? _rest : 0f);
+
+        /// <summary>
+        /// Whether this run's first wave has come. Nought is not the question on a run opened at
+        /// a checkpoint, whose counter starts part-way up (<see cref="SiegeStart"/>).
+        /// </summary>
+        public bool Opened => _wave > _first;
+
+        /// <summary>The wave this run opened on, counting from one: one, or a checkpoint's.</summary>
+        public int StartWave => _first + 1;
 
         /// <summary>How many waves this siege sends, the warlord's included.</summary>
         public int Waves => Layout.Waves.Length;
@@ -414,8 +453,22 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public bool IsFinished => Layout.IsEndless ? WardsStanding == 0 : GoalsLeft == 0;
 
-        /// <summary>How many waves this run has seen off. The score, on an endless lane.</summary>
-        public int WavesCleared => _wave > 0 ? _wave - 1 : 0;
+        /// <summary>
+        /// The furthest wave this run has seen off, counted from wave one of the lane - so a run
+        /// opened at a checkpoint is credited with the waves it skipped. <b>The score and the
+        /// record, never the pay</b>: how far a run got is a fact about the lane, and a player who
+        /// cleared wave forty from a checkpoint cleared wave forty. What a run is paid is
+        /// <see cref="WavesThisRun"/>.
+        /// </summary>
+        public int WavesCleared => _wave > _first ? _wave - 1 : _first;
+
+        /// <summary>
+        /// Waves this run actually saw off - <see cref="WavesCleared"/> less the waves a
+        /// checkpoint skipped. <b>Everything that pays reads this</b>: the lifetime tally the XP
+        /// derives from, the day's credits and the tasks' wave counter (MODES.md 43f). On a run
+        /// opened at wave one the two are the same number.
+        /// </summary>
+        public int WavesThisRun => WavesCleared - _first;
 
         public int Goals => Layout.RaiderCount;
 

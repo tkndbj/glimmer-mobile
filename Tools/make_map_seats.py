@@ -277,12 +277,16 @@ NUDGE = {
 #: zig-zags the full width of four strips twenty times over - so a twenty-rung chain on it is
 #: dense in the same way `map8`'s is, and the seats are the ones that reach over the fewest
 #: record marks (`traced`) rather than a promise that none do.
+#:
+#: **`map10` accepts every rung for `map9`'s reason**: it is walked along its road as well
+#: (`TRACES`), a road that crosses the full width of four strips a dozen times over.
 ACCEPTED_OVERLAPS = {
     5: True,
     6: True,
     7: {1, 2, 3, 4, 5, 6, 8, 9},
     8: True,
     9: True,
+    10: True,
 }
 
 
@@ -388,6 +392,27 @@ TRACES = {
             (980, 0),
         ),
     ),
+    #: `map10` is the owner's pirate sky islands (2026-09-29): a road of pale stone slabs across a
+    #: dozen floating rocks, joined by **plank bridges** - a long pier, a rope bridge, a ladder and a
+    #: broken mast laid across the gap. Only the slabs are listed as ground (`GROUND[10]`), because
+    #: a plank is the same brown as a lit cliff face; so every bridge is a deck here, and the line
+    #: is read down the middle of each one exactly as `map9`'s decks were.
+    10: dict(
+        size=(2048, 8256),
+        bends=(
+            (160, 8256), (760, 7920), (1420, 7560), (1620, 7460), (1540, 7340), (1340, 7290),
+            (700, 6980), (560, 6880), (600, 6780), (720, 6720), (1200, 6430), (1400, 6300),
+            (1360, 6200), (1260, 6150), (820, 5920), (820, 5860), (1120, 5420), (1320, 5380),
+            (1460, 5300), (1340, 5180), (1240, 5120), (860, 4880), (760, 4800), (700, 4720),
+            (1260, 4400), (1420, 4320), (1540, 4240), (1420, 4160), (1240, 4100), (1000, 3980),
+            (1180, 3860), (1440, 3720), (1400, 3640), (1220, 3600), (820, 3380), (680, 3290),
+            (640, 3200), (760, 3110), (880, 3060), (1380, 2700), (1480, 2620), (1540, 2500),
+            (1420, 2430), (1320, 2380), (900, 2080), (820, 1960), (620, 1760), (560, 1720),
+            (700, 1640), (860, 1580), (1280, 1300), (1380, 1250), (1500, 1150), (1400, 1060),
+            (1300, 990), (840, 720), (720, 640), (600, 540), (700, 460), (800, 420),
+            (1100, 230), (1220, 160), (1300, 100), (1180, 20), (1100, 0),
+        ),
+    ),
 }
 
 #: How far apart the samples along a traced road are, in canvas units, and how far one may be
@@ -490,6 +515,14 @@ GROUND = {
     # same metal** and pass this test, which is why this map is walked along its road
     # (`TRACES`) rather than searched: nothing is ever asked to stand anywhere the road is not.
     9: [(190, 110, 80), (200, 118, 84), (226, 134, 90)],
+
+    # `map10` is the pirate sky islands, and its ground is its **stone slabs** and nothing else -
+    # the lit face (190, 162, 127) and the shaded one (176, 151, 124). The plank bridges between
+    # them are browns shared with the lit cliff faces and the barrels, so they are left out and
+    # walked as decks (`TRACES`). **The dusk sky passes through the slab colour** about halfway
+    # up the painting - (181, 168, 126) at one height, eight from a slab - so no tolerance keeps it
+    # out, and it is refused by shape instead (`ENCLOSED`).
+    10: [(190, 162, 127), (176, 151, 124)],
 }
 
 # `map5` is the one painting here whose **road cannot be used**, and that is a fact about the
@@ -522,6 +555,7 @@ STREAM = {
     7: [],
     8: [],
     9: [],
+    10: [],
 }
 
 #: What each painting draws **instead of land**: sea, sky, lake, chasm, void.
@@ -579,7 +613,23 @@ VOID = {
     # rocks joined by bridges, so the "is there land all round" test this list otherwise feeds
     # would read every one of them as a speck in the sky (`MIN_LANDMASS`), and it is not asked.
     9: [(61, 54, 96), (70, 142, 156), (86, 167, 170)],
+
+    # `map10`'s void is a sky running teal at the head to orange at the foot. Subtracted from the
+    # slabs at their own tolerance only, for `map9`'s reason (it is walked, not searched) - and it
+    # cannot take out the band of sky that is the slabs' own colour (`ENCLOSED` does that).
+    10: [(49, 107, 121), (143, 160, 140), (237, 176, 101), (246, 218, 170)],
 }
+
+#: Maps whose ground is always drawn **inside** an outline, so anything the ground colour finds
+#: touching the side of the picture is not ground at all.
+#:
+#: `map10`'s sky is a gradient from teal to orange and passes through its slabs' own colour on the
+#: way - a whole band of sky came out as road, two hundred units deep and the width of the map, and
+#: `TRACES` snaps to the deepest road in reach, so it would have pulled a seat into the sky. A slab
+#: is always drawn on an island, inside a dark outline, and never reaches the edge of the painting;
+#: the sky always does. So on these maps a piece of ground touching the left or right edge is
+#: thrown away whole. Only the sides: the foot of the road runs off the bottom of the picture.
+ENCLOSED = {10}
 
 # `map4`'s own shadow deliberately does not appear above, and that is the correction worth
 # keeping. It is a volcanic map drawn almost entirely in four near-blacks, and listing the
@@ -790,8 +840,15 @@ def ground_mask(image: Image.Image, which: int) -> np.ndarray:
     # The subtraction is at the *narrow* tolerance, deliberately: at `VOID_TOLERANCE` the
     # lava would take `map4`'s orange stone with it, and the stone is the road.
     tol = tolerance_of(which)
-    return _tidy(_near(pixels, GROUND[which], tol) & ~_near(pixels, VOID[which], tol),
+    mask = _tidy(_near(pixels, GROUND[which], tol) & ~_near(pixels, VOID[which], tol),
                  heal_of(which))
+    if which in ENCLOSED:
+        # Within `DESPECKLE` of the side rather than on it: the opening in `_tidy` erodes the
+        # picture's own border, so nothing survives in the outermost columns to touch it.
+        labels, _ = ndimage.label(mask)
+        edge = np.union1d(labels[:, :DESPECKLE], labels[:, -DESPECKLE:])
+        mask &= ~np.isin(labels, edge[edge > 0])
+    return mask
 
 
 def stream_mask(image: Image.Image, which: int) -> np.ndarray:

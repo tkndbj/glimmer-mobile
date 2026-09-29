@@ -122,7 +122,7 @@ namespace GlimmerGrove.Tests
             {
                 "levels_cleared", "stars", "three_stars", "keeper_level", "best_wave",
                 "runs", "wins", "matches", "raiders", "bosses", "charms", "cogs", "bombs",
-                "utilities", "waves", "streak",
+                "utilities", "waves", "streak", "challenge_plays", "challenge_wins",
             };
 
             CollectionAssert.AreEquivalent(expected, RankMeasures.All(),
@@ -535,8 +535,10 @@ namespace GlimmerGrove.Tests
                               $"'{piece}.png' is not on disk; cut it with Tools/make_rank_kit_art.py");
             }
 
-            foreach (var id in new[] { "stars", "three_stars", "keeper_level", "best_wave", "levels_cleared",
-                                       "runs", "raiders", "bosses", "charms", "never_heard_of" })
+            // Every measure a ladder may name, walked rather than listed, so a counted verb added
+            // to `TaskGoals` is held here the day it lands; and one this build has never heard of.
+            var ids = new List<string>(RankMeasures.All()) { "never_heard_of" };
+            foreach (var id in ids)
             {
                 var measure = RankMeasures.Parse(id);
                 var (address, _) = RankKit.IconFor(measure);

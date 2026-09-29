@@ -41,11 +41,12 @@ namespace GlimmerGrove.Tests
         {
             SiegeMode.Insects, SiegeMode.Medley, SiegeMode.Brood, SiegeMode.Bones,
             SiegeMode.Rabble, SiegeMode.Wild, SiegeMode.Court, SiegeMode.Reunion,
-            SiegeMode.Gathering,
+            SiegeMode.Gathering, SiegeMode.Armada,
         };
 
-        /// <summary>The casts dealt out of the six rather than cut: the lane's, the eighth chapter's and the ninth's.</summary>
-        static readonly int[] Squares = { SiegeMode.Medley, SiegeMode.Reunion, SiegeMode.Gathering };
+        /// <summary>The casts dealt out of the six rather than cut: the lane's, and the eighth, ninth and tenth chapters'.</summary>
+        static readonly int[] Squares =
+            { SiegeMode.Medley, SiegeMode.Reunion, SiegeMode.Gathering, SiegeMode.Armada };
 
         /// <summary>
         /// The six a <b>chapter</b> can draw. The medley is not one of them: it is dealt out of
@@ -293,6 +294,9 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(SiegeMode.Gathering, SiegeMode.CastFor(GameTrack.Main, 8),
                             "Cogspire does not draw the gathering");
 
+            Assert.AreEqual(SiegeMode.Armada, SiegeMode.CastFor(GameTrack.Main, 9),
+                            "Windwreck does not draw the armada");
+
             Assert.AreEqual(SiegeMode.Medley, SiegeMode.CastFor(GameTrack.Infinite, 0),
                             "the Infinite lane does not draw the medley");
         }
@@ -316,6 +320,32 @@ namespace GlimmerGrove.Tests
         public void TheGatheringIsAThirdSquareAndSharesNoSlotWithTheMedleyOrTheReunion()
             => IsASquareOverTheSix(SiegeMode.Gathering, "gathering",
                                    SiegeMode.Medley, SiegeMode.Reunion);
+
+        /// <summary>
+        /// **The armada is the fourth square, and it shares no slot with any of the other three** -
+        /// so the tenth chapter's hill is its own against the Infinite lane and against both
+        /// chapters below it on the ladder.
+        /// </summary>
+        [Test]
+        public void TheArmadaIsAFourthSquareAndSharesNoSlotWithAnyOtherSquare()
+            => IsASquareOverTheSix(SiegeMode.Armada, "armada",
+                                   SiegeMode.Medley, SiegeMode.Reunion, SiegeMode.Gathering);
+
+        /// <summary>
+        /// **Every brute and bulwark of the armada swings**, which is the one thing it was dealt
+        /// for beyond the square's rules: the tenth chapter sends more of those two kinds than any
+        /// chapter before it, and they are the bodies that reach the line.
+        /// </summary>
+        [Test]
+        public void EveryArmedBodyOfTheArmadaSwings()
+        {
+            var swings = SiegeMode.CastSwingArt(SiegeMode.Armada);
+            Assert.That(swings, Is.Not.Null);
+
+            for (int slot = 4; slot < SiegeMode.CastBodies; slot++)
+                Assert.That(swings[slot].Address, Is.Not.Null.And.Not.Empty,
+                            $"slot {slot} of the armada is a brute or a bulwark that never swings");
+        }
 
         /// <summary>
         /// <paramref name="square"/> is dealt out of the six chapter casts, twice each, no colour

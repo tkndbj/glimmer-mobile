@@ -231,11 +231,31 @@ CHARM_INSET, CHARM_RING = 1.06, 1.18
 #: disk, which is the same thing the view now does (`frames.Length / HeaveSweep`).
 HEAVE_FRONT = 1.5
 
-#: `SiegeView.HexFront` - how deep the curse's front is drawn, in cells - and `CurseLight`'s violet,
-#: the tint every piece of the curse's added light wears. Read off `make_obsidian_art.VIOLET` by
-#: `SiegeObsidianTests` on the C# side; here it is the same three numbers.
-HEX_FRONT = 1.6
+#: `CurseLight`'s violet, lilac and ink: the tint every piece of the curse's added light wears, its
+#: hottest part, and the dark a whip and the knot are *laid on* in. Read off `make_obsidian_art`
+#: by `SiegeObsidianTests` on the C# side; here they are the same numbers.
 HEX_VIOLET = (168, 92, 255)
+HEX_LILAC = (232, 206, 255)
+HEX_INK = (16, 6, 30)
+
+#: The lash (`SiegeView.Cursed`, `Lash`): a whip's dark core and how far it writhes, in cells; how
+#: far it bows, as a share of its length; how the whips are staggered and how fast they fly; how
+#: long one stands on its body and how long it takes to go in. And the knot it is thrown from, and
+#: how much wider than its body a seal is. Every one is the view's constant of the same name.
+LASH_CORE, LASH_JAG = 0.085, 0.17
+LASH_BOW = (0.09, 0.20)
+LASH_STEP, LASH_SPREAD = 0.034, 0.30
+LASH_SPEED, LASH_FLIGHT = 34.0, (0.15, 0.26)
+LASH_HELD, LASH_WITHDRAW = 0.10, 0.20
+LASH_JOINTS, LASH_BEAT = 22, 0.07
+LASH_SWELL, LASH_SWELL_REACH, LASH_SWELL_DOWN, LASH_TAIL = 1.35, 0.38, 0.14, 0.10
+KNOT_WIDE = 1.05
+SEAL_WIDE = 1.42
+
+#: `SiegeView.DischargeCore` / `.DischargeJag` / `.DischargeForks` and the burst's `NovaArms` /
+#: `NovaReach` / `NovaCore` / `ForkCore`.
+DISCHARGE_CORE, DISCHARGE_JAG, DISCHARGE_FORKS = 0.125, 0.36, 3
+NOVA_ARMS, NOVA_REACH, NOVA_CORE, FORK_CORE = 10, 2.5, 0.06, 0.075
 
 #: **`Pal.Rope` and `Pal.Glass` are gone from this file, and their absence is the point.** They were
 #: what the anvil's front and the hourglass's front and dial were tinted with here, mirroring a view
@@ -564,13 +584,23 @@ GATHERING = (
     ("rabble", "wild",   "bone",   ""),
 )
 
+#: The tenth chapter's square, mirroring `SiegeMode.ArmadaOrder` - the fourth, dealt so that no
+#: slot draws what `MEDLEY`, `REUNION` or `GATHERING` draws in it, and every body that swings
+#: stands on the brutes and the bulwarks.
+ARMADA = (
+    ("brood",  "",       "brood",  ""),
+    ("bone",   "bone",   "wild",   "rabble"),
+    ("wild",   "court",  "rabble", "court"),
+)
+
 #: Which row of `MEDLEY` a kind reads, in `SiegeMode.CastAddress`'s own order.
 MEDLEY_ROWS = {"mon": 0, "brute": 1, "bulwark": 2}
 
 
 def skin(kind, colour):
     square = (MEDLEY if CAST == "medley" else REUNION if CAST == "reunion"
-              else GATHERING if CAST == "gathering" else None)
+              else GATHERING if CAST == "gathering"
+              else ARMADA if CAST == "armada" else None)
     cast = square[MEDLEY_ROWS[kind]][colour] if square else CAST
 
     return "%s%s_%s" % (cast, kind if not cast else kind[0].upper() + kind[1:],
@@ -863,38 +893,259 @@ def struck(sheet, cx, cy, cell, seed, plate_top):
     add_layer(sheet, layer)
 
 
-def discharge(sheet, muzzle, target, cell, tint):
-    """`SiegeView.Discharge` on the frame the bead lands: the beam standing at full with its
-    lightning wrapped round it, the muzzle lit, and the slam on the box it was aimed at.
+def discharge(sheet, muzzle, target, cell, tint, struck=()):
+    """`SiegeView.Discharge` a beat after the channel lands: the channel lit white with its forks
+    and the painted strand along it, the muzzle lit, and the burst where it landed - a bloom, a
+    round shock, arcs thrown out in every direction and a fork to every body the blast hurt.
 
-    **The mirror picks the box** - the board aims at whatever is furthest down the hill, which a
-    still picture cannot know - so what this answers is the beam's weight, the wrap and the slam's
-    size against the hill, and never where a real overcharge would land.
+    **Nothing on the ground** (invariant 37ev): it landed as the kit's splat with the blast's
+    boxes scorched under it, and what the owner said of the splat is the reason none of this is
+    squashed to the hill. `struck` is where the bodies stand; **the mirror picks them**, as it
+    picks the box - the board aims at whatever is furthest down the hill, which a still cannot
+    know - so what this answers is the weight of the channel and the size of the burst against
+    the hill, and whether a fork to each body reads as *who was hit*.
     """
     (mx, my), (tx, ty) = muzzle, target
     bright = lighter(tint, 0.5)
+
+    # The bloom, then the shock in the air: round, the first most of the way out.
+    bloom = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
+    r = cell * 1.1
+    ImageDraw.Draw(bloom).ellipse([tx - r, ty - r, tx + r, ty + r], fill=tint + (120,))
+    add_layer(sheet, bloom.filter(ImageFilter.GaussianBlur(cell * 0.5)))
+    shine(sheet, kit("ring"), tx, ty, cell * 5.0 * 0.78, cell * 5.0 * 0.78, tint, alpha=0.55)
+    shine(sheet, kit("ring"), tx, ty, cell * 3.3 * 0.42, cell * 3.3 * 0.42, lighter(tint, 0.4), alpha=0.8)
+
+    # The channel: the strand under the drawn bolt, both added.
+    strand = kit("bolt")
+    if strand is not None:
+        tall = math.hypot(mx - tx, my - ty) + cell * 0.5
+        wide = tall * 0.25
+        im = strand.resize((max(1, int(wide)), max(1, int(tall))), Image.LANCZOS)
+        ang = math.degrees(math.atan2(mx - tx, ty - my))
+        cx = tx + (mx - tx) * 0.5 - (cell * 0.3) * (mx - tx) / tall
+        cy = ty + (my - ty) * 0.5 - (cell * 0.3) * (my - ty) / tall
+        shine(sheet, im, cx, cy, im.width, im.height, tint, alpha=0.85, angle=-ang)
+
     layer = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
-    pen = ImageDraw.Draw(layer)
-    core = cell * 0.16
-    pen.line([muzzle, target], fill=tint + (180,), width=max(2, int(core * 6.5)))
-    layer = layer.filter(ImageFilter.GaussianBlur(core * 1.6))
-    pen = ImageDraw.Draw(layer)
-    pen.line([muzzle, target], fill=tint + (242,), width=max(2, int(core * 2.4)))
-    pen.line([muzzle, target], fill=lighter(tint, 0.85) + (255,), width=max(1, int(core)))
-    for k in range(2):
-        random.seed(1000 + k)
-        bolt(layer, muzzle, target, tint, cell * 0.055, cell, jag=0.28, forks=1)
+    random.seed(1000)
+    bolt(layer, muzzle, target, tint, cell * DISCHARGE_CORE, cell, jag=DISCHARGE_JAG,
+         forks=DISCHARGE_FORKS)
+
+    # The arms (`Lightning.Radiate`): dealt by sector, each its own angle and reach.
+    random.seed(1101)
+    turn = random.uniform(0, math.tau)
+    for i in range(NOVA_ARMS):
+        ang = turn + math.tau / NOVA_ARMS * (i + random.uniform(-0.38, 0.38))
+        reach = cell * random.uniform(0.18 + (NOVA_REACH - 0.18) * 0.5, NOVA_REACH)
+        tip = (tx + math.cos(ang) * reach, ty + math.sin(ang) * reach)
+        root = (tx + math.cos(ang) * cell * 0.18, ty + math.sin(ang) * cell * 0.18)
+        bolt(layer, root, tip, tint, cell * NOVA_CORE, cell, jag=0.42)
+
+    # The forks (`Lightning.Spread`): one trunk to each body, ending on it.
+    random.seed(1211)
+    for (sx, sy) in struck:
+        if math.hypot(sx - tx, sy - ty) < 1.0:
+            continue
+        bolt(layer, target, (sx, sy), tint, cell * FORK_CORE, cell, jag=0.30)
     add_layer(sheet, layer)
 
-    # The muzzle (`Flash` at 2.1 cells) and the bead arriving.
+    # The muzzle (`Flash` at 2.1 cells).
     shine(sheet, kit("flare"), mx, my, cell * 2.0, cell * 2.0, lighter(tint, 0.25), alpha=0.9, angle=10)
     streak = kit("streak")
     if streak is not None:
         wide = cell * 2.1 * 1.6
         shine(sheet, streak, mx, my, wide, wide * streak.height / streak.width, bright, alpha=0.7)
-    shine(sheet, kit("flare"), tx, ty, cell * 1.3, cell * 1.3, bright, alpha=1.0, angle=70)
 
-    slam(sheet, tx, ty, cell, tint, "splat", 3.2, 4.6, 3.1, 22)
+    # The landing (`Flash` at 3.6 cells), and a flare on every body it reached (`Jolt`).
+    shine(sheet, kit("flare"), tx, ty, cell * 3.0 * 0.95, cell * 3.0 * 0.95, lighter(tint, 0.25),
+          alpha=0.9, angle=random.uniform(-14, 14))
+    if streak is not None:
+        wide = cell * 3.0 * 1.6
+        shine(sheet, streak, tx, ty, wide, wide * streak.height / streak.width, bright, alpha=0.7)
+    shine(sheet, kit("glint"), tx, ty, cell * 3.0 * 0.55, cell * 3.0 * 0.55, (255, 255, 255),
+          alpha=0.7, angle=40)
+    for (sx, sy) in struck:
+        shine(sheet, kit("flare"), sx, sy, cell * 1.3, cell * 1.3, lighter(tint, 0.6), alpha=0.9,
+              angle=random.uniform(0, 60))
+
+    embers(sheet, tx, ty, cell, tint, 26, cell * 2.4, cell * 0.35)
+    for _ in range(5):
+        shine(sheet, kit("glint"), tx + random.uniform(-1.8, 1.8) * cell,
+              ty + random.uniform(-1.8, 1.8) * cell * GROUND_SQUASH,
+              cell * 0.5, cell * 0.5, lighter(tint, 0.6), alpha=0.8, angle=random.uniform(-40, 40))
+
+
+# ------------------------------------------------------------------ the lash
+def _lash_hash(n, seed):
+    """`Lash.Hash`, in the same unsigned arithmetic, so the mirror writhes the way the game does."""
+    h = ((n & 0xFFFFFFFF) * 374761393 + (seed & 0xFFFFFFFF) * 668265263) & 0xFFFFFFFF
+    h = ((h ^ (h >> 13)) * 1274126177) & 0xFFFFFFFF
+    h ^= h >> 16
+    return (h & 0xFFFF) / 65535.0 * 2.0 - 1.0
+
+
+def _lash_noise(x, seed):
+    i = math.floor(x)
+    f = x - i
+    f = f * f * (3.0 - 2.0 * f)
+    a, b = _lash_hash(i, seed), _lash_hash(i + 1, seed)
+    return a + (b - a) * f
+
+
+def _lash_wander(t, seed):
+    return (_lash_noise(t * 3.1, seed) + _lash_noise(t * 8.3, seed + 7919) * 0.45) / 1.45
+
+
+def lash_window(whip, clock):
+    """`Lash.Window` - how much of a whip is drawn: (tail, head), each a share of its length."""
+    s = clock - whip["leaves"]
+    if s <= 0.0:
+        return 0.0, 0.0
+    flown = min(1.0, s / whip["flight"]) if whip["flight"] > 0 else 1.0
+    head = 1.0 if flown >= 1.0 else flown + (flown * flown - flown) * 0.65
+    back = s - whip["flight"] - whip["held"]
+    if back <= 0.0:
+        return 0.0, head
+    drawn = min(1.0, back / whip["withdraw"]) if whip["withdraw"] > 0 else 1.0
+    return (1.0 if drawn >= 1.0 else drawn * drawn), head
+
+
+def lash_point(whip, t, clock, cell):
+    """`Lash.Point`, in the picture's own axes: y runs down here, so the side vector is the other
+    hand and the bow is handed in with its sign turned (`lash`)."""
+    (ax, ay), (bx, by) = whip["from"], whip["to"]
+    if t <= 0.0:
+        return ax, ay
+    if t >= 1.0:
+        return bx, by
+    dx, dy = bx - ax, by - ay
+    length = math.hypot(dx, dy)
+    if length < 0.001:
+        return ax, ay
+    sx, sy = -dy / length, dx / length
+    pinch = math.sin(t * math.pi)
+    beats = max(0.0, clock) / LASH_BEAT
+    beat = math.floor(beats)
+    k = beats - beat
+    k = k * k * (3.0 - 2.0 * k)
+    w0 = _lash_wander(t, whip["seed"] + beat)
+    w1 = _lash_wander(t, whip["seed"] + beat + 1)
+    off = (whip["bow"] + (w0 + (w1 - w0) * k) * LASH_JAG * cell) * pinch
+    return ax + dx * t + sx * off, ay + dy * t + sy * off
+
+
+def lash_girth(along, reach, cell, loose, swell):
+    """`Lash.Girth` - thin at a tail that has let go, swollen at a flying head, closed round at the tip."""
+    smooth = max(0.0, min(1.0, along / 0.45))
+    smooth = smooth * smooth * (3.0 - 2.0 * smooth)
+    loose = max(0.0, min(1.0, loose))
+    tail = 1.0 + ((LASH_TAIL + (1.0 - LASH_TAIL) * smooth) - 1.0) * loose
+    behind = (1.0 - along) * reach
+    back = behind / max(1.0, cell * LASH_SWELL_REACH)
+    head = 1.0 + LASH_SWELL * swell * math.exp(-back * back)
+    cap = max(1.0, cell * 0.16)
+    tip = 1.0 if behind >= cap else math.sqrt(max(0.0, 1.0 - (1.0 - behind / cap) ** 2))
+    return tail * head * max(0.06, tip)
+
+
+def lash_trace(whip, clock, cell):
+    """`Lash.Trace` - the joints of the drawn part of a whip and how wide each is, or nothing."""
+    tail, head = lash_window(whip, clock)
+    if head <= tail:
+        return []
+    length = math.hypot(whip["to"][0] - whip["from"][0], whip["to"][1] - whip["from"][1])
+    reach = length * (head - tail)
+    if reach < 1.0:
+        return []
+    landed = clock - (whip["leaves"] + whip["flight"])
+    swell = 1.0 if landed <= 0.0 else max(0.0, 1.0 - landed / LASH_SWELL_DOWN)
+    loose = tail / 0.06
+    steps = max(3, min(LASH_JOINTS, math.ceil(LASH_JOINTS * (head - tail))))
+    cap = min(0.5, cell * 0.16 / reach)
+    alongs = [i / steps for i in range(steps) if i / steps < 1.0 - cap]
+    alongs += [1.0 - cap, 1.0 - cap * 0.55, 1.0 - cap * 0.25, 1.0 - cap * 0.07, 1.0]
+    return [(lash_point(whip, tail + (head - tail) * k, clock, cell),
+             lash_girth(k, reach, cell, loose, swell)) for k in alongs]
+
+
+def _ribbon(pen, trace, width, fill):
+    """One strip of `Lightning.Strip`: two edges either side of the joints, by each joint's girth."""
+    if len(trace) < 2:
+        return
+    left, right = [], []
+    for i, ((x, y), g) in enumerate(trace):
+        (px, py) = trace[max(0, i - 1)][0]
+        (nx, ny) = trace[min(len(trace) - 1, i + 1)][0]
+        dx, dy = nx - px, ny - py
+        d = math.hypot(dx, dy) or 1.0
+        ox, oy = -dy / d * width * 0.5 * g, dx / d * width * 0.5 * g
+        left.append((x - ox, y - oy))
+        right.append((x + ox, y + oy))
+    pen.polygon(left + right[::-1], fill=fill)
+
+
+def lash(sheet, whips, clock, cell):
+    """`Lash.Layered` - every whip at `clock`, as a glow and a sheath *added* and a dark core laid on.
+
+    The order is the game's: the two layers of light first and the dark over them, because the
+    dark is what the line is and the light is what lets a black line be seen on a dark board.
+    """
+    traces = [t for t in (lash_trace(w, clock, cell) for w in whips) if t]
+    if not traces:
+        return
+    core = cell * LASH_CORE
+
+    halo = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
+    pen = ImageDraw.Draw(halo)
+    for trace in traces:
+        _ribbon(pen, trace, core * 5.4 * 0.6, HEX_VIOLET + (150,))
+    add_layer(sheet, halo.filter(ImageFilter.GaussianBlur(core * 1.3)))
+
+    sheath = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
+    pen = ImageDraw.Draw(sheath)
+    for trace in traces:
+        _ribbon(pen, trace, core * 2.5 * 0.75, HEX_VIOLET + (235,))
+    add_layer(sheet, sheath.filter(ImageFilter.GaussianBlur(core * 0.35)))
+
+    ink = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
+    pen = ImageDraw.Draw(ink)
+    for trace in traces:
+        _ribbon(pen, trace, core * 1.3, HEX_INK + (255,))
+    sheet.alpha_composite(ink.filter(ImageFilter.GaussianBlur(max(0.6, core * 0.10))))
+
+
+def knot(sheet, x, y, cell, kick=0.0):
+    """`SiegeView.Knotted` - what is left of a broken curse, hanging over the field: a dark laid
+    on, the seal turning in it, and a violet rim. `kick` is the swell it throws with."""
+    wide = cell * KNOT_WIDE * (1.0 + kick)
+    dark = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
+    ImageDraw.Draw(dark).ellipse([x - wide * 0.42, y - wide * 0.42, x + wide * 0.42, y + wide * 0.42],
+                                 fill=HEX_INK + (240,))
+    sheet.alpha_composite(dark.filter(ImageFilter.GaussianBlur(wide * 0.07)))
+    seal = sprite("hex_sigil")
+    if seal is not None:
+        shine(sheet, seal.convert("RGBA"), x, y, wide * 1.25, wide * 1.25, HEX_VIOLET, alpha=0.55,
+              angle=25)
+    shine(sheet, kit("ring"), x, y, wide * 1.02, wide * 1.02, lighter(HEX_VIOLET, 0.3), alpha=0.9)
+
+
+def bitten(sheet, x, y, cell, age):
+    """`SiegeView.Bitten` - a whip landing on a body, `age` seconds ago: the dark closing on it
+    and the violet pop over that."""
+    if age < 0.0 or age > 0.26:
+        return
+    t = age / 0.26
+    r = cell * 1.5 * 0.5 * (1.0 + (0.25 - 1.0) * t)
+    dark = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
+    ImageDraw.Draw(dark).ellipse([x - r, y - r, x + r, y + r],
+                                 fill=HEX_INK + (int(215 * (1 - t * t)),))
+    sheet.alpha_composite(dark.filter(ImageFilter.GaussianBlur(cell * 0.12)))
+    pop = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
+    pr = cell * (0.4 + 0.8 * t) * 0.6
+    ImageDraw.Draw(pop).ellipse([x - pr, y - pr, x + pr, y + pr],
+                                fill=HEX_LILAC + (int(230 * (1 - t)),))
+    add_layer(sheet, pop.filter(ImageFilter.GaussianBlur(cell * 0.14)))
 
 
 #: The face the game draws with (invariant 46a: `Fonts/GameFont` is a role). It is in the repo,
@@ -2108,6 +2359,52 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
     bosses = [(x, k) for x, k in sent if k in BOSSES]
     mob = []
 
+    # **The lash, laid out before anybody is drawn** (`SiegeView.Cursed`): one whip per body
+    # standing, nearest the knot first, each bowed outward. It is worked out here because the
+    # seal a body stands in is drawn *under* the body and only once its whip has landed, so who
+    # has been reached has to be known before the first raider is painted.
+    whips, lash_clock, knot_at = [], 0.0, None
+    if cursed is not None:
+        knot_at = at(0.5 * cell, gem_centre)
+        walkers = [x for x in sent if x[1] not in BOSSES][:raiders]
+        stand = []
+        for i, (letter, kind) in enumerate(walkers):
+            tall_i = cell * (1.85 if kind == "bulwark" else 1.55 if kind == "brute" else 1.15)
+            lane_i = lane_walk(lay.wards.index(letter) if letter in lay.wards else 0,
+                               len(lay.wards), i)
+            sx = (lane_i - (LANES - 1) / 2) * (span[0] / (LANES + 0.6))
+            sy = hill_top + (hill_foot - hill_top) * (0.18 + 0.16 * i)
+            px_i, py_i = at(sx, sy + tall_i * 0.25)
+            stand.append((i, px_i, py_i))
+
+        stand.sort(key=lambda q: math.hypot(q[1] - knot_at[0], q[2] - knot_at[1]))
+        step = min(LASH_STEP, LASH_SPREAD / (len(stand) - 1)) if len(stand) > 1 else 0.0
+        random.seed(4242)
+        for order, (i, px_i, py_i) in enumerate(stand):
+            far = math.hypot(px_i - knot_at[0], py_i - knot_at[1])
+            outward = 1.0 if px_i > knot_at[0] else -1.0
+            bow = outward * far * random.uniform(*LASH_BOW)
+
+            # `SiegeView.Kept`: as much of the bow as keeps the whip on the plate.
+            side = -(py_i - knot_at[1]) / far if far > 1.0 else 0.0
+            edge = span[0] * 0.5 - cell * 0.35
+            middle = (knot_at[0] + px_i) * 0.5 - px
+            if abs(side) > 0.001 and abs(middle + side * bow) > edge:
+                if abs(middle - side * bow) <= edge:
+                    bow = -bow
+                else:
+                    bow = (math.copysign(edge, middle + side * bow) - middle) / side
+
+            whips.append(dict(index=i, to=(px_i, py_i), leaves=order * step,
+                              flight=max(LASH_FLIGHT[0], min(LASH_FLIGHT[1], far / (cell * LASH_SPEED))),
+                              held=LASH_HELD, withdraw=LASH_WITHDRAW, bow=bow,
+                              seed=random.randrange(1 << 20)))
+            whips[-1]["from"] = knot_at
+        ends = max([w["leaves"] + w["flight"] + w["held"] + w["withdraw"] for w in whips] or [0.0])
+        lash_clock = max(0.0, min(1.0, cursed)) * ends
+
+    landed_at = {w["index"]: w["leaves"] + w["flight"] for w in whips}
+
     for i, (letter, kind) in enumerate([x for x in sent if x[1] not in BOSSES][:raiders]):
         colour = siege.LETTERS.index(letter)
         brute = kind == "brute"
@@ -2136,14 +2433,18 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
         wide = tall if body is None else tall * body.width / body.height
         shadow(sheet, cx, cy, wide, tall)
 
-        # **The sigil a hexed body stands in** (`SiegeView.Hexing`): on the ground under it,
-        # squashed to the hill, in the curse's violet - drawn for every body the front has already
-        # passed at `--cursed T`, because that is who the model marked (`SiegeBoard.Unbind`).
-        if cursed is not None and ly < hill_foot + (hill_top - hill_foot) * max(0.0, min(1.0, cursed)) + cell:
-            mark = dyed(sprite("hex_sigil"), HEX_VIOLET, 200)
-            if mark is not None:
-                put(sheet, mark, cx, cy - BODY_LIFT * tall + tall * 0.18, wide * 1.35,
-                    wide * 1.35 * 0.45)
+        # **The seal a hexed body stands in** (`SiegeView.Hexing`, `SealOf`): under the body,
+        # *round*, seated on the body's own middle and wider than its longer side, so the whole
+        # ring stands clear of what it is drawn under. Drawn for every body whose whip has landed
+        # at `--cursed T` and no other (`Mob.HexAt`), and arriving over a quarter of a second.
+        # Added, as the view adds it (`Additive.Lit`).
+        if i in landed_at and lash_clock >= landed_at[i]:
+            arrive = min(1.0, (lash_clock - landed_at[i]) / 0.25)
+            seal = sprite("hex_sigil")
+            if seal is not None:
+                around = max(tall * 0.94, wide) * SEAL_WIDE * (0.2 + 0.8 * arrive)
+                shine(sheet, seal.convert("RGBA"), cx, cy - BODY_LIFT * tall, around, around,
+                      HEX_VIOLET, alpha=0.78 * arrive, angle=17 * i)
 
         put(sheet, body, cx, cy - BODY_LIFT * tall, wide, tall)
 
@@ -2255,7 +2556,6 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
     # projectile pack so a bolt is told apart by silhouette and not by hue alone; whether that is
     # true at the size a phone draws it is a question only this picture answers.
     if bolts and mob:
-        import math
 
         for i, ward in enumerate(lay.wards):
             wide = span[0] / (len(lay.wards) + 0.6)
@@ -2389,18 +2689,6 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
             hdx, hdy = at(0.0, (hill_top + hill_foot) * 0.5)
             hddisc = faded(heaveface.resize((hdsize, hdsize), Image.LANCZOS), DIAL_INK)
             sheet.alpha_composite(hddisc, (int(hdx - hdsize / 2), int(hdy - hdsize / 2)))
-
-    # ------------------------------------------------------------------ the curse falling
-    # `SiegeView.Cursed` - the curse's front climbing from the line to the crest, the wake behind
-    # it, and (above, with the bodies) the sigil every body it has passed now stands in. The third
-    # thing that sweeps this hill, so draw it beside `--stilled` and `--heaved` before believing it
-    # reads as neither.
-    if cursed is not None:
-        v = max(0.0, min(1.0, cursed))
-        hexfrom = line_y + cell * 0.5
-        sweep_wall(sheet, at, "hexwave", hexfrom, hill_top,
-                   max(0.0, (v - 0.16) / 1.25), HEX_FRONT * 1.9, 0.45, span, cell)
-        sweep_wall(sheet, at, "hexwave", hexfrom, hill_top, v, HEX_FRONT, 1.0, span, cell)
 
     # **Both of the hill's captions, together, because apart they say nothing.** Each was
     # individually well placed and the pair overlapped on every shape; drawing only the chain is
@@ -2759,14 +3047,35 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
     elif aim == "wards":
         ward_rings(sheet, span, cell, line_y, len(lay.wards), at)
 
+    # ------------------------------------------------------------------ the curse falling
+    # `SiegeView.Cursed` - the knot the break left hanging over the field throws a lash: one
+    # black whip at every body standing, each landing on the body it was thrown at. `--cursed T`
+    # is T of the way through the whole lash, so a third is whips in the air, two thirds is most
+    # of them standing on their bodies and one is the last of them gone in with every seal lit.
+    # It was a front climbing the hill, which was the third thing that swept it. **Drawn after the
+    # field**, because the effects layer is over the gems as well as over the hill: the knot
+    # hangs on the board and every whip leaves from there.
+    if cursed is not None and knot_at is not None:
+        thrown = whips[-1]["leaves"] + 0.06 if whips else 0.0
+        if lash_clock < thrown + 0.20:
+            knot(sheet, knot_at[0], knot_at[1], cell, kick=0.42 * math.exp(-lash_clock * 9.0))
+        lash(sheet, whips, lash_clock, cell)
+        for w in whips:
+            bitten(sheet, w["to"][0], w["to"][1], cell, lash_clock - (w["leaves"] + w["flight"]))
+
     # ------------------------------------------------------------------ the overcharge
-    # A tube tapped: the beam out of that ward and the slam on a box of the hill, on the frame
-    # the bead lands. The box is the ward's home lane, mid hill - the mirror's choice, since the
-    # board aims at whatever is furthest down.
+    # A tube tapped: the channel out of that ward and the burst on a box of the hill, a beat
+    # after it lands. The box is the ward's home lane, mid hill - the mirror's choice, since the
+    # board aims at whatever is furthest down - and the bodies it forks to are whoever stands
+    # within a box and a half of it, which is the plus a blast takes near enough.
     if unleash is not None and 0 <= unleash < len(lay.wards):
         muzzle = at(post_x(span, unleash, len(lay.wards)), line_y + cell * 1.0)
         bx, by = box_at(span, hill_top, hill_foot, lane_home(unleash, len(lay.wards)), 1)
-        discharge(sheet, muzzle, at(bx, by), cell, TINTS[siege.LETTERS.index(lay.wards[unleash])])
+        tx, ty = at(bx, by)
+        near = [(mx, my - cell * 0.25) for (mx, my, _) in mob
+                if math.hypot(mx - tx, my - ty) < cell * 2.4]
+        discharge(sheet, muzzle, (tx, ty), cell, TINTS[siege.LETTERS.index(lay.wards[unleash])],
+                  near)
 
     return sheet
 
@@ -2822,6 +3131,8 @@ CHAPTER_CASTS = {
     "s09_cloudkeep": "reunion",
     # The ninth chapter draws the gathering, a third square over the six (`SiegeMode.Gathering`).
     "s10_cogspire": "gathering",
+    # The tenth chapter draws the armada, a fourth square over the six (`SiegeMode.Armada`).
+    "s11_windwreck": "armada",
     "s02_endlesswatch": "medley",
 }
 
@@ -3216,8 +3527,9 @@ def main():
                          "return stroke - the only picture of the strike kit stacked additively "
                          "on the hill, which is what the stormcall's whole look rests on")
     ap.add_argument("--unleash", type=int, default=None, metavar="WARD",
-                    help="fire ward WARD's overcharge at a box of the hill, on the frame the "
-                         "bead lands - the beam, its lightning wrap and the slam")
+                    help="fire ward WARD's overcharge at a box of the hill, a beat after it "
+                         "lands - the channel of lightning, the burst of arcs and a fork to "
+                         "every body near it, and nothing on the ground")
     ap.add_argument("--alight", type=int, default=0, metavar="N",
                     help="draw the first N raiders wearing an ember turret's flame "
                          "(SiegeView.Ablaze) - the only picture that says whether a hill of "
@@ -3267,9 +3579,10 @@ def main():
                          "are dealt, never authored, so this is the only way to see whether a "
                          "black stone reads as cursed among four jewels")
     ap.add_argument("--cursed", type=float, default=None, metavar="T",
-                    help="draw the curse's front T of the way up the hill (0..1), every body it "
-                         "has passed standing in the sigil - the third thing that sweeps the "
-                         "hill, to be judged beside --stilled and --heaved")
+                    help="draw the curse's lash T of the way through (0..1): the knot over the "
+                         "field, a black whip to every body standing, and the round seal under "
+                         "each body its whip has reached - .3 is the throw, .6 the landing, 1 "
+                         "the hill hexed")
     ap.add_argument("--stilled", type=float, default=None, metavar="T",
                     help="draw the hourglass stopping the hill, T of the way through the sweep "
                          "(0..1) - the wavefront and the dial it hangs over the hill")

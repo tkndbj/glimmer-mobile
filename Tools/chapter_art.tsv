@@ -76,6 +76,12 @@ s09_cloudkeep	craftpix-net-390835-the-top-down-level-selection-asset-pack/Png/Le
 # 2048x8256 picture, supplied as `levelmapnew.png` - pass the folder it was saved in as --source.
 # Drawn by s10_cogspire, and by whatever ninth chapter comes next.
 s10_cogspire	levelmapnew.png
+# map10 - four strips, the owner's own painting (2026-09-29): pirate sky islands - wrecked ships, a
+# lighthouse, cannons and treasure on floating rocks, joined by stone slabs and plank bridges. One
+# flattened 2048x8256 picture, supplied under a generated name and saved as `windwreck_map.png` -
+# pass the folder it was saved in as --source. Drawn by s11_windwreck, and by whatever tenth
+# chapter comes next.
+s11_windwreck	windwreck_map.png
 f01_lightfall	-
 f02_glasswater	-
 f03_whorlwater	-

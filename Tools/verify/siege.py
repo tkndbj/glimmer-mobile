@@ -318,7 +318,9 @@ CHAPTER_TOUGH_STEP, TOUGH_FROM, MOST_TOUGH = 1, 2, 40
 #: tenth is the wall invariant 37ef measured. The owner's figure, 2026-09-27.
 #: The ninth deals 1.5 rather than the 1.7 the ladder derives, for the same reason and the owner's
 #: brief of 2026-09-28: harder than the eighth in health and in headcount, "but not too much".
-TRADED = {7: 14, 8: 15}
+#: The tenth deals 1.6 rather than the 1.8 the ladder derives: the owner's brief of 2026-09-29 was
+#: exactly one tenth over the ninth, with more raiders, more brutes and more hill on top of it.
+TRADED = {7: 14, 8: 15, 9: 16}
 
 
 def toughness_for(ordinal):
@@ -442,6 +444,15 @@ STAR_FACTORS = {
     #: curse pulls clears under par as well - a hexed hill dies faster than par credits - so the
     #: likelier correction is down.
     9: (0.42, 0.56),
+
+    #: Windwreck, whose raiders carry **six** tenths over the baseline and whose hill is a fifth
+    #: bigger than Cogspire's, most of it in brutes. **Tighter than any chapter before it, and
+    #: measured rather than carried over**: at Cogspire's (0.42, 0.56) four three-star pyres
+    #: three-starred 56 of 180 runs here against 18 on Cogspire, because par counts a brute's
+    #: health and a strong line kills brutes far cheaper than par credits - so the lines came down
+    #: until three stars asks for the same strong line to play well, which is the owner's brief
+    #: ("players should need a good set of turrets to win or to get three stars").
+    10: (0.38, 0.52),
 }
 
 

@@ -92,6 +92,7 @@ MEASURE_ICON = {
     "stars": ("star_full", None), "three_stars": ("ic_stars", "gold"), "keeper_level": ("ic_xp_boost", None),
     "best_wave": ("ic_endless", None), "runs": ("ic_battle", None), "raiders": ("Rank/ic_raiders", None),
     "bosses": ("crest_gold", None), "charms": ("ic_gem", None), "levels_cleared": ("ic_trophy", "gold"),
+    "challenge_plays": ("challenge_pairs", None), "challenge_wins": ("challenge_merge", None),
 }
 INSET_ALLOWANCE = 150.0
 SHORTEST_CANVAS = 1080.0 * 1.75             # CanvasFit.ShortestCanvas

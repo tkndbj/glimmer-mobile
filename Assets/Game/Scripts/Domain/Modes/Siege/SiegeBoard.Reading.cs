@@ -102,7 +102,7 @@ namespace GlimmerGrove.Modes
         {
             get
             {
-                if (_wave <= 0 || _wave >= Layout.WaveCount) return false;
+                if (_wave <= _first || _wave >= Layout.WaveCount) return false;
                 if (_rest <= 0f) return false;
 
                 for (int i = 0; i < _raiders.Count; i++)

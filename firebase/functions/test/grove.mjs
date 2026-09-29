@@ -1097,6 +1097,7 @@ console.log("\nranks");
     levels: Object.fromEntries((c.levels ?? []).map((r) => [r.level, { stars: r.stars }])),
     endlessBest: c.endless ?? [],
     tasks: { lifetime: c.lifetime ?? [] },
+    ...(c.challenges ? { challenges: { clears: c.challenges } } : {}),
   });
 
   const levelChapters = {};

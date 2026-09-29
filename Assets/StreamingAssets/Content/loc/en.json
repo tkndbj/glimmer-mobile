@@ -2470,6 +2470,14 @@
       "text": "Set off a bomb"
     },
     {
+      "key": "task.d_challenges.name",
+      "text": "Play {0} daily challenges"
+    },
+    {
+      "key": "task.d_challenges.name_one",
+      "text": "Play a daily challenge"
+    },
+    {
       "key": "task.d_charms.name",
       "text": "Set off {0} charms"
     },
@@ -2520,6 +2528,14 @@
     {
       "key": "task.w_bosses.name",
       "text": "Defeat {0} bosses"
+    },
+    {
+      "key": "task.w_challenges.name",
+      "text": "Complete {0} daily challenges"
+    },
+    {
+      "key": "task.w_challenges.name_one",
+      "text": "Complete a daily challenge"
     },
     {
       "key": "task.w_charms.name",
@@ -3682,6 +3698,62 @@
       "text": "Wave {0}"
     },
     {
+      "key": "ui.endless.checkpoint.title",
+      "text": "Checkpoints"
+    },
+    {
+      "key": "ui.endless.checkpoint.start",
+      "text": "Start: Wave {0}"
+    },
+    {
+      "key": "ui.endless.checkpoint.first",
+      "text": "Clear wave {0} for checkpoints"
+    },
+    {
+      "key": "ui.endless.checkpoint.note",
+      "text": "Start further in. Waves you skip pay nothing."
+    },
+    {
+      "key": "ui.endless.checkpoint.beginning",
+      "text": "Every wave, from the first."
+    },
+    {
+      "key": "ui.endless.checkpoint.boost",
+      "text": "Turrets start {0} levels up."
+    },
+    {
+      "key": "ui.endless.checkpoint.boost_one",
+      "text": "Turrets start 1 level up."
+    },
+    {
+      "key": "ui.endless.checkpoint.bare",
+      "text": "Turrets start at level 1."
+    },
+    {
+      "key": "ui.endless.checkpoint.locked_line",
+      "text": "Clear wave {0} to open. Your best: {1}."
+    },
+    {
+      "key": "ui.endless.checkpoint.choose",
+      "text": "Start here"
+    },
+    {
+      "key": "ui.endless.checkpoint.chosen",
+      "text": "Selected"
+    },
+    {
+      "key": "ui.endless.checkpoint.locked",
+      "text": "Locked"
+    },
+    {
+      "key": "ui.endless.checkpoint.locked_hint",
+      "text": "Clear wave {0} to open this checkpoint."
+    },
+    {
+      "key": "ui.endless.checkpoint.close",
+      "text": "Close"
+    },
+    {
       "key": "ui.event.ended",
       "text": "this one has closed"
     },
@@ -3776,6 +3848,14 @@
     {
       "key": "ui.forfeit.restart_watch_body",
       "text": "The heart for this watch is already spent, and starting again costs another. You will get a fresh hill and a fresh wave count."
+    },
+    {
+      "key": "ui.forfeit.watch_title",
+      "text": "Leave the watch?"
+    },
+    {
+      "key": "ui.forfeit.watch_body",
+      "text": "No heart is lost, but this run ends here and its waves won't count."
     },
     {
       "key": "ui.forfeit.stay",
@@ -6958,6 +7038,170 @@
       "text": "Stop feeding one, keep the other three working"
     },
     {
+      "key": "chapter.s11_windwreck.name",
+      "text": "Windwreck"
+    },
+    {
+      "key": "level.s11_driftpier.name",
+      "text": "Drift Pier"
+    },
+    {
+      "key": "level.s11_driftpier.tagline",
+      "text": "A brute in every colour by the third wave"
+    },
+    {
+      "key": "level.s11_barrelrow.name",
+      "text": "Barrel Row"
+    },
+    {
+      "key": "level.s11_barrelrow.tagline",
+      "text": "Brutes at the back of every wave"
+    },
+    {
+      "key": "level.s11_longplank.name",
+      "text": "The Long Plank"
+    },
+    {
+      "key": "level.s11_longplank.tagline",
+      "text": "Shields behind the brutes"
+    },
+    {
+      "key": "level.s11_chestrock.name",
+      "text": "Chest Rock"
+    },
+    {
+      "key": "level.s11_chestrock.tagline",
+      "text": "Bombs inside a crowd of brutes"
+    },
+    {
+      "key": "level.s11_brokenkeel.name",
+      "text": "The Broken Keel"
+    },
+    {
+      "key": "level.s11_brokenkeel.tagline",
+      "text": "A roar and a devour: bank nothing"
+    },
+    {
+      "key": "level.s11_lanternpost.name",
+      "text": "Lantern Post"
+    },
+    {
+      "key": "level.s11_lanternpost.tagline",
+      "text": "One colour at a time, in a flood"
+    },
+    {
+      "key": "level.s11_saltdock.name",
+      "text": "Salt Dock"
+    },
+    {
+      "key": "level.s11_saltdock.tagline",
+      "text": "Four waves off the pier"
+    },
+    {
+      "key": "level.s11_rigladder.name",
+      "text": "Rigging Ladder"
+    },
+    {
+      "key": "level.s11_rigladder.tagline",
+      "text": "Plate and a bomb behind the crowd"
+    },
+    {
+      "key": "level.s11_cannonreef.name",
+      "text": "Cannon Reef"
+    },
+    {
+      "key": "level.s11_cannonreef.tagline",
+      "text": "Four waves, a brute pair in each"
+    },
+    {
+      "key": "level.s11_ropeway.name",
+      "text": "The Ropeway"
+    },
+    {
+      "key": "level.s11_ropeway.tagline",
+      "text": "Break the curse over the raised crowd"
+    },
+    {
+      "key": "level.s11_bowsprit.name",
+      "text": "Bowsprit"
+    },
+    {
+      "key": "level.s11_bowsprit.tagline",
+      "text": "The crowd climbs: seventeen by the end"
+    },
+    {
+      "key": "level.s11_tattersail.name",
+      "text": "Tattersail"
+    },
+    {
+      "key": "level.s11_tattersail.tagline",
+      "text": "Sixteen from the very first wave"
+    },
+    {
+      "key": "level.s11_bilgewater.name",
+      "text": "Bilgewater"
+    },
+    {
+      "key": "level.s11_bilgewater.tagline",
+      "text": "Three shields a wave, brutes behind them"
+    },
+    {
+      "key": "level.s11_helmsway.name",
+      "text": "Helmsway"
+    },
+    {
+      "key": "level.s11_helmsway.tagline",
+      "text": "Four waves under the wheel"
+    },
+    {
+      "key": "level.s11_lighthouse.name",
+      "text": "The Lighthouse"
+    },
+    {
+      "key": "level.s11_lighthouse.tagline",
+      "text": "A storm drains, a harrow tears a rank"
+    },
+    {
+      "key": "level.s11_mastbridge.name",
+      "text": "Mast Bridge"
+    },
+    {
+      "key": "level.s11_mastbridge.tagline",
+      "text": "Three brutes of one colour at a time"
+    },
+    {
+      "key": "level.s11_goldhold.name",
+      "text": "Gold Hold"
+    },
+    {
+      "key": "level.s11_goldhold.tagline",
+      "text": "The answer to plate is in the bombs"
+    },
+    {
+      "key": "level.s11_swayline.name",
+      "text": "Swayline"
+    },
+    {
+      "key": "level.s11_swayline.tagline",
+      "text": "The longest climb in the chapter"
+    },
+    {
+      "key": "level.s11_wreckdeck.name",
+      "text": "Wreck Deck"
+    },
+    {
+      "key": "level.s11_wreckdeck.tagline",
+      "text": "Everything this chapter taught, at once"
+    },
+    {
+      "key": "level.s11_captainsdeck.name",
+      "text": "The Captain's Deck"
+    },
+    {
+      "key": "level.s11_captainsdeck.tagline",
+      "text": "Fill the sealed ward, through the plate"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Cinderling"
     },
@@ -7092,6 +7336,14 @@
     {
       "key": "rank.req.streak",
       "text": "Collect {0} streak nights"
+    },
+    {
+      "key": "rank.req.challenge_plays",
+      "text": "Play {0} daily challenges"
+    },
+    {
+      "key": "rank.req.challenge_wins",
+      "text": "Complete {0} daily challenges"
     },
     {
       "key": "ui.ranks.title",

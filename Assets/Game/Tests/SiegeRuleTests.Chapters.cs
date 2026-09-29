@@ -207,6 +207,36 @@ namespace GlimmerGrove.Tests
             new Rung("s10_skyclock", new[] { "yygrybrg", "yygbrgby", "gbbygyrr", "ryrgrbgy", "rbbgbyyr" }, "rgby", "rgby", new[] { "rgbyrgbyrgbyr", "rgby#rrgbyrgbyr", "rgbyrgbyrgbyr" }, "gorgon:y+hollowking:g", 50, 15, 42, 56, "plsfha", true),
         };
 
+        /// <summary>
+        /// Windwreck, the tenth chapter: the owner's pirate sky islands, twenty rungs, a duel on
+        /// every fifth, six tenths of surge (one over Cogspire), more raiders, many more brutes and
+        /// more hill than Cogspire, the armada cast, and the curse carried on - every rung deals
+        /// obsidians. Held to  by .
+        /// </summary>
+        static readonly Rung[] Windwreck =
+        {
+            new Rung("s11_driftpier", new[] { "yyrgrgrg", "grgbrgbb", "byrybrgg", "bggrybrr", "gyybrbyb" }, "rgby", "rgby", new[] { "rgbyRGbyrgbyr", "rgbyRGbyrgBYr", "rgbyRGBY#r#grgb" }, "", 20, 16, 38, 52, "plsfha", true),
+            new Rung("s11_barrelrow", new[] { "byrbyryr", "bgryrbyg", "rybrggbr", "ggybgrbg", "ybrgrryg" }, "rgby", "rgby", new[] { "rgbyrgbyrgbRG", "rgbyrgby#rrgBY", "rgbyrgbyRGbyRGby" }, "", 20, 16, 38, 52, "plsfha", true),
+            new Rung("s11_longplank", new[] { "gbbyyrbr", "ryrybgyr", "bgbgbryg", "ryrbrgbb", "ybygrbbg" }, "rgby", "rgby", new[] { "rgbyRG#rbyrgby", "rgbyRGby#b#yrgb", "rgBY#r#gRGbyrgby" }, "", 20, 16, 38, 52, "plsfha", true),
+            new Rung("s11_chestrock", new[] { "bgrbyyrr", "bygyrgry", "yygbrgyg", "grbbgybg", "ygrgbybr" }, "rgby", "rgby", new[] { "rgbyRGby!rRGby", "rgBY#gRGby!brgb", "rgBY!y#rRGbyRGby" }, "", 20, 16, 38, 52, "plsfha", true),
+            new Rung("s11_brokenkeel", new[] { "ygrbrbgb", "yybggrrg", "grrygbby", "yrrbyrby", "rybggyrg" }, "rgby", "rgby", new[] { "rgbyRGbyrgby", "rgby#r!gRGbyRG", "rgBY#b#yRGbyrg" }, "warbringer:y+gravemaw:r", 25, 16, 38, 52, "plsfha", true),
+            new Rung("s11_lanternpost", new[] { "yryrgbgy", "gbgrgbrr", "bbybyybb", "bgrbbgry", "yyrryryg" }, "rgby", "rgby", new[] { "rrRRrrrrr#rggg", "ggGGgggggg#gbbb", "bbBB#bbbbbYYY#yyy" }, "", 20, 16, 38, 52, "plsfha", true),
+            new Rung("s11_saltdock", new[] { "rggbrrbg", "ybrgbyry", "ygrgygby", "brybbgrb", "ggybrygy" }, "rgby", "rgby", new[] { "rgbyRGbyrgby", "rgby#r#gRGbyRG", "rgby!rrgBY#bbyr", "rgbyRGbyrgby" }, "", 20, 16, 38, 52, "plsfha", true),
+            new Rung("s11_rigladder", new[] { "grgbbyrb", "rrbygbyy", "ybgrgbrr", "brybyygg", "gbrgyybg" }, "rgby", "rgby", new[] { "rgBYrgbyrgbyRG", "rgby#g#brgbyRGby", "rgBY!grgby#rrgBY" }, "", 20, 16, 38, 52, "plsfha", true),
+            new Rung("s11_cannonreef", new[] { "bbrrbyry", "bgbggybb", "yyrbyrgg", "rgyrgbbr", "gbbrryyg" }, "rgby", "rgby", new[] { "rgbyrgbyRGby", "rgby#rrgbyRGb", "rgby#brgBYrgby", "rgBYrgbyrgbyr" }, "", 20, 16, 38, 52, "plsfha", true),
+            new Rung("s11_ropeway", new[] { "rrbyrbbr", "rgyggryy", "yybrgbrr", "yygyryby", "gbrbyrgy" }, "rgby", "rgby", new[] { "rgbyRGbyrgby", "rgby#yRGbyrgbRG", "rgby#g#rRGbyrg" }, "bonecaller:g+shackler:b", 30, 16, 38, 52, "plsfha", true),
+            new Rung("s11_bowsprit", new[] { "rggbrgbr", "rbgrygyb", "gbybbryy", "yyryrrby", "rybygbgr" }, "rgby", "rgby", new[] { "rgbyrgbyRGbyr", "rgBY#r#grgbyRGby", "rgby!b#yRGbyrgBYr" }, "", 20, 16, 38, 52, "plsfha", true),
+            new Rung("s11_tattersail", new[] { "bgbryrbr", "yrbbygyy", "rgybrryr", "ybrgybbg", "rbygygbg" }, "rgby", "rgby", new[] { "rgbyrgbyRGbyrgby", "rgBY#b!rRGbyrgb", "rgby#g#yrgbyRGBY" }, "", 20, 16, 38, 52, "plsfha", true),
+            new Rung("s11_bilgewater", new[] { "yrbrggrr", "brybrybg", "ygygygry", "yybbyrgy", "ggrrgbrb" }, "rgby", "rgby", new[] { "rgby#r#g#bRGbyr", "rgby#y#r!gRGbyrg", "rgby#g#b#yRGBYrg" }, "", 20, 16, 38, 52, "plsfha", true),
+            new Rung("s11_helmsway", new[] { "ygyrrgyr", "ybbrrbrb", "rgygbggy", "gbrbyrgb", "rggrbyrr" }, "rgby", "rgby", new[] { "rgbyRGbyrgby", "rgby#rrgbyRGb", "rgby#g#bRGbyrg", "rgby!yRGbyrgb" }, "", 20, 16, 38, 52, "plsfha", true),
+            new Rung("s11_lighthouse", new[] { "gyybbryg", "rbbygbry", "ygybyygg", "bgybrrgy", "yrrgybbr" }, "rgby", "rgby", new[] { "rgbyRGbyrgby", "rgby#b!rRGbyRG", "rgBY#r#gRGbyrg" }, "thunderer:b+harrower:r", 25, 16, 38, 52, "plsfha", true),
+            new Rung("s11_mastbridge", new[] { "rbgybygr", "bbyyrgrb", "yrggbbrr", "rgbyrbyy", "grbryryr" }, "rgby", "rgby", new[] { "rrRRR#rrrrrgg", "ggGGG#ggggg#gbb", "bbBBB#bbbbYYYY#yy" }, "", 20, 16, 38, 52, "plsfha", true),
+            new Rung("s11_goldhold", new[] { "grygbyrb", "gybgrgbg", "ygbbyyrr", "bgrygbyb", "rbyygbgb" }, "rgby", "rgby", new[] { "rgbyRGbyRGbyrg", "rgby#r#g!bRGbyrgb", "rgby#b#yRGbyRGby" }, "", 20, 16, 38, 52, "plsfha", true),
+            new Rung("s11_swayline", new[] { "gyrbryrb", "yrbygybb", "rgyrbrry", "bbryyrgy", "grrbgygg" }, "rgby", "rgby", new[] { "rgbyrgbyRGby", "rgby#rrgbyRGb", "rgby#g#b!yrgbyRG", "rgbyrgbyRGBY" }, "", 20, 16, 38, 52, "plsfha", true),
+            new Rung("s11_wreckdeck", new[] { "rygbygbr", "bbggyyby", "bryrbgrg", "ygbyybbr", "gybgrgyr" }, "rgby", "rgby", new[] { "rgbyrgbyRGbyRGby", "rgby#r#g#bRGbyrgb", "rgby!y#rRGbyrgBY" }, "", 20, 16, 38, 52, "plsfha", true),
+            new Rung("s11_captainsdeck", new[] { "ygbgbbyy", "rbyrygby", "yggbgrrg", "bryrybgy", "rybbryby" }, "rgby", "rgby", new[] { "rgbyrgbyRGbyr", "rgby#rrgbyRGbyr", "rgbyRGbyrgbyr" }, "sunlord:r+ironclad:b", 50, 16, 38, 52, "plsfha", true),
+        };
+
         // ------------------------------------------------------------------ the lines it plays
         /// <summary>
         /// The four turrets a player who has bought nothing stands: the free bolt, four times.
@@ -428,6 +458,7 @@ namespace GlimmerGrove.Tests
             ("Bonereach", Bonereach),
             ("Cloudkeep", Cloudkeep),
             ("Cogspire", Cogspire),
+            ("Windwreck", Windwreck),
         };
 
         static Sweep Play(Rung[] chapter, WardLine line)
@@ -1782,6 +1813,84 @@ namespace GlimmerGrove.Tests
                 + $"cleaver ({spread.Held}/{spread.Runs} held, {spread.Starred} three-starred):\n"
                 + spread.Table
                 + $"\nCloudkeep on {Workhorse} for comparison ({before.Held}/{before.Runs} "
+                + $"held):\n" + before.Table;
+
+            System.Console.WriteLine(report);
+
+            Assert.IsEmpty(faults, string.Join("\n", faults) + "\n\n" + report);
+        }
+
+        /// <summary>
+        /// **The tenth chapter asks for a good line** - the owner's brief of 2026-09-29, "players
+        /// should need to get a good set of turrets to be able to win or get three stars",
+        /// measured rather than felt.
+        ///
+        /// <para>
+        /// <b>Four readings, each a clause of the brief.</b> On the workhorse it is harder than
+        /// Cogspire, as a share because both are twenty rungs. A bought-and-upgraded line - the
+        /// same four embers at three stars - wins a real share of it, and the strongest line on the
+        /// shelf wins most of it. And three stars belongs to the strong line: the workhorse all but
+        /// never earns one, and the strongest line earns them on a share of its runs.
+        /// </para>
+        /// <para>
+        /// <b>Set off one measurement, 2026-09-29</b>, this fixture's own player at nine rhythms:
+        /// the workhorse held 7 of 180 (Cogspire 27) with twelve rungs held at no rhythm; three-star
+        /// embers held 43 and three-starred 1; four three-star pyres held 135 and three-starred 25.
+        /// Every floor sits a clear margin under what was measured.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void TheTenthChapterAsksForAGoodLine()
+        {
+            const int AcceptedWalls = 14;   // measured 12 on the workhorse
+            const int UpgradedFloor = 32;   // three-star embers, measured 43
+            const int StrongFloor = 115;    // three-star pyres, measured 135
+            const int StrongStarred = 15;   // three-star pyres, measured 25
+            const int CheapStarred = 2;     // the workhorse, measured 0
+
+            var bought = Play(Windwreck, Bought());
+            var before = Play(Cogspire, Bought());
+            var upgraded = Play(Windwreck, Starred(Workhorse, 3));
+            var strong = Play(Windwreck, Strongest());
+
+            var faults = new List<string>();
+
+            if (bought.Walled > AcceptedWalls)
+                faults.Add($"{bought.Walled} rung(s) of Windwreck are held at no rhythm at all "
+                           + $"on a '{Workhorse}' line, against the {AcceptedWalls} accepted");
+
+            if (bought.Held * before.Runs >= before.Held * bought.Runs)
+                faults.Add($"on a '{Workhorse}' line Windwreck held {bought.Held} of "
+                           + $"{bought.Runs} runs against Cogspire's {before.Held} of "
+                           + $"{before.Runs} - the tenth chapter is not harder than the ninth");
+
+            if (upgraded.Held < UpgradedFloor)
+                faults.Add($"three-star '{Workhorse}' turrets held {upgraded.Held} of "
+                           + $"{upgraded.Runs} runs against a floor of {UpgradedFloor} - upgrading "
+                           + "the line no longer wins the chapter");
+
+            if (strong.Held < StrongFloor)
+                faults.Add($"the strongest line held {strong.Held} of {strong.Runs} runs "
+                           + $"against a floor of {StrongFloor}");
+
+            if (strong.Starred < StrongStarred)
+                faults.Add($"the strongest line three-starred {strong.Starred} of {strong.Runs} "
+                           + $"runs against a floor of {StrongStarred} - three stars is out of "
+                           + "reach even for a good line");
+
+            if (bought.Starred > CheapStarred)
+                faults.Add($"the one-star '{Workhorse}' line three-starred {bought.Starred} runs "
+                           + $"against a ceiling of {CheapStarred} - three stars no longer asks "
+                           + "for a good line");
+
+            string report =
+                $"Windwreck on {Workhorse} ({bought.Held}/{bought.Runs} held, "
+                + $"{bought.Starred} three-starred, {bought.Walled} walled):\n" + bought.Table
+                + $"\nWindwreck on three-star {Workhorse} ({upgraded.Held}/{upgraded.Runs} held, "
+                + $"{upgraded.Starred} three-starred):\n" + upgraded.Table
+                + $"\nWindwreck on the strongest line ({strong.Held}/{strong.Runs} held, "
+                + $"{strong.Starred} three-starred):\n" + strong.Table
+                + $"\nCogspire on {Workhorse} for comparison ({before.Held}/{before.Runs} "
                 + $"held):\n" + before.Table;
 
             System.Console.WriteLine(report);

@@ -68,6 +68,17 @@ namespace GlimmerGrove.Tasks
 
         /// <summary>Streak nights collected on the streak page.</summary>
         Streak,
+
+        /// <summary>
+        /// Daily challenge plays spent, won or lost. Counted where a play is spent
+        /// (<c>ChallengeLedger.Commit</c>, at the first move), because that is the one moment a
+        /// play happens exactly once: a play forfeited, lost or abandoned by a killed process was
+        /// still played, and a board dealt and never touched was not (invariant 56g).
+        /// </summary>
+        ChallengePlays,
+
+        /// <summary>Daily challenge levels cleared. Counted where the clear is (<c>ChallengeLedger.Win</c>).</summary>
+        ChallengeWins,
     }
 
     /// <summary>
@@ -90,6 +101,8 @@ namespace GlimmerGrove.Tasks
         public const string Utilities = "utilities";
         public const string Waves = "waves";
         public const string Streak = "streak";
+        public const string ChallengePlays = "challenge_plays";
+        public const string ChallengeWins = "challenge_wins";
 
         /// <summary>Every goal that can be counted, in enum order. For the gates and the tests.</summary>
         public static readonly TaskGoal[] All =
@@ -97,6 +110,7 @@ namespace GlimmerGrove.Tasks
             TaskGoal.Runs, TaskGoal.Wins, TaskGoal.Stars, TaskGoal.ThreeStars, TaskGoal.Matches,
             TaskGoal.Raiders, TaskGoal.Bosses, TaskGoal.Charms, TaskGoal.Cogs, TaskGoal.Bombs,
             TaskGoal.Utilities, TaskGoal.Waves, TaskGoal.Streak,
+            TaskGoal.ChallengePlays, TaskGoal.ChallengeWins,
         };
 
         public static TaskGoal Parse(string id)
@@ -116,6 +130,8 @@ namespace GlimmerGrove.Tasks
                 case Utilities: return TaskGoal.Utilities;
                 case Waves: return TaskGoal.Waves;
                 case Streak: return TaskGoal.Streak;
+                case ChallengePlays: return TaskGoal.ChallengePlays;
+                case ChallengeWins: return TaskGoal.ChallengeWins;
                 default: return TaskGoal.None;
             }
         }
@@ -137,6 +153,8 @@ namespace GlimmerGrove.Tasks
                 case TaskGoal.Utilities: return Utilities;
                 case TaskGoal.Waves: return Waves;
                 case TaskGoal.Streak: return Streak;
+                case TaskGoal.ChallengePlays: return ChallengePlays;
+                case TaskGoal.ChallengeWins: return ChallengeWins;
                 default: return string.Empty;
             }
         }
@@ -164,6 +182,12 @@ namespace GlimmerGrove.Tasks
                 case TaskGoal.Utilities: return "Ui/Utility/surge";
                 case TaskGoal.Waves: return "Ui/Task/wave";
                 case TaskGoal.Streak: return "Ui/ic_streak";
+
+                // Two of the genre cards the Daily Challenges list already draws, so a row reads
+                // as *that* screen at a glance and costs no art: both are in the global preload
+                // set (`AssetManifest.UiSprites`) for the list's own reason.
+                case TaskGoal.ChallengePlays: return "Ui/challenge_pairs";
+                case TaskGoal.ChallengeWins: return "Ui/challenge_merge";
                 default: return string.Empty;
             }
         }

@@ -713,7 +713,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// One glade's disc, name and standing, in its seat on the painting.
+        /// One glade's disc and standing, in its seat on the painting.
         /// </summary>
         /// <param name="arriving">
         /// Whether this node is part of the map opening - popped in on the chain's stagger - or
@@ -754,8 +754,8 @@ namespace GlimmerGrove
                              TextAnchor.MiddleCenter, new Vector2(190f, 110f), new Vector2(.5f, .5f),
                              new Vector2(0f, NodeFaceY), 0f, 2f);
 
-            Plate(node, unlocked ? Loc.Get(level.NameKey) : Loc.Get("ui.levels.locked"),
-                  unlocked ? Pal.Cream : new Color(1f, 1f, 1f, .62f), PlateY);
+            // No name plate under a glade, at the owner's instruction (2026-09-29): the disc
+            // carries its number and its padlock, and the chapter end keeps its own plate.
 
             float delay = arriving ? PopDelay(indexInChapter, _layout.Levels.Count) : 0f;
 

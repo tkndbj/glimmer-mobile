@@ -97,8 +97,11 @@ CUTS = {
     "wave":   ("Shockwave.png", 512),     # a radial burst - the ground answering
     "crack":  ("Shatter.psd", 512),       # the crazing a bolt leaves in the ground
     "star":   ("Star.psd", 256),          # a soft four-point star - sparks and twinkles
-    "splat":  ("Ground Crack.psd", 512),  # a spiked burst - the slam under an overcharge
 }
+
+#: **There was a ninth, `splat`** (`Ground Crack.psd`, the spiked splash an overcharge left on
+#: the ground). Withdrawn on 2026-09-29 with its PNG, its `.meta` and its Addressables row
+#: (invariant 8d), when the overcharge stopped drawing on the ground (MODES.md 37ev).
 
 #: **The pack's two PSDs are named the wrong way round for what they draw**: `Shatter.psd` is
 #: the web of cracks and `Ground Crack.psd` is the spiked splash. The first cut of this file

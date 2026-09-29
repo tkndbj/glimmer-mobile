@@ -1309,8 +1309,11 @@ Every reward in it is a chest, and a task names a tier rather than a prize (inva
   rotation and keeps its tier, so a claim already in flight still pays. Its title is
   `task.{id}.name` with `{0}` the target, and `task.{id}.name_one` when the target can be one.
 - **A goal is code.** `runs`, `wins`, `stars`, `three_stars`, `matches`, `raiders`, `bosses`,
-  `charms`, `cogs`, `bombs`, `utilities`, `waves`, `streak`. Content may not invent one; an unknown
-  goal is skipped by name and the gate says so.
+  `charms`, `cogs`, `bombs`, `utilities`, `waves`, `streak`, `challenge_plays`, `challenge_wins`.
+  Content may not invent one; an unknown goal is skipped by name and the gate says so. The two
+  challenge goals count a daily challenge play when it is **spent** (its first move, won or lost,
+  56g) and a clear when it is **won**, and never count as a battle - `runs` and `wins` are the
+  siege's alone.
 - **The slate order is the rotation**: period `k` deals entries `k·n … k·n+n-1` of the live slate,
   wrapping, identically on every device and on the server. Ten entries dealt three at a time show
   every task in ten periods with no repeat between neighbours. Reordering or inserting re-deals

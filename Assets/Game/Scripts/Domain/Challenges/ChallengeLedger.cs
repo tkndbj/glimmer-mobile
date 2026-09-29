@@ -434,6 +434,11 @@ namespace GlimmerGrove.Challenges
             play.ClaimSlot = _day == play.Day ? play.Slot : row.Wins;
             play.Spent = true;
 
+            // The task slate's "play N challenges", here because this is the one place a play is
+            // spent exactly once whatever ends it (`TaskGoal.ChallengePlays`). Before the save,
+            // so the one write carries the spend and the count together; `Note` only marks dirty.
+            Tasks.TaskLedger.Note(Tasks.TaskGoal.ChallengePlays);
+
             SaveService.Save();
             Raise();
 
@@ -489,6 +494,10 @@ namespace GlimmerGrove.Challenges
             long before = LifetimeClears;
             int held = _clears.TryGetValue(name, out int n) ? n : 0;
             if (held < ChallengeLimits.HardMaxClears) _clears[name] = held + 1;
+
+            // Beside the tally it mirrors, so the task counter and the lifetime clears move on
+            // the same event and a rank floored by one never reads below the other.
+            Tasks.TaskLedger.Note(Tasks.TaskGoal.ChallengeWins);
 
             int xp = 0;
             long bonus = 0L;
@@ -625,6 +634,12 @@ namespace GlimmerGrove.Challenges
             var block = dto?.challenges;
             _day = block == null || block.day < 0 ? 0 : block.day;
             ReadToday(_today, block?.today);
+
+            // Cleared first: `ReadClears` joins by `max` into whatever it is handed, which is
+            // right for `Join` and wrong here. A load replaces the ledger - an account switch
+            // loads a different account's file (17a) - and a tally left over from the last one
+            // would be written into this one's save and pushed as its own XP and rank floor.
+            _clears.Clear();
             ReadClears(_clears, block?.clears);
             _tiers.Clear();
             ReadTiers(_tiers, block?.tiers);

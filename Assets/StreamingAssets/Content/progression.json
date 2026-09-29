@@ -29,6 +29,16 @@
     "creditsPerWave": 30,
     "dailyCreditCap": 10000
   },
+  "endlessCheckpoints": {
+    "rows": [
+      { "wave": 9, "unlockAt": 20, "cogs": 2 },
+      { "wave": 17, "unlockAt": 30, "cogs": 2 },
+      { "wave": 22, "unlockAt": 40, "cogs": 2 },
+      { "wave": 27, "unlockAt": 50, "cogs": 2 },
+      { "wave": 32, "unlockAt": 60, "cogs": 2 },
+      { "wave": 37, "unlockAt": 70, "cogs": 2 }
+    ]
+  },
   "keeperLevels": {
     "top": 70,
     "anchors": [
@@ -1172,6 +1182,12 @@
         "goal": "three_stars",
         "target": 1,
         "tier": "silver"
+      },
+      {
+        "id": "d_challenges",
+        "goal": "challenge_plays",
+        "target": 8,
+        "tier": "silver"
       }
     ],
     "weekly": [
@@ -1234,6 +1250,12 @@
         "goal": "cogs",
         "target": 20,
         "tier": "silver"
+      },
+      {
+        "id": "w_challenges",
+        "goal": "challenge_wins",
+        "target": 30,
+        "tier": "royal"
       }
     ]
   },
@@ -1282,7 +1304,8 @@
       {
         "id": "goldbrand",
         "requires": [
-          { "measure": "stars", "target": 75 },
+          { "measure": "stars", "target": 150 },
+          { "measure": "three_stars", "target": 30 },
           { "measure": "keeper_level", "target": 12 },
           { "measure": "raiders", "target": 2500 }
         ]
@@ -1290,8 +1313,8 @@
       {
         "id": "duskcrown",
         "requires": [
-          { "measure": "stars", "target": 115 },
-          { "measure": "three_stars", "target": 26 },
+          { "measure": "stars", "target": 240 },
+          { "measure": "three_stars", "target": 70 },
           { "measure": "runs", "target": 200 },
           { "measure": "best_wave", "scope": "s02_endless", "target": 20 }
         ]
@@ -1299,8 +1322,8 @@
       {
         "id": "fireheart",
         "requires": [
-          { "measure": "stars", "target": 145 },
-          { "measure": "three_stars", "target": 44 },
+          { "measure": "stars", "target": 330 },
+          { "measure": "three_stars", "target": 110 },
           { "measure": "bosses", "target": 30 },
           { "measure": "best_wave", "scope": "s02_endless", "target": 30 }
         ]
@@ -1308,7 +1331,8 @@
       {
         "id": "frozencrest",
         "requires": [
-          { "measure": "stars", "target": 170 },
+          { "measure": "stars", "target": 450 },
+          { "measure": "three_stars", "target": 150 },
           { "measure": "runs", "target": 450 },
           { "measure": "charms", "target": 300 },
           { "measure": "best_wave", "scope": "s02_endless", "target": 45 }
@@ -1317,8 +1341,8 @@
       {
         "id": "gemfire",
         "requires": [
-          { "measure": "stars", "target": 195 },
-          { "measure": "three_stars", "target": 62 },
+          { "measure": "stars", "target": 600 },
+          { "measure": "three_stars", "target": 200 },
           { "measure": "bosses", "target": 60 },
           { "measure": "best_wave", "scope": "s02_endless", "target": 60 }
         ]

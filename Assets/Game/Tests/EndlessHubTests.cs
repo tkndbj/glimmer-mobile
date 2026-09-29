@@ -49,8 +49,12 @@ namespace GlimmerGrove.Tests
                         "the plate is not under the rank");
             Assert.Less(EndlessHubLayout.PanelCentre, EndlessHubLayout.RecordCentre,
                         "the record is not under the plate");
-            Assert.Less(EndlessHubLayout.RecordCentre, EndlessHubLayout.ButtonCentre,
-                        "the button is not under the record");
+            Assert.Less(EndlessHubLayout.RecordCentre, EndlessHubLayout.CheckpointCentre,
+                        "the checkpoint bar is not under the record");
+            Assert.Less(EndlessHubLayout.CheckpointCentre, EndlessHubLayout.ButtonCentre,
+                        "the button is not under the checkpoint bar");
+            Assert.AreEqual(EndlessHubLayout.ButtonWidth, EndlessHubLayout.CheckpointWidth, .001f,
+                            "the checkpoint bar speaks for the key and is drawn its width");
 
             float last = EndlessHubLayout.RowCentre(0);
 

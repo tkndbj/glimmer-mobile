@@ -94,7 +94,8 @@ namespace GlimmerGrove.Progression
                          WardCatalog wards, TaskTable tasks, ReferralTable referral,
                          EndlessRewardTable endless, XpBoostTable xpBoost,
                          RankLadder ranks, KeeperLadder keeperLevels,
-                         KeeperMilestoneTable keeperMilestones)
+                         KeeperMilestoneTable keeperMilestones,
+                         EndlessCheckpointTable endlessCheckpoints)
         {
             _cumulative = cumulative;
             _defaultRule = defaultRule;
@@ -118,6 +119,7 @@ namespace GlimmerGrove.Progression
             Ranks = ranks ?? RankLadder.Empty;
             KeeperLevels = keeperLevels ?? KeeperLadder.Empty;
             KeeperMilestones = keeperMilestones ?? KeeperMilestoneTable.Empty;
+            EndlessCheckpoints = endlessCheckpoints ?? EndlessCheckpointTable.Empty;
         }
 
         /// <summary>
@@ -184,6 +186,14 @@ namespace GlimmerGrove.Progression
         /// block or the block names a tier the tasks block does not hold.
         /// </summary>
         public KeeperMilestoneTable KeeperMilestones { get; }
+
+        /// <summary>
+        /// Where an Infinite run may open once the lane's best has been there (MODES.md 43f).
+        /// <see cref="EndlessCheckpointTable.Empty"/> - every run from wave one - when the file
+        /// carries no block. Published with the curve for the atomic swap every block here
+        /// shares, and read by nothing on a server: a checkpoint pays nothing.
+        /// </summary>
+        public EndlessCheckpointTable EndlessCheckpoints { get; }
 
         /// <summary>
         /// The rank ladder, published with the curve for the reason every block here is and one
@@ -661,10 +671,17 @@ namespace GlimmerGrove.Progression
             // the server leaves unconfirmed for ever. Absent pays nothing.
             var keeperMilestones = KeeperMilestoneTable.Resolve(dto.keeperMilestones, tasks, maxLevel, problems);
 
+            // And the Infinite lane's checkpoints. Read against the endless schedule, which is
+            // code (`SiegeEndless`): a checkpoint in front of a boss wave is refused here, so a
+            // retuned schedule fails the build rather than a player's opening wave. Absent
+            // offers none and every run opens at wave one.
+            var endlessCheckpoints = EndlessCheckpointTable.Resolve(dto.endlessCheckpoints, problems);
+
             table = Build(dto.xpToNext, dto.tailXpToNext, dto.tailXpIncrement, maxLevel,
                           defaultRule, chapterRules, daily, ads, streak, golden, hearts, hints,
                           store, prompts, chapterGate, carryOn, utilities, wards, tasks, referral,
-                          endless, xpBoost, ranks, keeperLevels, keeperMilestones);
+                          endless, xpBoost, ranks, keeperLevels, keeperMilestones,
+                          endlessCheckpoints);
             return true;
         }
 
@@ -681,7 +698,8 @@ namespace GlimmerGrove.Progression
                                       ReferralTable referral, EndlessRewardTable endless,
                                       XpBoostTable xpBoost, RankLadder ranks,
                                       KeeperLadder keeperLevels = null,
-                                      KeeperMilestoneTable keeperMilestones = null)
+                                      KeeperMilestoneTable keeperMilestones = null,
+                                      EndlessCheckpointTable endlessCheckpoints = null)
         {
             if (maxLevel < 1) maxLevel = 1;
 
@@ -701,7 +719,8 @@ namespace GlimmerGrove.Progression
             return new ProgressionTable(cumulative, defaultRule, chapterRules, daily, ads, streak,
                                         golden, hearts, hints, store, prompts,
                                         chapterGate, carryOn, utilities, wards, tasks, referral,
-                                        endless, xpBoost, ranks, keeperLevels, keeperMilestones);
+                                        endless, xpBoost, ranks, keeperLevels, keeperMilestones,
+                                        endlessCheckpoints);
         }
     }
 }

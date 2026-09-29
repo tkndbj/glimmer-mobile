@@ -351,6 +351,36 @@
       ]
     },
     {
+      "id": "s11_windwreck",
+      "version": 1,
+      "order": 155,
+      "disabled": false,
+      "minAppVersion": 0,
+      "mode": "siege",
+      "levels": [
+        "s11_driftpier",
+        "s11_barrelrow",
+        "s11_longplank",
+        "s11_chestrock",
+        "s11_brokenkeel",
+        "s11_lanternpost",
+        "s11_saltdock",
+        "s11_rigladder",
+        "s11_cannonreef",
+        "s11_ropeway",
+        "s11_bowsprit",
+        "s11_tattersail",
+        "s11_bilgewater",
+        "s11_helmsway",
+        "s11_lighthouse",
+        "s11_mastbridge",
+        "s11_goldhold",
+        "s11_swayline",
+        "s11_wreckdeck",
+        "s11_captainsdeck"
+      ]
+    },
+    {
       "id": "s02_endlesswatch",
       "version": 1,
       "order": 150,

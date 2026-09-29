@@ -120,6 +120,8 @@ namespace GlimmerGrove
                 case "bosses": return ("crest_gold", false);
                 case "charms": return ("ic_gem", false);
                 case "levels_cleared": return ("ic_trophy", true);
+                case "challenge_plays": return ("challenge_pairs", false);
+                case "challenge_wins": return ("challenge_merge", false);
                 default: return ("ic_trophy", true);
             }
         }

@@ -114,6 +114,7 @@ GOAL_ICON = {
     "matches": "ic_gem", "raiders": "Task/raiders", "boss": "Task/boss", "bosses": "Task/boss",
     "charms": "Task/charm", "cogs": "Task/cog", "bombs": "Utility/firepot",
     "utilities": "Utility/surge", "waves": "Task/wave", "streak": "ic_streak",
+    "challenge_plays": "challenge_pairs", "challenge_wins": "challenge_merge",
 }
 
 

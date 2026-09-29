@@ -43,7 +43,13 @@ namespace GlimmerGrove
         bool _coaching;
         float _noticeUntil;
 
-        protected ProtoLevelRules Rules => Level != null ? Level.RulesAs<ProtoLevelRules>() : null;
+        /// <summary>
+        /// The rules a run on this screen is dealt from - the level's own, unless a mode opens
+        /// it somewhere else (the siege's endless checkpoints, MODES.md 43f). Asked on the first
+        /// deal, on a restart and on a retry, so an override must answer the same rules each
+        /// time for the life of the screen.
+        /// </summary>
+        protected virtual ProtoLevelRules Rules => Level != null ? Level.RulesAs<ProtoLevelRules>() : null;
 
         /// <summary>The view this mode draws its board with. Added to the host, never pooled.</summary>
         protected abstract ProtoView Attach(GameObject host);

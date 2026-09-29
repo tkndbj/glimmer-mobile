@@ -335,6 +335,7 @@ namespace GlimmerGrove
             Rank(column, arriving);
             Lines(column, lane, 0f, arriving);
             Record(column, owner, level, arriving);
+            Checkpoint(column, level, arriving);
             Battle(column, unlocked, wall, open, 0f, arriving);
 
             return host;
@@ -682,6 +683,128 @@ namespace GlimmerGrove
         /// </summary>
         static string Worth(string word, Color tint)
             => $"<color=#{ColorUtility.ToHtmlStringRGB(tint)}>{Loc.Get("ui.endless." + word)}</color>";
+
+        // ------------------------------------------------------------------ the checkpoint
+        /// <summary>
+        /// Where the next run opens, over the key it speaks for, and the way to the sheet that
+        /// changes it (MODES.md 43f).
+        ///
+        /// <para>
+        /// <b>Two faces and no geometry between them.</b> Once the lane's best has opened a
+        /// checkpoint the bar is the kit's blue pill saying where the key will start - wave one
+        /// included, because a player who chose the beginning should see that they did. Before
+        /// then it is the shut grey pill saying what opens the first one, and it still opens the
+        /// sheet: a feature that hides until it is earned is one nobody knows to earn (42a's rule
+        /// about a shelf, said of a start).
+        /// </para>
+        /// <para>
+        /// <b>Watched rather than drawn</b> (<see cref="CheckpointWatch"/>), for 44j's reason: the
+        /// sheet moves the choice while this screen stands, and a caption built once would say
+        /// the old wave over a key that starts the new one. Which <em>face</em> it wears moves
+        /// only with the best, which already redraws the column (<see cref="Reading"/>).
+        /// </para>
+        /// <para>
+        /// <b>Drawn for no table at all as nothing</b>, which leaves its slot as air: a content
+        /// file with no checkpoints is a lane that opens at wave one, exactly as it did before.
+        /// </para>
+        /// </summary>
+        static void Checkpoint(RectTransform column, LevelDefinition level, bool arriving)
+        {
+            var table = EndlessCheckpoints.Table;
+            if (level == null || !table.Any) return;
+
+            bool open = table.OpenCount(BestOf(level)) > 0;
+            var id = level.Id;
+
+            var bar = UIKit.TextButton("Checkpoint", column, open ? Skins.Alternate : Skins.Shut,
+                                       CheckpointCaption(id), 36,
+                                       new Vector2(EndlessHubLayout.CheckpointWidth,
+                                                   EndlessHubLayout.CheckpointHeight),
+                                       new Vector2(.5f, 1f),
+                                       new Vector2(0f, -EndlessHubLayout.CheckpointCentre),
+                                       () => OpenCheckpoints(id),
+                                       open ? "ic_endless" : "ic_padlock");
+
+            // The kit's glyph is a third of the pill's height, which on a slim pill is a speck;
+            // the lane's own mark at a readable size, and the block re-fitted round it.
+            if (bar.Icon)
+            {
+                ((RectTransform)bar.Icon.transform).sizeDelta = Vector2.one * 62f;
+                bar.Icon.color = Color.white;
+                UIKit.FitLabel(bar);
+            }
+
+            UIKit.OneLine(bar, 24);
+
+            bar.gameObject.AddComponent<CheckpointWatch>().Watch(bar, id);
+
+            if (!arriving) { bar.Rehome(); return; }
+
+            // Between the medal's pop and the key's, so the column still lands top to bottom.
+            bar.Enter(.55f, .36f);
+        }
+
+        /// <summary>
+        /// What the bar says: where the next run starts once a checkpoint is open, and what opens
+        /// the first one before that.
+        /// </summary>
+        public static string CheckpointCaption(LevelId level)
+        {
+            var table = EndlessCheckpoints.Table;
+            int best = EndlessLedger.BestFor(level);
+
+            if (table.OpenCount(best) == 0)
+            {
+                var next = table.NextLocked(best);
+                return next.IsValid
+                    ? Loc.Format("ui.endless.checkpoint.first", next.UnlockAt).ToUpperInvariant()
+                    : Loc.Get("ui.endless.checkpoint.title").ToUpperInvariant();
+            }
+
+            var chosen = EndlessCheckpoints.Chosen(level);
+            return Loc.Format("ui.endless.checkpoint.start", chosen.IsValid ? chosen.Wave : 1)
+                      .ToUpperInvariant();
+        }
+
+        static void OpenCheckpoints(LevelId level)
+        {
+            if (Flow.HasModal || Flow.Busy) return;
+            Flow.Modal<EndlessCheckpointOverlay>(v => v.Level = level);
+        }
+
+        /// <summary>
+        /// Keeps the bar's caption true while the screen stands: on the sheet's choice, and on a
+        /// best landing from a sync. On the node, for <see cref="Standing"/>'s reason.
+        /// </summary>
+        sealed class CheckpointWatch : MonoBehaviour
+        {
+            Btn _bar;
+            LevelId _level;
+
+            public void Watch(Btn bar, LevelId level)
+            {
+                _bar = bar;
+                _level = level;
+            }
+
+            void OnEnable()
+            {
+                EndlessCheckpoints.Changed += Repaint;
+                EndlessLedger.Changed += Repaint;
+                Repaint();
+            }
+
+            void OnDisable()
+            {
+                EndlessCheckpoints.Changed -= Repaint;
+                EndlessLedger.Changed -= Repaint;
+            }
+
+            void Repaint()
+            {
+                if (_bar != null && _level.IsValid) _bar.SetCaption(CheckpointCaption(_level));
+            }
+        }
 
         // ------------------------------------------------------------------ the way in
         /// <summary>

@@ -39,8 +39,12 @@ namespace GlimmerGrove
         /// <summary>What the player is about to do, and what it will cost them.</summary>
         public enum Kind { Leave, Restart }
 
-        /// <summary>What is on the price tag: a heart (a run), or one of today's plays (a challenge).</summary>
-        public enum Stakes { Heart, Play }
+        /// <summary>
+        /// What is on the price tag: a heart (a run), one of today's plays (a challenge), or
+        /// nothing at all - an Infinite watch, whose heart went out at the door, so leaving it
+        /// costs no heart and loses the run's waves instead (MODES.md 43e).
+        /// </summary>
+        public enum Stakes { Heart, Play, Watch }
 
         public Kind Choice = Kind.Leave;
 
@@ -60,8 +64,8 @@ namespace GlimmerGrove
         /// a player a rule the game does not have.
         /// </para>
         /// <para>
-        /// Only the restart reads it. Leaving a prepaid run costs nothing, so this panel is never
-        /// raised for it (<c>RunScreen.ConfirmForfeit</c>).
+        /// Only the restart reads it. Leaving a prepaid run costs no heart, so it is asked as
+        /// <see cref="Stakes.Watch"/> instead (<c>RunScreen.ConfirmForfeit</c>).
         /// </para>
         /// </summary>
         public bool Prepaid;
@@ -84,12 +88,14 @@ namespace GlimmerGrove
         static string TitleKey(Kind kind, Stakes stake)
         {
             if (stake == Stakes.Play) return "ui.forfeit.play_title";
+            if (stake == Stakes.Watch) return "ui.forfeit.watch_title";
             return kind == Kind.Restart ? "ui.forfeit.restart_title" : "ui.forfeit.leave_title";
         }
 
         static string BodyKey(Kind kind, Stakes stake, bool prepaid)
         {
             if (stake == Stakes.Play) return "ui.forfeit.play_body";
+            if (stake == Stakes.Watch) return "ui.forfeit.watch_body";
             if (kind != Kind.Restart) return "ui.forfeit.leave_body";
             return prepaid ? "ui.forfeit.restart_watch_body" : "ui.forfeit.restart_body";
         }
@@ -111,17 +117,28 @@ namespace GlimmerGrove
             // follows it, and the panel is cut down to what is left: ~45 units of air from the
             // sentence to the tag and ~50 from the tag to KEEP PLAYING, which are the same step.
             bool play = Stake == Stakes.Play;
-            float panelHeight = play ? 700f : 800f;
+            bool watch = Stake == Stakes.Watch;
+            float panelHeight = watch ? WatchHeight : play ? 700f : 800f;
 
             MakePanel(new Vector2(880f, panelHeight), Loc.Get(TitleKey(Choice, Stake)), dismissOnScrim: false);
 
             UIKit.Shrinkable(
                 UIKit.Titled("Why", Panel, Loc.Get(BodyKey(Choice, Stake, Prepaid)), 32,
                              new Color(.36f, .25f, .18f),
-                             play ? TextAnchor.MiddleCenter : TextAnchor.UpperCenter,
-                             play ? new Vector2(680f, 120f) : new Vector2(680f, 190f),
-                             new Vector2(.5f, 1f), new Vector2(0f, play ? -145f : -196f),
+                             play || watch ? TextAnchor.MiddleCenter : TextAnchor.UpperCenter,
+                             play || watch ? new Vector2(680f, 120f) : new Vector2(680f, 190f),
+                             new Vector2(.5f, 1f), new Vector2(0f, play || watch ? -145f : -196f),
                              outline: 0f, shadow: 0f, wrap: true), 22);
+
+            // **A watch carries no price tag**, because leaving one takes nothing: its heart
+            // went out at the door. The band is the play's, and the panel stops under it - the
+            // sentence ends at -205, the Stay key's top edge is at -(WatchHeight - 301) = -299,
+            // which is the play panel's own step from its tag to its keys.
+            if (watch)
+            {
+                Keys();
+                return;
+            }
 
             // The heart being spent, drawn once rather than described. A row of five would be
             // the defeat panel's picture of the gate; this is a single price tag.
@@ -167,6 +184,15 @@ namespace GlimmerGrove
 
             Tween.Breathe(token.transform, .05f, 1.9f);
 
+            Keys();
+        }
+
+        /// <summary>The panel's height for a watch: the play panel less its tag.</summary>
+        const float WatchHeight = 600f;
+
+        /// <summary>The two answers, anchored to the foot so they sit alike on every panel.</summary>
+        void Keys()
+        {
             UIKit.TextButton("Stay", Panel, "btn_green", Loc.Get("ui.forfeit.stay"), 46,
                              new Vector2(620f, 138f), new Vector2(.5f, 0f), new Vector2(0f, 232f),
                              Cancel);
