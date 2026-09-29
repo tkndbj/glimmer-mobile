@@ -50,6 +50,11 @@ export const AD_PLACEMENTS = [
   // because a placement this list does not know is dropped from the published config by
   // `sanitiseAds` and refused by a callback that names it.
   "xp_boost",
+
+  // One extra daily challenge play (2026-09-28). Pays no currency and is still counted here:
+  // a won play is a coin claim, and `claimAwards` bounds every claim past the day's own
+  // allowance by the plays this callback has counted (`challenges.ts`, `drawAdPlay`).
+  "challenge_play",
 ] as const;
 export type AdPlacementId = (typeof AD_PLACEMENTS)[number];
 
@@ -61,9 +66,23 @@ export type AdPlacementId = (typeof AD_PLACEMENTS)[number];
  */
 export const MAX_AD_REWARD = 5000;
 
+/** Mirrors `AdRules.MaxDailyCap`: the most views one placement may pay for in a day. */
+export const MAX_AD_DAILY_CAP = 30;
+
+/** The reward kind only `challenge_play` pays, and the only kind it pays (`AdRewardTable.TryReadOffer`). */
+export const CHALLENGE_PLAY_KIND = "challenge_play";
+
 export interface AdPlacementConfig {
   kind: string;
   amount: number;
+
+  /**
+   * Views a day this placement pays for. Published for `challenge_play` alone, because it is
+   * the one placement whose grant this server has to bound by count: every other is bounded by
+   * the network's own signed callback per view and pays a flat figure, while a challenge play
+   * widens the day's coin allowance. Absent everywhere else.
+   */
+  dailyCap?: number;
 }
 
 export interface AdsConfig {
@@ -128,7 +147,14 @@ export function usableAdConfig(config: unknown): AdsConfig | null {
     if (typeof kind !== "string") continue;
     if (typeof amount !== "number" || !Number.isFinite(amount) || amount <= 0) continue;
 
-    clean[placement] = { kind, amount: Math.min(Math.floor(amount), MAX_AD_REWARD) };
+    const entryClean: AdPlacementConfig = { kind, amount: Math.min(Math.floor(amount), MAX_AD_REWARD) };
+
+    const dailyCap = (entry as { dailyCap?: unknown }).dailyCap;
+    if (typeof dailyCap === "number" && Number.isFinite(dailyCap) && dailyCap > 0) {
+      entryClean.dailyCap = Math.min(Math.floor(dailyCap), MAX_AD_DAILY_CAP);
+    }
+
+    clean[placement] = entryClean;
   }
 
   return Object.keys(clean).length > 0 ? { placements: clean } : null;
@@ -169,6 +195,27 @@ export function adCurrencyOf(ads: AdsConfig, placement: string): string | null {
   const entry = ads.placements[placement];
   if (!entry) return null;
   return entry.kind === "credits" || entry.kind === "gems" ? entry.kind : null;
+}
+
+/**
+ * What one finished view of a placement adds to the day's challenge plays, and the day's
+ * ceiling, or null when the placement pays something else.
+ *
+ * <p>
+ * **No published cap means no plays**, rather than a default: the cap is the whole bound on how
+ * far a day's coin allowance can be widened by adverts, so a config that never said what it is
+ * leaves the callback counting nothing - and a won play it would have covered is left
+ * unconfirmed in the ordinary way (13a) until the seeder runs.
+ * </p>
+ */
+export function adChallengePlays(
+  ads: AdsConfig,
+  placement: string
+): { plays: number; cap: number } | null {
+  const entry = ads.placements[placement];
+  if (!entry || entry.kind !== CHALLENGE_PLAY_KIND) return null;
+  if (!entry.dailyCap || entry.dailyCap <= 0) return null;
+  return { plays: entry.amount, cap: entry.dailyCap };
 }
 
 // ------------------------------------------------------------ the SSV callback

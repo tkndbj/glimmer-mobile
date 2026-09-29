@@ -266,7 +266,7 @@ namespace GlimmerGrove
             // card so it sits over the card's tap area, and painted rather than drawn (44j): a
             // level moves while the hub stands (a purchase on the ladder page, a sync that brings
             // another device's play), so it subscribes to both cues that can move the count.
-            _keeperBadge = WaitingBadge.BurstTopRight(card.transform, Pal.Mint);
+            _keeperBadge = WaitingBadge.GiftTopRight(card.transform, Pal.Mint);
             PaintKeeperBadge();
 
             // corner buttons
@@ -514,7 +514,7 @@ namespace GlimmerGrove
 
             // The starburst, top left, counting what is ready. Built last so it sits over
             // the card's own tap area.
-            _taskBadge = WaitingBadge.BurstTopLeft(card.transform);
+            _taskBadge = WaitingBadge.HubGiftTopLeft(card.transform, Pal.Gold);
 
             PaintTasks();
 
@@ -770,11 +770,11 @@ namespace GlimmerGrove
             //
             // `badged` moves the meta out of that corner as well. The streak box never needed
             // it because it carries no meta, so the collision only appeared when the event box
-            // gained a badge and its countdown ran straight under the disc. The corner is 66
-            // wide and hangs 30 out, so 70 of clearance puts the text clear of it whatever the
-            // translation is.
+            // gained a badge and its countdown ran straight under the disc. The corner is the
+            // hub's starburst now (`WaitingBadge.HubTopRight`, 125 wide, centred 46 in), so
+            // 100 of clearance puts the text clear of it whatever the translation is.
             bool hasMeta = !string.IsNullOrEmpty(meta);
-            float inset = badged ? 70f : 0f;
+            float inset = badged ? 100f : 0f;
             float tw = hasMeta ? w - 262f - inset : w - 110f;
 
             UIKit.Shrinkable(
@@ -1035,7 +1035,7 @@ namespace GlimmerGrove
             // Built last so it sits over the card's own tap area, and drawn as a number rather
             // than a dot because "3" is a reason to go and a dot is only a hint that there
             // might be one. FeatureHeader keeps its title clear of that corner.
-            _streakBadge = WaitingBadge.Disc(card);
+            _streakBadge = WaitingBadge.HubGiftTopRight(card, Pal.Gold);
 
             PaintStreak();
         }
@@ -1246,7 +1246,7 @@ namespace GlimmerGrove
             Milestones(FeatureBar(FeatureStrip(card, w), w, done, Pal.Bloom),
                        w, live, progress.Marks, goal);
 
-            WaitingBadge.Disc(card).Paint(progress.Waiting);
+            WaitingBadge.HubGiftTopRight(card, Pal.Gold).Paint(progress.Waiting);
 
             Sheen.Attach(card, 4.6f);
         }
@@ -1388,8 +1388,6 @@ namespace GlimmerGrove
         const float FootGap = 14f;
         const float ChallengeW = 960f, ChallengeH = 280f;
 
-        /// <summary>How far inside the plate the banner's window sits. See BuildChallenges.</summary>
-        const float BannerInset = 8f;
         const float PlayW = 620f, PlayH = 178f;
         const float LineW = 960f;
 
@@ -1442,121 +1440,42 @@ namespace GlimmerGrove
 
         // -------------------------------------------------------- daily challenges
         /// <summary>
-        /// The second door out of the hub: one painted banner on the kit's blue plate, with a
-        /// shine crossing it.
+        /// The second door out of the hub: the keeper ladder's buy key, word for word in its
+        /// furniture, with the owner's turret scene standing on its right and two lines of
+        /// <em>Daily Challenges</em> on its left (the owner, 2026-09-28).
         ///
         /// <para>
-        /// <b>The picture is the caption.</b> The words <em>Daily Challenges</em> are painted
-        /// into the art, so nothing here writes them a second time - a caption under a banner
-        /// that already says the same thing is the furniture the tasks card had to lose
-        /// (<see cref="BuildTasks"/>). That does cost this control the one thing every other
-        /// string in the game has, which is a translation (invariant 6): <b>the banner is
-        /// English and only English until it is re-cut</b>, and it is named here so that is a
-        /// decision on the record rather than an oversight.
+        /// <b>The key is <see cref="DoorKey"/></b>, shared with the Refer a Friend door on the
+        /// profile and the shop: the violet pill the BUY LEVEL key wears, drawn near its own
+        /// height rather than stretched to the old banner's 280 (44a).
         /// </para>
         /// <para>
-        /// <b>The plate is <see cref="Skins.PlateBlue"/> rather than a button face.</b>
-        /// <c>btn_blue</c> is sliced across its width only (its border is <c>15,0,15,0</c>), so
-        /// drawn at this height it stretches its own moulded face by 1.7 and reads as a smeared
-        /// pill - invariant 44a, from the other end. The plate is sliced on all four edges and
-        /// scales to any box, which is what "wide and smooth-cornered" actually needs.
+        /// <b>The slot is still <see cref="ChallengeH"/> tall</b>, so nothing above it moves: the
+        /// key sits at the foot of the slot and the picture rises out of it into the room above.
+        /// <b>The caption is a loc key</b> (<c>ui.challenges.title</c>, wrapped onto two lines),
+        /// so this door is translated now - the painted banner it replaces carried English in
+        /// its pixels and was the one control outside invariant 6.
         /// </para>
         /// <para>
-        /// <b>The banner <em>covers</em> the plate rather than standing on it</b>, which is the
-        /// owner's call after playing it: fitted inside, the art was an island with a hand's
-        /// width of blue at each end and read as a picture somebody had dropped on a button.
-        /// The art is 2.67:1 and the plate is 3.43:1, so covering is width-led and the crop
-        /// comes off the top and bottom - about a ninth at each end, which is glow and empty
-        /// sky above the lettering and leaf and rock below it.
-        /// </para>
-        /// <para>
-        /// <b>So the plate becomes a window, and the window is cut from its own sprite.</b> A
-        /// <c>Mask</c> whose graphic is the plate clips the picture to exactly the corners the
-        /// plate draws, which is the only way a rounded button can hold a rectangular picture
-        /// without either squashing it or showing its square corners. The scale is read off the
-        /// sprite rather than typed, for <c>IdentWordmark</c>'s reason: a re-cut of the banner
-        /// at another aspect must not leave a number here quietly describing the last one.
-        /// </para>
-        /// <para>
-        /// <b>And the window is <see cref="BannerInset"/> inside the plate rather than flush
-        /// with it.</b> Flush, the picture covered the plate's own painted bevel - the border
-        /// that is what makes the sprite read as a button at all - so the art went right to the
-        /// outside edge and past the curve at the four corners, and was reported as overflowing
-        /// its box. The inset is small on purpose: enough to leave the plate's frame drawn all
-        /// the way round, not enough to turn the picture back into an island.
-        /// </para>
-        /// <para>
-        /// <b>And the halo went with the change rather than being kept.</b> It was a bloom
-        /// around a small picture on a big plate; with the picture covering the plate there is
-        /// nothing of the glow left to see, and the art carries its own.
-        /// </para>
-        /// <para>
-        /// <b>The badge is the tasks pack's badge</b> - the same starburst, in the same corner,
-        /// painted with how many genres still have a play left today
-        /// (<see cref="ChallengeLedger.ReadyCount"/>) - so the two doors on the hub's foot say
-        /// "something is waiting" in one voice. It is painted rather than drawn (44j): a play
-        /// spent, a deal bought, a sync arriving with plays spent on another phone, and the day
-        /// turning all repaint it through <see cref="ChallengeLedger.Changed"/>, and it is built
-        /// after the window so it draws over the mask rather than being cropped by it.
+        /// <b>The badge is the tasks pack's badge</b>, painted with how many genres still have a
+        /// play left today (<see cref="ChallengeLedger.ReadyCount"/>) and repainted through
+        /// <see cref="ChallengeLedger.Changed"/> (44j).
         /// </para>
         /// </summary>
         void BuildChallenges()
         {
-            var card = UIKit.Button("Challenges", Content, Art.S("Ui/" + Skins.PlateBlue),
-                                    new Vector2(ChallengeW, ChallengeH), new Vector2(.5f, 0f),
-                                    new Vector2(0f, ChallengeY),
-                                    () => Flow.Go<DailyChallengesScreen>());
+            // The shared door key (`DoorKey`): the violet pill, the caption on the left and the
+            // owner's turret scene on the right, at the foot of this slot.
+            var card = DoorKey.Build("Challenges", Content, ChallengeW, ChallengeH, new Vector2(.5f, 0f),
+                                     new Vector2(0f, ChallengeY), "ui.challenges.title", "challenge_door",
+                                     () => Flow.Go<DailyChallengesScreen>());
 
-            // A press-scale that squashes a plate this wide reads as the screen flinching
-            // rather than as a key going down - the same reason the loadout shelf and the
-            // tasks card both hold theirs near one. Kept through the shut state so the number
-            // does not have to be found again the day the door opens.
-            card.PressScale = .985f;
-
-            // **Open only while there is a slate to offer.** The door stays a door when the
-            // challenge file is missing or empty (a fresh clone with no content, a read that
-            // failed): a tap onto an empty room is a tap a player learns not to make.
+            // **Open only while there is a slate to offer.** A tap onto an empty room is a tap a
+            // player learns not to make.
             card.Interactable = !ChallengeRules.Table.IsEmpty;
 
-            // The window. `showMaskGraphic` is false, so the plate is not painted twice; the
-            // near-nothing alpha is what writes the stencil (`Sheen` cuts its own the same way).
-            //
-            // A compressed sprite used as a stencil leaks a few texels where its alpha should
-            // be nought, which is what `ArtImportRules.Grades` grades the publisher card's
-            // wordmark uncompressed for. It is deliberately *not* worth it here: this plate is
-            // drawn on every screen in the game, the leak is a pixel or two at four corners
-            // rather than a field of holes in a full-screen black sheet, and `Sheen` has cut
-            // this same sprite this same way on every key in the app since the kit landed.
-            var clip = UIKit.Img("Clip", card.transform, Art.S("Ui/" + Skins.PlateBlue),
-                                 new Color(1f, 1f, 1f, .004f));
-            var crt = (RectTransform)clip.transform;
-            UIKit.StretchTo(crt, BannerInset, BannerInset, BannerInset, BannerInset);
-            clip.type = Image.Type.Sliced;
-            clip.raycastTarget = false;
-            clip.gameObject.AddComponent<Mask>().showMaskGraphic = false;
-
-            var banner = Art.S("Ui/challenges");
-            float aspect = banner != null && banner.rect.height > 0f
-                         ? banner.rect.width / banner.rect.height
-                         : 0f;
-
-            // Cover: the larger of the two scales that fill an axis. An address that has not
-            // arrived leaves the plate plain rather than drawing a white bar (invariant 7b).
-            float windowW = ChallengeW - BannerInset * 2f, windowH = ChallengeH - BannerInset * 2f;
-            float drawnW = windowW, drawnH = aspect > 0f ? drawnW / aspect : 0f;
-            if (drawnH < windowH) { drawnH = windowH; drawnW = drawnH * aspect; }
-
-            var art = UIKit.Img("Banner", crt, banner, Color.white,
-                                new Vector2(drawnW, drawnH), new Vector2(.5f, .5f), Vector2.zero);
-            art.raycastTarget = false;
-            art.enabled = aspect > 0f;
-
-            // The tag, built after the window so it draws over the picture rather than
-            // under it - the banner is inside a Mask and this is its sibling.
-            //
-            // The badge, built after the window so it draws over the picture rather than under
-            // it - the banner is inside a Mask and this is its sibling.
-            _challengeBadge = WaitingBadge.BurstTopLeft(card.transform);
+            // Built last, so it draws over the key and the picture.
+            _challengeBadge = WaitingBadge.HubInkedTopLeft(card.transform, Pal.Amber);
             PaintChallenges();
 
             card.transform.localScale = Vector3.zero;
@@ -1565,9 +1484,8 @@ namespace GlimmerGrove
                 if (!card) return;
                 card.Rehome();
 
-                // The shine the owner asked for, and it is the one this game already has: a
-                // band travelling left to right behind a mask cut to the plate's own shape,
-                // so it cannot spill past the corners. See Sheen.
+                // The shine the owner asked for on this door: a band travelling left to right
+                // behind a mask cut to the key's own shape. See Sheen.
                 Sheen.Attach((RectTransform)card.transform, 3.1f);
             });
         }

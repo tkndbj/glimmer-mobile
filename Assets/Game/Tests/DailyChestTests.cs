@@ -272,6 +272,29 @@ namespace GlimmerGrove.Tests
             Assert.AreSame(DailyChestTable.Default, table, "a chest that can pay nothing must not ship");
         }
 
+        /// <summary>
+        /// A challenge play is a day's, and a chest is opened on a day of its own choosing, so a
+        /// band naming one is refused by name rather than rolled into a play for the wrong day.
+        /// </summary>
+        [Test]
+        public void AChestMayNotPayAChallengePlay()
+        {
+            var problems = new List<string>();
+            DailyChestTable.Resolve(new DailyChestDto
+            {
+                runsPerChest = 3,
+                chests = new[]
+                {
+                    new DailyChestEntryDto
+                    {
+                        guaranteed = new[] { Band("credits", 1, 1), Band("challenge_play", 1, 1) },
+                    },
+                },
+            }, problems);
+
+            Assert.IsTrue(problems.Exists(p => p.Contains("challenge_play")), string.Join("; ", problems));
+        }
+
         [Test]
         public void AZeroWeightOptionIsRefusedBecauseItMakesTheOddsALie()
         {

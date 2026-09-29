@@ -89,6 +89,13 @@ namespace GlimmerGrove.Daily
                     // the network's signed callback. See the type's remarks.
                     return false;
 
+                case ChestDropKind.ChallengePlay:
+                    // The caller's: the server counts it when the network's callback lands, and
+                    // the device offers the play only once that count comes back
+                    // (`ChallengeAdPlays`). Banking it here would offer a play whose win the
+                    // server then refuses to pay.
+                    return false;
+
                 case ChestDropKind.RunTime:
                     // Retired, and the caller's in any case: it belongs to a live board, which
                     // nothing in Domain can see.

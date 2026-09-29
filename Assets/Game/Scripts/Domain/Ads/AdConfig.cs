@@ -106,6 +106,14 @@ namespace GlimmerGrove.Ads
         public const string IosXpBoost = "hr9lakpd3gn0rhur";
 
         /// <summary>
+        /// The daily challenges' extra play (2026-09-28). Both dashboard apps define a Placement
+        /// named <c>challenge_play</c> with that reward name, which is what the server reads the
+        /// callback's offer from (<c>namedPlacement</c>, placement name first).
+        /// </summary>
+        public const string AndroidChallengePlay = "dyu6bempmr8jje3c";
+        public const string IosChallengePlay = "wklicdx1zdrdjx3y";
+
+        /// <summary>
         /// Whether real identifiers have been filled in.
         ///
         /// The app key alone is checked: without it nothing initialises at all, so a missing
@@ -145,6 +153,7 @@ namespace GlimmerGrove.Ads
                 { AdPlacement.WinBonus, Real(IosWinBonus) },
                 { AdPlacement.HintRefill, Real(IosHintRefill) },
                 { AdPlacement.XpBoost, Real(IosXpBoost) },
+                { AdPlacement.ChallengePlay, Real(IosChallengePlay) },
             };
 #else
             return new Dictionary<string, string>
@@ -154,6 +163,7 @@ namespace GlimmerGrove.Ads
                 { AdPlacement.WinBonus, Real(AndroidWinBonus) },
                 { AdPlacement.HintRefill, Real(AndroidHintRefill) },
                 { AdPlacement.XpBoost, Real(AndroidXpBoost) },
+                { AdPlacement.ChallengePlay, Real(AndroidChallengePlay) },
             };
 #endif
         }

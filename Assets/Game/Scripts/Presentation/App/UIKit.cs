@@ -612,6 +612,10 @@ namespace GlimmerGrove
         {
             var label = button.Label;
 
+            // Every fit starts whole: a caption that fits again (a countdown shortening, a
+            // loading line giving way to WATCH) must not keep the last one's compression.
+            label.rectTransform.localScale = Vector3.one;
+
             label.fontSize = button.LabelSize > 0 ? button.LabelSize : label.fontSize;
             if (room <= 0f || string.IsNullOrEmpty(label.text)) return;
 
@@ -625,6 +629,16 @@ namespace GlimmerGrove
 
             while (label.fontSize > button.LabelMinSize && label.preferredWidth > room)
                 label.fontSize--;
+
+            // **The floor is a size, and a size cannot promise a width.** A caption still wider
+            // than the pill at its floor - a long translation, a longer loading line - used to
+            // draw off both ends, because a one-line label overflows by construction. So the
+            // last resort is to scale the drawn line down to exactly the room, uniformly, so the
+            // letterforms keep their shape: smaller than the floor on the rare caption that
+            // needs it, and never outside the button. The challenge advert's "FINDING A
+            // VIDEO..." on a 280-wide key is what found it (2026-09-28).
+            wide = label.preferredWidth;
+            if (wide > room) label.rectTransform.localScale = Vector3.one * (room / wide);
         }
 
         /// <summary>Square button carrying a white glyph.</summary>

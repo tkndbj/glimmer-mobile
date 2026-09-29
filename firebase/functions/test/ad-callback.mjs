@@ -11,7 +11,7 @@
 
 import { createHash } from "node:crypto";
 import {
-  adCurrencyOf, adCurrencyValue, adGrantId, ackBody, callbackQuery,
+  adChallengePlays, adCurrencyOf, adCurrencyValue, adGrantId, ackBody, callbackQuery,
   isAdGrantId, usableAdConfig, usableEventId, verifyAdCallback,
 } from "../lib/ads.js";
 
@@ -189,6 +189,49 @@ check("a config with no usable placements reads as absent",
 
 check("an unknown placement in config is ignored rather than adopted",
       usableAdConfig({ placements: { made_up: { kind: "credits", amount: 50 } } }) === null);
+
+console.log("== challenge plays");
+
+{
+  const plays = usableAdConfig({
+    placements: {
+      coin_bonus: { kind: "credits", amount: 300, dailyCap: 12 },
+      challenge_play: { kind: "challenge_play", amount: 1, dailyCap: 10 },
+    },
+  });
+
+  check("the challenge play placement is known and read",
+        plays !== null && plays.placements.challenge_play?.dailyCap === 10);
+
+  const counted = adChallengePlays(plays, "challenge_play");
+  check("a challenge play counts one play under its published cap",
+        counted !== null && counted.plays === 1 && counted.cap === 10);
+
+  check("a challenge play is not currency, so the currency path grants nothing",
+        adCurrencyOf(plays, "challenge_play") === null
+        && adCurrencyValue(plays, "challenge_play", "credits") === 0);
+
+  check("a coin placement counts no challenge play",
+        adChallengePlays(plays, "coin_bonus") === null);
+
+  check("a play with no published cap counts nothing rather than a default",
+        adChallengePlays(usableAdConfig({ placements: { challenge_play: { kind: "challenge_play", amount: 1 } } }),
+                         "challenge_play") === null);
+
+  check("a published cap above the ceiling is clamped",
+        usableAdConfig({ placements: { challenge_play: { kind: "challenge_play", amount: 1, dailyCap: 500 } } })
+          .placements.challenge_play.dailyCap === 30);
+
+  const query = {
+    eventId: "evt-play", userId: "uid-1", rewards: "1", timestamp: "1700000000",
+    placementName: "challenge_play",
+  };
+  query.signature = createHash("md5")
+    .update(`${query.timestamp}${query.eventId}${query.userId}${query.rewards}${KEY}`).digest("hex");
+  const verdict = verifyAdCallback(query, KEY);
+  check("a signed callback naming the challenge play is authorised for it",
+        verdict.ok && verdict.placement === "challenge_play");
+}
 
 console.log("== acknowledgement");
 

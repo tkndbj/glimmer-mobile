@@ -1,3 +1,4 @@
+using GlimmerGrove.Ads;
 using GlimmerGrove.Challenges;
 using GlimmerGrove.Localization;
 using UnityEngine;
@@ -64,10 +65,34 @@ namespace GlimmerGrove
         static readonly Vector2 KeySize = new Vector2(280f, 116f);
         const float KeyInset = 16f;
 
+        /// <summary>
+        /// The advert row's picture box: wider than a stone, because the art is a landscape, and
+        /// no wider than keeps 16 units between it and the name (<c>render_challenges.py --deals</c>).
+        /// </summary>
+        static readonly Vector2 AdArtSize = new Vector2(168f, 140f);
+
+        /// <summary>How often the advert row re-reads the network's readiness, which moves by itself.</summary>
+        const float AdTickSeconds = .5f;
+
+        Btn _adKey;
+        Text _adLeft;
+        bool _adWatching;
+        float _adTick;
+        int _adGranted = -1;
+        bool _listening;
+
         protected override void Build()
         {
             var tiers = ChallengeRules.Table.Tiers;
-            float rows = tiers.Count * (RowH + RowGap) - (tiers.Count > 0 ? RowGap : 0f);
+
+            // The advert row stands first, because the sheet is ordered cheapest first and nothing
+            // is cheaper than nothing (18g's rule, said of this sheet). Drawn whenever the offer
+            // belongs on screen at all - loading, capped and ready alike say so on the key - and
+            // left off only when it cannot be taken by waiting here (no network provider, no
+            // account for the server to count the play against, or no challenge to spend it on).
+            bool adRow = RewardedAds.ShouldOffer(AdPlacement.ChallengePlay);
+            int rowCount = tiers.Count + (adRow ? 1 : 0);
+            float rows = rowCount * (RowH + RowGap) - (rowCount > 0 ? RowGap : 0f);
             float panelH = RowsTop + rows + Tail + FootH;
 
             Scrim = UIKit.Scrim(Content, .72f, () => Close());
@@ -85,6 +110,24 @@ namespace GlimmerGrove
                 20);
 
             float y = -(RowsTop + RowH * .5f);
+
+            _adKey = null;
+            _adLeft = null;
+            if (adRow)
+            {
+                BuildAdRow(y);
+                y -= RowH + RowGap;
+            }
+
+            // Listened to once, however many times a purchase rebuilds the sheet: a play the
+            // server counted lands seconds after its video, on whatever the sheet is showing.
+            if (!_listening)
+            {
+                _listening = true;
+                _adGranted = ChallengeLedger.AdPlays;
+                ChallengeLedger.Changed += OnLedgerChanged;
+            }
+
             for (int i = 0; i < tiers.Count; i++)
             {
                 BuildRow(tiers[i], i + 1, y);
@@ -191,6 +234,154 @@ namespace GlimmerGrove
                     UIKit.Titled("Note", t, Loc.Get("ui.challenges.upgrade_note"), 22, Pal.A(Pal.Gold, .95f),
                                  TextAnchor.UpperLeft, new Vector2(TextW, 48f), new Vector2(0f, .5f),
                                  new Vector2(TextX + TextW * .5f, -88f), 2f, 0f, wrap: true), 14);
+        }
+
+        // ------------------------------------------------------------ the advert row
+        /// <summary>
+        /// One video, one play of any puzzle today (<see cref="AdPlacement.ChallengePlay"/>). The
+        /// row is a deal like the others - a picture, a name over a sentence, a key - and says
+        /// what is left of the day's videos in the note seat an upgrade uses.
+        ///
+        /// <para>
+        /// <b>The play arrives when the server has counted it</b>, a few seconds after the video
+        /// (<see cref="ChallengeAdPlays"/>): so a finished video says it is on its way, and the
+        /// play's landing says it has come - a toast on whatever the sheet is showing then, off
+        /// <see cref="ChallengeLedger.Changed"/>.
+        /// </para>
+        /// </summary>
+        void BuildAdRow(float y)
+        {
+            var plate = UIKit.Img("Row_ad", Panel, Art.Round(28), new Color(0f, 0f, 0f, .32f),
+                                  new Vector2(RowW, RowH), new Vector2(.5f, 1f), new Vector2(0f, y));
+            var edge = UIKit.Img("Edge", plate.transform, Art.RoundOutline(28, 3f), Pal.A(Pal.Mint, .42f));
+            UIKit.StretchTo((RectTransform)edge.transform, 0f, 0f, 0f, 0f);
+            edge.raycastTarget = false;
+            var t = plate.transform;
+
+            // Null until synced, and drawn as nothing rather than as a white rectangle (7b).
+            var art = UIKit.Img("Art", t, ChallengeArt.AdPlay(), Color.white, AdArtSize,
+                                new Vector2(0f, .5f), new Vector2(StoneX, 0f));
+            art.preserveAspect = true;
+            art.raycastTarget = false;
+            art.enabled = art.sprite != null;
+            UIKit.Halo(art.transform, Pal.Bloom, StoneSize * 1.9f, .18f);
+
+            UIKit.Shrinkable(
+                UIKit.Titled("Name", t, Loc.Get("ui.challenges.ad_name"), 52, Pal.Cream, TextAnchor.MiddleLeft,
+                             new Vector2(TextW, 66f), new Vector2(0f, .5f), new Vector2(TextX + TextW * .5f, 60f), 3f, 3f),
+                28);
+
+            UIKit.Shrinkable(
+                UIKit.Titled("Line", t, Loc.Get("ui.challenges.ad_line"), 32,
+                             new Color(1f, .96f, .88f, .88f), TextAnchor.UpperLeft, new Vector2(TextW, 84f),
+                             new Vector2(0f, .5f), new Vector2(TextX + TextW * .5f, -20f), 2f, 0f, wrap: true),
+                20);
+
+            _adLeft = UIKit.Shrinkable(
+                UIKit.Titled("Left", t, string.Empty, 24, Pal.A(Pal.Mint, .95f), TextAnchor.UpperLeft,
+                             new Vector2(TextW, 40f), new Vector2(0f, .5f),
+                             new Vector2(TextX + TextW * .5f, -92f), 2f, 0f), 14);
+
+            // Green, the kit's affirmative pill: this key costs nothing, and every priced key on
+            // the sheet is a gem one. **No play glyph on it**: the row's picture already says
+            // video, and a glyph left "BACK TOMORROW" and "FINDING A VIDEO..." half the room -
+            // the mirror measured the first at 19 against its floor of 18 (19n).
+            _adKey = UIKit.TextButton("Watch", t, Skins.Affirm, Loc.Get("ui.ads.watch"), 36, KeySize,
+                                      new Vector2(1f, .5f), new Vector2(-(KeyInset + KeySize.x * .5f), 0f),
+                                      Watch);
+
+            // One line, fitted on every caption change (`Btn.SetCaption` re-runs it), because
+            // this key says WATCH, FINDING A VIDEO..., OPENING... and BACK TOMORROW in
+            // turn: a plain TextButton with no glyph is never fitted at all, and the loading line
+            // ran off both ends of the pill. The floor is the other video keys' 24; past it
+            // `Squeeze` scales the line to the room, so no caption can leave the button.
+            UIKit.OneLine(_adKey, 24);
+
+            PaintAdRow();
+        }
+
+        void Update()
+        {
+            if (!_adKey || _adWatching) return;
+
+            _adTick += Time.unscaledDeltaTime;
+            if (_adTick < AdTickSeconds) return;
+
+            _adTick = 0f;
+            PaintAdRow();
+        }
+
+        /// <summary>
+        /// The key's caption and whether it takes a tap, and the day's videos left. Painted on a
+        /// tick because readiness is the network's and moves by itself; each write is skipped
+        /// when nothing moved (<c>AdOfferButton.Paint</c>'s bargain).
+        /// </summary>
+        void PaintAdRow()
+        {
+            if (!_adKey || _adWatching) return;
+
+            AdOfferButton.Paint(_adKey, AdPlacement.ChallengePlay, "ui.ads.watch");
+
+            if (_adLeft)
+            {
+                var offer = RewardedAds.Table.Offer(AdPlacement.ChallengePlay);
+                string left = Loc.Format("ui.challenges.ad_left",
+                                         RewardedAds.RemainingToday(AdPlacement.ChallengePlay), offer.DailyCap);
+                if (!string.Equals(_adLeft.text, left, System.StringComparison.Ordinal)) _adLeft.text = left;
+            }
+        }
+
+        void Watch()
+        {
+            if (_adWatching) return;
+            if (!RewardedAds.CanOffer(AdPlacement.ChallengePlay)) { PaintAdRow(); return; }
+
+            _adWatching = true;
+            _adKey.Interactable = false;
+            // The key's own caption rather than `ui.ads.opening`, which is the status sentence
+            // other panels print under their key and measured too long for this one.
+            _adKey.SetCaption(Loc.Get("ui.ads.btn_opening"));
+
+            Run(async token =>
+            {
+                var payment = await RewardedVideo.Watch(AdPlacement.ChallengePlay);
+
+                // The sheet can be gone by now; the view is counted by the server either way.
+                if (!Living) return;
+
+                _adWatching = false;
+
+                if (payment.Paid)
+                {
+                    // Said only if the play has not already landed while the video closed.
+                    if (ChallengeLedger.AdPlays <= _adGranted)
+                        Scenery.Toast(Content, Loc.Get("ui.challenges.ad_coming"), Pal.Mint, 2.4f);
+                }
+                else Scenery.Toast(Content, RewardedVideo.Refusal(payment), Pal.Gold, 2.6f);
+
+                PaintAdRow();
+            });
+        }
+
+        /// <summary>A play the server counted has come back: say so, once per play.</summary>
+        void OnLedgerChanged()
+        {
+            if (!Living) return;
+
+            int granted = ChallengeLedger.AdPlays;
+            if (granted > _adGranted && _adGranted >= 0)
+            {
+                Audio.Sfx("collect", .8f);
+                Scenery.Toast(Content, Loc.Get("ui.challenges.ad_arrived"), Pal.Mint, 2.6f);
+            }
+            _adGranted = granted;
+
+            PaintAdRow();
+        }
+
+        void OnDestroy()
+        {
+            if (_listening) ChallengeLedger.Changed -= OnLedgerChanged;
         }
 
         void Buy(ChallengeTier tier)

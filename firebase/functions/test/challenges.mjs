@@ -24,9 +24,10 @@ if (!existsSync(compiled)) {
 }
 
 const {
-  DEFAULT_CHALLENGES, HARD_MAX_CLEARS, allowanceOn, challengeClears, challengeGrant, challengeXp,
-  dealPrice, findTier, holdTier, isChallengeGrantId, isChallengeTierSpendId, parseChallengeClaim,
-  parseChallengeTierSpendId, readChallengeTiers, usableChallengesConfig,
+  DEFAULT_CHALLENGES, HARD_MAX_CLEARS, MAX_AD_PLAYS_PER_DAY, MAX_CHALLENGE_DAYS_BEHIND,
+  adPlaysDrawn, adPlaysOn, allowanceOn, challengeClears, challengeGrant, challengeXp,
+  dealPrice, drawAdPlay, findTier, grantAdPlays, holdTier, isChallengeGrantId, isChallengeTierSpendId,
+  parseChallengeClaim, parseChallengeTierSpendId, readChallengeAds, readChallengeTiers, usableChallengesConfig,
 } = await import(pathToFileURL(compiled).href);
 
 let pass = 0, fail = 0;
@@ -180,6 +181,52 @@ console.log("\nthe xp");
   equal("a save with no block pays nothing", challengeXp({}, { challenges: CONFIG }), 0);
   equal("a non-object block pays nothing", challengeClears({ challenges: 7 }), 0);
   equal("a null row is skipped", challengeClears({ challenges: { clears: [null, { genre: "pairs", count: 2 }] } }), 2);
+}
+
+// ------------------------------------------------------------------ the advert pool
+console.log("\nthe advert pool");
+{
+  const DAY = 20700;
+  const claim = (win, genre = "pairs", day = DAY) => ({ dayKey: day, genre, win, currency: "credits" });
+
+  // The count: one play a confirmed view, never past the cap, and a full day adds nothing.
+  let days = {};
+  for (let i = 0; i < 12; i++) days = grantAdPlays(days, DAY, 1, 10).days;
+  equal("ten views fill a cap of ten and the rest count nothing", adPlaysOn(days, DAY), 10);
+  equal("a view past the cap adds nought", grantAdPlays(days, DAY, 1, 10).added, 0);
+  equal("a cap above the ceiling is held to it",
+        adPlaysOn(grantAdPlays({}, DAY, 99, 500).days, DAY), MAX_AD_PLAYS_PER_DAY);
+  equal("an old day is pruned when a new one is counted",
+        Object.keys(grantAdPlays({ [DAY - MAX_CHALLENGE_DAYS_BEHIND - 1]: { granted: 3, drawn: {} } }, DAY, 1, 10).days),
+        [String(DAY)]);
+
+  // The draw: a win inside the allowance never touches the pool; one past it spends a play.
+  const two = { [DAY]: { granted: 2, drawn: {} } };
+  equal("a win inside the allowance is covered without a draw", drawAdPlay(two, claim(2), 2), two);
+  const once = drawAdPlay(two, claim(3), 2);
+  equal("a win past the allowance draws a play", once?.[DAY]?.drawn, { pairs: [3] });
+  const twice = drawAdPlay(once, claim(3, "merge"), 2);
+  equal("the pool is shared by every genre", twice?.[DAY]?.drawn, { pairs: [3], merge: [3] });
+  equal("a third win past the allowance is refused once the pool is spent", drawAdPlay(twice, claim(4), 2), null);
+  equal("an ordinal already drawn is covered again, not drawn twice", drawAdPlay(twice, claim(3), 2), twice);
+  equal("a day with no advert plays covers nothing past the allowance", drawAdPlay({}, claim(3), 2), null);
+  equal("another day's plays do not cover this one", drawAdPlay(two, claim(3, "pairs", DAY + 1), 2), null);
+
+  // The recount: a deal landing after a win was drawn gives that play back.
+  equal("drawn plays past the allowance are counted", adPlaysDrawn(twice[DAY], 2), 2);
+  equal("a deal that now covers them gives both back", adPlaysDrawn(twice[DAY], 5), 0);
+  equal("so a later win can draw again", drawAdPlay(twice, claim(7), 5)?.[DAY]?.drawn?.pairs, [3, 7]);
+
+  // The reader: shape and the window.
+  equal("the reader keeps a well-formed day", readChallengeAds({ [DAY]: { granted: 3, drawn: { pairs: [5, 3, 3] } } }, DAY),
+        { [DAY]: { granted: 3, drawn: { pairs: [3, 5] } } });
+  equal("the reader drops a day no claim can name any more",
+        readChallengeAds({ [DAY - MAX_CHALLENGE_DAYS_BEHIND - 1]: { granted: 3, drawn: {} } }, DAY), {});
+  equal("the reader drops a count past the ceiling and junk",
+        readChallengeAds({ [DAY]: { granted: 999 }, x: { granted: 1 }, [DAY - 1]: 7 }, DAY), {});
+  equal("the reader drops a genre that is not key-shaped and ordinals that are not whole",
+        readChallengeAds({ [DAY]: { granted: 2, drawn: { "Bad Genre": [3], pairs: [0, -1, 2.5, "4", 4] } } }, DAY),
+        { [DAY]: { granted: 2, drawn: { pairs: [4] } } });
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

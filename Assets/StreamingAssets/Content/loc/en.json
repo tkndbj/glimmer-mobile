@@ -2714,6 +2714,38 @@
       "text": "Done"
     },
     {
+      "key": "ui.challenges.ad_name",
+      "text": "Watch & Play"
+    },
+    {
+      "key": "ui.challenges.ad_line",
+      "text": "One more play of any puzzle, today"
+    },
+    {
+      "key": "ui.challenges.ad_left",
+      "text": "{0} of {1} videos left today"
+    },
+    {
+      "key": "ui.challenges.ad_coming",
+      "text": "Your play is on its way!"
+    },
+    {
+      "key": "ui.challenges.ad_arrived",
+      "text": "Bonus play ready! Pick any puzzle."
+    },
+    {
+      "key": "ui.challenges.plays_left_bonus",
+      "text": "{0} / {1} plays +{2}"
+    },
+    {
+      "key": "ui.challenges.spent_watch",
+      "text": "Watch for +1 play"
+    },
+    {
+      "key": "ui.challenges.no_plays_watch",
+      "text": "Out of plays. Watch a video for one more!"
+    },
+    {
       "key": "ui.challenges.empty",
       "text": "No challenge is on today. Come back tomorrow."
     },
@@ -2916,6 +2948,10 @@
     {
       "key": "ui.ads.btn_cooling",
       "text": "READY IN {0}"
+    },
+    {
+      "key": "ui.ads.btn_opening",
+      "text": "OPENING..."
     },
     {
       "key": "ui.ads.btn_loading",
@@ -4508,6 +4544,10 @@
     {
       "key": "ui.referral.title",
       "text": "Invite Friends"
+    },
+    {
+      "key": "ui.referral.door",
+      "text": "Refer a Friend"
     },
     {
       "key": "ui.referral.subtitle",
@@ -6372,6 +6412,10 @@
     {
       "key": "ui.shop.xp_surge_added",
       "text": "+{0}% XP for {1} more hours"
+    },
+    {
+      "key": "ui.ads.challenge_play_title",
+      "text": "EXTRA PLAY"
     },
     {
       "key": "ui.ads.xp_boost_title",

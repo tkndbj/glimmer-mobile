@@ -307,6 +307,12 @@
         "kind": "xp_boost",
         "amount": 2,
         "dailyCap": 6
+      },
+      {
+        "id": "challenge_play",
+        "kind": "challenge_play",
+        "amount": 1,
+        "dailyCap": 10
       }
     ],
     "wheel": {

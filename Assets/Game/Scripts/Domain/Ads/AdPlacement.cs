@@ -100,8 +100,26 @@ namespace GlimmerGrove.Ads
         /// </summary>
         public const string XpBoost = "xp_boost";
 
+        /// <summary>
+        /// Offered on the daily challenges' deal sheet, for one extra play today of whichever
+        /// genre the player picks. Its own daily allowance, and outside the shared cooldown
+        /// (<c>RewardedAds.Paced</c>): nothing another placement does moves it, and it moves
+        /// nothing of theirs.
+        ///
+        /// <para>
+        /// <b>Granted by the server, though it pays no currency</b>, because a won play is a coin
+        /// claim and the server bounds every one by the plays it knows the day allowed (56i). So
+        /// the signed callback raises a per-day count on the wallet document
+        /// (<c>challengeAds</c>, capped at the published <c>dailyCap</c>), the reply carries it
+        /// back, and the device offers exactly that many (<c>ChallengeAdPlays</c>). A play
+        /// arrives a few seconds after the video closes rather than the instant it does - the
+        /// price of never offering one whose win would be refused.
+        /// </para>
+        /// </summary>
+        public const string ChallengePlay = "challenge_play";
+
         public static readonly string[] All =
-            { HeartRefill, CoinBonus, WinBonus, HintRefill, XpBoost };
+            { HeartRefill, CoinBonus, WinBonus, HintRefill, XpBoost, ChallengePlay };
 
         /// <summary>
         /// Whether an id names a placement this build knows.

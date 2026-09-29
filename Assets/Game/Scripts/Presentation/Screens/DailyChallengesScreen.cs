@@ -211,11 +211,31 @@ namespace GlimmerGrove
         {
             if (!ChallengeLedger.CanPlay(genre))
             {
+                // Spent, but a video would buy another: the sheet that sells it is the answer,
+                // so it opens rather than the page saying come back tomorrow.
+                if (VideoWouldHelp())
+                {
+                    Scenery.Toast(Content, Loc.Get("ui.challenges.no_plays_watch"), Pal.Gold, 2.4f);
+                    if (!Flow.HasModal) Flow.Modal<ChallengeTierOverlay>();
+                    return;
+                }
+
                 Scenery.Toast(Content, Loc.Get("ui.challenges.no_plays"), Pal.Gold, 2.4f);
                 return;
             }
 
             Flow.Go<ChallengeScreen>(v => v.Genre = genre);
+        }
+
+        /// <summary>
+        /// Whether the advert that buys a play could still be watched today - loading and ready
+        /// alike, never once the day's videos are spent - so a spent card can say "watch" rather
+        /// than "tomorrow".
+        /// </summary>
+        static bool VideoWouldHelp()
+        {
+            var status = Ads.RewardedAds.Status(Ads.AdPlacement.ChallengePlay);
+            return status.State == Ads.AdOfferState.Ready || status.State == Ads.AdOfferState.NotLoaded;
         }
 
         /// <summary>The hardware key goes back to the hub, which is the only way in.</summary>
@@ -284,7 +304,7 @@ namespace GlimmerGrove
                                  TextAnchor.MiddleCenter, pillSize, default, default, 0f, 0f), 16);
 
                 // Built last, so it sits over the plate's own tap area (see WaitingBadge).
-                _badge = WaitingBadge.Disc(t);
+                _badge = WaitingBadge.ListTopRight(t, Pal.Gold);
             }
 
             public void Bind(int index)
@@ -304,12 +324,17 @@ namespace GlimmerGrove
                 _level.text = level == null ? string.Empty
                             : Loc.Format("ui.challenges.today_level", Loc.Get(level.NameKey));
 
-                int left = ChallengeLedger.PlaysLeft(_genre);
+                // The genre's own plays over its allowance, and the advert plays any genre may take
+                // beside them - two numbers, because "12 / 10" would read as a fault.
+                int own = ChallengeLedger.OwnPlaysLeft(_genre);
+                int bonus = ChallengeLedger.AdPlaysLeft;
+                int left = own + bonus;
                 int allowance = ChallengeLedger.Allowance;
                 bool open = left > 0 && level != null;
 
-                _plays.text = open ? Loc.Format("ui.challenges.plays_left", left, allowance)
-                                   : Loc.Get("ui.challenges.spent");
+                _plays.text = !open ? Loc.Get(level != null && VideoWouldHelp() ? "ui.challenges.spent_watch" : "ui.challenges.spent")
+                            : bonus > 0 ? Loc.Format("ui.challenges.plays_left_bonus", own, allowance, bonus)
+                            : Loc.Format("ui.challenges.plays_left", own, allowance);
                 _playsPlate.color = open ? Pal.A(Pal.Gold, .95f) : new Color(.62f, .66f, .74f, .95f);
 
                 _button.Interactable = true;

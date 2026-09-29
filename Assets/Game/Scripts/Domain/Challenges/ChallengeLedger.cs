@@ -162,6 +162,10 @@ namespace GlimmerGrove.Challenges
             // so the one thing that can take it back is the debit being refused - the season
             // pass's shape, for its reason (47o). The ledger says so by id; this is the listener.
             CurrencyLedger.SpendRejected += OnSpendRejected;
+
+            // A play an advert earned lands on its own clock - seconds after the video, when the
+            // server's count comes back - so a page drawing plays listens here for it.
+            ChallengeAdPlays.Changed += Raise;
         }
 
         // ------------------------------------------------------------- the day
@@ -259,11 +263,67 @@ namespace GlimmerGrove.Challenges
             return _today.TryGetValue(ChallengeGenres.NameOf(genre), out var row) ? row.Wins : 0;
         }
 
-        /// <summary>Plays of a genre still allowed today. Nought once the allowance is spent.</summary>
-        public static int PlaysLeft(ChallengeGenre genre)
+        /// <summary>
+        /// Plays of a genre still allowed today: what is left of the genre's own allowance, plus
+        /// the advert plays nobody has spent yet, which any genre may take. Nought once both are
+        /// gone.
+        /// </summary>
+        public static int PlaysLeft(ChallengeGenre genre) => OwnPlaysLeft(genre) + AdPlaysLeft;
+
+        /// <summary>What is left of a genre's own allowance today, the advert pool aside.</summary>
+        public static int OwnPlaysLeft(ChallengeGenre genre)
         {
             int left = Allowance - AttemptsToday(genre);
             return left > 0 ? left : 0;
+        }
+
+        // ------------------------------------------------------------- the advert pool
+        /// <summary>
+        /// Extra plays the <c>challenge_play</c> advert earned today, as the server counts them
+        /// (<see cref="ChallengeAdPlays"/>). One pool for every genre: the player picks the genre
+        /// by playing it.
+        /// </summary>
+        public static int AdPlays => ChallengeAdPlays.GrantedToday;
+
+        /// <summary>
+        /// Advert plays spent today: every play of a genre past its own allowance, summed over
+        /// the genres. Derived from the day's rows rather than stored, so it needs no field, no
+        /// merge rule and nothing to keep in step - and it reads a play committed on another
+        /// phone the moment the rows merge.
+        ///
+        /// <para>
+        /// <b>Counted in plays, where the server counts wins</b> - deliberately the stricter of
+        /// the two. The server pays a win past the allowance only while the day's advert count
+        /// covers it (<c>drawAdPlay</c>), and every win is a play, so a device that stops
+        /// offering when its plays reach the count can never have raised a claim the count does
+        /// not cover. A lost play spends the pool here and costs the server nothing, which is
+        /// the right way round.
+        /// </para>
+        /// </summary>
+        public static int AdPlaysUsed
+        {
+            get
+            {
+                Sync();
+                int allowance = Allowance;
+                int used = 0;
+                foreach (var pair in _today)
+                {
+                    int over = pair.Value.Attempts - allowance;
+                    if (over > 0) used += over;
+                }
+                return used;
+            }
+        }
+
+        /// <summary>Advert plays still to spend today, on any genre.</summary>
+        public static int AdPlaysLeft
+        {
+            get
+            {
+                int left = AdPlays - AdPlaysUsed;
+                return left > 0 ? left : 0;
+            }
         }
 
         /// <summary>Whether a genre can be dealt right now: it has rows and plays are left.</summary>
@@ -366,7 +426,9 @@ namespace GlimmerGrove.Challenges
                             "level", play.Definition.Id,
                             "slot", play.Slot,
                             "attempt", play.Attempt,
-                            "allowance", Allowance);
+                            "allowance", Allowance,
+                            "ad_plays", AdPlays,
+                            "ad_plays_used", AdPlaysUsed);
         }
 
         /// <summary>

@@ -551,10 +551,11 @@ def table():
     return json.load(open(FILE, encoding="utf-8"))
 
 
-def render_list(txt, canvas=(1080, 1920), held=None, spent=(), day_wins=None):
+def render_list(txt, canvas=(1080, 1920), held=None, spent=(), day_wins=None, bonus=0):
     """`DailyChallengesScreen` at rest: the band saying what the day allows with the crowned
     chest on it, one card per genre with today's level, the plays left and the badge. `held`
-    names a deal to draw as running, `spent` the genres drawn with no play left. Every caption
+    names a deal to draw as running, `spent` the genres drawn with no play of their own left,
+    and `bonus` the advert plays still to spend, which every genre shows beside its own. Every caption
     is measured against its box and printed, because `UIKit.Shrinkable` truncates silently
     (invariant 19n)."""
     global W
@@ -620,27 +621,35 @@ def render_list(txt, canvas=(1080, 1920), held=None, spent=(), day_wins=None):
         floors.append(("level %s" % genre,
                        K.shrunk_left(sheet, today, px + TEXT_X, ccy + 82 - 23, 420, 46, 26, 16, fill=K.GOLD, outline=2), 16))
 
-        is_spent = genre in spent
-        left_plays = 0 if is_spent else allowance - (day_wins or {}).get(genre, 0)
+        own_spent = genre in spent
+        left_plays = 0 if own_spent else allowance - (day_wins or {}).get(genre, 0)
+        is_spent = own_spent and bonus <= 0
         pill_w, pill_h = 290, 66
         pill_cx = px + PLATE_W - 26 - pill_w / 2
         pill_cy = ccy + 82
         K.paste(sheet, K.round_rect(pill_w, pill_h, 24, (158, 168, 189) if is_spent else K.GOLD, .95), pill_cx, pill_cy)
         if is_spent:
-            caption = txt("ui.challenges.spent")
+            # A spent card points at the video while the advert is offered (`VideoWouldHelp`);
+            # the mirror draws the morning, when none of the day's videos is watched yet.
+            caption = txt("ui.challenges.spent_watch" if ad_play_offer() else "ui.challenges.spent")
+        elif bonus > 0:
+            caption = (txt("ui.challenges.plays_left_bonus").replace("{0}", str(left_plays))
+                       .replace("{1}", str(allowance)).replace("{2}", str(bonus)))
         else:
             caption = txt("ui.challenges.plays_left").replace("{0}", str(left_plays)).replace("{1}", str(allowance))
         floors.append(("pill %s" % genre, K.shrunk(sheet, caption, pill_cx, pill_cy, pill_w - 24, pill_h - 8, 26, 16,
                                                    fill=K.INK, outline=0), 16))
 
+        left_plays += bonus
         if not is_spent and left_plays > 0:
-            # WaitingBadge.Disc: a 66 gold disc, a dark rim, the number, on the plate's top-right.
-            bx, by = px + PLATE_W - 30, ccy - PLATE_H / 2 + 28
-            disc = Image.new("RGBA", (66, 66), (0, 0, 0, 0))
-            ImageDraw.Draw(disc).ellipse([0, 0, 65, 65], fill=(*K.GOLD, 255))
-            ImageDraw.Draw(disc).ellipse([0, 0, 65, 65], outline=(41, 31, 10, 242), width=7)
-            K.paste(sheet, disc, bx, by)
-            K.text(sheet, str(left_plays), bx, by, 36, fill=K.INK, outline=0)
+            # WaitingBadge.ListTopRight: the gold starburst, a touch smaller than the hub's,
+            # with a white +N over a black outline, on the plate's top-right.
+            bx, by = px + PLATE_W - 46, ccy - PLATE_H / 2 + 44
+            scale = 1.08
+            size = round(104 * scale)
+            K.paste(sheet, K.glow(round(190 * scale), 2.0, K.GOLD, .40), bx, by)
+            K.paste(sheet, K.tint(K.skin("Hud/burst", size, size), K.GOLD).rotate(8, resample=Image.BICUBIC), bx, by)
+            K.text(sheet, "+%d" % left_plays, bx, by - 2 * scale, round(30 * scale), fill=(255, 255, 255), outline=2)
 
     K.navbar(sheet, "home")
 
@@ -669,7 +678,47 @@ def price_key(sheet, caption, cx, cy, w, h, size):
     return px
 
 
-def render_deals(txt, canvas=(1080, 1920), held=None):
+AD_KEY_SIZE, AD_KEY_FLOOR = 36, 24
+
+
+def key_fit(caption):
+    """`UIKit.Squeeze` on the advert key: the size the caption settles at on one line in the
+    label's room (the key less 40), and the uniform scale applied past the floor - 1.0 when none."""
+    room = KEY_W - 40
+    size = AD_KEY_SIZE
+    while size > AD_KEY_FLOOR and K.font(size).getlength(caption) > room:
+        size -= 1
+    wide = K.font(size).getlength(caption)
+    return size, (room / wide if wide > room else 1.0)
+
+
+def fit_key(sheet, caption, cx, cy):
+    """Draws the key's caption as `Squeeze` leaves it: shrunk, then scaled if it has to be."""
+    size, scale = key_fit(caption)
+    if scale >= 1.0:
+        K.text(sheet, caption, cx, cy, size, outline=3)
+        return
+    # Drawn whole on a canvas as wide as the line needs, then scaled and centred - the line is
+    # wider than the pill by definition here, so a canvas the pill's size would clip it first.
+    w = int(K.font(size).getlength(caption)) + 40
+    h = size * 3
+    layer = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    K.text(layer, caption, w / 2, h / 2, size, outline=3)
+    small = layer.resize((max(1, int(w * scale)), max(1, int(h * scale))), Image.LANCZOS)
+    K.paste(sheet, small, cx, cy)
+
+
+def ad_play_offer():
+    """`challenge_play` off progression.json's ads block: (plays a view, views a day), or None
+    when the table does not carry it - which takes the row off the sheet, as it does on a device."""
+    progression = json.loads((REPO / "Assets/StreamingAssets/Content/progression.json").read_text(encoding="utf-8"))
+    for placement in (progression.get("ads") or {}).get("placements") or []:
+        if placement.get("id") == "challenge_play":
+            return placement.get("amount", 0), placement.get("dailyCap", 0)
+    return None
+
+
+def render_deals(txt, canvas=(1080, 1920), held=None, ad_left=None):
     """`ChallengeTierOverlay` at rest, on `VictoryFrame`: the scrim, the fan and bloom, the
     green window with the crown and banner over it, the free line, one row per shipped deal
     with its stone, its name, its line and its key, and DONE at the foot. `held` names the deal
@@ -690,7 +739,10 @@ def render_deals(txt, canvas=(1080, 1920), held=None):
     deal = next((x for x in tiers if x["id"] == held), None) if held else None
     floors = []
 
-    rows_h = len(tiers) * (ROW_H + ROW_GAP) - (ROW_GAP if tiers else 0)
+    # The advert row (`ChallengeTierOverlay.BuildAdRow`) stands first when the table offers it.
+    ad = ad_play_offer()
+    row_count = len(tiers) + (1 if ad else 0)
+    rows_h = row_count * (ROW_H + ROW_GAP) - (ROW_GAP if row_count else 0)
     panel_h = ROWS_TOP + rows_h + TAIL + FOOT_H
 
     # `VictoryFrame.MakeFit`: the block is scaled to the screen, crest included.
@@ -728,6 +780,45 @@ def render_deals(txt, canvas=(1080, 1920), held=None):
                                          fill=(255, 245, 224), outline=2), 20))
 
     y = panel_top + ROWS_TOP + ROW_H / 2
+
+    if ad:
+        cap = ad[1]
+        left_today = cap if ad_left is None else max(0, min(cap, ad_left))
+        K.paste(block, K.round_rect(ROW_W, ROW_H, 28, (0, 0, 0), .32), bcx, y)
+        K.paste(block, K.round_rect(ROW_W, ROW_H, 28, K.MINT, .42, width=3), bcx, y)
+        left = bcx - ROW_W / 2
+
+        # The owner's picture, in a landscape box (`AdArtSize`, 168 x 140), with the stones' halo.
+        K.paste(block, K.glow(int(STONE_SIZE * 1.9), 2.2, (255, 116, 212), .18), left + STONE_X, y)
+        if (K.UI / "challenge_ad_play.png").exists():
+            K.paste(block, K.fit(K.load("challenge_ad_play")[0], (168, 140)), left + STONE_X, y)
+
+        floors.append(("name ad", K.shrunk_left(block, txt("ui.challenges.ad_name"), left + ROW_TEXT_X, y - 60 - 33,
+                                                ROW_TEXT_W, 66, 52, 28, fill=K.CREAM, outline=3), 28))
+        floors.append(("line ad", K.shrunk_left(block, txt("ui.challenges.ad_line"), left + ROW_TEXT_X, y + 20 - 42,
+                                                ROW_TEXT_W, 84, 32, 20, fill=(255, 245, 224), outline=2), 20))
+        note = txt("ui.challenges.ad_left").replace("{0}", str(left_today)).replace("{1}", str(cap))
+        floors.append(("left ad", K.shrunk_left(block, note, left + ROW_TEXT_X, y + 92 - 20, ROW_TEXT_W, 40, 24, 14,
+                                                fill=K.MINT, outline=2), 14))
+
+        key_cx = bcx + ROW_W / 2 - KEY_INSET - KEY_W / 2
+        K.paste(block, K.skin("btn_green", KEY_W, KEY_H), key_cx, y)
+        caption = txt("ui.ads.watch") if left_today > 0 else txt("ui.ads.btn_cap")
+        # No glyph on this key (`ChallengeTierOverlay.BuildAdRow` says why), and it is fitted by
+        # `UIKit.OneLine(_adKey, 24)`: one line from 36 down to 24, then scaled to the room.
+        fit_key(block, caption, key_cx, y - 4)
+
+        # Every caption the key says in turn, measured: the one drawn is only the resting state,
+        # and the loading line is the one that ran off the pill on a device (2026-09-28).
+        for what in ("ui.ads.watch", "ui.ads.btn_loading", "ui.ads.btn_opening", "ui.ads.btn_cap"):
+            said = txt(what).upper()
+            size, scale = key_fit(said)
+            floors.append(("key ad %s" % what.split(".")[-1], size, AD_KEY_FLOOR - 1))
+            if scale < 1.0:
+                print("  key ad: '%s' is scaled to %.2f past its floor of %d to stay on the pill"
+                      % (said, scale, AD_KEY_FLOOR))
+        y += ROW_H + ROW_GAP
+
     for rung, tier in enumerate(tiers, 1):
         is_held = deal is not None and tier["id"] == deal["id"]
         under = deal is not None and deal["plays"] >= tier["plays"] and not is_held
@@ -785,8 +876,8 @@ def render_deals(txt, canvas=(1080, 1920), held=None):
     for what, got, floor in floors:
         flag = "  <- AT ITS FLOOR: the string is too long for its box" if got <= floor else ""
         print("  %-16s settled at %2d (floor %d)%s" % (what, got, floor, flag))
-    print("  deals: %d row(s), held %s, panel %.0f tall (+%.0f crest) fitted at %.2f on %dx%d"
-          % (len(tiers), held or "-", panel_h, CREST_REACH, fit, W, H))
+    print("  deals: %d row(s)%s, held %s, panel %.0f tall (+%.0f crest) fitted at %.2f on %dx%d"
+          % (len(tiers), " and the advert row" if ad else "", held or "-", panel_h, CREST_REACH, fit, W, H))
     return sheet
 
 
@@ -830,6 +921,8 @@ def main():
     ap.add_argument("--deals", action="store_true", help="the deal sheet (ChallengeTierOverlay) rather than a board")
     ap.add_argument("--held", help="with --list or --deals: a deal id drawn as running")
     ap.add_argument("--spent", default="", help="with --list: genres drawn with no play left, comma-separated")
+    ap.add_argument("--bonus", type=int, default=0, help="with --list: advert plays still to spend, shared by every genre")
+    ap.add_argument("--videos-left", type=int, help="with --deals: the day's challenge_play videos not yet watched")
     ap.add_argument("--midgame", action="store_true", help="a Pairs board with a third of its pairs claimed and one card up")
     args = ap.parse_args()
     global MIDGAME
@@ -839,14 +932,14 @@ def main():
     canvas = (1080, 2340) if args.phone else (1080, 1920)
 
     if args.deals:
-        sheet = render_deals(txt, canvas, args.held)
+        sheet = render_deals(txt, canvas, args.held, ad_left=args.videos_left)
         path = Path(args.out) if args.out else REPO / "out" / "challenges_deals.png"
         path.parent.mkdir(parents=True, exist_ok=True)
         sheet.save(path)
         print("wrote %s  %dx%d  - look at it" % (path, sheet.width, sheet.height))
         return
     if args.list:
-        sheet = render_list(txt, canvas, args.held, [g for g in args.spent.split(",") if g])
+        sheet = render_list(txt, canvas, args.held, [g for g in args.spent.split(",") if g], bonus=args.bonus)
         path = Path(args.out) if args.out else REPO / "out" / "challenges_list.png"
         path.parent.mkdir(parents=True, exist_ok=True)
         sheet.save(path)

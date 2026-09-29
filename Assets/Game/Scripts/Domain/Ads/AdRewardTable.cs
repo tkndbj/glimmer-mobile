@@ -215,6 +215,11 @@ namespace GlimmerGrove.Ads
             // two blocks is how they come to disagree. The daily cap is generous because the
             // binding limit is meant to be the cooldown, not the allowance.
             new AdOffer(AdPlacement.XpBoost, ChestDropKind.XpBoost, 2, 6),
+
+            // One play a view, ten views a day: at most ten extra challenge plays, shared by
+            // every genre. The cap binds on the server as well as here (`challengeAds`), because
+            // a won play is a coin claim and the server bounds the claim by this count.
+            new AdOffer(AdPlacement.ChallengePlay, ChestDropKind.ChallengePlay, 1, 10),
         }, BonusWheel.Default);
 
         static AdRewardTable Build(int cooldownSeconds, AdOffer[] offers, BonusWheel wheel)
@@ -336,6 +341,19 @@ namespace GlimmerGrove.Ads
             {
                 problems.Add($"ads placement '{dto.id}' pays '{dto.kind}', which is spent " +
                              "inside a run; nothing is offered from inside one");
+                return false;
+            }
+
+            // A challenge play is paid by its own placement and that placement pays nothing else.
+            // The server reads the kind off the published table to decide whether a callback
+            // raises the day's play count, so a play on another placement would be counted by
+            // nobody, and coins on this one would be paid for a view the page sold as a play.
+            bool playKind = kind == ChestDropKind.ChallengePlay;
+            bool playPlacement = string.Equals(dto.id, AdPlacement.ChallengePlay, StringComparison.Ordinal);
+            if (playKind != playPlacement)
+            {
+                problems.Add($"ads placement '{dto.id}' pays '{dto.kind}'; a challenge play is paid by " +
+                             $"'{AdPlacement.ChallengePlay}' alone, and that placement pays nothing else");
                 return false;
             }
 

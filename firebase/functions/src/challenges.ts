@@ -418,3 +418,153 @@ export function challengeGrant(
   if (!known || claim.win > allowance || config.coins <= 0) return { amount: 0, allowance, known };
   return { amount: config.coins, allowance, known };
 }
+
+// --------------------------------------------------------------------------- the advert pool
+/**
+ * The plays the `challenge_play` advert earned on one day, and which past-the-allowance wins
+ * have been paid out of them.
+ *
+ * <p>
+ * **Counted where the network's signed callback lands** (`adReward`), because a won play is a
+ * coin claim and a play the device granted for itself would be one this server could not bound
+ * (invariant 10d). `granted` rises by one per confirmed view up to the published daily cap;
+ * `drawn` holds, per genre, the win ordinals this server paid *because* of the pool.
+ * </p>
+ * <p>
+ * **The ordinals, not a count, and that is what keeps a later deal honest.** Awards reach this
+ * server before debits (a sync's order), so a deal bought offline arrives *after* the wins it
+ * allowed - and a win paid out of the pool a moment earlier would then be counted against it for
+ * the rest of the day. Holding the ordinals lets every judgement recount the pool against the
+ * allowance as it stands now (`adPlaysDrawn`): an ordinal the deal has since covered no longer
+ * spends a play.
+ * </p>
+ */
+export interface ChallengeAdDay {
+  granted: number;
+  drawn: Record<string, number[]>;
+}
+
+/** Day key (as a string, because it is a map key on the document) → that day's pool. */
+export type ChallengeAdDays = Record<string, ChallengeAdDay>;
+
+/** Mirrors `AdRules.MaxDailyCap`: no day's pool holds more than this, whatever the config says. */
+export const MAX_AD_PLAYS_PER_DAY = 30;
+
+/**
+ * Reads the pool off a wallet, keeping only the days a claim can still name.
+ *
+ * A claim is refused outside {@link MAX_CHALLENGE_DAYS_BEHIND} days, so an older day can never
+ * be asked about again and keeping it would grow the document for the life of the account. The
+ * rest is held to shape: a day key, a count inside the ceiling, and per genre a short list of
+ * distinct positive ordinals - never longer than the day's count, because each one spent a play.
+ */
+export function readChallengeAds(raw: unknown, today: number): ChallengeAdDays {
+  const days: ChallengeAdDays = {};
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return days;
+
+  for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+    const day = strictInt(key);
+    if (day === null || day < today - MAX_CHALLENGE_DAYS_BEHIND || day > today + MAX_CHALLENGE_DAYS_AHEAD) continue;
+    if (!value || typeof value !== "object" || Array.isArray(value)) continue;
+
+    const entry = value as { granted?: unknown; drawn?: unknown };
+    const granted = whole(entry.granted, MAX_AD_PLAYS_PER_DAY);
+    if (granted === null || granted <= 0) continue;
+
+    const drawn: Record<string, number[]> = {};
+    if (entry.drawn && typeof entry.drawn === "object" && !Array.isArray(entry.drawn)) {
+      for (const [genre, list] of Object.entries(entry.drawn as Record<string, unknown>)) {
+        if (!KEY.test(genre) || !Array.isArray(list)) continue;
+        const wins = [...new Set(list.filter((n): n is number =>
+          typeof n === "number" && Number.isInteger(n) && n > 0 && n <= HARD_MAX_CLEARS))]
+          .sort((a, b) => a - b)
+          .slice(0, MAX_AD_PLAYS_PER_DAY);
+        if (wins.length > 0) drawn[genre] = wins;
+      }
+    }
+
+    days[String(day)] = { granted, drawn };
+  }
+
+  return days;
+}
+
+/** The plays the adverts earned on `day`. */
+export function adPlaysOn(days: ChallengeAdDays, day: number): number {
+  return days[String(day)]?.granted ?? 0;
+}
+
+/**
+ * How many of a day's advert plays are spent, recounted against the allowance as it stands:
+ * every drawn ordinal still past it, over every genre.
+ */
+export function adPlaysDrawn(entry: ChallengeAdDay | undefined, allowance: number): number {
+  if (!entry) return 0;
+  let spent = 0;
+  for (const wins of Object.values(entry.drawn)) {
+    for (const win of wins) if (win > allowance) spent++;
+  }
+  return spent;
+}
+
+/**
+ * Counts one confirmed view: `plays` more on `today`, never past `cap` (itself held under
+ * {@link MAX_AD_PLAYS_PER_DAY}). Answers the pool to write back and how many plays were really
+ * added - nought once the day is full, which the caller records all the same so a retried
+ * callback collides with the grant document rather than being asked again.
+ */
+export function grantAdPlays(
+  days: ChallengeAdDays,
+  today: number,
+  plays: number,
+  cap: number
+): { days: ChallengeAdDays; added: number } {
+  const ceiling = Math.min(Math.max(0, Math.floor(cap)), MAX_AD_PLAYS_PER_DAY);
+  const current = days[String(today)] ?? { granted: 0, drawn: {} };
+  const granted = Math.min(ceiling, current.granted + Math.max(0, Math.floor(plays)));
+  const added = Math.max(0, granted - current.granted);
+
+  const next: ChallengeAdDays = {};
+  for (const [key, entry] of Object.entries(days)) {
+    const day = Number(key);
+    if (day >= today - MAX_CHALLENGE_DAYS_BEHIND) next[key] = entry;
+  }
+  if (granted > 0) next[String(today)] = { granted, drawn: current.drawn };
+
+  return { days: next, added };
+}
+
+/**
+ * Pays a win past the day's allowance out of the day's advert plays, or answers null when the
+ * pool cannot cover it.
+ *
+ * <p>
+ * **The client counts plays and this counts wins, and that is the safe way round.** The device
+ * stops offering once its plays past the allowance reach the day's count (`AdPlaysUsed`), and
+ * every win is a play, so a claim it raised is always inside what this allows. A lost play
+ * spends the device's pool and nothing here.
+ * </p>
+ * <p>
+ * An ordinal already drawn is covered again rather than drawn twice: the grant document makes a
+ * resubmission collide before it reaches here, so this is only ever the belt to that brace.
+ * </p>
+ */
+export function drawAdPlay(
+  days: ChallengeAdDays,
+  claim: ChallengeClaim,
+  allowance: number
+): ChallengeAdDays | null {
+  if (claim.win <= allowance) return days;
+
+  const key = String(claim.dayKey);
+  const entry = days[key];
+  if (!entry) return null;
+
+  const held = entry.drawn[claim.genre] ?? [];
+  if (held.includes(claim.win)) return days;
+
+  if (adPlaysDrawn(entry, allowance) + 1 > entry.granted) return null;
+
+  const drawn = { ...entry.drawn, [claim.genre]: [...held, claim.win].sort((a, b) => a - b) };
+  return { ...days, [key]: { granted: entry.granted, drawn } };
+}

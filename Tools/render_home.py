@@ -46,7 +46,6 @@ ROW_TOP, ROW_HEIGHT, ROW_WIDTH, ROW_GAP = 570.0, 300.0, 960.0, 24.0
 # `hero` that drew it here.
 FOOT_GAP = 14.0
 CHALLENGE_W, CHALLENGE_H = 960.0, 280.0
-BANNER_INSET = 8.0
 PLAY_W, PLAY_H = 620.0, 178.0
 LINE_W = 960.0
 LINE_CELL, LINE_CELL_GAP, LINE_STAR = 168.0, 20.0, 20.0
@@ -108,12 +107,9 @@ def top_bar(sheet, waiting=True):
     K.paste(sheet, K.tint(K.skin("Hud/fill", 432 * .62, 22), K.MINT),
             tx + 4 + 432 * .62 / 2, cy + 24)
 
-    # the milestone badge, top right of the card - `WaitingBadge.BurstTopRight(card, Pal.Mint)`
+    # the milestone badge, top right of the card - `WaitingBadge.GiftTopRight(card, Pal.Mint)`
     if waiting:
-        bx, by = card_cx + 620 / 2 - 46, cy - 138 / 2 + 44
-        K.paste(sheet, K.glow(190, 2.0, K.MINT, .40), bx, by)
-        K.paste(sheet, K.tint(K.skin("Hud/burst", 104, 104), K.MINT).rotate(8, resample=Image.BICUBIC), bx, by)
-        K.text(sheet, "+1", bx, by - 2, 30, fill=(43, 28, 5), outline=0)
+        hub_burst(sheet, card_cx + 620 / 2 - 46, cy - 138 / 2 + 44, K.MINT, None, scale=1.0)
 
     for i, glyph in enumerate(("ic_gear", "ic_info")):
         bx = W - (92 if i == 0 else 208)
@@ -269,8 +265,27 @@ def tasks(sheet, ready=("silver",), verbose=False):
     K.text(sheet, txt("ui.tasks.title").upper(), W / 2, top + 26, 27, fill=K.GOLD)
 
     # the starburst, top left
-    K.paste(sheet, K.tint(K.skin("Hud/burst", 104, 104), K.GOLD), W / 2 - ROW_WIDTH / 2 + 46, top + 44)
-    K.text(sheet, "+2", W / 2 - ROW_WIDTH / 2 + 46, top + 42, 30, fill=(43, 28, 5), outline=0)
+    hub_burst(sheet, W / 2 - ROW_WIDTH / 2 + 46, top + 44, K.GOLD, None)
+
+
+# `WaitingBadge.HubScale` - the four feature boxes wear the starburst a fifth larger.
+HUB_SCALE = 1.2
+
+
+def hub_burst(sheet, bx, by, tint, n, scale=HUB_SCALE, inked=False):
+    """`WaitingBadge.HubTopLeft` / `HubTopRight` - the kit's starburst with a `+N`; with `n`
+    None it is `WaitingBadge.Gift`, carrying the shop's gift box instead of a count."""
+    size = round(104 * scale)
+    K.paste(sheet, K.glow(round(190 * scale), 2.0, tint, .40), bx, by)
+    K.paste(sheet, K.tint(K.skin("Hud/burst", size, size), tint).rotate(8, resample=Image.BICUBIC), bx, by)
+    if n is None:
+        gift = Image.open(K.UI / "ic_gift.png").convert("RGBA")
+        K.paste(sheet, K.fit(gift, (round(66 * scale), round(66 * scale))), bx, by)
+    else:
+        if inked:  # `WaitingBadge.WhiteInk`: white over a black outline
+            K.text(sheet, f"+{n}", bx, by - 2 * scale, round(30 * scale), fill=(255, 255, 255), outline=2)
+        else:
+            K.text(sheet, f"+{n}", bx, by - 2 * scale, round(30 * scale), fill=(43, 28, 5), outline=0)
 
 
 def feature(sheet, paired=True, waiting=True):
@@ -346,10 +361,10 @@ def feature(sheet, paired=True, waiting=True):
         K.text(sheet, title, cx - bw / 2 + 30, cy - ROW_HEIGHT / 2 + 36, 25,
                fill=colour, outline=0, anchor="l")
         if meta:
-            # `FeatureHeader`'s `badged` inset: 70 units of clearance so a countdown never
-            # runs under the corner disc — and nothing, so it does not sit oddly short, on a
+            # `FeatureHeader`'s `badged` inset: 100 units of clearance so a countdown never
+            # runs under the corner starburst — and nothing, so it does not sit oddly short, on a
             # box with no disc on it.
-            K.text(sheet, meta, cx + bw / 2 - 30 - (70 if badge else 0),
+            K.text(sheet, meta, cx + bw / 2 - 26 - (100 if badge else 0),
                    cy - ROW_HEIGHT / 2 + 36, 23,
                    fill=(255, 242, 214), outline=0, anchor="r")
 
@@ -405,12 +420,9 @@ def feature(sheet, paired=True, waiting=True):
                 d.ellipse([px - 9, sy - 9, px + 9, sy + 9],
                           fill=K.GOLD if rung <= .58 else (120, 130, 140), outline=(3, 5, 10), width=3)
 
-        # the gold count badge, pinned to the corner and hanging off it
+        # the hub's gift starburst, pinned to the corner (`WaitingBadge.HubGiftTopRight`)
         if badge:
-            bxx, byy = cx + bw / 2 - 30, cy - ROW_HEIGHT / 2 + 28
-            d.ellipse([bxx - 33, byy - 33, bxx + 33, byy + 33], fill=K.GOLD,
-                      outline=(41, 31, 10), width=7)
-            K.text(sheet, str(badge), bxx, byy, 36, fill=(43, 28, 5), outline=0)
+            hub_burst(sheet, cx + bw / 2 - 46, cy - ROW_HEIGHT / 2 + 44, K.GOLD, None)
 
 
 def loadout(sheet):
@@ -491,51 +503,18 @@ def _starter_ward():
 
 
 def challenges(sheet):
-    """`HomeScreen.BuildChallenges` — the painted banner filling the kit's blue plate.
+    """`HomeScreen.BuildChallenges` - the keeper ladder's BUY LEVEL key (`Skins.Gem`, violet),
+    `CHALLENGE_KEY_H` tall at the foot of its `CHALLENGE_H` slot, with the owner's turret scene
+    standing on its right and rising out of its top, and `ui.challenges.title` on two lines on
+    its left. The shine is a tween and is not drawn."""
+    slot_bottom = H - (CHALLENGE_Y - CHALLENGE_H / 2)
+    ky, size, room = K.door_key(sheet, W / 2, slot_bottom, CHALLENGE_W, CHALLENGE_H,
+                                txt("ui.challenges.title").upper(), "challenge_door")
+    left = W / 2 - CHALLENGE_W / 2
+    print("  challenges key: caption settled at %d (floor 26) in %d of room" % (size, room))
 
-    **The plate is a window**: a `Mask` cut from the plate's own sprite, with the picture
-    cover-fitted behind it. Mirrored here with the sprite's alpha as the mask, which is the same
-    question uGUI asks — so this is the only picture that can answer whether the crop lands
-    somewhere the art can afford, and whether the rounded corners still read.
-
-    **The door is open** (2026-09-22): the card is interactable whenever `challenges.json`
-    offers a slate, so the plate is drawn in its own colour and no tag is drawn over it. The
-    shut state - the plate greyed by `Btn.Interactable` - is what a build with no slate shows,
-    and it is not drawn here because it is not the state a player is meant to meet.
-
-    The shine is deliberately absent: `Sheen` is a tween, and this file draws furniture rather
-    than motion (its own header says so).
-    """
-    cy = H - CHALLENGE_Y
-    K.paste(sheet, K.skin("Hud/plate_blue", CHALLENGE_W, CHALLENGE_H), W / 2, cy)
-
-    try:
-        art = Image.open(K.UI / "challenges.png").convert("RGBA")
-    except FileNotFoundError:
-        return
-
-    # The window sits `BANNER_INSET` inside the plate, so the plate's own bevel is drawn all
-    # the way round rather than being covered by the picture.
-    ww, wh = CHALLENGE_W - BANNER_INSET * 2, CHALLENGE_H - BANNER_INSET * 2
-
-    # Cover: the larger of the two scales that fill an axis, which on this art is width-led.
-    cover = max(ww / art.width, wh / art.height)
-    art = art.resize((max(1, int(art.width * cover)), max(1, int(art.height * cover))),
-                     Image.LANCZOS)
-
-    window = Image.new("RGBA", (int(ww), int(wh)), (0, 0, 0, 0))
-    window.alpha_composite(art, ((window.width - art.width) // 2,
-                                 (window.height - art.height) // 2))
-
-    # The mask is the window's own copy of the plate sprite, nine-sliced at the window's size —
-    # so its corner radius is the plate's (a nine-slice never stretches a corner) and the
-    # picture is cut to the same curve, one inset in.
-    mask = K.skin("Hud/plate_blue", ww, wh)
-    window.putalpha(Image.fromarray(
-        (_np().array(window.split()[3], dtype="uint16")
-         * _np().array(mask.split()[3], dtype="uint16") // 255).astype("uint8")))
-
-    K.paste(sheet, window, W / 2, cy)
+    # the badge, top left, in orange (`WaitingBadge.HubInkedTopLeft(card, Pal.Amber)`)
+    hub_burst(sheet, left + 46, ky - K.DOOR_KEY_H / 2 + 44, K.AMBER, 2, inked=True)
 
 
 def _np():

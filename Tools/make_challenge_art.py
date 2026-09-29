@@ -48,6 +48,21 @@ CUTS = {
     "glade": "glade",
 }
 
+# The owner's other pictures for the challenge pages, keyed by the address the game asks for
+# rather than by a genre spelling. `playad` is the advert row's picture on the deal sheet
+# (2026-09-28, `ChallengeArt.AdPlay`): one video that buys one play, drawn at the deal stones'
+# size, so it is cut at their edge.
+EXTRA_CUTS = {
+    "playad": ("challenge_ad_play", 256),
+    # The hub's Daily Challenges key (2026-09-28, `HomeScreen.BuildChallenges`): the owner's
+    # turret scene, standing on the right of the key at about 440 wide and rising out of it.
+    "challenge2": ("challenge_door", 768),
+    # The Refer a Friend door on the profile and the shop (2026-09-28, `DoorKey`): the owner's
+    # chest hoard, standing on the right of the same key. Not a challenge picture, but the same
+    # door and the same cut, so it lives beside its twin rather than in a tool of its own.
+    "refer2": ("refer_door", 768),
+}
+
 # The deal furniture, cut from the same licensed Layer Lab pack the shop's money ladders come
 # from (`make_shop_art.PACK`, outside the repo — see the art-source-packs note). The band on
 # the list page wears the crowned chest on its left, at the owner's instruction on 2026-09-23,
@@ -137,7 +152,10 @@ def same(path, art):
 
 
 def draw(source):
-    return {address(spelling): cut(load(source, stem)) for stem, spelling in CUTS.items()}
+    made = {address(spelling): cut(load(source, stem)) for stem, spelling in CUTS.items()}
+    for stem, (name, edge) in EXTRA_CUTS.items():
+        made[name] = cut(load(source, stem), edge)
+    return made
 
 
 def spellings():
@@ -155,7 +173,7 @@ def contact():
     # Two rows: the genre marks on the card's plate at the card's size, and the deal furniture
     # on the band's plate at the band's size, so each is judged on the ground it is seen on.
     rows = [([address(s) for s in spellings()], "Hud/plate_blue", 216),
-            (list(PACK_CUTS.values()), "Hud/plate_navy", 140)]
+            (list(PACK_CUTS.values()) + [name for name, _ in EXTRA_CUTS.values()], "Hud/plate_navy", 140)]
     cols = max(len(names) for names, _, _ in rows)
     sheet = Image.new("RGBA", (cols * (cell + pad) + pad, len(rows) * (cell + pad) + pad), (0, 0, 0, 0))
 
@@ -180,7 +198,7 @@ def contact():
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--source", help="folder holding pairs.png, merge.png, push.png and glade.png")
+    ap.add_argument("--source", help="folder holding pairs.png, merge.png, push.png, glade.png and playad.png")
     ap.add_argument("--check", action="store_true",
                     help="prove the shipped PNGs are what this cuts from --source, and change nothing")
     ap.add_argument("--contact", action="store_true", help="draw the sheet and change nothing")
@@ -202,7 +220,8 @@ def main():
         # `--source` plus a clean `git status`; the pack's cuts are proved (or written) here.
         made = dict(pack)
         if args.check:
-            wanted = [address(s) for s in spellings()] + list(PACK_CUTS.values())
+            wanted = ([address(s) for s in spellings()] + list(PACK_CUTS.values())
+                      + [name for name, _ in EXTRA_CUTS.values()])
             missing = [name for name in wanted if not (OUT / (name + ".png")).exists()]
             if missing:
                 sys.exit("missing on disk: " + ", ".join(missing))

@@ -303,32 +303,6 @@ namespace GlimmerGrove
             return (RectTransform)card.transform;
         }
 
-        /// <summary>
-        /// The same card, as a button: one plate that <em>is</em> the control rather than a
-        /// plate with a control on it.
-        ///
-        /// <para>
-        /// The hub's second door is built this way (<c>HomeScreen.BuildChallenges</c>) and this
-        /// is the second of them, so the two go through one shape. A card carrying a painted
-        /// banner has nothing on it to press <em>except</em> the banner, and a key drawn inside
-        /// one would be a smaller target for the only thing the card does - the tasks page's
-        /// rule about a row being its own button, one size up.
-        /// </para>
-        /// </summary>
-        Btn SectionKey(string name, float height, int order, Action tap)
-        {
-            var card = UIKit.Button(name, _stack, Art.S("Ui/" + Skins.PlateBlue),
-                                    new Vector2(CardWidth, height), new Vector2(.5f, 1f),
-                                    new Vector2(0f, _cursor - height * .5f), tap);
-
-            // A press-scale that squashes a plate this wide reads as the screen flinching
-            // rather than as a key going down. The hub holds its banner's at the same number.
-            card.PressScale = .985f;
-
-            Seated(card.transform, height, order);
-            return card;
-        }
-
         /// <summary>Moves the cursor past a card just built, and plays its entrance.</summary>
         void Seated(Transform card, float height, int order)
         {
@@ -493,18 +467,15 @@ namespace GlimmerGrove
         }
 
         // ----------------------------------------------------------- inviting
-        /// <summary>How far inside the plate the banner's window sits. See BuildInviteCard.</summary>
-        const float BannerInset = 8f;
-
         /// <summary>
-        /// How far the banner swells and how long it takes. See <see cref="BuildInviteCard"/>
-        /// for why the picture is cut oversize by exactly this much.
+        /// The invite door's slot: the key plus the room its picture rises into. The chest hoard
+        /// is wide, so <see cref="DoorKey"/> draws it at <see cref="DoorKey.ArtWidest"/> and it
+        /// stands about 190 tall - 200 holds it, as on the shop.
         /// </summary>
-        const float BannerSwell = .03f, BannerPeriod = 3.6f;
+        const float InviteH = 200f;
 
         /// <summary>
-        /// The way to the invite page, on the one page in the game about who the player is: one
-        /// painted banner that is the whole card and the whole button.
+        /// The way to the invite page, on the one page in the game about who the player is.
         ///
         /// <para>
         /// A card rather than a row in Settings for the account card's reason: a feature that
@@ -514,24 +485,10 @@ namespace GlimmerGrove
         /// pay would be the one lie this page could tell about money.
         /// </para>
         /// <para>
-        /// <b>It is the hub's second door, built twice</b> - the same plate, the same window
-        /// cut with a <c>Mask</c>, the same cover-fit, at the owner's instruction. What it
-        /// costs is the one thing that shape costs: the words are <em>painted into the
-        /// picture</em>, so this control and the hub's are the only two in the game outside
-        /// invariant 6, and neither is translated until its art is re-cut. The title, the
-        /// milestone sentence and the key it replaced were all loc keys; the page it opens
-        /// still says all three.
-        /// </para>
-        /// <para>
-        /// <b>The swell is why the picture is cut <em>smaller</em> than the window, which is the
-        /// opposite of what it looks like it should be.</b> The banner's ground is transparent -
-        /// the plate behind it is the card's colour - so a trough that pulls the art inside the
-        /// window exposes nothing; what the swell can do is push it <em>out</em>, and at the
-        /// crest a cover-fitted banner runs 29 units past the window and the mask takes a slice
-        /// off the leaves at each end. Cut at <c>1 / (1 + swell)</c> the crest is exactly the
-        /// window, so the sides are never cut at any point in the breath and the mask is there
-        /// to guarantee it rather than to do it. Invariant 44a's rule in a second costume: size
-        /// a thing for the size it has to draw at, not for the size it sits at.
+        /// <b>It is the hub's Daily Challenges door, built by the same <see cref="DoorKey"/></b>
+        /// at the owner's instruction on 2026-09-28: the violet BUY LEVEL pill, "Refer a Friend"
+        /// on two lines (a loc key, so the door is translated now), and the owner's chest hoard
+        /// rising out of it on the right. The shop's invite band is the same key.
         /// </para>
         /// </summary>
         void BuildInviteCard()
@@ -539,50 +496,17 @@ namespace GlimmerGrove
             _inviteBadge = null;
             if (!ReferralLedger.IsAvailable) return;
 
-            const float InviteH = 300f;
-            var card = SectionKey("Invite", InviteH, 3, () => Flow.Go<ReferralScreen>());
+            // The shared door key (`DoorKey`), the hub's Daily Challenges door with the owner's
+            // chest hoard on it, at the foot of a slot the stack advances past like any card.
+            var card = DoorKey.Build("Invite", _stack, CardWidth, InviteH, new Vector2(.5f, 1f),
+                                     new Vector2(0f, _cursor - InviteH * .5f), "ui.referral.door", "refer_door",
+                                     () => Flow.Go<ReferralScreen>());
+            Seated(card.transform, InviteH, 3);
+            Sheen.Attach((RectTransform)card.transform, 3.1f);
 
-            // The window. `showMaskGraphic` is false, so the plate is not painted twice; the
-            // near-nothing alpha is what writes the stencil. See `HomeScreen.BuildChallenges`
-            // for why this plate is deliberately *not* graded uncompressed to cut it.
-            var clip = UIKit.Img("Clip", card.transform, Art.S("Ui/" + Skins.PlateBlue),
-                                 new Color(1f, 1f, 1f, .004f));
-            var crt = (RectTransform)clip.transform;
-            UIKit.StretchTo(crt, BannerInset, BannerInset, BannerInset, BannerInset);
-            clip.type = Image.Type.Sliced;
-            clip.raycastTarget = false;
-            clip.gameObject.AddComponent<Mask>().showMaskGraphic = false;
-
-            var banner = Art.S("Ui/refer");
-            float aspect = banner != null && banner.rect.height > 0f
-                         ? banner.rect.width / banner.rect.height
-                         : 0f;
-
-            // Cover: the larger of the two scales that fill an axis, then taken back down so
-            // the *crest* of the breath is what fits. An address that has not arrived leaves the
-            // plate plain rather than drawing a white bar (invariant 7b).
-            float windowW = CardWidth - BannerInset * 2f, windowH = InviteH - BannerInset * 2f;
-            float drawnW = windowW, drawnH = aspect > 0f ? drawnW / aspect : 0f;
-            if (drawnH < windowH) { drawnH = windowH; drawnW = drawnH * aspect; }
-
-            float seated = 1f / (1f + BannerSwell);
-            drawnW *= seated;
-            drawnH *= seated;
-
-            var art = UIKit.Img("Banner", crt, banner, Color.white,
-                                new Vector2(drawnW, drawnH), new Vector2(.5f, .5f), Vector2.zero);
-            art.raycastTarget = false;
-            art.enabled = aspect > 0f;
-
-            // Slow, and on the picture rather than on the card: a plate that breathed would
-            // move against the two cards it is stacked between, where a picture breathing
-            // behind a fixed window is the card's own light moving.
-            if (art.enabled) Tween.Breathe(art.transform, BannerSwell, BannerPeriod);
-
-            // The count of chests waiting behind this door, on its top-right corner - the
-            // hub's task pack's starburst, so the two doors that lead to chests say "there is
-            // something here" in one voice. Built after the window so the mask cannot cut it.
-            _inviteBadge = WaitingBadge.BurstTopRight(card.transform);
+            // The chests waiting behind this door, on its top-left corner as on the hub's
+            // Daily Challenges door - the hub's gift starburst, built last so it draws over the key.
+            _inviteBadge = WaitingBadge.HubGiftTopLeft(card.transform, Pal.Gold);
             PaintInvite();
 
             // The count moves when a stranger finishes a chapter, which no event on this

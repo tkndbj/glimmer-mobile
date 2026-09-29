@@ -1943,6 +1943,14 @@ namespace GlimmerGrove.Cloud
                     state.KeeperBought = (int)ReadLong(entry, "keeperBought");
                 }
 
+                // The day's advert-earned challenge plays, presence first for the same reason.
+                if (entry.TryGetValue("challengeAdPlays", out object adPlays) && adPlays != null)
+                {
+                    state.CarriesChallengeAds = true;
+                    state.ChallengeAdPlays = (int)ReadLong(entry, "challengeAdPlays");
+                    state.ChallengeAdDay = (int)ReadLong(entry, "challengeAdDay");
+                }
+
                 states.Add(state);
             }
 

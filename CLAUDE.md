@@ -1130,6 +1130,15 @@ is where they are written down, not what they mean.
    rows of cell. The hill is tuned up to 1.3x the route, not the glade's .7x, because a Push
    route seats its gems late and a hill shorter than the first seat is lost before any turret
    can fire.
+56p. **An advert play is counted by the server and offered by the device only once counted**
+   (`challenge_play`, 2026-09-28). A won play is a coin claim, so a play the device granted at
+   the video's end would be a win the server could not bound (10d). The callback raises a per-day
+   count on the wallet (`challengeAds`, capped at the published `dailyCap`, the one cap the
+   seeder publishes); the reply carries it back to `ChallengeAdPlays`, a device-local per-account
+   copy kept off the save for `EndlessCoins`' reason. It is **one pool for every genre**:
+   the device spends it in *plays* past a genre's allowance, and `drawAdPlay` pays a win past
+   the allowance out of it, holding the drawn **ordinals** so a deal landing later gives its play
+   back. Its own daily cap, outside the shared cooldown, and never a chest drop (`IsAdOnly`).
 
 ### Art credits
 
@@ -1877,6 +1886,18 @@ half is `Assets/Game/Scripts/Cloud/`, Firebase Unity SDK
 on a fresh clone).
 
 ## Owed
+
+**The daily challenges' advert play (56p, 2026-09-28): the server half is live, the client half
+needs a build.** Done: `adReward`, `claimAwards` and `getWallet` deployed by name, all three
+artifacts' `lib/` byte-identical to the local build; re-seeded, with the four config documents
+diffed against a snapshot - exactly three fields added (`ads.placements.challenge_play` kind,
+amount, `dailyCap`), nothing else moved; `smoke-test.mjs` 169/169 live. No rules release (the
+wallet is server-only). The Editor's importer addressed `Ui/challenge_ad_play` on import (7a).
+The two LevelPlay units (`dyu6bempmr8jje3c` / `wklicdx1zdrdjx3y`) and both apps'
+`challenge_play` placements were made by the owner. **Owed: `Audit Addresses`, the full EditMode
+suite (an offline full run was stopped for memory; every touched fixture passed alone), and a
+device**: the play should arrive a few seconds after the video, and a third win of a genre
+should be paid.
 
 **Three fixes of 2026-09-28 have been in the Editor's test runner and never on a device.**
 (1) Every modal draws on a canvas of its own (`Flow.Isolate`, `ModalCanvasTests` 4/4 in the

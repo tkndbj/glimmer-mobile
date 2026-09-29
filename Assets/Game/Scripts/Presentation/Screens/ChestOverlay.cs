@@ -226,6 +226,11 @@ namespace GlimmerGrove
                 // callers size their box against; see `AdOfferOverlay.BuildRewardCard`.
                 case ChestDropKind.XpBoost: return "Ui/ic_xp_boost";
 
+                // The advert's own picture (a video that buys a play), resident in `AssetManifest`
+                // for the deal sheet. No chest pays one (`ChestDropKinds.IsAdOnly`), but a kind
+                // that can be handed to a player names a picture wherever it might be drawn.
+                case ChestDropKind.ChallengePlay: return "Ui/challenge_ad_play";
+
                 // The item's own picture, which is the one the action bar and the shelf already
                 // draw (`UtilityItem.Art`) - and `AssetManifest` names all four, so it is
                 // resident rather than scoped and cannot arrive late.

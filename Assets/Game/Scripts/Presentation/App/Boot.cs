@@ -83,6 +83,9 @@ namespace GlimmerGrove
             if (_started) return;
             _started = true;
 
+            // Optimized Frame Pacing (androidUseSwappy) is off on purpose: with it
+            // on, a 120 Hz phone ran this 60 at a flat 30 fps once the touch boost
+            // let the panel fall to 60 Hz (S25 Ultra, 2026-09-28).
             Application.targetFrameRate = 60;
             QualitySettings.vSyncCount = 0;
             UnityEngine.Screen.sleepTimeout = SleepTimeout.NeverSleep;

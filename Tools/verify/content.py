@@ -2741,9 +2741,31 @@ def check_challenges(keys, warnings):
     n = len(genres_shipped)
     top_tier = max(tiers, key=lambda t: t.get("plays", 0)) if tiers else None
     top_plays = top_tier.get("plays", 0) if top_tier else free
-    if top_plays * n * coins > MAX_DAILY_COINS:
-        errors.append(f"the largest deal could pay {top_plays * n * coins:,} credits a day across {n} genre(s), "
+
+    # The advert that buys a play (`challenge_play`, in progression.json's ads block because it
+    # is an advert): its plays are shared by every genre, so a day's most is the largest deal's
+    # plays in every genre plus the advert's cap once. Mirrors `AdRewardTable.TryReadOffer`'s
+    # pairing rule - the placement pays that kind and the kind is paid by that placement alone -
+    # which the server relies on to decide whether a callback raises the day's play count.
+    progression_path = os.path.join(ROOT, "progression.json")
+    ad_plays = 0
+    if os.path.exists(progression_path):
+        progression = json.load(open(progression_path, encoding="utf-8"))
+        for placement in (progression.get("ads") or {}).get("placements") or []:
+            pid, kind = placement.get("id"), placement.get("kind")
+            if (pid == "challenge_play") != (kind == "challenge_play"):
+                errors.append(f"ads placement '{pid}' pays '{kind}'; a challenge play is paid by "
+                              "'challenge_play' alone, and that placement pays nothing else")
+            elif pid == "challenge_play":
+                ad_plays = (placement.get("amount") or 0) * (placement.get("dailyCap") or 0)
+
+    if (top_plays * n + ad_plays) * coins > MAX_DAILY_COINS:
+        errors.append(f"the largest deal and the day's advert plays could pay "
+                      f"{(top_plays * n + ad_plays) * coins:,} credits a day across {n} genre(s), "
                       f"above the {MAX_DAILY_COINS:,} ceiling (ChallengeLimits.MaxDailyCoins)")
+    if ad_plays:
+        print(f"       adverts: up to {ad_plays} extra play(s) a day, any genre, "
+              f"at most {ad_plays * coins:,} credits and {ad_plays * xp:,} XP on top of any deal")
     print(f"       allowance: {free} free play(s) of each of {n} genre(s) a day; "
           f"a clear pays {coins} credits and {xp} XP, up to {max_clears:,} lifetime clears "
           f"({max_clears * xp:,} XP)")

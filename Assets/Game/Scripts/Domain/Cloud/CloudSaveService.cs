@@ -1435,6 +1435,11 @@ namespace GlimmerGrove.Cloud
                 // The keeper levels bought (invariant 57), for the same reason once more: the
                 // wallet document is the entitlement and every device has to agree about it.
                 Progression.KeeperLedger.ApplyServerState(state.CarriesKeeper, state.KeeperBought);
+
+                // The day's advert-earned challenge plays: the server counts them as the network's
+                // callbacks land, and the device offers exactly that many.
+                Challenges.ChallengeAdPlays.ApplyServerState(
+                    state.CarriesChallengeAds, state.ChallengeAdDay, state.ChallengeAdPlays);
             }
 
             SaveService.MarkDirty();
@@ -1447,24 +1452,33 @@ namespace GlimmerGrove.Cloud
         static double _adGrantClock;
 
         /// <summary>
-        /// A rewarded video paid <paramref name="currency"/> and the server is about to grant
-        /// it. Watches the wallet until the grant lands, so the balance moves on screen without
-        /// waiting for the next sync. Cheap and safe to call from anywhere on the main thread.
+        /// A rewarded video paid <paramref name="grant"/> - a currency, or
+        /// <see cref="Challenges.ChallengeAdPlays.WatchKey"/> for a challenge play - and the
+        /// server is about to grant it. Watches the wallet until the grant lands, so it arrives
+        /// on screen without waiting for the next sync. Cheap and safe to call from anywhere on
+        /// the main thread.
         /// </summary>
-        public static void AwaitAdGrant(string currency)
+        public static void AwaitAdGrant(string grant)
         {
-            if (!IsAvailable || string.IsNullOrEmpty(currency)) return;
+            if (!IsAvailable || string.IsNullOrEmpty(grant)) return;
 
-            _adGrant.Expect(currency, Wallet.Ledger(currency).GrantedBaseline,
-                            CloudState.UserId, _adGrantClock);
+            _adGrant.Expect(grant, GrantedFor(grant), CloudState.UserId, _adGrantClock);
         }
+
+        /// <summary>
+        /// The figure a server grant raises, for whatever <see cref="AwaitAdGrant"/> was asked to
+        /// wait on: a ledger's granted baseline, or the day's challenge plays.
+        /// </summary>
+        static long GrantedFor(string grant)
+            => grant == Challenges.ChallengeAdPlays.WatchKey
+             ? Challenges.ChallengeAdPlays.GrantedToday
+             : Wallet.Ledger(grant).GrantedBaseline;
 
         static void PumpAdGrant(float deltaSeconds)
         {
             _adGrantClock += deltaSeconds;
 
-            switch (_adGrant.Next(_adGrantClock, CloudState.UserId,
-                                  currency => Wallet.Ledger(currency).GrantedBaseline))
+            switch (_adGrant.Next(_adGrantClock, CloudState.UserId, GrantedFor))
             {
                 case AdGrantWatch.Step.Attach:
                     StopWalletListener();

@@ -157,6 +157,32 @@ namespace GlimmerGrove.Daily
         /// </para>
         /// </summary>
         XpBoost,
+
+        /// <summary>
+        /// One extra daily challenge play, today only, of whichever genre the player chooses.
+        /// Paid by the <c>challenge_play</c> advert and by nothing else.
+        ///
+        /// <para>
+        /// <b>Added last, for <see cref="XpBoost"/>'s reason</b>: the values of this enum key the
+        /// daily chest vectors, so a member anywhere but the end rerolls every unopened chest.
+        /// </para>
+        /// <para>
+        /// <b>Not currency, and still granted by the server</b> - the one kind that is both. A
+        /// play pays nothing by itself, but a <em>won</em> play is a coin claim, and the server
+        /// bounds every coin claim by the plays it knows the day allowed (56i). So the play is
+        /// counted where the network's signed callback lands, on the wallet document no client
+        /// can write (<c>challengeAds</c>, <c>challenges.ts</c>), and the device offers only what
+        /// that count has come back as (<c>ChallengeAdPlays</c>). Granting it here and now, as a
+        /// heart is granted, would offer a play whose win the server then refuses - coins shown
+        /// and taken back (45d). See <see cref="ChestDropKinds.IsServerGranted"/>.
+        /// </para>
+        /// <para>
+        /// <b>Never a chest drop</b>: a chest is opened on another day than the play it would pay,
+        /// and a play is a day's. Both chest readers refuse it by name
+        /// (<see cref="ChestDropKinds.IsAdOnly"/>).
+        /// </para>
+        /// </summary>
+        ChallengePlay,
     }
 
     /// <summary>
@@ -176,6 +202,7 @@ namespace GlimmerGrove.Daily
         public const string Hints = "hints";
         public const string XpBoost = "xp_boost";
         public const string Utility = "utility";
+        public const string ChallengePlay = "challenge_play";
 
         public static ChestDropKind Parse(string id)
         {
@@ -187,6 +214,7 @@ namespace GlimmerGrove.Daily
             if (string.Equals(id, Hints, StringComparison.Ordinal)) return ChestDropKind.Hints;
             if (string.Equals(id, XpBoost, StringComparison.Ordinal)) return ChestDropKind.XpBoost;
             if (string.Equals(id, Utility, StringComparison.Ordinal)) return ChestDropKind.Utility;
+            if (string.Equals(id, ChallengePlay, StringComparison.Ordinal)) return ChestDropKind.ChallengePlay;
             return ChestDropKind.None;
         }
 
@@ -202,9 +230,25 @@ namespace GlimmerGrove.Daily
                 case ChestDropKind.Hints: return Hints;
                 case ChestDropKind.Utility: return Utility;
                 case ChestDropKind.XpBoost: return XpBoost;
+                case ChestDropKind.ChallengePlay: return ChallengePlay;
                 default: return string.Empty;
             }
         }
+
+        /// <summary>
+        /// Which kinds only the server can grant: currency, and a challenge play. What an advert
+        /// paying one of these needs is an account for the network's callback to name, which is
+        /// <c>RewardedAds.CanAdjudicate</c>'s question. Asked in one place so the gate and the
+        /// grant cannot come to different conclusions.
+        /// </summary>
+        public static bool IsServerGranted(ChestDropKind kind)
+            => IsCurrency(kind) || kind == ChestDropKind.ChallengePlay;
+
+        /// <summary>
+        /// Whether a kind may only be paid by an advert, and so never by a chest band. A challenge
+        /// play is a day's, and a chest is opened on a day of its own choosing.
+        /// </summary>
+        public static bool IsAdOnly(ChestDropKind kind) => kind == ChestDropKind.ChallengePlay;
 
         /// <summary>
         /// Which kinds are currency, and therefore adjudicated by the server rather than

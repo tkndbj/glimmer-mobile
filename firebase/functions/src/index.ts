@@ -24,7 +24,7 @@ import {
   MAX_AWARDS_PER_CALL, MAX_SPENDS_PER_CALL, PATHS, REGION,
 } from "./config";
 import {
-  ackBody, adCurrencyOf, adCurrencyValue, adGrantId,
+  ackBody, adChallengePlays, adCurrencyOf, adCurrencyValue, adGrantId,
   callbackQuery, isAdGrantId, usableAdConfig, verifyAdCallback,
 } from "./ads";
 import {
@@ -86,7 +86,7 @@ import {
 import type { EndlessClaim } from "./endless";
 import {
   MAX_CHALLENGE_DAYS_AHEAD, MAX_CHALLENGE_DAYS_BEHIND, MAX_TIER_DAYS_AHEAD, MAX_TIER_DAYS_BEHIND,
-  challengeGrant, challengeXp, dealPrice, holdTier, isChallengeGrantId,
+  challengeGrant, challengeXp, dealPrice, drawAdPlay, grantAdPlays, holdTier, isChallengeGrantId,
   parseChallengeClaim, parseChallengeTierSpendId, usableChallengesConfig,
 } from "./challenges";
 import type { ChallengeClaim } from "./challenges";
@@ -926,6 +926,7 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
         }
 
         const priced = challengeGrant(challenges!, award.claim, state.challengeTiers ?? {});
+        let fromAdPool = false;
 
         if (priced.amount <= 0) {
           // A genre the file does not ship, or a rate of nought: nothing to pay, ever.
@@ -937,6 +938,17 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
             continue;
           }
 
+          // A win past the day's own allowance, paid out of the plays the `challenge_play`
+          // advert earned that day - recounted against the allowance as it stands, so a deal
+          // that has since covered an earlier win gives its play back. See `drawAdPlay`.
+          const drawn = drawAdPlay(state.challengeAds ?? {}, award.claim, priced.allowance);
+          if (drawn) {
+            state.challengeAds = drawn;
+            fromAdPool = true;
+          }
+        }
+
+        if (priced.amount <= 0 && !fromAdPool) {
           // A win past the day's allowance. A sync sends awards before debits, so the deal that
           // covers it may be one call behind — left unconfirmed while the claim's day is still
           // inside the window, refused once it has closed (by then the debit has landed, or the
@@ -956,8 +968,8 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
           continue;
         }
 
-        amount = priced.amount;
-        detail = { genre: award.claim.genre, win: award.claim.win, allowance: priced.allowance };
+        amount = fromAdPool ? challenges!.coins : priced.amount;
+        detail = { genre: award.claim.genre, win: award.claim.win, allowance: priced.allowance, adPlay: fromAdPool };
       } else if (award.kind === "milestone") {
         // Re-rolled from the account and the level, and paid only at or below the level the
         // save and the wallet prove together. Left unconfirmed on every other answer, because
@@ -1172,6 +1184,47 @@ export const adReward = onRequest(
             uid: verdict.uid, placement: verdict.placement,
           });
           throw new Error("no ads config");     // 503, so the network retries after seeding
+        }
+
+        // A daily challenge play. Not currency, and still counted here: a won play is a coin
+        // claim, and `claimAwards` pays a win past the day's own allowance only out of the plays
+        // this callback has counted (`drawAdPlay`). The grant document is written even when the
+        // day is already full, so a retried callback collides with it instead of being asked
+        // again; the wallet is written so the count and the grant land in one transaction.
+        const play = adChallengePlays(ads, verdict.placement);
+        if (play) {
+          const today = todayKey(Date.now());
+          const counted = grantAdPlays(state.challengeAds ?? {}, today, play.plays, play.cap);
+
+          transaction.set(grantRef, {
+            kind: "challenge_play",
+            plays: counted.added,
+            day: today,
+            reason: "rewarded_ad",
+            placement: verdict.placement,
+            eventId: verdict.eventId,
+            network: typeof query.adNetwork === "string" ? query.adNetwork.slice(0, 64) : "",
+            grantedAt: FieldValue.serverTimestamp(),
+          });
+
+          state.challengeAds = counted.days;
+          transaction.set(walletRef, { ...state, updatedAt: FieldValue.serverTimestamp() });
+
+          if (counted.added <= 0) {
+            logger.warn("a challenge play callback past the day's cap; counted nothing", {
+              uid: verdict.uid, eventId: verdict.eventId, day: today, cap: play.cap,
+            });
+          }
+          return 0;
+        }
+
+        // A placement named `challenge_play` whose published entry is not a play with a cap is a
+        // config seeded badly; the view must not be thrown away, so it is retried after a seed.
+        if (verdict.placement === "challenge_play") {
+          logger.error("config/progression publishes no usable challenge_play placement; cannot count a confirmed view", {
+            uid: verdict.uid, eventId: verdict.eventId,
+          });
+          throw new Error("no challenge_play config");
         }
 
         const currency = adCurrencyOf(ads, verdict.placement);

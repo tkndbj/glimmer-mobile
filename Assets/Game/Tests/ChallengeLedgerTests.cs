@@ -39,6 +39,11 @@ namespace GlimmerGrove.Tests
         {
             _clock = new FixedClock { Now = Noon };
             GameClock.Set(_clock);
+
+            // The advert pool is read off the device store (`ChallengeAdPlays`), which is
+            // PlayerPrefs in the game - a native call that would turn this whole fixture into
+            // "needs the Editor" offline. A fresh memory store is also a fresh day's count.
+            EndlessCoins.UseStore(new EndlessCoins.MemoryStore());
             ChallengeLedger.ResetForTests();
             Wallet.LoadFrom(new SaveFileDto());
             ProgressionStore.LoadFrom(new SaveFileDto());
@@ -50,6 +55,7 @@ namespace GlimmerGrove.Tests
         public void Restore()
         {
             GameClock.Set(new DeviceClock());
+            EndlessCoins.UseStore(null);
             ChallengeLedger.ResetForTests();
             ChallengeRules.Reset();
             Wallet.LoadFrom(new SaveFileDto());
@@ -229,7 +235,8 @@ namespace GlimmerGrove.Tests
 
             string root = System.IO.Path.Combine(TestJson.RepoRoot(), "Assets", "Game", "Art", "Ui");
 
-            var keys = new List<string> { ChallengeArt.ChestKey };
+            // The advert row's picture rides with the deal furniture: it is drawn on the same sheet.
+            var keys = new List<string> { ChallengeArt.ChestKey, ChallengeArt.AdPlayKey };
             int shipped = ChallengeTests.Shipped().Tiers.Count;
             Assert.Greater(shipped, 0, "the shipped file sells no deal; the band's key would hide and this test would hold nothing");
             for (int rung = 1; rung <= shipped; rung++) keys.Add(ChallengeArt.DealMarkKey(rung));
@@ -350,6 +357,82 @@ namespace GlimmerGrove.Tests
             Assert.IsFalse(ChallengeLedger.CanPlay(ChallengeGenre.Pairs));
             Assert.IsNull(ChallengeLedger.Begin(ChallengeGenre.Pairs), "no third play for free");
             Assert.AreEqual(1, ChallengeLedger.ReadyCount);
+        }
+
+        // ------------------------------------------------------------------ the advert pool
+        /// <summary>
+        /// A play the advert earned is one pool for every genre: it is spent by whichever genre
+        /// runs past its own allowance first, and it is only there once the server's count
+        /// says so.
+        /// </summary>
+        [Test]
+        public void AnAdvertPlayIsOnePoolSpentByWhicheverGenreRunsOutFirst()
+        {
+            Assert.AreEqual(0, ChallengeLedger.AdPlays, "nothing is offered before the server has counted a view");
+
+            ChallengeAdPlays.ApplyServerState(true, Day, 2);
+            Assert.AreEqual(2, ChallengeLedger.AdPlays);
+            Assert.AreEqual(2 + 2, ChallengeLedger.PlaysLeft(ChallengeGenre.Pairs), "own plays and the pool together");
+            Assert.AreEqual(2, ChallengeLedger.OwnPlaysLeft(ChallengeGenre.Pairs));
+
+            // Two own plays, then one out of the pool.
+            for (int i = 0; i < 3; i++) ChallengeLedger.Lose(ChallengeLedger.Begin(ChallengeGenre.Pairs), 1);
+
+            Assert.AreEqual(0, ChallengeLedger.OwnPlaysLeft(ChallengeGenre.Pairs));
+            Assert.AreEqual(1, ChallengeLedger.AdPlaysUsed, "a play past the allowance is an advert play");
+            Assert.AreEqual(1, ChallengeLedger.PlaysLeft(ChallengeGenre.Pairs));
+            Assert.AreEqual(2 + 1, ChallengeLedger.PlaysLeft(ChallengeGenre.Merge), "the other genre sees the same pool, one lighter");
+
+            // The last pool play, taken by the other genre after its own two.
+            for (int i = 0; i < 3; i++) ChallengeLedger.Lose(ChallengeLedger.Begin(ChallengeGenre.Merge), 1);
+
+            Assert.AreEqual(0, ChallengeLedger.AdPlaysLeft);
+            Assert.IsFalse(ChallengeLedger.CanPlay(ChallengeGenre.Pairs));
+            Assert.IsFalse(ChallengeLedger.CanPlay(ChallengeGenre.Merge));
+            Assert.IsNull(ChallengeLedger.Begin(ChallengeGenre.Pairs), "no play past the server's count");
+        }
+
+        /// <summary>
+        /// A win out of the pool is claimed under the same id as any other win - the server tells
+        /// the two apart by the ordinal against the allowance - so the claim is the win's ordinal.
+        /// </summary>
+        [Test]
+        public void AWinOutOfThePoolIsClaimedAsTheNextOrdinal()
+        {
+            ChallengeAdPlays.ApplyServerState(true, Day, 1);
+
+            for (int i = 0; i < 2; i++) ChallengeLedger.Win(ChallengeLedger.Begin(ChallengeGenre.Pairs));
+            var third = ChallengeLedger.Begin(ChallengeGenre.Pairs);
+            Assert.IsNotNull(third, "the pool deals a third play");
+            ChallengeLedger.Win(third);
+
+            string id = GrantEntry.ChallengeClearId(Day, "pairs", 3, Currency.Credits);
+            Assert.IsTrue(Holds(Wallet.Ledger(Currency.Credits).PendingGrants, id), "the third win is claimed as win 3 of the day");
+        }
+
+        /// <summary>
+        /// The server's count only ever moves up within a day - a reply taken before the last
+        /// callback landed must not take back a play already shown - and yesterday's count is
+        /// nothing today. A reply that never carried the field changes nothing.
+        /// </summary>
+        [Test]
+        public void TheServersCountMovesUpWithinADayAndResetsWithIt()
+        {
+            ChallengeAdPlays.ApplyServerState(true, Day, 3);
+            ChallengeAdPlays.ApplyServerState(true, Day, 1);
+            Assert.AreEqual(3, ChallengeAdPlays.GrantedToday, "an older, smaller reply is ignored");
+
+            ChallengeAdPlays.ApplyServerState(false, Day, 9);
+            Assert.AreEqual(3, ChallengeAdPlays.GrantedToday, "a reply without the field is not an answer");
+
+            ChallengeAdPlays.ApplyServerState(true, Day, 99);
+            Assert.AreEqual(Ads.AdRules.MaxDailyCap, ChallengeAdPlays.GrantedToday, "held to the structural ceiling");
+
+            _clock.Now = Noon + DailyRules.SecondsPerDay;
+            Assert.AreEqual(0, ChallengeAdPlays.GrantedToday, "yesterday's plays are not today's");
+
+            ChallengeAdPlays.ApplyServerState(true, Day, 5);
+            Assert.AreEqual(0, ChallengeAdPlays.GrantedToday, "an older day's reply never lands on a newer day");
         }
 
         [Test]

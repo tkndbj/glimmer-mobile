@@ -812,7 +812,9 @@ namespace GlimmerGrove
             if (said == _ribbonSaid) return;
 
             _ribbonSaid = said;
-            UIKit.Arc(_ribbonArc, said, _ribbonFont, Pal.Sun, _ribbonRadius, 2.5f, 0f, 1f);
+            // White over a black outline (`Arc` inks every outline black), at the owner's
+            // instruction on 2026-09-28 - the same ink the challenge badges' counts wear.
+            UIKit.Arc(_ribbonArc, said, _ribbonFont, Color.white, _ribbonRadius, 2.5f, 0f, 1f);
         }
 
         void PaintSeal(string key)

@@ -302,6 +302,10 @@ namespace GlimmerGrove
             if (placementId == AdPlacement.CoinBonus) return "ui.ads.coins_title";
             if (placementId == AdPlacement.WinBonus) return "ui.ads.bonus_title";
             if (placementId == AdPlacement.XpBoost) return "ui.ads.xp_boost_title";
+
+            // Sold on the challenges' deal sheet rather than on this panel, and named all the
+            // same, so the day a door opens this panel for it the heading says what it pays.
+            if (placementId == AdPlacement.ChallengePlay) return "ui.ads.challenge_play_title";
             
 
             if (placementId == AdPlacement.HintRefill)
@@ -314,6 +318,7 @@ namespace GlimmerGrove
                 case ChestDropKind.Credits: return "ui.ads.coins_title";
                 case ChestDropKind.Hints: return "ui.ads.hints_title";
                 case ChestDropKind.XpBoost: return "ui.ads.xp_boost_title";
+                case ChestDropKind.ChallengePlay: return "ui.ads.challenge_play_title";
                 default: return "ui.ads.hearts_title";
             }
         }
@@ -336,6 +341,7 @@ namespace GlimmerGrove
                  ? ChestDropKind.Credits
              : placementId == AdPlacement.HintRefill ? ChestDropKind.Hints
              : placementId == AdPlacement.XpBoost ? ChestDropKind.XpBoost
+             : placementId == AdPlacement.ChallengePlay ? ChestDropKind.ChallengePlay
              : ChestDropKind.Hearts;
 
         // ------------------------------------------------------------- the prize

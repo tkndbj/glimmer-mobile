@@ -243,7 +243,7 @@ function buildProgressionConfig() {
       endless: readEndless(progression),
       xpBoost: readXpBoost(progression),
       keeperLevels: readKeeperLevels(progression),
-      challenges: readChallenges(),
+      challenges: readChallenges(progression),
       // Read before the calendar and before the streak, because both name chest tiers and
       // the seeder is the one place that can prove a named tier actually exists — a
       // season's ladder lives in the manifest, the streak's in progression.json, the tiers
@@ -854,7 +854,7 @@ function readEndless(progression) {
  * never be seeded apart; a file with no `challenges.json` at all publishes the built-in rates
  * with no deals and no genres, which leaves every coin claim unconfirmed rather than paid.
  */
-function readChallenges() {
+function readChallenges(progression) {
   // `ChallengeLimits`, mirrored.
   const DEFAULTS = { freePlays: 2, coins: 40, xp: 20, maxClears: 25000 };
   const MAX_FREE_PLAYS = 100, MAX_TIER_PLAYS = 1000, MAX_TIER_GEMS = 100000, MAX_TIER_DAYS = 365;
@@ -936,11 +936,15 @@ function readChallenges() {
 
   // The economy gate (56k): the largest deal's daily maximum across every genre is held under
   // a ceiling, so a genre or a rate added to the file cannot quietly out-earn the rest of the game.
+  // The advert plays (`challenge_play`, an advert and so in progression.json's ads block) are
+  // shared by every genre, so they add their cap once on top of the largest deal.
+  const playAd = (progression?.ads?.placements ?? []).find((p) => p?.id === "challenge_play");
+  const adPlays = playAd ? Math.floor(playAd.amount ?? 0) * Math.floor(playAd.dailyCap ?? 0) : 0;
   const topPlays = tiers.length ? Math.max(...tiers.map((t) => t.plays)) : freePlays;
-  const topDay = topPlays * genres.length * coins;
+  const topDay = (topPlays * genres.length + adPlays) * coins;
   if (topDay > MAX_DAILY_COINS) {
-    throw new Error(`the largest challenge deal could pay ${topDay} credits a day across ${genres.length} genre(s), ` +
-                    `above the ${MAX_DAILY_COINS} ceiling (ChallengeLimits.MaxDailyCoins)`);
+    throw new Error(`the largest challenge deal and the day's advert plays could pay ${topDay} credits a day ` +
+                    `across ${genres.length} genre(s), above the ${MAX_DAILY_COINS} ceiling (ChallengeLimits.MaxDailyCoins)`);
   }
 
   console.log(`  challenges: ${genres.length} genre(s), ${freePlays} free play(s) a day, ${tiers.length} deal(s), ` +
@@ -1000,8 +1004,8 @@ function readAds(progression) {
   // in functions/src/ads.ts. `run_time` stays in the kind list so a stale published config
   // is rejected by the rule below with a sentence naming the real problem, rather than by
   // "unknown reward kind", which reads like a typo.
-  const known = ["heart_refill", "coin_bonus", "win_bonus", "hint_refill", "xp_boost"];
-  const kinds = ["credits", "gems", "hearts", "heart_boost", "run_time", "hints", "xp_boost"];
+  const known = ["heart_refill", "coin_bonus", "win_bonus", "hint_refill", "xp_boost", "challenge_play"];
+  const kinds = ["credits", "gems", "hearts", "heart_boost", "run_time", "hints", "xp_boost", "challenge_play"];
 
   // Mirrors the same rule on the client (`AdRewardTable.TryReadOffer`). A kind spent inside
   // a run makes sense only on a placement offered from inside one, and nothing is any more:
@@ -1033,14 +1037,35 @@ function readAds(progression) {
       );
     }
 
+    // A challenge play is paid by its own placement and that placement pays nothing else
+    // (`AdRewardTable.TryReadOffer`): `adReward` reads the kind to decide whether a callback
+    // raises the day's play count, so any other pairing is a view counted by nobody.
+    if ((id === "challenge_play") !== (placement.kind === "challenge_play")) {
+      throw new Error(
+        `ads placement '${id}' pays '${placement.kind}'; a challenge play is paid by ` +
+        `'challenge_play' alone, and that placement pays nothing else`
+      );
+    }
+
     const amount = Math.floor(placement.amount ?? 0);
     if (!Number.isFinite(amount) || amount < 1) {
       throw new Error(`ads placement '${id}' pays ${placement.amount}; it must be at least 1`);
     }
 
-    // The daily cap is deliberately not published. It bounds what the client offers, and
-    // the server does not enforce it — an ad grant is already bounded by something far
-    // stronger, namely a signed callback from the ad network for every single view.
+    // The daily cap is published for `challenge_play` alone. Every other cap bounds only what
+    // the client offers, and the server has no reason to enforce it: each of those grants is
+    // already bounded by a signed callback per view and pays a flat figure. A challenge play is
+    // different - it widens the day's coin allowance - so the server counts it and stops at the
+    // cap, and a cap it was never told is a count it refuses to keep (`adChallengePlays`).
+    if (id === "challenge_play") {
+      const dailyCap = Math.floor(placement.dailyCap ?? 0);
+      if (!Number.isFinite(dailyCap) || dailyCap < 1 || dailyCap > 30) {
+        throw new Error(`ads placement 'challenge_play' has daily cap ${placement.dailyCap}; it must be 1..30 (AdRules.MaxDailyCap)`);
+      }
+      placements[id] = { kind: placement.kind, amount, dailyCap };
+      continue;
+    }
+
     placements[id] = { kind: placement.kind, amount };
   }
 

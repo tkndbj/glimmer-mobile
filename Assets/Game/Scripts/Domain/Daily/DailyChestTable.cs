@@ -421,6 +421,15 @@ namespace GlimmerGrove.Daily
                 return false;
             }
 
+            // Refused by name for the reason one up, said of a day: a challenge play is today's,
+            // and a chest is opened whenever its owner gets round to it.
+            if (ChestDropKinds.IsAdOnly(kind))
+            {
+                problems.Add($"{label} {role} pays '{dto.kind}', which only an advert may pay; " +
+                             "a challenge play is a day's, and a chest is opened on a day of its own");
+                return false;
+            }
+
             if (dto.min < 1 || dto.max < dto.min)
             {
                 problems.Add($"{label} {role} '{dto.kind}' has band " +

@@ -356,6 +356,10 @@ namespace GlimmerGrove.Ads
             // The daily cap still applies on top, and is the table's rather than this rule's.
             if (offer.Kind == ChestDropKind.XpBoost) return Progression.XpBoost.WatchedReady;
 
+            // A challenge play needs a challenge to spend it on. A file that deals no genre shuts
+            // the page's door, so the offer is withheld rather than sold for nothing.
+            if (offer.Kind == ChestDropKind.ChallengePlay) return Challenges.ChallengeRules.Table.Genres.Count > 0;
+
             return true;
         }
 
@@ -384,7 +388,7 @@ namespace GlimmerGrove.Ads
         /// </para>
         /// </summary>
         static bool CanAdjudicate(AdOffer offer)
-            => !offer.IsCurrency || CloudState.IsSignedIn || !CloudSaveService.IsAvailable;
+            => !ChestDropKinds.IsServerGranted(offer.Kind) || CloudState.IsSignedIn || !CloudSaveService.IsAvailable;
 
         /// <summary>
         /// Whether the shared cooldown applies to this offer.
@@ -411,8 +415,15 @@ namespace GlimmerGrove.Ads
         /// would exempt hearts as well. It is keyed on the one property that actually
         /// justifies the exemption - see <see cref="ChestDropKinds.IsTransient"/>.
         /// </para>
+        /// <para>
+        /// <b>A challenge play is the one other exemption</b>, at the owner's instruction on
+        /// 2026-09-28 that its videos be completely independent of every other: it has its own
+        /// daily allowance and neither waits on another placement's cooldown nor starts one. It
+        /// needs no pacing of its own either - the play it buys takes minutes to spend.
+        /// </para>
         /// </summary>
-        static bool Paced(AdOffer offer) => !ChestDropKinds.IsTransient(offer.Kind);
+        static bool Paced(AdOffer offer)
+            => !ChestDropKinds.IsTransient(offer.Kind) && offer.Kind != ChestDropKind.ChallengePlay;
 
         /// <summary>Seconds left before another ad may be offered. 0 when none.</summary>
         public static long CooldownRemaining()
@@ -550,6 +561,23 @@ namespace GlimmerGrove.Ads
             // it was the *correct* half of a pair that had drifted: the chest's had no hint
             // case at all. See BankedDrop.
             if (BankedDrop.Apply(drop)) return;
+
+            // A challenge play is counted by the server when the network's callback lands, and
+            // offered once the count comes back (`ChallengeAdPlays`) - so this asks for the
+            // answer and watches for it, exactly as a coin view does. With no backend at all
+            // there is nobody to count it and nobody to disagree, so it is granted here.
+            if (drop.Kind == ChestDropKind.ChallengePlay)
+            {
+                if (!CloudSaveService.IsAvailable)
+                {
+                    Challenges.ChallengeAdPlays.GrantLocally(drop.Amount);
+                    return;
+                }
+
+                CloudSaveService.BeginSync();
+                CloudSaveService.AwaitAdGrant(Challenges.ChallengeAdPlays.WatchKey);
+                return;
+            }
 
             if (drop.IsCurrency)
             {

@@ -69,6 +69,16 @@ namespace GlimmerGrove
         /// <summary>The address under <c>Ui/</c>, for the preload test to hold to the manifest.</summary>
         public static string DealMarkKey(int rung) => "challenge_deal_" + rung;
 
+        /// <summary>
+        /// The picture the deal sheet's advert row wears - a video that buys a play - cut from
+        /// the owner's artwork by <c>Tools/make_challenge_art.py</c>. Global for the stones'
+        /// reason. Null until the address is synced, which the row draws as nothing (7b).
+        /// </summary>
+        public static Sprite AdPlay() => AssetLibrary.Sprite(AssetManifest.Ui(AdPlayKey));
+
+        /// <summary>The address under <c>Ui/</c>; <c>AssetManifest.UiSprites</c> writes it out for <c>artnames.py</c>.</summary>
+        public const string AdPlayKey = "challenge_ad_play";
+
         static Sprite Piece(string key) => AssetLibrary.Sprite(AssetManifest.SiegeArt(key));
         static Sprite Own(string key) => AssetLibrary.Sprite(AssetManifest.ChallengePiece(key));
         static Sprite[] Reel(string key) => AssetLibrary.Frames(AssetManifest.SiegeArt(key));

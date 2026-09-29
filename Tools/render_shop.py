@@ -74,15 +74,6 @@ REFER_W, REFER_H, REFER_GAP = CELLW * COLUMNS, 200.0, 16.0
 REFER_ROW = REFER_GAP + REFER_H + REFER_GAP
 SHELF_TOP = HEADER + TABROW + REFER_ROW
 
-# `ProfileScreen.BannerInset` / `BannerSwell` - the window, and how far the picture swells
-# inside it. Drawn at the crest, which is the phase that decides whether anything is cut.
-BANNER_INSET, BANNER_SWELL = 8.0, .03
-
-# How much of the cover fit the picture actually draws at. 1.0 is the fit exactly — the
-# banner is the window and never a pixel past it — and anything under it pulls the picture
-# in, showing the plate as a frame and un-cropping the art at the same time.
-BANNER_FILL = 0.90
-
 # ProductCard / ProductCardBadges
 #: `ProductCardBadges.Face`, `.FaceShift`, `.FaceRise`, `.FaceTextWidth`, `.FaceTextHeight`,
 #: `.TextSize` and `.TextFloor`. The caption is `UIKit.Shrinkable` and **wraps**, so it is
@@ -238,7 +229,7 @@ def card(sheet, x, top, shelf, picture, amount, sub, price, badge, bonus=None, l
         rib = rib.rotate(RIBBON_TILT, Image.BICUBIC, expand=True)
         K.paste(sheet, rib, plate_cx - PLATEW / 2 + RIBBON_INSET, ptop + RIBBON_DROP)
         K.text(sheet, bonus, plate_cx - PLATEW / 2 + RIBBON_INSET,
-               ptop + RIBBON_DROP - 4, 25, fill=K.SUN, outline=3)
+               ptop + RIBBON_DROP - 4, 25, fill=(255, 255, 255), outline=3)
 
 
     if badge:
@@ -351,7 +342,7 @@ def ad_card(sheet, x, top, shelf, kind, amount):
     rib = rib.rotate(RIBBON_TILT, Image.BICUBIC, expand=True)
     K.paste(sheet, rib, plate_cx - PLATEW / 2 + RIBBON_INSET, ptop + RIBBON_DROP)
     K.text(sheet, "FREE", plate_cx - PLATEW / 2 + RIBBON_INSET, ptop + RIBBON_DROP - 4, 25,
-           fill=K.SUN, outline=3)
+           fill=(255, 255, 255), outline=3)
 
 
 def good_card(sheet, x, top, kind, amount, gems, good_id=""):
@@ -674,63 +665,27 @@ def kit_card(sheet, x, top, item, gems):
 
 
 def invite_banner(sheet, waiting=0):
-    """`ShopScreen.BuildInvite` - the profile's card, on the storefront.
+    """`ShopScreen.BuildInvite` - `DoorKey`: the violet BUY LEVEL pill, "Refer a Friend" on
+    two lines and the owner's chest hoard on the right, at the foot of its band.
 
-    The banner's ground is transparent, so the plate behind it is what the picture stands on;
-    it is cut at `1 / (1 + swell)` so the *crest* of the breath is what fits the window, and
-    drawn here at that crest, because the one phase worth a picture is the one that decides
-    whether the mask cuts anything.
-
-    `waiting` is `ReferralLedger.WaitingCount`: the chests behind the door, on the hub pack's
-    starburst at the band's top-right corner (`WaitingBadge.BurstTopRight`). Nought draws no
+    `waiting` is `ReferralLedger.WaitingCount`: the chests behind the door, on the hub's gift
+    starburst at the key's top-left corner (`WaitingBadge.HubGiftTopLeft`). Nought draws no
     badge, which is what the band says until a friend finishes.
     """
-    cy = HEADER + TABROW + REFER_GAP + REFER_H / 2
-    K.paste(sheet, K.skin("Hud/plate_blue", REFER_W, REFER_H), W / 2, cy)
+    slot_bottom = HEADER + TABROW + REFER_GAP + REFER_H
+    ky, size, room = K.door_key(sheet, W / 2, slot_bottom, REFER_W, REFER_H,
+                                txt("ui.referral.door").upper(), "refer_door")
+    if waiting > 0:
+        # `WaitingBadge.HubGiftTopLeft` - the hub's scale, 1.2.
+        bx, by, sc = W / 2 - REFER_W / 2 + 46, ky - K.DOOR_KEY_H / 2 + 44, 1.2
+        K.paste(sheet, K.glow(round(190 * sc), 2.0, K.GOLD, .40), bx, by)
+        K.paste(sheet, K.tint(K.skin("Hud/burst", round(104 * sc), round(104 * sc)), K.GOLD)
+                .rotate(8, Image.BICUBIC), bx, by)
+        K.paste(sheet, K.fit(Image.open(K.UI / "ic_gift.png").convert("RGBA"),
+                             (round(66 * sc), round(66 * sc))), bx, by)
 
-    try:
-        banner = Image.open(UI / "refer.png").convert("RGBA")
-    except FileNotFoundError:
-        waiting_badge(sheet, cy, waiting)
-        return
-
-    win_w, win_h = REFER_W - 2 * BANNER_INSET, REFER_H - 2 * BANNER_INSET
-    dw, dh = win_w, win_w / (banner.width / banner.height)
-    if dh < win_h:
-        dh, dw = win_h, win_h * (banner.width / banner.height)
-    # Cut so the crest fits, then drawn *at* the crest - which is the cover fit exactly, and
-    # that identity is the whole design: at the top of the breath the banner is precisely the
-    # window and never a pixel past it.
-    seated = 1 / (1 + BANNER_SWELL)
-    crest = 1 + BANNER_SWELL
-    art = banner.resize((max(1, int(dw * seated * crest * BANNER_FILL)),
-                         max(1, int(dh * seated * crest * BANNER_FILL))), Image.LANCZOS)
-
-    # The `Mask`: everything outside the inset window is cut.
-    layer = Image.new("RGBA", (int(REFER_W), int(REFER_H)), (0, 0, 0, 0))
-    layer.alpha_composite(art, ((layer.width - art.width) // 2, (layer.height - art.height) // 2))
-    window = Image.new("L", layer.size, 0)
-    ins = int(BANNER_INSET)
-    window.paste(255, (ins, ins, layer.width - ins, layer.height - ins))
-    layer.putalpha(Image.composite(layer.getchannel("A"), Image.new("L", layer.size, 0), window))
-    K.paste(sheet, layer, W / 2, cy)
-    waiting_badge(sheet, cy, waiting)
-
-    print("  invite banner: tabs end at %d, banner %d..%d, then the band (%d quiet, %d saying)"
-          % (HEADER + TABROW, HEADER + TABROW + REFER_GAP,
-             HEADER + TABROW + REFER_GAP + REFER_H, QUIET_ROW, SUMMARY_LINE))
-
-
-def waiting_badge(sheet, cy, waiting):
-    """`WaitingBadge.BurstTopRight` on the invite band: the hub pack's starburst, `+N`, leant
-    eight degrees, over the band's top-right corner and outside the mask's window."""
-    if waiting <= 0:
-        return
-    bx = W / 2 + REFER_W / 2 - 46
-    by = cy - REFER_H / 2 + 44
-    K.paste(sheet, K.glow(190, 1.7, K.GOLD, .40), bx, by)
-    K.paste(sheet, K.tint(K.skin("Hud/burst", 104, 104), K.GOLD).rotate(8, Image.BICUBIC, expand=True), bx, by)
-    K.text(sheet, "+%d" % waiting, bx, by - 2, 30, fill=(43, 28, 5), outline=0)
+    print("  invite door: tabs end at %d, slot %d..%d, caption %d in %d of room"
+          % (HEADER + TABROW, HEADER + TABROW + REFER_GAP, slot_bottom, size, room))
 
 
 def screen(shelf, offline=False, waiting=0):

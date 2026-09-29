@@ -213,6 +213,15 @@ namespace GlimmerGrove.Progression
 
         static ITallyStore _store = new PrefsStore();
 
+        /// <summary>
+        /// The store every device-local, per-account tally in the game is kept in - this lane's
+        /// ceiling and the daily challenges' advert plays (<c>ChallengeAdPlays</c>). One seam
+        /// rather than one per tally, so a fixture that installs a <see cref="MemoryStore"/>
+        /// keeps every one of them off the native path at once, which is the failure the note
+        /// above was written about.
+        /// </summary>
+        internal static ITallyStore Store => _store;
+
         /// <summary>Installs a store, or the game's own for <c>null</c>. For fixtures.</summary>
         internal static void UseStore(ITallyStore store) => _store = store ?? new PrefsStore();
 

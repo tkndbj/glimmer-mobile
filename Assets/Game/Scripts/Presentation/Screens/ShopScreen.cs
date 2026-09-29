@@ -156,21 +156,11 @@ namespace GlimmerGrove
         /// shelf retuned to three columns takes the banner with it.
         /// </para>
         /// <para>
-        /// <b>The height was cut from 308 after the owner played it</b>, and what decides how far
-        /// it may be cut is the picture rather than the room. The banner covers its window
-        /// width-led (the art is 2.67:1 against a plate half again as wide), so every unit taken
-        /// off the height is a unit cropped off the top and bottom of the art: at 308 the crop
-        /// was a ninth at each end, at 256 it is a sixth, and below about 240 it starts eating
-        /// the megaphone's cone and the chests' feet. Measured against the source rather than
-        /// argued - <c>Tools/render_shop.py</c> draws the crop this number produces.
+        /// <b>The height is the key plus the room its picture rises into</b> (<see cref="DoorKey"/>):
+        /// the chest hoard is wide, so it is drawn at <see cref="DoorKey.ArtWidest"/> and stands
+        /// about 190 tall - 200 holds it.
         /// </para>
         /// </summary>
-        // **The height is a crop, not a scale.** The banner is fitted to the window's
-        // *width* and masked, so shortening this shows less of the picture rather than a
-        // smaller one - the width is untouched. At 200 the window keeps about half the
-        // art's height, which still holds the whole wordmark and the chests beside it;
-        // measured with `render_shop.py`, which is the only thing that can answer whether
-        // a crop has eaten the lettering.
         const float ReferW = CellW * Columns, ReferH = 200f, ReferGap = 16f;
 
         /// <summary>
@@ -529,21 +519,14 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The invite banner, directly under the tabs: the profile's card, on the storefront.
+        /// The invite door, directly under the tabs: the profile's door, on the storefront.
         ///
         /// <para>
-        /// <b>The same control twice rather than a second drawing of one idea</b> - the same
-        /// painted banner, the same plate, the same window cut with a <c>Mask</c>, the same
-        /// slow swell, the same destination. A shop is where somebody is already thinking about
-        /// what things cost, which is the one place a free source of chests is worth saying out
-        /// loud; and it costs no art, because the picture is already resident
-        /// (<c>AssetManifest</c>).
-        /// </para>
-        /// <para>
-        /// See <c>ProfileScreen.BuildInviteCard</c> for why the banner is cut smaller than its
-        /// window rather than larger, and for the one thing this shape costs: the words are
-        /// painted into the picture, so neither of these two is translated until the art is
-        /// re-cut.
+        /// <b>The same control twice rather than a second drawing of one idea</b> -
+        /// <see cref="DoorKey"/>, the violet BUY LEVEL pill with "Refer a Friend" on the left and
+        /// the owner's chest hoard on the right (2026-09-28), shared with the profile and the
+        /// hub's Daily Challenges door. A shop is where somebody is already thinking about what
+        /// things cost, which is the one place a free source of chests is worth saying out loud.
         /// </para>
         /// </summary>
         void BuildInvite()
@@ -551,49 +534,17 @@ namespace GlimmerGrove
             _inviteBadge = null;
             if (!ReferralLedger.IsAvailable) return;
 
-            var card = UIKit.Button("Invite", Safe, Art.S("Ui/" + Skins.PlateBlue),
-                                    new Vector2(ReferW, ReferH), new Vector2(.5f, 1f),
-                                    new Vector2(0f, -(HeaderHeight + TabRow + ReferGap + ReferH * .5f)),
-                                    () => Flow.Go<ReferralScreen>());
-            card.PressScale = .985f;
+            // The shared door key (`DoorKey`): the profile's invite door and the hub's Daily
+            // Challenges door, at the foot of the band's slot.
+            var card = DoorKey.Build("Invite", Safe, ReferW, ReferH, new Vector2(.5f, 1f),
+                                     new Vector2(0f, -(HeaderHeight + TabRow + ReferGap + ReferH * .5f)),
+                                     "ui.referral.door", "refer_door", () => Flow.Go<ReferralScreen>());
+            Sheen.Attach((RectTransform)card.transform, 3.1f);
 
-            var clip = UIKit.Img("Clip", card.transform, Art.S("Ui/" + Skins.PlateBlue),
-                                 new Color(1f, 1f, 1f, .004f));
-            var crt = (RectTransform)clip.transform;
-            UIKit.StretchTo(crt, BannerInset, BannerInset, BannerInset, BannerInset);
-            clip.type = Image.Type.Sliced;
-            clip.raycastTarget = false;
-            clip.gameObject.AddComponent<Mask>().showMaskGraphic = false;
-
-            var banner = Art.S("Ui/refer");
-            float aspect = banner != null && banner.rect.height > 0f
-                         ? banner.rect.width / banner.rect.height
-                         : 0f;
-
-            float windowW = ReferW - BannerInset * 2f, windowH = ReferH - BannerInset * 2f;
-            float drawnW = windowW, drawnH = aspect > 0f ? drawnW / aspect : 0f;
-            if (drawnH < windowH) { drawnH = windowH; drawnW = drawnH * aspect; }
-
-            // `seated` cuts the picture so the *crest* of its breath is the cover fit exactly
-            // - at the top of the swell the banner is the window and never a pixel past it, which
-            // is the whole reason the swell is safe inside a mask. `BannerFill` is the separate
-            // decision on top: how much of that fit the picture actually draws at.
-            float seated = BannerFill / (1f + BannerSwell);
-            drawnW *= seated;
-            drawnH *= seated;
-
-            var art = UIKit.Img("Banner", crt, banner, Color.white,
-                                new Vector2(drawnW, drawnH), new Vector2(.5f, .5f), Vector2.zero);
-            art.raycastTarget = false;
-            art.enabled = aspect > 0f;
-
-            if (art.enabled) Tween.Breathe(art.transform, BannerSwell, BannerPeriod);
-
-            // The chests waiting behind the band, on its top-right corner: the profile door's
-            // badge and the hub pack's, so a door to chests looks the same wherever it stands.
-            // After the window, so the mask cannot cut it; before the pop, so it rides in with
+            // The chests waiting behind the band, on its top-left corner as on the other two
+            // doors. Built last so it draws over the key; before the pop, so it rides in with
             // the card and does not pop twice.
-            _inviteBadge = WaitingBadge.BurstTopRight(card.transform);
+            _inviteBadge = WaitingBadge.HubGiftTopLeft(card.transform, Pal.Gold);
             PaintInvite();
             ReferralWatch.Attach(this);
 
@@ -607,24 +558,6 @@ namespace GlimmerGrove
             if (!this || _inviteBadge == null) return;
             _inviteBadge.Paint(ReferralLedger.WaitingCount);
         }
-
-        /// <summary>The banner's window inset, its swell and how long the swell takes.</summary>
-        const float BannerInset = 8f;
-        const float BannerSwell = .03f, BannerPeriod = 3.6f;
-
-        /// <summary>
-        /// How much of the cover fit the picture draws at.
-        ///
-        /// <para>
-        /// <b>1 is the fit exactly</b> - the banner is the window and never a pixel past it -
-        /// and anything under it does two things at once, which is worth knowing before reaching
-        /// for it: the picture pulls in from the window's edges, *and* it un-crops, because a
-        /// cover fit is only cropped in the first place by being larger than what shows. At .9
-        /// the art's own sky reads as a margin rather than the plate showing through, which is
-        /// why it stays a scale rather than becoming a padding.
-        /// </para>
-        /// </summary>
-        const float BannerFill = .90f;
 
         /// <summary>
         /// The standing warning on the shelves priced in real money: this phone is not signed

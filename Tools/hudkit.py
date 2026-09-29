@@ -459,3 +459,51 @@ def navbar(sheet, active):
         shrunk(sheet, NAV_WORDS[tab], x, base + ph / 2 - 28, btn_w - 16, 34,
                27 if live else 25, 17,
                fill=SUN if live else (255, 247, 230), outline=4)
+
+
+# `DoorKey` - the violet BUY LEVEL pill with a two-line caption on the left and one of the
+# owner's pictures on the right, rising out of the key. Shared by render_home (the Daily
+# Challenges door) and render_shop (the Refer a Friend door), as the C# is shared.
+DOOR_KEY_H, DOOR_ART_RIGHT, DOOR_CAPTION_LEFT = 160.0, 18.0, 118.0
+DOOR_ART_MOST, DOOR_ART_WIDEST = 274.0, 480.0
+PILL_FACE_LIFT = 0.0231  # UIKit.PillFaceLift
+
+
+def door_two_lines(s):
+    """`DoorKey.TwoLines`: broken at the space nearest the middle."""
+    spaces = [i for i, c in enumerate(s) if c == " "]
+    if not spaces:
+        return [s]
+    best = min(spaces, key=lambda i: abs(i - len(s) * .5))
+    return [s[:best], s[best + 1:]]
+
+
+def door_key(sheet, cx, slot_bottom, width, slot_h, caption, art):
+    """Draws `DoorKey.Build` with its slot's foot at `slot_bottom` (image y, down-positive).
+    Returns (key centre y, the caption size it settled at, the caption's room)."""
+    ky = slot_bottom - DOOR_KEY_H / 2
+    left, right = cx - width / 2, cx + width / 2
+    paste(sheet, skin("btn_violet", width, DOOR_KEY_H), cx, ky)
+
+    art_w = 0.0
+    try:
+        pic = Image.open(UI / f"{art}.png").convert("RGBA")
+        aspect = pic.width / pic.height
+        art_h = min(DOOR_ART_MOST, slot_h - 6, DOOR_ART_WIDEST / aspect)
+        art_w = art_h * aspect
+        paste(sheet, fit(pic, (art_w, art_h)), right - DOOR_ART_RIGHT - art_w / 2, slot_bottom - 4 - art_h / 2)
+    except FileNotFoundError:
+        pass
+
+    room = width - DOOR_ART_RIGHT - art_w - 20 - DOOR_CAPTION_LEFT
+    lines = door_two_lines(caption)
+    size = 44
+    probe = ImageDraw.Draw(sheet)
+    while size > 26 and (max(probe.textlength(ln, font=font(size)) for ln in lines) > room
+                         or len(lines) * size * 1.2 > DOOR_KEY_H * .82):
+        size -= 1
+    tx = left + DOOR_CAPTION_LEFT + room / 2
+    top = ky - DOOR_KEY_H * PILL_FACE_LIFT - (len(lines) - 1) * size * 1.2 / 2
+    for i, ln in enumerate(lines):
+        text(sheet, ln, tx, top + i * size * 1.2, size)
+    return ky, size, room

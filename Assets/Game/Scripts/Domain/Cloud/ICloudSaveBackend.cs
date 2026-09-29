@@ -335,6 +335,19 @@ namespace GlimmerGrove.Cloud
         public bool CarriesKeeper;
 
         /// <summary>
+        /// The day the server's count of advert-earned challenge plays is for, and the count
+        /// (<c>challengeAds</c> on the wallet document). Carried for <see cref="EndlessPaid"/>'s
+        /// reason: a per-day figure the server owns, which decides what the device may offer.
+        /// Folded in by <c>ChallengeAdPlays.ApplyServerState</c>.
+        /// </summary>
+        public int ChallengeAdDay;
+
+        public int ChallengeAdPlays;
+
+        /// <summary>Whether the reply carried the count at all, for <see cref="CarriesEndless"/>'s reason.</summary>
+        public bool CarriesChallengeAds;
+
+        /// <summary>
         /// Whether the reply carried the lane's figure at all.
         ///
         /// <b>Asked separately for <c>CarriesWheel</c>'s reason</b>: a fresh account's honest

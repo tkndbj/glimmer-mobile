@@ -397,6 +397,10 @@ namespace GlimmerGrove.AssetPipeline
             // shipped deal count to this list.
             "challenge_chest", "challenge_deal_1", "challenge_deal_2", "challenge_deal_3",
 
+            // The advert row's picture on the same sheet (`ChallengeArt.AdPlay`, 2026-09-28): one
+            // video, one play. The owner's artwork, cut by the same tool.
+            "challenge_ad_play",
+
             // The hall of ranks' furniture (`RankKit`, cut from the owner's bought UI kit by
             // `Tools/make_rank_kit_art.py`): the requirement board, one line's row, a rail
             // seat, the ordinal's chip, and the swords beside "Defeat N
@@ -518,7 +522,11 @@ namespace GlimmerGrove.AssetPipeline
             // Both are 2048x768 sources capped to 1024 by the `/Art/Ui/` folder rule, so the
             // pair costs about 350 KB resident at ASTC 6x6 - which is what makes global the
             // cheap answer rather than the lazy one.
-            "challenges", "refer",
+            //
+            // Both doors are the keeper key with one of the owner's pictures on it since
+            // 2026-09-28 (`DoorKey`: `challenge_door` and `refer_door`, 768 wide); the painted
+            // `challenges` and `refer` banners are drawn by nothing and are not preloaded.
+            "challenge_door", "refer_door",
 
             // The task chests, closed, and the goal glyphs the shared icon set has no picture
             // for. Global for the streak flame's reason: the hub draws all four chests on the

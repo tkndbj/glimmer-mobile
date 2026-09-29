@@ -135,6 +135,65 @@ namespace GlimmerGrove.Tests
             Assert.IsFalse(table.Has(AdPlacement.HeartRefill));
         }
 
+        /// <summary>
+        /// A challenge play is paid by its own placement and that placement pays nothing else:
+        /// the server reads the kind off the published table to decide whether a callback raises
+        /// the day's play count, so any other pairing is a view counted by nobody.
+        /// </summary>
+        [Test]
+        public void AChallengePlayIsPaidByItsOwnPlacementAlone()
+        {
+            var problems = new List<string>();
+
+            var table = AdRewardTable.Resolve(new AdsDto
+            {
+                placements = new[]
+                {
+                    new AdPlacementDto { id = AdPlacement.ChallengePlay, kind = "challenge_play", amount = 1, dailyCap = 10 },
+                    new AdPlacementDto { id = AdPlacement.CoinBonus, kind = "challenge_play", amount = 1, dailyCap = 6 },
+                    new AdPlacementDto { id = AdPlacement.WinBonus, kind = "credits", amount = 200, dailyCap = 6 },
+                },
+            }, problems);
+
+            Assert.IsTrue(table.Has(AdPlacement.ChallengePlay));
+            Assert.AreEqual(ChestDropKind.ChallengePlay, table.Offer(AdPlacement.ChallengePlay).Kind);
+            Assert.AreEqual(10, table.Offer(AdPlacement.ChallengePlay).DailyCap);
+            Assert.IsFalse(table.Has(AdPlacement.CoinBonus), "a play on another placement is refused");
+            Assert.IsNotEmpty(problems);
+
+            problems.Clear();
+            var coins = AdRewardTable.Resolve(new AdsDto
+            {
+                placements = new[]
+                {
+                    new AdPlacementDto { id = AdPlacement.ChallengePlay, kind = "credits", amount = 100, dailyCap = 10 },
+                    new AdPlacementDto { id = AdPlacement.WinBonus, kind = "credits", amount = 200, dailyCap = 6 },
+                },
+            }, problems);
+
+            Assert.IsFalse(coins.Has(AdPlacement.ChallengePlay), "the play placement paying coins is refused");
+            Assert.IsNotEmpty(problems);
+        }
+
+        /// <summary>
+        /// The built-in table offers the play, and the kind is granted by the server rather than
+        /// banked: a play the device banked would be offered before the server could bound its win.
+        /// </summary>
+        [Test]
+        public void TheBuiltInPlayIsServerGrantedAndNeverBanked()
+        {
+            var offer = AdRewardTable.Default.Offer(AdPlacement.ChallengePlay);
+            Assert.IsTrue(offer.IsValid);
+            Assert.AreEqual(1, offer.Amount);
+            Assert.AreEqual(10, offer.DailyCap);
+
+            Assert.IsTrue(ChestDropKinds.IsServerGranted(ChestDropKind.ChallengePlay));
+            Assert.IsFalse(ChestDropKinds.IsCurrency(ChestDropKind.ChallengePlay));
+            Assert.IsFalse(BankedDrop.Apply(new ChestDrop(ChestDropKind.ChallengePlay, 1)),
+                           "a challenge play is never applied by the device");
+            Assert.AreEqual(ChestDropKind.ChallengePlay, ChestDropKinds.Parse(ChestDropKinds.Id(ChestDropKind.ChallengePlay)));
+        }
+
         [Test]
         public void AnUnknownPlacementIsSkippedRatherThanFatal()
         {

@@ -17,7 +17,7 @@ import { readWheelPosition } from "./wheel";
 import { readTaskPaid, TaskPaid } from "./tasks";
 import { EndlessDay, readEndlessDay } from "./endless";
 import { keeperBoughtOf } from "./keeper";
-import { ChallengeTiersHeld, readChallengeTiers } from "./challenges";
+import { ChallengeAdDays, ChallengeTiersHeld, adPlaysOn, readChallengeAds, readChallengeTiers } from "./challenges";
 
 export interface CurrencyState {
   granted: number;
@@ -137,6 +137,15 @@ export type WalletDoc = Record<CurrencyId, CurrencyState> & {
    * whole.
    */
   keeperBought?: number;
+
+  /**
+   * The daily challenges' advert plays, per day: how many the `challenge_play` callback counted
+   * and which past-the-allowance wins were paid out of them (`challenges.ts`). Server-owned for
+   * the streak floor's reason, and it is the whole bound on a coin claim past a day's own
+   * allowance. Written by `adReward` (the count) and `claimAwards` (the draw); carried through
+   * `readWallet` because every writer writes this document whole.
+   */
+  challengeAds?: ChallengeAdDays;
 };
 
 /** What the client's `CloudWalletState` expects back. */
@@ -209,12 +218,21 @@ export interface WalletReply {
    * trick, for the wheel's reason.
    */
   keeperBought: number;
+
+  /**
+   * The day the advert-play count is for, and the plays the `challenge_play` callback has
+   * counted in it. Reported for the lane's reason: the device offers exactly this many extra
+   * plays, so every device has to agree with it, and a play the device offered past it would be
+   * a win this server refuses. Always present, including as nought.
+   */
+  challengeAdDay: number;
+  challengeAdPlays: number;
 }
 
 /** The keys `readWallet` models itself, so `carryUnknownFields` knows which to leave to it. */
 const MODELLED_WALLET_KEYS = new Set<string>([
   ...CURRENCIES, "name", "containersRevoked", "wheel", "tasks", "endless", "challengeTiers",
-  "keeperBought", "streak", "updatedAt",
+  "keeperBought", "challengeAds", "streak", "updatedAt",
 ]);
 
 /**
@@ -323,6 +341,11 @@ export function readWallet(
   const keeperBought = keeperBoughtOf(raw);
   if (keeperBought > 0) wallet.keeperBought = keeperBought;
 
+  // The advert plays, carried through for exactly the reason every field above it is - and
+  // pruned to the days a claim can still name, so the document does not grow for ever.
+  const adDays = readChallengeAds((raw as { challengeAds?: unknown } | undefined)?.challengeAds, todayKey(Date.now()));
+  if (Object.keys(adDays).length > 0) wallet.challengeAds = adDays;
+
   // **Everything else the document holds, carried through untouched - and this is the rule
   // the eight paragraphs above were each one instance of.** Every writer of this document
   // writes it whole, so a field this function does not copy is a field the next write deletes.
@@ -417,6 +440,8 @@ export function toReply(
     endlessDay: lane.day,
     endlessPaid: lane.paid,
     keeperBought: wallet.keeperBought ?? 0,
+    challengeAdDay: today,
+    challengeAdPlays: adPlaysOn(wallet.challengeAds ?? {}, today),
   }));
 }
 

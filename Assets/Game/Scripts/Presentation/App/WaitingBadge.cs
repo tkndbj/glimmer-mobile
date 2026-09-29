@@ -49,16 +49,24 @@ namespace GlimmerGrove
         /// invariant 44g) and lights the halo; the count stays dark ink on both.
         /// </summary>
         public static WaitingBadge Burst(Transform card, Vector2 anchor, Vector2 pos, Color tint)
+            => Burst(card, anchor, pos, tint, 1f);
+
+        /// <summary>
+        /// The starburst at a multiple of its size. The hub's four feature boxes wear it at
+        /// <see cref="HubScale"/>; the size is built in rather than scaled on the root, because
+        /// <see cref="Paint"/> pops and breathes the root's own scale.
+        /// </summary>
+        public static WaitingBadge Burst(Transform card, Vector2 anchor, Vector2 pos, Color tint, float scale)
         {
             var burst = UIKit.Img("Waiting", card, Art.S("Ui/" + Skins.Badge), tint,
-                                  new Vector2(104f, 104f), anchor, pos);
+                                  new Vector2(104f, 104f) * scale, anchor, pos);
 
             var count = UIKit.Shrinkable(
-                UIKit.Titled("N", burst.transform, "+0", 30, new Color(.17f, .11f, .02f),
-                             TextAnchor.MiddleCenter, new Vector2(80f, 50f),
-                             new Vector2(.5f, .5f), new Vector2(0f, 2f), 0f, 0f), 18);
+                UIKit.Titled("N", burst.transform, "+0", Mathf.RoundToInt(30 * scale), new Color(.17f, .11f, .02f),
+                             TextAnchor.MiddleCenter, new Vector2(80f, 50f) * scale,
+                             new Vector2(.5f, .5f), new Vector2(0f, 2f * scale), 0f, 0f), 18);
 
-            UIKit.Halo(burst.transform, tint, 190f, .40f);
+            UIKit.Halo(burst.transform, tint, 190f * scale, .40f);
             burst.transform.localRotation = Quaternion.Euler(0f, 0f, 8f);
             burst.gameObject.SetActive(false);
 
@@ -76,6 +84,79 @@ namespace GlimmerGrove
         /// <summary>The starburst on a card's top-right corner in a colour of the caller's - the hub's name card wears it green.</summary>
         public static WaitingBadge BurstTopRight(Transform card, Color tint)
             => Burst(card, new Vector2(1f, 1f), new Vector2(-46f, -44f), tint);
+
+        /// <summary>
+        /// How much larger the hub's feature boxes wear the starburst (tasks, streak, season,
+        /// daily challenges), at the owner's instruction on 2026-09-28: one shape on all four,
+        /// a little bigger than the invite door's.
+        /// </summary>
+        public const float HubScale = 1.2f;
+
+        /// <summary>The hub's starburst on a card's top-left corner.</summary>
+        public static WaitingBadge HubTopLeft(Transform card, Color tint)
+            => Burst(card, new Vector2(0f, 1f), new Vector2(46f, -44f), tint, HubScale);
+
+        /// <summary>The hub's starburst on a card's top-right corner.</summary>
+        public static WaitingBadge HubTopRight(Transform card, Color tint)
+            => Burst(card, new Vector2(1f, 1f), new Vector2(-46f, -44f), tint, HubScale);
+
+        /// <summary>
+        /// The starburst carrying the shop's gift box (`Ui/ic_gift`, the Bundles tab's mark)
+        /// instead of a count, at the owner's instruction on 2026-09-28: the streak, the season
+        /// and the keeper card say "something is waiting" with a picture. The count still
+        /// decides whether it shows - <see cref="Paint"/> hides it at nought.
+        /// </summary>
+        public static WaitingBadge Gift(Transform card, Vector2 anchor, Vector2 pos, Color tint, float scale)
+        {
+            var badge = Burst(card, anchor, pos, tint, scale);
+            badge._count.gameObject.SetActive(false);
+            badge._count = null;
+
+            var gift = UIKit.Img("Gift", badge.Root, Art.S("Ui/ic_gift"), Color.white,
+                                 new Vector2(66f, 66f) * scale, new Vector2(.5f, .5f), Vector2.zero);
+            gift.preserveAspect = true;
+            gift.raycastTarget = false;
+            // Upright, whatever the burst's own tilt.
+            gift.transform.localRotation = Quaternion.Euler(0f, 0f, -8f);
+            return badge;
+        }
+
+        /// <summary>The hub's gift starburst on a card's top-left corner - the tasks pack.</summary>
+        public static WaitingBadge HubGiftTopLeft(Transform card, Color tint)
+            => Gift(card, new Vector2(0f, 1f), new Vector2(46f, -44f), tint, HubScale);
+
+        /// <summary>The hub's gift starburst on a card's top-right corner.</summary>
+        public static WaitingBadge HubGiftTopRight(Transform card, Color tint)
+            => Gift(card, new Vector2(1f, 1f), new Vector2(-46f, -44f), tint, HubScale);
+
+        /// <summary>The gift starburst at its ordinary size on a card's top-right corner - the hub's name card.</summary>
+        public static WaitingBadge GiftTopRight(Transform card, Color tint)
+            => Gift(card, new Vector2(1f, 1f), new Vector2(-46f, -44f), tint, 1f);
+
+        /// <summary>
+        /// The Daily Challenges list's starburst: a touch smaller than the hub's, with the
+        /// <c>+N</c> in white over a black outline (the owner, 2026-09-28).
+        /// </summary>
+        public static WaitingBadge ListTopRight(Transform card, Color tint)
+            => Burst(card, new Vector2(1f, 1f), new Vector2(-46f, -44f), tint, 1.08f).WhiteInk();
+
+        /// <summary>
+        /// The hub's Daily Challenges door: the hub's starburst, top left, with the list's white
+        /// <c>+N</c> over a black outline.
+        /// </summary>
+        public static WaitingBadge HubInkedTopLeft(Transform card, Color tint)
+            => HubTopLeft(card, tint).WhiteInk();
+
+        /// <summary>Re-inks the count white over a black outline.</summary>
+        WaitingBadge WhiteInk()
+        {
+            _count.color = Color.white;
+            var ink = _count.gameObject.AddComponent<Outline>();
+            ink.effectColor = new Color(0f, 0f, 0f, .95f);
+            ink.effectDistance = new Vector2(2.5f, 2.5f);
+            ink.useGraphicAlpha = true;
+            return this;
+        }
 
         /// <summary>A gold disc with the bare number, on a card's top-right corner.</summary>
         public static WaitingBadge Disc(Transform card)
