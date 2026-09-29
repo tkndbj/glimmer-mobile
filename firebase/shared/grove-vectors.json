@@ -5483,6 +5483,11 @@
     "upgrade price: the difference under a running smaller deal, sharing its window. A",
     "disagreement is a claim refused for a play the page offered (45d), or gems taken back.",
     "",
+    "`challengeAdPoolCases` is the advert pool (56p): the plays the device deals past a",
+    "genre's allowance against the day's advert count, and the wins the server pays out of it.",
+    "The two rules differ on purpose (attempts on the device, wins on the server); what is pinned",
+    "is that every claim the device raises is one the server pays - the tool refuses otherwise.",
+    "",
     "`challengeDefaults` is what both sides use when no `challenges` block has been published.",
     "They agree on purpose rather than failing closed, for the endless block's reason.",
     "",
@@ -10554,5 +10559,322 @@
         "tier": "royal"
       }
     ]
-  }
+  },
+  "challengeAdPoolCases": [
+    {
+      "name": "with no advert plays nothing is dealt past the allowance",
+      "allowance": 2,
+      "granted": 0,
+      "plays": [
+        [
+          "pairs",
+          true
+        ],
+        [
+          "pairs",
+          true
+        ],
+        [
+          "pairs",
+          true
+        ]
+      ],
+      "dealt": [
+        true,
+        true,
+        false
+      ],
+      "claims": [
+        [
+          "pairs",
+          1
+        ],
+        [
+          "pairs",
+          2
+        ]
+      ],
+      "drawn": 0
+    },
+    {
+      "name": "one pool serves every genre and runs out once",
+      "allowance": 2,
+      "granted": 2,
+      "plays": [
+        [
+          "pairs",
+          true
+        ],
+        [
+          "pairs",
+          true
+        ],
+        [
+          "pairs",
+          true
+        ],
+        [
+          "merge",
+          true
+        ],
+        [
+          "merge",
+          true
+        ],
+        [
+          "merge",
+          true
+        ],
+        [
+          "merge",
+          true
+        ]
+      ],
+      "dealt": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "claims": [
+        [
+          "pairs",
+          1
+        ],
+        [
+          "pairs",
+          2
+        ],
+        [
+          "pairs",
+          3
+        ],
+        [
+          "merge",
+          1
+        ],
+        [
+          "merge",
+          2
+        ],
+        [
+          "merge",
+          3
+        ]
+      ],
+      "drawn": 2
+    },
+    {
+      "name": "a lost play spends the pool on the device and nothing on the server",
+      "allowance": 1,
+      "granted": 2,
+      "plays": [
+        [
+          "pairs",
+          true
+        ],
+        [
+          "pairs",
+          false
+        ],
+        [
+          "pairs",
+          true
+        ],
+        [
+          "pairs",
+          true
+        ]
+      ],
+      "dealt": [
+        true,
+        true,
+        true,
+        false
+      ],
+      "claims": [
+        [
+          "pairs",
+          1
+        ],
+        [
+          "pairs",
+          2
+        ]
+      ],
+      "drawn": 1
+    },
+    {
+      "name": "a genre that never passes its allowance spends none of the pool",
+      "allowance": 3,
+      "granted": 1,
+      "plays": [
+        [
+          "glade",
+          true
+        ],
+        [
+          "glade",
+          false
+        ],
+        [
+          "sokoban",
+          true
+        ],
+        [
+          "sokoban",
+          true
+        ],
+        [
+          "sokoban",
+          true
+        ],
+        [
+          "sokoban",
+          true
+        ]
+      ],
+      "dealt": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "claims": [
+        [
+          "glade",
+          1
+        ],
+        [
+          "sokoban",
+          1
+        ],
+        [
+          "sokoban",
+          2
+        ],
+        [
+          "sokoban",
+          3
+        ],
+        [
+          "sokoban",
+          4
+        ]
+      ],
+      "drawn": 1
+    },
+    {
+      "name": "a deal landing after the wins it covers gives their plays back",
+      "allowance": 2,
+      "granted": 2,
+      "plays": [
+        [
+          "pairs",
+          true
+        ],
+        [
+          "pairs",
+          true
+        ],
+        [
+          "pairs",
+          true
+        ],
+        [
+          "merge",
+          true
+        ],
+        [
+          "merge",
+          true
+        ],
+        [
+          "merge",
+          true
+        ]
+      ],
+      "dealt": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "claims": [
+        [
+          "pairs",
+          1
+        ],
+        [
+          "pairs",
+          2
+        ],
+        [
+          "pairs",
+          3
+        ],
+        [
+          "merge",
+          1
+        ],
+        [
+          "merge",
+          2
+        ],
+        [
+          "merge",
+          3
+        ]
+      ],
+      "drawn": 2,
+      "laterAllowance": 5,
+      "drawnLater": 0
+    },
+    {
+      "name": "a pool larger than the day's plays is not all spent",
+      "allowance": 2,
+      "granted": 10,
+      "plays": [
+        [
+          "pairs",
+          true
+        ],
+        [
+          "pairs",
+          true
+        ],
+        [
+          "pairs",
+          true
+        ]
+      ],
+      "dealt": [
+        true,
+        true,
+        true
+      ],
+      "claims": [
+        [
+          "pairs",
+          1
+        ],
+        [
+          "pairs",
+          2
+        ],
+        [
+          "pairs",
+          3
+        ]
+      ],
+      "drawn": 1
+    }
+  ]
 }

@@ -860,6 +860,7 @@ namespace GlimmerGrove.Tests
             yield return ("dustcrown", Dustcrown);
             yield return ("bonereach", Bonereach);
             yield return ("cloudkeep", Cloudkeep);
+            yield return ("cogspire", Cogspire);
         }
     }
 }

@@ -76,13 +76,14 @@ namespace GlimmerGrove.Tests
 
         static SiegeLayout Layout(string[] rows, string gems, string wards, string[] waves,
                                   string boss = null, int cogs = 0, int tough = 0,
-                                  string charms = "")
+                                  string charms = "", bool obsidian = false)
         {
             Assert.IsTrue(ProtoGrid.TryRead(rows, rows[0].Length, rows.Length,
                                             SiegeLayout.Cells, out var grid, out string error),
                           error);
 
-            return new SiegeLayout(grid, gems, wards, waves, boss, cogs, null, tough, charms);
+            return new SiegeLayout(grid, gems, wards, waves, boss, cogs, null, tough, charms,
+                                   obsidian);
         }
 
         // ------------------------------------------------------------------ the whole chapter
@@ -106,6 +107,15 @@ namespace GlimmerGrove.Tests
             public readonly string Charms;
 
             /// <summary>
+            /// Whether this rung's refill deals obsidians. See <c>SiegeDto.obsidian</c>.
+            ///
+            /// <b>Carried for <see cref="Charms"/>'s reason, and it is the same reason</b>: a
+            /// sweep of the ninth chapter that dealt no curse would measure a board nobody ships.
+            /// <c>Tools/verify/rungs.py</c> compares it against the body.
+            /// </summary>
+            public readonly bool Obsidian;
+
+            /// <summary>
             /// This chapter's star lines, in hundredths of par.
             ///
             /// <b>Carried here for <see cref="Tough"/>'s reason</b>: a siege authors its own
@@ -117,9 +127,10 @@ namespace GlimmerGrove.Tests
 
             public Rung(string id, string[] rows, string gems, string wards, string[] waves,
                         string boss, int cogs, int tough = 0, int gold = 75, int silver = 92,
-                        string charms = "")
+                        string charms = "", bool obsidian = false)
             {
                 Charms = charms;
+                Obsidian = obsidian;
                 Id = id;
                 Rows = rows;
                 Gems = gems;
@@ -140,7 +151,7 @@ namespace GlimmerGrove.Tests
             /// <c>Tools/verify/rungs.py</c> exists to catch, and that gate compares this field too.
             /// </summary>
             public SiegeLayout Built()
-                => Layout(Rows, Gems, Wards, Waves, Boss, Cogs, Tough, Charms);
+                => Layout(Rows, Gems, Wards, Waves, Boss, Cogs, Tough, Charms, Obsidian);
         }
 
         /// <summary>

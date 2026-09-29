@@ -619,26 +619,62 @@ namespace GlimmerGrove
             label.fontSize = button.LabelSize > 0 ? button.LabelSize : label.fontSize;
             if (room <= 0f || string.IsNullOrEmpty(label.text)) return;
 
-            float wide = label.preferredWidth;
-            if (wide <= room) return;
+            var fit = FitOneLine(label.fontSize, button.LabelMinSize, room,
+                                 size => { label.fontSize = size; return label.preferredWidth; });
+
+            label.fontSize = fit.Size;
+            if (fit.Scale < 1f) label.rectTransform.localScale = Vector3.one * fit.Scale;
+        }
+
+        /// <summary>What <see cref="FitOneLine"/> settled on: a font size, and a uniform scale below 1 only past the floor.</summary>
+        public readonly struct LineFit
+        {
+            public readonly int Size;
+            public readonly float Scale;
+
+            public LineFit(int size, float scale)
+            {
+                Size = size;
+                Scale = scale;
+            }
+        }
+
+        /// <summary>
+        /// Fits one line of text into <paramref name="room"/>: the design size if it fits, else
+        /// the largest size down to <paramref name="floor"/> that does, else the floor scaled
+        /// uniformly to exactly the room.
+        ///
+        /// <para>
+        /// <b>The floor is a size, and a size cannot promise a width.</b> A caption still wider
+        /// than the pill at its floor - a long translation, a longer loading line - used to draw
+        /// off both ends, because a one-line label overflows by construction. So the last resort
+        /// scales the drawn line to the room, keeping the letterforms' shape: smaller than the
+        /// floor on the rare caption that needs it, and never outside the button. The challenge
+        /// advert's "FINDING A VIDEO..." on a 280-wide key found it (2026-09-28).
+        /// </para>
+        /// <para>
+        /// <b>Pure, with the measure passed in</b>, so the arithmetic that promises "never
+        /// overflows" is held by an offline test (<c>LineFitTests</c>) rather than only by a
+        /// render mirror: uGUI's <c>preferredWidth</c> is native and runs in no fixture here.
+        /// <paramref name="widthAt"/> answers the drawn width at a size.
+        /// </para>
+        /// </summary>
+        public static LineFit FitOneLine(int size, int floor, float room, Func<int, float> widthAt)
+        {
+            if (widthAt == null || room <= 0f || size <= 0) return new LineFit(Math.Max(size, 1), 1f);
+
+            floor = Math.Min(Math.Max(floor, 1), size);
+
+            float wide = widthAt(size);
+            if (wide <= room) return new LineFit(size, 1f);
 
             // One ratio gets within a point of it; the loop is what closes the gap left by
-            // integer font sizes and by hinting, and it is bounded by the minimum.
-            label.fontSize = Mathf.Max(button.LabelMinSize,
-                                       Mathf.FloorToInt(label.fontSize * room / wide));
+            // integer font sizes and by hinting, and it is bounded by the floor.
+            int fitted = Math.Max(floor, (int)Math.Floor(size * room / wide));
+            while (fitted > floor && widthAt(fitted) > room) fitted--;
 
-            while (label.fontSize > button.LabelMinSize && label.preferredWidth > room)
-                label.fontSize--;
-
-            // **The floor is a size, and a size cannot promise a width.** A caption still wider
-            // than the pill at its floor - a long translation, a longer loading line - used to
-            // draw off both ends, because a one-line label overflows by construction. So the
-            // last resort is to scale the drawn line down to exactly the room, uniformly, so the
-            // letterforms keep their shape: smaller than the floor on the rare caption that
-            // needs it, and never outside the button. The challenge advert's "FINDING A
-            // VIDEO..." on a 280-wide key is what found it (2026-09-28).
-            wide = label.preferredWidth;
-            if (wide > room) label.rectTransform.localScale = Vector3.one * (room / wide);
+            wide = widthAt(fitted);
+            return new LineFit(fitted, wide > room ? room / wide : 1f);
         }
 
         /// <summary>Square button carrying a white glyph.</summary>

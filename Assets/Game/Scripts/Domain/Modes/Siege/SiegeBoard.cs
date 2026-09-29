@@ -251,7 +251,11 @@ namespace GlimmerGrove.Modes
 
         public char At(int index) => index >= 0 && index < _cells.Length ? _cells[index] : Hole;
 
-        public int ColourAt(int index) => SiegeLayout.Letters.IndexOf(At(index));
+        /// <summary>
+        /// What stands in this cell as the index a drawing is keyed on: a colour, -1 for nothing,
+        /// or <see cref="SiegeLayout.ObsidianFace"/> for a cursed stone.
+        /// </summary>
+        public int ColourAt(int index) => SiegeLayout.FaceOf(At(index));
 
         public int IndexOf(int x, int y) => y * Width + x;
 

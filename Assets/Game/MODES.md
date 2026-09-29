@@ -993,6 +993,59 @@ marked *(art)* are one-line pointers - the working detail is in `CRAFT.md`.
    is `render_siege.py --unleash W`, and it picks the box, because a still cannot know which
    raider was furthest down.
 
+37ew. **The ninth chapter's mechanic is a fifth kind of gem, and that is the one shape this field
+   had refused twice - refused then because the glyphs did not behave like gems.** The obsidian
+   (`SiegeLayout.Obsidian`, the Pairs curse stone, owner's brief 2026-09-28) falls, swaps and
+   lines up with its own kind through the same maximal-block rule the colours use (`Runs`,
+   `Lined`, a fifth pass with no wild in it - a prism joins a *colour*); what it does not do is
+   burn in any ward, so it is clutter. **Three in a line break the curse**: every obsidian on
+   the field is drawn into that beat (`SiegeBoard.Unbound`, folded in before the clear exactly as
+   a lance's cross is) and, booked with the beat's fuel (37s), every raider *standing* on the
+   hill is **hexed** (`SiegeRaider.Hexed`, extended never stacked) and takes
+   `SiegeTuning.HexPercent` of every point of harm - applied in `Wound`, the one door (37dj),
+   before the stand's floor, so a hex never lets a boss skip a stand. It is the seventh axis a
+   payoff takes (37z): not a colour, a piece of the board, a moment, a charge, time or ground,
+   but the raiders' *toughness* - and it scales with the line without a number (37cg), because
+   it multiplies what the standing turrets land. **Whether is content, how often is the mode**
+   (37ce): `SiegeDto.obsidian` is written into every rung by the chapter tool,
+   `ObsidianPercent` (9) is read out of the same draw as the gem, salted and avalanched, so a
+   cursed field draws the stream exactly as often as a plain one (41) and every field without the
+   flag deals exactly what it always did (`SiegeObsidianTests.DealingAnObsidianCostsNoExtraDraw`).
+   A stone never rides a charm and never lands lined, strictly - three dealt together would be a
+   curse nobody gathered (37el). The decision is *when* (40i): gather them (each stone past three
+   adds `HexPerStone`, capped at `HexMost`) and break them over a crowd; broken over an empty hill
+   it marks nobody, and the refusal is drawn and said.
+37ex. **The curse is drawn as light in three colours and one dark, and none of it is borrowed.**
+   `Tools/make_obsidian_art.py` cuts the stone from the Pairs card's own PNG (so it runs without
+   the licensed pack) with violet fissures of light screened into its body, a white rune-circle
+   mask for the additive material, and a painted front (`hexwave`) that is the third temperature
+   on the hill - glass for the hourglass, fire for the anvil, violet night for the curse, and
+   wispy where the other two are crystalline and billowing. **The sigil is a clockwork wheel, not
+   a star**: every familiar star polygon is somebody's sacred sign, and a globally shipped game
+   may not draw one as a *curse*. The break is the lance's shape (37cn): the clock slows
+   (`Dilate`, 37cq), every pulled stone is chained to the break with lightning and dragged into a
+   gathering void, the void bursts; the front climbs off the report and stamps each body as it
+   passes; a hexed body stands in the turning sigil, washed lilac, its figures drawn lilac, and
+   the sigil gutters as the hex runs out - a state read off the model every frame (37ek).
+   `CurseLight` holds the palette to the tool (`SiegeObsidianTests`), the art is scoped to the
+   chapters that deal it (`SiegeMode.CurseArt`, 7b), and `render_siege.py --obsidian --cursed T`
+   is the mirror.
+37ey. **The ninth chapter is harder by headcount and one tenth, and it re-states the duel rule
+   rather than breaking it.** Cogspire (`s10_cogspire`, order 154, levels 91-110) deals 1.5
+   (`Traded` row `(8, 15)`, the ladder would give 1.7) and 8% more raiders, the extra bodies
+   creepers - measured on the workhorse at 27 of 180 held against Cloudkeep's 31. **The first cut
+   was +19% bodies at Cloudkeep's brute share and held 10**: at a fresh tenth, headcount is the
+   cliff 37ef describes, so the trim went into the bodies' weight rather than the surge the brief
+   asked for, and an unset floor had let the gate pass it. Its cast is the
+   **gathering**, a third square over the six sharing no slot with the medley or the reunion.
+   It needed four duels and the ladder had six undueled verbs, so "no verb in two duels" became
+   what it was always about: **no verb twice in one chapter's duels, and no *pair* fought twice
+   anywhere** (a gorgon with a hollowking is not a sunlord with a hollowking). Its map is the
+   owner's painting, seated by **walking the road** (`make_map_seats.TRACES`: a hand-read
+   centreline snapped to the copper, the chain chosen by a programme that minimises record marks
+   reached over, then spreads rungs evenly along the road, bridges included) - twenty rungs on
+   four strips reach over 32 marks, accepted as `map8`'s were.
+
 **Adding a boss rung, or a boss.** A rung: author `boss: "<kind>:<colour>"` - or a duel,
 `"<kind>:<colour>+<kind>:<colour>"` (37er) - on every fifth rung, no
 other number; copy the rung into the chapter's table in `SiegeRuleTests.Chapters.cs` (`rungs.py` holds

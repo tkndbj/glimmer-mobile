@@ -43,8 +43,9 @@ const {
 } = await import(pathToFileURL(compiled).href);
 
 const challengesModule = join(REPO, "firebase", "functions", "lib", "challenges.js");
-const { DEFAULT_CHALLENGES, HARD_MAX_CLEARS, allowanceOn, challengeClears, challengeXp, dealPrice } =
-  await import(pathToFileURL(challengesModule).href);
+const {
+  DEFAULT_CHALLENGES, HARD_MAX_CLEARS, adPlaysDrawn, allowanceOn, challengeClears, challengeXp, dealPrice, drawAdPlay,
+} = await import(pathToFileURL(challengesModule).href);
 
 const ranksModule = join(REPO, "firebase", "functions", "lib", "ranks.js");
 const { rungOf } = await import(pathToFileURL(ranksModule).href);
@@ -372,6 +373,25 @@ console.log("\nthe daily challenges");
     const owed = dealPrice(dealConfig, held, c.target, fromDay, dayOf(c.now));
     equal(`${c.name} — price`, owed && owed.price, c.price);
     equal(`${c.name} — upgrades`, owed && owed.upgrades, c.upgrades);
+  }
+
+  // The advert pool (56p): every claim the device raised is one this server pays out of the
+  // day's advert plays, and the plays it spent doing so are the count the vectors carry -
+  // recounted, too, against a deal that landed after the wins it covered.
+  const DAY = 20700;
+  for (const c of vectors.challengeAdPoolCases ?? []) {
+    let days = { [DAY]: { granted: c.granted, drawn: {} } };
+    let paid = true;
+    for (const [genre, win] of c.claims) {
+      const next = drawAdPlay(days, { dayKey: DAY, genre, win, currency: "credits" }, c.allowance);
+      if (!next) { paid = false; break; }
+      days = next;
+    }
+    equal(`${c.name} — every claim is paid`, paid, true);
+    equal(`${c.name} — plays drawn`, adPlaysDrawn(days[DAY], c.allowance), c.drawn);
+    if (c.laterAllowance !== undefined) {
+      equal(`${c.name} — plays drawn after the later deal`, adPlaysDrawn(days[DAY], c.laterAllowance), c.drawnLater);
+    }
   }
 
   const played = { challenges: { clears: [{ genre: "pairs", count: 10 }] } };

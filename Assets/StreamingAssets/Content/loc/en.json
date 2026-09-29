@@ -5818,6 +5818,22 @@
       "text": "THE ANVIL"
     },
     {
+      "key": "ui.tip.siege_obsidian.title",
+      "text": "THE CURSED STONE"
+    },
+    {
+      "key": "ui.tip.siege_obsidian.body",
+      "text": "This stone feeds no turret, so it just gets in the way.\n\nLine up three and the curse breaks: every cursed stone on the board shatters, and everything on the hill takes extra damage for a while. More stones, longer curse, so break it over a crowd."
+    },
+    {
+      "key": "ui.siege.hexed",
+      "text": "CURSED!"
+    },
+    {
+      "key": "ui.siege.hex_wasted",
+      "text": "NOTHING TO CURSE"
+    },
+    {
       "key": "ui.title.elder",
       "text": "Groove Elder"
     },
@@ -6776,6 +6792,170 @@
     {
       "key": "level.s09_crownofclouds.tagline",
       "text": "Fill the sealed one, keep the rest working"
+    },
+    {
+      "key": "chapter.s10_cogspire.name",
+      "text": "Cogspire"
+    },
+    {
+      "key": "level.s10_brassgate.name",
+      "text": "Brass Gate"
+    },
+    {
+      "key": "level.s10_brassgate.tagline",
+      "text": "Break three cursed stones over a crowd"
+    },
+    {
+      "key": "level.s10_windmill.name",
+      "text": "Windmill Row"
+    },
+    {
+      "key": "level.s10_windmill.tagline",
+      "text": "Fourteen at once, and nothing armoured"
+    },
+    {
+      "key": "level.s10_lampwick.name",
+      "text": "Lampwick"
+    },
+    {
+      "key": "level.s10_lampwick.tagline",
+      "text": "Plate in every wave, under the lamps"
+    },
+    {
+      "key": "level.s10_gearhouse.name",
+      "text": "Gearhouse"
+    },
+    {
+      "key": "level.s10_gearhouse.tagline",
+      "text": "Bombers walk in with the crowd"
+    },
+    {
+      "key": "level.s10_boilerheart.name",
+      "text": "Boiler Heart"
+    },
+    {
+      "key": "level.s10_boilerheart.tagline",
+      "text": "A warlord and a warbringer, together"
+    },
+    {
+      "key": "level.s10_steamvent.name",
+      "text": "Steam Vent"
+    },
+    {
+      "key": "level.s10_steamvent.tagline",
+      "text": "One colour at a time, in a flood"
+    },
+    {
+      "key": "level.s10_airdock.name",
+      "text": "Airship Dock"
+    },
+    {
+      "key": "level.s10_airdock.tagline",
+      "text": "Four waves past the airship"
+    },
+    {
+      "key": "level.s10_chainbridge.name",
+      "text": "Chain Bridge"
+    },
+    {
+      "key": "level.s10_chainbridge.tagline",
+      "text": "Brutes lead every wave"
+    },
+    {
+      "key": "level.s10_plankway.name",
+      "text": "Plankway"
+    },
+    {
+      "key": "level.s10_plankway.tagline",
+      "text": "Keep every turret fed"
+    },
+    {
+      "key": "level.s10_millwheel.name",
+      "text": "The Millwheel"
+    },
+    {
+      "key": "level.s10_millwheel.tagline",
+      "text": "An overlord and a bonecaller, together"
+    },
+    {
+      "key": "level.s10_axlegate.name",
+      "text": "Axle Gate"
+    },
+    {
+      "key": "level.s10_axlegate.tagline",
+      "text": "The crowd keeps climbing"
+    },
+    {
+      "key": "level.s10_orecart.name",
+      "text": "Ore Cart"
+    },
+    {
+      "key": "level.s10_orecart.tagline",
+      "text": "Sixteen from the very first wave"
+    },
+    {
+      "key": "level.s10_armillary.name",
+      "text": "Armillary"
+    },
+    {
+      "key": "level.s10_armillary.tagline",
+      "text": "Three shields in every wave"
+    },
+    {
+      "key": "level.s10_coilyard.name",
+      "text": "Coil Yard"
+    },
+    {
+      "key": "level.s10_coilyard.tagline",
+      "text": "A long crowd under the coils"
+    },
+    {
+      "key": "level.s10_sparkspire.name",
+      "text": "Spark Spire"
+    },
+    {
+      "key": "level.s10_sparkspire.tagline",
+      "text": "An ironclad and a colossus, together"
+    },
+    {
+      "key": "level.s10_trussway.name",
+      "text": "Truss Way"
+    },
+    {
+      "key": "level.s10_trussway.tagline",
+      "text": "Four brutes of one colour at a time"
+    },
+    {
+      "key": "level.s10_domewatch.name",
+      "text": "Dome Watch"
+    },
+    {
+      "key": "level.s10_domewatch.tagline",
+      "text": "Plate and bombs in the same wave"
+    },
+    {
+      "key": "level.s10_starglass.name",
+      "text": "Starglass"
+    },
+    {
+      "key": "level.s10_starglass.tagline",
+      "text": "The longest climb in the chapter"
+    },
+    {
+      "key": "level.s10_nightrail.name",
+      "text": "Night Rail"
+    },
+    {
+      "key": "level.s10_nightrail.tagline",
+      "text": "Everything this chapter taught, at once"
+    },
+    {
+      "key": "level.s10_skyclock.name",
+      "text": "The Sky Clock"
+    },
+    {
+      "key": "level.s10_skyclock.tagline",
+      "text": "Stop feeding one, keep the other three working"
     },
     {
       "key": "rank.cinderling.name",

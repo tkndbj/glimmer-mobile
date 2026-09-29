@@ -260,6 +260,44 @@ namespace GlimmerGrove.Modes
         public bool Shoved => Alive && Heave > 0f;
 
         /// <summary>
+        /// Seconds left of a hex, or nought (<see cref="SiegeLayout.Obsidian"/>).
+        ///
+        /// <para>
+        /// <b>A state the body wears rather than a timer on the board</b>, and the difference from
+        /// the hourglass is the whole of what the curse is. A stop is a fact about the ground, so
+        /// a raider that steps out mid-stop stops with the rest; a hex is a fact about <em>who
+        /// was standing there when the curse broke</em>, so a body mustered a second later walks
+        /// on clean. That is what makes <em>when</em> the decision (invariant 40i): broken over a
+        /// crowd it marks the crowd, and broken over an empty hill it marks nothing.
+        /// </para>
+        /// <para>
+        /// Read in exactly one place, <c>SiegeBoard.Wound</c>, which is the one door every point
+        /// of harm goes through - so every source of damage this mode has, and every one it gains
+        /// later, is multiplied without being taught about the curse.
+        /// </para>
+        /// </summary>
+        public float Hexed;
+
+        /// <summary>Whether this body is carrying a hex right now.</summary>
+        public bool Cursed => Alive && Hexed > 0f;
+
+        /// <summary>
+        /// Lays a hex on this body for <paramref name="seconds"/>, keeping the longer of what it
+        /// already carried - <b>extended, never stacked</b>, the hourglass's rule said of a body:
+        /// two breaks a beat apart are one curse lasting as long as the later says.
+        ///
+        /// <b>Something still in the wings is refused</b>, for <see cref="Shove"/>'s reason: a
+        /// body that has not walked on was not standing there when the curse broke.
+        /// </summary>
+        public bool Hex(float seconds)
+        {
+            if (!Alive || !OnTheHill || seconds <= 0f) return false;
+
+            if (seconds > Hexed) Hexed = seconds;
+            return true;
+        }
+
+        /// <summary>
         /// Drives this body back up the slope by <paramref name="share"/> of the hill, or as far
         /// as the crest, whichever is less.
         ///

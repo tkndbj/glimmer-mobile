@@ -491,6 +491,10 @@ namespace GlimmerGrove
             // lives in one place and a fourth charm cannot be half-added.
             _siege.Dealt = charm => Teaching?.Teach(Taught(charm));
 
+            // **And the cursed stone, the same way** (`SiegeLayout.Obsidian`): raised the first
+            // time one is standing in its socket, so the panel rings a stone the player can see.
+            _siege.StoneDealt = () => Teaching?.Teach(Mechanic.SiegeObsidian);
+
             // **What a bomb hits for is the published firepot's number, not a constant.** The two
             // are the same blast and the player is told so; a second figure is a second thing a
             // content push can move half of.
@@ -829,6 +833,12 @@ namespace GlimmerGrove
 
             for (int i = 0; charms != null && i < charms.Length; i++)
                 into.Add(Lesson.Later(Taught(charms[i]), _siege.LiveCharm(charms[i])));
+
+            // **And the curse, on a board that deals it and on no other** - the charms' rule: a
+            // lesson is shown once in a player's life, so offering it where no stone can ever
+            // fall would spend it on nothing.
+            if (plan.Cursed)
+                into.Add(Lesson.Later(Mechanic.SiegeObsidian, _siege.LiveObsidian()));
         }
 
         /// <summary>

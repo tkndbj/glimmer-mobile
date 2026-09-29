@@ -271,11 +271,18 @@ NUDGE = {
 #: painting's own artist stood a level node, and a route that dense cannot keep every record
 #: mark clear - the pack packs thirty nodes onto it. The twenty are chosen to overlap *least*
 #: (`routed`), and what is left is the look the owner asked for by picture on 2026-09-27.
+#:
+#: **`map9` accepts every rung too, and for a reason of its own.** Its chain is not searched for
+#: either (`TRACES`): it stands on the copper road the owner's painting draws, and that road
+#: zig-zags the full width of four strips twenty times over - so a twenty-rung chain on it is
+#: dense in the same way `map8`'s is, and the seats are the ones that reach over the fewest
+#: record marks (`traced`) rather than a promise that none do.
 ACCEPTED_OVERLAPS = {
     5: True,
     6: True,
     7: {1, 2, 3, 4, 5, 6, 8, 9},
     8: True,
+    9: True,
 }
 
 
@@ -352,6 +359,57 @@ ROUTES = {
 }
 
 
+#: Maps whose chain is **walked along the road the painting draws**, and the road itself.
+#:
+#: **The second-strongest reading of a painting, and the one available when the artist left no
+#: node layout but drew one unbroken route.** `map9` is the owner's own painting and ships
+#: flattened, with no PSD to read places out of (`ROUTES`). What it does carry is a single copper
+#: road from the foot of the map to the head, crossing between islands on six bridges - so a node
+#: belongs *on the road*, spaced along it, and never on the rock beside it.
+#:
+#: `bends` is that road's centreline as the painting draws it, **in the source picture's own
+#: pixels** (`size`), foot first: every corner the road turns and both ends of every bridge. It
+#: is read off the picture by eye and is the one authored thing here, exactly as `NUDGE` is - and
+#: like a nudge it is not what decides a seat. What decides it is the paint: the line is sampled
+#: every `TRACE_STEP` units of its length, each sample is **snapped to the middle of the copper
+#: under it** (the deepest point of the road mask within `TRACE_SNAP`), anything that snaps to
+#: nothing - a bridge deck, a gear, the gap at a hairpin - is thrown away, and the chain is
+#: chosen out of what is left (`traced`). So a bend read a few pixels wide still seats a node in
+#: the middle of the road, and a bend read onto the wrong island seats nothing at all.
+TRACES = {
+    9: dict(
+        size=(2048, 8256),
+        bends=(
+            (40, 8180), (1680, 7344), (540, 6772), (1528, 6224), (652, 5848), (780, 5760),
+            (1072, 5408), (1500, 5248), (1220, 5112), (860, 4840), (600, 4688), (1572, 4200),
+            (928, 4000), (1580, 3676), (1200, 3528), (800, 3320), (520, 3168), (800, 3020),
+            (1320, 2672), (1688, 2520), (1340, 2328), (860, 1952), (500, 1732), (780, 1560),
+            (1280, 1360), (1620, 1148), (1220, 1020), (860, 712), (540, 520), (1180, 100),
+            (980, 0),
+        ),
+    ),
+}
+
+#: How far apart the samples along a traced road are, in canvas units, and how far one may be
+#: moved to find the middle of the copper under it.
+#:
+#: **Twelve is a sixteenth of a node**, fine enough that the chain can be chosen to within a
+#: disc's width of wherever it wants; **the snap is half the road's width** (the copper is about
+#: seventy units across at this zoom), so a sample off-centre by the whole of a hand-read bend
+#: still finds the middle and a sample on a bridge deck finds no road to snap to at all.
+TRACE_STEP = 12.0
+TRACE_SNAP = 38.0
+
+#: How far up the map a traced chain's first rung stands, in canvas units: two edge margins,
+#: which is the widening `EDGE_MARGIN`'s own note asks for, taken where no approved seat moves.
+TRACE_FOOT = 236.0
+
+#: What a rung standing on a bridge deck rather than on the copper costs a traced chain, against
+#: a record mark's 100 - so a deck is taken when it clears a mark, and never merely to even out
+#: the spacing.
+DECK = 40.0
+
+
 def nudged(which: int, rung, seat):
     """
     A seat with its authored correction applied, still rounded to what ships.
@@ -421,6 +479,17 @@ GROUND = {
     # 26 from the road in green, so at the default tolerance a seat could hang on the side of an
     # island, and `TOLERANCE` holds this map at 12.
     8: [(83, 145, 138)],
+
+    # `map9` is the owner's clockwork sky islands, and its ground is its **copper road** and
+    # nothing else: the plate's body (190, 110, 80), its lit face (200, 118, 84) and the pale
+    # sheen the painting runs down the middle of every plate (226, 134, 90). At the default
+    # tolerance those three reach every plate in the road, lit at the foot of the map and dusk
+    # at the head, and nothing else a node might stand on: the islands' slate tops are grey
+    # (100 or more away in red), the brass bands are yellow (over 30 away in green) and the
+    # bridge planks are browns under 150 in red. **The copper pipes and the boiler are the
+    # same metal** and pass this test, which is why this map is walked along its road
+    # (`TRACES`) rather than searched: nothing is ever asked to stand anywhere the road is not.
+    9: [(190, 110, 80), (200, 118, 84), (226, 134, 90)],
 }
 
 # `map5` is the one painting here whose **road cannot be used**, and that is a fact about the
@@ -452,6 +521,7 @@ STREAM = {
     6: [],
     7: [],
     8: [],
+    9: [],
 }
 
 #: What each painting draws **instead of land**: sea, sky, lake, chasm, void.
@@ -502,6 +572,13 @@ VOID = {
     # the mid blue already takes in - a node on the lake's edge is the same fault as one on a bridge.
     8: [(39, 170, 225), (34, 145, 207), (197, 240, 255), (174, 235, 254), (234, 253, 249),
         (211, 248, 250)],
+
+    # `map9`'s void is a dusk sky: night navy at the head and teal at the foot. **It is only ever
+    # subtracted from the road here**, at the road's own tolerance (`ground_mask`), because this
+    # map is walked along its road rather than searched (`TRACES`): its islands are a dozen small
+    # rocks joined by bridges, so the "is there land all round" test this list otherwise feeds
+    # would read every one of them as a speck in the sky (`MIN_LANDMASS`), and it is not asked.
+    9: [(61, 54, 96), (70, 142, 156), (86, 167, 170)],
 }
 
 # `map4`'s own shadow deliberately does not appear above, and that is the correction worth
@@ -1216,6 +1293,177 @@ def routed(which: int, score: np.ndarray, land: np.ndarray):
     return places, marker
 
 
+def _trace_samples(which: int, mask: np.ndarray, height: float):
+    """Points along a traced road (`TRACES`), each snapped to the middle of the copper under it.
+
+    Answers `(arc, x, y, road)` in canvas units - `arc` along the hand-read line, `x` and `y`
+    from the map's top-left, and whether copper was found under it (a bridge deck, a gear axle or
+    the ore cart's rails are the path and are not copper) - foot of the map first. The painting is
+    placed exactly as `make_chapter_art.strips` cuts it: scaled on its height to whole strips and
+    trimmed from the centre.
+    """
+    trace = TRACES[which]
+    width_px, height_px = trace["size"]
+    zoom = height / height_px
+    trim = (width_px * zoom - WIDTH) / 2.0
+    bends = [(x * zoom - trim, y * zoom) for x, y in trace["bends"]]
+
+    # The deepest point of the road within reach of a sample is the middle of the road there.
+    depth = ndimage.distance_transform_edt(mask)
+    snap = int(round(TRACE_SNAP))
+    ys, xs = np.mgrid[-snap:snap + 1, -snap:snap + 1]
+    reach = (xs * xs + ys * ys) <= snap * snap
+
+    samples = []
+    arc = 0.0
+    for (ax, ay), (bx, by) in zip(bends, bends[1:]):
+        length = ((bx - ax) ** 2 + (by - ay) ** 2) ** 0.5
+        steps = max(1, int(length // TRACE_STEP))
+        for k in range(steps):
+            t = k / steps
+            px, py = ax + (bx - ax) * t, ay + (by - ay) * t
+            cx, cy = int(round(px)), int(round(py))
+            y0, y1 = max(0, cy - snap), min(mask.shape[0], cy + snap + 1)
+            x0, x1 = max(0, cx - snap), min(mask.shape[1], cx + snap + 1)
+            window = depth[y0:y1, x0:x1] * reach[y0 - cy + snap:y1 - cy + snap,
+                                                  x0 - cx + snap:x1 - cx + snap]
+            if window.size and window.max() >= FOOTING_RADIUS:
+                wy, wx = np.unravel_index(int(window.argmax()), window.shape)
+                samples.append((arc + length * t, float(x0 + wx), float(y0 + wy), True))
+            else:
+                # **A bridge deck is the path too**, and the line was read along its middle - so
+                # a sample with no copper under it stands where the line says, and is marked as
+                # off the road so the chain prefers the copper (`traced`).
+                samples.append((arc + length * t, px, py, False))
+        arc += length
+    return samples
+
+
+def traced(which: int, score: np.ndarray, land: np.ndarray, mask: np.ndarray):
+    """
+    A chapter's chain walked along the road the painting draws (`TRACES`), and its marker.
+
+    **Chosen, never typed**, for `routed`'s reason: a road sampled every twelve units offers a
+    few hundred places against a twenty-rung chapter, so which of them stand a node is a search.
+    It is a dynamic programme over the samples in road order, each node one step further along
+    the road than the last, and a chain is scored on two things in this order: **how many record
+    marks it reaches over** (`_collisions` between near neighbours, a disc overlap being fatal),
+    and **how evenly it is spread along the road** - so a player reads the chain as a walk up the
+    painting's own route rather than as twenty discs bunched on the easy stretches.
+
+    Every sample is on the road already (`_trace_samples` threw away the ones that were not), so
+    nothing here asks the broad footing test at all - a road across a dozen small islands is a
+    string of specks by that test (see `VOID[9]`). What is asked instead is the narrow one, on the
+    road mask itself, and a seat it refuses is printed rather than hidden.
+
+    **The marker is walked to as well.** Its height is the game's (`ChapterMap.TeaserPosition`)
+    and only its x is a body's to author, so it is put wherever the road is at that height, past
+    the last rung - the same road, one step further on, which is what "the chapter continues
+    here" should look like.
+    """
+    height = float(score.shape[0])
+    count = mapart.nodes_on(which)
+    ceiling = 1.0 - TEASER_HEADROOM / height
+
+    # The chain stops a disc short of the marker's height, so the marker can stand on the road
+    # past it rather than on top of the last rung; and it starts `TRACE_FOOT` up the map, clear
+    # of the loadout bar that stands in the map's foot on a siege (see `EDGE_MARGIN`'s note).
+    roof = ceiling - (MIN_SEPARATION + NODE_DIAMETER * .25) / height
+
+    pool = []
+    paved = []
+    for arc, x, y, road in _trace_samples(which, mask, height):
+        seat = (round(x / WIDTH, PRECISION), round(1.0 - y / height, PRECISION), False)
+        if seat[1] > roof or y > height - TRACE_FOOT:
+            continue
+        if not EDGE_MARGIN <= x <= WIDTH - EDGE_MARGIN:
+            continue
+        # A snapped sample can land on the same pixel as its neighbour; keep one.
+        if pool and pool[-1][1][:2] == seat[:2]:
+            continue
+        pool.append((arc, seat))
+        paved.append(road)
+
+    if len(pool) < count:
+        raise SystemExit(f"  map{which}: its road offers {len(pool)} places under the marker's "
+                         f"headroom against a {count}-rung chapter")
+
+    arcs = [arc for arc, _ in pool]
+    seats = [seat for _, seat in pool]
+    n = len(pool)
+    ideal = (arcs[-1] - arcs[0]) / (count - 1)
+
+    # Only a stretch of road near the ideal step is worth asking about, which is what keeps the
+    # programme to seconds: a gap far under a step crowds two nodes onto one lane, and one of two
+    # steps leaves a stretch of road with nobody on it. The bridges are where the window is
+    # wide enough to need: nothing may stand on a deck, so the step across one is long.
+    INF = float("inf")
+    least, most = ideal * 0.35, ideal * 2.0
+
+    def cost(i, j):
+        clash = _collisions(seats[i], seats[j], height)
+        if clash >= 1000:
+            return INF                     # two discs touching is never a chain
+        spread = ((arcs[j] - arcs[i]) - ideal) / ideal
+        return clash * 100.0 + spread * spread + (0.0 if paved[j] else DECK)
+
+    best = [[INF] * n for _ in range(count)]
+    back = [[-1] * n for _ in range(count)]
+
+    # The first node stands near the foot of the road and the last near its head, and both are
+    # pulled there gently rather than pinned, so the ends of the chain can still dodge a clash.
+    for j in range(n):
+        lead = (arcs[j] - arcs[0]) / ideal
+        best[0][j] = lead * lead * 4.0 + (0.0 if paved[j] else DECK)
+    for k in range(1, count):
+        for j in range(n):
+            for i in range(j - 1, -1, -1):
+                gap = arcs[j] - arcs[i]
+                if gap < least:
+                    continue
+                if gap > most:
+                    break
+                if best[k - 1][i] == INF:
+                    continue
+                total = best[k - 1][i] + cost(i, j)
+                if total < best[k][j]:
+                    best[k][j] = total
+                    back[k][j] = i
+
+    tail = [(best[count - 1][j] + (((arcs[-1] - arcs[j]) / ideal) ** 2) * 4.0, j)
+            for j in range(n) if best[count - 1][j] < INF]
+    if not tail:
+        raise SystemExit(f"  map{which}: no {count} places along its road clear each other")
+    _, j = min(tail)
+    chosen = []
+    for k in range(count - 1, -1, -1):
+        chosen.append(j)
+        j = back[k][j]
+    chosen.reverse()
+    places = [seats[i] for i in chosen]
+
+    # The marker: the road past the last rung, at the height the game will draw it at.
+    aim = min(ceiling, places[-1][1] + TEASER_GAP)
+    ahead = [(abs(1.0 - y / height - aim), x) for arc, x, y, road in
+             _trace_samples(which, mask, height) if road and arc > arcs[chosen[-1]]]
+    across = min(ahead)[1] / WIDTH if ahead else TEASER_X
+    marker = (round(min(1.0, max(0.0, across)), PRECISION), round(aim, PRECISION), False)
+
+    places, marker = apply_nudges(which, places, marker, height)
+
+    marks = sum(_collisions(a, b, height) for i, a in enumerate(places)
+                for b in places[i + 1:i + 5])
+    road = _disc_share(mask[::FOOTING_SCALE, ::FOOTING_SCALE].astype(np.float32), FOOTING_RADIUS)
+    off = [str(i + 1) for i, seat in enumerate(places)
+           if road[min(road.shape[0] - 1, int(round((1.0 - seat[1]) * height)) // FOOTING_SCALE),
+                   min(road.shape[1] - 1, int(round(seat[0] * WIDTH)) // FOOTING_SCALE)]
+           < FOOTING_SHARE]
+    print(f"  map{which}: {count} of {n} places along its road, {marks} record mark(s) reached "
+          f"over" + (f"; rungs {', '.join(off)} stand off the road's own footing test"
+                     if off else ", every rung on the road"))
+    return places, marker
+
+
 #: Every map measured once, because a borrow asks for the map it borrows from.
 _MEASURED: dict = {}
 
@@ -1228,7 +1476,9 @@ def measure(which: int):
     mask = ground_mask(image, which)
     land = land_mask(image, which)
     score = footing(mask, land, stream_mask(image, which))
-    if which in ROUTES:
+    if which in TRACES:
+        places, marker = traced(which, score, land, mask)
+    elif which in ROUTES:
         places, marker = routed(which, score, land)
     elif which in BORROWS:
         places, marker = borrowed(which, BORROWS[which], score)

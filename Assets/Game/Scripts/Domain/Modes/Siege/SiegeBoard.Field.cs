@@ -156,6 +156,12 @@ namespace GlimmerGrove.Modes
                 depth++;
                 var beat = new SiegeBeat { Depth = depth, Fuel = new float[_wards.Length] };
 
+                // **A broken curse takes every obsidian on the field with it, and it is folded
+                // into this beat before a single cell is taken** - the lance's reason: the stones
+                // it pulls in have not started a cascade, they are the same event, so they clear,
+                // pay and are drawn going in one picture. See `SiegeBoard.Obsidian`.
+                Unbound(hit, beat);
+
                 // **Everything a charm adds is folded into the beat that set it off, before a
                 // single cell is taken away.** A lance that takes its row and column has not
                 // started a cascade - a cascade is what falls in afterwards - so its cells clear
@@ -180,7 +186,11 @@ namespace GlimmerGrove.Modes
                     // A cell a lance took that was in no run of its own is paid as its own colour,
                     // which is what the fallback says.
                     char worth = _paid[cell] != '\0' ? _paid[cell] : _cells[cell];
-                    beat.Paid.Add(SiegeLayout.Letters.IndexOf(worth));
+
+                    // **`FaceOf` rather than an index into the four**, so an obsidian is recorded
+                    // as the stone it was - it pays no ward (`WardOf` answers -1 below) and the
+                    // view draws its shards in its own colour rather than as a cream nothing.
+                    beat.Paid.Add(SiegeLayout.FaceOf(worth));
 
                     int ward = Layout.WardOf(worth);
                     if (ward >= 0) beat.Fuel[ward] += SiegeTuning.FuelPerGem;
@@ -284,7 +294,7 @@ namespace GlimmerGrove.Modes
                         _charms[from] = SiegeCharm.None;
                         Attention.CharmMoved(from, to);
 
-                        beat.Drops.Add(new SiegeDrop(x, y, write, SiegeLayout.Letters.IndexOf(c),
+                        beat.Drops.Add(new SiegeDrop(x, y, write, SiegeLayout.FaceOf(c),
                                                      _charms[to]));
                     }
 
@@ -310,7 +320,7 @@ namespace GlimmerGrove.Modes
 
                     if (charm != SiegeCharm.None) Attention.CharmDealt(charm, to);
 
-                    beat.Drops.Add(new SiegeDrop(x, -1 - fresh, y, SiegeLayout.Letters.IndexOf(c),
+                    beat.Drops.Add(new SiegeDrop(x, -1 - fresh, y, SiegeLayout.FaceOf(c),
                                                  charm));
                     fresh++;
                 }
@@ -413,7 +423,7 @@ namespace GlimmerGrove.Modes
             charm = SiegeCharm.None;
 
             var charms = Layout.Charms;
-            if (charms == null || charms.Length == 0) return Settled(at, drawn);
+            if (charms == null || charms.Length == 0) return Cursing(at, drawn, charm);
 
             uint mixed = Avalanche(drawn);
 
@@ -434,8 +444,45 @@ namespace GlimmerGrove.Modes
                 _charmAt = (int)((mixed & 0xFFFFu) % SiegeTuning.CharmWithin);
             }
 
+            return Cursing(at, drawn, charm);
+        }
+
+        /// <summary>
+        /// The gem this draw deals, or an obsidian in its place on a field that deals them.
+        ///
+        /// <para>
+        /// <b>Still the one draw</b> (invariant 41): the roll is read out of the same word, salted
+        /// and avalanched so it shares no bits with the letter, the charm or the settle roll -
+        /// the rule `Avalanche` exists for. And it is only taken on a cursed field, so every
+        /// board that shipped before the curse deals exactly the gems it always did.
+        /// </para>
+        /// <para>
+        /// <b>Never onto a charm</b>, because a charm rides a colour and an obsidian has none; the
+        /// charm wins and the stone waits for the next cell. <b>And never already lined</b>
+        /// (invariant 37el), strictly rather than at the settle dial's rate: three obsidians
+        /// landing together would break a curse nobody gathered, which is the free payoff that
+        /// rule exists to refuse. A stone that would land lined deals the gem instead.
+        /// </para>
+        /// </summary>
+        char Cursing(int at, uint drawn, SiegeCharm charm)
+        {
+            if (Layout.Cursed && charm == SiegeCharm.None
+                && Avalanche(drawn ^ CurseSalt) % 100u < (uint)SiegeTuning.ObsidianPercent)
+            {
+                char was = _cells[at];
+                _cells[at] = SiegeLayout.Obsidian;
+
+                bool lined = SiegeLayout.Lined(_cells, Width, Height, _charms, at);
+                _cells[at] = was;
+
+                if (!lined) return SiegeLayout.Obsidian;
+            }
+
             return Settled(at, drawn);
         }
+
+        /// <summary>Keeps the curse roll out of every other roll's bits. See <see cref="SettleSalt"/>.</summary>
+        const uint CurseSalt = 0x9E3779B9u;
 
         /// <summary>
         /// The gem this draw deals into <paramref name="at"/>: the one it picked, unless that one

@@ -231,6 +231,12 @@ CHARM_INSET, CHARM_RING = 1.06, 1.18
 #: disk, which is the same thing the view now does (`frames.Length / HeaveSweep`).
 HEAVE_FRONT = 1.5
 
+#: `SiegeView.HexFront` - how deep the curse's front is drawn, in cells - and `CurseLight`'s violet,
+#: the tint every piece of the curse's added light wears. Read off `make_obsidian_art.VIOLET` by
+#: `SiegeObsidianTests` on the C# side; here it is the same three numbers.
+HEX_FRONT = 1.6
+HEX_VIOLET = (168, 92, 255)
+
 #: **`Pal.Rope` and `Pal.Glass` are gone from this file, and their absence is the point.** They were
 #: what the anvil's front and the hourglass's front and dial were tinted with here, mirroring a view
 #: that lent the same two colours - a dull tan and a near-white. All four reels carry their own paint
@@ -550,12 +556,21 @@ REUNION = (
     ("",       "brood",  "court",  "rabble"),
 )
 
+#: The ninth chapter's square, mirroring `SiegeMode.GatheringOrder` - the third, dealt so that no
+#: slot draws what `MEDLEY` or `REUNION` draws in it.
+GATHERING = (
+    ("wild",   "bone",   "",       "brood"),
+    ("court",  "rabble", "brood",  "court"),
+    ("rabble", "wild",   "bone",   ""),
+)
+
 #: Which row of `MEDLEY` a kind reads, in `SiegeMode.CastAddress`'s own order.
 MEDLEY_ROWS = {"mon": 0, "brute": 1, "bulwark": 2}
 
 
 def skin(kind, colour):
-    square = MEDLEY if CAST == "medley" else REUNION if CAST == "reunion" else None
+    square = (MEDLEY if CAST == "medley" else REUNION if CAST == "reunion"
+              else GATHERING if CAST == "gathering" else None)
     cast = square[MEDLEY_ROWS[kind]][colour] if square else CAST
 
     return "%s%s_%s" % (cast, kind if not cast else kind[0].upper() + kind[1:],
@@ -1990,6 +2005,21 @@ def stood_charms(spec, level):
     return out
 
 
+def stood_stones(spec, level):
+    """`--obsidian`, as a set of cells. `auto` scatters five where no three touch."""
+    if not spec:
+        return set()
+
+    block = level.get("siege") or {}
+    wide, tall = block.get("width") or 0, block.get("height") or 0
+
+    if spec == "auto":
+        picks = [(1, 0), (4, 1), (6, 3), (2, 3), (0, 4)]
+        return {y * wide + x for x, y in picks if x < wide and y < tall}
+
+    return {int(part) for part in spec.split(",") if part.strip()}
+
+
 def board_fit(grid):
     """The room, the cell and the board's span on whatever canvas is set - `SiegeView.Fit`.
 
@@ -2016,10 +2046,12 @@ def board_fit(grid):
 
 def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, line=None,
          burn=None, storm=0, bombs=None, cogs=0, forecast=False, armed=(), charms=None,
-         lance=None, volley=None, stilled=None, heaved=None, unleash=None):
+         lance=None, volley=None, stilled=None, heaved=None, unleash=None, stones=None,
+         cursed=None):
     lay = layout_of(level)
     grid = lay.grid
     charms = charms or {}
+    stones = stones or set()
 
     # **Every damage figure on this picture, painted last.** It mirrors the view's own layer
     # order rather than the order the code happens to run in (invariant 44d): `SiegeView.Number`
@@ -2103,6 +2135,16 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
         body = reel(skin("bulwark" if bulwark else "brute" if brute else "mon", colour))
         wide = tall if body is None else tall * body.width / body.height
         shadow(sheet, cx, cy, wide, tall)
+
+        # **The sigil a hexed body stands in** (`SiegeView.Hexing`): on the ground under it,
+        # squashed to the hill, in the curse's violet - drawn for every body the front has already
+        # passed at `--cursed T`, because that is who the model marked (`SiegeBoard.Unbind`).
+        if cursed is not None and ly < hill_foot + (hill_top - hill_foot) * max(0.0, min(1.0, cursed)) + cell:
+            mark = dyed(sprite("hex_sigil"), HEX_VIOLET, 200)
+            if mark is not None:
+                put(sheet, mark, cx, cy - BODY_LIFT * tall + tall * 0.18, wide * 1.35,
+                    wide * 1.35 * 0.45)
+
         put(sheet, body, cx, cy - BODY_LIFT * tall, wide, tall)
 
         # **The flame an ember turret leaves on it** (`SiegeView.Ablaze`). Over the body and under
@@ -2348,6 +2390,18 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
             hddisc = faded(heaveface.resize((hdsize, hdsize), Image.LANCZOS), DIAL_INK)
             sheet.alpha_composite(hddisc, (int(hdx - hdsize / 2), int(hdy - hdsize / 2)))
 
+    # ------------------------------------------------------------------ the curse falling
+    # `SiegeView.Cursed` - the curse's front climbing from the line to the crest, the wake behind
+    # it, and (above, with the bodies) the sigil every body it has passed now stands in. The third
+    # thing that sweeps this hill, so draw it beside `--stilled` and `--heaved` before believing it
+    # reads as neither.
+    if cursed is not None:
+        v = max(0.0, min(1.0, cursed))
+        hexfrom = line_y + cell * 0.5
+        sweep_wall(sheet, at, "hexwave", hexfrom, hill_top,
+                   max(0.0, (v - 0.16) / 1.25), HEX_FRONT * 1.9, 0.45, span, cell)
+        sweep_wall(sheet, at, "hexwave", hexfrom, hill_top, v, HEX_FRONT, 1.0, span, cell)
+
     # **Both of the hill's captions, together, because apart they say nothing.** Each was
     # individually well placed and the pair overlapped on every shape; drawing only the chain is
     # what let that ship. A cascade while a wave walks on is ordinary, so this is the real worst
@@ -2409,6 +2463,16 @@ def draw(level, raiders, bolts=True, aim=False, boss="cast", rung=0, wave=1, lin
         # one thing on this field that is not a gem, and the gap is the cheapest way of saying so
         # that survives being forty pixels wide (`SiegeView.Mint`).
         side = cell * (GEM_INSET * 0.88 if c == "*" else GEM_INSET)
+
+        # **An obsidian, stood where `--obsidian` asks** (`SiegeLayout.Obsidian`): dealt, never
+        # authored, so this is the only way to look at one - and the question is whether a black
+        # stone among four saturated jewels reads as *cursed* at forty pixels rather than as a
+        # hole. The curse's glow under it is `SiegeView.Brood`'s at rest.
+        if i in stones:
+            glow = dyed(sprite("charm_ring"), HEX_VIOLET, 150)
+            put(sheet, glow, cx, cy, cell * 1.2, cell * 1.2)
+            put(sheet, sprite("gem_obsidian"), cx, cy, side, side)
+            continue
 
         # **Every charm is a face** (`SiegeView.CharmFace`): a prism is the one gem here that is
         # not a colour, and the other two are their own stone cut in the colour they are worth. So
@@ -2756,6 +2820,8 @@ CHAPTER_CASTS = {
     "s08_bonereach": "",
     # The eighth chapter draws the reunion, a second square over the six (`SiegeMode.Reunion`).
     "s09_cloudkeep": "reunion",
+    # The ninth chapter draws the gathering, a third square over the six (`SiegeMode.Gathering`).
+    "s10_cogspire": "gathering",
     "s02_endlesswatch": "medley",
 }
 
@@ -3196,6 +3262,14 @@ def main():
                     help="draw an anvil's front mid-sweep, nought at the line and one at the "
                          "crest - the charm's whole payoff is a moment, so a still frame is what "
                          "it is for")
+    ap.add_argument("--obsidian", nargs="?", const="auto", default="", metavar="CELL,...",
+                    help="stand cursed stones on the field - bare for five scattered cells. They "
+                         "are dealt, never authored, so this is the only way to see whether a "
+                         "black stone reads as cursed among four jewels")
+    ap.add_argument("--cursed", type=float, default=None, metavar="T",
+                    help="draw the curse's front T of the way up the hill (0..1), every body it "
+                         "has passed standing in the sigil - the third thing that sweeps the "
+                         "hill, to be judged beside --stilled and --heaved")
     ap.add_argument("--stilled", type=float, default=None, metavar="T",
                     help="draw the hourglass stopping the hill, T of the way through the sweep "
                          "(0..1) - the wavefront and the dial it hangs over the hill")
@@ -3302,7 +3376,8 @@ def main():
                     armed=[int(x) for x in args.armed.split(",") if x.strip()],
                     charms=stood_charms(args.charms, lv), lance=stood_lance(args.lance, lv),
                     volley=stood_lance(args.volley, lv), stilled=args.stilled,
-                    heaved=args.heaved, unleash=args.unleash)
+                    heaved=args.heaved, unleash=args.unleash,
+                    stones=stood_stones(args.obsidian, lv), cursed=args.cursed)
         if not args.no_bar:
             bar(shot, held, cooling)
         if not args.no_header:

@@ -1038,8 +1038,9 @@ is where they are written down, not what they mean.
    owner's instruction). A win or a loss commits an uncommitted play first. Leaving a moved-on
    board asks through `ForfeitOverlay` with a play on the tag, which keeps the confirmations at
    three. A win advances to the next slot; a loss retries
-   the same one; a play dealt before midnight and won after is paid against the day it was dealt
-   (`ChallengePlay`). The block is its own top-level save key (`challenges`, v34), by the owner's
+   the same one; a win is paid against the day that *charged* the play (`ChargedDay`), which is
+   the dealt day unless midnight fell before the first move - a win claimed against another
+   day than its attempt was a claim that day's advert pool never paid for (56p). The block is its own top-level save key (`challenges`, v34), by the owner's
    instruction that a challenge shares nothing with the core game — which cost the whole of 12a,
    **and the rules release goes out before the client.**
 56h. **A deal is the season pass's shape** (47e): bought with gems under a derived id the server
@@ -1138,7 +1139,12 @@ is where they are written down, not what they mean.
    copy kept off the save for `EndlessCoins`' reason. It is **one pool for every genre**:
    the device spends it in *plays* past a genre's allowance, and `drawAdPlay` pays a win past
    the allowance out of it, holding the drawn **ordinals** so a deal landing later gives its play
-   back. Its own daily cap, outside the shared cooldown, and never a chest drop (`IsAdOnly`).
+   back. The two rules differ on purpose and are held together by `challengeAdPoolCases`
+   (`make_challenge_vectors.py` refuses a case where the device raises a claim the server would
+   not pay). A win is claimed against the day that *charged* its play (56g), or it is priced
+   against a pool it never drew on. Its own daily cap, outside the shared cooldown, and never a
+   chest drop (`IsAdOnly`); the build gate counts its plays in the coin ceiling
+   (`ChallengeEconomyGate`).
 
 ### Art credits
 
@@ -1802,6 +1808,7 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
 | `s07_dustcrown` | siege | 10 | 61–101 matches | the sixth chapter: the **court** cast of three robed wizards, a hooded archer, a falcon-headed war-god and a bone knight; **four tenths of surge**, which is **+40% raider health against the first chapter**; a **gorgon** on 5 (her glare wastes what is poured into a ward) and a **sunlord** on 10 (he seals a ward — fill it or lose it, and never the last one standing); deals all six charms, the **anvil** new |
 | `s08_bonereach` | siege | 10 | 69–100 matches | the seventh chapter, and the cheapest one this mode has ever shipped: **five tenths of surge**, which is **+50% raider health against the first chapter**, and *nothing else new but the two fights* — no charm (the roster clamps at six) and no cast (the table wraps to the insects). A **harrower** on 5 (it tears a rank off a ward and drops it on the hill as a cog you can pick back up) and a **hollowking** on 10 (it strikes every post that has fired nothing since its last cast and spares every post that has been working). Draws `map7`, the dead lands |
 | `s09_cloudkeep` | siege | 20 | 50–108 matches | the eighth chapter and the first of **twenty rungs** - four islands of five, levels 71–90 - on `map8`, the sky islands, seated on the pack's own node layout read out of its PSD (`make_map_seats.ROUTES`). **A crowd at a softer surge**: four tenths (`SiegeTuning.Traded`, the owner's 40% against Bonereach's 50%) with waves of ten to fifteen. **A duel on 5, 10, 15 and 20** - two bosses at once, each at 60% of its health (37er): gravemaw + harrower, blightcaller + gorgon, thunderer + shackler, sunlord + hollowking. Draws the **reunion** cast, a second square over all six chapter casts (37et) |
+| `s10_cogspire` | siege | 20 | 64–132 matches | the ninth chapter, levels 91–110, on `map9` - the owner's clockwork islands, seated by walking the copper road (`make_map_seats.TRACES`). **The curse**: a fifth, rarer gem (the Pairs obsidian) that feeds no ward; three in a line take every stone on the field and hex every raider standing (+50% damage from everything, 6-12 s) - MODES.md 37ew-37ey. Surge 1.5 (`Traded`), 8% more raiders than Cloudkeep (mostly creepers); 27/180 held on the one-star ember line against Cloudkeep's 31; the **gathering** cast; duels warlord+warbringer, overlord+bonecaller, ironclad+colossus, gorgon+hollowking |
 | `s02_endlesswatch` | siege *(infinite)* | 1 | 3★ at wave 30 | waves that never stop, graded on how far it got, drawing a **medley** of every cast; **both star waves are guesses until somebody plays it**; opens at keeper level 10; **a heart to enter and none to lose** (43e) |
 
 **No level authors a difficulty number except the first glade in the game, and no chapter authors a clock.**
@@ -1886,6 +1893,8 @@ half is `Assets/Game/Scripts/Cloud/`, Firebase Unity SDK
 on a fresh clone).
 
 ## Owed
+
+**Cogspire and the curse shipped on 2026-09-28 (MODES.md 37ew-37ey) and have never been played or swept.** Done: the Editor's three (the stone, sigil and map strips in a new `Glimmer Chapter s10_cogspire` group, `hexwave` in Global; Audit Addresses clean, Validate Content verifies all twenty, Validate Art clean) and the re-seed from a HEAD shadow (exactly the twenty `s10_*` ids added to `levelChapters`, the other three documents unchanged). **Owed: the owner's sweep** - `TheNinthChapterIsFoughtOnABoughtLine`'s floors (20 held, 10 walled) are set off one probe rather than a sweep, and `siege.STAR_FACTORS[9]` is provisional at Bonereach's (0.42, 0.56); **and a device**: whether a black stone reads as *gather me* rather than as a hole, whether the break (chains, void, burst) reads at slow motion, and whether the violet front is told apart from the hourglass's and the anvil's. The map accepts 32 record-mark overlaps (twenty rungs on four strips; `map8` accepts 15).
 
 **The daily challenges' advert play (56p, 2026-09-28): the server half is live, the client half
 needs a build.** Done: `adReward`, `claimAwards` and `getWallet` deployed by name, all three

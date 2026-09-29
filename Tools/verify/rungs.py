@@ -59,6 +59,7 @@ TABLES = (
     ("Dustcrown", "s07_dustcrown", "SiegeRuleTests.Chapters.cs"),
     ("Bonereach", "s08_bonereach", "SiegeRuleTests.Chapters.cs"),
     ("Cloudkeep", "s09_cloudkeep", "SiegeRuleTests.Chapters.cs"),
+    ("Cogspire", "s10_cogspire", "SiegeRuleTests.Chapters.cs"),
 )
 
 #: One `new Rung(...)` line. Deliberately narrow - it matches the shape this project writes and
@@ -73,7 +74,8 @@ ROW = re.compile(
     r'(?P<cogs>\d+)'
     r'(?:,\s*(?P<tough>\d+))?'
     r'(?:,\s*(?P<gold>\d+),\s*(?P<silver>\d+))?'
-    r'(?:,\s*"(?P<charms>[^"]*)")?\)'
+    r'(?:,\s*"(?P<charms>[^"]*)")?'
+    r'(?:,\s*(?P<obsidian>true|false))?\)'
 )
 
 STRINGS = re.compile(r'"([^"]*)"')
@@ -104,6 +106,7 @@ def table_of(source, name):
             "gold": int(m.group("gold") or 120),
             "silver": int(m.group("silver") or 140),
             "charms": m.group("charms") or "",
+            "obsidian": m.group("obsidian") == "true",
         })
 
     return made
@@ -140,6 +143,10 @@ def body_of(chapter):
             # has no catalog, so a set the C# copy is missing is ninety runs a chapter played on a
             # board nobody ships, with every gate green.
             "charms": block.get("charms", "") or "",
+
+            # **And the curse, for the charms' reason** (`SiegeDto.obsidian`): a sweep of the
+            # ninth chapter played on a board that deals no obsidian is a chapter nobody ships.
+            "obsidian": bool(block.get("obsidian", False)),
         })
 
     return made
@@ -155,10 +162,14 @@ def row_text(rung):
     """
     rows = ", ".join('"%s"' % r for r in rung["rows"])
     waves = ", ".join('"%s"' % w for w in rung["waves"])
+
+    # The curse is written only where a rung deals it, so every chapter shipped before it prints
+    # exactly the line it always did.
+    cursed = ", true" if rung["obsidian"] else ""
     return ('            new Rung("%s", new[] { %s }, "%s", "%s", new[] { %s }, "%s", %d, %d, %d, '
-            '%d, "%s"),'
+            '%d, "%s"%s),'
             % (rung["id"], rows, rung["gems"], rung["wards"], waves, rung["boss"], rung["cogs"],
-               rung["tough"], rung["gold"], rung["silver"], rung["charms"]))
+               rung["tough"], rung["gold"], rung["silver"], rung["charms"], cursed))
 
 
 def main():
@@ -207,7 +218,7 @@ def main():
 
             print("%s row %d disagrees with %s.json:" % (name, i + 1, chapter))
             for key in ("id", "rows", "gems", "wards", "waves", "boss", "cogs", "tough",
-                        "gold", "silver", "charms"):
+                        "gold", "silver", "charms", "obsidian"):
                 if inline[i][key] != shipped[i][key]:
                     print("    %-6s inline  %r" % (key, inline[i][key]))
                     print("    %-6s shipped %r" % ("", shipped[i][key]))

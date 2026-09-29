@@ -1311,7 +1311,13 @@ namespace GlimmerGrove
 
             tally.Label.fontSize = Mathf.Max(8, Mathf.RoundToInt(size));
             tally.Label.text = tally.Total.ToString();
-            tally.Label.color = tally.Mine ? Pal.Ember : tally.Weak ? Pal.Gold : Pal.Cream;
+            // **A figure off a hexed body is drawn in the curse's light**, so the half again
+            // it took is visibly the curse's doing rather than a bigger number from nowhere.
+            var hit = _board != null ? _board.Find(tally.Raider) : null;
+
+            tally.Label.color = tally.Mine ? Pal.Ember
+                              : hit != null && hit.Cursed ? HexCore
+                              : tally.Weak ? Pal.Gold : Pal.Cream;
         }
 
         /// <summary>The arrival: overshoot and settle, once per hit that lands on it.</summary>

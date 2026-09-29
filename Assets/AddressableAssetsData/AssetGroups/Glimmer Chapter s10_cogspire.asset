@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Glimmer Chapter s10_cogspire
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Glimmer Chapter s10_cogspire
+  m_GUID: 048c86dad0f8f634db22aca741aa4407
+  m_SerializeEntries:
+  - m_GUID: 16e236101f23e9c47a712d6763ee2726
+    m_Address: Art/Siege/hex_sigil
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 292912c6998541a469575e1d84579ed3
+    m_Address: Art/Map/map9_strip1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3ceb1dff22890ce4d9404236b23ddc27
+    m_Address: Art/Map/map9_strip3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6a6e1d2bcc3fb6d4d9bc06eaef70e4cc
+    m_Address: Art/Siege/gem_obsidian
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6b7fd6eb67d5c184fbe26db22dcaa6d7
+    m_Address: Art/Map/map9_strip0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c6d2f05ac11616942b01b44ec630a3a4
+    m_Address: Art/Map/map9_strip2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 6c4c5f6eb57af6542b195d29840b42f2, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 1c4484dc5250e97418248a47422c836b, type: 2}
+    - {fileID: 11400000, guid: 53fb79fe4b5267a438b0b5997943ec3e, type: 2}
+    m_SchemaDisplayOrder:
+    - Glimmer Chapter s10_cogspire_BundledAssetGroupSchema
+    - Glimmer Chapter s10_cogspire_ContentUpdateGroupSchema
+  m_IncludeInBuild: 1
+  m_IncludeInBuildMigrated: 1

@@ -65,6 +65,10 @@ namespace GlimmerGrove
             // dead. It draws nothing on a field carrying no charm, which is most frames.
             Breathe(Time.unscaledDeltaTime);
 
+            // **The obsidians smoulder, for `Breathe`'s reason**: a held board is still a board
+            // with cursed stones on it. Draws nothing on a field that deals none.
+            Brood(Time.unscaledDeltaTime);
+
             // **Before the gate, with `Idle` and `Breathe`, and for their reason.** A dilation is
             // seconds of real time and has to expire whether or not the run is advancing - a panel
             // raised over a charm would otherwise park the slowdown at full and hand it back to a
@@ -118,6 +122,11 @@ namespace GlimmerGrove
             // a widget built after it would spend a frame at the wrong depth.
             Burning(Time.unscaledDeltaTime);
 
+            // **And what is cursed, which is the same kind of reading**: the sigil a hexed body
+            // stands in is put up, kept and taken down off `SiegeRaider.Hexed` every frame
+            // (`SiegeView.Obsidian`). Beside `Burning` and for its reasons.
+            Hexing(Time.unscaledDeltaTime);
+
             // The fight's own beats - the plant, each phase turning, the guard going up and
             // coming down - read off the raiders `Follow` just drew. See `SiegeView.Fight`.
             Fight(Time.unscaledDeltaTime);
@@ -160,6 +169,11 @@ namespace GlimmerGrove
             // shove that moved nothing is drawn too, because a payoff that did nothing in
             // silence would be a broken gem rather than a wrong choice.
             if (report.Heaved > 0f) Heaved(report.Heaved, report.Shoved);
+
+            // **The curse falling on the hill, on the frame the model laid it** - the stones that
+            // paid for it broke `FuelLands` earlier and were drawn then (`SiegeView.Obsidian`). A
+            // curse that marked nobody is drawn too, for the anvil's reason.
+            if (report.Hex > 0f) Cursed(report.Hex, report.Hexed);
 
             // What a gorgon's glare cost: a shot leaving a stone-struck barrel and shattering.
             // One per post per beat, so a ward masked through a whole window is seen wasting
@@ -402,6 +416,7 @@ namespace GlimmerGrove
                     mob.Body.color = raider.Flash > 0f
                                    ? Color.Lerp(Color.white, Pal.Cream, raider.Flash * 5f)
                                    : raider.Stunned || _board.Stilled ? Stunned
+                                   : raider.Cursed ? HexedBody(raider)
                                    : raider.Alight ? Scorched(raider) : Color.white;
 
                 // **A boss goes back to its own body the frame after a spell finishes, and which

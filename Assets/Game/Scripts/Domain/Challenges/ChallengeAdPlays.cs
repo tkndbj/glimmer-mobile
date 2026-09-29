@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using GlimmerGrove.Ads;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
@@ -102,6 +103,48 @@ namespace GlimmerGrove.Challenges
 
             Write(today, next);
             Raise();
+        }
+
+        // ------------------------------------------------------------------ the pool rule
+        /// <summary>
+        /// Advert plays a day has spent: every attempt of a genre past the day's own allowance,
+        /// summed over the genres. Pure, so the ledger, the shared vectors
+        /// (<c>challengeAdPoolCases</c>) and the server's half (<c>drawAdPlay</c>, which counts
+        /// the wins those attempts can produce) are held to one another rather than argued.
+        ///
+        /// <para>
+        /// <b>Attempts here, wins there, and that is the safe way round</b>: every win is an
+        /// attempt, so a device that stops offering when this reaches the day's count can never
+        /// raise a win the server's count does not cover.
+        /// </para>
+        /// </summary>
+        public static int Used(int allowance, IEnumerable<int> attemptsPerGenre)
+        {
+            int used = 0;
+            if (attemptsPerGenre == null) return used;
+            foreach (int attempts in attemptsPerGenre)
+            {
+                int over = attempts - allowance;
+                if (over > 0) used += over;
+            }
+            return used;
+        }
+
+        /// <summary>Advert plays still to spend: the day's count less <see cref="Used"/>, never below nought.</summary>
+        public static int Left(int allowance, int granted, IEnumerable<int> attemptsPerGenre)
+        {
+            int left = granted - Used(allowance, attemptsPerGenre);
+            return left > 0 ? left : 0;
+        }
+
+        /// <summary>
+        /// Plays a genre may still take: what is left of its own allowance plus the pool, which
+        /// every genre shares.
+        /// </summary>
+        public static int PlaysLeft(int allowance, int granted, int genreAttempts, IEnumerable<int> attemptsPerGenre)
+        {
+            int own = allowance - genreAttempts;
+            return (own > 0 ? own : 0) + Left(allowance, granted, attemptsPerGenre);
         }
 
         static void Raise()

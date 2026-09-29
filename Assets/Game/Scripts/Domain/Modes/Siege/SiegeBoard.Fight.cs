@@ -104,6 +104,14 @@ namespace GlimmerGrove.Modes
             int room = raider.Health - raider.Floor;
             if (raider.Arriving || room <= 0) return 0;
 
+            // **A hexed body takes more from everything, and this is the only place that says
+            // so** (`SiegeLayout.Obsidian`). Applied before the floor rather than after it, so a
+            // boss resting on its notch is still held there: the curse makes the line hit harder,
+            // it never lets a stand be skipped (invariant 37di). Integer and rounded down, for
+            // the "no float decides a threshold" rule; a point is never lost to the rounding,
+            // because the percentage is at least a hundred.
+            if (raider.Hexed > 0f) damage = SiegeTuning.Hexing(damage);
+
             int took = damage < room ? damage : room;
 
             raider.Health -= took;

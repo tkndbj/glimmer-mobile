@@ -251,5 +251,19 @@ namespace GlimmerGrove.Modes
             RubbleDug++;
             if (cleared) PostsCleared++;
         }
+
+        /// <summary>
+        /// Curses broken this run, and the most stones one break took. The second is the reading
+        /// that says whether a player <em>gathers</em> obsidians before breaking them - which is
+        /// the whole decision the stone asks (<see cref="SiegeLayout.Obsidian"/>).
+        /// </summary>
+        public int CursesBroken { get; private set; }
+        public int MostStonesBroken { get; private set; }
+
+        internal void CurseBroken(int stones)
+        {
+            CursesBroken++;
+            if (stones > MostStonesBroken) MostStonesBroken = stones;
+        }
     }
 }

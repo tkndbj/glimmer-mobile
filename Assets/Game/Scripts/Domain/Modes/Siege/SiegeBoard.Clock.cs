@@ -104,6 +104,11 @@ namespace GlimmerGrove.Modes
             // which is a different run from the one the player played.
             Break(dt);
 
+            // **The curse lands beside the charms and for their reason** (invariant 37s): booked
+            // with the break's own fuel, after the fuel, so the line is fed before the hill it is
+            // about to shoot at is marked.
+            Unbind(dt);
+
             Arrive(dt);
         }
 
@@ -553,6 +558,11 @@ namespace GlimmerGrove.Modes
                 if (!raider.Alive) continue;
 
                 if (raider.Flash > 0f) raider.Flash = Math.Max(0f, raider.Flash - dt);
+
+                // **A hex runs down on the board's own clock, and through a stopped hill** - it
+                // is a curse the body wears, not a walk, so an hourglass landing inside it does
+                // not buy it more seconds (`SiegeRaider.Hexed`).
+                if (raider.Hexed > 0f) raider.Hexed = Math.Max(0f, raider.Hexed - dt);
 
                 // **An anvil's shove is worked off before anything else and through a stopped
                 // hill** (`SiegeCharm.Anvil`, `SiegeRaider.Shove`). Two reasons, and neither is

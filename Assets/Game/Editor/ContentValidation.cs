@@ -1151,6 +1151,19 @@ namespace GlimmerGrove.EditorTools
             Challenges.ChallengeTable.TryRead(fetch.Text, out var table, problems);
             foreach (var problem in problems) result.Errors.Add("challenges: " + problem);
 
+            // The economy ceiling with the advert plays counted (56p): the advert's cap is in
+            // progression.json, so this is read from the shipped file rather than from
+            // `ProgressionRules.Table`, which is the built-in default inside the Editor.
+            var progression = source.FetchAsync(ContentPaths.Progression, default).GetAwaiter().GetResult();
+            if (progression.Success && ProgressionTable.TryRead(progression.Text, out var rules, new List<string>()))
+            {
+                string ceiling = Challenges.ChallengeEconomyGate.Check(table, rules.Ads);
+                if (ceiling != null) result.Errors.Add("challenges: " + ceiling);
+                else if (verbose)
+                    Debug.Log($"[Glimmer] challenges: at most {Challenges.ChallengeEconomyGate.MostCoinsADay(table, rules.Ads):N0} " +
+                              $"credits a day, counting {Challenges.ChallengeEconomyGate.AdPlaysPerDay(rules.Ads)} advert play(s)");
+            }
+
             var strings = LocalisationTable();
 
             foreach (var row in table.All)

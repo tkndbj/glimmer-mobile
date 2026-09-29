@@ -408,6 +408,21 @@ namespace GlimmerGrove.Modes
         /// <summary>How many bodies the anvil moved. See <see cref="Heaved"/>.</summary>
         public int Shoved;
 
+        /// <summary>
+        /// Seconds of hex a broken curse just laid on the hill, or nought
+        /// (<see cref="SiegeLayout.Obsidian"/>).
+        ///
+        /// <b>The edge, for <see cref="Stilled"/>'s reason</b>: the view reads
+        /// <see cref="SiegeRaider.Hexed"/> every frame to draw who is carrying it, and what it
+        /// wants here is the frame the curse fell - which is the frame it is drawn sweeping the
+        /// hill. A curse that fell on an empty hill reports its seconds and no bodies, and the
+        /// view draws the refusal rather than nothing.
+        /// </summary>
+        public float Hex;
+
+        /// <summary>The raiders the curse marked this step, by id. See <see cref="Hex"/>.</summary>
+        public readonly List<int> Hexed = new List<int>(12);
+
         /// <summary>The wave that has just stepped out, or -1.</summary>
         public int Wave = -1;
 
@@ -432,6 +447,8 @@ namespace GlimmerGrove.Modes
             Stilled = 0f;
             Heaved = 0f;
             Shoved = 0;
+            Hex = 0f;
+            Hexed.Clear();
             Wave = -1;
         }
 
@@ -441,7 +458,7 @@ namespace GlimmerGrove.Modes
                         || Devoured.Count > 0
                         || Brimmed.Count > 0 || Charmed.Count > 0 || Forged.Count > 0
                         || Stoned.Count > 0 || Redeemed.Count > 0
-                        || Stilled > 0f || Heaved > 0f || Wave >= 0;
+                        || Stilled > 0f || Heaved > 0f || Hex > 0f || Wave >= 0;
     }
 
     /// <summary>Fuel a match has earned that has not reached its ward yet.</summary>
@@ -542,6 +559,22 @@ namespace GlimmerGrove.Modes
 
         /// <summary>Every charm this beat set off, in the order they went.</summary>
         public readonly List<SiegeSpark> Sprung = new List<SiegeSpark>(2);
+
+        /// <summary>
+        /// Every obsidian a broken curse took this beat, in cell order - the run that broke it
+        /// and every stone it drew in from the rest of the field - or empty when no curse broke.
+        ///
+        /// <b>Recorded rather than read back, for <see cref="Paid"/>'s reason</b>: the cells are
+        /// holes by the time the view draws them, and what the drawing has to say is which
+        /// stones were pulled across the field into the break and which were the run itself.
+        /// </summary>
+        public readonly List<int> Broken = new List<int>(6);
+
+        /// <summary>The cells of <see cref="Broken"/> that were in a run, which is where the break is drawn from.</summary>
+        public readonly List<int> Breakers = new List<int>(3);
+
+        /// <summary>Whether a curse broke on this beat.</summary>
+        public bool Unbound => Broken.Count > 0;
 
         /// <summary>
         /// What each cell of <see cref="Cleared"/> was paid as, as an index into

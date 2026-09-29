@@ -136,6 +136,16 @@ namespace GlimmerGrove
             /// </para>
             /// </summary>
             public Image Ring;
+
+            /// <summary>
+            /// The curse's glow on an obsidian, or null (<c>SiegeView.Brood</c>). A child of the
+            /// gem for <see cref="Web"/>'s reason, minted the first time the gem is one and hidden
+            /// while it is not.
+            /// </summary>
+            public Image Aura;
+
+            /// <summary>When this stone next gives off a wisp of the curse, in real seconds.</summary>
+            public float Wisp;
         }
 
         sealed class Mob
@@ -159,6 +169,16 @@ namespace GlimmerGrove
             /// clears is the frame the body starts standing up again.
             /// </summary>
             public float Braced;
+
+            /// <summary>
+            /// The curse's sigil this body stands in while it is hexed, or null
+            /// (<c>SiegeView.Hexing</c>) - and how long it has worn it, and when it next gives off
+            /// a wisp. Read off <see cref="Modes.SiegeRaider.Hexed"/> every frame, never tweened
+            /// out (invariant 37ek).
+            /// </summary>
+            public Image Mark;
+
+            public float Marked, MarkWisp;
 
 
             /// <summary>The warlord's, and null for everything else.</summary>

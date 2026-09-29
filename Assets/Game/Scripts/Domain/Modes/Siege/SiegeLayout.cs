@@ -65,6 +65,51 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public const char RetiredCog = '*';
 
+        /// <summary>
+        /// The obsidian: a cursed stone, dealt into a refill on a field that deals them
+        /// (<see cref="Cursed"/>), and the one cell of this field that is a gem and not a colour.
+        ///
+        /// <para>
+        /// <b>A fifth kind of gem, and that is the opposite of what this field has twice taken
+        /// back out - on purpose, and for the reason those two were wrong.</b> A cog in a cell and
+        /// a thief's sack were glyphs that did not <em>behave</em> like gems: they could not be
+        /// lined up, so every rule asking "what colour is this" had to learn a second answer. An
+        /// obsidian does behave like a gem - it falls, it swaps, and it lines up with its own
+        /// kind exactly as a colour does, through the same maximal-block definition
+        /// (<see cref="Runs"/>) - so the only thing any rule has to learn is that it burns in no
+        /// ward. It is <em>not</em> a charm, because a charm rides a colour and is worth it, and the
+        /// whole of this stone's sentence is that it is worth nothing on its own.
+        /// </para>
+        /// <para>
+        /// <b>What it is for is the break.</b> Three in a line and the curse breaks: every
+        /// obsidian on the field is drawn into the break and shatters with it
+        /// (<c>SiegeBoard.Unbound</c>), and the curse falls on the hill - every raider standing
+        /// there is hexed (<see cref="SiegeRaider.Hexed"/>) and takes
+        /// <see cref="SiegeTuning.HexPercent"/> of everything thrown at it for
+        /// <see cref="SiegeTuning.HexFor"/> seconds. So it is clutter the player can turn into
+        /// the biggest multiplier on the board, and the decision is <em>when</em> (invariant 40i):
+        /// gather them, and break them over a crowd.
+        /// </para>
+        /// <para>
+        /// <b>Never authored into a cell</b> (the charms' rule, 37cf): it is dealt, never placed,
+        /// so the letter is not in <see cref="Cells"/> and an authored field carrying one is
+        /// refused by the grid parse like any other unknown letter. <b>A prism does not join
+        /// it</b> - a wild joins a run of any <em>colour</em>, and an obsidian is not one.
+        /// </para>
+        /// </summary>
+        public const char Obsidian = 'o';
+
+        /// <summary>
+        /// What a cell holding an obsidian answers when asked its colour, as an index. Negative,
+        /// because every reader that asks for a colour tests <c>&gt;= 0</c> before indexing a
+        /// table of four - and its own number rather than the cog's -1, because the two are
+        /// opposite things and a view that could not tell them apart would draw the wrong one.
+        /// </summary>
+        public const int ObsidianFace = -5;
+
+        /// <summary>What this cell is, as the index a drawing is keyed on: a colour, or <see cref="ObsidianFace"/>.</summary>
+        public static int FaceOf(char cell) => cell == Obsidian ? ObsidianFace : Letters.IndexOf(cell);
+
         /// <summary>What a ward may be. The same four, because a ward is fuelled by its own colour.</summary>
         public const string WardLetters = "rgby";
 
@@ -617,12 +662,29 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public readonly SiegeCharm[] Charms;
 
+        /// <summary>
+        /// Whether this field's refill deals obsidians (<see cref="Obsidian"/>).
+        ///
+        /// <para>
+        /// <b>Whether is content and how often is the mode</b> - the charms' bargain (37ce): the
+        /// chapter that introduces the curse writes it into every rung's body, and the rate is
+        /// <see cref="SiegeTuning.ObsidianPercent"/>, retuned for every rung at once.
+        /// </para>
+        /// <para>
+        /// <b>False is every field that shipped before it</b>, and on those the deal is exactly the
+        /// deal it always was: the roll is only taken on a cursed field, so nothing about a plain
+        /// one's stream, its refills or its runs has moved (invariant 41).
+        /// </para>
+        /// </summary>
+        public readonly bool Cursed;
+
         public SiegeLayout(ProtoGrid grid, string deal, string wards, string[] waves, string boss,
                            int cogs = 0, SiegeEndless endless = null, int tough = 0,
-                           string charms = null)
+                           string charms = null, bool obsidian = false)
         {
             Grid = grid;
             Endless = endless;
+            Cursed = obsidian;
 
             // **Refused by name rather than salvaged**, which is `Tidy`'s opposite and invariant
             // 5f's rule: a body naming a charm this build does not have was written against rules
@@ -1052,7 +1114,7 @@ namespace GlimmerGrove.Modes
         /// quietly wrong (invariant 26f) - and this field has carried one twice.
         /// </summary>
         internal static bool IsGem(char cell)
-            => cell != SiegeBoard.Hole && Letters.IndexOf(cell) >= 0;
+            => cell != SiegeBoard.Hole && (Letters.IndexOf(cell) >= 0 || cell == Obsidian);
 
         /// <summary>
         /// Every cell standing in a run of three or more, as one set - and, optionally, the colour
@@ -1145,6 +1207,34 @@ namespace GlimmerGrove.Modes
                 }
             }
 
+            // **The obsidian, scanned exactly as a colour is and with no wild in it** - a prism
+            // joins a run of any colour and an obsidian is not one (see `Obsidian`). Its own pass
+            // after the four rather than a fifth letter in `Letters`, because `Letters` is the
+            // alphabet of things a ward burns and every table of four is indexed by it. A field
+            // that deals none has none, so on every board that shipped before the curse this
+            // finds nothing.
+            for (int y = 0; y < height; y++) Stones(y * width, 1, width);
+            for (int x = 0; x < width; x++) Stones(x, width, height);
+
+            void Stones(int from, int step, int span)
+            {
+                int run = 0;
+
+                for (int k = 0; k <= span; k++)
+                {
+                    if (k < span && cells[from + k * step] == Obsidian)
+                    {
+                        run++;
+                        continue;
+                    }
+
+                    if (run >= SiegeTuning.MinRun)
+                        for (int back = k - run; back < k; back++) Take(from + back * step, Obsidian);
+
+                    run = 0;
+                }
+            }
+
             return hit;
         }
 
@@ -1183,7 +1273,32 @@ namespace GlimmerGrove.Modes
                 if (Reaches(1, 0, colour) || Reaches(0, 1, colour)) return true;
             }
 
+            // **The obsidian, read as `Runs` reads it**: a block of obsidians alone, no wild in
+            // it. Written as the same maximal-block walk so the two cannot come to disagree
+            // (`SiegeFieldTests.OneCellReadsTheSameAsTheWholeField`, which walks cursed fields).
+            if (cells[at] == Obsidian) return Stones(1, 0) || Stones(0, 1);
+
             return false;
+
+            bool Stones(int dx, int dy)
+            {
+                int run = 1;
+
+                for (int side = -1; side <= 1; side += 2)
+                {
+                    int x = x0 + dx * side, y = y0 + dy * side;
+
+                    while (x >= 0 && x < width && y >= 0 && y < height
+                           && cells[y * width + x] == Obsidian)
+                    {
+                        run++;
+                        x += dx * side;
+                        y += dy * side;
+                    }
+                }
+
+                return run >= SiegeTuning.MinRun;
+            }
 
             // The maximal block of this colour through `at`, walked both ways from it - which is
             // the same block `Runs` finds when it scans the whole line, because a maximal block is

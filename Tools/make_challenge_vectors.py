@@ -233,6 +233,88 @@ def upgrade_cases():
     return out
 
 
+def pool_cases():
+    """The advert pool, as the device spends it and as the server pays it (56p).
+
+    Two rules that are *deliberately different* and must stay in one relationship. The device
+    counts **attempts** past a genre's own allowance against the day's advert count and deals no
+    play past it (`ChallengeAdPlays.PlaysLeft`); the server pays a **win** past the allowance out
+    of the count, holding the ordinals it drew and recounting them against the allowance as it
+    stands (`drawAdPlay`, `adPlaysDrawn`). Every win is an attempt, so every claim the first
+    raises the second must pay - and this tool refuses to write a case where it would not, which
+    makes that sentence a gate rather than an argument.
+
+    A case is a sequence of plays (genre, won). `dealt` is whether the device dealt each one,
+    `claims` the (genre, ordinal) of every win it raised, `drawn` how many of the day's plays the
+    server spent paying them, and `drawnLater` the same count recounted against `laterAllowance`,
+    which is a deal landing after the wins it covered (a sync sends awards before debits).
+    """
+    out = []
+
+    def device(allowance, granted, plays):
+        attempts, wins, dealt, claims = {}, {}, [], []
+        for genre, won in plays:
+            own = max(0, allowance - attempts.get(genre, 0))
+            used = sum(max(0, a - allowance) for a in attempts.values())
+            ok = own + max(0, granted - used) > 0
+            dealt.append(ok)
+            if not ok:
+                continue
+            attempts[genre] = attempts.get(genre, 0) + 1
+            if won:
+                wins[genre] = wins.get(genre, 0) + 1
+                claims.append([genre, wins[genre]])
+        return dealt, claims
+
+    def server(allowance, granted, claims):
+        drawn, paid = {}, []
+        for genre, win in claims:
+            if win <= allowance or win in drawn.get(genre, []):
+                paid.append(True)
+                continue
+            spent = sum(1 for wins in drawn.values() for w in wins if w > allowance)
+            if spent + 1 > granted:
+                paid.append(False)
+                continue
+            drawn.setdefault(genre, []).append(win)
+            paid.append(True)
+        return paid, drawn
+
+    def recount(drawn, allowance):
+        return sum(1 for wins in drawn.values() for w in wins if w > allowance)
+
+    def case(name, allowance, granted, plays, later=None):
+        dealt, claims = device(allowance, granted, plays)
+        paid, drawn = server(allowance, granted, claims)
+        if not all(paid):
+            raise SystemExit(f"pool case '{name}': the device raised a claim the server would not pay "
+                             f"({claims} -> {paid}); the two rules have stopped agreeing")
+        entry = {
+            "name": name, "allowance": allowance, "granted": granted,
+            "plays": [[g, bool(w)] for g, w in plays],
+            "dealt": dealt, "claims": claims, "drawn": recount(drawn, allowance),
+        }
+        if later is not None:
+            entry["laterAllowance"] = later
+            entry["drawnLater"] = recount(drawn, later)
+        out.append(entry)
+
+    W, L = True, False
+    case("with no advert plays nothing is dealt past the allowance", 2, 0,
+         [("pairs", W), ("pairs", W), ("pairs", W)])
+    case("one pool serves every genre and runs out once", 2, 2,
+         [("pairs", W), ("pairs", W), ("pairs", W), ("merge", W), ("merge", W), ("merge", W), ("merge", W)])
+    case("a lost play spends the pool on the device and nothing on the server", 1, 2,
+         [("pairs", W), ("pairs", L), ("pairs", W), ("pairs", W)])
+    case("a genre that never passes its allowance spends none of the pool", 3, 1,
+         [("glade", W), ("glade", L), ("sokoban", W), ("sokoban", W), ("sokoban", W), ("sokoban", W)])
+    case("a deal landing after the wins it covers gives their plays back", 2, 2,
+         [("pairs", W), ("pairs", W), ("pairs", W), ("merge", W), ("merge", W), ("merge", W)], later=5)
+    case("a pool larger than the day's plays is not all spent", 2, 10,
+         [("pairs", W), ("pairs", W), ("pairs", W)])
+    return out
+
+
 COMMENT = [
     "What the daily challenges pay and allow, derived twice and pinned here.",
     "",
@@ -248,6 +330,11 @@ COMMENT = [
     "day more generous at the end of a window on purpose. `challengeUpgradeCases` is the",
     "upgrade price: the difference under a running smaller deal, sharing its window. A",
     "disagreement is a claim refused for a play the page offered (45d), or gems taken back.",
+    "",
+    "`challengeAdPoolCases` is the advert pool (56p): the plays the device deals past a",
+    "genre's allowance against the day's advert count, and the wins the server pays out of it.",
+    "The two rules differ on purpose (attempts on the device, wins on the server); what is pinned",
+    "is that every claim the device raises is one the server pays - the tool refuses otherwise.",
     "",
     "`challengeDefaults` is what both sides use when no `challenges` block has been published.",
     "They agree on purpose rather than failing closed, for the endless block's reason.",
@@ -267,6 +354,7 @@ def build(existing):
     out["challengeCases"] = xp_cases()
     out["challengeAllowanceCases"] = allowance_cases()
     out["challengeUpgradeCases"] = upgrade_cases()
+    out["challengeAdPoolCases"] = pool_cases()
     return out
 
 
@@ -288,13 +376,15 @@ def main():
             return 1
         print(f"challenge vectors: {len(built['challengeCases'])} xp case(s), "
               f"{len(built['challengeAllowanceCases'])} allowance case(s), "
-              f"{len(built['challengeUpgradeCases'])} upgrade case(s), reproducible")
+              f"{len(built['challengeUpgradeCases'])} upgrade case(s), "
+              f"{len(built['challengeAdPoolCases'])} pool case(s), reproducible")
         return 0
 
     VECTORS.write_text(text, encoding="utf-8")
     print(f"challenge vectors: {len(built['challengeCases'])} xp case(s), "
           f"{len(built['challengeAllowanceCases'])} allowance case(s), "
-          f"{len(built['challengeUpgradeCases'])} upgrade case(s) written to {VECTORS}")
+          f"{len(built['challengeUpgradeCases'])} upgrade case(s), "
+          f"{len(built['challengeAdPoolCases'])} pool case(s) written to {VECTORS}")
     return 0
 
 

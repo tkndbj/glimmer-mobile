@@ -734,7 +734,18 @@ def check_siege(lid, chapter_id, level, block):
                           block.get('boss'), block.get('cogs') or 0,
                           endless=bool(endless_block.get('goldWave')),
                           tough=block.get('tough') or 0,
-                          charms=block.get('charms') or '')
+                          charms=block.get('charms') or '',
+                          obsidian=bool(block.get('obsidian')))
+
+    # **A cursed field is a fact about the chapter, and it is a boolean.** `SiegeDto.obsidian` is a
+    # `bool` read by `JsonUtility`, which quietly reads anything that is not `true` as false - so a
+    # body that wrote a rate or a string here would ship a chapter that deals no curse with every
+    # other gate green.
+    if 'obsidian' in block and not isinstance(block['obsidian'], bool):
+        errors.append("%s: 'obsidian' is %r; it is true or false - whether the refill deals the "
+                      "cursed stone - and how often is the mode's (SiegeTuning.ObsidianPercent)"
+                      % (lid, block['obsidian']))
+        return empty
 
     if layout.fault:
         errors.append("%s: %s" % (lid, layout.fault))

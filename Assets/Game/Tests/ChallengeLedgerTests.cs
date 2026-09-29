@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using GlimmerGrove.Challenges;
+using GlimmerGrove.Content;
 using GlimmerGrove.Daily;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
@@ -411,6 +412,82 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
+        /// A board dealt before midnight and first moved after it is charged to the new day, and
+        /// so is its win: the claim names the day whose plays paid for it and that day's next
+        /// ordinal. Claimed against the dealt day instead, a win past that day's allowance was
+        /// priced against a pool the play never drew on, and refused once the window closed.
+        /// </summary>
+        [Test]
+        public void APlayMovedAfterMidnightIsChargedAndClaimedOnTheNewDay()
+        {
+            _clock.Now = Day * DailyRules.SecondsPerDay + DailyRules.SecondsPerDay - 30;
+            var play = ChallengeLedger.Begin(ChallengeGenre.Pairs);
+            Assert.AreEqual(Day, play.Day);
+
+            _clock.Now = (Day + 1) * DailyRules.SecondsPerDay + 60;
+            ChallengeLedger.Commit(play);
+            Assert.AreEqual(Day + 1, play.ChargedDay, "charged to the day of the first move");
+            Assert.AreEqual(0, play.ClaimSlot, "and slotted as that day's first win");
+
+            ChallengeLedger.Win(play);
+            Assert.IsTrue(Holds(Wallet.Ledger(Currency.Credits).PendingGrants,
+                                GrantEntry.ChallengeClearId(Day + 1, "pairs", 1, Currency.Credits)),
+                          "the win is claimed against the day that charged it");
+            Assert.IsFalse(Holds(Wallet.Ledger(Currency.Credits).PendingGrants,
+                                 GrantEntry.ChallengeClearId(Day, "pairs", 1, Currency.Credits)));
+            Assert.AreEqual(1, ChallengeLedger.WinsToday(ChallengeGenre.Pairs), "and the new day's row advances");
+        }
+
+        /// <summary>
+        /// The other order is unchanged: a play charged before midnight and won after it is the
+        /// last win of the day it was charged to, which is the day the server's window accepts.
+        /// </summary>
+        [Test]
+        public void APlayChargedBeforeMidnightIsClaimedOnThatDayWhenWonAfterIt()
+        {
+            _clock.Now = Day * DailyRules.SecondsPerDay + DailyRules.SecondsPerDay - 30;
+            var play = ChallengeLedger.Begin(ChallengeGenre.Pairs);
+            ChallengeLedger.Commit(play);
+
+            _clock.Now = (Day + 1) * DailyRules.SecondsPerDay + 60;
+            ChallengeLedger.Win(play);
+
+            Assert.IsTrue(Holds(Wallet.Ledger(Currency.Credits).PendingGrants,
+                                GrantEntry.ChallengeClearId(Day, "pairs", 1, Currency.Credits)));
+            Assert.AreEqual(0, ChallengeLedger.WinsToday(ChallengeGenre.Pairs), "the new day's row is untouched");
+        }
+
+        /// <summary>
+        /// The economy ceiling counts the advert plays (56p): the pool adds once on top of the
+        /// largest deal in every genre, and a file that fits without it can be pushed over by it.
+        /// </summary>
+        [Test]
+        public void TheDailyCeilingCountsTheAdvertPlays()
+        {
+            var noAdvert = Ads.AdRewardTable.Resolve(new AdsDto
+            {
+                placements = new[] { new AdPlacementDto { id = Ads.AdPlacement.CoinBonus, kind = "credits", amount = 300, dailyCap = 6 } },
+            }, new List<string>());
+            var tenPlays = Ads.AdRewardTable.Resolve(new AdsDto
+            {
+                placements = new[] { new AdPlacementDto { id = Ads.AdPlacement.ChallengePlay, kind = "challenge_play", amount = 1, dailyCap = 10 } },
+            }, new List<string>());
+
+            Assert.AreEqual(0, ChallengeEconomyGate.AdPlaysPerDay(noAdvert));
+            Assert.AreEqual(10, ChallengeEconomyGate.AdPlaysPerDay(tenPlays));
+
+            // Two genres at 40 a clear under the 25-play deal: 2,000, and 2,400 with ten advert plays.
+            var modest = Table(3, 1);
+            Assert.AreEqual(2400L, ChallengeEconomyGate.MostCoinsADay(modest, tenPlays));
+            Assert.IsNull(ChallengeEconomyGate.Check(modest, tenPlays));
+
+            // At 180 a clear the deal alone is 9,000 - inside - and the advert plays make it 10,800.
+            var rich = Table(3, 1, coins: 180);
+            Assert.IsNull(ChallengeEconomyGate.Check(rich, noAdvert), "the deal alone fits under the ceiling");
+            Assert.IsNotNull(ChallengeEconomyGate.Check(rich, tenPlays), "the advert plays push it over");
+        }
+
+        /// <summary>
         /// The server's count only ever moves up within a day - a reply taken before the last
         /// callback landed must not take back a play already shown - and yesterday's count is
         /// nothing today. A reply that never carried the field changes nothing.
@@ -645,8 +722,11 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(1, ChallengeLedger.WinsToday(ChallengeGenre.Pairs));
             Assert.AreEqual(2, ChallengeLedger.LifetimeClears);
 
-            // A play dealt yesterday and won after midnight is paid against yesterday.
+            // A play charged yesterday and won after midnight is paid against yesterday - the day
+            // whose plays paid for it (`Commit`; the untouched-deal order is its own fixture,
+            // `APlayMovedAfterMidnightIsChargedAndClaimedOnTheNewDay`).
             var late = ChallengeLedger.Begin(ChallengeGenre.Merge);
+            ChallengeLedger.Commit(late);
             _clock.Now += DailyRules.SecondsPerDay;
             var reward = ChallengeLedger.Win(late);
             Assert.AreEqual(40, reward.Coins);

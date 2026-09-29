@@ -163,6 +163,12 @@ namespace GlimmerGrove
                 // A thief's sack: not a colour, and deliberately the dullest thing on the field.
                 case SackColour: return Piece("sack");
 
+                // **An obsidian: the cursed stone** (`SiegeLayout.Obsidian`), cut from the Pairs
+                // curse card's own stone with the curse's light in its cracks
+                // (`Tools/make_obsidian_art.py`). Scoped to the chapters that deal it
+                // (`SiegeMode.CurseArt`), so no other board ever asks for it.
+                case ObsidianColour: return Piece("gem_obsidian");
+
                 // A bomber's bomb, drawn as the firepot it turns into when it is tapped.
                 case BombColour: return Art.S("Ui/Utility/firepot");
 

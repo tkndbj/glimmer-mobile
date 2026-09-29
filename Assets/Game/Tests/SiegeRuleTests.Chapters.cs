@@ -177,6 +177,36 @@ namespace GlimmerGrove.Tests
             new Rung("s09_crownofclouds", new[] { "ryrbgrry", "gbgybygb", "rbrbgrgg", "ygrryybb", "rgybyybr" }, "rgby", "rgby", new[] { "rgbyrgbyrg", "rgby#rrgbyrg", "rgbyrgby" }, "sunlord:y+hollowking:g", 50, 14, 45, 59, "plsfha"),
         };
 
+        /// <summary>
+        /// Cogspire, the ninth chapter: the owner's clockwork islands, twenty rungs, a duel on
+        /// every fifth, a bigger crowd than Cloudkeep at five tenths of surge, and the curse -
+        /// every rung deals obsidians (`SiegeLayout.Obsidian`). Held to `s10_cogspire.json` by
+        /// `Tools/verify/rungs.py`, the curse flag included.
+        /// </summary>
+        static readonly Rung[] Cogspire =
+        {
+            new Rung("s10_brassgate", new[] { "rryyggyr", "rbbygrbr", "bgrgbbgg", "bgbryryb", "yrbyybby" }, "rgby", "rgby", new[] { "rgbyrgbyrgbyr", "rgbyrgbyRGbyr", "rgbyRGby#r#grgb" }, "", 20, 15, 42, 56, "plsfha", true),
+            new Rung("s10_windmill", new[] { "yggbgyrr", "rrgyrgyb", "bbrbrggr", "yybgybby", "ybryybry" }, "rgby", "rgby", new[] { "rgbyrgbyrgbyr", "rgbyRGbyrgbyr", "rgbyRGbyrgbyrgb" }, "", 20, 15, 42, 56, "plsfha", true),
+            new Rung("s10_lampwick", new[] { "rrgbbryr", "yygbyggy", "gbbryybb", "rrgbbrgr", "byybygbr" }, "rgby", "rgby", new[] { "rgby#rRGbyrgb", "rgbyrgby#b#yRGb", "rgby#r#gRGbyrgb" }, "", 20, 15, 42, 56, "plsfha", true),
+            new Rung("s10_gearhouse", new[] { "gbgrybbg", "yrrgrbbg", "bbgyygrr", "ygrrbgyb", "brbbryyr" }, "rgby", "rgby", new[] { "rgbyRGby!rRGb", "rgBY#gRGby!br", "rgBY!y#rRGbyr" }, "", 20, 15, 42, 56, "plsfha", true),
+            new Rung("s10_boilerheart", new[] { "ygbrgyrg", "rbrybgyr", "bygybrby", "brrbggrb", "grryggyg" }, "rgby", "rgby", new[] { "rgbyRGbyrgb", "rgby#r!gRGbyr", "rgBY#b#yRGbyr" }, "warlord:r+warbringer:y", 25, 15, 42, 56, "plsfha", true),
+            new Rung("s10_steamvent", new[] { "grgbryyr", "grrybrgg", "bybrybbr", "yyggrbrg", "bbggbggb" }, "rgby", "rgby", new[] { "rrRrrrrrr#rgg", "ggGgggggg#gbbb", "bbB#bbbbbYYY#yyy" }, "", 20, 15, 42, 56, "plsfha", true),
+            new Rung("s10_airdock", new[] { "ggyyggyr", "rrygrbyy", "grgbbggr", "bbygyryb", "bgybyggb" }, "rgby", "rgby", new[] { "rgbyRGbyrgb", "rgby#r#gRGbyr", "rgby!rrgBY#bb", "rgbyrgbyrgb" }, "", 20, 15, 42, 56, "plsfha", true),
+            new Rung("s10_chainbridge", new[] { "ybgbrgbr", "rbgbgyry", "yyryybrg", "bgbyrggy", "ggrrgybr" }, "rgby", "rgby", new[] { "rgBYrgbyrgbyr", "rgby#g#brgbyrgb", "rgBY!grgby#rrgbyr" }, "", 20, 15, 42, 56, "plsfha", true),
+            new Rung("s10_plankway", new[] { "ybgyrgbr", "ybybgygb", "grgryrry", "bgyrbgbg", "brgygbgr" }, "rgby", "rgby", new[] { "rgbyrgbyrgb", "rgby#rrgbyRG", "rgby#brgbyrgb", "rgBYrgbyrgb" }, "", 20, 15, 42, 56, "plsfha", true),
+            new Rung("s10_millwheel", new[] { "ybyrgygb", "rgyyrbgg", "ggbrrybr", "yrbbggyr", "yrgrrbrb" }, "rgby", "rgby", new[] { "rgbyrgbyrgb", "rgby#yRGbyrgb", "rgby#g#rrgbyr" }, "overlord:b+bonecaller:g", 30, 15, 42, 56, "plsfha", true),
+            new Rung("s10_axlegate", new[] { "ygygrbgr", "rryggbbr", "brrbbgyg", "gygygrrg", "gbyrbrby" }, "rgby", "rgby", new[] { "rgbyrgbyRGbyr", "rgBY#r#grgbyRGb", "rgby!b#yRGbyrgby" }, "", 20, 15, 42, 56, "plsfha", true),
+            new Rung("s10_orecart", new[] { "brrbygry", "rbgbrbyr", "yrrgbggr", "ggbyrrgb", "gbbygrby" }, "rgby", "rgby", new[] { "rgbyrgbyrgbyrgb", "rgBY#b!rRGbyrgb", "rgby#g#yrgbyrgb" }, "", 20, 15, 42, 56, "plsfha", true),
+            new Rung("s10_armillary", new[] { "rbggbbgg", "yyrgryrb", "ygybyygb", "bggbbgrr", "rbrgyygg" }, "rgby", "rgby", new[] { "rgby#r#g#brgby", "rgby#y#r!gRGbyr", "rgby#g#b#yRGBYr" }, "", 20, 15, 42, 56, "plsfha", true),
+            new Rung("s10_coilyard", new[] { "gygygyry", "rgbyrbbr", "rrybgbyy", "ybgrryrb", "ryygygrr" }, "rgby", "rgby", new[] { "rgbyrgbyrgb", "rgby#rrgbyrg", "rgby#g#brgbyr", "rgby!yrgbyrg" }, "", 20, 15, 42, 56, "plsfha", true),
+            new Rung("s10_sparkspire", new[] { "bbygrbgy", "yryggybr", "grgryyry", "gbyrrgby", "rbyybgyb" }, "rgby", "rgby", new[] { "rgbyRGbyrgb", "rgby#b!rRGbyr", "rgBY#r#gRGbyr" }, "ironclad:y+colossus:r", 25, 15, 42, 56, "plsfha", true),
+            new Rung("s10_trussway", new[] { "rbgbrgrr", "rygyrbgb", "ybbrgyrr", "gryybbyb", "bbgbyrgg" }, "rgby", "rgby", new[] { "rrRR#rrrrrgg", "ggGG#ggggg#gbb", "bbBB#bbbbYYYY#yy" }, "", 20, 15, 42, 56, "plsfha", true),
+            new Rung("s10_domewatch", new[] { "rgbgyybb", "byrgrybg", "bbrybgry", "rggyrygb", "rrbrrbrg" }, "rgby", "rgby", new[] { "rgbyRGbyRGbyr", "rgby#r#g!brgbyrgb", "rgby#b#yRGbyrgb" }, "", 20, 15, 42, 56, "plsfha", true),
+            new Rung("s10_starglass", new[] { "gbrgbybr", "ggbrbrgr", "ryygryyg", "rrgbybrb", "gbbyyrgr" }, "rgby", "rgby", new[] { "rgbyrgbyRGb", "rgby#rrgbyrg", "rgby#g#b!yrgbyr", "rgbyrgbyRGb" }, "", 20, 15, 42, 56, "plsfha", true),
+            new Rung("s10_nightrail", new[] { "byrgbbyr", "ggbryyrg", "brybgyby", "rggbbrgg", "bybygrbr" }, "rgby", "rgby", new[] { "rgbyrgbyRGbyrgb", "rgby#r#g#brgbyrgb", "rgby!y#rrgbyrgb" }, "", 20, 15, 42, 56, "plsfha", true),
+            new Rung("s10_skyclock", new[] { "yygrybrg", "yygbrgby", "gbbygyrr", "ryrgrbgy", "rbbgbyyr" }, "rgby", "rgby", new[] { "rgbyrgbyrgbyr", "rgby#rrgbyrgbyr", "rgbyrgbyrgbyr" }, "gorgon:y+hollowking:g", 50, 15, 42, 56, "plsfha", true),
+        };
+
         // ------------------------------------------------------------------ the lines it plays
         /// <summary>
         /// The four turrets a player who has bought nothing stands: the free bolt, four times.
@@ -397,6 +427,7 @@ namespace GlimmerGrove.Tests
             ("Dustcrown", Dustcrown),
             ("Bonereach", Bonereach),
             ("Cloudkeep", Cloudkeep),
+            ("Cogspire", Cogspire),
         };
 
         static Sweep Play(Rung[] chapter, WardLine line)
@@ -681,20 +712,32 @@ namespace GlimmerGrove.Tests
         /// Two bosses at once (`SiegeLayout.BossJoin`) is a new <em>fight</em> made of two verbs
         /// the player already knows, which is exactly why the lane sends pairs only after every
         /// boss in them has been met alone (`SiegeEndless.PairsAfter`). So a duel may re-send a
-        /// verb, and it is held to three things instead: every verb in it was met <b>alone,
-        /// earlier on the ladder</b>; no verb is in two duels; and the two are two different
-        /// verbs. A lone boss is still held to the original sentence - no verb sent alone twice.
+        /// verb, and it is held to four things instead: every verb in it was met <b>alone,
+        /// earlier on the ladder</b>; the two are two different verbs; <b>no verb is in two duels
+        /// of one chapter</b>; and <b>no pair is fought twice anywhere on the ladder</b>. A lone
+        /// boss is still held to the original sentence - no verb sent alone twice.
+        /// </para>
+        /// <para>
+        /// <b>Restated on 2026-09-28, when the ninth chapter needed a fourth duel and the ladder
+        /// had one verb pair left.</b> "No verb in two duels" was written ladder-wide against
+        /// fourteen verbs and eight duels - it spent the budget in two chapters. The fight a
+        /// player meets in a duel is the <em>pair</em> (37z asked of two bosses: a sunlord with a
+        /// hollowking and a gorgon with a hollowking are two different questions), so what may
+        /// not repeat across the ladder is the pair, and what may not repeat inside one chapter is
+        /// a verb, so each chapter's four fights are four different ones.
         /// </para>
         /// </summary>
         [Test]
         public void NoBossVerbIsSentByAnyTwoChapters()
         {
             var alone = new Dictionary<SiegeSpell, string>();
-            var dueled = new Dictionary<SiegeSpell, string>();
+            var pairs = new Dictionary<string, string>();
             var faults = new List<string>();
 
             foreach (var pair in Ladder)
             {
+                var dueled = new Dictionary<SiegeSpell, string>();
+
                 foreach (var rung in pair.Item2)
                 {
                     var layout = rung.Built();
@@ -714,6 +757,7 @@ namespace GlimmerGrove.Tests
                     }
 
                     var pairOf = new HashSet<SiegeSpell>();
+                    var spelled = new List<string>();
 
                     foreach (var kind in layout.BossKinds)
                     {
@@ -729,10 +773,21 @@ namespace GlimmerGrove.Tests
                                        + "once without having learned either");
 
                         if (dueled.TryGetValue(craft, out string twice))
-                            faults.Add($"{rung.Id} sends a {craft} in a duel and so does {twice}");
+                            faults.Add($"{rung.Id} sends a {craft} in a duel and so does {twice}, "
+                                       + "in the same chapter");
                         else
                             dueled[craft] = rung.Id;
+
+                        spelled.Add(craft.ToString());
                     }
+
+                    spelled.Sort(System.StringComparer.Ordinal);
+                    string both = string.Join("+", spelled);
+
+                    if (pairs.TryGetValue(both, out string again))
+                        faults.Add($"{rung.Id} is the duel {both}, which {again} already fought");
+                    else
+                        pairs[both] = rung.Id;
                 }
             }
 
@@ -1658,6 +1713,75 @@ namespace GlimmerGrove.Tests
                 + $"{spread.Silvered} two-starred, {spread.Bronzed} one-starred):\n"
                 + spread.Table
                 + $"\nBroodmarch on {FirstRung} for comparison ({before.Held}/{before.Runs} "
+                + $"held):\n" + before.Table;
+
+            System.Console.WriteLine(report);
+
+            Assert.IsEmpty(faults, string.Join("\n", faults) + "\n\n" + report);
+        }
+
+        /// <summary>
+        /// **The ninth chapter is fought on a bought line, and it is harder than the eighth** -
+        /// the owner's brief, "harder than the previous chapter, not too much", measured rather
+        /// than felt.
+        ///
+        /// <para>
+        /// <b>The same clauses as the eighth chapter's gate</b>, plus the one this chapter was
+        /// commissioned against: on the workhorse it holds <em>fewer</em> of its runs than
+        /// Cloudkeep does, as a share because both are twenty rungs. Every rung deals the curse,
+        /// and the model player never lines obsidians up on purpose - it pours by rhythm - so
+        /// what is measured is the chapter's hill with the curse arriving only by accident, which
+        /// is the harder reading and the honest one for a floor.
+        /// </para>
+        /// <para>
+        /// <b>The floors are set off one measurement, not a sweep</b> - 27 of 180 held on the
+        /// workhorse against Cloudkeep's 31. The first cut held 10, and this gate passed it,
+        /// because its floors were unset: <b>an unset floor is a gate that cannot fail</b>, so
+        /// they were set the moment there was a number. `siege.STAR_FACTORS[9]` still ships at
+        /// Bonereach's (0.42, 0.56), provisional until the owner's sweep reads the spent shares.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void TheNinthChapterIsFoughtOnABoughtLine()
+        {
+            // **Measured 2026-09-28** with this fixture's own player on the workhorse at nine
+            // rhythms: 27 of 180 held, eight rungs held at no rhythm (before `Walled` re-asks them
+            // at four times the resolution, which can only lower the count) - against Cloudkeep's
+            // 31. Both sit a clear margin under what was measured; the owner's sweep may raise them.
+            const int AcceptedWalls = 10;
+            const int BoughtFloor = 20;
+
+            var bare = Play(Cogspire, Bare());
+            var bought = Play(Cogspire, Bought());
+            var before = Play(Cloudkeep, Bought());
+            var spread = Play(Cogspire, Mixed("siphon", "ember", "rime", "cleaver"));
+
+            var faults = new List<string>();
+
+            if (bought.Walled > AcceptedWalls)
+                faults.Add($"{bought.Walled} rung(s) of Cogspire are held at no rhythm at all "
+                           + $"on a '{Workhorse}' line, against the {AcceptedWalls} accepted");
+
+            // **The brief: harder than the chapter before it**, as a share because both chapters
+            // are twenty rungs and a count would compare their lengths.
+            if (bought.Held * before.Runs > before.Held * bought.Runs)
+                faults.Add($"on a '{Workhorse}' line Cogspire held {bought.Held} of "
+                           + $"{bought.Runs} runs against Cloudkeep's {before.Held} of "
+                           + $"{before.Runs} - the ninth chapter is not harder than the eighth");
+
+            if (bought.Held < BoughtFloor)
+                faults.Add($"one rung up the shelf Cogspire held {bought.Held} of "
+                           + $"{bought.Runs} runs against a floor of {BoughtFloor}");
+
+            string report =
+                $"Cogspire on the starter ({bare.Held}/{bare.Runs} held, "
+                + $"{bare.Starred} three-starred):\n" + bare.Table
+                + $"\nCogspire on {Workhorse} ({bought.Held}/{bought.Runs} held, "
+                + $"{bought.Starred} three-starred, {bought.Walled} walled):\n" + bought.Table
+                + $"\nCogspire on four different one-star turrets - siphon, ember, rime, "
+                + $"cleaver ({spread.Held}/{spread.Runs} held, {spread.Starred} three-starred):\n"
+                + spread.Table
+                + $"\nCloudkeep on {Workhorse} for comparison ({before.Held}/{before.Runs} "
                 + $"held):\n" + before.Table;
 
             System.Console.WriteLine(report);

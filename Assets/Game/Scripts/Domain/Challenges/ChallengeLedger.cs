@@ -37,6 +37,21 @@ namespace GlimmerGrove.Challenges
         /// <summary>Whether one of the day's plays has been taken for this. False on a board nobody has touched.</summary>
         public bool Spent { get; internal set; }
 
+        /// <summary>
+        /// The day whose plays paid for this, set when it is <see cref="Spent"/>: the day of the
+        /// first move, which is the dealt <see cref="Day"/> unless midnight fell between the deal
+        /// and the move. **A win is claimed against this day and never another** - see
+        /// <see cref="ChallengeLedger.Commit"/> for the fault that rule closes.
+        /// </summary>
+        public int ChargedDay { get; internal set; }
+
+        /// <summary>
+        /// The slot of <see cref="ChargedDay"/>'s sequence this play wins as: <see cref="Slot"/>
+        /// when it was charged to the day it was dealt on, else the wins that day had when it
+        /// was charged. A win is claimed as ordinal <c>ClaimSlot + 1</c>.
+        /// </summary>
+        public int ClaimSlot { get; internal set; }
+
         internal ChallengePlay(ChallengeGenre genre, ChallengeDefinition definition, int day, int slot, int attempt)
         {
             Genre = genre;
@@ -268,7 +283,8 @@ namespace GlimmerGrove.Challenges
         /// the advert plays nobody has spent yet, which any genre may take. Nought once both are
         /// gone.
         /// </summary>
-        public static int PlaysLeft(ChallengeGenre genre) => OwnPlaysLeft(genre) + AdPlaysLeft;
+        public static int PlaysLeft(ChallengeGenre genre)
+            => ChallengeAdPlays.PlaysLeft(Allowance, AdPlays, AttemptsToday(genre), TodaysAttempts());
 
         /// <summary>What is left of a genre's own allowance today, the advert pool aside.</summary>
         public static int OwnPlaysLeft(ChallengeGenre genre)
@@ -300,30 +316,16 @@ namespace GlimmerGrove.Challenges
         /// the right way round.
         /// </para>
         /// </summary>
-        public static int AdPlaysUsed
-        {
-            get
-            {
-                Sync();
-                int allowance = Allowance;
-                int used = 0;
-                foreach (var pair in _today)
-                {
-                    int over = pair.Value.Attempts - allowance;
-                    if (over > 0) used += over;
-                }
-                return used;
-            }
-        }
+        public static int AdPlaysUsed => ChallengeAdPlays.Used(Allowance, TodaysAttempts());
 
         /// <summary>Advert plays still to spend today, on any genre.</summary>
-        public static int AdPlaysLeft
+        public static int AdPlaysLeft => ChallengeAdPlays.Left(Allowance, AdPlays, TodaysAttempts());
+
+        /// <summary>Every genre's attempts today, for the pool rule (<see cref="ChallengeAdPlays.Used"/>).</summary>
+        static IEnumerable<int> TodaysAttempts()
         {
-            get
-            {
-                int left = AdPlays - AdPlaysUsed;
-                return left > 0 ? left : 0;
-            }
+            Sync();
+            foreach (var pair in _today) yield return pair.Value.Attempts;
         }
 
         /// <summary>Whether a genre can be dealt right now: it has rows and plays are left.</summary>
@@ -407,6 +409,18 @@ namespace GlimmerGrove.Challenges
         /// could want to lose, and a process killed on the board must find it spent on relaunch.
         /// The row charged is today's, whatever day the play was dealt on - a board opened
         /// before midnight and first moved after it is a play of the day it was moved on.
+        ///
+        /// <para>
+        /// <b>And so is its win.</b> The server pays a win past a day's allowance out of that
+        /// day's advert plays (<c>drawAdPlay</c>), and the device spends those plays by the
+        /// day's attempts - so an attempt charged to one day and a win claimed against another
+        /// is a claim the first day's pool never paid for. It was refused once the window
+        /// closed and the coins drawn for it taken back (45d). So the play is re-slotted onto
+        /// the day that charged it: <see cref="ChallengePlay.ChargedDay"/> and
+        /// <see cref="ChallengePlay.ClaimSlot"/>, which is what <see cref="Win"/> claims as.
+        /// The server never sees which board was played (56), so a board dealt from yesterday's
+        /// calendar and won as today's win costs nothing but the ordinal it takes.
+        /// </para>
         /// </summary>
         public static void Commit(ChallengePlay play)
         {
@@ -416,6 +430,8 @@ namespace GlimmerGrove.Challenges
             var row = Mutable(play.Genre);
             row.Attempts = Bounded(row.Attempts + 1);
             play.Attempt = row.Attempts;
+            play.ChargedDay = _day;
+            play.ClaimSlot = _day == play.Day ? play.Slot : row.Wins;
             play.Spent = true;
 
             SaveService.Save();
@@ -459,10 +475,12 @@ namespace GlimmerGrove.Challenges
             string name = ChallengeGenres.NameOf(play.Genre);
             var rewards = Table.Rewards;
 
-            if (play.Day == _day)
+            // Everything below is the charged day's (`Commit` for why), which is the dealt day
+            // unless midnight fell between the deal and the first move.
+            if (play.ChargedDay == _day)
             {
                 var row = Mutable(play.Genre);
-                if (row.Wins == play.Slot && row.Wins < row.Attempts) row.Wins = Bounded(row.Wins + 1);
+                if (row.Wins == play.ClaimSlot && row.Wins < row.Attempts) row.Wins = Bounded(row.Wins + 1);
             }
 
             // The tally first, and bounded at the structural ceiling rather than the published one
@@ -484,7 +502,7 @@ namespace GlimmerGrove.Challenges
             if (rewards.PaysCoins)
             {
                 long now = GameClock.NowUnix();
-                string id = GrantEntry.ChallengeClearId(play.Day, name, play.Slot + 1, Currency.Credits);
+                string id = GrantEntry.ChallengeClearId(play.ChargedDay, name, play.ClaimSlot + 1, Currency.Credits);
                 if (PlayerProgression.Award(Currency.Credits, rewards.Coins, id, GrantEntry.ChallengeClearReason, now))
                     coins = rewards.Coins;
             }

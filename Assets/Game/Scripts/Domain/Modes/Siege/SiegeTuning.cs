@@ -942,6 +942,76 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public const float AnvilFor = AnvilHeave / AnvilPace;
 
+        // ------------------------------------------------------------------ the obsidian
+        /// <summary>
+        /// How often a refilled cell is dealt an obsidian on a field that deals them, per hundred
+        /// (<see cref="SiegeLayout.Obsidian"/>).
+        ///
+        /// <para>
+        /// <b>A rate rather than a window, and that is the opposite of the charms' answer for a
+        /// reason.</b> A charm is a <em>payoff</em>, so a player who never met one on a rung was
+        /// denied something and 37ci asked for a bound. An obsidian is first of all
+        /// <em>clutter</em> - a cell that lines up with nothing a ward burns - and what it asks is
+        /// to be gathered; it has to be common enough that three can be walked together and rare
+        /// enough that a board never fills with them. Nine in a hundred against the four colours'
+        /// quarter each is "like the other gems, but fewer": a forty-cell field carries three or
+        /// four at rest.
+        /// </para>
+        /// <para>
+        /// <b>Read out of the same draw as the gem, avalanched and salted</b>, so dealing one
+        /// costs the stream nothing (invariant 41) and a field that deals none deals exactly
+        /// the gems it always did.
+        /// </para>
+        /// </summary>
+        public const int ObsidianPercent = 9;
+
+        /// <summary>
+        /// What a hexed body takes from every source, in per cent of what it would have taken.
+        ///
+        /// <para>
+        /// <b>A multiplier on the line's own damage rather than damage of its own</b>, which is
+        /// invariant 37cg met without a number: a free payoff that paid a flat figure would be
+        /// worth the same to a starter line and a bought one and flatten the shelf. A hex is
+        /// worth exactly what the standing turrets land while it lasts, so a stronger line gets
+        /// more out of the same curse, a line half down gets less, and a player who broke it
+        /// over an empty hill got nothing.
+        /// </para>
+        /// </summary>
+        public const int HexPercent = 150;
+
+        /// <summary>
+        /// How long a curse broken from <see cref="MinRun"/> stones lasts, how much each stone past
+        /// that adds, and the most any break can last.
+        ///
+        /// <b>More stones is a longer hex, and that is what makes the pull worth reading.</b> A
+        /// break draws every obsidian standing on the field into itself
+        /// (<c>SiegeBoard.Shatter</c>), so a player who lets them gather before lining three up
+        /// is paid in seconds - and the ceiling is what stops a board of them becoming a curse
+        /// that outlasts a wave.
+        /// </summary>
+        public const float HexBase = 6f, HexPerStone = 1.5f, HexMost = 12f;
+
+        /// <summary>How long a curse broken from <paramref name="stones"/> obsidians lasts.</summary>
+        public static float HexFor(int stones)
+        {
+            if (stones < MinRun) return 0f;
+
+            float seconds = HexBase + (stones - MinRun) * HexPerStone;
+            return seconds < HexMost ? seconds : HexMost;
+        }
+
+        /// <summary>
+        /// What <paramref name="damage"/> becomes against a hexed body: <see cref="HexPercent"/>
+        /// of it, in integers, never less than it was.
+        /// </summary>
+        public static int Hexing(int damage)
+        {
+            if (damage <= 0) return damage;
+
+            int hexed = damage * HexPercent / 100;
+            return hexed > damage ? hexed : damage;
+        }
+
         /// <summary>
         /// <b>How long a charm is drawn for is not a number, and that is the correction.</b>
         ///
@@ -2670,8 +2740,15 @@ namespace GlimmerGrove.Modes
         /// surge is arithmetic on its place" stays true with one named exception rather than
         /// becoming a field an author sets. Mirrored by <c>Tools/verify/siege.TRADED</c>.
         /// </para>
+        /// <para>
+        /// <b>A second row: the ninth chapter deals 1.5</b>, against the 1.7 the ladder would give
+        /// it - the owner's brief on 2026-09-28 was "harder than the chapter before in health and
+        /// in raider count, but not too much", so it takes one tenth over Cloudkeep's 1.4 and
+        /// the rest of its difficulty from a bigger crowd, which is 37ef's measurement read the
+        /// same way the eighth chapter read it.
+        /// </para>
         /// </summary>
-        public static readonly (int Ordinal, int Tenths)[] Traded = { (7, 14) };
+        public static readonly (int Ordinal, int Tenths)[] Traded = { (7, 14), (8, 15) };
 
         /// <summary>
         /// A health figure at a share of itself, in per cent, never under one - the one place a

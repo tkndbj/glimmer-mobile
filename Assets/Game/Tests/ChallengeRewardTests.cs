@@ -177,5 +177,64 @@ namespace GlimmerGrove.Tests
                                 name + " - upgrades");
             }
         }
+
+        /// <summary>
+        /// The advert pool (56p), as the device spends it: which plays it deals past a genre's
+        /// allowance against the day's advert count, and which wins it claims. The server's half
+        /// (<c>drawAdPlay</c>) runs the same cases in <c>firebase/functions/test/challenges.mjs</c>
+        /// and pays every claim listed; <c>make_challenge_vectors.py</c> refuses to write a case
+        /// where it would not. So a drift on either side is a red test here or there, rather than a
+        /// win the page dealt and the server refused (45d).
+        /// </summary>
+        [Test]
+        public void EveryPoolCaseDealsAndClaimsWhatTheServerPays()
+        {
+            var cases = TestJson.Children(File(), "challengeAdPoolCases");
+            Assert.Greater(cases.Count, 0);
+
+            foreach (object raw in cases)
+            {
+                var map = TestJson.Object(raw);
+                string name = TestJson.Str(map, "name", "(unnamed)");
+                int allowance = TestJson.Int(map, "allowance");
+                int granted = TestJson.Int(map, "granted");
+
+                var attempts = new Dictionary<string, int>();
+                var wins = new Dictionary<string, int>();
+                var dealt = new List<bool>();
+                var claims = new List<string>();
+
+                foreach (object play in TestJson.Children(map, "plays"))
+                {
+                    var pair = TestJson.Array(play);
+                    string genre = (string)pair[0];
+                    bool won = (bool)pair[1];
+
+                    int mine = attempts.TryGetValue(genre, out int a) ? a : 0;
+                    bool ok = ChallengeAdPlays.PlaysLeft(allowance, granted, mine, attempts.Values) > 0;
+                    dealt.Add(ok);
+                    if (!ok) continue;
+
+                    attempts[genre] = mine + 1;
+                    if (!won) continue;
+
+                    int w = (wins.TryGetValue(genre, out int held) ? held : 0) + 1;
+                    wins[genre] = w;
+                    claims.Add(genre + ":" + w);
+                }
+
+                var wantDealt = new List<bool>();
+                foreach (object d in TestJson.Children(map, "dealt")) wantDealt.Add((bool)d);
+                CollectionAssert.AreEqual(wantDealt, dealt, name + " - dealt");
+
+                var wantClaims = new List<string>();
+                foreach (object c in TestJson.Children(map, "claims"))
+                {
+                    var pair = TestJson.Array(c);
+                    wantClaims.Add((string)pair[0] + ":" + System.Convert.ToInt32(pair[1]));
+                }
+                CollectionAssert.AreEqual(wantClaims, claims, name + " - claims");
+            }
+        }
     }
 }

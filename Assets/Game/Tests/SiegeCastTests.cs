@@ -41,10 +41,11 @@ namespace GlimmerGrove.Tests
         {
             SiegeMode.Insects, SiegeMode.Medley, SiegeMode.Brood, SiegeMode.Bones,
             SiegeMode.Rabble, SiegeMode.Wild, SiegeMode.Court, SiegeMode.Reunion,
+            SiegeMode.Gathering,
         };
 
-        /// <summary>The two casts dealt out of the six rather than cut: the lane's and the eighth chapter's.</summary>
-        static readonly int[] Squares = { SiegeMode.Medley, SiegeMode.Reunion };
+        /// <summary>The casts dealt out of the six rather than cut: the lane's, the eighth chapter's and the ninth's.</summary>
+        static readonly int[] Squares = { SiegeMode.Medley, SiegeMode.Reunion, SiegeMode.Gathering };
 
         /// <summary>
         /// The six a <b>chapter</b> can draw. The medley is not one of them: it is dealt out of
@@ -289,6 +290,9 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(SiegeMode.Reunion, SiegeMode.CastFor(GameTrack.Main, 7),
                             "Cloudkeep does not draw the reunion");
 
+            Assert.AreEqual(SiegeMode.Gathering, SiegeMode.CastFor(GameTrack.Main, 8),
+                            "Cogspire does not draw the gathering");
+
             Assert.AreEqual(SiegeMode.Medley, SiegeMode.CastFor(GameTrack.Infinite, 0),
                             "the Infinite lane does not draw the medley");
         }
@@ -301,13 +305,30 @@ namespace GlimmerGrove.Tests
         /// </summary>
         [Test]
         public void TheReunionIsASecondSquareOverTheSixAndSharesNoSlotWithTheMedley()
+            => IsASquareOverTheSix(SiegeMode.Reunion, "reunion", SiegeMode.Medley);
+
+        /// <summary>
+        /// **The gathering is the third square, and it shares no slot with either of the other
+        /// two** - the reunion's rule asked once more, so the ninth chapter's hill is its own
+        /// against the Infinite lane and against the chapter below it on the map.
+        /// </summary>
+        [Test]
+        public void TheGatheringIsAThirdSquareAndSharesNoSlotWithTheMedleyOrTheReunion()
+            => IsASquareOverTheSix(SiegeMode.Gathering, "gathering",
+                                   SiegeMode.Medley, SiegeMode.Reunion);
+
+        /// <summary>
+        /// <paramref name="square"/> is dealt out of the six chapter casts, twice each, no colour
+        /// drawing one family twice, and no slot drawing what any of <paramref name="others"/>
+        /// draws in it.
+        /// </summary>
+        static void IsASquareOverTheSix(int square, string name, params int[] others)
         {
             var owners = new Dictionary<string, int>();
             foreach (int set in Chapters)
                 foreach (var request in SiegeMode.CastArt(set)) owners[request.Address] = set;
 
-            var reunion = SiegeMode.CastArt(SiegeMode.Reunion);
-            var medley = SiegeMode.CastArt(SiegeMode.Medley);
+            var reunion = SiegeMode.CastArt(square);
 
             var dealt = new Dictionary<int, int>();
 
@@ -316,10 +337,12 @@ namespace GlimmerGrove.Tests
                 string address = reunion[slot].Address;
 
                 Assert.That(owners.ContainsKey(address), Is.True,
-                            $"the reunion draws {address}, which no chapter cast owns");
+                            $"the {name} draws {address}, which no chapter cast owns");
 
-                Assert.AreNotEqual(medley[slot].Address, address,
-                                   $"slot {slot} of the reunion draws the Infinite lane's body");
+                foreach (int other in others)
+                    Assert.AreNotEqual(SiegeMode.CastArt(other)[slot].Address, address,
+                                       $"slot {slot} of the {name} draws what cast {other} "
+                                       + "draws there");
 
                 int family = owners[address];
                 dealt[family] = dealt.TryGetValue(family, out int n) ? n + 1 : 1;
@@ -327,7 +350,7 @@ namespace GlimmerGrove.Tests
 
             foreach (int set in Chapters)
                 Assert.AreEqual(2, dealt.TryGetValue(set, out int n) ? n : 0,
-                                $"the reunion deals cast {set} a number of times other than twice");
+                                $"the {name} deals cast {set} a number of times other than twice");
 
             // No colour draws one family twice, in any of its three roles.
             int colours = Wards.WardLine.Colours.Length;
@@ -336,7 +359,7 @@ namespace GlimmerGrove.Tests
                 var families = new HashSet<int>();
                 for (int row = 0; row < 3; row++)
                     Assert.That(families.Add(owners[reunion[row * colours + colour].Address]),
-                                Is.True, $"colour {colour} of the reunion draws one family twice");
+                                Is.True, $"colour {colour} of the {name} draws one family twice");
             }
         }
 

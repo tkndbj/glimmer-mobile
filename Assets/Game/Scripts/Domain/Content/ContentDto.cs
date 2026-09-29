@@ -728,6 +728,19 @@ namespace GlimmerGrove.Content
         public string charms;
 
         /// <summary>
+        /// Whether this field's refill deals obsidians - the cursed stone that lines up with
+        /// nothing a ward burns and, three in a line, breaks: every obsidian on the field goes with
+        /// it and every raider on the hill is hexed (<c>SiegeLayout.Obsidian</c>). Absent is false,
+        /// which is every body written before the ninth chapter.
+        ///
+        /// <b>Whether, and never how often</b> - the charms' bargain: the rate is the mode's
+        /// (<c>SiegeTuning.ObsidianPercent</c>), and the chapter tool writes this into every rung of
+        /// the chapter that introduces it. <b>Never written into <see cref="rows"/></b>: a stone is
+        /// dealt, never placed.
+        /// </summary>
+        public bool obsidian;
+
+        /// <summary>
         /// The ramp, for a lane whose waves never stop, or absent for an ordinary siege.
         ///
         /// <para>

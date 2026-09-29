@@ -321,6 +321,36 @@
       ]
     },
     {
+      "id": "s10_cogspire",
+      "version": 1,
+      "order": 154,
+      "disabled": false,
+      "minAppVersion": 0,
+      "mode": "siege",
+      "levels": [
+        "s10_brassgate",
+        "s10_windmill",
+        "s10_lampwick",
+        "s10_gearhouse",
+        "s10_boilerheart",
+        "s10_steamvent",
+        "s10_airdock",
+        "s10_chainbridge",
+        "s10_plankway",
+        "s10_millwheel",
+        "s10_axlegate",
+        "s10_orecart",
+        "s10_armillary",
+        "s10_coilyard",
+        "s10_sparkspire",
+        "s10_trussway",
+        "s10_domewatch",
+        "s10_starglass",
+        "s10_nightrail",
+        "s10_skyclock"
+      ]
+    },
+    {
       "id": "s02_endlesswatch",
       "version": 1,
       "order": 150,

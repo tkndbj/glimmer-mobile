@@ -956,6 +956,37 @@ namespace GlimmerGrove.Content
         static readonly AssetRequest[] ReunionSwings = Dealt(ReunionOrder, true);
 
         /// <summary>
+        /// Which cast each of the <b>gathering</b>'s twelve slots is dealt from - the ninth
+        /// chapter's cast, and the third square over the six chapter casts.
+        ///
+        /// <para>
+        /// <b>Commissioned as "a combination of raiders from previous chapters"</b> (the owner,
+        /// 2026-09-28), which is the reunion's brief a second time - and a chapter may draw
+        /// neither the reunion nor the medley, for the reunion's own reason: what a chapter sends
+        /// has to be its own. So it is a third square over the same six casts, held to the same
+        /// three rules and to one more: <b>no slot draws the body the medley <em>or</em> the
+        /// reunion draws in it</b>, so a red creeper here is neither the red creeper on the
+        /// Infinite hill nor the one the chapter below sent.
+        /// </para>
+        /// <para>
+        /// It costs no art: every reel is indexed out of the cast that owns it, so the gathering
+        /// is a table and nothing else. <c>SiegeCastTests</c> holds all four rules.
+        /// </para>
+        /// </summary>
+        static readonly int[] GatheringOrder =
+        {
+            Wild,    Bones,   Insects, Brood,      // creepers  r g b y
+            Court,   Rabble,  Brood,   Court,      // brutes
+            Rabble,  Wild,    Bones,   Insects,    // bulwarks
+        };
+
+        /// <summary>The twelve bodies the gathering draws. See <see cref="GatheringOrder"/>.</summary>
+        static readonly AssetRequest[] GatheringCast = Dealt(GatheringOrder, false);
+
+        /// <summary>What the gathering swings - the medley's honest gap, for the same two families.</summary>
+        static readonly AssetRequest[] GatheringSwings = Dealt(GatheringOrder, true);
+
+        /// <summary>
         /// One of the medley's two arrays, dealt out of <see cref="MedleyOrder"/>.
         ///
         /// <b>A method rather than two initialisers</b>, so the walk and the swing cannot be
@@ -1018,8 +1049,14 @@ namespace GlimmerGrove.Content
         /// </summary>
         public const int Reunion = 7;
 
+        /// <summary>
+        /// The ninth chapter's cast: a third square over the six chapter casts. See
+        /// <see cref="GatheringOrder"/>.
+        /// </summary>
+        public const int Gathering = 8;
+
         /// <summary>How many casts this mode ships.</summary>
-        public const int CastSets = 8;
+        public const int CastSets = 9;
 
         /// <summary>
         /// The casts the <b>main ladder</b> draws from, in the order its chapters meet them.
@@ -1039,8 +1076,13 @@ namespace GlimmerGrove.Content
         /// than one: the seventh entry writes down what Bonereach already draws, which is what
         /// keeps a lengthened table from moving a shipped chapter onto a new cast.
         /// </para>
+        /// <para>
+        /// <b>Nine, and the ninth is a square of its own</b> (<see cref="GatheringOrder"/>) rather
+        /// than the table wrapping onto the insects, for the same reason the eighth grew by two:
+        /// appending it moves no shipped chapter onto a new cast.
+        /// </para>
         static readonly int[] MainCasts = { Insects, Brood, Bones, Rabble, Wild, Court,
-                                            Insects, Reunion };
+                                            Insects, Reunion, Gathering };
 
         /// <summary>
         /// How many casts the main ladder draws from before it starts again.
@@ -1098,6 +1140,7 @@ namespace GlimmerGrove.Content
             {
                 case Medley: return MedleyCast;
                 case Reunion: return ReunionCast;
+                case Gathering: return GatheringCast;
                 case Brood: return BroodCast;
                 case Bones: return BoneCast;
                 case Rabble: return RabbleCast;
@@ -1124,6 +1167,7 @@ namespace GlimmerGrove.Content
             => set == Bones ? BoneSwings
              : set == Medley ? MedleySwings
              : set == Reunion ? ReunionSwings
+             : set == Gathering ? GatheringSwings
              : set == Rabble ? RabbleSwings
              : set == Wild ? WildSwings
              : set == Court ? CourtSwings : null;
@@ -1227,12 +1271,33 @@ namespace GlimmerGrove.Content
             }
         }
 
+        /// <summary>
+        /// What the curse draws (<see cref="SiegeLayout.Obsidian"/>): the stone on the field, the
+        /// sigil a hex stamps on a body and the front it rides up the hill on
+        /// (<c>Tools/make_obsidian_art.py</c>).
+        ///
+        /// <b>Scoped to the chapters that deal it rather than loaded with the field</b>, which is
+        /// the one place this differs from the charms: a charm is dealt by every chapter past the
+        /// first and by the Infinite lane, so the field's own set carries them; an obsidian is
+        /// dealt by one chapter, and art nothing else draws belongs to the scope that draws it
+        /// (invariant 7b). <see cref="ArtFor"/> adds it when any rung of the chapter is cursed.
+        /// </summary>
+        static readonly AssetRequest[] CurseArt =
+        {
+            AssetRequest.Sprite(AssetManifest.SiegeArt("gem_obsidian")),
+            AssetRequest.Sprite(AssetManifest.SiegeArt("hex_sigil")),
+            AssetRequest.SpriteSet(AssetManifest.SiegeArt("hexwave")),
+        };
+
         public override IReadOnlyList<AssetRequest> Art
         {
             get
             {
                 var list = new List<AssetRequest>(Cast);
                 list.AddRange(StarterLine());
+
+                // The curse's three, because this is the question about what *exists* (see below).
+                list.AddRange(CurseArt);
 
                 // **Every cast, because this is the question about what *exists*.** It is what
                 // `AddressableAddresses.FrameFolders` walks to label frames, and a reel that is
@@ -1298,6 +1363,7 @@ namespace GlimmerGrove.Content
             Reels(list, CastSwingArt(cast));
 
             var seen = new HashSet<SiegeKind>();
+            bool cursed = false;
 
             for (int i = 0; i < chapter.Levels.Count; i++)
             {
@@ -1311,6 +1377,15 @@ namespace GlimmerGrove.Content
                 if (!(chapter.Levels[i].Rules is SiegeRules siege)) continue;
 
                 var sends = siege.Layout;
+
+                // **The curse, once, for a chapter any rung of which deals it** - see
+                // `CurseArt`. Asked before the boss clause below, which skips a rung with none.
+                if (sends != null && sends.Cursed && !cursed)
+                {
+                    cursed = true;
+                    list.AddRange(CurseArt);
+                }
+
                 if (sends == null || !sends.HasBoss) continue;
 
                 // **Every boss the rung sends, not the first**: a duel stands two
@@ -1411,7 +1486,8 @@ namespace GlimmerGrove.Content
             }
 
             var layout = new SiegeLayout(grid, block.gems, block.wards, block.waves, block.boss,
-                                         block.cogs, endless, block.tough, block.charms);
+                                         block.cogs, endless, block.tough, block.charms,
+                                         block.obsidian);
 
             if (layout.Fault != null)
             {

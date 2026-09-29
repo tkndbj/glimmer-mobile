@@ -130,9 +130,21 @@ namespace GlimmerGrove
             _sprang = -1;
             for (int i = 0; i < beat.Sprung.Count; i++) Sprung(beat.Sprung[i]);
 
+            // **A broken curse takes its stones before the clear does** - they are dragged into
+            // the break rather than shattered where they stand, so the ordinary clear below skips
+            // every cell `Unbinding` has taken (`SiegeView.Obsidian`).
+            var taken = beat.Unbound ? Unbinding(beat) : null;
+
             for (int i = 0; i < beat.Cleared.Count; i++)
             {
                 int cell = beat.Cleared[i];
+
+                if (taken != null && taken.Contains(cell))
+                {
+                    _gems[cell] = null;
+                    continue;
+                }
+
                 var gem = _gems[cell];
                 if (gem == null || gem.Img == null) continue;
 
@@ -143,7 +155,10 @@ namespace GlimmerGrove
                 // prism, which is drawn colourless and is worth the colour of the run it
                 // completed (`SiegeBeat.Paid`).
                 int paid = i < beat.Paid.Count ? beat.Paid[i] : gem.Colour;
-                var tint = paid >= 0 ? TintOf(paid) : Pal.Cream;
+
+                // An obsidian a lance swept up without a curse breaking goes in the curse's own
+                // light - it is the stone it was, and a cream burst would say it was nothing.
+                var tint = paid >= 0 ? TintOf(paid) : paid == ObsidianColour ? Hex : Pal.Cream;
 
                 // **A gem comes apart rather than switching off**, which is what came back from
                 // play as "gems only disappear when they are matched". Three things at once and
@@ -492,13 +507,34 @@ namespace GlimmerGrove
             // rather than a rare one, and a count-in number is drawn at over two cells of type
             // across the middle of the hill. Measured, it and this banner share about six tenths
             // of a cell on a 19.5:9 phone.
+            Banner(Loc.Format("mode.siege.chain", depth), ChainHeat(depth),
+                   .72f + Mathf.Min(depth, 6) * .05f,
+                   () => Audio.Sfx("chain", .35f, Mathf.Min(1.6f, .9f + depth * .12f)));
+        }
+
+        /// <summary>
+        /// One line of news in the chain banner's seat: <paramref name="text"/> in
+        /// <paramref name="heat"/>, at <paramref name="cells"/> of type, with its sound.
+        ///
+        /// <para>
+        /// <b>One seat, so two pieces of news can never be drawn through each other</b> - a curse
+        /// breaking on a cascade is a chain and a curse on the same beat, and two banners in one
+        /// row is the fault invariant 37ej was written for. Whatever is newest takes the seat and
+        /// the one before it gives way, exactly as a deeper chain replaces a shallower one. The
+        /// hold rule about the forecast and the count-in is the chain's, unchanged: the text
+        /// waits and <b>the sound is never given up</b>.
+        /// </para>
+        /// </summary>
+        void Banner(string text, Color heat, float cells, System.Action sound)
+        {
+            if (Muted) return;
+
             if ((_forecastGroup != null && _forecastGroup.alpha > .05f) || Counting)
             {
-                Audio.Sfx("chain", .35f, Mathf.Min(1.6f, .9f + depth * .12f));
+                sound?.Invoke();
                 return;
             }
 
-            var heat = ChainHeat(depth);
             float y = Caption.Chain;
 
             if (_chain == null)
@@ -520,7 +556,7 @@ namespace GlimmerGrove
 
             // Bigger with depth as well as hotter, so a five reads as more than a two across the
             // room rather than only up close.
-            _chain.text = Loc.Format("mode.siege.chain", depth);
+            _chain.text = text;
             _chain.color = heat;
 
             // Fitted like every other caption on this hill: it grows with depth and it is a
@@ -528,7 +564,7 @@ namespace GlimmerGrove
             // size the depth asks for is handed to the fit rather than written on the label
             // first, so a deeper chain can never inherit a shallower one's shrink.
             UIKit.OneLineLabel(_chain, CaptionRoom,
-                               Mathf.RoundToInt(Cell * (.72f + Mathf.Min(depth, 6) * .05f)),
+                               Mathf.RoundToInt(Cell * cells),
                                Mathf.RoundToInt(Cell * CaptionFloor));
 
             var solid = _chain.color;
@@ -570,7 +606,7 @@ namespace GlimmerGrove
                 if (_chain == banner) { _chain = null; _chainAura = null; }
             });
 
-            Audio.Sfx("chain", .35f, Mathf.Min(1.6f, .9f + depth * .12f));
+            sound?.Invoke();
         }
 
         /// <summary>

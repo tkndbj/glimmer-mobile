@@ -490,6 +490,18 @@ namespace GlimmerGrove.Progression
         public static readonly Mechanic SiegeAnvil = new Mechanic("siege_anvil");
 
         /// <summary>
+        /// The cursed stone (<c>SiegeLayout.Obsidian</c>): it feeds nothing, and three in a line
+        /// break the curse over the hill. Raised the first time one settles on the field, and
+        /// pointed at it (invariant 6b - the thing to line up).
+        ///
+        /// <b>The sentence says what it costs and what it buys, in that order</b> - "it gets in
+        /// the way" is the first thing a player notices about a stone that matches nothing, and
+        /// "break it over a crowd" is the only part of it that changes a decision (the stormglass
+        /// lesson's rule).
+        /// </summary>
+        public static readonly Mechanic SiegeObsidian = new Mechanic("siege_obsidian");
+
+        /// <summary>
         /// A buried turret: tap the rubble off it. Raised the first time a colossus lands a
         /// boulder, and pointed at the post it landed on (invariant 6b - the thing to tap).
         /// </summary>
@@ -920,6 +932,7 @@ namespace GlimmerGrove.Progression
             SiegeFuel, SiegeBrim, SiegeSalvage,
             SiegeBomber,
             SiegePrism, SiegeLance, SiegeStorm, SiegeFurnace, SiegeHourglass, SiegeAnvil,
+            SiegeObsidian,
             SiegeRubble,
             ModeSwitch, LuckySpin,
             // Grove and GroveShop are retired and deliberately absent. See the remarks above.

@@ -316,7 +316,9 @@ CHAPTER_TOUGH_STEP, TOUGH_FROM, MOST_TOUGH = 1, 2, 40
 #: `SiegeTuning.Traded` - the chapters that trade surge for headcount, by 0-based ordinal. The
 #: eighth deals 1.4 rather than the 1.6 the ladder derives: it is a crowd, and a crowd on a fresh
 #: tenth is the wall invariant 37ef measured. The owner's figure, 2026-09-27.
-TRADED = {7: 14}
+#: The ninth deals 1.5 rather than the 1.7 the ladder derives, for the same reason and the owner's
+#: brief of 2026-09-28: harder than the eighth in health and in headcount, "but not too much".
+TRADED = {7: 14, 8: 15}
 
 
 def toughness_for(ordinal):
@@ -432,6 +434,14 @@ STAR_FACTORS = {
     #: these two are set from. A bigger crowd pays more cogs and bombs per run, which pulls clears
     #: *under* par further, so the likelier correction is down.
     8: (0.45, 0.59),
+
+    #: Cogspire, whose raiders carry **five** tenths more health than the baseline - one over
+    #: Cloudkeep, at a bigger crowd still. Started on Bonereach's lines, which is the chapter at the
+    #: same surge, and **provisional until this chapter's own sweep has been read**
+    #: (`SiegeRuleTests.TheNinthChapterIsFoughtOnABoughtLine` prints the spent-share table). The
+    #: curse pulls clears under par as well - a hexed hill dies faster than par credits - so the
+    #: likelier correction is down.
+    9: (0.42, 0.56),
 }
 
 
@@ -541,15 +551,21 @@ def tidy(raw, legal):
     return "".join(c for c in (raw or "") if c != " " and c in legal)
 
 
+#: `SiegeLayout.Obsidian` - the cursed stone a cursed field deals into its refill. Never authored
+#: (it is not in `CELLS`), so no offline gate ever reads one out of a body; it is here so the run
+#: rule below is the whole of `SiegeLayout.Runs`, including its fifth pass.
+OBSIDIAN = "o"
+
+
 def is_gem(cell):
-    """`SiegeLayout.IsGem` - something that can line up and is worth fuel. Never a cog, never a hole.
+    """`SiegeLayout.IsGem` - something that can line up and falls. Never a cog, never a hole.
 
     **A predicate rather than the test written out four times**, which is exactly where a mode with
     a second kind of cell goes quietly wrong: `'' in 'rgby'` is True in Python, so a hole read as a
     gem the day `proto.py` forgot it (CLAUDE.md's own hard-won note), and a cog would line up with
     the cog beside it the day this one did.
     """
-    return cell in LETTERS and cell != ""
+    return cell != "" and (cell in LETTERS or cell == OBSIDIAN)
 
 
 def runs(cells, width, height, charms=None, paid=None):
@@ -604,6 +620,23 @@ def runs(cells, width, height, charms=None, paid=None):
         for x in range(width):
             scan(colour, x, width, height)
 
+    # The obsidian: a block of stones alone, no wild in it (a prism joins a *colour*).
+    def stones(first, step, span):
+        run = 0
+        for k in range(span + 1):
+            if k < span and cells[first + k * step] == OBSIDIAN:
+                run += 1
+                continue
+            if run >= MIN_RUN:
+                for back in range(k - run, k):
+                    take(first + back * step, OBSIDIAN)
+            run = 0
+
+    for y in range(height):
+        stones(y * width, 1, width)
+    for x in range(width):
+        stones(x, width, height)
+
     return hit
 
 
@@ -611,9 +644,13 @@ class Layout(object):
     """`SiegeLayout`. `fault` is None when the level is readable, and the sentence when it is not."""
 
     def __init__(self, grid, deal, wards, waves, boss=None, cogs=0, endless=False, tough=0,
-                 charms=None):
+                 charms=None, obsidian=False):
         self.grid = grid
         self.endless = bool(endless)
+
+        # `SiegeLayout.Cursed`: whether the refill deals obsidians. A flag and nothing more here -
+        # no offline gate deals a refill, so what it changes is the hold simulation's, in C#.
+        self.cursed = bool(obsidian)
 
         # `SiegeLayout.Charms`. None is a body naming a charm this build does not have, which
         # `_check` turns into a sentence rather than guessing at.

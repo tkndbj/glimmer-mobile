@@ -71,6 +71,11 @@ s08_bonereach	craftpix-229916-dead-lands-level-map-2d-backgrounds/_PNG/01/layers
 # pack ships the map flattened (`Png/Level map.png`), and its layered source is a .psd.
 # Drawn by s09_cloudkeep - the first twenty-rung chapter - and by whatever eighth chapter comes next.
 s09_cloudkeep	craftpix-net-390835-the-top-down-level-selection-asset-pack/Png/Level map.png
+# map9 - four strips, the owner's own painting (2026-09-28): clockwork sky islands joined by a
+# copper road, with bridges, gears, tesla coils, an airship and an observatory. One flattened
+# 2048x8256 picture, supplied as `levelmapnew.png` - pass the folder it was saved in as --source.
+# Drawn by s10_cogspire, and by whatever ninth chapter comes next.
+s10_cogspire	levelmapnew.png
 f01_lightfall	-
 f02_glasswater	-
 f03_whorlwater	-
