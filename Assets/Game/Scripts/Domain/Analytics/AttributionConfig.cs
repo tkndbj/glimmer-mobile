@@ -72,7 +72,7 @@ namespace GlimmerGrove.Analytics
         /// package name, which the SDK would accept and then fail to match.
         /// </para>
         /// </summary>
-        public const string AppleAppId = Unset;
+        public const string AppleAppId = "6804516450";
 
         /// <summary>The dev key, or empty when it is still a placeholder.</summary>
         public static string Key => Real(DevKey);
