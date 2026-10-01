@@ -17613,11 +17613,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/shot_ember_y
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6af4750299308632f4963bb954687826
-    m_Address: Art/Fx/Strike
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6b0882b575f34834f92fee4e7f0dd8ee
     m_Address: Art/Fx/Siege/hit_arcstorm_y/f08
     m_ReadOnly: 0
@@ -26277,11 +26272,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9e118629c61e3361fd21f79f940dd79f
     m_Address: Art/Ui/Chest/royal
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 9e15949047ec3744f81f81431d057072
-    m_Address: Art/Challenge
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
