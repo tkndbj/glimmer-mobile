@@ -1160,6 +1160,17 @@ is where they are written down, not what they mean.
    `ranks.ts`), held by `rankCases`, so either is a retroactive rank measure. The same change
    found `ChallengeLedger.LoadFrom` joining the clears into the last account's rather than
    replacing them, which pushed one account's challenge XP into the next after a switch (17a).
+56r. **A raider's position on the challenge hill has one writer, and it is a walk, not a
+   tween** (2026-09-30, the owner: raiders "step back and forth" under rapid moves). A step, a
+   muster and a repaint each hand a widget a *goal* distance (`ChallengeHillView.Aim`, which
+   only ever lowers it) and `Update` walks every widget toward its goal through `LaneWalk` - a
+   critically damped spring on the distance, proved never to overshoot and never to move away
+   (`LaneWalkTests`, every clause mutation-proved). Drawn as one `Tween.Move` per step, a
+   hurried second step restarted from rest mid-stride, and the closing repaint snapped a body
+   ahead of a tween whose clock is capped per frame (`TweenCycle.MaxStep`) while the
+   coroutine's wait is not, after which the tween pulled it back. `Place` is the one line that
+   writes the node, `Idle` also waits for every walk to arrive, and nothing borrows that
+   position (`Tween.Shake` is for posts).
 
 ### Art credits
 
@@ -1922,6 +1933,15 @@ half is `Assets/Game/Scripts/Cloud/`, Firebase Unity SDK
 on a fresh clone).
 
 ## Owed
+
+**The challenge hill's walk was rebuilt on 2026-09-30 (56r) and has been in the Editor but not
+on a device.** Client-only: no schema, no rules, no deploy, no seed, no art, no loc key. Green:
+`compile.py`, `LaneWalkTests` 7/7 offline and in the Editor (four mutations each caught), the
+Editor's compile with the two new metas minted, `render_challenges.py`. **Owed is a build and
+rapid play on all four genres**: tap or swipe faster than the hill replays and watch a raider
+under queued turns - it should stride on without a stall, and never step up the hill. If a step
+reads too soft or too snappy, `LaneWalk.SmoothTime` is the one dial, and the fixture holds it to
+`StepFor`.
 
 **The overcharge and the curse's hill half were redrawn on 2026-09-29 (MODES.md 37ev, 37ex) and neither has been played.** At the owner's instruction: the overcharge leaves nothing on the ground (a re-struck channel of lightning, a burst of arcs, a fork to every body hurt; `splat` withdrawn), and the curse reaches the hill as a lash of black whips thrown from a knot on the board instead of as a third front (`hexwave` withdrawn), with the seal under a hexed body a whole circle. Done in the Editor: compiled, the 25 Addressables rows and the label removed through the API with the files, `Audit Addresses` reads no dead entry, the new meshes build. Offline green: `compile.py`, `SiegeLashTests` 6/6, `SiegeStrikeTests` 8/8, `StrikeFxTests` 5/5, `SiegeArtTests`, `TutorialTests`, `ShowcaseTests`, both art tools' `--check`. **Owed is a device**, and the questions are all ones no gate can answer: whether ten arms re-dealt four times read as a burst or as noise, whether a black line reads on the darkest hill (`LashCore` and the sheath in `Lash.Grow` are the dials), whether the knot hanging for the second between the break and the lash reads as *holding* or as *stuck* (`KnotWide`), and whether a round seal a body and a half wide crowds a full hill (`SealWide`).
 

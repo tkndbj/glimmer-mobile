@@ -31,6 +31,21 @@ namespace GlimmerGrove
     /// A widget the replay leaves behind is put right by that repaint.
     /// </para>
     /// <para>
+    /// <b>A raider's position has exactly one writer, and it is a walk, not a tween</b>
+    /// (2026-09-30). Every step used to start a position tween on the raider's node, and the
+    /// closing repaint wrote the node directly - so a hurried second step restarted from
+    /// rest mid-stride, and a repaint could snap a body ahead of a tween whose clock is
+    /// capped per frame (<see cref="TweenCycle.MaxStep"/>) while the coroutine's wait is
+    /// not, after which the tween pulled it back. On a device that was a raider seen to
+    /// step forward and back (the owner: "not smooth with my actions"). Now a step, a
+    /// muster and a repaint each hand the widget a <em>goal</em> distance through
+    /// <see cref="Aim"/>, which only ever lowers it, and <see cref="Update"/> walks every
+    /// widget toward its goal through <see cref="LaneWalk"/> - one position, one speed,
+    /// proved never to overshoot and never to move away. <see cref="Place"/> is the one line
+    /// that writes a raider node's position; nothing else may, including <c>Tween.Move</c>
+    /// and <c>Tween.Shake</c>, which borrow that same value.
+    /// </para>
+    /// <para>
     /// <b>Each colour has a lane, and the lane ends on that colour's post.</b> That is the
     /// colour lock drawn rather than explained: a red raider walks at the red turret, so
     /// which puzzle move to make next is readable off the hill without a caption.
@@ -44,6 +59,21 @@ namespace GlimmerGrove
 
             /// <summary>The health the widget is drawn at, stepped by events (see the class note).</summary>
             public int Shown;
+
+            /// <summary>
+            /// The distance the widget is drawn at, in steps from the line, continuous: the
+            /// walk's position (<see cref="LaneWalk"/>). Read by nothing but <see cref="Place"/>.
+            /// </summary>
+            public float At;
+
+            /// <summary>
+            /// The distance the last drawn event or repaint gave it, in steps. Only ever falls,
+            /// because a raider never walks back up the hill (<see cref="Aim"/>).
+            /// </summary>
+            public int Goal;
+
+            /// <summary>The walk's speed, in steps per second; negative down the hill.</summary>
+            public float Speed;
 
             public RectTransform Node;
             public Image Body, Fill;
@@ -74,7 +104,15 @@ namespace GlimmerGrove
         /// </summary>
         public const float PostScale = .72f;
 
-        const float FlightFor = .22f, StepFor = .30f, Stagger = .10f;
+        const float FlightFor = .22f, Stagger = .10f;
+
+        /// <summary>
+        /// The beat a replay gives a step before it moves on, in seconds. The walk itself is
+        /// not timed by this - it is a spring (<see cref="LaneWalk.SmoothTime"/>) - but the two
+        /// are held together by the fixture, so a step has all but a hair of its stride behind
+        /// it when the next beat begins.
+        /// </summary>
+        public const float StepFor = .30f;
 
         /// <summary>
         /// How much faster a turn is replayed while another is already waiting behind it. A
@@ -100,8 +138,23 @@ namespace GlimmerGrove
         /// <summary>The line's top edge, in the host's space: where the puzzle band may begin.</summary>
         public float Foot { get; private set; }
 
-        /// <summary>Whether every queued turn has been drawn. The ending waits on it.</summary>
-        public bool Idle => !_draining && _turns.Count == 0;
+        /// <summary>
+        /// Whether every queued turn has been drawn and every raider has reached the seat it
+        /// was walking to. The ending waits on it, so a line that fell is seen to fall and the
+        /// body that felled it is seen to arrive before the panel says so.
+        /// </summary>
+        public bool Idle => !_draining && _turns.Count == 0 && Settled;
+
+        /// <summary>Whether no raider is still walking. Always true within a beat of the last goal, because the walk snaps (<see cref="LaneWalk.Snap"/>).</summary>
+        public bool Settled
+        {
+            get
+            {
+                for (int i = 0; i < _mob.Count; i++)
+                    if (!LaneWalk.Arrived(_mob[i].At, _mob[i].Speed, _mob[i].Goal)) return false;
+                return true;
+            }
+        }
 
         // ------------------------------------------------------------------ building
         /// <summary>
@@ -294,9 +347,9 @@ namespace GlimmerGrove
             return (index - (n - 1) * .5f) * wide;
         }
 
-        float MarchY(int distance)
+        float MarchY(float distance)
         {
-            float t = _hill.Length <= 0 ? 1f : 1f - Mathf.Clamp01(distance / (float)_hill.Length);
+            float t = _hill.Length <= 0 ? 1f : 1f - Mathf.Clamp01(distance / _hill.Length);
             return Mathf.Lerp(_hillTop, _hillFoot + _unit * .45f, t);
         }
 
@@ -304,16 +357,60 @@ namespace GlimmerGrove
         /// Where a body of a colour stands at a distance. Bodies sharing a lane step sideways
         /// a little so two at one distance both read. Takes the distance rather than the
         /// raider, because during a queued replay the raider's own distance is ahead of the
-        /// picture (the class note).
+        /// picture (the class note) - and takes it as a float, because between two seats the
+        /// walk is somewhere on the lane between them.
         /// </summary>
-        Vector2 Seat(int colour, int id, int distance)
+        Vector2 Seat(int colour, int id, float distance)
         {
             float side = ((id % 3) - 1) * _unit * .28f;
             return new Vector2(PostX(colour) + side, MarchY(distance));
         }
 
+        // ------------------------------------------------------------------ the walk
+        /// <summary>The one line that writes a raider node's position (the class note).</summary>
+        void Place(Mob mob)
+        {
+            if (mob.Node) mob.Node.anchoredPosition = Seat(mob.Colour, mob.Id, mob.At);
+        }
+
+        /// <summary>
+        /// Give a widget the seat to walk to. <b>Never raises it</b>: a step, a repaint and a
+        /// stumble can each name a distance, and with turns queued they can name them out of
+        /// order against the picture, but a raider only ever walks down the hill, so the
+        /// lowest is always the truth and an older reading cannot pull a body back.
+        /// </summary>
+        void Aim(Mob mob, int distance)
+        {
+            if (distance < mob.Goal) mob.Goal = distance;
+        }
+
+        /// <summary>
+        /// Every raider walks toward its goal, every frame, on the tween clock
+        /// (<see cref="TweenCycle.Step"/>). A body already standing on its goal costs a
+        /// comparison and nothing else.
+        /// </summary>
+        void Update()
+        {
+            if (_mob.Count == 0) return;
+
+            float dt = TweenCycle.Step(Time.unscaledDeltaTime);
+            for (int i = 0; i < _mob.Count; i++)
+            {
+                var mob = _mob[i];
+                if (LaneWalk.Arrived(mob.At, mob.Speed, mob.Goal)) continue;
+
+                LaneWalk.Advance(ref mob.At, ref mob.Speed, mob.Goal, dt);
+                Place(mob);
+            }
+        }
+
         // ------------------------------------------------------------------ painting
-        /// <summary>Put everything where the model says it is, and draw every health as the model holds it.</summary>
+        /// <summary>
+        /// Aim everything where the model says it is, and draw every health as the model holds
+        /// it. A raider's position is not written here - its goal is (<see cref="Aim"/>), and
+        /// the walk finishes on its own - because a repaint that moved a body directly was one
+        /// of the two writers the class note is about.
+        /// </summary>
         public void Repaint()
         {
             for (int i = 0; i < _posts.Length; i++)
@@ -328,7 +425,7 @@ namespace GlimmerGrove
                 var mob = Widget(raider, raider.Distance);
                 if (mob == null) continue;
 
-                mob.Node.anchoredPosition = Seat(raider.Colour, raider.Id, raider.Distance);
+                Aim(mob, raider.Distance);
                 mob.Shown = raider.Health;
                 PaintHealth(mob, raider);
             }
@@ -388,12 +485,16 @@ namespace GlimmerGrove
 
         Mob Hatch(ChallengeRaider raider, int distance)
         {
-            var mob = new Mob { Id = raider.Id, Colour = raider.Colour, Shown = raider.MaxHealth };
+            var mob = new Mob
+            {
+                Id = raider.Id, Colour = raider.Colour, Shown = raider.MaxHealth,
+                At = distance, Goal = distance, Speed = 0f,
+            };
 
             mob.Node = UIKit.Node("Raider", _mobs);
             mob.Node.anchorMin = mob.Node.anchorMax = new Vector2(.5f, .5f);
             mob.Node.sizeDelta = new Vector2(_unit, _unit);
-            mob.Node.anchoredPosition = Seat(raider.Colour, raider.Id, distance);
+            Place(mob);
 
             float tall = _unit * RaiderTall;
             var frames = ChallengeArt.Raider(raider.Colour);
@@ -456,6 +557,9 @@ namespace GlimmerGrove
 
         void PaintHealth(Mob mob, ChallengeRaider raider)
         {
+            // A blow can land on a body already falling (its bar is being destroyed with it).
+            if (!mob.Fill) return;
+
             int shown = Mathf.Clamp(mob.Shown, 0, raider.MaxHealth);
             float frac = raider.MaxHealth > 0 ? shown / (float)raider.MaxHealth : 0f;
             var size = mob.Fill.rectTransform.sizeDelta;
@@ -713,8 +817,9 @@ namespace GlimmerGrove
             var mob = Widget(raider, e.Amount + 1);
             if (mob == null) return;
 
-            Tween.KillChannel(mob.Node, "walk");
-            Tween.Move(mob.Node, Seat(raider.Colour, raider.Id, e.Amount), StepFor, Ease.InOutSine);
+            // The walk does the rest (the class note): a body mid-stride from the last step
+            // carries its momentum into this one rather than starting again from rest.
+            Aim(mob, e.Amount);
         }
 
         void Struck(ChallengeEvent e)
