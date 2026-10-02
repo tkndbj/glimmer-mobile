@@ -139,25 +139,117 @@ namespace GlimmerGrove.Progression
     }
 
     /// <summary>
+    /// The shape of what the save holds about taken milestone chests: a floor and, above it, the
+    /// levels taken out of order. The one canonical form every writer produces, so a join, a load
+    /// and a write agree byte for byte (invariant 11f).
+    ///
+    /// <para>
+    /// <b>A floor says every milestone at or under it is taken; the list says which above it
+    /// are.</b> Together they are a set that only ever grows: the floor joins by <c>max</c>, the
+    /// list by union, and the join of two such pairs is exactly the union of the two sets they
+    /// mean (11b). The list holds nothing at or under the floor - redundant there, and pruned by
+    /// the same function on every side - so in practice it is a handful of levels or empty, and
+    /// a player who opens chests from the bottom up writes exactly what the v37 build wrote.
+    /// </para>
+    /// </summary>
+    public static class KeeperMilestoneSet
+    {
+        /// <summary>
+        /// The most levels the list carries. A level is a milestone of the table at the moment
+        /// it is taken and the table has at most <see cref="KeeperMilestoneLimits.MaxRows"/>, so
+        /// a longer list is a forged file; the lowest are kept, deterministically, so a join and
+        /// a load cannot disagree about which.
+        /// </summary>
+        public const int MaxTaken = KeeperMilestoneLimits.MaxRows;
+
+        /// <summary>
+        /// The canonical list: distinct, ascending, every entry a level a milestone can stand on
+        /// and above <paramref name="floor"/>, at most <see cref="MaxTaken"/> of them.
+        /// </summary>
+        public static int[] Normal(int floor, int[] taken)
+        {
+            if (taken == null || taken.Length == 0) return Array.Empty<int>();
+
+            var set = new SortedSet<int>();
+            foreach (int level in taken)
+            {
+                if (level <= floor) continue;
+                if (level < KeeperMilestoneLimits.LowestLevel || level > ProgressionTable.MaxSupportedLevel) continue;
+                set.Add(level);
+            }
+
+            if (set.Count == 0) return Array.Empty<int>();
+
+            var result = new int[Math.Min(set.Count, MaxTaken)];
+            int i = 0;
+            foreach (int level in set)
+            {
+                if (i == result.Length) break;
+                result[i++] = level;
+            }
+            return result;
+        }
+
+        /// <summary>The join of two devices' records: the higher floor, the union above it.</summary>
+        public static int[] Join(int floorA, int[] a, int floorB, int[] b)
+        {
+            int floor = Math.Max(floorA, floorB);
+            int la = a?.Length ?? 0, lb = b?.Length ?? 0;
+            if (la == 0) return Normal(floor, b);
+            if (lb == 0) return Normal(floor, a);
+
+            var both = new int[la + lb];
+            Array.Copy(a, 0, both, 0, la);
+            Array.Copy(b, 0, both, la, lb);
+            return Normal(floor, both);
+        }
+
+        /// <summary>Whether <paramref name="level"/> is taken: at or under the floor, or in the list.</summary>
+        public static bool Holds(int floor, int[] taken, int level)
+        {
+            if (level <= floor) return true;
+            if (taken == null) return false;
+            for (int i = 0; i < taken.Length; i++)
+                if (taken[i] == level) return true;
+            return false;
+        }
+
+        /// <summary>Whether two lists hold the same levels in the same order.</summary>
+        public static bool Same(int[] a, int[] b)
+        {
+            int la = a?.Length ?? 0, lb = b?.Length ?? 0;
+            if (la != lb) return false;
+            for (int i = 0; i < la; i++)
+                if (a[i] != b[i]) return false;
+            return true;
+        }
+    }
+
+    /// <summary>
     /// The milestone chests this account has taken - the ledger half of invariant 57d.
     ///
     /// <para>
-    /// <b>What is stored is a floor</b>: the highest milestone level claimed, one monotonic
-    /// integer inside the wallet map joined by <c>max</c> (11b, 12a), and nothing else. Which
-    /// chests are <em>waiting</em> is derived on every read from the level the player stands at
-    /// against that floor, so a milestone added by a content push under a player already past it
-    /// is waiting the moment the table arrives, and a level that falls (a refused purchase, 57a)
+    /// <b>What is stored is a floor and the levels taken above it</b>
+    /// (<see cref="KeeperMilestoneSet"/>): the highest milestone level under which every chest is
+    /// taken, one monotonic integer inside the wallet map joined by <c>max</c> (11b, 12a), and
+    /// beside it the short list of levels opened out of order, joined by union. Which chests are
+    /// <em>waiting</em> is derived on every read from the level the player stands at against
+    /// those two, so a milestone added by a content push under a player already past it is
+    /// waiting the moment the table arrives, and a level that falls (a refused purchase, 57a)
     /// hides nothing that was already paid.
     /// </para>
     /// <para>
-    /// <b>Only the earliest waiting milestone may be taken</b> - the streak's rule (48b) for the
-    /// streak's reason: a floor is a floor, so taking a later one first would sweep the earlier
-    /// ones behind a single ceremony. A tap on a later one is redirected to the earliest. The
-    /// chest is rolled from the account and the level (<see cref="SeedFor"/>), so two devices open
-    /// the same one; its currency reaches the wallet as a claim under
-    /// <see cref="GrantEntry.KeeperMilestoneId"/>, which the server re-rolls and bounds by the
-    /// level the save and the wallet prove; everything else is banked at once
-    /// (<see cref="BankedDrop"/>). It feeds the season by naming a tier (47).
+    /// <b>Any waiting chest may be taken, and the one tapped is the one opened.</b> The first cut
+    /// held the streak's rule (48b) - only the earliest - because the save held a floor alone; a
+    /// tap on the top chest then opened the bottom one, off screen, and the top chest stayed lit,
+    /// which the owner met as a chest that could be opened again and again (2026-10-02). Taking
+    /// the earliest still moves the floor, and the floor then climbs over every chest above it
+    /// that was already taken (<see cref="Settle"/>), so a player opening them bottom-up writes
+    /// nothing a v37 build would not. The chest is rolled from the account and the level
+    /// (<see cref="SeedFor"/>), so two devices open the same one; its currency reaches the wallet
+    /// as a claim under <see cref="GrantEntry.KeeperMilestoneId"/>, which the server re-rolls and
+    /// bounds by the level the save and the wallet prove, in no particular order; everything else
+    /// is banked at once (<see cref="BankedDrop"/>). It feeds the season by naming a tier (47).
     /// </para>
     /// </summary>
     public static class KeeperMilestoneLedger
@@ -173,7 +265,11 @@ namespace GlimmerGrove.Progression
         /// <summary>The published table - content, so retunable without a build.</summary>
         public static KeeperMilestoneTable Table => ProgressionRules.Table.KeeperMilestones;
 
-        /// <summary>The highest milestone level this account has taken. Nought before the first.</summary>
+        /// <summary>
+        /// The floor: every milestone at or under this level is taken. Nought before the first.
+        /// Not the whole answer - <see cref="IsClaimed"/> is - because a chest above it may have
+        /// been opened out of order.
+        /// </summary>
         public static int ClaimedThrough => Wallet.KeeperMilestonesClaimed;
 
         /// <summary>
@@ -185,11 +281,15 @@ namespace GlimmerGrove.Progression
         /// <summary>The level the milestones are read against: earned plus bought.</summary>
         static int Standing => PlayerProgression.Level.Level;
 
+        /// <summary>Whether the chest at <paramref name="level"/> has been opened, in any order.</summary>
+        public static bool IsClaimed(int level)
+            => KeeperMilestoneSet.Holds(ClaimedThrough, Wallet.KeeperMilestonesTaken, level);
+
         /// <summary>Whether <paramref name="level"/> is a milestone the player has reached and not taken.</summary>
         public static bool IsWaiting(int level)
         {
             var row = Table.At(level);
-            return row.IsValid && level <= Standing && level > ClaimedThrough;
+            return row.IsValid && level <= Standing && !IsClaimed(level);
         }
 
         /// <summary>How many milestones are reached and untaken. What the hub's badge prints.</summary>
@@ -197,34 +297,34 @@ namespace GlimmerGrove.Progression
         {
             get
             {
-                int standing = Standing, claimed = ClaimedThrough, count = 0;
+                int standing = Standing, count = 0;
                 foreach (var row in Table.Rows)
                 {
                     if (row.Level > standing) break;
-                    if (row.Level > claimed) count++;
+                    if (!IsClaimed(row.Level)) count++;
                 }
                 return count;
             }
         }
 
-        /// <summary>The lowest waiting milestone's level - the one a tap takes - or 0 when none waits.</summary>
+        /// <summary>The lowest waiting milestone's level, or 0 when none waits.</summary>
         public static int NextWaiting
         {
             get
             {
-                int standing = Standing, claimed = ClaimedThrough;
+                int standing = Standing;
                 foreach (var row in Table.Rows)
                 {
                     if (row.Level > standing) break;
-                    if (row.Level > claimed) return row.Level;
+                    if (!IsClaimed(row.Level)) return row.Level;
                 }
                 return 0;
             }
         }
 
-        /// <summary>True when <paramref name="level"/> is the milestone a tap would take right now.</summary>
+        /// <summary>True when the chest at <paramref name="level"/> can be opened right now.</summary>
         public static bool CanCollect(int level)
-            => level > 0 && level == NextWaiting && CanClaimChests;
+            => IsWaiting(level) && CanClaimChests;
 
         /// <summary>What a milestone holds, without claiming it. Empty for a level that is no milestone.</summary>
         public static List<ChestDrop> Preview(int level)
@@ -248,10 +348,11 @@ namespace GlimmerGrove.Progression
         /// Hands over one milestone and returns what it paid.
         ///
         /// <para>
-        /// The floor moves <em>before</em> the reward is handed over, which is
+        /// The record moves <em>before</em> the reward is handed over, which is
         /// <c>DailyStreak.TryCollect</c>'s ordering and its argument: a process killed mid-payout
-        /// must come back with the floor past a chest whose hearts were already banked, because
-        /// currency survives a retry (the award carries a derived id) and a banked drop does not.
+        /// must come back with the chest recorded as taken when its hearts were already banked,
+        /// because currency survives a retry (the award carries a derived id) and a banked drop
+        /// does not.
         /// </para>
         /// </summary>
         public static bool TryCollect(int level, out List<ChestDrop> drops)
@@ -262,7 +363,7 @@ namespace GlimmerGrove.Progression
             var row = Table.At(level);
             if (!row.IsValid) return false;
 
-            Wallet.RaiseKeeperMilestonesClaimed(level);
+            Record(level);
 
             var paid = row.Tier.Chest.Roll(SeedFor(level));
             Apply(paid, level);
@@ -279,6 +380,43 @@ namespace GlimmerGrove.Progression
 
             drops = paid;
             return true;
+        }
+
+        /// <summary>
+        /// Writes one chest down as taken. The earliest unclaimed milestone moves the floor - every
+        /// chest under it is already taken, so that is exactly what the floor means - and the
+        /// floor then settles upward over any chest above it that was opened earlier out of order
+        /// (<see cref="Settle"/>); any other chest goes in the list. So a bottom-up player's save
+        /// never carries a list, and a top-down player's list empties itself as the floor catches
+        /// up.
+        /// </summary>
+        static void Record(int level)
+        {
+            if (level == NextWaiting)
+            {
+                Wallet.RaiseKeeperMilestonesClaimed(Settle(level));
+                return;
+            }
+            Wallet.MarkKeeperMilestoneTaken(level);
+        }
+
+        /// <summary>
+        /// The level the floor can stand at once the chest at <paramref name="floor"/> is taken:
+        /// walks the table upward from it over every milestone already in the list and stops at
+        /// the first that is not. Reads the table, which is why it lives here and not in the join -
+        /// a join sees two files and no content, so it keeps both halves as they are (the list
+        /// stays sound either way; this only keeps it short).
+        /// </summary>
+        static int Settle(int floor)
+        {
+            var taken = Wallet.KeeperMilestonesTaken;
+            foreach (var row in Table.Rows)
+            {
+                if (row.Level <= floor) continue;
+                if (!KeeperMilestoneSet.Holds(floor, taken, row.Level)) break;
+                floor = row.Level;
+            }
+            return floor;
         }
 
         /// <summary>Currency is claimed under the milestone's own id; everything else is banked now.</summary>

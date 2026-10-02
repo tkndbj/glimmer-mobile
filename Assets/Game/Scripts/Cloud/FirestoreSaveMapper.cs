@@ -196,6 +196,7 @@ namespace GlimmerGrove.Cloud
                         // The highest keeper milestone chest claimed (57d), inside the map for the
                         // same reason: one more number on the wire, no rules release.
                         { "keeperMilestonesClaimed", (long)(dto.wallet?.keeperMilestonesClaimed ?? 0) },
+                        { "keeperMilestonesTaken", Longs(dto.wallet?.keeperMilestonesTaken) },
 
                         // The hint ledger, whole, for the heart ledger's reason. -1 rather
                         // than 0 for the two counters, so a document written before hints
@@ -528,6 +529,7 @@ namespace GlimmerGrove.Cloud
                 dto.wallet.xpBoostEarned = Long(wallet, "xpBoostEarned", 0);
                 dto.wallet.keeperLevelsBought = (int)Long(wallet, "keeperLevelsBought", 0);
                 dto.wallet.keeperMilestonesClaimed = (int)Long(wallet, "keeperMilestonesClaimed", 0);
+                dto.wallet.keeperMilestonesTaken = IntList(wallet, "keeperMilestonesTaken");
 
                 // -1 when the document predates the hint pool, which SaveMerge reads as "no
                 // opinion" and answers with a full pool. Defaulting to 0 would claim a real
@@ -1145,6 +1147,45 @@ namespace GlimmerGrove.Cloud
                 if (item is string s && !string.IsNullOrEmpty(s)) list.Add(s);
 
             return list.ToArray();
+        }
+
+        /// <summary>
+        /// A list of whole numbers, read through <see cref="Long"/>'s tolerance one entry at a
+        /// time: an entry that is not a number, or is outside <c>int</c>, is dropped rather than
+        /// thrown over, for <see cref="StrList"/>'s reason.
+        /// </summary>
+        static int[] IntList(IDictionary<string, object> map, string key)
+        {
+            if (map == null || !map.TryGetValue(key, out object value)) return new int[0];
+            if (!(value is IEnumerable<object> items)) return new int[0];
+
+            var list = new List<int>();
+            foreach (var item in items)
+            {
+                long n;
+                switch (item)
+                {
+                    case long l: n = l; break;
+                    case int i: n = i; break;
+                    case double d: n = (long)d; break;
+                    case float f: n = (long)f; break;
+                    case string s when long.TryParse(s, out long parsed): n = parsed; break;
+                    default: continue;
+                }
+                if (n < int.MinValue || n > int.MaxValue) continue;
+                list.Add((int)n);
+            }
+
+            return list.ToArray();
+        }
+
+        /// <summary>The wire form of a list of whole numbers: Firestore integers, in order.</summary>
+        static List<object> Longs(int[] values)
+        {
+            var list = new List<object>(values?.Length ?? 0);
+            if (values != null)
+                foreach (int v in values) list.Add((long)v);
+            return list;
         }
 
         static object Map(IDictionary<string, object> map, string key)

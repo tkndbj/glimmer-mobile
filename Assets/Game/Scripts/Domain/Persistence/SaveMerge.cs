@@ -328,6 +328,13 @@ namespace GlimmerGrove.Persistence
                 keeperMilestonesClaimed = mine.keeperMilestonesClaimed > other.keeperMilestonesClaimed
                                         ? mine.keeperMilestonesClaimed : other.keeperMilestonesClaimed,
 
+                // The chests opened above that floor, as a union pruned to the joined floor: a
+                // chest once opened stays opened on both devices, and the join of the two records
+                // is exactly the union of the chests they mean (KeeperMilestoneSet).
+                keeperMilestonesTaken = Progression.KeeperMilestoneSet.Join(
+                    mine.keeperMilestonesClaimed, mine.keeperMilestonesTaken,
+                    other.keeperMilestonesClaimed, other.keeperMilestonesTaken),
+
                 // Hints join exactly as hearts do, and through the same arithmetic - see
                 // RegenLedger.Join. There is no legacy shape to rebase from here, because a
                 // hint allowance was never written to a save file at all: it was three per

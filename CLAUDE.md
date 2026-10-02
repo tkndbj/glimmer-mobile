@@ -984,9 +984,17 @@ is where they are written down, not what they mean.
    tag `milestone`, held by `keeperMilestoneChestCases`), its currency is a claim under
    `milestone:{level}:{currency}` (never the debit's `keeper:` prefix - two logs, two readers),
    the rest is banked, and it feeds the season by naming a tier (47). **What the save holds is a
-   floor**: `keeperMilestonesClaimed` (v37, inside the `wallet` map, `max`), so only the earliest
-   waiting chest can be taken (48b's rule) and a milestone added under a player already past it
-   is owed the moment the table arrives. It costs about 4,000 credits and 50 gems over the whole
+   floor and the chests opened above it**: `keeperMilestonesClaimed` (v37, inside the `wallet`
+   map, `max`) and `keeperMilestonesTaken` (v38, same map, union, canonical through
+   `KeeperMilestoneSet` on every side), so a milestone added under a player already past it is
+   owed the moment the table arrives. **The chest tapped is the chest opened**, in any order -
+   the first cut held 48b's rule with the floor alone, so a tap on the top chest opened the
+   bottom one off screen and the top one stayed lit, which the owner met as a chest opening again
+   and again (2026-10-02). Taking the earliest still moves the floor and the floor climbs over
+   whatever above it is already taken, so a bottom-up player writes exactly the v37 shape and
+   the list is empty or short; the server never read the floor, so nothing deploys. A v37 device
+   sees the floor alone and can re-open a chest the newer one took, doubling its banked part only
+   (currency is one claim id either way). It costs about 4,000 credits and 50 gems over the whole
    ladder, once per account, against 936 credits a day - `content.py` prints it. The hub's name
    card wears the count in the tasks pack's starburst cut green (`WaitingBadge.BurstTopRight(card,
    Pal.Mint)`), watched on both cues that move it.
@@ -1737,10 +1745,11 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
 - **Content pipeline** — levels as data, stable `LevelId`s, manifest-built `CatalogIndex`, lazy chapter
   bodies, `Content ▸ Sync Manifest`, build gate.
 - **Save** — versioned atomic file with checksum, backup rotation, corrupt-file recovery, tested
-  migrations, monotonic merge. **Save schema v37** (v33 removed the Grovement's five fields —
+  migrations, monotonic merge. **Save schema v38** (v33 removed the Grovement's five fields —
   16aa; v34 added the daily challenges; v35 the XP surge's deadline, inside the `wallet` map;
   v36 the count of keeper levels bought, inside the `wallet` map, 57; v37 the keeper milestone
-  floor, inside the `wallet` map, 57d). Content schema: manifest and chapter bodies **v2**; `ContentSchema.Version` stays at **3**,
+  floor, inside the `wallet` map, 57d; v38 the milestone chests opened above that floor, same
+  map, 57d). Content schema: manifest and chapter bodies **v2**; `ContentSchema.Version` stays at **3**,
   which only the retired grove body ever used.
 - **Cloud** — Firebase (Firestore + Auth + Functions), anonymous by default, Apple/Google linking,
   per-account local archive for switching, debounce/backoff.
@@ -1938,6 +1947,20 @@ half is `Assets/Game/Scripts/Cloud/`, Firebase Unity SDK
 on a fresh clone).
 
 ## Owed
+
+**The keeper milestone chests open in any order since 2026-10-02 (57d) and need a build to reach
+anybody.** Client-only: **save v38** (`wallet.keeperMilestonesTaken`, union-joined, canonical
+through `KeeperMilestoneSet`), no rules release (the wallet map is unbounded by name), no deploy
+(`judgeMilestoneClaim` never read the floor), no seed, no art, no loc key. Green offline:
+`compile.py` (all sixteen), `KeeperMilestoneTests` 18/18 (the top-down case, the drain, the join
+and the canonical form), `SaveWiringTests` 6/6 (the new field held to the mapper, the delta and
+the join by reflection), `CloudWireTests`, `CloudDepartureTests`, `KeeperLevelTests`,
+`EconomyAndMergeTests`, `AccountSwitchTests`, `render_keeper_ladder.py --taken` (0 overlaps).
+**Owed is the Editor's EditMode suite** (no new file, so no `.meta`) **and a device at the top of
+the ladder**: tap the level 70 chest and watch it alone go spent, tap a few more from the top
+down, then one from the bottom and check the hub badge counts down by one each time. A v37
+build on a second phone sees only the floor and can re-open a chest this one took, banking its
+hearts twice; nothing else is at risk.
 
 **The duplicate-account race was closed on 2026-10-02 (17b) and needs a build to reach anybody.**
 Client-only: no schema, no rules, no deploy, no seed. Green offline: `compile.py`,

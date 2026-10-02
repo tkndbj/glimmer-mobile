@@ -329,6 +329,11 @@ namespace GlimmerGrove.Tests
                 case "wallet.hintsSpent": return 7L;
                 case "wallet.hintsDueUnix": return 1_700_000_600L;
 
+                // The milestone list is canonical: it holds only levels above the floor beside
+                // it (KeeperMilestoneSet.Normal), so the row has to stand above the floor.
+                case "wallet.keeperMilestonesClaimed": return 12;
+                case "wallet.keeperMilestonesTaken[]": return 20;
+
                 // Ids a reader parses and drops when unknown - by design, a malformed row is
                 // judged once, at read.
                 case "wardLoadout[].colour": return "r";

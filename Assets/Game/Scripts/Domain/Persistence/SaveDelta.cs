@@ -192,6 +192,7 @@ namespace GlimmerGrove.Persistence
             if (walletA.xpBoostEarned != walletB.xpBoostEarned) return true;
             if (walletA.keeperLevelsBought != walletB.keeperLevelsBought) return true;
             if (walletA.keeperMilestonesClaimed != walletB.keeperMilestonesClaimed) return true;
+            if (!Progression.KeeperMilestoneSet.Same(walletA.keeperMilestonesTaken, walletB.keeperMilestonesTaken)) return true;
 
             // The hint ledger, for the reason above it: three counters and no derived count,
             // because the refill deadline moves without the count moving and that is exactly

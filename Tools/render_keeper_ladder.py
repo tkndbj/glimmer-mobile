@@ -3,7 +3,8 @@
 
     python Tools/render_keeper_ladder.py                       # a keeper at level 7, three levels bought
     python Tools/render_keeper_ladder.py --standing 12 --bought 0
-    python Tools/render_keeper_ladder.py --standing 9 --claimed 0   # two chests waiting, the first lit
+    python Tools/render_keeper_ladder.py --standing 9 --claimed 0   # two chests waiting, both lit
+    python Tools/render_keeper_ladder.py --standing 70 --claimed 0 --taken 70 68   # opened from the top
     python Tools/render_keeper_ladder.py --standing 70          # at the top: the key is shut
     python Tools/render_keeper_ladder.py --unsold               # no ladder published: the key is shut
     python Tools/render_keeper_ladder.py --contact              # five states side by side
@@ -279,8 +280,12 @@ def dock(sheet, offer, at_top):
 
 
 # ------------------------------------------------------------------ the climb
-def cell(board, cy, level, standing, earned, top, tier, lad, offer, claimed, next_chest):
-    """`KeeperScreen.LevelCell.Bind`, drawn onto the board at the cell's centre line."""
+def cell(board, cy, level, standing, earned, top, tier, lad, offer, claimed, taken=()):
+    """`KeeperScreen.LevelCell.Bind`, drawn onto the board at the cell's centre line.
+
+    `claimed` is the floor and `taken` the levels opened above it out of order
+    (`KeeperMilestoneSet.Holds`): a chest is spent by either, and every waiting chest is lit the
+    same, because every one of them opens itself."""
     x = CX + swing(level)
     reached, crowned = level <= standing, level == standing
     nxt = offer is not None and offer[2] == level
@@ -321,9 +326,8 @@ def cell(board, cy, level, standing, earned, top, tier, lad, offer, claimed, nex
     size = CROWN if crowned else NODE
     if tier:
         px = CX + chest_column(level)
-        spent = level <= claimed
+        spent = level <= claimed or level in taken
         waiting = reached and not spent
-        takes = waiting and level == next_chest
 
         # the tether from the disc's rim to the chest's near edge, in the path's colours
         d = 1.0 if px > x else -1.0
@@ -337,7 +341,7 @@ def cell(board, cy, level, standing, earned, top, tier, lad, offer, claimed, nex
         dd.line([(x0, ty), (x1, ty)], fill=core if len(core) == 4 else (*core, 255), width=int(TETHER_W))
         board.alpha_composite(layer)
         if waiting:
-            K.paste(board, K.glow(int(CHEST_TALL * 1.9), 1.9, K.SUN, .55 if takes else .30), px, cy - CHEST_Y)
+            K.paste(board, K.glow(int(CHEST_TALL * 1.9), 1.9, K.SUN, .55), px, cy - CHEST_Y)
         shadow = K.glow(128, 1.9, (26, 5, 41), .18 if spent else .42)
         shadow = shadow.resize((int(CHEST_TALL * CHEST_WIDE * 1.30), int(CHEST_TALL * .22)))
         K.paste(board, shadow, px, cy - CHEST_Y + CHEST_TALL / 2 + 2)
@@ -387,7 +391,7 @@ def default_claimed(standing, table):
     return reached[-2] if len(reached) >= 2 else 0
 
 
-def shot(standing, bought, unsold=False, claimed=None):
+def shot(standing, bought, unsold=False, claimed=None, taken=()):
     lad = None if unsold else ladder()
     table = milestones()
     last = max(table) if table else 0
@@ -397,8 +401,7 @@ def shot(standing, bought, unsold=False, claimed=None):
     offer = (got[0], got[1], standing + 1) if got else None
     if claimed is None:
         claimed = default_claimed(standing, table)
-    waiting = [level for level in sorted(table) if claimed < level <= standing]
-    next_chest = waiting[0] if waiting else 0
+    taken = tuple(level for level in taken if level > claimed)       # `KeeperMilestoneSet.Normal`
 
     sheet = gradient(W, H)
     stars(sheet)
@@ -419,7 +422,7 @@ def shot(standing, bought, unsold=False, claimed=None):
         cy = PAD_TOP + i * CELL_H + CELL_H / 2 - scroll
         if cy < -CELL_H or cy > view_h + CELL_H:
             continue
-        cell(board, cy, level, standing, earned, top, table.get(level), lad, offer, claimed, next_chest)
+        cell(board, cy, level, standing, earned, top, table.get(level), lad, offer, claimed, taken)
     sheet.alpha_composite(board, (0, int(view_top)))
 
     dock(sheet, offer, lad is not None and standing >= top)
@@ -440,7 +443,7 @@ def audit(top):
     del BOXES[:]
     for i in range(top):
         level = top - i
-        cell(board, PAD_TOP + i * CELL_H + CELL_H / 2, level, 30, 30, top, table.get(level), lad, None, 0, 4)
+        cell(board, PAD_TOP + i * CELL_H + CELL_H / 2, level, 30, 30, top, table.get(level), lad, None, 0)
     return overlaps()
 
 
@@ -449,7 +452,9 @@ def main():
     ap.add_argument("--standing", type=int, default=7, help="the level the keeper stands at")
     ap.add_argument("--bought", type=int, default=3, help="how many of those were bought")
     ap.add_argument("--claimed", type=int, default=None,
-                    help="the highest milestone chest already opened (default: all but the last reached)")
+                    help="the floor: every milestone chest at or under it is opened (default: all but the last reached)")
+    ap.add_argument("--taken", type=int, nargs="*", default=(),
+                    help="milestone levels opened above the floor, out of order - the top-down player's state")
     ap.add_argument("--unsold", action="store_true", help="no ladder published: the key is shut")
     ap.add_argument("--contact", action="store_true", help="five states side by side")
     ap.add_argument("--out", type=Path, default=Path("out") / "keeper.png")
@@ -463,7 +468,7 @@ def main():
             sheet.paste(s.resize((cell_w, int(cell_w * H / W)), Image.LANCZOS), (i * cell_w, 0))
         out = sheet
     else:
-        out = shot(args.standing, args.bought, args.unsold, args.claimed)
+        out = shot(args.standing, args.bought, args.unsold, args.claimed, args.taken)
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     out.save(args.out)

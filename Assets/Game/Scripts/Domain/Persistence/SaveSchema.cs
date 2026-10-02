@@ -617,7 +617,11 @@ namespace GlimmerGrove.Persistence
         ///      chest claimed (invariant 57d). A monotonic floor inside the existing <c>wallet</c>
         ///      map, so no rules release (12a); absent is nought, so no migration. The version
         ///      moves for v35's reason.
-        public const int Version = 37;
+        /// v38: <see cref="WalletDto.keeperMilestonesTaken"/> - the keeper milestone chests opened
+        ///      above the floor, out of order (57d). A union-joined set inside the existing
+        ///      <c>wallet</c> map, so no rules release (12a); absent is empty, so no migration. The
+        ///      version moves for v35's reason.
+        public const int Version = 38;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -1257,22 +1261,47 @@ namespace GlimmerGrove.Persistence
         public int keeperLevelsBought;
 
         /// <summary>
-        /// The highest keeper milestone level whose chest this account has claimed (invariant
-        /// 57d). Only ever rises; joined by <c>max</c>.
+        /// The keeper milestone level under which every chest has been claimed (invariant 57d).
+        /// Only ever rises; joined by <c>max</c>.
         ///
         /// <para>
-        /// <b>A floor, not a set.</b> Only the earliest waiting milestone may be taken (48b's
-        /// rule), so which chests are still owed is derived on every read from the level the
-        /// player stands at against this one number - a milestone added by a content push under
-        /// a player already past it is owed the moment the table arrives, with nothing here to
-        /// migrate. Absent is nought, which is what every file written before this means and what
-        /// a rolled-back client writes, so no migration and no sentinel.
+        /// <b>A floor</b>, with <see cref="keeperMilestonesTaken"/> for what was opened above it.
+        /// Which chests are still owed is derived on every read from the level the player stands
+        /// at against the two - a milestone added by a content push under a player already past
+        /// it is owed the moment the table arrives, with nothing here to migrate. Absent is
+        /// nought, which is what every file written before this means and what a rolled-back
+        /// client writes, so no migration and no sentinel.
         /// </para>
         /// <para>
         /// It rides inside the <c>wallet</c> map, so no rules release (12a). Added in v37.
         /// </para>
         /// </summary>
         public int keeperMilestonesClaimed;
+
+        /// <summary>
+        /// The keeper milestone levels whose chest was claimed <em>above</em> the floor, out of
+        /// order (invariant 57d). A set of permanent levels joined by union, the companions' and
+        /// the turrets' shape (15): a chest once opened stays opened.
+        ///
+        /// <para>
+        /// <b>Canonical, and empty for anyone opening chests bottom-up.</b> Ascending, distinct,
+        /// nothing at or under <see cref="keeperMilestonesClaimed"/> (the floor already says
+        /// those), at most <c>KeeperMilestoneSet.MaxTaken</c> entries - and every writer (the
+        /// ledger, the join, the loader) produces that one form through
+        /// <c>KeeperMilestoneSet.Normal</c>, so what a sync agreed is what the device holds
+        /// (11f). Taking the earliest waiting chest moves the floor and the floor then climbs over
+        /// whatever here it has caught up with, so the list drains itself. A v37 build neither
+        /// reads nor writes it: it still sees the floor alone, draws a chest listed here as
+        /// waiting, and would open it again - its currency is a claim under the same derived id
+        /// and is paid once, so what such a device can double is only the banked part of a chest
+        /// the owner opened on a newer one, and only until that device updates.
+        /// </para>
+        /// <para>
+        /// Absent or null is empty. It rides inside the <c>wallet</c> map, so no rules release
+        /// (12a). Added in v38.
+        /// </para>
+        /// </summary>
+        public int[] keeperMilestonesTaken;
 
         /// <summary>
         /// Every hint ever handed to this player - timer refills, the starting set, a

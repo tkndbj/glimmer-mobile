@@ -133,7 +133,8 @@ namespace GlimmerGrove
 
         /// <summary>The ladder rows read, once per repaint, so seventy binds share one walk.</summary>
         readonly Dictionary<int, RowFacts> _facts = new Dictionary<int, RowFacts>();
-        int _standing = 1, _earned = 1, _top, _claimed, _nextChest;
+        int _standing = 1, _earned = 1, _top, _claimed;
+        int[] _taken = Array.Empty<int>();
         KeeperOffer _offer;
 
         // ------------------------------------------------------------------ build
@@ -358,7 +359,7 @@ namespace GlimmerGrove
             _earned = PlayerProgression.EarnedLevel.Level;
             _offer = KeeperLedger.Next();
             _claimed = KeeperMilestoneLedger.ClaimedThrough;
-            _nextChest = KeeperMilestoneLedger.NextWaiting;
+            _taken = Wallet.KeeperMilestonesTaken;
 
             // The page reaches the ladder's top, the last milestone, or the standing level if a
             // player somehow stands above both (a retune that lowered the top), so the crowned
@@ -537,14 +538,19 @@ namespace GlimmerGrove
             => SwingOf(level) >= 0f ? -ColumnX : ColumnX;
 
         // ------------------------------------------------------------------ the chests
+        /// <summary>Whether the chest at <paramref name="level"/> was opened, as of the last repaint.</summary>
+        bool Claimed(int level) => KeeperMilestoneSet.Holds(_claimed, _taken, level);
+
         /// <summary>
-        /// A chest was tapped. Only the earliest waiting milestone may be taken (48b), so a tap
-        /// on a later one is redirected to it rather than swallowed; one above the player says
-        /// which level opens it; one already opened says nothing, because it draws as spent.
+        /// A chest was tapped. <b>The chest tapped is the chest opened</b>, in any order: the
+        /// first cut redirected every tap to the earliest waiting chest (48b's rule), so a tap on
+        /// the top chest opened one far below it, off screen, and the top chest stayed lit - which
+        /// the owner met as a chest that opened again and again (2026-10-02). One above the player
+        /// says which level opens it; one already opened says nothing, because it draws as spent.
         /// </summary>
         void TapChest(int level)
         {
-            if (level <= _claimed) return;
+            if (Claimed(level)) return;
 
             if (level > _standing)
             {
@@ -558,11 +564,13 @@ namespace GlimmerGrove
                 return;
             }
 
-            int take = KeeperMilestoneLedger.NextWaiting;
-            if (take <= 0 || Flow.HasModal) return;
+            if (Flow.HasModal) return;
+
+            var claim = ChestClaim.ForKeeperMilestone(level);
+            if (!claim.IsValid) return;
 
             Audio.Sfx("collect", .6f);
-            Flow.Modal<ChestOverlay>(v => v.Claim = ChestClaim.ForKeeperMilestone(take));
+            Flow.Modal<ChestOverlay>(v => v.Claim = claim);
         }
 
         // ------------------------------------------------------------------ the climb
@@ -704,8 +712,9 @@ namespace GlimmerGrove
 
                 // ---------------------------------------------------------------- the chest
                 // Three states and every field written for each (44mc): above the player it is
-                // dim and unlit; reached and untaken it is lit, breathing and the one to tap;
-                // taken it is spent - faded, no light - so a player can see what the climb paid.
+                // dim and unlit; reached and untaken it is lit, breathing and tappable - every
+                // waiting chest alike, because every one of them opens itself; taken it is spent -
+                // faded, no light - so a player can see what the climb paid.
                 var tier = facts?.Chest;
                 bool chest = tier != null;
                 _chestRoot.gameObject.SetActive(chest);
@@ -713,9 +722,8 @@ namespace GlimmerGrove
                 _tetherCore.enabled = chest;
                 if (chest)
                 {
-                    bool spent = level <= _screen._claimed;
+                    bool spent = _screen.Claimed(level);
                     bool waiting = !spent && reached;
-                    bool takes = waiting && level == _screen._nextChest;
                     float column = ChestColumn(level);
 
                     // From the disc's rim to the chest's near edge, in the path's own colours:
@@ -740,7 +748,7 @@ namespace GlimmerGrove
                     _chest.color = spent ? new Color(1f, 1f, 1f, .42f) : waiting ? Color.white : Pal.A(Unlit, .95f);
                     _chestShadow.color = new Color(.10f, .02f, .16f, spent ? .18f : .42f);
                     _chestHalo.enabled = waiting;
-                    _chestHalo.color = Pal.A(Pal.Sun, takes ? .55f : .30f);
+                    _chestHalo.color = Pal.A(Pal.Sun, .55f);
 
                     if (waiting && _breathing != level)
                     {

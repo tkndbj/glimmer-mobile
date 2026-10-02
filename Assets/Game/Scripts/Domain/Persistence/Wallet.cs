@@ -62,10 +62,12 @@ namespace GlimmerGrove.Persistence
         // class is the single writer of `dto.wallet`. `KeeperLedger` is the rule over it.
         static int _keeperBought;
 
-        // The highest keeper milestone claimed (invariant 57d): a floor, monotonic and joined by
-        // `max`. Held here for the same reason as the count above it; `KeeperMilestoneLedger` is
-        // the rule over it.
+        // The keeper milestones claimed (invariant 57d): a floor, monotonic and joined by `max`,
+        // and the levels taken above it out of order, joined by union and kept canonical by
+        // `KeeperMilestoneSet`. Held here for the same reason as the count above them;
+        // `KeeperMilestoneLedger` is the rule over them.
         static int _milestonesClaimed;
+        static int[] _milestonesTaken = System.Array.Empty<int>();
 
         static Hints _hints = Hints.Full;
 
@@ -162,14 +164,40 @@ namespace GlimmerGrove.Persistence
         }
 
         // ------------------------------------------------------------- keeper milestones
-        /// <summary>The highest keeper milestone level claimed. See <c>KeeperMilestoneLedger</c>.</summary>
+        /// <summary>The floor: every keeper milestone at or under it is claimed. See <c>KeeperMilestoneLedger</c>.</summary>
         public static int KeeperMilestonesClaimed => _milestonesClaimed;
 
-        /// <summary>Raises the claimed floor, never lowering it. The join, applied locally.</summary>
+        /// <summary>
+        /// The milestone levels claimed above the floor, out of order - canonical
+        /// (<c>KeeperMilestoneSet.Normal</c>), never holding anything at or under the floor.
+        /// The array is the stored one; nothing may write into it.
+        /// </summary>
+        public static int[] KeeperMilestonesTaken => _milestonesTaken;
+
+        /// <summary>
+        /// Raises the claimed floor, never lowering it, and drops from the list whatever the new
+        /// floor now covers. The join, applied locally.
+        /// </summary>
         public static void RaiseKeeperMilestonesClaimed(int level)
         {
             if (level <= _milestonesClaimed) return;
             _milestonesClaimed = level;
+            _milestonesTaken = Progression.KeeperMilestoneSet.Normal(_milestonesClaimed, _milestonesTaken);
+            SaveService.MarkDirty();
+        }
+
+        /// <summary>Writes one milestone above the floor down as claimed. Union, applied locally.</summary>
+        public static void MarkKeeperMilestoneTaken(int level)
+        {
+            if (Progression.KeeperMilestoneSet.Holds(_milestonesClaimed, _milestonesTaken, level)) return;
+
+            var grown = new int[_milestonesTaken.Length + 1];
+            System.Array.Copy(_milestonesTaken, grown, _milestonesTaken.Length);
+            grown[_milestonesTaken.Length] = level;
+
+            var normal = Progression.KeeperMilestoneSet.Normal(_milestonesClaimed, grown);
+            if (Progression.KeeperMilestoneSet.Same(normal, _milestonesTaken)) return;   // out of range, or no room
+            _milestonesTaken = normal;
             SaveService.MarkDirty();
         }
 
@@ -568,6 +596,9 @@ namespace GlimmerGrove.Persistence
             // Negative or absent is nought, for the boost fields' reason one line up.
             _keeperBought = w.keeperLevelsBought < 0 ? 0 : w.keeperLevelsBought;
             _milestonesClaimed = w.keeperMilestonesClaimed < 0 ? 0 : w.keeperMilestonesClaimed;
+            // Read through the same canonical form the join writes, so a file a sync agreed is
+            // held as agreed (11f): nothing here can differ from `SaveMerge.Join`'s output.
+            _milestonesTaken = Progression.KeeperMilestoneSet.Normal(_milestonesClaimed, w.keeperMilestonesTaken);
 
             _hearts = ReadHearts(w).At(GameClock.NowUnix(), _heartBoostUntil);
             _hints = ReadHints(w).At(GameClock.NowUnix());
@@ -698,6 +729,7 @@ namespace GlimmerGrove.Persistence
                 // Keeper levels bought outright (invariant 57).
                 keeperLevelsBought = _keeperBought,
                 keeperMilestonesClaimed = _milestonesClaimed,
+                keeperMilestonesTaken = (int[])_milestonesTaken.Clone(),
 
                 // The hint ledger. No derived mirror beside it, unlike hearts: a build that
                 // predates this one had nothing to read a hint count into, so there is

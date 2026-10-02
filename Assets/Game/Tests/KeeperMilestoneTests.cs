@@ -23,10 +23,12 @@ namespace GlimmerGrove.Tests
     /// Read through <see cref="TestJson"/> for invariant 29e's reason.
     /// </para>
     /// <para>
-    /// <b>The rest is the ledger rule</b>: a milestone is waiting when reached and above the
-    /// floor, only the earliest waiting one can be taken, taking it moves the floor first and
-    /// pays currency as a claim under the derived id, a bought level passes a milestone exactly
-    /// as an earned one does, and the floor rides the wallet map on every leg of the wire.
+    /// <b>The rest is the ledger rule</b>: a milestone is waiting when reached and not taken, any
+    /// waiting one can be taken and the one tapped is the one opened, taking it writes it down
+    /// first (the floor when it is the earliest, the list above the floor otherwise, and the
+    /// floor climbs over the list as it catches up) and pays currency as a claim under the
+    /// derived id, a bought level passes a milestone exactly as an earned one does, and both the
+    /// floor and the list ride the wallet map on every leg of the wire.
     /// </para>
     /// </summary>
     public sealed class KeeperMilestoneTests
@@ -207,10 +209,21 @@ namespace GlimmerGrove.Tests
             return MilestonesDto(map["keeperMilestones"]);
         }
 
-        /// <summary>A save standing at <paramref name="bought"/> levels above earned, with the floor at <paramref name="claimed"/>.</summary>
-        static void SaveWith(int bought, int claimed = 0)
+        /// <summary>
+        /// A save standing at <paramref name="bought"/> levels above earned, with the floor at
+        /// <paramref name="claimed"/> and <paramref name="taken"/> opened above it.
+        /// </summary>
+        static void SaveWith(int bought, int claimed = 0, params int[] taken)
         {
-            var dto = new SaveFileDto { wallet = new WalletDto { keeperLevelsBought = bought, keeperMilestonesClaimed = claimed } };
+            var dto = new SaveFileDto
+            {
+                wallet = new WalletDto
+                {
+                    keeperLevelsBought = bought,
+                    keeperMilestonesClaimed = claimed,
+                    keeperMilestonesTaken = taken.Length == 0 ? null : taken,
+                },
+            };
             Wallet.LoadFrom(dto);
             PlayerProgression.Invalidate();
         }
@@ -397,7 +410,7 @@ namespace GlimmerGrove.Tests
 
         // ------------------------------------------------------------ the rule
         [Test]
-        public void WaitingIsEveryReachedMilestoneAboveTheFloorAndTheEarliestIsNext()
+        public void WaitingIsEveryReachedMilestoneNotTakenAndAnyOfThemCanBeCollected()
         {
             Publish(Rows((4, "silver"), (8, "silver"), (12, "gold")));
 
@@ -414,17 +427,97 @@ namespace GlimmerGrove.Tests
             Assert.IsFalse(KeeperMilestoneLedger.IsWaiting(9), "nine is no milestone");
 
             Assert.IsTrue(KeeperMilestoneLedger.CanCollect(4));
-            Assert.IsFalse(KeeperMilestoneLedger.CanCollect(8), "only the earliest waiting one can be taken");
+            Assert.IsTrue(KeeperMilestoneLedger.CanCollect(8), "any waiting chest can be taken, not only the earliest");
             Assert.IsFalse(KeeperMilestoneLedger.CanCollect(12), "not reached");
+            Assert.IsFalse(KeeperMilestoneLedger.CanCollect(9), "no milestone");
 
             SaveWith(bought: 8, claimed: 4);
             Assert.AreEqual(1, KeeperMilestoneLedger.Waiting);
             Assert.AreEqual(8, KeeperMilestoneLedger.NextWaiting);
             Assert.IsTrue(KeeperMilestoneLedger.CanCollect(8));
+
+            // Opened out of order on another device: the floor says nothing about 8, the list does.
+            SaveWith(bought: 8, claimed: 0, 8);
+            Assert.IsTrue(KeeperMilestoneLedger.IsClaimed(8));
+            Assert.IsFalse(KeeperMilestoneLedger.IsClaimed(4));
+            Assert.AreEqual(1, KeeperMilestoneLedger.Waiting);
+            Assert.AreEqual(4, KeeperMilestoneLedger.NextWaiting);
+            Assert.IsFalse(KeeperMilestoneLedger.CanCollect(8), "already opened");
+            Assert.IsTrue(KeeperMilestoneLedger.CanCollect(4));
         }
 
         [Test]
-        public void CollectingMovesTheFloorFirstAndPaysCurrencyAsAClaim()
+        public void CollectingOutOfOrderOpensTheChestTappedAndTheFloorCatchesUpLater()
+        {
+            Publish(Rows((4, "silver"), (8, "silver"), (12, "gold"), (16, "silver")));
+            SaveWith(bought: 16);                                  // standing at 17, four waiting
+
+            var expected12 = KeeperMilestoneLedger.Preview(12);
+            Assert.IsTrue(KeeperMilestoneLedger.TryCollect(12, out var drops12), "the chest tapped is the chest opened");
+            Assert.AreEqual(Describe(expected12), Describe(drops12), "and it pays its own level's roll");
+            Assert.AreEqual(0, KeeperMilestoneLedger.ClaimedThrough, "the floor cannot move over chests still waiting");
+            CollectionAssert.AreEqual(new[] { 12 }, Wallet.KeeperMilestonesTaken);
+            Assert.IsTrue(KeeperMilestoneLedger.IsClaimed(12));
+            Assert.AreEqual(3, KeeperMilestoneLedger.Waiting);
+            Assert.AreEqual(4, KeeperMilestoneLedger.NextWaiting);
+            Assert.IsFalse(KeeperMilestoneLedger.TryCollect(12, out _), "twice is nothing");
+
+            Assert.IsTrue(KeeperMilestoneLedger.TryCollect(16, out _));
+            CollectionAssert.AreEqual(new[] { 12, 16 }, Wallet.KeeperMilestonesTaken);
+            Assert.AreEqual(0, KeeperMilestoneLedger.ClaimedThrough);
+
+            // The earliest moves the floor, which stops under 8 because 8 is still waiting.
+            Assert.IsTrue(KeeperMilestoneLedger.TryCollect(4, out _));
+            Assert.AreEqual(4, KeeperMilestoneLedger.ClaimedThrough);
+            CollectionAssert.AreEqual(new[] { 12, 16 }, Wallet.KeeperMilestonesTaken);
+            Assert.AreEqual(1, KeeperMilestoneLedger.Waiting);
+
+            // Now the floor catches up over everything already opened and the list drains.
+            Assert.IsTrue(KeeperMilestoneLedger.TryCollect(8, out _));
+            Assert.AreEqual(16, KeeperMilestoneLedger.ClaimedThrough, "4..16 are all taken, so the floor stands at 16");
+            CollectionAssert.IsEmpty(Wallet.KeeperMilestonesTaken, "nothing above the floor is left to list");
+            Assert.AreEqual(0, KeeperMilestoneLedger.Waiting);
+
+            // What a v37 build writes for a bottom-up player is what this one writes too.
+            var written = new SaveFileDto();
+            Wallet.WriteInto(written);
+            Assert.AreEqual(16, written.wallet.keeperMilestonesClaimed);
+            CollectionAssert.IsEmpty(written.wallet.keeperMilestonesTaken);
+        }
+
+        [Test]
+        public void ATopDownPlayerOpensEveryChestOnceAndEachUnderItsOwnId()
+        {
+            Publish(Rows((4, "silver"), (8, "silver"), (12, "gold")));
+            SaveWith(bought: 12);
+
+            // The owner's own case: at the top, collecting from the top.
+            Assert.IsTrue(KeeperMilestoneLedger.TryCollect(12, out var top));
+            Assert.AreEqual(Describe(KeeperMilestoneLedger.Preview(12)), Describe(top));
+            Assert.IsTrue(KeeperMilestoneLedger.TryCollect(8, out _));
+            Assert.IsTrue(KeeperMilestoneLedger.TryCollect(4, out _));
+            Assert.AreEqual(12, KeeperMilestoneLedger.ClaimedThrough);
+            CollectionAssert.IsEmpty(Wallet.KeeperMilestonesTaken);
+            Assert.AreEqual(0, KeeperMilestoneLedger.Waiting);
+            Assert.IsFalse(KeeperMilestoneLedger.TryCollect(12, out _));
+            Assert.IsFalse(KeeperMilestoneLedger.TryCollect(8, out _));
+            Assert.IsFalse(KeeperMilestoneLedger.TryCollect(4, out _));
+
+            // Three chests, three claim ids - never one chest's currency under another's level.
+            foreach (int level in new[] { 4, 8, 12 })
+            {
+                foreach (var drop in KeeperMilestoneLedger.Preview(level))
+                {
+                    if (!drop.IsCurrency) continue;
+                    string currency = ChestDropKinds.CurrencyOf(drop.Kind);
+                    Assert.IsTrue(HoldsGrant(currency, GrantEntry.KeeperMilestoneId(level, currency)),
+                                  $"level {level}'s {currency} is a claim under its own id");
+                }
+            }
+        }
+
+        [Test]
+        public void CollectingTheEarliestMovesTheFloorFirstAndPaysCurrencyAsAClaim()
         {
             Publish(Rows((4, "silver"), (8, "silver")));
             SaveWith(bought: 8);
@@ -439,12 +532,12 @@ namespace GlimmerGrove.Tests
 
             try
             {
-                Assert.IsFalse(KeeperMilestoneLedger.TryCollect(8, out _), "eight is not the earliest waiting");
                 Assert.IsTrue(KeeperMilestoneLedger.TryCollect(4, out var drops));
                 Assert.AreEqual(Describe(expected), Describe(drops), "what was previewed is what was paid");
 
                 Assert.AreEqual(4, KeeperMilestoneLedger.ClaimedThrough);
                 Assert.AreEqual(4, Wallet.KeeperMilestonesClaimed);
+                CollectionAssert.IsEmpty(Wallet.KeeperMilestonesTaken, "the earliest moves the floor, never the list");
                 Assert.AreEqual(1, raised);
                 Assert.AreEqual(1, KeeperMilestoneLedger.Waiting);
                 Assert.AreEqual(8, KeeperMilestoneLedger.NextWaiting);
@@ -557,6 +650,82 @@ namespace GlimmerGrove.Tests
             Wallet.RaiseKeeperMilestonesClaimed(8);
             Wallet.RaiseKeeperMilestonesClaimed(4);
             Assert.AreEqual(8, Wallet.KeeperMilestonesClaimed);
+        }
+
+        [Test]
+        public void TheTakenListRidesTheWalletMapOnEveryLegAndJoinsAsAUnion()
+        {
+            var dto = new SaveFileDto { wallet = new WalletDto { keeperMilestonesClaimed = 4, keeperMilestonesTaken = new[] { 12, 20 } } };
+
+            Wallet.LoadFrom(dto);
+            CollectionAssert.AreEqual(new[] { 12, 20 }, Wallet.KeeperMilestonesTaken);
+            var written = new SaveFileDto();
+            Wallet.WriteInto(written);
+            CollectionAssert.AreEqual(new[] { 12, 20 }, written.wallet.keeperMilestonesTaken);
+
+            var back = FirestoreSaveMapper.FromDocument(FirestoreSaveMapper.ToDocument(dto));
+            CollectionAssert.AreEqual(new[] { 12, 20 }, back.wallet.keeperMilestonesTaken);
+
+            // A union above the joined floor: 12 falls under the other side's floor of 16 and goes;
+            // 20 and 24 stay, whichever side knew them and whichever order the devices sync in.
+            var other = new SaveFileDto { wallet = new WalletDto { keeperMilestonesClaimed = 16, keeperMilestonesTaken = new[] { 24 } } };
+            var joined = SaveMerge.Join(dto, other).wallet;
+            Assert.AreEqual(16, joined.keeperMilestonesClaimed);
+            CollectionAssert.AreEqual(new[] { 20, 24 }, joined.keeperMilestonesTaken);
+            CollectionAssert.AreEqual(new[] { 20, 24 }, SaveMerge.Join(other, dto).wallet.keeperMilestonesTaken);
+
+            // A list that changed is a difference the sync sees; the same list is not.
+            Assert.IsTrue(SaveDelta.Between(dto, other).ScalarsChanged);
+            Assert.IsTrue(SaveDelta.Between(dto, new SaveFileDto { wallet = new WalletDto { keeperMilestonesClaimed = 4, keeperMilestonesTaken = new[] { 12 } } }).ScalarsChanged);
+            Assert.IsFalse(SaveDelta.Between(dto, new SaveFileDto { wallet = new WalletDto { keeperMilestonesClaimed = 4, keeperMilestonesTaken = new[] { 12, 20 } } }).ScalarsChanged);
+
+            // A v37 file carries no list at all, and reads exactly as it always did.
+            Wallet.LoadFrom(new SaveFileDto { wallet = new WalletDto { keeperMilestonesClaimed = 8, keeperMilestonesTaken = null } });
+            Assert.AreEqual(8, Wallet.KeeperMilestonesClaimed);
+            CollectionAssert.IsEmpty(Wallet.KeeperMilestonesTaken);
+            Wallet.WriteInto(written);
+            Assert.AreEqual(8, written.wallet.keeperMilestonesClaimed);
+            CollectionAssert.IsEmpty(written.wallet.keeperMilestonesTaken);
+
+            // Marked locally: a set, so twice is once; raising the floor over it drops it.
+            Wallet.MarkKeeperMilestoneTaken(16);
+            Wallet.MarkKeeperMilestoneTaken(12);
+            Wallet.MarkKeeperMilestoneTaken(16);
+            Wallet.MarkKeeperMilestoneTaken(8);                     // at the floor already
+            CollectionAssert.AreEqual(new[] { 12, 16 }, Wallet.KeeperMilestonesTaken);
+            Wallet.RaiseKeeperMilestonesClaimed(12);
+            CollectionAssert.AreEqual(new[] { 16 }, Wallet.KeeperMilestonesTaken);
+        }
+
+        [Test]
+        public void TheSetHasOneCanonicalFormOnEverySide()
+        {
+            // Unsorted, repeated, under the floor, out of range: one answer.
+            CollectionAssert.AreEqual(new[] { 8, 12 }, KeeperMilestoneSet.Normal(4, new[] { 12, 8, 8, 4, 2, 0, -5, 12, ProgressionTable.MaxSupportedLevel + 1 }));
+            CollectionAssert.IsEmpty(KeeperMilestoneSet.Normal(0, null));
+            CollectionAssert.IsEmpty(KeeperMilestoneSet.Normal(20, new[] { 4, 8, 12 }));
+
+            // Bounded, deterministically: the lowest survive.
+            var many = new int[KeeperMilestoneSet.MaxTaken + 5];
+            for (int i = 0; i < many.Length; i++) many[i] = 2 + i;
+            var bounded = KeeperMilestoneSet.Normal(0, many);
+            Assert.AreEqual(KeeperMilestoneSet.MaxTaken, bounded.Length);
+            Assert.AreEqual(2, bounded[0]);
+
+            // Holds reads the floor first and the list second.
+            Assert.IsTrue(KeeperMilestoneSet.Holds(4, new[] { 12 }, 4));
+            Assert.IsTrue(KeeperMilestoneSet.Holds(4, new[] { 12 }, 12));
+            Assert.IsFalse(KeeperMilestoneSet.Holds(4, new[] { 12 }, 8));
+            Assert.IsFalse(KeeperMilestoneSet.Holds(4, null, 8));
+
+            // Join is the union of what the two records mean: commutative, and a floor absorbs.
+            CollectionAssert.AreEqual(new[] { 12, 16 }, KeeperMilestoneSet.Join(4, new[] { 12 }, 8, new[] { 16, 8 }));
+            CollectionAssert.AreEqual(new[] { 12, 16 }, KeeperMilestoneSet.Join(8, new[] { 16, 8 }, 4, new[] { 12 }));
+            CollectionAssert.IsEmpty(KeeperMilestoneSet.Join(16, null, 4, new[] { 12 }));
+
+            Assert.IsTrue(KeeperMilestoneSet.Same(null, new int[0]));
+            Assert.IsTrue(KeeperMilestoneSet.Same(new[] { 1, 2 }, new[] { 1, 2 }));
+            Assert.IsFalse(KeeperMilestoneSet.Same(new[] { 1, 2 }, new[] { 2, 1 }));
         }
 
         [Test]
