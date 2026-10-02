@@ -284,6 +284,11 @@ Grove, and the bundle id can never move.
    better half of two strangers' groves and writes it over one of them.
 17a. **A switch is finished on the device before the network is asked for anything** — the swap is local
    and the server is folded in afterwards by an ordinary sync.
+17b. **Only a caller holding the sync latch may create an account, and the anonymous sign-in is
+   single-flight.** A referral read fired on every foreground signed in beside the first sync, the
+   provider minted an account for each (seventeen pairs on the live project by 2026-10-02), and when
+   the two read different users back the next sync filed what had been played under a dead account.
+   A call outside the latch goes through `AuthoriseUnlatchedAsync`, which may only resume.
 27. **Deleting an account removes data first and the account itself last**, which is the only thing making
    it safe to retry: **visibility first**, **the name next** (while the wallet holding the key is readable),
    **then the save**, recursively, **then Apple; the auth user last**. Every step is delete-if-exists.
@@ -1933,6 +1938,17 @@ half is `Assets/Game/Scripts/Cloud/`, Firebase Unity SDK
 on a fresh clone).
 
 ## Owed
+
+**The duplicate-account race was closed on 2026-10-02 (17b) and needs a build to reach anybody.**
+Client-only: no schema, no rules, no deploy, no seed. Green offline: `compile.py`,
+`SingleFlightTests` 7/7, `AccountSwitchTests` (five new, the race itself among them),
+`ReferralTests`, both store fixtures, `CloudDepartureTests`; each of the three rules proved by
+mutation. `SingleFlight.cs` and `SingleFlightTests.cs` have no `.meta` yet. **Owed**: the Editor's
+suite, a first launch on each platform, and then the live check - no two Auth accounts created
+within a second of each other once the build is out. The foreground no longer costs a
+`getReferral` when no referral screen is standing. **Not cleaned up**: about eighteen orphan
+anonymous Auth accounts and five orphan `referrals/{uid}` documents with their codes, all holding
+nothing; and old builds keep making them until they update.
 
 **The challenge hill's walk was rebuilt on 2026-09-30 (56r) and has been in the Editor but not
 on a device.** Client-only: no schema, no rules, no deploy, no seed, no art, no loc key. Green:

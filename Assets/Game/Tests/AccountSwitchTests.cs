@@ -318,6 +318,155 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(Mine, CloudState.UserId, "linking keeps the uid; that is what it is for");
         }
 
+        // ============================================================ the one account
+        // Invariant 17b: only a caller holding the latch may make an account. Found in live
+        // data on 2026-10-02 - seventeen pairs of anonymous accounts created within a tenth of
+        // a second of each other, because a referral read fired on every foreground signed in
+        // beside the first sync.
+
+        /// <summary>A save nobody owns yet, with a glade played before any account existed.</summary>
+        void PlayedOfflineBeforeAnyAccount()
+        {
+            SaveService.Adopt(SaveWith("", "c01_first_light"));
+            SaveService.Flush();
+        }
+
+        /// <summary>
+        /// A first launch is the one moment an account is made, and it is still made - by the
+        /// sync, which holds the latch. Here so that closing the race cannot be done by closing
+        /// the door: a build in which nothing may create is a build in which nobody ever syncs.
+        /// </summary>
+        [Test]
+        public void TheFirstSyncMakesTheAccount()
+        {
+            PlayedOfflineBeforeAnyAccount();
+            _backend.Session = null;
+
+            var result = Wait(CloudSaveService.SyncAsync());
+
+            Assert.IsTrue(result.Ok);
+            Assert.AreEqual(1, _backend.SignIns);
+            Assert.AreEqual(_backend.Session, CloudState.UserId, "and the save is recorded under it");
+            Assert.AreEqual("c01_first_light", GladeOnDevice(), "with what was played before it existed");
+        }
+
+        /// <summary>
+        /// A call from outside the latch - a referral read, here - finds no account and makes
+        /// none. It is told so, and comes back after the first sync has made the one.
+        /// </summary>
+        [Test]
+        public void ACallOutsideTheLatchNeverMakesAnAccount()
+        {
+            PlayedOfflineBeforeAnyAccount();
+            _backend.Session = null;
+
+            var result = Wait(CloudSaveService.AuthoriseForCallAsync(default));
+
+            Assert.IsFalse(result.Ok);
+            Assert.AreEqual(CloudFailure.Unauthenticated, result.Failure, "retryable, and said honestly");
+            Assert.AreEqual(0, _backend.SignIns, "signing in here is a second account beside the sync's");
+            Assert.AreEqual(1, _backend.Resumes, "it asks who is there, which creates nobody");
+            Assert.AreEqual("", CloudState.UserId, "and the save is still nobody's");
+        }
+
+        /// <summary>
+        /// The same rule on the money path. A receipt re-delivered on a first launch arrives
+        /// beside the first sync; refusing it costs nothing, because both stores re-deliver an
+        /// unfinished transaction for ever and the retry finds the account the sync made.
+        /// </summary>
+        [Test]
+        public void APurchaseOnAFirstLaunchWaitsForTheAccountRatherThanMakingOne()
+        {
+            PlayedOfflineBeforeAnyAccount();
+            _backend.Session = null;
+
+            var (result, _) = Wait(CloudSaveService.RedeemPurchaseAsync(
+                new PurchaseReceipt
+                {
+                    Store = "apple",
+                    ProductId = "gems_small",
+                    TransactionId = "txn-first-launch",
+                    Payload = "payload",
+                }));
+
+            Assert.IsFalse(result.Ok);
+            Assert.AreEqual(CloudFailure.Unauthenticated, result.Failure);
+            Assert.AreEqual(0, _backend.SignIns);
+            Assert.AreEqual("", CloudState.UserId);
+        }
+
+        /// <summary>
+        /// A call outside the latch still works the moment an account is standing, including
+        /// on a save that has not been told yet - or closing the race would have cost every
+        /// referral read and every purchase made between a sign-in and the sync that records it.
+        /// </summary>
+        [Test]
+        public void ACallOutsideTheLatchStillFindsTheAccountThatIsThere()
+        {
+            PlayedOfflineBeforeAnyAccount();
+            _backend.Session = Mine;
+
+            var result = Wait(CloudSaveService.AuthoriseForCallAsync(default));
+
+            Assert.IsTrue(result.Ok);
+            Assert.AreEqual(0, _backend.SignIns);
+            Assert.AreEqual(Mine, CloudState.UserId);
+            Assert.AreEqual("c01_first_light", GladeOnDevice());
+        }
+
+        /// <summary>
+        /// The fault itself, in the order a device meets it: the app comes to the foreground,
+        /// the referral read goes out, the sync goes out on the next line, and the provider has
+        /// answered neither.
+        ///
+        /// <para>
+        /// When both could create, each was given an account. The read recorded the save under
+        /// the first and the sync came back as the second, found the two disagreeing, and
+        /// "completed the account change" - filing the glade a player had cleared offline under
+        /// an account nothing can sign into again, and starting an empty grove. So this asserts
+        /// the loss directly: one account, the glade still on the device, and nothing filed.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void AForegroundBesideTheFirstSyncMakesOneAccountAndKeepsTheGrove()
+        {
+            PlayedOfflineBeforeAnyAccount();
+            _backend.Session = null;
+
+            // A genuine suspension, so the context is dropped for the duration - see
+            // ASwitchWaitsForARunningSyncRatherThanCallingItAFailure.
+            var context = SynchronizationContext.Current;
+            SynchronizationContext.SetSynchronizationContext(null);
+
+            CloudResult call, sync;
+            try
+            {
+                _backend.HoldSignIns();
+                var calling = CloudSaveService.AuthoriseForCallAsync(default);
+                var syncing = CloudSaveService.SyncAsync();
+                _backend.ReleaseSignIns();
+
+                call = Wait(calling);
+                sync = Wait(syncing);
+            }
+            finally
+            {
+                SynchronizationContext.SetSynchronizationContext(context);
+            }
+
+            Assert.AreEqual(1, _backend.SignIns, "one request, so the provider makes one account");
+            Assert.IsFalse(call.Ok, "the call outside the latch is turned away, to come back later");
+            Assert.IsTrue(sync.Ok);
+
+            Assert.AreEqual(_backend.Session, CloudState.UserId, "the save and the session are one account");
+            Assert.IsFalse(CloudSaveService.AccountMismatched);
+            Assert.AreEqual(0, _archive.Count, "nothing was swapped away to an account nobody can reach");
+            Assert.AreEqual("c01_first_light", GladeOnDevice(), "and what was played offline is still here");
+
+            Assert.IsTrue(_backend.Remote.TryGetValue(_backend.Session, out var pushed), "and on the server");
+            Assert.AreEqual(1, pushed.levels == null ? 0 : pushed.levels.Length);
+        }
+
         // ================================================================== the loss
         /// <summary>
         /// The promise the button makes. If the outgoing grove cannot be put somewhere safe, the
@@ -773,11 +922,47 @@ namespace GlimmerGrove.Tests
             public CloudIdentity CurrentIdentity
                 => string.IsNullOrEmpty(Session) ? CloudIdentity.None : new CloudIdentity(Session, true);
 
+            /// <summary>
+            /// Holds every anonymous sign-in on the wire until released, and makes each one the
+            /// provider's own way: <b>a request sent while another is out is given an account
+            /// of its own, and the later one to land becomes the session.</b> That is what a
+            /// real provider does with two requests - it has no way to know they came from one
+            /// device - and a fake that handed both the same account would pass every test
+            /// about the race while the live project filled with pairs.
+            /// </summary>
+            TaskCompletionSource<bool> _signInHeld;
+            int _minted;
+
+            public void HoldSignIns() => _signInHeld = new TaskCompletionSource<bool>();
+
+            public void ReleaseSignIns()
+            {
+                var held = _signInHeld;
+                _signInHeld = null;
+                held?.TrySetResult(true);
+            }
+
             public Task<(CloudResult result, CloudIdentity identity)> SignInAsync(CancellationToken c = default)
             {
                 SignIns++;
+
+                var held = _signInHeld;
+                if (held != null) return MintOnceReleased(held.Task);
+
                 Session = string.IsNullOrEmpty(Session) ? "uid-fresh-anonymous" : Session;
                 return Task.FromResult((CloudResult.Success, new CloudIdentity(Session, false)));
+            }
+
+            async Task<(CloudResult result, CloudIdentity identity)> MintOnceReleased(Task released)
+            {
+                // Named when the request goes out, as the provider's is: by the time anything
+                // comes back the account exists, whichever request the device ends up keeping.
+                string minted = "uid-anonymous-" + (++_minted);
+
+                await released;
+
+                Session = minted;
+                return (CloudResult.Success, new CloudIdentity(minted, false));
             }
 
             public Task<(CloudResult result, CloudIdentity identity)> ResumeAsync(CancellationToken c = default)

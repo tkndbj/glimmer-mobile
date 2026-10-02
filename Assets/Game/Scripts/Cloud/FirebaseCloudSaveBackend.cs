@@ -183,6 +183,35 @@ namespace GlimmerGrove.Cloud
         }
 
         // --------------------------------------------------------------- signin
+        /// <summary>
+        /// The one anonymous sign-in that may be out at a time. Static because the session it
+        /// guards is: <c>FirebaseAuth.DefaultInstance</c> is one per process whatever holds it.
+        /// </summary>
+        static readonly SingleFlight _anonymous = new SingleFlight(AuthSeconds);
+
+        /// <summary>
+        /// Mints an anonymous account, or joins the request that is already minting one.
+        ///
+        /// <para>
+        /// <b>Every anonymous sign-in in this file goes through here, and the reason is live
+        /// data.</b> <c>CurrentUser</c> stays null for as long as the request is on the wire,
+        /// so two callers that each checked it and each signed in were each given an account -
+        /// the later one became the session and the earlier one was left on the project holding
+        /// nothing (see <see cref="SingleFlight"/>). Worse than untidy: when the two callers
+        /// read different users back, the save was recorded under one and the session was the
+        /// other, and the next sync filed whatever had been played under the dead account and
+        /// started an empty grove.
+        /// </para>
+        /// <para>
+        /// Each caller still waits under its own deadline and its own token. Giving up on the
+        /// wait does not abandon the request, so a caller that comes back inside the window
+        /// joins it rather than racing it.
+        /// </para>
+        /// </summary>
+        Task SignInAnonymouslyOnceAsync(CancellationToken cancellation)
+            => CloudCancel.Within(_anonymous.Run(() => _auth.SignInAnonymouslyAsync()),
+                                  AuthSeconds, cancellation);
+
         public async Task<(CloudResult result, CloudIdentity identity)> SignInAsync(
             CancellationToken cancellation = default)
         {
@@ -192,7 +221,7 @@ namespace GlimmerGrove.Cloud
             try
             {
                 if (_auth.CurrentUser == null)
-                    await CloudCancel.Within(_auth.SignInAnonymouslyAsync(), AuthSeconds, cancellation);
+                    await SignInAnonymouslyOnceAsync(cancellation);
 
                 var user = _auth.CurrentUser;
                 if (user == null)
@@ -248,7 +277,7 @@ namespace GlimmerGrove.Cloud
             try
             {
                 if (_auth.CurrentUser == null)
-                    await CloudCancel.Within(_auth.SignInAnonymouslyAsync(), AuthSeconds, cancellation);
+                    await SignInAnonymouslyOnceAsync(cancellation);
 
                 var (upgraded, refusal) = await NativeIfRequiredAsync(credential);
                 if (refusal.HasValue) return (refusal.Value, CloudIdentity.None);
@@ -1556,7 +1585,7 @@ namespace GlimmerGrove.Cloud
                 // Out first, unconditionally. SignInAsync only mints an anonymous account when
                 // nobody is signed in, and the user it is holding right now is the deleted one.
                 _auth.SignOut();
-                await CloudCancel.Within(_auth.SignInAnonymouslyAsync(), AuthSeconds, cancellation);
+                await SignInAnonymouslyOnceAsync(cancellation);
             }
             catch (Exception e)
             {

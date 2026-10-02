@@ -629,8 +629,31 @@ namespace GlimmerGrove.Referral
             // A re-attached listener delivers the document as it stands, and `Pump` compares
             // that with the stamp on the cached answer - so with a listener the gap is covered
             // by the delivery, and only a device that could not re-attach asks blind.
-            if (!Feed.Resume()) Poke();
+            bool reattached = Feed.Resume();
+            if (AsksOnResume(Feed.Watchers, reattached)) Poke();
         }
+
+        /// <summary>
+        /// Whether coming back to the foreground is worth a call: only when a screen showing
+        /// this is standing and no listener could be brought back for it.
+        ///
+        /// <para>
+        /// <b>"Nobody is watching" used to read as "could not re-attach", and it is the common
+        /// case by a very wide margin.</b> A listener exists only while a screen holds one, so
+        /// on the hub, the map or a board <c>Feed.Resume</c> answers false for the plainest of
+        /// reasons - and every foreground on every device then cost a <c>getReferral</c>, a
+        /// transaction over the whole save, to refresh a figure no screen was drawing. The
+        /// three screens that draw it each attach a watch, and a watch asks as it opens
+        /// (<see cref="Opened"/>), so nothing is left stale by not asking here.
+        /// </para>
+        /// <para>
+        /// It is also what took this call off a first launch, where it ran beside the first
+        /// sync and both signed in (invariant 17b). That fault is closed where it belongs, in
+        /// <c>CloudSaveService</c>; this is the half that is about the bill.
+        /// </para>
+        /// </summary>
+        internal static bool AsksOnResume(int watchers, bool reattached)
+            => watchers > 0 && !reattached;
 
         /// <summary>Re-points the listener after an account switch, or drops it on a sign-out.</summary>
         static void SettleListener() => Feed.Settle();

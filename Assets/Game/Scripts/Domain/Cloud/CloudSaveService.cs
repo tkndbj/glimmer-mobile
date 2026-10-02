@@ -607,9 +607,22 @@ namespace GlimmerGrove.Cloud
         /// <see cref="ICloudSaveBackend.ResumeAsync"/>, which creates nobody. The two used to
         /// be one call, and the difference is a player's grove.
         /// </para>
+        /// <para>
+        /// <b><paramref name="create"/> is true only for a caller that holds the latch</b> - a
+        /// sync, or a link - and that is invariant 17b. Creating an account is a check followed
+        /// by a request, and the check stays true for as long as the request is on the wire, so
+        /// two callers that may both create are two accounts: the referral read fired on every
+        /// foreground and the sync fired beside it each signed in on a first launch, the
+        /// provider minted one account for each, and when the two read different users back the
+        /// save was recorded under one while the session was the other - which the next sync
+        /// "repaired" by filing whatever had been played under an account nothing can sign into
+        /// again. The latch is what makes creation one decision, so a caller outside it may
+        /// only <see cref="ICloudSaveBackend.ResumeAsync"/>: it is told there is no account yet
+        /// and comes back after the first sync has made one. See <see cref="AuthoriseUnlatchedAsync"/>.
+        /// </para>
         /// </summary>
         static async Task<CloudResult> AuthoriseAsync(
-            CancellationToken cancellation, bool repair = true)
+            CancellationToken cancellation, bool repair = true, bool create = true)
         {
             switch (AccountGate.Decide(CloudState.UserId, _backend.CurrentIdentity.UserId))
             {
@@ -626,17 +639,23 @@ namespace GlimmerGrove.Cloud
 
             bool owned = CloudState.IsSignedIn;
 
-            var (result, identity) = owned ? await _backend.ResumeAsync(cancellation)
-                                           : await _backend.SignInAsync(cancellation);
+            var (result, identity) = owned || !create ? await _backend.ResumeAsync(cancellation)
+                                                      : await _backend.SignInAsync(cancellation);
             if (!result.Ok) return result;
 
             // An empty answer from Resume is not a failure of the call - the SDK is up and
             // nobody is signed in - but it is a refusal of this sync, because the account the
             // save belongs to is not available to push to. Retryable, and the account screen's
             // provider buttons are the way a player fixes it deliberately.
+            //
+            // The third sentence is a first launch seen from outside the latch: nobody owns the
+            // save and nobody is signed in, and making somebody is the sync's to do. Retryable
+            // too, and by then the sync has run.
             if (!identity.IsValid)
                 return CloudResult.Failed(CloudFailure.Unauthenticated,
-                                          owned ? "the save's account is not signed in" : "no user id");
+                                          owned ? "the save's account is not signed in"
+                                          : create ? "no user id"
+                                          : "no account yet; the first sync creates it");
 
             if (AccountGate.Decide(CloudState.UserId, identity.UserId) == AccountGateVerdict.Refuse)
                 return Reconcile(identity.UserId, repair);
@@ -1349,7 +1368,11 @@ namespace GlimmerGrove.Cloud
             // asked for, which is right for progress and wrong for a payment made under the
             // account being left. Refusing costs nothing: both stores re-deliver an unfinished
             // transaction for ever, and by the retry the device has repaired itself.
-            var authorised = await AuthoriseAsync(cancellation, repair: false);
+            //
+            // And it creates nobody, for the same retry's sake: a receipt re-delivered on a
+            // first launch arrives beside the first sync, and two sign-ins at once are two
+            // accounts (invariant 17b). It is refused until the sync has made the one.
+            var authorised = await AuthoriseUnlatchedAsync(cancellation);
             if (!authorised.Ok) return (authorised, CloudRedemption.Nothing);
 
             var (result, wallets, redemption) = await _backend.RedeemPurchaseAsync(
@@ -1374,8 +1397,25 @@ namespace GlimmerGrove.Cloud
         internal static Task<CloudResult> AuthoriseForCallAsync(CancellationToken cancellation)
         {
             if (!IsAvailable) return Task.FromResult(CloudResult.Failed(CloudFailure.Offline, "no cloud backend"));
-            return AuthoriseAsync(cancellation, repair: false);
+            return AuthoriseUnlatchedAsync(cancellation);
         }
+
+        /// <summary>
+        /// The gate for a caller that does not hold the latch: it may confirm the account that
+        /// is signed in, and may neither repair a disagreement nor make an account.
+        ///
+        /// <para>
+        /// One door rather than two flags at each call site, because the two refusals are one
+        /// fact - this caller is running beside whatever sync or account change is in flight,
+        /// so it must not swap the grove on the device and must not move the session. A third
+        /// caller of this kind gets both by using it, and cannot get one without the other by
+        /// forgetting an argument (invariant 17b). What it may still do is note that an unowned
+        /// save belongs to the session already standing, which is the answer the sync would
+        /// reach and changes nothing either side holds.
+        /// </para>
+        /// </summary>
+        static Task<CloudResult> AuthoriseUnlatchedAsync(CancellationToken cancellation)
+            => AuthoriseAsync(cancellation, repair: false, create: false);
 
         /// <summary>
         /// Adopts balances a callable outside this class answered with. The one door onto

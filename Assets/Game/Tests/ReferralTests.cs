@@ -542,6 +542,34 @@ namespace GlimmerGrove.Tests
             Assert.IsTrue(first.IsKnown, "but it is the first one that is known, and that is the change");
         }
 
+        // ------------------------------------------------------------- coming back
+        /// <summary>
+        /// The common case by a very wide margin: the app comes back on the hub, the map or a
+        /// board, where no screen draws a referral figure and so no listener exists. That used
+        /// to read as "could not re-attach" and cost a <c>getReferral</c> - a transaction over
+        /// the whole save - on every foreground of every device, and on a first launch it was
+        /// the second sign-in beside the sync's (invariant 17b).
+        /// </summary>
+        [Test]
+        public void ComingBackWithNobodyWatchingAsksNothing()
+        {
+            Assert.IsFalse(ReferralLedger.AsksOnResume(watchers: 0, reattached: false));
+        }
+
+        [Test]
+        public void ComingBackToAPageThatCouldNotReattachAsksOnce()
+        {
+            Assert.IsTrue(ReferralLedger.AsksOnResume(watchers: 1, reattached: false),
+                          "nothing was listening while the app was away, and nothing is now");
+            Assert.IsTrue(ReferralLedger.AsksOnResume(watchers: 2, reattached: false));
+        }
+
+        [Test]
+        public void ComingBackToALiveListenerLeavesTheAskToItsFirstDelivery()
+        {
+            Assert.IsFalse(ReferralLedger.AsksOnResume(watchers: 1, reattached: true));
+        }
+
         // --------------------------------------------------------------- the feed
         [Test]
         public void ADeliveryMatchingTheStampAsksNothing()
