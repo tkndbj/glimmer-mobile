@@ -577,6 +577,10 @@ def tidy(raw, legal):
 #: rule below is the whole of `SiegeLayout.Runs`, including its fifth pass.
 OBSIDIAN = "o"
 
+#: `SiegeLayout.Singularity` - the void stone a singular field deals, rarely, into its refill.
+#: Never authored, for the obsidian's reason; here so `runs` is the whole of `SiegeLayout.Runs`.
+SINGULARITY = "v"
+
 
 def is_gem(cell):
     """`SiegeLayout.IsGem` - something that can line up and falls. Never a cog, never a hole.
@@ -586,7 +590,7 @@ def is_gem(cell):
     gem the day `proto.py` forgot it (CLAUDE.md's own hard-won note), and a cog would line up with
     the cog beside it the day this one did.
     """
-    return cell != "" and (cell in LETTERS or cell == OBSIDIAN)
+    return cell != "" and (cell in LETTERS or cell == OBSIDIAN or cell == SINGULARITY)
 
 
 def runs(cells, width, height, charms=None, paid=None):
@@ -642,21 +646,23 @@ def runs(cells, width, height, charms=None, paid=None):
             scan(colour, x, width, height)
 
     # The obsidian: a block of stones alone, no wild in it (a prism joins a *colour*).
-    def stones(first, step, span):
+    # And the void stone by the same pass: each stone lines up with its own kind only.
+    def stones(first, step, span, stone):
         run = 0
         for k in range(span + 1):
-            if k < span and cells[first + k * step] == OBSIDIAN:
+            if k < span and cells[first + k * step] == stone:
                 run += 1
                 continue
             if run >= MIN_RUN:
                 for back in range(k - run, k):
-                    take(first + back * step, OBSIDIAN)
+                    take(first + back * step, stone)
             run = 0
 
-    for y in range(height):
-        stones(y * width, 1, width)
-    for x in range(width):
-        stones(x, width, height)
+    for stone in (OBSIDIAN, SINGULARITY):
+        for y in range(height):
+            stones(y * width, 1, width, stone)
+        for x in range(width):
+            stones(x, width, height, stone)
 
     return hit
 
@@ -665,9 +671,13 @@ class Layout(object):
     """`SiegeLayout`. `fault` is None when the level is readable, and the sentence when it is not."""
 
     def __init__(self, grid, deal, wards, waves, boss=None, cogs=0, endless=False, tough=0,
-                 charms=None, obsidian=False):
+                 charms=None, obsidian=False, singularity=False):
         self.grid = grid
         self.endless = bool(endless)
+
+        # `SiegeLayout.Singular`: whether the refill deals void stones. A flag and nothing more
+        # here, for `cursed`'s reason just below.
+        self.singular = bool(singularity)
 
         # `SiegeLayout.Cursed`: whether the refill deals obsidians. A flag and nothing more here -
         # no offline gate deals a refill, so what it changes is the hold simulation's, in C#.

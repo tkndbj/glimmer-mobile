@@ -1407,6 +1407,17 @@ namespace GlimmerGrove.Content
             AssetRequest.Sprite(AssetManifest.SiegeArt("hex_sigil")),
         };
 
+        /// <summary>
+        /// What the singularity draws that nothing else does (<see cref="SiegeLayout.Singularity"/>):
+        /// the void stone on the field. The hole it opens and the beam it fires are stacked from
+        /// the gravity well's pieces (<see cref="GravityFx"/>) and the strike kit, which every
+        /// siege already holds. Scoped as <see cref="CurseArt"/> is and for its reason.
+        /// </summary>
+        static readonly AssetRequest[] VoidArt =
+        {
+            AssetRequest.Sprite(AssetManifest.SiegeArt("gem_void")),
+        };
+
         public override IReadOnlyList<AssetRequest> Art
         {
             get
@@ -1416,6 +1427,7 @@ namespace GlimmerGrove.Content
 
                 // The curse's two, because this is the question about what *exists* (see below).
                 list.AddRange(CurseArt);
+                list.AddRange(VoidArt);
 
                 // **Every cast, because this is the question about what *exists*.** It is what
                 // `AddressableAddresses.FrameFolders` walks to label frames, and a reel that is
@@ -1486,7 +1498,7 @@ namespace GlimmerGrove.Content
             Reels(list, CastSwingArt(cast));
 
             var seen = new HashSet<SiegeKind>();
-            bool cursed = false;
+            bool cursed = false, voided = false;
 
             for (int i = 0; i < chapter.Levels.Count; i++)
             {
@@ -1507,6 +1519,13 @@ namespace GlimmerGrove.Content
                 {
                     cursed = true;
                     list.AddRange(CurseArt);
+                }
+
+                // And the void stone, the same way - see `VoidArt`.
+                if (sends != null && sends.Singular && !voided)
+                {
+                    voided = true;
+                    list.AddRange(VoidArt);
                 }
 
                 if (sends == null || !sends.HasBoss) continue;
@@ -1610,7 +1629,7 @@ namespace GlimmerGrove.Content
 
             var layout = new SiegeLayout(grid, block.gems, block.wards, block.waves, block.boss,
                                          block.cogs, endless, block.tough, block.charms,
-                                         block.obsidian);
+                                         block.obsidian, block.singularity);
 
             if (layout.Fault != null)
             {

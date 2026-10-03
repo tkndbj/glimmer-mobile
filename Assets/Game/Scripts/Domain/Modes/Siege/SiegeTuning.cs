@@ -988,6 +988,46 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public const float GravityFan = 1.2f;
 
+        // ------------------------------------------------------------------ the singularity
+        /// <summary>
+        /// How often a refilled cell is dealt a void stone on a field that deals them, per
+        /// thousand (<see cref="SiegeLayout.Singularity"/>).
+        ///
+        /// <b>Rare, and per thousand because per hundred has no rare in it.</b> Three have to be
+        /// gathered into a line, and nothing but the collapse ever takes one off the field, so
+        /// what the rate sets is how many matches stand between two collapses - about one stone
+        /// every nine or ten matches at this figure, which is a handful of collapses in a long
+        /// rung and none in a short one. The payoff is the largest thing the field can do
+        /// (<see cref="VoidBolts"/>), so it is rationed by the deal and not by a cooldown.
+        /// </summary>
+        public const int SingularityPermille = 25;
+
+        /// <summary>
+        /// How many of its own bolts each standing ward lands on every body when a singularity
+        /// fires.
+        ///
+        /// <b>A count of bolts and never a damage figure</b>, the stormglass's rule
+        /// (<see cref="CharmVolley"/>): the beam is worth what the line is worth, at the rank
+        /// and the build it stands at, so it climbs with the shelf without a number and is worth
+        /// nothing to a line that has fallen. Four from each of four starter wards is sixteen
+        /// bolts a body - a creeper and a half on the first chapter's figures - where a
+        /// stormglass lands five.
+        /// </summary>
+        public const int VoidBolts = 4;
+
+        /// <summary>
+        /// Seconds the field takes to fall into a singularity before the beam leaves it, on top
+        /// of the beat it collapsed on.
+        ///
+        /// <b>Model time, so the damage lands when the picture fires</b> (invariant 37s): the
+        /// view draws the swallow over this window and throws the beam on the report, and
+        /// neither has a clock of its own to drift on.
+        /// </summary>
+        public const float VoidGather = .95f;
+
+        /// <summary>When a singularity that collapsed on a cascade's <paramref name="beat"/>th beat fires.</summary>
+        public static float BeamLands(int beat) => SwapFor + beat * BeatFor + VoidGather;
+
         // ------------------------------------------------------------------ the obsidian
         /// <summary>
         /// How often a refilled cell is dealt an obsidian on a field that deals them, per hundred
@@ -1022,8 +1062,15 @@ namespace GlimmerGrove.Modes
         /// more out of the same curse, a line half down gets less, and a player who broke it
         /// over an empty hill got nothing.
         /// </para>
+        /// <para>
+        /// <b>A hundred and twenty since 2026-10-03, down from a hundred and fifty</b>, at the
+        /// owner's instruction, and the half of the curse that moved went into the
+        /// <see cref="WitherPercent">wither</see> the same change added: a curse is now a little
+        /// harder hitting for as long as it lasts <em>and</em> a hurt that lands on every body it
+        /// marked, which is what a crowd broken over is worth.
+        /// </para>
         /// </summary>
-        public const int HexPercent = 150;
+        public const int HexPercent = 120;
 
         /// <summary>
         /// How long a curse broken from <see cref="MinRun"/> stones lasts, how much each stone past
@@ -1049,14 +1096,83 @@ namespace GlimmerGrove.Modes
         /// <summary>
         /// What <paramref name="damage"/> becomes against a hexed body: <see cref="HexPercent"/>
         /// of it, in integers, never less than it was.
+        ///
+        /// <b>Rounded half up rather than down</b>, since the percentage fell to a hundred and
+        /// twenty: rounded down, every hit under five points - a burn's instalment, a wither's,
+        /// a starter bolt against a shield - would take nothing extra at all, so the curse would
+        /// quietly be worth least to the cheapest line, the opposite of invariant 37cg's
+        /// "scales with the line" said from below. Integer throughout, for the "no float decides
+        /// a threshold" rule.
         /// </summary>
         public static int Hexing(int damage)
         {
             if (damage <= 0) return damage;
 
-            int hexed = damage * HexPercent / 100;
+            int hexed = (damage * HexPercent + 50) / 100;
             return hexed > damage ? hexed : damage;
         }
+
+        /// <summary>
+        /// How many instalments a curse's <b>wither</b> is paid in, and the seconds that makes.
+        ///
+        /// <para>
+        /// <b>A count of ticks, and the seconds derived from it, rather than the other way
+        /// round</b>, so the whole of what a wither owes is paid in exact integers on any frame
+        /// rate (<see cref="WitherShare"/>): six seconds at the burn's own cadence
+        /// (<see cref="BurnTick"/>), which is the rhythm a player already reads as "this is
+        /// hurting it", and the shortest hex a curse can lay (<see cref="HexBase"/>), so a
+        /// wither is always paid while its own hex is still multiplying it.
+        /// </para>
+        /// </summary>
+        public const int WitherTicks = 12;
+
+        /// <summary>How long a wither lasts. See <see cref="WitherTicks"/>.</summary>
+        public const float WitherSeconds = WitherTicks * BurnTick;
+
+        /// <summary>
+        /// What a curse withers off each body it marks, over <see cref="WitherSeconds"/>, in per
+        /// cent of one own-colour volley of the line standing when it fell.
+        ///
+        /// <para>
+        /// <b>The line's, with no number of its own</b> - invariant 37cg, and the singularity's
+        /// beam's answer (<see cref="VoidBolts"/>) asked of a hurt over time. A flat figure would
+        /// be a free payoff worth the same to a starter line and a bought one, so it would flatten
+        /// the shelf, and it would not climb with the chapters either: a raider's health grows
+        /// with every chapter's surge, and a fixed number is a large wither in the ninth and
+        /// nothing by the eleventh. Read off the line, it grows exactly as the player's line
+        /// grows - the same way every other gem's payoff here does - and a line half down
+        /// withers half as hard.
+        /// </para>
+        /// <para>
+        /// <b>Half a volley, against the beam's four</b>, because the two stones are not the same
+        /// rarity: an obsidian is dealt ninety times in a thousand and a void stone twenty-five
+        /// (<see cref="ObsidianPercent"/>, <see cref="SingularityPermille"/>), and the beam
+        /// spends the whole field to fire. On a four-ward
+        /// starter line that is about eighty points a body - a quarter of a ninth-chapter creeper
+        /// before the hex multiplies it - and a crowd is where it adds up, which is the curse's
+        /// own decision (<em>break it over a crowd</em>). <b>A guess against the old figure, not a
+        /// measurement</b>: the model player in the sweeps never lines stones up on purpose, so a
+        /// device is what can say whether it is too weak; this is the one dial.
+        /// </para>
+        /// </summary>
+        public const int WitherPercent = 50;
+
+        /// <summary>
+        /// What a curse withers off a body that one own-colour <paramref name="volley"/> of the
+        /// standing line would have taken: <see cref="WitherPercent"/> of it, rounded half up.
+        /// </summary>
+        public static int WitherFor(int volley)
+            => volley <= 0 ? 0 : (volley * WitherPercent + 50) / 100;
+
+        /// <summary>
+        /// The instalment a wither pays on this tick, given what it still <paramref name="owes"/>
+        /// and how many <paramref name="ticks"/> it has left to pay it in.
+        ///
+        /// <b>Spread rather than divided once</b>, so the instalments sum to exactly what was owed
+        /// - the last one is whatever is left - and no point is lost to a remainder.
+        /// </summary>
+        public static int WitherShare(int owes, int ticks)
+            => owes <= 0 ? 0 : ticks <= 1 ? owes : owes / ticks;
 
         /// <summary>
         /// <b>How long a charm is drawn for is not a number, and that is the correction.</b>

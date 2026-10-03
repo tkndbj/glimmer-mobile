@@ -5875,7 +5875,15 @@
     },
     {
       "key": "ui.tip.siege_obsidian.body",
-      "text": "This stone feeds no turret, so it just gets in the way.\n\nLine up three and the curse breaks: every cursed stone on the board shatters, and everything on the hill takes extra damage for a while. More stones, longer curse, so break it over a crowd."
+      "text": "This stone feeds no turret, so it just gets in the way.\n\nLine up three and the curse breaks: every cursed stone on the board shatters, and everything on the hill withers for a few seconds and takes extra damage while the curse lasts. More stones, longer curse, so break it over a crowd."
+    },
+    {
+      "key": "ui.tip.siege_singularity.title",
+      "text": "THE VOID STONE"
+    },
+    {
+      "key": "ui.tip.siege_singularity.body",
+      "text": "Rare, and it feeds no turret.\n\nLine up three and a black hole swallows the whole board, then fires it at the hill: every turret still standing hits every raider at once. The board is dealt fresh, so use it when the hill is full."
     },
     {
       "key": "ui.siege.hexed",
@@ -6187,7 +6195,7 @@
     },
     {
       "key": "utility.mending.note",
-      "text": "Pours into one ward and puts its stones back. It cannot raise a fallen one."
+      "text": "Heal a turret. It cannot raise a fallen one."
     },
     {
       "key": "utility.stormcall.name",
@@ -6203,7 +6211,7 @@
     },
     {
       "key": "utility.surge.note",
-      "text": "Fills one ward with fuel, so it opens fire whatever colour you have matched."
+      "text": "Fills one turret with fuel, so it opens fire whatever colour you have matched."
     },
     {
       "key": "ward.apex.name",

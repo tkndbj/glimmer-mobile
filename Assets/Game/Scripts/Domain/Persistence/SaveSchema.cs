@@ -621,7 +621,14 @@ namespace GlimmerGrove.Persistence
         ///      above the floor, out of order (57d). A union-joined set inside the existing
         ///      <c>wallet</c> map, so no rules release (12a); absent is empty, so no migration. The
         ///      version moves for v35's reason.
-        public const int Version = 38;
+        /// v39: chests taken out of order on the season and the streak. <see cref="EventStateDto.taken"/>
+        ///      and <see cref="EventStateDto.premiumTaken"/> are the rungs opened above each
+        ///      track's floor; <see cref="StreakStateDto.collectedDays"/> the nights taken above
+        ///      the collected floor, and <see cref="StreakStateDto.collectedPeakDay"/> the latest
+        ///      day a night was claimed under. All four ride inside an existing row or map, so no
+        ///      rules release (12a); absent is empty or nought, so no migration. The version
+        ///      moves for v35's reason.
+        public const int Version = 39;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -1659,6 +1666,40 @@ namespace GlimmerGrove.Persistence
         /// </para>
         /// </summary>
         public int shieldFromDay;
+
+        /// <summary>
+        /// The nights taken <b>above</b> <see cref="collectedThroughDay"/>, as day keys.
+        ///
+        /// <para>
+        /// A night can be taken in any order, so the floor alone is no longer the whole
+        /// answer: this is the short list of days whose night was collected while an older one
+        /// still waited (<see cref="FloorSet"/>). Days rather than night numbers, for the
+        /// floor's reason - a restarted streak seeds the floor to the day before it, which
+        /// puts every older day under the floor and empties the list by itself, where a list
+        /// of night numbers would have to be cleared and so could not be joined (11b).
+        /// </para>
+        /// <para>
+        /// Joined by union, canonical on every side (<see cref="FloorSet.Normal"/>), empty
+        /// for a player who takes nights oldest first - which is exactly the file every build
+        /// before v39 wrote.
+        /// </para>
+        /// </summary>
+        public int[] collectedDays;
+
+        /// <summary>
+        /// The latest day key any night was <b>claimed under</b>, or 0 before v39.
+        ///
+        /// <para>
+        /// Monotonic, joined by <c>max</c>. It exists for one case: a night left waiting
+        /// under a taken one, across days a shield forgave. Forgiveness slides the run's
+        /// start, so every night's day slides with it - but the server remembers the day it
+        /// really paid the higher night on, and a night under it must be claimed against
+        /// <em>that</em> calendar (<c>advances</c> in <c>functions/src/streak.ts</c>). The
+        /// difference between this and the highest taken day is exactly how far the run has
+        /// slid since; see <c>DailyStreak.ClaimDayAt</c>.
+        /// </para>
+        /// </summary>
+        public int collectedPeakDay;
     }
 
     /// <summary>
@@ -1705,6 +1746,20 @@ namespace GlimmerGrove.Persistence
 
         /// <summary>The largest <b>pass</b>-track goal already claimed. 0 for none.</summary>
         public int premiumGoal;
+
+        /// <summary>
+        /// The <b>free</b>-track goals claimed above <see cref="collectedGoal"/>, out of order.
+        ///
+        /// A rung can be opened in any order, so a floor alone would have to either refuse a
+        /// later rung or take the earlier ones with it unpaid - which it did, until v39. The
+        /// floor still says "everything at or under this is taken"; this says which above it
+        /// are (<see cref="FloorSet"/>). Union-joined, canonical on every side, and empty for
+        /// a player who opens rungs bottom-up. Nested in a row, so no rules release.
+        /// </summary>
+        public int[] taken;
+
+        /// <summary>The <b>pass</b>-track goals claimed above <see cref="premiumGoal"/>. See <see cref="taken"/>.</summary>
+        public int[] premiumTaken;
 
         /// <summary>
         /// Whether this account has bought the season's pass.

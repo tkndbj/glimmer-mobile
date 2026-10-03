@@ -162,6 +162,11 @@ namespace GlimmerGrove.Modes
                 // pay and are drawn going in one picture. See `SiegeBoard.Obsidian`.
                 Unbound(hit, beat);
 
+                // **A collapsed singularity takes the whole field, and it is folded in here for
+                // the same reason** - and before `Spring`, so nothing it swallows goes off
+                // inside it. See `SiegeBoard.Singularity.cs`.
+                Devour(hit, beat);
+
                 // **Everything a charm adds is folded into the beat that set it off, before a
                 // single cell is taken away.** A lance that takes its row and column has not
                 // started a cascade - a cascade is what falls in afterwards - so its cells clear
@@ -478,8 +483,26 @@ namespace GlimmerGrove.Modes
                 if (!lined) return SiegeLayout.Obsidian;
             }
 
+            // **The void stone, by the same roll under its own salt** (`SiegeLayout.Singularity`):
+            // still the one draw, only taken on a field that deals them, never onto a charm and
+            // never already lined - three dealt together would be a collapse nobody gathered.
+            if (Layout.Singular && charm == SiegeCharm.None
+                && Avalanche(drawn ^ VoidSalt) % 1000u < (uint)SiegeTuning.SingularityPermille)
+            {
+                char was = _cells[at];
+                _cells[at] = SiegeLayout.Singularity;
+
+                bool lined = SiegeLayout.Lined(_cells, Width, Height, _charms, at);
+                _cells[at] = was;
+
+                if (!lined) return SiegeLayout.Singularity;
+            }
+
             return Settled(at, drawn);
         }
+
+        /// <summary>Keeps the void roll out of every other roll's bits. See <see cref="SettleSalt"/>.</summary>
+        const uint VoidSalt = 0x85EBCA6Bu;
 
         /// <summary>Keeps the curse roll out of every other roll's bits. See <see cref="SettleSalt"/>.</summary>
         const uint CurseSalt = 0x9E3779B9u;

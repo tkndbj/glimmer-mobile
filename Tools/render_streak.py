@@ -489,6 +489,11 @@ def shot(state):
         # only way the state is reachable at all.
         days, first, lit, kept, held, line, colour = 2, 1, 2, 2, False, \
             txt("ui.streak.waiting_one"), K.GOLD
+    elif state == "backlog":
+        # Nights taken in any order (48b, v39): five earned, night four taken early, so one,
+        # two, three and five all stand lit at once with a kept night between them - the
+        # state the screen could not draw while only the oldest was takeable.
+        days, first, lit, kept, held, line, colour = 5, 1, -1, 0, False,             txt("ui.streak.waiting_many", 4), K.GOLD
     elif state == "week2":
         days, first, lit, kept, held, line, colour = 11, 8, 3, 3, False, \
             txt("ui.streak.waiting_one"), K.GOLD
@@ -496,10 +501,14 @@ def shot(state):
         days, first, lit, kept, held, line, colour = 5, 1, 4, 4, False, \
             txt("ui.streak.waiting_one"), K.GOLD
 
+    taken_early = {4} if state == "backlog" else set()
+
     rows = []
     for i in range(n):
         night = first + i
-        if i == lit:
+        if state == "backlog" and night <= days:
+            rows.append("kept" if night in taken_early else "lit")
+        elif i == lit:
             rows.append("blocked" if state == "offline" else "lit")
         elif night <= days and i < kept:
             rows.append("kept")
@@ -523,13 +532,13 @@ def shot(state):
     return sheet.convert("RGB")
 
 
-STATES = ("live", "risk", "none", "shield", "week2", "offline")
+STATES = ("live", "risk", "none", "shield", "week2", "offline", "backlog")
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--state", choices=STATES, default="live")
-    ap.add_argument("--contact", action="store_true", help="all six states side by side")
+    ap.add_argument("--contact", action="store_true", help="every state side by side")
     ap.add_argument("--out", type=Path, default=Path("streak.png"))
     args = ap.parse_args()
 

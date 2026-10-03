@@ -797,29 +797,166 @@ namespace GlimmerGrove.Tests
                            "night four has not happened yet");
         }
 
+        /// <summary>Takes the night on <paramref name="rung"/> through the pure record rule.</summary>
+        static void Take(int start, int rung, ref int floor, ref int[] taken)
+            => DailyStreak.Collect(start, Day, Len(start, Day, Day), floor, taken,
+                                   DailyStreak.DayOfRung(start, rung), Ladder, out floor, out taken);
+
         /// <summary>
-        /// <b>Only the oldest waiting night may be taken, and that is what paying a chest
-        /// cost.</b> The floor is a floor - taking night three would take one and two with it
-        /// - which was invisible while every rung was a figure and is not once a rung opens a
-        /// ceremony: a sweep would grant three chests behind one animation, which is the
-        /// "reward that arrives while a panel is up" failure this game has already made twice.
+        /// <b>Any waiting night may be taken, and exactly that night</b> (48b, v39). The record
+        /// was a floor alone, so only the oldest could be taken and a tap on a newer night was
+        /// redirected to it - read by the owner as tapping the bottom chest and watching another
+        /// open. Each night is its own ceremony, and taking one takes nothing else with it.
         /// </summary>
         [Test]
-        public void OnlyTheOldestWaitingNightIsCollectable()
+        public void AnyWaitingNightIsCollectableAndOnlyThatNightIsTaken()
         {
             int start = StartOf(3);
             int floor = start - 1;                       // nothing taken yet
+            int[] taken = null;
 
             Assert.AreEqual(3, Pend(start, Day, floor, Day, Ladder), "three nights are owed");
+            for (int rung = 1; rung <= 3; rung++)
+                Assert.IsTrue(DailyStreak.CollectableAt(start, Day, floor, taken, Day, rung, Ladder, 0, Days),
+                              $"night {rung} is the player's to take");
 
-            Assert.IsTrue(Can(start, Day, floor, Day, 1, Ladder), "night one is the oldest");
-            Assert.IsFalse(Can(start, Day, floor, Day, 2, Ladder), "night two has to wait its turn");
-            Assert.IsFalse(Can(start, Day, floor, Day, 3, Ladder));
+            Take(start, 3, ref floor, ref taken);
 
-            // And taking it moves the offer on by exactly one.
-            floor = DailyStreak.DayOfRung(start, 1);
-            Assert.IsFalse(Can(start, Day, floor, Day, 1, Ladder));
-            Assert.IsTrue(Can(start, Day, floor, Day, 2, Ladder));
+            Assert.AreEqual(start - 1, floor, "taking the newest leaves the floor where it was");
+            CollectionAssert.AreEqual(new[] { Day }, taken, "and writes that one night down");
+            Assert.IsTrue(DailyStreak.WaitingAt(start, Day, floor, taken, Day, 1, Ladder, 0, Days));
+            Assert.IsTrue(DailyStreak.WaitingAt(start, Day, floor, taken, Day, 2, Ladder, 0, Days));
+            Assert.IsFalse(DailyStreak.WaitingAt(start, Day, floor, taken, Day, 3, Ladder, 0, Days),
+                           "the night taken is not offered again");
+            Assert.AreEqual(2, DailyStreak.PendingAt(start, Day, floor, taken, Day, Ladder, 0, Days));
+
+            Take(start, 1, ref floor, ref taken);
+            Assert.AreEqual(DailyStreak.DayOfRung(start, 1), floor, "the oldest moves the floor");
+
+            Take(start, 2, ref floor, ref taken);
+            Assert.AreEqual(Day, floor, "and filling the last gap lets it climb over the night taken early");
+            CollectionAssert.IsEmpty(taken, "which empties the list");
+            Assert.AreEqual(0, DailyStreak.PendingAt(start, Day, floor, taken, Day, Ladder, 0, Days));
+        }
+
+        /// <summary>Oldest-first play writes exactly what every build before v39 wrote.</summary>
+        [Test]
+        public void OldestFirstNeverWritesAList()
+        {
+            int start = StartOf(5);
+            int floor = start - 1;
+            int[] taken = null;
+
+            for (int rung = 1; rung <= 5; rung++)
+            {
+                Take(start, rung, ref floor, ref taken);
+                Assert.AreEqual(DailyStreak.DayOfRung(start, rung), floor);
+                CollectionAssert.IsEmpty(taken);
+            }
+        }
+
+        /// <summary>
+        /// A bounded list fails toward the old rule rather than toward losing a record: once it
+        /// is full, only the oldest night - which moves the floor, not the list - is offered.
+        /// </summary>
+        [Test]
+        public void AFullListStillOffersTheOldest()
+        {
+            int start = StartOf(FloorSet.MaxTaken + 3);
+            int floor = start - 1;
+
+            var full = new int[FloorSet.MaxTaken];
+            for (int i = 0; i < full.Length; i++) full[i] = DailyStreak.DayOfRung(start, i + 3);
+
+            Assert.IsTrue(DailyStreak.CollectableAt(start, Day, floor, full, Day, 1, Ladder, 0, Days));
+            Assert.IsFalse(DailyStreak.CollectableAt(start, Day, floor, full, Day, 2, Ladder, 0, Days),
+                           "a full list takes nothing more out of order");
+        }
+
+        /// <summary>
+        /// The server's rule, mirrored: <c>advances</c> in <c>functions/src/streak.ts</c> accepts a
+        /// night dated at or before the last one it paid only when <c>night == paidNight +
+        /// elapsed</c>. Copied here so the claim dates below are held to the arithmetic that will
+        /// judge them; the server's own suite holds the original.
+        /// </summary>
+        static bool ServerAdvances(int paidDay, int paidNight, int day, int night)
+        {
+            if (night < 1) return false;
+            if (paidDay <= 0) return true;
+            int elapsed = day - paidDay;
+            if (elapsed <= 0) return night == paidNight + elapsed;
+            if (night > paidNight && night <= paidNight + elapsed) return true;
+            return night <= elapsed;
+        }
+
+        /// <summary>
+        /// A night taken below one already paid is accepted by the server exactly, with no
+        /// shield in the way - and that is every streak nobody protected, so its ids are the
+        /// night's own day, as they always were.
+        /// </summary>
+        [Test]
+        public void ANightTakenUnderAPaidOneIsDatedOnItsOwnDay()
+        {
+            int start = StartOf(5);
+            int top = DailyStreak.DayOfRung(start, 5);
+
+            for (int rung = 1; rung <= 4; rung++)
+            {
+                int day = DailyStreak.ClaimDayAt(start, top, top, rung);
+                Assert.AreEqual(DailyStreak.DayOfRung(start, rung), day, "no slide, no change to the id");
+                Assert.IsTrue(ServerAdvances(top, 5, day, rung), $"night {rung} under night 5 is paid");
+            }
+        }
+
+        /// <summary>
+        /// <b>Across a shield the night's own day stops adding up</b>, which is why the claim day
+        /// exists. Night five taken on its day, nights one to four left, then four protected days:
+        /// the run slides four days, so every waiting night's own day slides too - and the server,
+        /// which paid night five on the real calendar, would refuse them all and the client would
+        /// drop the coins it had shown. Dated by <see cref="DailyStreak.ClaimDayAt"/>, each is
+        /// accepted exactly.
+        /// </summary>
+        [Test]
+        public void ANightTakenUnderAPaidOneAcrossAShieldIsDatedInThePaidCalendar()
+        {
+            const int Slide = 2;
+            int oldStart = StartOf(5) - 10;
+            int paidDay = DailyStreak.DayOfRung(oldStart, 5);   // night five, claimed on its own day
+
+            int newStart = oldStart + Slide;                    // the shield forgave two days
+            int top = paidDay + Slide;                          // the list entry slid with the run
+
+            for (int rung = 1; rung <= 4; rung++)
+            {
+                int own = DailyStreak.DayOfRung(newStart, rung);
+                Assert.IsFalse(ServerAdvances(paidDay, 5, own, rung),
+                               "precondition: the slid day is one the server refuses");
+
+                int day = DailyStreak.ClaimDayAt(newStart, top, paidDay, rung);
+                Assert.IsTrue(ServerAdvances(paidDay, 5, day, rung), $"night {rung} is dated so it is paid");
+            }
+
+            Assert.AreEqual(DailyStreak.DayOfRung(newStart, 6), DailyStreak.ClaimDayAt(newStart, top, paidDay, 6),
+                            "a night above the one paid keeps its own day");
+            Assert.IsTrue(ServerAdvances(paidDay, 5, DailyStreak.DayOfRung(newStart, 6), 6));
+        }
+
+        /// <summary>The join unions the nights taken early, and is a join (11b).</summary>
+        [Test]
+        public void TheJoinUnionsTheNightsTakenEarly()
+        {
+            var a = new StreakStateDto { startDay = Day - 4, lastPlayedDay = Day, collectedThroughDay = Day - 5,
+                                         collectedDays = new[] { Day }, collectedPeakDay = Day };
+            var b = new StreakStateDto { startDay = Day - 4, lastPlayedDay = Day, collectedThroughDay = Day - 4,
+                                         collectedDays = new[] { Day - 2 }, collectedPeakDay = Day - 2 };
+
+            var joined = DailyStreak.Join(a, b);
+            Assert.AreEqual(Day - 4, joined.collectedThroughDay);
+            CollectionAssert.AreEqual(new[] { Day - 2, Day }, joined.collectedDays);
+            Assert.AreEqual(Day, joined.collectedPeakDay);
+
+            CollectionAssert.AreEqual(joined.collectedDays, DailyStreak.Join(b, a).collectedDays, "commutative");
+            CollectionAssert.AreEqual(joined.collectedDays, DailyStreak.Join(joined, joined).collectedDays, "idempotent");
         }
 
         /// <summary>

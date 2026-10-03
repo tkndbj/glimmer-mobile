@@ -561,6 +561,174 @@ namespace GlimmerGrove.Tests
                             "rows are written in id order");
         }
 
+        // ------------------------------------------------------- any order (v39)
+        /// <summary>Three rungs paying on both tracks, reached by thirty marks.</summary>
+        static GroveEvent Ladder3()
+            => new GroveEvent("vector_order", 100, 200, new[]
+            {
+                new EventMilestone(10, "silver", "silver"),
+                new EventMilestone(20, "silver", "silver"),
+                new EventMilestone(30, "silver", "silver"),
+            }, passGems: 250);
+
+        /// <summary>
+        /// Runs a claim against a clean wallet: a claim pays currency, so the wallet has to be
+        /// one this fixture owns, and the published tables the built-in ones that hold silver.
+        /// </summary>
+        static void WithCleanWallet(Action body)
+        {
+            Progression.ProgressionRules.Reset();
+            Wallet.LoadFrom(new SaveFileDto());
+            Progression.PlayerProgression.Invalidate();
+            try { body(); }
+            finally
+            {
+                Wallet.LoadFrom(new SaveFileDto());
+                Progression.PlayerProgression.Invalidate();
+            }
+        }
+
+        /// <summary>
+        /// The reported fault: three chests waiting, the top one tapped, and the two under it
+        /// went to spent seals unpaid, because the record was a floor raised to the tapped
+        /// rung's goal. The rung tapped is now the only rung taken.
+        /// </summary>
+        [Test]
+        public void TakingATopRungTakesNothingUnderIt()
+        {
+            var season = Ladder3();
+            SeasonLedger.LoadFrom(File(("vector_order", 30, 0, 0)));
+
+            WithCleanWallet(() =>
+            {
+                Assert.IsTrue(SeasonLedger.TryClaim(season, season.Milestones[2], SeasonTrack.Free, out var drops));
+                Assert.IsNotEmpty(drops);
+
+                Assert.IsTrue(SeasonLedger.IsClaimed(season, season.Milestones[2], SeasonTrack.Free));
+                Assert.IsFalse(SeasonLedger.IsClaimed(season, season.Milestones[0], SeasonTrack.Free),
+                               "the bottom rung is still the player's to open");
+                Assert.IsFalse(SeasonLedger.IsClaimed(season, season.Milestones[1], SeasonTrack.Free));
+                Assert.IsTrue(SeasonLedger.IsClaimable(season, season.Milestones[0], SeasonTrack.Free));
+                Assert.IsTrue(SeasonLedger.IsClaimable(season, season.Milestones[1], SeasonTrack.Free));
+
+                Assert.AreEqual(2, SeasonLedger.ProgressOf(season).Free.Waiting, "two are still waiting");
+                Assert.AreEqual(0, SeasonLedger.ClaimedGoal("vector_order", SeasonTrack.Free),
+                                "the floor did not move past rungs nobody opened");
+
+                Assert.IsFalse(SeasonLedger.TryClaim(season, season.Milestones[2], SeasonTrack.Free, out _),
+                               "and the one taken pays once");
+            });
+        }
+
+        /// <summary>
+        /// The floor climbs over the list as the gaps under it fill, so out-of-order play
+        /// drains back to the v38 shape: a floor and nothing beside it.
+        /// </summary>
+        [Test]
+        public void TheFloorCatchesUpAndTheListDrains()
+        {
+            var season = Ladder3();
+            SeasonLedger.LoadFrom(File(("vector_order", 30, 0, 0)));
+
+            WithCleanWallet(() =>
+            {
+                Assert.IsTrue(SeasonLedger.TryClaim(season, season.Milestones[1], SeasonTrack.Free, out _));
+                Assert.IsTrue(SeasonLedger.TryClaim(season, season.Milestones[2], SeasonTrack.Free, out _));
+                Assert.AreEqual(0, SeasonLedger.ClaimedGoal("vector_order", SeasonTrack.Free));
+
+                Assert.IsTrue(SeasonLedger.TryClaim(season, season.Milestones[0], SeasonTrack.Free, out _));
+                Assert.AreEqual(30, SeasonLedger.ClaimedGoal("vector_order", SeasonTrack.Free),
+                                "filling the gap lets the floor climb over everything taken");
+
+                var dto = new SaveFileDto();
+                SeasonLedger.WriteInto(dto);
+                CollectionAssert.IsEmpty(dto.events[0].taken, "and the list is empty again");
+                Assert.AreEqual(0, SeasonLedger.ProgressOf(season).Free.Waiting);
+            });
+        }
+
+        /// <summary>Bottom-up play writes exactly what every build before v39 wrote.</summary>
+        [Test]
+        public void BottomUpPlayNeverWritesAList()
+        {
+            var season = Ladder3();
+            SeasonLedger.LoadFrom(File(("vector_order", 30, 0, 0)));
+
+            WithCleanWallet(() =>
+            {
+                for (int i = 0; i < 3; i++)
+                {
+                    Assert.IsTrue(SeasonLedger.TryClaim(season, season.Milestones[i], SeasonTrack.Free, out _));
+
+                    var dto = new SaveFileDto();
+                    SeasonLedger.WriteInto(dto);
+                    Assert.AreEqual(season.Milestones[i].Goal, dto.events[0].collectedGoal);
+                    CollectionAssert.IsEmpty(dto.events[0].taken);
+                }
+            });
+        }
+
+        /// <summary>The two tracks keep separate records: a free rung taken leaves the paid one.</summary>
+        [Test]
+        public void TheTracksAreTakenIndependently()
+        {
+            var season = Ladder3();
+            SeasonLedger.LoadFrom(Held("vector_order", 30, 0, 0));
+
+            WithCleanWallet(() =>
+            {
+                Assert.IsTrue(SeasonLedger.TryClaim(season, season.Milestones[2], SeasonTrack.Pass, out _));
+                Assert.IsTrue(SeasonLedger.IsClaimed(season, season.Milestones[2], SeasonTrack.Pass));
+                Assert.IsFalse(SeasonLedger.IsClaimed(season, season.Milestones[2], SeasonTrack.Free));
+                Assert.AreEqual(5, SeasonLedger.ProgressOf(season).Waiting, "three free and two paid");
+            });
+        }
+
+        /// <summary>
+        /// The join is a union above the higher floor - so two devices that each opened a
+        /// different rung out of order both keep theirs, and a list the other device's floor
+        /// already covers is pruned to the canonical form.
+        /// </summary>
+        [Test]
+        public void TheJoinUnionsTheRungsTakenAboveTheFloor()
+        {
+            var mine = new[] { new EventStateDto { id = "a", marks = 40, collectedGoal = 0, taken = new[] { 30 } } };
+            var other = new[] { new EventStateDto { id = "a", marks = 40, collectedGoal = 10, taken = new[] { 20, 40 } } };
+
+            var joined = SeasonLedger.Join(mine, other);
+            Assert.AreEqual(10, joined[0].collectedGoal);
+            CollectionAssert.AreEqual(new[] { 20, 30, 40 }, joined[0].taken);
+
+            var flipped = SeasonLedger.Join(other, mine);
+            CollectionAssert.AreEqual(joined[0].taken, flipped[0].taken, "commutative");
+            CollectionAssert.AreEqual(joined[0].taken, SeasonLedger.Join(joined, joined)[0].taken, "idempotent");
+
+            var higher = new[] { new EventStateDto { id = "a", marks = 40, collectedGoal = 30 } };
+            CollectionAssert.AreEqual(new[] { 40 }, SeasonLedger.Join(joined, higher)[0].taken,
+                                      "a floor that covers an entry prunes it");
+        }
+
+        /// <summary>A row loaded and written back is byte for byte what was read (invariant 11f).</summary>
+        [Test]
+        public void ALoadedListIsWrittenBackCanonical()
+        {
+            SeasonLedger.LoadFrom(new SaveFileDto
+            {
+                events = new[] { new EventStateDto { id = "a", marks = 40, collectedGoal = 20,
+                                                     taken = new[] { 40, 10, 30, 30 }, premiumTaken = new[] { 5 } } },
+            });
+
+            var dto = new SaveFileDto();
+            SeasonLedger.WriteInto(dto);
+            CollectionAssert.AreEqual(new[] { 30, 40 }, dto.events[0].taken, "sorted, distinct, above the floor");
+            CollectionAssert.AreEqual(new[] { 5 }, dto.events[0].premiumTaken);
+
+            SeasonLedger.LoadFrom(dto);
+            var again = new SaveFileDto();
+            SeasonLedger.WriteInto(again);
+            CollectionAssert.AreEqual(dto.events[0].taken, again.events[0].taken);
+        }
+
         /// <summary>A padded cycle id, so ordinal order is calendar order.</summary>
         static string Cycle(int index) => "watch_" + index.ToString("D4");
 

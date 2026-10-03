@@ -244,6 +244,8 @@ namespace GlimmerGrove.Persistence
             if (streakA.lastPlayedDay != streakB.lastPlayedDay) return true;
             if (streakA.collectedThroughDay != streakB.collectedThroughDay) return true;
             if (streakA.shieldFromDay != streakB.shieldFromDay) return true;
+            if (streakA.collectedPeakDay != streakB.collectedPeakDay) return true;
+            if (!FloorSet.Same(streakA.collectedDays, streakB.collectedDays)) return true;
 
             // The tasks. Both periods' counters and claims have to travel: a counter that stays
             // on one phone is a task that reads half done on the other, and a claim that stays
@@ -453,6 +455,8 @@ namespace GlimmerGrove.Persistence
                 if (x.premiumGoal != y.premiumGoal) return false;
                 if (x.marks != y.marks) return false;
                 if (x.pass != y.pass) return false;
+                if (!FloorSet.Same(x.taken, y.taken)) return false;
+                if (!FloorSet.Same(x.premiumTaken, y.premiumTaken)) return false;
             }
 
             return true;

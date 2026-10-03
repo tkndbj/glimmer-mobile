@@ -8,7 +8,10 @@ using GlimmerGrove.Tasks;
 
 namespace GlimmerGrove.Events
 {
-    /// <summary>What one season's row in the save holds. Three numbers, all monotone.</summary>
+    /// <summary>
+    /// What one season's row in the save holds: marks, a floor per track with the rungs taken
+    /// above it, and the pass. Every part only ever grows.
+    /// </summary>
     public sealed class SeasonState
     {
         /// <summary>Marks grown inside this season's window.</summary>
@@ -20,11 +23,32 @@ namespace GlimmerGrove.Events
         /// <summary>The largest pass-track goal already claimed.</summary>
         public int PassGoal;
 
+        /// <summary>Free-track goals claimed above <see cref="FreeGoal"/>, canonical (<see cref="FloorSet"/>).</summary>
+        public int[] FreeTaken = Array.Empty<int>();
+
+        /// <summary>Pass-track goals claimed above <see cref="PassGoal"/>, canonical.</summary>
+        public int[] PassTaken = Array.Empty<int>();
+
         /// <summary>Whether the pass has been bought. Only ever goes true.</summary>
         public bool Pass;
 
         public SeasonState Copy()
-            => new SeasonState { Marks = Marks, FreeGoal = FreeGoal, PassGoal = PassGoal, Pass = Pass };
+            => new SeasonState
+            {
+                Marks = Marks, FreeGoal = FreeGoal, PassGoal = PassGoal, Pass = Pass,
+                FreeTaken = (int[])FreeTaken.Clone(), PassTaken = (int[])PassTaken.Clone(),
+            };
+
+        public int FloorOn(SeasonTrack track) => track == SeasonTrack.Pass ? PassGoal : FreeGoal;
+
+        public int[] TakenOn(SeasonTrack track) => track == SeasonTrack.Pass ? PassTaken : FreeTaken;
+
+        /// <summary>Puts every list back in its canonical form against the floor beside it.</summary>
+        public void Normalise()
+        {
+            FreeTaken = FloorSet.Normal(FreeGoal, FreeTaken, EventRules.MaxGoal);
+            PassTaken = FloorSet.Normal(PassGoal, PassTaken, EventRules.MaxGoal);
+        }
 
         /// <summary>The larger of two, field by field. See <see cref="SeasonLedger.Join"/>.</summary>
         public void Absorb(SeasonState other)
@@ -34,12 +58,18 @@ namespace GlimmerGrove.Events
             if (other.FreeGoal > FreeGoal) FreeGoal = other.FreeGoal;
             if (other.PassGoal > PassGoal) PassGoal = other.PassGoal;
 
+            // Union above the joined floor: the pair means a set, and the join of two such
+            // sets is their union (11b). Normal prunes whatever the higher floor now covers.
+            FreeTaken = FloorSet.Union(FreeGoal, FreeTaken, other.FreeTaken, EventRules.MaxGoal);
+            PassTaken = FloorSet.Union(PassGoal, PassTaken, other.PassTaken, EventRules.MaxGoal);
+
             // `or`, because buying is irreversible. The same join owned companions and owned
             // land take, on a single season rather than on a set (invariant 15).
             Pass |= other.Pass;
         }
 
-        public bool IsEmpty => Marks <= 0 && FreeGoal <= 0 && PassGoal <= 0 && !Pass;
+        public bool IsEmpty => Marks <= 0 && FreeGoal <= 0 && PassGoal <= 0 && !Pass
+                            && FreeTaken.Length == 0 && PassTaken.Length == 0;
 
         /// <summary>
         /// Whether this row might still be holding a chest nobody has opened.
@@ -49,8 +79,9 @@ namespace GlimmerGrove.Events
         /// season's own ladder, and the ledger deliberately does not hold a catalog - so this
         /// asks the question the row alone can answer: a claim floor is the goal of the highest
         /// rung taken, and every rung still waiting has a goal above that floor and at or below
-        /// the marks earned. So <c>Marks &gt; floor</c> is true of every row that owes something
-        /// and of some that owe nothing, which is the direction to be wrong in - the cost of a
+        /// the marks earned - a rung opened out of order sits above the floor too, but that can
+        /// only ever make this a false yes. So <c>Marks &gt; floor</c> is true of every row
+        /// that owes something and of some that owe nothing, which is the direction to be wrong in - the cost of a
         /// false yes is one row kept, and the cost of a false no is a player's chest deleted.
         /// </para>
         /// <para>
@@ -70,11 +101,18 @@ namespace GlimmerGrove.Events
     /// mergeable.</b> Three integers per season id - marks grown, and a claim floor per
     /// track - joined by <c>max</c> (invariant 11b). A count of chests <em>remaining</em>
     /// could not be joined; a count of marks <em>grown</em> can, because two devices
-    /// showing 40 and 12 are not ambiguous: the larger knows more. A set of claimed rungs
-    /// would merge too, but a floor makes "claiming a later rung takes the earlier ones with
-    /// it" the only representable behaviour rather than a rule somebody has to remember, and
-    /// a floor is one integer where a set of forty is a list the security rules would have
-    /// to bound.
+    /// showing 40 and 12 are not ambiguous: the larger knows more.
+    /// </para>
+    /// <para>
+    /// <b>Any reached rung may be opened, in any order, and the one tapped is the one opened.</b>
+    /// The claim record was a floor alone until v39, which made "claiming a later rung takes
+    /// the earlier ones with it" the only representable behaviour - so a player with three
+    /// chests waiting who tapped the third watched the first two turn to spent seals, unpaid.
+    /// What is stored now is a floor and the short list of goals taken above it
+    /// (<see cref="FloorSet"/>): union-joined, canonical on every side, and empty for a player
+    /// who opens rungs bottom-up, because the floor climbs over every rung already in the list
+    /// (<see cref="Settle"/>). The server never read the floor - a rung is its own grant-log
+    /// entry - so the change cost no deploy.
     /// </para>
     /// <para>
     /// <b>Marks come from chests, and only from the live season.</b> Every
@@ -241,11 +279,15 @@ namespace GlimmerGrove.Events
             Raise();
         }
 
-        /// <summary>The largest goal already claimed on one track. 0 when none.</summary>
+        /// <summary>
+        /// The floor on one track: every goal at or under it is claimed. 0 when none. Not the
+        /// whole answer - <see cref="IsClaimed"/> is - because a rung above it may have been
+        /// opened out of order.
+        /// </summary>
         public static int ClaimedGoal(string seasonId, SeasonTrack track)
         {
             if (string.IsNullOrEmpty(seasonId) || !_seasons.TryGetValue(seasonId, out var state)) return 0;
-            return track == SeasonTrack.Pass ? state.PassGoal : state.FreeGoal;
+            return state.FloorOn(track);
         }
 
         /// <summary>How far through a season this player is, both tracks.</summary>
@@ -254,8 +296,8 @@ namespace GlimmerGrove.Events
             if (season == null) return EventProgress.None;
 
             var state = StateOf(season.Id);
-            return EventLedger.ProgressOf(season, state.Marks, state.FreeGoal, state.PassGoal,
-                                          state.Pass);
+            return EventLedger.ProgressOf(season, state.Marks, state.FreeGoal, state.FreeTaken,
+                                          state.PassGoal, state.PassTaken, state.Pass);
         }
 
         /// <summary>True when tapping this rung on this track would hand something over.</summary>
@@ -264,13 +306,18 @@ namespace GlimmerGrove.Events
             if (season == null) return false;
 
             var state = StateOf(season.Id);
-            int floor = track == SeasonTrack.Pass ? state.PassGoal : state.FreeGoal;
-            return EventLedger.IsClaimable(season, rung, track, state.Marks, floor, state.Pass);
+            return EventLedger.IsClaimable(season, rung, track, state.Marks, state.FloorOn(track),
+                                           state.TakenOn(track), state.Pass)
+                && Fits(season, state, track, rung.Goal);
         }
 
         /// <summary>True when this rung's chest is already in the player's hands.</summary>
         public static bool IsClaimed(GroveEvent season, EventMilestone rung, SeasonTrack track)
-            => season != null && rung.Pays(track) && rung.Goal <= ClaimedGoal(season.Id, track);
+        {
+            if (season == null || !rung.Pays(track)) return false;
+            if (!_seasons.TryGetValue(season.Id, out var state)) return false;
+            return FloorSet.Holds(state.FloorOn(track), state.TakenOn(track), rung.Goal);
+        }
 
         /// <summary>
         /// What a rung's chest holds, without claiming it. For the opening overlay and the
@@ -410,11 +457,11 @@ namespace GlimmerGrove.Events
         /// with an entry already in the ledger, and the server refuses it a third time on top.
         /// </para>
         /// <para>
-        /// The floor is raised to <em>this rung's goal</em> rather than swept to the top,
-        /// because each rung is a chest with its own ceremony: a sweep would grant several
-        /// chests with one animation, which is the "reward that arrives while a panel is up"
-        /// failure this game has now made twice. A player holding three waiting rungs taps
-        /// three times and opens three chests.
+        /// <b>Exactly this rung is recorded, never the ones under it.</b> Each rung is a chest
+        /// with its own ceremony: a sweep would mark several chests taken behind one animation -
+        /// which is what raising a floor to a later rung's goal did, and what a player met as
+        /// tapping one chest and watching the ones under it go spent. A player holding three
+        /// waiting rungs taps three times, in any order, and opens three chests.
         /// </para>
         /// </summary>
         public static bool TryClaim(GroveEvent season, EventMilestone rung, SeasonTrack track,
@@ -432,18 +479,21 @@ namespace GlimmerGrove.Events
             if (!CanClaim) return false;
 
             var state = Mutable(season.Id);
-            int floor = track == SeasonTrack.Pass ? state.PassGoal : state.FreeGoal;
 
             // The entitlement goes in with the floors rather than being asked separately, so
             // this refuses a paid rung nobody bought by the same rule that stops the badge
             // counting one (`EventLedger.Opens`).
-            if (!EventLedger.IsClaimable(season, rung, track, state.Marks, floor, state.Pass))
+            if (!EventLedger.IsClaimable(season, rung, track, state.Marks, state.FloorOn(track),
+                                         state.TakenOn(track), state.Pass))
                 return false;
+
+            if (!Fits(season, state, track, rung.Goal)) return false;
 
             var rolled = tier.Chest.Roll(SeedFor(season.Id, track, rung.Goal));
 
-            if (track == SeasonTrack.Pass) state.PassGoal = rung.Goal;
-            else state.FreeGoal = rung.Goal;
+            // Recorded before the payout, for DailyStreak.TryCollect's reason: a banked drop
+            // carries no id, so a process killed mid-payout must come back with the rung taken.
+            Record(season, state, track, rung.Goal);
 
             Apply(rolled, season.Id, track, rung.Goal);
 
@@ -462,6 +512,66 @@ namespace GlimmerGrove.Events
 
             drops = rolled;
             return true;
+        }
+
+        /// <summary>
+        /// Writes one rung down as taken: into the list, and then the floor climbs over every
+        /// paying rung above it that the list already holds. So bottom-up play leaves the list
+        /// empty and writes exactly what a v38 build wrote, and out-of-order play keeps a list
+        /// that drains as the gaps under it are filled.
+        /// </summary>
+        static void Record(GroveEvent season, SeasonState state, SeasonTrack track, int goal)
+        {
+            int floor = state.FloorOn(track);
+            var taken = FloorSet.With(floor, state.TakenOn(track), goal, EventRules.MaxGoal);
+
+            floor = Settle(season, track, floor, taken);
+            taken = FloorSet.Normal(floor, taken, EventRules.MaxGoal);
+
+            if (track == SeasonTrack.Pass) { state.PassGoal = floor; state.PassTaken = taken; }
+            else { state.FreeGoal = floor; state.FreeTaken = taken; }
+        }
+
+        /// <summary>
+        /// How far the floor can climb: over every rung paying on this track that is already
+        /// taken, stopping at the first that is not. Rungs that pay nothing on the track are
+        /// stepped over, since nothing on them can ever be waiting. Reads the ladder, which is
+        /// why it lives here and not in the join - a join sees two files and no content, so it
+        /// keeps both halves as they are (the list stays sound either way; this only keeps it
+        /// short).
+        /// </summary>
+        static int Settle(GroveEvent season, SeasonTrack track, int floor, int[] taken)
+        {
+            for (int i = 0; i < season.Milestones.Count; i++)
+            {
+                var rung = season.Milestones[i];
+                if (rung.Goal <= floor || !rung.Pays(track)) continue;
+                if (!FloorSet.Holds(floor, taken, rung.Goal)) break;
+                floor = rung.Goal;
+            }
+
+            return floor;
+        }
+
+        /// <summary>
+        /// Whether taking <paramref name="goal"/> can be written down: always for the lowest rung
+        /// still open (it moves the floor), and otherwise while the list has room. A full list is
+        /// unreachable on a real ladder - forty rungs at most - and refusing is the direction a
+        /// bound may fail in: the rung stays waiting until the ones under it are taken.
+        /// </summary>
+        static bool Fits(GroveEvent season, SeasonState state, SeasonTrack track, int goal)
+        {
+            if (FloorSet.HasRoom(state.TakenOn(track))) return true;
+
+            for (int i = 0; i < season.Milestones.Count; i++)
+            {
+                var rung = season.Milestones[i];
+                if (!rung.Pays(track)) continue;
+                if (FloorSet.Holds(state.FloorOn(track), state.TakenOn(track), rung.Goal)) continue;
+                return rung.Goal == goal;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -614,6 +724,8 @@ namespace GlimmerGrove.Events
                     collectedGoal = state.FreeGoal,
                     premiumGoal = state.PassGoal,
                     pass = state.Pass,
+                    taken = FloorSet.Normal(state.FreeGoal, state.FreeTaken, EventRules.MaxGoal),
+                    premiumTaken = FloorSet.Normal(state.PassGoal, state.PassTaken, EventRules.MaxGoal),
                 };
             }
 
@@ -634,7 +746,10 @@ namespace GlimmerGrove.Events
                     FreeGoal = row.collectedGoal < 0 ? 0 : row.collectedGoal,
                     PassGoal = row.premiumGoal < 0 ? 0 : row.premiumGoal,
                     Pass = row.pass,
+                    FreeTaken = row.taken ?? Array.Empty<int>(),
+                    PassTaken = row.premiumTaken ?? Array.Empty<int>(),
                 };
+                read.Normalise();
 
                 // Two rows for one season is a malformed file, not two tracks. The larger of
                 // each field wins for the same reason the merge takes the larger: every one of

@@ -1255,16 +1255,17 @@ namespace GlimmerGrove
 
             // **The light comes off a row that will refuse, and this is the half that matters
             // more than the words.** The halo and the turning fan are the loudest thing on the
-            // page and the page has exactly one at a time (48i) - pointed at a tap that answers
-            // with an apology, they are the game asking for something it is about to refuse.
-            bool lit = waiting && !blocked && tile.Night == DailyStreak.FirstPending;
+            // page - pointed at a tap that answers with an apology, they are the game asking for
+            // something it is about to refuse. Every night that can be taken wears it, because
+            // every one of them opens itself when tapped (48b); a row that lit only the oldest
+            // told the player the newer ones were not theirs yet.
+            bool lit = waiting && !blocked && DailyStreak.IsCollectable(tile.Night);
 
             if (tile.Group) tile.Group.alpha = state == Night.Ahead ? .74f : 1f;
 
-            // Every waiting row is a button, and every one of them takes the *earliest*
-            // waiting night - see Take. A tap that did nothing would be a broken button
-            // (invariant 16o), and a tap that quietly reached past an older night would be a
-            // reward stranded behind a newer one.
+            // Every waiting row is a button, and each one takes *its own* night - see Take. A
+            // tap that did nothing would be a broken button (invariant 16o), and a tap that
+            // opened a different night from the one pressed is the fault this replaced.
             if (tile.Tap) tile.Tap.gameObject.SetActive(waiting);
 
             // The right end carries one answer at a time, and the order is the order a player
@@ -1358,10 +1359,10 @@ namespace GlimmerGrove
         /// The light around a reward that can be taken: a halo, and a turning fan over it.
         ///
         /// <para>
-        /// <b>This is what "ready" looks like, and it is deliberately more than a glow.</b> The
-        /// page has exactly one of these at a time - only the oldest waiting night may be taken
-        /// - so it can afford to be the loudest thing on the screen, and it has to be: the row
-        /// under it is one of seven that otherwise look alike. The fan says <em>light is coming
+        /// <b>This is what "ready" looks like, and it is deliberately more than a glow.</b> It
+        /// stands on every night that can be taken - usually one, a few after a weekend away -
+        /// and it has to be the loudest thing on the screen: the row under it is one of seven
+        /// that otherwise look alike. The fan says <em>light is coming
         /// out of this</em>, which is the thing that could not be said by tinting the plate.
         /// </para>
         /// <para>
@@ -1473,11 +1474,10 @@ namespace GlimmerGrove
         /// Takes a night.
         ///
         /// <para>
-        /// <b>Whichever tile was tapped, the night taken is the earliest one waiting.</b> The
-        /// collected floor is a floor - taking night five would take four with it - so only
-        /// the oldest can be handed over, and a tap on a newer one is redirected rather than
-        /// swallowed: a button that does nothing is a broken button (16o), and the player gets
-        /// every night they are owed by tapping the same number of times either way.
+        /// <b>The night tapped is the night taken</b> (48b). It used to be redirected to the
+        /// oldest waiting night, because the record was a floor alone - so a tap on the bottom
+        /// chest opened one higher up and the tapped row stayed lit, which read as the page
+        /// opening the wrong chest. The ledger records exactly one night in any order now.
         /// </para>
         /// <para>
         /// The two shapes end differently and deliberately so. A chest night opens the
@@ -1491,10 +1491,10 @@ namespace GlimmerGrove
         {
             if (_collecting || tapped == null || Flow.HasModal) return;
 
-            int night = DailyStreak.FirstPending;
-            if (night <= 0) return;
+            int night = tapped.Night;
+            if (!DailyStreak.IsWaiting(night)) return;
 
-            var tile = Find(night) ?? tapped;
+            var tile = tapped;
             var rung = _ladder.Rung(night);
 
             if (rung.IsChest && !DailyStreak.CanClaimChests)
@@ -1513,12 +1513,6 @@ namespace GlimmerGrove
 
             if (rung.IsChest) TakeChest(tile, night);
             else TakeCurrency(tile, night, rung);
-        }
-
-        NightTile Find(int night)
-        {
-            foreach (var tile in _tiles) if (tile.Night == night) return tile;
-            return null;
         }
 
         /// <summary>

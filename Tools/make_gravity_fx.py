@@ -30,7 +30,8 @@ the thing on the bar and the thing on the hill are one object.
 **Every piece is seamless in angle** - every band is an integer number of turns - because the
 board rotates them for ever and a seam would come round once a turn.
 
-**The icon is cut, not drawn** (`Ui/Utility/gravityhole.png`): it is the owner's own artwork,
+**The icon and the void stone are cut, not drawn** (`Ui/Utility/gravityhole.png`,
+`Siege/gem_void.png` - the stone a singularity field deals, `SiegeLayout.Singularity`): it is the owner's own artwork,
 trimmed to its ink and fitted to the 256 square every utility icon is. The painting lives outside
 the repo (`art-source-packs`' arrangement), so ``--check`` proves the four drawn pieces always and
 the icon only when the painting can be found; the committed PNG is the artifact.
@@ -59,6 +60,11 @@ except ImportError:
 REPO = Path(__file__).resolve().parent.parent
 OUT = REPO / "Assets" / "Game" / "Art" / "Fx" / "Gravity"
 ICON = REPO / "Assets" / "Game" / "Art" / "Ui" / "Utility" / "gravityhole.png"
+
+#: The void stone a singularity field deals (`SiegeLayout.Singularity`): the same painting, cut
+#: to the size and the room every gem on the field is cut at (`Art/Siege/gem_obsidian.png`).
+GEM = REPO / "Assets" / "Game" / "Art" / "Siege" / "gem_void.png"
+GEM_META_TEMPLATE = REPO / "Assets" / "Game" / "Art" / "Siege" / "gem_obsidian.png.meta"
 
 META_TEMPLATE = REPO / "Assets" / "Game" / "Art" / "Siege" / "web.png.meta"
 ICON_META_TEMPLATE = REPO / "Assets" / "Game" / "Art" / "Ui" / "Utility" / "firepot.png.meta"
@@ -206,20 +212,32 @@ CUTS = {
 
 
 # --------------------------------------------------------------------------- the icon
-def icon(painting):
-    """The owner's painting, trimmed to its ink and fitted to the utility icon's square."""
+def fitted(painting, size, pad):
+    """The owner's painting, trimmed to its ink and fitted to a square of `size`."""
     art = Image.open(painting).convert("RGBA")
     box = art.split()[3].point(lambda v: 255 if v > 8 else 0).getbbox()
     art = art.crop(box)
 
-    room = int(round(ICON_SIZE * (1.0 - 2.0 * ICON_PAD)))
+    room = int(round(size * (1.0 - 2.0 * pad)))
     scale = room / max(art.width, art.height)
     art = art.resize((max(1, round(art.width * scale)), max(1, round(art.height * scale))),
                      Image.LANCZOS)
 
-    sheet = Image.new("RGBA", (ICON_SIZE, ICON_SIZE), (0, 0, 0, 0))
-    sheet.alpha_composite(art, ((ICON_SIZE - art.width) // 2, (ICON_SIZE - art.height) // 2))
+    sheet = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    sheet.alpha_composite(art, ((size - art.width) // 2, (size - art.height) // 2))
     return sheet
+
+
+def icon(painting):
+    """The bar icon: the painting at the size every utility icon is."""
+    return fitted(painting, ICON_SIZE, ICON_PAD)
+
+
+def gem(painting):
+    """The void stone: the painting at whatever size the field's other stone is cut at, so the
+    two sit in a socket alike."""
+    size = Image.open(GEM_META_TEMPLATE.with_suffix("")).width
+    return fitted(painting, size, 0.02)
 
 
 # --------------------------------------------------------------------------- io
@@ -267,6 +285,12 @@ def write(made, painted):
         Path(str(ICON) + ".meta").write_text(meta_from(ICON_META_TEMPLATE, "icon"),
                                              encoding="utf8", newline="\n")
         print(f"  icon   {painted.width}x{painted.height}  -> {ICON.relative_to(REPO)}")
+
+        stone = gem(SOURCE[0])
+        GEM.write_bytes(png_bytes(stone))
+        Path(str(GEM) + ".meta").write_text(meta_from(GEM_META_TEMPLATE, "gem"),
+                                            encoding="utf8", newline="\n")
+        print(f"  gem    {stone.width}x{stone.height}  -> {GEM.relative_to(REPO)}")
     else:
         print("  icon   not re-cut: the painting was not found (pass --source)")
 
@@ -289,6 +313,11 @@ def check(made, painted):
         missing.append("icon")
     elif painted is not None and ICON.read_bytes() != png_bytes(painted):
         differ.append("icon")
+
+    if not GEM.exists():
+        missing.append("gem")
+    elif painted is not None and GEM.read_bytes() != png_bytes(gem(SOURCE[0])):
+        differ.append("gem")
 
     if missing or differ:
         for name in missing:
@@ -386,6 +415,10 @@ def contact(made, path):
     print(f"wrote {path} - look at it; --check cannot")
 
 
+#: The painting `main` was handed, for the two cuts made from it.
+SOURCE = [None]
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--write", action="store_true")
@@ -400,6 +433,7 @@ def main():
 
     made = {name: draw() for name, draw in CUTS.items()}
     painted = icon(args.source) if args.source and args.source.exists() else None
+    SOURCE[0] = args.source
 
     if args.write:
         write(made, painted)

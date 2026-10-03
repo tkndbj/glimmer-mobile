@@ -35,10 +35,10 @@ namespace GlimmerGrove
         {
             switch (kind)
             {
-                case UtilityKind.Blast: return Pal.Ember;   // the firepot's flame
+                case UtilityKind.Blast: return Pal.Ember;   // the firepot's spark
                 case UtilityKind.Mend:  return Pal.Mint;    // the mending's flask
-                case UtilityKind.Surge: return Pal.Azure;   // the surge's disc
-                case UtilityKind.Storm: return Pal.Sun;     // the stormcall's bolts
+                case UtilityKind.Surge: return Pal.Sun;     // the surge's battery
+                case UtilityKind.Storm: return Pal.Azure;   // the stormcall's blue edge
                 case UtilityKind.Gravity: return Pal.Bloom; // the gravity hole's outer light
                 default: return Pal.Rope;
             }

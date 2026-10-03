@@ -77,7 +77,8 @@ ROW = re.compile(
     r'(?:,\s*(?P<tough>\d+))?'
     r'(?:,\s*(?P<gold>\d+),\s*(?P<silver>\d+))?'
     r'(?:,\s*"(?P<charms>[^"]*)")?'
-    r'(?:,\s*(?P<obsidian>true|false))?\)'
+    r'(?:,\s*(?P<obsidian>true|false))?'
+    r'(?:,\s*(?P<singularity>true|false))?\)'
 )
 
 STRINGS = re.compile(r'"([^"]*)"')
@@ -109,6 +110,7 @@ def table_of(source, name):
             "silver": int(m.group("silver") or 140),
             "charms": m.group("charms") or "",
             "obsidian": m.group("obsidian") == "true",
+            "singularity": m.group("singularity") == "true",
         })
 
     return made
@@ -149,6 +151,9 @@ def body_of(chapter):
             # **And the curse, for the charms' reason** (`SiegeDto.obsidian`): a sweep of the
             # ninth chapter played on a board that deals no obsidian is a chapter nobody ships.
             "obsidian": bool(block.get("obsidian", False)),
+
+            # And the void stone, for the same reason (`SiegeDto.singularity`).
+            "singularity": bool(block.get("singularity", False)),
         })
 
     return made
@@ -168,6 +173,10 @@ def row_text(rung):
     # The curse is written only where a rung deals it, so every chapter shipped before it prints
     # exactly the line it always did.
     cursed = ", true" if rung["obsidian"] else ""
+
+    # The void stone follows the curse positionally, so a rung that deals it writes both.
+    if rung["singularity"]:
+        cursed = ", true, true" if rung["obsidian"] else ", false, true"
     return ('            new Rung("%s", new[] { %s }, "%s", "%s", new[] { %s }, "%s", %d, %d, %d, '
             '%d, "%s"%s),'
             % (rung["id"], rows, rung["gems"], rung["wards"], waves, rung["boss"], rung["cogs"],
@@ -220,7 +229,7 @@ def main():
 
             print("%s row %d disagrees with %s.json:" % (name, i + 1, chapter))
             for key in ("id", "rows", "gems", "wards", "waves", "boss", "cogs", "tough",
-                        "gold", "silver", "charms", "obsidian"):
+                        "gold", "silver", "charms", "obsidian", "singularity"):
                 if inline[i][key] != shipped[i][key]:
                     print("    %-6s inline  %r" % (key, inline[i][key]))
                     print("    %-6s shipped %r" % ("", shipped[i][key]))

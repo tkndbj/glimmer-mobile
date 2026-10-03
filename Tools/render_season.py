@@ -401,6 +401,12 @@ def headings(sheet, y):
     return y + HEADING_H
 
 
+#: The claim record `SeasonLedger` keeps per track: a floor, and the goals opened above it out of
+#: order (v39). `--through` and `--taken` set them; the default is the sheet's old floor of 55.
+CLAIMED_THROUGH = 55
+TAKEN = set()
+
+
 def rung_card(sheet, y, index, rung, marks, owned):
     """One rung. `SeasonLadder.BuildRow` and `Paint`."""
     cy = y + ROW_H / 2
@@ -409,7 +415,7 @@ def rung_card(sheet, y, index, rung, marks, owned):
 
     # The first reached rung on the sheet is drawn already opened, so the contact sheet
     # carries all three faces rather than only the two a fresh account would show.
-    claimed = reached and rung["goal"] <= 55
+    claimed = reached and (rung["goal"] <= CLAIMED_THROUGH or rung["goal"] in TAKEN)
     free_face = "sealed" if claimed else "ready" if reached else "locked"
     pass_face = ("locked" if not owned
                  else "sealed" if claimed
@@ -509,13 +515,21 @@ def page(owned=False, marks=62, offline=False):
 
 
 def main():
+    global CLAIMED_THROUGH, TAKEN
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--owned", action="store_true", help="draw it with the pass unlocked")
     parser.add_argument("--marks", type=int, default=62, help="how far up the ladder to draw")
     parser.add_argument("--contact", action="store_true", help="both states side by side")
     parser.add_argument("--offline", action="store_true",
                         help="an account that has never been online: the connect-once banner")
+    parser.add_argument("--through", type=int, default=CLAIMED_THROUGH,
+                        help="the claim floor: every goal at or under it is opened")
+    parser.add_argument("--taken", default="",
+                        help="goals opened above the floor out of order, comma-separated")
     args = parser.parse_args()
+
+    CLAIMED_THROUGH = args.through
+    TAKEN = {int(g) for g in args.taken.split(",") if g.strip()}
 
     OUT.mkdir(parents=True, exist_ok=True)
 

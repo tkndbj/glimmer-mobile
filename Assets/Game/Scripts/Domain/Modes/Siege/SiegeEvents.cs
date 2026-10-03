@@ -420,8 +420,28 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public float Hex;
 
+        /// <summary>
+        /// Whether a singularity's beam fired this step (<see cref="SiegeLayout.Singularity"/>),
+        /// and what it took off each body it reached.
+        ///
+        /// <b>The flag is the edge and is true over an empty hill too</b>, so the view draws the
+        /// beam firing at nothing rather than nothing at all (the furnace's rule).
+        /// </summary>
+        public bool Beamed;
+
+        public readonly List<SiegeStrike> Beam = new List<SiegeStrike>(12);
+
         /// <summary>The raiders the curse marked this step, by id. See <see cref="Hex"/>.</summary>
         public readonly List<int> Hexed = new List<int>(12);
+
+        /// <summary>
+        /// What a curse's wither took off each body this step (<c>SiegeRaider.Withering</c>).
+        ///
+        /// <b>Its own list and not <see cref="Burns"/></b>, for the burn's own reason turned
+        /// round: a burn is drawn in the colour of the ward that lit it, and a wither was lit by
+        /// no ward, so carried as a burn it would be drawn as fire in a colour nobody chose.
+        /// </summary>
+        public readonly List<SiegeStrike> Withers = new List<SiegeStrike>(16);
 
         /// <summary>The wave that has just stepped out, or -1.</summary>
         public int Wave = -1;
@@ -449,6 +469,9 @@ namespace GlimmerGrove.Modes
             Shoved = 0;
             Hex = 0f;
             Hexed.Clear();
+            Withers.Clear();
+            Beamed = false;
+            Beam.Clear();
             Wave = -1;
         }
 
@@ -457,8 +480,8 @@ namespace GlimmerGrove.Modes
                         || Cogs.Count > 0 || Felled.Count > 0 || Trampled.Count > 0
                         || Devoured.Count > 0
                         || Brimmed.Count > 0 || Charmed.Count > 0 || Forged.Count > 0
-                        || Stoned.Count > 0 || Redeemed.Count > 0
-                        || Stilled > 0f || Heaved > 0f || Hex > 0f || Wave >= 0;
+                        || Stoned.Count > 0 || Redeemed.Count > 0 || Withers.Count > 0
+                        || Stilled > 0f || Heaved > 0f || Hex > 0f || Beamed || Wave >= 0;
     }
 
     /// <summary>Fuel a match has earned that has not reached its ward yet.</summary>
@@ -575,6 +598,15 @@ namespace GlimmerGrove.Modes
 
         /// <summary>Whether a curse broke on this beat.</summary>
         public bool Unbound => Broken.Count > 0;
+
+        /// <summary>
+        /// Whether a singularity collapsed on this beat and took the whole field with it
+        /// (<c>SiegeBoard.Devour</c>), and the void stones whose run it was - where the hole is
+        /// drawn opening.
+        /// </summary>
+        public bool Swallowed;
+
+        public readonly List<int> Eaters = new List<int>(3);
 
         /// <summary>
         /// What each cell of <see cref="Cleared"/> was paid as, as an index into

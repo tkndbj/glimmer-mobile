@@ -299,11 +299,11 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// **A hexed body takes half again from every bolt** - two boards dealt alike, one of them
-        /// cursed, and the first bolt of each compared.
+        /// **A hexed body takes the hex's share more from every bolt** - two boards dealt alike,
+        /// one of them cursed, and the first bolt of each compared.
         /// </summary>
         [Test]
-        public void AHexedBodyTakesHalfAgainFromTheLine()
+        public void AHexedBodyTakesMoreFromTheLine()
         {
             var plain = Board(true);
             var cursed = Board(true);
@@ -373,9 +373,184 @@ namespace GlimmerGrove.Tests
             Assert.Greater(SiegeTuning.HexFor(5), SiegeTuning.HexFor(4));
             Assert.AreEqual(SiegeTuning.HexMost, SiegeTuning.HexFor(40));
 
-            Assert.AreEqual(30, SiegeTuning.Hexing(20));
+            Assert.AreEqual(120, SiegeTuning.HexPercent, "the hex is a fifth more (2026-10-03)");
+            Assert.AreEqual(24, SiegeTuning.Hexing(20));
             Assert.AreEqual(1, SiegeTuning.Hexing(1), "a hex made a point of damage worth less");
             Assert.AreEqual(0, SiegeTuning.Hexing(0));
+
+            // **Rounded half up**, so a small hit - a burn's instalment, a wither's - still takes
+            // its fifth: rounded down, 4 would stay 4 and the curse would be worth nothing to
+            // exactly the hits the cheapest line throws.
+            Assert.AreEqual(5, SiegeTuning.Hexing(4), "a small hit lost the hex to the rounding");
+            for (int d = 1; d <= 500; d++)
+                Assert.GreaterOrEqual(SiegeTuning.Hexing(d), d, $"a hex made {d} worth less");
+        }
+
+        // ----------------------------------------------------------------- the wither
+        /// <summary>
+        /// **The instalments pay exactly the debt, for every debt** - the last one is whatever is
+        /// left, so no point is lost to a remainder and none is invented.
+        /// </summary>
+        [Test]
+        public void AWithersInstalmentsSumToExactlyWhatItOwes()
+        {
+            Assert.AreEqual(6f, SiegeTuning.WitherSeconds, 1e-6, "a wither is six seconds");
+
+            for (int owes = 0; owes <= 600; owes++)
+            {
+                int left = owes, paid = 0;
+                for (int ticks = SiegeTuning.WitherTicks; ticks > 0; ticks--)
+                {
+                    int share = SiegeTuning.WitherShare(left, ticks);
+                    Assert.GreaterOrEqual(share, 0);
+                    left -= share;
+                    paid += share;
+                }
+
+                Assert.AreEqual(owes, paid, $"a wither owing {owes} paid {paid}");
+            }
+
+            Assert.AreEqual(0, SiegeTuning.WitherFor(0));
+            Assert.AreEqual(80, SiegeTuning.WitherFor(160), "half a volley");
+            Assert.AreEqual(1, SiegeTuning.WitherFor(1), "rounded half up");
+        }
+
+        /// <summary>
+        /// **The curse withers exactly the bodies it hexed, by half the standing line's
+        /// own-colour volley on each** - computed here from the wards rather than read back off
+        /// the board, so the board's arithmetic is checked rather than repeated.
+        /// </summary>
+        [Test]
+        public void TheCurseWithersExactlyWhatItMarkedOffTheStandingLine()
+        {
+            var board = Board(true);
+
+            for (int i = 0; i < 60 * 8 && board.OnTheHill < 3; i++) board.Advance(1f / 60f);
+            Assert.GreaterOrEqual(board.OnTheHill, 3, "the first wave never walked on");
+
+            board.Lay(0, SiegeLayout.Obsidian);
+            board.Lay(1, SiegeLayout.Obsidian);
+            board.Lay(3, SiegeLayout.Obsidian);
+            Assert.IsNotNull(board.Swap(2, 3));
+
+            List<int> marked = null;
+            for (int i = 0; i < 60 * 3 && marked == null; i++)
+            {
+                var report = board.Advance(1f / 60f);
+                if (report.Hex > 0f) marked = new List<int>(report.Hexed);
+            }
+
+            Assert.IsNotNull(marked, "the curse never fell");
+            Assert.IsNotEmpty(marked, "the curse fell on a hill with raiders and marked nobody");
+
+            foreach (var raider in board.Raiders)
+            {
+                if (!raider.Alive) continue;
+
+                if (!marked.Contains(raider.Id))
+                {
+                    Assert.IsFalse(raider.Withered, "a body the hex refused was withered");
+                    continue;
+                }
+
+                int volley = 0;
+                foreach (var ward in board.Wards)
+                    if (ward.Alive)
+                        volley += SiegeTuning.DamageTo(raider.Kind, ward.Rank, true, ward.Build);
+
+                Assert.Greater(volley, 0, "the line had no weight");
+                Assert.AreEqual(SiegeTuning.WitherFor(volley), raider.Withering,
+                                "a marked body was withered by other than half the line's volley");
+                Assert.AreEqual(SiegeTuning.WitherTicks, raider.WitherTicks);
+            }
+        }
+
+        /// <summary>
+        /// **A wither pays its whole debt in twelve instalments over six seconds, on any frame
+        /// rate** - the same debt played at sixty frames a second and at five lands the same
+        /// total in the same count, none before the first cadence and none after the last.
+        /// Two plain cases rather than a <c>TestCase</c>, because the offline runner skips a
+        /// parameterised test and this one has to be able to fail without the Editor.
+        /// </summary>
+        [Test]
+        public void AWitherPaysItsWholeDebtAtSixtyFrames() => PaysItsWholeDebt(1f / 60f);
+
+        [Test]
+        public void AWitherPaysItsWholeDebtAtFiveFrames() => PaysItsWholeDebt(1f / 5f);
+
+        static void PaysItsWholeDebt(float dt)
+        {
+            const int owes = 37;
+
+            var board = Board(true);
+            for (int i = 0; i < 60 * 8 && board.OnTheHill < 1; i++) board.Advance(1f / 60f);
+
+            SiegeRaider body = null;
+            foreach (var raider in board.Raiders)
+                if (raider.Alive && raider.OnTheHill) { body = raider; break; }
+            Assert.IsNotNull(body);
+
+            // Out of the line's reach, so every point it loses is the wither's.
+            body.Health = 1_000_000;
+            Assert.IsTrue(body.Wither(owes));
+
+            int paid = 0, instalments = 0;
+            float t = 0f, first = -1f, last = -1f;
+
+            while (t < SiegeTuning.WitherSeconds + 1f)
+            {
+                foreach (var ward in board.Wards) ward.Fuel = 0f;
+
+                var report = board.Advance(dt);
+                t += dt;
+
+                foreach (var hit in report.Withers)
+                {
+                    if (hit.Raider != body.Id) continue;
+                    paid += hit.Damage;
+                    instalments++;
+                    if (first < 0f) first = t;
+                    last = t;
+                }
+            }
+
+            Assert.AreEqual(owes, paid, "the wither did not pay exactly what it owed");
+            Assert.AreEqual(SiegeTuning.WitherTicks, instalments, "not twelve instalments");
+            Assert.GreaterOrEqual(first, SiegeTuning.BurnTick - 1e-4f, "it paid before its cadence");
+            Assert.LessOrEqual(last, SiegeTuning.WitherSeconds + dt + 1e-4f, "it outlasted six seconds");
+            Assert.IsFalse(body.Withered, "a paid wither was still carried");
+            Assert.AreEqual(0, body.Withering);
+        }
+
+        /// <summary>
+        /// **Extended, never stacked**, the hex's rule: a second curse keeps the larger debt and
+        /// starts the full count again; a body still in the wings is refused.
+        /// </summary>
+        [Test]
+        public void AWitherIsExtendedNeverStacked()
+        {
+            var board = Board(true);
+            for (int i = 0; i < 60 * 8 && board.OnTheHill < 1; i++) board.Advance(1f / 60f);
+
+            SiegeRaider body = null, waiting = null;
+            foreach (var raider in board.Raiders)
+            {
+                if (!raider.Alive) continue;
+                if (raider.OnTheHill) body = body ?? raider;
+                else waiting = waiting ?? raider;
+            }
+            Assert.IsNotNull(body);
+
+            Assert.IsTrue(body.Wither(30));
+            body.WitherTicks = 4;
+            body.Wither(10);
+            Assert.AreEqual(30, body.Withering, "a smaller curse cut a larger wither");
+            Assert.AreEqual(SiegeTuning.WitherTicks, body.WitherTicks, "a second curse did not extend");
+            body.Wither(50);
+            Assert.AreEqual(50, body.Withering, "a larger curse did not raise the wither");
+
+            Assert.IsFalse(body.Wither(0), "a wither of nothing was laid");
+            if (waiting != null) Assert.IsFalse(waiting.Wither(30), "a body in the wings withered");
         }
 
         // ----------------------------------------------------------------- the content

@@ -502,6 +502,17 @@ namespace GlimmerGrove.Progression
         public static readonly Mechanic SiegeObsidian = new Mechanic("siege_obsidian");
 
         /// <summary>
+        /// The void stone (<c>SiegeLayout.Singularity</c>): three in a line swallow the whole
+        /// field and fire it at the hill. Raised the first time one settles on the field, and
+        /// pointed at it (invariant 6b).
+        ///
+        /// <b>The sentence carries the price as well as the prize</b> - "the whole board goes
+        /// with it" is the half that changes a decision, because it is what makes a player look
+        /// at what is standing on the field before lining the third one up.
+        /// </summary>
+        public static readonly Mechanic SiegeSingularity = new Mechanic("siege_singularity");
+
+        /// <summary>
         /// A buried turret: tap the rubble off it. Raised the first time a colossus lands a
         /// boulder, and pointed at the post it landed on (invariant 6b - the thing to tap).
         /// </summary>
@@ -925,7 +936,7 @@ namespace GlimmerGrove.Progression
             SiegeFuel, SiegeBrim, SiegeSalvage,
             SiegeBomber,
             SiegePrism, SiegeLance, SiegeStorm, SiegeFurnace, SiegeHourglass, SiegeAnvil,
-            SiegeObsidian,
+            SiegeObsidian, SiegeSingularity,
             SiegeRubble,
             ModeSwitch, LuckySpin,
             // Grove and GroveShop are retired and deliberately absent. See the remarks above.

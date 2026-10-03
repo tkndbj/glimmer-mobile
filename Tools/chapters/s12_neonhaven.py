@@ -248,6 +248,11 @@ def level(index, rung):
     # is the mode (`SiegeTuning.ObsidianPercent`), the charms' bargain.
     block["obsidian"] = True
 
+    # **And this chapter's own stone, the singularity** (`SiegeLayout.Singularity`): three void
+    # stones in a line swallow the field and fire the line at the hill. Whether is content, how
+    # often is the mode (`SiegeTuning.SingularityPermille`).
+    block["singularity"] = True
+
     # **Derived from the chapter's ordinal and written down, never typed** (invariant 7c) - and
     # for this chapter the derivation names a trade (`siege.TRADED`, `SiegeTuning.Traded`).
     tough = siege.toughness_for(ORDINAL - 1)
@@ -287,7 +292,8 @@ def _layout(block):
                         block.get("boss"), block.get("cogs", 0),
                         tough=block.get("tough", 0),
                         charms=block.get("charms", ""),
-                        obsidian=block.get("obsidian", False))
+                        obsidian=block.get("obsidian", False),
+                        singularity=block.get("singularity", False))
 
 
 def totals(levels):

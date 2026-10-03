@@ -1,3 +1,5 @@
+using GlimmerGrove.Persistence;
+
 namespace GlimmerGrove.Events
 {
     /// <summary>How far up one track a player is, and how much of it is still waiting.</summary>
@@ -29,10 +31,10 @@ namespace GlimmerGrove.Events
         /// Rungs a tap would hand over right now. What a badge counts.
         ///
         /// <para>
-        /// <b>Derived rather than counted, so it cannot drift from the other two.</b> The
-        /// rungs are sorted by goal and the floor is the goal of the highest one taken, so
-        /// every reached rung is either at or below the floor (claimed) or above it (waiting)
-        /// and the subtraction is exact.
+        /// <b>Derived rather than counted, so it cannot drift from the other two.</b> Every
+        /// reached rung is either taken (at or under the floor, or in the list above it) or
+        /// waiting, and <see cref="Claimed"/> counts only reached rungs, so the subtraction is
+        /// exact.
         /// </para>
         /// <para>
         /// <b>Nought on a track this account cannot claim from</b>, which is the whole reason
@@ -172,6 +174,16 @@ namespace GlimmerGrove.Events
         /// <param name="passHeld">Whether this account bought the season's pass.</param>
         public static EventProgress ProgressOf(GroveEvent season, int marks,
                                                int freeFloor, int passFloor, bool passHeld)
+            => ProgressOf(season, marks, freeFloor, null, passFloor, null, passHeld);
+
+        /// <summary>
+        /// The whole state of one season for one player, with the rungs taken out of order.
+        /// </summary>
+        /// <param name="freeTaken">Free-track goals claimed above <paramref name="freeFloor"/>.</param>
+        /// <param name="passTaken">Pass-track goals claimed above <paramref name="passFloor"/>.</param>
+        public static EventProgress ProgressOf(GroveEvent season, int marks,
+                                               int freeFloor, int[] freeTaken,
+                                               int passFloor, int[] passTaken, bool passHeld)
         {
             if (season == null || !season.IsValid) return EventProgress.None;
 
@@ -199,13 +211,13 @@ namespace GlimmerGrove.Events
                 if (rung.Pays(SeasonTrack.Free))
                 {
                     freeReached++;
-                    if (rung.Goal <= free) freeClaimed++;
+                    if (FloorSet.Holds(free, freeTaken, rung.Goal)) freeClaimed++;
                 }
 
                 if (rung.Pays(SeasonTrack.Pass))
                 {
                     passReached++;
-                    if (rung.Goal <= pass) passClaimed++;
+                    if (FloorSet.Holds(pass, passTaken, rung.Goal)) passClaimed++;
                 }
             }
 
@@ -226,13 +238,22 @@ namespace GlimmerGrove.Events
         /// </summary>
         public static bool IsClaimable(GroveEvent season, EventMilestone rung, SeasonTrack track,
                                        int marks, int floor, bool passHeld)
+            => IsClaimable(season, rung, track, marks, floor, null, passHeld);
+
+        /// <summary>
+        /// The same question with the rungs taken out of order. <b>Any reached rung may be
+        /// taken, in any order</b> - a rung is its own grant-log entry on the server, so paying
+        /// one changes nothing about the next - and the one tapped is the one opened.
+        /// </summary>
+        public static bool IsClaimable(GroveEvent season, EventMilestone rung, SeasonTrack track,
+                                       int marks, int floor, int[] taken, bool passHeld)
         {
             if (season == null || !season.IsValid) return false;
             if (!Opens(track, passHeld)) return false;
             if (!rung.Pays(track)) return false;
             if (marks < rung.Goal) return false;
 
-            return rung.Goal > Clamp(floor, marks);
+            return !FloorSet.Holds(Clamp(floor, marks), taken, rung.Goal);
         }
 
         /// <summary>

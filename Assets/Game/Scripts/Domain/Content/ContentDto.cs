@@ -741,6 +741,15 @@ namespace GlimmerGrove.Content
         public bool obsidian;
 
         /// <summary>
+        /// Whether this field's refill deals void stones - the rare stone that, three in a line,
+        /// swallows the whole field and fires the line's weight at everything on the hill
+        /// (<c>SiegeLayout.Singularity</c>). Absent is false, which is every body written before
+        /// the eleventh chapter. <b>Whether, and never how often</b>, for
+        /// <see cref="obsidian"/>'s reason and in its words.
+        /// </summary>
+        public bool singularity;
+
+        /// <summary>
         /// The ramp, for a lane whose waves never stop, or absent for an ordinary siege.
         ///
         /// <para>

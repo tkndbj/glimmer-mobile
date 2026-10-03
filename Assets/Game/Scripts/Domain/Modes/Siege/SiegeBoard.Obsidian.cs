@@ -161,7 +161,75 @@ namespace GlimmerGrove.Modes
                 if (seconds > _report.Hex) _report.Hex = seconds;
 
                 for (int r = 0; r < _raiders.Count; r++)
-                    if (_raiders[r].Hex(seconds)) _report.Hexed.Add(_raiders[r].Id);
+                {
+                    var raider = _raiders[r];
+                    if (!raider.Hex(seconds)) continue;
+
+                    _report.Hexed.Add(raider.Id);
+
+                    // **And withered, by exactly the bodies the hex marked** - a wither is the
+                    // other half of the same curse, so it may not reach anybody the hex refused.
+                    // Sized off the line standing *now*, the frame the curse fell, which is the
+                    // burn's shape (a rate decided when it is lit): a ward lost a second later
+                    // does not take back a hurt already laid.
+                    raider.Wither(SiegeTuning.WitherFor(Volley(raider)));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Pays every wither its instalment as its cadence comes round.
+        ///
+        /// <para>
+        /// <b>The burn's cadence and the burn's door</b> (<see cref="SiegeTuning.BurnTick"/>,
+        /// <c>Wound</c>): twice a second, through the one place harm is taken, so a hexed body
+        /// takes the hex's share of every instalment, a boss walking on takes nothing and the
+        /// instalment is spent, and one in place is held at its stand's floor (invariant 37di).
+        /// </para>
+        /// <para>
+        /// <b>Run through a stopped hill</b>, as a burn and a hex are: a wither is something the
+        /// body wears, not a walk, so an hourglass inside it neither pauses nor lengthens it.
+        /// </para>
+        /// <para>
+        /// <b><c>+=</c> on the cadence, never <c>=</c></b>, for <c>Smoulder</c>'s reason: a long
+        /// frame that crosses a boundary must not push the next one a whole tick late, or a slow
+        /// phone would pay fewer instalments than a fast one. And a frame that crosses two pays
+        /// two, so the count of instalments is the count of boundaries crossed on every device.
+        /// </para>
+        /// </summary>
+        void Wither(float dt)
+        {
+            for (int i = 0; i < _raiders.Count; i++)
+            {
+                var raider = _raiders[i];
+                if (!raider.Alive || raider.WitherTicks <= 0) continue;
+
+                raider.WitherSear -= dt;
+
+                while (raider.WitherSear <= 0f && raider.WitherTicks > 0 && raider.Alive)
+                {
+                    raider.WitherSear += SiegeTuning.BurnTick;
+
+                    int share = SiegeTuning.WitherShare(raider.Withering, raider.WitherTicks);
+                    raider.Withering -= share;
+                    raider.WitherTicks--;
+
+                    if (share <= 0) continue;
+
+                    int took = Wound(raider, share);
+                    if (took <= 0) continue;
+
+                    bool killed = Fell(raider);
+                    _report.Withers.Add(new SiegeStrike(raider.Id, took, killed));
+                }
+
+                // Settled to nought rather than left owing, so a wither that has paid its last
+                // instalment is a body carrying nothing (`SiegeRaider.Withered`).
+                if (raider.WitherTicks <= 0)
+                {
+                    raider.Withering = 0;
+                    raider.WitherSear = 0f;
+                }
             }
         }
     }

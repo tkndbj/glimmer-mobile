@@ -625,6 +625,27 @@ namespace GlimmerGrove
                 Mathf.Pow(Mathf.Clamp01(1f - Mathf.Abs(x - h) / h), power));
         }
 
+        /// <summary>
+        /// A shaft of light stood on end: <see cref="Profile"/>'s falloff across it, and a foot
+        /// that fades in over the bottom <paramref name="foot"/> of its height.
+        ///
+        /// <b>The foot is the reason it is a shape of its own.</b> A column drawn from a point
+        /// upward with a flat profile ends in a straight edge across whatever it leaves, and on
+        /// a wide soft layer that edge is the most visible line in the picture. Faded in, the
+        /// shaft grows out of its source instead of being cut off at it.
+        /// </summary>
+        public static Sprite Shaft(int width = 64, int height = 64, float power = 1.6f,
+                                   float foot = .16f)
+        {
+            float h = width * .5f;
+            return Make($"shaft{width}x{height}_{power}_{foot}", width, height, (x, y) =>
+            {
+                float across = Mathf.Pow(Mathf.Clamp01(1f - Mathf.Abs(x - h) / h), power);
+                float up = foot <= 0f ? 1f : Mathf.Clamp01(y / height / foot);
+                return across * up * up * (3f - 2f * up);
+            });
+        }
+
         /// <summary>Vertical soft gradient, 1 at the bottom fading to 0 at the top.</summary>
         public static Sprite FadeUp(int h = 64)
             => Make($"fadeup{h}", 4, h, (x, y) => 1f - (y / (float)h), new Vector4(0, 0, 0, 0));

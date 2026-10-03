@@ -539,6 +539,9 @@ namespace GlimmerGrove
             // time one is standing in its socket, so the panel rings a stone the player can see.
             _siege.StoneDealt = () => Teaching?.Teach(Mechanic.SiegeObsidian);
 
+            // And the void stone, by the same rule (`SiegeLayout.Singularity`).
+            _siege.VoidDealt = () => Teaching?.Teach(Mechanic.SiegeSingularity);
+
             // **What a bomb hits for is the published firepot's number, not a constant.** The two
             // are the same blast and the player is told so; a second figure is a second thing a
             // content push can move half of.
@@ -883,6 +886,10 @@ namespace GlimmerGrove
             // fall would spend it on nothing.
             if (plan.Cursed)
                 into.Add(Lesson.Later(Mechanic.SiegeObsidian, _siege.LiveObsidian()));
+
+            // And the void stone, on a board that deals it and on no other.
+            if (plan.Singular)
+                into.Add(Lesson.Later(Mechanic.SiegeSingularity, _siege.LiveVoid()));
         }
 
         /// <summary>

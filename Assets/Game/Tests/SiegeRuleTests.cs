@@ -76,14 +76,15 @@ namespace GlimmerGrove.Tests
 
         static SiegeLayout Layout(string[] rows, string gems, string wards, string[] waves,
                                   string boss = null, int cogs = 0, int tough = 0,
-                                  string charms = "", bool obsidian = false)
+                                  string charms = "", bool obsidian = false,
+                                  bool singularity = false)
         {
             Assert.IsTrue(ProtoGrid.TryRead(rows, rows[0].Length, rows.Length,
                                             SiegeLayout.Cells, out var grid, out string error),
                           error);
 
             return new SiegeLayout(grid, gems, wards, waves, boss, cogs, null, tough, charms,
-                                   obsidian);
+                                   obsidian, singularity);
         }
 
         // ------------------------------------------------------------------ the whole chapter
@@ -116,6 +117,12 @@ namespace GlimmerGrove.Tests
             public readonly bool Obsidian;
 
             /// <summary>
+            /// Whether this rung's refill deals void stones. See <c>SiegeDto.singularity</c>,
+            /// and <see cref="Obsidian"/> for why it is carried.
+            /// </summary>
+            public readonly bool Singularity;
+
+            /// <summary>
             /// This chapter's star lines, in hundredths of par.
             ///
             /// <b>Carried here for <see cref="Tough"/>'s reason</b>: a siege authors its own
@@ -127,10 +134,11 @@ namespace GlimmerGrove.Tests
 
             public Rung(string id, string[] rows, string gems, string wards, string[] waves,
                         string boss, int cogs, int tough = 0, int gold = 75, int silver = 92,
-                        string charms = "", bool obsidian = false)
+                        string charms = "", bool obsidian = false, bool singularity = false)
             {
                 Charms = charms;
                 Obsidian = obsidian;
+                Singularity = singularity;
                 Id = id;
                 Rows = rows;
                 Gems = gems;
@@ -151,7 +159,8 @@ namespace GlimmerGrove.Tests
             /// <c>Tools/verify/rungs.py</c> exists to catch, and that gate compares this field too.
             /// </summary>
             public SiegeLayout Built()
-                => Layout(Rows, Gems, Wards, Waves, Boss, Cogs, Tough, Charms, Obsidian);
+                => Layout(Rows, Gems, Wards, Waves, Boss, Cogs, Tough, Charms, Obsidian,
+                          Singularity);
         }
 
         /// <summary>

@@ -1015,7 +1015,7 @@ marked *(art)* are one-line pointers - the working detail is in `CRAFT.md`.
    the field is drawn into that beat (`SiegeBoard.Unbound`, folded in before the clear exactly as
    a lance's cross is) and, booked with the beat's fuel (37s), every raider *standing* on the
    hill is **hexed** (`SiegeRaider.Hexed`, extended never stacked) and takes
-   `SiegeTuning.HexPercent` of every point of harm - applied in `Wound`, the one door (37dj),
+   `SiegeTuning.HexPercent` of every point of harm (120 since 37fc; it shipped at 150) - applied in `Wound`, the one door (37dj),
    before the stand's floor, so a hex never lets a boss skip a stand. It is the seventh axis a
    payoff takes (37z): not a colour, a piece of the board, a moment, a charge, time or ground,
    but the raiders' *toughness* - and it scales with the line without a number (37cg), because
@@ -1141,6 +1141,52 @@ and its own spell row in `SiegeShotBake` (37dc); scope in `SiegeMode.Bosses`; a 
 `Tools/verify/siege.py`. Every fixture that matters walks the enum (`EveryBoss`, `SiegeArtTests`,
 `SiegeCaptionTests`), so the one you forget is the one that goes red.
 
+37fb. **The eleventh chapter's own mechanic is a sixth kind of gem that spends the board, and it is
+   the curse's machinery asked a second time** (the singularity, 2026-10-03, the owner's brief:
+   a rare gem wearing the Gravity Hole's picture; three in a line open a black hole on the field
+   that swallows every gem, fires a wide beam at everything on the hill and deals a new field).
+   `SiegeLayout.Singularity` (`'v'`) is a stone exactly as the obsidian is - falls, swaps, lines
+   up with its own kind and never with the other stone, no prism joins it, no ward burns it - so
+   `Runs` and `Lined` grew a parameter rather than a pass. **Whether is content, how often is the
+   mode**: `SiegeDto.singularity` is written into every rung of Neonhaven by its chapter tool, and
+   `SingularityPermille` (25) is read out of the same draw under its own salt, never onto a charm
+   and never already lined, so a field without the flag deals what it always did (41,
+   `SiegeSingularityTests.DealingAVoidStoneCostsNoExtraDraw`). **The collapse takes the whole
+   field unpaid and unsprung** (`SiegeBoard.Devour`, folded in before `Spring`): every cell is
+   paid as the stone, which no ward burns, and every charm is taken off first - so what is lost
+   with the board is the price, and *when* is the decision (40i). **The beam is the line's, with
+   no number of its own** (37cg): booked `BeamLands` after the beat (37s) and fired by
+   `Annihilate`, every standing ward lands `VoidBolts` (4) of its bolts on every body, one strike
+   a body, through `Wound` - so a hex multiplies it, a boss walking on takes nothing and one in
+   place is held at its stand's floor (37dj). It is the eighth axis a payoff takes (37z): the
+   board itself. **Drawn in two beats off two facts** (37s): the field going in off
+   `SiegeBeat.Swallowed`, into the gravity well's own stack raised over the field
+   (`SiegeView.Raise`, so the stone, the utility and the hole are one object), and the beam off
+   `SiegeReport.Beamed`; the refill waits for the beam as a condition bounded by a patience that
+   runs only while the run does (`Voiding`), because a run that ends between the two would
+   otherwise leave an empty field behind a latch. The beam is four added shafts, wide and soft
+   outside and narrow inside (`Art.Shaft`, whose foot fades in - a flat column ends in a line
+   across whatever it leaves, which is what the first render showed). Its stone is cut from the
+   owner's painting by `Tools/make_gravity_fx.py` (`gem_void`), scoped by `SiegeMode.VoidArt`.
+   **Neonhaven's fields are re-dealt by it and have not been swept**: the stone is clutter until
+   it fires and the largest payoff on the field when it does.
+37fc. **A curse is a smaller multiplier and a hurt over time, and the hurt is the line's, never a
+   number** (2026-10-03, the owner: "+20% and a DOT for six seconds, scaling as the chapters
+   do"). `HexPercent` 150 -> **120**, rounded half up so a burn's instalment still takes its
+   fifth; every body the hex marks is also **withered** for `WitherPercent` (50) of one
+   own-colour volley of the line standing when it fell (`SiegeBoard.Volley`, the unit the beam's
+   `VoidBolts` is counted in too), paid in `WitherTicks` (12) exact integer instalments at the
+   burn's cadence (`WitherShare`, so no frame rate pays more or less), through `Wound` - so the
+   hex multiplies it, a walking boss takes nothing and a planted one is held at its floor. **Why
+   the line and not a flat figure**: a flat figure is worth the same to every line (37cg) and
+   shrinks against every chapter's surge; read off the line it climbs exactly as the player's
+   line does, the same as every other gem's payoff. Its own fields on the raider and its own
+   report list (`Withers`), never the burn's, because no ward lit it; extended, never stacked;
+   drawn as a violet bite and a wisp (`SiegeView.Withered`), with the death left to `Reap`.
+   **Half a volley is a guess against the old value, not a measurement** - the sweeps' model
+   player never lines stones up on purpose - and it is the one dial. Held by `SiegeObsidianTests`
+   (the instalments sum exactly, at 60 and 5 frames a second; the bodies withered are the bodies
+   hexed, by the volley computed from the wards; each clause mutation-proved).
 38. **A mode hides behind one manifest boolean, and deleting one is a session.** Hidden is `"disabled":
    true` and nothing else; deleted means class, board, view, screen, validator, reading, bodies, art,
    mirrors and tools all go, with the ids spent.

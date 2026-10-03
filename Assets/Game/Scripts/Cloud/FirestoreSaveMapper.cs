@@ -266,6 +266,11 @@ namespace GlimmerGrove.Cloud
                         { "lastPlayedDay", (long)(dto.streak?.lastPlayedDay ?? 0) },
                         { "collectedThroughDay", (long)(dto.streak?.collectedThroughDay ?? 0) },
                         { "shieldFromDay", (long)(dto.streak?.shieldFromDay ?? 0) },
+
+                        // The nights taken out of order and the latest day one was claimed
+                        // under (v39). Inside the `streak` map, so no rules release.
+                        { "collectedDays", Longs(dto.streak?.collectedDays) },
+                        { "collectedPeakDay", (long)(dto.streak?.collectedPeakDay ?? 0) },
                     }
                 },
 
@@ -367,6 +372,11 @@ namespace GlimmerGrove.Cloud
                     { "collectedGoal", (long)entry.collectedGoal },
                     { "premiumGoal", (long)entry.premiumGoal },
                     { "pass", entry.pass },
+
+                    // The rungs opened above each floor, out of order (v39). Nested in a row,
+                    // so no rules release.
+                    { "taken", Longs(entry.taken) },
+                    { "premiumTaken", Longs(entry.premiumTaken) },
                 });
             }
 
@@ -571,6 +581,8 @@ namespace GlimmerGrove.Cloud
                 dto.streak.lastPlayedDay = (int)Long(streak, "lastPlayedDay", 0);
                 dto.streak.collectedThroughDay = (int)Long(streak, "collectedThroughDay", 0);
                 dto.streak.shieldFromDay = (int)Long(streak, "shieldFromDay", 0);
+                dto.streak.collectedDays = IntList(streak, "collectedDays");
+                dto.streak.collectedPeakDay = (int)Long(streak, "collectedPeakDay", 0);
             }
 
             // Absent on a document written before rungs were collected by hand, which reads
@@ -675,6 +687,8 @@ namespace GlimmerGrove.Cloud
                     collectedGoal = (int)Long(entry, "collectedGoal", 0),
                     premiumGoal = (int)Long(entry, "premiumGoal", 0),
                     pass = Bool(entry, "pass"),
+                    taken = IntList(entry, "taken"),
+                    premiumTaken = IntList(entry, "premiumTaken"),
                 });
             }
 

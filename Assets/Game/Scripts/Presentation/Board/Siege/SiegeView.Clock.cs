@@ -83,6 +83,10 @@ namespace GlimmerGrove
             // nothing on a hill with no well on it, which is nearly every frame.
             Welling(Time.unscaledDeltaTime);
 
+            // **And the hole a singularity opens on the field, beside it and for its reason**
+            // (`SiegeView.Singularity`). Asks one flag on a field that deals no void stone.
+            Mawing(Time.unscaledDeltaTime);
+
             // **And the overcharge glyph, for `Breathe`'s reason.** The tutorial raises its
             // "tap the turret" panel over a held board with a ring round this very glyph, so a
             // bolt that stopped beating the moment the panel opened would freeze at whatever size
@@ -162,6 +166,11 @@ namespace GlimmerGrove
             // turret read as a machine gun. See `SiegeView.Burned`.
             for (int i = 0; i < report.Burns.Count; i++) Burned(report.Burns[i]);
 
+            // **And what a curse withered, beside the fire and for its reason** - a hurt over
+            // time, drawn as a bite in the curse's own light rather than as a shot or a flame,
+            // because no ward fired it and no ward lit it. See `SiegeView.Withered`.
+            for (int i = 0; i < report.Withers.Count; i++) Withered(report.Withers[i]);
+
             // **The volley a stormglass loosed, as one event.** It is drawn here rather than with
             // the beat that sprang it because the model books it exactly as it books a match's
             // fuel (invariant 37s): the bolts land when the motes do, and the one thing this may
@@ -180,6 +189,10 @@ namespace GlimmerGrove
             // paid for it broke `FuelLands` earlier and were drawn then (`SiegeView.Obsidian`). A
             // curse that marked nobody is drawn too, for the anvil's reason.
             if (report.Hex > 0f) Cursed(report.Hex, report.Hexed);
+
+            // **A singularity's beam, on the frame the model fired it** - after the curse, so a
+            // hill hexed on the same step is drawn hexed before it is drawn struck.
+            if (report.Beamed) Beamed(report.Beam);
 
             // What a gorgon's glare cost: a shot leaving a stone-struck barrel and shattering.
             // One per post per beat, so a ward masked through a whole window is seen wasting

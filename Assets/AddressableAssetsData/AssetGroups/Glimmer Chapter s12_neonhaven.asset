@@ -25,6 +25,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2eac521479c8bce708d792997eda70aa
+    m_Address: Art/Siege/gem_void
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3683786868033584fb7d9d11154c2aac
     m_Address: Art/Map/map11_strip3
     m_ReadOnly: 0

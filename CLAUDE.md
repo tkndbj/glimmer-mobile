@@ -590,7 +590,12 @@ is where they are written down, not what they mean.
 47b. **A rung names two tiers and no amounts.** **A paid column may not have a hole in it**, refused by the
    reader. A tier is resolved on **every read** rather than frozen when the calendar was parsed.
 47c. **The bound is the ladder, not the play** — the grant log makes each rung payable exactly once. No
-   window check, so a rung reached before a season closed stays claimable.
+   window check, so a rung reached before a season closed stays claimable. **And so a rung is
+   order-independent, and any reached rung opens alone** (v39, 2026-10-03): the claim floor used to be
+   raised to the tapped rung's goal, so tapping the third of three waiting chests turned the two under it to
+   spent seals, unpaid. Each track keeps a floor and the goals taken above it (`EventStateDto.taken` /
+   `premiumTaken`, `FloorSet`), and the floor climbs over the list as it catches up. The server never read
+   the floor, so nothing deployed.
 47d. **The pass is bought with gems, and that removed a whole apparatus rather than a price.** Both content
    gates now **refuse** a product carrying a pass entitlement by name.
 47e. **A gem entitlement that gates a payout cannot live in the save alone, and the spend is what fixes
@@ -647,9 +652,16 @@ is where they are written down, not what they mean.
    protect something they already have.** The count climbs for ever and the ladder **laps** under it.
 48a. **The ladder pays credits, gems and chests, and a night that pays a chest names a *tier*.** Hearts and
    boosts are refused by name at parse. **And no chest below the second tier.**
-48b. **Only the earliest waiting night may be taken, and that is what paying a chest cost** — the collected
-   floor is a floor, so a sweep would grant three chests behind one animation. A tap on a newer one is
-   **redirected to the oldest** rather than swallowed.
+48b. **Any waiting night may be taken, in any order, and the night tapped is the night opened** (v39,
+   2026-10-03). The first rule was oldest-only, because the record was a floor alone, and a tap on a newer
+   night was redirected to the oldest — which the owner met as tapping a chest and watching a different
+   one open. The record is now the floor plus the short list of days taken above it (`FloorSet`, the 57d
+   shape, union-joined), and the floor climbs over the list as the gaps fill, so oldest-first play writes
+   exactly the old file. **A night taken under one already paid is dated in the paid one's calendar**
+   (`DailyStreak.ClaimDayAt`, `collectedPeakDay`): a shield slides every night's day, and the server's
+   `advances` accepts a night below the last one paid only when `night == paidNight + elapsed`, so a slid
+   date would be refused and its coins dropped (45d). With no slide the id is the night's own day, as
+   before. No server change and no rules release.
 48c. **A streak can be protected, and the whole entitlement is the day it was bought** — one monotonic date
    joined by `max`. There is **one** number, so playing inside the window writes nothing to it, and a second
    purchase is refused while the first is running.
@@ -1759,11 +1771,12 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
 - **Content pipeline** — levels as data, stable `LevelId`s, manifest-built `CatalogIndex`, lazy chapter
   bodies, `Content ▸ Sync Manifest`, build gate.
 - **Save** — versioned atomic file with checksum, backup rotation, corrupt-file recovery, tested
-  migrations, monotonic merge. **Save schema v38** (v33 removed the Grovement's five fields —
+  migrations, monotonic merge. **Save schema v39** (v33 removed the Grovement's five fields —
   16aa; v34 added the daily challenges; v35 the XP surge's deadline, inside the `wallet` map;
   v36 the count of keeper levels bought, inside the `wallet` map, 57; v37 the keeper milestone
   floor, inside the `wallet` map, 57d; v38 the milestone chests opened above that floor, same
-  map, 57d). Content schema: manifest and chapter bodies **v2**; `ContentSchema.Version` stays at **3**,
+  map, 57d; v39 the season rungs and streak nights taken out of order, inside existing rows, 47c
+  and 48b). Content schema: manifest and chapter bodies **v2**; `ContentSchema.Version` stays at **3**,
   which only the retired grove body ever used.
 - **Cloud** — Firebase (Firestore + Auth + Functions), anonymous by default, Apple/Google linking,
   per-account local archive for switching, debounce/backoff.
@@ -1880,9 +1893,9 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
 | `s07_dustcrown` | siege | 10 | 61–101 matches | the sixth chapter: the **court** cast of three robed wizards, a hooded archer, a falcon-headed war-god and a bone knight; **four tenths of surge**, which is **+40% raider health against the first chapter**; a **gorgon** on 5 (her glare wastes what is poured into a ward) and a **sunlord** on 10 (he seals a ward — fill it or lose it, and never the last one standing); deals all six charms, the **anvil** new |
 | `s08_bonereach` | siege | 10 | 69–100 matches | the seventh chapter, and the cheapest one this mode has ever shipped: **five tenths of surge**, which is **+50% raider health against the first chapter**, and *nothing else new but the two fights* — no charm (the roster clamps at six) and no cast (the table wraps to the insects). A **harrower** on 5 (it tears a rank off a ward and drops it on the hill as a cog you can pick back up) and a **hollowking** on 10 (it strikes every post that has fired nothing since its last cast and spares every post that has been working). Draws `map7`, the dead lands |
 | `s09_cloudkeep` | siege | 20 | 50–108 matches | the eighth chapter and the first of **twenty rungs** - four islands of five, levels 71–90 - on `map8`, the sky islands, seated on the pack's own node layout read out of its PSD (`make_map_seats.ROUTES`). **A crowd at a softer surge**: four tenths (`SiegeTuning.Traded`, the owner's 40% against Bonereach's 50%) with waves of ten to fifteen. **A duel on 5, 10, 15 and 20** - two bosses at once, each at 60% of its health (37er): gravemaw + harrower, blightcaller + gorgon, thunderer + shackler, sunlord + hollowking. Draws the **reunion** cast, a second square over all six chapter casts (37et) |
-| `s10_cogspire` | siege | 20 | 64–132 matches | the ninth chapter, levels 91–110, on `map9` - the owner's clockwork islands, seated by walking the copper road (`make_map_seats.TRACES`). **The curse**: a fifth, rarer gem (the Pairs obsidian) that feeds no ward; three in a line take every stone on the field and hex every raider standing (+50% damage from everything, 6-12 s) - MODES.md 37ew-37ey. Surge 1.5 (`Traded`), 8% more raiders than Cloudkeep (mostly creepers); 27/180 held on the one-star ember line against Cloudkeep's 31; the **gathering** cast; duels warlord+warbringer, overlord+bonecaller, ironclad+colossus, gorgon+hollowking |
+| `s10_cogspire` | siege | 20 | 64–132 matches | the ninth chapter, levels 91–110, on `map9` - the owner's clockwork islands, seated by walking the copper road (`make_map_seats.TRACES`). **The curse**: a fifth, rarer gem (the Pairs obsidian) that feeds no ward; three in a line take every stone on the field and hex every raider standing (+20% damage from everything, 6-12 s, plus a six-second wither of half the line's volley, since 2026-10-03) - MODES.md 37ew-37ey, 37fc. Surge 1.5 (`Traded`), 8% more raiders than Cloudkeep (mostly creepers); 27/180 held on the one-star ember line against Cloudkeep's 31; the **gathering** cast; duels warlord+warbringer, overlord+bonecaller, ironclad+colossus, gorgon+hollowking |
 | `s11_windwreck` | siege | 20 | 82–141 matches | the tenth chapter, levels 111–130, on `map10` - the owner's pirate sky islands (wrecks, a lighthouse, cannons), seated by walking the slab road (`make_map_seats.TRACES`, with `ENCLOSED` refusing the sky that passes through the slab colour). **Asks for a good line** (MODES.md 37ez): surge 1.6 (`Traded`, one tenth over Cogspire), 848 raiders (+7%), 190 brutes (+83%), 2,039 par (+20%); held 7/180 on one-star embers (Cogspire 27), 43 on three-star embers, 136 on three-star pyres; star lines (0.38, 0.52), so three stars is the strong line playing well. The curse carries on; the **armada** cast; duels warbringer+gravemaw, bonecaller+shackler, thunderer+harrower, sunlord+ironclad |
-| `s12_neonhaven` | siege | 20 | 78–122 matches | the eleventh chapter, levels 131–150, on `map11` - the owner's neon sky city (server racks, dishes, a noodle stall, holograms), seated by walking the glass road (`make_map_seats.TRACES`). **A little harder, set by play** (MODES.md 37fa): a crowd held to Windwreck's (860 raiders +1.4%, 190 brutes level) at surge **1.5** (`Traded`, under Windwreck's 1.6, because its fields play harder) - three-star embers hold 34/180 against Windwreck's 43 (13 at 1.7, a wall); star lines (0.38, 0.52). The curse carries on; the **vanguard** cast, the last square the six casts allow; duels warlord+blightcaller, thunderer+colossus, gorgon+shackler, hollowking+ironclad |
+| `s12_neonhaven` | siege | 20 | 78–122 matches | the eleventh chapter, levels 131–150, on `map11` - the owner's neon sky city (server racks, dishes, a noodle stall, holograms), seated by walking the glass road (`make_map_seats.TRACES`). **A little harder, set by play** (MODES.md 37fa): a crowd held to Windwreck's (860 raiders +1.4%, 190 brutes level) at surge **1.5** (`Traded`, under Windwreck's 1.6, because its fields play harder) - three-star embers hold 34/180 against Windwreck's 43 (13 at 1.7, a wall); star lines (0.38, 0.52). The curse carries on, and the chapter deals a stone of its own: the **void stone**, rare, three in a line swallow the whole field and fire the line at everything on the hill (MODES.md 37fb); the **vanguard** cast, the last square the six casts allow; duels warlord+blightcaller, thunderer+colossus, gorgon+shackler, hollowking+ironclad |
 | `s02_endlesswatch` | siege *(infinite)* | 1 | 3★ at wave 30 | waves that never stop, graded on how far it got, drawing a **medley** of every cast; **both star waves are guesses until somebody plays it**; opens at keeper level 10; **a heart to enter and none to lose** (43e) |
 
 **No level authors a difficulty number except the first glade in the game, and no chapter authors a clock.**
@@ -1967,6 +1980,43 @@ half is `Assets/Game/Scripts/Cloud/`, Firebase Unity SDK
 on a fresh clone).
 
 ## Owed
+
+**Season rungs and streak nights open in any order since 2026-10-03 (47c, 48b), and need a build
+to reach anybody.** The owner's report: with several chests waiting, opening one marked the others
+spent (the season raised its floor to the tapped rung) or opened a different one (the streak
+redirected every tap to the oldest night). **Save v39**: `EventStateDto.taken`/`premiumTaken` and
+`StreakStateDto.collectedDays`/`collectedPeakDay`, all inside existing rows, held by the shared
+`FloorSet` shape. No rules release, no deploy, no seed: the server judges a rung by its grant-log id
+alone and a streak night by `advances`, whose backfill branch already accepts a night under the last
+one paid. Offline green: `compile.py` (all seventeen), `StreakTests` 68/68, `SeasonLedgerTests`
+33/33 (six new), `EventTests`, `SaveWiringTests` 6/6 (the four fields held to the mapper, the delta
+and the join by reflection), `CloudWireTests`, `CloudDepartureTests`, `KeeperMilestoneTests`,
+`EconomyAndMergeTests`, `TaskTests`, `loc.py`; three mutations (the season floor raised to the goal,
+the streak oldest-only, the claim day ignoring a shield's slide) each turned their fixture red.
+`render_streak.py --state backlog` draws four nights lit with one taken early between them;
+`render_season.py` gained `--through`/`--taken`. **Owed: the Editor's `.meta` for
+`Domain/Persistence/FloorSet.cs`, the EditMode suite, and a device**: let three nights and three
+rungs stack up, open them top-down, and check each one alone goes spent and the hub badges count
+down by one. **A v38 build on a second phone sees the floors alone**, so it can offer a rung or
+night this one took out of order: its currency is one claim id either way and is never paid twice,
+but its hearts and utilities would bank a second time, the same exposure 57d accepted.
+
+**The void stone shipped in Neonhaven on 2026-10-03 (MODES.md 37fb) and has never been played or
+swept.** Client-only: no schema, no rules, no deploy, no seed (the server is published the
+level-to-chapter map and nothing about a field). Done in the Editor: compiled, `Sync All Assets` and
+save (`Art/Siege/gem_void` is one new row in `Glimmer Global`), `Audit Addresses` and `Validate
+Content` clean, and the hole and the beam rendered through the real additive material. Offline green:
+`compile.py` (all sixteen), `SiegeSingularityTests` 19/19, `SiegeObsidianTests` 17/17,
+`SiegeFieldTests`, `SiegeCharmTests`, `TipTests`, `TutorialTests`, `EveryShippedBossRungIsAFight`
+(Neonhaven's four duels fall 6-9 of 9, as before), `rungs.py`, `content.py` (0 errors), `loc.py`,
+`artnames.py` (0/0), `make_gravity_fx.py --check`, the chapter tool's own proof. **Owed: the owner's
+sweep** - every Neonhaven field now deals a stone it did not, so the chapter's measured figures
+(34/180 on three-star embers) are from before it and `TheEleventhChapterIsALittleHarder` is still
+unrun; the model player never lines stones up on purpose, so a sweep sees the clutter and almost none
+of the payoff. **And a device**: whether the swallow reads as the board being eaten rather than as a
+reshuffle, whether the beam is too white at its core on the brightest hill (`BeamLayers` is the one
+table), whether a collapse that takes a saved charm reads as a price or as a theft, and how often
+three stones really meet (`SingularityPermille` 25 and `VoidBolts` 4 are the two dials).
 
 **The Gravity Hole shipped on 2026-10-03 (MODES.md 39o) and has never been played.** Client-only: no
 schema, no rules, no function deploy. Done in the Editor: compiled, `Sync All Assets` and save (the icon

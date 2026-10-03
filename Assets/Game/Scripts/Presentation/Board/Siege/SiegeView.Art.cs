@@ -169,6 +169,11 @@ namespace GlimmerGrove
                 // (`SiegeMode.CurseArt`), so no other board ever asks for it.
                 case ObsidianColour: return Piece("gem_obsidian");
 
+                // **A void stone** (`SiegeLayout.Singularity`): the Gravity Hole's own picture
+                // cut to a gem's size (`Tools/make_gravity_fx.py`), scoped to the chapters that
+                // deal it (`SiegeMode.VoidArt`).
+                case VoidColour: return Piece("gem_void");
+
                 // A bomber's bomb, drawn as the firepot it turns into when it is tapped.
                 case BombColour: return Art.S("Ui/Utility/firepot");
 

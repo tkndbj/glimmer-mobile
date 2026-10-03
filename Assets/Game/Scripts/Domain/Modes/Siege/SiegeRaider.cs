@@ -406,6 +406,56 @@ namespace GlimmerGrove.Modes
         }
 
         /// <summary>
+        /// What a curse's wither still owes this body, in points, and how many instalments it
+        /// has left to pay them in (<c>SiegeTuning.WitherTicks</c>).
+        ///
+        /// <para>
+        /// <b>A debt and a count rather than a rate and a clock</b> - the burn's shape
+        /// (<see cref="Burn"/>) was a rate with a carried fraction, because an ember's rate is
+        /// authored per second. A wither is a total decided the frame the curse falls, so it is
+        /// held as the total and paid in exact integer instalments
+        /// (<c>SiegeTuning.WitherShare</c>), and no frame rate can make it pay more or less.
+        /// </para>
+        /// <para>
+        /// <b>Its own fields, never the burn's</b>: a body can be alight and withering at once,
+        /// and folding the two into one slot would make a curse put out an ember's fire, or an
+        /// ember's colour be drawn on a curse.
+        /// </para>
+        /// </summary>
+        public int Withering;
+
+        public int WitherTicks;
+
+        /// <summary>
+        /// Seconds until the wither next pays. <b>Armed on the edge and never on a refresh</b>,
+        /// for <see cref="Sear"/>'s reason.
+        /// </summary>
+        public float WitherSear;
+
+        /// <summary>Whether a curse is still hurting this body.</summary>
+        public bool Withered => Alive && WitherTicks > 0;
+
+        /// <summary>
+        /// Lays a wither of <paramref name="owes"/> points on this body, paid over the next
+        /// <c>SiegeTuning.WitherSeconds</c>.
+        ///
+        /// <b>Extended, never stacked</b> - <see cref="Hex"/>'s rule: a second curse landing on a
+        /// body still withering keeps the larger of the two debts and starts the full count
+        /// again, so two breaks a beat apart are one long wither rather than two at once. Refused
+        /// for a body still in the wings, for the same reason a hex is.
+        /// </summary>
+        public bool Wither(int owes)
+        {
+            if (!Alive || !OnTheHill || owes <= 0) return false;
+
+            if (WitherTicks <= 0) WitherSear = SiegeTuning.BurnTick;
+
+            if (owes > Withering) Withering = owes;
+            WitherTicks = SiegeTuning.WitherTicks;
+            return true;
+        }
+
+        /// <summary>
         /// Drives this body back up the slope by <paramref name="share"/> of the hill, or as far
         /// as the crest, whichever is less.
         ///

@@ -48,6 +48,7 @@ namespace GlimmerGrove.Modes
             Fights(dt);
             Conjure(dt);
             Smoulder(dt);
+            Wither(dt);
             Swing(dt);
             Age(dt);
 
@@ -108,6 +109,10 @@ namespace GlimmerGrove.Modes
             // with the break's own fuel, after the fuel, so the line is fed before the hill it is
             // about to shoot at is marked.
             Unbind(dt);
+
+            // **And a singularity's beam, beside the curse and after it**, so a curse that broke
+            // on the same beat has marked the hill before the beam it multiplies lands.
+            Annihilate(dt);
 
             Arrive(dt);
         }

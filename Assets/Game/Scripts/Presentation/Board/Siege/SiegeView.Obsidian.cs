@@ -1056,6 +1056,43 @@ namespace GlimmerGrove
         }
 
         /// <summary>
+        /// One instalment of a curse's wither landing (<see cref="SiegeReport.Withers"/>).
+        ///
+        /// <para>
+        /// <b><see cref="Burned"/>'s shape in the curse's own light</b>: a small bite of violet
+        /// up the body, the figure, a flinch - never a shot, because a wither leaves no barrel,
+        /// and never fire, because no ward lit it. The figure joins the body's running tally
+        /// (<c>Number</c>), so twelve instalments read as one sum climbing rather than twelve
+        /// numbers stacking.
+        /// </para>
+        /// <para>
+        /// <b>The death itself is <c>Reap</c>'s</b>, read off the model exactly as a burn's kill
+        /// is; this only adds the curse's own sparks on the instalment that took the last of it.
+        /// </para>
+        /// </summary>
+        void Withered(SiegeStrike hit)
+        {
+            var mob = MobOf(hit.Raider);
+            if (mob == null || mob.Node == null) return;
+
+            var at = mob.Node.anchoredPosition;
+
+            Pop(at + new Vector2(0f, mob.Height * .18f), Pal.Lift(Hex, .30f), .80f, .24f);
+            Number(hit.Raider, at, hit.Damage, false);
+
+            if (mob.Body != null) Tween.Punch(mob.Body.transform, .04f, .12f);
+
+            if (hit.Killed)
+            {
+                if (_fx != null)
+                    Burst.Sparks(_fx, at, HexCore, 8, mob.Height * 1.2f, mob.Height * .16f, .45f);
+                return;
+            }
+
+            Wisp(at + new Vector2(0f, mob.Height * (BodyLift + .2f)), mob.Height * .55f);
+        }
+
+        /// <summary>
         /// The light a hexed body is drawn in: its own colours washed toward the curse's, pulsing,
         /// so a cursed raider reads as cursed from across the board even under a crowd.
         /// </summary>

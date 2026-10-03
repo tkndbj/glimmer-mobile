@@ -363,6 +363,15 @@ namespace GlimmerGrove.Tests
                 case "streak.collectedThroughDay": return 20_005;
                 case "streak.shieldFromDay": return 20_008;
 
+                // The nights and rungs taken out of order are canonical lists (FloorSet.Normal):
+                // each entry above the floor beside it, and a night at or under the last day played.
+                case "streak.collectedDays[]": return 20_007;
+                case "streak.collectedPeakDay": return 20_007;
+                case "events[].collectedGoal": return 10;
+                case "events[].taken[]": return 20;
+                case "events[].premiumGoal": return 10;
+                case "events[].premiumTaken[]": return 30;
+
                 default: return null;
             }
         }

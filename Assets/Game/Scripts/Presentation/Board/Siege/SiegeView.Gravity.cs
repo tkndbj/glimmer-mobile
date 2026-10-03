@@ -221,38 +221,8 @@ namespace GlimmerGrove
         {
             if (well < 0 || _hill == null || _fx == null) return;
 
-            var pit = new Pit { At = WellAt(well) };
-            float wide = Cell * WellWide;
-
-            pit.Under = UIKit.Box("Well under", _hill, Vector2.zero, new Vector2(.5f, .5f), pit.At);
-            pit.Over = UIKit.Box("Well over", _fx, Vector2.zero, new Vector2(.5f, .5f), pit.At);
+            var pit = Raise(WellAt(well), _hill, _fx, Cell * WellWide, Cell * WellCore);
             pit.Over.SetAsFirstSibling();
-
-            pit.Under.localRotation = pit.Over.localRotation = Quaternion.Euler(0f, 0f, WellLean);
-            pit.Under.localScale = pit.Over.localScale = Vector3.zero;
-
-            // **The dark first.** A black hole on a lit hill is a dark disc among bright things;
-            // what makes it the brightest thing on the board is the ground round it going out.
-            pit.Veil = UIKit.Img("Veil", pit.Under, Art.Glow(128, 1.5f), Pal.A(WellDark, 0f),
-                                 new Vector2(wide * 2.5f, wide * 1.9f));
-            pit.Veil.raycastTarget = false;
-
-            // The second disc: smaller, turning the other way, whole. It is what makes the
-            // bands cross rather than slide, which is the difference between a disc and a wheel.
-            var slow = UIKit.Box("Tilt", pit.Under, Vector2.zero, new Vector2(.5f, .5f), Vector2.zero);
-            slow.localScale = new Vector3(1f, WellTilt, 1f);
-            pit.Inner = WellPiece("Inner", slow, GravityFx.Disc, wide * .78f, true);
-
-            var far = Half("Far", pit.Under, wide * 1.06f, far: true);
-            pit.DiscBack = WellPiece("Disc", far, GravityFx.Disc, wide, true);
-            pit.ArmsBack = WellPiece("Arms", far, GravityFx.Arms, wide * .94f, true);
-
-            pit.Core = WellPiece("Core", pit.Under, GravityFx.Core, Cell * WellCore, false);
-            pit.Ring = WellPiece("Ring", pit.Under, GravityFx.Ring, Cell * WellCore * 1.36f, true);
-
-            var near = Half("Near", pit.Over, wide * 1.06f, far: false);
-            pit.DiscFront = WellPiece("Disc", near, GravityFx.Disc, wide, true);
-            pit.ArmsFront = WellPiece("Arms", near, GravityFx.Arms, wide * .94f, true);
 
             _pit = pit;
 
@@ -274,6 +244,51 @@ namespace GlimmerGrove
             // sweep over it is the air going in.
             Audio.Sfx("charge", .85f, .52f);
             Audio.Sfx("whoosh", .60f, .62f);
+        }
+
+        /// <summary>
+        /// Stacks a hole at <paramref name="at"/>: the far half of the disc, the horizon and the
+        /// ring under <paramref name="under"/>, the near half under <paramref name="over"/>.
+        /// Built closed; whoever raised it turns it and takes it down.
+        ///
+        /// <b>One stack for both holes this mode draws</b> - the well a Gravity Hole opens on the
+        /// hill and the one a singularity opens on the field (<c>SiegeView.Singularity</c>) - so
+        /// the two cannot come to look like different things.
+        /// </summary>
+        Pit Raise(Vector2 at, RectTransform under, RectTransform over, float wide, float core)
+        {
+            var pit = new Pit { At = at };
+
+            pit.Under = UIKit.Box("Well under", under, Vector2.zero, new Vector2(.5f, .5f), pit.At);
+            pit.Over = UIKit.Box("Well over", over, Vector2.zero, new Vector2(.5f, .5f), pit.At);
+
+            pit.Under.localRotation = pit.Over.localRotation = Quaternion.Euler(0f, 0f, WellLean);
+            pit.Under.localScale = pit.Over.localScale = Vector3.zero;
+
+            // **The dark first.** A black hole on a lit hill is a dark disc among bright things;
+            // what makes it the brightest thing on the board is the ground round it going out.
+            pit.Veil = UIKit.Img("Veil", pit.Under, Art.Glow(128, 1.5f), Pal.A(WellDark, 0f),
+                                 new Vector2(wide * 2.5f, wide * 1.9f));
+            pit.Veil.raycastTarget = false;
+
+            // The second disc: smaller, turning the other way, whole. It is what makes the
+            // bands cross rather than slide, which is the difference between a disc and a wheel.
+            var slow = UIKit.Box("Tilt", pit.Under, Vector2.zero, new Vector2(.5f, .5f), Vector2.zero);
+            slow.localScale = new Vector3(1f, WellTilt, 1f);
+            pit.Inner = WellPiece("Inner", slow, GravityFx.Disc, wide * .78f, true);
+
+            var far = Half("Far", pit.Under, wide * 1.06f, far: true);
+            pit.DiscBack = WellPiece("Disc", far, GravityFx.Disc, wide, true);
+            pit.ArmsBack = WellPiece("Arms", far, GravityFx.Arms, wide * .94f, true);
+
+            pit.Core = WellPiece("Core", pit.Under, GravityFx.Core, core, false);
+            pit.Ring = WellPiece("Ring", pit.Under, GravityFx.Ring, core * 1.36f, true);
+
+            var near = Half("Near", pit.Over, wide * 1.06f, far: false);
+            pit.DiscFront = WellPiece("Disc", near, GravityFx.Disc, wide, true);
+            pit.ArmsFront = WellPiece("Arms", near, GravityFx.Arms, wide * .94f, true);
+
+            return pit;
         }
 
         /// <summary>A thread of light from a body to the well, as it is taken.</summary>

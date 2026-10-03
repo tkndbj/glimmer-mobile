@@ -735,7 +735,15 @@ def check_siege(lid, chapter_id, level, block):
                           endless=bool(endless_block.get('goldWave')),
                           tough=block.get('tough') or 0,
                           charms=block.get('charms') or '',
-                          obsidian=bool(block.get('obsidian')))
+                          obsidian=bool(block.get('obsidian')),
+                          singularity=bool(block.get('singularity')))
+
+    # The void stone's flag, held to a boolean for the reason given just below.
+    if 'singularity' in block and not isinstance(block['singularity'], bool):
+        errors.append("%s: 'singularity' is %r; it is true or false - whether the refill deals "
+                      "the void stone - and how often is the mode's "
+                      "(SiegeTuning.SingularityPermille)" % (lid, block['singularity']))
+        return empty
 
     # **A cursed field is a fact about the chapter, and it is a boolean.** `SiegeDto.obsidian` is a
     # `bool` read by `JsonUtility`, which quietly reads anything that is not `true` as false - so a

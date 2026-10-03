@@ -107,8 +107,45 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public const int ObsidianFace = -5;
 
-        /// <summary>What this cell is, as the index a drawing is keyed on: a colour, or <see cref="ObsidianFace"/>.</summary>
-        public static int FaceOf(char cell) => cell == Obsidian ? ObsidianFace : Letters.IndexOf(cell);
+        /// <summary>
+        /// The singularity: a void stone, dealt rarely into a refill on a field that deals them
+        /// (<see cref="Singular"/>), and the second cell of this field that is a gem and not a
+        /// colour.
+        ///
+        /// <para>
+        /// <b>A gem in every way the obsidian is</b> - it falls, it swaps, it lines up with its
+        /// own kind through the same maximal-block rule, no prism joins it and no ward burns it -
+        /// so nothing had to learn a new question, only a second answer to "which stone".
+        /// </para>
+        /// <para>
+        /// <b>What it is for is the collapse.</b> Three in a line and the field falls into them:
+        /// every cell is swallowed unpaid and unsprung (<c>SiegeBoard.Devour</c>), a whole new
+        /// field is dealt, and the line's full weight is thrown at everything on the hill
+        /// (<c>SiegeBoard.Annihilate</c>). It is the one payoff in the mode that spends the
+        /// board itself, so the decision is <em>when</em> (invariant 40i): over a full hill, and
+        /// not while a charm worth more is standing on the field.
+        /// </para>
+        /// <para>
+        /// <b>Never authored into a cell</b>, for the obsidian's reason: it is dealt, never
+        /// placed, so the letter is not in <see cref="Cells"/>.
+        /// </para>
+        /// </summary>
+        public const char Singularity = 'v';
+
+        /// <summary>What a cell holding a void stone answers when asked its colour. See <see cref="ObsidianFace"/>.</summary>
+        public const int SingularityFace = -6;
+
+        /// <summary>Whether this cell is one of the two stones - a gem no ward burns.</summary>
+        public static bool IsStone(char cell) => cell == Obsidian || cell == Singularity;
+
+        /// <summary>
+        /// What this cell is, as the index a drawing is keyed on: a colour,
+        /// <see cref="ObsidianFace"/> or <see cref="SingularityFace"/>.
+        /// </summary>
+        public static int FaceOf(char cell)
+            => cell == Obsidian ? ObsidianFace
+             : cell == Singularity ? SingularityFace
+             : Letters.IndexOf(cell);
 
         /// <summary>What a ward may be. The same four, because a ward is fuelled by its own colour.</summary>
         public const string WardLetters = "rgby";
@@ -678,13 +715,25 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public readonly bool Cursed;
 
+        /// <summary>
+        /// Whether this field's refill deals void stones (<see cref="Singularity"/>).
+        ///
+        /// <b><see cref="Cursed"/>'s bargain, word for word</b>: whether is content, written into
+        /// every rung by the chapter that introduces it; how often is the mode's
+        /// (<see cref="SiegeTuning.SingularityPermille"/>); and false is every field that shipped
+        /// before it, on which the roll is never taken and the deal is the deal it always was
+        /// (invariant 41).
+        /// </summary>
+        public readonly bool Singular;
+
         public SiegeLayout(ProtoGrid grid, string deal, string wards, string[] waves, string boss,
                            int cogs = 0, SiegeEndless endless = null, int tough = 0,
-                           string charms = null, bool obsidian = false)
+                           string charms = null, bool obsidian = false, bool singularity = false)
         {
             Grid = grid;
             Endless = endless;
             Cursed = obsidian;
+            Singular = singularity;
 
             // **Refused by name rather than salvaged**, which is `Tidy`'s opposite and invariant
             // 5f's rule: a body naming a charm this build does not have was written against rules
@@ -1114,7 +1163,7 @@ namespace GlimmerGrove.Modes
         /// quietly wrong (invariant 26f) - and this field has carried one twice.
         /// </summary>
         internal static bool IsGem(char cell)
-            => cell != SiegeBoard.Hole && (Letters.IndexOf(cell) >= 0 || cell == Obsidian);
+            => cell != SiegeBoard.Hole && (Letters.IndexOf(cell) >= 0 || IsStone(cell));
 
         /// <summary>
         /// Every cell standing in a run of three or more, as one set - and, optionally, the colour
@@ -1213,23 +1262,28 @@ namespace GlimmerGrove.Modes
             // alphabet of things a ward burns and every table of four is indexed by it. A field
             // that deals none has none, so on every board that shipped before the curse this
             // finds nothing.
-            for (int y = 0; y < height; y++) Stones(y * width, 1, width);
-            for (int x = 0; x < width; x++) Stones(x, width, height);
+            //
+            // **And the void stone, by the same pass** (see `Singularity`): each stone lines up
+            // with its own kind and never with the other.
+            for (int y = 0; y < height; y++) Stones(y * width, 1, width, Obsidian);
+            for (int x = 0; x < width; x++) Stones(x, width, height, Obsidian);
+            for (int y = 0; y < height; y++) Stones(y * width, 1, width, Singularity);
+            for (int x = 0; x < width; x++) Stones(x, width, height, Singularity);
 
-            void Stones(int from, int step, int span)
+            void Stones(int from, int step, int span, char stone)
             {
                 int run = 0;
 
                 for (int k = 0; k <= span; k++)
                 {
-                    if (k < span && cells[from + k * step] == Obsidian)
+                    if (k < span && cells[from + k * step] == stone)
                     {
                         run++;
                         continue;
                     }
 
                     if (run >= SiegeTuning.MinRun)
-                        for (int back = k - run; back < k; back++) Take(from + back * step, Obsidian);
+                        for (int back = k - run; back < k; back++) Take(from + back * step, stone);
 
                     run = 0;
                 }
@@ -1276,7 +1330,8 @@ namespace GlimmerGrove.Modes
             // **The obsidian, read as `Runs` reads it**: a block of obsidians alone, no wild in
             // it. Written as the same maximal-block walk so the two cannot come to disagree
             // (`SiegeFieldTests.OneCellReadsTheSameAsTheWholeField`, which walks cursed fields).
-            if (cells[at] == Obsidian) return Stones(1, 0) || Stones(0, 1);
+            // The void stone reads the same way, against its own kind.
+            if (IsStone(cells[at])) return Stones(1, 0) || Stones(0, 1);
 
             return false;
 
@@ -1289,7 +1344,7 @@ namespace GlimmerGrove.Modes
                     int x = x0 + dx * side, y = y0 + dy * side;
 
                     while (x >= 0 && x < width && y >= 0 && y < height
-                           && cells[y * width + x] == Obsidian)
+                           && cells[y * width + x] == cells[at])
                     {
                         run++;
                         x += dx * side;

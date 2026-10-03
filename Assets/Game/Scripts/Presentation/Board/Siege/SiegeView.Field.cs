@@ -135,6 +135,11 @@ namespace GlimmerGrove
             // every cell `Unbinding` has taken (`SiegeView.Obsidian`).
             var taken = beat.Unbound ? Unbinding(beat) : null;
 
+            // **And a collapsed singularity takes everything else**: the whole field is drawn
+            // into the hole, so the clear below shatters nothing and flies no fuel
+            // (`SiegeView.Singularity`).
+            if (beat.Swallowed) taken = Swallowing(beat, taken);
+
             for (int i = 0; i < beat.Cleared.Count; i++)
             {
                 int cell = beat.Cleared[i];
@@ -235,6 +240,10 @@ namespace GlimmerGrove
             // waited on as a deadline rather than counted down, so a stormglass whose barrage
             // only exists a beat later can push it out from under the wait (see `_holdUntil`).
             while (HoldLeft > 0f) yield return null;
+
+            // **A swallowed field waits for its beam**, which is the model's to fire and is
+            // waited on as a condition rather than as seconds - see `Voiding` for what bounds it.
+            if (beat.Swallowed) yield return Voiding();
 
             // Halves of `BeatFor`, because the board books this beat's fuel to land a whole
             // `BeatFor` after the last one - see `SiegeTuning.FuelLands`. Typed here they would

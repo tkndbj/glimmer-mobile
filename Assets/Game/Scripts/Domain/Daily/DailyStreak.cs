@@ -66,6 +66,18 @@ namespace GlimmerGrove.Daily
     /// twenty-one. Crediting them instead would sell six chests for a hundred and twenty
     /// gems, which is a currency printer wearing a retention feature's clothes.
     /// </para>
+    /// <para>
+    /// <b>Nights are taken in any order, and the night tapped is the night opened</b> (v39).
+    /// The collected floor alone made only the oldest night takeable, so a tap on a newer one
+    /// was redirected to the oldest - which a player read as tapping the bottom chest and
+    /// watching the one above it open instead. What is stored now is the floor and the short
+    /// list of days taken above it (<see cref="CollectedDays"/>, the <see cref="FloorSet"/>
+    /// shape), with the floor climbing over the list as the gaps fill, so a player who takes
+    /// nights oldest first writes exactly what every earlier build wrote. The server needed
+    /// nothing: <c>advances</c> already accepts a night claimed below the last one paid when
+    /// the calendar adds up exactly, and <see cref="ClaimDayAt"/> is what keeps it adding up
+    /// across a shield.
+    /// </para>
     /// </summary>
     public static class DailyStreak
     {
@@ -73,6 +85,8 @@ namespace GlimmerGrove.Daily
         static int _lastPlayedDay;
         static int _collectedThrough;
         static int _shieldFrom;
+        static int[] _collectedDays = Array.Empty<int>();
+        static int _collectedPeak;
 
         /// <summary>The seed tag a chest night is rolled under, shared with the server. Contract (9c).</summary>
         public const string SeedTag = "streak";
@@ -418,9 +432,13 @@ namespace GlimmerGrove.Daily
         /// caller wants that rather than a tri-state it would have to re-combine.
         /// </summary>
         public static bool CollectedAt(int startDay, int collectedThrough, int rung)
+            => CollectedAt(startDay, collectedThrough, null, rung);
+
+        /// <summary>The same, with the days taken above the floor out of order.</summary>
+        public static bool CollectedAt(int startDay, int collectedThrough, int[] collectedDays, int rung)
         {
             int day = DayOfRung(startDay, rung);
-            return day <= 0 || day <= collectedThrough;
+            return day <= 0 || FloorSet.Holds(collectedThrough, collectedDays, day);
         }
 
         /// <summary>
@@ -432,11 +450,18 @@ namespace GlimmerGrove.Daily
         public static bool WaitingAt(int startDay, int lastPlayedDay, int collectedThrough,
                                      int today, int rung, StreakTable ladder,
                                      int shieldFrom, int shieldDays)
+            => WaitingAt(startDay, lastPlayedDay, collectedThrough, null, today, rung, ladder,
+                         shieldFrom, shieldDays);
+
+        /// <summary>The same, with the days taken above the floor out of order.</summary>
+        public static bool WaitingAt(int startDay, int lastPlayedDay, int collectedThrough,
+                                     int[] collectedDays, int today, int rung, StreakTable ladder,
+                                     int shieldFrom, int shieldDays)
         {
             if (ladder == null) return false;
             if (rung < 1 || rung > LengthOf(startDay, lastPlayedDay, today, shieldFrom, shieldDays))
                 return false;
-            if (CollectedAt(startDay, collectedThrough, rung)) return false;
+            if (CollectedAt(startDay, collectedThrough, collectedDays, rung)) return false;
 
             return ladder.Rung(rung).IsValid;
         }
@@ -445,9 +470,8 @@ namespace GlimmerGrove.Daily
         /// The earliest night still waiting, or 0 when nothing is.
         ///
         /// <para>
-        /// What the board pages to, and - since a night can now pay a chest - the only night
-        /// that may actually be taken. A streak runs on past the end of the ladder, so the
-        /// board shows one lap of it at a time, and the lap it shows has to be the one holding
+        /// What the board pages to and opens on. A streak runs on past the end of the ladder,
+        /// so the board shows one lap of it at a time, and the lap it shows has to be the one holding
         /// the oldest thing the player has not taken. Showing the <em>current</em> lap instead
         /// is how night seven's reward gets stranded off the board the moment night eight
         /// arrives.
@@ -456,12 +480,19 @@ namespace GlimmerGrove.Daily
         public static int FirstPendingAt(int startDay, int lastPlayedDay, int collectedThrough,
                                          int today, StreakTable ladder,
                                          int shieldFrom, int shieldDays)
+            => FirstPendingAt(startDay, lastPlayedDay, collectedThrough, null, today, ladder,
+                              shieldFrom, shieldDays);
+
+        /// <summary>The same, with the days taken above the floor out of order.</summary>
+        public static int FirstPendingAt(int startDay, int lastPlayedDay, int collectedThrough,
+                                         int[] collectedDays, int today, StreakTable ladder,
+                                         int shieldFrom, int shieldDays)
         {
             int days = LengthOf(startDay, lastPlayedDay, today, shieldFrom, shieldDays);
 
             for (int rung = 1; rung <= days; rung++)
-                if (WaitingAt(startDay, lastPlayedDay, collectedThrough, today, rung, ladder,
-                              shieldFrom, shieldDays))
+                if (WaitingAt(startDay, lastPlayedDay, collectedThrough, collectedDays, today, rung,
+                              ladder, shieldFrom, shieldDays))
                     return rung;
 
             return 0;
@@ -471,36 +502,95 @@ namespace GlimmerGrove.Daily
         /// True when tapping this night would pay something out.
         ///
         /// <para>
-        /// <b>Only the earliest waiting night is collectable, and that is what paying a chest
-        /// cost.</b> The floor is a floor - taking night five necessarily takes four with it -
-        /// which was invisible while every rung was a figure and is not once a rung opens a
-        /// ceremony: a sweep would grant three chests behind one animation, which is the
-        /// "reward that arrives while a panel is up" failure this game has already made twice
-        /// (invariants 45, 47g). A player holding three waiting nights taps three times and
-        /// opens three chests, oldest first.
+        /// <b>Any waiting night, in any order, and exactly that night.</b> Each night is its own
+        /// ceremony, so taking one never takes another with it - the floor used to be the whole
+        /// record, which made only the oldest takeable and turned a tap on a newer night into the
+        /// oldest night opening instead. A player holding three waiting nights taps three times,
+        /// in whatever order they like, and opens three chests (invariants 45, 47g).
+        /// </para>
+        /// <para>
+        /// The oldest is always takeable, because it moves the floor rather than the list. Any
+        /// other is takeable while the list has room (<see cref="FloorSet.MaxTaken"/>), which only
+        /// a backlog of more than sixty-four nights taken newest first can exhaust - and then the
+        /// answer is oldest first again, which is the direction a bound may fail in.
         /// </para>
         /// </summary>
         public static bool CollectableAt(int startDay, int lastPlayedDay, int collectedThrough,
                                          int today, int rung, StreakTable ladder,
                                          int shieldFrom, int shieldDays)
-            => rung >= 1
-            && FirstPendingAt(startDay, lastPlayedDay, collectedThrough, today, ladder,
-                              shieldFrom, shieldDays) == rung;
+            => CollectableAt(startDay, lastPlayedDay, collectedThrough, null, today, rung, ladder,
+                             shieldFrom, shieldDays);
+
+        /// <summary>The same, with the days taken above the floor out of order.</summary>
+        public static bool CollectableAt(int startDay, int lastPlayedDay, int collectedThrough,
+                                         int[] collectedDays, int today, int rung, StreakTable ladder,
+                                         int shieldFrom, int shieldDays)
+        {
+            if (!WaitingAt(startDay, lastPlayedDay, collectedThrough, collectedDays, today, rung,
+                           ladder, shieldFrom, shieldDays))
+                return false;
+
+            return FloorSet.HasRoom(collectedDays)
+                || FirstPendingAt(startDay, lastPlayedDay, collectedThrough, collectedDays, today,
+                                  ladder, shieldFrom, shieldDays) == rung;
+        }
 
         /// <summary>How many nights are waiting to be collected, over a given ladder.</summary>
         public static int PendingAt(int startDay, int lastPlayedDay, int collectedThrough,
                                     int today, StreakTable ladder, int shieldFrom, int shieldDays)
+            => PendingAt(startDay, lastPlayedDay, collectedThrough, null, today, ladder,
+                         shieldFrom, shieldDays);
+
+        /// <summary>The same, with the days taken above the floor out of order.</summary>
+        public static int PendingAt(int startDay, int lastPlayedDay, int collectedThrough,
+                                    int[] collectedDays, int today, StreakTable ladder,
+                                    int shieldFrom, int shieldDays)
         {
             int days = LengthOf(startDay, lastPlayedDay, today, shieldFrom, shieldDays);
             int count = 0;
 
             for (int rung = 1; rung <= days; rung++)
-                if (WaitingAt(startDay, lastPlayedDay, collectedThrough, today, rung, ladder,
-                              shieldFrom, shieldDays))
+                if (WaitingAt(startDay, lastPlayedDay, collectedThrough, collectedDays, today, rung,
+                              ladder, shieldFrom, shieldDays))
                     count++;
 
             return count;
         }
+
+        /// <summary>
+        /// The calendar day a night is <b>claimed under</b>: the day in its claim id and its
+        /// chest's seed.
+        ///
+        /// <para>
+        /// The night's own day (<see cref="DayOfRung"/>) in every case but one. The server
+        /// remembers the day and night it last paid and accepts a night below that one only when
+        /// the calendar adds up exactly (<c>advances</c>: <c>night == paidNight + elapsed</c>).
+        /// A shield's forgiven days slide the run's start and every night's day with it, so a
+        /// night left waiting under a taken one would, after a slide, name a day the server's
+        /// arithmetic cannot reach - and a refused claim is dropped with the coins it showed
+        /// (45d).
+        /// </para>
+        /// <para>
+        /// So a night below the highest taken one is dated in the calendar that one was paid in:
+        /// the highest taken day is in today's dating, <paramref name="peakDay"/> is the latest
+        /// day anything was really claimed under (which is that same night's claim day), and the
+        /// difference is exactly how far the run has slid since. With no slide - every streak
+        /// nobody protected - it is the night's own day, so the ids are the ones every earlier
+        /// build wrote.
+        /// </para>
+        /// </summary>
+        public static int ClaimDayAt(int startDay, int highestTaken, int peakDay, int rung)
+        {
+            int day = DayOfRung(startDay, rung);
+            if (day <= 0 || highestTaken <= 0 || peakDay <= 0 || day >= highestTaken) return day;
+
+            int slide = highestTaken - peakDay;
+            return slide > 0 ? day - slide : day;
+        }
+
+        /// <summary>The highest day in a canonical list, or 0.</summary>
+        public static int TopOf(int[] collectedDays)
+            => collectedDays == null || collectedDays.Length == 0 ? 0 : collectedDays[collectedDays.Length - 1];
 
         /// <summary>Which lap of the ladder a night falls on, counting from one.</summary>
         public static int CycleOf(int night, int cycleLength)
@@ -544,8 +634,8 @@ namespace GlimmerGrove.Daily
         {
             get
             {
-                int pending = FirstPendingAt(_startDay, _lastPlayedDay, _collectedThrough, Today,
-                                             Table, _shieldFrom, ShieldDays);
+                int pending = FirstPendingAt(_startDay, _lastPlayedDay, _collectedThrough,
+                                             _collectedDays, Today, Table, _shieldFrom, ShieldDays);
                 int anchor = pending > 0 ? pending : Days;
                 return CycleStart(anchor < 1 ? 1 : anchor, CycleLength);
             }
@@ -605,28 +695,36 @@ namespace GlimmerGrove.Daily
         /// <summary>True when the streak has already reached this night.</summary>
         public static bool IsEarned(int rung) => rung >= 1 && rung <= Days;
 
+        /// <summary>The days taken above the collected floor, out of order. Canonical.</summary>
+        public static IReadOnlyList<int> CollectedDays => _collectedDays;
+
         /// <summary>True when this night's reward has been taken.</summary>
-        public static bool IsCollected(int rung) => CollectedAt(_startDay, _collectedThrough, rung);
+        public static bool IsCollected(int rung)
+            => CollectedAt(_startDay, _collectedThrough, _collectedDays, rung);
 
         /// <summary>True when this night has been reached and not yet taken.</summary>
         public static bool IsWaiting(int rung)
-            => WaitingAt(_startDay, _lastPlayedDay, _collectedThrough, Today, rung, Table,
-                         _shieldFrom, ShieldDays);
+            => WaitingAt(_startDay, _lastPlayedDay, _collectedThrough, _collectedDays, Today, rung,
+                         Table, _shieldFrom, ShieldDays);
 
         /// <summary>True when tapping this night would pay something out.</summary>
         public static bool IsCollectable(int rung)
-            => CollectableAt(_startDay, _lastPlayedDay, _collectedThrough, Today, rung, Table,
-                             _shieldFrom, ShieldDays);
+            => CollectableAt(_startDay, _lastPlayedDay, _collectedThrough, _collectedDays, Today,
+                             rung, Table, _shieldFrom, ShieldDays);
 
-        /// <summary>The earliest night waiting to be taken, or 0. The only tappable one.</summary>
+        /// <summary>The earliest night waiting to be taken, or 0. What the board opens on.</summary>
         public static int FirstPending
-            => FirstPendingAt(_startDay, _lastPlayedDay, _collectedThrough, Today, Table,
-                              _shieldFrom, ShieldDays);
+            => FirstPendingAt(_startDay, _lastPlayedDay, _collectedThrough, _collectedDays, Today,
+                              Table, _shieldFrom, ShieldDays);
 
         /// <summary>How many nights are waiting to be collected. What a badge counts.</summary>
         public static int Pending
-            => PendingAt(_startDay, _lastPlayedDay, _collectedThrough, Today, Table,
+            => PendingAt(_startDay, _lastPlayedDay, _collectedThrough, _collectedDays, Today, Table,
                          _shieldFrom, ShieldDays);
+
+        /// <summary>The day this night is claimed under. See <see cref="ClaimDayAt"/>.</summary>
+        static int ClaimDayOf(int rung)
+            => ClaimDayAt(_startDay, TopOf(_collectedDays), _collectedPeak, rung);
 
         /// <summary>Whether anything is waiting, for a line that wants to mention it.</summary>
         public static bool AnyPending => Pending > 0;
@@ -657,7 +755,7 @@ namespace GlimmerGrove.Daily
         {
             var night = Table.Rung(rung);
             if (!night.IsChest) return new List<ChestDrop>();
-            return night.Tier.Chest.Roll(SeedFor(DayOf(rung), rung));
+            return night.Tier.Chest.Roll(SeedFor(ClaimDayOf(rung), rung));
         }
 
         /// <summary>
@@ -675,14 +773,14 @@ namespace GlimmerGrove.Daily
         /// Hands over one night and returns what it paid.
         ///
         /// <para>
-        /// <b>One night, never a sweep.</b> Only the earliest waiting night is collectable
-        /// (<see cref="CollectableAt"/>), so this pays exactly one rung per tap - which is
-        /// what lets a night open the same chest ceremony the tasks page and the season do,
-        /// instead of granting three chests behind one animation.
+        /// <b>One night, never a sweep.</b> Exactly the night asked for is recorded
+        /// (<see cref="RecordCollected"/>), in any order - which is what lets a night open the
+        /// same chest ceremony the tasks page and the season do, instead of granting or marking
+        /// several chests behind one animation.
         /// </para>
         /// <para>
-        /// Nights before it that pay nothing are swept silently, because the floor is a floor
-        /// and there is nothing to show for them.
+        /// Nights that pay nothing are stepped over silently as the floor climbs, because there
+        /// is nothing to show for them.
         /// </para>
         /// <para>
         /// Two independent guards stop a night paying twice. The floor refuses a second
@@ -703,18 +801,22 @@ namespace GlimmerGrove.Daily
             // in a screen is a guard the next screen forgets.
             if (night.IsChest && !CanClaimChests) return false;
 
-            int through = DayOf(rung);
-            if (through <= _collectedThrough) return false;
+            int day = DayOf(rung);
+            if (FloorSet.Holds(_collectedThrough, _collectedDays, day)) return false;
 
-            // The floor moves *before* the reward is handed over, and the ordering is
+            // Dated before the record moves, because the date reads the record: a night below
+            // the highest taken one is claimed in that one's calendar (ClaimDayAt).
+            int through = ClaimDayOf(rung);
+
+            // The record moves *before* the reward is handed over, and the ordering is
             // load-bearing rather than tidy. Applying a rung writes the save - an award has to
             // be durable the moment the player is shown it - so a process killed mid-payout
-            // would otherwise come back with the floor still behind a night whose utilities
-            // had already been banked. Currency survives that: the award carries a derived id
-            // and the second attempt collides with the first. A banked drop carries nothing,
-            // so it would simply be paid twice. Paying late is recoverable on the next tap;
-            // paying twice is not recoverable at all.
-            _collectedThrough = through;
+            // would otherwise come back with the night still waiting whose utilities had
+            // already been banked. Currency survives that: the award carries a derived id and
+            // the second attempt collides with the first. A banked drop carries nothing, so it
+            // would simply be paid twice. Paying late is recoverable on the next tap; paying
+            // twice is not recoverable at all.
+            RecordCollected(day, through);
 
             var paid = night.IsChest
                 ? night.Tier.Chest.Roll(SeedFor(through, rung))
@@ -745,6 +847,48 @@ namespace GlimmerGrove.Daily
 
             drops = paid;
             return true;
+        }
+
+        /// <summary>
+        /// Writes one night down as taken: into the list, then the floor climbs over every
+        /// earned night above it that is in the list or pays nothing, stopping at the first one
+        /// still owed. So a player taking nights oldest first never carries a list, and one
+        /// taking them out of order carries a list that drains as the gaps fill.
+        /// </summary>
+        static void RecordCollected(int day, int claimDay)
+        {
+            Collect(_startDay, _lastPlayedDay, Days, _collectedThrough, _collectedDays, day, Table,
+                    out _collectedThrough, out _collectedDays);
+            if (claimDay > _collectedPeak) _collectedPeak = claimDay;
+        }
+
+        /// <summary>
+        /// What the collected record becomes when the night on <paramref name="day"/> is taken.
+        /// Pure counterpart of <see cref="RecordCollected"/>, for <see cref="LengthOf"/>'s reason.
+        ///
+        /// <para>
+        /// The day goes in the list, then the floor climbs night by night over every earned
+        /// night that is in the list or pays nothing, and stops at the first still owed. Both
+        /// outputs are at least what went in - the floor rises and the set it means only grows -
+        /// which is the property every merge in this file rests on (11b).
+        /// </para>
+        /// </summary>
+        public static void Collect(int startDay, int lastPlayedDay, int days, int floor, int[] taken,
+                                   int day, StreakTable ladder, out int nextFloor, out int[] nextTaken)
+        {
+            var held = FloorSet.With(floor, taken, day, lastPlayedDay);
+
+            int from = floor - startDay + 2;
+            for (int rung = from < 1 ? 1 : from; rung <= days; rung++)
+            {
+                int at = DayOfRung(startDay, rung);
+                bool paysNothing = ladder != null && !ladder.Rung(rung).IsValid;
+                if (!FloorSet.Holds(floor, held, at) && !paysNothing) break;
+                floor = at;
+            }
+
+            nextFloor = floor;
+            nextTaken = FloorSet.Normal(floor, held, lastPlayedDay);
         }
 
         static string Describe(List<ChestDrop> drops)
@@ -808,7 +952,15 @@ namespace GlimmerGrove.Daily
             // A run that starts a new streak seeds the collected floor to the day before it,
             // and a run that continued across forgiven days carries its floor forward by the
             // same amount its start moved. See SeedCollected.
+            int floorWas = _collectedThrough;
             _collectedThrough = SeedCollected(_collectedThrough, today, continues, forgiven);
+
+            // The days taken out of order slide with the floor, for the floor's reason: they
+            // name nights, and every night's day has just moved by the same amount. A restart
+            // seeds the floor past every old day, which empties the list by itself.
+            _collectedDays = FloorSet.Normal(_collectedThrough,
+                                             Slid(_collectedDays, continues ? _collectedThrough - floorWas : 0),
+                                             _lastPlayedDay);
 
             int length = LengthOf(_startDay, _lastPlayedDay, today, _shieldFrom, shieldDays);
             var reward = Table.Rung(length);
@@ -864,6 +1016,15 @@ namespace GlimmerGrove.Daily
             }
         }
 
+        /// <summary>A copy of <paramref name="days"/> moved forward by <paramref name="by"/>.</summary>
+        static int[] Slid(int[] days, int by)
+        {
+            if (days == null || days.Length == 0 || by <= 0) return days;
+            var moved = new int[days.Length];
+            for (int i = 0; i < days.Length; i++) moved[i] = days[i] + by;
+            return moved;
+        }
+
         static void Raise()
         {
             try { Changed?.Invoke(); }
@@ -893,6 +1054,11 @@ namespace GlimmerGrove.Daily
             // second time. A live v10 file cannot say zero here - see StreakStateDto.
             _collectedThrough = RepairCollected(_collectedThrough, _lastPlayedDay);
 
+            // v39. Canonical against the repaired floor and the last day played, which is the
+            // ceiling every writer keeps - so a load writes back exactly what it read (11f).
+            _collectedDays = FloorSet.Normal(_collectedThrough, streak?.collectedDays, _lastPlayedDay);
+            _collectedPeak = streak == null || streak.collectedPeakDay < 0 ? 0 : streak.collectedPeakDay;
+
             Raise();
         }
 
@@ -904,6 +1070,8 @@ namespace GlimmerGrove.Daily
                 lastPlayedDay = _lastPlayedDay,
                 collectedThroughDay = _collectedThrough,
                 shieldFromDay = _shieldFrom,
+                collectedDays = (int[])_collectedDays.Clone(),
+                collectedPeakDay = _collectedPeak,
             };
         }
 
@@ -945,6 +1113,21 @@ namespace GlimmerGrove.Daily
                 // that has heard about it; there is no reading under which the earlier one
                 // knows more.
                 shieldFromDay = Math.Max(mine.shieldFromDay, other.shieldFromDay),
+
+                // The nights taken out of order: union above the joined floor, under the joined
+                // last day played - the same canonical form the loader writes, so a sync agrees
+                // with what the device then holds (11f). The latest claim day by `max`.
+                //
+                // What this join gives up is the start date's own trade: a device that slid its
+                // run across a shield and one that did not can each hold a list in a different
+                // dating, and the union may then mark a night taken that neither took. That can
+                // only ever withhold a night, never pay one twice, and it is gone the moment the
+                // two agree.
+                collectedDays = FloorSet.Union(
+                    Math.Max(mine.collectedThroughDay, other.collectedThroughDay),
+                    mine.collectedDays, other.collectedDays,
+                    Math.Max(mine.lastPlayedDay, other.lastPlayedDay)),
+                collectedPeakDay = Math.Max(mine.collectedPeakDay, other.collectedPeakDay),
             };
         }
 
@@ -955,6 +1138,8 @@ namespace GlimmerGrove.Daily
                 lastPlayedDay = s.lastPlayedDay,
                 collectedThroughDay = s.collectedThroughDay,
                 shieldFromDay = s.shieldFromDay,
+                collectedDays = FloorSet.Normal(s.collectedThroughDay, s.collectedDays, s.lastPlayedDay),
+                collectedPeakDay = s.collectedPeakDay,
             };
 
         /// <summary>Forgets the streak. Dev only, and used by the wipe.</summary>
@@ -964,6 +1149,8 @@ namespace GlimmerGrove.Daily
             _lastPlayedDay = 0;
             _collectedThrough = 0;
             _shieldFrom = 0;
+            _collectedDays = Array.Empty<int>();
+            _collectedPeak = 0;
         }
     }
 }

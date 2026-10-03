@@ -30,6 +30,10 @@ namespace GlimmerGrove
             _striking.Clear();
             _volleying.Clear();
 
+            // A hole on a field that has just been dealt again went with the layer it was in.
+            _maw = null;
+            _beamsEarly = 0;
+
             // A board dealt again mid-charm must not hand the next beat a hold taken for a stone
             // that no longer exists.
             _holdUntil = 0f;
