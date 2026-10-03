@@ -80,7 +80,27 @@ namespace GlimmerGrove
         Stage _stage;
         Text _status;
         Transform _adoptButton;
-        bool _busy;
+        bool _busyFlag;
+
+        /// <summary>
+        /// A sign-in flow is in the air. Setting it is the one place the panel swaps its
+        /// actions for the spinner and back, so no path can end a flow and leave the buttons
+        /// hidden, or start one and leave them tappable.
+        /// </summary>
+        bool _busy
+        {
+            get => _busyFlag;
+            set { _busyFlag = value; ShowBusy(); }
+        }
+
+        /// <summary>Everything a tap can act on, hidden while a flow is in the air.</summary>
+        readonly List<GameObject> _actions = new List<GameObject>();
+
+        /// <summary>The panel-space span the actions occupy, so the spinner stands in their middle.</summary>
+        float _actionsTop, _actionsBottom;
+
+        /// <summary>Exists only while busy; its spin tween is keyed on it and dies with it.</summary>
+        RectTransform _spinner;
 
         /// <summary>Set when the provider is already attached to another grove.</summary>
         LinkCredential _contested;
@@ -258,13 +278,18 @@ namespace GlimmerGrove
                          26, new Color(.62f, .26f, .24f), LineH, TextAnchor.UpperCenter, 0f), 20, 26);
 
             // ------------------------------------------------------------------ buttons
+            // A rebuild destroyed the previous panel's children, these and the spinner with it.
+            _actions.Clear();
+            _spinner = null;
+            _actionsTop = _cursor;
+
             if (contested)
             {
                 _adoptButton = Button("Adopt", "btn_red", Loc.Get("ui.account.adopt"), ConfirmAdopt);
 
                 if (costly)
-                    Fit(Line("AdoptWarn", Loc.Get("ui.account.adopt_warning"), 24,
-                             new Color(.62f, .26f, .24f, .9f), WarnH, TextAnchor.UpperCenter, 0f), 18, 24);
+                    Fit(Action(Line("AdoptWarn", Loc.Get("ui.account.adopt_warning"), 24,
+                             new Color(.62f, .26f, .24f, .9f), WarnH, TextAnchor.UpperCenter, 0f)), 18, 24);
             }
 
             if (showSwitch)
@@ -282,10 +307,52 @@ namespace GlimmerGrove
             }
 
             _cursor += BeforeClose;
-            UIKit.TextButton("Close", Panel, "btn_green", Loc.Get("ui.common.done"), 46,
+            _actions.Add(UIKit.TextButton("Close", Panel, "btn_green", Loc.Get("ui.common.done"), 46,
                              new Vector2(560f, CloseH), new Vector2(.5f, 1f),
                              new Vector2(0f, -(_cursor + CloseH * .5f)),
-                             () => { if (!_busy) Close(); });
+                             () => { if (!_busy) Close(); }).gameObject);
+            _actionsBottom = _cursor + CloseH;
+
+            ShowBusy();
+        }
+
+        /// <summary>
+        /// Draws the busy state: the actions hidden and one turning arc where they were, or the
+        /// actions back and the arc gone. Idempotent, so it is safe from the setter and from
+        /// the end of every build.
+        /// </summary>
+        void ShowBusy()
+        {
+            bool busy = _busyFlag;
+
+            for (int i = 0; i < _actions.Count; i++)
+                if (_actions[i]) _actions[i].SetActive(!busy);
+
+            if (!busy)
+            {
+                if (_spinner) Destroy(_spinner.gameObject);
+                _spinner = null;
+                return;
+            }
+
+            if (_spinner || Panel == null) return;
+
+            var arc = UIKit.Img("Spinner", Panel, Art.Arc(96, 9f), Pal.Moss,
+                                new Vector2(96f, 96f), new Vector2(.5f, 1f),
+                                new Vector2(0f, -(_actionsTop + _actionsBottom) * .5f));
+            arc.raycastTarget = false;
+
+            var spin = (RectTransform)arc.transform;
+            _spinner = spin;
+            Tween.Run(1.15f, Ease.Linear,
+                      t => { if (spin) spin.localRotation = Quaternion.Euler(0f, 0f, -360f * t); },
+                      spin, "spin").Loop(-1, false);
+        }
+
+        Text Action(Text label)
+        {
+            if (label) _actions.Add(label.gameObject);
+            return label;
         }
 
         // ------------------------------------------------------------------- layout
@@ -307,6 +374,7 @@ namespace GlimmerGrove
                                           new Vector2(600f, ButtonH), new Vector2(.5f, 1f),
                                           new Vector2(0f, -(_cursor + ButtonH * .5f)), onTap);
             Advance(ButtonH);
+            _actions.Add(button.gameObject);
             return button.transform;
         }
 
@@ -380,12 +448,12 @@ namespace GlimmerGrove
                 // Says what is happening first, because this is the step that takes the time
                 // and the one the player is trusting: their grove is being put somewhere safe
                 // before anything is handed over.
-                Say("ui.account.securing", Pal.Cream);
+                Say("ui.account.securing", Pal.Moss);
                 StartCoroutine(RunBecome(CloudSaveService.SwitchAccountAsync(credential)));
                 return;
             }
 
-            Say("ui.account.working", Pal.Cream);
+            Say("ui.account.working", Pal.Moss);
             StartCoroutine(RunLink(credential));
         }
 
@@ -610,7 +678,7 @@ namespace GlimmerGrove
         void RunAdopt()
         {
             _busy = true;
-            Say("ui.account.working", Pal.Cream);
+            Say("ui.account.working", Pal.Moss);
             StartCoroutine(RunBecome(CloudSaveService.AdoptLinkedAccountAsync(_contested)));
         }
 

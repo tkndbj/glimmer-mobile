@@ -4,6 +4,7 @@ using GlimmerGrove.Analytics;
 using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Challenges;
 using GlimmerGrove.Localization;
+using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
 using UnityEngine;
 using UnityEngine.UI;
@@ -52,11 +53,11 @@ namespace GlimmerGrove
     /// one that costs something. The count of confirmations in this game is still three.
     /// </para>
     /// <para>
-    /// <b>A board declares its lessons and <c>ScreenLessons</c> sequences them</b> (invariant
-    /// 6a). Two moments: the opening, once the entrance has landed, and the beat after a move
-    /// has been drawn and before the hill replays it, so a lesson taught at an event rings a
-    /// thing that has just happened (6b). The board is latched while a panel is up, exactly as
-    /// it is while a move is landing.
+    /// <b>A genre is taught by one preview, not by tip boxes</b> (<see cref="ChallengePreviewOverlay"/>,
+    /// the owner's instruction on 2026-10-02): a first visit to a genre raises its demonstration
+    /// once the board has landed, the info key raises it again on request, and nothing is taught
+    /// at an event. The board is latched while the panel is up, exactly as it is while a move is
+    /// landing. The gate is the genre's verb lesson in the tip ledger (invariant 56s).
     /// </para>
     /// </summary>
     public sealed class ChallengeScreen : View
@@ -168,13 +169,16 @@ namespace GlimmerGrove
             StartCoroutine(Opening());
         }
 
-        /// <summary>
-        /// The board's opening lessons, after its entrance has landed - a ring drawn round a
-        /// plate still springing up is a ring round the wrong rectangle.
-        /// </summary>
-        /// <summary>The longest the opening lessons wait on a board's own entrance, in seconds.</summary>
+        /// <summary>The longest the opening preview waits on a board's own entrance, in seconds.</summary>
         const float LandedMost = 2f;
 
+        /// <summary>
+        /// A first-timer's preview, after the board's entrance has landed - a panel going up
+        /// over a board still sweeping in reads as the board being interrupted. Raised only
+        /// while the genre's verb has not been seen, which is the gate the old tip box kept
+        /// (<see cref="ChallengePreviewOverlay"/>), so a player who already read that box is
+        /// never shown this unasked.
+        /// </summary>
         IEnumerator Opening()
         {
             yield return new WaitForSecondsRealtime(.6f);
@@ -185,17 +189,30 @@ namespace GlimmerGrove
             while (this && !_ended && !_puzzle.Landed && Time.unscaledTime < until) yield return null;
             if (!this || _ended) yield break;
 
-            // A player who opened the tips from the key before these arrived reads them there;
-            // what they dismissed is marked seen, so the offer below skips it.
+            // A player who opened the preview from the key before this arrived has seen it;
+            // what they dismissed is marked seen, so the gate below holds it back.
             while (this && _teaching) yield return null;
             if (!this || _ended) yield break;
 
-            var lessons = new List<ScreenLesson>(2);
-            _puzzle.Lessons(lessons);
-            if (lessons.Count == 0) yield break;
+            if (TipLedger.HasSeen(Mechanic.ChallengeVerb(Genre))) yield break;
 
+            Preview();
+        }
+
+        /// <summary>
+        /// The genre's demonstration, over a latched board. One door for the opening and the
+        /// info key, so the two cannot disagree about the latch; <c>Flow.Modal</c> refuses a
+        /// second while one is up, and the latch is let go however the panel leaves.
+        /// </summary>
+        void Preview()
+        {
             _teaching = true;
-            ScreenLessons.Show(this, lessons, () => _teaching = false);
+
+            Flow.Modal<ChallengePreviewOverlay>(v =>
+            {
+                v.Genre = Genre;
+                v.Dismissed = () => { if (this) _teaching = false; };
+            });
         }
 
         System.Threading.Tasks.Task Warm()
@@ -366,20 +383,6 @@ namespace GlimmerGrove
             yield return _puzzle.Animate(report.Move);
             if (!this) yield break;
 
-            // A lesson the move just made true goes up here, between the board landing and the
-            // hill answering, so what it rings is what the move did and the bolt it bought is
-            // watched after the sentence rather than under it.
-            var lessons = new List<ScreenLesson>(1);
-            _puzzle.LessonsAfter(report.Move, lessons);
-            if (lessons.Count > 0)
-            {
-                bool waiting = true;
-                _teaching = true;
-                ScreenLessons.Show(this, lessons, () => { _teaching = false; waiting = false; });
-                while (waiting && this) yield return null;
-                if (!this) yield break;
-            }
-
             // The hill is queued, never awaited: it draws this turn after whatever it is
             // still drawing, and the board is free to take the next move meanwhile.
             if (report.Walked) _hill.Enqueue(report.Events);
@@ -511,24 +514,17 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The info key: every lesson about this genre, then the rule every genre shares, shown
-        /// whether or not they have been seen (<c>ScreenLessons.Add</c>) - the loadout's key and
-        /// for its reason. The board is latched exactly as it is for the opening lessons, and
-        /// the key is refused while a move is landing, a lesson is already up or the run is
-        /// over, so two chains can never run at once.
+        /// The info key: the genre's preview again, whether or not it has been seen - the
+        /// loadout's key and for its reason. The board is latched exactly as it is for the
+        /// opening preview, and the key is refused while a move is landing, a panel is already
+        /// up or the run is over, so two can never be up at once.
         /// </summary>
         void Review()
         {
             if (!this || !_ready || _busy || _teaching || _ended || _asking || Flow.HasModal) return;
             if (_run.State != ChallengeState.Playing) return;
 
-            var lessons = new List<ScreenLesson>(4);
-            _puzzle.Review(lessons);
-            ScreenLessons.Add(lessons, Mechanic.ChallengeHill, _hillHost);
-            if (lessons.Count == 0) return;
-
-            _teaching = true;
-            ScreenLessons.Show(this, lessons, () => _teaching = false);
+            Preview();
         }
 
         public override bool OnBack()

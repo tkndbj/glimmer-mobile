@@ -58,6 +58,20 @@ namespace GlimmerGrove
         /// </remarks>
         static readonly Vector4 HostInset = new Vector4(24f, 96f, 24f, 214f);
 
+        /// <summary>
+        /// The map's music, at the owner's instruction (2026-10-02): a first-timer hears the
+        /// grove's own theme over the first board they ever touch, and the hub's regular track
+        /// starts as this screen hands over to it (<c>Flow</c> plays each screen's own).
+        /// </summary>
+        public override string Track => "mus_map";
+
+        /// <summary>
+        /// Quieter than the map plays the same track (<c>Audio.DefaultLevel</c>, .42): the owner
+        /// heard it as too loud under the panels a first-timer is reading. The map's own level
+        /// is untouched, because the level is the screen's and not the track's.
+        /// </summary>
+        public override float TrackLevel => .26f;
+
         const float ChromeSize = 92f;
 
         /// <summary>
@@ -486,6 +500,14 @@ namespace GlimmerGrove
         /// the moment it goes up, which is the same conversion <c>TipOverlay</c> does and for the
         /// same reason.
         /// </para>
+        /// <para>
+        /// <b>One ring, on the gem the hand picks up, and the same gem the panel ringed.</b>
+        /// <paramref name="a"/> is the gem that completes the line (<c>SiegeTutorial.Oriented</c>)
+        /// and the ink the hand lays down already says where it goes. It used to ring both ends,
+        /// which put a second ring on the gem the match pushes aside - the one gem on the row
+        /// that is not part of what lights up - so the board asked the player to swipe two gems
+        /// and then rewarded neither of them.
+        /// </para>
         /// </summary>
         void PointAlong(int a, int b)
         {
@@ -497,7 +519,6 @@ namespace GlimmerGrove
             var route = new List<Vector2> { Centre(from, host), Centre(to, host) };
 
             Ring(host, from);
-            Ring(host, to);
 
             CoachHand.Show(host, route, Pal.Cream, 1, host);
         }
@@ -593,7 +614,8 @@ namespace GlimmerGrove
 
             UIKit.Halo(safe, Pal.Gold, 820f, .34f, new Vector2(0f, LineSeat));
 
-            var line = UIKit.Titled("Line", safe, Loc.Get("ui.tutorial.win"), 66, Pal.Cream,
+            // Capitals, at the owner's instruction (2026-10-02): the closing line is a title.
+            var line = UIKit.Titled("Line", safe, Loc.Get("ui.tutorial.win").ToUpperInvariant(), 66, Pal.Cream,
                                     TextAnchor.MiddleCenter, new Vector2(880f, 240f),
                                     new Vector2(.5f, .5f), new Vector2(0f, LineSeat),
                                     3f, 5f, wrap: true);

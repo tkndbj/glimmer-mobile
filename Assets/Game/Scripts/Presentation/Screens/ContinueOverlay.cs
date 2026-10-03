@@ -158,12 +158,11 @@ namespace GlimmerGrove
             // is built from the offer rather than written into the copy, so a retune of what a
             // continue hands over cannot leave this saying something else.
             UIKit.Shrinkable(
-                UIKit.Titled("Offer", Panel,
-                             Loc.Format("ui.continue.offer", Offer.Amount,
-                                        Loc.Get(UnitKey(Offer.Unit))),
+                UIKit.Titled("Offer", Panel, OfferLine(),
                              38, new Color(.30f, .21f, .15f), TextAnchor.UpperCenter,
                              new Vector2(ContentW, OfferH), new Vector2(.5f, 1f),
-                             new Vector2(0f, -offerY), outline: 0f, shadow: 0f, wrap: true), 26);
+                             new Vector2(0f, -offerY), outline: 0f, shadow: 0f, wrap: true,
+                             rich: true), 26);
 
             if (buying)
                 UIKit.Shrinkable(
@@ -419,6 +418,19 @@ namespace GlimmerGrove
                 case ContinueUnit.Wards: return "ui.continue.wards_title";
                 default: return "ui.continue.turns_title";
             }
+        }
+
+        /// <summary>
+        /// The offer sentence. A siege continue restores the whole line, so it says that in
+        /// plain words with the phrase that matters lit green, rather than "+4 wards"; every
+        /// other unit keeps the counted sentence. Rich text is on for this label alone.
+        /// </summary>
+        string OfferLine()
+        {
+            if (Offer.Unit == ContinueUnit.Wards)
+                return Loc.Format("ui.continue.wards_offer",
+                                  "<color=#2E9E3A>" + Loc.Get("ui.continue.full_health") + "</color>");
+            return Loc.Format("ui.continue.offer", Offer.Amount, Loc.Get(UnitKey(Offer.Unit)));
         }
 
         static string UnitKey(ContinueUnit unit)

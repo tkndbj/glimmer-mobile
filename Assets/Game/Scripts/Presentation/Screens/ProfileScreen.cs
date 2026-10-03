@@ -801,7 +801,7 @@ namespace GlimmerGrove
             // opens this card to read.
             UIKit.Titled("Why", card, Loc.Get(mismatched ? "ui.profile.mismatch_hint"
                                              : linked ? "ui.profile.linked_hint" : "ui.profile.guest_hint"),
-                         25, Color.white, TextAnchor.UpperCenter,
+                         !mismatched && !linked ? 26 : 25, Color.white, TextAnchor.UpperCenter,
                          new Vector2(800f, HintH), new Vector2(.5f, 1f),
                          new Vector2(0f, -(cursor + HintH * .5f)), 0f, 2f, wrap: true);
 

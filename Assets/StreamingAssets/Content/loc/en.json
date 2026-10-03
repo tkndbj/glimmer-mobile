@@ -2730,6 +2730,10 @@
       "text": "Done"
     },
     {
+      "key": "ui.challenges.preview_play",
+      "text": "Play"
+    },
+    {
       "key": "ui.challenges.ad_name",
       "text": "Watch & Play"
     },
@@ -2875,7 +2879,7 @@
     },
     {
       "key": "ui.account.guest",
-      "text": "not signed in  ·  your progress is only on this phone"
+      "text": "Not signed in  ·  Your progress is only on this phone"
     },
     {
       "key": "ui.account.guest_purchase",
@@ -2887,7 +2891,7 @@
     },
     {
       "key": "ui.account.linked",
-      "text": "signed in  ·  your progress is saved online"
+      "text": "Signed in  ·  Your progress is saved online"
     },
     {
       "key": "ui.account.linked_ok",
@@ -2895,7 +2899,7 @@
     },
     {
       "key": "ui.account.mismatch",
-      "text": "your last account change did not finish  ·  choose an account"
+      "text": "Your last account change did not finish  ·  Choose an account"
     },
     {
       "key": "ui.account.not_secured",
@@ -2939,7 +2943,7 @@
     },
     {
       "key": "ui.account.unavailable",
-      "text": "online saving is not available in this version"
+      "text": "Online saving is not available in this version"
     },
     {
       "key": "ui.account.working",
@@ -3500,6 +3504,14 @@
     {
       "key": "ui.continue.turns_unit",
       "text": "more turns"
+    },
+    {
+      "key": "ui.continue.full_health",
+      "text": "FULL HEALTH"
+    },
+    {
+      "key": "ui.continue.wards_offer",
+      "text": "Restore all turrets back to {0} and carry on where you left off!"
     },
     {
       "key": "ui.continue.wards_title",
@@ -4447,11 +4459,11 @@
     },
     {
       "key": "ui.profile.chapters",
-      "text": "chapters"
+      "text": "Chapters"
     },
     {
       "key": "ui.profile.coins",
-      "text": "coins"
+      "text": "Coins"
     },
     {
       "key": "ui.profile.companions",
@@ -4471,19 +4483,19 @@
     },
     {
       "key": "ui.profile.gems",
-      "text": "gems"
+      "text": "Gems"
     },
     {
       "key": "ui.profile.glades",
-      "text": "glades"
+      "text": "Levels"
     },
     {
       "key": "ui.profile.guest_hint",
-      "text": "This groove lives only on this device. Link an account and it follows you."
+      "text": "This account lives only on this device. Sign in and play the same account on any device!"
     },
     {
       "key": "ui.profile.linked_hint",
-      "text": "Your groove is backed up and follows you to any device you sign in on."
+      "text": "Your account is backed up and follows you to any device you sign in on."
     },
     {
       "key": "ui.profile.locked",
@@ -4551,7 +4563,7 @@
     },
     {
       "key": "ui.profile.perfect",
-      "text": "perfect"
+      "text": "Perfect"
     },
     {
       "key": "ui.profile.protect",
@@ -4583,7 +4595,7 @@
     },
     {
       "key": "ui.profile.record",
-      "text": "groove record"
+      "text": "account record"
     },
     {
       "key": "ui.profile.rename",
@@ -4595,7 +4607,7 @@
     },
     {
       "key": "ui.profile.stars",
-      "text": "stars"
+      "text": "Stars"
     },
     {
       "key": "ui.profile.tap_to_wear",
@@ -5682,24 +5694,8 @@
       "text": "PLAY FOREVER"
     },
     {
-      "key": "ui.tip.merge_feed.body",
-      "text": "Every size has a colour.\n\nJoining gems feeds the turret of that colour. It fires at raiders of the same colour."
-    },
-    {
-      "key": "ui.tip.merge_feed.title",
-      "text": "A JOIN FEEDS A TURRET"
-    },
-    {
-      "key": "ui.tip.merge_goal.body",
-      "text": "Join gems until you make a {0}.\n\nRocks stop a slide. UNDO takes a move back, but the raiders still step."
-    },
-    {
-      "key": "ui.tip.merge_goal.title",
-      "text": "REACH THE GOAL"
-    },
-    {
       "key": "ui.tip.merge_swipe.body",
-      "text": "Drag a gem. Only that gem slides, until something stops it.\n\nIf it stops against its twin, the two join into one, twice as big."
+      "text": "Drag a gem. It slides until something stops it, and twins that meet join into one twice as big."
     },
     {
       "key": "ui.tip.merge_swipe.title",
@@ -5707,31 +5703,15 @@
     },
     {
       "key": "ui.tip.pairs_flip.body",
-      "text": "Tap two cards to turn them over.\n\nThe same gem twice is a pair. It fires the turret of its colour. A miss turns back over."
+      "text": "Tap two cards to turn them over. The same stone twice is a pair, and it fires the turret of its colour."
     },
     {
       "key": "ui.tip.pairs_flip.title",
       "text": "TURN TWO CARDS"
     },
     {
-      "key": "ui.tip.pairs_combo.body",
-      "text": "Pairs made one after another are a combo.\n\nEach pair in a row fires more bolts. A miss starts over."
-    },
-    {
-      "key": "ui.tip.pairs_combo.title",
-      "text": "COMBO!"
-    },
-    {
-      "key": "ui.tip.pairs_curse.body",
-      "text": "That black stone is cursed.\n\nTurning it ends your turn and moves the raiders an extra step. Remember where it is."
-    },
-    {
-      "key": "ui.tip.pairs_curse.title",
-      "text": "A CURSED STONE"
-    },
-    {
       "key": "ui.tip.glade_wake.body",
-      "text": "Tap a tile to turn it.\n\nLight each critter in its own colour to wake it. A woken critter fires its turret every turn. Two colours that meet put the light out."
+      "text": "Tap a conduit to turn it. A critter lit in its own colour wakes and fires its turret every turn."
     },
     {
       "key": "ui.tip.glade_wake.title",
@@ -5739,19 +5719,11 @@
     },
     {
       "key": "ui.tip.sokoban_push.body",
-      "text": "Swipe to walk. Walk into a gem to push it.\n\nA gem on the pad of its colour arms that turret. Seat them all to win.\n\nStuck? UNDO takes a step back."
+      "text": "Swipe to walk. Walk into a gem to push it, and a gem on the pad of its colour arms that turret."
     },
     {
       "key": "ui.tip.sokoban_push.title",
       "text": "PUSH THE GEMS"
-    },
-    {
-      "key": "ui.tip.challenge_hill.body",
-      "text": "Every turn walks the raiders one step.\n\nA turret only hits raiders of its own colour. Lose every turret and the run is over."
-    },
-    {
-      "key": "ui.tip.challenge_hill.title",
-      "text": "HOLD THE LINE"
     },
     {
       "key": "ui.tip.mixing.body",

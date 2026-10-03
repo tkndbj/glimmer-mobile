@@ -227,6 +227,14 @@ namespace GlimmerGrove
         public virtual string Track => null;
 
         /// <summary>
+        /// How loud <see cref="Track"/> plays, as the level handed to <c>Audio.Music</c>. The
+        /// house level unless a screen asks otherwise - the tutorial asks for less, because a
+        /// first-timer is reading sentences over it. A property of the screen rather than of the
+        /// track, since the same track plays louder on the map.
+        /// </summary>
+        public virtual float TrackLevel => Audio.DefaultLevel;
+
+        /// <summary>
         /// Whether this screen wants no music at all, rather than a track of its own.
         ///
         /// <para>
@@ -397,7 +405,7 @@ namespace GlimmerGrove
                 screen.Init();
                 Current = screen;
                 if (screen.WantsSilence) Audio.Silence();
-                else if (screen.Track != null) Audio.Music(screen.Track);
+                else if (screen.Track != null) Audio.Music(screen.Track, volume: screen.TrackLevel);
 
                 // Applied on every swap rather than only when it changes, so the answer is
                 // always the incoming screen's own - see View.WantsMultiTouch.

@@ -918,6 +918,12 @@ is where they are written down, not what they mean.
    later shortens must not strand the script. Every scripted change goes through a door the board
    or the ward already owns (`SiegeBoard.Pour`/`.Kindle`/`.Sheltered`, `SiegeWard.Stoke`);
    `SiegeTutorial` writes to nothing.
+53g. **The hand picks up the gem that joins the line, never the one the match pushes aside.** A
+   swap is two gems trading places and a demonstration is one gem being moved; the ring, the
+   finger and the sentence all hang off that one gem, so it has to be one of the three that light
+   up. It shipped ringing and sliding the red the match displaced (2026-10-02), read as "the
+   swiped gem is not the one highlighted". `SiegeTutorial.Oriented` turns every swap, and
+   `TutorialTests.TheHandPicksUpTheGemThatJoinsTheLine` holds the authored pair to it.
 
 ### Keeper levels for sale
 
@@ -1184,6 +1190,14 @@ is where they are written down, not what they mean.
    coroutine's wait is not, after which the tween pulled it back. `Place` is the one line that
    writes the node, `Idle` also waits for every walk to arrive, and nothing borrows that
    position (`Tween.Shake` is for posts).
+56s. **A challenge genre is taught by one preview, never by tip boxes** (2026-10-02, the
+   owner's instruction): `ChallengePreviewOverlay` in the deal sheet's frame, a board of the
+   genre's own pieces played by the hand on one looping clock (`ChallengeDemos`), raised once
+   over a first-timer's landed board and again from the info key. **The gate is the genre's
+   verb lesson** (`Mechanic.ChallengeVerb`, held by `TipTests`), so no id was minted and a
+   player who read the old box is never shown it unasked; the event lessons (`merge_goal`,
+   `merge_feed`, `pairs_combo`, `pairs_curse`, `challenge_hill`) are spent. A rule a board
+   carries is met on the board, where it happens. `PuzzleView` declares no lessons any more.
 
 ### Art credits
 

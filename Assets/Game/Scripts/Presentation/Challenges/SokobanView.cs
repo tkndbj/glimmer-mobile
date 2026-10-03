@@ -237,14 +237,6 @@ namespace GlimmerGrove
 
         int ChipOf(int cell) => _padCells.IndexOf(cell);
 
-        // ------------------------------------------------------------------ lessons
-        /// <summary>Rings the keeper, because the sentence is about moving it (invariant 6b).</summary>
-        public override void Lessons(List<ScreenLesson> into)
-            => ScreenLessons.Offer(into, Mechanic.SokobanPush, _keeper);
-
-        public override void Review(List<ScreenLesson> into)
-            => ScreenLessons.Add(into, Mechanic.SokobanPush, _keeper);
-
         // ------------------------------------------------------------------ painting
         public override void Repaint()
         {

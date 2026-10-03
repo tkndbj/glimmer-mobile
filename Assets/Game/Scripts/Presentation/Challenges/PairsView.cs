@@ -614,28 +614,5 @@ namespace GlimmerGrove
 
             base.Refuse();
         }
-
-        // ------------------------------------------------------------------ the lessons
-        public override void Lessons(List<ScreenLesson> into)
-            => ScreenLessons.Offer(into, Mechanic.PairsFlip, Field);
-
-        public override void LessonsAfter(ChallengeMove move, List<ScreenLesson> into)
-        {
-            if (move == null || !move.Turn) return;
-
-            int b = _pairs.LastB;
-            if (b < 0 || b >= _card.Length) return;
-
-            // Each at the event: a ring round the card that just did the thing.
-            if (_pairs.LastCursed) ScreenLessons.Offer(into, Mechanic.PairsCurse, _card[b].Node);
-            else if (_pairs.LastMatched && _pairs.LastCombo == 2) ScreenLessons.Offer(into, Mechanic.PairsCombo, _card[b].Node);
-        }
-
-        public override void Review(List<ScreenLesson> into)
-        {
-            ScreenLessons.Add(into, Mechanic.PairsFlip, Field);
-            ScreenLessons.Add(into, Mechanic.PairsCombo, Field);
-            if (_pairs.Curses > 0) ScreenLessons.Add(into, Mechanic.PairsCurse, Field);
-        }
     }
 }

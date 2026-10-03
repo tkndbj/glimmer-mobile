@@ -122,10 +122,15 @@ namespace GlimmerGrove.Tests
         {
             var table = ChallengeTests.Shipped();
 
-            Assert.AreEqual(2, table.FreePlays);
+            // The owner's figures of 2026-10-02: three free plays, and the deals at 6 / 12 / 25
+            // plays with the largest at 400 gems. A retune moves these on purpose.
+            Assert.AreEqual(3, table.FreePlays);
             Assert.AreEqual(3, table.Tiers.Count);
             Assert.AreEqual("bronze", table.Tiers[0].Id);
+            Assert.AreEqual(6, table.Tiers[0].Plays);
+            Assert.AreEqual(12, table.Tiers[1].Plays);
             Assert.AreEqual(25, table.Tiers[2].Plays);
+            Assert.AreEqual(400, table.Tiers[2].Gems);
             Assert.IsTrue(table.Rewards.PaysCoins && table.Rewards.PaysXp);
             Assert.AreEqual(4, table.Genres.Count, "every shipped genre has a row");
         }

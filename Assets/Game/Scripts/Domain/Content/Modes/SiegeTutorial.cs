@@ -108,16 +108,27 @@ namespace GlimmerGrove.Content
         };
 
         /// <summary>
-        /// The two cells the coaching hand is drawn between: (3,3) and (4,3).
+        /// The gem the coaching hand picks up, at (4,3), and the cell it slides it into, (3,3).
         ///
+        /// <para>
         /// <b>Chosen rather than searched, and the difference matters on this one board.</b>
         /// <c>SiegeBoard.FindSwap</c> answers the first pair in reading order, which on this field
         /// is up near the top edge - a long reach on a phone and a poor first gesture. These two
-        /// sit low and central, and the drag is left to right, which is the easiest movement to
-        /// read from a still frame. <see cref="Taught"/> falls back to the search if they ever
-        /// stop working, so the worst a mistyped row can do is move the hand rather than break it.
+        /// sit low and central. <see cref="Taught"/> falls back to the search if they ever stop
+        /// working, so the worst a mistyped row can do is move the hand rather than break it.
+        /// </para>
+        /// <para>
+        /// <b><see cref="TaughtA"/> is the green, and the order is the lesson.</b> The swap lines
+        /// up three greens along the fourth row, so the gem the hand picks up has to be the green
+        /// that completes them - the one the ring is on and the one the player then watches light
+        /// up with the other two. It shipped the other way round: the hand picked up the red at
+        /// (3,3) and slid it right, so the gem ringed and swiped was the one gem on the row that
+        /// was <em>not</em> part of the match, and the first thing the game ever demonstrated read
+        /// as pointing at the wrong gem. <see cref="Oriented"/> is the rule and this pair is
+        /// authored to obey it, so a re-typed row is caught by the fixture rather than redrawn.
+        /// </para>
         /// </summary>
-        public const int TaughtA = 3 * Width + 3, TaughtB = 3 * Width + 4;
+        public const int TaughtA = 3 * Width + 4, TaughtB = 3 * Width + 3;
 
         /// <summary>
         /// How long one feed takes to climb the tube. See <see cref="Feed"/>.
@@ -193,7 +204,8 @@ namespace GlimmerGrove.Content
         // ------------------------------------------------------------------ the script
         /// <summary>
         /// The swap the hand demonstrates: <see cref="TaughtA"/> ↔ <see cref="TaughtB"/> while
-        /// the field still accepts it, and whatever the board offers otherwise.
+        /// the field still accepts it, and whatever the board offers otherwise. <c>A</c> is
+        /// always the gem the hand picks up and <c>B</c> where it goes (<see cref="Oriented"/>).
         ///
         /// <b>Asked of the board rather than trusted</b>, through the one door every other reader
         /// goes through (<c>SiegeBoard.Lines</c>), so a hand is never drawn over a move the drag
@@ -204,9 +216,73 @@ namespace GlimmerGrove.Content
             if (board == null) return default;
 
             if (board.Lines(TaughtA, TaughtB))
-                return new SiegeSwap(TaughtA, TaughtB, 0);
+                return Oriented(board, new SiegeSwap(TaughtA, TaughtB, 0));
 
-            return board.FindSwap(0);
+            return Oriented(board, board.FindSwap(0));
+        }
+
+        /// <summary>
+        /// The same swap, turned so that <c>A</c> is the gem that joins the line it makes and
+        /// <c>B</c> is the cell it slides into.
+        ///
+        /// <para>
+        /// <b>A swap is two gems trading places, and a demonstration is one gem being moved.</b>
+        /// Which of the two the hand picks up is the whole of what the player is shown: the ring
+        /// sits on it, the finger lands on it, and the sentence beside it says <em>line up three
+        /// of a colour</em>. If that gem is the one the match pushes out of the way, the player
+        /// is told to swipe a gem and then watches three others light up - the fault the first
+        /// cut shipped with. So the mover is the gem that stands in a run once the trade is made,
+        /// read off the same rule the board scores matches by (<c>SiegeLayout.Runs</c>) rather
+        /// than off the colours by hand.
+        /// </para>
+        /// <para>
+        /// <b>Both or neither leaves the order alone.</b> A trade that lines up both gems (two
+        /// matches at once) has no wrong answer, and a trade that lines up neither is one
+        /// <c>SiegeBoard.Lines</c> would have refused, so there is nothing to turn.
+        /// </para>
+        /// </summary>
+        public static SiegeSwap Oriented(SiegeBoard board, SiegeSwap swap)
+        {
+            if (board == null || !swap.Found) return swap;
+
+            return Mover(board, swap.A, swap.B) == swap.B
+                ? new SiegeSwap(swap.B, swap.A, swap.At)
+                : swap;
+        }
+
+        /// <summary>
+        /// Which of two adjacent cells holds the gem that joins a run once they trade places:
+        /// <paramref name="a"/> unless only <paramref name="b"/>'s gem does. See <see cref="Oriented"/>.
+        /// </summary>
+        public static int Mover(SiegeBoard board, int a, int b)
+        {
+            if (board == null) return a;
+            if (a < 0 || b < 0 || a >= board.Count || b >= board.Count) return a;
+
+            var cells = new char[board.Count];
+            var charms = new SiegeCharm[board.Count];
+
+            for (int i = 0; i < cells.Length; i++)
+            {
+                cells[i] = board.At(i);
+                charms[i] = board.CharmAt(i);
+            }
+
+            char cell = cells[a];
+            cells[a] = cells[b];
+            cells[b] = cell;
+
+            var charm = charms[a];
+            charms[a] = charms[b];
+            charms[b] = charm;
+
+            var runs = SiegeLayout.Runs(cells, board.Width, board.Height, charms);
+
+            // After the trade a's gem stands at b and b's at a.
+            bool aJoins = runs.Contains(b);
+            bool bJoins = runs.Contains(a);
+
+            return bJoins && !aJoins ? b : a;
         }
 
         /// <summary>

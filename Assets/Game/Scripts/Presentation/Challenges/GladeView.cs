@@ -150,66 +150,14 @@ namespace GlimmerGrove
         }
 
         /// <summary>The board has swept in and is taking input: <see cref="BoardView"/>'s own latch.</summary>
+        /// <remarks>
+        /// This board used to raise the mode's own tile lessons (a rooted tile, a crossing, a
+        /// briar, a taproot) at its opening, two at a time, because the glade chapters are hidden
+        /// and this is where most players first meet them. They came off with every challenge
+        /// tip box on 2026-10-02 (<c>ChallengePreviewOverlay</c>); the ids are the mode's and
+        /// are untouched, and a tile is met on the board, where it happens.
+        /// </remarks>
         public override bool Landed => _board && !_board.Locked;
-
-        /// <summary>
-        /// The most lessons one opening raises. A hard glade can carry a rooted tile, a crossing,
-        /// a briar and a taproot at once, and four panels before the first tap is a wall of text
-        /// in front of a puzzle; a lesson not raised today is raised the next time a board
-        /// carries it, because <c>ScreenLessons.Offer</c> only ever skips what was seen.
-        /// </summary>
-        const int LessonsAtOnce = 2;
-
-        /// <summary>
-        /// The glade's own lessons, asked of the board exactly as the mode asks them
-        /// (<see cref="MechanicScan.Taught"/>, in <see cref="Mechanic.TeachingOrder"/>), each
-        /// ringing the first tile that shows it (invariant 6b). <b>The glade chapters are
-        /// hidden</b>, so for nearly every player this board is the first place a crossing, a
-        /// briar, a rooted tile or a taproot is ever met - and a taproot met
-        /// untaught reads as a tap that turned the wrong tile. The same ids as the mode's, so
-        /// a lesson learnt here is never taught again on the map, and the other way round.
-        /// Only the four a challenge row can carry are asked: the move budget and fragile
-        /// conduits are refused at read (<see cref="GladePuzzle.Fault"/>) or are not this
-        /// screen's, and a challenge critter always wants a colour. <b>Mixing is never taught
-        /// here</b>, because this board never mixes (invariant 56l): the mode's lesson says red
-        /// and yellow make orange, which on this screen is a sentence about a rule that is off,
-        /// and an amber critter is a sighting of that lesson all the same.
-        /// </summary>
-        public override void Lessons(List<ScreenLesson> into)
-        {
-            if (!_board) return;
-
-            foreach (var sighting in MechanicScan.Taught(_glade.Board))
-            {
-                if (into.Count >= LessonsAtOnce) break;
-                if (sighting.CellIndex < 0 || !Teaches(sighting.Mechanic)) continue;
-
-                ScreenLessons.Offer(into, sighting.Mechanic, _board.TileAt(sighting.CellIndex));
-            }
-        }
-
-        /// <summary>
-        /// The verb, ringing the board, then every one of the mode's tile lessons this board
-        /// carries - all of them rather than <see cref="LessonsAtOnce"/>, because a player who
-        /// pressed the key asked for them.
-        /// </summary>
-        public override void Review(List<ScreenLesson> into)
-        {
-            if (!_board) return;
-
-            ScreenLessons.Add(into, Mechanic.GladeWake, Inner);
-
-            foreach (var sighting in MechanicScan.Taught(_glade.Board))
-            {
-                if (sighting.CellIndex < 0 || !Teaches(sighting.Mechanic)) continue;
-                ScreenLessons.Add(into, sighting.Mechanic, _board.TileAt(sighting.CellIndex));
-            }
-        }
-
-        static bool Teaches(Mechanic mechanic)
-            => mechanic.Equals(Mechanic.RootedTile)
-            || mechanic.Equals(Mechanic.Crossing) || mechanic.Equals(Mechanic.Briar)
-            || mechanic.Equals(Mechanic.BoundConduit);
 
         public override void Refuse()
         {

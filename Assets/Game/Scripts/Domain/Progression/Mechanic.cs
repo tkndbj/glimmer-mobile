@@ -771,86 +771,79 @@ namespace GlimmerGrove.Progression
 
         // ------------------------------------------------------------- the daily challenges
         /// <summary>
+        /// A daily challenge genre has <b>one</b> lesson, its verb, and since 2026-10-02 it is
+        /// drawn as a demonstration rather than as a tip box (<c>ChallengePreviewOverlay</c>,
+        /// <c>ChallengeDemos</c>): the genre's board played by a hand, over and over, with the
+        /// lesson's title over it and its sentence under it. The id is the gate - a player whose
+        /// save already carries it read the old tip box and is never shown the panel unasked -
+        /// which is why none of the four was re-minted. <see cref="ChallengeVerb"/> is the map.
+        ///
+        /// <para>
+        /// <b>The event lessons went with the boxes.</b> A combo, a curse, the goal and the feed
+        /// (<see cref="MergeGoal"/>, <see cref="MergeFeed"/>, <see cref="PairsCombo"/>,
+        /// <see cref="PairsCurse"/>) and the rule the hill shares (<see cref="ChallengeHill"/>) are
+        /// met on the board, where they happen. Their ids are spent (<see cref="Retired"/>).
+        /// </para>
+        /// </summary>
+        /// <remarks>
         /// Merge's verb: a drag slides one gem until something stops it, and two of a size that
         /// meet become one (one gem at a time since 2026-09-27; it was a whole-board swipe).
-        ///
-        /// <para>
-        /// <b>A lesson about a gesture is shown, not described</b> (the house rule
-        /// <c>Lesson.Trace</c> exists for): the panel's hand drags one real gem to where it would
-        /// stop, a slide the mode's own input could produce, and the sentence is cut down to the
-        /// half a hand cannot show - that meeting gems join. Raised at the opening of the first
-        /// Merge a player ever deals, ringing the board itself, and once in a life like every
-        /// lesson here.
-        /// </para>
-        /// </summary>
+        /// </remarks>
         public static readonly Mechanic MergeSwipe = new Mechanic("merge_swipe");
 
-        /// <summary>
-        /// What Merge is won by: a gem of the target value, printed rather than written
-        /// (<see cref="Args"/> is one, for <see cref="MapChapterGate"/>'s reason - the target
-        /// is a figure in <c>challenges.json</c> and a retune must not leave a stale number in
-        /// a sentence shown once). Rings the goal readout, because that is where the figure
-        /// lives for the rest of the run.
-        /// </summary>
+        /// <summary><b>Retired 2026-10-02 with the challenge tip boxes; the id must never be reused.</b></summary>
         public static readonly Mechanic MergeGoal = new Mechanic("merge_goal", 1);
 
-        /// <summary>
-        /// The fusion: a gem's size is a colour, and a merge feeds the turret of that colour.
-        ///
-        /// <para>
-        /// <b>Taught at the event and never at the opening</b> (the shape <see cref="SiegeBrim"/>
-        /// keeps): it goes up after the first merge a player makes, when a mote has just flown
-        /// from the board to a post and there is a real turret to ring (invariant 6b). A player
-        /// shown it before any merge would be told about a thing that had not happened.
-        /// </para>
-        /// </summary>
+        /// <summary><b>Retired 2026-10-02 with the challenge tip boxes; the id must never be reused.</b></summary>
         public static readonly Mechanic MergeFeed = new Mechanic("merge_feed");
 
         /// <summary>
         /// Pairs' verb: turn two cards, and the same gem twice is a pair that fires the turret
-        /// of its colour. Rings the board. Raised at the opening of the first Pairs a player
-        /// ever deals, once the deal has landed (<c>PairsView.Landed</c>), and by the info key.
+        /// of its colour. See <see cref="MergeSwipe"/> for how a challenge verb is shown.
         /// </summary>
         public static readonly Mechanic PairsFlip = new Mechanic("pairs_flip");
 
-        /// <summary>
-        /// Pairs back to back are a combo, and each pays more (<c>PairsPuzzle.ComboCap</c>).
-        /// <b>Taught at the event</b>: after the first second match in a row, ringing the card
-        /// that made it, because a combo explained before one has happened is a number with
-        /// nothing to point at (<see cref="MergeFeed"/>'s shape).
-        /// </summary>
+        /// <summary><b>Retired 2026-10-02 with the challenge tip boxes; the id must never be reused.</b></summary>
         public static readonly Mechanic PairsCombo = new Mechanic("pairs_combo");
 
-        /// <summary>
-        /// A cursed stone ends the turn and walks the raiders an extra step. <b>Taught at the
-        /// event</b>, ringing the card the first curse was just turned on - the one place it is
-        /// true that there is a curse to point at, since a face-down card is not one yet.
-        /// </summary>
+        /// <summary><b>Retired 2026-10-02 with the challenge tip boxes; the id must never be reused.</b></summary>
         public static readonly Mechanic PairsCurse = new Mechanic("pairs_curse");
 
         /// <summary>
         /// The glade challenge's verb: turn the conduits until every critter is lit in its own
-        /// colour, and a woken critter fires its turret every turn. Rings the board. Info key
-        /// only, for <see cref="PairsFlip"/>'s reason; the tiles the board carries (a crossing,
-        /// a briar, a rooted tile, a taproot) are the mode's own lessons and follow it.
+        /// colour, and a woken critter fires its turret every turn. The tiles the board carries
+        /// (a crossing, a briar, a rooted tile, a taproot) are the mode's own lessons and are
+        /// no longer taught on this screen - the glade chapters are hidden, and a rule met on
+        /// the board is the board's to show.
         /// </summary>
         public static readonly Mechanic GladeWake = new Mechanic("glade_wake");
 
         /// <summary>
         /// Push's verb: swipe to walk, a gem pushed onto the pad of its colour arms that turret
-        /// for as long as it stays there, and UNDO takes a step back. Rings the keeper, because
-        /// the sentence is about moving it (invariant 6b). Offered at a first Push's opening, as
-        /// <see cref="PairsFlip"/> is at a first Pairs', since 2026-09-27: a first-timer met a
-        /// cannon on a board of gems with nothing to say which of them moves.
+        /// for as long as it stays there, and UNDO takes a step back.
         /// </summary>
         public static readonly Mechanic SokobanPush = new Mechanic("sokoban_push");
 
-        /// <summary>
-        /// The rule every challenge shares: every move walks the raiders a step, a turret fires
-        /// only at its own colour, and the run is lost when no turret is left standing. Rings
-        /// the hill. Info key only, shown after the genre's own lessons.
-        /// </summary>
+        /// <summary><b>Retired 2026-10-02 with the challenge tip boxes; the id must never be reused.</b></summary>
         public static readonly Mechanic ChallengeHill = new Mechanic("challenge_hill");
+
+        /// <summary>
+        /// The one lesson a challenge genre has - its verb - which is what the preview panel
+        /// shows and what gates it. A <c>switch</c> whose default refuses (invariant 44e), so a
+        /// genre added without a lesson fails the moment it is opened rather than opening mute.
+        /// </summary>
+        public static Mechanic ChallengeVerb(GlimmerGrove.Challenges.ChallengeGenre genre)
+        {
+            switch (genre)
+            {
+                case GlimmerGrove.Challenges.ChallengeGenre.Pairs: return PairsFlip;
+                case GlimmerGrove.Challenges.ChallengeGenre.Glade: return GladeWake;
+                case GlimmerGrove.Challenges.ChallengeGenre.Merge: return MergeSwipe;
+                case GlimmerGrove.Challenges.ChallengeGenre.Sokoban: return SokobanPush;
+                default:
+                    throw new System.InvalidOperationException($"genre '{genre}' has no verb lesson");
+            }
+        }
 
         /// <summary>
         /// Teaching order, most disruptive first.
@@ -938,8 +931,9 @@ namespace GlimmerGrove.Progression
             // Grove and GroveShop are retired and deliberately absent. See the remarks above.
             MapLoadout, MapChapterGate, MapTrack,
             LoadoutSeats, LoadoutKit,
-            MergeSwipe, MergeGoal, MergeFeed,
-            PairsFlip, PairsCombo, PairsCurse, GladeWake, SokobanPush, ChallengeHill,
+            // MergeGoal, MergeFeed, PairsCombo, PairsCurse and ChallengeHill are retired and
+            // deliberately absent. See the remarks on MergeSwipe.
+            MergeSwipe, PairsFlip, GladeWake, SokobanPush,
         };
 
         /// <summary>
@@ -967,6 +961,7 @@ namespace GlimmerGrove.Progression
             SiegeWeaver, SiegeThief,
             SiegeCog,
             Grove, GroveShop,
+            MergeGoal, MergeFeed, PairsCombo, PairsCurse, ChallengeHill,
         };
 
         public bool IsValid => !string.IsNullOrEmpty(Id);

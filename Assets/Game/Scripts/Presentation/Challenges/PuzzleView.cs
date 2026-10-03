@@ -339,37 +339,19 @@ namespace GlimmerGrove
         public abstract void Repaint();
 
         /// <summary>
-        /// The lessons this board teaches at its opening, for a first-timer. A board says what
-        /// it wants taught and about which of its own widgets; <c>ScreenLessons</c> owns the
-        /// order and the chaining (invariant 6a). Offered through <c>ScreenLessons.Offer</c>,
-        /// so a lesson already seen is never queued. The default teaches nothing.
+        /// Whether the board's own entrance has finished. The screen waits on this, bounded,
+        /// before it raises the genre's preview over a first-timer's board
+        /// (<c>ChallengePreviewOverlay</c>), so the panel never goes up over a board still
+        /// sweeping in. True for every board whose entrance is the screen's own fade.
         /// </summary>
-        public virtual void Lessons(List<ScreenLesson> into) { }
-
-        /// <summary>
-        /// Whether the board's own entrance has finished. A lesson's ring is measured once, off
-        /// the target's drawn rectangle (<c>TipOverlay</c>), so a ring cut round a tile still
-        /// popping up is a ring round a smaller tile; the screen waits on this, bounded, before
-        /// it asks for <see cref="Lessons"/>. True for every board whose entrance is the
-        /// screen's own fade.
-        /// </summary>
+        /// <remarks>
+        /// <b>A board teaches nothing of its own any more.</b> It used to declare lessons for
+        /// <c>ScreenLessons</c> to sequence - at the opening, at an event and for the info key -
+        /// and the owner took every one of them off the four genres on 2026-10-02 in favour of
+        /// one demonstration per genre (<c>ChallengeDemos</c>). A rule a board carries is met on
+        /// the board, where it happens.
+        /// </remarks>
         public virtual bool Landed => true;
-
-        /// <summary>
-        /// The lessons a move has just made true, taught at the event rather than at the
-        /// opening (invariant 6b: a ring goes round a thing that exists). Asked after
-        /// <see cref="Animate"/> has landed and before the hill replays, so what is ringed is
-        /// what the move just did. The default teaches nothing.
-        /// </summary>
-        public virtual void LessonsAfter(ChallengeMove move, List<ScreenLesson> into) { }
-
-        /// <summary>
-        /// Every lesson about this genre, for the screen's info key: queued through
-        /// <c>ScreenLessons.Add</c>, so a lesson already seen is shown again - a player who
-        /// pressed the key has asked. The genre's verb first, then anything this board carries.
-        /// The screen appends the lesson every genre shares (<c>Mechanic.ChallengeHill</c>).
-        /// </summary>
-        public abstract void Review(List<ScreenLesson> into);
 
         /// <summary>Show the last move landing. The default is a plain repaint.</summary>
         public virtual IEnumerator Animate(ChallengeMove move)

@@ -75,7 +75,13 @@ namespace GlimmerGrove
     /// </summary>
     public sealed class SplashScreen : View
     {
-        public override string Track => "mus_menu";
+        /// <summary>
+        /// Quiet, at the owner's instruction (2026-10-02): the music starts on the first screen
+        /// a player can act on - the tutorial's own track for a first-timer, the hub's for
+        /// everybody else - and never under the loading bar. <c>WantsSilence</c> rather than a
+        /// null track, because null means "keep what was playing" (<c>View.WantsSilence</c>).
+        /// </summary>
+        public override bool WantsSilence => true;
 
         /// <summary>
         /// How long the screen stands, and how fast the bar is allowed to fill.

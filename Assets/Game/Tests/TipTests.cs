@@ -480,6 +480,33 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
+        /// Every challenge genre has a verb lesson, and it is live: the verb is what gates and
+        /// titles the genre's preview (invariant 56s), so a genre whose verb was retired or a
+        /// genre added without one would open a panel with no strings on it - or not open at
+        /// all, because <c>Mechanic.ChallengeVerb</c> refuses an unknown genre by throwing.
+        /// </summary>
+        [Test]
+        public void EveryChallengeGenreHasALiveVerbLesson()
+        {
+            var live = new HashSet<string>(System.StringComparer.Ordinal);
+            foreach (var m in Mechanic.All) live.Add(m.Id);
+
+            var verbs = new HashSet<string>(System.StringComparer.Ordinal);
+
+            foreach (GlimmerGrove.Challenges.ChallengeGenre genre
+                     in System.Enum.GetValues(typeof(GlimmerGrove.Challenges.ChallengeGenre)))
+            {
+                var verb = Mechanic.ChallengeVerb(genre);
+
+                Assert.IsTrue(verb.IsValid, $"'{genre}' has no verb lesson");
+                Assert.IsTrue(live.Contains(verb.Id),
+                              $"'{genre}' is gated on '{verb}', which is not in All, so nothing proves "
+                              + "the preview has its two strings");
+                Assert.IsTrue(verbs.Add(verb.Id), $"'{verb}' gates two genres, so seeing one would silence the other");
+            }
+        }
+
+        /// <summary>
         /// Every lesson that has ever been declared is either live or retired, and never both.
         ///
         /// <para>

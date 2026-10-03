@@ -6,12 +6,12 @@
     "strike": 1
   },
   "allowance": {
-    "freePlays": 2
+    "freePlays": 3
   },
   "tiers": [
-    { "id": "bronze", "gems": 120, "plays": 5,  "days": 30 },
-    { "id": "silver", "gems": 200, "plays": 10, "days": 30 },
-    { "id": "gold",   "gems": 500, "plays": 25, "days": 30 }
+    { "id": "bronze", "gems": 120, "plays": 6,  "days": 30 },
+    { "id": "silver", "gems": 200, "plays": 12, "days": 30 },
+    { "id": "gold",   "gems": 400, "plays": 25, "days": 30 }
   ],
   "rewards": {
     "coins": 40,

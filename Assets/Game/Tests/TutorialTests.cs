@@ -70,6 +70,51 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
+        /// The gem the hand picks up is one of the three that light up, never the one the
+        /// match pushes aside.
+        ///
+        /// The first cut rang and slid the red at (3,3), which is the one gem on that row that
+        /// is not part of the three greens the swap lines up - so the first thing the game ever
+        /// demonstrated pointed at a gem the match then ignored. The ring, the finger and the
+        /// sentence all hang off <c>swap.A</c>, so this is the whole of what they say.
+        /// </summary>
+        [Test]
+        public void TheHandPicksUpTheGemThatJoinsTheLine()
+        {
+            var board = Fresh();
+            var swap = SiegeTutorial.Taught(board);
+            Assert.IsTrue(swap.Found);
+
+            // The field as it stands once the two have traded places.
+            var cells = Cells(board);
+            char cell = cells[swap.A];
+            cells[swap.A] = cells[swap.B];
+            cells[swap.B] = cell;
+
+            var runs = SiegeLayout.Runs(cells, board.Width, board.Height, null);
+
+            Assert.IsTrue(runs.Contains(swap.B),
+                          "the gem the hand picks up has to stand in the line it made");
+            Assert.IsFalse(runs.Contains(swap.A),
+                           "the gem it displaced is not part of the match, so it must not be "
+                           + "the one ringed and swiped");
+
+            // The authored pair obeys the rule as typed, and the rule holds whichever way round
+            // a pair is handed in - which is what makes a re-typed row a moved hand rather than
+            // the fault coming back.
+            Assert.AreEqual(SiegeTutorial.TaughtA,
+                            SiegeTutorial.Mover(board, SiegeTutorial.TaughtA, SiegeTutorial.TaughtB));
+            Assert.AreEqual(SiegeTutorial.TaughtA,
+                            SiegeTutorial.Mover(board, SiegeTutorial.TaughtB, SiegeTutorial.TaughtA));
+
+            var turned = SiegeTutorial.Oriented(
+                board, new SiegeSwap(SiegeTutorial.TaughtB, SiegeTutorial.TaughtA, 0));
+
+            Assert.AreEqual(SiegeTutorial.TaughtA, turned.A);
+            Assert.AreEqual(SiegeTutorial.TaughtB, turned.B);
+        }
+
+        /// <summary>
         /// The tutorial deals nothing it does not teach.
         ///
         /// A cog, a charm, a bomber, a bulwark or a boss is a second thing to learn, and a lesson
