@@ -559,8 +559,10 @@ namespace GlimmerGrove.Tests
         /// shipped rung before the ninth deals one, so nothing the owner signed off has moved;
         /// every rung of the ninth and of every chapter since does, because a mechanic a chapter
         /// teaches is a tool the next chapter keeps, as the charms are (`SiegeCharms.Upto`).
-        /// Read off the file names: the siege chapters are numbered in ladder order (`s02`, the
-        /// Infinite lane, is under `s10` and deals none).
+        /// Read off the file names: the siege chapters are numbered in ladder order. **`s02`, the
+        /// Infinite lane, is under `s10` and deals it too** (since 2026-10-03), named here rather
+        /// than read off its number, and from its own wave rather than its first refill
+        /// (<c>EndlessStoneTests</c>).
         /// </summary>
         [Test]
         public void EveryChapterFromTheNinthDealsTheCurse()
@@ -575,7 +577,7 @@ namespace GlimmerGrove.Tests
 
                 // `s10_cogspire` is the ninth chapter of the ladder, so `s10` and every later
                 // number keeps the curse.
-                bool keeps = int.Parse(name.Substring(1, 2)) >= 10;
+                bool keeps = int.Parse(name.Substring(1, 2)) >= 10 || name == "s02_endlesswatch";
 
                 int dealt = Regex.Matches(text, "\"obsidian\"\\s*:\\s*true").Count;
                 int levels = Regex.Matches(text, "\"siege\"\\s*:").Count;

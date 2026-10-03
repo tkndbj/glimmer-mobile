@@ -36,6 +36,8 @@
     "boss": "",
     "cogs": 30,
     "charms": "plsfha",
+    "obsidian": true,
+    "singularity": true,
     "endless": {
      "goldWave": 30,
      "silverFactor": 0.55

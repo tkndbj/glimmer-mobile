@@ -1397,8 +1397,9 @@ namespace GlimmerGrove.Content
         /// <b>Scoped to the chapters that deal it rather than loaded with the field</b>, which is
         /// the one place this differs from the charms: a charm is dealt by every chapter past the
         /// first and by the Infinite lane, so the field's own set carries them; an obsidian is
-        /// dealt only by the chapters from the ninth on (never by the lane or the first eight), and
-        /// art nothing else draws belongs to the scope that draws it
+        /// dealt only by the chapters from the ninth on and by the Infinite lane from its own wave
+        /// (<see cref="SiegeEndless.CursedFrom"/>), never by the first eight, and art nothing
+        /// else draws belongs to the scope that draws it
         /// (invariant 7b). <see cref="ArtFor"/> adds it when any rung of the chapter is cursed.
         /// </summary>
         static readonly AssetRequest[] CurseArt =

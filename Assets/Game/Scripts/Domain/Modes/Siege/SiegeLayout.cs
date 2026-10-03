@@ -726,6 +726,28 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public readonly bool Singular;
 
+        /// <summary>
+        /// Whether a refill dealt while wave <paramref name="wave"/> is on the hill (counting
+        /// from one, nought before the first - <c>SiegeBoard.Wave</c>) may deal an obsidian.
+        ///
+        /// <para>
+        /// <b>An authored rung deals its stones from the first refill</b>, exactly as it always
+        /// did; <b>the endless lane only from <see cref="SiegeEndless.CursedFrom"/></b>, because
+        /// a lane that never ends meets its rules in order rather than all at once (the kinds'
+        /// own shape). <see cref="Cursed"/> still answers whether the field may ever hold one,
+        /// which is the question the art scope, the lesson and the break ask.
+        /// </para>
+        /// </summary>
+        public bool CursesOn(int wave)
+            => Cursed && (Endless == null || wave >= SiegeEndless.CursedFrom);
+
+        /// <summary>
+        /// Whether a refill dealt while wave <paramref name="wave"/> is on the hill may deal a
+        /// void stone. <see cref="CursesOn"/>'s rule, from <see cref="SiegeEndless.VoidFrom"/>.
+        /// </summary>
+        public bool VoidsOn(int wave)
+            => Singular && (Endless == null || wave >= SiegeEndless.VoidFrom);
+
         public SiegeLayout(ProtoGrid grid, string deal, string wards, string[] waves, string boss,
                            int cogs = 0, SiegeEndless endless = null, int tough = 0,
                            string charms = null, bool obsidian = false, bool singularity = false)

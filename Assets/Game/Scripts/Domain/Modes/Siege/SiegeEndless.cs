@@ -247,6 +247,28 @@ namespace GlimmerGrove.Modes
         public const int BrutesFrom = 3, BulwarksFrom = 6, BombersFrom = 9;
 
         /// <summary>
+        /// The wave the field starts dealing the cursed stone and the void stone on
+        /// (<see cref="SiegeLayout.Obsidian"/>, <see cref="SiegeLayout.Singularity"/>), on a lane
+        /// whose body deals them at all (<see cref="SiegeLayout.CursesOn"/>).
+        ///
+        /// <para>
+        /// <b>The chapters' stones, met in the chapters' order</b> (2026-10-03, the owner): the
+        /// curse first and the void five waves later, so each is learned alone before the two
+        /// share a field. <b>Whether is content and when is the lane</b> - the body writes the
+        /// two flags as Cogspire's and Neonhaven's do, and these are this lane's answer to
+        /// <em>when</em>, beside the kinds' own. How often is the mode's
+        /// (<see cref="SiegeTuning.ObsidianPercent"/>, <see cref="SiegeTuning.SingularityPermille"/>),
+        /// the same rate the chapters were tuned on, on the same eight-by-five field.
+        /// </para>
+        /// <para>
+        /// <b>A gate on the roll, never on the draw</b> (invariant 41): the stone is read out of
+        /// the gem's own draw, so every wave before these deals exactly the field it dealt before
+        /// the stones came to this lane (<c>EndlessStoneTests</c>).
+        /// </para>
+        /// </summary>
+        public const int CursedFrom = 15, VoidFrom = 20;
+
+        /// <summary>
         /// The colours the hill wears. The level's own deal, so an endless lane on a three-colour
         /// field never sends a raider no ward can answer.
         /// </summary>

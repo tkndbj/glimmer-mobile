@@ -85,12 +85,25 @@ COGS = 30
 #: about how far through the mode a player is when they reach it.
 CHARMS = siege.CHARM_LETTERS
 
+#: **The two stones, by the charms' argument** (2026-10-03, the owner): the cursed stone and the
+#: void stone are Cogspire's and Neonhaven's, and this lane deals everything a player has been
+#: taught. The flags say only *whether*; *when* is the lane's own (`SiegeEndless.CursedFrom` 15,
+#: `SiegeEndless.VoidFrom` 20, read by `SiegeLayout.CursesOn`), so the opening waves deal exactly
+#: the field they always did, and how often is the mode's (`SiegeTuning.ObsidianPercent`,
+#: `SiegeTuning.SingularityPermille`), the rates the chapters were tuned on.
+OBSIDIAN = True
+SINGULARITY = True
+
 #: How far a three-star run reaches, and the fraction of it a two-star run does.
 #:
 #: **Both are guesses until somebody plays it**, and they are the only two numbers in this file
 #: that are. Wave twenty is four bosses met and one pair; eleven is most of the way to the second
 #: boss. What pins them is a device, which is the owed item this lane ships with.
-GOLD_WAVE = 20
+#:
+#: **Thirty since the ramp was quartered on 2026-09-18** (`SiegeEndless.HealthStepTenths`): the
+#: body was moved by hand then and this line was not, so `--check` failed against the shipped file
+#: until 2026-10-03, when the stones below brought it back in step.
+GOLD_WAVE = 30
 SILVER_FACTOR = 0.55
 
 
@@ -127,6 +140,8 @@ def level():
             "boss": "",
             "cogs": COGS,
             "charms": CHARMS,
+            "obsidian": OBSIDIAN,
+            "singularity": SINGULARITY,
 
             "endless": {
                 "goldWave": GOLD_WAVE,
@@ -162,7 +177,9 @@ def prove(written):
     grid = proto.Grid(block["rows"], block["width"], block["height"], siege.CELLS)
     layout = siege.Layout(grid, block["gems"], block["wards"], block["waves"],
                           block.get("boss"), block.get("cogs", 0), endless=True,
-                          charms=block.get("charms", ""))
+                          charms=block.get("charms", ""),
+                          obsidian=block.get("obsidian", False),
+                          singularity=block.get("singularity", False))
 
     if layout.fault:
         sys.exit("s02_endless: %s" % layout.fault)

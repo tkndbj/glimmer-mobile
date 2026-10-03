@@ -1401,3 +1401,15 @@ and its own spell row in `SiegeShotBake` (37dc); scope in `SiegeMode.Bosses`; a 
    A laddered chapter ignores a start. The run screen reads the choice once and holds it, so a restart and a
    retry open where the run began. Held by `EndlessCheckpointTests`; drawn by `render_checkpoints.py` and
    `render_endless.py --start/--first`.
+43g. **The lane deals the chapters' two stones, each from a wave of its own** (2026-10-03, the owner): the
+   cursed stone from wave 15 and the void stone from wave 20 (`SiegeEndless.CursedFrom`/`VoidFrom`, beside
+   the kinds' own waves). **Whether is content, when is the lane, how often is the mode**: the body writes
+   `obsidian` and `singularity` as Cogspire and Neonhaven do (`Tools/chapters/s02_endlesswatch.py`), the
+   board asks `SiegeLayout.CursesOn`/`VoidsOn` of the wave on the hill, and the rates are the chapters'
+   own on the same 8x5 field, so from wave 20 the field is Neonhaven's. An authored rung still deals from
+   its first refill. **A gate on the roll, never on the draw** (41): every wave before the gate deals
+   exactly the field it dealt before. Everything else - the break, the hex, the collapse, the lessons, the
+   drawing, the dead-field shuffle (37fd) - keys on the flags and needed no line. `gem_void` moved to
+   `Glimmer Global` because two scopes now load it. Held by `EndlessStoneTests` (both gates
+   mutation-proved): on wave 20 a take-any-swap player meets ~6 stones at rest, a curse broken every ~20
+   turns, a collapse every ~70 and a field dealt again every ~260.

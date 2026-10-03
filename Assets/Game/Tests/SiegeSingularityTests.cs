@@ -445,10 +445,11 @@ namespace GlimmerGrove.Tests
         // ----------------------------------------------------------------- the content
         /// <summary>
         /// The eleventh chapter introduces it and nothing before it deals it - so every board
-        /// that shipped earlier deals exactly what it always did.
+        /// that shipped earlier deals exactly what it always did. **The Infinite lane deals it
+        /// too** (since 2026-10-03), and only from its own wave (<c>EndlessStoneTests</c>).
         /// </summary>
         [Test]
-        public void OnlyNeonhavenDealsTheVoidStone()
+        public void OnlyNeonhavenAndTheInfiniteLaneDealTheVoidStone()
         {
             string chapters = Path.Combine(TestJson.RepoRoot(), "Assets", "StreamingAssets",
                                            "Content", "chapters");
@@ -461,8 +462,8 @@ namespace GlimmerGrove.Tests
                 int dealt = Regex.Matches(text, "\"singularity\"\\s*:\\s*true").Count;
                 int levels = Regex.Matches(text, "\"siege\"\\s*:").Count;
 
-                if (name == "s12_neonhaven")
-                    Assert.AreEqual(levels, dealt, "a rung of Neonhaven deals no void stone");
+                if (name == "s12_neonhaven" || name == "s02_endlesswatch")
+                    Assert.AreEqual(levels, dealt, $"a rung of {name} deals no void stone");
                 else
                     Assert.AreEqual(0, dealt, $"{name} deals the void stone");
             }

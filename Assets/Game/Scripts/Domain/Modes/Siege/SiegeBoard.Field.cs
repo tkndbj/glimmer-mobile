@@ -494,10 +494,15 @@ namespace GlimmerGrove.Modes
         /// landing together would break a curse nobody gathered, which is the free payoff that
         /// rule exists to refuse. A stone that would land lined deals the gem instead.
         /// </para>
+        /// <para>
+        /// <b>Asked of the wave on the hill</b> (<see cref="SiegeLayout.CursesOn"/>): an authored
+        /// rung answers yes from the first refill as it always did, and the endless lane only
+        /// from its own wave. The draw above is taken either way, so the gate moves no gem.
+        /// </para>
         /// </summary>
         char Cursing(int at, uint drawn, SiegeCharm charm)
         {
-            if (Layout.Cursed && charm == SiegeCharm.None
+            if (Layout.CursesOn(_wave) && charm == SiegeCharm.None
                 && Avalanche(drawn ^ CurseSalt) % 100u < (uint)SiegeTuning.ObsidianPercent)
             {
                 char was = _cells[at];
@@ -512,7 +517,7 @@ namespace GlimmerGrove.Modes
             // **The void stone, by the same roll under its own salt** (`SiegeLayout.Singularity`):
             // still the one draw, only taken on a field that deals them, never onto a charm and
             // never already lined - three dealt together would be a collapse nobody gathered.
-            if (Layout.Singular && charm == SiegeCharm.None
+            if (Layout.VoidsOn(_wave) && charm == SiegeCharm.None
                 && Avalanche(drawn ^ VoidSalt) % 1000u < (uint)SiegeTuning.SingularityPermille)
             {
                 char was = _cells[at];
