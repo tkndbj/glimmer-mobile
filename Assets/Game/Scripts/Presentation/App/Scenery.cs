@@ -435,9 +435,18 @@ namespace GlimmerGrove
             Tween.Tint(edge, new Color(1, 1, 1, .16f), .3f);
             Tween.Tint(t, tint ?? Pal.Cream, .3f);
             Tween.Move(rt, new Vector2(0f, y), .5f, Ease.OutBack);
-            Tween.After(hold, () =>
+
+            // A toast can sit over the board it is talking about, so it can be flicked away.
+            bg.raycastTarget = true;
+            var swipe = bg.gameObject.AddComponent<ToastSwipe>();
+            swipe.Rest = new Vector2(0f, y);
+            swipe.Leave = Leave;
+
+            void Leave()
             {
                 if (!bg) return;
+                swipe.Gone = true;
+                bg.raycastTarget = false;     // leaving: stop catching touches
                 Tween.Tint(bg, new Color(.05f, .11f, .16f, 0f), .45f);
                 Tween.Tint(edge, new Color(1, 1, 1, 0f), .45f);
                 Tween.Tint(t, Pal.A(tint ?? Pal.Cream, 0f), .45f);
@@ -445,7 +454,82 @@ namespace GlimmerGrove
                 {
                     if (bg) UnityEngine.Object.Destroy(bg.gameObject);
                 });
+            }
+
+            Tween.After(hold, () =>
+            {
+                if (!bg || swipe.Gone) return;
+                if (swipe.Held) swipe.LeaveOnRelease = true;
+                else Leave();
             });
+        }
+    }
+
+    /// <summary>
+    /// Lets a toast be dismissed by dragging it left, right or down. It follows the finger
+    /// along those directions only, flies off past a threshold, and springs back short of it.
+    /// </summary>
+    public sealed class ToastSwipe : MonoBehaviour,
+        UnityEngine.EventSystems.IBeginDragHandler,
+        UnityEngine.EventSystems.IDragHandler,
+        UnityEngine.EventSystems.IEndDragHandler
+    {
+        /// <summary>How far, in canvas units, a drag must carry the toast to dismiss it.</summary>
+        const float Throw = 140f;
+
+        internal Vector2 Rest;
+        internal Action Leave;
+        internal bool Held, Gone, LeaveOnRelease;
+
+        Vector2 _grab, _from;
+
+        bool Local(UnityEngine.EventSystems.PointerEventData e, out Vector2 p) =>
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                (RectTransform)transform.parent, e.position, e.pressEventCamera, out p);
+
+        public void OnBeginDrag(UnityEngine.EventSystems.PointerEventData e)
+        {
+            if (Gone || !Local(e, out _grab)) return;
+            Held = true;
+            var rt = (RectTransform)transform;
+            Tween.KillChannel(rt, "move");
+            _from = rt.anchoredPosition;
+        }
+
+        public void OnDrag(UnityEngine.EventSystems.PointerEventData e)
+        {
+            if (!Held || !Local(e, out var p)) return;
+            var d = p - _grab;
+            var at = _from + d;
+            at.y = Mathf.Min(at.y, Rest.y);      // down only, never up
+            ((RectTransform)transform).anchoredPosition = at;
+        }
+
+        public void OnEndDrag(UnityEngine.EventSystems.PointerEventData e)
+        {
+            if (!Held) return;
+            Held = false;
+            var rt = (RectTransform)transform;
+            var off = rt.anchoredPosition - Rest;
+
+            if (Mathf.Abs(off.x) > Throw || -off.y > Throw * .6f)
+            {
+                Gone = true;
+                var dir = Mathf.Abs(off.x) > -off.y
+                    ? new Vector2(Mathf.Sign(off.x), 0f)
+                    : new Vector2(0f, -1f);
+                var cg = gameObject.AddComponent<CanvasGroup>();
+                cg.blocksRaycasts = false;
+                Tween.Fade(cg, 0f, .22f);
+                Tween.Move(rt, rt.anchoredPosition + dir * 1200f, .25f, Ease.InQuad).OnDone(() =>
+                {
+                    if (this) Destroy(gameObject);
+                });
+                return;
+            }
+
+            if (LeaveOnRelease) { Gone = true; Leave?.Invoke(); }
+            else Tween.Move(rt, Rest, .25f, Ease.OutBack);
         }
     }
 

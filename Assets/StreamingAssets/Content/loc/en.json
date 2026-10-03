@@ -2258,6 +2258,10 @@
       "text": "WAVE {0} OF {1}"
     },
     {
+      "key": "mode.siege.wave_endless",
+      "text": "WAVE {0}"
+    },
+    {
       "key": "mode.siege.gorgon",
       "text": "THE GORGON"
     },

@@ -1042,7 +1042,9 @@ namespace GlimmerGrove
             // gives: half the cast casts in a hue darker than the hill it is announced over,
             // so the name went unread. What says which boss it is is everything else about
             // the arrival - the flash, the shake, the voice and the body.
-            Announce(boss ? Loc.Get(banner) : Loc.Format("mode.siege.wave", _wave, _board.Waves),
+            Announce(boss ? Loc.Get(banner)
+                    : _board.IsEndless ? Loc.Format("mode.siege.wave_endless", _wave)
+                    : Loc.Format("mode.siege.wave", _wave, _board.Waves),
                     boss ? Color.white : Pal.Cream, boss ? .78f : .46f, boss ? 2.4f : 1.5f, boss);
 
             // **A duel names both, one after the other** (`SiegeLayout.BossJoin`). Two names on
