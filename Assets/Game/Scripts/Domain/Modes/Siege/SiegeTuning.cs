@@ -2754,8 +2754,18 @@ namespace GlimmerGrove.Modes
         /// tenth asked for and no more, because every other axis of that brief is composition and
         /// 37ef measured surge and composition together as the wall.
         /// </para>
+        /// <para>
+        /// <b>A fourth row: the eleventh chapter deals 1.5</b>, against the 1.9 the ladder would
+        /// give it and the tenth chapter's 1.6 - the owner's brief on 2026-10-02 was "slightly
+        /// harder than the previous chapter, just a little", and <b>measured, its new fields and
+        /// waves are harder than Windwreck's at the same surge</b>. On three-star embers (the line
+        /// Windwreck was tuned around) it held 13 of 180 at 1.7, 22 at 1.6 and 34 at 1.5, against
+        /// Windwreck's 43 - so 1.5 is the figure that makes it about a fifth harder, which is
+        /// "a little". A surge is a dial on a chapter's difficulty, not a promise that it climbs.
+        /// </para>
         /// </summary>
-        public static readonly (int Ordinal, int Tenths)[] Traded = { (7, 14), (8, 15), (9, 16) };
+        public static readonly (int Ordinal, int Tenths)[] Traded =
+            { (7, 14), (8, 15), (9, 16), (10, 15) };
 
         /// <summary>
         /// A health figure at a share of itself, in per cent, never under one - the one place a

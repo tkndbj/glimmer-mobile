@@ -41,12 +41,15 @@ namespace GlimmerGrove.Tests
         {
             SiegeMode.Insects, SiegeMode.Medley, SiegeMode.Brood, SiegeMode.Bones,
             SiegeMode.Rabble, SiegeMode.Wild, SiegeMode.Court, SiegeMode.Reunion,
-            SiegeMode.Gathering, SiegeMode.Armada,
+            SiegeMode.Gathering, SiegeMode.Armada, SiegeMode.Vanguard,
         };
 
-        /// <summary>The casts dealt out of the six rather than cut: the lane's, and the eighth, ninth and tenth chapters'.</summary>
+        /// <summary>The casts dealt out of the six rather than cut: the lane's, and the eighth to eleventh chapters'.</summary>
         static readonly int[] Squares =
-            { SiegeMode.Medley, SiegeMode.Reunion, SiegeMode.Gathering, SiegeMode.Armada };
+        {
+            SiegeMode.Medley, SiegeMode.Reunion, SiegeMode.Gathering, SiegeMode.Armada,
+            SiegeMode.Vanguard,
+        };
 
         /// <summary>
         /// The six a <b>chapter</b> can draw. The medley is not one of them: it is dealt out of
@@ -297,6 +300,9 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(SiegeMode.Armada, SiegeMode.CastFor(GameTrack.Main, 9),
                             "Windwreck does not draw the armada");
 
+            Assert.AreEqual(SiegeMode.Vanguard, SiegeMode.CastFor(GameTrack.Main, 10),
+                            "Neonhaven does not draw the vanguard");
+
             Assert.AreEqual(SiegeMode.Medley, SiegeMode.CastFor(GameTrack.Infinite, 0),
                             "the Infinite lane does not draw the medley");
         }
@@ -330,6 +336,35 @@ namespace GlimmerGrove.Tests
         public void TheArmadaIsAFourthSquareAndSharesNoSlotWithAnyOtherSquare()
             => IsASquareOverTheSix(SiegeMode.Armada, "armada",
                                    SiegeMode.Medley, SiegeMode.Reunion, SiegeMode.Gathering);
+
+        /// <summary>
+        /// **The vanguard is the fifth square, and it shares no slot with any of the other four** -
+        /// so the eleventh chapter's hill is its own against the Infinite lane and against all
+        /// three twenty-rung chapters below it on the ladder.
+        /// </summary>
+        [Test]
+        public void TheVanguardIsAFifthSquareAndSharesNoSlotWithAnyOtherSquare()
+            => IsASquareOverTheSix(SiegeMode.Vanguard, "vanguard", SiegeMode.Medley,
+                                   SiegeMode.Reunion, SiegeMode.Gathering, SiegeMode.Armada);
+
+        /// <summary>
+        /// **Three of the vanguard's four brutes swing** - the most any fifth square can give
+        /// them, because the insects and the brood may only take brute and bulwark slots once the
+        /// four squares before it have spent the rest (see <c>SiegeMode.VanguardOrder</c>).
+        /// </summary>
+        [Test]
+        public void MostOfTheVanguardsBrutesSwing()
+        {
+            var swings = SiegeMode.CastSwingArt(SiegeMode.Vanguard);
+            Assert.That(swings, Is.Not.Null);
+
+            int armed = 0;
+            for (int slot = 4; slot < 8; slot++)
+                if (!string.IsNullOrEmpty(swings[slot].Address)) armed++;
+
+            Assert.AreEqual(3, armed, "the vanguard's brutes are not the three swinging bodies "
+                                      + "it was dealt for");
+        }
 
         /// <summary>
         /// **Every brute and bulwark of the armada swings**, which is the one thing it was dealt

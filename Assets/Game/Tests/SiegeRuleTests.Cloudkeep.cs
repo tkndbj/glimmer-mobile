@@ -220,7 +220,8 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(14, SiegeTuning.ToughnessFor(7), "Cloudkeep is not the traded 1.4");
             Assert.AreEqual(15, SiegeTuning.ToughnessFor(8), "Cogspire is not the traded 1.5");
             Assert.AreEqual(16, SiegeTuning.ToughnessFor(9), "Windwreck is not the traded 1.6");
-            Assert.AreEqual(19, SiegeTuning.ToughnessFor(10), "the ladder past the trades moved");
+            Assert.AreEqual(15, SiegeTuning.ToughnessFor(10), "Neonhaven is not the traded 1.5");
+            Assert.AreEqual(20, SiegeTuning.ToughnessFor(11), "the ladder past the trades moved");
 
             foreach (var rung in Cogspire)
                 Assert.AreEqual(SiegeTuning.ToughnessFor(8), rung.Built().Tough.HealthTenths,
@@ -228,6 +229,10 @@ namespace GlimmerGrove.Tests
 
             foreach (var rung in Cloudkeep)
                 Assert.AreEqual(SiegeTuning.ToughnessFor(7), rung.Built().Tough.HealthTenths,
+                                $"{rung.Id} deals a surge the rule does not give it");
+
+            foreach (var rung in Neonhaven)
+                Assert.AreEqual(SiegeTuning.ToughnessFor(10), rung.Built().Tough.HealthTenths,
                                 $"{rung.Id} deals a surge the rule does not give it");
         }
     }

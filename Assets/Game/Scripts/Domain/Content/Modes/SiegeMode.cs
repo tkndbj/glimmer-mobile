@@ -1042,6 +1042,44 @@ namespace GlimmerGrove.Content
         static readonly AssetRequest[] ArmadaSwings = Dealt(ArmadaOrder, true);
 
         /// <summary>
+        /// Which cast each of the <b>vanguard</b>'s twelve slots is dealt from - the eleventh
+        /// chapter's cast, and the fifth square over the six chapter casts.
+        ///
+        /// <para>
+        /// <b>The table would otherwise have wrapped onto the insects</b> for the armada's reason:
+        /// the eleventh chapter is a little harder than the tenth (the owner's brief, 2026-10-02),
+        /// so a crowd of the first chapter's beetles is the wrong thing to see there. So it is a
+        /// fifth square under the same four rules - every family twice, no colour drawing one
+        /// family twice, and <b>no slot drawing what the medley, the reunion, the gathering or the
+        /// armada draws in it</b>. Four squares leave exactly two families free in every slot,
+        /// and only fifteen squares survive that; this one is a best of them on swings.
+        /// </para>
+        /// <para>
+        /// <b>The armada's extra rule cannot be kept here, and that is arithmetic rather than a
+        /// choice</b>: every slot the insects and the brood may still take is a brute or a
+        /// bulwark, so four armed slots must go to the two flat-sheet families that never swing.
+        /// What it keeps is the next best thing - three of the four brutes, the kind this mode
+        /// sends most of at the line, are bodies that swing. It costs no art;
+        /// <c>SiegeCastTests</c> holds all four rules.
+        /// </para>
+        /// </summary>
+        static readonly int[] VanguardOrder =
+        {
+            Bones,   Wild,    Court,   Rabble,     // creepers  r g b y
+            Wild,    Court,   Rabble,  Brood,      // brutes
+            Brood,   Insects, Insects, Bones,      // bulwarks
+        };
+
+        /// <summary>The twelve bodies the vanguard draws. See <see cref="VanguardOrder"/>.</summary>
+        static readonly AssetRequest[] VanguardCast = Dealt(VanguardOrder, false);
+
+        /// <summary>
+        /// What the vanguard swings. Its four empty entries are the bodies dealt from the insects
+        /// and the brood, which never swing - the medley's honest gap (<see cref="MedleySwings"/>).
+        /// </summary>
+        static readonly AssetRequest[] VanguardSwings = Dealt(VanguardOrder, true);
+
+        /// <summary>
         /// One of the medley's two arrays, dealt out of <see cref="MedleyOrder"/>.
         ///
         /// <b>A method rather than two initialisers</b>, so the walk and the swing cannot be
@@ -1116,8 +1154,14 @@ namespace GlimmerGrove.Content
         /// </summary>
         public const int Armada = 9;
 
+        /// <summary>
+        /// The eleventh chapter's cast: a fifth square over the six chapter casts. See
+        /// <see cref="VanguardOrder"/>.
+        /// </summary>
+        public const int Vanguard = 10;
+
         /// <summary>How many casts this mode ships.</summary>
-        public const int CastSets = 10;
+        public const int CastSets = 11;
 
         /// <summary>
         /// The casts the <b>main ladder</b> draws from, in the order its chapters meet them.
@@ -1146,8 +1190,12 @@ namespace GlimmerGrove.Content
         /// <b>Ten, and the tenth is a fourth square</b> (<see cref="ArmadaOrder"/>) for the ninth's
         /// reason, said once more.
         /// </para>
+        /// <para>
+        /// <b>Eleven, and the eleventh is a fifth square</b> (<see cref="VanguardOrder"/>), for the
+        /// same reason a third time: appending it moves no shipped chapter onto a new cast.
+        /// </para>
         static readonly int[] MainCasts = { Insects, Brood, Bones, Rabble, Wild, Court,
-                                            Insects, Reunion, Gathering, Armada };
+                                            Insects, Reunion, Gathering, Armada, Vanguard };
 
         /// <summary>
         /// How many casts the main ladder draws from before it starts again.
@@ -1207,6 +1255,7 @@ namespace GlimmerGrove.Content
                 case Reunion: return ReunionCast;
                 case Gathering: return GatheringCast;
                 case Armada: return ArmadaCast;
+                case Vanguard: return VanguardCast;
                 case Brood: return BroodCast;
                 case Bones: return BoneCast;
                 case Rabble: return RabbleCast;
@@ -1235,6 +1284,7 @@ namespace GlimmerGrove.Content
              : set == Reunion ? ReunionSwings
              : set == Gathering ? GatheringSwings
              : set == Armada ? ArmadaSwings
+             : set == Vanguard ? VanguardSwings
              : set == Rabble ? RabbleSwings
              : set == Wild ? WildSwings
              : set == Court ? CourtSwings : null;

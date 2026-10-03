@@ -930,11 +930,12 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The band every Pairs row's slack must sit in, in hundredths of a perfect memory's
-        /// turns, on its median deal (<c>SLACK_BAND</c>): a medium row is tuned to 1.70x and a
-        /// hard one to 1.45x. The floor keeps a hard row from asking for a perfect memory; the
-        /// ceiling keeps a miss costing something.
+        /// turns, on its median deal (<c>SLACK_BAND</c>): a medium row forgives about 1.95x and a
+        /// hard one about 1.75x, since every hill was lengthened a fifth on 2026-10-03 (the owner:
+        /// still too hard, give a player more flips). The floor keeps a hard row from asking for a
+        /// perfect memory; the ceiling keeps a miss costing something.
         /// </summary>
-        const int PairsSlackFloor = 135, PairsSlackCeiling = 185;
+        const int PairsSlackFloor = 135, PairsSlackCeiling = 240;
 
         /// <summary>What the turrets must be worth: the same run with no bolt fed forgives this much less (<c>FIRE_WORTH</c>).</summary>
         const int PairsFireWorth = 25;

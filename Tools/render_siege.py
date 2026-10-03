@@ -593,6 +593,14 @@ ARMADA = (
     ("wild",   "court",  "rabble", "court"),
 )
 
+#: The eleventh chapter's square, mirroring `SiegeMode.VanguardOrder` - the fifth, dealt so that no
+#: slot draws what `MEDLEY`, `REUNION`, `GATHERING` or `ARMADA` draws in it.
+VANGUARD = (
+    ("bone",   "wild",   "court",  "rabble"),
+    ("wild",   "court",  "rabble", "brood"),
+    ("brood",  "",       "",       "bone"),
+)
+
 #: Which row of `MEDLEY` a kind reads, in `SiegeMode.CastAddress`'s own order.
 MEDLEY_ROWS = {"mon": 0, "brute": 1, "bulwark": 2}
 
@@ -600,7 +608,8 @@ MEDLEY_ROWS = {"mon": 0, "brute": 1, "bulwark": 2}
 def skin(kind, colour):
     square = (MEDLEY if CAST == "medley" else REUNION if CAST == "reunion"
               else GATHERING if CAST == "gathering"
-              else ARMADA if CAST == "armada" else None)
+              else ARMADA if CAST == "armada"
+              else VANGUARD if CAST == "vanguard" else None)
     cast = square[MEDLEY_ROWS[kind]][colour] if square else CAST
 
     return "%s%s_%s" % (cast, kind if not cast else kind[0].upper() + kind[1:],
@@ -3133,6 +3142,8 @@ CHAPTER_CASTS = {
     "s10_cogspire": "gathering",
     # The tenth chapter draws the armada, a fourth square over the six (`SiegeMode.Armada`).
     "s11_windwreck": "armada",
+    # The eleventh chapter draws the vanguard, a fifth square over the six (`SiegeMode.Vanguard`).
+    "s12_neonhaven": "vanguard",
     "s02_endlesswatch": "medley",
 }
 

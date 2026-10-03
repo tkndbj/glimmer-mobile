@@ -17,10 +17,10 @@ the RPG gem pack (`siege.GEMPACK`) with stones whose colour and shape repeat not
 sheet. Left out on purpose: the set's bomb (a black ball beside the black cursed stone) and its
 silver key and chest (the gold ones' silhouettes).
 
-**The turret a card feeds is a pip, not the picture's colour.** A picture no longer wears its
-turret's hue, so each carries a small disc of that hue in its corner (`PIP`), baked into the
-PNG so the view did not change. Which picture feeds which turret is only the row token (`r1` ..
-`y6`) and the order of `GEMS`; the rules never see a picture.
+**A picture does not say which turret it feeds.** Which one it feeds is only the row token
+(`r1` .. `y6`) and the order of `GEMS`; the rules never see a picture, and a matched card's rim
+wears the turret's colour. A corner dot in that colour was tried on 2026-10-03 and taken off at
+the owner's instruction.
 
 **The card is drawn, not cut**, in the owner's own picture of this genre
 (`Art/Ui/challenge_pairs`): a stone frame, a royal-blue back with a crown on it, a cream face.
@@ -65,8 +65,7 @@ MATCH3 = Path(r"C:\Users\Digikey\Downloads\craftpix-net-298179-match-3-game-asse
 #: is), the pack being `m3` (`MATCH3`) or `gem` (`siege.GEMPACK`). The variant is the digit in a
 #: row's token (`r1` .. `y6`, `PairsGems.TryParse`) and names the file (`pair_r1`), so the order
 #: here is permanent once a row names it - a re-cut that swaps two lines swaps two pictures under
-#: every shipped board. Leaned toward the turret's colour where a picture allowed; the pip says
-#: the rest.
+#: every shipped board. Leaned toward the turret's colour where a picture allowed.
 GEMS = {
     "r": [("m3", "8.png", "red heart"), ("gem", "89.png", "red pyramid"),
           ("gem", "57.png", "crimson cushion"), ("m3", "chest gold.png", "treasure chest"),
@@ -82,16 +81,12 @@ GEMS = {
           ("m3", "key gold.png", "gold key"), ("m3", "mosaic.png", "puzzle piece")],
 }
 
-#: The pip a card carries for the turret it feeds: the siege's four ward colours
-#: (`make_siege_art.WARD_HUES`, as `SiegeView.TintOf` draws them).
-PIP = {"r": (242, 64, 79), "g": (123, 216, 106), "b": (79, 193, 255), "y": (255, 138, 43)}
-
 #: Below this alpha a source pixel is the vendor's soft glow round an object rather than the
 #: object, and is dropped - or a glowing key is framed to its halo and drawn small inside it.
 HALO = 72
 
-#: The cursed stone: the gem pack's one black jewel, cut untouched and wearing no pip - it is
-#: no colour and feeds no turret.
+#: The cursed stone: the gem pack's one black jewel, cut untouched - it is no colour and
+#: feeds no turret.
 CURSE = ("53.png", "obsidian")
 
 # ------------------------------------------------------------------ colours of the card
@@ -127,31 +122,12 @@ def dehaloed(im):
     return out
 
 
-def pip(letter):
-    """The turret's disc in the lower right corner: its colour, a dark rim and a highlight."""
-    s = SS
-    W = GEM * s
-    layer = Image.new("RGBA", (W, W), (0, 0, 0, 0))
-    d = ImageDraw.Draw(layer)
-    r = 27 * s
-    cx = cy = W - r - 3 * s
-    d.ellipse((cx - r, cy - r, cx + r, cy + r), fill=STONE_OUT + (255,))
-    ri = r - 5 * s
-    d.ellipse((cx - ri, cy - ri, cx + ri, cy + ri), fill=PIP[letter] + (255,))
-    hl = ri * .42
-    hx, hy = cx - ri * .3, cy - ri * .3
-    d.ellipse((hx - hl, hy - hl, hx + hl, hy + hl), fill=(255, 255, 255, 120))
-    return layer.resize((GEM, GEM), Image.LANCZOS)
-
-
 def cut_gem(letter, pack, file):
     root = siege.GEMPACK if pack == "gem" else MATCH3
     im = Image.open(root / "PNG" / file).convert("RGBA")
     if letter is None:
         return trimmed(im)
-    out = trimmed(dehaloed(im), GEM - 24)
-    out.alpha_composite(pip(letter))
-    return out
+    return trimmed(dehaloed(im), GEM - 24)
 
 
 # ------------------------------------------------------------------ the card

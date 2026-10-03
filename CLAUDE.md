@@ -1132,7 +1132,7 @@ is where they are written down, not what they mean.
    day is one board, a retry is a fresh one (an authored layout is learned by losing it once),
    and an untouched board is dealt again unchanged. So a row is measured over **48 deals** by
    a perfect-memory bot mirrored bit for bit in `Tools/make_pairs_challenges.py`: every deal
-   won above a luck floor, the median deal's slack in 1.35-1.85x, the turrets worth at least
+   won above a luck floor, the median deal's slack in 1.35-2.40x (every hill lengthened a fifth on 2026-10-03), the turrets worth at least
    0.25x of it (5d), the hill peopled and never a smear - held by `ChallengeTests` and
    `content.py` alike.
 
@@ -1791,17 +1791,19 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   offline by `RankCeremonyTests`.
 - **One live mode, three hidden.** **Thornwatch**: `s01_thornwatch`, `s03_broodmarch`, `s04_barrowfell`,
   `s05_ashenhold`, `s06_thundercrag`, `s07_dustcrown`, `s08_bonereach` (ten rungs each) and
-  `s09_cloudkeep`, `s10_cogspire` and `s11_windwreck` (**twenty** each, a two-boss duel on every
-  fifth, MODES.md 37eq-37et, 37ey, 37ez) on the ordinary ladder, and `s02_endlesswatch` on an **Infinite** track beside it. The map draws no *mode* switcher and
+  `s09_cloudkeep`, `s10_cogspire`, `s11_windwreck` and `s12_neonhaven` (**twenty** each, a two-boss
+  duel on every fifth, MODES.md 37eq-37et, 37ey, 37ez, 37fa) on the ordinary ladder, and `s02_endlesswatch` on an **Infinite** track beside it. The map draws no *mode* switcher and
   does draw the **track** switcher; the ordinary ladder draws a map and the Infinite lane draws a **hub**,
   opening at **keeper level 10**. Six casts and **fourteen** boss verbs, one cast per chapter by ordinal:
   insects, the blob brood, skeletons, the **rabble** — the only cast **baked from vector** — the **wild**,
   and the **court**, both cut from the top-down unit packs. **The cast table wraps at six**, so the
   seventh chapter draws the insects again (7c's bargain, MODES.md 37em) and its two bosses are cut from
   the same head-on family the first chapter's five already are. The Infinite lane draws a **medley** of
-  the six chapter casts, so it costs no art of its own; the eighth, ninth and tenth chapters draw the
-  **reunion**, the **gathering** and the **armada**, three more squares over the same six
-  (`SiegeMode.MainCasts`, held by `SiegeCastTests`).
+  the six chapter casts, so it costs no art of its own; the eighth to eleventh chapters draw the
+  **reunion**, the **gathering**, the **armada** and the **vanguard**, four more squares over the same
+  six (`SiegeMode.MainCasts`, held by `SiegeCastTests`) - and four squares leave exactly two families
+  free in every slot, so **a sixth square may not exist**: the twelfth chapter is where the table
+  wraps or a cast is cut.
 - **Fire** — the three ember turrets (`ember`, `pyre` and the legendary `pyroclast`) set what they hit
   alight, and since **2026-09-18** that is a thing you can see: a looping flame stands on the raider for
   the seconds the model authors, in the colour of the *seat* that lit it, and the burn pays twice a
@@ -1877,6 +1879,7 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
 | `s09_cloudkeep` | siege | 20 | 50–108 matches | the eighth chapter and the first of **twenty rungs** - four islands of five, levels 71–90 - on `map8`, the sky islands, seated on the pack's own node layout read out of its PSD (`make_map_seats.ROUTES`). **A crowd at a softer surge**: four tenths (`SiegeTuning.Traded`, the owner's 40% against Bonereach's 50%) with waves of ten to fifteen. **A duel on 5, 10, 15 and 20** - two bosses at once, each at 60% of its health (37er): gravemaw + harrower, blightcaller + gorgon, thunderer + shackler, sunlord + hollowking. Draws the **reunion** cast, a second square over all six chapter casts (37et) |
 | `s10_cogspire` | siege | 20 | 64–132 matches | the ninth chapter, levels 91–110, on `map9` - the owner's clockwork islands, seated by walking the copper road (`make_map_seats.TRACES`). **The curse**: a fifth, rarer gem (the Pairs obsidian) that feeds no ward; three in a line take every stone on the field and hex every raider standing (+50% damage from everything, 6-12 s) - MODES.md 37ew-37ey. Surge 1.5 (`Traded`), 8% more raiders than Cloudkeep (mostly creepers); 27/180 held on the one-star ember line against Cloudkeep's 31; the **gathering** cast; duels warlord+warbringer, overlord+bonecaller, ironclad+colossus, gorgon+hollowking |
 | `s11_windwreck` | siege | 20 | 82–141 matches | the tenth chapter, levels 111–130, on `map10` - the owner's pirate sky islands (wrecks, a lighthouse, cannons), seated by walking the slab road (`make_map_seats.TRACES`, with `ENCLOSED` refusing the sky that passes through the slab colour). **Asks for a good line** (MODES.md 37ez): surge 1.6 (`Traded`, one tenth over Cogspire), 848 raiders (+7%), 190 brutes (+83%), 2,039 par (+20%); held 7/180 on one-star embers (Cogspire 27), 43 on three-star embers, 136 on three-star pyres; star lines (0.38, 0.52), so three stars is the strong line playing well. The curse carries on; the **armada** cast; duels warbringer+gravemaw, bonecaller+shackler, thunderer+harrower, sunlord+ironclad |
+| `s12_neonhaven` | siege | 20 | 78–122 matches | the eleventh chapter, levels 131–150, on `map11` - the owner's neon sky city (server racks, dishes, a noodle stall, holograms), seated by walking the glass road (`make_map_seats.TRACES`). **A little harder, set by play** (MODES.md 37fa): a crowd held to Windwreck's (860 raiders +1.4%, 190 brutes level) at surge **1.5** (`Traded`, under Windwreck's 1.6, because its fields play harder) - three-star embers hold 34/180 against Windwreck's 43 (13 at 1.7, a wall); star lines (0.38, 0.52). The curse carries on; the **vanguard** cast, the last square the six casts allow; duels warlord+blightcaller, thunderer+colossus, gorgon+shackler, hollowking+ironclad |
 | `s02_endlesswatch` | siege *(infinite)* | 1 | 3★ at wave 30 | waves that never stop, graded on how far it got, drawing a **medley** of every cast; **both star waves are guesses until somebody plays it**; opens at keeper level 10; **a heart to enter and none to lose** (43e) |
 
 **No level authors a difficulty number except the first glade in the game, and no chapter authors a clock.**
@@ -1961,6 +1964,26 @@ half is `Assets/Game/Scripts/Cloud/`, Firebase Unity SDK
 on a fresh clone).
 
 ## Owed
+
+**Neonhaven, the eleventh chapter, was built on 2026-10-02 (MODES.md 37fa) and has never been
+played or swept.** Done: the map (`map11`, four strips, seated on the glass road), the chapter
+(twenty rungs, `Tools/chapters/s12_neonhaven.py`), the vanguard cast, the `Traded` row, loc, the
+Editor's three (the strips in a new `Glimmer Chapter s12_neonhaven` group, nothing else moved;
+`Audit Addresses` resolves all 2,585, `Validate Content` verifies all twenty, `Validate Art`
+clean) and the server (the twenty `s12_*` ids added to the live `levelChapters` **by field mask**
+with an update-time precondition; all four config documents read back and diffed - only those
+ids moved). Offline green: `compile.py` (all sixteen), `SiegeCastTests` 20/20,
+`SiegeObsidianTests` 17/17, `SiegeArtTests`, `SiegeGroundTests`,
+`NoBossVerbIsSentByAnyTwoChapters`, `TheEighthChapterTradesSurgeForItsCrowd`,
+`EveryShippedBossRungIsAFight` (all four duels fall 6-9 of 9 at the shipped 1.5), `rungs.py`, `content.py` (0 errors),
+`loc.py`, `artnames.py`, `make_map_seats.py --check`, the chapter tool's own proof against
+Windwreck's body, `render_siege.py`, and a quick sweep on 2026-10-03 that set the surge (three-star
+embers 34/180 at 1.5 against Windwreck's 43; one-star 15 against 7). **Owed: the owner's sweep** -
+`TheEleventhChapterIsALittleHarder` was started once and stopped by the machine running low on
+memory, so its relative clauses have never run and its three floors are UNSET; **and a device**.
+Level 146 was moved off the painted car at the owner's instruction on 2026-10-03
+(`make_map_seats.NUDGE[11]`, back down the car bridge). The map accepts 31 record-mark overlaps
+(`map10` accepts 33).
 
 **The keeper milestone chests open in any order since 2026-10-02 (57d) and need a build to reach
 anybody.** Client-only: **save v38** (`wallet.keeperMilestonesTaken`, union-joined, canonical

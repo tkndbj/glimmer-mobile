@@ -7174,6 +7174,170 @@
       "text": "Fill the sealed ward, through the plate"
     },
     {
+      "key": "chapter.s12_neonhaven.name",
+      "text": "Neonhaven"
+    },
+    {
+      "key": "level.s12_glasspier.name",
+      "text": "Glass Pier"
+    },
+    {
+      "key": "level.s12_glasspier.tagline",
+      "text": "The surge climbs a tenth from the first wave"
+    },
+    {
+      "key": "level.s12_serverrow.name",
+      "text": "Server Row"
+    },
+    {
+      "key": "level.s12_serverrow.tagline",
+      "text": "Brutes at the back of every wave"
+    },
+    {
+      "key": "level.s12_neonspan.name",
+      "text": "Neon Span"
+    },
+    {
+      "key": "level.s12_neonspan.tagline",
+      "text": "Two shields a wave behind the brutes"
+    },
+    {
+      "key": "level.s12_noodlestall.name",
+      "text": "Noodle Stall"
+    },
+    {
+      "key": "level.s12_noodlestall.tagline",
+      "text": "Bombers hiding in a crowd of brutes"
+    },
+    {
+      "key": "level.s12_jetrock.name",
+      "text": "Jet Rock"
+    },
+    {
+      "key": "level.s12_jetrock.tagline",
+      "text": "A warlord and a blightcaller, together at last"
+    },
+    {
+      "key": "level.s12_lanternlift.name",
+      "text": "Lantern Lift"
+    },
+    {
+      "key": "level.s12_lanternlift.tagline",
+      "text": "One colour at a time, in a flood"
+    },
+    {
+      "key": "level.s12_escalator.name",
+      "text": "The Escalator"
+    },
+    {
+      "key": "level.s12_escalator.tagline",
+      "text": "Four waves, the third armoured and bombed"
+    },
+    {
+      "key": "level.s12_pipealley.name",
+      "text": "Pipe Alley"
+    },
+    {
+      "key": "level.s12_pipealley.tagline",
+      "text": "Plate and a bomb behind the crowd"
+    },
+    {
+      "key": "level.s12_rackhall.name",
+      "text": "Rack Hall"
+    },
+    {
+      "key": "level.s12_rackhall.tagline",
+      "text": "Four waves, a brute pair in every one"
+    },
+    {
+      "key": "level.s12_signalyard.name",
+      "text": "Signal Yard"
+    },
+    {
+      "key": "level.s12_signalyard.tagline",
+      "text": "Dig out the buried turret in the storm"
+    },
+    {
+      "key": "level.s12_holoplaza.name",
+      "text": "Holo Plaza"
+    },
+    {
+      "key": "level.s12_holoplaza.tagline",
+      "text": "The crowd climbs with every wave"
+    },
+    {
+      "key": "level.s12_relaydeck.name",
+      "text": "Relay Deck"
+    },
+    {
+      "key": "level.s12_relaydeck.tagline",
+      "text": "Sixteen from the very first wave"
+    },
+    {
+      "key": "level.s12_carbridge.name",
+      "text": "Car Bridge"
+    },
+    {
+      "key": "level.s12_carbridge.tagline",
+      "text": "Three shields in every wave"
+    },
+    {
+      "key": "level.s12_dishhill.name",
+      "text": "Dish Hill"
+    },
+    {
+      "key": "level.s12_dishhill.tagline",
+      "text": "Four waves, the bomb held for the last"
+    },
+    {
+      "key": "level.s12_glowgate.name",
+      "text": "Glow Gate"
+    },
+    {
+      "key": "level.s12_glowgate.tagline",
+      "text": "A glare and a chain, both at once"
+    },
+    {
+      "key": "level.s12_skyladder.name",
+      "text": "Sky Ladder"
+    },
+    {
+      "key": "level.s12_skyladder.tagline",
+      "text": "Brutes of one colour, then plate of it"
+    },
+    {
+      "key": "level.s12_fanhouse.name",
+      "text": "Fan House"
+    },
+    {
+      "key": "level.s12_fanhouse.tagline",
+      "text": "Plate and bombs in the same wave"
+    },
+    {
+      "key": "level.s12_glassway.name",
+      "text": "Glassway"
+    },
+    {
+      "key": "level.s12_glassway.tagline",
+      "text": "The longest climb in the city"
+    },
+    {
+      "key": "level.s12_beaconroof.name",
+      "text": "Beacon Roof"
+    },
+    {
+      "key": "level.s12_beaconroof.tagline",
+      "text": "Everything this chapter taught, at once"
+    },
+    {
+      "key": "level.s12_neoncrown.name",
+      "text": "The Neon Crown"
+    },
+    {
+      "key": "level.s12_neoncrown.tagline",
+      "text": "Keep every ward firing, through the plate"
+    },
+    {
       "key": "rank.cinderling.name",
       "text": "Cinderling"
     },

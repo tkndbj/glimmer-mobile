@@ -52,10 +52,12 @@ MASK = 0xFFFFFFFF
 DEALS = 48
 
 #: The slowest pace, in hundredths of the bot's turns, a row is tuned to forgive on its median
-#: deal. A medium row forgives a player who takes 1.7 times the turns a perfect memory would;
-#: a hard row asks for a good memory. `ChallengeTests` holds every row to `SLACK_BAND`.
-TARGET = {"medium": 170, "hard": 145}
-SLACK_BAND = (135, 185)
+#: deal. A medium row forgives a player who takes about twice the turns a perfect memory would;
+#: a hard row asks for a better memory. `ChallengeTests` holds every row to `SLACK_BAND`.
+#: Raised from 170 / 145 on 2026-10-03, when every shipped hill was lengthened a fifth with
+#: its waves untouched (the owner: Pairs was still too hard), which read 1.96x / 1.73x.
+TARGET = {"medium": 195, "hard": 175}
+SLACK_BAND = (135, 240)
 
 #: **The turrets have to matter** (invariant 5d asked of the fusion): the same run with every
 #: bolt taken away must forgive at least this much less, in hundredths of the bot's turns. A row

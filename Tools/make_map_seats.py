@@ -224,6 +224,12 @@ NUDGE = {
         10: (68, -5),
         "marker": (138, 0),   # see `ACCEPTED_OVERLAPS`: this is what stopped being impossible
     },
+    11: {
+        # **The owner, 2026-10-03: level 146 "lands on a car, which looks bad".** The search stood
+        # it in the middle of the car bridge, which is the deck the painting parks a car on; this
+        # pulls it back down the bridge toward level 145, onto the deck's open foot.
+        16: (-60, -90),       # level 146, back down the car bridge, off the car
+    },
 }
 
 
@@ -280,6 +286,9 @@ NUDGE = {
 #:
 #: **`map10` accepts every rung for `map9`'s reason**: it is walked along its road as well
 #: (`TRACES`), a road that crosses the full width of four strips a dozen times over.
+#:
+#: **`map11` accepts every rung for the same reason**: its glass road switches back across the
+#: middle of four strips eighteen times, so twenty rungs on it cannot all keep their marks clear.
 ACCEPTED_OVERLAPS = {
     5: True,
     6: True,
@@ -287,6 +296,7 @@ ACCEPTED_OVERLAPS = {
     8: True,
     9: True,
     10: True,
+    11: True,
 }
 
 
@@ -413,6 +423,22 @@ TRACES = {
             (1100, 230), (1220, 160), (1300, 100), (1180, 20), (1100, 0),
         ),
     ),
+    #: `map11` is the owner's neon sky city (2026-10-02): a road of tinted glass slabs edged in
+    #: cyan light, switching back up a stack of floating rocks and crossing between them on **six
+    #: decks** - two glass bridges, an escalator, a car bridge, a ladder and the stair at the foot.
+    #: Only the slab is listed as ground (`GROUND[11]`), so every deck is walked as a deck, and the
+    #: line is read down the middle of the slab between its two cyan edges.
+    11: dict(
+        size=(2048, 8256),
+        bends=(
+            (200, 8256), (1240, 7592), (1400, 7600), (1580, 7432), (660, 6852), (1440, 6272),
+            (1400, 6192), (660, 5888), (840, 5848), (1120, 5408), (1560, 5268), (1280, 5128),
+            (880, 4868), (700, 4728), (1580, 4288), (1320, 4128), (1000, 4004), (1560, 3724),
+            (1280, 3544), (800, 3344), (580, 3204), (880, 3084), (960, 3044), (1400, 2764),
+            (1600, 2544), (1360, 2404), (960, 2000), (540, 1760), (880, 1620), (1240, 1300),
+            (1560, 1140), (1280, 1000), (840, 660), (620, 520), (1200, 120), (1000, 0),
+        ),
+    ),
 }
 
 #: How far apart the samples along a traced road are, in canvas units, and how far one may be
@@ -523,6 +549,14 @@ GROUND = {
     # up the painting - (181, 168, 126) at one height, eight from a slab - so no tolerance keeps it
     # out, and it is refused by shape instead (`ENCLOSED`).
     10: [(190, 162, 127), (176, 151, 124)],
+
+    # `map11` is the neon sky city, and its ground is its **glass road** and nothing else: the
+    # slab's two blue-greys (63, 63, 105) and (69, 72, 112). **The rock tops beside it are the same
+    # value with the hue turned toward red** - (86, 79, 121), (78, 73, 107) - eighteen apart in
+    # red at the nearest, so this painting is read at a tolerance of eight (`TOLERANCE`) and the
+    # road comes out whole while the rocks do not. The building walls that pass are a few specks
+    # far from the line, and a walked map never asks about anywhere the line is not.
+    11: [(63, 63, 105), (69, 72, 112)],
 }
 
 # `map5` is the one painting here whose **road cannot be used**, and that is a fact about the
@@ -556,6 +590,7 @@ STREAM = {
     8: [],
     9: [],
     10: [],
+    11: [],
 }
 
 #: What each painting draws **instead of land**: sea, sky, lake, chasm, void.
@@ -618,6 +653,10 @@ VOID = {
     # slabs at their own tolerance only, for `map9`'s reason (it is walked, not searched) - and it
     # cannot take out the band of sky that is the slabs' own colour (`ENCLOSED` does that).
     10: [(49, 107, 121), (143, 160, 140), (237, 176, 101), (246, 218, 170)],
+
+    # `map11`'s void is a night sky running navy at the head to magenta at the foot. Subtracted
+    # from the road at its own tolerance only, for `map9`'s reason (it is walked, not searched).
+    11: [(24, 22, 52), (40, 30, 90), (131, 56, 148), (190, 70, 190)],
 }
 
 #: Maps whose ground is always drawn **inside** an outline, so anything the ground colour finds
@@ -651,7 +690,7 @@ ENCLOSED = {10}
 #: at 12 its seatable ground fell from 8.1% to 5.4% and it could not seat ten nodes at all.
 #: A flat-colour map wants a tight tolerance and a shaded one wants a loose one; there is no
 #: number that is right for both.
-TOLERANCE = {1: 12, 5: 12, 8: 12}
+TOLERANCE = {1: 12, 5: 12, 8: 12, 11: 8}
 DEFAULT_TOLERANCE = 26
 
 

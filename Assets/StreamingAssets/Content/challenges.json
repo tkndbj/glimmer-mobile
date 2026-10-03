@@ -30,7 +30,7 @@
         "b1 r2 y2 r4 g4 g6",
         "r2 g4 r1 r4 g6 b1"
       ],
-      "hill": 12,
+      "hill": 15,
       "bolts": 2,
       "waves": [
         "0 r2",
@@ -71,7 +71,7 @@
         "b2 g3 r1 r6 b4",
         "g6 b4 r5 g5 g6"
       ],
-      "hill": 13,
+      "hill": 16,
       "bolts": 2,
       "waves": [
         "0 r4",
@@ -104,7 +104,7 @@
         "g6 b3 y6 y2 b4 b1",
         "y2 y5 g6 y6 g3 b3"
       ],
-      "hill": 12,
+      "hill": 15,
       "bolts": 2,
       "waves": [
         "0 g4",
@@ -131,7 +131,7 @@
         "r6 g2 g1 y4 b5",
         "g4 g4 r2 r3 r6"
       ],
-      "hill": 14,
+      "hill": 17,
       "bolts": 2,
       "waves": [
         "0 r2",
@@ -164,7 +164,7 @@
         "b2 g1 r6 g6 g1 b3",
         "g2 b5 r2 r6 b5 r3"
       ],
-      "hill": 16,
+      "hill": 20,
       "bolts": 2,
       "waves": [
         "0 r4 g4 b4",
@@ -188,7 +188,7 @@
         "r4 r1 g5 y3 y4",
         "r3 g6 o y4 y3"
       ],
-      "hill": 18,
+      "hill": 22,
       "bolts": 2,
       "waves": [
         "0 r2",
@@ -226,7 +226,7 @@
         "r6 b4 r4 b5 b2 r2",
         "b4 r1 r1 r5 b2 b6"
       ],
-      "hill": 12,
+      "hill": 15,
       "bolts": 2,
       "waves": [
         "0 r6 b6",
@@ -253,7 +253,7 @@
         "g1 r1 g6 g6 y1 g3",
         "b1 y3 y2 b3 g3 r1"
       ],
-      "hill": 16,
+      "hill": 20,
       "bolts": 2,
       "waves": [
         "0 r3",
@@ -305,7 +305,7 @@
         "y4 b4 b5 y6 b1 b1 y5",
         "g1 y6 g2 b4 g1 b5 o"
       ],
-      "hill": 15,
+      "hill": 18,
       "bolts": 2,
       "waves": [
         "0 g4",
@@ -340,7 +340,7 @@
         "y5 y3 y5 g3 y1",
         "g4 y6 g5 g4 g2"
       ],
-      "hill": 13,
+      "hill": 16,
       "bolts": 2,
       "waves": [
         "0 g6 y6",
@@ -367,7 +367,7 @@
         "b1 r2 r1 b1 y2 o r6",
         "r1 o b6 y4 y4 y2 b3"
       ],
-      "hill": 17,
+      "hill": 21,
       "bolts": 2,
       "waves": [
         "0 r4",
@@ -401,7 +401,7 @@
         "y1 b1 y1 r2 b3",
         "r4 r6 r3 y3 r4"
       ],
-      "hill": 17,
+      "hill": 21,
       "bolts": 2,
       "waves": [
         "0 r4",
@@ -436,7 +436,7 @@
         "r1 g5 r2 y5 g3 b3 b2",
         "g3 o y1 y5 b3 r2 g5"
       ],
-      "hill": 15,
+      "hill": 18,
       "bolts": 2,
       "waves": [
         "0 r4 g4 b4 y4",
@@ -464,7 +464,7 @@
         "r2 g6 g5 r5 g2 r2",
         "g2 r4 r3 r6 r1 g3"
       ],
-      "hill": 13,
+      "hill": 16,
       "bolts": 2,
       "waves": [
         "0 r5",
@@ -494,7 +494,7 @@
         "g5 y3 g3 r5 b4 b5",
         "r2 b2 o y4 g3 g4"
       ],
-      "hill": 17,
+      "hill": 21,
       "bolts": 2,
       "waves": [
         "0 r2",
@@ -541,7 +541,7 @@
         "g2 y1 r6 r3 r2 y1",
         "r2 g3 b6 y4 r1 y4"
       ],
-      "hill": 18,
+      "hill": 22,
       "bolts": 2,
       "waves": [
         "0 r4",
@@ -579,7 +579,7 @@
         "b3 g3 b6 g3 r2 g5 r6",
         "r6 g4 y6 r4 b2 b2 b6"
       ],
-      "hill": 17,
+      "hill": 21,
       "bolts": 2,
       "waves": [
         "0 r2",
@@ -630,7 +630,7 @@
         "y1 y5 g5 g5 r5 r3",
         "r5 r3 r2 o b6 g3"
       ],
-      "hill": 18,
+      "hill": 22,
       "bolts": 2,
       "waves": [
         "0 r4",
@@ -671,7 +671,7 @@
         "g3 r5 r6 g6 b3 r6 b4",
         "r4 g1 r4 r2 g5 g6 o"
       ],
-      "hill": 19,
+      "hill": 23,
       "bolts": 2,
       "waves": [
         "0 r4 g4 b4",
@@ -706,7 +706,7 @@
         "b5 b2 b1 g3 g1 g6",
         "g3 b4 y6 y2 b3 y4"
       ],
-      "hill": 18,
+      "hill": 22,
       "bolts": 2,
       "waves": [
         "0 g4",
@@ -760,7 +760,7 @@
         "r2 g1 r6 y3 r1 r6 y2",
         "y5 b4 r3 g2 r2 g2 r4"
       ],
-      "hill": 26,
+      "hill": 32,
       "bolts": 2,
       "waves": [
         "0 r4",
@@ -808,7 +808,7 @@
         "b3 y2 y5 b3 g6 b2",
         "y5 b6 g2 g6 o y3"
       ],
-      "hill": 21,
+      "hill": 26,
       "bolts": 2,
       "waves": [
         "0 g4",
@@ -848,7 +848,7 @@
         "r2 y5 b6 b4 r5 b1 b6",
         "y4 r2 r6 b2 r1 b4 r4"
       ],
-      "hill": 16,
+      "hill": 20,
       "bolts": 2,
       "waves": [
         "0 r4",
@@ -885,7 +885,7 @@
         "b5 g3 r4 g6 g3 b6 b4",
         "g5 g4 b5 r1 b1 o g2"
       ],
-      "hill": 26,
+      "hill": 32,
       "bolts": 2,
       "waves": [
         "0 r4",
@@ -928,7 +928,7 @@
         "r2 g2 r6 y4 y5 g4",
         "g3 y1 y6 g5 y1 g1"
       ],
-      "hill": 15,
+      "hill": 18,
       "bolts": 2,
       "waves": [
         "0 r4",
@@ -975,7 +975,7 @@
         "r5 y4 b2 o o r6 r4",
         "r1 y6 y2 y3 b6 b4 o"
       ],
-      "hill": 26,
+      "hill": 32,
       "bolts": 2,
       "waves": [
         "0 r4",
@@ -1021,7 +1021,7 @@
         "g1 y3 y2 r1 y5 r4 y2",
         "b2 b4 g5 o r4 r1 b2"
       ],
-      "hill": 20,
+      "hill": 24,
       "bolts": 2,
       "waves": [
         "0 r4",
@@ -1060,7 +1060,7 @@
         "b1 o r1 b3 b4 b4",
         "o y1 r2 y2 r3 b3"
       ],
-      "hill": 20,
+      "hill": 24,
       "bolts": 2,
       "waves": [
         "0 r4",
@@ -1105,7 +1105,7 @@
         "b3 b4 b5 g4 g1 b1 o",
         "g3 y6 y3 y3 g5 g6 y4"
       ],
-      "hill": 21,
+      "hill": 26,
       "bolts": 2,
       "waves": [
         "0 g4",
@@ -1152,7 +1152,7 @@
         "g6 g5 y6 r1 y2 g6 o",
         "r4 r2 g1 y3 y1 g4 g5"
       ],
-      "hill": 25,
+      "hill": 30,
       "bolts": 2,
       "waves": [
         "0 r4",
@@ -1200,7 +1200,7 @@
         "y5 y3 y2 b3 y5 o b1",
         "y3 y1 g5 b5 r4 b2 g6"
       ],
-      "hill": 24,
+      "hill": 29,
       "bolts": 2,
       "waves": [
         "0 r4 g4 b4 y4",

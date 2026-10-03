@@ -1101,6 +1101,30 @@ marked *(art)* are one-line pointers - the working detail is in `CRAFT.md`.
    passes through the slabs' own colour, so ground touching the painting's side is refused by
    shape (`make_map_seats.ENCLOSED`) - twenty rungs reach over 33 marks, accepted as `map9`'s 32.
 
+37fa. **The eleventh chapter is a little harder, and "a little" was set by play, not by the
+   ladder.** Neonhaven (`s12_neonhaven`, order 156, levels 131-150, the owner's neon sky city,
+   2026-10-02) was commissioned as "slightly harder than the previous chapter - just a little".
+   Its crowd is held to Windwreck's (860 raiders, +1.4%; 190 brutes, level; the chapter tool
+   refuses fewer or more than a few per cent over), and **its surge is the dial that sets the
+   rest**. The first cut dealt one tenth over Windwreck (1.7) and a quick sweep on three-star
+   embers - the good line Windwreck was tuned around - held **13 of 180 against Windwreck's 43**,
+   a wall: these fields and waves play harder than Windwreck's at one surge (22 at 1.6). Windwreck's
+   own levels at 1.7 hold 35, so a fifth fewer wins is what "a little" measures; **1.5 holds 34**,
+   and that is what ships (`Traded` row `(10, 15)`, under the tenth chapter's 1.6 - a surge is a
+   dial on difficulty, not a promise that it climbs). The one-star workhorse, which both chapters
+   all but refuse, holds 15 here against Windwreck's 7; no single surge put both lines on the right
+   side with these fields, and the good line is the brief. `TheEleventhChapterIsALittleHarder`
+   asks the good line's half (no easier than Windwreck, at least 70% of it) and prints the rest;
+   its absolute floors are UNSET until the owner's sweep. **Its duels were placed by the fight
+   gate**: an overlord with a colossus on rung 10 was never felled on the strongest line, so rung
+   10 is a thunderer and a colossus, and rungs 5 and 10 carry cogs at 35 and 45. **The cast is the
+   vanguard, a fifth square - and the last one**: after five, every slot has exactly one family
+   left and those twelve do not form a square, so the twelfth chapter must wrap `MainCasts` or cut
+   a cast. Its map (`map11`) is walked along its glass road (`TRACES[11]`), read at a tolerance of
+   eight because the road and the rock beside it are one value eighteen apart in hue, with level
+   146 pulled back off the painted car by hand (`NUDGE[11]`); twenty rungs reach over 31 marks,
+   accepted as `map10`'s 33.
+
 **Adding a boss rung, or a boss.** A rung: author `boss: "<kind>:<colour>"` - or a duel,
 `"<kind>:<colour>+<kind>:<colour>"` (37er) - on every fifth rung, no
 other number; copy the rung into the chapter's table in `SiegeRuleTests.Chapters.cs` (`rungs.py` holds

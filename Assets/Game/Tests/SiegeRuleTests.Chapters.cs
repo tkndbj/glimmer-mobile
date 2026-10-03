@@ -237,6 +237,37 @@ namespace GlimmerGrove.Tests
             new Rung("s11_captainsdeck", new[] { "ygbgbbyy", "rbyrygby", "yggbgrrg", "bryrybgy", "rybbryby" }, "rgby", "rgby", new[] { "rgbyrgbyRGbyr", "rgby#rrgbyRGbyr", "rgbyRGbyrgbyr" }, "sunlord:r+ironclad:b", 50, 16, 38, 52, "plsfha", true),
         };
 
+        /// <summary>
+        /// Neonhaven, the eleventh chapter: the owner's neon sky city, twenty rungs, a duel on every
+        /// fifth, five tenths of surge (its fields play harder than Windwreck's, so the surge is the
+        /// dial that brings it back to "a little") and a crowd held within a few per cent of
+        /// Windwreck's, the vanguard cast, and the curse carried on - every rung deals
+        /// obsidians. Held to `s12_neonhaven.json` by `Tools/verify/rungs.py`.
+        /// </summary>
+        static readonly Rung[] Neonhaven =
+        {
+            new Rung("s12_glasspier", new[] { "gybbyygb", "brbbgrgy", "rrgyrryg", "ybbgygbr", "rgyyrbrr" }, "rgby", "rgby", new[] { "rgbyRGbyRGbyrg", "rgbyRGbyrgBYr", "rgbyRGBY#g#brgb" }, "", 20, 15, 38, 52, "plsfha", true),
+            new Rung("s12_serverrow", new[] { "brbryygy", "ygyggbry", "grbggyrr", "gyrbrybg", "rybgrrgy" }, "rgby", "rgby", new[] { "rgbyrgbyrgbRGy", "rgbyrgby#brgBY", "rgbyrgbyRGbyRGby" }, "", 20, 15, 38, 52, "plsfha", true),
+            new Rung("s12_neonspan", new[] { "ggbybryg", "ybgybrby", "brrbyygb", "gyygrbgr", "yyggybrg" }, "rgby", "rgby", new[] { "rgbyRG#gbyrgby", "rgbyRGby#r#yrgb", "rgBY#b#gRGbyrgby" }, "", 20, 15, 38, 52, "plsfha", true),
+            new Rung("s12_noodlestall", new[] { "bbygrybr", "ggrgyyrb", "ryyrbrby", "rrbbgyry", "gyyrgybr" }, "rgby", "rgby", new[] { "rgbyRGby!gRGby", "rgBY#rRGby!yrgb", "rgBY!b#gRGbyRGby" }, "", 20, 15, 38, 52, "plsfha", true),
+            new Rung("s12_jetrock", new[] { "yyggbgrg", "rrgyrbrb", "yrryrgyg", "bggbbyrb", "yygrbgbr" }, "rgby", "rgby", new[] { "rgbyRGbyrgbyr", "rgby#y!rRGbyRG", "rgBY#g#rRGbyrg" }, "warlord:g+blightcaller:b", 35, 15, 38, 52, "plsfha", true),
+            new Rung("s12_lanternlift", new[] { "rbbgyrry", "ygrybgyy", "gygrygrg", "rbbgbrgr", "gryygbyg" }, "rgby", "rgby", new[] { "ggGGgggggg#gyyy", "yyYYyyyyyy#ybbb", "bbBB#bbbbbRRR#rrr" }, "", 20, 15, 38, 52, "plsfha", true),
+            new Rung("s12_escalator", new[] { "grbggyyg", "brbrrbyr", "rygygbgb", "bbrrygyr", "yyrgbgby" }, "rgby", "rgby", new[] { "rgbyRGbyrgbyr", "rgby#g#bRGbyRG", "rgby!ggrBY#yybr", "rgbyRGbyrgby" }, "", 20, 15, 38, 52, "plsfha", true),
+            new Rung("s12_pipealley", new[] { "rybgrbgy", "ygbgygry", "grrbbybg", "bygbbyyr", "rggyrryb" }, "rgby", "rgby", new[] { "rgBYrgbyrgbyRGb", "rgby#b#rrgbyRGby", "rgBY!yrgby#ggrBY" }, "", 20, 15, 38, 52, "plsfha", true),
+            new Rung("s12_rackhall", new[] { "ybggrgby", "brybgrby", "yggyrgyb", "grrbyggr", "bbrgrbrb" }, "rgby", "rgby", new[] { "rgbyrgbyRGbyr", "rgby#grgbyRGb", "rgby#yrgBYrgby", "rgBYrgbyrgbyr" }, "", 20, 15, 38, 52, "plsfha", true),
+            new Rung("s12_signalyard", new[] { "gbybggyr", "ybgyrbbr", "rggbygby", "bbrrgrgy", "bryggrbr" }, "rgby", "rgby", new[] { "rgbyRGbyrgby", "rgby#gRGbyrgbrg", "rgby#b#yRGbyrg" }, "thunderer:y+colossus:r", 45, 15, 38, 52, "plsfha", true),
+            new Rung("s12_holoplaza", new[] { "rbrbrgbg", "ryrbrbyr", "gbgyyrgb", "yybgbgyg", "gbbgygrb" }, "rgby", "rgby", new[] { "rgbyrgbyRGbyg", "rgBY#g#brgbyRGby", "rgby!r#yRGbyrgBYb" }, "", 20, 15, 38, 52, "plsfha", true),
+            new Rung("s12_relaydeck", new[] { "gygrybgr", "bygbgrby", "ygyygrgg", "gryrbyyb", "bbgrybgb" }, "rgby", "rgby", new[] { "rgbyrgbyRGbyrgby", "rgBY#y!gRGbyrgb", "rgby#r#brgbyRGBY" }, "", 20, 15, 38, 52, "plsfha", true),
+            new Rung("s12_carbridge", new[] { "rbgyrybr", "rybrbyyr", "bgrrgbyg", "ybybyrgy", "rbygrgby" }, "rgby", "rgby", new[] { "rgby#g#b#yRGbyr", "rgby#r#g!bRGbyrg", "rgby#b#y#rRGBYrg" }, "", 20, 15, 38, 52, "plsfha", true),
+            new Rung("s12_dishhill", new[] { "brbgygrb", "bgrgrggy", "ybybyryr", "rbyrgbgb", "gybgbbgy" }, "rgby", "rgby", new[] { "rgbyRGbyrgbyg", "rgby#ggrbyRGb", "rgby#b#yRGbyrg", "rgby!rRGbyrgb" }, "", 20, 15, 38, 52, "plsfha", true),
+            new Rung("s12_glowgate", new[] { "ggybyrgb", "rybrrgyb", "yggybgyy", "yrbrybry", "bbggrybr" }, "rgby", "rgby", new[] { "rgbyRGbyrgby", "rgby#y!gRGbyRG", "rgBY#b#rRGbyrg" }, "gorgon:r+shackler:g", 25, 15, 38, 52, "plsfha", true),
+            new Rung("s12_skyladder", new[] { "rybrygbr", "bbybyrgr", "yrrggryg", "gbbgrbgb", "gryyrggr" }, "rgby", "rgby", new[] { "ggGGG#gggggbb", "bbBBB#bbbbb#byy", "yyYYY#yyyyRRRR#rr" }, "", 20, 15, 38, 52, "plsfha", true),
+            new Rung("s12_fanhouse", new[] { "rgbyrggr", "yybrbbyg", "brggygyr", "rrybygbb", "bgybbrgr" }, "rgby", "rgby", new[] { "rgbyRGbyRGbyrgb", "rgby#g#b!yRGbyrgb", "rgby#r#gRGbyRGby" }, "", 20, 15, 38, 52, "plsfha", true),
+            new Rung("s12_glassway", new[] { "ygbyrrbb", "brrgyrgg", "bggbgbyy", "gbrrggrb", "ryybbryy" }, "rgby", "rgby", new[] { "rgbyrgbyRGbyg", "rgby#bbrgbyRGb", "rgby#y#r!grgbyRG", "rgbyrgbyRGBY" }, "", 20, 15, 38, 52, "plsfha", true),
+            new Rung("s12_beaconroof", new[] { "gybbrgyr", "rrgybgrr", "rgbryygb", "bbygbrby", "ggybbggy" }, "rgby", "rgby", new[] { "rgbyrgbyRGbyRGby", "rgby#g#b#yRGbyrgb", "rgby!r#gRGbyrgBY" }, "", 20, 15, 38, 52, "plsfha", true),
+            new Rung("s12_neoncrown", new[] { "yyrbrryb", "brbgygbr", "ygbrygyg", "rrggrbrr", "yygbbyyb" }, "rgby", "rgby", new[] { "rgbyrgbyRGbyrg", "rgby#ggrbyRGbyr", "rgbyRGbyrgbyr" }, "hollowking:y+ironclad:b", 50, 15, 38, 52, "plsfha", true),
+        };
+
         // ------------------------------------------------------------------ the lines it plays
         /// <summary>
         /// The four turrets a player who has bought nothing stands: the free bolt, four times.
@@ -459,6 +490,7 @@ namespace GlimmerGrove.Tests
             ("Cloudkeep", Cloudkeep),
             ("Cogspire", Cogspire),
             ("Windwreck", Windwreck),
+            ("Neonhaven", Neonhaven),
         };
 
         static Sweep Play(Rung[] chapter, WardLine line)
@@ -1897,6 +1929,99 @@ namespace GlimmerGrove.Tests
 
             Assert.IsEmpty(faults, string.Join("\n", faults) + "\n\n" + report);
         }
+
+        /// <summary>
+        /// **The eleventh chapter is a little harder than the tenth, and only a little** - the
+        /// owner's brief of 2026-10-02, "slightly harder than the previous chapter, just a
+        /// little", measured as a pair of bounds rather than felt.
+        ///
+        /// <para>
+        /// <b>Harder</b>: on three-star embers - the good line Windwreck was tuned around - it
+        /// holds no more of its runs than Windwreck does, as a share because both are twenty
+        /// rungs. <b>Only a little</b>: a three-star ember line and the strongest line each keep at
+        /// least <see cref="LittleShare"/> per cent of what they win on Windwreck, so a draft that
+        /// turns into a second wall fails here with every other gate green.
+        /// </para>
+        /// <para>
+        /// <b>The one-star workhorse is printed and deliberately not compared.</b> Measured on
+        /// 2026-10-03, no single surge put both lines on the right side of Windwreck with these
+        /// fields: at 1.7 three-star embers held 13 of 180 (a wall), at 1.6 held 22, and at 1.5
+        /// held 34 against Windwreck's 43 - while the one-star line, which both chapters all but
+        /// refuse (Windwreck 7 of 180), held 15. The good line is the brief, so 1.5 shipped.
+        /// </para>
+        /// <para>
+        /// <b>The three floors are UNSET (nought) until the owner's sweep</b> - this fixture's first
+        /// run prints the tables they are set from, beside Windwreck's figures for the same lines
+        /// (7 / 43 / 135 held of 180 when it shipped). The relative clauses are live from the first
+        /// run, because they need no measurement to be true.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void TheEleventhChapterIsALittleHarder()
+        {
+            const int AcceptedWalls = 0;    // UNSET: the workhorse's walls, set on the first sweep
+            const int UpgradedFloor = 0;    // UNSET: three-star embers, set on the first sweep
+            const int StrongFloor = 0;      // UNSET: three-star pyres, set on the first sweep
+
+            var bought = Play(Neonhaven, Bought());
+            var before = Play(Windwreck, Bought());
+            var upgraded = Play(Neonhaven, Starred(Workhorse, 3));
+            var upgradedBefore = Play(Windwreck, Starred(Workhorse, 3));
+            var strong = Play(Neonhaven, Strongest());
+            var strongBefore = Play(Windwreck, Strongest());
+
+            var faults = new List<string>();
+
+            if (AcceptedWalls > 0 && bought.Walled > AcceptedWalls)
+                faults.Add($"{bought.Walled} rung(s) of Neonhaven are held at no rhythm at all "
+                           + $"on a '{Workhorse}' line, against the {AcceptedWalls} accepted");
+
+            // Harder: no easier than Windwreck on the good line the chapter asks for.
+            if (upgraded.Held * upgradedBefore.Runs > upgradedBefore.Held * upgraded.Runs)
+                faults.Add($"on three-star '{Workhorse}' turrets Neonhaven held {upgraded.Held} "
+                           + $"against Windwreck's {upgradedBefore.Held} - easier than the tenth");
+
+            // Only a little: a good line still keeps most of what it wins on Windwreck.
+            if (upgraded.Held * 100 < upgradedBefore.Held * LittleShare)
+                faults.Add($"three-star '{Workhorse}' turrets held {upgraded.Held} against "
+                           + $"Windwreck's {upgradedBefore.Held}, under {LittleShare}% of it - the "
+                           + "eleventh chapter is a wall, not a notch");
+
+            if (strong.Held * 100 < strongBefore.Held * LittleShare)
+                faults.Add($"the strongest line held {strong.Held} against Windwreck's "
+                           + $"{strongBefore.Held}, under {LittleShare}% of it - the eleventh "
+                           + "chapter is a wall, not a notch");
+
+            if (UpgradedFloor > 0 && upgraded.Held < UpgradedFloor)
+                faults.Add($"three-star '{Workhorse}' turrets held {upgraded.Held} of "
+                           + $"{upgraded.Runs} runs against a floor of {UpgradedFloor}");
+
+            if (StrongFloor > 0 && strong.Held < StrongFloor)
+                faults.Add($"the strongest line held {strong.Held} of {strong.Runs} runs "
+                           + $"against a floor of {StrongFloor}");
+
+            string report =
+                $"Neonhaven on {Workhorse} ({bought.Held}/{bought.Runs} held, "
+                + $"{bought.Starred} three-starred, {bought.Walled} walled):\n" + bought.Table
+                + $"\nNeonhaven on three-star {Workhorse} ({upgraded.Held}/{upgraded.Runs} held, "
+                + $"{upgraded.Starred} three-starred):\n" + upgraded.Table
+                + $"\nNeonhaven on the strongest line ({strong.Held}/{strong.Runs} held, "
+                + $"{strong.Starred} three-starred):\n" + strong.Table
+                + $"\nWindwreck for comparison: {Workhorse} {before.Held}/{before.Runs}, "
+                + $"three-star {Workhorse} {upgradedBefore.Held}/{upgradedBefore.Runs}, "
+                + $"strongest {strongBefore.Held}/{strongBefore.Runs} "
+                + $"({strongBefore.Starred} three-starred)\n";
+
+            System.Console.WriteLine(report);
+
+            Assert.IsEmpty(faults, string.Join("\n", faults) + "\n\n" + report);
+        }
+
+        /// <summary>
+        /// How much of what a line wins on Windwreck it must still win on Neonhaven, in per cent:
+        /// the "only a little" half of <see cref="TheEleventhChapterIsALittleHarder"/>.
+        /// </summary>
+        const int LittleShare = 70;
 
         [Test]
         public void AShacklersChainAlwaysRunsOutBeforeTheNextOne()

@@ -381,6 +381,36 @@
       ]
     },
     {
+      "id": "s12_neonhaven",
+      "version": 1,
+      "order": 156,
+      "disabled": false,
+      "minAppVersion": 0,
+      "mode": "siege",
+      "levels": [
+        "s12_glasspier",
+        "s12_serverrow",
+        "s12_neonspan",
+        "s12_noodlestall",
+        "s12_jetrock",
+        "s12_lanternlift",
+        "s12_escalator",
+        "s12_pipealley",
+        "s12_rackhall",
+        "s12_signalyard",
+        "s12_holoplaza",
+        "s12_relaydeck",
+        "s12_carbridge",
+        "s12_dishhill",
+        "s12_glowgate",
+        "s12_skyladder",
+        "s12_fanhouse",
+        "s12_glassway",
+        "s12_beaconroof",
+        "s12_neoncrown"
+      ]
+    },
+    {
       "id": "s02_endlesswatch",
       "version": 1,
       "order": 150,

@@ -82,6 +82,13 @@ s10_cogspire	levelmapnew.png
 # pass the folder it was saved in as --source. Drawn by s11_windwreck, and by whatever tenth
 # chapter comes next.
 s11_windwreck	windwreck_map.png
+# map11 - four strips, the owner's own painting (2026-10-02): a neon sky city - floating rocks
+# carrying server racks, satellite dishes, a noodle stall and holograms, joined by a glass road
+# edged in cyan light, with glass bridges, a car bridge, a ladder and an escalator between them.
+# One flattened 2048x8256 picture, supplied under a generated name and saved as
+# `neonhaven_map.png` - pass the folder it was saved in as --source. Drawn by s12_neonhaven, and
+# by whatever eleventh chapter comes next.
+s12_neonhaven	neonhaven_map.png
 f01_lightfall	-
 f02_glasswater	-
 f03_whorlwater	-

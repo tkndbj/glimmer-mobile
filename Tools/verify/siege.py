@@ -320,7 +320,11 @@ CHAPTER_TOUGH_STEP, TOUGH_FROM, MOST_TOUGH = 1, 2, 40
 #: brief of 2026-09-28: harder than the eighth in health and in headcount, "but not too much".
 #: The tenth deals 1.6 rather than the 1.8 the ladder derives: the owner's brief of 2026-09-29 was
 #: exactly one tenth over the ninth, with more raiders, more brutes and more hill on top of it.
-TRADED = {7: 14, 8: 15, 9: 16}
+#: The eleventh deals 1.5 rather than the 1.9 the ladder derives or the tenth's 1.6: the owner's
+#: brief of 2026-10-02 was "slightly harder than the previous chapter, just a little", and its
+#: fields and waves measured harder than Windwreck's at one surge (three-star embers held 13 of
+#: 180 at 1.7, 22 at 1.6, 34 at 1.5, against Windwreck's 43), so 1.5 is the "little".
+TRADED = {7: 14, 8: 15, 9: 16, 10: 15}
 
 
 def toughness_for(ordinal):
@@ -453,6 +457,12 @@ STAR_FACTORS = {
     #: until three stars asks for the same strong line to play well, which is the owner's brief
     #: ("players should need a good set of turrets to win or to get three stars").
     10: (0.38, 0.52),
+
+    #: Neonhaven, a crowd of Windwreck's shape on fields that play harder, at 1.5 of surge.
+    #: **Windwreck's lines, carried over on purpose**: they were measured for a brute-heavy hill
+    #: and this is the same kind of hill, so a line held as a share of par asks for the same play.
+    #: Provisional until the owner's sweep reads `TheEleventhChapterIsALittleHarder`.
+    11: (0.38, 0.52),
 }
 
 
