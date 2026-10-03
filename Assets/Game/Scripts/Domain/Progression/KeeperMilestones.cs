@@ -151,6 +151,12 @@ namespace GlimmerGrove.Progression
     /// the same function on every side - so in practice it is a handful of levels or empty, and
     /// a player who opens chests from the bottom up writes exactly what the v37 build wrote.
     /// </para>
+    /// <para>
+    /// <b>The rule itself is <see cref="FloorSet"/>'s</b>, shared with the season and the streak;
+    /// what is here is only what a keeper level adds - a milestone stands on a level at least
+    /// <see cref="KeeperMilestoneLimits.LowestLevel"/> and at most the highest level supported,
+    /// and the list is as long as a table can be.
+    /// </para>
     /// </summary>
     public static class KeeperMilestoneSet
     {
@@ -167,62 +173,20 @@ namespace GlimmerGrove.Progression
         /// and above <paramref name="floor"/>, at most <see cref="MaxTaken"/> of them.
         /// </summary>
         public static int[] Normal(int floor, int[] taken)
-        {
-            if (taken == null || taken.Length == 0) return Array.Empty<int>();
-
-            var set = new SortedSet<int>();
-            foreach (int level in taken)
-            {
-                if (level <= floor) continue;
-                if (level < KeeperMilestoneLimits.LowestLevel || level > ProgressionTable.MaxSupportedLevel) continue;
-                set.Add(level);
-            }
-
-            if (set.Count == 0) return Array.Empty<int>();
-
-            var result = new int[Math.Min(set.Count, MaxTaken)];
-            int i = 0;
-            foreach (int level in set)
-            {
-                if (i == result.Length) break;
-                result[i++] = level;
-            }
-            return result;
-        }
+            => FloorSet.Normal(Below(floor), taken, ProgressionTable.MaxSupportedLevel, MaxTaken);
 
         /// <summary>The join of two devices' records: the higher floor, the union above it.</summary>
         public static int[] Join(int floorA, int[] a, int floorB, int[] b)
-        {
-            int floor = Math.Max(floorA, floorB);
-            int la = a?.Length ?? 0, lb = b?.Length ?? 0;
-            if (la == 0) return Normal(floor, b);
-            if (lb == 0) return Normal(floor, a);
-
-            var both = new int[la + lb];
-            Array.Copy(a, 0, both, 0, la);
-            Array.Copy(b, 0, both, la, lb);
-            return Normal(floor, both);
-        }
+            => FloorSet.Union(Below(Math.Max(floorA, floorB)), a, b, ProgressionTable.MaxSupportedLevel, MaxTaken);
 
         /// <summary>Whether <paramref name="level"/> is taken: at or under the floor, or in the list.</summary>
-        public static bool Holds(int floor, int[] taken, int level)
-        {
-            if (level <= floor) return true;
-            if (taken == null) return false;
-            for (int i = 0; i < taken.Length; i++)
-                if (taken[i] == level) return true;
-            return false;
-        }
+        public static bool Holds(int floor, int[] taken, int level) => FloorSet.Holds(floor, taken, level);
 
         /// <summary>Whether two lists hold the same levels in the same order.</summary>
-        public static bool Same(int[] a, int[] b)
-        {
-            int la = a?.Length ?? 0, lb = b?.Length ?? 0;
-            if (la != lb) return false;
-            for (int i = 0; i < la; i++)
-                if (a[i] != b[i]) return false;
-            return true;
-        }
+        public static bool Same(int[] a, int[] b) => FloorSet.Same(a, b);
+
+        /// <summary>The floor a list is pruned against: never below the level under the lowest milestone.</summary>
+        static int Below(int floor) => Math.Max(floor, KeeperMilestoneLimits.LowestLevel - 1);
     }
 
     /// <summary>

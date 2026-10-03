@@ -267,10 +267,12 @@ namespace GlimmerGrove.Cloud
                         { "collectedThroughDay", (long)(dto.streak?.collectedThroughDay ?? 0) },
                         { "shieldFromDay", (long)(dto.streak?.shieldFromDay ?? 0) },
 
-                        // The nights taken out of order and the latest day one was claimed
-                        // under (v39). Inside the `streak` map, so no rules release.
-                        { "collectedDays", Longs(dto.streak?.collectedDays) },
-                        { "collectedPeakDay", (long)(dto.streak?.collectedPeakDay ?? 0) },
+                        // The nights taken out of order, the run they belong to and the anchor
+                        // of its claim line (v39). Inside the `streak` map, so no rules release.
+                        { "collectedRun", (long)(dto.streak?.collectedRun ?? 0) },
+                        { "collectedNights", Longs(dto.streak?.collectedNights) },
+                        { "collectedAnchorNight", (long)(dto.streak?.collectedAnchorNight ?? 0) },
+                        { "collectedAnchorDay", (long)(dto.streak?.collectedAnchorDay ?? 0) },
                     }
                 },
 
@@ -581,8 +583,10 @@ namespace GlimmerGrove.Cloud
                 dto.streak.lastPlayedDay = (int)Long(streak, "lastPlayedDay", 0);
                 dto.streak.collectedThroughDay = (int)Long(streak, "collectedThroughDay", 0);
                 dto.streak.shieldFromDay = (int)Long(streak, "shieldFromDay", 0);
-                dto.streak.collectedDays = IntList(streak, "collectedDays");
-                dto.streak.collectedPeakDay = (int)Long(streak, "collectedPeakDay", 0);
+                dto.streak.collectedRun = (int)Long(streak, "collectedRun", 0);
+                dto.streak.collectedNights = IntList(streak, "collectedNights");
+                dto.streak.collectedAnchorNight = (int)Long(streak, "collectedAnchorNight", 0);
+                dto.streak.collectedAnchorDay = (int)Long(streak, "collectedAnchorDay", 0);
             }
 
             // Absent on a document written before rungs were collected by hand, which reads

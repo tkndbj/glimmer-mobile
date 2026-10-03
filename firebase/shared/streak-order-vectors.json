@@ -1,0 +1,77 @@
+{
+  "_about": [
+    "Streak nights taken in any order (CLAUDE.md 48b, save v39), pinned on both sides.",
+    "Each case is a run of play and taps; `claims` is the [day, night] the client dates each tap's",
+    "claim under. Assets/Game/Tests/StreakTests.cs derives `claims` from the real ledger rules",
+    "(DailyStreak.Advance, SeedCollected, Collect, StreakTaken) and must reproduce them exactly;",
+    "firebase/functions/test/reward-vectors.mjs replays them through the real `advances` and",
+    "`raise` from functions/src/streak.ts, in the order tapped and in the day-sorted order",
+    "claimAwards batches them in, and every one must be paid.",
+    "Hand-written: a case is a scenario, not a generated table. `serverFloor` is what a fresh",
+    "wallet holds (readWallet seeds it to the day before the run). Shields cover `shieldDays`."
+  ],
+  "shieldDays": 7,
+  "streakOrderCases": [
+    {
+      "name": "oldest first, no shield",
+      "serverFloor": [19999, 0],
+      "steps": [
+        { "play": 20000 }, { "play": 20001 }, { "play": 20002 }, { "play": 20003 }, { "play": 20004 },
+        { "take": 1 }, { "take": 2 }, { "take": 3 }, { "take": 4 }, { "take": 5 }
+      ],
+      "claims": [[20000, 1], [20001, 2], [20002, 3], [20003, 4], [20004, 5]]
+    },
+    {
+      "name": "newest first, no shield",
+      "serverFloor": [19999, 0],
+      "steps": [
+        { "play": 20000 }, { "play": 20001 }, { "play": 20002 }, { "play": 20003 }, { "play": 20004 },
+        { "take": 5 }, { "take": 4 }, { "take": 3 }, { "take": 2 }, { "take": 1 }
+      ],
+      "claims": [[20004, 5], [20003, 4], [20002, 3], [20001, 2], [20000, 1]]
+    },
+    {
+      "name": "newest first, then a shield slides the run, then the rest in a scramble",
+      "serverFloor": [19999, 0],
+      "steps": [
+        { "play": 20000 }, { "play": 20001 }, { "play": 20002 }, { "play": 20003 }, { "play": 20004 },
+        { "take": 5 },
+        { "shield": 20004 }, { "play": 20007 },
+        { "take": 3 }, { "take": 1 }, { "take": 6 }, { "take": 2 }, { "take": 4 }
+      ],
+      "claims": [[20004, 5], [20002, 3], [20000, 1], [20005, 6], [20001, 2], [20003, 4]]
+    },
+    {
+      "name": "a shield before the run's first claim, then newest first",
+      "serverFloor": [19999, 0],
+      "steps": [
+        { "play": 20000 }, { "play": 20001 }, { "play": 20002 }, { "play": 20003 },
+        { "shield": 20003 }, { "play": 20006 },
+        { "take": 5 }, { "take": 2 }, { "take": 4 }
+      ],
+      "claims": [[20006, 5], [20003, 2], [20005, 4]]
+    },
+    {
+      "name": "oldest first across a shield",
+      "serverFloor": [19999, 0],
+      "steps": [
+        { "play": 20000 }, { "play": 20001 }, { "play": 20002 },
+        { "take": 1 }, { "take": 2 }, { "take": 3 },
+        { "shield": 20002 }, { "play": 20005 },
+        { "take": 4 }
+      ],
+      "claims": [[20000, 1], [20001, 2], [20002, 3], [20003, 4]]
+    },
+    {
+      "name": "a broken streak starts a new run on a new line",
+      "serverFloor": [19999, 0],
+      "steps": [
+        { "play": 20000 }, { "play": 20001 }, { "play": 20002 },
+        { "take": 3 },
+        { "play": 20010 },
+        { "take": 1 }
+      ],
+      "claims": [[20002, 3], [20010, 1]]
+    }
+  ]
+}

@@ -41,14 +41,58 @@ namespace GlimmerGrove
         /// <summary>The hole's disc and horizon on the field, in cells. Wider than a well: it is eating a board.</summary>
         const float MawWide = 6.4f, MawCore = 1.9f;
 
-        /// <summary>Seconds a gem takes to fall in, and the most its start is held back by its distance.</summary>
-        const float GulpFor = .58f, GulpSpread = .30f;
+        /// <summary>
+        /// Seconds a gem takes to fall in, and the most its start is held back by its distance.
+        ///
+        /// <b>Half as long again since 2026-10-03</b> (.58 and .30 before), at the owner's
+        /// instruction that the swallow went by too fast to see. The shape of the fall is
+        /// untouched; only its clock is longer, and <see cref="SwallowPace"/> is what keeps the
+        /// beam from firing into gems still on their way in.
+        /// </summary>
+        internal const float GulpFor = .87f, GulpSpread = .45f;
 
-        /// <summary>Seconds the beam stands, and the slow motion it stands in.</summary>
-        const float BeamFor = .62f, BeamPace = .22f;
+        /// <summary>
+        /// How fast the run's own clock runs while the field is going in.
+        ///
+        /// <para>
+        /// <b>The charms' bargain, asked of the swallow</b> (<c>Dilate</c>, invariant 37cq): the
+        /// beam is booked <c>SiegeTuning.VoidGather</c> of <em>model</em> time after the
+        /// collapse, so a longer fall drawn at full pace would have the beam leave while gems
+        /// were still falling in. Slowing the clock for exactly the fall hands the board the
+        /// same seconds more slowly instead of moving when it fires - no rule, no figure and no
+        /// model timing changes, the hill does not gain a step on the player while they watch,
+        /// and the beam still lands on the frame its picture fires (37s).
+        /// </para>
+        /// <para>
+        /// <b>The one inequality it must keep</b>: the model time that passes while the gems
+        /// fall (this pace over <see cref="GulpSpread"/> plus <see cref="GulpFor"/>) is less than
+        /// <c>VoidGather</c>, so the last gem is under the horizon before the beam leaves. Held
+        /// by <c>SiegeSingularityTests.TheFieldIsSwallowedBeforeTheBeamLeaves</c>. Slower
+        /// slowdowns from a charm on the same cascade only widen the margin, because a dilation
+        /// keeps the slowest pace asked for.
+        /// </para>
+        /// </summary>
+        internal const float SwallowPace = .6f;
+
+        /// <summary>
+        /// Seconds the beam stands, and the slow motion it stands in.
+        ///
+        /// <b>A second since 2026-10-03</b> (.62 before), so the beam and the figures it throws
+        /// can be read. Everything the beam draws is sized off this one figure - the column's
+        /// open and close, the lightning's re-deals, the pulses, the slow motion, the glow, the
+        /// hole falling shut and the refill's wait - so lengthening it stretches the whole
+        /// picture as one.
+        /// </summary>
+        internal const float BeamFor = 1f, BeamPace = .22f;
+
+        /// <summary>Seconds one pulse takes to race the length of the beam.</summary>
+        const float PulseFor = .24f;
+
+        /// <summary>How many pulses race up the beam while it stands.</summary>
+        const int Pulses = 8;
 
         /// <summary>Seconds of a live run the refill will wait for a beam before giving up on it.</summary>
-        const float VoidPatience = 4f;
+        internal const float VoidPatience = 4f;
 
         /// <summary>
         /// The beam's four layers, outside in: width in cells, colour, alpha, and how tight its
@@ -241,6 +285,12 @@ namespace GlimmerGrove
                 _maw.Fired = true;
                 _maw.Since = BeamFor;
             }
+
+            // The run's clock slowed for exactly the fall, so the beam - model time - leaves
+            // after the last gem is under the horizon. See `SwallowPace`. Only while the beam
+            // is still owed: one the model already fired has nothing left to wait for, and
+            // slowing the hill then would be a second of slow motion over nothing.
+            if (!_maw.Fired) Dilate(SwallowPace, GulpSpread + GulpFor);
 
             Lightup(WellViolet, .16f, .5f);
             Closing(pit, MawWide * 1.5f, WellOpens + .1f);
@@ -444,19 +494,23 @@ namespace GlimmerGrove
 
             // Pulses racing up it, so the column reads as something travelling rather than as
             // a bar that appeared.
-            for (int n = 0; n < 8; n++)
+            // Spread over however long the beam stands, so the last pulse reaches the top as the
+            // column closes - at .62 seconds this was the .055 the first cut typed.
+            float pulseEvery = Mathf.Max(0f, BeamFor - PulseFor) / (Pulses - 1);
+
+            for (int n = 0; n < Pulses; n++)
             {
                 var pulse = Lit("Pulse", host, Art.Glow(96, 1.6f), Pal.A(Color.white, 0f),
                                 new Vector2(Cell * 2.6f, Cell * 4.2f));
                 var rt = pulse.rectTransform;
                 var tint = n % 2 == 0 ? Color.white : Pal.Bloom;
 
-                Tween.Run(.24f, Ease.Linear, t =>
+                Tween.Run(PulseFor, Ease.Linear, t =>
                 {
                     if (!pulse) return;
                     rt.anchoredPosition = new Vector2(0f, Mathf.Lerp(-tall * .5f, tall * .5f, t));
                     pulse.color = Pal.A(tint, Mathf.Sin(t * Mathf.PI) * .75f);
-                }, pulse).Delay(n * .055f).OnDone(() => { if (pulse) Destroy(pulse.gameObject); });
+                }, pulse).Delay(n * pulseEvery).OnDone(() => { if (pulse) Destroy(pulse.gameObject); });
             }
 
             // Lightning down both flanks, re-dealt every few hundredths (MODES.md 37eu).

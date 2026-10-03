@@ -364,9 +364,13 @@ namespace GlimmerGrove.Tests
                 case "streak.shieldFromDay": return 20_008;
 
                 // The nights and rungs taken out of order are canonical lists (FloorSet.Normal):
-                // each entry above the floor beside it, and a night at or under the last day played.
-                case "streak.collectedDays[]": return 20_007;
-                case "streak.collectedPeakDay": return 20_007;
+                // each entry above the floor beside it. A streak night is a night number inside the
+                // run above (start 20,000, floor 20,005: nights 7 to 11), and the anchor a night the
+                // run could have reached (StreakTaken.Canonical).
+                case "streak.collectedRun": return 20_000;
+                case "streak.collectedNights[]": return 8;
+                case "streak.collectedAnchorNight": return 9;
+                case "streak.collectedAnchorDay": return 20_008;
                 case "events[].collectedGoal": return 10;
                 case "events[].taken[]": return 20;
                 case "events[].premiumGoal": return 10;

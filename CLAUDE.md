@@ -655,13 +655,17 @@ is where they are written down, not what they mean.
 48b. **Any waiting night may be taken, in any order, and the night tapped is the night opened** (v39,
    2026-10-03). The first rule was oldest-only, because the record was a floor alone, and a tap on a newer
    night was redirected to the oldest — which the owner met as tapping a chest and watching a different
-   one open. The record is now the floor plus the short list of days taken above it (`FloorSet`, the 57d
-   shape, union-joined), and the floor climbs over the list as the gaps fill, so oldest-first play writes
-   exactly the old file. **A night taken under one already paid is dated in the paid one's calendar**
-   (`DailyStreak.ClaimDayAt`, `collectedPeakDay`): a shield slides every night's day, and the server's
-   `advances` accepts a night below the last one paid only when `night == paidNight + elapsed`, so a slid
-   date would be refused and its coins dropped (45d). With no slide the id is the night's own day, as
-   before. No server change and no rules release.
+   one open. The record is now the floor plus `StreakTaken`: the **night numbers** taken above it (the
+   `FloorSet` shape, 57d), the **run** they belong to and the run's claim **anchor**. Night numbers, because
+   a shield slides every night's day (48d) and a list of days means different nights on two devices; the
+   run (the day it began, 0 for the one in progress at upgrade) because only a restart starts a new one,
+   and two runs never join - the later start's record wins. **Every claim of a run is dated on one line,
+   `day = night + offset`, fixed by its first claim** (`DailyStreak.ClaimDayAt`): it is the one dating
+   `advances` accepts in every order, including a backlog `claimAwards` sorts by day, where "date it off the
+   last paid night" was refused once a shield had slid the run. With no shield the line is the calendar,
+   so the ids are unchanged. `firebase/shared/streak-order-vectors.json` pins it on both sides:
+   `StreakTests` derives each claim sequence from the ledger and `reward-vectors.mjs` replays it through
+   the real `advances` as tapped and day-sorted. No server change and no rules release.
 48c. **A streak can be protected, and the whole entitlement is the day it was bought** — one monotonic date
    joined by `max`. There is **one** number, so playing inside the window writes nothing to it, and a second
    purchase is refused while the first is running.
@@ -1985,24 +1989,28 @@ on a fresh clone).
 to reach anybody.** The owner's report: with several chests waiting, opening one marked the others
 spent (the season raised its floor to the tapped rung) or opened a different one (the streak
 redirected every tap to the oldest night). **Save v39**: `EventStateDto.taken`/`premiumTaken` and
-`StreakStateDto.collectedDays`/`collectedPeakDay`, all inside existing rows, held by the shared
-`FloorSet` shape. No rules release, no deploy, no seed: the server judges a rung by its grant-log id
+`StreakStateDto.collectedRun`/`collectedNights`/`collectedAnchorNight`/`collectedAnchorDay`, all
+inside existing rows, held by the shared `FloorSet` shape (which `KeeperMilestoneSet` now delegates
+to as well). No rules release, no deploy, no seed: the server judges a rung by its grant-log id
 alone and a streak night by `advances`, whose backfill branch already accepts a night under the last
-one paid. Offline green: `compile.py` (all seventeen), `StreakTests` 68/68, `SeasonLedgerTests`
-33/33 (six new), `EventTests`, `SaveWiringTests` 6/6 (the four fields held to the mapper, the delta
-and the join by reflection), `CloudWireTests`, `CloudDepartureTests`, `KeeperMilestoneTests`,
-`EconomyAndMergeTests`, `TaskTests`, `loc.py`; three mutations (the season floor raised to the goal,
-the streak oldest-only, the claim day ignoring a shield's slide) each turned their fixture red.
+one paid. Offline green: `compile.py` (all seventeen), `StreakTests` 73/73, `SeasonLedgerTests`
+33/33, `EventTests`, `SaveWiringTests` 6/6 (every new field held to the mapper, the delta and the
+join by reflection), `CloudWireTests`, `CloudDepartureTests`, `KeeperMilestoneTests`,
+`EconomyAndMergeTests`, `TaskTests`, `AccountSwitchTests`, `loc.py`, and the whole
+`npm --prefix firebase/functions test` with **12/12 streak order replays** through the real
+`advances`. Mutations caught: the season floor raised to the goal, the streak oldest-only, the claim
+date ignoring the anchor (three tests), and a vector re-dated off the last paid night (both suites).
 `render_streak.py --state backlog` draws four nights lit with one taken early between them;
 `render_season.py` gained `--through`/`--taken`. **The owner tried chest opening on a device on
-2026-10-03 and it looked right.** **Still owed**: the Editor's `.meta` for
-`Domain/Persistence/FloorSet.cs` and the full EditMode suite; a `firebase/functions` test replaying
-out-of-order and shield-shifted streak claims through the real `advances` (only a C# mirror of it
-is tested); and one device pass that buys a shield between opening a newer night and an older one,
-the only path `ClaimDayAt` changes. A two-device merge across a shield can mark an unopened night as
-taken (withholds, never double-pays; fixed by recording the dating per entry, not built). **A v38 build on a second phone sees the floors alone**, so it can offer a rung or
+2026-10-03 and it looked right** (before the night-number rework of the same day). **Still owed**:
+the full EditMode suite (`FloorSet.cs.meta` is minted and committed); and one device
+pass that buys a shield between opening a newer night and an older one, the only path the claim line
+changes. Two devices that both make a run's **first** claim offline, either side of a shield, write
+two lines; the join keeps the later and the server judges what was sent on the other. **A v38 build on a second phone sees the floors alone**, so it can offer a rung or
 night this one took out of order: its currency is one claim id either way and is never paid twice,
-but its hearts and utilities would bank a second time, the same exposure 57d accepted.
+but its hearts and utilities would bank a second time, the same exposure 57d accepted. And because
+an old build rewrites the whole `streak` map without the new fields, a shield used on an old build
+mid-run can drop this build's out-of-order record for that run (the later start wins the join).
 
 **The void stone shipped in Neonhaven on 2026-10-03 (MODES.md 37fb) and has never been played or
 swept.** Client-only: no schema, no rules, no deploy, no seed (the server is published the

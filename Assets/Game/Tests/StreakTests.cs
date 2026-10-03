@@ -797,16 +797,16 @@ namespace GlimmerGrove.Tests
                            "night four has not happened yet");
         }
 
-        /// <summary>Takes the night on <paramref name="rung"/> through the pure record rule.</summary>
+        /// <summary>Takes night <paramref name="rung"/> through the pure record rule.</summary>
         static void Take(int start, int rung, ref int floor, ref int[] taken)
-            => DailyStreak.Collect(start, Day, Len(start, Day, Day), floor, taken,
-                                   DailyStreak.DayOfRung(start, rung), Ladder, out floor, out taken);
+            => DailyStreak.Collect(start, Day, Len(start, Day, Day), floor, taken, rung, Ladder,
+                                   out floor, out taken);
 
         /// <summary>
         /// <b>Any waiting night may be taken, and exactly that night</b> (48b, v39). The record
         /// was a floor alone, so only the oldest could be taken and a tap on a newer night was
-        /// redirected to it - read by the owner as tapping the bottom chest and watching another
-        /// open. Each night is its own ceremony, and taking one takes nothing else with it.
+        /// redirected to it - read by the owner as tapping one chest and watching another open.
+        /// Each night is its own ceremony, and taking one takes nothing else with it.
         /// </summary>
         [Test]
         public void AnyWaitingNightIsCollectableAndOnlyThatNightIsTaken()
@@ -823,7 +823,7 @@ namespace GlimmerGrove.Tests
             Take(start, 3, ref floor, ref taken);
 
             Assert.AreEqual(start - 1, floor, "taking the newest leaves the floor where it was");
-            CollectionAssert.AreEqual(new[] { Day }, taken, "and writes that one night down");
+            CollectionAssert.AreEqual(new[] { 3 }, taken, "and writes that one night down");
             Assert.IsTrue(DailyStreak.WaitingAt(start, Day, floor, taken, Day, 1, Ladder, 0, Days));
             Assert.IsTrue(DailyStreak.WaitingAt(start, Day, floor, taken, Day, 2, Ladder, 0, Days));
             Assert.IsFalse(DailyStreak.WaitingAt(start, Day, floor, taken, Day, 3, Ladder, 0, Days),
@@ -866,7 +866,7 @@ namespace GlimmerGrove.Tests
             int floor = start - 1;
 
             var full = new int[FloorSet.MaxTaken];
-            for (int i = 0; i < full.Length; i++) full[i] = DailyStreak.DayOfRung(start, i + 3);
+            for (int i = 0; i < full.Length; i++) full[i] = i + 3;
 
             Assert.IsTrue(DailyStreak.CollectableAt(start, Day, floor, full, Day, 1, Ladder, 0, Days));
             Assert.IsFalse(DailyStreak.CollectableAt(start, Day, floor, full, Day, 2, Ladder, 0, Days),
@@ -874,10 +874,10 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// The server's rule, mirrored: <c>advances</c> in <c>functions/src/streak.ts</c> accepts a
-        /// night dated at or before the last one it paid only when <c>night == paidNight +
-        /// elapsed</c>. Copied here so the claim dates below are held to the arithmetic that will
-        /// judge them; the server's own suite holds the original.
+        /// The server's rule, mirrored for the cases below. <c>advances</c> in
+        /// <c>functions/src/streak.ts</c> is the original, and
+        /// <c>firebase/functions/test/reward-vectors.mjs</c> replays the same claim sequences
+        /// (<c>streakOrderCases</c>) through it, so this copy cannot drift unnoticed.
         /// </summary>
         static bool ServerAdvances(int paidDay, int paidNight, int day, int night)
         {
@@ -890,73 +890,234 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A night taken below one already paid is accepted by the server exactly, with no
-        /// shield in the way - and that is every streak nobody protected, so its ids are the
-        /// night's own day, as they always were.
+        /// A night taken under one already paid is dated on its own day when no shield came
+        /// between, so every streak nobody protected writes the ids it always did.
         /// </summary>
         [Test]
         public void ANightTakenUnderAPaidOneIsDatedOnItsOwnDay()
         {
             int start = StartOf(5);
-            int top = DailyStreak.DayOfRung(start, 5);
+            int paidDay = DailyStreak.DayOfRung(start, 5);
 
             for (int rung = 1; rung <= 4; rung++)
             {
-                int day = DailyStreak.ClaimDayAt(start, top, top, rung);
+                int day = DailyStreak.ClaimDayAt(start, 5, paidDay, rung);
                 Assert.AreEqual(DailyStreak.DayOfRung(start, rung), day, "no slide, no change to the id");
-                Assert.IsTrue(ServerAdvances(top, 5, day, rung), $"night {rung} under night 5 is paid");
+                Assert.IsTrue(ServerAdvances(paidDay, 5, day, rung), $"night {rung} under night 5 is paid");
             }
         }
 
         /// <summary>
-        /// <b>Across a shield the night's own day stops adding up</b>, which is why the claim day
-        /// exists. Night five taken on its day, nights one to four left, then four protected days:
-        /// the run slides four days, so every waiting night's own day slides too - and the server,
-        /// which paid night five on the real calendar, would refuse them all and the client would
-        /// drop the coins it had shown. Dated by <see cref="DailyStreak.ClaimDayAt"/>, each is
-        /// accepted exactly.
+        /// <b>Across a shield the night's own day stops adding up</b>, which is why the paid
+        /// night's day is recorded. Night five paid on its day, nights one to four left, then two
+        /// forgiven days: every waiting night's own day slides, and the server - which paid night
+        /// five on the real calendar - would refuse each of them, and the client would drop the
+        /// coins it had shown. Dated off the recorded paid day, each is accepted exactly.
         /// </summary>
         [Test]
         public void ANightTakenUnderAPaidOneAcrossAShieldIsDatedInThePaidCalendar()
         {
             const int Slide = 2;
             int oldStart = StartOf(5) - 10;
-            int paidDay = DailyStreak.DayOfRung(oldStart, 5);   // night five, claimed on its own day
-
-            int newStart = oldStart + Slide;                    // the shield forgave two days
-            int top = paidDay + Slide;                          // the list entry slid with the run
+            int paidDay = DailyStreak.DayOfRung(oldStart, 5);
+            int newStart = oldStart + Slide;
 
             for (int rung = 1; rung <= 4; rung++)
             {
-                int own = DailyStreak.DayOfRung(newStart, rung);
-                Assert.IsFalse(ServerAdvances(paidDay, 5, own, rung),
+                Assert.IsFalse(ServerAdvances(paidDay, 5, DailyStreak.DayOfRung(newStart, rung), rung),
                                "precondition: the slid day is one the server refuses");
 
-                int day = DailyStreak.ClaimDayAt(newStart, top, paidDay, rung);
+                int day = DailyStreak.ClaimDayAt(newStart, 5, paidDay, rung);
                 Assert.IsTrue(ServerAdvances(paidDay, 5, day, rung), $"night {rung} is dated so it is paid");
             }
 
-            Assert.AreEqual(DailyStreak.DayOfRung(newStart, 6), DailyStreak.ClaimDayAt(newStart, top, paidDay, 6),
-                            "a night above the one paid keeps its own day");
-            Assert.IsTrue(ServerAdvances(paidDay, 5, DailyStreak.DayOfRung(newStart, 6), 6));
+            Assert.AreEqual(paidDay + 1, DailyStreak.ClaimDayAt(newStart, 5, paidDay, 6),
+                            "a night above it is on the same line, a day behind its slid calendar");
+            Assert.IsTrue(ServerAdvances(paidDay, 5, paidDay + 1, 6));
+            Assert.LessOrEqual(paidDay + 1, DailyStreak.DayOfRung(newStart, 6),
+                               "and the line is never ahead of a night's own day");
         }
 
-        /// <summary>The join unions the nights taken early, and is a join (11b).</summary>
+        /// <summary>
+        /// <b>The client half of <c>firebase/shared/streak-order-vectors.json</c>.</b> Each case is
+        /// played through the ledger's own rules - a day played is <see cref="DailyStreak.Advance"/>
+        /// and <see cref="DailyStreak.SeedCollected"/>, a tap is <see cref="DailyStreak.Collect"/>
+        /// and <see cref="StreakTaken"/> - and the day every tap's claim is dated under must be the
+        /// one the file names. <c>firebase/functions/test/reward-vectors.mjs</c> replays the same
+        /// claims through the server's real <c>advances</c>, in tap order and in the day-sorted
+        /// order <c>claimAwards</c> batches them in, so a claim the client dates is a claim the
+        /// server pays.
+        /// </summary>
         [Test]
-        public void TheJoinUnionsTheNightsTakenEarly()
+        public void EveryOrderVectorIsDatedTheWayTheServerPaysIt()
         {
-            var a = new StreakStateDto { startDay = Day - 4, lastPlayedDay = Day, collectedThroughDay = Day - 5,
-                                         collectedDays = new[] { Day }, collectedPeakDay = Day };
-            var b = new StreakStateDto { startDay = Day - 4, lastPlayedDay = Day, collectedThroughDay = Day - 4,
-                                         collectedDays = new[] { Day - 2 }, collectedPeakDay = Day - 2 };
+            var file = TestJson.ReadShared("streak-order-vectors.json");
+            int shieldDays = TestJson.Int(file, "shieldDays");
+            var failures = new List<string>();
+            int seen = 0;
 
-            var joined = DailyStreak.Join(a, b);
-            Assert.AreEqual(Day - 4, joined.collectedThroughDay);
-            CollectionAssert.AreEqual(new[] { Day - 2, Day }, joined.collectedDays);
-            Assert.AreEqual(Day, joined.collectedPeakDay);
+            foreach (object raw in TestJson.Children(file, "streakOrderCases"))
+            {
+                var c = TestJson.Object(raw);
+                string name = TestJson.Str(c, "name");
 
-            CollectionAssert.AreEqual(joined.collectedDays, DailyStreak.Join(b, a).collectedDays, "commutative");
-            CollectionAssert.AreEqual(joined.collectedDays, DailyStreak.Join(joined, joined).collectedDays, "idempotent");
+                int start = 0, last = 0, floor = 0, shieldFrom = 0;
+                var taken = StreakTaken.Fresh(0);
+                var claims = new List<string>();
+
+                foreach (object rawStep in TestJson.Children(c, "steps"))
+                {
+                    var step = TestJson.Object(rawStep);
+
+                    if (step.ContainsKey("shield"))
+                    {
+                        shieldFrom = TestJson.Int(step, "shield");
+                    }
+                    else if (step.ContainsKey("play"))
+                    {
+                        int today = TestJson.Int(step, "play");
+                        DailyStreak.Advance(start, last, today, shieldFrom, shieldDays,
+                                            out int nextStart, out int nextLast, out int forgiven);
+                        bool continues = nextStart != today;
+
+                        floor = DailyStreak.SeedCollected(floor, today, continues, forgiven);
+                        start = nextStart;
+                        last = nextLast;
+                        taken = (continues ? taken : StreakTaken.Fresh(today)).Canonical(start, last, floor);
+                    }
+                    else
+                    {
+                        int night = TestJson.Int(step, "take");
+                        if (!DailyStreak.WaitingAt(start, last, floor, taken.Nights, last, night, Ladder,
+                                                   shieldFrom, shieldDays))
+                        {
+                            failures.Add($"'{name}': night {night} is not waiting when tapped");
+                            break;
+                        }
+
+                        int claimDay = taken.ClaimDay(start, night);
+                        DailyStreak.Collect(start, last, DailyStreak.LengthOf(start, last, last, shieldFrom, shieldDays),
+                                            floor, taken.Nights, night, Ladder, out floor, out int[] nights);
+                        taken = taken.Claimed(nights, night, claimDay);
+                        claims.Add($"[{claimDay}, {night}]");
+                    }
+                }
+
+                var want = new List<string>();
+                foreach (object pair in TestJson.Children(c, "claims"))
+                {
+                    var two = TestJson.Array(pair);
+                    want.Add($"[{System.Convert.ToInt32(two[0])}, {System.Convert.ToInt32(two[1])}]");
+                }
+
+                string got = string.Join(" ", claims), expected = string.Join(" ", want);
+                if (got != expected) failures.Add($"'{name}': expected {expected}, got {got}");
+                seen++;
+            }
+
+            Assert.GreaterOrEqual(seen, 6, "the order vectors are missing cases");
+            Assert.IsEmpty(failures,
+                           "the client no longer dates streak claims the way the shared vectors say - " +
+                           "and the server suite proves those are the dates it pays. " +
+                           string.Join("; ", failures));
+        }
+
+        /// <summary>The run's first claim fixes its line, and nothing claimed after it moves the line.</summary>
+        [Test]
+        public void TheFirstClaimFixesTheLine()
+        {
+            var taken = StreakTaken.Fresh(Day - 4).Claimed(new[] { 5 }, 5, Day);
+            Assert.AreEqual(5, taken.AnchorNight);
+            Assert.AreEqual(Day, taken.AnchorDay);
+
+            taken = taken.Claimed(new[] { 3, 5 }, 3, Day - 2);
+            taken = taken.Claimed(new[] { 3, 5, 6 }, 6, Day + 1);
+            Assert.AreEqual(5, taken.AnchorNight, "a later claim does not move the anchor");
+            Assert.AreEqual(Day, taken.AnchorDay);
+            Assert.AreEqual(Day - 4, taken.ClaimDay(Day - 2, 1), "and night one is on its line");
+        }
+
+        /// <summary>
+        /// <b>The join that a list of days could not do.</b> One phone took night five and then
+        /// slid two days across a shield; the tablet took night three before the slide and never
+        /// synced. Kept in days the two records named different nights; kept as night numbers in
+        /// one run they are the same run, so the join is a plain union and neither device's
+        /// night is lost or misread.
+        /// </summary>
+        [Test]
+        public void TwoDevicesOnOneRunJoinAcrossAShield()
+        {
+            const int Run = 20_480;
+            var phone = new StreakStateDto { startDay = Run + 2, lastPlayedDay = Run + 6,
+                                             collectedThroughDay = Run + 1,
+                                             collectedRun = Run, collectedNights = new[] { 5 },
+                                             collectedAnchorNight = 5, collectedAnchorDay = Run + 4 };
+            var tablet = new StreakStateDto { startDay = Run, lastPlayedDay = Run + 4,
+                                              collectedThroughDay = Run - 1,
+                                              collectedRun = Run, collectedNights = new[] { 3 },
+                                              collectedAnchorNight = 3, collectedAnchorDay = Run + 2 };
+
+            var joined = DailyStreak.Join(phone, tablet);
+            Assert.AreEqual(Run + 2, joined.startDay);
+            CollectionAssert.AreEqual(new[] { 3, 5 }, joined.collectedNights, "both nights survive, as nights");
+            Assert.AreEqual(Run - 1, joined.collectedAnchorDay - joined.collectedAnchorNight,
+                            "both devices claimed on one line, and the join keeps it");
+
+            Assert.IsFalse(DailyStreak.CollectedAt(joined.startDay, joined.collectedThroughDay,
+                                                   joined.collectedNights, 4),
+                           "and a night neither device took is not marked as taken");
+
+            CollectionAssert.AreEqual(joined.collectedNights, DailyStreak.Join(tablet, phone).collectedNights, "commutative");
+            CollectionAssert.AreEqual(joined.collectedNights, DailyStreak.Join(joined, joined).collectedNights, "idempotent");
+        }
+
+        /// <summary>
+        /// A restart is a new run, and two runs do not join: the record kept is the one belonging
+        /// to the later start, which is the one the merge keeps. Otherwise a night taken in the
+        /// old run would read as taken in the new one.
+        /// </summary>
+        [Test]
+        public void ARestartedRunDropsTheOldRunsRecord()
+        {
+            var old = new StreakStateDto { startDay = Day - 10, lastPlayedDay = Day - 6,
+                                           collectedThroughDay = Day - 11,
+                                           collectedRun = 0, collectedNights = new[] { 3 },
+                                           collectedAnchorNight = 3, collectedAnchorDay = Day - 8 };
+            var restarted = new StreakStateDto { startDay = Day, lastPlayedDay = Day,
+                                                 collectedThroughDay = Day - 1, collectedRun = Day };
+
+            var joined = DailyStreak.Join(old, restarted);
+            Assert.AreEqual(Day, joined.collectedRun);
+            CollectionAssert.IsEmpty(joined.collectedNights);
+            Assert.AreEqual(0, joined.collectedAnchorNight, "nothing from the old run dates a new night");
+            CollectionAssert.AreEqual(joined.collectedNights, DailyStreak.Join(restarted, old).collectedNights);
+        }
+
+        /// <summary>
+        /// A record from a run this file no longer describes - a restart by a build that does not
+        /// carry the record - cannot name a night past the run's own length, so canonicalising
+        /// against the new run sheds it rather than dating a new night off an old calendar.
+        /// </summary>
+        [Test]
+        public void ARecordLongerThanItsRunIsShed()
+        {
+            var stale = new StreakTaken(0, new[] { 4, 6 }, 6, Day - 20);
+            var canonical = stale.Canonical(Day - 1, Day, Day - 2);    // a run two nights long
+
+            CollectionAssert.IsEmpty(canonical.Nights);
+            Assert.AreEqual(0, canonical.AnchorNight);
+        }
+
+        /// <summary>A loaded record writes back exactly what it read (invariant 11f).</summary>
+        [Test]
+        public void TheCanonicalFormIsAFixedPoint()
+        {
+            var raw = new StreakTaken(7, new[] { 9, 4, 4, 2, 30 }, 9, Day);
+            int start = Day - 9, floor = start + 1;                    // nights 1 and 2 under the floor
+
+            var once = raw.Canonical(start, Day, floor);
+            CollectionAssert.AreEqual(new[] { 4, 9 }, once.Nights, "sorted, distinct, above the floor, inside the run");
+            Assert.IsTrue(once.Same(once.Canonical(start, Day, floor)));
         }
 
         /// <summary>

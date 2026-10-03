@@ -483,5 +483,31 @@ namespace GlimmerGrove.Tests
             Assert.IsTrue(names.Contains(AssetPipeline.AssetManifest.SiegeArt("gem_void")),
                           "the siege never names gem_void, so it ships addressed and unloadable");
         }
+
+        // ----------------------------------------------------------------- the drawing's clock
+        /// <summary>
+        /// **The field is under the horizon before the beam leaves it.** The beam is model time
+        /// (<see cref="SiegeTuning.VoidGather"/>) and the fall is drawn in real time with the run's
+        /// clock slowed to <see cref="SiegeView.SwallowPace"/> for exactly as long as it lasts, so
+        /// the model time that passes during the fall has to be less than the gather - or a
+        /// longer fall would have the beam fire through gems still falling in. Asked of the
+        /// figures rather than of a frame, because no offline fixture can run the view's clock.
+        /// </summary>
+        [Test]
+        public void TheFieldIsSwallowedBeforeTheBeamLeaves()
+        {
+            float fall = SiegeView.GulpSpread + SiegeView.GulpFor;
+
+            Assert.Greater(SiegeView.SwallowPace, 0f, "the swallow stops the hill dead");
+            Assert.Less(SiegeView.SwallowPace, 1f, "the swallow does not slow the clock at all");
+            Assert.Less(SiegeView.SwallowPace * fall, SiegeTuning.VoidGather,
+                        "the beam leaves before the last gem is under the horizon");
+
+            // And the refill's patience outlasts the whole swallow at full pace afterwards, with
+            // room to spare - it is the net under a beam that never comes, never a clock that
+            // cuts a real one short.
+            Assert.Greater(SiegeView.VoidPatience, fall + SiegeTuning.VoidGather + 1f,
+                           "the refill gives up on a beam that is still on its way");
+        }
     }
 }

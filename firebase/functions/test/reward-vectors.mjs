@@ -274,7 +274,7 @@ console.log(`  ${markCases.length - markFailures}/${markCases.length} season che
  */
 const streakCompiled = join(REPO, "firebase", "functions", "lib", "streak.js");
 const {
-  rungFor, usableStreakConfig, advances, rollStreakChest, streakSubject,
+  rungFor, usableStreakConfig, advances, raise, rollStreakChest, streakSubject,
 } = await import(pathToFileURL(streakCompiled).href);
 
 const streakLadder = vectors.streakLadder;
@@ -441,6 +441,56 @@ for (const [name, floor, day, night, want] of advanceCases) {
 
 failures += advanceFailures;
 console.log(`  ${advanceCases.length - advanceFailures}/${advanceCases.length} streak advance case(s) ok`);
+
+// ------------------------------------------------------------ nights in any order
+/**
+ * Streak nights are taken in any order (CLAUDE.md 48b, save v39), and every claim of a run is
+ * dated on one line fixed by its first claim (`DailyStreak.ClaimDayAt`). These are the claim
+ * sequences the client derives - `StreakTests.EveryOrderVectorIsDatedTheWayTheServerPaysIt`
+ * reproduces each one from the real ledger rules - replayed here through the real `advances`
+ * and `raise`, twice: in the order they were tapped, which is what separate syncs deliver, and
+ * sorted by day, which is what `claimAwards` does to one batch. A refusal here is a night the
+ * client showed and would then take back (45d).
+ */
+const orderVectors = JSON.parse(
+  readFileSync(join(REPO, "firebase", "shared", "streak-order-vectors.json"), "utf8")
+);
+const orderCases = orderVectors.streakOrderCases ?? [];
+let orderFailures = 0;
+
+function replay(name, floor0, claims) {
+  let floor = { paidThroughDay: floor0[0], paidNight: floor0[1] };
+  for (const [day, night] of claims) {
+    if (!advances(floor, day, night)) {
+      orderFailures++;
+      console.log(`  FAIL order '${name}': refused night ${night} on ${day} ` +
+                  `(paid night ${floor.paidNight} on ${floor.paidThroughDay})`);
+      return;
+    }
+    floor = raise(floor, day, night);
+  }
+}
+
+if (orderCases.length < 6) {
+  orderFailures++;
+  console.log("  FAIL the streak order vectors are missing");
+}
+
+for (const c of orderCases) {
+  const ids = new Set(c.claims.map(([day, night]) => `${day}:${night}`));
+  const nights = new Set(c.claims.map(([, night]) => night));
+  if (ids.size !== c.claims.length || nights.size !== c.claims.length) {
+    orderFailures++;
+    console.log(`  FAIL order '${c.name}': a night is claimed twice`);
+  }
+
+  replay(`${c.name} (as tapped)`, c.serverFloor, c.claims);
+  replay(`${c.name} (one batch, sorted by day)`, c.serverFloor,
+         [...c.claims].sort((a, b) => a[0] - b[0]));
+}
+
+failures += orderFailures;
+console.log(`  ${orderCases.length * 2 - orderFailures}/${orderCases.length * 2} streak order replay(s) ok`);
 
 // --------------------------------------------------------------- bonus wheel
 /**

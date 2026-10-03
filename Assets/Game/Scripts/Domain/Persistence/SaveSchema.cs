@@ -623,11 +623,11 @@ namespace GlimmerGrove.Persistence
         ///      version moves for v35's reason.
         /// v39: chests taken out of order on the season and the streak. <see cref="EventStateDto.taken"/>
         ///      and <see cref="EventStateDto.premiumTaken"/> are the rungs opened above each
-        ///      track's floor; <see cref="StreakStateDto.collectedDays"/> the nights taken above
-        ///      the collected floor, and <see cref="StreakStateDto.collectedPeakDay"/> the latest
-        ///      day a night was claimed under. All four ride inside an existing row or map, so no
-        ///      rules release (12a); absent is empty or nought, so no migration. The version
-        ///      moves for v35's reason.
+        ///      track's floor; <see cref="StreakStateDto.collectedNights"/> the nights of the
+        ///      run taken above the collected floor, with the run they belong to and the anchor
+        ///      that fixes the run's claim line (<c>Daily.StreakTaken</c>). All of it rides inside an existing row or
+        ///      map, so no rules release (12a); absent is empty or nought, so no migration. The
+        ///      version moves for v35's reason.
         public const int Version = 39;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
@@ -1668,38 +1668,36 @@ namespace GlimmerGrove.Persistence
         public int shieldFromDay;
 
         /// <summary>
-        /// The nights taken <b>above</b> <see cref="collectedThroughDay"/>, as day keys.
-        ///
-        /// <para>
-        /// A night can be taken in any order, so the floor alone is no longer the whole
-        /// answer: this is the short list of days whose night was collected while an older one
-        /// still waited (<see cref="FloorSet"/>). Days rather than night numbers, for the
-        /// floor's reason - a restarted streak seeds the floor to the day before it, which
-        /// puts every older day under the floor and empties the list by itself, where a list
-        /// of night numbers would have to be cleared and so could not be joined (11b).
-        /// </para>
-        /// <para>
-        /// Joined by union, canonical on every side (<see cref="FloorSet.Normal"/>), empty
-        /// for a player who takes nights oldest first - which is exactly the file every build
-        /// before v39 wrote.
-        /// </para>
+        /// Which run <see cref="collectedNights"/> and the anchor belong to: the day this
+        /// record began a run, or 0 for the run already in progress when a device first carried
+        /// it. A shield never changes it; a restart does (<c>Daily.StreakTaken</c>).
         /// </summary>
-        public int[] collectedDays;
+        public int collectedRun;
 
         /// <summary>
-        /// The latest day key any night was <b>claimed under</b>, or 0 before v39.
+        /// The nights of <see cref="collectedRun"/> taken <b>above</b>
+        /// <see cref="collectedThroughDay"/>, out of order, as night numbers.
         ///
         /// <para>
-        /// Monotonic, joined by <c>max</c>. It exists for one case: a night left waiting
-        /// under a taken one, across days a shield forgave. Forgiveness slides the run's
-        /// start, so every night's day slides with it - but the server remembers the day it
-        /// really paid the higher night on, and a night under it must be claimed against
-        /// <em>that</em> calendar (<c>advances</c> in <c>functions/src/streak.ts</c>). The
-        /// difference between this and the highest taken day is exactly how far the run has
-        /// slid since; see <c>DailyStreak.ClaimDayAt</c>.
+        /// Night numbers rather than days, because a shield slides every night's day (48d) and a
+        /// night number does not move - so two devices that have and have not slid still mean
+        /// the same nights. Union-joined within one run, canonical on every side, and empty for a
+        /// player who takes nights oldest first, which is exactly the file every build before
+        /// v39 wrote.
         /// </para>
         /// </summary>
-        public int collectedPeakDay;
+        public int[] collectedNights;
+
+        /// <summary>The first night claimed in <see cref="collectedRun"/>, or 0 before any.</summary>
+        public int collectedAnchorNight;
+
+        /// <summary>
+        /// The day <see cref="collectedAnchorNight"/> was claimed under, or 0. It fixes the line
+        /// every claim of the run is dated on - <c>day = night + (anchorDay - anchorNight)</c> -
+        /// because that is the one dating the server's <c>advances</c> accepts in every order,
+        /// across a shield too (<c>DailyStreak.ClaimDayAt</c>).
+        /// </summary>
+        public int collectedAnchorDay;
     }
 
     /// <summary>

@@ -1169,7 +1169,11 @@ and its own spell row in `SiegeShotBake` (37dc); scope in `SiegeMode.Bosses`; a 
    across whatever it leaves, which is what the first render showed). Its stone is cut from the
    owner's painting by `Tools/make_gravity_fx.py` (`gem_void`), scoped by `SiegeMode.VoidArt`.
    **Neonhaven's fields are re-dealt by it and have not been swept**: the stone is clutter until
-   it fires and the largest payoff on the field when it does.
+   it fires and the largest payoff on the field when it does. **Slowed to be seen on
+   2026-10-03** (the owner: "too fast, I cannot see it"): the fall is half as long again and the
+   beam stands a second, and the run's clock runs at `SwallowPace` (.6) for exactly the fall, so
+   the beam, which is model time, still leaves after the last gem is in. No rule, figure or model
+   timing moved (`TheFieldIsSwallowedBeforeTheBeamLeaves`).
 37fc. **A curse is a smaller multiplier and a hurt over time, and the hurt is the line's, never a
    number** (2026-10-03, the owner: "+20% and a DOT for six seconds, scaling as the chapters
    do"). `HexPercent` 150 -> **120**, rounded half up so a burn's instalment still takes its
