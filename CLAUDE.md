@@ -1994,10 +1994,13 @@ and the join by reflection), `CloudWireTests`, `CloudDepartureTests`, `KeeperMil
 `EconomyAndMergeTests`, `TaskTests`, `loc.py`; three mutations (the season floor raised to the goal,
 the streak oldest-only, the claim day ignoring a shield's slide) each turned their fixture red.
 `render_streak.py --state backlog` draws four nights lit with one taken early between them;
-`render_season.py` gained `--through`/`--taken`. **Owed: the Editor's `.meta` for
-`Domain/Persistence/FloorSet.cs`, the EditMode suite, and a device**: let three nights and three
-rungs stack up, open them top-down, and check each one alone goes spent and the hub badges count
-down by one. **A v38 build on a second phone sees the floors alone**, so it can offer a rung or
+`render_season.py` gained `--through`/`--taken`. **The owner tried chest opening on a device on
+2026-10-03 and it looked right.** **Still owed**: the Editor's `.meta` for
+`Domain/Persistence/FloorSet.cs` and the full EditMode suite; a `firebase/functions` test replaying
+out-of-order and shield-shifted streak claims through the real `advances` (only a C# mirror of it
+is tested); and one device pass that buys a shield between opening a newer night and an older one,
+the only path `ClaimDayAt` changes. A two-device merge across a shield can mark an unopened night as
+taken (withholds, never double-pays; fixed by recording the dating per entry, not built). **A v38 build on a second phone sees the floors alone**, so it can offer a rung or
 night this one took out of order: its currency is one claim id either way and is never paid twice,
 but its hearts and utilities would bank a second time, the same exposure 57d accepted.
 
