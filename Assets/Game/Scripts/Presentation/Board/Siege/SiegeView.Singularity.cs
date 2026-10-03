@@ -410,6 +410,9 @@ namespace GlimmerGrove
             Lightup(Pal.Cream, .42f, .22f);
             Lightup(WellViolet, .26f, BeamFor + .3f);
 
+            // The blast is the beam's voice on a phone: the thunder and the boom under it are
+            // almost all below 500 Hz, which a handset speaker barely plays (Tools/sfx.tsv).
+            Audio.Sfx("voidblast", 1f);
             Audio.Sfx("thunder", .95f, 1.22f);
             Audio.Sfx("boom", .80f, .62f);
             Audio.Sfx("arc", .70f, .80f);

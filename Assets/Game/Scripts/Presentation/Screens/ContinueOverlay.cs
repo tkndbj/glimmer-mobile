@@ -138,14 +138,23 @@ namespace GlimmerGrove
             // Held back until the word above has landed and risen. Sequencing them is what makes
             // the two read as one sentence - this happened, so: this question - and it is the
             // whole reason the banner is worth animating at all.
-            var entrance = Panel.gameObject.AddComponent<CanvasGroup>();
-            entrance.alpha = 0f;
-
-            Tween.Run(ContinuePanel.PanelEnter, Ease.OutCubic, t =>
+            //
+            // **Never on a rebuild.** A rebuild is the same panel in a new state (ModalView's
+            // rule), and this fade and the banner below were the two entrances that did not ask:
+            // every balance change faded the panel out to nothing and threw DEFEAT back into the
+            // middle of the screen, which players met as the defeat and the offer reappearing by
+            // themselves while they were reading it.
+            if (!Rebuilding)
             {
-                if (entrance) entrance.alpha = t;
-            }, entrance).Delay(ContinuePanel.PanelDelay)
-               .OnAbandon(() => { if (entrance) entrance.alpha = 1f; });
+                var entrance = Panel.gameObject.AddComponent<CanvasGroup>();
+                entrance.alpha = 0f;
+
+                Tween.Run(ContinuePanel.PanelEnter, Ease.OutCubic, t =>
+                {
+                    if (entrance) entrance.alpha = t;
+                }, entrance).Delay(ContinuePanel.PanelDelay)
+                   .OnAbandon(() => { if (entrance) entrance.alpha = 1f; });
+            }
 
             // The word first, so nobody has to infer from a price that they have lost. It was
             // reported exactly that way - a panel offering gems, read as the cost of *finishing*
@@ -244,6 +253,13 @@ namespace GlimmerGrove
             why.raycastTarget = false;
             why.transform.SetParent(rt, false);
 
+            // A rebuild draws the word where it already rests. See the entrance in Build.
+            if (Rebuilding)
+            {
+                rt.anchoredPosition = new Vector2(0f, rest);
+                return;
+            }
+
             Tween.Run(ContinuePanel.BannerPop, Ease.OutBack, t =>
             {
                 if (!word) return;
@@ -299,7 +315,7 @@ namespace GlimmerGrove
                 // - the offer is still good, the player simply cannot meet it yet, and this
                 // panel already knows how to say that.
                 Audio.SfxVaried("back", .5f);
-                Rebuild();
+                Refresh();
                 return;
             }
 
@@ -331,7 +347,7 @@ namespace GlimmerGrove
         {
             if (_reported) return;
 
-            Flow.Modal<GemShopOverlay>(v => v.Bought = Rebuild);
+            Flow.Modal<GemShopOverlay>(v => v.Bought = Refresh);
         }
 
         // ------------------------------------------------------------------ repainting
@@ -346,7 +362,35 @@ namespace GlimmerGrove
             => GemPrice.ChoiceFor(Profile.Gems, Offer.Gems,
                                      StoreService.IsAvailable && StoreRules.Catalog.HasGems);
 
-        void OnBalanceChanged() => Rebuild();
+        void OnBalanceChanged() => Refresh();
+
+        /// <summary>
+        /// Redraws the panel when what it says has changed, and leaves it alone otherwise.
+        ///
+        /// <para>
+        /// <b>A change event is not a change</b> (invariant 44m). <c>PlayerProgression.Changed</c>
+        /// is raised by every sync, every foreground and every ledger that moves, and almost none
+        /// of them move the one thing this panel draws from the balance: whether the price can
+        /// be met (<see cref="GemChoice"/>). The offer itself is fixed for the panel's life. So
+        /// the panel was being thrown away and rebuilt under the player's thumb for nothing,
+        /// which could also swallow a tap landing on a button being replaced.
+        /// <c>HeartRescueFlow.Refresh</c> is the same rule on the defeat panel.
+        /// </para>
+        /// <para>
+        /// <b>Not while the debit is on the stack.</b> <see cref="Spend"/> raises the event from
+        /// inside itself with the gems already gone, which reads as "short of gems" and would
+        /// redraw the panel into the buy-gems state a frame before it closes - the reason
+        /// <see cref="_spending"/> exists, which nothing used to ask. And never after a report:
+        /// the decision is made and the panel is on its way out.
+        /// </para>
+        /// </summary>
+        void Refresh()
+        {
+            if (!this || _reported || _spending) return;
+            if (Choice() == _choice) return;
+
+            Rebuild();
+        }
 
         // ------------------------------------------------------------------ reporting
         /// <summary>

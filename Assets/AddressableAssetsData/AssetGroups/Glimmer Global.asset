@@ -29554,6 +29554,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/burn_g
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b1831198ac09489d98869ac5642fa5cc
+    m_Address: Audio/Sfx/voidblast
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b18f5163b3d31d04cb0a4411f406c0fb
     m_Address: Art/Ui/challenge_ad_play
     m_ReadOnly: 0

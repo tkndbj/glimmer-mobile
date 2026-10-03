@@ -619,6 +619,7 @@ namespace GlimmerGrove.AssetPipeline
             "lift", "stow", "chain",
             "rankup",
             "thunder", "arc", "charge",
+            "voidblast",
         };
 
         /// <summary>Everything the game needs before the menu appears.</summary>
