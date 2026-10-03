@@ -5894,6 +5894,10 @@
       "text": "NOTHING TO CURSE"
     },
     {
+      "key": "ui.siege.shuffle",
+      "text": "NO MOVES - SHUFFLE!"
+    },
+    {
       "key": "ui.title.elder",
       "text": "Groove Elder"
     },

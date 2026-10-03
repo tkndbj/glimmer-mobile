@@ -226,7 +226,7 @@ namespace GlimmerGrove.Modes
                 turn.Beats.Add(beat);
             }
 
-            Settle();
+            turn.Shuffled = Settle();
             return turn;
         }
 
@@ -338,15 +338,32 @@ namespace GlimmerGrove.Modes
         /// <b>A field that cannot be played is the one thing this mode may never show</b>, because
         /// its clock does not stop: a locked board with raiders still walking is a run the player
         /// watches themselves lose. It is deterministic, so two devices reshuffle the same way.
+        ///
+        /// <para>
+        /// <b>Answers where every cell's gem came from, or null when the field was left alone</b>
+        /// (<see cref="SiegeTurn.Shuffled"/>), so the view can draw the gems travelling to their
+        /// new cells rather than the whole board changing in one frame. The record is kept beside
+        /// the trades and costs no draw: the stream is asked exactly what it always was, so every
+        /// seed still deals the field it dealt (invariant 41).
+        /// </para>
         /// </summary>
-        void Settle()
+        int[] Settle()
         {
+            // The ordinary case, asked before anything is allocated: almost every turn leaves a
+            // move on the field, and this runs at the end of every one of them.
+            if (AnySwap()) return null;
+
             // **Only what may move is shuffled**, so a web and a sack keep the cells they were
             // put on. The alternative reads as the raider's own work being undone by the game
             // tidying up, and it would let a shuffle carry a lock into a corner the player had
             // just cleared.
             var free = new List<int>(_cells.Length);
             for (int i = 0; i < _cells.Length; i++) if (Movable(i)) free.Add(i);
+
+            // origin[cell] is the cell whose gem is standing there now - traded alongside the
+            // cells, so however many attempts it takes the record is the whole journey.
+            var origin = new int[_cells.Length];
+            for (int i = 0; i < origin.Length; i++) origin[i] = i;
 
             for (int attempt = 0; attempt < 40 && !AnySwap(); attempt++)
             {
@@ -356,12 +373,21 @@ namespace GlimmerGrove.Modes
                 {
                     int j = (int)(Next() % (uint)(i + 1));
                     Trade(free[i], free[j]);
+
+                    int was = origin[free[i]];
+                    origin[free[i]] = origin[free[j]];
+                    origin[free[j]] = was;
                 }
 
                 // A shuffle that lands three alike together would go off with nobody having
                 // touched it, so it is dealt again rather than resolved.
                 if (SiegeLayout.Runs(_cells, Width, Height, _charms).Count > 0) continue;
             }
+
+            for (int i = 0; i < origin.Length; i++)
+                if (origin[i] != i) return origin;
+
+            return null;
         }
 
         /// <summary>

@@ -109,6 +109,11 @@ namespace GlimmerGrove
             for (int i = 0; i < turn.Beats.Count; i++)
                 yield return Beat(turn.Beats[i]);
 
+            // **A field left with no move is dealt again by the model, and drawn here** before
+            // the repaint, which would otherwise show it as every cell changing in one frame.
+            // Still `Busy`, so nothing can be swapped while it turns. See `SiegeView.Shuffle`.
+            if (turn.Shuffled != null) yield return Reshuffling(turn.Shuffled);
+
             Busy = false;
             Repaint();
             Changed?.Invoke();
@@ -277,7 +282,7 @@ namespace GlimmerGrove
                 _gems[to] = gem;
 
                 float far = Mathf.Abs(gem.Img.rectTransform.anchoredPosition.y - CentreOf(to).y);
-                float fall = Mathf.Clamp(.09f + far / (Cell * 22f), .12f, .34f);
+                float fall = Mathf.Clamp(.09f + far / (Cell * 22f), .12f, DropMost);
 
                 Tween.Move(gem.Img.rectTransform, CentreOf(to), fall, Ease.OutBounce);
             }

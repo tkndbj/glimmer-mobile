@@ -1191,6 +1191,17 @@ and its own spell row in `SiegeShotBake` (37dc); scope in `SiegeMode.Bosses`; a 
    player never lines stones up on purpose - and it is the one dial. Held by `SiegeObsidianTests`
    (the instalments sum exactly, at 60 and 5 frames a second; the bodies withered are the bodies
    hexed, by the volley computed from the wards; each clause mutation-proved).
+37fd. **A dead field dealt again is drawn, and the board says how** (2026-10-03, the owner saw
+   level 131's board change in one frame). `Settle` always reshuffled a field with no move and
+   told nobody, so the view's picture was wrong until the end-of-turn repaint snapped every
+   cell; the stones made it common (Neonhaven ~0.4% of turns against Windwreck's ~0.05%,
+   measured by replaying the view's own bookkeeping). `SiegeTurn.Shuffled` now records where
+   each cell's gem came from - kept beside the trades, **no extra draw** (41) - and
+   `SiegeView.Reshuffling` turns the board over as one anticlockwise vortex in the field's own
+   proportions, rim first, under a slowed clock and a caption. Held by `SiegeShuffleTests`:
+   the view's picture plus the record is the model's field on every turn, and a changed field
+   with no record never happens (both mutation-proved; the second mutation is the original
+   fault, reproduced).
 38. **A mode hides behind one manifest boolean, and deleting one is a session.** Hidden is `"disabled":
    true` and nothing else; deleted means class, board, view, screen, validator, reading, bodies, art,
    mirrors and tools all go, with the ids spent.

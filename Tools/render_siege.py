@@ -3452,6 +3452,8 @@ def caption_lines():
     said.append(("unsealed", loc("mode.siege.unsealed"), TURN_SIZE, True))
     said.append(("forecast", loc("mode.siege.next"), 0.34, False))
     said.append(("chain", loc("mode.siege.chain", 9), 1.02, False))
+    # The dead field dealt again (`SiegeView.Reshuffling`), said on the chain's row.
+    said.append(("shuffle", loc("ui.siege.shuffle"), 0.86, False))
     said.append(("count", loc("mode.siege.go"), 1.1, False))
 
     return said

@@ -642,5 +642,21 @@ namespace GlimmerGrove.Modes
 
         /// <summary>Gems cleared altogether, which is what the flourish readout counts.</summary>
         public int Worth;
+
+        /// <summary>
+        /// Where each cell's gem came from when the field was dealt again for want of a move
+        /// (<c>SiegeBoard.Settle</c>) - <c>Shuffled[to] == from</c> - or null when it was not.
+        ///
+        /// <para>
+        /// <b>A record of the shuffle the board already made, so it can be drawn.</b> The field
+        /// was always dealt again when nothing on it lined up, and the view only ever learnt of
+        /// it by repainting every cell from the model at the end of the turn - so the whole board
+        /// changed in one frame, which read as a glitch rather than as the game helping. It is a
+        /// permutation over the cells and nothing more: the shuffle draws exactly what it always
+        /// drew from the stream (invariant 41), and a reader that ignores this field sees exactly
+        /// the board it always saw.
+        /// </para>
+        /// </summary>
+        public int[] Shuffled;
     }
 }
