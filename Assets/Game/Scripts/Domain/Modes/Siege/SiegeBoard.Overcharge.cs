@@ -121,7 +121,7 @@ namespace GlimmerGrove.Modes
             // number the player cannot see going stale.
             post.Charges--;
 
-            int lane = target.Lane;
+            int lane = target.Column;
             int row = SiegeTuning.RowOf(target.March);
 
             int absorbed = Unleash(post, lane, row, heavy, into);
@@ -148,7 +148,7 @@ namespace GlimmerGrove.Modes
                 var raider = _raiders[i];
                 if (!raider.Alive || !raider.OnTheHill) continue;
 
-                if (!SiegeTuning.Caught(raider.Kind, raider.Lane, raider.March, lane, row))
+                if (!SiegeTuning.Caught(raider.Kind, raider.Column, raider.March, lane, row))
                     continue;
 
                 int bites = Through(ward, raider, damage);

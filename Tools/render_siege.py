@@ -170,8 +170,8 @@ UTILITY_ART = REPO / "Assets" / "Game" / "Art" / "Ui" / "Utility"
 #: cooldown is here because it is 228 points of screen doing something a number cannot
 #: describe: whether a cell counting down still reads as an item you have, and whether the
 #: seconds are legible over the picture. Mirrors the `utilities` block.
-UTILITIES = ["firepot", "mending", "surge", "stormcall"]
-COOLDOWNS = {"firepot": 10, "mending": 15, "surge": 20, "stormcall": 30}
+UTILITIES = ["firepot", "mending", "surge", "stormcall", "gravityhole"]
+COOLDOWNS = {"firepot": 10, "mending": 15, "surge": 20, "stormcall": 30, "gravityhole": 45}
 
 #: `SiegeView`'s own numbers. The field is laid out to the *width* and the hill and the line
 #: then share what is left in the proportion below - see `SiegeView.Fit` and `MaxGemBand`.
@@ -3658,7 +3658,7 @@ def main():
         if not (ART / "Wards" / worn).exists():
             sys.exit("no turret called %s" % model)
 
-    held = {"firepot": 2, "mending": 0, "surge": 5, "stormcall": 1}
+    held = {"firepot": 2, "mending": 0, "surge": 5, "stormcall": 1, "gravityhole": 1}
 
     cooling = {}
     for pair in (args.cooling or "").split(","):

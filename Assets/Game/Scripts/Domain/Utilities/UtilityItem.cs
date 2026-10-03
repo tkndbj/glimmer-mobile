@@ -73,6 +73,25 @@ namespace GlimmerGrove.Utilities
         /// </para>
         /// </summary>
         Storm = 4,
+
+        /// <summary>
+        /// A gravity well opened on one of four places on the hill: every raider standing there
+        /// is dragged into it, held, and let go slowed.
+        ///
+        /// <para>
+        /// <b>It delivers no damage, so it is charged nothing</b> - a mending's answer to
+        /// invariant 39's one question, <em>how many matches would this have saved?</em> What it
+        /// sells is seconds and a place: the hill stops arriving for a moment, and everything on
+        /// it is standing in one box when it starts again. Damage is still only ever fuel, and
+        /// fuel is still only ever a match.
+        /// </para>
+        /// <para>
+        /// <b>A boss does not move</b>, for <c>SiegeRaider.Shove</c>'s reason: its fight is
+        /// measured from the ground it stands on. A well opened over a boss alone is refused
+        /// before the item is spent.
+        /// </para>
+        /// </summary>
+        Gravity = 5,
     }
 
     /// <summary>
@@ -137,6 +156,13 @@ namespace GlimmerGrove.Utilities
         /// this one.
         /// </summary>
         Fuel = 3,
+
+        /// <summary>
+        /// Tenths of a second. <b>Never climbs</b>, and has nothing to climb against: a second
+        /// a raider is held is a second on every chapter that will ever ship, whatever that
+        /// raider is carrying.
+        /// </summary>
+        Time = 4,
     }
 
     /// <summary>
@@ -170,6 +196,7 @@ namespace GlimmerGrove.Utilities
                 case UtilityKind.Storm: return UtilityUnit.Hill;
                 case UtilityKind.Mend: return UtilityUnit.Ward;
                 case UtilityKind.Surge: return UtilityUnit.Fuel;
+                case UtilityKind.Gravity: return UtilityUnit.Time;
                 case UtilityKind.None: return UtilityUnit.None;
                 default: return UtilityUnit.None;
             }
@@ -207,6 +234,17 @@ namespace GlimmerGrove.Utilities
         /// </b>
         /// </summary>
         Everywhere = 2,
+
+        /// <summary>
+        /// One of the hill's four wells (<c>SiegeTuning.GravityWells</c>): a quarter of the hill
+        /// each, tapped as a place.
+        ///
+        /// <b>Its own answer rather than a box of the firepot's grid</b>, because the two are
+        /// different questions: a firepot asks <em>which twenty-fifth of the hill burns</em>, and
+        /// this asks <em>which corner everything is dragged to</em>. Twenty panes that resolved to
+        /// four answers would be sixteen that reject nothing (invariant 5d).
+        /// </summary>
+        Well = 3,
     }
 
     /// <summary>
@@ -222,6 +260,7 @@ namespace GlimmerGrove.Utilities
         public const string Mend = "mend";
         public const string Surge = "surge";
         public const string Storm = "storm";
+        public const string Gravity = "gravity";
 
         public static UtilityKind Parse(string id)
         {
@@ -229,6 +268,7 @@ namespace GlimmerGrove.Utilities
             if (string.Equals(id, Mend, StringComparison.Ordinal)) return UtilityKind.Mend;
             if (string.Equals(id, Surge, StringComparison.Ordinal)) return UtilityKind.Surge;
             if (string.Equals(id, Storm, StringComparison.Ordinal)) return UtilityKind.Storm;
+            if (string.Equals(id, Gravity, StringComparison.Ordinal)) return UtilityKind.Gravity;
             return UtilityKind.None;
         }
 
@@ -240,6 +280,7 @@ namespace GlimmerGrove.Utilities
                 case UtilityKind.Mend: return Mend;
                 case UtilityKind.Surge: return Surge;
                 case UtilityKind.Storm: return Storm;
+                case UtilityKind.Gravity: return Gravity;
                 default: return string.Empty;
             }
         }
@@ -253,6 +294,7 @@ namespace GlimmerGrove.Utilities
         /// </summary>
         public static UtilityTarget TargetOf(UtilityKind kind)
             => kind == UtilityKind.Storm ? UtilityTarget.Everywhere
+             : kind == UtilityKind.Gravity ? UtilityTarget.Well
              : kind == UtilityKind.Blast ? UtilityTarget.Hill
              : UtilityTarget.Ward;
     }
@@ -283,7 +325,7 @@ namespace GlimmerGrove.Utilities
 
         /// <summary>
         /// How strong one is, in the unit its kind measures: damage for a blast, health for a
-        /// mend, fuel-tenths for a surge.
+        /// mend, fuel-tenths for a surge, tenths of a second held for a gravity well.
         ///
         /// <b>Tenths for the surge and whole numbers for the other two</b>, because fuel is the
         /// one quantity in <c>SiegeTuning</c> that is a float and a graded number decided by a

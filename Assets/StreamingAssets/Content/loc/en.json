@@ -6162,12 +6162,24 @@
       "text": "Tap a ward"
     },
     {
+      "key": "utility.aim.well",
+      "text": "Tap a corner of the hill"
+    },
+    {
       "key": "utility.firepot.name",
       "text": "Firepot"
     },
     {
       "key": "utility.firepot.note",
       "text": "Bursts on the hill, burning every raider close to where it lands."
+    },
+    {
+      "key": "utility.gravityhole.name",
+      "text": "Gravity Hole"
+    },
+    {
+      "key": "utility.gravityhole.note",
+      "text": "Drags every raider on the hill into one spot, holds them there, then lets them go slowed. A boss will not budge."
     },
     {
       "key": "utility.mending.name",

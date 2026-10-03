@@ -175,7 +175,14 @@ namespace GlimmerGrove.Tasks
                 },
                 new[]
                 {
-                    new ChestOption(new ChestBand(ChestDropKind.Utility, 1, 1, "stormcall"), 30),
+                    // **One slice cut in two, and the cut is the whole of the change**: the
+                    // stormcall's thirty became eighteen and twelve, side by side, so every
+                    // other option keeps the numbers it had and a chest that rolled gems before
+                    // the gravity hole shipped rolls the same gems after it. The pick is one
+                    // draw over the summed weights (invariant 9c), and currency is the only
+                    // thing in a chest the server recomputes.
+                    new ChestOption(new ChestBand(ChestDropKind.Utility, 1, 1, "stormcall"), 18),
+                    new ChestOption(new ChestBand(ChestDropKind.Utility, 1, 1, "gravityhole"), 12),
                     new ChestOption(new ChestBand(ChestDropKind.Gems, 5, 8), 30),
                     new ChestOption(new ChestBand(ChestDropKind.Hearts, 2, 3), 20),
                     new ChestOption(new ChestBand(ChestDropKind.HeartBoost, 24, 24), 20),
@@ -191,7 +198,9 @@ namespace GlimmerGrove.Tasks
                 new[]
                 {
                     new ChestOption(new ChestBand(ChestDropKind.Gems, 12, 20), 40),
-                    new ChestOption(new ChestBand(ChestDropKind.Utility, 3, 3, "firepot"), 25),
+                    // The gold tier's cut again: twenty-five became fifteen and ten.
+                    new ChestOption(new ChestBand(ChestDropKind.Utility, 3, 3, "firepot"), 15),
+                    new ChestOption(new ChestBand(ChestDropKind.Utility, 1, 1, "gravityhole"), 10),
                     new ChestOption(new ChestBand(ChestDropKind.Hearts, 5, 5), 15),
                     new ChestOption(new ChestBand(ChestDropKind.HeartBoost, 24, 24), 20),
                 }), 5);

@@ -54,6 +54,7 @@ namespace GlimmerGrove
             if (_arming.Target == UtilityTarget.Everywhere) return;
 
             if (_arming.Target == UtilityTarget.Ward) AimWards();
+            else if (_arming.Target == UtilityTarget.Well) AimWells();
             else AimHill();
         }
 
@@ -226,6 +227,14 @@ namespace GlimmerGrove
 
                 case UtilityKind.Surge:
                     Surged(use.Ward);
+                    break;
+
+                case UtilityKind.Gravity:
+                    // **Nothing is drawn here, and that is the rule rather than a gap.** A well
+                    // is put up, turned and taken down off the model's own state
+                    // (`SiegeView.Welling`), so the frame after this the board says one is open
+                    // and the drawing follows - one path, whether it was opened by this tap or
+                    // is being met by a board dealt again.
                     break;
 
                 case UtilityKind.Storm:

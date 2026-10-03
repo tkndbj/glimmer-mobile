@@ -77,6 +77,12 @@ namespace GlimmerGrove
             // scales is not being read while the run is held.
             Pacing(Time.unscaledDeltaTime);
 
+            // **A gravity well turns through a held board, for `Breathe`'s reason**: it is put
+            // up, kept and taken down off `SiegeBoard.Sinking` (`SiegeView.Gravity`), and one
+            // that froze the moment a panel opened would say the board had gone dead. Draws
+            // nothing on a hill with no well on it, which is nearly every frame.
+            Welling(Time.unscaledDeltaTime);
+
             // **And the overcharge glyph, for `Breathe`'s reason.** The tutorial raises its
             // "tap the turret" panel over a held board with a ring round this very glyph, so a
             // bolt that stopped beating the moment the panel opened would freeze at whatever size
@@ -372,8 +378,9 @@ namespace GlimmerGrove
                 var mob = Widget(raider);
                 if (mob == null) continue;
 
-                mob.Node.anchoredPosition =
-                    new Vector2(LaneX(raider.Lane), MarchY(raider.March));
+                // Where the model says it stands - and, while a gravity well has hold of it,
+                // the small circle it turns in round that (`SiegeView.Standing`).
+                mob.Node.anchoredPosition = Standing(mob, raider);
 
                 // **The lean a thrown body wears**, read off the model rather than latched on
                 // the blow - see `SiegeView.Anvil`. The position above is already sliding
@@ -416,8 +423,10 @@ namespace GlimmerGrove
                     mob.Body.color = raider.Flash > 0f
                                    ? Color.Lerp(Color.white, Pal.Cream, raider.Flash * 5f)
                                    : raider.Stunned || _board.Stilled ? Stunned
+                                   : raider.Sunk ? Sunken
                                    : raider.Cursed && mob.Hexed ? HexedBody(raider)
-                                   : raider.Alight ? Scorched(raider) : Color.white;
+                                   : raider.Alight ? Scorched(raider)
+                                   : raider.Weighed ? Heavy : Color.white;
 
                 // **A boss goes back to its own body the frame after a spell finishes, and which
                 // body that is depends on whether it has arrived.**

@@ -10016,6 +10016,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/shot_spark_r
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3d8114f394d41f44c523b5131afbfa08
+    m_Address: Art/Fx/Gravity/core
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3d869f56fe3268ee4dfd8befc0f2df88
     m_Address: Art/Ui/potion5
     m_ReadOnly: 0
@@ -10759,6 +10764,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Siege/brute_r
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 418f47d4bc09304bb8b5c488016202a5
+    m_Address: Art/Fx/Gravity/arms
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4196ab8abb5a962498c0ae9fbea09cc2
     m_Address: Art/Fx/Siege/shot_lance_r/f02
     m_ReadOnly: 0
@@ -11459,6 +11469,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Siege/muzzle_spectrum_y
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 46136ac014ae3ac61a4c238de449c325
+    m_Address: Art/Ui/Utility/gravityhole
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 461a2cfdbf838924bae3ff2eb0e484b3
     m_Address: Art/Siege/Wards/stasis_fire/f06
@@ -24467,6 +24482,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/muzzle_siphon_b
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 946aac2a9117033638e8348b2f0d081c
+    m_Address: Art/Fx/Gravity/ring
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9477c4b105b9637449bdae2982448be0
     m_Address: Art/Fx/Siege/shot_harpoon_g/f02
     m_ReadOnly: 0
@@ -30489,6 +30509,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Siege/shot_apex_g
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b67686d3bc91b207d4b1a2c691c18b14
+    m_Address: Art/Fx/Gravity/disc
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b68b89a61530a6647890921f907bbcdf
     m_Address: Art/Fx/Siege/hit_siphon_r/f01

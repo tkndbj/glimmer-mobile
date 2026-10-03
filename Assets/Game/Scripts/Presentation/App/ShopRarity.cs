@@ -39,6 +39,7 @@ namespace GlimmerGrove
                 case UtilityKind.Mend:  return Pal.Mint;    // the mending's flask
                 case UtilityKind.Surge: return Pal.Azure;   // the surge's disc
                 case UtilityKind.Storm: return Pal.Sun;     // the stormcall's bolts
+                case UtilityKind.Gravity: return Pal.Bloom; // the gravity hole's outer light
                 default: return Pal.Rope;
             }
         }

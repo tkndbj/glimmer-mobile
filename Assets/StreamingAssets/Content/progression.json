@@ -568,6 +568,15 @@
         "maxHeld": 100,
         "order": 4,
         "cooldownSeconds": 30
+      },
+      {
+        "id": "gravityhole",
+        "kind": "gravity",
+        "magnitude": 10,
+        "gemPrice": 60,
+        "maxHeld": 100,
+        "order": 5,
+        "cooldownSeconds": 45
       }
     ]
   },
@@ -1046,7 +1055,14 @@
               "item": "stormcall",
               "min": 1,
               "max": 1,
-              "weight": 30
+              "weight": 18
+            },
+            {
+              "kind": "utility",
+              "item": "gravityhole",
+              "min": 1,
+              "max": 1,
+              "weight": 12
             },
             {
               "kind": "gems",
@@ -1103,7 +1119,14 @@
               "item": "firepot",
               "min": 3,
               "max": 3,
-              "weight": 25
+              "weight": 15
+            },
+            {
+              "kind": "utility",
+              "item": "gravityhole",
+              "min": 1,
+              "max": 1,
+              "weight": 10
             },
             {
               "kind": "hearts",

@@ -585,8 +585,9 @@ namespace GlimmerGrove
         /// </summary>
         public string AimingNote
             => Armed == null ? string.Empty
-             : Loc.Get(Armed.Target == UtilityTarget.Ward
-                       ? "utility.aim.ward" : "utility.aim.hill");
+             : Loc.Get(Armed.Target == UtilityTarget.Ward ? "utility.aim.ward"
+                     : Armed.Target == UtilityTarget.Well ? "utility.aim.well"
+                     : "utility.aim.hill");
 
         /// <summary>Whether this bar is drawing this utility at all.</summary>
         public bool Shows(UtilityItem item)

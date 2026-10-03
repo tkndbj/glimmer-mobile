@@ -552,6 +552,12 @@ namespace GlimmerGrove.Modes
 
             float charge = _roar > 0f ? SiegeTuning.Rally : 1f;
 
+            // **A gravity well's clock, and the share of the way in it closes this step**
+            // (`SiegeBoard.Gravity.cs`). Run down here for the roar's and the hourglass's reason,
+            // and before the bodies are walked so the frame the well shuts is the frame they are
+            // let go.
+            float drawn = Draw(dt);
+
             for (int i = 0; i < _raiders.Count; i++)
             {
                 var raider = _raiders[i];
@@ -563,6 +569,15 @@ namespace GlimmerGrove.Modes
                 // is a curse the body wears, not a walk, so an hourglass landing inside it does
                 // not buy it more seconds (`SiegeRaider.Hexed`).
                 if (raider.Hexed > 0f) raider.Hexed = Math.Max(0f, raider.Hexed - dt);
+
+                // **A body a well has hold of is not walking, and is moved through a stopped
+                // hill** for the anvil's reason just below: the stop is the hill's clock and the
+                // pull is the player's purchase.
+                if (raider.Sunk)
+                {
+                    Sink(raider, drawn);
+                    continue;
+                }
 
                 // **An anvil's shove is worked off before anything else and through a stopped
                 // hill** (`SiegeCharm.Anvil`, `SiegeRaider.Shove`). Two reasons, and neither is
@@ -600,6 +615,12 @@ namespace GlimmerGrove.Modes
                     raider.Wait -= dt;
                     continue;
                 }
+
+                // **A body a well let go walks back to its own lane as it walks down**, at the
+                // pace it walks at - and at the line too, which is why this is above the check
+                // that it has arrived: the ward its blow lands on is read off where it stands
+                // (`SiegeRaider.Column`), so it has to keep standing somewhere true.
+                if (raider.Drift != 0f) raider.Fan(dt * raider.Pace * SiegeTuning.GravityFan);
 
                 if (raider.March >= raider.Hold) continue;
 
@@ -1221,14 +1242,16 @@ namespace GlimmerGrove.Modes
                 // line up: a stop that held the march and left the blows running would cost a
                 // raider already at the line nothing at all, which is the half of the hill an
                 // hourglass is worth most against.
-                if (raider.Stunned || _still > 0f) continue;
+                // **Nor does a body a gravity well has hold of**, for the same reason once more:
+                // on the frame a well opens a raider at the line is still at the line.
+                if (raider.Stunned || _still > 0f || raider.Sunk) continue;
 
                 raider.Blow -= dt;
                 if (raider.Blow > 0f) continue;
 
                 raider.Blow = SiegeTuning.BlowEvery;
 
-                int w = Nearest(raider.Lane);
+                int w = Nearest(raider.Column);
                 if (w < 0) continue;
 
                 var ward = _wards[w];

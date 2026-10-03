@@ -413,7 +413,14 @@ namespace GlimmerGrove
         }
 
         /// <summary>Where a lane sits across the hill.</summary>
-        float LaneX(int lane)
+        float LaneX(int lane) => LaneX((float)lane);
+
+        /// <summary>
+        /// Where a body stands across the hill when it is between lanes - one a gravity well has
+        /// dragged out of its own (<c>SiegeRaider.Drift</c>). A whole lane answers exactly what
+        /// it always did.
+        /// </summary>
+        float LaneX(float lane)
         {
             // **Inset the way `PostX` already insets the ward line, and a render is what said so.**
             // Divided by the lane count flat, the outer lanes put a raider's *centre* four tenths

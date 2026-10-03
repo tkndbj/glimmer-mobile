@@ -1465,6 +1465,11 @@ namespace GlimmerGrove.Content
             foreach (var piece in StrikeFx.All)
                 list.Add(AssetRequest.Sprite(AssetManifest.StrikeFx(piece)));
 
+            // **And the gravity well, for the same reason**: a utility is account-wide, so the
+            // four pieces a gravity hole is stacked from are loaded by every siege (`GravityFx`).
+            foreach (var piece in GravityFx.All)
+                list.Add(AssetRequest.Sprite(AssetManifest.GravityFx(piece)));
+
             if (chapter == null)
             {
                 list.AddRange(CastArt(Insects));

@@ -201,8 +201,116 @@ namespace GlimmerGrove.Modes
         /// tenths, deliberately, because a chill is refreshable and a tenth of a pace that never
         /// arrives is a raid that rejects nothing.
         /// </summary>
-        public float Pace => Stun > 0f ? 0f
-                           : Chill > 0f ? (10 - ChillTenths) / 10f : 1f;
+        public float Pace
+        {
+            get
+            {
+                if (Stun > 0f) return 0f;
+
+                float pace = Chill > 0f ? (10 - ChillTenths) / 10f : 1f;
+
+                // **The slower of the two and never their product** - see
+                // `SiegeTuning.GravitySlowTenths`.
+                if (Drag > 0f)
+                {
+                    float heavy = (10 - SiegeTuning.GravitySlowTenths) / 10f;
+                    if (heavy < pace) pace = heavy;
+                }
+
+                return pace;
+            }
+        }
+
+        // ------------------------------------------------------------------ the gravity well
+        /// <summary>
+        /// Whether a gravity well has hold of this body right now (<c>SiegeBoard.Gravity</c>).
+        ///
+        /// <b>A flag on the body and one clock on the board</b>, which is the hex's shape rather
+        /// than the hourglass's: a well takes who was standing on the hill when it opened, so a
+        /// raider that steps out a moment later walks on untouched, and nothing can be left held
+        /// after the board's one clock has run out because the board lets every body go on the
+        /// frame it does.
+        /// </summary>
+        public bool Sunk;
+
+        /// <summary>
+        /// How far this body stands from its own lane, in lanes, signed. Nought for every raider
+        /// a well has never touched.
+        ///
+        /// <para>
+        /// <b>A displacement rather than a new lane</b>, because <see cref="Lane"/> is what a
+        /// raider was mustered into and is readonly on purpose. A well drags a body sideways and
+        /// lets it go; it walks back (<see cref="Fan"/>), and everything that asks <em>where is
+        /// this body standing</em> asks <see cref="Column"/>, which is the lane when this is
+        /// nought - so a board no well was opened on is the board it always was, to the bit.
+        /// </para>
+        /// </summary>
+        public float Drift;
+
+        /// <summary>Seconds left of the slow a well leaves behind. See <see cref="Pace"/>.</summary>
+        public float Drag;
+
+        /// <summary>Whether this body is still walking off a well's slow.</summary>
+        public bool Weighed => Alive && Drag > 0f;
+
+        /// <summary>
+        /// The lane this body is standing in <em>right now</em>: its own, unless a well has
+        /// dragged it out of it.
+        ///
+        /// <b>What every rule about a place reads</b> - a firepot's boxes, a splash, a pierce,
+        /// the ward a blow lands on, where a bomb or a cog is dropped - so the thing a player
+        /// sees gathered in a box is the thing the rules find there (invariant 39k).
+        /// </summary>
+        public int Column
+        {
+            get
+            {
+                if (Drift == 0f) return Lane;
+
+                int column = (int)Math.Floor(Lane + Drift + .5f);
+                return column < 0 ? 0
+                     : column >= SiegeTuning.Lanes ? SiegeTuning.Lanes - 1 : column;
+            }
+        }
+
+        /// <summary>
+        /// Hands this body to a gravity well. Answers false for anything a well may not take.
+        ///
+        /// <b>A boss is refused here rather than at the call site</b>, for <see cref="Shove"/>'s
+        /// reason and in its words: a boss's fight is measured from the ground it stands on.
+        /// Something still in the wings is refused too - it was not on the hill when the well
+        /// opened. An anvil's debt is dropped, because a body cannot be thrown up the slope and
+        /// dragged across it in the same step.
+        /// </summary>
+        public bool Sink()
+        {
+            if (!Alive || Boss || !OnTheHill) return false;
+
+            Sunk = true;
+            Heave = 0f;
+            return true;
+        }
+
+        /// <summary>Lets go: the body stands where the well stood and walks on slowed.</summary>
+        public void Surface(float march, float drift, float slowFor)
+        {
+            if (!Sunk) return;
+
+            Sunk = false;
+            March = march;
+            Drift = drift;
+
+            if (slowFor > Drag) Drag = slowFor;
+        }
+
+        /// <summary>Walks this body <paramref name="lanes"/> back toward its own lane.</summary>
+        public void Fan(float lanes)
+        {
+            if (lanes <= 0f || Drift == 0f) return;
+
+            if (Drift > 0f) { Drift -= lanes; if (Drift < 0f) Drift = 0f; }
+            else { Drift += lanes; if (Drift > 0f) Drift = 0f; }
+        }
 
         /// <summary>
         /// Puts a frost on it, keeping the stronger of what it already had.

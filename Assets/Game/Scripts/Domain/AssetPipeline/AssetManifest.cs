@@ -230,6 +230,13 @@ namespace GlimmerGrove.AssetPipeline
         public static string StrikeFx(string key) => ArtRoot + "Fx/Strike/" + key;
 
         /// <summary>
+        /// One piece of the gravity well - the disc, the arms, the horizon and the ring a
+        /// gravity hole is stacked from. The names are <see cref="GravityFx"/>'s; the pictures
+        /// are drawn by <c>Tools/make_gravity_fx.py</c>.
+        /// </summary>
+        public static string GravityFx(string key) => ArtRoot + "Fx/Gravity/" + key;
+
+        /// <summary>
         /// A task chest's opening reel: <c>Chests/{tier}</c>, a folder of frames.
         ///
         /// Its own folder so the reels bundle apart from the global set
@@ -454,6 +461,7 @@ namespace GlimmerGrove.AssetPipeline
             // a build, exactly as adding a mode is (invariant 20), and `ContentValidation` errors
             // on a catalog entry whose icon is not one of these rather than letting it draw blank.
             "Utility/firepot", "Utility/mending", "Utility/surge", "Utility/stormcall",
+            "Utility/gravityhole",
 
             // The bar's own furniture: the shelf and one cell. Global with the icons,
             // because the bar is drawn on the board and in a shop panel that opens over it.

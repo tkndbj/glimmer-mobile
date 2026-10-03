@@ -1179,6 +1179,19 @@ and its own spell row in `SiegeShotBake` (37dc); scope in `SiegeMode.Bosses`; a 
    make a purchase decide a graded number. **A free payoff scales with the line; a bought one with the
    board.**
 39n. **A damage figure is a readout, not an effect, so it gets a layer above every effect.**
+39o. **A utility that moves the hill moves it in the model, and every rule about a place reads where a
+   body stands rather than where it was mustered** (the Gravity Hole, 2026-10-03). `SiegeBoard.Gravity`
+   drags every non-boss raider on the hill to one of four wells over `GravityGather`, holds them for the
+   item's magnitude (tenths of a second) and lets them go slowed; a raider keeps its readonly `Lane` and
+   carries a `Drift`, and the firepot, the overcharge, splash, pierce, the blow at the line and a dropped
+   bomb or cog all ask `SiegeRaider.Column` - which is the lane when nothing has moved it, so a board no
+   well was opened on is the board it always was. It hurts nothing, so it is charged no matches (39), it
+   draws from neither random stream (41), and a boss is refused for `Shove`'s reason. **The well is a
+   state the view draws off `SiegeBoard.Sinking`**, never off the tap (48l): four pieces stacked and
+   spun (`GravityFx`, `Tools/make_gravity_fx.py`), the far half of the disc under the raiders and the
+   near half over them. **It reached the chest tables by cutting one option's weight in two**, side by
+   side, so every other option keeps its numbers and a client on the old table still rolls the currency
+   the server recomputes (9c).
 40. **A mechanic that attacks the *field* was the hole this mode had** - everything could only hurt the
    wards, so the field was a fuel tap the player operated while looking somewhere else.
 40a. **A mechanic nobody authored into a wave does not exist, and it shipped that way for two chapters** -

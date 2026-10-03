@@ -74,7 +74,7 @@ namespace GlimmerGrove.Modes
                 // its lane) and as deep as it is drawn, centred where it stands, and a firepot is
                 // the plus around the tapped box. Aiming at the thing you can see and being told
                 // nothing is there is what this replaced.
-                if (!SiegeTuning.Caught(raider.Kind, raider.Lane, raider.March, lane, row))
+                if (!SiegeTuning.Caught(raider.Kind, raider.Column, raider.March, lane, row))
                     continue;
 
                 // Through this raider's own surge, exactly as its health was (invariant 39a).

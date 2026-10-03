@@ -21,16 +21,26 @@ namespace GlimmerGrove.Modes
         /// <summary>Which ward. Read by a mend and a surge.</summary>
         public readonly int Ward;
 
-        SiegeAim(int lane, int row, int ward)
+        /// <summary>
+        /// Which of the hill's four wells, 0..<c>SiegeTuning.GravityWells - 1</c>. Read by a
+        /// gravity well, and nought on every aim that is not one - a well is only ever read
+        /// under its own kind, so the default never has to mean "none".
+        /// </summary>
+        public readonly int Well;
+
+        SiegeAim(int lane, int row, int ward, int well = 0)
         {
             Lane = lane;
             Row = row;
             Ward = ward;
+            Well = well;
         }
 
         public static SiegeAim OnTheHill(int lane, int row) => new SiegeAim(lane, row, -1);
 
         public static SiegeAim AtWard(int ward) => new SiegeAim(0, 0, ward);
+
+        public static SiegeAim AtWell(int well) => new SiegeAim(0, 0, -1, well);
     }
 
     /// <summary>
@@ -50,7 +60,10 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public readonly int Matches;
 
-        /// <summary>Damage actually absorbed, health actually mended, or fuel-tenths poured.</summary>
+        /// <summary>
+        /// Damage actually absorbed, health actually mended, fuel-tenths poured, or bodies a
+        /// gravity well took hold of.
+        /// </summary>
         public readonly int Delivered;
 
         /// <summary>Which ward, or -1 for a blast.</summary>
@@ -197,6 +210,13 @@ namespace GlimmerGrove.Modes
                     // accepting one with a tenth of room would spend an item for nothing.
                     return board.RoomForFuel(aim.Ward) * 2 >= item.Magnitude;
 
+                case UtilityKind.Gravity:
+                    // **Answerable in advance, like a storm**: a well takes everything on the
+                    // hill that is not a boss, so "would it do anything" is exactly "is there
+                    // such a body" - and one well at a time, because the board keeps one clock.
+                    return aim.Well >= 0 && aim.Well < SiegeTuning.GravityWells
+                        && !board.Sinking && board.Pullable > 0;
+
                 default:
                     return false;
             }
@@ -284,6 +304,17 @@ namespace GlimmerGrove.Modes
                     int matches = MatchesFor(DamageOfFuel(item.Magnitude, rank));
 
                     return new SiegeUse(true, matches, poured, aim.Ward);
+                }
+
+                case UtilityKind.Gravity:
+                {
+                    int taken = board.Gravity(aim.Well, item.Magnitude);
+                    if (taken <= 0) return SiegeUse.Refused;
+
+                    // Nought matches, for the mending's reason and in its words: it delivers no
+                    // damage, so it saves no matches. It buys seconds and a place - a finish and
+                    // never a grade (invariant 39).
+                    return new SiegeUse(true, 0, taken, -1);
                 }
 
                 default:

@@ -218,6 +218,9 @@ namespace GlimmerGrove.Tests
                            "fuel is bounded by the tube it is poured into, so a surged pour would "
                            + "be a pour a ward cannot hold");
 
+            Assert.IsFalse(UtilityUnits.Climbs(UtilityKind.Gravity),
+                           "a second a raider is held is a second on every chapter");
+
             Assert.IsFalse(UtilityUnits.Climbs(UtilityKind.None));
         }
 

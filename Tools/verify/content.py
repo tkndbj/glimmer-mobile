@@ -1610,7 +1610,7 @@ def check_hints(progression, warnings):
 #: The utility kinds this build knows. Content may not invent one: what a utility *does* is a
 #: rule with a fail state and a grade attached, so an entry naming an unknown kind is skipped
 #: exactly as a chapter naming an unknown mode is (invariant 20). Mirrors `UtilityKinds`.
-UTILITY_KINDS = {"blast", "mend", "surge", "storm"}
+UTILITY_KINDS = {"blast", "mend", "surge", "storm", "gravity"}
 
 #: The kinds whose magnitude is measured in *hill health* and therefore climbs with a board that
 #: has been made tougher. Mirrors `UtilityUnits.Climbs`, and the reasoning lives on `UtilityUnit`:
@@ -1622,7 +1622,7 @@ UTILITY_CLIMBS = {"blast", "storm"}
 #: What the build actually carries a picture for. Which utilities exist is content and which
 #: pictures exist is not, so adding one is a build - and an entry with no icon would draw a white
 #: rectangle on the bar (invariant 7b). Mirrors the `Utility/` block in `AssetManifest.UiSprites`.
-UTILITY_ART = {"firepot", "mending", "surge", "stormcall"}
+UTILITY_ART = {"firepot", "mending", "surge", "stormcall", "gravityhole"}
 
 #: The longest cooldown content may author, in whole seconds. Mirrors
 #: `UtilityCooldown.MaxSeconds`. It is a guard against a *unit* rather than a balance opinion:

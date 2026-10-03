@@ -1823,7 +1823,10 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   from the gem pack. Both charms that sweep the hill draw a **painted reel lent white** rather than a white
   reel tinted, and both hang a **clock** — the anvil's runs anti-clockwise (see `CRAFT.md`).
 - **Utilities** — an account-wide action bar (39), dropped by chests and bought with gems, charged against
-  the graded count so one can never buy a star.
+  the graded count so one can never buy a star. **Five** since 2026-10-03: the firepot, the mending, the
+  surge, the stormcall and the **Gravity Hole** (60 gems, 45 s cooldown; gold and royal chests), which
+  drags the hill into one of four wells, holds it a second and lets it go slowed for two (MODES.md 39o).
+  The bar's five cells are full; a sixth utility is a wider shelf and a re-cut tray.
 - **The turret loadout** — **thirty** turrets on a four-band shelf, upgraded to five stars, previewed
   firing before purchase, carried in from a readout on the map. Twenty are bought **per colour** behind a
   keeper level; the ten of the **LEGENDARY** band (42g) wear no colour at all — stood on any seat and
@@ -1964,6 +1967,22 @@ half is `Assets/Game/Scripts/Cloud/`, Firebase Unity SDK
 on a fresh clone).
 
 ## Owed
+
+**The Gravity Hole shipped on 2026-10-03 (MODES.md 39o) and has never been played.** Client-only: no
+schema, no rules, no function deploy. Done in the Editor: compiled, `Sync All Assets` and save (the icon
+and the four `Art/Fx/Gravity` pieces are five new rows in `Glimmer Global`). Offline green: `compile.py`
+(all sixteen), `GravityTests` 18/18, `GravityFxTests` 4/4, `UtilityTests`, `SiegeUtilityScaleTests`,
+`RewardArtTests`, `TaskTests`, `content.py` (0 errors), `loc.py`, `artnames.py` (0/0),
+`make_gravity_fx.py --check`, `seed-config.mjs --check`. **The re-seed is owed with the build and is safe
+in either order**: the gold and royal tiers each had one utility option's weight cut in two (stormcall
+30 -> 18 + 12, firepot x3 25 -> 15 + 10), so no currency roll moves and the server grants no utility.
+**Owed is a device**, and the questions are ones no gate answers: whether the stencilled halves of the
+disc meet without a seam under the additive material, whether a crowd circling the horizon reads as held
+rather than as a pile (`OrbitNear`/`OrbitFar`), whether the dark under the well is too much on the
+darkest hill (`Welling`'s veil, .62), and whether the top two wells are simply the right answer every
+time - they send the whole hill back to a quarter of the slope, which is nearly four anvils. The magnitude
+(tenths held), the price and the cooldown are content; the gather, the slow and the four places are
+`SiegeTuning`.
 
 **Neonhaven, the eleventh chapter, was built on 2026-10-02 (MODES.md 37fa) and has never been
 played or swept.** Done: the map (`map11`, four strips, seated on the glass road), the chapter

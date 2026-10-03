@@ -59,7 +59,7 @@ namespace GlimmerGrove.Modes
 
             int row = SiegeTuning.RowOf(raider.March);
 
-            var cog = new SiegeCog(_minted++, raider.Lane, row, ward, _wards[ward].Colour);
+            var cog = new SiegeCog(_minted++, raider.Column, row, ward, _wards[ward].Colour);
 
             _cogs.Add(cog);
             _report.Cogs.Add(cog);
@@ -104,7 +104,7 @@ namespace GlimmerGrove.Modes
             var ward = _wards[at];
             if (!ward.Alive || !ward.Sunder()) return false;
 
-            var cog = new SiegeCog(_minted++, caster.Lane, SiegeTuning.RowOf(caster.March),
+            var cog = new SiegeCog(_minted++, caster.Column, SiegeTuning.RowOf(caster.March),
                                    at, ward.Colour);
 
             _cogs.Add(cog);

@@ -71,7 +71,7 @@ namespace GlimmerGrove.Modes
             if (row < 0) row = 0;
             if (row >= SiegeTuning.BlastRows) row = SiegeTuning.BlastRows - 1;
 
-            var bomb = new SiegeBomb(_minted++, raider.Lane, row, raider.Colour);
+            var bomb = new SiegeBomb(_minted++, raider.Column, row, raider.Colour);
 
             _bombs.Add(bomb);
             _report.Dropped.Add(bomb);

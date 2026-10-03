@@ -294,7 +294,13 @@ namespace GlimmerGrove
                        ? Mathf.Clamp01(raider.Heave / SiegeTuning.AnvilHeave)
                        : 0f;
 
-            if (want <= 0f && Mathf.Approximately(mob.Braced, 0f)) return;
+            // **And the circle a gravity well turns it in** (`SiegeView.Gravity`), eased here
+            // because this is the one place a body's own rotation and scale are written: two
+            // writers of one transform is how a posture comes to flicker between two opinions.
+            float circling = Orbiting(mob, raider);
+
+            if (want <= 0f && Mathf.Approximately(mob.Braced, 0f)
+                && circling <= 0f && mob.Orbit <= 0f) return;
 
             // Eased back rather than snapped, so the body rights itself over a beat instead of
             // popping upright the frame the debt clears.
@@ -303,8 +309,12 @@ namespace GlimmerGrove
                        : Mathf.MoveTowards(mob.Braced, want, Time.unscaledDeltaTime * 4.5f);
 
             var body = mob.Body.rectTransform;
-            body.localRotation = Quaternion.Euler(0f, 0f, mob.Braced * BraceLean);
-            body.localScale = new Vector3(1f, 1f + mob.Braced * .08f, 1f);
+            // A body in a well is drawn a little smaller and rocked as it goes round; one that
+            // is in neither state is written upright exactly once and then left alone.
+            float small = 1f - mob.Orbit * .20f;
+
+            body.localRotation = Quaternion.Euler(0f, 0f, mob.Braced * BraceLean + Tumble(mob));
+            body.localScale = new Vector3(small, small * (1f + mob.Braced * .08f), 1f);
         }
 
         /// <summary>Degrees a body is tipped back at the height of a shove.</summary>

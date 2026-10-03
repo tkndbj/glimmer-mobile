@@ -171,6 +171,13 @@ namespace GlimmerGrove
             public float Braced;
 
             /// <summary>
+            /// How far into its circle round a gravity well this body is, nought to one
+            /// (<c>SiegeView.Gravity</c>). Kept on the widget and eased toward
+            /// <see cref="Modes.SiegeRaider.Sunk"/> every frame, for <see cref="Braced"/>'s reason.
+            /// </summary>
+            public float Orbit;
+
+            /// <summary>
             /// The curse's sigil this body stands in while it is hexed, or null
             /// (<c>SiegeView.Hexing</c>) - and how long it has worn it, and when it next gives off
             /// a wisp. Read off <see cref="Modes.SiegeRaider.Hexed"/> every frame, never tweened

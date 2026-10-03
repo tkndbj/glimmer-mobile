@@ -942,6 +942,52 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public const float AnvilFor = AnvilHeave / AnvilPace;
 
+        // ------------------------------------------------------------------ the gravity well
+        /// <summary>
+        /// How many places on the hill a gravity well may be opened: one to each quarter.
+        ///
+        /// <b>Places and never a point</b> (invariant 39f): the well is tapped as a quarter of
+        /// the hill and stands on a lane the grid already has, so what a firepot thrown at the
+        /// clump reads and what the player sees gathered are the same integers.
+        /// </summary>
+        public const int GravityWells = 4;
+
+        /// <summary>
+        /// The lane a well stands on: the second from the left for the left pair, the second
+        /// from the right for the right pair. Wells count left to right, top row first.
+        /// </summary>
+        public static int WellLane(int well) => (well & 1) == 0 ? 1 : Lanes - 2;
+
+        /// <summary>How far down the hill a well stands: a quarter for the top pair, three for the bottom.</summary>
+        public static float WellMarch(int well) => well < 2 ? .25f : .75f;
+
+        /// <summary>
+        /// Seconds a well takes to drag the hill in, before the hold it was bought for begins.
+        ///
+        /// <b>Model time rather than a drawing</b>, for the anvil's reason
+        /// (<see cref="AnvilHeave"/>): the view draws a raider wherever the model says it is, so
+        /// a pull the model performs is a pull the drawing follows for free, and a firepot
+        /// thrown mid-pull catches exactly what is drawn where it lands.
+        /// </summary>
+        public const float GravityGather = .45f;
+
+        /// <summary>Seconds a body walks slowed after a well lets it go.</summary>
+        public const float GravitySlowFor = 2f;
+
+        /// <summary>
+        /// How much slower, in tenths. <b>Joined with a chill by taking the slower of the two,
+        /// never by multiplying</b>, so a rime turret and a well together are still bounded by
+        /// the strongest single slow this mode can author and a raider always arrives.
+        /// </summary>
+        public const int GravitySlowTenths = 5;
+
+        /// <summary>
+        /// Lanes a second a body let go by a well walks back toward its own lane, at full pace.
+        /// A slowed body fans out slower, so the clump outlives the hold by about a second -
+        /// which is the window a firepot thrown after it is aimed at.
+        /// </summary>
+        public const float GravityFan = 1.2f;
+
         // ------------------------------------------------------------------ the obsidian
         /// <summary>
         /// How often a refilled cell is dealt an obsidian on a field that deals them, per hundred

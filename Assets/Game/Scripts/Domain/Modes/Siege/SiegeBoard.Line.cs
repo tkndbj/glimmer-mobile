@@ -120,7 +120,7 @@ namespace GlimmerGrove.Modes
                 if (other == target || !other.Alive || !other.OnTheHill) continue;
 
                 if (Math.Abs(SiegeTuning.RowOf(other.March) - row) > reach) continue;
-                if (Math.Abs(other.Lane - target.Lane) > reach) continue;
+                if (Math.Abs(other.Column - target.Column) > reach) continue;
 
                 Splinter(ward, index, other, damage);
             }
@@ -149,7 +149,7 @@ namespace GlimmerGrove.Modes
                     if (_arced.Contains(other.Id)) continue;
 
                     float gap = Math.Abs(other.March - target.March)
-                              + Math.Abs(other.Lane - target.Lane) * .04f;
+                              + Math.Abs(other.Column - target.Column) * .04f;
 
                     if (gap >= best) continue;
 
@@ -173,7 +173,7 @@ namespace GlimmerGrove.Modes
             {
                 var other = _raiders[i];
                 if (other == target || !other.Alive || !other.OnTheHill) continue;
-                if (other.Lane != target.Lane) continue;
+                if (other.Column != target.Column) continue;
 
                 Splinter(ward, index, other, damage);
             }
@@ -249,6 +249,9 @@ namespace GlimmerGrove.Modes
                 var raider = _raiders[i];
 
                 if (raider.Chill > 0f) raider.Chill = Math.Max(0f, raider.Chill - dt);
+
+                // A well's slow, aged beside the chill it is joined with (`SiegeRaider.Pace`).
+                if (raider.Drag > 0f) raider.Drag = Math.Max(0f, raider.Drag - dt);
 
                 // **Both halves of a stun run down here**, in the one place the board already
                 // ages what a bolt left behind. `Steady` outlives `Stun` by
