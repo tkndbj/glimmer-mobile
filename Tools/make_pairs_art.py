@@ -6,29 +6,27 @@ twenty-four gems a board is dealt from, and the cursed stone.
     python Tools/make_pairs_art.py --check    # prove the committed PNGs are what this cuts
     python Tools/make_pairs_art.py --contact  # out/pairs_art.png, the sheet to judge by eye
 
-**A pair is a gem, never a colour** (CLAUDE.md 56m). The first cut matched on the four turret
-colours alone, so a 6x3 board held four or five of each and any two reds paired - a memory game
-with nothing to remember. Now each colour is six *different* stones, cut from the one licensed
-pack the siege's own gems come from (`make_siege_art.GEMPACK`), so a red heart and a red kite
-are two cards that both feed the red turret and do not match each other. That is the whole
-difficulty dial a memory game has, and it costs pictures rather than code.
+**A pair is a picture, never a colour** (CLAUDE.md 56m), **and no two pictures look alike**
+(2026-10-02, the owner: "many same colored gems ... makes the game very hard to remember"). The
+first cut matched on the four turret colours alone; the second gave each colour six stones
+pulled onto that colour's hue, so a seventeen-pair board held five or six reds told apart by
+silhouette alone - a test of eyesight rather than of memory. Now each of the twenty-four is its
+own *thing* - a pocket watch, a key, a heart, a padlock, a potion, a star, an orb - in the
+colours its artist painted, cut from the match-3 jewellery set (`MATCH3`) and topped up from
+the RPG gem pack (`siege.GEMPACK`) with stones whose colour and shape repeat nothing else on the
+sheet. Left out on purpose: the set's bomb (a black ball beside the black cursed stone) and its
+silver key and chest (the gold ones' silhouettes).
 
-**Six silhouettes a colour, and the silhouette is what is remembered.** Within a colour every
-stone is a different shape - heart, drop, hexagon, triangle, brilliant, kite - because two reds
-told apart by shading alone would be a test of eyesight rather than of memory. Across colours
-shapes may repeat; the colour already separates them.
-
-**Pulled onto the four turret hues rather than cut as the pack paints them** (`hued`, the
-function the siege's wards and charms are painted with), so a card's colour *is* the turret it
-feeds: a stone that came out pink beside the poppy red would be inventing a fifth colour on a
-board where the colour of a pair is a rule. The pull is partial, so each stone keeps its own
-highlights and warm and cool notes.
+**The turret a card feeds is a pip, not the picture's colour.** A picture no longer wears its
+turret's hue, so each carries a small disc of that hue in its corner (`PIP`), baked into the
+PNG so the view did not change. Which picture feeds which turret is only the row token (`r1` ..
+`y6`) and the order of `GEMS`; the rules never see a picture.
 
 **The card is drawn, not cut**, in the owner's own picture of this genre
 (`Art/Ui/challenge_pairs`): a stone frame, a royal-blue back with a crown on it, a cream face.
 Drawn at four times size and reduced, so the edges are clean at every size a phone draws it.
 
-The pack is optional: without it `--check` still passes on the committed gems (every art tool
+The packs are optional: without them `--check` still passes on the committed pictures (every art tool
 here passes with its licensed source absent, because the PNGs are committed), and the two cards
 need no source at all.
 """
@@ -45,7 +43,7 @@ from PIL import Image, ImageDraw, ImageFilter
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO / "Tools"))
 
-import make_siege_art as siege  # noqa: E402  (the pack root and `hued`)
+import make_siege_art as siege  # noqa: E402  (the gem pack's root)
 
 OUT = REPO / "Assets" / "Game" / "Art" / "Challenge"
 CONTACT = REPO / "out" / "pairs_art.png"
@@ -60,30 +58,40 @@ CARD = 256
 #: The supersampling a card is drawn at before it is reduced.
 SS = 4
 
-#: The four turret hues, as the siege paints its wards (`make_siege_art.WARD_HUES`).
-HUES = dict(siege.WARD_HUES)
+#: The match-3 jewellery set most of the pictures are cut from.
+MATCH3 = Path(r"C:\Users\Digikey\Downloads\craftpix-net-298179-match-3-game-asset-set")
 
-#: How far a stone is pulled toward its turret's hue. Most of the way - a card's colour is a
-#: rule - but not all of it, so a stone keeps the pack's own shading.
-PULL = 0.82
-
-#: Which stone each gem is cut from, per colour, variant 1 to 6, and what it is. The variant is
-#: the digit in a row's token (`r1` .. `y6`, `PairsGems.TryParse`) and names the file
-#: (`pair_r1`), so the order here is permanent once a row names it - a re-cut that swaps two
-#: lines swaps two pictures under every shipped board.
+#: Which picture each card is cut from, per turret colour, variant 1 to 6: (pack, file, what it
+#: is), the pack being `m3` (`MATCH3`) or `gem` (`siege.GEMPACK`). The variant is the digit in a
+#: row's token (`r1` .. `y6`, `PairsGems.TryParse`) and names the file (`pair_r1`), so the order
+#: here is permanent once a row names it - a re-cut that swaps two lines swaps two pictures under
+#: every shipped board. Leaned toward the turret's colour where a picture allowed; the pip says
+#: the rest.
 GEMS = {
-    "r": [("50.png", "heart"), ("19.png", "drop"), ("1.png", "hexagon"),
-          ("32.png", "triangle"), ("9.png", "round brilliant"), ("93.png", "kite")],
-    "g": [("63.png", "emerald cut"), ("74.png", "drop"), ("65.png", "round"),
-          ("77.png", "rhombus"), ("18.png", "trapezoid"), ("58.png", "trillion")],
-    "b": [("10.png", "hexagon"), ("83.png", "triangle"), ("92.png", "star"),
-          ("26.png", "rhombus"), ("82.png", "orb"), ("95-2.png", "crystal")],
-    "y": [("60.png", "hexagon"), ("51.png", "oval"), ("24.png", "ingot"),
-          ("75.png", "kite"), ("2.png", "trillion"), ("14.png", "nugget")],
+    "r": [("m3", "8.png", "red heart"), ("gem", "89.png", "red pyramid"),
+          ("gem", "57.png", "crimson cushion"), ("m3", "chest gold.png", "treasure chest"),
+          ("m3", "magnet.png", "magnet"), ("m3", "4.png", "magenta square")],
+    "g": [("m3", "5.png", "green octagon"), ("gem", "74.png", "emerald drop"),
+          ("gem", "100.png", "olive egg"), ("m3", "3.png", "rainbow stone"),
+          ("m3", "padlock.png", "padlock"), ("m3", "2.png", "pearl octagon")],
+    "b": [("m3", "1.png", "cyan diamond"), ("m3", "7.png", "blue rhombus"),
+          ("gem", "28.png", "rune stone"), ("gem", "92.png", "ice star"),
+          ("m3", "potion.png", "potion"), ("gem", "23.png", "galaxy orb")],
+    "y": [("m3", "6.png", "amber bar"), ("gem", "13.png", "ore nugget"),
+          ("gem", "31.png", "gold orb"), ("m3", "clock.png", "pocket watch"),
+          ("m3", "key gold.png", "gold key"), ("m3", "mosaic.png", "puzzle piece")],
 }
 
-#: The cursed stone: the pack's one black jewel, cut untouched - it is no colour and feeds no
-#: turret, so `hued` never sees it.
+#: The pip a card carries for the turret it feeds: the siege's four ward colours
+#: (`make_siege_art.WARD_HUES`, as `SiegeView.TintOf` draws them).
+PIP = {"r": (242, 64, 79), "g": (123, 216, 106), "b": (79, 193, 255), "y": (255, 138, 43)}
+
+#: Below this alpha a source pixel is the vendor's soft glow round an object rather than the
+#: object, and is dropped - or a glowing key is framed to its halo and drawn small inside it.
+HALO = 72
+
+#: The cursed stone: the gem pack's one black jewel, cut untouched and wearing no pip - it is
+#: no colour and feeds no turret.
 CURSE = ("53.png", "obsidian")
 
 # ------------------------------------------------------------------ colours of the card
@@ -98,12 +106,11 @@ FACE_LINE = (122, 92, 64)
 
 
 # ------------------------------------------------------------------ gems
-def trimmed(im):
-    """A stone cropped to its own ink and centred on a square of `GEM`, a margin all round."""
+def trimmed(im, room=GEM - 12):
+    """A picture cropped to its own ink and centred on a square of `GEM`, a margin all round."""
     box = im.getchannel("A").point(lambda a: 255 if a > 8 else 0).getbbox()
     if box:
         im = im.crop(box)
-    room = GEM - 12
     scale = min(room / im.width, room / im.height)
     im = im.resize((max(1, round(im.width * scale)), max(1, round(im.height * scale))), Image.LANCZOS)
     out = Image.new("RGBA", (GEM, GEM), (0, 0, 0, 0))
@@ -111,12 +118,40 @@ def trimmed(im):
     return out
 
 
-def cut_gem(letter, file):
-    im = Image.open(siege.GEMPACK / "PNG" / file).convert("RGBA")
-    if letter is not None:
-        im = siege.hued(im, HUES[letter], pull=PULL, sat_gain=0.55, sat_floor=0.42,
-                        val_gain=1.04, val_lift=0.03)
-    return trimmed(im)
+def dehaloed(im):
+    """The vendor's glow taken off: alpha under `HALO` goes and the rest is re-ramped to full."""
+    a = np.asarray(im.getchannel("A")).astype(np.float32)
+    a = np.clip((a - HALO) * 255.0 / (255 - HALO), 0, 255).astype(np.uint8)
+    out = im.copy()
+    out.putalpha(Image.fromarray(a, "L"))
+    return out
+
+
+def pip(letter):
+    """The turret's disc in the lower right corner: its colour, a dark rim and a highlight."""
+    s = SS
+    W = GEM * s
+    layer = Image.new("RGBA", (W, W), (0, 0, 0, 0))
+    d = ImageDraw.Draw(layer)
+    r = 27 * s
+    cx = cy = W - r - 3 * s
+    d.ellipse((cx - r, cy - r, cx + r, cy + r), fill=STONE_OUT + (255,))
+    ri = r - 5 * s
+    d.ellipse((cx - ri, cy - ri, cx + ri, cy + ri), fill=PIP[letter] + (255,))
+    hl = ri * .42
+    hx, hy = cx - ri * .3, cy - ri * .3
+    d.ellipse((hx - hl, hy - hl, hx + hl, hy + hl), fill=(255, 255, 255, 120))
+    return layer.resize((GEM, GEM), Image.LANCZOS)
+
+
+def cut_gem(letter, pack, file):
+    root = siege.GEMPACK if pack == "gem" else MATCH3
+    im = Image.open(root / "PNG" / file).convert("RGBA")
+    if letter is None:
+        return trimmed(im)
+    out = trimmed(dehaloed(im), GEM - 24)
+    out.alpha_composite(pip(letter))
+    return out
 
 
 # ------------------------------------------------------------------ the card
@@ -233,15 +268,15 @@ def card(kind):
 def everything(pack_needed):
     """-> {filename: Image}. Gems only when the pack is on this machine (or asked for)."""
     out = {"pairs_back.png": card("back"), "pairs_face.png": card("face")}
-    have = (siege.GEMPACK / "PNG").is_dir()
-    if not have:
+    missing = [str(p) for p in (siege.GEMPACK, MATCH3) if not (p / "PNG").is_dir()]
+    if missing:
         if pack_needed:
-            sys.exit(f"the gem pack is not at {siege.GEMPACK}; the gems cannot be cut")
+            sys.exit(f"not on this machine: {', '.join(missing)}; the pictures cannot be cut")
         return out, False
     for letter, stones in GEMS.items():
-        for n, (file, _) in enumerate(stones, 1):
-            out[f"pair_{letter}{n}.png"] = cut_gem(letter, file)
-    out["pair_curse.png"] = cut_gem(None, CURSE[0])
+        for n, (pack, file, _) in enumerate(stones, 1):
+            out[f"pair_{letter}{n}.png"] = cut_gem(letter, pack, file)
+    out["pair_curse.png"] = cut_gem(None, "gem", CURSE[0])
     return out, True
 
 
@@ -276,7 +311,7 @@ def check():
     if len(on_disk) != expected:
         bad.append(f"{len(on_disk)} picture(s) on disk, the tool cuts {expected}")
     if not gems:
-        print("the gem pack is absent: the cards were checked, the committed gems were not")
+        print("a source pack is absent: the cards were checked, the committed pictures were not")
     if bad:
         print("\n".join(bad))
         sys.exit(1)
