@@ -219,8 +219,8 @@ BOSSES = {
     "warlord": {"health": 4100, "cast": 3, "spell": "smite"},
     "warbringer": {"health": 5500, "cast": 2, "spell": "rally"},
     "overlord": {"health": 7300, "cast": 2, "spell": "sunder"},
-    "gravemaw": {"health": 3000, "cast": 2, "spell": "devour"},
-    "bonecaller": {"health": 6000, "cast": 2, "spell": "raise"},
+    "gravemaw": {"health": 3750, "cast": 2, "spell": "devour"},
+    "bonecaller": {"health": 7500, "cast": 2, "spell": "raise"},
 
     #: The fourth chapter's two, and between them they take the one thing the first six leave.
     #:
@@ -236,8 +236,8 @@ BOSSES = {
     #: full weight, which is exactly what `PERFECT_MATCH` already assumes of every gem. What its
     #: aegis really costs is the *clock*, and this mode's fail state is a clock rather than a move
     #: budget (invariant 37b), so its health is set under an overlord's to pay for it.
-    "shackler": {"health": 3400, "cast": 2, "spell": "bind"},
-    "ironclad": {"health": 5200, "cast": 2, "spell": "aegis"},
+    "shackler": {"health": 4250, "cast": 2, "spell": "bind"},
+    "ironclad": {"health": 6500, "cast": 2, "spell": "aegis"},
 
     #: The fifth chapter's two, and between them they take the two things the first eight leave.
     #:
@@ -249,8 +249,8 @@ BOSSES = {
     #: `SiegeTuning.ColossusBury`; the ward keeps everything and cannot fire until it is clear.
     #: Its `cast` is the heaviest base blow in the mode and still touches nothing here:
     #: neither of these two reaches par.
-    "thunderer": {"health": 3800, "cast": 2, "spell": "drain"},
-    "colossus": {"health": 5800, "cast": 4, "spell": "bury"},
+    "thunderer": {"health": 4750, "cast": 2, "spell": "drain"},
+    "colossus": {"health": 7250, "cast": 4, "spell": "bury"},
 
     #: The sixth chapter's two, and between them they take the two things the first ten leave.
     #:
@@ -267,8 +267,8 @@ BOSSES = {
     #: hill's health over what one match could ideally deliver, and neither adds a body nor heals
     #: one. What they cost is the *clock*, and this mode's fail state is a clock rather than a
     #: move budget (invariant 37b).
-    "gorgon": {"health": 4600, "cast": 2, "spell": "glare"},
-    "sunlord": {"health": 6800, "cast": 3, "spell": "doom"},
+    "gorgon": {"health": 5750, "cast": 2, "spell": "glare"},
+    "sunlord": {"health": 8500, "cast": 3, "spell": "doom"},
 
     #: The seventh chapter's two, and between them they take the two things the first
     #: twelve leave.
@@ -285,8 +285,8 @@ BOSSES = {
     #: **Neither reaches par**, which is why there is no third column for either: par is
     #: the hill's health over what one match could ideally deliver, and neither adds a body
     #: nor heals one.
-    "harrower": {"health": 4800, "cast": 2, "spell": "harrow"},
-    "hollowking": {"health": 7200, "cast": 2, "spell": "wane"},
+    "harrower": {"health": 6000, "cast": 2, "spell": "harrow"},
+    "hollowking": {"health": 9000, "cast": 2, "spell": "wane"},
 }
 
 #: `SiegeTuning.RaiseSize` and `.Raises` - how many creepers one raise puts on the hill, and how
@@ -878,7 +878,7 @@ MOST_BOSSES = 2
 
 #: `SiegeLayout.DuelSharePercent` - each boss of an authored duel stands with this share of its own
 #: health: one fight's worth and a fifth, split over two bodies.
-DUEL_SHARE_PERCENT = 60
+DUEL_SHARE_PERCENT = 70
 
 
 def share_at(layout, wave, index):

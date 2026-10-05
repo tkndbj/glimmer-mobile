@@ -765,53 +765,45 @@ namespace GlimmerGrove.Tests
             Assert.IsFalse(SiegeUtility.Apply(board, item, SiegeAim.AtWard(0), null).Landed);
         }
 
-        [Test]
-        public void ASurgeFillsAWardAndIsChargedForWhatThatFuelCouldDeliver()
-        {
-            var board = Board();
-            var item = UtilityCatalog.Default.Find("surge");
-
-            float before = board.Wards[0].Fuel;
-            var use = SiegeUtility.Apply(board, item, SiegeAim.AtWard(0), null);
-
-            Assert.IsTrue(use.Landed);
-            Assert.Greater(board.Wards[0].Fuel, before);
-            Assert.AreEqual(SiegeUtility.MatchesFor(SiegeUtility.DamageOfFuel(item.Magnitude)),
-                            use.Matches);
-        }
-
         /// <summary>
-        /// A ward with less than half a pour's room is refused, because an item spent for a
-        /// tenth of its effect is an item spent for nothing - and the charge is the whole pour
-        /// whatever lands, so it would also be over-charged.
-        ///
-        /// <para>
-        /// <b>"Full" means the tube <em>and</em> the charge rack</b>, which is what the overcharge
-        /// changed. A full tube with a charge still to bank has somewhere for a pour to go - and
-        /// what it buys there is worth more than the fuel was, so refusing it would refuse the item
-        /// at the one moment it is most valuable.
-        /// </para>
+        /// A surge fills the tube to the brim whatever was in it, and is charged for what it
+        /// poured - so an empty ward costs a whole tube and a half-full one half of it.
         /// </summary>
         [Test]
-        public void ASurgeIntoAWardWithNothingLeftToFillIsRefused()
+        public void ASurgeFillsAWardToTheBrimAndIsChargedForWhatItPoured()
+        {
+            var item = UtilityCatalog.Default.Find("surge");
+
+            foreach (float share in new[] { 0f, .5f, .9f })
+            {
+                var board = Board();
+                var ward = board.Wards[0];
+
+                ward.Charges = SiegeTuning.MostCharges;            // so the brim stays visible
+                ward.Fuel = ward.Capacity * share;
+
+                int owed = board.TenthsToBrim(0);
+                var use = SiegeUtility.Apply(board, item, SiegeAim.AtWard(0), null);
+
+                Assert.IsTrue(use.Landed, $"refused at {share:P0}");
+                Assert.AreEqual(ward.Capacity, ward.Fuel, .0001f, $"not full from {share:P0}");
+                Assert.AreEqual(SiegeUtility.MatchesFor(SiegeUtility.DamageOfFuel(owed)),
+                                use.Matches, $"charged wrong from {share:P0}");
+            }
+        }
+
+        /// <summary>A ward whose tube is already full has nothing for a surge to fill.</summary>
+        [Test]
+        public void ASurgeIntoAFullTubeIsRefused()
         {
             var board = Board();
             var item = UtilityCatalog.Default.Find("surge");
 
-            var ward = board.Wards[0];
+            board.Wards[0].Fuel = board.Wards[0].Capacity;
 
-            // A full tube alone is not full: the next pour banks an overcharge.
-            ward.Fuel = ward.Capacity;
-
-            Assert.Greater(board.RoomForFuel(0), 0,
-                           "a full tube with a charge still to bank has somewhere to put a pour");
-            Assert.IsTrue(SiegeUtility.Would(board, item, SiegeAim.AtWard(0)));
-
-            // Tube full and every charge held: now there is nowhere for it to go.
-            ward.Charges = SiegeTuning.MostCharges;
-
-            Assert.AreEqual(0, board.RoomForFuel(0));
+            Assert.AreEqual(0, board.TenthsToBrim(0));
             Assert.IsFalse(SiegeUtility.Would(board, item, SiegeAim.AtWard(0)));
+            Assert.IsFalse(SiegeUtility.Apply(board, item, SiegeAim.AtWard(0), null).Landed);
         }
 
         /// <summary>
@@ -823,19 +815,49 @@ namespace GlimmerGrove.Tests
         [Test]
         public void ASurgeThatFillsATubeBanksAnOvercharge()
         {
+            var item = UtilityCatalog.Default.Find("surge");
+
+            // Awkward fractions included: a fill added up to the brim in a float can land a hair
+            // short of it, and a tube a hair short banks nothing.
+            foreach (float share in new[] { 0f, .137f, .7f, .999f })
+            {
+                var board = Board();
+                var ward = board.Wards[0];
+                ward.Fuel = ward.Capacity * share;
+
+                Assert.AreEqual(0, ward.Charges);
+
+                var use = SiegeUtility.Apply(board, item, SiegeAim.AtWard(0), null);
+
+                Assert.IsTrue(use.Landed, $"refused at {share:P1}");
+                Assert.AreEqual(1, ward.Charges, $"filling from {share:P1} banked nothing");
+                Assert.IsTrue(ward.Armed);
+            }
+        }
+
+        /// <summary>
+        /// A doused ward takes a surge even with its tube already full: what it buys there is the
+        /// seconds, so the douse lifts and the grade is charged nothing, because no fuel went in.
+        /// </summary>
+        [Test]
+        public void ASurgeLiftsADouseEvenOnAFullTubeAndChargesNothingForIt()
+        {
             var board = Board();
             var item = UtilityCatalog.Default.Find("surge");
 
             var ward = board.Wards[0];
-            ward.Fuel = ward.Capacity - item.Magnitude / 20f;      // half a pour short of full
+            ward.Fuel = ward.Capacity;
+            ward.Dark = 5f;
 
-            Assert.AreEqual(0, ward.Charges);
+            Assert.IsTrue(ward.Doused);
+            Assert.IsTrue(SiegeUtility.Would(board, item, SiegeAim.AtWard(0)));
 
             var use = SiegeUtility.Apply(board, item, SiegeAim.AtWard(0), null);
 
-            Assert.IsTrue(use.Landed);
-            Assert.AreEqual(1, ward.Charges, "a surge that filled the tube banked nothing");
-            Assert.IsTrue(ward.Armed);
+            Assert.IsTrue(use.Landed, "the blightcaller's answer was refused on a full tube");
+            Assert.IsFalse(ward.Doused);
+            Assert.AreEqual(0, use.Matches);
+            Assert.AreEqual(ward.Capacity, ward.Fuel, .0001f);
         }
 
         [Test]

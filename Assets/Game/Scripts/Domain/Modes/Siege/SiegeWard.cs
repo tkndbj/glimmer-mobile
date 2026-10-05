@@ -292,7 +292,7 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>One door, because there are two ways in.</b> Fuel arrives from a match landing
-        /// (<c>SiegeBoard.Land</c>) and from a surge being poured (<c>SiegeBoard.Surge</c>), and a
+        /// (<c>SiegeBoard.Land</c>) and from a surge being poured (<c>SiegeBoard.Brim</c>), and a
         /// conversion written at one of them is a ward that can never bank from the other.
         /// </para>
         /// <para>
@@ -313,7 +313,18 @@ namespace GlimmerGrove.Modes
         /// exists so a caller that genuinely has no way to report a broken seal cannot silently
         /// lose one: it has to say so.
         /// </summary>
-        public bool Fill(float fuel, out bool redeemed)
+        public bool Fill(float fuel, out bool redeemed) => Pour(fuel, false, out redeemed);
+
+        /// <summary>
+        /// Fills the tube exactly to the brim, through the same door as <see cref="Fill"/>.
+        ///
+        /// <b>Set to the brim rather than added up to it</b>, because <c>Fuel + (Capacity - Fuel)</c>
+        /// can land a rounding error short in a float, and a tube a hair short of full banks no
+        /// charge.
+        /// </summary>
+        public bool Brim(out bool redeemed) => Pour(Capacity - Fuel, true, out redeemed);
+
+        bool Pour(float fuel, bool brim, out bool redeemed)
         {
             redeemed = false;
             if (fuel <= 0f) return false;
@@ -328,7 +339,7 @@ namespace GlimmerGrove.Modes
                 }
             }
 
-            Fuel += fuel;
+            Fuel = brim ? Capacity : Fuel + fuel;
 
             bool banked = false;
 

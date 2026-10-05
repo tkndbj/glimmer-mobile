@@ -145,8 +145,8 @@ namespace GlimmerGrove
             // Pointing down, because the list opens downward. It turns rather than being swapped
             // for the other glyph while the menu is open: a mark that turns is the same mark
             // saying the same thing about the same list.
-            var chevron = UIKit.Titled("Chevron", pill.transform, "▼", 26, Pal.A(Pal.Cream, .78f),
-                                       TextAnchor.MiddleCenter, new Vector2(34f, 34f),
+            var chevron = UIKit.Titled("Chevron", pill.transform, "▼", 38, Color.white,
+                                       TextAnchor.MiddleCenter, new Vector2(48f, 48f),
                                        new Vector2(.5f, .5f),
                                        new Vector2(PillW * .5f - 40f, lift), 0f, 2f);
 
@@ -250,7 +250,7 @@ namespace GlimmerGrove
                 float rowY = height * .5f - rowH * .5f - i * (rowH + RowGap);
                 var tap = row.Tap;
 
-                Row(list, row.Id, row.Title, row.Tagline, row.Accent, row.Selected, row.Locked,
+                Row(list, row.Id, row.Title, row.Accent, row.Selected, row.Locked,
                     rowY, rowH, () => { Close(); tap?.Invoke(); });
             }
 
@@ -269,17 +269,12 @@ namespace GlimmerGrove
         }
 
         /// <summary>One row of the list.</summary>
-        static void Row(RectTransform parent, string id, string title, string tagline,
+        static void Row(RectTransform parent, string id, string title,
                         Color accent, bool selected, bool locked, float y, float height,
                         Action tap)
         {
             var row = UIKit.Box(id, parent, new Vector2(RowInner, height),
                                 new Vector2(.5f, .5f), new Vector2(0f, y));
-
-            // The two lines sit either side of the row's middle by a fraction of its height rather
-            // than by a fixed offset, so a squeezed row closes the gap between them instead of
-            // letting the tagline slide out of the seat. See MinRowH.
-            float split = height * .165f;
 
             // The row's own hit area. UIKit.Img leaves raycastTarget off on everything it builds,
             // so a row made only of pictures is a row no tap ever reaches - invisible in the
@@ -321,18 +316,12 @@ namespace GlimmerGrove
             // is the whole row going quiet, and the mark says why.
             float ink = locked ? .58f : selected ? 1f : .82f;
 
-            var name = UIKit.Titled("Name", row, title, 36, Pal.A(Pal.Cream, ink),
-                                    TextAnchor.MiddleCenter, new Vector2(TextW, 42f),
-                                    new Vector2(.5f, .5f), new Vector2(0f, split), 0f, 2f);
+            // The name alone, centred and large: the owner cut the tagline, so the row is one
+            // word and the word takes the room the second line had.
+            var name = UIKit.Titled("Name", row, title, 48, Pal.A(Pal.Cream, ink),
+                                    TextAnchor.MiddleCenter, new Vector2(TextW, 58f),
+                                    new Vector2(.5f, .5f), Vector2.zero, 0f, 2f);
             UIKit.Shrinkable(name);
-
-            // The tagline is the only place the game says what one of these *is*, and it is here
-            // rather than on a first-run panel because this is where somebody is deciding.
-            var tag = UIKit.Label("Tag", row, tagline, 24,
-                                  Pal.A(Pal.Cream, locked ? .44f : .60f), TextAnchor.MiddleCenter,
-                                  new Vector2(TextW, 40f), new Vector2(.5f, .5f),
-                                  new Vector2(0f, -split - 2f));
-            UIKit.Shrinkable(tag, 14);
 
             row.gameObject.AddComponent<Btn>().Setup(tap);
         }

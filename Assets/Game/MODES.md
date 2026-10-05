@@ -1219,6 +1219,12 @@ and its own spell row in `SiegeShotBake` (37dc); scope in `SiegeMode.Bosses`; a 
    screen that takes two fingers, withdrawn under any panel (`Flow.Touches`). Held by
    `APlantedBossTakesEverythingAtOnce`, `AStandOpensWhenItsThirdIsTaken`,
    `ATapIsKeptOnlyForABossThatCannotTakeItYet` and `ReadingTheBoardForTheDrawingMovesNothing`.
+   **And health was the lever, the same day**: the ten bosses met from the third chapter on went up a
+   quarter and an authored duel's share from 60 to 70 per cent (`SiegeLayout.DuelSharePercent`; 80
+   was measured first and left three late duels never won on the strongest line). The first two
+   chapters' four bosses are the Infinite lane's four and were not touched, so neither moved.
+   `EveryChapterReadOnThreeLines` prints every chapter on a cheap, a mid and the strongest line.
+   A stand's opener is never begun sooner than `SiegeTuning.OpenerRest` after the last.
 38. **A mode hides behind one manifest boolean, and deleting one is a session.** Hidden is `"disabled":
    true` and nothing else; deleted means class, board, view, screen, validator, reading, bodies, art,
    mirrors and tools all go, with the ids spent.

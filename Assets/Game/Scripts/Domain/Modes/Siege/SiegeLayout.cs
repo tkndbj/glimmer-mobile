@@ -318,14 +318,13 @@ namespace GlimmerGrove.Modes
         /// What share of its own health each boss of an authored duel stands with, in per cent.
         ///
         /// <para>
-        /// <b>A duel is one fight's worth of health and a fifth, split over two bodies</b> - so it
-        /// is sixty. Measured before it existed: a sunlord and a hollowking at their full lone
-        /// figures (9,520 and 10,080 at this chapter's surge) stood five hundred seconds against
-        /// the strongest line on the shelf, the hollowking casting a hundred times over a line
-        /// that never broke - a stalemate rather than a finale, which is 37di's promise broken
-        /// from the other side. Each boss keeps all three stands and all three floors (they are
-        /// shares of its own health), so every verb still fights; what moved is how long the
-        /// line has to hold two of them at once.
+        /// <b>Seventy since 2026-10-05, and sixty before it.</b> Sixty was set while a stand held
+        /// a floor: two bosses at their full lone figures stood five hundred seconds against
+        /// the strongest line on the shelf, a stalemate rather than a finale, so a duel was cut
+        /// to one fight's worth of health and a fifth. The floor has gone (<c>SiegeTuning.BossPhases</c>)
+        /// and with it the seconds it bought, and what came back from play was duels that fell
+        /// before they had fought - so the share went up, at the owner's instruction, to one
+        /// fight's worth and two fifths. Eighty was asked for and measured first: three duels of the last three chapters were then never won on the strongest line at any rhythm (<c>SiegeRuleTests.EveryShippedBossRungIsAFight</c>), so it rests at the highest share that gate passes.
         /// </para>
         /// <para>
         /// <b>Authored duels only.</b> The Infinite lane's pairs are its four lightest bosses on a
@@ -333,7 +332,7 @@ namespace GlimmerGrove.Modes
         /// reads the same share (<see cref="ShareAt"/>), so a duel is graded on the hill it is.
         /// </para>
         /// </summary>
-        public const int DuelSharePercent = 60;
+        public const int DuelSharePercent = 70;
 
         /// <summary>
         /// What share of its own health the raider at this place stands with, in per cent - a

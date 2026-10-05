@@ -1600,7 +1600,11 @@ namespace GlimmerGrove.Modes
         /// 0.62 puts it among the things the player has been killing.
         /// </para>
         /// </summary>
-        public const int GravemawHealth = 3000;
+        // Raised a quarter on 2026-10-05 with the other nine bosses met from the third chapter
+        // on, when the stand's floor went and health became the whole of what makes a boss
+        // last (`BossPhases`). None of the ten is sent by the first two chapters or by the
+        // Infinite lane, so neither moved. Was 3000.
+        public const int GravemawHealth = 3750;
 
         public const float GravemawHold = .62f;
         public const float GravemawMarch = 7.5f;
@@ -1635,7 +1639,11 @@ namespace GlimmerGrove.Modes
         /// the same shape: it holds the middle and the line has to come to it.
         /// </para>
         /// </summary>
-        public const int BonecallerHealth = 6000;
+        // Raised a quarter on 2026-10-05 with the other nine bosses met from the third chapter
+        // on, when the stand's floor went and health became the whole of what makes a boss
+        // last (`BossPhases`). None of the ten is sent by the first two chapters or by the
+        // Infinite lane, so neither moved. Was 6000.
+        public const int BonecallerHealth = 7500;
 
         public const float BonecallerHold = .40f;
         public const float BonecallerMarch = 8f;
@@ -1689,7 +1697,11 @@ namespace GlimmerGrove.Modes
         /// rides the head of its last authored wave (invariant 37ad), so the line is answering an
         /// ordinary wave at the same time and every point here is a point not spent on that.
         /// </summary>
-        public const int ShacklerHealth = 3400;
+        // Raised a quarter on 2026-10-05 with the other nine bosses met from the third chapter
+        // on, when the stand's floor went and health became the whole of what makes a boss
+        // last (`BossPhases`). None of the ten is sent by the first two chapters or by the
+        // Infinite lane, so neither moved. Was 3400.
+        public const int ShacklerHealth = 4250;
 
         /// <summary>
         /// Where a shackler stops, and it is the furthest back of any boss in the mode.
@@ -1754,7 +1766,11 @@ namespace GlimmerGrove.Modes
         /// lands is a measurement, not an argument: <c>SiegeRuleTests</c> sweeps the chapter.
         /// </para>
         /// </summary>
-        public const int IroncladHealth = 5200;
+        // Raised a quarter on 2026-10-05 with the other nine bosses met from the third chapter
+        // on, when the stand's floor went and health became the whole of what makes a boss
+        // last (`BossPhases`). None of the ten is sent by the first two chapters or by the
+        // Infinite lane, so neither moved. Was 5200.
+        public const int IroncladHealth = 6500;
 
         /// <summary>Where an ironclad stops. An overlord's ground: it holds the middle.</summary>
         public const float IroncladHold = .42f;
@@ -1864,7 +1880,11 @@ namespace GlimmerGrove.Modes
         /// fights something heavier, and chose to.
         /// </para>
         /// </summary>
-        public const int ThundererHealth = 3800;
+        // Raised a quarter on 2026-10-05 with the other nine bosses met from the third chapter
+        // on, when the stand's floor went and health became the whole of what makes a boss
+        // last (`BossPhases`). None of the ten is sent by the first two chapters or by the
+        // Infinite lane, so neither moved. Was 3800.
+        public const int ThundererHealth = 4750;
         public const float ThundererHold = .50f;
         public const float ThundererMarch = 8f;
 
@@ -1907,7 +1927,11 @@ namespace GlimmerGrove.Modes
         /// (<see cref="RubbleTaps"/>) while the hill is still coming.
         /// </para>
         /// </summary>
-        public const int ColossusHealth = 5800;
+        // Raised a quarter on 2026-10-05 with the other nine bosses met from the third chapter
+        // on, when the stand's floor went and health became the whole of what makes a boss
+        // last (`BossPhases`). None of the ten is sent by the first two chapters or by the
+        // Infinite lane, so neither moved. Was 5800.
+        public const int ColossusHealth = 7250;
         public const float ColossusHold = .40f;
         public const float ColossusMarch = 9.5f;
 
@@ -2010,7 +2034,11 @@ namespace GlimmerGrove.Modes
         /// (<see cref="SiegeSpell.Glare"/>), so it is a rung-five fight rather than a finale: the
         /// health pays for a duel long enough to make the reading matter twice.
         /// </summary>
-        public const int GorgonHealth = 4600;
+        // Raised a quarter on 2026-10-05 with the other nine bosses met from the third chapter
+        // on, when the stand's floor went and health became the whole of what makes a boss
+        // last (`BossPhases`). None of the ten is sent by the first two chapters or by the
+        // Infinite lane, so neither moved. Was 4600.
+        public const int GorgonHealth = 5750;
 
         /// <summary>Where a gorgon stops on the hill. See <see cref="GorgonHealth"/>.</summary>
         public const float GorgonHold = .52f;
@@ -2043,7 +2071,11 @@ namespace GlimmerGrove.Modes
         /// line - and a finale whose verb can be paid off has to be long enough to ask the
         /// question more than once.
         /// </summary>
-        public const int SunlordHealth = 6800;
+        // Raised a quarter on 2026-10-05 with the other nine bosses met from the third chapter
+        // on, when the stand's floor went and health became the whole of what makes a boss
+        // last (`BossPhases`). None of the ten is sent by the first two chapters or by the
+        // Infinite lane, so neither moved. Was 6800.
+        public const int SunlordHealth = 8500;
 
         /// <summary>Where a sunlord stops on the hill. See <see cref="SunlordHealth"/>.</summary>
         public const float SunlordHold = .44f;
@@ -2100,7 +2132,11 @@ namespace GlimmerGrove.Modes
         /// the health buys a duel long enough for the player to be asked the question three or
         /// four times - which is what makes it a habit rather than an incident.
         /// </summary>
-        public const int HarrowerHealth = 4800;
+        // Raised a quarter on 2026-10-05 with the other nine bosses met from the third chapter
+        // on, when the stand's floor went and health became the whole of what makes a boss
+        // last (`BossPhases`). None of the ten is sent by the first two chapters or by the
+        // Infinite lane, so neither moved. Was 4800.
+        public const int HarrowerHealth = 6000;
 
         /// <summary>
         /// Where a harrower stops on the hill. See <see cref="HarrowerHealth"/>.
@@ -2131,7 +2167,11 @@ namespace GlimmerGrove.Modes
         /// tube would never ask its question - and a finale whose verb can be answered for free
         /// has to be long enough to ask it four or five times over.
         /// </summary>
-        public const int HollowkingHealth = 7200;
+        // Raised a quarter on 2026-10-05 with the other nine bosses met from the third chapter
+        // on, when the stand's floor went and health became the whole of what makes a boss
+        // last (`BossPhases`). None of the ten is sent by the first two chapters or by the
+        // Infinite lane, so neither moved. Was 7200.
+        public const int HollowkingHealth = 9000;
 
         /// <summary>Where a hollowking stops on the hill. See <see cref="HollowkingHealth"/>.</summary>
         public const float HollowkingHold = .42f;

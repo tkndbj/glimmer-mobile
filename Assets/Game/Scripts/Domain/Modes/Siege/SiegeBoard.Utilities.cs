@@ -251,22 +251,73 @@ namespace GlimmerGrove.Modes
         }
 
         /// <summary>
-        /// Pours fuel into a ward, in tenths, and answers how many tenths it took.
+        /// Fills a ward's tube to the brim, which is what the surge utility does, and answers
+        /// whether it landed. <paramref name="tenths"/> is the fuel it poured, which is what the
+        /// grade is charged for.
         ///
         /// <para>
-        /// <b>Tenths rather than the ward's own float</b>, because what comes back decides a
-        /// graded number: <c>SiegeUtility</c> converts it to matches, and a graded number
-        /// decided by a float is one three code generators round three ways. The ward's live
-        /// fuel stays a float because it is drained by a clock, which is the one quantity here
-        /// that genuinely is continuous.
+        /// <b>A surge lifts a douse, and that is what makes it the blightcaller's answer.</b> Fuel
+        /// poured into a ward that cannot fire is fuel spent on nothing until the dark runs out on
+        /// its own, so pouring re-lights it - and a doused ward whose tube is already full still
+        /// takes one, for the seconds alone (nought tenths, so nought charged). The player is
+        /// buying a finish, never a grade (invariant 39).
         /// </para>
         /// <para>
-        /// Room is <em>floored</em> to whole tenths, so this can never report taking more than
-        /// it gave. What refuses a ward too full to be worth it is <c>SiegeUtility</c>, before
-        /// an item is spent.
+        /// Through <c>SiegeWard.Brim</c>, so a surge that fills a tube banks an overcharge exactly
+        /// as a match would, and pays a sunlord's seal like any other fuel (<c>SiegeSpell.Doom</c>).
+        /// The seal is reported here because the <em>saying so</em> is each door's own job.
         /// </para>
         /// </summary>
-        public int Surge(int ward, int tenths)
+        public bool Brim(int ward, out int tenths)
+        {
+            tenths = TenthsToBrim(ward);
+            if (ward < 0 || ward >= _wards.Length) return false;
+
+            var post = _wards[ward];
+            if (tenths <= 0 && !post.Doused) return false;
+
+            post.Dark = 0f;
+
+            if (tenths > 0)
+            {
+                post.Brim(out bool redeemed);
+                if (redeemed) _report.Redeemed.Add(ward);
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// The fuel it takes to fill this ward's tube, in tenths; nought for a full or fallen one.
+        ///
+        /// <para>
+        /// <b>Tenths, because this decides a graded number</b> (<c>SiegeUtility</c> converts it to
+        /// matches), and a graded number decided by a float is one three code generators round
+        /// three ways. Rounded to hundredths first and then up to tenths: a sliver of float error
+        /// can never mint a tenth, and a real part of one is always charged - over-charging is the
+        /// safe direction.
+        /// </para>
+        /// </summary>
+        public int TenthsToBrim(int ward)
+        {
+            if (ward < 0 || ward >= _wards.Length) return 0;
+
+            var post = _wards[ward];
+            if (!post.Alive) return 0;
+
+            int hundredths = (int)Math.Round((post.Capacity - post.Fuel) * 100f);
+            return hundredths <= 0 ? 0 : (hundredths + 9) / 10;
+        }
+
+        /// <summary>
+        /// Pours a set amount of fuel into a ward, in tenths, and answers how many it took.
+        ///
+        /// <b>A fixture door, not a rule</b>: the surge utility fills to the brim
+        /// (<see cref="Brim"/>), so nothing a player does pours a fixed amount; tests use this to
+        /// put a ward in a known state. Room is floored to whole tenths, so it never reports
+        /// taking more than it gave.
+        /// </summary>
+        internal int Surge(int ward, int tenths)
         {
             if (ward < 0 || ward >= _wards.Length || tenths <= 0) return 0;
 
@@ -276,24 +327,10 @@ namespace GlimmerGrove.Modes
             int room = RoomForFuel(ward);
             if (room <= 0) return 0;
 
-            // **A surge lifts a douse, and that is what makes it the blightcaller's answer.**
-            // Fuel poured into a ward that cannot fire is fuel spent on nothing until the dark
-            // runs out on its own, which is a utility charged for a delay - so pouring re-lights
-            // it. The player is buying the seconds rather than the fuel, which is exactly what
-            // invariant 39 says a utility may sell: a finish, never a grade.
-            post.Dark = 0f;
-
             int given = tenths < room ? tenths : room;
 
-            // Through `Fill`, so a surge that tops a tube up banks an overcharge exactly as a
-            // match would. Written as `Fuel +=` here it was the one way to fill a ward that could
-            // never arm one.
+            post.Dark = 0f;
             post.Fill(given / 10f, out bool redeemed);
-
-            // **A surge pays a seal like any other fuel** (`SiegeSpell.Doom`), and it is reported
-            // here because the toll is counted inside `SiegeWard.Fill` and the *saying so* is
-            // each door's own job. A utility that broke a seal in silence would be the one way
-            // of answering a sunlord that the player could not see working.
             if (redeemed) _report.Redeemed.Add(ward);
 
             return given;

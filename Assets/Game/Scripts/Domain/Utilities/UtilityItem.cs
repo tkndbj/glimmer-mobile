@@ -149,9 +149,9 @@ namespace GlimmerGrove.Utilities
         Ward = 2,
 
         /// <summary>
-        /// Fuel. <b>Never climbs</b>, and must not: fuel becomes bolts at the line's own weight
-        /// and is bounded by <c>SiegeTuning.WardCapacity</c>, so a surged pour would be a pour
-        /// into a tube that cannot hold it. What a surge buys is the line's output, so it is worth
+        /// Fuel. <b>Never climbs</b>, and must not: a surge fills the tube to the brim
+        /// (<c>SiegeBoard.Brim</c>) and the tube is bounded by <c>SiegeTuning.WardCapacity</c>, so
+        /// there is nothing to scale. What a surge buys is the line's output, so it is worth
         /// exactly what the line is worth - which is the shelf's question (invariant 42) and not
         /// this one.
         /// </summary>
@@ -324,12 +324,13 @@ namespace GlimmerGrove.Utilities
         public readonly UtilityKind Kind;
 
         /// <summary>
-        /// How strong one is, in the unit its kind measures: damage for a blast, health for a
-        /// mend, fuel-tenths for a surge, tenths of a second held for a gravity well.
+        /// How strong one is, in the unit its kind measures: damage for a blast or a storm, health
+        /// for a mend, tenths of a second held for a gravity well.
         ///
-        /// <b>Tenths for the surge and whole numbers for the other two</b>, because fuel is the
-        /// one quantity in <c>SiegeTuning</c> that is a float and a graded number decided by a
-        /// float is a number three code generators round three ways.
+        /// <b>Not read for a surge</b>, which fills the ward's tube to the brim whatever this says
+        /// (<c>SiegeBoard.Brim</c>). The field stays in its row because the content file is read
+        /// by every shipped client and the server, and an item always carries one (it is clamped
+        /// to at least one below).
         /// </summary>
         public readonly int Magnitude;
 

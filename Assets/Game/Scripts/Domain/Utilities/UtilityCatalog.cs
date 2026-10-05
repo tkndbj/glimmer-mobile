@@ -117,8 +117,8 @@ namespace GlimmerGrove.Utilities
             new UtilityItem("mending", UtilityKind.Mend, magnitude: 6,
                             gemPrice: 8, maxHeld: 100, order: 2, cooldownSeconds: 15),
 
-            // Magnitude is fuel in tenths, so 90 is nine shots - a ward that had run dry firing
-            // for about two seconds, which is most of a creeper.
+            // Fills the ward's tube to the brim (`SiegeBoard.Brim`); the magnitude is not read
+            // for a surge and is kept only because the validators ask every item for one.
             new UtilityItem("surge", UtilityKind.Surge, magnitude: 90,
                             gemPrice: 10, maxHeld: 100, order: 3, cooldownSeconds: 20),
         });

@@ -493,7 +493,7 @@ namespace GlimmerGrove.Tests
             ("Neonhaven", Neonhaven),
         };
 
-        static Sweep Play(Rung[] chapter, WardLine line)
+        static Sweep Play(Rung[] chapter, WardLine line, bool walls = true)
         {
             float[] rhythms = { 2.20f, 2.25f, 2.30f, 2.35f, 2.40f, 2.45f, 2.50f, 2.55f, 2.60f };
 
@@ -561,7 +561,7 @@ namespace GlimmerGrove.Tests
                 // and both are the same fault.
                 //
                 // Only a suspected wall pays for the second sweep, so the common path is unchanged.
-                if (held == 0 && Walled(layout, line)) swept.Walled++;
+                if (walls && held == 0 && Walled(layout, line)) swept.Walled++;
 
                 table.AppendLine($"  {chapter[i].Id,-18} par {par,3}  3* {gold,3}"
                                  + $"  held {held}/{rhythms.Length}"
@@ -2076,6 +2076,58 @@ namespace GlimmerGrove.Tests
                     Assert.AreEqual(c == wears ? 10 : 0, ward.ReachTenths(creeper));
                 }
             }
+        }
+
+        // ------------------------------------------------------------------ the readout
+        /// <summary>
+        /// Every chapter on three lines - a cheap one, a mid one and the strongest - as one
+        /// table: how many of each chapter's runs are held, and how many are three-starred.
+        ///
+        /// <para>
+        /// <b>A reading and not a gate</b>: it asserts nothing about difficulty, and exists so a
+        /// re-tune of anything a whole ladder feels (a boss's health, the duel share) can be
+        /// read before and after in one run rather than chapter by chapter out of eleven gates.
+        /// The lines are the gates' own - <see cref="Bought"/>, three-star workhorses and
+        /// <see cref="Strongest"/> - so a figure here is the figure a gate would print.
+        /// </para>
+        /// <para>
+        /// <b>Without the fine sweep</b> (<see cref="Walled"/>), which is the gates' question
+        /// and four times the cost of everything else here.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void EveryChapterReadOnThreeLines()
+        {
+            var lines = new (string Name, WardLine Line)[]
+            {
+                ("cheap", Bought()),
+                ("mid", Starred(Workhorse, 3)),
+                ("strong", Strongest()),
+            };
+
+            var table = new StringBuilder();
+            int runs = 0;
+
+            foreach (var (name, rungs) in Ladder)
+            {
+                table.Append($"  {name,-12}");
+
+                foreach (var (_, line) in lines)
+                {
+                    var swept = Play(rungs, line, walls: false);
+                    runs += swept.Runs;
+
+                    table.Append($"  held {swept.Held,3}/{swept.Runs,-3} 3* {swept.Starred,3}");
+                }
+
+                table.AppendLine();
+                System.Console.WriteLine(table.ToString().TrimEnd().Substring(
+                    table.ToString().TrimEnd().LastIndexOf('\n') + 1));
+            }
+
+            Assert.Greater(runs, 0);
+
+            System.Console.WriteLine("every chapter on cheap / mid / strong:\n" + table);
         }
     }
 }

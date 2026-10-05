@@ -200,15 +200,13 @@ namespace GlimmerGrove.Modes
 
                 case UtilityKind.Surge:
                     // **A doused ward always takes one**, whatever is in its tube: what a surge
-                    // buys there is the seconds rather than the fuel (see `SiegeBoard.Surge`), and
+                    // buys there is the seconds rather than the fuel (see `SiegeBoard.Brim`), and
                     // refusing it on a full tube would refuse the item on exactly the ward a
                     // blightcaller has just put out - which is the one moment it is worth most.
                     if (board.Doused(aim.Ward)) return true;
 
-                    // Half, rather than all of it. Refusing a ward that cannot take the whole
-                    // pour would make a surge unusable on exactly the ward that is firing, and
-                    // accepting one with a tenth of room would spend an item for nothing.
-                    return board.RoomForFuel(aim.Ward) * 2 >= item.Magnitude;
+                    // A surge fills the tube to the brim, so any tube short of full takes one.
+                    return board.TenthsToBrim(aim.Ward) > 0;
 
                 case UtilityKind.Gravity:
                     // **Answerable in advance, like a storm**: a well takes everything on the
@@ -291,17 +289,16 @@ namespace GlimmerGrove.Modes
 
                 case UtilityKind.Surge:
                 {
-                    int poured = board.Surge(aim.Ward, item.Magnitude);
-                    if (poured <= 0) return SiegeUse.Refused;
+                    // **A full tube, whatever was in it** - the item's magnitude is not read for
+                    // this kind (see `UtilityItem.Magnitude`).
+                    if (!board.Brim(aim.Ward, out int poured)) return SiegeUse.Refused;
 
-                    // Charged for the *whole* pour rather than for what the ward took, so the
-                    // charge is a constant a player can learn and never a number that depends on
-                    // how full the ward happened to be. Over-charging is the safe direction; the
-                    // ward that could take less than half of it was refused by Would.
+                    // Charged for what it poured, so filling a nearly-empty ward costs the grade
+                    // more than topping up a nearly-full one (invariant 39).
                     int rank = aim.Ward >= 0 && aim.Ward < board.Wards.Count
                              ? board.Wards[aim.Ward].Rank : 0;
 
-                    int matches = MatchesFor(DamageOfFuel(item.Magnitude, rank));
+                    int matches = MatchesFor(DamageOfFuel(poured, rank));
 
                     return new SiegeUse(true, matches, poured, aim.Ward);
                 }
