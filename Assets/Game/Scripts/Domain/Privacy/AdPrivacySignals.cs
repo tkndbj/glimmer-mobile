@@ -171,7 +171,9 @@ namespace GlimmerGrove.Privacy
         /// was owed has been answered.
         ///
         /// <para>
-        /// This is the gate on Apple's tracking prompt (<see cref="AdPrivacy.ResolveAsync"/>).
+        /// This is the gate on Apple's tracking prompt (<see cref="AdPrivacy.AskAsync"/>), and
+        /// on the splash's answer: an open question commits nothing until the hub has asked
+        /// (<see cref="AdPrivacy.PrepareAsync"/>).
         /// Apple requires that a GDPR form shown <em>after</em> "Ask App Not to Track" not ask
         /// about tracking again, and the cheapest way to honour that on every path is never to
         /// let the form come second: the prompt is asked only once this is true, so a launch

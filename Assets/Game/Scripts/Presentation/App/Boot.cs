@@ -168,9 +168,9 @@ namespace GlimmerGrove
             // Without the second, LevelPlay would start, fail, and leave the game showing
             // offers that can never fill - which is worse than showing none.
             // The consent platform and Apple's tracking prompt, installed before anything can
-            // ask what the player agreed to. Installed, not resolved: asking is a network
-            // round trip and possibly a native dialog, neither of which belongs before the
-            // first scene has loaded - the splash starts that, through RewardedAds.StartAsync.
+            // ask what the player agreed to. Installed, not resolved: the splash refreshes the
+            // answer through RewardedAds.StartAsync, and any dialog still owed is put on the hub
+            // by ConsentMoment (invariant 55).
             Privacy.PrivacySetup.Install();
 
             // Measurement, installed immediately after the consent platform and before
@@ -335,6 +335,11 @@ namespace GlimmerGrove
                 // every modal in the stack, so a wall that was merely *raised* would be
                 // dismissed by the first piece of code that navigated.
                 UpdateGate.Tick();
+
+                // And whatever the consent form and Apple's prompt still owe, put on the hub once
+                // the player is standing on it with nothing in front of it (invariant 55). After
+                // the wall, so a frame that raised it is a frame that asks nothing.
+                ConsentMoment.Tick();
             }
 
             void OnApplicationPause(bool paused)

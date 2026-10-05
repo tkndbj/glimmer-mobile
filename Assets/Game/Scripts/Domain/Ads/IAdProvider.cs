@@ -110,8 +110,9 @@ namespace GlimmerGrove.Ads
         /// <b>Must be called before <see cref="InitializeAsync"/>, and the ordering is the
         /// whole point.</b> A mediation SDK that starts without having been told has already
         /// decided what it may collect and has already run an auction on it; a signal applied
-        /// afterwards changes the next request and cannot undo the first. <c>Boot</c> awaits
-        /// <c>AdPrivacy.ResolveAsync</c>, applies the result here, and only then initialises.
+        /// afterwards changes the next request and cannot undo the first. <c>RewardedAds.StartAsync</c>
+        /// awaits <c>AdPrivacy.WhenResolvedAsync</c>, applies the result here, and only then
+        /// initialises.
         /// </para>
         /// <para>
         /// Also called again whenever the player revisits the consent form, which is why it is

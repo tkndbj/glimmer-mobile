@@ -20,8 +20,12 @@ namespace GlimmerGrove.Analytics
     /// </para>
     /// <para>
     /// <b>Nothing is ever blocked on the network.</b> The SDK is told to start as soon as the
-    /// gateway answers, which happens on the splash - not when a sign-in completes, and not
-    /// when a save syncs. An install reported late is an install attributed to nobody, and a
+    /// gateway answers - on the splash wherever no consent form is owed, otherwise once the
+    /// form has been answered on the hub (invariant 55) - not when a sign-in completes, and not
+    /// when a save syncs. On iOS the install is reported without waiting for Apple's prompt,
+    /// which now comes on the hub after the tutorial: holding the install for it would lose
+    /// every player who left during the tutorial, and the SDK reads the advertising id on
+    /// later events once the player has allowed it. An install reported late is an install attributed to nobody, and a
     /// sign-in is the one step here that can fail on a device with no Play Services.
     /// </para>
     /// </summary>
@@ -76,7 +80,7 @@ namespace GlimmerGrove.Analytics
         /// </para>
         /// <para>
         /// <b>The signals are taken from the event rather than read back off
-        /// <c>AdPrivacy</c>.</b> <c>ResolveAsync</c> raises <c>Changed</c> and sets
+        /// <c>AdPrivacy</c>.</b> A commit raises <c>Changed</c> and sets
         /// <c>IsResolved</c> on the line <em>after</em> it, so a handler that asks the flag is
         /// told the answer has not arrived - during the one call that carries it. Both halves
         /// of this file did exactly that and both failed the same silent way: attribution was

@@ -99,7 +99,7 @@ namespace GlimmerGrove.Analytics
         /// </para>
         /// <para>
         /// <b>The signals are taken from the event rather than read back off
-        /// <c>AdPrivacy</c>.</b> <c>ResolveAsync</c> raises <c>Changed</c> and sets
+        /// <c>AdPrivacy</c>.</b> A commit raises <c>Changed</c> and sets
         /// <c>IsResolved</c> on the line <em>after</em> it, so a handler that asks the flag is
         /// told the answer has not arrived - during the one call that carries it. Both halves
         /// of this file did exactly that and both failed the same silent way: attribution was

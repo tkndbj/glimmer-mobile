@@ -17,7 +17,7 @@ namespace GlimmerGrove.Privacy
     /// they save: Unity's iOS-support package is another package to resolve for forty lines,
     /// and the mediation SDKs that ship their own ATT helper each want to own the timing -
     /// which is the one thing that must stay ours, because the prompt has to come before any
-    /// SDK touches the advertising id. See <see cref="AdPrivacy.ResolveAsync"/>.
+    /// SDK touches the advertising id. See <see cref="AdPrivacy.AskAsync"/>.
     /// </para>
     /// <para>
     /// <b>The prompt is shown once per install and the OS enforces that.</b>

@@ -358,7 +358,8 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
 50f. **iOS keeps the 64 soonest pending notifications silently; the count is gated.**
 50g. **Cadence is an outcome of cooldowns, not a quota**, and it thins the longer a player is away.
 50h. **The permission is asked at a chest, never on the splash**; switch and OS answer are separate
-   device-local facts.
+   device-local facts. The package's iOS "request on app launch" stays off (it shipped on, ahead of the
+   splash); `NotificationTests.TheOsIsNeverAskedForNotificationsAtLaunch` reads the settings file.
 50i. **Android status-bar icon is a silhouette in an `.androidlib`.**
 50j. **A 24dp mark is a different picture**, nothing thinner than 1/12 of the canvas.
 50k. **A `versionDefines` flag adds no reference**; `compile.py` runs three passes (no package,
@@ -438,9 +439,12 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
 
 ### Consent
 
-55. **The consent form comes before Apple's tracking prompt on every path.** `UmpConsentGateway` bounds the
-   two server calls and waits for a shown form without a clock; a late form is dropped. `AdPrivacy` asks ATT
-   only when `ConsentSettled`. Held by `PrivacyTests`.
+55. **The consent form comes before Apple's tracking prompt on every path, and both wait for the hub.** The
+   splash only refreshes (`AdPrivacy.PrepareAsync`) and commits there when nothing is owed; what is owed is
+   put by `ConsentMoment` on an idle hub (`AskAsync`), so a new player meets the tutorial first and an
+   answered one is never asked. `UmpConsentGateway` bounds the two server calls, waits for a shown form
+   without a clock, and drops a form the hub is no longer idle for. ATT only when `ConsentSettled`. Held by
+   `PrivacyTests`.
 
 ### Daily challenges
 

@@ -78,13 +78,17 @@ namespace GlimmerGrove.Ads
         /// <para>
         /// Safe before <c>Init</c>, and that is not luck: the Unity wrapper builds its
         /// platform bridge in a <em>static constructor</em> rather than on initialisation, so
-        /// <c>SetMetaData</c> and <c>SetGDPRConsent</c> reach the native SDK from the first
-        /// touch of the class. ironSource's own contract requires exactly that - the metadata
-        /// keys are documented as "before init" - and calling them after would configure an
-        /// SDK that had already run an auction.
+        /// the privacy calls reach the native SDK from the first touch of the class.
+        /// ironSource's own contract requires exactly that - the privacy flags are documented
+        /// as "before init" - and calling them after would configure an SDK that had already
+        /// run an auction.
         /// </para>
         /// <para>
-        /// Three calls and no more, because three is what this SDK actually consumes. The IAB
+        /// Three calls and no more, because three is what this SDK actually consumes - all
+        /// through <c>LevelPlayPrivacySettings</c>, which since LevelPlay 9 replaces the
+        /// <c>do_not_sell</c> and <c>is_child_directed</c> metadata keys (the SDK logs each of
+        /// those as deprecated). <c>SetCCPA(true)</c> is an opt-out of sale and
+        /// <c>SetCOPPA(true)</c> a child-directed user, the same meanings the keys had. The IAB
         /// TCF consent string is not among them: the CMP writes it into the platform's own
         /// preference store and every adapter reads it there, so passing a copy would make us
         /// a second source of truth for a value we do not own.
@@ -101,8 +105,8 @@ namespace GlimmerGrove.Ads
             _privacyApplied = true;
 
             LevelPlayPrivacySettings.SetGDPRConsent(signals.AllowsPersonalisation);
-            LevelPlay.SetMetaData("do_not_sell", signals.DoNotSell ? "true" : "false");
-            LevelPlay.SetMetaData("is_child_directed", signals.ChildDirected ? "true" : "false");
+            LevelPlayPrivacySettings.SetCCPA(signals.DoNotSell);
+            LevelPlayPrivacySettings.SetCOPPA(signals.ChildDirected);
 
             Debug.Log($"[Ads] privacy applied: {signals}");
         }

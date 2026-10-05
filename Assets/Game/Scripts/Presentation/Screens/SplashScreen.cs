@@ -642,13 +642,15 @@ namespace GlimmerGrove
 
             StoreService.BeginConnect();
 
-            // Consent, then mediation, in that order and never the other one. This is the
-            // only thing on the splash that can put a dialog in front of the player - the
-            // CMP's form, and on iOS Apple's tracking prompt - and it is here rather than in
-            // Boot because neither belongs before the first scene has loaded. Nothing waits
-            // on it: the offer buttons light up when readiness arrives, which is what
-            // RewardedAds.Changed is for. See RewardedAds.StartAsync for why the order is
-            // owned there rather than written out at this call site.
+            // Consent, then mediation, in that order and never the other one - and nothing on
+            // screen (invariant 55). This only refreshes what the CMP knows: where nothing is
+            // owed (outside the EEA, or a player who has answered before) the answer settles
+            // here and mediation, analytics and attribution start as they always did; where
+            // the form or Apple's prompt is still owed, ConsentMoment puts it on the hub once
+            // the tutorial is behind the player. Nothing waits on it: the offer buttons light
+            // up when readiness arrives, which is what RewardedAds.Changed is for. See
+            // RewardedAds.StartAsync for why the order is owned there rather than written out
+            // at this call site.
             RewardedAds.BeginStart();
 
             // Against the reveal rather than against the build, so a launch is the card and then

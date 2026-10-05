@@ -1,4 +1,5 @@
 #if GLIMMER_UMP
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -41,7 +42,7 @@ namespace GlimmerGrove.Privacy
     /// wait.</b> The first version wrapped "load the form and show it and wait for the answer"
     /// in a single fifteen-second timeout - so a reviewer who read the form for sixteen
     /// seconds, or whose form loaded slowly, found the gateway giving up underneath them:
-    /// <see cref="AdPrivacy.ResolveAsync"/> moved on to Apple's tracking prompt, which landed
+    /// the gateway's caller moved on to Apple's tracking prompt, which landed
     /// on top of the consent form still on screen, and after "Ask App Not to Track" the form
     /// was still there asking about personalised ads. Apple rejected 1.0.2 for exactly that
     /// sequence (Guideline 5.1.1(iv), 2026-09-22). So now <see cref="LoadForm"/> is bounded,
@@ -64,11 +65,127 @@ namespace GlimmerGrove.Privacy
         /// </summary>
         const int TimeoutMilliseconds = 15_000;
 
+        /// <summary>
+        /// Whether the consent info has been refreshed successfully on this launch. The hub's
+        /// step refreshes again when the splash's could not - a train that had no signal at the
+        /// splash often has one by the end of the tutorial.
+        /// </summary>
+        bool _fresh;
+
+        /// <summary>
+        /// The debug reset, at most once a process: a second refresh on the same launch must not
+        /// wipe the answer the tester has just given. See <see cref="ConsentDebug"/>.
+        /// </summary>
+        static bool _debugReset;
+
         public bool CanRevisit
             => ConsentInformation.PrivacyOptionsRequirementStatus
                == PrivacyOptionsRequirementStatus.Required;
 
-        public async Task<AdPrivacySignals> ResolveAsync(CancellationToken cancellation = default)
+        /// <summary>
+        /// The splash's step: asks Google what this player owes and draws nothing.
+        ///
+        /// <para>
+        /// <c>ConsentInformation.Update</c> is the call Google asks for on every launch, and it
+        /// is the whole of what happens before the tutorial. A returning player's stored answer
+        /// comes back <c>Obtained</c> and a player outside the EEA comes back
+        /// <c>NotRequired</c>; both read as a settled question, and nobody in either group is
+        /// ever shown anything. Only <c>Required</c> leaves the question open for the hub.
+        /// </para>
+        /// </summary>
+        public async Task<AdPrivacySignals> RefreshAsync(CancellationToken cancellation = default)
+        {
+            // A refresh that fails leaves the question open - Read() would say Unknown, and
+            // Restricted says the same thing without pretending the SDK was consulted. Open is
+            // what AdPrivacy needs to hear: the hub refreshes once more before giving up.
+            if (!await Refresh(cancellation)) return AdPrivacySignals.Restricted;
+
+            return Read();
+        }
+
+        /// <summary>
+        /// The hub's step: the form, where one is owed and the player is still on an idle hub
+        /// once it has loaded.
+        ///
+        /// <para>
+        /// Deliberately not <c>LoadAndShowConsentFormIfRequired</c>, which the SDK offers and
+        /// the first version used: its one callback fires when the form is <em>dismissed</em>,
+        /// so there is no moment at which a caller can tell "still fetching" from "on screen,
+        /// being read" - and those two want opposite treatment. Loading and showing as two
+        /// calls is what makes the load bounded and the show not, and it is also what leaves
+        /// room to ask <paramref name="mayPresent"/> in between.
+        /// </para>
+        /// </summary>
+        public async Task<ConsentAsk> AskAsync(Func<bool> mayPresent, CancellationToken cancellation = default)
+        {
+            if (!_fresh && !await Refresh(cancellation))
+                return ConsentAsk.Answered(AdPrivacySignals.Restricted);
+
+            // Outside the EEA and the UK UMP answers NotRequired and this returns having drawn
+            // nothing, which is why no geography check of ours appears anywhere in this file.
+            if (ConsentInformation.ConsentStatus != GoogleMobileAds.Ump.Api.ConsentStatus.Required)
+                return ConsentAsk.Answered(Read());
+
+            if (!ConsentInformation.IsConsentFormAvailable())
+            {
+                // The console problem named in Refresh: UMP has placed this player inside the
+                // EEA and has nothing published to show them. Nothing to wait for; the question
+                // stays open and Apple's prompt stays unasked, which is the right pairing - with
+                // no GDPR consent there is nothing lawful to do with a device id anyway.
+                Debug.LogWarning("[Privacy] UMP requires a consent form and has none to show; " +
+                                 "nothing is published for this app in the AdMob console. " +
+                                 "Running unpersonalised.");
+                return ConsentAsk.Answered(Read());
+            }
+
+            var form = await LoadForm(cancellation);
+            if (form == null) return ConsentAsk.Answered(Read());
+
+            // Asked after the load and immediately before the show, because the load is a
+            // network round trip and the player may have tapped into a run while it ran. The
+            // loaded form is simply let go - a UMP form is single-use, and the next ask loads a
+            // fresh one.
+            if (mayPresent == null || !mayPresent())
+            {
+                Debug.Log("[Privacy] the hub is no longer idle; the consent form waits for the player's return");
+                return ConsentAsk.NotNow;
+            }
+
+            await Show(form, cancellation);
+
+            Debug.Log($"[Privacy] after the form: status={ConsentInformation.ConsentStatus}, " +
+                      $"canRequestAds={ConsentInformation.CanRequestAds()}, " +
+                      $"privacyOptions={ConsentInformation.PrivacyOptionsRequirementStatus}");
+
+            return ConsentAsk.Answered(Read());
+        }
+
+        public async Task<AdPrivacySignals> RevisitAsync(CancellationToken cancellation = default)
+        {
+            if (!CanRevisit) return Read();
+
+            // The options form is opened by the player from Settings, so unlike the boot-path
+            // form it is never in a race with Apple's prompt - the tracking answer was read
+            // long ago. It still waits for the person rather than a clock, because a form that
+            // is dismissed and then read back as "no change" has thrown their decision away.
+            var dismissed = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            ConsentForm.ShowPrivacyOptionsForm(error =>
+            {
+                if (error != null) Debug.LogWarning($"[Privacy] the privacy options form failed: {error.Message}");
+                dismissed.TrySetResult(error == null);
+            });
+
+            await Dismissal(dismissed.Task, cancellation);
+
+            return Read();
+        }
+
+        // ------------------------------------------------------------- the SDK
+        /// <summary>
+        /// Refreshes the consent info, bounded, and records the outcome in <see cref="_fresh"/>.
+        /// </summary>
+        async Task<bool> Refresh(CancellationToken cancellation)
         {
             // TagForUnderAgeOfConsent follows the app's own COPPA classification rather than a
             // separate switch, so the two can never disagree. See AdPrivacy.ChildDirected.
@@ -100,19 +217,18 @@ namespace GlimmerGrove.Privacy
                 // every later run is answered from that - the override is applied, ignored, and
                 // nothing in any log says why. Clearing it is what makes the debug geography
                 // mean anything. Debug-only: resetting a real player would re-prompt somebody
-                // who had already answered.
-                if (ConsentDebug.ResetEachRun)
+                // who had already answered. Once a process, so the hub's second refresh cannot
+                // wipe the answer the tester has just given.
+                if (ConsentDebug.ResetEachRun && !_debugReset)
                 {
+                    _debugReset = true;
                     ConsentInformation.Reset();
                     Debug.LogWarning("[Privacy] UMP consent state reset for testing");
                 }
             }
 
-            // A refresh that fails leaves the question open - Read() would say Unknown, and
-            // Restricted says the same thing without pretending the SDK was consulted. Open is
-            // what AdPrivacy needs to hear: it means Apple's prompt waits for a launch on which
-            // the form can actually be shown first.
-            if (!await Update(request, cancellation)) return AdPrivacySignals.Restricted;
+            _fresh = await Update(request, cancellation);
+            if (!_fresh) return false;
 
             // Logged raw, before Read() folds them together. The two states that matter here
             // are indistinguishable afterwards: NotRequired means UMP placed this player
@@ -123,37 +239,9 @@ namespace GlimmerGrove.Privacy
                       $"canRequestAds={ConsentInformation.CanRequestAds()}, " +
                       $"privacyOptions={ConsentInformation.PrivacyOptionsRequirementStatus}");
 
-            await ShowIfRequired(cancellation);
-
-            Debug.Log($"[Privacy] after the form: status={ConsentInformation.ConsentStatus}, " +
-                      $"canRequestAds={ConsentInformation.CanRequestAds()}, " +
-                      $"privacyOptions={ConsentInformation.PrivacyOptionsRequirementStatus}");
-
-            return Read();
+            return true;
         }
 
-        public async Task<AdPrivacySignals> RevisitAsync(CancellationToken cancellation = default)
-        {
-            if (!CanRevisit) return Read();
-
-            // The options form is opened by the player from Settings, so unlike the boot-path
-            // form it is never in a race with Apple's prompt - the tracking answer was read
-            // long ago. It still waits for the person rather than a clock, because a form that
-            // is dismissed and then read back as "no change" has thrown their decision away.
-            var dismissed = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-
-            ConsentForm.ShowPrivacyOptionsForm(error =>
-            {
-                if (error != null) Debug.LogWarning($"[Privacy] the privacy options form failed: {error.Message}");
-                dismissed.TrySetResult(error == null);
-            });
-
-            await Dismissal(dismissed.Task, cancellation);
-
-            return Read();
-        }
-
-        // ------------------------------------------------------------- the SDK
         static async Task<bool> Update(ConsentRequestParameters request, CancellationToken cancellation)
         {
             var updated = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -167,41 +255,6 @@ namespace GlimmerGrove.Privacy
             });
 
             return await Bounded(updated.Task, "consent info", cancellation);
-        }
-
-        /// <summary>
-        /// Shows the form only where one is owed. Outside the EEA and the UK UMP answers
-        /// <c>NotRequired</c> and this returns having drawn nothing, which is why no geography
-        /// check of ours appears anywhere in this file.
-        ///
-        /// <para>
-        /// Deliberately not <c>LoadAndShowConsentFormIfRequired</c>, which the SDK offers and
-        /// the first version used: its one callback fires when the form is <em>dismissed</em>,
-        /// so there is no moment at which a caller can tell "still fetching" from "on screen,
-        /// being read" - and those two want opposite treatment. Loading and showing as two
-        /// calls is what makes the load bounded and the show not.
-        /// </para>
-        /// </summary>
-        static async Task ShowIfRequired(CancellationToken cancellation)
-        {
-            if (ConsentInformation.ConsentStatus != GoogleMobileAds.Ump.Api.ConsentStatus.Required) return;
-
-            if (!ConsentInformation.IsConsentFormAvailable())
-            {
-                // The console problem named above: UMP has placed this player inside the EEA
-                // and has nothing published to show them. Nothing to wait for; the question
-                // stays open and Apple's prompt stays unasked, which is the right pairing -
-                // with no GDPR consent there is nothing lawful to do with a device id anyway.
-                Debug.LogWarning("[Privacy] UMP requires a consent form and has none to show; " +
-                                 "nothing is published for this app in the AdMob console. " +
-                                 "Running unpersonalised.");
-                return;
-            }
-
-            var form = await LoadForm(cancellation);
-            if (form == null) return;
-
-            await Show(form, cancellation);
         }
 
         /// <summary>
@@ -314,8 +367,8 @@ namespace GlimmerGrove.Privacy
         /// </para>
         /// <para>
         /// <b>An <see cref="ConsentStatus.Unknown"/> here means the question is still open</b>
-        /// - a form owed and not yet answered - and <see cref="AdPrivacy.ResolveAsync"/> reads
-        /// it as "do not ask Apple yet". <c>Required</c> after this method is exactly that
+        /// - a form owed and not yet answered - and <see cref="AdPrivacy"/> reads it as "leave
+        /// it for the hub" on the splash and "do not ask Apple yet" on the hub. <c>Required</c> after this method is exactly that
         /// state: the form failed to load, failed to show, or was never published.
         /// </para>
         /// </summary>

@@ -137,7 +137,8 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// A gateway that throws must not stop the game starting, and must not be read as a
         /// yes. This is the failure that actually happens: a CMP whose servers are unreachable
-        /// on a train.
+        /// on a train. The splash leaves the question open; the hub tries once more, fails,
+        /// and commits the restrictive answer - and mediation starts on that.
         /// </summary>
         [Test]
         public async Task AGatewayThatThrowsLeavesTheRestrictiveAnswerAndStillStartsMediation()
@@ -146,11 +147,19 @@ namespace GlimmerGrove.Tests
             AdPrivacy.Install(new ThrowingGateway());
             RewardedAds.Install(provider);
 
-            await RewardedAds.StartAsync();
+            var starting = RewardedAds.StartAsync();
+            await AdPrivacy.PrepareAsync();
+
+            Assert.IsEmpty(provider.Calls, "an open question starts nothing on the splash");
+            Assert.IsTrue(AdPrivacy.Owed, "the hub asks again");
+
+            await AdPrivacy.AskAsync(Idle);
+            await starting;
 
             Assert.IsFalse(AdPrivacy.Signals.AllowsPersonalisation);
             CollectionAssert.AreEqual(new[] { "privacy", "init" }, provider.Calls,
                                       "the game still starts; it simply does not personalise");
+            Assert.IsFalse(AdPrivacy.Owed, "and the launch does not ask in a loop");
         }
 
         /// <summary>
@@ -168,8 +177,10 @@ namespace GlimmerGrove.Tests
 
             await RewardedAds.StartAsync();
             await RewardedAds.StartAsync();
+            await AdPrivacy.PrepareAsync();
 
-            Assert.AreEqual(1, gateway.Resolves);
+            Assert.AreEqual(1, gateway.Refreshes);
+            Assert.AreEqual(0, gateway.Asks);
             CollectionAssert.AreEqual(new[] { "privacy", "init" }, provider.Calls);
         }
 
@@ -205,7 +216,7 @@ namespace GlimmerGrove.Tests
             AdPrivacy.Install(new FakeGateway(new AdPrivacySignals(
                 false, ConsentStatus.Granted, false, childDirected: true, TrackingStatus.NotSupported)));
 
-            await AdPrivacy.ResolveAsync();
+            await AdPrivacy.PrepareAsync();
 
             Assert.AreEqual(AdPrivacy.ChildDirected, AdPrivacy.Signals.ChildDirected);
         }
@@ -213,7 +224,8 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// A build with no ad SDK asks nobody anything. Consent exists to be handed to
         /// mediation, so a form shown where no ad can ever appear collects an answer nothing
-        /// will use - and spends the one chance to ask on it.
+        /// will use - and spends the one chance to ask on it. Nothing is owed, so the hub's
+        /// poll never fires either.
         /// </summary>
         [Test]
         public async Task ABuildWithNoAdProviderNeverPromptsForConsent()
@@ -223,9 +235,207 @@ namespace GlimmerGrove.Tests
             RewardedAds.Install(null);
 
             await RewardedAds.StartAsync();
+            await AdPrivacy.AskAsync(Idle);
 
-            Assert.AreEqual(0, gateway.Resolves);
+            Assert.AreEqual(0, gateway.Refreshes);
+            Assert.AreEqual(0, gateway.Asks);
             Assert.IsFalse(AdPrivacy.IsResolved);
+            Assert.IsFalse(AdPrivacy.Owed);
+        }
+
+        // ------------------------------------------------------- the two moments
+        /// <summary>
+        /// <b>Nothing is put in front of a new player before the hub</b> (invariant 55). The
+        /// splash's step only refreshes: the form owed in the EEA and Apple's prompt owed on a
+        /// fresh iPhone are both left for the hub, and nothing that needs the answer has
+        /// started - mediation included.
+        /// </summary>
+        [Test]
+        public async Task TheSplashShowsANewPlayerNothing()
+        {
+            var log = new List<string>();
+            var gateway = new FormGateway(log, Granted);
+            var prompt = new RecordingPrompt(log, TrackingStatus.NotDetermined, TrackingStatus.Authorized);
+            var provider = new RecordingProvider();
+            AdPrivacy.Install(gateway);
+            AdPrivacy.Install(prompt);
+            RewardedAds.Install(provider);
+
+            var starting = RewardedAds.StartAsync();
+            await AdPrivacy.PrepareAsync();
+
+            CollectionAssert.IsEmpty(log, "no form and no Apple prompt on the splash");
+            Assert.IsEmpty(provider.Calls, "mediation waits for the form");
+            Assert.IsFalse(AdPrivacy.IsResolved);
+            Assert.IsTrue(AdPrivacy.Owed);
+
+            var asking = AdPrivacy.AskAsync(Idle);
+            gateway.Dismiss();
+            await asking;
+            await starting;
+
+            CollectionAssert.AreEqual(new[] { "form shown", "form dismissed", "apple asked" }, log);
+            CollectionAssert.AreEqual(new[] { "privacy", "init" }, provider.Calls);
+            Assert.AreEqual(TrackingStatus.Authorized, provider.Last.Tracking,
+                            "mediation is handed the answer as it stands once the hub has asked");
+            Assert.IsFalse(AdPrivacy.Owed);
+        }
+
+        /// <summary>
+        /// <b>A player who answered before is never asked again</b> - the property this update
+        /// has to keep for the installed base. The CMP reports a stored answer as settled and
+        /// iOS reports a stored tracking answer, so nothing is owed: the answer is committed on
+        /// the splash, mediation starts there, and the hub has nothing to show. Every stored
+        /// shape: consented, refused, outside the EEA, Android.
+        /// </summary>
+        [Test]
+        public async Task APlayerWhoHasAnsweredIsNeverAskedAgain()
+        {
+            foreach (var (stored, tracking) in new[]
+                     {
+                         (Granted, TrackingStatus.Authorized),
+                         (Denied, TrackingStatus.Denied),
+                         (OutsideTheEea, TrackingStatus.Denied),
+                         (OutsideTheEea, TrackingStatus.Restricted),
+                         (Granted, TrackingStatus.NotSupported),
+                     })
+            {
+                AdPrivacy.Reset();
+                var log = new List<string>();
+                var gateway = new FakeGateway(stored);
+                var prompt = new RecordingPrompt(log, tracking, TrackingStatus.Authorized);
+                var provider = new RecordingProvider();
+                AdPrivacy.Install(gateway);
+                AdPrivacy.Install(prompt);
+                RewardedAds.Install(provider);
+
+                await RewardedAds.StartAsync();
+
+                Assert.IsTrue(AdPrivacy.IsResolved, $"{stored}: settled on the splash");
+                Assert.IsFalse(AdPrivacy.Owed, $"{stored}: the hub has nothing to ask");
+                CollectionAssert.AreEqual(new[] { "privacy", "init" }, provider.Calls);
+                Assert.AreEqual(tracking, AdPrivacy.Signals.Tracking, "the stored answer is carried");
+
+                await AdPrivacy.AskAsync(Idle);
+
+                Assert.AreEqual(0, gateway.Asks, $"{stored}: no form");
+                Assert.AreEqual(0, prompt.Requests, $"{stored}: no Apple prompt");
+            }
+        }
+
+        /// <summary>
+        /// Outside the EEA nothing is owed but Apple's prompt, so everything starts on the
+        /// splash with the device id withheld, and the hub asks Apple and carries the answer to
+        /// mediation as a change - which is the path a new iPhone player outside Europe takes.
+        /// </summary>
+        [Test]
+        public async Task OutsideTheEeaEverythingStartsOnTheSplashAndAppleWaitsForTheHub()
+        {
+            var prompt = new RecordingPrompt(new List<string>(), TrackingStatus.NotDetermined,
+                                             TrackingStatus.Authorized);
+            var provider = new RecordingProvider();
+            AdPrivacy.Install(new FakeGateway(OutsideTheEea));
+            AdPrivacy.Install(prompt);
+            RewardedAds.Install(provider);
+
+            await RewardedAds.StartAsync();
+
+            Assert.AreEqual(0, prompt.Requests, "Apple is not asked on the splash");
+            CollectionAssert.AreEqual(new[] { "privacy", "init" }, provider.Calls);
+            Assert.IsFalse(provider.Last.AllowsDeviceId, "and the device id is withheld until it is");
+            Assert.IsTrue(AdPrivacy.Owed);
+
+            await AdPrivacy.AskAsync(Idle);
+
+            Assert.AreEqual(1, prompt.Requests);
+            CollectionAssert.AreEqual(new[] { "privacy", "init", "privacy" }, provider.Calls);
+            Assert.IsTrue(provider.Last.AllowsDeviceId);
+            Assert.IsFalse(AdPrivacy.Owed);
+        }
+
+        /// <summary>
+        /// A form that loaded after the player had left the hub is dropped unseen and asked
+        /// again on their return - nothing committed meanwhile, nothing lost, and the question
+        /// not quietly closed by a player who never saw it.
+        /// </summary>
+        [Test]
+        public async Task AFormThePlayerWalkedAwayFromIsAskedOnTheirReturn()
+        {
+            var log = new List<string>();
+            var gateway = new FormGateway(log, Granted);
+            var prompt = new RecordingPrompt(log, TrackingStatus.NotDetermined, TrackingStatus.Denied);
+            AdPrivacy.Install(gateway);
+            AdPrivacy.Install(prompt);
+
+            await AdPrivacy.PrepareAsync();
+            await AdPrivacy.AskAsync(Away);
+
+            CollectionAssert.IsEmpty(log, "nothing was laid over a run");
+            Assert.IsFalse(AdPrivacy.IsResolved);
+            Assert.IsTrue(AdPrivacy.Owed, "still owed");
+
+            var asking = AdPrivacy.AskAsync(Idle);
+            gateway.Dismiss();
+            await asking;
+
+            CollectionAssert.AreEqual(new[] { "form shown", "form dismissed", "apple asked" }, log);
+            Assert.IsTrue(AdPrivacy.Signals.AllowsPersonalisation);
+            Assert.IsFalse(AdPrivacy.Owed);
+        }
+
+        /// <summary>
+        /// The player leaves the hub in the moment between the form and Apple's prompt: the
+        /// consent answer is committed at once, so everything waiting on it starts, and Apple
+        /// stays owed for their return rather than landing on a run.
+        /// </summary>
+        [Test]
+        public async Task ApplesPromptWaitsForTheHubWhenThePlayerLeavesAfterTheForm()
+        {
+            var log = new List<string>();
+            bool idle = true;
+            var gateway = new FormGateway(log, Granted) { OnDismiss = () => idle = false };
+            var prompt = new RecordingPrompt(log, TrackingStatus.NotDetermined, TrackingStatus.Denied);
+            AdPrivacy.Install(gateway);
+            AdPrivacy.Install(prompt);
+
+            await AdPrivacy.PrepareAsync();
+            var asking = AdPrivacy.AskAsync(() => idle);
+            gateway.Dismiss();
+            await asking;
+
+            Assert.AreEqual(0, prompt.Requests);
+            Assert.IsTrue(AdPrivacy.IsResolved, "the consent half is committed");
+            Assert.IsTrue(AdPrivacy.Owed, "Apple's half is still owed");
+
+            idle = true;
+            await AdPrivacy.AskAsync(() => idle);
+
+            Assert.AreEqual(1, gateway.Shows, "the form is not shown twice");
+            Assert.AreEqual(1, prompt.Requests);
+            Assert.AreEqual(TrackingStatus.Denied, AdPrivacy.Signals.Tracking);
+            Assert.IsFalse(AdPrivacy.Owed);
+        }
+
+        /// <summary>
+        /// The hub's step cannot be started twice at once - the poll reads <c>Owed</c> every
+        /// frame, and two forms in flight would be two forms on screen.
+        /// </summary>
+        [Test]
+        public async Task TheHubAsksOneQuestionAtATime()
+        {
+            var gateway = new FormGateway(new List<string>(), Granted);
+            AdPrivacy.Install(gateway);
+
+            await AdPrivacy.PrepareAsync();
+            var first = AdPrivacy.AskAsync(Idle);
+
+            Assert.IsFalse(AdPrivacy.Owed, "not owed while it is being asked");
+            await AdPrivacy.AskAsync(Idle);
+
+            gateway.Dismiss();
+            await first;
+
+            Assert.AreEqual(1, gateway.Shows);
         }
 
         // -------------------------------------------------------- Apple's prompt
@@ -246,11 +456,12 @@ namespace GlimmerGrove.Tests
             AdPrivacy.Install(gateway);
             AdPrivacy.Install(prompt);
 
-            var resolving = AdPrivacy.ResolveAsync();
+            await AdPrivacy.PrepareAsync();
+            var asking = AdPrivacy.AskAsync(Idle);
 
             Assert.AreEqual(0, prompt.Requests, "the form is on screen; Apple has not been asked");
             gateway.Dismiss();
-            await resolving;
+            await asking;
 
             CollectionAssert.AreEqual(new[] { "form shown", "form dismissed", "apple asked" }, log);
             Assert.AreEqual(TrackingStatus.Denied, AdPrivacy.Signals.Tracking);
@@ -266,16 +477,17 @@ namespace GlimmerGrove.Tests
         public async Task AnOpenConsentQuestionLeavesApplesPromptForALaterLaunch()
         {
             var log = new List<string>();
-            var prompt = new RecordingPrompt(log, TrackingStatus.Denied, TrackingStatus.Authorized);
+            var prompt = new RecordingPrompt(log, TrackingStatus.NotDetermined, TrackingStatus.Authorized);
             AdPrivacy.Install(new FakeGateway(AdPrivacySignals.Restricted));
             AdPrivacy.Install(prompt);
 
-            await AdPrivacy.ResolveAsync();
+            await AdPrivacy.PrepareAsync();
+            await AdPrivacy.AskAsync(Idle);
 
             Assert.AreEqual(0, prompt.Requests, "an open question asks Apple nothing");
-            Assert.AreEqual(TrackingStatus.Denied, AdPrivacy.Signals.Tracking,
-                            "but the answer already on the device is carried");
+            Assert.AreEqual(TrackingStatus.NotDetermined, AdPrivacy.Signals.Tracking);
             Assert.IsTrue(AdPrivacy.IsResolved, "and the game still starts");
+            Assert.IsFalse(AdPrivacy.Owed, "and the launch does not ask in a loop");
         }
 
         /// <summary>
@@ -290,24 +502,25 @@ namespace GlimmerGrove.Tests
             AdPrivacy.Install(new ThrowingGateway());
             AdPrivacy.Install(prompt);
 
-            await AdPrivacy.ResolveAsync();
+            await AdPrivacy.PrepareAsync();
+            await AdPrivacy.AskAsync(Idle);
 
             Assert.AreEqual(0, prompt.Requests);
         }
 
         /// <summary>
         /// Where no form is owed the question is closed without one, and Apple is asked on the
-        /// first launch as before - a player outside the EEA must not lose the prompt to a
-        /// gate written for the EEA. Both spellings a CMP can answer with: "does not apply",
-        /// and "applies and answered".
+        /// hub of the first launch - a player outside the EEA must not lose the prompt to a gate
+        /// written for the EEA. Both spellings a CMP can answer with: "does not apply", and
+        /// "applies and answered".
         /// </summary>
         [Test]
-        public async Task ASettledConsentAnswerAsksAppleOnTheSameLaunch()
+        public async Task ASettledConsentAnswerAsksAppleOnTheHubOfTheSameLaunch()
         {
             foreach (var settled in new[]
                      {
                          new AdPrivacySignals(false, ConsentStatus.Unknown, false, false, TrackingStatus.NotDetermined),
-                         new AdPrivacySignals(false, ConsentStatus.Granted, false, false, TrackingStatus.NotDetermined),
+                         OutsideTheEea,
                          Granted,
                          Denied,
                      })
@@ -318,7 +531,10 @@ namespace GlimmerGrove.Tests
                 AdPrivacy.Install(new FakeGateway(settled));
                 AdPrivacy.Install(prompt);
 
-                await AdPrivacy.ResolveAsync();
+                await AdPrivacy.PrepareAsync();
+                Assert.AreEqual(0, prompt.Requests, $"{settled}: not on the splash");
+
+                await AdPrivacy.AskAsync(Idle);
 
                 Assert.AreEqual(1, prompt.Requests, settled.ToString());
                 Assert.AreEqual(TrackingStatus.Authorized, AdPrivacy.Signals.Tracking);
@@ -349,8 +565,7 @@ namespace GlimmerGrove.Tests
         /// <see cref="AdPrivacy.Signals"/> or <see cref="AdPrivacy.IsResolved"/>.</b>
         ///
         /// <para>
-        /// <c>ResolveAsync</c> raises the event and sets <c>IsResolved</c> on the line after
-        /// it, so for the duration of the one callback that carries the answer the flag still
+        /// A commit raises the event and sets <c>IsResolved</c> on the line after it, so for the duration of the one callback that carries the answer the flag still
         /// says the answer has not arrived. A handler that asks it returns early and is never
         /// called again, because consent is answered once.
         /// </para>
@@ -382,7 +597,7 @@ namespace GlimmerGrove.Tests
             AdPrivacy.Changed += handler;
             try
             {
-                AdPrivacy.ResolveAsync().GetAwaiter().GetResult();
+                AdPrivacy.PrepareAsync().GetAwaiter().GetResult();
             }
             finally
             {
@@ -401,7 +616,9 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The case that stops the ordering being "fixed" by moving one line: a player whose
         /// real answer equals the restrictive default must still produce an event, or every
-        /// refusal in the EEA would be indistinguishable from never having been asked.
+        /// refusal in the EEA would be indistinguishable from never having been asked. It is
+        /// the hub that commits it - a CMP that cannot be reached leaves the splash with an
+        /// open question - so the hub is what is driven here.
         /// </summary>
         [Test]
         public void ARefusalStillRaisesTheEventEvenThoughItMatchesTheDefault()
@@ -414,7 +631,8 @@ namespace GlimmerGrove.Tests
             AdPrivacy.Changed += handler;
             try
             {
-                AdPrivacy.ResolveAsync().GetAwaiter().GetResult();
+                AdPrivacy.PrepareAsync().GetAwaiter().GetResult();
+                AdPrivacy.AskAsync(Idle).GetAwaiter().GetResult();
             }
             finally
             {
@@ -432,6 +650,20 @@ namespace GlimmerGrove.Tests
         static AdPrivacySignals Denied => new AdPrivacySignals(
             true, ConsentStatus.Denied, false, false, TrackingStatus.NotSupported);
 
+        /// <summary>What UMP answers outside the EEA and the UK: no form owed.</summary>
+        static AdPrivacySignals OutsideTheEea => new AdPrivacySignals(
+            false, ConsentStatus.Granted, false, false, TrackingStatus.NotSupported);
+
+        /// <summary>The player is standing on an idle hub.</summary>
+        static bool Idle() => true;
+
+        /// <summary>The player has walked into a run, or a panel is open.</summary>
+        static bool Away() => false;
+
+        /// <summary>
+        /// A CMP holding a stored answer: the splash's refresh reports it, and the hub's ask
+        /// shows nothing and reports it again.
+        /// </summary>
         sealed class FakeGateway : IConsentGateway
         {
             readonly AdPrivacySignals _resolved;
@@ -439,12 +671,20 @@ namespace GlimmerGrove.Tests
             public FakeGateway(AdPrivacySignals resolved) { _resolved = resolved; }
 
             public AdPrivacySignals Revisited;
-            public int Resolves;
+            public int Refreshes;
+            public int Asks;
 
-            public Task<AdPrivacySignals> ResolveAsync(CancellationToken cancellation = default)
+            public Task<AdPrivacySignals> RefreshAsync(CancellationToken cancellation = default)
             {
-                Resolves++;
+                Refreshes++;
                 return Task.FromResult(_resolved);
+            }
+
+            public Task<ConsentAsk> AskAsync(System.Func<bool> mayPresent,
+                                             CancellationToken cancellation = default)
+            {
+                Asks++;
+                return Task.FromResult(ConsentAsk.Answered(_resolved));
             }
 
             public bool CanRevisit => true;
@@ -455,7 +695,11 @@ namespace GlimmerGrove.Tests
 
         sealed class ThrowingGateway : IConsentGateway
         {
-            public Task<AdPrivacySignals> ResolveAsync(CancellationToken cancellation = default)
+            public Task<AdPrivacySignals> RefreshAsync(CancellationToken cancellation = default)
+                => throw new System.InvalidOperationException("the CMP is unreachable");
+
+            public Task<ConsentAsk> AskAsync(System.Func<bool> mayPresent,
+                                             CancellationToken cancellation = default)
                 => throw new System.InvalidOperationException("the CMP is unreachable");
 
             public bool CanRevisit => false;
@@ -465,8 +709,10 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A gateway with a form on screen: <c>ResolveAsync</c> does not return until
-        /// <see cref="Dismiss"/>, which is the contract the real gateway now keeps.
+        /// A new player in the EEA: the refresh says a form is owed, and the hub's ask shows it
+        /// and does not return until <see cref="Dismiss"/> - the contract the real gateway
+        /// keeps. Honours <c>mayPresent</c> the way the real one does, by dropping the form
+        /// unseen.
         /// </summary>
         sealed class FormGateway : IConsentGateway
         {
@@ -475,18 +721,36 @@ namespace GlimmerGrove.Tests
             readonly TaskCompletionSource<bool> _dismissed =
                 new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
+            bool _answered;
+
             public FormGateway(List<string> log, AdPrivacySignals answer)
             {
                 _log = log;
                 _answer = answer;
             }
 
-            public async Task<AdPrivacySignals> ResolveAsync(CancellationToken cancellation = default)
+            /// <summary>Runs as the form closes, before the gateway returns - the player's next move.</summary>
+            public System.Action OnDismiss;
+
+            public int Shows;
+
+            public Task<AdPrivacySignals> RefreshAsync(CancellationToken cancellation = default)
+                => Task.FromResult(_answered ? _answer : AdPrivacySignals.Restricted);
+
+            public async Task<ConsentAsk> AskAsync(System.Func<bool> mayPresent,
+                                                   CancellationToken cancellation = default)
             {
+                if (_answered) return ConsentAsk.Answered(_answer);
+                if (!mayPresent()) return ConsentAsk.NotNow;
+
+                Shows++;
                 _log.Add("form shown");
                 await _dismissed.Task;
                 _log.Add("form dismissed");
-                return _answer;
+                OnDismiss?.Invoke();
+
+                _answered = true;
+                return ConsentAsk.Answered(_answer);
             }
 
             public void Dismiss() => _dismissed.TrySetResult(true);

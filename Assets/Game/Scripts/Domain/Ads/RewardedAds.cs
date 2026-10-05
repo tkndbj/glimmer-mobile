@@ -158,8 +158,9 @@ namespace GlimmerGrove.Ads
         /// </para>
         /// <para>
         /// Started from the splash rather than from <c>Boot</c>, for the reason the store
-        /// connection is: this is a network round trip, and it may also put a native dialog on
-        /// screen - neither belongs before the first scene has loaded. Nothing waits on it.
+        /// connection is: this is a network round trip, and neither it nor anything it waits on
+        /// belongs before the first scene has loaded. It draws nothing itself - a dialog owed
+        /// is put by the hub (invariant 55). Nothing waits on it.
         /// </para>
         /// </summary>
         public static async Task StartAsync(CancellationToken cancellation = default)
@@ -178,15 +179,27 @@ namespace GlimmerGrove.Ads
             // No ConfigureAwait(false) anywhere on this path, and it is not an oversight.
             // Unity's main thread carries a SynchronizationContext, so a plain await resumes
             // on it; ConfigureAwait(false) resumes on the thread pool instead, and everything
-            // below this line ends up calling into JNI - SetMetaData, SetGDPRConsent, Init.
+            // below this line ends up calling into JNI - SetGDPRConsent, SetCCPA, SetCOPPA, Init.
             // JNI from an unattached background thread throws, and because BeginStart fires
             // this off as `_ = StartAsync()` the exception lands in a task nobody observes
             // and disappears. Mediation then simply never starts, with nothing in the log.
             // That shipped once; see the try/catch below, which is the other half of the fix.
-            var signals = await AdPrivacy.ResolveAsync(cancellation);
+            //
+            // Two steps, and only the first is ours to start (invariant 55). The splash's step
+            // draws nothing and commits the answer itself wherever nothing is owed - outside the
+            // EEA, and for anybody who has answered before - so for them mediation starts here
+            // on the splash as it always did. Where the consent form is still owed the answer
+            // arrives from the hub, after the tutorial (ConsentMoment), and mediation waits for
+            // it: the tutorial shows no ads, and an SDK started before the form would already
+            // have decided what it may collect.
+            await AdPrivacy.PrepareAsync(cancellation);
+            await AdPrivacy.WhenResolvedAsync(cancellation);
 
+            // The signals as they stand *now*, not as the first commit carried them: the hub may
+            // already have committed a second answer (Apple's) in the frames before this
+            // continuation ran, and the subscription below only hears what comes after it.
             var provider = _provider;
-            provider.ApplyPrivacy(signals);
+            provider.ApplyPrivacy(AdPrivacy.Signals);
 
             // Subscribed *after* the first application, deliberately. Resolving raises
             // Changed, so subscribing first means the opening consent reaches the SDK twice -

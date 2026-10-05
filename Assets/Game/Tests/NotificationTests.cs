@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.IO;
+using System.Text.RegularExpressions;
 using GlimmerGrove.Content;
 using GlimmerGrove.Daily;
 using GlimmerGrove.Notifications;
@@ -440,6 +442,71 @@ namespace GlimmerGrove.Tests
                 Assert.AreNotEqual(NotificationKind.GroveIdle, planned.Kind);
 
             NotificationTable.Resolve(null, new List<string>());   // leave the static as found
+        }
+
+        // ------------------------------------------------------------- the launch
+        /// <summary>
+        /// <b>The OS is never asked at launch</b> (invariant 50h). The package's iOS setting
+        /// "request authorization on app launch" puts Apple's notification dialog in front of
+        /// the first frame, before the splash - ahead of the tutorial, the consent form and
+        /// everything else - and it shipped switched on while the code carefully asked at a
+        /// chest. It lives in a project-settings file no code path reads, so this reads it.
+        /// </summary>
+        [Test]
+        public void TheOsIsNeverAskedForNotificationsAtLaunch()
+        {
+            string path = Path.Combine(CheckoutRoot(), "ProjectSettings", "NotificationsSettings.asset");
+            Assert.IsTrue(File.Exists(path), $"notification settings not found at {path}");
+
+            var ios = Regex.Match(File.ReadAllText(path),
+                                  @"""m_iOSNotificationSettingsValues""\s*:\s*\{\s*""m_Keys""\s*:\s*\[(?<keys>[^\]]*)\]\s*,\s*""m_Values""\s*:\s*\[(?<values>[^\]]*)\]");
+            Assert.IsTrue(ios.Success, "the iOS block of NotificationsSettings.asset has changed shape");
+
+            var keys = Strings(ios.Groups["keys"].Value);
+            var values = Strings(ios.Groups["values"].Value);
+            Assert.AreEqual(keys.Count, values.Count, "keys and values out of step");
+
+            foreach (var key in new[]
+                     {
+                         "UnityNotificationRequestAuthorizationOnAppLaunch",
+                         "UnityNotificationRequestAuthorizationForRemoteNotificationsOnAppLaunch",
+                     })
+            {
+                int at = keys.IndexOf(key);
+                Assert.GreaterOrEqual(at, 0, $"{key} is missing; the package may have renamed it");
+                Assert.AreEqual("False", values[at], $"{key} must be off: the permission is asked at a chest");
+            }
+        }
+
+        static List<string> Strings(string list)
+        {
+            var found = new List<string>();
+            foreach (Match m in Regex.Matches(list, @"""(?<s>[^""]*)"""))
+                found.Add(m.Groups["s"].Value);
+            return found;
+        }
+
+        /// <summary>
+        /// The checkout, found the way <c>CloudWireTests.RepoRoot</c> finds it: the engine's
+        /// answer when there is an engine, otherwise up from the working directory, because the
+        /// offline runner has none and a test that "needs the Editor" is not a gate (29e).
+        /// </summary>
+        static string CheckoutRoot()
+        {
+            string root = null;
+
+            try { root = Path.GetFullPath(Path.Combine(UnityEngine.Application.dataPath, "..")); }
+            catch (System.Exception) { }
+
+            if (root != null && Directory.Exists(Path.Combine(root, "ProjectSettings"))) return root;
+
+            string dir = Directory.GetCurrentDirectory();
+            while (!string.IsNullOrEmpty(dir) && !Directory.Exists(Path.Combine(dir, "ProjectSettings")))
+                dir = Path.GetDirectoryName(dir);
+
+            Assert.IsFalse(string.IsNullOrEmpty(dir), "could not find the checkout from " +
+                                                       Directory.GetCurrentDirectory());
+            return dir;
         }
 
         static NotificationEntryDto Row(string kind, string slot, int priority, int gap)
