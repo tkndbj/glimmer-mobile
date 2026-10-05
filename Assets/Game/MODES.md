@@ -1202,6 +1202,23 @@ and its own spell row in `SiegeShotBake` (37dc); scope in `SiegeMode.Bosses`; a 
    the view's picture plus the record is the model's field on every turn, and a changed field
    with no record never happens (both mutation-proved; the second mutation is the original
    fault, reproduced).
+37fe. **A planted boss is attacked with everything, and nothing holds any of it back** (2026-10-05, the
+   owner, after two rounds: *they stop, then they attack, then they stop*; *I have eight overcharges
+   and cannot throw them*; *let me attack the boss properly, do not stop me with anything*). **This
+   supersedes the floor of 37di and 37ei, and 37dl with it.** A boss is untouchable on the walk in
+   and nowhere else (`SiegeRaider.Impervious` is `Arriving`); `Wound` clamps at nought and at nothing
+   above it; a stand is a third of the bar, opened by `Fights` when that third has been taken, and a
+   blow through two thirds opens the last one directly. `PhaseLeast`, `PhaseMost`, `Settled` and the
+   floor are gone. **What makes a boss last is its health** - if one falls too fast the lever is
+   `BossHealth` and its siblings, never a wait - and the fight gate no longer holds a boss to a least
+   number of spells or seconds; it prints them. Measured the day it changed, on the strongest line: a
+   boss can fall in under a second having cast nothing. With it: the overcharge glyph is drawn for as
+   long as the charge is held (`SiegeBoard.Charged`) and only *pulses* off the hill; a tap in a
+   boss's walk in is kept and thrown the frame it plants (`CanHold`, one per ward, never over an
+   empty hill); the key acts on the press (`Btn.ActsOnPress`); and the siege screen is the one
+   screen that takes two fingers, withdrawn under any panel (`Flow.Touches`). Held by
+   `APlantedBossTakesEverythingAtOnce`, `AStandOpensWhenItsThirdIsTaken`,
+   `ATapIsKeptOnlyForABossThatCannotTakeItYet` and `ReadingTheBoardForTheDrawingMovesNothing`.
 38. **A mode hides behind one manifest boolean, and deleting one is a session.** Hidden is `"disabled":
    true` and nothing else; deleted means class, board, view, screen, validator, reading, bodies, art,
    mirrors and tools all go, with the ids spent.

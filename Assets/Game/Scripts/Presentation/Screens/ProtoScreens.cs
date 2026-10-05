@@ -246,6 +246,27 @@ namespace GlimmerGrove
         /// </summary>
         public override bool WantsSilence => true;
 
+        /// <summary>
+        /// A siege is played with two thumbs: one on the gems, one on the line.
+        ///
+        /// <para>
+        /// <b>The one screen that asks, and the reason the rest do not is absent here.</b> A
+        /// second finger is refused everywhere else because a turn-based board with a move
+        /// allowance could be beaten by having two of them. This board counts no moves, its hill
+        /// walks whatever the player is doing, and everything on it but a swap is already
+        /// allowed mid-cascade (<c>ProtoView.Tappable</c>) - so with one finger a tube tapped
+        /// while the other thumb was still down on a gem was simply never delivered. Reported
+        /// from play as <em>sometimes I cannot press it</em>.
+        /// </para>
+        /// <para>
+        /// <b>It changes nothing a swap may do.</b> Two drags in one frame are still one swap:
+        /// the first latches the field (<c>ProtoView.Busy</c>) before the second is asked. And
+        /// it is this board's alone - <c>Flow</c> withdraws it for as long as any panel is
+        /// raised over the screen.
+        /// </para>
+        /// </summary>
+        public override bool WantsMultiTouch => true;
+
         SiegeView _siege;
         UtilityBar _bar;
 

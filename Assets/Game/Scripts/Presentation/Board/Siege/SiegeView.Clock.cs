@@ -228,6 +228,11 @@ namespace GlimmerGrove
 
             if (report.Any) Changed?.Invoke();
 
+            // **A tap kept for a boss that could not take it, thrown the frame it can**
+            // (`SiegeView.Keeping`). Last before the verdict, once everything this step did has
+            // been drawn and reaped, which is where a tap from the event system lands too.
+            Keeping();
+
             Judge();
         }
 

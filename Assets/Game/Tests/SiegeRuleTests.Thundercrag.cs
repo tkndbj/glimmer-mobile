@@ -311,15 +311,14 @@ namespace GlimmerGrove.Tests
                       SiegeTuning.NameOf(kind) + ":r", 0, 0, "plsfh");
 
         [Test]
-        public void AnHourglassHoldsABosssSpellAndNotItsStand()
+        public void AnHourglassHoldsABosssSpell()
         {
             var board = SiegeBoard.Build(CrossedDuel(SiegeKind.Boss));
             var boss = Standing(board);
-            Assert.IsFalse(boss.Settled, "the boss stood with its first stand already settled");
 
-            // Stopped on the frame it stands: the stand's clock must still run down to its
-            // deadline (invariant 37dl), and no spell may leave while the hill stands still. On the
-            // one cell the fixture's swap clears, so what is under test is the stop, not the deal.
+            // Stopped on the frame it stands: no spell may leave while the hill stands still. On
+            // the one cell the fixture's swap clears, so what is under test is the stop, not the
+            // deal.
             int casts = boss.Casts;
             board.Stand(7, SiegeCharm.Hourglass);
             Assert.IsNotNull(board.Swap(2, 7), "the fixture's swap no longer lines anything up");
@@ -337,11 +336,6 @@ namespace GlimmerGrove.Tests
             }
 
             Assert.AreEqual(SiegeTuning.HourglassFor, held, .05f);
-
-            // The stand's deadline is `PhaseMost` from the plant, which the stop ran through
-            // rather than paused; two more seconds is past it whatever the stop cost.
-            for (int i = 0; i < 60 * 2 && !boss.Settled; i++) board.Advance(1f / 60f);
-            Assert.IsTrue(boss.Settled, "the stand held past its deadline under an hourglass");
         }
     }
 }

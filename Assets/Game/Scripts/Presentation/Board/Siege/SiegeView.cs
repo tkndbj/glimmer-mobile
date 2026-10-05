@@ -414,6 +414,26 @@ namespace GlimmerGrove
             /// </summary>
             public float NextArc = -1f;
 
+            /// <summary>
+            /// How live the glyph is drawn, nought to one: one while a tap would throw, nought
+            /// while the charge is held with nothing on the hill to take it.
+            ///
+            /// <b>Eased rather than switched</b> (<c>SiegeView.Ready</c>), so a hill that empties
+            /// and fills again inside a second is a glyph settling and waking, never one that
+            /// blinks.
+            /// </summary>
+            public float Live;
+
+            /// <summary>
+            /// Whether a tap on this tube is being kept for the frame a boss plants
+            /// (<c>SiegeBoard.CanHold</c>, <c>SiegeView.Keeping</c>).
+            ///
+            /// <b>One, never a count.</b> A second tap while one is kept is acknowledged and
+            /// changes nothing: a player hammering the key through a walk in is asking for it
+            /// <em>now</em>, and every tap after the boss plants is a throw of its own.
+            /// </summary>
+            public bool Kept;
+
             // ------------------------------------------------------------ the rubble
             /// <summary>
             /// The pile a colossus leaves on this post: one stone drawn three times, and the

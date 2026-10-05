@@ -9,35 +9,20 @@ namespace GlimmerGrove.Tests
     /// The fight: what a boss is promised, and the gate every chapter's boss rungs go through.
     ///
     /// <para>
-    /// <b>This file exists because nothing measured a boss's life.</b> Four chapters shipped
-    /// eight bosses that died on the walk in or on their ground before their first spell had
-    /// left their hand, and every gate was green - the hold simulation scored a run
-    /// <em>better</em> for killing one faster. What a boss has to be is written in
-    /// <see cref="SiegeTuning.BossPhases"/>; what is held here is that it <em>is</em> that, on
-    /// the rules alone and on every shipped rung under a played line that dumps every charge it
-    /// banks.
+    /// <b>The promise is three sentences, and every one of them has a fixture below.</b> A boss
+    /// is alone on the hill for as long as it lives; it walks on untouchable; and from the
+    /// frame it plants, everything the player has lands on it at full weight with nothing held
+    /// back.
     /// </para>
     /// <para>
-    /// <b>The promise is four sentences, and every one of them has a fixture below.</b> A boss is
-    /// alone on the hill for as long as it lives; it walks on untouchable; the frame it plants,
-    /// every ward on the line may fire at it at full weight; and it cannot be taken past a
-    /// stand's floor until that stand has thrown its spell and held
-    /// <see cref="SiegeTuning.PhaseLeast"/>.
-    /// </para>
-    /// <para>
-    /// <b>The third of those replaced an invulnerability, and that is what most of this file is
-    /// about.</b> A guard in front of every stand bought the same seconds out of the player's own
-    /// turrets: fed, lit, and refusing to fire for three to four seconds at every stand, which is
-    /// a game that looks broken rather than a boss that is tough. The floor buys them out of the
-    /// boss's health bar instead. <b>The fight's arithmetic is unchanged</b> -
-    /// <see cref="SiegeTuning.BossPhases"/> × <see cref="SiegeTuning.PhaseLeast"/> is still the
-    /// shortest a fight can be - and for any line that cannot chew a third of a boss inside
-    /// <see cref="SiegeTuning.PhaseLeast"/> the two are identical to the frame.
+    /// <b>The third replaced a floor, which replaced a guard.</b> Both refused the player's
+    /// damage to buy a fight its seconds, and both came back from play as a broken game. The
+    /// owner's ruling on 2026-10-05 ended it: what makes a boss last is its health.
     /// </para>
     /// <para>
     /// <b>A new chapter passes through <see cref="EveryShippedBossRungIsAFight"/> by being added
     /// to the rung tables</b>, which <c>Tools/verify/rungs.py</c> already holds to the shipped
-    /// bodies - so a boss that cannot fight on its rung is a red build, not a verdict from play.
+    /// bodies.
     /// </para>
     /// </summary>
     public sealed partial class SiegeRuleTests
@@ -81,21 +66,6 @@ namespace GlimmerGrove.Tests
             }
         }
 
-        /// <summary>Walks the clock until this board's boss has settled the stand it is in.</summary>
-        static SiegeRaider Settled(SiegeBoard board)
-        {
-            var boss = board.Warlord ?? Standing(board);
-
-            for (int i = 0; i < 60 * 10 && !boss.Settled; i++) board.Advance(1f / 60f);
-
-            Assert.IsTrue(boss.Settled, "the boss never settled its stand");
-            return boss;
-        }
-
-        /// <summary>The least a fight may be: casts thrown and seconds stood, on every shipped rung.</summary>
-        const int LeastCasts = SiegeTuning.BossPhases;
-        const float LeastStood = 10f;
-
         // ------------------------------------------------------------------ the rules
         [Test]
         public void TheFightIsPhasedInThirdsFromTheTop()
@@ -105,29 +75,6 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(1000, SiegeTuning.PhaseFloor(3000, 1));
             Assert.AreEqual(0, SiegeTuning.PhaseFloor(3000, 2));
             Assert.AreEqual(0, SiegeTuning.PhaseFloor(3000, 9), "past the last phase is the last phase");
-        }
-
-        /// <summary>
-        /// The fight's own floor is arithmetic rather than an opinion: three stands, each holding
-        /// at least <see cref="SiegeTuning.PhaseLeast"/>, is the <see cref="LeastStood"/> seconds
-        /// every shipped rung is held to. Written down because the two numbers are set in
-        /// different files and only their product is the promise.
-        /// </summary>
-        [Test]
-        public void ThreeStandsAreTheTenSecondsTheRungsArePromised()
-        {
-            float opener = SiegeTuning.PhaseWake + SiegeTuning.BossTell + SiegeTuning.BossFlight;
-
-            Assert.Less(opener, SiegeTuning.PhaseLeast,
-                        "a stand's opening spell lands after the stand may settle, so the floor "
-                        + "under the fight is the spell rather than the seconds");
-
-            Assert.LessOrEqual(SiegeTuning.PhaseLeast, SiegeTuning.PhaseMost,
-                               "a stand's deadline is shorter than its floor");
-
-            Assert.GreaterOrEqual(SiegeTuning.BossPhases * SiegeTuning.PhaseLeast, LeastStood,
-                                  "three stands no longer add up to the seconds the rung gate "
-                                  + "asks for, so the shipped chapters cannot all pass");
         }
 
         [Test]
@@ -238,8 +185,8 @@ namespace GlimmerGrove.Tests
         /// the owner's report is written into.
         ///
         /// <para>
-        /// A boss used to plant and then stand behind a guard for
-        /// <see cref="SiegeTuning.PhaseLeast"/> seconds, which a player meets as four fed,
+        /// A boss used to plant and then stand behind a guard for three and a half seconds,
+        /// which a player meets as four fed,
         /// pulsing turrets pointed at a boss and doing nothing - reported, repeatedly, as
         /// <em>the turrets start attacking too late</em>. There is no such window now: the only
         /// thing between a fed ward and a standing boss is <c>SiegeTuning.FireEvery</c>, the
@@ -363,244 +310,150 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A stand holds its floor until its opening spell has landed and
-        /// <see cref="SiegeTuning.PhaseLeast"/> has passed - and never past
-        /// <see cref="SiegeTuning.PhaseMost"/>.
+        /// <b>A planted boss takes everything, at once, and this is the fixture the owner's
+        /// ruling is written into</b> (2026-10-05: <em>let me attack the boss properly, do not
+        /// stop me with anything</em>).
         ///
-        /// <b>What is under test is the floor and not a silence</b>: the line fires at the boss
-        /// throughout, walks it down to the notch and is refused only there, which is the whole
-        /// difference between this and the guard it replaced.
+        /// <para>
+        /// A stand used to be a floor: the bar rested on its notch until the stand had thrown
+        /// its spell and held three seconds, so eight banked charges went one stand at a time
+        /// and whatever crossed a notch was thrown away. Held here is that nothing of that is
+        /// left - every charge the line holds lands on the frame it is thrown, each for
+        /// everything it is worth, and a blow big enough ends the boss on the spot.
+        /// </para>
         /// </summary>
         [Test]
-        public void AStandHoldsItsFloorUntilItsOpeningSpellHasLanded()
+        public void APlantedBossTakesEverythingAtOnce()
         {
             foreach (var kind in EveryBoss())
             {
-                var board = SiegeBoard.Build(DuelWith(kind));
-                var boss = Standing(board);
-
-                Assert.IsFalse(boss.Settled, $"{kind} stood with its first stand already settled");
-                Assert.AreEqual(SiegeTuning.PhaseFloor(boss.MaxHealth, 0), boss.Floor,
-                                $"{kind}'s first stand stood with no floor under it");
-
-                bool opened = false;
-                float held = 0f;
-
-                // **Watched until the stand <em>turns</em> rather than until it settles**, because
-                // settling and turning are one frame apart when the line is already at the floor:
-                // `Fights` opens the next stand in the same step, which resets the clock and makes
-                // `Settled` false again. The turn is the observable edge.
-                for (int i = 0; i < 60 * 10 && boss.Phase == 0; i++)
+                // Every banked charge, thrown in one frame: each lands whole.
                 {
+                    var board = SiegeBoard.Build(DuelWith(kind));
+                    var boss = Standing(board);
                     Bank(board);
-                    for (int w = 0; w < board.Wards.Count; w++) board.Overcharge(w, null);
-                    board.Storm(9999, null);
 
-                    var report = board.Advance(1f / 60f);
-                    held += 1f / 60f;
+                    int thrown = 0;
 
-                    foreach (var cast in report.Casts)
-                        if (cast.Raider == boss.Id && cast.Opens) opened = true;
+                    for (int w = 0; w < board.Wards.Count && boss.Alive; w++)
+                        while (boss.Alive && board.Wards[w].Charges > 0)
+                        {
+                            Assert.IsTrue(board.CanOvercharge(w),
+                                $"{kind}: charge {thrown + 1} was refused against a planted boss");
 
-                    Assert.GreaterOrEqual(boss.Health, SiegeTuning.PhaseFloor(boss.MaxHealth, 0),
-                                          $"{kind} was taken past its first stand's floor");
+                            int before = boss.Health;
+                            var hits = new List<SiegeStrike>();
+                            var blast = board.Overcharge(w, hits);
+
+                            Assert.IsTrue(blast.Landed, $"{kind}: charge {thrown + 1} did not land");
+
+                            int took = 0;
+                            foreach (var hit in hits) if (hit.Raider == boss.Id) took += hit.Damage;
+
+                            Assert.AreEqual(before - boss.Health, took);
+                            Assert.AreEqual(System.Math.Min(blast.Damage, before), took,
+                                $"{kind}: charge {thrown + 1} was worth {blast.Damage} and took "
+                                + $"{took} of a boss holding {before}, so something held it back");
+
+                            thrown++;
+                        }
+
+                    Assert.Greater(thrown, 1, $"{kind}: the fixture threw one charge and proved nothing");
                 }
 
-                // **The turn is the proof that it settled**, and `Settled` cannot be read for
-                // it: the stand that settles is opened over in the same step, which winds its
-                // clock back to nought. `AFloorInFrontOfNoSpellSettles` and
-                // `AStunnedBossStillSettlesItsStandAtTheDeadline` read the flag directly, on
-                // boards where the line is not firing and so nothing turns.
-                Assert.AreEqual(1, boss.Phase, $"{kind}'s first stand never turned");
-                Assert.IsTrue(opened, $"{kind} settled a stand without throwing its opening spell");
-                Assert.LessOrEqual(held, SiegeTuning.PhaseMost + .1f,
-                                   $"{kind}'s stand outlived its deadline");
-                Assert.AreEqual(SiegeTuning.PhaseLeast, held, .1f,
-                                $"{kind}'s stand did not settle when it was due");
-
-                // And the line was never idle while it held: everything dumped above landed the
-                // moment it was thrown, which is where the seconds are now paid from. A boss that
-                // turned at exactly `PhaseLeast` is one the line had already walked to the notch.
-                Assert.AreEqual(SiegeTuning.PhaseFloor(boss.MaxHealth, 0), boss.Health,
-                                $"{kind} held its floor without the line ever reaching it");
-            }
-        }
-
-        /// <summary>
-        /// A blow that would cross a stand's floor stops at it, the stand settles in its own time
-        /// and only then does the next one open. This is what makes the stands a promise.
-        /// </summary>
-        [Test]
-        public void NoBlowTakesABossThroughTwoStands()
-        {
-            foreach (var kind in EveryBoss())
-            {
-                var board = SiegeBoard.Build(DuelWith(kind));
-                var boss = Standing(board);
-
-                for (int phase = 0; phase < SiegeTuning.BossPhases; phase++)
+                // One blow worth the whole bar: the boss falls to it, from its first stand.
                 {
-                    Assert.AreEqual(phase, boss.Phase, $"{kind} is not in stand {phase}");
+                    var board = SiegeBoard.Build(DuelWith(kind));
+                    var boss = Standing(board);
 
-                    int floor = SiegeTuning.PhaseFloor(boss.MaxHealth, phase);
-
-                    // The storm strikes everything on the hill, a bonecaller's raised creepers
-                    // included, so what is read is the boss's own health and never the total.
+                    Assert.AreEqual(0, boss.Phase);
                     board.Storm(boss.MaxHealth * 10, null);
 
-                    Assert.IsTrue(boss.Alive,
-                                  $"{kind} was killed through stand {phase}'s floor");
-                    Assert.AreEqual(floor > 0 ? floor : 1, boss.Health,
-                                    $"a storm took {kind} past stand {phase}'s floor");
-                    Assert.AreEqual(phase, boss.Phase,
-                                    $"{kind}'s stand turned on the blow that reached its floor");
-
-                    // And nothing else lands while it rests there, which is what the floor is.
-                    Assert.AreEqual(0, board.Storm(9999, null),
-                                    $"{kind} was hurt resting on stand {phase}'s floor");
-
-                    Settled(board);
-                    board.Advance(1f / 60f);
+                    Assert.IsFalse(boss.Alive, $"{kind} survived a blow worth ten of it");
                 }
 
-                Assert.AreEqual(SiegeTuning.BossPhases - 1, boss.Phase);
+                // And a boss is never anything but hurtable once it stands.
+                {
+                    var board = SiegeBoard.Build(DuelWith(kind));
+                    var boss = Standing(board);
 
-                board.Storm(boss.MaxHealth * 10, null);
-                Assert.IsFalse(boss.Alive,
-                               $"{kind} survived a blow in its last stand with no floor under it");
+                    for (int i = 0; i < 60 * 30 && boss.Alive; i++)
+                    {
+                        for (int w = 0; w < board.Wards.Count; w++)
+                            board.Wards[w].Fuel = board.Wards[w].Capacity;
+
+                        board.Advance(1f / 60f);
+
+                        if (boss.Alive)
+                            Assert.IsFalse(boss.Impervious, $"{kind} could not be hurt while standing");
+                    }
+                }
             }
         }
 
         /// <summary>
-        /// A wall is not a stand: a boss with nothing it could ever throw settles at once, and one
-        /// with nothing to aim at settles at the deadline.
+        /// A stand opens when its third has been taken, and a blow through two thirds opens the
+        /// last one directly: the stands are where a boss's health is, not a sequence it is owed.
         /// </summary>
         [Test]
-        public void AFloorInFrontOfNoSpellSettles()
+        public void AStandOpensWhenItsThirdIsTaken()
         {
-            // A bonecaller with its raises spent has no spell left to open a stand with.
+            foreach (var kind in EveryBoss())
             {
-                var board = SiegeBoard.Build(DuelWith(SiegeKind.Bonecaller));
+                var board = SiegeBoard.Build(DuelWith(kind));
                 var boss = Standing(board);
-                boss.Raised = SiegeTuning.Raises;
 
-                float held = 0f;
-                for (int i = 0; i < 60 * 10 && !boss.Settled; i++) { board.Advance(1f / 60f); held += 1f / 60f; }
+                boss.Health = SiegeTuning.PhaseFloor(boss.MaxHealth, 0) + 1;
+                board.Advance(1f / 600f);
+                if (!boss.Alive) continue;
+                Assert.AreEqual(0, boss.Phase, $"{kind} turned a stand above its threshold");
 
-                Assert.IsTrue(boss.Settled);
-                Assert.LessOrEqual(held, SiegeTuning.PhaseWake + .1f,
-                                   "a bonecaller with nothing to raise held its floor past its wake");
+                boss.Health = SiegeTuning.PhaseFloor(boss.MaxHealth, 0);
+                board.Advance(1f / 600f);
+                Assert.AreEqual(1, boss.Phase, $"{kind} did not open its second stand at the notch");
+
+                boss.Health = 1;
+                board.Advance(1f / 600f);
+                Assert.AreEqual(SiegeTuning.BossPhases - 1, boss.Phase,
+                                $"{kind} did not open its last stand");
             }
 
-            // A shackler whose every ward is already chained finds nothing to aim at.
+            // Two thirds in one blow, from the first stand.
             {
-                var board = SiegeBoard.Build(DuelWith(SiegeKind.Shackler));
+                var board = SiegeBoard.Build(DuelWith(SiegeKind.Boss));
                 var boss = Standing(board);
-                foreach (var ward in board.Wards) ward.Shackle();
 
-                float held = 0f;
-                for (int i = 0; i < 60 * 10 && !boss.Settled; i++)
-                {
-                    foreach (var ward in board.Wards) ward.Shackle();
-                    board.Advance(1f / 60f);
-                    held += 1f / 60f;
-                }
+                boss.Health = 1;
+                board.Advance(1f / 600f);
 
-                Assert.IsTrue(boss.Settled, "a shackler with nothing to chain held its floor for ever");
-                Assert.AreEqual(SiegeTuning.PhaseMost, held, .1f, "the floor did not lift at its deadline");
+                Assert.AreEqual(SiegeTuning.BossPhases - 1, boss.Phase,
+                                "a blow through two thirds left the boss in a stand it had passed");
             }
         }
 
-        /// <summary>A stunned boss still settles its stand: a stun is seconds off the fight, never a wall.</summary>
+        /// <summary>A stunned boss does not cast: a stun is seconds off the fight's spells.</summary>
         [Test]
-        public void AStunnedBossStillSettlesItsStandAtTheDeadline()
+        public void AStunnedBossDoesNotCast()
         {
             var board = SiegeBoard.Build(DuelWith(SiegeKind.Boss));
             var boss = Standing(board);
+            int casts = boss.Casts;
 
-            float held = 0f;
-            for (int i = 0; i < 60 * 10 && !boss.Settled; i++)
+            for (int i = 0; i < 60 * 6; i++)
             {
                 boss.Stun = 1f;
                 boss.Steady = 0f;
                 board.Advance(1f / 60f);
-                held += 1f / 60f;
             }
 
-            Assert.IsTrue(boss.Settled);
-            Assert.AreEqual(SiegeTuning.PhaseMost, held, .1f);
-        }
-
-        /// <summary>
-        /// <b>A boss is alone on the hill, on both sides of the duel</b> (invariant 37dn): nothing
-        /// walks on while one lives, and one does not walk on while anything else does.
-        ///
-        /// <para>
-        /// <b>The second half was a rule nobody had written down.</b> An authored chapter puts its
-        /// boss on its last wave, so nothing was ever scheduled behind one and the gap could not
-        /// be seen; the Infinite lane deals a boss every few waves and carried straight on over
-        /// it, so the back half of a duel was fought inside the next wave's escort. It is one rule
-        /// read off the hill rather than one rule per lane, so a seventh chapter and whatever the
-        /// endless ramp deals inherit it without being taught.
-        /// </para>
-        /// </summary>
-        [Test]
-        public void ABossFightsAloneOnBothSides()
-        {
-            // The authored ladder: the duel opens on an empty hill.
-            foreach (var kind in EveryBoss())
-            {
-                var board = SiegeBoard.Build(DuelWith(kind));
-                var boss = Standing(board);
-
-                int company = 0;
-                foreach (var raider in board.Raiders)
-                    if (raider.Alive && raider.Id != boss.Id) company++;
-
-                Assert.AreEqual(0, company, $"{kind} walked on with {company} raider(s) beside it");
-            }
-
-            // The Infinite lane, which is where the other half was missing: play through the
-            // first boss wave and prove nothing ever stands beside it.
-            {
-                var board = SiegeBoard.Build(EndlessLane());
-
-                SiegeRaider boss = null;
-                int worst = 0;
-
-                for (int i = 0; i < 60 * 60 * 12; i++)
-                {
-                    // Fed but not banked: the line is answering, so the run walks on through the
-                    // waves in front of the boss rather than standing still.
-                    for (int w = 0; w < board.Wards.Count; w++)
-                        board.Wards[w].Fuel = board.Wards[w].Capacity;
-
-                    board.Advance(1f / 60f);
-
-                    var standing = board.Warlord;
-                    if (standing != null && standing.Alive) boss = standing;
-
-                    if (boss == null || !boss.Alive) continue;
-
-                    int company = 0;
-                    foreach (var raider in board.Raiders)
-                        if (raider.Alive && raider.Id != boss.Id && !raider.Boss) company++;
-
-                    if (company > worst) worst = company;
-                }
-
-                Assert.IsNotNull(boss, "the endless lane never dealt a boss in twelve minutes");
-                Assert.AreEqual(0, worst,
-                                $"the endless lane put {worst} raider(s) on the hill beside a "
-                                + "boss, so a duel is fought inside a wave");
-            }
+            Assert.AreEqual(casts, boss.Casts, "a boss cast through a stun");
         }
 
         // ------------------------------------------------------------------ played
         /// <summary>
         /// Every boss, alone on its hill against an unhurried player who dumps every charge the
-        /// moment it banks, throws at least one spell per phase and stands long enough to be a
-        /// fight - and the fight <em>ends</em>, one way or the other.
+        /// moment it banks: the fight <em>ends</em>, one way or the other, and the table says
+        /// how long each stood and how often it cast.
         ///
         /// <b>A duel is harder than anything shipped</b> - no escort means no cogs, so the line
         /// fights at rank nought with nothing banked - and the overlord takes it at rank nought,
@@ -632,22 +485,17 @@ namespace GlimmerGrove.Tests
 
                 if (!ended)
                     faults.Add($"{kind}: neither it nor the line fell in ten minutes, so the duel is a stalemate");
-                if (boss.Casts < LeastCasts)
-                    faults.Add($"{kind}: threw {boss.Casts} spells against a floor of {LeastCasts}");
-                if (boss.Stood < LeastStood)
-                    faults.Add($"{kind}: stood {boss.Stood:0.0}s against a floor of {LeastStood}");
-                if (!boss.Alive && boss.Phase != SiegeTuning.BossPhases - 1)
-                    faults.Add($"{kind}: fell in phase {boss.Phase + 1} of {SiegeTuning.BossPhases}");
             }
 
             Assert.IsEmpty(faults, string.Join("\n", faults) + "\n\nthe duels read:\n" + table);
         }
 
         /// <summary>
-        /// The gate: on every shipped rung that sends a boss, at every rhythm the chapter sweep
-        /// plays, the boss throws at least <see cref="LeastCasts"/> spells and stands at least
-        /// <see cref="LeastStood"/> seconds before it falls. A boss rung that fails this is a
-        /// boss the player never met.
+        /// The gate: every shipped rung that sends a boss sends the bosses it says, and each is
+        /// reached and felled at some rhythm on the strongest line. <b>It no longer holds a boss
+        /// to a least number of spells or seconds</b> - that promise was the stand's floor, and
+        /// the floor is gone (2026-10-05). What it prints is the reading a health re-tune wants:
+        /// how long each boss stood and how often it cast before it fell.
         /// </summary>
         [Test]
         public void EveryShippedBossRungIsAFight()
@@ -739,13 +587,6 @@ namespace GlimmerGrove.Tests
                             if (boss.Casts > mostCasts) mostCasts = boss.Casts;
                             if (boss.Stood < leastStood) leastStood = boss.Stood;
                             if (boss.Stood > mostStood) mostStood = boss.Stood;
-
-                            if (boss.Casts < LeastCasts)
-                                faults.Add($"{rung.Id} at {rhythm:0.00}: {boss.Kind} threw {boss.Casts} "
-                                           + $"spells against a floor of {LeastCasts}");
-                            if (boss.Stood < LeastStood)
-                                faults.Add($"{rung.Id} at {rhythm:0.00}: {boss.Kind} stood {boss.Stood:0.0}s "
-                                           + $"against a floor of {LeastStood}");
                         }
                     }
 
@@ -840,6 +681,143 @@ namespace GlimmerGrove.Tests
             });
 
             return log.ToString();
+        }
+
+        // ------------------------------------------------------------------ what the drawing reads
+        /// <summary>
+        /// <b>A tap is kept only for a boss that cannot take it yet</b>
+        /// (<c>SiegeBoard.CanHold</c>, <c>SiegeView.Keeping</c>), and the three answers a tube
+        /// can give - thrown, kept, refused - never overlap.
+        ///
+        /// <para>
+        /// Walked over a whole duel with every charge banked and none thrown: the walk in is
+        /// the one place a tap is kept, and everywhere a tap is kept the throw itself is still
+        /// refused with the charge intact - which is the proof that keeping a tap spends
+        /// nothing until the board says it lands.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void ATapIsKeptOnlyForABossThatCannotTakeItYet()
+        {
+            foreach (var kind in EveryBoss())
+            {
+                var board = SiegeBoard.Build(DuelWith(kind));
+                int kept = 0, live = 0;
+
+                // Before anything has mustered: a charge, an empty hill, and no boss to wait for.
+                Bank(board);
+                for (int w = 0; w < board.Wards.Count; w++)
+                {
+                    Assert.IsTrue(board.Charged(w), $"{kind}: a banked charge was not drawn");
+                    Assert.IsFalse(board.CanOvercharge(w));
+                    Assert.IsFalse(board.CanHold(w),
+                        $"{kind}: a tap over an empty hill was kept for whatever walks on next");
+                }
+
+                for (int i = 0; i < 60 * 45; i++)
+                {
+                    Bank(board);
+                    board.Advance(1f / 60f);
+
+                    var boss = board.Warlord;
+
+                    for (int w = 0; w < board.Wards.Count; w++)
+                    {
+                        bool thrown = board.CanOvercharge(w), held = board.CanHold(w);
+
+                        Assert.IsFalse(thrown && held,
+                            $"{kind}: ward {w} would both throw a tap and keep it");
+
+                        if (thrown) live++;
+                        if (!held) continue;
+
+                        kept++;
+
+                        Assert.IsTrue(board.Charged(w));
+                        Assert.IsNotNull(boss, $"{kind}: a tap was kept with no boss on the hill");
+                        Assert.IsTrue(boss.Alive && boss.Impervious,
+                            $"{kind}: a tap was kept against a boss that could take it");
+
+                        int charges = board.Wards[w].Charges;
+                        Assert.IsFalse(board.Overcharge(w, null).Landed,
+                            $"{kind}: a kept tap landed");
+                        Assert.AreEqual(charges, board.Wards[w].Charges,
+                            $"{kind}: keeping a tap spent the charge");
+                    }
+                }
+
+                Assert.Greater(kept, 0, $"{kind}: no tap was ever kept, so the walk in refuses them");
+                Assert.Greater(live, 0, $"{kind}: no tap would ever have thrown");
+            }
+        }
+
+        /// <summary>
+        /// <b>Asking the board what to draw moves nothing on it.</b>
+        ///
+        /// <para>
+        /// The overcharge key's readings are asked every frame by a view, so they have to be
+        /// pure. Two boards are played through the same
+        /// duel with the same hands, one of them asked every reading for every ward on every
+        /// frame, and held equal on everything a run is decided by.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void ReadingTheBoardForTheDrawingMovesNothing()
+        {
+            foreach (var kind in EveryBoss())
+            {
+                var plain = SiegeBoard.Build(DuelWith(kind));
+                var read = SiegeBoard.Build(DuelWith(kind));
+
+                for (int i = 0; i < 60 * 60; i++)
+                {
+                    foreach (var board in new[] { plain, read })
+                    {
+                        // Fed hard, and a charge thrown twice a second.
+                        Bank(board);
+                        if (i % 30 == 0) board.Overcharge(i / 30 % board.Wards.Count, null);
+                    }
+
+                    for (int w = -1; w <= read.Wards.Count; w++)
+                    {
+                        read.Charged(w);
+                        read.CanHold(w);
+                        read.CanOvercharge(w);
+                    }
+
+                    var a = plain.Advance(1f / 60f);
+                    int bolts = a.Bolts.Count, spells = a.Spells.Count, casts = a.Casts.Count;
+
+                    var b = read.Advance(1f / 60f);
+
+                    Assert.AreEqual(bolts, b.Bolts.Count, $"{kind}: frame {i} fired differently");
+                    Assert.AreEqual(spells, b.Spells.Count, $"{kind}: frame {i} was struck differently");
+                    Assert.AreEqual(casts, b.Casts.Count, $"{kind}: frame {i} cast differently");
+                    Assert.AreEqual(plain.Raiders.Count, read.Raiders.Count, $"{kind}: frame {i}");
+
+                    for (int r = 0; r < plain.Raiders.Count; r++)
+                    {
+                        Assert.AreEqual(plain.Raiders[r].Health, read.Raiders[r].Health,
+                                        $"{kind}: frame {i}, a raider's health moved");
+                        Assert.AreEqual(plain.Raiders[r].Phase, read.Raiders[r].Phase,
+                                        $"{kind}: frame {i}, a stand turned on a different frame");
+                        Assert.AreEqual(plain.Raiders[r].March, read.Raiders[r].March,
+                                        $"{kind}: frame {i}, a raider stood somewhere else");
+                    }
+
+                    for (int w = 0; w < plain.Wards.Count; w++)
+                    {
+                        Assert.AreEqual(plain.Wards[w].Fuel, read.Wards[w].Fuel,
+                                        $"{kind}: frame {i}, ward {w}'s fuel moved");
+                        Assert.AreEqual(plain.Wards[w].Charges, read.Wards[w].Charges,
+                                        $"{kind}: frame {i}, ward {w}'s charges moved");
+                        Assert.AreEqual(plain.Wards[w].Health, read.Wards[w].Health,
+                                        $"{kind}: frame {i}, ward {w}'s health moved");
+                        Assert.AreEqual(plain.Wards[w].Shots, read.Wards[w].Shots,
+                                        $"{kind}: frame {i}, ward {w} fired a different number");
+                    }
+                }
+            }
         }
 
         /// <summary>

@@ -34,6 +34,25 @@ namespace GlimmerGrove
         public float PressScale = .93f;
 
         /// <summary>
+        /// True for a control that acts the moment the finger lands rather than when it lifts.
+        ///
+        /// <para>
+        /// <b>Off for every button in the game but the ones on a board that is running.</b> A
+        /// click is a press and a release over the same thing, which is right for a menu - a
+        /// finger that slides off a key has changed its mind - and wrong for a control on a
+        /// hill that does not stop: the release is a reaction-time late, and the tap is lost
+        /// outright if the key moved, shrank or stopped taking raycasts between the two. The
+        /// overcharge key does all three (it pulses, and its light follows the hill), which is
+        /// what a player met as a tap that sometimes did nothing.
+        /// </para>
+        /// <para>
+        /// <b>Exactly one of the two fires</b>: with this set the click that follows the press
+        /// is swallowed, so a control can never act twice for one tap.
+        /// </para>
+        /// </summary>
+        public bool ActsOnPress;
+
+        /// <summary>
         /// The caption, when this button has one. Held rather than looked up by name, so a
         /// repaint costs nothing and renaming the child cannot silently break the layout.
         /// </summary>
@@ -134,6 +153,9 @@ namespace GlimmerGrove
             _down = true;
             if (PressScale < .999f) Tween.Scale(transform, _home * PressScale, .09f, Ease.OutQuad);
             if (!_silent && !string.IsNullOrEmpty(ClickSfx)) Audio.SfxVaried(ClickSfx, .7f, .04f);
+
+            // Last, because the handler may tear this button down. See ActsOnPress.
+            if (ActsOnPress) _click?.Invoke();
         }
 
         public void OnPointerUp(PointerEventData e)
@@ -145,7 +167,7 @@ namespace GlimmerGrove
 
         public void OnPointerClick(PointerEventData e)
         {
-            if (!_interactable) return;
+            if (!_interactable || ActsOnPress) return;
             // Silent: OnPointerDown already spoke for this tap. See ClickSfx.
             _click?.Invoke();
         }

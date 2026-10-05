@@ -146,11 +146,9 @@ namespace GlimmerGrove.Modes
                 var caster = Find(spell.Raider);
                 if (caster == null || !caster.Alive) continue;
 
-                // **The spell that opened a stand has landed**, which is half of what settles it
-                // (`SiegeTuning.PhaseLeast` is the other half) - noted before anything below can
+                // **The spell that opened a stand has landed** - noted before anything below can
                 // `continue` past it, because a spell aimed at a ward that has since fallen is
-                // dropped and a stand must not be held open on a spell that was thrown. What the
-                // floor promises is one spell thrown, not one spell that found something.
+                // dropped and it was still thrown.
                 if (spell.Opens) caster.Opened = true;
 
                 // **A roar is aimed at no ward and lands on every one of them.** It is settled
@@ -861,10 +859,8 @@ namespace GlimmerGrove.Modes
                 // it is fuel converted into nothing on the player's behalf (37bq's fault from the
                 // other side).
                 //
-                // **The window this skips is now the narrow one**: the walk in, and whatever
-                // seconds a line quick enough to reach the stand's floor early has bought itself.
-                // It used to include three to four seconds of guard at every stand, which is what
-                // a player saw as their turrets refusing to fire at the boss.
+                // **The window this skips is the walk in and nothing else**
+                // (`SiegeRaider.Impervious`): from the frame a boss plants, the line fires.
                 if (raider.Impervious) continue;
 
                 // **A legendary ward treats every raider on the hill as its own colour**, which
@@ -912,8 +908,8 @@ namespace GlimmerGrove.Modes
                 // colour is the one thing on the shelf that can take seconds off the finale's
                 // spell rather than health off the boss (invariant 26h - the player decides, and
                 // can be wrong).
-                // **Nor does a boss cast into a stopped hill**, and its guard has already run down
-                // above (invariant 37dl): an hourglass takes seconds off a fight and never walls it.
+                // **Nor does a boss cast into a stopped hill**: an hourglass takes seconds off a
+                // fight and never walls it.
                 if (boss.Stunned || _still > 0f) continue;
 
                 boss.Spell -= dt;
@@ -921,16 +917,8 @@ namespace GlimmerGrove.Modes
 
                 var craft = boss.Spellcraft;
 
-                // The first spell of a stand is the one its floor is held for; the stand settles
-                // when it lands (`Arrive`) and `PhaseLeast` has passed. Decided before the
-                // target, because what an opener wants can differ from what an ordinary cast
-                // wants (`Wanted`).
-                //
-                // **Read off the stand rather than off a guard**: this asked `boss.Guarded`,
-                // which meant "the window in which nothing can hurt it", and the two stopped
-                // being the same question the moment the window became a floor. What an opener
-                // is is the first spell of a stand that has not thrown one - true whether or not
-                // the line has already walked the bar down to the notch.
+                // The first spell of a stand is its opener, and what an opener wants can differ
+                // from what an ordinary cast wants (`Wanted`), so it is decided before the target.
                 bool opens = !boss.Opened && !boss.Opening;
 
                 // **A roar is thrown at the hill and a wane at every idle post, so neither
@@ -968,10 +956,6 @@ namespace GlimmerGrove.Modes
                 // visibly doing nothing, which is the reading `CastRetry`'s note is about.
                 if (SiegeTuning.Summons(boss.Kind) && boss.Raised >= SiegeTuning.Raises)
                 {
-                    // **A floor in front of a spell that will never be thrown is a wall**
-                    // (invariant 5d), so a bonecaller that has spent its raises settles its stand
-                    // at once rather than resting on the notch until the deadline.
-                    Settle(boss);
                     continue;
                 }
 
@@ -981,7 +965,7 @@ namespace GlimmerGrove.Modes
                 boss.Spell = SiegeTuning.CastEveryFor(boss.Kind, boss.Phase);
                 boss.Casts++;
 
-                if (opens) boss.Opening = true;
+                if (opens) { boss.Opening = true; boss.SinceOpener = 0f; }
 
                 float lands = SiegeTuning.BossTell + SiegeTuning.BossFlight;
 

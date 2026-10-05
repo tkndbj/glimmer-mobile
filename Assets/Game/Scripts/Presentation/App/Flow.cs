@@ -320,8 +320,15 @@ namespace GlimmerGrove
         /// Multi-touch is <b>off for the whole game</b> - <c>Boot</c> turns it off before the
         /// first frame - because a board that accepted two fingers would let a player turn two
         /// conduits in one tap, and a move counter that can be beaten by having two thumbs is
-        /// not a move counter. Exactly one screen needs it back: the grove, whose field is
-        /// pinch-zoomed.
+        /// not a move counter. Exactly one screen needs it back: the siege, which counts no
+        /// moves and whose hill does not wait - a thumb on the gems and a thumb on a turret is
+        /// how it is played, and with one finger the second tap was silently dropped for as
+        /// long as the first was down.
+        /// </para>
+        /// <para>
+        /// <b>It is the screen's own board that gets the second finger, never a panel over
+        /// it</b>: <see cref="Flow"/> gives a screen what it asks for only while nothing is
+        /// raised above it.
         /// </para>
         /// <para>
         /// <b>Declared rather than set.</b> A screen that switched the flag on in <c>Build</c>
@@ -409,7 +416,7 @@ namespace GlimmerGrove
 
                 // Applied on every swap rather than only when it changes, so the answer is
                 // always the incoming screen's own - see View.WantsMultiTouch.
-                Input.multiTouchEnabled = screen.WantsMultiTouch;
+                Touches();
             }
 
             if (instant)
@@ -551,9 +558,33 @@ namespace GlimmerGrove
             while (at > 0 && _modals[at - 1].Layer > view.Layer) at--;
             _modals.Insert(at, view);
             Restack();
+            Touches();
 
             return view;
         }
+
+        /// <summary>
+        /// Sets how many fingers the game listens to, from the two facts that decide it: the
+        /// screen in front asked for more than one (<see cref="View.WantsMultiTouch"/>), and no
+        /// panel is standing over it.
+        ///
+        /// <para>
+        /// <b>A panel is always one finger, whatever is under it.</b> A screen asks for two
+        /// thumbs because its own board is played with two; a pause menu, a shop shelf or a
+        /// verdict raised over that board never did, and two of a panel's keys pressed in one
+        /// frame is the double-fire <see cref="Modal{T}"/> already exists to refuse by type.
+        /// </para>
+        /// <para>
+        /// <b>Called from the three places the answer can change and nowhere else</b> - a
+        /// screen swapped in, a panel raised, a panel dismissed - which are the only three
+        /// writers <see cref="_modals"/> and <see cref="Current"/> have. A panel that somehow
+        /// outlived its removal leaves this at one finger, which is every screen's behaviour
+        /// before any of them asked for two: the failure is the safe one.
+        /// </para>
+        /// </summary>
+        static void Touches()
+            => Input.multiTouchEnabled = Current != null && Current.WantsMultiTouch
+                                      && _modals.Count == 0;
 
         /// <summary>
         /// Gives a modal a canvas of its own, so nothing it does re-meshes the screen under it.
@@ -634,6 +665,7 @@ namespace GlimmerGrove
         {
             _modals.Remove(v);
             if (v) UnityEngine.Object.Destroy(v.gameObject);
+            Touches();
         }
 
         public static bool HasModal => _modals.Count > 0;

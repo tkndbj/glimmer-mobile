@@ -508,7 +508,6 @@ namespace GlimmerGrove.Content
                 {
                     var raider = raiders[r];
                     if (!raider.Alive || !raider.OnTheHill || raider.Arriving) continue;
-                    if (raider.Health <= raider.Floor) continue;
                     if (!SiegeTuning.Caught(raider.Kind, raider.Column, raider.March,
                                             bombs[i].Lane, bombs[i].Row)) continue;
 

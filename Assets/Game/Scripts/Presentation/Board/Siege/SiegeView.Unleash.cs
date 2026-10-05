@@ -48,30 +48,55 @@ namespace GlimmerGrove
         const float CrackleLeast = .30f, CrackleMost = .75f;
 
         /// <summary>
-        /// Paints every tube's readiness: the pulse that says a tube may be spent.
+        /// Seconds a glyph takes to settle when the hill has nothing for it and to wake when it
+        /// has. Short enough to read as the same frame the hill changed on, long enough that a
+        /// hill emptying and filling inside a second is not a blink.
+        /// </summary>
+        const float SettleSeconds = .16f;
+
+        /// <summary>
+        /// What a held glyph with nothing to throw at is drawn at: its share of the live size and
+        /// of the live light. Plainly still there and plainly not asking to be pressed.
+        /// </summary>
+        const float RestScale = .86f, RestAlpha = .6f, RestHalo = .3f;
+
+        /// <summary>How much faster a kept tap beats than an ordinary armed glyph, and how much oftener it arcs.</summary>
+        const float KeptBeat = 2f;
+
+        /// <summary>
+        /// Paints every tube's readiness: the glyph that says a charge is held, and the pulse
+        /// that says a tap would throw it.
         ///
         /// <para>
-        /// <b>The raycast is switched with it</b>, so a tube that cannot be spent cannot be tapped
-        /// at all - a control that is live and silently refuses is one nobody learns.
+        /// <b>Two readings, and they used to be one.</b> Whether the glyph is <em>there</em> is
+        /// the tube's answer (<c>SiegeBoard.Charged</c>): a charge the player banked is theirs
+        /// until they spend it. Whether it is <em>live</em> is the hill's
+        /// (<c>SiegeBoard.CanOvercharge</c>): there is something a throw would hurt. Drawing
+        /// both off the hill's answer took the key off the turret on every frame the hill had
+        /// nothing to hurt - between two waves, on a boss's walk in - and brought it back with
+        /// its entrance a moment later, which came back from
+        /// play as <em>the overcharge icon disappears and appears</em>.
         /// </para>
         /// <para>
-        /// <b>And "can be spent" is the board's answer, not this file's guess.</b> It read
-        /// <c>ward.Armed</c> - a charge banked, not chained, not buried - which is only half the
-        /// question: <c>SiegeBoard.Overcharge</c> also needs something on the hill it could hurt,
-        /// and against a boss there are frames where there is not (the walk in, and a stand
-        /// already resting on its floor). So the button pulsed, invited a tap and shook it off,
-        /// which is what a player meets as <em>sometimes I can use it and sometimes I cannot</em>.
-        /// One reading, asked here and answered there: <c>SiegeBoard.CanOvercharge</c>.
+        /// <b>A held glyph always answers a tap, and the three answers are the board's.</b>
+        /// Thrown when it can land; kept when a boss is still walking on
+        /// (<see cref="Keeping"/>); and shaken off, with the screen's own sentence, over a hill
+        /// with nothing on it. The raycast is on for as long as the glyph is drawn, so no tap is
+        /// ever lost to the frame the answer changed on.
         /// </para>
         /// <para>
         /// <b>An armed glyph crackles.</b> A short arc jumps off it every half second or so
         /// (<see cref="Crackle"/>): a thing holding a charge is a thing that cannot quite hold
         /// it, and it is what says <em>overcharged</em> where a pulse alone says <em>button</em>.
+        /// A resting one does neither, which is the whole of how the two are told apart.
         /// </para>
         /// </summary>
         void Ready()
         {
             if (_posts == null || _board == null) return;
+
+            float now = Time.unscaledTime;
+            float step = Time.unscaledDeltaTime / SettleSeconds;
 
             for (int i = 0; i < _posts.Length; i++)
             {
@@ -79,16 +104,35 @@ namespace GlimmerGrove
                 if (post == null || post.Dump == null) continue;
 
                 var ward = _board.Wards[i];
-                bool armed = _board.CanOvercharge(i);
 
-                post.Dump.raycastTarget = armed;
+                bool held = _board.Charged(i);
+                if (!held) post.Kept = false;
 
-                float now = Time.unscaledTime;
+                // **A kept tap is drawn live**, because it is the one state in which the player
+                // has already said *now* and the board is the thing that is waiting.
+                bool live = held && (post.Kept || _board.CanOvercharge(i));
 
-                if (!armed) { post.LitAt = -1f; post.NextArc = -1f; }
-                else if (post.LitAt < 0f) { post.LitAt = now; post.NextArc = now + ArriveSeconds; }
+                post.Dump.raycastTarget = held;
 
-                float age = armed ? now - post.LitAt : 0f;
+                if (!held)
+                {
+                    post.LitAt = -1f;
+                    post.NextArc = -1f;
+                    post.Live = 0f;
+                }
+                else if (post.LitAt < 0f)
+                {
+                    // Arrives in whichever state it is in, rather than waking into it: the
+                    // entrance is the event, and a second ease on top of it would smear it.
+                    post.LitAt = now;
+                    post.NextArc = now + ArriveSeconds;
+                    post.Live = live ? 1f : 0f;
+                }
+
+                post.Live = Mathf.MoveTowards(post.Live, live ? 1f : 0f, step);
+
+                float age = held ? now - post.LitAt : 0f;
+                float beat = post.Kept ? PulseHz * KeptBeat : PulseHz;
 
                 // **It arrives, then it beats.** The bolt springs up from nothing with an
                 // overshoot, and from then on swells by a fifth and settles, never dimming: the
@@ -96,26 +140,28 @@ namespace GlimmerGrove
                 // alpha pulse spends half of every beat being harder to see. What breathes is the
                 // size and the light behind it, on a cosine timed from the arrival so every bolt
                 // opens its beat at rest rather than mid-swell.
-                float arrive = armed ? Ease.OutBack(Mathf.Clamp01(age / ArriveSeconds)) : 0f;
-                float swell = armed ? .5f - .5f * Mathf.Cos(age * PulseHz * 2f * Mathf.PI) : 0f;
+                float arrive = held ? Ease.OutBack(Mathf.Clamp01(age / ArriveSeconds)) : 0f;
+                float swell = held ? (.5f - .5f * Mathf.Cos(age * beat * 2f * Mathf.PI)) * post.Live : 0f;
 
                 // **White, because the glyph carries its own colour.** Tinting it would be the
                 // multiply invariant 37l records - `Image.color` can only ever darken, so a
                 // coloured badge asked to look *lit* comes out muddy.
-                post.Dump.color = Pal.A(Color.white, armed ? 1f : 0f);
-                post.Dump.rectTransform.localScale = Vector3.one * (arrive * (1f + swell * PulseReach));
+                post.Dump.color = Pal.A(Color.white, held ? Mathf.Lerp(RestAlpha, 1f, post.Live) : 0f);
+                post.Dump.rectTransform.localScale =
+                    Vector3.one * (arrive * (Mathf.Lerp(RestScale, 1f, post.Live) + swell * PulseReach));
 
                 if (post.Halo != null)
                 {
                     post.Halo.color = Pal.A(Pal.Lift(TintOf(ward.Colour), .35f),
-                                            Mathf.Clamp01(arrive) * (.45f + swell * .5f));
+                                            Mathf.Clamp01(arrive) * (.45f + swell * .5f)
+                                            * Mathf.Lerp(RestHalo, 1f, post.Live));
                     post.Halo.rectTransform.localScale = Vector3.one * (arrive * (.9f + swell * .45f));
                 }
 
-                if (armed && post.NextArc >= 0f && now >= post.NextArc)
+                if (live && post.NextArc >= 0f && now >= post.NextArc)
                 {
                     Crackle(new Vector2(PostX(i), _lineY + ChargeY), TintOf(ward.Colour), Cell * .62f, .14f);
-                    post.NextArc = now + Random.Range(CrackleLeast, CrackleMost);
+                    post.NextArc = now + Random.Range(CrackleLeast, CrackleMost) / (post.Kept ? KeptBeat : 1f);
                 }
 
                 // **How many are held, and only once there is more than one.** A badge saying "1"
@@ -129,6 +175,44 @@ namespace GlimmerGrove
                 if (post.Pip != null) post.Pip.enabled = many;
 
                 if (many) post.Held.text = ward.Charges.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Throws every kept tap the hill can now take, and lets go of any it never will.
+        ///
+        /// <para>
+        /// <b>The first frame, and exactly the throw a tap on that frame would have been.</b> A
+        /// kept tap goes through <see cref="Throw"/>, which is the door a live tap goes through,
+        /// so there is one overcharge in this mode and it is drawn, claimed, felled and judged
+        /// one way. Called once a frame after the step has been drawn, which is where a tap from
+        /// the event system lands too: between two steps, never inside one.
+        /// </para>
+        /// <para>
+        /// <b>Let go rather than carried when the boss is gone.</b> A tap kept against a boss
+        /// that the rest of the line has since finished would otherwise go at the first raider
+        /// of the next wave, seconds after it was asked for - see <c>SiegeBoard.CanHold</c>. A
+        /// charge drained, chained or buried lets go in <see cref="Ready"/>, which runs on a
+        /// held board too.
+        /// </para>
+        /// </summary>
+        void Keeping()
+        {
+            if (_posts == null || _board == null) return;
+
+            for (int i = 0; i < _posts.Length && Tappable; i++)
+            {
+                var post = _posts[i];
+                if (post == null || !post.Kept) continue;
+
+                if (_board.CanOvercharge(i))
+                {
+                    post.Kept = false;
+                    Throw(i);
+                    continue;
+                }
+
+                if (!_board.CanHold(i)) post.Kept = false;
             }
         }
 
@@ -215,17 +299,50 @@ namespace GlimmerGrove
             HideCoach();
             Stir();
 
+            var post = _posts != null && ward >= 0 && ward < _posts.Length ? _posts[ward] : null;
+
+            if (_board.CanOvercharge(ward))
+            {
+                if (post != null) post.Kept = false;
+                Throw(ward);
+                return;
+            }
+
+            // **A boss still walking on: the tap is kept, and said to be.** The glyph quickens
+            // and arcs (`Ready`), and `Keeping` throws it on the frame the boss plants. A second
+            // tap in the walk is the same answer; every tap after it plants is its own throw.
+            if (post != null && _board.CanHold(ward))
+            {
+                if (!post.Kept) Audio.Sfx("charge", .5f, 1.25f);
+
+                post.Kept = true;
+                Crackle(new Vector2(PostX(ward), _lineY + ChargeY),
+                        TintOf(_board.Wards[ward].Colour), Cell * .7f, .16f);
+                return;
+            }
+
+            if (post != null)
+            {
+                post.Kept = false;
+                if (post.Dump != null) Refuse(post.Dump.rectTransform);
+            }
+
+            Rejected?.Invoke();
+        }
+
+        /// <summary>
+        /// One banked charge thrown and drawn. The one door: a live tap and a kept one
+        /// (<see cref="Keeping"/>) both come through here.
+        /// </summary>
+        void Throw(int ward)
+        {
             _strikes.Clear();
             var blast = _board.Overcharge(ward, _strikes);
 
-            if (!blast.Landed)
-            {
-                var post = ward >= 0 && ward < _posts.Length ? _posts[ward] : null;
-                if (post != null && post.Dump != null) Refuse(post.Dump.rectTransform);
-
-                Rejected?.Invoke();
-                return;
-            }
+            // `CanOvercharge` is this call's own two refusals, asked a line ago by both callers,
+            // so this is unreachable - and kept, because a throw drawn for a charge the board
+            // did not spend would be the one way this file could invent damage.
+            if (!blast.Landed) return;
 
             // **The killed are claimed until the channel lands.** The rules have already killed
             // them; `Reap` would take their bodies down this frame, a third of a second before

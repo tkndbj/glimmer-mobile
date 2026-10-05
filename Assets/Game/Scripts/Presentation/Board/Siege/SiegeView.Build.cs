@@ -443,6 +443,10 @@ namespace GlimmerGrove
 
                 var key = post.Dump.gameObject.AddComponent<Btn>();
                 key.PressScale = .88f;
+
+                // On the press, not the release: the glyph pulses and the hill does not wait
+                // (`Btn.ActsOnPress`).
+                key.ActsOnPress = true;
                 key.Setup(() => Unleashed(seat), silent: true);
 
                 // Hung off the turret rather than off the glyph, so it is not scaled by the

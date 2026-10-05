@@ -2163,50 +2163,28 @@ namespace GlimmerGrove.Modes
 
         // ------------------------------------------------------------------ the fight
         /// <summary>
-        /// How many phases a boss fight has, and every one of them is a promise.
+        /// How many stands a boss fight has: its health read in thirds from the top.
         ///
         /// <para>
-        /// <b>A boss used to be a raider with a large number on it, and a large number is not a
-        /// fight.</b> Played, it died on the walk in, or on its ground before its first spell
-        /// had left its hand: a fed line lands about 230 damage a second on a lone boss, and the
-        /// overcharges banked through the quiet in front of one deliver more in an instant than
-        /// any boss stands with. Every gate was green, because nothing measured how long a boss
-        /// lived - the hold simulation scored a run <em>better</em> for killing it faster
-        /// (<c>SiegeRuleTests.EveryShippedBossRungIsAFight</c> is the instrument now, and every
-        /// chapter's boss rungs go through it).
+        /// <b>A stand is a third of the bar and what it changes is the boss.</b> Each third a
+        /// boss is taken through opens the next stand - a fresh opening spell and a faster
+        /// cadence (<see cref="PhasePaceHundredths"/>) - so the fight climbs rather than repeats
+        /// and the last third is the one that is felt.
         /// </para>
         /// <para>
-        /// <b>So a fight is three <em>stands</em>, and a stand is a floor under the boss's
-        /// health.</b> A boss walks on untouchable; the moment it reaches its ground it opens its
-        /// first stand, and <b>from that frame every ward on the line may fire at it</b>. What a
-        /// stand promises is not that the line is idle but that the boss cannot be taken past the
-        /// stand's floor until it has done what the stand is for: thrown and landed its opening
-        /// spell, and held the ground <see cref="PhaseLeast"/> seconds (<see cref="PhaseMost"/> is
-        /// the deadline for a boss that can find nothing to throw). Then the floor lifts, the next
-        /// stand opens and the next floor slides under it. That is invariant 5d asked of a finale:
-        /// the arrangement it rejects is <em>kill it in one dump</em>, which was the only
-        /// arrangement anybody was ever playing.
+        /// <b>A stand holds nothing back, and it used to.</b> It shipped as a guard (the line
+        /// could not fire for three to four seconds a stand) and then as a floor (the line
+        /// fired, and the bar rested on its notch until the stand had thrown its spell and held
+        /// 3.4 seconds). Both were written to stop a banked line ending a boss before it had
+        /// fought, and both came back from play as a broken game: turrets that stopped, an
+        /// overcharge that refused, eight charges that would not go. <b>The owner's ruling on
+        /// 2026-10-05 ended it</b>: a boss is untouchable while it walks on and nowhere else,
+        /// and what makes one last is its health. If a boss falls too fast, the lever is
+        /// <see cref="BossHealth"/> and its siblings, never a wait.
         /// </para>
         /// <para>
-        /// <b>It was an invulnerability for exactly one build, and that is the fault this shape
-        /// exists to fix.</b> A guard in front of every stand is arithmetically the same promise -
-        /// the fight's floor is <see cref="BossPhases"/> × <see cref="PhaseLeast"/> either way -
-        /// but it spends the promise on the player's own turrets: for three to four seconds out
-        /// of every stand the line stood lit, fed and doing nothing, which reads as the game
-        /// being broken rather than as the boss being tough. Reported from play as exactly that,
-        /// repeatedly. A floor pays the same seconds out of the boss's <em>health bar</em>
-        /// instead: the bolts land, the numbers come up, the bar walks down to the notch and
-        /// stops there while the boss casts. <b>For any line that cannot chew a third of a boss
-        /// in <see cref="PhaseLeast"/> seconds the two are identical to the frame</b>, so nothing
-        /// shipped moves; what changes is what an over-fed line sees, and what it sees now is its
-        /// own damage.
-        /// </para>
-        /// <para>
-        /// <b>What a player gets for a phase is a faster boss</b>
-        /// (<see cref="PhasePaceHundredths"/>), so the fight climbs rather than repeats, and the
-        /// last third is the one that is felt. Par does not move: it is the hill's health over
-        /// what a match delivers (invariant 37a) and no phase, guard or cadence is in it. What
-        /// the sweep can see is everything here.
+        /// Par does not move: it is the hill's health over what a match delivers (invariant
+        /// 37a) and no stand or cadence is in it.
         /// </para>
         /// </summary>
         public const int BossPhases = 3;
@@ -2221,6 +2199,26 @@ namespace GlimmerGrove.Modes
         /// the roar and the throw, and the tell (<see cref="BossTell"/>) still sits on top of it.
         /// </summary>
         public const float PhaseWake = .9f;
+
+        /// <summary>
+        /// The least seconds between one stand's opening spell being begun and the next one's.
+        ///
+        /// <para>
+        /// <b>What stops a burst being answered with a volley.</b> A stand opens when its third
+        /// is taken and its opener follows on <see cref="PhaseWake"/> - which was safe while a
+        /// floor held every stand at least this long, and stopped being safe the day the floor
+        /// went: a line that takes two thirds in a second would be thrown three openers inside
+        /// two, and a warbringer's is a roar on all four wards. Found by the Broodmarch gate,
+        /// which the finale began failing on a siphon line.
+        /// </para>
+        /// <para>
+        /// <b>The figure is the old floor's own</b> (3.4), so a fight a line cannot burst is
+        /// cast for cast the fight it was, and one it can burst is never cast at oftener than
+        /// that fight was. <b>It holds back the boss and never the player</b>: nothing here
+        /// touches what the line may hit.
+        /// </para>
+        /// </summary>
+        public const float OpenerRest = 3.4f;
 
         /// <summary>
         /// The cadence of each phase, in hundredths of the kind's own <see cref="CastEveryFor"/>.
@@ -2239,42 +2237,6 @@ namespace GlimmerGrove.Modes
         /// </para>
         /// </summary>
         public static readonly int[] PhasePaceHundredths = { 100, 80, 65 };
-
-        /// <summary>
-        /// The least a stand lasts, in seconds from the phase opening, before its floor will lift.
-        ///
-        /// <para>
-        /// <b>Longer than the spell it holds the boss up for, and the difference is the fight's
-        /// floor.</b> The opening spell lands at <see cref="PhaseWake"/> +
-        /// <see cref="BossTell"/> + <see cref="BossFlight"/> = 2.5 seconds; a stand that lifted on
-        /// that frame let a player who had banked every charge take a third of the boss the same
-        /// instant, three times over, and an ironclad on its own rung fell in 7.6 seconds having
-        /// done everything the rules promised. So a stand holds at least this long whatever the
-        /// line does, and three of them are the shortest a fight can be - about ten seconds
-        /// standing, plus the walk in, which is the floor <c>SiegeRuleTests</c> holds the shipped
-        /// rungs to.
-        /// </para>
-        /// <para>
-        /// <b>What it does not buy is silence.</b> The line fires through the whole of it; what
-        /// the seconds are spent on is the bar sitting at its notch while the boss casts, which is
-        /// a player watching their own damage arrive rather than watching four lit turrets do
-        /// nothing. See <see cref="BossPhases"/>.
-        /// </para>
-        /// </summary>
-        public const float PhaseLeast = 3.4f;
-
-        /// <summary>
-        /// The most a stand may hold its floor, in seconds from the phase opening.
-        ///
-        /// <b>A deadline rather than a duration</b> (invariant 37cq's shape): the floor lifts when
-        /// the stand's opening spell has landed and <see cref="PhaseLeast"/> has passed, whichever
-        /// is later. A boss that finds nothing to aim at retries every <see cref="CastRetry"/>
-        /// (every ward already dark, every one already chained) and must not hold a boss up for
-        /// as long as that lasts, so the floor lifts here whatever happened - and a bonecaller
-        /// that has spent its raises settles at once, because a floor in front of a spell that
-        /// will never be thrown is a wall (invariant 5d).
-        /// </summary>
-        public const float PhaseMost = 4.5f;
 
         /// <summary>
         /// The health at which the phase after <paramref name="phase"/> opens, for a boss that

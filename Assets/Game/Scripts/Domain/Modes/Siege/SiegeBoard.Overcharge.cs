@@ -55,6 +55,49 @@ namespace GlimmerGrove.Modes
         public bool CanOvercharge(int ward) => Bolts(ward) > 0 && Furthest() != null;
 
         /// <summary>
+        /// Whether <paramref name="ward"/> is holding a charge it could throw at all - the tube's
+        /// half of <see cref="CanOvercharge"/>, with nothing asked of the hill.
+        ///
+        /// <para>
+        /// <b>What the glyph is drawn off, where <see cref="CanOvercharge"/> is what it pulses
+        /// off.</b> The two were one reading, so the key vanished on every frame the hill had
+        /// nothing to hurt - between two waves, on a boss's walk in - and came back with its
+        /// entrance a moment later. Reported from play as
+        /// <em>the overcharge icon disappears and appears</em>. A charge the player banked is
+        /// theirs for as long as they hold it, so it is drawn for as long as they hold it; what
+        /// the hill changes is whether it is <em>live</em>.
+        /// </para>
+        /// </summary>
+        public bool Charged(int ward) => Bolts(ward) > 0;
+
+        /// <summary>
+        /// Whether a tap on <paramref name="ward"/>'s tube right now is worth keeping: it has a
+        /// charge, nothing on the hill can take it this frame, and a boss is standing that will.
+        ///
+        /// <para>
+        /// <b>The other answer to a tap that cannot land, and it is asked only of a duel.</b>
+        /// A boss walking on is the one hill where "nothing to hurt" is a matter of seconds and
+        /// the target is already known (<see cref="SiegeRaider.Impervious"/>,
+        /// <see cref="BossStanding"/>). A tap in that window used to be shaken off and the
+        /// player made to find the frame it opened by tapping again. The view keeps it instead
+        /// and throws it through <see cref="Overcharge"/> on the first frame
+        /// <see cref="CanOvercharge"/> answers true - which is the throw a frame-perfect player
+        /// would have made, so no rule moves and nothing is delivered that was not already
+        /// theirs to deliver.
+        /// </para>
+        /// <para>
+        /// <b>Never true over an empty hill.</b> A charge kept there would be thrown at the first
+        /// creeper of the next wave, which is the wrong target chosen on the player's behalf
+        /// seconds after they asked. That tap is still refused, and said to be.
+        /// </para>
+        /// <para>
+        /// <b>Never true together with <see cref="CanOvercharge"/></b>, by construction: the two
+        /// differ in what <see cref="Furthest"/> answers.
+        /// </para>
+        /// </summary>
+        public bool CanHold(int ward) => Bolts(ward) > 0 && Furthest() == null && BossStanding;
+
+        /// <summary>
         /// How many bolts' worth <paramref name="ward"/>'s banked charge is, or nought when there
         /// is nothing to throw.
         ///
@@ -153,9 +196,8 @@ namespace GlimmerGrove.Modes
 
                 int bites = Through(ward, raider, damage);
 
-                // Through the one door (`SiegeBoard.Fight.cs`): nought on a boss behind its
-                // guard, clamped at a phase's floor. A strike that took nothing is not recorded,
-                // so the view draws the guard rather than a hit that did nothing.
+                // Through the one door (`SiegeBoard.Fight.cs`): nought on a boss still walking
+                // on. A strike that took nothing is not recorded.
                 int took = Wound(raider, bites);
                 if (took <= 0) continue;
 
@@ -181,8 +223,9 @@ namespace GlimmerGrove.Modes
 
                 // **A boss that cannot be hurt is not a target for a charge either**, so a tap
                 // with nothing else on the hill is refused and the charge is kept. The player
-                // never has to discover that by tapping: `CanOvercharge` is the same reading, and
-                // the control goes dark for exactly these frames.
+                // never has to discover that by tapping: `CanOvercharge` is the same reading, the
+                // glyph rests through the walk in, and a tap made in it is kept for the frame the
+                // boss plants (`CanHold`).
                 if (raider.Impervious) continue;
 
                 if (found == null || raider.March > found.March) found = raider;

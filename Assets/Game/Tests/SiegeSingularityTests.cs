@@ -402,11 +402,11 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A boss is hurt and is never taken under its stand's floor - the beam goes through the
-        /// one door every other blow does (invariant 37dj).
+        /// A boss in place is hurt by the beam, through the one door every other blow goes
+        /// through (invariant 37dj), and a beam worth more than it holds fells it.
         /// </summary>
         [Test]
-        public void TheBeamHurtsABossAndNeverSkipsAStand()
+        public void TheBeamHurtsABossInPlace()
         {
             var board = SiegeBoard.Build(Layout(true, boss: "warlord:r", waves: new[] { "rg" }));
 
@@ -426,20 +426,14 @@ namespace GlimmerGrove.Tests
             // The line the wait may have cost is stood back up: a beam is worth what is standing.
             foreach (var ward in board.Wards) { ward.Alive = true; ward.Health = ward.Full; }
 
-            // Ten points above its stand's floor, so the beam is many times what the stand
-            // has left and the floor is the only thing that can hold it.
-            int floor = boss.Floor;
-            boss.Health = floor + 10;
-
-            int was = boss.Health;
+            // Ten points left, so the beam is many times what the boss holds.
+            boss.Health = 10;
 
             Collapse(board);
             for (float t = 0f; t < SiegeTuning.BeamLands(0) + .2f; t += 1f / 60f)
                 board.Advance(1f / 60f);
 
-            Assert.Less(boss.Health, was, "the beam has to hurt a boss in place");
-            Assert.IsTrue(boss.Alive, "the beam felled a boss through its stand");
-            Assert.GreaterOrEqual(boss.Health, floor, "the beam took a boss under its stand's floor");
+            Assert.IsFalse(boss.Alive, "the beam did not fell a boss it was worth many times over");
         }
 
         // ----------------------------------------------------------------- the content
