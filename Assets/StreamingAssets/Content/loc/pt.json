@@ -4882,18 +4882,6 @@
       "text": "{0} turno"
     },
     {
-      "key": "ui.rank.top10",
-      "text": "Você está entre os 10% melhores"
-    },
-    {
-      "key": "ui.rank.top25",
-      "text": "Você está entre os 25% melhores"
-    },
-    {
-      "key": "ui.rank.top50",
-      "text": "Você está entre os 50% melhores"
-    },
-    {
       "key": "ui.rank.record_unit",
       "text": "Turnos"
     },
@@ -6115,7 +6103,7 @@
     },
     {
       "key": "ui.welcome.subtitle",
-      "text": "Quatro torres para sempre. Cada uma é liberada depois de alguns dias diferentes de jogo. Os dias não precisam ser seguidos."
+      "text": "Conclua missões e libere torres"
     },
     {
       "key": "ui.welcome.all_done",
@@ -6128,6 +6116,14 @@
     {
       "key": "ui.welcome.days_left_one",
       "text": "Falta 1 dia"
+    },
+    {
+      "key": "ui.welcome.to_go",
+      "text": "dias restantes"
+    },
+    {
+      "key": "ui.welcome.to_go_one",
+      "text": "dia restante"
     },
     {
       "key": "ui.welcome.goal.runs",
@@ -6159,11 +6155,11 @@
     },
     {
       "key": "ui.welcome.choose_line",
-      "text": "Pegue a torre em todos os lugares, ou o preço dela no lugar."
+      "text": "Pegue a torre, ou o preço dela no lugar."
     },
     {
       "key": "ui.welcome.choose_turret",
-      "text": "Sua nos quatro lugares, para sempre. Melhore com moedas."
+      "text": "Sua para sempre, nesta cor. Melhore com moedas."
     },
     {
       "key": "ui.welcome.choose_price",

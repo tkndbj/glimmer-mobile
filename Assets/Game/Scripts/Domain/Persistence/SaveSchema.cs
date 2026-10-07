@@ -95,11 +95,10 @@ namespace GlimmerGrove.Persistence
         ///      while its owner is away, and freezing whatever was current when the record
         ///      was set means a player who beats their own move count against a larger
         ///      population is demoted for playing better. Zero is unreachable for a real
-        ///      standing (<see cref="Social.LevelStats.MinRank"/> is 5), so a v12 file reads
-        ///      as unranked and this is the first section to need no migration at all - the
-        ///      move counts it is derived from were already on disk, and
-        ///      <see cref="PlayerProgress.RefreshRanks"/> backfills from them the first time
-        ///      a table lands. See <see cref="Social.RankTier"/>.
+        ///      standing (the producer's floor was 5), so a v12 file reads as unranked and
+        ///      this was the first section to need no migration at all. <b>Retired in place
+        ///      2026-10-07</b> with the standing badge: still carried, merged and written,
+        ///      never produced or drawn. See <see cref="LevelRecord.BestRank"/>.
         /// v14 - the fastest clear of each glade in milliseconds
         ///      (<see cref="LevelRecordDto.bestMillis"/>), so a map node can report what the
         ///      player actually did rather than only how it compared. Smaller wins and zero
@@ -1970,9 +1969,9 @@ namespace GlimmerGrove.Persistence
         public long lastPlayedUnix;
 
         /// <summary>
-        /// Best standing ever held on this glade, as percent-of-keepers-slower. 0 = never
-        /// ranked, which is also what an older file reads as. See
-        /// <see cref="LevelRecord.BestRank"/>.
+        /// <b>Retired in place.</b> Best standing ever held on this glade, as
+        /// percent-of-keepers-slower; 0 = never ranked. Carried and merged, never produced.
+        /// See <see cref="LevelRecord.BestRank"/>.
         /// </summary>
         public int bestRank;
 

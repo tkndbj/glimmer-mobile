@@ -395,7 +395,7 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
 52d. **The held rung is the top of an unbroken run from the bottom.**
 52e. **A rank pays nothing** (it is published because the badge is public).
 52f. **A rung's badge and strings derive from its id**; `check_ranks` walks the table.
-52g. **The board tab reads BOARDS**; `Social.RankTier` (percentile) is a different thing.
+52g. **The board tab reads BOARDS.**
 52h. **A public badge is climbed twice**: `rungOf` recomputes it server-side over an `IRankSource`; held by
    `rankCases`; a ladder the server cannot read is truncated at the fault; an unknown rung draws as nothing.
 52i. **The ladder may not open before the Infinite lane** — one `keeper_level` line on the first rung, held to
@@ -445,8 +445,10 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
 
 58. **The welcome bonus is four turrets earned on different days; a finished quest is taken as the turret or
    as its shelf price.** A quest is a counted verb (`TaskGoal`) and a number of days, rows of the `welcome`
-   block. The turret is `WardLedger.Grant` on every seat with no server (a client-held entitlement that buys no
-   currency: 15, 13's fourth clause). The price is currency, so a claim (10a): `welcome:{quest}:{currency}`,
+   block. The turret is `WardLedger.Grant` on **one seat, the row's authored `colour`** (r/g/b/y, required, never the
+   row's position, so removing or inserting a quest changes no other prize; a purchase is one seat; four
+   seats was four shelf prices against a price worth one), with no server (a client-held entitlement that buys
+   no currency: 15, 13's fourth clause). The price is currency, so a claim (10a): `welcome:{quest}:{currency}`,
    re-priced by `welcome.ts` off the roster the seeder publishes, paid once, unconfirmed until the save records
    the choice, refused only in the wrong currency. **Re-seed after touching the block or the roster's prices.**
 58a. **The save holds days per verb, claims per quest and the choice per claim, never progress per quest**
@@ -572,7 +574,9 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
 - **Enum members kept for analytics ordinals**: `ContinueUnit.Tiles`/`.Taps`;
   `DefeatReason.OutOfTiles`/`.Overgrown`/`.OutOfTaps`/`.Barren`/`.OutOfTime`; `ChestDropKind.RunTime`;
   `SiegeKind.Weaver`/`.Thief`; `SiegeSpell.Weave`/`.Snatch`/`.Bombard`.
-- **Retired in place on the wire**: `bestMillis` (22) and `DailyChests`' section (45).
+- **Retired in place on the wire**: `bestMillis` (22), `DailyChests`' section (45), and `levels[].bestRank`
+  (the population standing; its map badge, win line and `publishGroveStats` removed 2026-10-07).
+  `config/stats` is deleted; its read rule stays until the update wall excludes builds that ask.
 - **League board ids `l0`…`l8`** and the card's `league` field.
 - **Season id `first_watch`** (seasons are `watch` + four digits).
 - **Store product `gg_first_bloom_pass`** — registered with both stores, never reusable.

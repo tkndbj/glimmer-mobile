@@ -36,7 +36,7 @@ namespace GlimmerGrove
     /// </para>
     /// <para>
     /// <b>A finished row's boxes give way to a COLLECT key</b> (the owner, 2026-10-07), which
-    /// opens <see cref="WelcomeChoiceOverlay"/>: the turret on every seat, or its shelf price.
+    /// opens <see cref="WelcomeChoiceOverlay"/>: the turret on its row's seat, or its shelf price.
     /// The turret's payoff is the loadout's own reveal (<see cref="WardRevealOverlay"/>, ending
     /// on EQUIP); the price's payoff is the wallet's flight to the one readout this page keeps,
     /// the credits pill in the header (44j: watched, never drawn once).
@@ -78,9 +78,25 @@ namespace GlimmerGrove
         /// <summary>The COLLECT key that stands where the boxes were once every day is in.</summary>
         static readonly Vector2 CollectSize = new Vector2(280f, 88f);
 
-        /// <summary>The pill at the right end: days to go, or COLLECTED.</summary>
+        /// <summary>The pill at the right end once the quest is taken: COLLECTED.</summary>
         static readonly Vector2 PillSize = new Vector2(232f, 76f);
         const float PillX = -136f;
+
+        /// <summary>
+        /// The days still to go, at the same right end while a quest is counting: the number
+        /// large over its words, green on the card with no plate - the ticks' own mint (the owner, 2026-10-07). The
+        /// number stands on its own line, so no language has to agree a noun with it in one
+        /// string - the words are their own key, in the singular and the plural.
+        /// </summary>
+        const float ToGoW = 232f, ToGoNumberY = 24f, ToGoWordsY = -34f;
+        const int ToGoNumberSize = 72, ToGoWordsSize = 32;
+
+        /// <summary>
+        /// The sentence's plate (<see cref="DoorKey.Plate"/>): the kit's orange pill, the hub
+        /// door's picture, and a slot taller than the key by the room the picture rises into.
+        /// </summary>
+        const string SubPill = "btn_orange", SubArt = "challenge_door";
+        const float SubSlotH = 210f;
 
         /// <summary>The credits readout at the header's right, narrower than the tasks page's so it clears the ribbon.</summary>
         static readonly Vector2 WalletSize = new Vector2(160f, 72f);
@@ -106,7 +122,7 @@ namespace GlimmerGrove
             public Image Card, Body, Pool, Rim, Halo, Bar;
             public RectTransform Fill, Seal, Boxes;
             public Image[] Ticks;
-            public Text Count, Pill;
+            public Text Count, Pill, ToGo, ToGoWords;
             public Btn Collect;
             public bool Lit;
             public bool? Full;
@@ -169,14 +185,14 @@ namespace GlimmerGrove
             BuildWallet(cy);
             y += BannerH + 4f;
 
-            // Two lines allowed: the sentence says the one thing a player has to know - the
-            // days need not be in a row - and a translation of it is longer than English. The
-            // same slot says every turret is theirs once the last quest is taken (Repaint).
-            _subtitle = UIKit.Shrinkable(
-                UIKit.Titled("Sub", Safe, Loc.Get("ui.welcome.subtitle"), 26, new Color(.86f, .90f, 1f, .82f),
-                             TextAnchor.MiddleCenter, new Vector2(920f, 64f), Top,
-                             new Vector2(0f, -(y + 32f)), 3f, 3f, wrap: true), 16);
-            y += 64f + 10f;
+            // The sentence on the hub's Daily Challenges door, cut orange and with no tap (the
+            // owner, 2026-10-07): the same pill, the same turret scene rising out of its right
+            // end, the caption on two lines on its left, in solid white. The same slot says every turret is
+            // theirs once the last quest is taken (Repaint).
+            _subtitle = DoorKey.Plate("Sub", Safe, SubPill, Width, SubSlotH, Top,
+                                      new Vector2(0f, -(y + SubSlotH * .5f)),
+                                      Loc.Get("ui.welcome.subtitle"), SubArt, Color.white);
+            y += SubSlotH + 14f;
 
             return y;
         }
@@ -241,8 +257,14 @@ namespace GlimmerGrove
                                  new Vector2(0f, -(y + RowH * .5f)));
             row.Pool.raycastTarget = false;
 
-            var card = UIKit.Img("Row_" + quest.Id, list, Art.S("Ui/" + Skins.PlateNavy), Color.white,
-                                 new Vector2(Width, RowH), Top, new Vector2(0f, -(y + RowH * .5f)));
+            // **The whole card is a key** (the owner, 2026-10-07): a tap anywhere on it shows the
+            // choice the quest ends in (`Show`). The COLLECT key on it is a button of its own, so
+            // it takes its own taps first.
+            var key = UIKit.Button("Row_" + quest.Id, list, Art.S("Ui/" + Skins.PlateNavy),
+                                   new Vector2(Width, RowH), Top, new Vector2(0f, -(y + RowH * .5f)),
+                                   () => Show(row));
+            key.PressScale = .985f;
+            var card = key.GetComponent<Image>();
             row.Card = card;
             row.Root = (RectTransform)card.transform;
             row.Group = UIKit.Group(row.Root);
@@ -326,8 +348,20 @@ namespace GlimmerGrove
             row.Collect.gameObject.SetActive(false);
 
             // The answer at the right end while there is one: days to go, or COLLECTED.
-            row.Pill = Scenery.Pill(row.Root, string.Empty, 28, PillSize, Right, new Vector2(PillX, 0f));
+            row.Pill = Scenery.Pill(row.Root, Loc.Get("ui.welcome.taken").Upper(), 28, PillSize, Right,
+                                    new Vector2(PillX, 0f));
             UIKit.Shrinkable(row.Pill, 16);
+
+            row.ToGo = UIKit.Shrinkable(
+                UIKit.Titled("ToGo", row.Root, string.Empty, ToGoNumberSize, Pal.Mint, TextAnchor.MiddleCenter,
+                             new Vector2(ToGoW, ToGoNumberSize + 12f), Right, new Vector2(PillX, ToGoNumberY), 4f, 4f),
+                36);
+            row.ToGo.raycastTarget = false;
+            row.ToGoWords = UIKit.Shrinkable(
+                UIKit.Titled("ToGoWords", row.Root, string.Empty, ToGoWordsSize, Pal.Mint, TextAnchor.MiddleCenter,
+                             new Vector2(ToGoW, ToGoWordsSize + 10f), Right, new Vector2(PillX, ToGoWordsY), 3f, 3f),
+                18);
+            row.ToGoWords.raycastTarget = false;
 
             // The seal a taken quest wears on its seat, so it reads as stamped *on* the prize.
             var seal = UIKit.Img("Seal", row.Root, Art.Disc(96), Pal.Mint,
@@ -356,11 +390,11 @@ namespace GlimmerGrove
         {
             foreach (var row in _rows) Paint(row);
 
+            // Written as the plate wrote it (`DoorKey.Plate`): capitals, broken onto two lines.
             if (_subtitle)
             {
                 bool done = WelcomeLedger.Live && WelcomeLedger.IsDone;
-                _subtitle.text = Loc.Get(done ? "ui.welcome.all_done" : "ui.welcome.subtitle");
-                _subtitle.color = done ? Pal.Gold : new Color(.86f, .90f, 1f, .82f);
+                _subtitle.text = DoorKey.TwoLines(Loc.Get(done ? "ui.welcome.all_done" : "ui.welcome.subtitle").Upper());
             }
         }
 
@@ -413,17 +447,17 @@ namespace GlimmerGrove
 
             if (row.Count) row.Count.text = Loc.Format("ui.tasks.fraction", done, quest.Days);
 
-            // Exactly one answer at the right end, or none while the key is out.
-            if (row.Pill)
+            // Exactly one answer at the right end, or none while the key is out: the days to go
+            // while counting, COLLECTED once taken.
+            bool counting = !ready && !claimed;
+            if (row.Pill) row.Pill.transform.parent.gameObject.SetActive(claimed);
+            if (row.ToGo && row.ToGoWords)
             {
-                if (claimed) row.Pill.text = Loc.Get("ui.welcome.taken").Upper();
-                else
-                {
-                    int left = quest.Days - done;
-                    row.Pill.text = left == 1 ? Loc.Get("ui.welcome.days_left_one")
-                                              : Loc.Format("ui.welcome.days_left", left);
-                }
-                row.Pill.transform.parent.gameObject.SetActive(!ready);
+                int left = Math.Max(0, quest.Days - done);
+                row.ToGo.text = left.ToString();
+                row.ToGoWords.text = Loc.Get(left == 1 ? "ui.welcome.to_go_one" : "ui.welcome.to_go");
+                row.ToGo.gameObject.SetActive(counting);
+                row.ToGoWords.gameObject.SetActive(counting);
             }
 
             if (row.Group) row.Group.alpha = claimed ? .62f : 1f;
@@ -517,6 +551,36 @@ namespace GlimmerGrove
                 v.Quest = quest;
                 v.Taken = reward => OnTaken(row, reward);
             });
+        }
+
+        /// <summary>
+        /// A tap on the card itself. A quest still counting shows the same sheet with nothing to
+        /// take (<see cref="WelcomeChoiceOverlay.ViewOnly"/>), so a player can see what the days
+        /// are for; a ready one is the COLLECT key under a bigger finger; a taken one has nothing
+        /// left to show and stays still.
+        /// </summary>
+        void Show(Row row)
+        {
+            if (_claiming || Flow.HasModal || row == null) return;
+
+            switch (WelcomeLedger.StateOf(row.Quest))
+            {
+                case WelcomeState.Ready:
+                    Collect(row);
+                    return;
+                case WelcomeState.Claimed:
+                    return;
+                case WelcomeState.Open:
+                    var quest = row.Quest;
+                    Flow.Modal<WelcomeChoiceOverlay>(v =>
+                    {
+                        v.Quest = quest;
+                        v.ViewOnly = true;
+                    });
+                    return;
+                default:
+                    throw new InvalidOperationException($"welcome state {WelcomeLedger.StateOf(row.Quest)} has no answer to a tap");
+            }
         }
 
         void OnTaken(Row row, WelcomeReward reward)

@@ -77,15 +77,6 @@ namespace GlimmerGrove.Cloud
                                 new List<CloudWalletState>(), CloudRedemption.Nothing));
 
         /// <summary>
-        /// Nothing to compare against, which is exactly right: with no backend there is no
-        /// population, and a percentile over nobody is a number pretending to be a fact.
-        /// </summary>
-        public Task<(CloudResult result, Dictionary<Content.LevelId, Social.LevelStats> stats)>
-            ReadGroveStatsAsync(CancellationToken cancellation = default)
-            => Task.FromResult((CloudResult.Failed(CloudFailure.Offline, "no cloud backend configured"),
-                               new Dictionary<Content.LevelId, Social.LevelStats>()));
-
-        /// <summary>
         /// A failure rather than "nothing is required", and the distinction is the whole reason
         /// <c>ReleaseGate.Apply</c> is only ever called for a successful read.
         ///

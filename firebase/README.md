@@ -74,7 +74,7 @@ firestore.rules          the security boundary. Read this first.
 firebase.json            deploy config
 functions/src/
   index.ts               getWallet, submitSpends, claimAwards, redeemPurchase,
-                         adReward, appleNotification, sweepVoidedPurchases, publishGroveStats,
+                         adReward, appleNotification, sweepVoidedPurchases,
                          publishGrove, withdrawGrove, publishGroveRanks, publishGroveBoards, claimName,
                          getReferral, redeemReferral, claimReferral
   progression.ts         server-side derivation — mirrors ProgressionLedger.cs
@@ -173,8 +173,7 @@ board document in the same call (`placeOnBoards` in grove.ts, gated by a per-ins
 cutoff so a card that cannot reach the top hundred costs no read), and `withdrawGrove` scrubs
 the row in the same call. `publishGroveBoards` re-reads the top hundred of each board off the
 index every fifteen minutes as the net under that (about two hundred reads a run at any
-population). `publishGroveRanks` runs at 04:00 UTC (an hour after `publishGroveStats`, so the
-two heaviest reads never overlap), takes the two `count()`s and a bounded sample of cards for
+population). `publishGroveRanks` runs at 04:00 UTC, takes the two `count()`s and a bounded sample of cards for
 the deciles, and writes the boards again plus `config/groveRanks`. One document read per
 screen open, at any player count.
 

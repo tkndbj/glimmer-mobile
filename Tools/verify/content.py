@@ -1777,9 +1777,13 @@ WELCOME_MAX_QUESTS, WELCOME_LEAST_DAYS, WELCOME_MAX_DAYS = 5, 2, 32
 #: block that ships without its page copy fails here rather than as a blank on the hub.
 WELCOME_KEYS = ("ui.welcome.door", "ui.welcome.new", "ui.welcome.title", "ui.welcome.subtitle",
                 "ui.welcome.all_done", "ui.welcome.days_left", "ui.welcome.days_left_one",
+                "ui.welcome.to_go", "ui.welcome.to_go_one",
                 "ui.welcome.taken", "ui.welcome.choose_word", "ui.welcome.choose_line",
                 "ui.welcome.choose_turret", "ui.welcome.choose_price", "ui.welcome.coins",
                 "ui.welcome.gems", "ui.welcome.take")
+
+#: `WardLine.Colours`: the four seat letters, in seat order. A quest's `colour` is one of them.
+WARD_SEATS = "rgby"
 
 WELCOME_ID = __import__("re").compile(r"^[a-z][a-z0-9_]{0,31}$")
 
@@ -1835,6 +1839,10 @@ def check_welcome(progression, keys, warnings):
             elif ward in wards_seen:
                 errors.append(f"{where} pays turret '{ward}' a second time")
         wards_seen.add(ward)
+
+        colour = quest.get("colour")
+        if not isinstance(colour, str) or len(colour) != 1 or colour not in WARD_SEATS:
+            errors.append(f"{where} pays on seat '{colour}'; a quest names one of '{WARD_SEATS}' as its colour")
 
         goal = quest.get("goal") or ""
         if goal not in TASK_GOALS:

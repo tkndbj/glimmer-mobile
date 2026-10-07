@@ -11,7 +11,10 @@ namespace GlimmerGrove.Tasks
     /// <summary>Which of a finished quest's two prizes the player took.</summary>
     public enum WelcomeReward
     {
-        /// <summary>The turret, on every seat. An entitlement, granted here with no server.</summary>
+        /// <summary>
+        /// The turret, on the one seat the quest wears (<see cref="WelcomeQuest.Colour"/>). An
+        /// entitlement, granted here with no server.
+        /// </summary>
         Turret,
 
         /// <summary>
@@ -32,7 +35,7 @@ namespace GlimmerGrove.Tasks
         /// <summary>Enough days. The turret is waiting to be taken.</summary>
         Ready,
 
-        /// <summary>Taken. The turret is theirs on every seat.</summary>
+        /// <summary>Taken: the turret on the quest's seat, or its price.</summary>
         Claimed,
     }
 
@@ -240,7 +243,8 @@ namespace GlimmerGrove.Tasks
         /// <see cref="PlayerProgression.Award"/> under <see cref="GrantEntry.WelcomeId"/>, counted
         /// toward the balance now and confirmed or re-priced by the server on the next sync; a
         /// refused claim is dropped with the balance it inflated, which is every claim's fate
-        /// (45d). A turret already held on some seats keeps what it has and gains the rest.
+        /// (45d). The turret is the quest's one seat (the owner, 2026-10-07); a seat already
+        /// held is kept and nothing is added.
         /// </para>
         /// </summary>
         public static bool TryClaim(WelcomeQuest quest, WelcomeReward reward)
@@ -266,7 +270,7 @@ namespace GlimmerGrove.Tasks
             }
             else
             {
-                WardLedger.Grant(quest.Ward, "welcome:" + quest.Id);
+                WardLedger.Grant(quest.Ward, quest.Colour, "welcome:" + quest.Id);
             }
 
             SaveService.Save();
@@ -275,6 +279,7 @@ namespace GlimmerGrove.Tasks
             Telemetry.Track("welcome_claimed",
                             "quest", quest.Id, "ward", quest.Ward.Id,
                             "goal", TaskGoals.Id(quest.Goal), "days", quest.Days,
+                            "colour", WardLine.Colours[quest.Colour].ToString(),
                             "reward", reward == WelcomeReward.Price ? "price" : "turret",
                             "amount", reward == WelcomeReward.Price ? quest.PriceAmount : 0L,
                             "done", IsDone);

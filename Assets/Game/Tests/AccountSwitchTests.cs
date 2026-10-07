@@ -1064,10 +1064,6 @@ namespace GlimmerGrove.Tests
                 => Task.FromResult((CloudResult.Failed(CloudFailure.Offline),
                                     new List<CloudWalletState>(), CloudRedemption.Nothing));
 
-            public Task<(CloudResult result, Dictionary<Content.LevelId, Social.LevelStats> stats)>
-                ReadGroveStatsAsync(CancellationToken c = default)
-                => Task.FromResult((CloudResult.Success, new Dictionary<Content.LevelId, Social.LevelStats>()));
-
             /// <summary>
             /// Nothing to say about releases, and a failure rather than "nothing is required" -
             /// see <c>NullCloudBackend.ReadReleaseAsync</c>. A double that answered success here

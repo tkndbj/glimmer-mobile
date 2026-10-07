@@ -583,7 +583,7 @@ def welcome_door(sheet, foot):
 
     quests = _welcome_quests()[:4]
     for i, quest in enumerate(quests):
-        colour = "rgby"[i % 4]
+        colour = quest["colour"]  # `WelcomeQuest.Colour`: authored, never the row's position
         try:
             body = Image.open(K.REPO / "Assets" / "Game" / "Art" / "Siege" / "Wards"
                               / f"{quest.get('ward')}_{colour}.png").convert("RGBA")

@@ -4882,18 +4882,6 @@
       "text": "{0} tour"
     },
     {
-      "key": "ui.rank.top10",
-      "text": "Tu es dans les 10 % meilleurs"
-    },
-    {
-      "key": "ui.rank.top25",
-      "text": "Tu es dans les 25 % meilleurs"
-    },
-    {
-      "key": "ui.rank.top50",
-      "text": "Tu es dans les 50 % meilleurs"
-    },
-    {
       "key": "ui.rank.record_unit",
       "text": "Tours"
     },
@@ -6115,7 +6103,7 @@
     },
     {
       "key": "ui.welcome.subtitle",
-      "text": "Quatre tourelles à garder pour toujours. Chacune se débloque après quelques jours de jeu différents. Les jours ne doivent pas forcément se suivre."
+      "text": "Termine des missions et débloque des tourelles"
     },
     {
       "key": "ui.welcome.all_done",
@@ -6128,6 +6116,14 @@
     {
       "key": "ui.welcome.days_left_one",
       "text": "Encore 1 jour"
+    },
+    {
+      "key": "ui.welcome.to_go",
+      "text": "jours restants"
+    },
+    {
+      "key": "ui.welcome.to_go_one",
+      "text": "jour restant"
     },
     {
       "key": "ui.welcome.goal.runs",
@@ -6159,11 +6155,11 @@
     },
     {
       "key": "ui.welcome.choose_line",
-      "text": "Prends la tourelle sur toutes les places, ou son prix à la place."
+      "text": "Prends la tourelle, ou son prix à la place."
     },
     {
       "key": "ui.welcome.choose_turret",
-      "text": "À toi sur les quatre places, pour toujours. Améliore-la avec des pièces."
+      "text": "À toi pour toujours, dans cette couleur. Améliore-la avec des pièces."
     },
     {
       "key": "ui.welcome.choose_price",

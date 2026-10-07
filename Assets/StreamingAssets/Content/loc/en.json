@@ -4882,18 +4882,6 @@
       "text": "{0} turn"
     },
     {
-      "key": "ui.rank.top10",
-      "text": "You are in the top 10%"
-    },
-    {
-      "key": "ui.rank.top25",
-      "text": "You are in the top 25%"
-    },
-    {
-      "key": "ui.rank.top50",
-      "text": "You are in the top 50%"
-    },
-    {
       "key": "ui.rank.record_unit",
       "text": "Turns"
     },
@@ -6115,7 +6103,7 @@
     },
     {
       "key": "ui.welcome.subtitle",
-      "text": "Four turrets to keep for ever. Each one unlocks after a few different days of play. The days do not need to be in a row."
+      "text": "Complete tasks and unlock turrets"
     },
     {
       "key": "ui.welcome.all_done",
@@ -6128,6 +6116,14 @@
     {
       "key": "ui.welcome.days_left_one",
       "text": "1 day to go"
+    },
+    {
+      "key": "ui.welcome.to_go",
+      "text": "days to go"
+    },
+    {
+      "key": "ui.welcome.to_go_one",
+      "text": "day to go"
     },
     {
       "key": "ui.welcome.goal.runs",
@@ -6159,11 +6155,11 @@
     },
     {
       "key": "ui.welcome.choose_line",
-      "text": "Take the turret on every seat, or its price instead."
+      "text": "Take the turret, or its price instead."
     },
     {
       "key": "ui.welcome.choose_turret",
-      "text": "Yours on all four seats, for ever. Upgrade it with coins."
+      "text": "Yours for ever, in this colour. Upgrade it with coins."
     },
     {
       "key": "ui.welcome.choose_price",

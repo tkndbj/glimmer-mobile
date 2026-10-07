@@ -9,7 +9,7 @@ using UnityEngine.UI;
 namespace GlimmerGrove
 {
     /// <summary>
-    /// A finished welcome quest's two prizes, side by side: the turret on every seat, or its
+    /// A finished welcome quest's two prizes, side by side: the turret on its one seat, or its
     /// shelf price in coins (the owner, 2026-10-07: some players already hold the turret).
     ///
     /// <para>
@@ -31,6 +31,12 @@ namespace GlimmerGrove
     /// <b>A quest that stops being ready under the sheet is answered by the sheet closing</b> -
     /// a sync landing another device's claim - rather than by a second prize.
     /// </para>
+    /// <para>
+    /// <b>The same sheet is the preview</b> (<see cref="ViewOnly"/>; the owner, 2026-10-07): a tap
+    /// on a row still counting days shows what it ends in, with the days to go standing where
+    /// each TAKE key stands and BACK at the foot. One sheet, so the preview cannot promise a prize
+    /// the real choice does not offer.
+    /// </para>
     /// </summary>
     public sealed class WelcomeChoiceOverlay : ModalView
     {
@@ -40,11 +46,18 @@ namespace GlimmerGrove
         /// <summary>Called after the ledger took the quest, with what was taken. The opener plays the payoff.</summary>
         public Action<WelcomeReward> Taken { get; set; }
 
+        /// <summary>
+        /// True for the preview: nothing on the sheet can take the quest. The keys are not built
+        /// at all, rather than built and refused, so no path reaches the ledger from here.
+        /// </summary>
+        public bool ViewOnly { get; set; }
+
         // The Deals sheet's stack, field for field (`ChallengeTierOverlay`).
         const float LineY = 150f, RowsTop = 200f, RowH = 230f, RowGap = 14f, Tail = 30f, FootH = 170f;
         const float PanelW = 1000f, RowW = 880f, StoneSize = 160f, StoneX = 104f, TextX = 204f, TextW = 370f;
         const float LineTop = 22f, LineH = 124f;
         static readonly Vector2 KeySize = new Vector2(280f, 116f);
+        static readonly Vector2 PillSize = new Vector2(280f, 84f);
         const float KeyInset = 16f;
 
         /// <summary>Its own hold on the turret's picture, never the page's (7b).</summary>
@@ -68,7 +81,7 @@ namespace GlimmerGrove
 
             UIKit.Shrinkable(
                 UIKit.Titled("Line", Panel, Loc.Get("ui.welcome.choose_line"), 32,
-                             new Color(1f, .96f, .88f, .82f), TextAnchor.MiddleCenter, new Vector2(860f, 60f),
+                             Color.white, TextAnchor.MiddleCenter, new Vector2(860f, 60f),
                              new Vector2(.5f, 1f), new Vector2(0f, -LineY), 2f, 2f, wrap: true),
                 20);
 
@@ -77,7 +90,8 @@ namespace GlimmerGrove
             y -= RowH + RowGap;
             BuildPriceRow(y);
 
-            UIKit.TextButton("Close", Panel, Skins.Alternate, Loc.Get("ui.common.cancel").Upper(), 36,
+            UIKit.TextButton("Close", Panel, Skins.Alternate,
+                             Loc.Get(ViewOnly ? "ui.common.back" : "ui.common.cancel").Upper(), 36,
                              new Vector2(400f, 110f), new Vector2(.5f, 0f), new Vector2(0f, 30f + 55f),
                              () => Close());
 
@@ -144,13 +158,13 @@ namespace GlimmerGrove
                 28);
 
             UIKit.Shrinkable(
-                UIKit.Titled("Line", t, line, 36, new Color(1f, .96f, .88f, .88f), TextAnchor.UpperLeft,
+                UIKit.Titled("Line", t, line, 36, Color.white, TextAnchor.UpperLeft,
                              new Vector2(TextW, LineH), new Vector2(0f, .5f),
                              new Vector2(TextX + TextW * .5f, LineTop - LineH * .5f), 2f, 0f, wrap: true),
                 20);
         }
 
-        /// <summary>The turret, on every seat, for ever. Green key: it costs nothing.</summary>
+        /// <summary>The turret, on the quest's seat, for ever. Green key: it costs nothing.</summary>
         void BuildTurretRow(float y)
         {
             var tint = SiegeView.TintOf(Quest.Colour);
@@ -158,6 +172,8 @@ namespace GlimmerGrove
                         new Vector2(StoneSize * .8f, StoneSize));
 
             Caption(t, Loc.Get(Quest.Ward.NameKey), Loc.Get("ui.welcome.choose_turret"), Pal.Cream);
+
+            if (ViewOnly) { DaysToGo(t); return; }
 
             var key = UIKit.TextButton("Take", t, Skins.Affirm, Loc.Get("ui.welcome.take").Upper(), 36, KeySize,
                                        new Vector2(1f, .5f), new Vector2(-(KeyInset + KeySize.x * .5f), 0f),
@@ -190,15 +206,30 @@ namespace GlimmerGrove
             // Orange - the BUY key's colour - because this row is about money, and the caption
             // carries the figure with the currency's glyph trailing it, which is how every price
             // in this game says which currency it is.
+            if (ViewOnly) { DaysToGo(t); return; }
+
             var key = UIKit.TextButton("Take", t, Skins.Buy, Loc.Get("ui.welcome.take").Upper(), 36, KeySize,
                                        new Vector2(1f, .5f), new Vector2(-(KeyInset + KeySize.x * .5f), 0f),
                                        () => Take(WelcomeReward.Price));
             UIKit.OneLine(key, 20);
         }
 
+        /// <summary>
+        /// The preview's answer where a TAKE key stands: the page's own days-to-go pill and its
+        /// words (<c>WelcomeScreen.Paint</c>), so the row and the sheet say the same thing.
+        /// </summary>
+        void DaysToGo(Transform row)
+        {
+            int left = Math.Max(1, Quest.Days - WelcomeLedger.DaysDone(Quest));
+            string words = left == 1 ? Loc.Get("ui.welcome.days_left_one") : Loc.Format("ui.welcome.days_left", left);
+            UIKit.Shrinkable(
+                Scenery.Pill(row, words, 30, PillSize, new Vector2(1f, .5f), new Vector2(-(KeyInset + PillSize.x * .5f), 0f)),
+                16);
+        }
+
         void Take(WelcomeReward reward)
         {
-            if (_taking) return;
+            if (_taking || ViewOnly) return;
             _taking = true;
 
             if (!WelcomeLedger.TryClaim(Quest, reward))

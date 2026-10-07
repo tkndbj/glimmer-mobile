@@ -4882,18 +4882,6 @@
       "text": "{0} turno"
     },
     {
-      "key": "ui.rank.top10",
-      "text": "Estás en el 10% mejor"
-    },
-    {
-      "key": "ui.rank.top25",
-      "text": "Estás en el 25% mejor"
-    },
-    {
-      "key": "ui.rank.top50",
-      "text": "Estás en el 50% mejor"
-    },
-    {
       "key": "ui.rank.record_unit",
       "text": "Turnos"
     },
@@ -6115,7 +6103,7 @@
     },
     {
       "key": "ui.welcome.subtitle",
-      "text": "Cuatro torres para siempre. Cada una se desbloquea tras jugar varios días distintos. No tienen que ser seguidos."
+      "text": "Completa misiones y desbloquea torres"
     },
     {
       "key": "ui.welcome.all_done",
@@ -6128,6 +6116,14 @@
     {
       "key": "ui.welcome.days_left_one",
       "text": "Falta 1 día"
+    },
+    {
+      "key": "ui.welcome.to_go",
+      "text": "días restantes"
+    },
+    {
+      "key": "ui.welcome.to_go_one",
+      "text": "día restante"
     },
     {
       "key": "ui.welcome.goal.runs",
@@ -6159,11 +6155,11 @@
     },
     {
       "key": "ui.welcome.choose_line",
-      "text": "Llévate la torre en todos los puestos, o su precio en su lugar."
+      "text": "Llévate la torre, o su precio en su lugar."
     },
     {
       "key": "ui.welcome.choose_turret",
-      "text": "Tuya en los cuatro puestos, para siempre. Mejórala con monedas."
+      "text": "Tuya para siempre, en este color. Mejórala con monedas."
     },
     {
       "key": "ui.welcome.choose_price",

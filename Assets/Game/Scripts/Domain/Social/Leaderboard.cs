@@ -74,8 +74,8 @@ namespace GlimmerGrove.Social
     /// score, take the first hundred - which is a hundred document reads every time anybody
     /// opens the screen, against a collection that grows for the life of the game, on a
     /// database billed per read. One document holding a hundred rows is one read, cacheable,
-    /// the same for everybody, and its cost does not move when the game does. It is the same
-    /// trade <c>config/stats</c> already makes, and the reason a scheduled job writes it.
+    /// the same for everybody, and its cost does not move when the game does. That is the
+    /// reason a scheduled job writes it.
     /// </para>
     /// <para>
     /// <b>There are exactly two boards and they are the game's two ladders.</b>

@@ -4882,18 +4882,6 @@
       "text": "{0} Runde"
     },
     {
-      "key": "ui.rank.top10",
-      "text": "Du gehörst zu den besten 10 %"
-    },
-    {
-      "key": "ui.rank.top25",
-      "text": "Du gehörst zu den besten 25 %"
-    },
-    {
-      "key": "ui.rank.top50",
-      "text": "Du gehörst zu den besten 50 %"
-    },
-    {
       "key": "ui.rank.record_unit",
       "text": "Runden"
     },
@@ -6115,7 +6103,7 @@
     },
     {
       "key": "ui.welcome.subtitle",
-      "text": "Vier Türme für immer. Jeder wird nach ein paar verschiedenen Spieltagen freigeschaltet. Die Tage müssen nicht aufeinander folgen."
+      "text": "Erfülle Aufgaben und schalte Türme frei"
     },
     {
       "key": "ui.welcome.all_done",
@@ -6128,6 +6116,14 @@
     {
       "key": "ui.welcome.days_left_one",
       "text": "Noch 1 Tag"
+    },
+    {
+      "key": "ui.welcome.to_go",
+      "text": "Tage übrig"
+    },
+    {
+      "key": "ui.welcome.to_go_one",
+      "text": "Tag übrig"
     },
     {
       "key": "ui.welcome.goal.runs",
@@ -6159,11 +6155,11 @@
     },
     {
       "key": "ui.welcome.choose_line",
-      "text": "Nimm den Turm auf allen Plätzen, oder stattdessen seinen Preis."
+      "text": "Nimm den Turm, oder stattdessen seinen Preis."
     },
     {
       "key": "ui.welcome.choose_turret",
-      "text": "Deiner auf allen vier Plätzen, für immer. Verbessere ihn mit Münzen."
+      "text": "Deiner für immer, in dieser Farbe. Verbessere ihn mit Münzen."
     },
     {
       "key": "ui.welcome.choose_price",

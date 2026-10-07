@@ -4882,18 +4882,6 @@
       "text": "{0} turno"
     },
     {
-      "key": "ui.rank.top10",
-      "text": "Sei nel 10% migliore"
-    },
-    {
-      "key": "ui.rank.top25",
-      "text": "Sei nel 25% migliore"
-    },
-    {
-      "key": "ui.rank.top50",
-      "text": "Sei nel 50% migliore"
-    },
-    {
       "key": "ui.rank.record_unit",
       "text": "Turni"
     },
@@ -6115,7 +6103,7 @@
     },
     {
       "key": "ui.welcome.subtitle",
-      "text": "Quattro torrette per sempre. Ognuna si sblocca dopo alcuni giorni di gioco diversi. I giorni non devono essere consecutivi."
+      "text": "Completa missioni e sblocca torrette"
     },
     {
       "key": "ui.welcome.all_done",
@@ -6128,6 +6116,14 @@
     {
       "key": "ui.welcome.days_left_one",
       "text": "Manca 1 giorno"
+    },
+    {
+      "key": "ui.welcome.to_go",
+      "text": "giorni rimasti"
+    },
+    {
+      "key": "ui.welcome.to_go_one",
+      "text": "giorno rimasto"
     },
     {
       "key": "ui.welcome.goal.runs",
@@ -6159,11 +6155,11 @@
     },
     {
       "key": "ui.welcome.choose_line",
-      "text": "Prendi la torretta su tutti i posti, oppure il suo prezzo."
+      "text": "Prendi la torretta, oppure il suo prezzo."
     },
     {
       "key": "ui.welcome.choose_turret",
-      "text": "Tua su tutti e quattro i posti, per sempre. Potenziala con le monete."
+      "text": "Tua per sempre, in questo colore. Potenziala con le monete."
     },
     {
       "key": "ui.welcome.choose_price",

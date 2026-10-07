@@ -16,8 +16,8 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// Four properties carry the feature. A verb counts <em>once per day</em>, however often it
-    /// happens, and only while a live quest names it. A quest pays exactly once, on every seat,
-    /// and never before its days are in. The merge is a join - commutative, idempotent - because
+    /// happens, and only while a live quest names it. A quest pays exactly once, on its own one
+    /// seat, and never before its days are in. The merge is a join - commutative, idempotent - because
     /// a set of days and a set of claims only ever grow. And the door on the hub is the
     /// ledger's answer and nothing device-local: live and something unclaimed.
     /// </para>
@@ -100,7 +100,8 @@ namespace GlimmerGrove.Tests
         [Test]
         public void TheLadderReadsAndEachQuestWearsItsOwnColour()
         {
-            var table = Read(Dto());
+            var dto = Dto();
+            var table = Read(dto);
             Assert.AreEqual(4, table.Quests.Count);
             Assert.AreEqual("leech", table.Quests[0].Ward.Id);
             Assert.AreEqual(TaskGoal.Runs, table.Quests[0].Goal);
@@ -110,13 +111,41 @@ namespace GlimmerGrove.Tests
             for (int i = 0; i < table.Quests.Count; i++)
             {
                 Assert.AreEqual(i, table.Quests[i].Ordinal);
-                Assert.AreEqual(i % WardLine.Colours.Length, table.Quests[i].Colour);
+                Assert.AreEqual(WardLine.Colours.IndexOf(dto.quests[i].colour[0]), table.Quests[i].Colour,
+                                "the authored seat");
             }
 
             Assert.IsTrue(table.Counts(TaskGoal.Runs));
             Assert.IsFalse(table.Counts(TaskGoal.Raiders));
             Assert.IsNotNull(table.Find("w3"));
             Assert.IsNull(table.Find("w9"));
+        }
+
+        /// <summary>
+        /// A quest's seat travels with the quest, never with its row: dropping the first quest or
+        /// putting a new one ahead of it changes nobody else's prize (the owner, 2026-10-07).
+        /// </summary>
+        [Test]
+        public void RemovingOrInsertingAQuestChangesNoOtherQuestsSeat()
+        {
+            var before = Read(Dto());
+
+            var dropped = Dto();
+            dropped.quests = new[] { dropped.quests[1], dropped.quests[2], dropped.quests[3] };
+            var after = Read(dropped);
+            foreach (var quest in after.Quests)
+                Assert.AreEqual(before.Find(quest.Id).Colour, quest.Colour, $"{quest.Id} after a removal");
+
+            var inserted = Dto();
+            inserted.quests = new[]
+            {
+                new WelcomeQuestDto { id = "w0", ward = "lighthouse", colour = "y", goal = "wins", days = 2 },
+                inserted.quests[0], inserted.quests[2], inserted.quests[3],
+            };
+            after = Read(inserted);
+            foreach (var quest in after.Quests)
+                if (quest.Id != "w0")
+                    Assert.AreEqual(before.Find(quest.Id).Colour, quest.Colour, $"{quest.Id} after an insertion");
         }
 
         /// <summary>
@@ -133,6 +162,11 @@ namespace GlimmerGrove.Tests
                 ("ward", "leech", "a turret paid twice"),      // the first row's turret, again
                 ("goal", "raiders", "a verb with no sentence"),
                 ("goal", "jumps", "a verb nobody counts"),
+                ("colour", "", "no seat"),
+                ("colour", null, "a row written before seats were authored"),
+                ("colour", "x", "a seat that does not exist"),
+                ("colour", "R", "a seat letter in the wrong case"),
+                ("colour", "rg", "two seats"),
                 ("days", "1", "a one-day quest"),
                 ("days", "40", "more days than the save records"),
                 ("days", "2", "a ladder that falls"),
@@ -148,6 +182,7 @@ namespace GlimmerGrove.Tests
                 {
                     case "ward": row.ward = value == "STARTER" ? Starter().Id : value; break;
                     case "goal": row.goal = value; break;
+                    case "colour": row.colour = value; break;
                     case "days": row.days = int.Parse(value); break;
                     case "id": row.id = value; break;
                 }
@@ -168,7 +203,7 @@ namespace GlimmerGrove.Tests
             foreach (var model in models)
             {
                 if (model.IsStarter) continue;
-                rows.Add(new WelcomeQuestDto { id = "q" + rows.Count, ward = model.Id, goal = "runs", days = days++ });
+                rows.Add(new WelcomeQuestDto { id = "q" + rows.Count, ward = model.Id, colour = "r", goal = "runs", days = days++ });
                 if (rows.Count > WelcomeTable.MaxQuests) break;
             }
             Assume.That(rows.Count, Is.GreaterThan(WelcomeTable.MaxQuests));
@@ -252,11 +287,16 @@ namespace GlimmerGrove.Tests
         }
 
         // ---------------------------------------------------------- claiming
+        /// <summary>
+        /// One quest, one turret: the seat its row wears and no other (the owner, 2026-10-07). It
+        /// handed over all four, which was four shelf prices against a price option worth one.
+        /// </summary>
         [Test]
-        public void ClaimingGrantsEverySeatOnceAndNeverBeforeTheDaysAreIn()
+        public void ClaimingGrantsTheQuestsOwnSeatOnceAndNeverBeforeTheDaysAreIn()
         {
             Publish(Dto());
             var quest = Quest("w1");
+            char seat = WardLine.Colours[quest.Colour];
 
             Assert.IsFalse(WelcomeLedger.TryClaim(quest, WelcomeReward.Turret), "not enough days");
             foreach (char c in WardLine.Colours) Assert.IsFalse(WardLedger.IsHeld(quest.Ward, c));
@@ -267,11 +307,16 @@ namespace GlimmerGrove.Tests
             Assert.IsTrue(WelcomeLedger.TryClaim(quest, WelcomeReward.Turret));
             Assert.AreEqual(WelcomeState.Claimed, WelcomeLedger.StateOf(quest));
             foreach (char c in WardLine.Colours)
-                Assert.IsTrue(WardLedger.IsHeld(quest.Ward, c), $"held on {c}");
-            Assert.AreEqual(WardLine.Colours.Length, WardLedger.BoughtCount, "four seat rows, in the purchase spelling");
+                Assert.AreEqual(c == seat, WardLedger.IsHeld(quest.Ward, c), $"held on {c} only if it is the quest's seat");
+            Assert.AreEqual(1, WardLedger.BoughtCount, "one seat row");
+
+            var dto = new SaveFileDto();
+            WardLedger.WriteInto(dto);
+            CollectionAssert.AreEqual(new[] { WardHolding.Row(quest.Ward, quest.Colour) }, dto.wardsOwned,
+                                      "in the purchase spelling, never the bare id that means all four");
 
             Assert.IsFalse(WelcomeLedger.TryClaim(quest, WelcomeReward.Turret), "a quest pays once");
-            Assert.AreEqual(WardLine.Colours.Length, WardLedger.BoughtCount);
+            Assert.AreEqual(1, WardLedger.BoughtCount);
 
             // Still live: three quests are owed, so the door stays.
             Assert.IsTrue(WelcomeLedger.Offered);
@@ -279,15 +324,39 @@ namespace GlimmerGrove.Tests
         }
 
         [Test]
-        public void ASeatAlreadyBoughtIsKeptAndTheRestAreAdded()
+        public void EachQuestPaysItsOwnColour()
+        {
+            Publish(Dto());
+            foreach (var quest in ProgressionRules.Table.Welcome.Quests)
+            {
+                Days(quest.Goal, quest.Days);
+                Assert.IsTrue(WelcomeLedger.TryClaim(quest, WelcomeReward.Turret), quest.Id);
+                for (int c = 0; c < WardLine.Colours.Length; c++)
+                    Assert.AreEqual(c == quest.Colour, WardLedger.IsHeld(quest.Ward, c),
+                                    $"{quest.Id} on seat {WardLine.Colours[c]}");
+            }
+            Assert.AreEqual(ProgressionRules.Table.Welcome.Quests.Count, WardLedger.BoughtCount, "one row a quest");
+        }
+
+        [Test]
+        public void ASeatAlreadyHeldIsKeptAndNothingElseIsAdded()
         {
             Publish(Dto());
             var quest = Quest("w1");
-            WardLedger.LoadFrom(new SaveFileDto { wardsOwned = new[] { WardHolding.Key(quest.Ward.Id, 'r') } });
+            char seat = WardLine.Colours[quest.Colour];
+            char other = WardLine.Colours[(quest.Colour + 1) % WardLine.Colours.Length];
 
+            // Bought on another seat: kept, and the quest adds its own.
+            WardLedger.LoadFrom(new SaveFileDto { wardsOwned = new[] { WardHolding.Key(quest.Ward.Id, other) } });
             Days(TaskGoal.Runs, 3);
             Assert.IsTrue(WelcomeLedger.TryClaim(quest, WelcomeReward.Turret));
-            Assert.AreEqual(WardLine.Colours.Length, WardLedger.BoughtCount, "the bought row and three new ones");
+            Assert.AreEqual(2, WardLedger.BoughtCount, "the bought row and the quest's seat");
+            Assert.IsTrue(WardLedger.IsHeld(quest.Ward, other));
+            Assert.IsTrue(WardLedger.IsHeld(quest.Ward, seat));
+
+            // Already held on the quest's own seat: nothing new, nothing lost.
+            Assert.IsFalse(WardLedger.Grant(quest.Ward, quest.Colour, "test"));
+            Assert.AreEqual(2, WardLedger.BoughtCount);
         }
 
         [Test]
@@ -538,8 +607,8 @@ namespace GlimmerGrove.Tests
             var joined = TaskLedger.Join(mine.tasks, other.tasks);
             CollectionAssert.AreEqual(new[] { "w1" }, joined.welcome.claimed);
             Assert.AreEqual(6, joined.welcome.days[0].days.Length, "both devices' days");
-            Assert.AreEqual(WardLine.Colours.Length, WardLedger.Join(mine.wardsOwned, other.wardsOwned).Length,
-                            "the same four rows, once");
+            Assert.AreEqual(1, WardLedger.Join(mine.wardsOwned, other.wardsOwned).Length,
+                            "the same one seat row, once");
         }
 
         // ------------------------------------------------------ the shipped block
@@ -559,6 +628,7 @@ namespace GlimmerGrove.Tests
                 {
                     id = (string)row["id"],
                     ward = (string)row["ward"],
+                    colour = row.TryGetValue("colour", out var colour) ? colour as string : null,
                     goal = (string)row["goal"],
                     days = System.Convert.ToInt32(row["days"]),
                 });
@@ -608,10 +678,10 @@ namespace GlimmerGrove.Tests
             {
                 quests = new[]
                 {
-                    new WelcomeQuestDto { id = "w1", ward = "leech", goal = "runs", days = 3 },
-                    new WelcomeQuestDto { id = "w2", ward = "lighthouse", goal = "task_claims", days = 5 },
-                    new WelcomeQuestDto { id = "w3", ward = "pyre", goal = "challenge_wins", days = 7 },
-                    new WelcomeQuestDto { id = "w4", ward = "glacier", goal = "streak", days = 10 },
+                    new WelcomeQuestDto { id = "w1", ward = "leech", colour = "r", goal = "runs", days = 3 },
+                    new WelcomeQuestDto { id = "w2", ward = "lighthouse", colour = "g", goal = "task_claims", days = 5 },
+                    new WelcomeQuestDto { id = "w3", ward = "pyre", colour = "b", goal = "challenge_wins", days = 7 },
+                    new WelcomeQuestDto { id = "w4", ward = "glacier", colour = "y", goal = "streak", days = 10 },
                 },
             };
 

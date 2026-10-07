@@ -512,92 +512,14 @@ namespace GlimmerGrove.Cloud
             return false;
         }
 
-        // ----------------------------------------------------------- grove stats
-        /// <summary>
-        /// The population's move counts, from the one public document a scheduled job
-        /// writes.
-        ///
-        /// <para>
-        /// No sign-in and no user id: this is the same table for everybody, and requiring
-        /// authentication for it would mean a first launch could not show it. The security
-        /// rules make <c>config/stats</c> world-readable and client-unwritable for the same
-        /// reason they do for <c>config/progression</c>.
-        /// </para>
-        /// <para>
-        /// Every failure returns an empty table rather than propagating, and a malformed
-        /// entry is skipped rather than poisoning the rest. Nothing on any screen depends
-        /// on this arriving - the worst outcome of it being wrong or missing is one
-        /// sentence not being drawn - so it must never be able to fail a launch or a sync.
-        /// </para>
-        /// </summary>
-        public async Task<(CloudResult result, Dictionary<Content.LevelId, Social.LevelStats> stats)>
-            ReadGroveStatsAsync(CancellationToken cancellation = default)
-        {
-            var empty = new Dictionary<Content.LevelId, Social.LevelStats>();
-
-            if (!await EnsureReadyAsync())
-                return (CloudResult.Failed(CloudFailure.Offline, "Firebase unavailable"), empty);
-
-            try
-            {
-                var snapshot = await CloudCancel.Within(
-                    _db.Collection("config").Document("stats").GetSnapshotAsync(), ReadSeconds, cancellation);
-                if (!snapshot.Exists) return (CloudResult.Success, empty);
-
-                var document = snapshot.ToDictionary();
-                if (!document.TryGetValue("levels", out object raw) ||
-                    !(raw is Dictionary<string, object> levels))
-                {
-                    return (CloudResult.Success, empty);
-                }
-
-                var table = new Dictionary<Content.LevelId, Social.LevelStats>(levels.Count);
-
-                foreach (var pair in levels)
-                {
-                    if (!Content.LevelId.TryParse(pair.Key, out var levelId, out _)) continue;
-                    if (!(pair.Value is Dictionary<string, object> entry)) continue;
-
-                    int samples = ReadInt(entry, "samples");
-                    if (!(entry.TryGetValue("deciles", out object rawDeciles) &&
-                          rawDeciles is List<object> list) || list.Count != 9)
-                    {
-                        continue;
-                    }
-
-                    var deciles = new int[9];
-                    bool ascending = true;
-
-                    for (int i = 0; i < 9; i++)
-                    {
-                        deciles[i] = ToInt(list[i]);
-
-                        // A table that is not ascending is not a decile table, and
-                        // interpolating through it would produce percentages at random.
-                        if (deciles[i] < 1 || (i > 0 && deciles[i] < deciles[i - 1])) ascending = false;
-                    }
-
-                    if (!ascending) continue;
-
-                    table[levelId] = new Social.LevelStats(samples, deciles);
-                }
-
-                return (CloudResult.Success, table);
-            }
-            catch (Exception e)
-            {
-                return (Classify(e, "read grove stats"), empty);
-            }
-        }
-
         // --------------------------------------------------------- the release gate
         /// <summary>
         /// What the deployment requires of a client on this platform, from the one public
         /// document a release publishes.
         ///
         /// <para>
-        /// No sign-in and no user id, for <see cref="ReadGroveStatsAsync"/>'s reason and one
-        /// sharper than it: the builds this gate exists to stop are quite often builds whose
+        /// No sign-in and no user id, because it is the same document for everybody, and for a
+        /// sharper reason: the builds this gate exists to stop are quite often builds whose
         /// problem is that they can no longer talk to this deployment, and a wall behind
         /// authentication is a wall that cannot close on them. <c>config/release</c> is
         /// world-readable in <c>firestore.rules</c> exactly as <c>config/stats</c> is.
@@ -1292,8 +1214,7 @@ namespace GlimmerGrove.Cloud
         /// <summary>
         /// Reads the published distributions: grove worth, and the Endless Watch's waves.
         ///
-        /// <see cref="ReadGroveStatsAsync"/>'s twin in every respect that matters: one document,
-        /// once a session, and every failure an empty answer rather than a propagated exception,
+        /// One document, once a session, and every failure an empty answer rather than a propagated exception,
         /// because nothing anywhere waits on it.
         ///
         /// <para>
@@ -1352,7 +1273,6 @@ namespace GlimmerGrove.Cloud
         ///
         /// <b>A table that is not ascending is not a decile table</b>, and interpolating through
         /// one produces percentages at random - so it is refused outright rather than repaired.
-        /// <c>ReadGroveStatsAsync</c> refuses the same way, for the same reason.
         /// </summary>
         static Social.GroveRankTable ReadRankTable(IDictionary<string, object> document,
                                                    string decileKey, string sampleKey)

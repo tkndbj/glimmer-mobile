@@ -25,8 +25,7 @@ namespace GlimmerGrove.Social
     /// <b>Everything here is best-effort and nothing is load-bearing.</b> A card that never
     /// publishes costs a row on a list; a board that never arrives draws as "not yet". So no
     /// call here can fail a launch, block a sync or hold the save latch, and every failure is
-    /// an empty answer rather than an exception. That is <see cref="GroveStats"/>'s stance,
-    /// which this is the second and larger instance of.
+    /// an empty answer rather than an exception.
     /// </para>
     /// <para>
     /// <b>A card is asked for after the sync, never after the change.</b> The server builds
@@ -459,8 +458,7 @@ namespace GlimmerGrove.Social
         /// <summary>
         /// Fetches the published distribution once a session, and forgets about it.
         ///
-        /// <see cref="CloudSaveService.BeginStatsRefresh"/>'s twin, separate from the sync for
-        /// the same reason: it needs no sign-in, writes nothing, and nothing waits on it.
+        /// Separate from the sync: it needs no sign-in, writes nothing, and nothing waits on it.
         /// </summary>
         public static void BeginRanksRefresh(CancellationToken cancellation = default)
         {

@@ -27,22 +27,18 @@ namespace GlimmerGrove.Persistence
         public readonly long LastPlayedUnix;
 
         /// <summary>
-        /// The best standing this glade has ever held against the published population,
-        /// as percent-of-keepers-slower. Zero means never ranked.
+        /// <b>Retired.</b> The best standing this glade ever held against the published
+        /// population, as percent-of-keepers-slower; zero means never ranked.
         ///
         /// <para>
-        /// <b>Only ever promoted</b>, which is the whole design - see
-        /// <see cref="Promote"/>. It is the one thing in this record that is not a fact
-        /// about the player's own play but about a population, and a population moves. The
-        /// merge is therefore <c>max</c> like every other mergeable number in this file,
-        /// and zero is unreachable for a real standing
-        /// (<see cref="Social.LevelStats.MinRank"/>), so a v12 file reads as unranked
-        /// rather than as badly ranked and no migration is needed.
-        /// </para>
-        /// <para>
-        /// It buys nothing. A forged value wears a band on a map node and pays no
-        /// currency, which is what makes it safe to store client-side at all - the same
-        /// test invariant 15 applies to a companion entitlement.
+        /// The standing badge and the job that published the population
+        /// (<c>publishGroveStats</c>) were removed on 2026-10-07: the badge would sit on the next
+        /// node on the tighter maps. Nothing produces or reads a new value. The field stays for
+        /// <see cref="BestMillis"/>' reason - it is on the wire in both directions of
+        /// <c>FirestoreSaveMapper</c>, every shipped build writes it, and a reader that dropped
+        /// it would leave every device owing a sync against the cloud's copy (invariant 11f:
+        /// retired in place means still written). It is still clamped on read and still merged
+        /// by <c>max</c>, so whatever a player already holds survives untouched.
         /// </para>
         /// </summary>
         public readonly int BestRank;
@@ -64,8 +60,7 @@ namespace GlimmerGrove.Persistence
         /// <para>
         /// It is still merged - smaller wins, zero is absent - so times already earned survive
         /// a sync and a reinstall rather than being quietly dropped by the build that stopped
-        /// measuring them. Nothing reads it: the record shown on a map node and the population
-        /// a player is ranked against are both move counts.
+        /// measuring them. Nothing reads it: the record shown on a map node is a move count.
         /// </para>
         /// </summary>
         public readonly int BestMillis;
@@ -94,29 +89,7 @@ namespace GlimmerGrove.Persistence
         /// star rating on one run and their move count on another.
         /// </summary>
         public LevelRecord WithRun(int stars, int moves, long nowUnix)
-            => WithRun(stars, moves, nowUnix, Social.LevelStats.None, false);
-
-        /// <summary>
-        /// The same fold, also ranking the result against the published population.
-        ///
-        /// <para>
-        /// An overload rather than an optional parameter, for the reason
-        /// <c>TrySpendHeart</c> is one: a default argument is baked into every calling
-        /// assembly at compile time, and <see cref="Social.LevelStats.None"/> is not a
-        /// compile-time constant anyway. Every existing call site keeps the three argument
-        /// form and keeps its standing untouched.
-        /// </para>
-        /// <para>
-        /// Note the order: the run is folded <em>first</em> and the standing is taken over
-        /// the new <c>bestMoves</c>, never over this run's move count. A replay that came
-        /// nowhere near the record would otherwise be ranked on its own merits and - since
-        /// a standing only rises - simply achieve nothing, quietly, on the one path that
-        /// exists to capture it. Doing it inside the transform is what stops a call site
-        /// getting that order wrong.
-        /// </para>
-        /// </summary>
-        public LevelRecord WithRun(int stars, int moves, long nowUnix, Social.LevelStats population)
-            => WithRun(stars, moves, nowUnix, population, false);
+            => WithRun(stars, moves, nowUnix, false);
 
         /// <summary>
         /// The same fold on a level graded on a count that <em>climbs</em> rather than falls.
@@ -128,66 +101,18 @@ namespace GlimmerGrove.Persistence
         /// ordinary record, so its stars, its clears, its merge and its rewards are the ones every
         /// glade already has (invariant 20a).
         /// </para>
-        /// <para>
-        /// <b>The standing is not taken on a climbing level</b>, and that is a decision rather
-        /// than an omission: <c>Social.LevelStats.PercentSlower</c> ranks a move count where fewer
-        /// is better, so feeding it a wave count would publish a percentile that means the
-        /// opposite of what it says. An endless run's standing belongs on a board of its own.
-        /// </para>
         /// </summary>
-        public LevelRecord WithRun(int stars, int moves, long nowUnix,
-                                   Social.LevelStats population, bool climbs)
+        public LevelRecord WithRun(int stars, int moves, long nowUnix, bool climbs)
         {
             int bestStars = stars > Stars ? stars : Stars;
             int bestMoves = climbs
                 ? (moves > BestMoves ? moves : BestMoves)
                 : (BestMoves == 0 || (moves > 0 && moves < BestMoves) ? moves : BestMoves);
 
-            if (climbs) population = Social.LevelStats.None;
             long firstCleared = FirstClearedUnix == 0 && stars > 0 ? nowUnix : FirstClearedUnix;
 
             return new LevelRecord(Id, bestStars, bestMoves, Clears + 1, firstCleared, nowUnix,
-                                   Promote(BestRank, bestMoves, population), BestMillis);
-        }
-
-        /// <summary>
-        /// Re-ranks the standing record against a freshly published population, without
-        /// touching anything else.
-        ///
-        /// <para>
-        /// This is what backfills a save written before the field existed, and what rescues
-        /// the player who cleared a glade before the day's table had arrived: the move count
-        /// was stored either way, so the standing can be worked out later from what is
-        /// already on disk. Returns <c>this</c> when nothing improved, so a caller sweeping
-        /// thousands of records can decide whether the file is worth rewriting with a
-        /// reference comparison.
-        /// </para>
-        /// </summary>
-        public LevelRecord WithRank(Social.LevelStats population)
-        {
-            int promoted = Promote(BestRank, BestMoves, population);
-            return promoted == BestRank
-                ? this
-                : new LevelRecord(Id, Stars, BestMoves, Clears, FirstClearedUnix, LastPlayedUnix,
-                                  promoted, BestMillis);
-        }
-
-        /// <summary>
-        /// The one place a standing changes, and it only ever climbs.
-        ///
-        /// <para>
-        /// Every failure mode collapses to "keep what we had": an uncleared glade, a table
-        /// too thin to speak from, a population that has since got faster.
-        /// <see cref="Social.LevelStats.PercentSlower"/> answers -1 in the middle case,
-        /// which loses the comparison against a held zero exactly as it should.
-        /// </para>
-        /// </summary>
-        static int Promote(int held, int bestMoves, Social.LevelStats population)
-        {
-            if (bestMoves <= 0) return held;
-
-            int now = population.PercentSlower(bestMoves);
-            return now > held ? now : held;
+                                   BestRank, BestMillis);
         }
 
         public bool Improves(int stars, int moves) => Improves(stars, moves, false);
@@ -222,12 +147,17 @@ namespace GlimmerGrove.Persistence
                                      dto.clears < 0 ? 0 : dto.clears,
                                      dto.firstClearedUnix,
                                      dto.lastPlayedUnix,
-                                     // Clamped to what the producer can actually emit, so a
-                                     // hand-edited file cannot wear a band above the ladder.
-                                     Clamp(dto.bestRank, 0, Social.LevelStats.MaxRank),
+                                     // Clamped to what the retired producer could emit.
+                                     Clamp(dto.bestRank, 0, MaxRetiredRank),
                                      dto.bestMillis < 0 ? 0 : dto.bestMillis);
             return true;
         }
+
+        /// <summary>
+        /// The highest standing the retired population table could ever report. Kept so a
+        /// forged file reads the same as it did while the producer existed.
+        /// </summary>
+        const int MaxRetiredRank = 95;
 
         static int Clamp(int v, int lo, int hi) => v < lo ? lo : v > hi ? hi : v;
     }

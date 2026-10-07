@@ -46,7 +46,6 @@ import { ReceiptRejected, lookupAppleTransaction, validateReceipt } from "./rece
 import {
   listVoidedPurchases, recordSweep, revokeReceipt, sweepWindow, transactionIdsIn,
 } from "./refunds";
-import { rebuildStats } from "./stats";
 import {
   DEFAULT_KEEPER_CURVE, GROVE_PATHS, GroveCardDoc, KeeperCurve,
   assertUsableGroveConfig, buildCard, derivedXp, endlessXp, xpBoostXp, groveWorth, keeperLevel,
@@ -1693,30 +1692,6 @@ export const sweepVoidedPurchases = onSchedule(
   }
 );
 
-/**
- * Republishes the population's move counts, once a day.
- *
- * The only scheduled function in the project, and the only one that reads other people's
- * saves. It writes one public document — nine numbers per glade, aggregated over thousands
- * of players, with no identifier of any kind in it — which the client fetches from the
- * splash to draw a single line on the victory panel.
- *
- * Nothing depends on it. If it never runs, the line is never drawn and every other part of
- * the game behaves identically, which is why it can afford to be a plain daily job with no
- * retry policy and no alerting.
- *
- * Three in the morning UTC is deliberately the quietest hour for a globally distributed
- * player base, and the read is bounded to a sample — see `stats.ts` for why an exact
- * running count would be the wrong trade.
- */
-export const publishGroveStats = onSchedule(
-  { region: REGION, schedule: "0 3 * * *", timeZone: "Etc/UTC", timeoutSeconds: 540 },
-  async () => {
-    const { levels, saves } = await rebuildStats();
-    logger.info("grove stats rebuilt", { levels, saves });
-  }
-);
-
 // ------------------------------------------------------------- the grove board
 /**
  * Rebuilds this account's public grove card.
@@ -2236,11 +2211,10 @@ export const publishGroveBoards = onSchedule(
  * Rebuilds the population counts and the published distributions, once a night — and the
  * boards with them, as the fifteen-minute job does.
  *
- * Four in the morning UTC, an hour after `publishGroveStats`, so the two heaviest reads in
- * the deployment never overlap — and late enough that a card published anywhere in the
+ * Four in the morning UTC, in the quietest hours for a global player base — and late enough that a card published anywhere in the
  * world during the previous day is in the sample. Everything here is what is worth taking
  * once a day and not ninety-six times: a `count()` billed against every card on a board's
- * index, and a five-thousand-card sample for the deciles. Like the stats job it has no retry
+ * index, and a five-thousand-card sample for the deciles. It has no retry
  * policy and no alerting: a night with no run leaves yesterday's distribution standing, and
  * the boards themselves are kept by the job above.
  */

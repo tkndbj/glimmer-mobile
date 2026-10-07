@@ -478,12 +478,17 @@ def door_two_lines(s):
     return [s[:best], s[best + 1:]]
 
 
-def door_key(sheet, cx, slot_bottom, width, slot_h, caption, art):
-    """Draws `DoorKey.Build` with its slot's foot at `slot_bottom` (image y, down-positive).
+DOOR_PLATE_CAPTION_LEFT = 44.0  # DoorKey.PlateCaptionLeft
+
+
+def door_key(sheet, cx, slot_bottom, width, slot_h, caption, art, pill="btn_violet",
+             caption_left=DOOR_CAPTION_LEFT, ink=CREAM):
+    """Draws `DoorKey.Build` with its slot's foot at `slot_bottom` (image y, down-positive), or
+    `DoorKey.Plate` given its `pill` and `DOOR_PLATE_CAPTION_LEFT`.
     Returns (key centre y, the caption size it settled at, the caption's room)."""
     ky = slot_bottom - DOOR_KEY_H / 2
     left, right = cx - width / 2, cx + width / 2
-    paste(sheet, skin("btn_violet", width, DOOR_KEY_H), cx, ky)
+    paste(sheet, skin(pill, width, DOOR_KEY_H), cx, ky)
 
     art_w = 0.0
     try:
@@ -495,15 +500,15 @@ def door_key(sheet, cx, slot_bottom, width, slot_h, caption, art):
     except FileNotFoundError:
         pass
 
-    room = width - DOOR_ART_RIGHT - art_w - 20 - DOOR_CAPTION_LEFT
+    room = width - DOOR_ART_RIGHT - art_w - 20 - caption_left
     lines = door_two_lines(caption)
     size = 44
     probe = ImageDraw.Draw(sheet)
     while size > 26 and (max(probe.textlength(ln, font=font(size)) for ln in lines) > room
                          or len(lines) * size * 1.2 > DOOR_KEY_H * .82):
         size -= 1
-    tx = left + DOOR_CAPTION_LEFT + room / 2
+    tx = left + caption_left + room / 2
     top = ky - DOOR_KEY_H * PILL_FACE_LIFT - (len(lines) - 1) * size * 1.2 / 2
     for i, ln in enumerate(lines):
-        text(sheet, ln, tx, top + i * size * 1.2, size)
+        text(sheet, ln, tx, top + i * size * 1.2, size, fill=ink)
     return ky, size, room

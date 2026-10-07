@@ -96,12 +96,11 @@ namespace GlimmerGrove.Tests
         {
             var held = new LevelRecord(Glade, 2, 50, 1, 100, 100, 0, 62_000);
 
-            var after = held.WithRun(3, 38, 200, Social.LevelStats.None);
+            var after = held.WithRun(3, 38, 200);
 
             Assert.AreEqual(3, after.Stars);
             Assert.AreEqual(38, after.BestMoves);
             Assert.AreEqual(62_000, after.BestMillis);
-            Assert.AreEqual(62_000, held.WithRank(Social.LevelStats.None).BestMillis);
         }
 
         // ------------------------------------------------------------------- the merge

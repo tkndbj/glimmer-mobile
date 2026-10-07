@@ -76,10 +76,10 @@
   },
   "welcome": {
     "quests": [
-      { "id": "w1_leech",      "ward": "leech",      "goal": "runs",           "days": 3 },
-      { "id": "w2_lighthouse", "ward": "lighthouse", "goal": "task_claims",    "days": 5 },
-      { "id": "w3_pyre",       "ward": "pyre",       "goal": "challenge_wins", "days": 7 },
-      { "id": "w4_glacier",    "ward": "glacier",    "goal": "streak",         "days": 10 }
+      { "id": "w1_leech",      "ward": "leech",      "colour": "r", "goal": "runs",           "days": 3 },
+      { "id": "w2_lighthouse", "ward": "lighthouse", "colour": "g", "goal": "task_claims",    "days": 5 },
+      { "id": "w3_pyre",       "ward": "pyre",       "colour": "b", "goal": "challenge_wins", "days": 7 },
+      { "id": "w4_glacier",    "ward": "glacier",    "colour": "y", "goal": "streak",         "days": 10 }
     ]
   },
   "xpBoost": {

@@ -668,38 +668,17 @@ namespace GlimmerGrove.Cloud
                                 CancellationToken cancellation = default);
 
         /// <summary>
-        /// Reads the published move-count deciles for every glade.
-        ///
-        /// <para>
-        /// The one read here that is not about this player. It needs no user id and no
-        /// sign-in - it is a single public document, written by a scheduled job that
-        /// samples the population - so it is safe to call on a launch that has not
-        /// authenticated, and safe to fail: every reader treats an absent table as
-        /// "nothing to say" and draws nothing.
-        /// </para>
-        /// <para>
-        /// Deliberately <b>not</b> routed through the content sources, even though it looks
-        /// like content. It is derived from live players rather than authored, it changes
-        /// daily, and it must never end up cached in a shipped build - a snapshot of it in
-        /// StreamingAssets would be quoting last quarter's population forever.
-        /// </para>
-        /// </summary>
-        Task<(CloudResult result, Dictionary<Content.LevelId, Social.LevelStats> stats)> ReadGroveStatsAsync(
-            CancellationToken cancellation = default);
-
-        /// <summary>
         /// Reads what the deployment currently requires of a client on
         /// <paramref name="platform"/> - the oldest build still allowed to run, and where to get
         /// a newer one.
         ///
         /// <para>
-        /// <b>Signed out on purpose, like the stats read beside it, and here it is load-bearing
-        /// rather than convenient.</b> The reason to force an update is usually that something
+        /// <b>Signed out on purpose, and here it is load-bearing rather than convenient.</b> The reason to force an update is usually that something
         /// about the old client no longer works against this deployment - and if that something
         /// happens to be authentication, a gate behind sign-in is a gate that can never close on
         /// exactly the builds it exists for. It is one public document, identical for every
         /// player, and the rules make it world-readable for the same reason they do
-        /// <c>config/stats</c>.
+        /// <c>config/progression</c>.
         /// </para>
         /// <para>
         /// <b>An absent document, an absent platform block and a bare one all succeed with

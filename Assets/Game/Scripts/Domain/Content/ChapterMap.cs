@@ -42,10 +42,16 @@ namespace GlimmerGrove.Content
         public const float MinimumNodeSeparation = NodeDiameter + NodeClearance;
 
         /// <summary>
-        /// What a cleared glade wears: the standing mark that <c>LevelsScreen.Standing</c> hangs
-        /// over it and the record badge <c>LevelsScreen.RecordTag</c> stands beside it. One
-        /// rectangle covering both, centred on the node, <see cref="CrownHalfWidth"/> either
+        /// What a cleared glade wears: the record badge <c>LevelsScreen.RecordTag</c> stands
+        /// beside it. One rectangle, centred on the node, <see cref="CrownHalfWidth"/> either
         /// side of it and reaching from <see cref="CrownBottom"/> to <see cref="CrownTop"/>.
+        ///
+        /// <para>
+        /// <b><see cref="CrownTop"/> still reserves the population standing mark's reach</b>,
+        /// though the mark itself was removed (2026-10-07): it would sit on the next node on the
+        /// tighter maps. Lowering it only loosens the gate, so it is left to the day a map
+        /// needs the room, and that change is made against the shipped seats.
+        /// </para>
         ///
         /// <para>
         /// <b><see cref="CrownBottom"/> is negative, and that is the badge.</b> The record used

@@ -4,6 +4,7 @@
     python Tools/render_welcome.py                 # one row in each state
     python Tools/render_welcome.py --done          # every quest taken
     python Tools/render_welcome.py --choice        # the sheet a COLLECT key opens
+    python Tools/render_welcome.py --preview       # the same sheet, view-only, a tap on a row opens
     python Tools/render_welcome.py --out welcome.png
 
 **Why this exists.** The page is a list of prizes (invariant 58), and every question it raises
@@ -49,8 +50,11 @@ BOX, BOX_GAP, TICK, MOST_BOXES = 48.0, 8.0, 30.0, 10
 BAR_W, BAR_H = 360.0, 26.0
 COLLECT_W, COLLECT_H = 280.0, 88.0
 PILL_W, PILL_H, PILL_X = 232.0, 76.0, -136.0
+TO_GO_W, TO_GO_NUMBER_Y, TO_GO_WORDS_Y, TO_GO_NUMBER, TO_GO_WORDS = 232.0, 24.0, -34.0, 72, 32
+MINT = (0x7B, 0xD8, 0x6A)  # Pal.Mint
 WALLET_W, WALLET_H, WALLET_X = 160.0, 72.0, 444.0
 CARD_ROUND = 30
+SUB_PILL, SUB_ART, SUB_SLOT_H = "btn_orange", "challenge_door", 210.0
 
 # WelcomeChoiceOverlay, which is ChallengeTierOverlay's stack on VictoryFrame.
 WIN_W, CREST_REACH = 1000.0, 202.0
@@ -61,6 +65,7 @@ LINE_Y, ROWS_TOP, SHEET_ROW_H, SHEET_ROW_GAP, TAIL, FOOT_H = 150.0, 200.0, 230.0
 SHEET_ROW_W, STONE, STONE_X, SHEET_TEXT_X, SHEET_TEXT_W = 880.0, 160.0, 104.0, 204.0, 370.0
 LINE_TOP, LINE_H = 22.0, 124.0
 KEY_W, KEY_H, KEY_INSET = 280.0, 116.0, 16.0
+PREVIEW_PILL_W, PREVIEW_PILL_H = 280.0, 84.0
 
 # SiegeView.Tints, in the order WardLine.Colours names them.
 SEAT_TINTS = [(0xF2, 0x40, 0x4F), (0x7B, 0xD8, 0x6A), (0x4F, 0xC1, 0xFF), (0xFF, 0x8A, 0x2B)]
@@ -94,6 +99,11 @@ def ward(ward_id):
         if m.get("id") == ward_id:
             return m
     return {}
+
+
+def seat(quest):
+    """`WelcomeQuest.Colour`: the authored seat letter as an index, never the row's position."""
+    return "rgby".index(quest["colour"])
 
 
 def price_of(quest):
@@ -158,10 +168,12 @@ def header(sheet, y):
     print("  wallet pill: left edge %d against the ribbon's right end %d" % (wx - WALLET_W / 2, W / 2 + 360))
     y += BANNER_H + 4
 
-    size = K.shrunk(sheet, txt("ui.welcome.subtitle"), W / 2, y + 32, 920, 64, 26, 16,
-                    fill=(219, 229, 255), outline=0)
-    print("  subtitle settled at %d (floor 16)" % size)
-    return y + 64 + 10
+    # `DoorKey.Plate`: the hub's Daily Challenges door, cut orange, with no tap.
+    _, size, room = K.door_key(sheet, W / 2, y + SUB_SLOT_H, WIDTH, SUB_SLOT_H,
+                               txt("ui.welcome.subtitle").upper(), SUB_ART, pill=SUB_PILL,
+                               caption_left=K.DOOR_PLATE_CAPTION_LEFT, ink=(255, 255, 255))
+    print("  subtitle plate: caption settled at %d in %d of room (floor 26)" % (size, room))
+    return y + SUB_SLOT_H + 14
 
 
 def boxes(sheet, left, cy, days, done):
@@ -189,7 +201,7 @@ def row(sheet, y, quest, index, state, done):
     cy = y + ROW_H / 2
     ready, claimed = state == "ready", state == "claimed"
     days = int(quest.get("days", 0))
-    tint = SEAT_TINTS[index % 4]
+    tint = SEAT_TINTS[seat(quest)]
     left, right = W / 2 - WIDTH / 2, W / 2 + WIDTH / 2
 
     if ready:
@@ -212,7 +224,7 @@ def row(sheet, y, quest, index, state, done):
     if ready:
         K.paste(sheet, K.glow(int(SEAT * 1.9), 2.0, tint, .55), left + SEAT_X, cy)
     try:
-        body = Image.open(WARDS / ("%s_%s.png" % (quest.get("ward"), "rgby"[index % 4]))).convert("RGBA")
+        body = Image.open(WARDS / ("%s_%s.png" % (quest.get("ward"), "rgby"[seat(quest)]))).convert("RGBA")
         body = K.fit(body, (BODY_TALL * .8, BODY_TALL))
         if claimed:
             body = K.tint(body, (199, 209, 224))
@@ -238,16 +250,21 @@ def row(sheet, y, quest, index, state, done):
     else:
         bar(sheet, text_x, cy + 30, done / float(days), done, days)
 
-    # the pill at the right end, or nothing while the key is out
-    if not ready:
-        px = right + PILL_X
-        label = (txt("ui.welcome.taken").upper() if claimed
-                 else txt("ui.welcome.days_left_one") if days - done == 1
-                 else txt("ui.welcome.days_left", days - done))
+    # the right end: COLLECTED on its pill once taken; the days to go, plateless, while counting
+    px = right + PILL_X
+    if claimed:
+        label = txt("ui.welcome.taken").upper()
         K.paste(sheet, K.round_rect(PILL_W, PILL_H, 28, (15, 31, 43), .72), px, cy)
         got = K.one_line(sheet, label, px, cy, PILL_W - 28, 28, 16, outline=2)
         if got <= 16:
             print("  pill '%s' settled at %dpx against a floor of 16" % (label, got))
+    elif not ready:
+        left_n = days - done
+        K.one_line(sheet, str(left_n), px, cy - TO_GO_NUMBER_Y, TO_GO_W, TO_GO_NUMBER, 36, fill=MINT, outline=4)
+        words = txt("ui.welcome.to_go_one" if left_n == 1 else "ui.welcome.to_go")
+        got = K.one_line(sheet, words, px, cy - TO_GO_WORDS_Y, TO_GO_W, TO_GO_WORDS, 18, fill=MINT, outline=3)
+        if got <= 18:
+            print("  to-go words '%s' settled at %dpx against a floor of 18" % (words, got))
 
     if claimed:
         d = ImageDraw.Draw(sheet)
@@ -285,17 +302,18 @@ def page(done=False):
 
 
 # ----------------------------------------------------------------- the sheet
-def choice(index=0):
+def choice(index=0, view_only=False):
     """`WelcomeChoiceOverlay` on `VictoryFrame`, which is `render_challenges.render_deals`' frame:
     the scrim, the fan, the green window with the crown and banner over it, the line, the turret
-    row and the price row, and NOT NOW at the foot."""
+    row and the price row, and NOT NOW at the foot. `view_only` is the preview a tap on a counting
+    row opens: the days to go where each TAKE key stands, and BACK at the foot."""
     sheet = Image.new("RGBA", (W, H), (0, 0, 0, 255))
     K.plain(sheet)
     sheet.alpha_composite(Image.new("RGBA", (W, H), (0, 0, 0, int(255 * .72))))
 
     quest = quests()[index]
     amount, currency = price_of(quest)
-    tint = SEAT_TINTS[index % 4]
+    tint = SEAT_TINTS[seat(quest)]
     floors = []
 
     rows_h = 2 * (SHEET_ROW_H + SHEET_ROW_GAP) - SHEET_ROW_GAP
@@ -323,7 +341,7 @@ def choice(index=0):
     floors.append(("word", K.shrunk(block, txt("ui.welcome.choose_word").upper(), bcx, panel_top - BANNER_Y - WORD_LIFT,
                                     WORD_W, WORD_H, 58, 32, outline=5), 32))
     floors.append(("line", K.shrunk(block, txt("ui.welcome.choose_line"), bcx, panel_top + LINE_Y, 860, 60, 32, 20,
-                                    fill=(255, 245, 224), outline=2), 20))
+                                    fill=(255, 255, 255), outline=2), 20))
 
     y = panel_top + ROWS_TOP + SHEET_ROW_H / 2
     key_cx = bcx + SHEET_ROW_W / 2 - KEY_INSET - KEY_W / 2
@@ -334,7 +352,7 @@ def choice(index=0):
     K.paste(block, K.round_rect(SHEET_ROW_W, SHEET_ROW_H, 28, tint, .55, width=3), bcx, y)
     K.paste(block, K.glow(int(STONE * 1.9), 2.2, tint, .22), left + STONE_X, y)
     try:
-        body = Image.open(WARDS / ("%s_%s.png" % (quest.get("ward"), "rgby"[index % 4]))).convert("RGBA")
+        body = Image.open(WARDS / ("%s_%s.png" % (quest.get("ward"), "rgby"[seat(quest)]))).convert("RGBA")
         K.paste(block, K.fit(body, (STONE * .8, STONE)), left + STONE_X, y)
     except FileNotFoundError:
         pass
@@ -342,10 +360,8 @@ def choice(index=0):
                                          y - 60 - 33, SHEET_TEXT_W, 66, 52, 28, fill=K.CREAM, outline=3), 28))
     floors.append(("turret line", K.shrunk_left(block, txt("ui.welcome.choose_turret"), left + SHEET_TEXT_X,
                                                 y - LINE_TOP, SHEET_TEXT_W, LINE_H, 36, 20,
-                                                fill=(255, 245, 224), outline=2), 20))
-    K.paste(block, K.skin("btn_green", KEY_W, KEY_H), key_cx, y)
-    floors.append(("take key", K.one_line(block, txt("ui.welcome.take").upper(), key_cx, y - 4, KEY_W - 40, 36, 20,
-                                          outline=3), 20))
+                                                fill=(255, 255, 255), outline=2), 20))
+    days_to_go(block, quest, key_cx, y, floors) if view_only else take_key(block, "btn_green", key_cx, y, floors)
     y += SHEET_ROW_H + SHEET_ROW_GAP
 
     # the price row
@@ -363,15 +379,13 @@ def choice(index=0):
                                                fill=money, outline=3), 28))
     floors.append(("price line", K.shrunk_left(block, txt("ui.welcome.choose_price"), left + SHEET_TEXT_X,
                                                y - LINE_TOP, SHEET_TEXT_W, LINE_H, 36, 20,
-                                               fill=(255, 245, 224), outline=2), 20))
-    K.paste(block, K.skin("btn_orange", KEY_W, KEY_H), key_cx, y)
-    floors.append(("take key 2", K.one_line(block, txt("ui.welcome.take").upper(), key_cx, y - 4, KEY_W - 40, 36, 20,
-                                            outline=3), 20))
+                                               fill=(255, 255, 255), outline=2), 20))
+    days_to_go(block, quest, key_cx, y, floors) if view_only else take_key(block, "btn_orange", key_cx, y, floors)
 
     done_cy = panel_top + panel_h - (30 + 55)
     K.paste(block, K.skin("btn_blue", 400, 110), bcx, done_cy)
-    floors.append(("not now", K.one_line(block, txt("ui.common.cancel").upper(), bcx, done_cy - 4, 340, 36, 18,
-                                         outline=3), 18))
+    foot = txt("ui.common.back" if view_only else "ui.common.cancel").upper()
+    floors.append(("not now", K.one_line(block, foot, bcx, done_cy - 4, 340, 36, 18, outline=3), 18))
 
     if fit < 1.0:
         block = block.resize((int(bw * fit), int(bh * fit)), Image.LANCZOS)
@@ -384,15 +398,31 @@ def choice(index=0):
     return sheet.convert("RGB")
 
 
+def take_key(block, pill, cx, cy, floors):
+    K.paste(block, K.skin(pill, KEY_W, KEY_H), cx, cy)
+    floors.append(("take key", K.one_line(block, txt("ui.welcome.take").upper(), cx, cy - 4, KEY_W - 40, 36, 20,
+                                          outline=3), 20))
+
+
+def days_to_go(block, quest, cx, cy, floors):
+    """`WelcomeChoiceOverlay.DaysToGo` - the page's pill, drawn as if one day were in."""
+    left = max(1, int(quest.get("days", 0)) - 1)
+    words = txt("ui.welcome.days_left_one") if left == 1 else txt("ui.welcome.days_left", left)
+    K.paste(block, K.round_rect(PREVIEW_PILL_W, PREVIEW_PILL_H, 28, (15, 31, 43), .72), cx, cy)
+    floors.append(("days to go", K.one_line(block, words, cx, cy, PREVIEW_PILL_W - 28, 30, 16, outline=2), 16))
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--done", action="store_true", help="every quest taken")
     ap.add_argument("--choice", action="store_true", help="the choice sheet over the page")
+    ap.add_argument("--preview", action="store_true", help="the choice sheet a tap on a counting row opens")
     ap.add_argument("--row", type=int, default=0, help="which quest the choice sheet is about")
     ap.add_argument("--out", type=Path, default=Path("welcome.png"))
     args = ap.parse_args()
 
-    out = choice(args.row) if args.choice else page(done=args.done)
+    out = (choice(args.row, view_only=args.preview) if args.choice or args.preview
+           else page(done=args.done))
     args.out.parent.mkdir(parents=True, exist_ok=True)
     out.save(args.out)
     print(f"  wrote {args.out}  {out.width}x{out.height}  - look at it")

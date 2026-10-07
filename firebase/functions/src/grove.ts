@@ -1475,16 +1475,14 @@ export interface RankedGrove {
 }
 
 /**
- * Nine deciles of a sorted list, nearest-rank. The same definition `stats.ts` uses.
+ * Nine deciles of a sorted list, nearest-rank.
  *
  * <b>An empty list has no deciles, and saying so is load-bearing.</b> The obvious loop
  * indexes `sorted[-1]` nine times and produces nine `undefined`s, which Firestore refuses as
  * a document value — so the whole ranking job threw *after* it had written ten board
  * documents, leaving the boards published and `config/groveRanks` absent. That is the state
  * on the first day of the feature, when nobody has a card yet, so it is the state it would
- * have shipped in. `stats.ts` never hits it because its buckets exist only once something has
- * been pushed into them; this one derives its list from a filter and can legitimately get
- * nothing.
+ * have shipped in. This list is derived from a filter and can legitimately be empty.
  *
  * An empty array is also exactly what the client reads as "nothing to say": it refuses any
  * table that is not nine ascending values and draws no percentile, which is the right

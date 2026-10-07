@@ -27,7 +27,7 @@ namespace GlimmerGrove.Social
     /// <para>
     /// Every call here is best-effort. Nothing in the game waits on one, none of them touch the
     /// save file or the sync latch, and every failure is an empty answer rather than an
-    /// exception - <see cref="GroveStats"/>'s stance, which this is the larger instance of.
+    /// exception.
     /// </para>
     /// </summary>
     public interface IGroveBoardBackend
@@ -151,8 +151,7 @@ namespace GlimmerGrove.Social
         /// Reads the published distributions - grove worth and endless waves - and each board's
         /// population.
         ///
-        /// <see cref="ReadGroveStatsAsync"/>'s twin, and public for the same reasons: it names
-        /// no player, it is the same for everybody, and every reader treats an absent table as
+        /// Public: it names no player, it is the same for everybody, and every reader treats an absent table as
         /// "nothing to say". One document, whole, once a session.
         /// </summary>
         Task<(CloudResult result, GroveRankPublication published)> ReadGroveRanksAsync(

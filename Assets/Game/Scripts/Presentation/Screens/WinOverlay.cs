@@ -162,7 +162,7 @@ namespace GlimmerGrove
         /// </para>
         /// </summary>
         const float HintRow = 54f, LaneHeight = 96f, VerdictRow = 66f,
-                    StandRow = 112f, PayoutRow = 148f, GoldenRow = 74f, BonusRow = 152f;
+                    PayoutRow = 148f, GoldenRow = 74f, BonusRow = 152f;
 
         /// <summary>Air under the last row, and the block the buttons own at the bottom.</summary>
         const float Tail = 40f, ButtonBlock = 208f;
@@ -267,14 +267,6 @@ namespace GlimmerGrove
             bool boosted = paid && BoostXp > 0L && BoostPercent > 0;
             bool hint = stars < 3 && Run.Target > 0;
 
-            // The player's own record after this run, against everybody else's.
-            int record = Run.NewBest ? Run.Moves
-                       : Run.PreviousBest > 0 ? Mathf.Min(Run.Moves, Run.PreviousBest)
-                       : Run.Moves;
-            var population = GroveStats.For(Run.Level);
-            var band = RankTier.Of(population.PercentSlower(record));
-            bool ranked = band != RankBand.None;
-
             // The comparison is drawn on every win that has a route, because merging the panels
             // made it free - it costs no tap and no navigation. Only the *sentence* stays
             // upward-only: a bar that happens to be longer than the grove's is a neutral fact
@@ -288,7 +280,7 @@ namespace GlimmerGrove
             // ---------------------------------------------------------- the stack
             float y = StarsBottom;
             float hintY = 0f, youCapY, youBarY = 0f, groveCapY = 0f, groveBarY = 0f;
-            float verdictY = 0f, standY = 0f, payY = 0f, goldY = 0f, boostY = 0f;
+            float verdictY = 0f, payY = 0f, goldY = 0f, boostY = 0f;
 
             if (hint) { hintY = y + 24f; y += HintRow; }
 
@@ -303,7 +295,6 @@ namespace GlimmerGrove
             }
             else y += 60f;
 
-            if (ranked) { standY = y + 52f; y += StandRow; }
             if (paid) { payY = y + 70f; y += PayoutRow; }
             if (goldened) { goldY = y + 34f; y += GoldenRow; }
             if (boosted) { boostY = y + 34f; y += GoldenRow; }
@@ -410,8 +401,6 @@ namespace GlimmerGrove
                     verdict.transform.localScale = Vector3.zero;
                 }
             }
-
-            var stand = ranked ? BuildStanding(-standY, band, population.PercentSlower(record)) : null;
 
             // ---------------------------------------------------------- the payout
             // Two chips rather than one sentence, each number put there by things the player
@@ -657,15 +646,6 @@ namespace GlimmerGrove
                             Burst.Sparks(verdict.transform, Vector2.zero, VerdictInk(), 16, 280f, 22f, .7f);
                     });
                 }
-            }
-
-            if (stand != null)
-            {
-                cue.Then(.22f, () =>
-                {
-                    if (stand == null) return;
-                    Tween.Pop(stand, 0f, .46f);
-                });
             }
 
             // The two lanes rejoin here. Everything below is either news in its own right or a
@@ -1287,65 +1267,6 @@ namespace GlimmerGrove
             UIKit.Shrinkable(n, 18);
 
             return (RectTransform)mark.transform;
-        }
-
-        /// <summary>
-        /// The population standing, as a struck medal on a pill.
-        ///
-        /// <para>
-        /// Same vocabulary as the map's own mark (<c>LevelsScreen.Medal</c>) and deliberately
-        /// so: a trophy rather than a star, because the stars directly above are already
-        /// counting something else and a gold star here would read as a fourth one. One glyph
-        /// in three colours rather than three glyphs, because a medal ladder needs no teaching.
-        /// The rim is cream on every tier - ringing a bronze medal in bronze makes the rim
-        /// vanish.
-        /// </para>
-        /// </summary>
-        RectTransform BuildStanding(float y, RankBand band, int percent)
-        {
-            bool top = band == RankBand.Top10;
-            Color ink = top ? Pal.Gold
-                      : band == RankBand.Top25 ? Pal.Parchment
-                      : new Color(1f, .95f, .86f, .84f);
-
-            const float PillW = 560f, PillH = 96f;
-
-            var host = UIKit.Box("Standing", Panel, new Vector2(PillW, PillH),
-                                 new Vector2(.5f, 1f), new Vector2(0f, y));
-            host.localScale = Vector3.zero;
-
-            var pill = UIKit.Img("Pill", host, Art.Round(28), new Color(.04f, .09f, .13f, .84f),
-                                 new Vector2(PillW, PillH), new Vector2(.5f, .5f), Vector2.zero);
-
-            var edge = UIKit.Img("Edge", pill.transform, Art.RoundOutline(28, 3f),
-                                 new Color(ink.r, ink.g, ink.b, top ? .62f : .40f));
-            UIKit.StretchTo((RectTransform)edge.transform, 0f, 0f, 0f, 0f);
-
-            var seat = new Vector2(-PillW * .5f + 64f, 0f);
-
-            UIKit.Img("Halo", host, Art.Glow(96, 2.2f), new Color(ink.r, ink.g, ink.b, top ? .42f : .28f),
-                      Vector2.one * 158f, new Vector2(.5f, .5f), seat);
-
-            var disc = UIKit.Img("Disc", host, Art.Disc(128), ink,
-                                 Vector2.one * 74f, new Vector2(.5f, .5f), seat);
-
-            UIKit.Img("Rim", host, Art.Ring(128, 9f), new Color(1f, .98f, .90f, top ? .92f : .74f),
-                      Vector2.one * 74f, new Vector2(.5f, .5f), seat);
-
-            var glyph = UIKit.Img("Trophy", host, Art.S("Ui/ic_trophy"), new Color(.20f, .13f, .07f, .92f),
-                                  Vector2.one * 40f, new Vector2(.5f, .5f), seat);
-            glyph.preserveAspect = true;
-
-            var line = UIKit.Titled("Band", host, Loc.Get(RankTier.KeyOf(band)), 33, ink,
-                                    TextAnchor.MiddleCenter, new Vector2(PillW - 160f, 46f),
-                                    new Vector2(.5f, .5f), new Vector2(36f, 0f), 3f, 3f);
-            UIKit.Shrinkable(line, 20);
-
-            // Only the best tier breathes, for the reason the map gives: motion is the loudest
-            // thing on the panel, so spending it on every ranked glade singles out none.
-            if (top) Tween.Breathe(disc.transform, .055f, 2.4f);
-
-            return host;
         }
 
         // =============================================================== the exits

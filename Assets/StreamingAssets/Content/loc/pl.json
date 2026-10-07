@@ -4882,18 +4882,6 @@
       "text": "Tury: {0}"
     },
     {
-      "key": "ui.rank.top10",
-      "text": "Jesteś w najlepszych 10%"
-    },
-    {
-      "key": "ui.rank.top25",
-      "text": "Jesteś w najlepszych 25%"
-    },
-    {
-      "key": "ui.rank.top50",
-      "text": "Jesteś w najlepszych 50%"
-    },
-    {
       "key": "ui.rank.record_unit",
       "text": "Tury"
     },
@@ -6115,7 +6103,7 @@
     },
     {
       "key": "ui.welcome.subtitle",
-      "text": "Cztery wieże na zawsze. Każda odblokowuje się po kilku różnych dniach gry. Dni nie muszą następować po sobie."
+      "text": "Wykonuj zadania i odblokuj wieże"
     },
     {
       "key": "ui.welcome.all_done",
@@ -6128,6 +6116,14 @@
     {
       "key": "ui.welcome.days_left_one",
       "text": "Pozostał 1 dzień"
+    },
+    {
+      "key": "ui.welcome.to_go",
+      "text": "dni do końca"
+    },
+    {
+      "key": "ui.welcome.to_go_one",
+      "text": "dzień do końca"
     },
     {
       "key": "ui.welcome.goal.runs",
@@ -6159,11 +6155,11 @@
     },
     {
       "key": "ui.welcome.choose_line",
-      "text": "Weź wieżę na wszystkie miejsca albo zamiast niej jej cenę."
+      "text": "Weź wieżę albo zamiast niej jej cenę."
     },
     {
       "key": "ui.welcome.choose_turret",
-      "text": "Twoja na wszystkich czterech miejscach, na zawsze. Ulepszaj ją monetami."
+      "text": "Twoja na zawsze, w tym kolorze. Ulepszaj ją monetami."
     },
     {
       "key": "ui.welcome.choose_price",

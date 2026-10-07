@@ -278,34 +278,37 @@ namespace GlimmerGrove.Wards
             => TryBuy(model, Letter(colour), keeperLevel);
 
         /// <summary>
-        /// Hands a turret over on every seat with no debit - the welcome bonus's path
+        /// Hands a turret over on <em>one seat</em> with no debit - the welcome bonus's path
         /// (<c>WelcomeLedger.TryClaim</c>, invariant 58).
         ///
         /// <para>
-        /// <b>Four seat rows, in the spelling every purchase writes</b> (<see cref="WardHolding.Row"/>),
-        /// rather than the bare id that means "all four": the bare row is read and is only ever
-        /// legacy, and a gift is not a reason to put a second writer on it. A seat already held -
-        /// bought before the bonus reached the player - is kept as it is; the player gains the
-        /// rest and loses nothing (invariant 15: owned sets join by union).
+        /// <b>One seat, as a purchase is one seat</b> (the owner, 2026-10-07): a red quest hands
+        /// over the red turret and nothing else. It handed over all four for one finished quest,
+        /// which is <see cref="IsHeld(WardModel, char)"/>'s own complaint about a turret bought
+        /// for red standing on every seat - one decision, four turrets - made by a gift instead
+        /// of a payment, and worth four shelf prices against a price option worth one.
+        /// </para>
+        /// <para>
+        /// <b>The row is spelled as every purchase spells it</b> (<see cref="WardHolding.Row"/>),
+        /// never the bare id, which means "all four" and is only ever legacy. A seat already held
+        /// is kept as it is and nothing is added (invariant 15: owned sets join by union).
         /// </para>
         /// <para>
         /// <b>It does not save</b>, deliberately: the caller writes the claim that earned this
-        /// and these rows in one save, so a process killed between the two leaves memory, never a
-        /// file, half done. Returns whether any seat was new.
+        /// and this row in one save, so a process killed between the two leaves memory, never a
+        /// file, half done. Returns whether the seat was new.
         /// </para>
         /// </summary>
-        public static bool Grant(WardModel model, string reason)
+        public static bool Grant(WardModel model, int colour, string reason)
         {
             if (model == null || model.IsStarter) return false;
+            if (colour < 0 || colour >= WardLine.Colours.Length) return false;
 
-            bool added = false;
-            for (int i = 0; i < WardLine.Colours.Length; i++)
-            {
-                string row = WardHolding.Row(model, i);
-                if (!string.IsNullOrEmpty(row) && _bought.Add(row)) added = true;
-            }
+            string row = WardHolding.Row(model, colour);
+            bool added = !string.IsNullOrEmpty(row) && _bought.Add(row);
 
-            Telemetry.Track("ward_granted", "ward", model.Id, "reason", reason ?? string.Empty, "new", added);
+            Telemetry.Track("ward_granted", "ward", model.Id, "colour", Letter(colour).ToString(),
+                            "reason", reason ?? string.Empty, "new", added);
 
             if (!added) return false;
 

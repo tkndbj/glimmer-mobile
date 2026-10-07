@@ -626,12 +626,6 @@ namespace GlimmerGrove
             // nobody ever opens the tab. Started after the content has loaded, because the
             // list of products to ask about comes out of it.
 
-            // The population's move counts, for the one line on the victory panel that
-            // compares a player to everybody else. It is the most disposable request the
-            // game makes - no sign-in, no writes, and an outcome nothing waits on - which
-            // is why it is started here and never checked again.
-            CloudSaveService.BeginStatsRefresh();
-
             // Whether this build is still one the deployment allows to be played. Fire and
             // forget like everything else on this list and for the same rule - nothing between
             // tapping the icon and playing may wait on a network - which costs nothing here,

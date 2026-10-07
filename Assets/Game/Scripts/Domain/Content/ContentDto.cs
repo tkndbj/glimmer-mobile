@@ -2521,6 +2521,13 @@ namespace GlimmerGrove.Content
         /// <summary>The turret it pays, by roster id. Never a starter.</summary>
         public string ward;
 
+        /// <summary>
+        /// The one seat it pays the turret on, as the seat's letter (<c>WardLine.Colours</c>:
+        /// r, g, b or y). <b>Authored, never derived from the row's position</b>, so removing or
+        /// inserting a quest cannot change what any other quest pays. Required.
+        /// </summary>
+        public string colour;
+
         /// <summary>The counted verb, one of <c>TaskGoals</c> ids with a sentence in <c>WelcomeGoals</c>.</summary>
         public string goal;
 

@@ -51,6 +51,12 @@ namespace GlimmerGrove
         public const float ArtWidest = 480f;
 
         /// <summary>
+        /// Where a <see cref="Plate"/>'s caption starts: a plate wears no badge, so its caption
+        /// needs only the pill's own rounded end to clear.
+        /// </summary>
+        public const float PlateCaptionLeft = 44f;
+
+        /// <summary>
         /// Builds the key at the foot of a slot <paramref name="slotH"/> tall whose centre is
         /// <paramref name="slotCentre"/> under <paramref name="anchor"/>. Returns the key, which is
         /// the button, so the caller can hang its badge and its entrance on it.
@@ -66,6 +72,42 @@ namespace GlimmerGrove
             // than as a key going down.
             key.PressScale = .985f;
 
+            Dress(key.transform, width, slotH, Loc.Get(captionKey), art, CaptionLeft, Pal.Cream);
+            return key;
+        }
+
+        /// <summary>
+        /// The same furniture as <see cref="Build"/> - the pill, the picture rising out of it and
+        /// the two-line caption - as a <b>decoration rather than a door</b>: no tap, no press, no
+        /// badge corner, and the pill's colour named by the caller (a <c>btn_*</c> cut, so it is
+        /// a re-cut of the kit's own mould rather than a multiply on the violet one, 44g). The
+        /// welcome page's header wears it under its sentence (the owner, 2026-10-07).
+        ///
+        /// <para>
+        /// The caption is cream like the doors' unless the caller names its <paramref name="ink"/>.
+        /// Returns the caption so a page that rewrites its sentence (the welcome page's
+        /// "every turret is yours") writes it through <see cref="TwoLines"/> as this did.
+        /// </para>
+        /// </summary>
+        public static Text Plate(string name, Transform parent, string pill, float width, float slotH,
+                                 Vector2 anchor, Vector2 slotCentre, string caption, string art,
+                                 Color? ink = null)
+        {
+            var centre = slotCentre - new Vector2(0f, (slotH - KeyH) * .5f);
+            var plate = UIKit.Img(name, parent, Art.S("Ui/" + pill), Color.white, new Vector2(width, KeyH),
+                                  anchor, centre);
+            plate.raycastTarget = false;
+
+            return Dress(plate.transform, width, slotH, caption, art, PlateCaptionLeft, ink ?? Pal.Cream);
+        }
+
+        /// <summary>
+        /// The picture standing on the pill's foot at its right end, and the caption on two lines
+        /// in the room left of it. Shared by the door and the plate so the two cannot drift (44d).
+        /// </summary>
+        static Text Dress(Transform key, float width, float slotH, string caption, string art, float captionLeft,
+                          Color ink)
+        {
             float lift = KeyH * UIKit.PillFaceLift;
 
             // The picture, right, standing on the key's foot. Read off the sprite rather than
@@ -74,22 +116,22 @@ namespace GlimmerGrove
             var picture = Art.S("Ui/" + art);
             float aspect = picture != null && picture.rect.height > 0f ? picture.rect.width / picture.rect.height : 1f;
             float artH = Mathf.Min(Mathf.Min(ArtMost, slotH - 6f), ArtWidest / aspect), artW = artH * aspect;
-            var img = UIKit.Img("Art", key.transform, picture, Color.white, new Vector2(artW, artH),
+            var img = UIKit.Img("Art", key, picture, Color.white, new Vector2(artW, artH),
                                 new Vector2(1f, 0f), new Vector2(-ArtRight - artW * .5f, artH * .5f + 4f));
             img.preserveAspect = true;
             img.raycastTarget = false;
             img.enabled = picture != null;
 
-            // The caption, left, on two lines in the room between the badge and the picture.
-            float room = width - ArtRight - artW - 20f - CaptionLeft;
-            UIKit.Shrinkable(
-                UIKit.Titled("Caption", key.transform, TwoLines(Loc.Get(captionKey).Upper()), 44,
-                             Pal.Cream, TextAnchor.MiddleCenter, new Vector2(room, KeyH * .82f),
-                             new Vector2(0f, .5f), new Vector2(CaptionLeft + room * .5f, lift), 3f, 3f,
+            // The caption, left, on two lines in the room between the corner and the picture.
+            float room = width - ArtRight - artW - 20f - captionLeft;
+            var text = UIKit.Shrinkable(
+                UIKit.Titled("Caption", key, TwoLines(caption.Upper()), 44,
+                             ink, TextAnchor.MiddleCenter, new Vector2(room, KeyH * .82f),
+                             new Vector2(0f, .5f), new Vector2(captionLeft + room * .5f, lift), 3f, 3f,
                              wrap: true),
                 26);
-
-            return key;
+            text.raycastTarget = false;
+            return text;
         }
 
         /// <summary>

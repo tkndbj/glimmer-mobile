@@ -229,17 +229,12 @@ namespace GlimmerGrove.Tests
         /// The crown and the body are what the screen draws, measured in Domain where the
         /// validator can reach them. The screen may not hold the map's geometry (8a) and
         /// Domain may not read the screen, so this is the only place the two meet: resize the
-        /// standing pill, the plate or the node and this names the number that stopped
+        /// record badge, the plate or the node and this names the number that stopped
         /// covering it.
         /// </summary>
         [Test]
         public void TheCrownAndBodyCoverWhatTheMapDraws()
         {
-            Assert.GreaterOrEqual(ChapterMap.CrownHalfWidth, LevelsScreen.RankMarkTwoLine.x * .5f,
-                                  "the standing pill is wider than the crown");
-            Assert.LessOrEqual(ChapterMap.CrownBottom, LevelsScreen.RankMarkBottom,
-                               "the standing pill starts below the crown");
-
             // The record badge stands beside the node rather than over it, so the crown has to
             // reach down past the node's own centre and out to the badge's far edge. Both ends
             // matter: the near edge is the disc's and is not the crown's business, the far edge
@@ -250,12 +245,6 @@ namespace GlimmerGrove.Tests
                                "the record badge hangs below the crown");
             Assert.GreaterOrEqual(ChapterMap.CrownTop, LevelsScreen.RecordBadge.y * .5f,
                                   "the record badge reaches above the crown");
-
-            float pillTop = LevelsScreen.RankMarkBottom + LevelsScreen.RankMarkTwoLine.y;
-            float medalTop = LevelsScreen.RankMarkBottom + LevelsScreen.RankMarkTwoLine.y * .5f
-                             + LevelsScreen.MedalY + LevelsScreen.MedalSize * .5f;
-            Assert.GreaterOrEqual(ChapterMap.CrownTop, Mathf.Max(pillTop, medalTop),
-                                  "the standing mark reaches above the crown");
 
             Assert.GreaterOrEqual(ChapterMap.BodyHalfWidth,
                                   Mathf.Max(LevelsScreen.NodeWidth, LevelsScreen.PlateWidth) * .5f,

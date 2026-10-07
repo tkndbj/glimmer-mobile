@@ -7,7 +7,8 @@ namespace GlimmerGrove.Social
     /// What everybody else's grove is worth, as nine numbers.
     ///
     /// <para>
-    /// <b>This is <see cref="LevelStats"/>'s bargain taken to the leaderboard, and it is why
+    /// <b>This is the per-glade move-count table's bargain (<c>LevelStats</c>, removed
+    /// 2026-10-07) taken to the leaderboard, and it is why
     /// there is no global sort anywhere in this feature.</b> The obvious implementation of
     /// "where do I stand" keeps every player's score in one ordered structure and asks it for
     /// a rank. That is a write on every purchase and a read that has to walk a list which
@@ -17,7 +18,7 @@ namespace GlimmerGrove.Social
     /// scale at which the exact version buys a player anything they could notice.
     /// </para>
     /// <para>
-    /// <b>Higher is better here, which is the one difference from <see cref="LevelStats"/>.</b>
+    /// <b>Higher is better here, which is the one difference from <c>LevelStats</c>.</b>
     /// A move count is a score you want small, so its reading is "how many keepers took more".
     /// A grove's worth is a score you want large, so the reading is "how many keepers hold
     /// less" - <see cref="PercentBelow"/>. The two are not the same function with a sign
@@ -60,7 +61,7 @@ namespace GlimmerGrove.Social
         /// <summary>
         /// Below this many keepers the reading is noise wearing a decimal point.
         ///
-        /// The same two hundred <see cref="LevelStats.MinimumSamples"/> uses, and for the
+        /// The same two hundred the retired <c>LevelStats</c> used, and for the
         /// same reason rather than by coincidence: the first players to reach a new feature
         /// are the most engaged accounts in the game, and they are exactly the ones a
         /// too-small sample would tell something false about themselves.
@@ -70,7 +71,7 @@ namespace GlimmerGrove.Social
         /// <summary>
         /// The narrowest and widest standing this will report.
         ///
-        /// Deliberately short of 0 and 100, which is <see cref="LevelStats.MinRank"/>'s
+        /// Deliberately short of 0 and 100, which was the retired <c>LevelStats</c>'
         /// argument: a line claiming a player is ahead of everybody is a line somebody will
         /// find a counterexample to, and on a leaderboard the counterexample is printed three
         /// rows above them.
@@ -90,7 +91,7 @@ namespace GlimmerGrove.Social
         /// between them, so a straight line is the least invented answer. A score of zero
         /// gets -1 rather than a percentile: a player who has built nothing is not in the
         /// population these deciles describe, and telling them they are behind everybody is
-        /// the one thing <see cref="LevelStats.IsWorthSaying"/> exists to avoid.
+        /// the one thing a percentile line must never say.
         /// </para>
         /// </summary>
         public int PercentBelow(long score)
@@ -188,7 +189,7 @@ namespace GlimmerGrove.Social
     /// <para>
     /// Read from the server, never computed here - <c>publishGroveRanks</c> writes one
     /// document a day and the client holds it for the session, exactly as
-    /// <see cref="GroveStats"/> does. Absent is the ordinary state and costs nothing: no
+    /// the retired <c>GroveStats</c> did. Absent is the ordinary state and costs nothing: no
     /// backend, no network, a game whose first day it is. Every reader gets
     /// <see cref="GroveRankTable.None"/> and draws no percentile, which is why no screen has
     /// to know whether this arrived.
@@ -246,8 +247,8 @@ namespace GlimmerGrove.Social
 
         /// <summary>
         /// Adopts a table. Replaces wholesale rather than merging, so a board that emptied
-        /// cannot leave a stale count behind claiming to be current - <see cref="GroveStats"/>
-        /// replaces for the same reason.
+        /// cannot leave a stale count behind claiming to be current - the retired
+        /// <c>GroveStats</c> replaced for the same reason.
         /// </summary>
         public static void Publish(GroveRankPublication published)
         {

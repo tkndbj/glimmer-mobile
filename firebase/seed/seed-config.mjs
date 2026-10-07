@@ -811,6 +811,12 @@ function readWelcome(progression) {
     if (wards.has(row.ward)) throw new Error(`${where} pays turret '${row.ward}' a second time`);
     wards.add(row.ward);
 
+    // `WelcomeTable.Resolve` refuses a quest with no seat letter, so a block published without one
+    // would be a price list for a page the client never draws. Checked, not published: the server
+    // pays a price, and a seat's price is the same on every seat.
+    if (typeof row?.colour !== "string" || row.colour.length !== 1 || !"rgby".includes(row.colour)) {
+      throw new Error(`${where} pays on seat '${row?.colour}'; a quest names one of 'rgby' as its colour`);
+    }
     if (!GOALS.has(row?.goal)) throw new Error(`${where} counts '${row?.goal}', which is not a welcome verb`);
 
     const days = Math.floor(Number(row?.days));

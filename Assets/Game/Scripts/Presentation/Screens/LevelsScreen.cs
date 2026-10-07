@@ -321,21 +321,13 @@ namespace GlimmerGrove
             ChapterId = _entry.Id;
             StartCoroutine(BuildChapter());
 
-            // The day's population lands once a session, from the cloud, on its own schedule.
-            // Usually that is long before anybody opens a map - but when it is not, this is
-            // the screen the promotion is visible on, so it repaints rather than waiting for
-            // the player to leave the chapter and come back.
-            PlayerProgress.RanksChanged += RepaintRanks;
-
-            // And the other device's play lands the same way - a sync after the splash, on a
-            // schedule of its own - onto a map that was drawn from the local file a second
-            // earlier. See OnLearned.
+            // The other device's play lands on its own schedule - a sync after the splash -
+            // onto a map that was drawn from the local file a second earlier. See OnLearned.
             CloudSaveService.Learned += OnLearned;
         }
 
         void OnDestroy()
         {
-            PlayerProgress.RanksChanged -= RepaintRanks;
             CloudSaveService.Learned -= OnLearned;
         }
 
@@ -416,7 +408,7 @@ namespace GlimmerGrove
         /// Takes a piece off the screen and then destroys it, in that order: <c>Destroy</c>
         /// lands at the end of the frame, so a piece replaced in place would otherwise be
         /// drawn over its own replacement for the rest of this one. The house rule everywhere
-        /// a region is rebuilt, and <see cref="RepaintRanks"/>' own.
+        /// a region is rebuilt.
         /// </summary>
         static void Retire(Transform piece)
         {
@@ -759,7 +751,7 @@ namespace GlimmerGrove
 
             float delay = arriving ? PopDelay(indexInChapter, _layout.Levels.Count) : 0f;
 
-            if (stars > 0) RankMark(node, level.Id, delay);
+            if (stars > 0) RecordMark(node, level.Id, delay);
 
             if (arriving)
             {
@@ -941,52 +933,6 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Where the standing mark sits, and how big it is.
-        ///
-        /// <para>
-        /// Directly above the disc rather than pinned to a corner of it, and that is a
-        /// collision decision rather than a taste one. <c>mapX</c>/<c>mapY</c> are authored,
-        /// and <see cref="ChapterMap"/> proves nodes do not overlap using the perch's own
-        /// footprint - so a mark that grew sideways could be validated as clear and still
-        /// touch its neighbour on somebody's phone. This stays inside the 360×420 perch and
-        /// reaches less far up than the pointer already does, so it adds nothing the build
-        /// gate is not already checking.
-        /// </para>
-        /// </summary>
-        /// <summary>
-        /// Where the mark's <em>bottom edge</em> sits above the node's centre, and the pill
-        /// size in each of its two shapes.
-        ///
-        /// <para>
-        /// Pinned by the bottom rather than the middle so the gap above the disc is the same
-        /// whether the pill carries one line or two - anchoring the centre made the shorter
-        /// pill float further away, which read as two different components rather than one in
-        /// two states. It grows upward instead, and the tall shape still finishes inside the
-        /// 420px perch that <see cref="ChapterMap"/> already proves does not collide.
-        /// </para>
-        /// </summary>
-        /// <remarks>
-        /// This pill is the <em>crown</em> <see cref="ChapterMap"/> carries
-        /// (<c>CrownHalfWidth</c>, <c>CrownBottom</c>, <c>CrownTop</c>), and
-        /// <c>ChapterMapValidator</c> refuses any perch - a glade's or the end-of-chapter
-        /// marker's - whose body would stand on it. It used to guarantee only the disc's 220px,
-        /// which is how the marker came to sit on the tenth glade's standing in every mode's
-        /// first chapter. Resize the pill here and <c>ChapterMapTests</c> says which of the
-        /// Domain numbers no longer covers it.
-        /// </remarks>
-        /// <remarks>
-        /// The two-line width is measured, not chosen. "You are in the top 25%" generates
-        /// 358px in <c>GameFont</c> at 32pt, so the inner line box has to clear that or
-        /// <see cref="UIKit.Shrinkable"/> folds it - which is what wrapping means here, since
-        /// best-fit only shrinks text that fails <em>vertically</em>. At 392 the box was 356
-        /// and the standing wrapped by two pixels. 408 leaves 14px, which also covers the
-        /// widest record line with room to spare - that used to be "108 turns · 12:04" at
-        /// 245px, and a record has carried no time since invariant 22.
-        /// </remarks>
-        public const float RankMarkBottom = 106f;
-        public static readonly Vector2 RankMarkTwoLine = new Vector2(408f, 196f);
-
-        /// <summary>
         /// The record badge: the count and its unit, on two lines, beside the node.
         ///
         /// <para>
@@ -1008,68 +954,11 @@ namespace GlimmerGrove
         public const float RecordLeft = 96f, RecordRight = 204f;
         public static readonly Vector2 RecordBadge = new Vector2(RecordRight - RecordLeft, 104f);
 
-        /// <summary>The standing's pill, when the shorter shape is all there is to draw.</summary>
-        static readonly Vector2 RankMarkOneLine = new Vector2(344f, 74f);
-
-        /// <summary>Medal disc size, and how far above the pill centre it sits.</summary>
-        public const float MedalSize = 78f, MedalY = 54f;
-
-        /// <summary>
-        /// Inset from the pill's edge to a line's own box, and how far each line sits from the
-        /// pill centre in the two-line shape.
-        ///
-        /// <para>
-        /// Both lines are anchored at the pill's centre with an explicit offset, never to its
-        /// top or bottom edge. <see cref="UIKit.Box"/> always pivots at the centre, so an
-        /// edge-anchored box reaches half its own height <em>past</em> that edge - which is
-        /// exactly how both of these ended up hanging out of the pill.
-        /// </para>
-        /// </summary>
-        const float RankMarkPad = 18f, RankMarkLineHeight = 44f;
-
-        /// <summary>
-        /// The record line, written out rather than assembled, so the build's loc gate can
-        /// see every key. Two of them because "1 turns" is wrong in English and worse in
-        /// languages with real plural rules.
-        /// </summary>
-        /// <summary>
-        /// The permanent standing on a cleared glade: "TOP 10%".
-        ///
-        /// <para>
-        /// Drawn from the save, never from <see cref="Social.GroveStats"/>, which is what
-        /// makes it instant and available offline - see <see cref="LevelRecord.BestRank"/>
-        /// for why a stored standing is the honest one here. An unranked glade draws nothing
-        /// at all rather than an empty frame: most of a catalog is unranked on any given day,
-        /// and a row of blanks would turn the absence into the message.
-        /// </para>
-        /// <para>
-        /// Colour carries the tier, because three identical pills reading different numbers
-        /// are three things to compare rather than one thing to notice. Gold is reserved for
-        /// the top tier for the reason the companion reveal reserves it - it is what this UI
-        /// already means by "best", so spending it lower devalues every other use of it.
-        /// </para>
-        /// </summary>
-        static void RankMark(Transform parent, LevelId id, float delay)
+        /// <summary>The record on a cleared glade, when it has a count to show.</summary>
+        static void RecordMark(Transform parent, LevelId id, float delay)
         {
             int moves = PlayerProgress.BestMoves(id);
-            if (moves <= 0) return;
-
-            var band = Social.RankTier.Of(PlayerProgress.BestRank(id));
-
-            bool ranked = band != Social.RankBand.None;
-            bool top = band == Social.RankBand.Top10;
-
-            Color ink = band == Social.RankBand.Top10 ? Pal.Gold
-                      : band == Social.RankBand.Top25 ? Pal.Parchment
-                      : new Color(1f, .95f, .86f, .82f);
-
-            // **Two marks now, because they are two things.** The record is a result and it is
-            // the half that says something on a brand new install with no backend at all, so it
-            // is drawn always, beside the node, where it covers nothing. The standing is an
-            // award, it needs a sentence ("You are in the top 25%" is 358 units at 32pt) and it
-            // is drawn over the node only when there is a population to be ranked against.
-            RecordTag(parent, id, moves, delay);
-            if (ranked) Standing(parent, band, ink, top, delay);
+            if (moves > 0) RecordTag(parent, id, moves, delay);
         }
 
         /// <summary>
@@ -1109,156 +998,6 @@ namespace GlimmerGrove
 
             host.localScale = Vector3.zero;
             Tween.Pop(host, 0f, .55f, .18f + delay + .16f);
-        }
-
-        /// <summary>
-        /// The standing over a cleared glade: a struck medal over the sentence saying where the
-        /// run placed.
-        ///
-        /// <para>
-        /// <b>This is the <em>crown</em> <see cref="ChapterMap"/> carries</b>
-        /// (<c>CrownHalfWidth</c>, <c>CrownBottom</c>, <c>CrownTop</c>), and
-        /// <c>ChapterMapValidator</c> refuses any perch - a glade's or the end-of-chapter
-        /// marker's - whose body would stand on it. Resize it here and
-        /// <c>ChapterMapTests</c> names the Domain number that stopped covering it.
-        /// </para>
-        /// <para>
-        /// <b>It lost its record line when the record moved out</b>, so it is the same pill in
-        /// the same place, shorter. The width is measured rather than chosen: "You are in the
-        /// top 25%" generates 358px in <c>GameFont</c> at 32pt, so the inner line box has to
-        /// clear that or <see cref="UIKit.Shrinkable"/> folds it.
-        /// </para>
-        /// </summary>
-        static void Standing(Transform parent, Social.RankBand band, Color ink, bool top, float delay)
-        {
-            var size = RankMarkTwoLine;
-
-            var host = UIKit.Node("Rank", parent);
-            host.anchorMin = host.anchorMax = host.pivot = new Vector2(.5f, .5f);
-            host.sizeDelta = size;
-            host.anchoredPosition = new Vector2(0f, RankMarkBottom + size.y * .5f);
-
-            float lineWidth = size.x - RankMarkPad * 2f;
-            float face = size.y * UIKit.PillFaceLift;
-
-            // Radiance behind the whole plate for the top tier. A soft gradient rather than
-            // anything with an edge, so it reads as light around an award and can never be
-            // mistaken for a mislaid rectangle - which is the risk with any layer that leaves
-            // the container it belongs to.
-            if (top)
-            {
-                UIKit.Img("Rays", host, Art.Rays(256, 12), new Color(1f, .80f, .32f, .16f),
-                          Vector2.one * (size.x * .96f), new Vector2(.5f, .5f), Vector2.zero);
-                UIKit.Img("Seat", host, Art.Glow(96, 2.2f), new Color(1f, .76f, .24f, .26f),
-                          size + new Vector2(96f, 76f), new Vector2(.5f, .5f), Vector2.zero);
-            }
-
-            // The banner under the node wears the hub's affirmative and this wears the orange of
-            // the same family, at the owner's instruction - one mould, two hues, which is how
-            // the kit already tells its plates apart (`Skins.PlateOrange`).
-            //
-            // **No traced edge any more**, and that is not a saving: the sprite carries its own
-            // keyline, and the rim this used to draw was tinted by *band*, which put a second
-            // outline a hair off the shape the mould already has. What the band colours now is
-            // the ink, which is where a tier belongs - on the medal and the words, not on a
-            // rectangle.
-            var bg = UIKit.Img("Pill", host, Art.S("Ui/" + Skins.PlateOrange), Color.white,
-                               size, new Vector2(.5f, .5f), Vector2.zero);
-
-            Medal(bg.transform, ink, top);
-
-            // **Cream rather than the band's own ink, and that is the plate's doing.** A tier
-            // used to be said twice, by the medal and by the colour of these words, and it
-            // could be: they were set on a near-black pill. On the kit's orange, `Pal.Gold` is
-            // a tint of the thing behind it. So the tier is said by the medal and by the
-            // sentence itself, and the words are simply legible.
-            var line = UIKit.Titled("Band", bg.transform, Loc.Get(Social.RankTier.KeyOf(band)),
-                                    32, Pal.Cream, TextAnchor.MiddleCenter,
-                                    new Vector2(lineWidth, RankMarkLineHeight),
-                                    new Vector2(.5f, .5f), new Vector2(0f, -46f + face), 3f, 3f);
-            UIKit.Shrinkable(line, 20);
-
-            // Its own entrance, a beat after the perch it rides. The perch scales from zero and
-            // takes the mark with it on a first build, but a repaint lands on a perch already at
-            // rest - this is the one path that has to animate either way.
-            host.localScale = Vector3.zero;
-            Tween.Pop(host, 0f, .55f, .18f + delay + .16f);
-        }
-
-        /// <summary>
-        /// The struck medal at the top of a ranked mark: a halo, a filled disc, a cream rim
-        /// and a trophy.
-        ///
-        /// <para>
-        /// <b>A trophy and not a star</b>, which matters more than it looks. The node's own
-        /// disc is already <c>node_s1</c>/<c>s2</c>/<c>s3</c> - its art *is* the star rating -
-        /// so a star sitting 100px above it would be the same symbol counting a different
-        /// thing, and a player would reasonably read a gold star on the badge as a fourth
-        /// star on the glade. A trophy is rank vocabulary and collides with nothing. It is
-        /// also why the tiers are one glyph in three colours rather than three glyphs: a
-        /// medal ladder is something everybody already knows how to read, and swapping the
-        /// symbol per tier would mean inventing an ordering nobody has been taught.
-        /// </para>
-        /// <para>
-        /// The rim is cream on every tier. Ringing a bronze medal in bronze makes the rim
-        /// disappear, which is the same mistake the feature beacon made travelling gold out
-        /// of gold - the contrast has to come from somewhere that is not the tier colour.
-        /// </para>
-        /// </summary>
-        static void Medal(Transform parent, Color ink, bool top)
-        {
-            var seat = new Vector2(0f, MedalY);
-
-            UIKit.Img("Halo", parent, Art.Glow(96, 2.2f), new Color(ink.r, ink.g, ink.b, top ? .42f : .24f),
-                      Vector2.one * (MedalSize * 1.7f), new Vector2(.5f, .5f), seat);
-
-            var disc = UIKit.Img("Disc", parent, Art.Disc(128), ink,
-                                 Vector2.one * MedalSize, new Vector2(.5f, .5f), seat);
-
-            UIKit.Img("Rim", parent, Art.Ring(128, 9f), new Color(1f, .98f, .90f, top ? .92f : .70f),
-                      Vector2.one * MedalSize, new Vector2(.5f, .5f), seat);
-
-            var glyph = UIKit.Img("Trophy", parent, Art.S("Ui/ic_trophy"),
-                                  new Color(.20f, .13f, .07f, .92f),
-                                  Vector2.one * (MedalSize * .52f), new Vector2(.5f, .5f), seat);
-            glyph.preserveAspect = true;
-
-            // Only the best tier breathes. Motion is the loudest thing on a map full of
-            // bobbing rocks, so spending it on every ranked glade would spend it on most of
-            // them and single out none.
-            if (top) Tween.Breathe(disc.transform, .055f, 2.4f);
-        }
-
-        /// <summary>
-        /// Redraws every standing mark after a freshly published population promoted some.
-        ///
-        /// <para>
-        /// The table is fetched once a session and normally lands before the player ever
-        /// reaches a map, so this is the uncommon path - but it is the one where a player who
-        /// has just been promoted is looking at the very screen that says so, and a screen
-        /// that draws asynchronous data has to repaint when it arrives.
-        /// </para>
-        /// </summary>
-        void RepaintRanks()
-        {
-            foreach (var pair in _nodes)
-            {
-                var perch = pair.Value;
-                if (!perch) continue;
-
-                // Hidden before it is destroyed: Destroy lands at the end of the frame, so
-                // the old mark would otherwise be drawn on top of the one replacing it for
-                // the rest of this one. The house rule everywhere a region is rebuilt.
-                var existing = perch.Find("Rank");
-                if (existing)
-                {
-                    existing.gameObject.SetActive(false);
-                    Destroy(existing.gameObject);
-                }
-
-                if (PlayerProgress.Stars(pair.Key) > 0)
-                    RankMark(perch, pair.Key, 0f);
-            }
         }
 
         /// <summary>

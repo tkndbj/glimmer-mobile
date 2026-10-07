@@ -570,7 +570,7 @@ console.log("\nranking");
   // check below is the one that has already cost a live run.
 
   // Deciles of a known list, so the shape of the distribution is pinned rather than assumed.
-  // Nearest-rank, the definition stats.ts already uses.
+  // Nearest-rank.
   const ten = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
   equal("nine deciles", deciles(ten).length, 9);
   equal("the first decile is the tenth value", deciles(ten)[0], 10);

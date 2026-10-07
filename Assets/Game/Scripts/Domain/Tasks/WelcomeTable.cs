@@ -26,14 +26,21 @@ namespace GlimmerGrove.Tasks
         public TaskGoal Goal { get; }
         public int Days { get; }
 
-        /// <summary>Its row on the page, nought first. Decides the colour its turret is drawn in.</summary>
+        /// <summary>Its row on the page, nought first. Order only - it decides nothing a quest pays.</summary>
         public int Ordinal { get; }
 
         /// <summary>
-        /// The seat colour the turret is shown in (0..3), one per row so four quests show four
-        /// colours. A picture only: the turret is granted on every seat (<see cref="WelcomeLedger"/>).
+        /// The seat the turret is granted on and drawn in (0..3). <b>The prize is this one
+        /// seat</b> (the owner, 2026-10-07): a red quest is the red turret and nothing else, as a
+        /// purchase is one seat (<see cref="WardLedger.Grant"/>). Its price option is the shelf
+        /// price, which is one seat's price, so the two prizes are worth the same.
+        /// <para>
+        /// <b>Authored on the row (<c>colour</c>), never derived from its position</b>, which it
+        /// once was: removing or inserting a quest would then have changed what every quest
+        /// under it pays, and a quest's prize is part of its identity the way its id is.
+        /// </para>
         /// </summary>
-        public int Colour => Ordinal % WardLine.Colours.Length;
+        public int Colour { get; }
 
         /// <summary>The loc key of the sentence the row says, with the day count as <c>{0}</c>.</summary>
         public string SentenceKey => WelcomeGoals.SentenceKey(Goal);
@@ -50,10 +57,11 @@ namespace GlimmerGrove.Tasks
         /// <summary>The amount of <see cref="PriceCurrency"/> the quest pays instead of the turret.</summary>
         public long PriceAmount => Ward == null ? 0L : Ward.ForGems ? Ward.GemPrice : Ward.CoinPrice;
 
-        public WelcomeQuest(string id, WardModel ward, TaskGoal goal, int days, int ordinal)
+        public WelcomeQuest(string id, WardModel ward, int colour, TaskGoal goal, int days, int ordinal)
         {
             Id = id;
             Ward = ward;
+            Colour = colour;
             Goal = goal;
             Days = days;
             Ordinal = ordinal;
@@ -233,6 +241,17 @@ namespace GlimmerGrove.Tasks
                     ok = false;
                 }
 
+                // One seat letter, exactly. Required rather than defaulted, because a default is
+                // a position or a constant, and either would pay a seat nobody chose.
+                int colour = row.colour != null && row.colour.Length == 1
+                           ? WardLine.Colours.IndexOf(row.colour[0]) : -1;
+                if (colour < 0)
+                {
+                    problems.Add($"{where} pays on seat '{row.colour}'; a quest names one of " +
+                                 $"'{WardLine.Colours}' as its colour");
+                    ok = false;
+                }
+
                 var goal = TaskGoals.Parse(row.goal);
                 if (goal == TaskGoal.None)
                 {
@@ -257,7 +276,7 @@ namespace GlimmerGrove.Tasks
                 }
 
                 lastDays = row.days;
-                quests[i] = new WelcomeQuest(row.id, ward, goal, row.days, i);
+                quests[i] = new WelcomeQuest(row.id, ward, colour, goal, row.days, i);
             }
 
             return ok ? new WelcomeTable(quests) : Empty;

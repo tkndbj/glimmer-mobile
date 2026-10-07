@@ -374,10 +374,8 @@ service cloud.firestore {
     // refused write access to something built entirely out of its own save.
     //
     // Readable by any signed-in player, and only by a signed-in player. It carries a
-    // display name, so it is not world-readable the way `config/stats` is — that document
-    // holds nine numbers per glade and names nobody, and it is public precisely because
-    // the splash needs it before authentication has finished. Nothing here is needed
-    // before a player is in the game.
+    // display name, so it is not world-readable the way `config/release` is. Nothing here
+    // is needed before a player is in the game.
     //
     // `get` and never `list`, for the reason `names` gives below and with more at stake:
     // a card is read by uid (a profile, a board row tapped), and nothing in the client or
@@ -396,8 +394,7 @@ service cloud.firestore {
     // the game grows. The obvious shape — order the player collection by score and take
     // the first hundred — is a hundred document reads every time anybody opens the screen,
     // against a collection that grows for the life of the game, on a database billed per
-    // read. One document is one read, the same for everybody, and cacheable. It is the
-    // same trade `config/stats` already makes.
+    // read. One document is one read, the same for everybody, and cacheable.
     //
     // `get` only, as `groves`: a board is opened by its id (`LeaderboardBoard.IsKnown`
     // refuses any other), and a collection nobody lists is a collection nobody should be
@@ -529,12 +526,12 @@ service cloud.firestore {
       allow list, write: if false;
     }
 
-    // The population's move counts, published by a scheduled job. Readable by anybody,
-    // deliberately: it holds no player and no identifier — nine numbers per glade,
-    // aggregated over thousands of saves — and the client fetches it from the splash,
-    // before anonymous sign-in has necessarily completed. Requiring a session would mean
-    // the one screen it feeds could not draw on a first launch, in exchange for
-    // protecting a document that is the same for everybody.
+    // RETIRED 2026-10-07. Was the population's move counts, written nightly by
+    // `publishGroveStats`; the function, the document and the client feature are all gone.
+    // Kept only because every build shipped before the removal still reads this path from
+    // the splash, signed out, and treats an absent document as "nothing to say". Without
+    // this block that read is refused instead: harmless too, but not worth a rules release.
+    // Delete it once the update wall's minimum excludes those builds.
     //
     // Rules union rather than override, so this widens the read above without touching it.
     match /config/stats {
@@ -543,8 +540,8 @@ service cloud.firestore {
     }
 
     // What the deployment requires of a client, per store: the oldest build still allowed
-    // to run, and where to get a newer one. Readable by anybody, for `config/stats`' reason
-    // and one sharper than it.
+    // to run, and where to get a newer one. Readable by anybody, signed
+    // out: it is the same for everybody, and for a sharper reason than that.
     //
     // A forced update exists precisely because something about an old client no longer works
     // against this deployment - and if that something is ever authentication, a gate behind

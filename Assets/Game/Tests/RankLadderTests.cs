@@ -14,11 +14,10 @@ namespace GlimmerGrove.Tests
     /// the two properties the whole feature rests on.
     ///
     /// <para>
-    /// <b>Not to be confused with <see cref="RankTests"/></b>, which is about the percentile
-    /// band a map node wears (<c>Social.RankTier</c>) and predates this by a year. Two things
-    /// in this game are called a rank: that one is a standing against other keepers, and this
-    /// one is a badge earned against a ladder. The nav bar's tab reads BOARDS now for the same
-    /// reason.
+    /// <b>Not to be confused with the percentile band a map node used to wear</b>
+    /// (<c>Social.RankTier</c>, removed 2026-10-07; its stored field is pinned by
+    /// <see cref="RetiredStandingTests"/>). That was a standing against other keepers; this is
+    /// a badge earned against a ladder. The nav bar's tab reads BOARDS for the same reason.
     /// </para>
     ///
     /// <para>
@@ -122,7 +121,7 @@ namespace GlimmerGrove.Tests
             {
                 "levels_cleared", "stars", "three_stars", "keeper_level", "best_wave",
                 "runs", "wins", "matches", "raiders", "bosses", "charms", "cogs", "bombs",
-                "utilities", "waves", "streak", "challenge_plays", "challenge_wins",
+                "utilities", "waves", "streak", "challenge_plays", "challenge_wins", "task_claims",
             };
 
             CollectionAssert.AreEquivalent(expected, RankMeasures.All(),
