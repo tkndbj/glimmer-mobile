@@ -216,7 +216,7 @@ namespace GlimmerGrove
                 _chip[c] = img;
             }
 
-            _undo = UIKit.TextButton("Undo", _tray, Skins.Alternate, Loc.Get("ui.challenges.undo").ToUpperInvariant(),
+            _undo = UIKit.TextButton("Undo", _tray, Skins.Alternate, Loc.Get("ui.challenges.undo").Upper(),
                                      Mathf.RoundToInt(Mathf.Min(tall * .34f, 30f)), new Vector2(keyW, tall * .92f),
                                      new Vector2(.5f, .5f), new Vector2(wide * .5f - keyW * .5f, 0f),
                                      () => Send(ChallengeInput.Undo()));

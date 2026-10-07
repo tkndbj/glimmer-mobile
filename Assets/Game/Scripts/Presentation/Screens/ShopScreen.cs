@@ -509,7 +509,7 @@ namespace GlimmerGrove
             // Not `Shrinkable`, because best-fit works on one label's box and this is one label
             // per character - a translated title that outgrew the plate would need a smaller
             // `size` here, which is a decision rather than something to leave to a fitter.
-            UIKit.Arced("Title", banner.transform, Loc.Get("ui.nav.shop").ToUpperInvariant(), 40,
+            UIKit.Arced("Title", banner.transform, Loc.Get("ui.nav.shop").Upper(), 40,
                         Pal.Sun, 620f, new Vector2(.5f, .5f), new Vector2(0f, 104f * Skins.RibbonLift), 3f, 3f, 2f);
 
             BuildBalances();
@@ -1455,7 +1455,7 @@ namespace GlimmerGrove
                 // line that used to run below this row, which is what stops five picture-only
                 // tabs asking the player to guess what a pouch means.
                 _name = UIKit.Shrinkable(
-                    UIKit.Titled("L", _plate.transform, Loc.Get(TabNameKey(shelf)).ToUpperInvariant(),
+                    UIKit.Titled("L", _plate.transform, Loc.Get(TabNameKey(shelf)).Upper(),
                                  23, Pal.Cream, TextAnchor.MiddleCenter,
                                  new Vector2(step - 26f, 30f), new Vector2(.5f, 0f),
                                  new Vector2(0f, 22f), 3f, 2f), 15);

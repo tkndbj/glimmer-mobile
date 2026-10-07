@@ -508,7 +508,7 @@ namespace GlimmerGrove
             // it is the page's own `ui.tasks.title` rather than a key of its own, because the
             // words are the same words and one string cannot come to disagree with itself.
             UIKit.Shrinkable(
-                UIKit.Titled("Name", card.transform, Loc.Get("ui.tasks.title").ToUpperInvariant(), 27,
+                UIKit.Titled("Name", card.transform, Loc.Get("ui.tasks.title").Upper(), 27,
                              Pal.Gold, TextAnchor.MiddleCenter, new Vector2(RowWidth - 2f * Margin, 36f),
                              new Vector2(.5f, 1f), new Vector2(0f, -26f), 3f, 3f), 17);
 
@@ -778,7 +778,7 @@ namespace GlimmerGrove
             float tw = hasMeta ? w - 262f - inset : w - 110f;
 
             UIKit.Shrinkable(
-                UIKit.Titled("Title", card, title.ToUpperInvariant(), 25, tint, TextAnchor.MiddleLeft,
+                UIKit.Titled("Title", card, title.Upper(), 25, tint, TextAnchor.MiddleLeft,
                              new Vector2(tw, 34f), new Vector2(0f, 1f),
                              new Vector2(30f + tw * .5f, -36f), 0f, 2f), 16);
 
@@ -1404,7 +1404,7 @@ namespace GlimmerGrove
 
         void BuildPlay()
         {
-            var play = UIKit.TextButton("Play", Content, Skins.Battle, "BATTLE", 62,
+            var play = UIKit.TextButton("Play", Content, Skins.Battle, Loc.Get("ui.home.battle"), 62,
                                         new Vector2(PlayW, PlayH), new Vector2(.5f, 0f),
                                         new Vector2(0f, PlayY),
                                         () => Flow.Go<LevelsScreen>(), "ic_battle");
@@ -1572,7 +1572,7 @@ namespace GlimmerGrove
             host.PressScale = .985f;
             _lineHost = (RectTransform)host.transform;
 
-            UIKit.Titled("Head", _lineHost, Loc.Get("ui.loadout.title").ToUpperInvariant(), 28,
+            UIKit.Titled("Head", _lineHost, Loc.Get("ui.loadout.title").Upper(), 28,
                          Pal.Gold, TextAnchor.MiddleCenter, new Vector2(LineW - 140f, LineHeadH),
                          new Vector2(.5f, 1f), new Vector2(0f, -(LinePad + LineHeadH * .5f)), 3f, 3f);
 

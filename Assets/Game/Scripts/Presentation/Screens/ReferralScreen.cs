@@ -285,7 +285,7 @@ namespace GlimmerGrove
                 _w.Goal = friend;
 
                 if (_w.Title)
-                    _w.Title.text = Loc.Format("ui.referral.friend_n", friend).ToUpperInvariant();
+                    _w.Title.text = Loc.Format("ui.referral.friend_n", friend).Upper();
 
                 _screen.Paint(_w, _screen._table.PerInvitee,
                               lit: friend == ReferralLedger.FirstClaimableFriend,
@@ -536,7 +536,7 @@ namespace GlimmerGrove
                              new Vector2(1f, 1f), new Vector2(-76f, cy),
                              () => { if (!Flow.HasModal) Flow.Modal<ReferralInfoOverlay>(); });
 
-            var ribbon = Scenery.TitleRibbon(Safe, Loc.Get("ui.referral.title").ToUpperInvariant(),
+            var ribbon = Scenery.TitleRibbon(Safe, Loc.Get("ui.referral.title").Upper(),
                                              new Vector2(720f, BannerH), Top, new Vector2(0f, cy), 42);
             if (!_restaging)
             {
@@ -617,7 +617,7 @@ namespace GlimmerGrove
             const float TextLeft = 236f;
 
             UIKit.Shrinkable(
-                UIKit.Titled("CodeCap", plate.transform, Loc.Get("ui.referral.your_code").ToUpperInvariant(),
+                UIKit.Titled("CodeCap", plate.transform, Loc.Get("ui.referral.your_code").Upper(),
                              24, Pal.A(Pal.Cream, .78f), TextAnchor.MiddleLeft, new Vector2(CodeW, 30f), Left,
                              new Vector2(TextLeft + CodeW * .5f, 92f), 3f, 3f), 15);
 
@@ -789,7 +789,7 @@ namespace GlimmerGrove
             _welcome.Goal = 0;
 
             if (_welcome.Title)
-                _welcome.Title.text = Loc.Get("ui.referral.welcome_title").ToUpperInvariant();
+                _welcome.Title.text = Loc.Get("ui.referral.welcome_title").Upper();
         }
 
         void EnterCode()
@@ -806,7 +806,7 @@ namespace GlimmerGrove
         void BuildHeading()
         {
             _heading = (RectTransform)UIKit.Shrinkable(
-                UIKit.Titled("H", Safe, Loc.Format("ui.referral.heading", _chapterName).ToUpperInvariant(),
+                UIKit.Titled("H", Safe, Loc.Format("ui.referral.heading", _chapterName).Upper(),
                              28, Pal.Gold, TextAnchor.MiddleLeft, new Vector2(Width - 16f, 38f), Top,
                              Vector2.zero, 3f, 3f), 17).transform;
         }
@@ -919,7 +919,7 @@ namespace GlimmerGrove
             var collect = UIKit.Img("Collect", root, Art.S("Ui/" + Skins.Affirm), Color.white,
                                     new Vector2(KeyW, KeyH), Right, new Vector2(-130f, 0f));
             UIKit.Shrinkable(
-                UIKit.Titled("CollectText", collect.transform, Loc.Get("ui.referral.collect").ToUpperInvariant(),
+                UIKit.Titled("CollectText", collect.transform, Loc.Get("ui.referral.collect").Upper(),
                              34, Pal.Cream, TextAnchor.MiddleCenter, new Vector2(KeyW - 36f, 52f), Centre,
                              new Vector2(0f, KeyH * UIKit.PillFaceLift), 4f, 4f), 20);
             w.Collect = (RectTransform)collect.transform;
@@ -1072,7 +1072,7 @@ namespace GlimmerGrove
                 if (welcome)
                 {
                     w.MarkText.text = clearedHere
-                        ? Loc.Get("ui.referral.settling").ToUpperInvariant()
+                        ? Loc.Get("ui.referral.settling").Upper()
                         : Loc.Format("ui.referral.progress", cleared, total);
                     w.MarkText.color = clearedHere ? Pal.Aqua : Pal.Cream;
                 }
@@ -1082,7 +1082,7 @@ namespace GlimmerGrove
                     // accent so it reads as *something is happening* beside the cream of a seat
                     // nobody has taken. Amber rather than gold, because gold on this board
                     // means *take this* (the lit row) and this row cannot be taken yet.
-                    w.MarkText.text = Loc.Get("ui.referral.in_progress").ToUpperInvariant();
+                    w.MarkText.text = Loc.Get("ui.referral.in_progress").Upper();
                     w.MarkText.color = Pal.Amber;
                 }
                 else

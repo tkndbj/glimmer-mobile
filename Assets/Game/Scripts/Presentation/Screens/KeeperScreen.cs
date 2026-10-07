@@ -229,7 +229,7 @@ namespace GlimmerGrove
             // page's headline and a second one above it would be two.
             float left = 76f + ChromeSize * .5f + 22f;
             float right = PageW - 40f - PillW * 2f - 16f - 20f;
-            var title = UIKit.Titled("Title", Safe, Loc.Get("ui.keeper.page_title").ToUpperInvariant(), 46, Pal.Gold,
+            var title = UIKit.Titled("Title", Safe, Loc.Get("ui.keeper.page_title").Upper(), 46, Pal.Gold,
                                      TextAnchor.MiddleLeft, new Vector2(right - left, ChromeSize), TopLeft,
                                      new Vector2((left + right) * .5f, cy), 3f, 3f);
             UIKit.OneLineLabel(title, right - left, 46, 26);
@@ -407,7 +407,7 @@ namespace GlimmerGrove
                 _xpLine.text = (earned.IsMaxLevel
                     ? Loc.Get("ui.keeper.xp_max")
                     : Loc.Format("ui.keeper.xp_short", Compact.Number(earned.XpIntoLevel), Compact.Number(earned.XpForNextLevel)))
-                    .ToUpperInvariant();
+                    .Upper();
                 UIKit.OneLineLabel(_xpLine, BarW - 40f, 30, 18);
             }
 
@@ -425,7 +425,7 @@ namespace GlimmerGrove
             {
                 _buy.Interactable = true;
                 if (img) img.sprite = Art.S("Ui/" + (_offer.Currency == Currency.Gems ? Skins.Gem : Skins.Buy));
-                _keyCaption.text = Loc.Format("ui.keeper.buy", _offer.Level).ToUpperInvariant();
+                _keyCaption.text = Loc.Format("ui.keeper.buy", _offer.Level).Upper();
                 _keyTag.gameObject.SetActive(true);
                 _keyPrice.text = Compact.Number(_offer.Price);
                 _keyIcon.sprite = _offer.Currency == Currency.Gems ? Art.S("Ui/ic_gem") : Art.CoinFace();
@@ -438,7 +438,7 @@ namespace GlimmerGrove
             {
                 _buy.Interactable = false;
                 if (img) img.sprite = Art.S("Ui/" + Skins.Shut);
-                _keyCaption.text = Loc.Get(_offer.AtTop ? "ui.keeper.key_top" : "ui.keeper.key_not_sold").ToUpperInvariant();
+                _keyCaption.text = Loc.Get(_offer.AtTop ? "ui.keeper.key_top" : "ui.keeper.key_not_sold").Upper();
                 _keyTag.gameObject.SetActive(false);
                 _keyGlow.enabled = false;
                 SeatCaption(KeyW - 60f, 0f);

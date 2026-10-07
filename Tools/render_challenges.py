@@ -841,9 +841,13 @@ def render_deals(txt, canvas=(1080, 1920), held=None, ad_left=None):
                        K.shrunk_left(block, name, left + ROW_TEXT_X, y - 60 - 33, ROW_TEXT_W, 66, 52, 28,
                                      fill=K.GOLD if is_held else K.CREAM, outline=3), 28))
         days = txt("ui.challenges.days_one") if tier["days"] == 1 else txt("ui.challenges.days").replace("{0}", str(tier["days"]))
-        line = txt("ui.challenges.deal_line").replace("{0}", str(tier["plays"])).replace("{1}", days)
+        # `ChallengeTierOverlay` slots ui.challenges.deal_plays ("+6 plays") into the line and
+        # draws it in Pal.Amber; this helper draws one colour, so the words, the size (36) and
+        # the box (top 22 above the row centre, 124 tall) are mirrored and the orange is not.
+        plays = txt("ui.challenges.deal_plays").replace("{0}", str(tier["plays"]))
+        line = txt("ui.challenges.deal_line").replace("{0}", plays).replace("{1}", days)
         floors.append(("line %s" % tier["id"],
-                       K.shrunk_left(block, line, left + ROW_TEXT_X, y + 20 - 42, ROW_TEXT_W, 84, 32, 20,
+                       K.shrunk_left(block, line, left + ROW_TEXT_X, y - 22, ROW_TEXT_W, 124, 36, 20,
                                      fill=(255, 245, 224), outline=2), 20))
 
         key_cx = bcx + ROW_W / 2 - KEY_INSET - KEY_W / 2

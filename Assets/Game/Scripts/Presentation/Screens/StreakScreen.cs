@@ -495,7 +495,7 @@ namespace GlimmerGrove
                              new Vector2(1f, 1f), new Vector2(-76f, cy),
                              () => { if (!Flow.HasModal) Flow.Modal<StreakInfoOverlay>(); });
 
-            var ribbon = Scenery.TitleRibbon(Safe, Loc.Get("ui.streak.title").ToUpperInvariant(),
+            var ribbon = Scenery.TitleRibbon(Safe, Loc.Get("ui.streak.title").Upper(),
                                              new Vector2(720f, BannerH), Top, new Vector2(0f, cy), 42);
             ribbon.transform.localScale = Vector3.zero;
             Tween.Pop(ribbon.transform, 0f, .5f, .06f);
@@ -796,7 +796,7 @@ namespace GlimmerGrove
                 UIKit.Titled("H", Safe,
                              (_cycle > 1
                                  ? Loc.Format("ui.streak.week_n", _cycle)
-                                 : Loc.Get("ui.streak.week_one")).ToUpperInvariant(),
+                                 : Loc.Get("ui.streak.week_one")).Upper(),
                              28, Pal.Gold, TextAnchor.MiddleLeft, new Vector2(420f, 38f), Top,
                              new Vector2(-Width * .5f + 210f + 8f, cy), 3f, 3f), 17);
 
@@ -947,7 +947,7 @@ namespace GlimmerGrove
             Reward(entry);
 
             entry.Title = UIKit.Shrinkable(
-                UIKit.Titled("Title", entry.Root, Loc.Format("ui.streak.day_n", night).ToUpperInvariant(),
+                UIKit.Titled("Title", entry.Root, Loc.Format("ui.streak.day_n", night).Upper(),
                              31, Pal.Cream, TextAnchor.MiddleLeft, new Vector2(TextW, 42f), Left,
                              new Vector2(TextX + TextW * .5f, 30f), 3f, 3f), 18);
 
@@ -967,7 +967,7 @@ namespace GlimmerGrove
 
             UIKit.Shrinkable(
                 UIKit.Titled("CollectText", collect.transform,
-                             Loc.Get("ui.streak.collect").ToUpperInvariant(), 34, Pal.Cream,
+                             Loc.Get("ui.streak.collect").Upper(), 34, Pal.Cream,
                              TextAnchor.MiddleCenter, new Vector2(KeyW - 36f, 52f), Centre,
                              new Vector2(0f, KeyH * UIKit.PillFaceLift), 4f, 4f), 20);
 
@@ -1300,7 +1300,7 @@ namespace GlimmerGrove
                     text.text = (blocked ? Loc.Get("ui.streak.needs_connection")
                                : state == Night.Tonight ? Loc.Get("ui.streak.tonight")
                                : away <= 1 ? Loc.Get("ui.streak.in_one")
-                               : Loc.Format("ui.streak.in_many", away)).ToUpperInvariant();
+                               : Loc.Format("ui.streak.in_many", away)).Upper();
 
                     text.color = blocked ? Pal.Sun
                                : state == Night.Tonight ? Pal.Aqua : Pal.A(Pal.Cream, .60f);

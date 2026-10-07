@@ -62,6 +62,9 @@ namespace GlimmerGrove
         /// fold three times. A row keeps 60 units inside the window's sliced border.
         /// </summary>
         const float PanelW = 1000f, RowW = 880f, StoneSize = 160f, StoneX = 104f, TextX = 204f, TextW = 370f;
+
+        /// <summary>A deal row's description: the box's top edge (row-centred) and its height.</summary>
+        const float LineTop = 22f, LineH = 124f;
         static readonly Vector2 KeySize = new Vector2(280f, 116f);
         const float KeyInset = 16f;
 
@@ -134,7 +137,7 @@ namespace GlimmerGrove
                 y -= RowH + RowGap;
             }
 
-            UIKit.TextButton("Close", Panel, Skins.Alternate, Loc.Get("ui.challenges.done").ToUpperInvariant(), 36,
+            UIKit.TextButton("Close", Panel, Skins.Alternate, Loc.Get("ui.challenges.done").Upper(), 36,
                              new Vector2(400f, 110f), new Vector2(.5f, 0f), new Vector2(0f, 30f + 55f),
                              () => Close());
 
@@ -194,11 +197,27 @@ namespace GlimmerGrove
                              new Vector2(TextW, 66f), new Vector2(0f, .5f), new Vector2(TextX + TextW * .5f, 60f), 3f, 3f),
                 28);
 
+            // What the deal adds - "+6 plays" - is its own loc piece, drawn in Amber inside the
+            // sentence, because it is the number a player is choosing between and it has to
+            // read first. A tag rather than markup in the loc file, for the hub's reason
+            // (EndlessHub.Worth): a translator never handles a hex code, and the colour stays
+            // with the palette.
+            //
+            // Asked for at 36 (was 32) in a box 124 tall (was 84), because the 370-wide column is
+            // what limits it: the sentence is about two and a half lines at 36, so the old box
+            // shrank it to 29-31 and an 84 box would shrink the new size straight back. At 124
+            // it settles at 33-34 over three lines in every shipped language (measured with
+            // render_challenges.py --deals). The top edge stays at +22, so the first line
+            // starts where it did; the extra height reaches into the row's empty lower third
+            // and stops 13 clear of the row's 115 half-height.
             string days = tier.Days == 1 ? Loc.Get("ui.challenges.days_one") : Loc.Format("ui.challenges.days", tier.Days);
+            string plays = $"<color=#{ColorUtility.ToHtmlStringRGB(Pal.Amber)}>" +
+                           Loc.Format("ui.challenges.deal_plays", tier.Plays) + "</color>";
             UIKit.Shrinkable(
-                UIKit.Titled("Line", t, Loc.Format("ui.challenges.deal_line", tier.Plays, days), 32,
-                             new Color(1f, .96f, .88f, .88f), TextAnchor.UpperLeft, new Vector2(TextW, 84f),
-                             new Vector2(0f, .5f), new Vector2(TextX + TextW * .5f, -20f), 2f, 0f, wrap: true),
+                UIKit.Titled("Line", t, Loc.Format("ui.challenges.deal_line", plays, days), 36,
+                             new Color(1f, .96f, .88f, .88f), TextAnchor.UpperLeft, new Vector2(TextW, LineH),
+                             new Vector2(0f, .5f), new Vector2(TextX + TextW * .5f, LineTop - LineH * .5f),
+                             2f, 0f, wrap: true, rich: true),
                 20);
 
             var keyPos = new Vector2(-(KeyInset + KeySize.x * .5f), 0f);

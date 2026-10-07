@@ -128,7 +128,7 @@ namespace GlimmerGrove
             // NEXT deals the day's next level of this genre while a play is left; when none is,
             // the one green key is the list, which is where tomorrow and the deals are said.
             var go = UIKit.TextButton("Next", Panel, "btn_green",
-                                      Loc.Get(again ? "ui.win.next" : "ui.challenges.title").ToUpperInvariant(), 50,
+                                      Loc.Get(again ? "ui.win.next" : "ui.challenges.title").Upper(), 50,
                                       new Vector2(520f, 152f), new Vector2(.5f, 0f), new Vector2(0f, ButtonY),
                                       () => Close(again ? (System.Action)ToNext : ToList));
             UIKit.Halo(go.transform, Pal.Mint, 620f, .28f);

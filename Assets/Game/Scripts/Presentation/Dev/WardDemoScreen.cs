@@ -251,7 +251,7 @@ namespace GlimmerGrove.Dev
 
         void Paint()
         {
-            if (_caption != null) _caption.text = Loc.Get(_model.NameKey).ToUpperInvariant();
+            if (_caption != null) _caption.text = Loc.Get(_model.NameKey).Upper();
 
             if (_note != null)
                 _note.text = WardAbilities.NameOf(_model.Ability) + "  ·  " + _model.Id

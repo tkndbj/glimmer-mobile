@@ -824,6 +824,34 @@ def check_lane_credits(files):
     return problems
 
 
+# --------------------------------------------- a caption is capitalised in its own language
+# `ToUpperInvariant` writes Turkish wrong: it takes dotted `i` to `I` where Turkish writes `İ`,
+# so a banner reading "GİRİŞ" comes out as "GIRIŞ" - a misspelling on every screen that shouts.
+# `Loc.Upper` (and its suffix `.Upper()`) knows the active language and is the one way the UI
+# capitalises. A string's own `ToUpperInvariant()` in Presentation is therefore the mistake;
+# `char.ToUpperInvariant(c)` takes an argument, is about codes rather than words, and is not
+# matched.
+INVARIANT_CAPS = re.compile(r"\.ToUpperInvariant\s*\(\s*\)")
+
+
+def check_capitals(files):
+    problems = []
+
+    for path in files:
+        name = path.replace("\\", "/")
+        if "/Presentation/" not in name:
+            continue
+
+        text = without_comments(io.open(path, encoding="utf-8", errors="replace").read())
+
+        for hit in INVARIANT_CAPS.finditer(text):
+            line = text[:hit.start()].count("\n") + 1
+            problems.append("%s:%d  capitalises with ToUpperInvariant() - use .Upper() "
+                            "(Loc.Upper), which writes Turkish i as İ" % (name, line))
+
+    return problems
+
+
 def main():
     wanted = [a.lower() for a in sys.argv[1:]]
     print("Unity: %s" % DATA)
@@ -868,7 +896,11 @@ def main():
         for line in lanes:
             print("  payout  FAILED  " + line)
 
-        if problems or boards or dtos or wallets or wipes or endings or lanes:
+        capitals = check_capitals(every)
+        for line in capitals:
+            print("  caps    FAILED  " + line)
+
+        if problems or boards or dtos or wallets or wipes or endings or lanes or capitals:
             ok = False
 
     print("OK" if ok else "FAILED")

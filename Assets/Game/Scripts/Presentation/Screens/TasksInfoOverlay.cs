@@ -56,7 +56,7 @@ namespace GlimmerGrove
             glyph.preserveAspect = true;
 
             UIKit.Shrinkable(
-                UIKit.Titled("H", host, Loc.Get(titleKey).ToUpperInvariant(), 34, Head,
+                UIKit.Titled("H", host, Loc.Get(titleKey).Upper(), 34, Head,
                              TextAnchor.MiddleLeft, new Vector2(BodyW, 44f),
                              new Vector2(0f, 1f), new Vector2(148f + BodyW * .5f, -34f), 0f, 0f), 22);
 

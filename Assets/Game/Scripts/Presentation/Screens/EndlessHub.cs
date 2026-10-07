@@ -117,13 +117,13 @@ namespace GlimmerGrove
         /// </summary>
         public static string CaptionFor(int best)
         {
-            if (best <= 0) return Loc.Get("ui.endless.unplayed").ToUpperInvariant();
+            if (best <= 0) return Loc.Get("ui.endless.unplayed").Upper();
 
             int top = GroveRanks.Waves.TopPercent(best);
 
             return top > 0
-                ? Loc.Format("ui.endless.standing", top).ToUpperInvariant()
-                : Loc.Get("ui.endless.best_label").ToUpperInvariant();
+                ? Loc.Format("ui.endless.standing", top).Upper()
+                : Loc.Get("ui.endless.best_label").Upper();
         }
 
         /// <summary>The record this hub is about, or nought for a lane never run.</summary>
@@ -478,7 +478,7 @@ namespace GlimmerGrove
                 _mark.enabled = _mark.sprite != null;
                 if (!drawn || _name == null) return;
 
-                _name.text = (held != null ? rung.Name : Loc.Get("ui.ranks.unranked")).ToUpperInvariant();
+                _name.text = (held != null ? rung.Name : Loc.Get("ui.ranks.unranked")).Upper();
                 _name.color = held != null ? Pal.Gold : Pal.A(Pal.Cream, .62f);
             }
         }
@@ -650,6 +650,10 @@ namespace GlimmerGrove
                                      seat != null ? Vector2.zero : new Vector2(seatX, y));
                 if (mark != null) mark.preserveAspect = true;
 
+                // `room` is the whole run from where the sentence starts to the plate's inner
+                // edge, so the box is `room` wide and centred half of it in. It was `room * 2`
+                // centred `room` in - a box reaching ~690 units past the plate, so a sentence
+                // never wrapped and anything longer than the English simply drew off the edge.
                 float textX = seatX + EndlessHubLayout.SlotSize * .5f + 26f;
                 float room = EndlessHubLayout.PanelWidth * .5f - EndlessHubLayout.PanelPad - textX;
 
@@ -662,9 +666,9 @@ namespace GlimmerGrove
                                         Loc.Format(lane.PointKey(i + 1), Worth("xp", Pal.Mint),
                                                    Worth("coins", Pal.Amber)), 34,
                                         Pal.Cream, TextAnchor.MiddleLeft,
-                                        new Vector2(room * 2f, EndlessHubLayout.RowHeight),
+                                        new Vector2(room, EndlessHubLayout.RowHeight),
                                         new Vector2(.5f, .5f),
-                                        new Vector2(textX + room, y), 3f, 3f, rich: true);
+                                        new Vector2(textX + room * .5f, y), 3f, 3f, rich: true);
                 UIKit.Shrinkable(says, 22);
             }
 
@@ -757,13 +761,13 @@ namespace GlimmerGrove
             {
                 var next = table.NextLocked(best);
                 return next.IsValid
-                    ? Loc.Format("ui.endless.checkpoint.first", next.UnlockAt).ToUpperInvariant()
-                    : Loc.Get("ui.endless.checkpoint.title").ToUpperInvariant();
+                    ? Loc.Format("ui.endless.checkpoint.first", next.UnlockAt).Upper()
+                    : Loc.Get("ui.endless.checkpoint.title").Upper();
             }
 
             var chosen = EndlessCheckpoints.Chosen(level);
             return Loc.Format("ui.endless.checkpoint.start", chosen.IsValid ? chosen.Wave : 1)
-                      .ToUpperInvariant();
+                      .Upper();
         }
 
         static void OpenCheckpoints(LevelId level)
@@ -844,7 +848,7 @@ namespace GlimmerGrove
             bool named = !unlocked && !string.IsNullOrEmpty(wall);
 
             var play = UIKit.TextButton("Battle", host, unlocked ? Skins.Battle : Skins.Shut,
-                                        named ? wall.ToUpperInvariant()
+                                        named ? wall.Upper()
                                               : Loc.Get("ui.endless.battle"),
                                         named ? 38 : 62,
                                         new Vector2(EndlessHubLayout.ButtonWidth,

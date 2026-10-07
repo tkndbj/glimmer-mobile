@@ -63,6 +63,10 @@ wire or rules mistake reaches live accounts.
    concatenation.
 6a. **A lesson is a permanent id; `ScreenLessons` owns order and chaining** for a screen that teaches several.
 6b. **A *tap this* lesson rings the thing to tap, never its source.**
+6c. **A translation is a whole copy of English** — every key, no extra, the same `{n}` slots, tags and
+   line breaks (`loc.py`, `TranslationTests`); `Loc.Languages` lists exactly the tables in `loc/`. UI
+   capitals go through `.Upper()` (`Loc.Upper`: Turkish i → İ); `compile.py` refuses a bare
+   `ToUpperInvariant()` in Presentation.
 7. **All asset loading goes through `AssetLibrary`.** Never call `Resources.Load` or `Addressables` directly;
    derive paths from `AssetManifest`.
 7a. **Asset registration is an importer hook plus a build-gate audit**, never a menu item.
@@ -588,7 +592,8 @@ The Editor is often not running and the MCP bridge is down whenever scripts fail
 **Core gates**
 - **Compile:** `Tools/verify/compile.py` (Unity's bundled Roslyn; command in the `verify-content-without-unity`
   memory). Also refuses magic-method name clashes, null tests on DTO fields, unacknowledged `.Layout.` reads,
-  readouts without `WalletWatch`, `Content` child reaches, run panels raised without `RankCeremony.Before`.
+  readouts without `WalletWatch`, `Content` child reaches, run panels raised without `RankCeremony.Before`,
+  `ToUpperInvariant()` in Presentation (6c).
 - **Tests:** `python Tools/verify/tests.py [Fixture[.Method]]`; `GLIMMER_WHY=1` explains "needs the Editor".
   Read the "needs the Editor" count as well as the red one, and ask why it moved.
 - **Content:** `Tools/verify/content.py` — parses content, proves levels solvable, derives par, resolves loc
@@ -747,6 +752,14 @@ gates print the derived totals.
   pays credits once (80 a level, 40 a star). Stars: gold `par x 1.20`, silver `par x 1.40`, fail at `par x
   1.60`, except a siege, which authors its own. Chapter gate: 16 stars of the chapter behind, flat (cut to
   what it pays). Hearts cap 5, 8 h refill. Continue: 20 gems doubling. Endless credits 30/wave, 10,000/day.
+- **Languages**: English plus Spanish, Portuguese (Brazilian), French, German, Italian, Turkish, Polish
+  (`loc/*.json`); device language by default, chooser in Settings (`LanguageOverlay`), choice saved in
+  `settings.language`. The translations were drafted by Claude and await native review. In Turkish a level
+  is *bölüm* and a chapter *bölge*. Polish has three plural forms and the code knows two, so a Polish count
+  is written label-first ("Gwiazdki: {0}") and never in the gendered past tense. iOS: the tracking
+  prompt's sentence is `ui.privacy.tracking_usage`; `IosPrivacyPlist` writes it per language as
+  `{code}.lproj/InfoPlist.strings` plus `CFBundleLocalizations` from `Loc.Languages` (a new language
+  needs nothing more).
 - **The Daily Challenges banner is a painted picture with English in it** — the one untranslated control.
 
 ## Open items

@@ -270,7 +270,7 @@ namespace GlimmerGrove
         }
 
         static void CardTitle(Transform card, string key)
-            => UIKit.Titled("Head", card, Loc.Get(key).ToUpperInvariant(), 30, Pal.Gold,
+            => UIKit.Titled("Head", card, Loc.Get(key).Upper(), 30, Pal.Gold,
                             TextAnchor.MiddleLeft, new Vector2(CardWidth - 80f, 40f),
                             new Vector2(0f, 1f), new Vector2(40f + (CardWidth - 80f) * .5f, -44f),
                             3f, 3f);
@@ -498,7 +498,7 @@ namespace GlimmerGrove
 
             var chrome = Safe;
 
-            var banner = Scenery.TitleRibbon(chrome, Loc.Get("ui.profile.public_title").ToUpperInvariant(),
+            var banner = Scenery.TitleRibbon(chrome, Loc.Get("ui.profile.public_title").Upper(),
                                              new Vector2(470f, 128f), new Vector2(.5f, 1f),
                                              new Vector2(0f, -106f), 36, 20f);
             banner.transform.localScale = Vector3.zero;

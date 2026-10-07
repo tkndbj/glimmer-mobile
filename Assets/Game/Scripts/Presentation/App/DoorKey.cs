@@ -83,7 +83,7 @@ namespace GlimmerGrove
             // The caption, left, on two lines in the room between the badge and the picture.
             float room = width - ArtRight - artW - 20f - CaptionLeft;
             UIKit.Shrinkable(
-                UIKit.Titled("Caption", key.transform, TwoLines(Loc.Get(captionKey).ToUpperInvariant()), 44,
+                UIKit.Titled("Caption", key.transform, TwoLines(Loc.Get(captionKey).Upper()), 44,
                              Pal.Cream, TextAnchor.MiddleCenter, new Vector2(room, KeyH * .82f),
                              new Vector2(0f, .5f), new Vector2(CaptionLeft + room * .5f, lift), 3f, 3f,
                              wrap: true),

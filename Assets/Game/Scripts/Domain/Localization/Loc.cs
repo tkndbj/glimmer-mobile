@@ -66,6 +66,68 @@ namespace GlimmerGrove.Localization
             => _active.TryGet(key, out _) || _fallback.TryGet(key, out _);
 
         /// <summary>
+        /// Capitals as the active language writes them.
+        ///
+        /// <para>
+        /// <c>ToUpperInvariant</c> is right for every language this game ships except Turkish,
+        /// which has two letters i: dotted <c>i</c> capitalises to <c>İ</c> and dotless <c>ı</c>
+        /// to <c>I</c>. The invariant rule turns both into <c>I</c>, so "giriş" would read
+        /// "GIRIŞ" - a different and wrong word on every banner. The two letters are mapped by
+        /// hand rather than through <c>CultureInfo("tr-TR")</c> because what a player's runtime
+        /// carries of the culture tables is the platform's business, and this has to be the
+        /// same answer on every device. Every caption the UI capitalises goes through
+        /// <see cref="LocCase.Upper"/>, and <c>compile.py</c> refuses a bare
+        /// <c>ToUpperInvariant()</c> in Presentation.
+        /// </para>
+        /// </summary>
+        public static string Upper(string text) => Upper(text, Language);
+
+        /// <summary><see cref="Upper(string)"/> for a named language - the pure half, so it can be tested.</summary>
+        public static string Upper(string text, string language)
+        {
+            if (string.IsNullOrEmpty(text)) return text ?? string.Empty;
+            if (language == TurkishLanguage) text = text.Replace('i', 'İ').Replace('ı', 'I');
+            return text.ToUpperInvariant();
+        }
+
+        const string TurkishLanguage = "tr";
+
+        /// <summary>
+        /// One language the game ships a table for, and the key of its name as its own speakers
+        /// write it - "Deutsch", never "German", because the list is read by somebody who may not
+        /// read the language it is currently drawn in.
+        /// </summary>
+        public readonly struct Shipped
+        {
+            public readonly string Code, NameKey;
+            public Shipped(string code, string nameKey) { Code = code; NameKey = nameKey; }
+        }
+
+        /// <summary>
+        /// Every language with a table under <c>loc/</c>, in the order the picker lists them.
+        /// <c>TranslationTests</c> holds this list and the folder to each other, so a table
+        /// nobody can choose, or a choice with no table, fails a fixture rather than a player.
+        /// </summary>
+        public static readonly Shipped[] Languages =
+        {
+            new Shipped("en", "ui.language.en"),
+            new Shipped("es", "ui.language.es"),
+            new Shipped("pt", "ui.language.pt"),
+            new Shipped("fr", "ui.language.fr"),
+            new Shipped("de", "ui.language.de"),
+            new Shipped("it", "ui.language.it"),
+            new Shipped("tr", "ui.language.tr"),
+            new Shipped("pl", "ui.language.pl"),
+        };
+
+        /// <summary>The key naming <paramref name="code"/> in its own language, or null for one not shipped.</summary>
+        public static string NameKeyOf(string code)
+        {
+            foreach (var l in Languages) if (l.Code == code) return l.NameKey;
+            return null;
+        }
+
+        /// <summary>
         /// Loads the fallback table and then the player's language. The fallback is
         /// loaded first and kept, so a failure to fetch the chosen language degrades
         /// to English instead of to raw keys.
@@ -161,5 +223,14 @@ namespace GlimmerGrove.Localization
             try { LanguageChanged?.Invoke(); }
             catch (Exception e) { Debug.LogException(e); }
         }
+    }
+
+    /// <summary>
+    /// <see cref="Loc.Upper"/> as a suffix, so a caption reads <c>Loc.Get(key).Upper()</c>
+    /// wherever it used to read <c>.ToUpperInvariant()</c>.
+    /// </summary>
+    public static class LocCase
+    {
+        public static string Upper(this string text) => Loc.Upper(text);
     }
 }

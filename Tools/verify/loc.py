@@ -32,7 +32,8 @@ import re
 import sys
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-TABLE = os.path.join(ROOT, "Assets", "StreamingAssets", "Content", "loc", "en.json")
+TABLES = os.path.join(ROOT, "Assets", "StreamingAssets", "Content", "loc")
+TABLE = os.path.join(TABLES, "en.json")
 SOURCE = os.path.join(ROOT, "Assets", "Game")
 
 # "ui.something.else" — two or more dot-separated lowercase segments. The same
@@ -150,6 +151,80 @@ def strip_comments(text):
     return LINE_COMMENT.sub("", BLOCK_COMMENT.sub("", text))
 
 
+# ------------------------------------------------------------------ translations
+# A translation is held to English key for key, because `Loc` falls back silently: a key a
+# table leaves out is drawn in English and a key it invents is drawn nowhere, and neither is
+# visible from the language it was written in. What a key's text carries beyond its words is
+# held too - the slots `Loc.Format` fills, the rich-text tags, the line breaks a tip is laid
+# out around - since a translation that drops a `{1}` prints a sentence missing its number.
+#
+# Three characters are refused outright. An em dash: house style says none ships anywhere under
+# Assets/. A double quote or a backslash: either is written as an escape in JSON, and
+# `JsonUtility` truncates a string at an escape (CLAUDE.md, Serialisation) - the player would
+# read half a sentence.
+TAG = re.compile(r"</?[a-z]+(?:=[^>]*)?>")
+REFUSED = {"—": "an em dash", '"': "a double quote", "\\": "a backslash"}
+
+# UTF-8 read back as the Windows codepage: "ü" becomes "Ã¼", "ı" becomes "Ä±", "·" becomes "Â·".
+# Every such pair is a lead letter followed by a continuation byte drawn as Latin-1 or cp1252, and
+# no word in a shipped language puts one after the other ("NÃO" and "Âmbar" are followed by a
+# letter). It is how a table edited through a shell that guessed the encoding wrong looks, and it
+# passed every other check here once: same slots, same keys, gibberish on a German button.
+MOJIBAKE = re.compile("[ÂÃÄÅ][\u0080-¿ŒœŠšŸ"
+                      "Žžƒˆ˜–—‘-„†-•"
+                      "…‰‹›€™]")
+
+
+def shape(text):
+    return (sorted(SLOT.findall(text)), sorted(TAG.findall(text)), text.count("\n"))
+
+
+def translations(english):
+    problems, same, tables = [], 0, 0
+
+    for name in sorted(os.listdir(TABLES)):
+        if not name.endswith(".json") or name == "en.json":
+            continue
+        tables += 1
+        code = name[:-len(".json")]
+        path = os.path.join(TABLES, name)
+
+        table = json.load(io.open(path, encoding="utf-8"))
+        if table.get("language") != code:
+            problems.append("%s says it is language '%s'" % (name, table.get("language")))
+
+        seen = {}
+        for e in table.get("entries", []):
+            if e["key"] in seen:
+                problems.append("%s: %s is defined twice" % (name, e["key"]))
+            seen[e["key"]] = e["text"]
+
+        for key in english:
+            if key not in seen:
+                problems.append("%s: %s is missing" % (name, key))
+        for key in seen:
+            if key not in english:
+                problems.append("%s: %s is not an English key" % (name, key))
+
+        for key, text in seen.items():
+            if key not in english:
+                continue
+            if not text.strip():
+                problems.append("%s: %s is empty" % (name, key))
+            if shape(text) != shape(english[key]):
+                problems.append("%s: %s does not carry English's slots, tags and line breaks\n"
+                                "      en: %r\n      %s: %r" % (name, key, english[key], code, text))
+            for char, what in REFUSED.items():
+                if char in text:
+                    problems.append("%s: %s contains %s" % (name, key, what))
+            if MOJIBAKE.search(text):
+                problems.append("%s: %s was saved in the wrong encoding: %r" % (name, key, text))
+            if text == english[key]:
+                same += 1
+
+    return problems, same, tables
+
+
 def main():
     table = json.load(io.open(TABLE, encoding="utf-8"))
     entries = table["entries"] if isinstance(table, dict) and "entries" in table else table
@@ -185,7 +260,13 @@ def main():
     print("%d key(s) used, %d defined, %d missing, %d unfilled, %d unused"
           % (len(used), len(defined), len(missing), len(short), len(unused)))
 
-    return 1 if missing or short else 0
+    wrong, same, tables = translations(defined)
+    for line in wrong:
+        print("TRANSLATION " + line)
+    print("%d translation(s), %d fault(s), %d string(s) left identical to English"
+          % (tables, len(wrong), same))
+
+    return 1 if missing or short or wrong else 0
 
 
 if __name__ == "__main__":

@@ -282,7 +282,7 @@ namespace GlimmerGrove
                              new Vector2(1f, 1f), new Vector2(-76f, cy),
                              () => { if (!Flow.HasModal) Flow.Modal<TasksInfoOverlay>(); });
 
-            var ribbon = Scenery.TitleRibbon(Safe, Loc.Get("ui.tasks.title").ToUpperInvariant(),
+            var ribbon = Scenery.TitleRibbon(Safe, Loc.Get("ui.tasks.title").Upper(),
                                              new Vector2(720f, BannerH), Top, new Vector2(0f, cy), 42);
             ribbon.transform.localScale = Vector3.zero;
             Tween.Pop(ribbon.transform, 0f, .5f, .06f);
@@ -537,7 +537,7 @@ namespace GlimmerGrove
             bool weekly = period == TaskPeriod.Weekly;
 
             var title = UIKit.Titled("H_" + TaskPeriods.Id(period), list,
-                                     Loc.Get(weekly ? "ui.tasks.weekly" : "ui.tasks.daily").ToUpperInvariant(),
+                                     Loc.Get(weekly ? "ui.tasks.weekly" : "ui.tasks.daily").Upper(),
                                      30, Pal.Gold, TextAnchor.MiddleLeft, new Vector2(420f, 40f),
                                      Top, new Vector2(-Width * .5f + 210f + 8f, -(y + HeadingH * .5f)), 3f, 3f);
             UIKit.Shrinkable(title, 18);

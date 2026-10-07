@@ -129,7 +129,7 @@ namespace GlimmerGrove
                              new Vector2(0f, 1f), new Vector2(76f, cy),
                              () => Flow.Go<HomeScreen>());
 
-            var ribbon = Scenery.TitleRibbon(Safe, Loc.Get("ui.challenges.title").ToUpperInvariant(),
+            var ribbon = Scenery.TitleRibbon(Safe, Loc.Get("ui.challenges.title").Upper(),
                                              new Vector2(720f, BannerH), new Vector2(.5f, 1f),
                                              new Vector2(0f, cy), 42);
             ribbon.transform.localScale = Vector3.zero;
@@ -164,7 +164,7 @@ namespace GlimmerGrove
             // Green (`Skins.Affirm`, the kit's own green pill - a tint cannot reach the season
             // screen's mint on an orange sprite, 44g), because on an orange plate the orange
             // Buy key vanished into its own ground.
-            _dealKey = UIKit.TextButton("Deals", band.transform, Skins.Affirm, Loc.Get("ui.challenges.deals").ToUpperInvariant(),
+            _dealKey = UIKit.TextButton("Deals", band.transform, Skins.Affirm, Loc.Get("ui.challenges.deals").Upper(),
                                         32, new Vector2(DealKeyW, DealKeyH), new Vector2(1f, .5f),
                                         new Vector2(-(24f + DealKeyW * .5f), 0f),
                                         () => { if (!Flow.HasModal) Flow.Modal<ChallengeTierOverlay>(); });

@@ -85,7 +85,7 @@ namespace GlimmerGrove
             }
 
             UIKit.TextButton("Close", Panel, Skins.Alternate,
-                             Loc.Get("ui.endless.checkpoint.close").ToUpperInvariant(), 36,
+                             Loc.Get("ui.endless.checkpoint.close").Upper(), 36,
                              new Vector2(400f, 110f), new Vector2(.5f, 0f), new Vector2(0f, 30f + 55f),
                              () => Close());
 
@@ -177,7 +177,7 @@ namespace GlimmerGrove
                 tag.raycastTarget = false;
                 UIKit.Shrinkable(
                     UIKit.Titled("ChosenText", tag.transform,
-                                 Loc.Get("ui.endless.checkpoint.chosen").ToUpperInvariant(), 32, Pal.Ink,
+                                 Loc.Get("ui.endless.checkpoint.chosen").Upper(), 32, Pal.Ink,
                                  TextAnchor.MiddleCenter, KeySize, default, default, 0f, 0f),
                     18);
                 return;
@@ -185,10 +185,10 @@ namespace GlimmerGrove
 
             var key = open
                 ? UIKit.TextButton("Choose", t, Skins.Affirm,
-                                   Loc.Get("ui.endless.checkpoint.choose").ToUpperInvariant(), 34, KeySize,
+                                   Loc.Get("ui.endless.checkpoint.choose").Upper(), 34, KeySize,
                                    new Vector2(1f, .5f), keyPos, () => Choose(wave))
                 : UIKit.TextButton("Shut", t, Skins.Shut,
-                                   Loc.Get("ui.endless.checkpoint.locked").ToUpperInvariant(), 34, KeySize,
+                                   Loc.Get("ui.endless.checkpoint.locked").Upper(), 34, KeySize,
                                    new Vector2(1f, .5f), keyPos, () => Refuse(row), "ic_padlock");
 
             UIKit.OneLine(key, 20);

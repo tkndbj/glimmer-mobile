@@ -421,7 +421,7 @@ namespace GlimmerGrove
             UIKit.IconButton("Info", Safe, Skins.Aside, "ic_info", new Vector2(118f, 118f),
                              new Vector2(1f, 1f), new Vector2(-96f, -110f), Review);
 
-            var banner = Scenery.TitleRibbon(Safe, Loc.Get("ui.loadout.title").ToUpperInvariant(),
+            var banner = Scenery.TitleRibbon(Safe, Loc.Get("ui.loadout.title").Upper(),
                                              new Vector2(520f, 140f), new Vector2(.5f, 1f),
                                              new Vector2(0f, -110f), 42, 22f);
             banner.transform.localScale = Vector3.zero;
@@ -756,7 +756,7 @@ namespace GlimmerGrove
                 UIKit.StretchTo((RectTransform)rim.transform, -2, -2, -2, -2);
             }
 
-            var label = UIKit.Titled("T", box, Loc.Get(key).ToUpperInvariant(), 30,
+            var label = UIKit.Titled("T", box, Loc.Get(key).Upper(), 30,
                                      on ? Pal.Sun : Pal.Cream,
                                      TextAnchor.MiddleCenter, new Vector2(250f, 48f),
                                      new Vector2(.5f, .5f), Vector2.zero, 0f, 2f);

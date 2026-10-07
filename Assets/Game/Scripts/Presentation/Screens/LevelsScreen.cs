@@ -1339,7 +1339,7 @@ namespace GlimmerGrove
                          && (LevelUnlock.ChapterBefore(_index, _entry.Id) != null
                           || LevelUnlock.ChapterAfter(_index, _entry.Id) != null);
 
-            _banner = Scenery.TitleRibbon(Safe, title.ToUpperInvariant(),
+            _banner = Scenery.TitleRibbon(Safe, title.Upper(),
                                           new Vector2(BannerWidth, BannerHeight),
                                           new Vector2(.5f, 1f), new Vector2(0f, BannerY), 40,
                                           26f, chevrons ? NameWidth : OpenNameWidth);

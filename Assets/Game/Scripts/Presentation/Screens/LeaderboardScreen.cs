@@ -173,7 +173,7 @@ namespace GlimmerGrove
 
             var chrome = Safe;
 
-            var banner = Scenery.TitleRibbon(chrome, Loc.Get("ui.board.title").ToUpperInvariant(),
+            var banner = Scenery.TitleRibbon(chrome, Loc.Get("ui.board.title").Upper(),
                                              new Vector2(470f, 128f), new Vector2(.5f, 1f),
                                              new Vector2(0f, -106f), 38, 20f);
             banner.transform.localScale = Vector3.zero;

@@ -207,10 +207,13 @@ namespace GlimmerGrove
             var tab = UIKit.Button("Tab", rt, Art.S("Ui/" + Skins.Buy), new Vector2(TabW, TabH),
                                    new Vector2(.5f, 1f), new Vector2(0f, TabH * .5f - TabLift), tapped);
 
-            UIKit.Titled("Caption", tab.transform,
-                         Loc.Get("ui.loadout.title").ToUpperInvariant(), 30, Pal.Cream,
-                         TextAnchor.MiddleCenter, new Vector2(TabW - 70f, TabH - 18f),
-                         new Vector2(.5f, .5f), new Vector2(14f, TabH * UIKit.PillFaceLift), 0f, 3f);
+            // One line, shrunk only when a translation is wider than the tab (Italian is).
+            UIKit.OneLineLabel(
+                UIKit.Titled("Caption", tab.transform,
+                             Loc.Get("ui.loadout.title").Upper(), 30, Pal.Cream,
+                             TextAnchor.MiddleCenter, new Vector2(TabW - 70f, TabH - 18f),
+                             new Vector2(.5f, .5f), new Vector2(14f, TabH * UIKit.PillFaceLift), 0f, 3f),
+                TabW - 70f, 30, 20);
 
             var gear = UIKit.Img("Gear", tab.transform, Art.S("Ui/ic_gear"), Pal.Cream,
                                  Vector2.one * 32f, new Vector2(0f, .5f),

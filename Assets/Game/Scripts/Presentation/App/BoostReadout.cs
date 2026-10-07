@@ -1,4 +1,5 @@
 using System;
+using GlimmerGrove.Localization;
 using GlimmerGrove.Progression;
 using UnityEngine;
 using UnityEngine.UI;
@@ -83,7 +84,7 @@ namespace GlimmerGrove
             mark.preserveAspect = true;
             mark.raycastTarget = false;
 
-            var label = UIKit.Titled("Xp", _root, "XP", 34, Green, TextAnchor.MiddleLeft,
+            var label = UIKit.Titled("Xp", _root, Loc.Get("ui.endless.xp"), 34, Green, TextAnchor.MiddleLeft,
                                      new Vector2(LabelWidth, MarkSize), new Vector2(.5f, 1f),
                                      new Vector2(MarkSize * .5f + 6f, -MarkSize * .5f),
                                      outline: 0f, shadow: 2f);

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using GlimmerGrove.Challenges;
+using GlimmerGrove.Localization;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -266,7 +267,7 @@ namespace GlimmerGrove
 
         /// <summary>A key in the strip, at an x measured from the strip's centre.</summary>
         protected Btn Key(string name, string text, float x, float width, Action onClick, string skin = null)
-            => UIKit.TextButton(name, Strip, skin ?? Skins.Alternate, text.ToUpperInvariant(), 28,
+            => UIKit.TextButton(name, Strip, skin ?? Skins.Alternate, text.Upper(), 28,
                                 new Vector2(width, StripHeight * .66f), new Vector2(.5f, .5f),
                                 new Vector2(x, 0f), onClick);
 

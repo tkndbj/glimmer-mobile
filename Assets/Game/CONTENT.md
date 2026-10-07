@@ -1906,9 +1906,12 @@ who changes their mind does it in iOS Settings.
 `IosPrivacyPlist` writes `NSUserTrackingUsageDescription` into the built Xcode project.
 **Without the key iOS silently refuses to show the prompt at all**: no dialog, every player
 non-consented, and a build that passes review with iOS ad revenue near zero. The sentence
-matters - Apple rejects copy that merely restates the dialog - and it needs an
-`InfoPlist.strings` per store language, which is deliberately not generated, because a string
-invented at build time would slip past the loc gate.
+matters - Apple rejects copy that merely restates the dialog - so it is the loc key
+`ui.privacy.tracking_usage`, translated like everything else. The same step writes one
+`{code}.lproj/InfoPlist.strings` per entry of `Loc.Languages` (folder references in the app
+target, under `GemfireLocalizations/`) and `CFBundleLocalizations`, which also gives the App
+Store listing its language line. A missing sentence fails the Mac build;
+`TranslationTests.TheTrackingPromptSaysWhyInEveryLanguage` fails long before that.
 
 ### app-ads.txt
 

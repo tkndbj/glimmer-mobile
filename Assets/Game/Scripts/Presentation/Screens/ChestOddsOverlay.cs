@@ -83,7 +83,7 @@ namespace GlimmerGrove
             UIKit.Shrinkable(
                 UIKit.Titled("Rank", Panel, Loc.Format("ui.chest.rank", Tier.Rank,
                                                        Progression.ProgressionRules.Table.Tasks.Tiers.Count)
-                                                .ToUpperInvariant(),
+                                                .Upper(),
                              28, Head, TextAnchor.MiddleCenter, new Vector2(BodyW, RankH),
                              new Vector2(.5f, 1f), new Vector2(0f, _y - RankH * .5f), 0f, 0f), 17);
             _y -= RankH;
@@ -141,7 +141,7 @@ namespace GlimmerGrove
                      ChestDefinition chest)
         {
             UIKit.Shrinkable(
-                UIKit.Titled("H" + titleKey, Panel, Loc.Get(titleKey).ToUpperInvariant(), 34, Head,
+                UIKit.Titled("H" + titleKey, Panel, Loc.Get(titleKey).Upper(), 34, Head,
                              TextAnchor.MiddleCenter, new Vector2(BodyW, SectionH),
                              new Vector2(.5f, 1f), new Vector2(0f, _y - SectionH * .5f), 0f, 0f), 21);
             _y -= SectionH;

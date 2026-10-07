@@ -109,7 +109,7 @@ namespace GlimmerGrove
                              new Vector2(0f, -(StageTop + StageSize.y + LineGap + LineH * .5f)), 2f, 2f, wrap: true),
                 20);
 
-            UIKit.TextButton("Play", Panel, Skins.Affirm, Loc.Get("ui.challenges.preview_play").ToUpperInvariant(), 36,
+            UIKit.TextButton("Play", Panel, Skins.Affirm, Loc.Get("ui.challenges.preview_play").Upper(), 36,
                              KeySize, new Vector2(.5f, 0f), new Vector2(0f, 30f + KeySize.y * .5f), Accept);
 
             // The entrance, in the deal sheet's order less its crown: the window, then the

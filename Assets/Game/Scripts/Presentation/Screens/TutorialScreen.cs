@@ -234,7 +234,7 @@ namespace GlimmerGrove
         {
             float cy = -(22f + BannerH * .5f);
 
-            var ribbon = Scenery.TitleRibbon(Safe, Loc.Get("ui.tutorial.title").ToUpperInvariant(),
+            var ribbon = Scenery.TitleRibbon(Safe, Loc.Get("ui.tutorial.title").Upper(),
                                              new Vector2(BannerW, BannerH), new Vector2(.5f, 1f),
                                              new Vector2(0f, cy), BannerSize);
             ribbon.transform.localScale = Vector3.zero;
@@ -245,7 +245,7 @@ namespace GlimmerGrove
             // vocabulary for either - the one control on this screen that has to be understood
             // without being explained is the one that gets you out of it.
             _skip = UIKit.TextButton("Skip", Safe, Skins.Shut,
-                                     Loc.Get("ui.tutorial.skip").ToUpperInvariant(), 26,
+                                     Loc.Get("ui.tutorial.skip").Upper(), 26,
                                      new Vector2(168f, ChromeSize), new Vector2(1f, 1f),
                                      new Vector2(-96f, cy), Skip);
 
@@ -615,7 +615,7 @@ namespace GlimmerGrove
             UIKit.Halo(safe, Pal.Gold, 820f, .34f, new Vector2(0f, LineSeat));
 
             // Capitals, at the owner's instruction (2026-10-02): the closing line is a title.
-            var line = UIKit.Titled("Line", safe, Loc.Get("ui.tutorial.win").ToUpperInvariant(), 66, Pal.Cream,
+            var line = UIKit.Titled("Line", safe, Loc.Get("ui.tutorial.win").Upper(), 66, Pal.Cream,
                                     TextAnchor.MiddleCenter, new Vector2(880f, 240f),
                                     new Vector2(.5f, .5f), new Vector2(0f, LineSeat),
                                     3f, 5f, wrap: true);
@@ -627,7 +627,7 @@ namespace GlimmerGrove
             Burst.Sparks(safe, new Vector2(0f, LineSeat), Pal.Gold, 22, 260f);
 
             var go = UIKit.TextButton("Go", safe, Skins.Affirm,
-                                      Loc.Get("ui.tutorial.go").ToUpperInvariant(), 34,
+                                      Loc.Get("ui.tutorial.go").Upper(), 34,
                                       new Vector2(460f, 122f), new Vector2(.5f, .5f),
                                       new Vector2(0f, KeySeat), Done);
 

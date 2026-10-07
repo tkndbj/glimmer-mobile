@@ -256,7 +256,7 @@ namespace GlimmerGrove
                              new Vector2(1f, 1f), new Vector2(-76f, cy),
                              () => { if (!Flow.HasModal) Flow.Modal<EventInfoOverlay>(v => v.Season = _season); });
 
-            var ribbon = Scenery.TitleRibbon(Safe, Loc.Get(_season.NameKey).ToUpperInvariant(),
+            var ribbon = Scenery.TitleRibbon(Safe, Loc.Get(_season.NameKey).Upper(),
                                              new Vector2(720f, BannerH), Top, new Vector2(0f, cy), 42);
             ribbon.transform.localScale = Vector3.zero;
             Tween.Pop(ribbon.transform, 0f, .5f, .06f);
@@ -562,12 +562,12 @@ namespace GlimmerGrove
             float cy = -(y + HeadingH * .5f);
 
             UIKit.Shrinkable(
-                UIKit.Titled("HFree", Safe, Loc.Get("ui.mark.free").ToUpperInvariant(), 24, Pal.Mint,
+                UIKit.Titled("HFree", Safe, Loc.Get("ui.mark.free").Upper(), 24, Pal.Mint,
                              TextAnchor.MiddleCenter, new Vector2(220f, 34f), Top,
                              new Vector2(SeasonLadder.FreeX, cy), 3f, 3f), 14);
 
             UIKit.Shrinkable(
-                UIKit.Titled("HPass", Safe, Loc.Get("ui.mark.pass").ToUpperInvariant(), 24, Pal.Bloom,
+                UIKit.Titled("HPass", Safe, Loc.Get("ui.mark.pass").Upper(), 24, Pal.Bloom,
                              TextAnchor.MiddleCenter, new Vector2(220f, 34f), Top,
                              new Vector2(SeasonLadder.PassX, cy), 3f, 3f), 14);
 

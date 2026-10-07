@@ -974,7 +974,7 @@ namespace GlimmerGrove
             // two optional rows, and a height somebody has to remember to move is a height that
             // ends up drawing a paragraph through a button. Both numbers below are what the
             // rows actually occupy, so adding a third row is one line here and one there.
-            float height = BaseHeight + (privacy ? ConsentRow : 0f)
+            float height = BaseHeight + LanguageRow + (privacy ? ConsentRow : 0f)
                          + (reminders ? ReminderRow : 0f) + LegalRow;
 
             MakePanel(new Vector2(860f, height), Loc.Get("ui.settings.title"));
@@ -1014,6 +1014,16 @@ namespace GlimmerGrove
             // it is the arrangement nobody has on their own device.
             float y = -520f;
 
+            // Always drawn: every device can change language, and the row names the one in use
+            // in that language's own words, so a player who landed in the wrong one can still
+            // find the way out by the name of their own.
+            string current = Loc.NameKeyOf(Loc.Language) ?? Loc.NameKeyOf(Loc.FallbackLanguage);
+            UIKit.Shrinkable(UIKit.TextButton("Language", Panel, "btn_blue",
+                                              Loc.Format("ui.settings.language", Loc.Get(current)), 40,
+                                              new Vector2(600f, 116f), new Vector2(.5f, 1f), new Vector2(0f, y),
+                                              () => Close(() => Flow.Modal<LanguageOverlay>())).Label, 24);
+            y -= LanguageRow;
+
             if (reminders) { Reminders(y); y -= ReminderRow; }
 
             if (privacy)
@@ -1024,9 +1034,12 @@ namespace GlimmerGrove
                 // string we do not own. The panel closes first, because the form is a native
                 // dialog and stacking one over a Unity modal leaves the modal drawn behind it
                 // for as long as it is up.
-                UIKit.TextButton("Privacy", Panel, "btn_blue", Loc.Get("ui.settings.privacy"), 40,
-                                 new Vector2(600f, 116f), new Vector2(.5f, 1f), new Vector2(0f, y),
-                                 () => Close(() => _ = AdPrivacy.RevisitAsync()));
+                //
+                // Shrinkable like the language and reminders rows beside it: the caption is a
+                // phrase rather than a word, and in Turkish it is half again as wide as English.
+                UIKit.Shrinkable(UIKit.TextButton("Privacy", Panel, "btn_blue", Loc.Get("ui.settings.privacy"), 40,
+                                                  new Vector2(600f, 116f), new Vector2(.5f, 1f), new Vector2(0f, y),
+                                                  () => Close(() => _ = AdPrivacy.RevisitAsync())).Label, 24);
             }
 
             // Account lives on the profile screen, not here. It is the one part of
@@ -1100,6 +1113,9 @@ namespace GlimmerGrove
         /// moves the other.
         /// </summary>
         internal const float ReminderRow = 130f;
+
+        /// <summary>The language row's height: the button plus the gap under it, as the two above.</summary>
+        internal const float LanguageRow = 130f;
 
         /// <summary>
         /// The reminders control: a row that says the state and, tapped, changes the thing that
@@ -1192,6 +1208,70 @@ namespace GlimmerGrove
         public override bool OnBack() { Close(); return true; }
     }
 
+    // ============================================================== language
+    /// <summary>
+    /// The language chooser: one key per shipped table, each named in its own language.
+    ///
+    /// <para>
+    /// The language in use wears <see cref="Skins.Settled"/>, this UI's "you have this", and the
+    /// rest <see cref="Skins.Alternate"/>. Choosing one stores it in <see cref="GameSettings"/>
+    /// (so it outlives the device language and follows the account) and then redraws the hub:
+    /// every screen draws its words when it is built, so building the hub again is what puts the
+    /// whole game in the new language - and the hub is the only place Settings opens from.
+    /// </para>
+    /// </summary>
+    public sealed class LanguageOverlay : ModalView
+    {
+        /// <summary>Panel arithmetic: the ribbon's room above the list, one row each, then Done.</summary>
+        internal const float TopRoom = 250f, RowPitch = 112f, FootRoom = 300f;
+
+        bool _choosing;
+
+        protected override void Build()
+        {
+            var languages = Loc.Languages;
+            MakePanel(new Vector2(860f, TopRoom + languages.Length * RowPitch + FootRoom),
+                      Loc.Get("ui.language.title"));
+
+            float y = -TopRoom;
+            foreach (var language in languages)
+            {
+                string code = language.Code;
+                bool held = code == Loc.Language;
+
+                UIKit.TextButton("L_" + code, Panel, held ? Skins.Settled : Skins.Alternate,
+                                 Loc.Get(language.NameKey), 40, new Vector2(600f, 100f),
+                                 new Vector2(.5f, 1f), new Vector2(0f, y),
+                                 () => { if (!held) _ = Choose(code); });
+                y -= RowPitch;
+            }
+
+            UIKit.TextButton("Close", Panel, Skins.Affirm, Loc.Get("ui.common.done"), 46, new Vector2(560f, 132f),
+                             new Vector2(.5f, 0f), new Vector2(0f, 108f), () => Close());
+        }
+
+        async System.Threading.Tasks.Task Choose(string code)
+        {
+            if (_choosing) return;
+            _choosing = true;
+
+            try
+            {
+                await Loc.SetLanguageAsync(ContentBootstrap.LocalSource, code);
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                _choosing = false;
+                return;
+            }
+
+            Flow.Go<HomeScreen>(instant: true);
+        }
+
+        public override bool OnBack() { Close(); return true; }
+    }
+
     // ============================================================== coming soon
     public sealed class ComingSoonOverlay : ModalView
     {
@@ -1210,7 +1290,7 @@ namespace GlimmerGrove
 
         protected override void Build()
         {
-            MakePanel(new Vector2(860f, 840f), Loc.Get(_titleKey).ToUpperInvariant());
+            MakePanel(new Vector2(860f, 840f), Loc.Get(_titleKey).Upper());
 
             var glow = UIKit.Img("Glow", Panel, Art.Glow(128, 1.9f), Pal.A(Pal.Gold, .45f),
                                  new Vector2(380f, 380f), new Vector2(.5f, 1f), new Vector2(0f, -290f));

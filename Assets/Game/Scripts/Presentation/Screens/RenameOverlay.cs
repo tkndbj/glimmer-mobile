@@ -78,7 +78,7 @@ namespace GlimmerGrove
 
         protected override void Build()
         {
-            MakePanel(new Vector2(860f, 660f), Loc.Get("ui.profile.rename").ToUpperInvariant());
+            MakePanel(new Vector2(860f, 660f), Loc.Get("ui.profile.rename").Upper());
 
             var box = UIKit.Img("Field", Panel, Art.Round(22), new Color(1f, .98f, .93f, .96f),
                                 new Vector2(640f, 120f), new Vector2(.5f, 1f), new Vector2(0f, -250f));

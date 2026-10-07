@@ -232,7 +232,7 @@ namespace GlimmerGrove
             UIKit.IconButton("Info", Safe, Skins.Aside, "ic_info", Vector2.one * ChromeSize,
                              new Vector2(1f, 1f), new Vector2(-76f, cy), Review);
 
-            var ribbon = Scenery.TitleRibbon(Safe, Loc.Get(def.NameKey).ToUpperInvariant(),
+            var ribbon = Scenery.TitleRibbon(Safe, Loc.Get(def.NameKey).Upper(),
                                              new Vector2(BannerW, BannerH), new Vector2(.5f, 1f),
                                              new Vector2(0f, cy), BannerSize);
             ribbon.transform.localScale = Vector3.zero;

@@ -7,7 +7,7 @@ using NUnit.Framework;
 namespace GlimmerGrove.Tests
 {
     /// <summary>
-    /// The shipped English string table, read off disk without asking Unity for anything.
+    /// The shipped string tables, read off disk without asking Unity for anything.
     ///
     /// <para>
     /// <b>A reader of its own rather than <c>Loc</c>, and that is not a preference.</b> Nothing
@@ -31,17 +31,20 @@ namespace GlimmerGrove.Tests
     /// </summary>
     public static class ShippedStrings
     {
-        static readonly string[] TableParts =
-            { "Assets", "StreamingAssets", "Content", "loc", "en.json" };
+        static readonly string[] FolderParts =
+            { "Assets", "StreamingAssets", "Content", "loc" };
+
+        /// <summary>The English table, found from wherever this is being run.</summary>
+        public static string Path() => Path("en");
 
         /// <summary>
-        /// The table, found from wherever this is being run.
+        /// One language's table, found from wherever this is being run.
         ///
         /// Two starting points because the two runners differ: the Editor's working directory is
         /// the project root, and the offline runner's is wherever the tool was invoked from. The
         /// assembly's own folder is what covers the second when it is neither.
         /// </summary>
-        public static string Path()
+        public static string Path(string language)
         {
             var seeds = new List<string> { Directory.GetCurrentDirectory() };
 
@@ -53,22 +56,36 @@ namespace GlimmerGrove.Tests
                 for (var dir = new DirectoryInfo(seed); dir != null; dir = dir.Parent)
                 {
                     string candidate = System.IO.Path.Combine(
-                        dir.FullName, System.IO.Path.Combine(TableParts));
+                        dir.FullName, System.IO.Path.Combine(FolderParts), language + ".json");
                     if (File.Exists(candidate)) return candidate;
                 }
 
-            Assert.Fail("the shipped string table could not be found from " + string.Join(", ", seeds));
+            Assert.Fail("the shipped " + language + " string table could not be found from " + string.Join(", ", seeds));
             return null;
+        }
+
+        /// <summary>The language codes the folder holds a table for, read off the file names.</summary>
+        public static List<string> Languages()
+        {
+            string folder = System.IO.Path.GetDirectoryName(Path());
+            var codes = new List<string>();
+            foreach (string file in Directory.GetFiles(folder, "*.json"))
+                codes.Add(System.IO.Path.GetFileNameWithoutExtension(file));
+            codes.Sort(StringComparer.Ordinal);
+            return codes;
         }
 
         static readonly Regex Entry = new Regex(
             @"\{\s*""key""\s*:\s*""(?<key>[^""]*)""\s*,\s*""text""\s*:\s*""(?<text>(?:[^""\\]|\\.)*)""",
             RegexOptions.Singleline);
 
-        /// <summary>Every entry, by key.</summary>
-        public static Dictionary<string, string> Table()
+        /// <summary>Every English entry, by key.</summary>
+        public static Dictionary<string, string> Table() => Table("en");
+
+        /// <summary>Every entry of one language's table, by key.</summary>
+        public static Dictionary<string, string> Table(string language)
         {
-            string path = Path();
+            string path = Path(language);
             var table = new Dictionary<string, string>(StringComparer.Ordinal);
 
             foreach (Match m in Entry.Matches(File.ReadAllText(path)))

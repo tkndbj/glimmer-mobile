@@ -433,7 +433,7 @@ namespace GlimmerGrove
             var ribbon = UIKit.Img("Ribbon", Content, Art.S("Ui/ribbon_orange"), Color.white,
                                    new Vector2(620f, 132f), new Vector2(.5f, 1f), new Vector2(0f, -300f));
             UIKit.Shrinkable(
-                UIKit.Titled("T", ribbon.transform, Loc.Get(Claim.Tier.NameKey).ToUpperInvariant(), 50,
+                UIKit.Titled("T", ribbon.transform, Loc.Get(Claim.Tier.NameKey).Upper(), 50,
                              Pal.Cream, TextAnchor.MiddleCenter, new Vector2(540f, 80f),
                              new Vector2(.5f, .5f), Vector2.zero, 4f, 4f), 28);
             ribbon.transform.localRotation = Quaternion.Euler(0, 0, -1.6f);

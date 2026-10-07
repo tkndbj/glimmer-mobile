@@ -316,7 +316,7 @@ namespace GlimmerGrove
         }
 
         static void CardTitle(Transform card, string key, float width)
-            => UIKit.Titled("Head", card, Loc.Get(key).ToUpperInvariant(), 30, Pal.Gold,
+            => UIKit.Titled("Head", card, Loc.Get(key).Upper(), 30, Pal.Gold,
                             TextAnchor.MiddleLeft, new Vector2(width - 80f, 40f), new Vector2(0f, 1f),
                             new Vector2(40f + (width - 80f) * .5f, -44f), 3f, 3f);
 
@@ -449,20 +449,27 @@ namespace GlimmerGrove
             // 3-unit dark border, which on this plate is more dark mass than the stem itself -
             // the two lines read as smudges rather than as sentences. The shadow stays; it is
             // what lifts a light line off the plate without thickening it.
-            UIKit.Titled("XpText", card,
-                         level.IsMaxLevel
-                             ? Loc.Get("ui.profile.xp_max")
-                             : Loc.Format("ui.profile.xp", level.XpIntoLevel, level.XpForNextLevel),
-                         27, Color.white, TextAnchor.MiddleLeft,
-                         new Vector2(XpW, 34f), new Vector2(.5f, .5f), new Vector2(XpX, -67f), 0f, 2f);
+            //
+            // Both lines are held to one line and shrunk only when wider than the strip - the
+            // XP sentence is, in five languages, once the numbers grow.
+            UIKit.OneLineLabel(
+                UIKit.Titled("XpText", card,
+                             level.IsMaxLevel
+                                 ? Loc.Get("ui.profile.xp_max")
+                                 : Loc.Format("ui.profile.xp", level.XpIntoLevel, level.XpForNextLevel),
+                             27, Color.white, TextAnchor.MiddleLeft,
+                             new Vector2(XpW, 34f), new Vector2(.5f, .5f), new Vector2(XpX, -67f), 0f, 2f),
+                XpW, 27, 18);
 
             int nextTier = KeeperTitle.NextTierLevel(level.Level);
             if (nextTier > 0)
             {
-                UIKit.Titled("NextTitle", card,
-                             Loc.Format("ui.profile.next_title", Loc.Get(KeeperTitle.KeyFor(nextTier)), nextTier),
-                             25, Color.white, TextAnchor.MiddleLeft,
-                             new Vector2(XpW, 32f), new Vector2(.5f, .5f), new Vector2(XpX, -111f), 0f, 2f);
+                UIKit.OneLineLabel(
+                    UIKit.Titled("NextTitle", card,
+                                 Loc.Format("ui.profile.next_title", Loc.Get(KeeperTitle.KeyFor(nextTier)), nextTier),
+                                 25, Color.white, TextAnchor.MiddleLeft,
+                                 new Vector2(XpW, 32f), new Vector2(.5f, .5f), new Vector2(XpX, -111f), 0f, 2f),
+                    XpW, 25, 18);
             }
         }
 
@@ -774,10 +781,15 @@ namespace GlimmerGrove
             // card off-centre to make room, so the one sentence a player opens this screen to
             // read - whether their grove is safe - was the only thing on the profile that was
             // not centred. The status colour already says everything the halo said.
-            UIKit.Titled("Status", card, Loc.Get(statusKey), 34,
-                         !available ? new Color(1f, .95f, .86f, .6f) : linked ? Pal.Mint : Pal.Rose,
-                         TextAnchor.MiddleCenter, new Vector2(CardWidth - 120f, StatusH),
-                         new Vector2(.5f, 1f), new Vector2(0f, -(cursor + StatusH * .5f)), 3f, 3f);
+            //
+            // One line, shrunk to the card when it is wider: every one of these four sentences
+            // is wider than the card in some language, and the mismatch one even in English.
+            UIKit.OneLineLabel(
+                UIKit.Titled("Status", card, Loc.Get(statusKey), 34,
+                             !available ? new Color(1f, .95f, .86f, .6f) : linked ? Pal.Mint : Pal.Rose,
+                             TextAnchor.MiddleCenter, new Vector2(CardWidth - 120f, StatusH),
+                             new Vector2(.5f, 1f), new Vector2(0f, -(cursor + StatusH * .5f)), 3f, 3f),
+                CardWidth - 120f, 34, 20);
 
             cursor += StatusH + AfterStatus;
 
@@ -891,7 +903,7 @@ namespace GlimmerGrove
             UIKit.IconButton("Back", Safe, Skins.Nav, "ic_left", new Vector2(118f, 118f),
                              new Vector2(0f, 1f), new Vector2(96f, -132f), () => Flow.Go<HomeScreen>());
 
-            var banner = Scenery.TitleRibbon(Safe, Loc.Get("ui.profile.title").ToUpperInvariant(),
+            var banner = Scenery.TitleRibbon(Safe, Loc.Get("ui.profile.title").Upper(),
                                              new Vector2(520f, 148f), new Vector2(.5f, 1f),
                                              new Vector2(0f, -142f));
             banner.transform.localScale = Vector3.zero;

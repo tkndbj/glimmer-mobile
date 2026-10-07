@@ -370,7 +370,15 @@ namespace GlimmerGrove
             b.LabelSize = fontSize;
             b.IconTrails = iconTrails;
 
-            if (icon == null) return b;
+            // **A caption with no glyph is held to one line inside the pill by default.** It
+            // used to be left as built - no wrap, no shrink - so any caption wider than its
+            // pill drew straight off both ends, and with seven translations that was the same
+            // button in every language but English. OneLine is a no-op on a caption that fits
+            // (FitOneLine returns the authored size at scale 1), so every caption that fitted
+            // before is drawn exactly as before; it only shrinks the ones that did not, and it
+            // survives SetCaption. The floor is the glyph branch's below. A caller that wants
+            // something else (Shrinkable, or OneLine with its own floor) still sets it after.
+            if (icon == null) return OneLine(b, Mathf.Max(1, fontSize / 2));
 
             var glyph = Img("Icon", b.transform, icon, Pal.Cream,
                             Vector2.one * (size.y * .34f), new Vector2(.5f, .5f), new Vector2(0f, lift));

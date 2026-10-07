@@ -823,7 +823,7 @@ namespace GlimmerGrove
 
             bool show = key != null;
             _seal.gameObject.SetActive(show);
-            if (show) _sealText.text = Loc.Get(key).ToUpperInvariant();
+            if (show) _sealText.text = Loc.Get(key).Upper();
         }
     }
 }

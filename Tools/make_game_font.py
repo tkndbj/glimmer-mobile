@@ -76,7 +76,9 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 OUT = REPO / "Assets" / "Game" / "Fonts" / "GameFont.ttf"
-LOC = REPO / "Assets" / "StreamingAssets" / "Content" / "loc" / "en.json"
+#: Every shipped string table - English and each translation - since a glyph one language
+#: needs and the face lacks is a word with a hole in it, whichever language it is.
+LOC = REPO / "Assets" / "StreamingAssets" / "Content" / "loc"
 
 #: How much to take off every edge of every glyph, in font units (0 = leave the face alone).
 #: Titan One is a single-weight face, so there is no lighter cut to switch to; the operation
@@ -386,8 +388,9 @@ def cmap_of(data: bytes) -> set[int]:
 
 def shipped_strings() -> set[str]:
     used = set(RUNTIME)
-    for e in json.load(io.open(LOC, encoding="utf-8"))["entries"]:
-        used |= set(e["text"])
+    for table in sorted(LOC.glob("*.json")):
+        for e in json.load(io.open(table, encoding="utf-8"))["entries"]:
+            used |= set(e["text"])
     return used - set("\n\r\t")
 
 

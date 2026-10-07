@@ -402,7 +402,7 @@ namespace GlimmerGrove
                              new Vector2(0f, 1f), new Vector2(76f, cy),
                              () => Flow.Go<LevelsScreen>());
 
-            var ribbon = Scenery.TitleRibbon(Safe, Loc.Get("ui.ranks.title").ToUpperInvariant(),
+            var ribbon = Scenery.TitleRibbon(Safe, Loc.Get("ui.ranks.title").Upper(),
                                              new Vector2(720f, BannerH), Top, new Vector2(0f, cy), 42);
             ribbon.transform.localScale = Vector3.zero;
             Tween.Pop(ribbon.transform, 0f, .5f, .06f);
@@ -696,7 +696,7 @@ namespace GlimmerGrove
                                    new Vector2(RibbonW, RibbonH), Centre, new Vector2(0f, capY));
             ribbon.preserveAspect = true;
             UIKit.OneLineLabel(
-                UIKit.Titled("Title", ribbon.transform, Loc.Get("ui.ranks.requirements").ToUpperInvariant(),
+                UIKit.Titled("Title", ribbon.transform, Loc.Get("ui.ranks.requirements").Upper(),
                              TabPt, Pal.Cream, TextAnchor.MiddleCenter,
                              new Vector2(RibbonW * .66f, RibbonH * .5f), Centre,
                              new Vector2(0f, RibbonH * Skins.RibbonLift), 3f, 3f),
@@ -952,7 +952,7 @@ namespace GlimmerGrove
             var metal = RankLook.Metal(rung);
             bool live = standing != Standing.Locked;
 
-            _eyebrow.text = EyebrowOf(standing).ToUpperInvariant();
+            _eyebrow.text = EyebrowOf(standing).Upper();
             // A locked rung's eyebrow is solid orange rather than the steel its other writing
             // wears - the one word on the stage saying "not yet", at the owner's instruction
             // (2026-09-27). The alpha is kept because the swap fades the eyebrow in.

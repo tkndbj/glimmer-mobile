@@ -1,6 +1,11 @@
 #if UNITY_IOS
+using System.Collections.Generic;
 using System.IO;
+using System.Text;
+using GlimmerGrove.Content;
+using GlimmerGrove.Localization;
 using UnityEditor;
+using UnityEditor.Build;
 using UnityEditor.Callbacks;
 using UnityEditor.iOS.Xcode;
 using UnityEngine;
@@ -22,12 +27,26 @@ namespace GlimmerGrove.EditorTools
     /// <para>
     /// <b>The sentence matters more than it looks.</b> Apple reviews it, and a description that
     /// merely restates the dialog ("this app would like to track you") is a documented
-    /// rejection. It has to say what the player gets. This one says the two true things: it
-    /// keeps the game free, and it is the difference between a relevant ad and a random one.
-    /// It must be translated for every language the store listing supports - that is an
-    /// <c>InfoPlist.strings</c> file per locale in the Xcode project, and it is deliberately
-    /// <em>not</em> generated here, because the loc keys in this game are gated by a build
-    /// check and a string invented at build time would slip past it.
+    /// rejection. It has to say what the data is used for: relevant ads, which keep the game
+    /// free. It is the loc key <see cref="TrackingKey"/>, so it is translated, checked and
+    /// reviewed exactly like every other player-facing string, and never typed into code.
+    /// </para>
+    /// <para>
+    /// <b>One translation per shipped language</b>, because Apple expects the purpose string in
+    /// the language the dialog is drawn in, and an English sentence inside a German dialog is a
+    /// half-translated permission request. <see cref="WriteTranslations"/> writes an
+    /// <c>InfoPlist.strings</c> into an <c>{code}.lproj</c> folder for every entry of
+    /// <see cref="Loc.Languages"/>, links each into the app target, and declares the same list
+    /// in <c>CFBundleLocalizations</c>. That also tells iOS and the App Store which languages the
+    /// app speaks: the listing derives its language line from these folders, and iOS offers a
+    /// per-app language choice in Settings once more than one is declared. The base
+    /// <c>Info.plist</c> keeps the English sentence for any device language not listed.
+    /// </para>
+    /// <para>
+    /// <b>A missing translation fails the build</b> rather than shipping an English line in a
+    /// translated dialog, and a missing English line fails it rather than shipping no key at
+    /// all - which would be the silent no-prompt failure above. <c>TranslationTests</c> catches
+    /// both long before a Mac build does.
     /// </para>
     /// <para>
     /// Everything else iOS needs for ads is already handled elsewhere and is not duplicated
@@ -55,14 +74,16 @@ namespace GlimmerGrove.EditorTools
     public static class IosPrivacyPlist
     {
         /// <summary>
-        /// What the player reads above Apple's Allow / Ask App Not to Track buttons.
-        ///
-        /// Deliberately a plain sentence with no jargon and no plea. Reviewers reject copy
-        /// that is vague, and players refuse copy that begs.
+        /// The loc key of what the player reads above Apple's Allow / Ask App Not to Track
+        /// buttons. Deliberately a plain sentence with no jargon and no plea: reviewers reject
+        /// copy that is vague, and players refuse copy that begs.
         /// </summary>
-        const string TrackingUsage =
-            "Glimmer Groove is free to play. Allowing this lets us show ads that are relevant " +
-            "to you rather than random ones, which is what pays for the glades.";
+        internal const string TrackingKey = "ui.privacy.tracking_usage";
+
+        const string TrackingPlistKey = "NSUserTrackingUsageDescription";
+
+        /// <summary>Where the per-language folders are written, inside the generated Xcode project.</summary>
+        const string LocalizationFolder = "GemfireLocalizations";
 
         [PostProcessBuild(100)]
         public static void OnPostProcessBuild(BuildTarget target, string pathToBuiltProject)
@@ -77,13 +98,22 @@ namespace GlimmerGrove.EditorTools
                 return;
             }
 
+            // Read every sentence before touching anything, so a missing one stops the build
+            // with the project exactly as Unity left it.
+            var sentences = TrackingSentences();
+
             var plist = new PlistDocument();
             plist.ReadFromFile(plistPath);
 
             // Set unconditionally rather than only when absent. A stale description left by an
             // earlier build is worse than none: it passes every check here and is the thing
-            // Apple actually reads.
-            plist.root.SetString("NSUserTrackingUsageDescription", TrackingUsage);
+            // Apple actually reads. English is the base for any device language not shipped.
+            plist.root.SetString(TrackingPlistKey, sentences[Loc.FallbackLanguage]);
+
+            // The languages this app speaks, declared once and replaced whole on every build so
+            // an append build cannot leave a stale list behind.
+            var localizations = plist.root.CreateArray("CFBundleLocalizations");
+            foreach (var language in Loc.Languages) localizations.AddString(LprojName(language.Code));
 
             // Export compliance, declared here rather than answered by hand on every upload.
             //
@@ -125,10 +155,143 @@ namespace GlimmerGrove.EditorTools
 
             plist.WriteToFile(plistPath);
 
-            Debug.Log("[Privacy] NSUserTrackingUsageDescription, ITSAppUsesNonExemptEncryption " +
-                      "and FIREBASE_ANALYTICS_COLLECTION_ENABLED written into Info.plist");
+            Debug.Log("[Privacy] NSUserTrackingUsageDescription, CFBundleLocalizations, " +
+                      "ITSAppUsesNonExemptEncryption and FIREBASE_ANALYTICS_COLLECTION_ENABLED " +
+                      "written into Info.plist");
 
+            WriteTranslations(pathToBuiltProject, sentences);
             LinkTrackingFramework(pathToBuiltProject);
+        }
+
+        /// <summary>
+        /// The tracking sentence in every shipped language, read from the same tables the game
+        /// reads. Throws - failing the build - when a table is missing, unreadable, or lacks the
+        /// sentence: a build that cannot say why it asks must not be built.
+        /// </summary>
+        static Dictionary<string, string> TrackingSentences()
+        {
+            var sentences = new Dictionary<string, string>();
+
+            foreach (var language in Loc.Languages)
+            {
+                string path = Path.Combine(Application.streamingAssetsPath,
+                                           ContentPaths.Localisation(language.Code));
+                if (!File.Exists(path))
+                    throw new BuildFailedException($"[Privacy] no string table at '{path}' for '{language.Code}'");
+
+                var table = LocTable.Parse(File.ReadAllText(path), out string error);
+                if (error != null)
+                    throw new BuildFailedException($"[Privacy] {language.Code}.json could not be read: {error}");
+
+                if (!table.TryGet(TrackingKey, out string sentence) || string.IsNullOrWhiteSpace(sentence))
+                    throw new BuildFailedException($"[Privacy] {language.Code}.json has no '{TrackingKey}'; " +
+                                                   "the tracking prompt would be drawn without its reason");
+
+                sentences[language.Code] = sentence.Trim();
+            }
+
+            return sentences;
+        }
+
+        /// <summary>
+        /// One <c>{code}.lproj/InfoPlist.strings</c> per shipped language, each linked into the
+        /// app target as a folder reference so Xcode copies the folder into the bundle as it is.
+        ///
+        /// <para>
+        /// The folders are written fresh on every build and linked only when not already linked,
+        /// so an append build neither duplicates a reference (which Xcode rejects as two
+        /// commands producing one file) nor keeps a sentence from the previous build.
+        /// </para>
+        /// </summary>
+        static void WriteTranslations(string pathToBuiltProject, Dictionary<string, string> sentences)
+        {
+            string projectPath = PBXProject.GetPBXProjectPath(pathToBuiltProject);
+            if (!File.Exists(projectPath))
+                throw new BuildFailedException($"[Privacy] no Xcode project at '{projectPath}'; " +
+                                               "the tracking prompt's translations cannot be linked");
+
+            RefuseAnotherInfoPlistStrings(pathToBuiltProject);
+
+            var project = new PBXProject();
+            project.ReadFromFile(projectPath);
+            string app = project.GetUnityMainTargetGuid();
+
+            foreach (var language in Loc.Languages)
+            {
+                string lproj = LprojName(language.Code) + ".lproj";
+                string relative = LocalizationFolder + "/" + lproj;
+                string folder = Path.Combine(pathToBuiltProject, LocalizationFolder, lproj);
+
+                Directory.CreateDirectory(folder);
+                File.WriteAllText(Path.Combine(folder, "InfoPlist.strings"),
+                                  StringsLine(TrackingPlistKey, sentences[language.Code]),
+                                  new UTF8Encoding(false));
+
+                // Relative to the project root (SOURCE_ROOT), never absolute: an absolute path
+                // is the build Mac's own directory and breaks the moment the Xcode project is
+                // moved, archived elsewhere or opened on another machine.
+                if (project.FindFileGuidByProjectPath(relative) == null)
+                {
+                    string guid = project.AddFolderReference(relative, relative, PBXSourceTree.Source);
+                    project.AddFileToBuild(app, guid);
+                }
+
+                project.AddKnownRegion(LprojName(language.Code));
+            }
+
+            project.WriteToFile(projectPath);
+
+            Debug.Log($"[Privacy] tracking sentence localised into {sentences.Count} languages: " +
+                      string.Join(", ", sentences.Keys));
+        }
+
+        /// <summary>
+        /// Fails the build if anything else in the generated project carries an
+        /// <c>InfoPlist.strings</c> that would land at the bundle root beside these.
+        ///
+        /// <para>
+        /// Unity's project template has none today, but a plugin or a future template that adds
+        /// one would make Xcode refuse the build with "multiple commands produce" - or, worse,
+        /// keep one of the two and silently drop the other's keys. Files inside a
+        /// <c>.bundle</c>, a framework or the CocoaPods tree belong to those packages and are
+        /// copied inside them, so they cannot collide and are not counted.
+        /// </para>
+        /// </summary>
+        static void RefuseAnotherInfoPlistStrings(string pathToBuiltProject)
+        {
+            string ours = Path.GetFullPath(Path.Combine(pathToBuiltProject, LocalizationFolder));
+
+            foreach (string file in Directory.GetFiles(pathToBuiltProject, "InfoPlist.strings",
+                                                       SearchOption.AllDirectories))
+            {
+                string full = Path.GetFullPath(file).Replace('\\', '/');
+                if (full.StartsWith(ours.Replace('\\', '/') + "/")) continue;
+                if (full.Contains(".bundle/") || full.Contains(".framework/") ||
+                    full.Contains(".xcframework/") || full.Contains("/Pods/")) continue;
+
+                throw new BuildFailedException(
+                    $"[Privacy] '{file}' is another InfoPlist.strings in the app; it would collide " +
+                    $"with the tracking prompt's translations in {LocalizationFolder}. Merge its keys " +
+                    "into the string tables or remove it.");
+            }
+        }
+
+        /// <summary>
+        /// The folder name iOS matches a device language against. The game's codes are already
+        /// Apple's for every shipped language: <c>pt</c> rather than <c>pt-BR</c> on purpose, so
+        /// a European Portuguese device falls back to the Brazilian table rather than to English.
+        /// </summary>
+        internal static string LprojName(string code) => code;
+
+        /// <summary>
+        /// One <c>"key" = "value";</c> line in the <c>.strings</c> format, escaped the way that
+        /// format requires: a backslash, a quote and a line break are the three characters that
+        /// would end or corrupt the value.
+        /// </summary>
+        internal static string StringsLine(string key, string value)
+        {
+            string escaped = value.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n");
+            return $"\"{key}\" = \"{escaped}\";\n";
         }
 
         /// <summary>

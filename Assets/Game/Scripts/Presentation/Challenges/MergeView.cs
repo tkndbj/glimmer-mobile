@@ -247,7 +247,7 @@ namespace GlimmerGrove
             _goalRing.raycastTarget = false;
             Tween.Breathe(_goalRing.transform, .08f, 1.6f);
 
-            _undo = UIKit.TextButton("Undo", _ladder, Skins.Alternate, Loc.Get("ui.challenges.undo").ToUpperInvariant(),
+            _undo = UIKit.TextButton("Undo", _ladder, Skins.Alternate, Loc.Get("ui.challenges.undo").Upper(),
                                      Mathf.RoundToInt(Mathf.Min(tall * .34f, 30f)), new Vector2(keyW, tall * .92f),
                                      new Vector2(.5f, .5f), new Vector2(wide * .5f - keyW * .5f, 0f),
                                      () => { _asked = -1; Send(ChallengeInput.Undo()); });

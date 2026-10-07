@@ -75,8 +75,8 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// The settings panel in its tallest arrangement - the consent row *and* the legal row -
-        /// still fits the shortest canvas this game is drawn on.
+        /// The settings panel in its tallest arrangement - the language, consent, reminders and
+        /// legal rows all at once - still fits the shortest canvas this game is drawn on.
         ///
         /// <para>
         /// Read from the panel's own constants rather than restated, because a test that checks
@@ -88,7 +88,9 @@ namespace GlimmerGrove.Tests
         public void TheSettingsPanelStillFitsTheShortestCanvas()
         {
             float tallest = SettingsOverlay.BaseHeight
+                          + SettingsOverlay.LanguageRow
                           + SettingsOverlay.ConsentRow
+                          + SettingsOverlay.ReminderRow
                           + SettingsOverlay.LegalRow;
 
             Assert.LessOrEqual(tallest, PanelStack.TallestPanel,

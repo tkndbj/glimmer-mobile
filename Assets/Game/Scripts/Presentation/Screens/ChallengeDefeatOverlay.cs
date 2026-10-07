@@ -61,7 +61,7 @@ namespace GlimmerGrove
                 UIKit.Shrinkable(Body("Spent", Loc.Get("ui.challenges.no_plays"),
                                       -stack.Note, DefeatPanel.NoteHeight), 22);
 
-            UIKit.TextButton("List", Panel, "btn_blue", Loc.Get("ui.challenges.title").ToUpperInvariant(), 46,
+            UIKit.TextButton("List", Panel, "btn_blue", Loc.Get("ui.challenges.title").Upper(), 46,
                              new Vector2(620f, DefeatPanel.GladesHeight), new Vector2(.5f, 1f),
                              new Vector2(0f, -stack.Glades),
                              () => Close(ToList));

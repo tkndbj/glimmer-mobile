@@ -117,7 +117,7 @@ namespace GlimmerGrove
             float statusY = y + StatusH * .5f;     y += StatusH + 12f;
             float buttonY = y + ButtonH * .5f;     y += ButtonH + FootRoom;
 
-            MakePanel(new Vector2(PanelW, y), Loc.Get("ui.companion.title").ToUpperInvariant());
+            MakePanel(new Vector2(PanelW, y), Loc.Get("ui.companion.title").Upper());
 
             BuildPortrait(discY);
 

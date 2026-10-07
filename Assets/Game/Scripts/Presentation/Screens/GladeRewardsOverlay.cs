@@ -77,7 +77,7 @@ namespace GlimmerGrove
             var answers = Answers();
 
             MakePanel(new Vector2(PanelStack.Width, PanelStack.HeightFor(answers.Count)),
-                      Loc.Get("ui.levels.info_title").ToUpperInvariant());
+                      Loc.Get("ui.levels.info_title").Upper());
 
             for (int i = 0; i < answers.Count; i++) Section(i, answers[i]);
 
@@ -237,7 +237,7 @@ namespace GlimmerGrove
             float textX = PanelStack.TextLeft + PanelStack.TextWidth * .5f;
 
             UIKit.Shrinkable(
-                UIKit.Titled("H", host, Loc.Get(answer.TitleKey).ToUpperInvariant(), 34, Head,
+                UIKit.Titled("H", host, Loc.Get(answer.TitleKey).Upper(), 34, Head,
                              TextAnchor.MiddleLeft,
                              new Vector2(PanelStack.TextWidth, PanelStack.HeadHeight),
                              new Vector2(0f, 1f), new Vector2(textX, -PanelStack.HeadCentre), 0f, 0f), 22);

@@ -56,7 +56,7 @@ namespace GlimmerGrove
 
         protected override void Build()
         {
-            MakePanel(new Vector2(860f, 640f), Loc.Get("ui.referral.code_title").ToUpperInvariant());
+            MakePanel(new Vector2(860f, 640f), Loc.Get("ui.referral.code_title").Upper());
 
             // The field and the key share one row and are centred as a pair, so the pair
             // stands where the field alone used to.
@@ -101,9 +101,11 @@ namespace GlimmerGrove
                                  new Vector2(PasteW, PasteH), new Vector2(.5f, 1f), new Vector2(pasteX, -250f),
                                  Paste), 16);
 
-            UIKit.Titled("Rule", Panel, Loc.Format("ui.referral.code_rule", ReferralCode.Length), 25,
-                         Muted, TextAnchor.MiddleCenter,
-                         new Vector2(700f, 36f), new Vector2(.5f, 1f), new Vector2(0f, -330f), 0f, 0f);
+            UIKit.OneLineLabel(
+                UIKit.Titled("Rule", Panel, Loc.Format("ui.referral.code_rule", ReferralCode.Length), 25,
+                             Muted, TextAnchor.MiddleCenter,
+                             new Vector2(700f, 36f), new Vector2(.5f, 1f), new Vector2(0f, -330f), 0f, 0f),
+                700f, 25, 18);
 
             _status = UIKit.Shrinkable(
                 UIKit.Titled("Status", Panel, string.Empty, 28, Muted, TextAnchor.MiddleCenter,
