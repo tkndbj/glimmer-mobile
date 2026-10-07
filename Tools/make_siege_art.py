@@ -589,12 +589,24 @@ RUBBLE_GEM = ("49.png", "a grey rough stone")
 #: cool notes collapse and the stone goes flat (invariant 37p). .95 is where both are true at once.
 CHARM_PULL, CHARM_SAT, CHARM_FLOOR = 0.95, 0.55, 0.58
 
-#: The two explosions, and which of the pack's seven each is cut from. A raider comes apart in fire
-#: and a ward comes down in smoke, which is the difference between something being destroyed and
-#: something being *lost*.
+#: The three explosions, and which of the pack's seven each is cut from. A raider comes apart in
+#: fire and a ward comes down in smoke, which is the difference between something being destroyed
+#: and something being *lost*. A boss ends in the gold burst: the pack's fourth, a star flash that
+#: opens into one round fireball and breaks up into drifting embers - the one explosion of the
+#: seven that leaves no smoke hanging, which is what the owner asked for of a boss's death
+#: (2026-10-07: the smoke cloud it used to end in read as weird on the phone).
+#:
+#: The fourth field says whether each frame is **centred on its own picture**. The pack trims
+#: every frame to its own ink and anchors it top-left, so under one box for the whole animation
+#: (`box_of`) the small opening star of a burst sits in the top-left corner of the tile and the
+#: fireball three frames later sits in the middle: on a creeper that is a few pixels, on a boss
+#: drawn at three times its height the explosion opens *above and to the left of the body*,
+#: which is what "it looks like it's up in the air" was. The two older reels keep the pack's
+#: placement so their shipped bytes stand; the boss's reel is centred.
 BLAST_SET = {
-    "boom_fire": ("2", 0.0, 1.0),
-    "boom_smoke": ("3", 0.0, 1.0),
+    "boom_fire": ("2", 0.0, 1.0, False),
+    "boom_smoke": ("3", 0.0, 1.0, False),
+    "boom_burst": ("4", 0.0, 1.0, True),
 }
 
 #: Every raider that walks down the hill: one body per colour, per kind.
@@ -3417,7 +3429,7 @@ def white(im, side, lift=1.0):
 # --------------------------------------------------------------------------- the packs
 
 
-def blast_frames(z, folder, turns, saturate):
+def blast_frames(z, folder, turns, saturate, centred=False):
     names = sorted(n for n in z.namelist()
                    if n.startswith("png/%s/" % folder) and n.lower().endswith(".png"))
 
@@ -3426,7 +3438,16 @@ def blast_frames(z, folder, turns, saturate):
 
     out = []
     for im in frames:
-        if box:
+        if box and centred:
+            # One scale for the whole animation (the box), each frame sat in the middle of it.
+            bb = im.getbbox()
+            if bb:
+                im = im.crop(bb)
+            canvas = Image.new("RGBA", (box[2] - box[0], box[3] - box[1]), (0, 0, 0, 0))
+            canvas.alpha_composite(im, ((canvas.width - im.width) // 2,
+                                        (canvas.height - im.height) // 2))
+            im = canvas
+        elif box:
             im = im.crop(box)
         out.append(im.resize((TILE, TILE), Image.LANCZOS))
     return out
@@ -4239,8 +4260,8 @@ def build():
         for i, frame in enumerate(reel()):
             made["Fx/Siege/%s/f%02d.png" % (key, i)] = frame
 
-    for key, (folder, turns, saturate) in BLAST_SET.items():
-        for i, im in enumerate(blast_frames(blasts, folder, turns, saturate)):
+    for key, (folder, turns, saturate, centred) in BLAST_SET.items():
+        for i, im in enumerate(blast_frames(blasts, folder, turns, saturate, centred)):
             made["Fx/Siege/%s/f%02d.png" % (key, i)] = im
 
     # **Every raider, hue-rotated into its own colour.** A gentler grade than the wards get: a

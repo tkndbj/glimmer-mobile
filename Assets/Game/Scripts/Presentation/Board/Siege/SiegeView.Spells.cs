@@ -1168,7 +1168,14 @@ namespace GlimmerGrove
         /// </summary>
         bool Speaking => _waveGroup != null && _waveGroup.alpha > .01f;
 
-        void Boom(Vector2 at, Sprite[] frames, float size)
+        /// <summary>
+        /// One explosion reel played once at <paramref name="at"/>, then thrown away.
+        ///
+        /// Every burst in this mode runs at the one rate; the only caller that slows one down is a
+        /// boss's death (`Fall`), whose final burst is drawn three times the size of any other and
+        /// reads as a flicker at the ordinary rate.
+        /// </summary>
+        void Boom(Vector2 at, Sprite[] frames, float size, float fps = 26f)
         {
             if (frames == null || frames.Length == 0) return;
 
@@ -1176,7 +1183,7 @@ namespace GlimmerGrove
             img.raycastTarget = false;
             img.rectTransform.anchoredPosition = at;
 
-            var book = Flipbook.Attach(img, frames, 26f, false);
+            var book = Flipbook.Attach(img, frames, fps, false);
             if (book != null) book.OnFinished = () => { if (img) Destroy(img.gameObject); };
             else Tween.After(.6f, () => { if (img) Destroy(img.gameObject); });
         }

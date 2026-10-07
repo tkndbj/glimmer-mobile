@@ -677,7 +677,6 @@ namespace GlimmerGrove
             Felling(BossFellingFor);
 
             var node = mob.Node;
-            var group = UIKit.Group(node);
             var crown = mob.Crown;
             var fire = Casting(mob.Kind);
 
@@ -704,49 +703,22 @@ namespace GlimmerGrove
             Flow.Flash(Pal.A(Pal.Lift(fire, .5f), 1f), .6f, .55f);
             ShakeBoard(34f);
 
-            // The body burns white and holds there while the bursts go off on it.
-            if (mob.Body != null)
-            {
-                var body = mob.Body;
-                Tween.Run(.45f, Ease.OutQuad, t =>
-                {
-                    if (!body) return;
-                    body.color = Color.Lerp(Color.white, Pal.Radiance, Mathf.PingPong(t * 6f, 1f));
-                }, body, "strobe").OnDone(() => { if (body) body.color = Pal.Radiance; });
-            }
-
             Announce(Loc.Format("mode.siege.felled", Loc.Get(BossKey(mob.Kind))), Pal.Gold, .70f,
                     2.2f, true);
 
-            for (int i = 0; i < 5; i++)
-            {
-                float wait = i * .11f;
-                var spot = at + new Vector2(Random.Range(-1f, 1f) * mob.Height * .34f,
-                                            Random.Range(-1f, 1f) * mob.Height * .30f);
-
-                Tween.After(wait, () =>
-                {
-                    Boom(spot, Blast("boom_fire"), mob.Height * 1.5f);
-                    Burst.Sparks(_fx, spot, Pal.Ember, 12, mob.Height * 1.2f, mob.Height * .16f);
-                    Audio.SfxVaried("burst", .42f);
-                });
-            }
-
-            Tween.Shake(node, Cell * .3f, .55f);
-
-            Tween.Run(.95f, Ease.InQuad, t =>
-            {
-                if (!node) return;
-                node.localScale = new Vector3(1f + t * .18f, 1f - t * .68f, 1f);
-                if (group) group.alpha = 1f - t * t;
-            }, node).Delay(.35f).OnDone(() =>
-            {
-                if (!node) return;
-
-                Boom(at, Blast("boom_smoke"), mob.Height * 2.6f);
-                Shockwave(at, Pal.Gold, 7f, .55f);
-                Destroy(node.gameObject);
-            });
+            // **One explosion on the body, and the body is gone.** A boss used to burn, pop five
+            // times, collapse and then go up in smoke - two beats that read as two deaths once
+            // the smoke became a burst, and a body seen shrinking on its own (owner, 2026-10-07,
+            // twice). Now the gold burst goes off where the body stands (drawn slower than an
+            // ordinary burst, because at this size the ordinary rate reads as a flicker), sparks
+            // and the shockwave carry it out, and the body is destroyed in the same frame - no
+            // fade, no shrink, nothing hanging in the air afterwards. Smoke stays what a ward
+            // comes down in (`Fell`): something lost, not something destroyed.
+            Boom(at, Blast("boom_burst"), mob.Height * 3f, 20f);
+            Burst.Sparks(_fx, at, Pal.Gold, 26, mob.Height * 2.4f, mob.Height * .2f, .8f);
+            Shockwave(at, Pal.Gold, 7f, .55f);
+            Audio.SfxVaried("burst", .7f);
+            Destroy(node.gameObject);
         }
     }
 }

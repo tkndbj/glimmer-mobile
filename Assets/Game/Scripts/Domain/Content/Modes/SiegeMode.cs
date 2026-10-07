@@ -313,6 +313,9 @@ namespace GlimmerGrove.Content
 
             AssetRequest.SpriteSet(AssetManifest.SiegeFx("boom_fire")),
             AssetRequest.SpriteSet(AssetManifest.SiegeFx("boom_smoke")),
+            // The gold burst a boss ends in (`SiegeView.Fall`): the one explosion that leaves
+            // no smoke behind it.
+            AssetRequest.SpriteSet(AssetManifest.SiegeFx("boom_burst")),
 
             // What each ward fires, as three parts: the flash it lets go with, the thing that
             // crosses the hill, and what that does when it arrives. Baked out of the bought

@@ -7363,6 +7363,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/shot_lighthouse_y
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2d725c1f7e5ed0c4b854b031a72bcf85
+    m_Address: Art/Fx/Siege/boom_burst/f01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Fx/Siege/boom_burst
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2d73cc0fe55df374c9478e1a1927d5f3
     m_Address: Art/Fx/Siege/hit_beacon_g/f00
     m_ReadOnly: 0
@@ -8204,6 +8210,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Siege/shot_stasis
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 328d5301f7227a1449d12fb829bd59cf
+    m_Address: Art/Fx/Siege/boom_burst/f00
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Fx/Siege/boom_burst
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 32915292eefb5df4a926e78fc7b7d215
     m_Address: Art/Siege/boneMon_y/f05
@@ -10414,6 +10426,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Siege/burn_b
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3f7a061b45a504548bda3ba777b7416f
+    m_Address: Art/Fx/Siege/boom_burst/f03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Fx/Siege/boom_burst
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3f83c191c59afaf499d7fc45467366bc
     m_Address: Art/Fx/Siege/muzzle_spectrum_b/f06
@@ -13382,6 +13400,12 @@ MonoBehaviour:
     m_Address: Art/Ui/ic_season
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 51937320f5b99e74da425e8ddaaaf5dc
+    m_Address: Art/Fx/Siege/boom_burst/f05
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Fx/Siege/boom_burst
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5194395599b963f4896201c370aee75a
     m_Address: Art/Siege/wildBrute_y/f02
@@ -18236,6 +18260,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/muzzle_apex_b
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6eb191413fb4d854eba0a80714f8a1f7
+    m_Address: Art/Fx/Siege/boom_burst/f04
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Fx/Siege/boom_burst
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6eb242fa98056f64499359dd258f9976
     m_Address: Art/Fx/Siege/hit_leech_b/f05
     m_ReadOnly: 0
@@ -21092,6 +21122,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Siege/shot_cleaver_g
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7f122f302a79ca24cbe6d77bd484d995
+    m_Address: Art/Fx/Siege/boom_burst/f07
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Fx/Siege/boom_burst
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7f1b7bfca3196a4448071d9578ce95e6
     m_Address: Art/Siege/heavedial/f02
@@ -32374,6 +32410,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/hit_spectrum_g
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c260b73130759c54b94e2056e0c5ecdb
+    m_Address: Art/Fx/Siege/boom_burst/f08
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Fx/Siege/boom_burst
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c27959ee377e68b4ea7563efea56043d
     m_Address: Art/Fx/Siege/muzzle_rime_g/f05
     m_ReadOnly: 0
@@ -32933,6 +32975,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Siege/quake_hit
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c652a05e4416276468798aa5ac335497
+    m_Address: Art/Fx/Siege/boom_burst/f02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Fx/Siege/boom_burst
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c65a06c7452eaa6419e48e380d2dc587
     m_Address: Art/Siege/fire2_y/f03
@@ -38303,6 +38351,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Siege/hit_mortar_y
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e6abb2b5124a7034a9045a8b0aa2d7ca
+    m_Address: Art/Fx/Siege/boom_burst/f06
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Fx/Siege/boom_burst
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e6ae659354f5c634c9ca9455c19c1a71
     m_Address: Art/Fx/Siege/shot_prism_y/f04
