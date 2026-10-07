@@ -467,7 +467,42 @@ namespace GlimmerGrove.Persistence
         static bool SameTasks(TaskStateDto a, TaskStateDto b)
             => SamePeriod(a?.daily, b?.daily)
             && SamePeriod(a?.weekly, b?.weekly)
-            && SameCounts(a?.lifetime, b?.lifetime);
+            && SameCounts(a?.lifetime, b?.lifetime)
+            && SameWelcome(a?.welcome, b?.welcome);
+
+        /// <summary>
+        /// The welcome bonus's days and claims, walked in order - both sides are written sorted
+        /// (<c>WelcomeLedger.Write</c>). It has to travel: a day played on one phone that never
+        /// reached the document is a turret the other phone will not hand over, and a claim that
+        /// stayed is a turret the other phone would offer a second time.
+        /// </summary>
+        static bool SameWelcome(WelcomeStateDto a, WelcomeStateDto b)
+        {
+            var x = a ?? new WelcomeStateDto();
+            var y = b ?? new WelcomeStateDto();
+
+            int na = x.days?.Length ?? 0, nb = y.days?.Length ?? 0;
+            if (na != nb) return false;
+            for (int i = 0; i < na; i++)
+            {
+                var p = x.days[i] ?? new WelcomeDaysDto();
+                var q = y.days[i] ?? new WelcomeDaysDto();
+                if (!Same(p.goal, q.goal)) return false;
+                if (!FloorSet.Same(p.days, q.days)) return false;
+            }
+
+            int ca = x.claimed?.Length ?? 0, cb = y.claimed?.Length ?? 0;
+            if (ca != cb) return false;
+            for (int i = 0; i < ca; i++)
+                if (!Same(x.claimed[i], y.claimed[i])) return false;
+
+            int pa = x.coined?.Length ?? 0, pb = y.coined?.Length ?? 0;
+            if (pa != pb) return false;
+            for (int i = 0; i < pa; i++)
+                if (!Same(x.coined[i], y.coined[i])) return false;
+
+            return true;
+        }
 
         /// <summary>
         /// The lifetime tally, walked in order like every other id-keyed list here - both sides

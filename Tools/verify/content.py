@@ -1754,7 +1754,122 @@ def check_utilities(progression, keys, warnings):
 #: exactly as a chapter naming an unknown mode is (invariant 20), and reported here.
 TASK_GOALS = {"runs", "wins", "stars", "three_stars", "matches", "raiders", "bosses",
               "charms", "cogs", "bombs", "utilities", "waves", "streak",
-              "challenge_plays", "challenge_wins"}
+              "challenge_plays", "challenge_wins", "task_claims"}
+
+#: The verbs a welcome quest may name, each with the loc key its row says. Mirrors
+#: `WelcomeGoals.SentenceKey`: a verb with no sentence cannot be a quest, because a row that
+#: cannot say what it asks for is a row nobody finishes on purpose (invariant 58).
+WELCOME_SENTENCES = {
+    "runs": "ui.welcome.goal.runs",
+    "wins": "ui.welcome.goal.wins",
+    "task_claims": "ui.welcome.goal.task_claims",
+    "challenge_plays": "ui.welcome.goal.challenge_plays",
+    "challenge_wins": "ui.welcome.goal.challenge_wins",
+    "streak": "ui.welcome.goal.streak",
+}
+
+#: `WelcomeTable.MaxQuests`, `LeastDays`, `MaxDays`. Five is the page's capacity (no scroll on
+#: the squarest canvas), two is the fewest days that is a return visit, thirty-two bounds the
+#: save's day lists.
+WELCOME_MAX_QUESTS, WELCOME_LEAST_DAYS, WELCOME_MAX_DAYS = 5, 2, 32
+
+#: The page's own strings, every one a literal in `WelcomeScreen` / `HomeScreen`. Listed so a
+#: block that ships without its page copy fails here rather than as a blank on the hub.
+WELCOME_KEYS = ("ui.welcome.door", "ui.welcome.new", "ui.welcome.title", "ui.welcome.subtitle",
+                "ui.welcome.all_done", "ui.welcome.days_left", "ui.welcome.days_left_one",
+                "ui.welcome.taken", "ui.welcome.choose_word", "ui.welcome.choose_line",
+                "ui.welcome.choose_turret", "ui.welcome.choose_price", "ui.welcome.coins",
+                "ui.welcome.gems", "ui.welcome.take")
+
+WELCOME_ID = __import__("re").compile(r"^[a-z][a-z0-9_]{0,31}$")
+
+
+def check_welcome(progression, keys, warnings):
+    """The welcome bonus (invariant 58). `WelcomeTable.Resolve`, offline.
+
+    What the reader on the phone refuses is refused here too (a turret the roster does not
+    hold, the free starter, a verb with no sentence, a ladder that falls, a one-day quest).
+    What only a gate can see: that every sentence the rows say and every word the page and
+    the hub's door say resolve in `loc/en.json`, and - printed rather than checked - what the
+    ladder hands over, beside the keeper level each turret would otherwise be bought at, so a
+    retune is judged against the shelf it bypasses.
+    """
+    errors = []
+    block = progression.get("welcome")
+    if not block:
+        warnings.append("progression.json has no 'welcome' block; the hub draws no welcome door")
+        return errors
+
+    quests = block.get("quests") or []
+    if not quests:
+        errors.append("welcome carries no quests; leave the block out to switch the bonus off")
+        return errors
+    if len(quests) > WELCOME_MAX_QUESTS:
+        errors.append(f"welcome lists {len(quests)} quests; the page holds at most "
+                      f"{WELCOME_MAX_QUESTS} without a scroll")
+        return errors
+
+    roster = (progression.get("wards") or {}).get("models")
+    models = {m.get("id"): m for m in roster} if roster else None
+    if models is None:
+        warnings.append("welcome cannot be checked against the roster: progression.json has no "
+                        "'wards' block, so the built-in one stands")
+
+    ids, wards_seen, last = set(), set(), 0
+    for i, quest in enumerate(quests):
+        where = f"welcome quest {i}"
+        qid = quest.get("id") or ""
+        if not WELCOME_ID.match(qid):
+            errors.append(f"{where} has a bad id '{qid}' (a-z, 0-9, _; at most 32)")
+        elif qid in ids:
+            errors.append(f"{where} repeats id '{qid}'")
+        ids.add(qid)
+
+        ward = quest.get("ward") or ""
+        if models is not None:
+            model = models.get(ward)
+            if model is None:
+                errors.append(f"{where} pays turret '{ward}', which the roster does not hold")
+            elif model.get("coinPrice", 0) <= 0 and model.get("gemPrice", 0) <= 0:
+                errors.append(f"{where} pays turret '{ward}', which is the free starter and already held")
+            elif ward in wards_seen:
+                errors.append(f"{where} pays turret '{ward}' a second time")
+        wards_seen.add(ward)
+
+        goal = quest.get("goal") or ""
+        if goal not in TASK_GOALS:
+            errors.append(f"{where} counts '{goal}', which is not a verb this build counts")
+        elif goal not in WELCOME_SENTENCES:
+            errors.append(f"{where} counts '{goal}', which has no sentence (WelcomeGoals)")
+        elif WELCOME_SENTENCES[goal] not in keys:
+            errors.append(f"{where} says '{WELCOME_SENTENCES[goal]}', which loc/en.json does not define")
+
+        days = quest.get("days", 0)
+        if not isinstance(days, int) or days < WELCOME_LEAST_DAYS or days > WELCOME_MAX_DAYS:
+            errors.append(f"{where} asks for {days} days, outside {WELCOME_LEAST_DAYS}..{WELCOME_MAX_DAYS}")
+        elif days < last:
+            errors.append(f"{where} asks for {days} days after {last}; the ladder must climb")
+        else:
+            last = days
+
+    for key in WELCOME_KEYS:
+        if key not in keys:
+            errors.append(f"the welcome page says '{key}', which loc/en.json does not define")
+
+    if errors:
+        return errors
+
+    print("")
+    print(f"welcome bonus: {len(quests)} quest(s), the ladder climbs "
+          + " / ".join(str(q.get("days")) for q in quests) + " days")
+    for quest in quests:
+        model = (models or {}).get(quest.get("ward")) or {}
+        price = model.get("coinPrice") or model.get("gemPrice") or 0
+        currency = "gems" if model.get("gemPrice") else "credits"
+        print(f"  {quest.get('id'):<16} {quest.get('ward'):<12} {quest.get('goal'):<16} "
+              f"{quest.get('days'):>2} day(s)   or {price:,} {currency} instead "
+              f"(the shelf sells it at keeper {model.get('minLevel', '?')})")
+    return errors
 
 #: A task or tier id: written into save files, claim ids and loc keys, so it is the same
 #: alphabet a level id is. Mirrors `TaskDefinition.IsValidId`.
@@ -4552,6 +4667,10 @@ def main():
     # one, so `loc.py` cannot either.
     ward_errors, wards = check_wards(progression, keys, warnings, art_on_disk())
     errors.extend(ward_errors)
+
+    # The welcome bonus (invariant 58). Read after the roster because it hands four of its
+    # turrets over, and the reader refuses a block naming one the shelf does not hold.
+    errors.extend(check_welcome(progression, keys, warnings))
 
     # The lanes. Their copy is derived from the track id, so `loc.py` cannot see it either - and
     # a lane with no ladder draws a whole screen out of strings nothing else names.

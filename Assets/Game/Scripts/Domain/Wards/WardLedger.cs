@@ -278,6 +278,43 @@ namespace GlimmerGrove.Wards
             => TryBuy(model, Letter(colour), keeperLevel);
 
         /// <summary>
+        /// Hands a turret over on every seat with no debit - the welcome bonus's path
+        /// (<c>WelcomeLedger.TryClaim</c>, invariant 58).
+        ///
+        /// <para>
+        /// <b>Four seat rows, in the spelling every purchase writes</b> (<see cref="WardHolding.Row"/>),
+        /// rather than the bare id that means "all four": the bare row is read and is only ever
+        /// legacy, and a gift is not a reason to put a second writer on it. A seat already held -
+        /// bought before the bonus reached the player - is kept as it is; the player gains the
+        /// rest and loses nothing (invariant 15: owned sets join by union).
+        /// </para>
+        /// <para>
+        /// <b>It does not save</b>, deliberately: the caller writes the claim that earned this
+        /// and these rows in one save, so a process killed between the two leaves memory, never a
+        /// file, half done. Returns whether any seat was new.
+        /// </para>
+        /// </summary>
+        public static bool Grant(WardModel model, string reason)
+        {
+            if (model == null || model.IsStarter) return false;
+
+            bool added = false;
+            for (int i = 0; i < WardLine.Colours.Length; i++)
+            {
+                string row = WardHolding.Row(model, i);
+                if (!string.IsNullOrEmpty(row) && _bought.Add(row)) added = true;
+            }
+
+            Telemetry.Track("ward_granted", "ward", model.Id, "reason", reason ?? string.Empty, "new", added);
+
+            if (!added) return false;
+
+            SaveService.MarkDirty();
+            Raise();
+            return true;
+        }
+
+        /// <summary>
         /// The debit and the row, which is the only place either happens.
         ///
         /// <para>

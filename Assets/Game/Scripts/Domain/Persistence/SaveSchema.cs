@@ -628,7 +628,14 @@ namespace GlimmerGrove.Persistence
         ///      that fixes the run's claim line (<c>Daily.StreakTaken</c>). All of it rides inside an existing row or
         ///      map, so no rules release (12a); absent is empty or nought, so no migration. The
         ///      version moves for v35's reason.
-        public const int Version = 39;
+        /// v40: the welcome bonus (<see cref="TaskStateDto.welcome"/>): the distinct days each
+        ///      counted verb happened on and the quest ids taken (<c>Tasks.WelcomeLedger</c>,
+        ///      invariant 58). Days per verb rather than a count, because a count of days cannot
+        ///      be merged and a set joins by union (11b); the prize is rows in <c>wardsOwned</c>,
+        ///      which already joins that way. Inside the existing <c>tasks</c> map, so no rules
+        ///      release (12a); absent is empty, so no migration. The version moves for v35's
+        ///      reason.
+        public const int Version = 40;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -1028,6 +1035,40 @@ namespace GlimmerGrove.Persistence
         /// </para>
         /// </summary>
         public TaskCountDto[] lifetime;
+
+        /// <summary>
+        /// The welcome bonus: which days each counted verb happened on and which quests were
+        /// taken. Added in v40; see <c>Tasks.WelcomeLedger</c>. Inside this map for
+        /// <see cref="lifetime"/>'s reason - a key inside a map already on <c>hasOnly</c> costs
+        /// no rules release.
+        /// </summary>
+        public WelcomeStateDto welcome;
+    }
+
+    /// <summary>The welcome bonus's record. See <c>Tasks.WelcomeLedger</c>.</summary>
+    [Serializable]
+    public sealed class WelcomeStateDto
+    {
+        /// <summary>One row per counted verb a live quest names, sorted by goal id.</summary>
+        public WelcomeDaysDto[] days;
+
+        /// <summary>The quest ids taken, sorted. A set joined by union.</summary>
+        public string[] claimed;
+
+        /// <summary>
+        /// The quest ids taken as their price rather than as the turret, sorted; a subset of
+        /// <see cref="claimed"/>. A set joined by union. The server reads it to see the choice
+        /// behind a <c>welcome:</c> claim (<c>welcome.ts</c>).
+        /// </summary>
+        public string[] coined;
+    }
+
+    /// <summary>The distinct UTC day keys one verb happened on, ascending, at most <c>WelcomeLedger.MaxDays</c>.</summary>
+    [Serializable]
+    public sealed class WelcomeDaysDto
+    {
+        public string goal;
+        public int[] days;
     }
 
     /// <summary>

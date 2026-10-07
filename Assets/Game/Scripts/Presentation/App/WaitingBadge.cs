@@ -147,6 +147,10 @@ namespace GlimmerGrove
         public static WaitingBadge HubInkedTopLeft(Transform card, Color tint)
             => HubTopLeft(card, tint).WhiteInk();
 
+        /// <summary>The same, on the card's top-right corner - the hub's welcome door (invariant 58).</summary>
+        public static WaitingBadge HubInkedTopRight(Transform card, Color tint)
+            => HubTopRight(card, tint).WhiteInk();
+
         /// <summary>Re-inks the count white over a black outline.</summary>
         WaitingBadge WhiteInk()
         {
@@ -196,7 +200,30 @@ namespace GlimmerGrove
                 return;
             }
 
-            if (_count) _count.text = _prefix + n;
+            Show(_prefix + n);
+        }
+
+        /// <summary>
+        /// Writes a word instead of a count - the welcome door says NEW until a turret is
+        /// waiting, then the count. An empty word hides the badge, as nought does.
+        /// </summary>
+        public void Paint(string word)
+        {
+            if (!Root) return;
+
+            if (string.IsNullOrEmpty(word))
+            {
+                Root.gameObject.SetActive(false);
+                _shown = false;
+                return;
+            }
+
+            Show(word);
+        }
+
+        void Show(string text)
+        {
+            if (_count) _count.text = text;
             if (_shown) return;
 
             _shown = true;

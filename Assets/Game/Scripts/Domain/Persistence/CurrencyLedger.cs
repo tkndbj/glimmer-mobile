@@ -380,6 +380,18 @@ namespace GlimmerGrove.Persistence
         public const string KeeperMilestoneReason = "keeper_milestone";
 
         /// <summary>
+        /// A welcome quest taken as its turret's price: <c>welcome:{questId}:{currency}</c>
+        /// (invariant 58). Derived from what earned it, for <see cref="DailyChestId"/>'s reason,
+        /// and parsed back by <c>functions/src/welcome.ts</c>, which re-prices it off the
+        /// published roster. The format is a wire contract.
+        /// </summary>
+        public static string WelcomeId(string questId, string currency)
+            => $"welcome:{questId}:{currency}";
+
+        /// <summary>What every welcome price grant records as its cause.</summary>
+        public const string WelcomeReason = "welcome_price";
+
+        /// <summary>
         /// One cleared daily challenge, in credits: <c>chal:{dayKey}:{genre}:{win}:{currency}</c>.
         ///
         /// <para>

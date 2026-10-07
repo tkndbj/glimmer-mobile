@@ -233,6 +233,10 @@ namespace GlimmerGrove.Tasks
             // makes a future mode's goal a rank requirement with no code (`LifetimeTally`).
             LifetimeTally.Note(goal, amount);
 
+            // And the welcome bonus, which counts *days* a verb happened on rather than how often
+            // (`WelcomeLedger`). Same hook, same reason: one list of counted verbs.
+            WelcomeLedger.Note(goal);
+
             bool moved = false;
             var finished = new List<TaskDefinition>();
 
@@ -356,6 +360,11 @@ namespace GlimmerGrove.Tasks
             state.Claimed.Add(task.Id);
             Apply(rolled, task, state.Key);
 
+            // A chest taken is itself a counted verb (`TaskGoal.TaskClaims`): the welcome bonus
+            // asks whether the player came back to this page today. Before the save, so one
+            // write carries the claim and the count.
+            Note(TaskGoal.TaskClaims);
+
             // The season grows here and nowhere else. A chest is the one thing in this game
             // that is both repeatable and calendar-bounded, which is why it is what a season
             // is graded on - see `ChestTier.Marks`. Before the save, so one write carries
@@ -453,6 +462,7 @@ namespace GlimmerGrove.Tasks
             Read(_daily, dto?.tasks?.daily);
             Read(_weekly, dto?.tasks?.weekly);
             LifetimeTally.LoadFrom(dto?.tasks?.lifetime);
+            WelcomeLedger.LoadFrom(dto?.tasks?.welcome);
             Raise();
         }
 
@@ -498,6 +508,7 @@ namespace GlimmerGrove.Tasks
                 daily = Write(_daily),
                 weekly = Write(_weekly),
                 lifetime = LifetimeTally.Write(),
+                welcome = WelcomeLedger.Write(),
             };
         }
 
@@ -544,6 +555,9 @@ namespace GlimmerGrove.Tasks
                 // No key to compare and nothing to claim: a per-goal `max` and nothing else.
                 // See `LifetimeTally.Join`.
                 lifetime = LifetimeTally.Join(mine?.lifetime, other?.lifetime),
+
+                // Days per verb and claims, both by union. See `WelcomeLedger.Join`.
+                welcome = WelcomeLedger.Join(mine?.welcome, other?.welcome),
             };
 
         static TaskPeriodDto JoinPeriod(TaskPeriodDto a, TaskPeriodDto b)
@@ -571,6 +585,7 @@ namespace GlimmerGrove.Tasks
             _daily.Clear(0);
             _weekly.Clear(0);
             LifetimeTally.Reset();
+            WelcomeLedger.Reset();
         }
     }
 }

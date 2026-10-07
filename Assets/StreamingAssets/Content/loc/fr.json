@@ -6102,6 +6102,90 @@
       "text": "SANTÉ"
     },
     {
+      "key": "ui.welcome.door",
+      "text": "Bonus de bienvenue"
+    },
+    {
+      "key": "ui.welcome.new",
+      "text": "NOUVEAU"
+    },
+    {
+      "key": "ui.welcome.title",
+      "text": "Bonus de bienvenue"
+    },
+    {
+      "key": "ui.welcome.subtitle",
+      "text": "Quatre tourelles à garder pour toujours. Chacune se débloque après quelques jours de jeu différents. Les jours ne doivent pas forcément se suivre."
+    },
+    {
+      "key": "ui.welcome.all_done",
+      "text": "Toutes les tourelles sont à toi. Profites-en !"
+    },
+    {
+      "key": "ui.welcome.days_left",
+      "text": "Encore {0} jours"
+    },
+    {
+      "key": "ui.welcome.days_left_one",
+      "text": "Encore 1 jour"
+    },
+    {
+      "key": "ui.welcome.goal.runs",
+      "text": "Joue un combat sur {0} jours différents"
+    },
+    {
+      "key": "ui.welcome.goal.wins",
+      "text": "Gagne un combat sur {0} jours différents"
+    },
+    {
+      "key": "ui.welcome.goal.task_claims",
+      "text": "Ouvre un coffre de mission sur {0} jours différents"
+    },
+    {
+      "key": "ui.welcome.goal.challenge_plays",
+      "text": "Joue un défi du jour sur {0} jours différents"
+    },
+    {
+      "key": "ui.welcome.goal.challenge_wins",
+      "text": "Gagne un défi du jour sur {0} jours différents"
+    },
+    {
+      "key": "ui.welcome.goal.streak",
+      "text": "Récupère une nuit de série sur {0} jours différents"
+    },
+    {
+      "key": "ui.welcome.choose_word",
+      "text": "Prix"
+    },
+    {
+      "key": "ui.welcome.choose_line",
+      "text": "Prends la tourelle sur toutes les places, ou son prix à la place."
+    },
+    {
+      "key": "ui.welcome.choose_turret",
+      "text": "À toi sur les quatre places, pour toujours. Améliore-la avec des pièces."
+    },
+    {
+      "key": "ui.welcome.choose_price",
+      "text": "Le prix de la tourelle en boutique, versé dans ton porte-monnaie."
+    },
+    {
+      "key": "ui.welcome.coins",
+      "text": "{0} pièces"
+    },
+    {
+      "key": "ui.welcome.gems",
+      "text": "{0} gemmes"
+    },
+    {
+      "key": "ui.welcome.take",
+      "text": "Prendre"
+    },
+    {
+      "key": "ui.welcome.taken",
+      "text": "Récupéré"
+    },
+    {
       "key": "ui.wheel.collect",
       "text": "REGARDE UNE VIDÉO POUR RÉCUPÉRER"
     },
@@ -7552,6 +7636,10 @@
     {
       "key": "rank.req.streak",
       "text": "Récupère {0} nuits de série"
+    },
+    {
+      "key": "rank.req.task_claims",
+      "text": "Ouvre {0} coffres de mission"
     },
     {
       "key": "rank.req.challenge_plays",

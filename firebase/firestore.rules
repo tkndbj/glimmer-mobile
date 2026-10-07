@@ -207,11 +207,25 @@ service cloud.firestore {
                // client and rules may go out in either order, which no other field here can
                // say (invariant 12a). The bound matches `LifetimeTally.MaxGoals` (32), held
                // to it offline by `CloudWireTests`.
+               //
+               // `welcome` is the fourth row of the map (save v40): the welcome bonus's days per
+               // verb and the quests taken (`WelcomeLedger`, invariant 58). It pays an
+               // entitlement that buys no currency, so this is shape only; the bounds match
+               // `WelcomeLedger.MaxRows` (8), held offline by `CloudWireTests`. It rides inside
+               // this map for `lifetime`'s reason - the ruleset deployed before this clause
+               // already accepts the key, so client and rules may go out in either order.
                && (!('tasks' in d) || (d.tasks is map
                                        && (!('daily' in d.tasks) || taskPeriod(d.tasks.daily))
                                        && (!('weekly' in d.tasks) || taskPeriod(d.tasks.weekly))
                                        && (!('lifetime' in d.tasks) || (d.tasks.lifetime is list
-                                                                        && d.tasks.lifetime.size() <= 32))))
+                                                                        && d.tasks.lifetime.size() <= 32))
+                                       && (!('welcome' in d.tasks) || (d.tasks.welcome is map
+                                           && (!('days' in d.tasks.welcome) || (d.tasks.welcome.days is list
+                                                                                && d.tasks.welcome.days.size() <= 8))
+                                           && (!('claimed' in d.tasks.welcome) || (d.tasks.welcome.claimed is list
+                                                                                   && d.tasks.welcome.claimed.size() <= 8))
+                                           && (!('coined' in d.tasks.welcome) || (d.tasks.welcome.coined is list
+                                                                                  && d.tasks.welcome.coined.size() <= 8))))))
 
                // The turrets the player bought and the line they stand in. Client-owned and
                // forgeable, and accounted for the way the companion set is: a forged turret buys

@@ -6102,6 +6102,90 @@
       "text": "ENERGIE"
     },
     {
+      "key": "ui.welcome.door",
+      "text": "Willkommensbonus"
+    },
+    {
+      "key": "ui.welcome.new",
+      "text": "NEU"
+    },
+    {
+      "key": "ui.welcome.title",
+      "text": "Willkommensbonus"
+    },
+    {
+      "key": "ui.welcome.subtitle",
+      "text": "Vier Türme für immer. Jeder wird nach ein paar verschiedenen Spieltagen freigeschaltet. Die Tage müssen nicht aufeinander folgen."
+    },
+    {
+      "key": "ui.welcome.all_done",
+      "text": "Alle Türme gehören dir. Viel Spaß damit!"
+    },
+    {
+      "key": "ui.welcome.days_left",
+      "text": "Noch {0} Tage"
+    },
+    {
+      "key": "ui.welcome.days_left_one",
+      "text": "Noch 1 Tag"
+    },
+    {
+      "key": "ui.welcome.goal.runs",
+      "text": "Spiele an {0} verschiedenen Tagen einen Kampf"
+    },
+    {
+      "key": "ui.welcome.goal.wins",
+      "text": "Gewinne an {0} verschiedenen Tagen einen Kampf"
+    },
+    {
+      "key": "ui.welcome.goal.task_claims",
+      "text": "Öffne an {0} verschiedenen Tagen eine Aufgabentruhe"
+    },
+    {
+      "key": "ui.welcome.goal.challenge_plays",
+      "text": "Spiele an {0} verschiedenen Tagen ein Tagesrätsel"
+    },
+    {
+      "key": "ui.welcome.goal.challenge_wins",
+      "text": "Gewinne an {0} verschiedenen Tagen ein Tagesrätsel"
+    },
+    {
+      "key": "ui.welcome.goal.streak",
+      "text": "Sammle an {0} verschiedenen Tagen eine Serien-Nacht ein"
+    },
+    {
+      "key": "ui.welcome.choose_word",
+      "text": "Belohnung"
+    },
+    {
+      "key": "ui.welcome.choose_line",
+      "text": "Nimm den Turm auf allen Plätzen, oder stattdessen seinen Preis."
+    },
+    {
+      "key": "ui.welcome.choose_turret",
+      "text": "Deiner auf allen vier Plätzen, für immer. Verbessere ihn mit Münzen."
+    },
+    {
+      "key": "ui.welcome.choose_price",
+      "text": "Der Ladenpreis des Turms, in deine Geldbörse gezahlt."
+    },
+    {
+      "key": "ui.welcome.coins",
+      "text": "{0} Münzen"
+    },
+    {
+      "key": "ui.welcome.gems",
+      "text": "{0} Juwelen"
+    },
+    {
+      "key": "ui.welcome.take",
+      "text": "Nehmen"
+    },
+    {
+      "key": "ui.welcome.taken",
+      "text": "Eingesammelt"
+    },
+    {
       "key": "ui.wheel.collect",
       "text": "ZUM EINSAMMELN VIDEO ANSEHEN"
     },
@@ -7552,6 +7636,10 @@
     {
       "key": "rank.req.streak",
       "text": "Sammle {0} Seriennächte"
+    },
+    {
+      "key": "rank.req.task_claims",
+      "text": "Öffne {0} Aufgabentruhen"
     },
     {
       "key": "rank.req.challenge_plays",

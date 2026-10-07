@@ -6102,6 +6102,90 @@
       "text": "SALUTE"
     },
     {
+      "key": "ui.welcome.door",
+      "text": "Bonus di benvenuto"
+    },
+    {
+      "key": "ui.welcome.new",
+      "text": "NUOVO"
+    },
+    {
+      "key": "ui.welcome.title",
+      "text": "Bonus di benvenuto"
+    },
+    {
+      "key": "ui.welcome.subtitle",
+      "text": "Quattro torrette per sempre. Ognuna si sblocca dopo alcuni giorni di gioco diversi. I giorni non devono essere consecutivi."
+    },
+    {
+      "key": "ui.welcome.all_done",
+      "text": "Tutte le torrette sono tue. Divertiti!"
+    },
+    {
+      "key": "ui.welcome.days_left",
+      "text": "Mancano {0} giorni"
+    },
+    {
+      "key": "ui.welcome.days_left_one",
+      "text": "Manca 1 giorno"
+    },
+    {
+      "key": "ui.welcome.goal.runs",
+      "text": "Gioca una battaglia in {0} giorni diversi"
+    },
+    {
+      "key": "ui.welcome.goal.wins",
+      "text": "Vinci una battaglia in {0} giorni diversi"
+    },
+    {
+      "key": "ui.welcome.goal.task_claims",
+      "text": "Apri un forziere delle missioni in {0} giorni diversi"
+    },
+    {
+      "key": "ui.welcome.goal.challenge_plays",
+      "text": "Gioca una sfida del giorno in {0} giorni diversi"
+    },
+    {
+      "key": "ui.welcome.goal.challenge_wins",
+      "text": "Vinci una sfida del giorno in {0} giorni diversi"
+    },
+    {
+      "key": "ui.welcome.goal.streak",
+      "text": "Riscuoti una notte della serie in {0} giorni diversi"
+    },
+    {
+      "key": "ui.welcome.choose_word",
+      "text": "Premio"
+    },
+    {
+      "key": "ui.welcome.choose_line",
+      "text": "Prendi la torretta su tutti i posti, oppure il suo prezzo."
+    },
+    {
+      "key": "ui.welcome.choose_turret",
+      "text": "Tua su tutti e quattro i posti, per sempre. Potenziala con le monete."
+    },
+    {
+      "key": "ui.welcome.choose_price",
+      "text": "Il prezzo della torretta in negozio, versato nel tuo portafoglio."
+    },
+    {
+      "key": "ui.welcome.coins",
+      "text": "{0} monete"
+    },
+    {
+      "key": "ui.welcome.gems",
+      "text": "{0} gemme"
+    },
+    {
+      "key": "ui.welcome.take",
+      "text": "Prendi"
+    },
+    {
+      "key": "ui.welcome.taken",
+      "text": "Riscosso"
+    },
+    {
       "key": "ui.wheel.collect",
       "text": "GUARDA UN VIDEO PER RISCUOTERE"
     },
@@ -7552,6 +7636,10 @@
     {
       "key": "rank.req.streak",
       "text": "Raccogli {0} notti di serie"
+    },
+    {
+      "key": "rank.req.task_claims",
+      "text": "Apri {0} forzieri delle missioni"
     },
     {
       "key": "rank.req.challenge_plays",

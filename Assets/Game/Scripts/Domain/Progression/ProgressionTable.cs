@@ -9,6 +9,7 @@ using GlimmerGrove.Utilities;
 using GlimmerGrove.Wards;
 using UnityEngine;
 using TaskTable = GlimmerGrove.Tasks.TaskTable;   // the property below is also called Tasks
+using WelcomeTable = GlimmerGrove.Tasks.WelcomeTable;
 using ReferralTable = GlimmerGrove.Referral.ReferralTable;   // and Referral
 using RankLadder = GlimmerGrove.Ranks.RankLadder;             // and Ranks
 
@@ -95,7 +96,8 @@ namespace GlimmerGrove.Progression
                          EndlessRewardTable endless, XpBoostTable xpBoost,
                          RankLadder ranks, KeeperLadder keeperLevels,
                          KeeperMilestoneTable keeperMilestones,
-                         EndlessCheckpointTable endlessCheckpoints)
+                         EndlessCheckpointTable endlessCheckpoints,
+                         WelcomeTable welcome)
         {
             _cumulative = cumulative;
             _defaultRule = defaultRule;
@@ -120,6 +122,7 @@ namespace GlimmerGrove.Progression
             KeeperLevels = keeperLevels ?? KeeperLadder.Empty;
             KeeperMilestones = keeperMilestones ?? KeeperMilestoneTable.Empty;
             EndlessCheckpoints = endlessCheckpoints ?? EndlessCheckpointTable.Empty;
+            Welcome = welcome ?? WelcomeTable.Empty;
         }
 
         /// <summary>
@@ -194,6 +197,14 @@ namespace GlimmerGrove.Progression
         /// shares, and read by nothing on a server: a checkpoint pays nothing.
         /// </summary>
         public EndlessCheckpointTable EndlessCheckpoints { get; }
+
+        /// <summary>
+        /// The welcome bonus: turrets handed to an account for coming back on several days.
+        /// <see cref="WelcomeTable.Empty"/> - no door, nothing counted - when the file carries no
+        /// block, which is the feature's off switch. Read by nothing on a server: a quest pays an
+        /// entitlement that buys no currency (invariant 15), so there is nothing to adjudicate.
+        /// </summary>
+        public WelcomeTable Welcome { get; }
 
         /// <summary>
         /// The rank ladder, published with the curve for the reason every block here is and one
@@ -677,11 +688,17 @@ namespace GlimmerGrove.Progression
             // offers none and every run opens at wave one.
             var endlessCheckpoints = EndlessCheckpointTable.Resolve(dto.endlessCheckpoints, problems);
 
+            // And the welcome bonus. Read against the roster, whose turrets it hands over: a
+            // quest paying a turret the shelf does not hold is a row nobody can collect. Absent
+            // is the feature off, and so is a block with a mistake in it - a page that cannot pay
+            // is worse than no page.
+            var welcome = WelcomeTable.Resolve(dto.welcome, wards, problems);
+
             table = Build(dto.xpToNext, dto.tailXpToNext, dto.tailXpIncrement, maxLevel,
                           defaultRule, chapterRules, daily, ads, streak, golden, hearts, hints,
                           store, prompts, chapterGate, carryOn, utilities, wards, tasks, referral,
                           endless, xpBoost, ranks, keeperLevels, keeperMilestones,
-                          endlessCheckpoints);
+                          endlessCheckpoints, welcome);
             return true;
         }
 
@@ -699,7 +716,8 @@ namespace GlimmerGrove.Progression
                                       XpBoostTable xpBoost, RankLadder ranks,
                                       KeeperLadder keeperLevels = null,
                                       KeeperMilestoneTable keeperMilestones = null,
-                                      EndlessCheckpointTable endlessCheckpoints = null)
+                                      EndlessCheckpointTable endlessCheckpoints = null,
+                                      WelcomeTable welcome = null)
         {
             if (maxLevel < 1) maxLevel = 1;
 
@@ -720,7 +738,7 @@ namespace GlimmerGrove.Progression
                                         golden, hearts, hints, store, prompts,
                                         chapterGate, carryOn, utilities, wards, tasks, referral,
                                         endless, xpBoost, ranks, keeperLevels, keeperMilestones,
-                                        endlessCheckpoints);
+                                        endlessCheckpoints, welcome);
         }
     }
 }

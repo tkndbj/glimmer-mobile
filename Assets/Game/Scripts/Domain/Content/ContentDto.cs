@@ -1117,6 +1117,18 @@ namespace GlimmerGrove.Content
         public EndlessCheckpointsDto endlessCheckpoints;
 
         /// <summary>
+        /// The welcome bonus: the turrets a new account earns by coming back on several days.
+        /// Optional; see <see cref="Tasks.WelcomeTable"/>.
+        ///
+        /// <b>A block that reaches no server</b>, like <see cref="notifications"/>: a quest counts
+        /// days on the device and pays an entitlement that buys no currency (invariant 15, the
+        /// turret set's own argument), so there is nothing to adjudicate and <c>seed-config.mjs</c>
+        /// does not publish it. <b>Absent switches the feature off</b>: no door on the hub, no
+        /// counting, nothing confiscated - which is also the emergency stop.
+        /// </summary>
+        public WelcomeDto welcome;
+
+        /// <summary>
         /// The rank ladder. Optional; see <see cref="Ranks.RankLadder"/>.
         ///
         /// <para>
@@ -2484,5 +2496,35 @@ namespace GlimmerGrove.Content
         public StoryBeatDto[] beats;
 
         public bool IsAuthored => beats != null && beats.Length > 0;
+    }
+
+    /// <summary>
+    /// The welcome bonus block. See <see cref="Tasks.WelcomeTable"/>.
+    /// </summary>
+    [Serializable]
+    public sealed class WelcomeDto
+    {
+        /// <summary>The quests, shortest first.</summary>
+        public WelcomeQuestDto[] quests;
+
+        /// <summary>Whether the file wrote this block at all; see <see cref="DailyChestEntryDto.IsAuthored"/>.</summary>
+        public bool IsAuthored => quests != null && quests.Length > 0;
+    }
+
+    /// <summary>One welcome quest: a turret, the verb that earns it and how many days of it.</summary>
+    [Serializable]
+    public sealed class WelcomeQuestDto
+    {
+        /// <summary>Permanent id; the save records a claim against it (invariant 1).</summary>
+        public string id;
+
+        /// <summary>The turret it pays, by roster id. Never a starter.</summary>
+        public string ward;
+
+        /// <summary>The counted verb, one of <c>TaskGoals</c> ids with a sentence in <c>WelcomeGoals</c>.</summary>
+        public string goal;
+
+        /// <summary>How many distinct days the verb has to happen on. 2 to <c>WelcomeTable.MaxDays</c>.</summary>
+        public int days;
     }
 }

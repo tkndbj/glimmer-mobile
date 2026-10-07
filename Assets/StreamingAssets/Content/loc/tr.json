@@ -6102,6 +6102,90 @@
       "text": "CAN"
     },
     {
+      "key": "ui.welcome.door",
+      "text": "Hoş geldin bonusu"
+    },
+    {
+      "key": "ui.welcome.new",
+      "text": "YENİ"
+    },
+    {
+      "key": "ui.welcome.title",
+      "text": "Hoş geldin bonusu"
+    },
+    {
+      "key": "ui.welcome.subtitle",
+      "text": "Sonsuza dek senin olacak dört kule. Her biri birkaç farklı günde oynadıktan sonra açılır. Günlerin art arda olması gerekmez."
+    },
+    {
+      "key": "ui.welcome.all_done",
+      "text": "Tüm kuleler senin. Keyfini çıkar!"
+    },
+    {
+      "key": "ui.welcome.days_left",
+      "text": "{0} gün kaldı"
+    },
+    {
+      "key": "ui.welcome.days_left_one",
+      "text": "1 gün kaldı"
+    },
+    {
+      "key": "ui.welcome.goal.runs",
+      "text": "{0} farklı günde bir savaş oyna"
+    },
+    {
+      "key": "ui.welcome.goal.wins",
+      "text": "{0} farklı günde bir savaş kazan"
+    },
+    {
+      "key": "ui.welcome.goal.task_claims",
+      "text": "{0} farklı günde bir görev sandığı aç"
+    },
+    {
+      "key": "ui.welcome.goal.challenge_plays",
+      "text": "{0} farklı günde bir günlük bulmaca oyna"
+    },
+    {
+      "key": "ui.welcome.goal.challenge_wins",
+      "text": "{0} farklı günde bir günlük bulmaca kazan"
+    },
+    {
+      "key": "ui.welcome.goal.streak",
+      "text": "{0} farklı günde bir seri gecesi topla"
+    },
+    {
+      "key": "ui.welcome.choose_word",
+      "text": "Ödül"
+    },
+    {
+      "key": "ui.welcome.choose_line",
+      "text": "Kuleyi tüm yuvalarda al ya da yerine fiyatını al."
+    },
+    {
+      "key": "ui.welcome.choose_turret",
+      "text": "Dört yuvada da sonsuza dek senin. Altınla geliştir."
+    },
+    {
+      "key": "ui.welcome.choose_price",
+      "text": "Kulenin mağaza fiyatı, cüzdanına ödenir."
+    },
+    {
+      "key": "ui.welcome.coins",
+      "text": "{0} altın"
+    },
+    {
+      "key": "ui.welcome.gems",
+      "text": "{0} mücevher"
+    },
+    {
+      "key": "ui.welcome.take",
+      "text": "Al"
+    },
+    {
+      "key": "ui.welcome.taken",
+      "text": "Alındı"
+    },
+    {
       "key": "ui.wheel.collect",
       "text": "ALMAK İÇİN VİDEO İZLE"
     },
@@ -7552,6 +7636,10 @@
     {
       "key": "rank.req.streak",
       "text": "{0} seri gecesi topla"
+    },
+    {
+      "key": "rank.req.task_claims",
+      "text": "{0} görev sandığı aç"
     },
     {
       "key": "rank.req.challenge_plays",

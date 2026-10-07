@@ -260,6 +260,7 @@ function buildProgressionConfig() {
         };
       })(),
       keeper: readKeeperCurve(progression),
+      welcome: readWelcome(progression),
 
       // Read last because it is the only block that has to be proved against the *catalog*
       // this same run derived: a rung scoped to a chapter nobody ships is a line that can
@@ -768,6 +769,67 @@ function readKeeperMilestones(progression, tierIds) {
 
   console.log(`  keeperMilestones: ${out.length} chest(s) between levels ${out[0].level} and ${last}`);
   return { rows: out };
+}
+
+/**
+ * The welcome bonus (invariant 58): each quest's id, the turret it pays and that turret's shelf
+ * price in its currency - what `claimAwards` pays when a quest is taken as money instead.
+ *
+ * Every rule `WelcomeTable.Resolve` enforces is enforced again here, because a block the client
+ * would have refused is a page nobody sees, while a block this side published differently is a
+ * claim paid at a price nobody authored. Absent is the feature off, and publishes nothing.
+ */
+function readWelcome(progression) {
+  const MAX_QUESTS = 5, LEAST_DAYS = 2, MAX_DAYS = 32;
+  const GOALS = new Set(["runs", "wins", "task_claims", "challenge_plays", "challenge_wins", "streak"]);
+  const ID = /^[a-z][a-z0-9_]{0,31}$/;
+
+  const block = progression.welcome;
+  if (!block) return undefined;
+
+  const rows = Array.isArray(block.quests) ? block.quests : [];
+  if (rows.length === 0) throw new Error("welcome carries no quests; leave the block out to switch the bonus off");
+  if (rows.length > MAX_QUESTS) throw new Error(`welcome lists ${rows.length} quests; at most ${MAX_QUESTS} are supported`);
+
+  const models = new Map((progression.wards?.models ?? []).map((m) => [m.id, m]));
+  if (models.size === 0) throw new Error("welcome needs the wards roster to price its turrets, and progression.json has none");
+
+  const quests = {};
+  const wards = new Set();
+  let last = 0;
+  rows.forEach((row, i) => {
+    const where = `welcome quest ${i}`;
+    if (typeof row?.id !== "string" || !ID.test(row.id)) throw new Error(`${where} has a bad id '${row?.id}'`);
+    if (quests[row.id]) throw new Error(`${where} repeats id '${row.id}'`);
+
+    const model = models.get(row?.ward);
+    if (!model) throw new Error(`${where} pays turret '${row?.ward}', which the roster does not hold`);
+    const coins = Math.floor(Number(model.coinPrice ?? 0));
+    const gems = Math.floor(Number(model.gemPrice ?? 0));
+    if (coins <= 0 && gems <= 0) throw new Error(`${where} pays turret '${row.ward}', which is the free starter`);
+    if (coins > 0 && gems > 0) throw new Error(`${where} pays turret '${row.ward}', which carries two prices`);
+    if (wards.has(row.ward)) throw new Error(`${where} pays turret '${row.ward}' a second time`);
+    wards.add(row.ward);
+
+    if (!GOALS.has(row?.goal)) throw new Error(`${where} counts '${row?.goal}', which is not a welcome verb`);
+
+    const days = Math.floor(Number(row?.days));
+    if (!Number.isFinite(days) || days < LEAST_DAYS || days > MAX_DAYS) {
+      throw new Error(`${where} asks for ${row?.days} days, outside ${LEAST_DAYS}..${MAX_DAYS}`);
+    }
+    if (days < last) throw new Error(`${where} asks for ${days} days after ${last}; the ladder must climb`);
+    last = days;
+
+    quests[row.id] = {
+      ward: row.ward,
+      currency: gems > 0 ? "gems" : "credits",
+      amount: gems > 0 ? gems : coins,
+    };
+  });
+
+  console.log(`  welcome: ${rows.length} quest(s); taken as money they pay `
+              + Object.values(quests).map((q) => `${q.amount} ${q.currency}`).join(", "));
+  return { quests };
 }
 
 function readEndless(progression) {

@@ -74,6 +74,14 @@
       { "level": 70, "tier": "royal" }
     ]
   },
+  "welcome": {
+    "quests": [
+      { "id": "w1_leech",      "ward": "leech",      "goal": "runs",           "days": 3 },
+      { "id": "w2_lighthouse", "ward": "lighthouse", "goal": "task_claims",    "days": 5 },
+      { "id": "w3_pyre",       "ward": "pyre",       "goal": "challenge_wins", "days": 7 },
+      { "id": "w4_glacier",    "ward": "glacier",    "goal": "streak",         "days": 10 }
+    ]
+  },
   "xpBoost": {
     "watchedPercent": 50,
     "watchedHours": 2,

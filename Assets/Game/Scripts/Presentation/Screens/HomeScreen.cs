@@ -62,10 +62,20 @@ namespace GlimmerGrove
             BuildResources();
             BuildTasks();
             BuildFeature();
-            BuildLoadout();
-            BuildPlay();
-            BuildChallenges();
-            NavBar.Build(Content, NavBar.Tab.Home);
+
+            // The foot takes one of two shapes (`HubFoot`): with the welcome door under the
+            // Daily Challenges door while the bonus is live and unclaimed, and without it for
+            // ever after. Decided once here and again in `RebuildFoot` when the ledger moves.
+            _foot = HubFoot.For(WelcomeLedger.Offered);
+            BuildLoadout(true);
+            BuildPlay(true);
+            BuildChallenges(true);
+            BuildWelcome(true);
+            _nav = NavBar.Build(Content, NavBar.Tab.Home);
+
+            // The welcome door: a day counted or a turret taken behind this screen, a sync
+            // arriving with another device's claims, or the block withdrawn by a content push.
+            WelcomeLedger.Changed += OnWelcomeChanged;
 
             // Midnight arrives while a screen is open exactly as often as it arrives while
             // it is not, and a run finishing changes the box from under itself.
@@ -93,8 +103,10 @@ namespace GlimmerGrove
             PlayerProgression.Changed -= OnKeeperChanged;
             ChallengeLedger.Changed -= OnChallengesChanged;
             WardLoadout.Changed -= OnLoadoutChanged;
+            WelcomeLedger.Changed -= OnWelcomeChanged;
 
             _line?.Dispose();
+            _welcomeArt?.Dispose();
         }
 
         void OnTasksChanged()
@@ -1385,11 +1397,19 @@ namespace GlimmerGrove
         /// on. <c>render_home.py</c> is what looks at it.
         /// </para>
         /// </summary>
-        const float FootGap = 14f;
-        const float ChallengeW = 960f, ChallengeH = 280f;
+        /// <summary>
+        /// The stack's figures, in whichever of its two shapes it is drawn in (<see cref="HubFoot"/>).
+        /// Every size and centre below reads off this, so the hub, the render mirror and
+        /// <c>HubFootTests</c> read one table.
+        /// </summary>
+        HubFoot _foot;
 
-        const float PlayW = 620f, PlayH = 178f;
-        const float LineW = 960f;
+        const float ChallengeW = HubFoot.Width;
+        const float LineW = HubFoot.Width;
+
+        float ChallengeH => _foot.ChallengeH;
+        float PlayW => _foot.PlayW;
+        float PlayH => _foot.PlayH;
 
         /// <summary>
         /// The challenge banner's centre, and the two rows stacked above it.
@@ -1398,16 +1418,23 @@ namespace GlimmerGrove
         /// owner's instruction after playing it: the thing the screen is for wants the top of
         /// the stack, where the readout under it reads as what the key is about to be spent on.
         /// </summary>
-        static float ChallengeY => NavBar.Height + FootGap + ChallengeH * .5f;
-        static float LineY => ChallengeY + ChallengeH * .5f + FootGap + LineH * .5f;
-        static float PlayY => LineY + LineH * .5f + FootGap + PlayH * .5f;
+        float ChallengeY => _foot.ChallengeY;
+        float LineY => _foot.LineY;
+        float PlayY => _foot.PlayY;
 
-        void BuildPlay()
+        Btn _play;
+
+        /// <summary>
+        /// The BATTLE key. <paramref name="entrance"/> is false on a rebuild, which is a redraw
+        /// and not an entrance (invariant 16d).
+        /// </summary>
+        void BuildPlay(bool entrance)
         {
             var play = UIKit.TextButton("Play", Content, Skins.Battle, Loc.Get("ui.home.battle"), 62,
                                         new Vector2(PlayW, PlayH), new Vector2(.5f, 0f),
                                         new Vector2(0f, PlayY),
                                         () => Flow.Go<LevelsScreen>(), "ic_battle");
+            _play = play;
 
             // The kit sizes a pill's glyph at a third of its height, which is right for a small
             // mark beside a word and small for the one control this screen is about. Two things
@@ -1428,6 +1455,14 @@ namespace GlimmerGrove
             // screen is composed around. What says "this is the control" is still here: the
             // key is the only gold thing on the hub, it is the widest, it pops in last and it
             // breathes.
+            if (!entrance)
+            {
+                play.Rehome();
+                Tween.Breathe(play.transform, .03f, 2.1f);
+                Sheen.Attach((RectTransform)play.transform, 3.4f);
+                return;
+            }
+
             play.transform.localScale = Vector3.zero;
             Tween.Pop(play.transform, 0f, .7f, .62f).OnDone(() =>
             {
@@ -1462,13 +1497,16 @@ namespace GlimmerGrove
         /// <see cref="ChallengeLedger.Changed"/> (44j).
         /// </para>
         /// </summary>
-        void BuildChallenges()
+        Btn _challengeCard;
+
+        void BuildChallenges(bool entrance)
         {
             // The shared door key (`DoorKey`): the violet pill, the caption on the left and the
             // owner's turret scene on the right, at the foot of this slot.
             var card = DoorKey.Build("Challenges", Content, ChallengeW, ChallengeH, new Vector2(.5f, 0f),
                                      new Vector2(0f, ChallengeY), "ui.challenges.title", "challenge_door",
                                      () => Flow.Go<DailyChallengesScreen>());
+            _challengeCard = card;
 
             // **Open only while there is a slate to offer.** A tap onto an empty room is a tap a
             // player learns not to make.
@@ -1477,6 +1515,13 @@ namespace GlimmerGrove
             // Built last, so it draws over the key and the picture.
             _challengeBadge = WaitingBadge.HubInkedTopLeft(card.transform, Pal.Amber);
             PaintChallenges();
+
+            if (!entrance)
+            {
+                card.Rehome();
+                Sheen.Attach((RectTransform)card.transform, 3.1f);
+                return;
+            }
 
             card.transform.localScale = Vector3.zero;
             Tween.Pop(card.transform, 0f, .7f, .70f).OnDone(() =>
@@ -1488,6 +1533,196 @@ namespace GlimmerGrove
                 // behind a mask cut to the key's own shape. See Sheen.
                 Sheen.Attach((RectTransform)card.transform, 3.1f);
             });
+        }
+
+        // ------------------------------------------------------------ the welcome door
+        /// <summary>
+        /// The four turrets standing on the welcome door's left: how tall each is drawn, how
+        /// wide (the sprites are 192 x 240), where the first stands, how far apart they are and
+        /// how far their feet sit above the key's own foot.
+        ///
+        /// <b>Inside the key, in a row, with air between them and the caption.</b> They were
+        /// drawn 150 tall and rose out of the key's top as the challenge door's picture does;
+        /// on a phone they read as standing on the key rather than in it, and the fourth ran
+        /// into the caption (the owner, 2026-10-07). At 120 their tops sit 4 under the key's
+        /// top edge, the step is their width so none overlaps its neighbour, and the caption
+        /// starts 20 clear of the last one.
+        /// </summary>
+        const float WelcomeArtH = 120f, WelcomeArtW = 96f, WelcomeArtLeft = 64f, WelcomeArtStep = 80f, WelcomeArtLift = 6f;
+
+        /// <summary>Where the caption stops: clear of the starburst on the key's top-right corner.</summary>
+        const float WelcomeCaptionRight = 130f;
+
+        Btn _welcomeDoor;
+        WaitingBadge _welcomeBadge;
+        RectTransform _nav;
+        AssetHold _welcomeArt;
+        readonly System.Collections.Generic.List<Image> _welcomeBodies =
+            new System.Collections.Generic.List<Image>(WardLine.Colours.Length);
+
+        /// <summary>
+        /// The third door out of the hub, under Daily Challenges, while the welcome bonus is live
+        /// and something on it is still unclaimed (invariant 58).
+        ///
+        /// <para>
+        /// <b>An orange key</b> (<see cref="Skins.Buy"/>, the BUY key's colour - this door is
+        /// about getting something), the quests' turrets on its left in the four seat colours,
+        /// WELCOME BONUS on two lines on its right, and the hub's starburst on the top-right
+        /// corner saying NEW until a turret is waiting, then how many.
+        /// </para>
+        /// <para>
+        /// <b>Built once per shape and gone for ever when the last quest is taken</b>: the door
+        /// is the ledger's <see cref="WelcomeLedger.Offered"/> and nothing device-local, so an
+        /// account that finished on one phone has no door on the next. See <see cref="RebuildFoot"/>.
+        /// </para>
+        /// </summary>
+        void BuildWelcome(bool entrance)
+        {
+            _welcomeBodies.Clear();
+            if (!_foot.Welcome) return;
+
+            var door = UIKit.Button("Welcome", Content, Art.S("Ui/" + Skins.Buy),
+                                    new Vector2(LineW, _foot.WelcomeH), new Vector2(.5f, 0f),
+                                    new Vector2(0f, _foot.WelcomeY), () => Flow.Go<WelcomeScreen>());
+            door.PressScale = .985f;
+            _welcomeDoor = door;
+
+            // The turrets, left, standing on the key's foot. An `Image` with no sprite is a
+            // white rectangle (7b), so each is off until its picture arrives (`DressWelcome`).
+            //
+            // **Anchored to the left edge's middle, never to the bottom-left corner.** `UIKit.Img`
+            // reads a zero anchor as "none given" and falls back to centre, so (0,0) put all four
+            // at the key's middle and over its top - which is the hub the owner photographed on
+            // 2026-10-07 while the render mirror, drawing the intent, showed them in place. The
+            // foot offset is measured from the key's vertical centre instead.
+            var quests = ProgressionRules.Table.Welcome.Quests;
+            int n = Mathf.Min(quests.Count, WardLine.Colours.Length);
+            float bodyY = WelcomeArtLift + WelcomeArtH * .5f - _foot.WelcomeH * .5f;
+            for (int i = 0; i < n; i++)
+            {
+                var body = UIKit.Img("Body" + i, door.transform, null, Color.white,
+                                     new Vector2(WelcomeArtW, WelcomeArtH), new Vector2(0f, .5f),
+                                     new Vector2(WelcomeArtLeft + i * WelcomeArtStep, bodyY));
+                body.preserveAspect = true;
+                body.raycastTarget = false;
+                body.enabled = false;
+                _welcomeBodies.Add(body);
+            }
+
+            // The caption, right, in the room between the pictures and the badge's corner.
+            float left = n > 0 ? WelcomeArtLeft + (n - 1) * WelcomeArtStep + WelcomeArtW * .5f + 20f : 40f;
+            float right = LineW - WelcomeCaptionRight;
+            float lift = _foot.WelcomeH * UIKit.PillFaceLift;
+            UIKit.Shrinkable(
+                UIKit.Titled("Caption", door.transform, DoorKey.TwoLines(Loc.Get("ui.welcome.door").Upper()), 44,
+                             Pal.Cream, TextAnchor.MiddleCenter, new Vector2(right - left, _foot.WelcomeH * .82f),
+                             new Vector2(0f, .5f), new Vector2((left + right) * .5f, lift), 3f, 3f,
+                             wrap: true),
+                26);
+
+            // Built last, so it draws over the key and the pictures.
+            _welcomeBadge = WaitingBadge.HubInkedTopRight(door.transform, Pal.Mint);
+            PaintWelcome();
+
+            if (entrance)
+            {
+                door.transform.localScale = Vector3.zero;
+                Tween.Pop(door.transform, 0f, .7f, .76f).OnDone(() =>
+                {
+                    if (!door) return;
+                    door.Rehome();
+                    Sheen.Attach((RectTransform)door.transform, 3.3f);
+                });
+            }
+            else
+            {
+                door.Rehome();
+                Sheen.Attach((RectTransform)door.transform, 3.3f);
+            }
+
+            Run(LoadWelcomeArt);
+        }
+
+        /// <summary>NEW until a turret is waiting, then how many are (44j: watched, never drawn once).</summary>
+        void PaintWelcome()
+        {
+            if (_welcomeBadge == null) return;
+            int ready = WelcomeLedger.ReadyCount;
+            if (ready > 0) _welcomeBadge.Paint(ready);
+            else _welcomeBadge.Paint(Loc.Get("ui.welcome.new").Upper());
+        }
+
+        void OnWelcomeChanged()
+        {
+            if (this == null) return;
+
+            // The door appearing or going is a change of shape; anything else is a repaint.
+            if (WelcomeLedger.Offered != _foot.Welcome) RebuildFoot();
+            else PaintWelcome();
+        }
+
+        /// <summary>
+        /// Redraws the foot in its other shape: the last welcome quest taken (on this device, or
+        /// learned from a sync), or the block arriving or withdrawn by a content push.
+        ///
+        /// <b>A redraw rather than an entrance</b> (invariant 16d): the four controls are remade
+        /// at their new sizes and centres and nothing pops. Taken off the screen before being
+        /// destroyed (<see cref="Hide"/>), or the old key is drawn over the new one until the
+        /// frame ends.
+        /// </summary>
+        void RebuildFoot()
+        {
+            if (_play) Hide(_play.gameObject);
+            if (_lineHost) Hide(_lineHost.gameObject);
+            if (_challengeCard) Hide(_challengeCard.gameObject);
+            if (_welcomeDoor) Hide(_welcomeDoor.gameObject);
+            _play = null;
+            _lineHost = null;
+            _challengeCard = null;
+            _welcomeDoor = null;
+            _challengeBadge = null;
+            _welcomeBadge = null;
+            _lineArt.Clear();
+
+            _foot = HubFoot.For(WelcomeLedger.Offered);
+            BuildLoadout(false);
+            BuildPlay(false);
+            BuildChallenges(false);
+            BuildWelcome(false);
+
+            // The nav bar was built after the foot and stays on top of it.
+            if (_nav) _nav.SetAsLastSibling();
+        }
+
+        /// <summary>Puts whichever turret pictures are in hand onto the door.</summary>
+        void DressWelcome()
+        {
+            var quests = ProgressionRules.Table.Welcome.Quests;
+            for (int i = 0; i < _welcomeBodies.Count && i < quests.Count; i++)
+            {
+                var body = _welcomeBodies[i];
+                if (body == null) continue;
+                var sprite = AssetLibrary.Sprite(AssetManifest.WardArt(quests[i].Ward, quests[i].Colour));
+                body.sprite = sprite;
+                body.enabled = sprite != null;
+            }
+        }
+
+        /// <summary>
+        /// This screen's own hold on the door's turrets - never the line's and never a board's
+        /// (7b: an address owned by another scope is never re-claimed).
+        /// </summary>
+        async Task LoadWelcomeArt(CancellationToken cancellation)
+        {
+            var quests = ProgressionRules.Table.Welcome.Quests;
+            var wanted = new System.Collections.Generic.List<AssetRequest>(quests.Count);
+            for (int i = 0; i < quests.Count && i < WardLine.Colours.Length; i++)
+                wanted.Add(AssetRequest.Sprite(AssetManifest.WardArt(quests[i].Ward, quests[i].Colour)));
+
+            _welcomeArt = _welcomeArt ?? AssetLibrary.Hold("hub_welcome");
+            await _welcomeArt.LoadAsync(wanted, null, cancellation);
+
+            if (Living) DressWelcome();
         }
 
         WaitingBadge _challengeBadge;
@@ -1517,7 +1752,9 @@ namespace GlimmerGrove
         /// of. The hub has room for one of those.
         /// </para>
         /// </summary>
-        const float LineCell = 168f, LineCellGap = 20f, LineStar = 20f;
+        float LineCell => _foot.LineCell;
+        float LineCellGap => _foot.LineCellGap;
+        float LineStar => _foot.LineStar;
 
         /// <summary>
         /// The strip, top to bottom: air, the caption's band, air, the row of cells, air.
@@ -1531,12 +1768,13 @@ namespace GlimmerGrove
         /// said so, which is the whole reason that file exists.
         /// </para>
         /// </summary>
-        const float LinePad = 8f, LineHeadH = 34f, LineHeadGap = 8f, LineFoot = 10f;
+        const float LinePad = HubFoot.LinePad, LineHeadH = HubFoot.LineHeadH;
+        const float LineHeadGap = HubFoot.LineHeadGap, LineFoot = HubFoot.LineFoot;
 
-        static float LineH => LinePad + LineHeadH + LineHeadGap + LineCell + LineFoot;
+        float LineH => _foot.LineH;
 
         /// <summary>Where a cell's centre sits, against the strip's own centre.</summary>
-        static float LineCellY => LineH * .5f - LinePad - LineHeadH - LineHeadGap - LineCell * .5f;
+        float LineCellY => _foot.LineCellY;
 
         /// <summary>The four turret pictures, in the order <c>WardLine.Colours</c> names.</summary>
         readonly System.Collections.Generic.List<Image> _lineArt =
@@ -1563,7 +1801,7 @@ namespace GlimmerGrove
         /// picture arrives.
         /// </para>
         /// </summary>
-        void BuildLoadout()
+        void BuildLoadout(bool entrance)
         {
             var host = UIKit.Button("Loadout", Content, Art.S("Ui/" + Skins.Panel),
                                     new Vector2(LineW, LineH), new Vector2(.5f, 0f),
@@ -1589,8 +1827,11 @@ namespace GlimmerGrove
             WardLoadout.Changed -= OnLoadoutChanged;
             WardLoadout.Changed += OnLoadoutChanged;
 
-            _lineHost.localScale = Vector3.zero;
-            Tween.Pop(_lineHost, 0f, .6f, .54f);
+            if (entrance)
+            {
+                _lineHost.localScale = Vector3.zero;
+                Tween.Pop(_lineHost, 0f, .6f, .54f);
+            }
 
             Run(LoadLineArt);
         }

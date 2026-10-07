@@ -25,6 +25,7 @@ import type { RankRungConfig } from "./ranks";
 import type { ReferralConfig } from "./referral";
 import { Rolls, subjectSeed } from "./random";
 import type { ChallengesConfig } from "./challenges";
+import type { WelcomeConfig } from "./welcome";
 
 export interface RewardRule {
   xpFirstClear: number;
@@ -149,6 +150,14 @@ export interface ProgressionConfig {
    * after any change to the block.
    */
   keeperMilestones?: KeeperMilestonesConfig;
+
+  /**
+   * The welcome bonus's quests and what each pays when taken as its turret's price, published
+   * by the seeder out of `progression.json`'s `welcome` block and `wards` roster (`welcome.ts`,
+   * invariant 58). Absent leaves every `welcome:` claim unconfirmed rather than refused (13a).
+   * Re-seed after any change to either block.
+   */
+  welcome?: WelcomeConfig;
 }
 
 /**

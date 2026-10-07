@@ -6102,6 +6102,90 @@
       "text": "ZDROWIE"
     },
     {
+      "key": "ui.welcome.door",
+      "text": "Bonus powitalny"
+    },
+    {
+      "key": "ui.welcome.new",
+      "text": "NOWOŚĆ"
+    },
+    {
+      "key": "ui.welcome.title",
+      "text": "Bonus powitalny"
+    },
+    {
+      "key": "ui.welcome.subtitle",
+      "text": "Cztery wieże na zawsze. Każda odblokowuje się po kilku różnych dniach gry. Dni nie muszą następować po sobie."
+    },
+    {
+      "key": "ui.welcome.all_done",
+      "text": "Wszystkie wieże są twoje. Baw się dobrze!"
+    },
+    {
+      "key": "ui.welcome.days_left",
+      "text": "Pozostało dni: {0}"
+    },
+    {
+      "key": "ui.welcome.days_left_one",
+      "text": "Pozostał 1 dzień"
+    },
+    {
+      "key": "ui.welcome.goal.runs",
+      "text": "Zagraj bitwę w {0} różnych dniach"
+    },
+    {
+      "key": "ui.welcome.goal.wins",
+      "text": "Wygraj bitwę w {0} różnych dniach"
+    },
+    {
+      "key": "ui.welcome.goal.task_claims",
+      "text": "Otwórz skrzynię zadania w {0} różnych dniach"
+    },
+    {
+      "key": "ui.welcome.goal.challenge_plays",
+      "text": "Zagraj wyzwanie dnia w {0} różnych dniach"
+    },
+    {
+      "key": "ui.welcome.goal.challenge_wins",
+      "text": "Wygraj wyzwanie dnia w {0} różnych dniach"
+    },
+    {
+      "key": "ui.welcome.goal.streak",
+      "text": "Odbierz noc serii w {0} różnych dniach"
+    },
+    {
+      "key": "ui.welcome.choose_word",
+      "text": "Nagroda"
+    },
+    {
+      "key": "ui.welcome.choose_line",
+      "text": "Weź wieżę na wszystkie miejsca albo zamiast niej jej cenę."
+    },
+    {
+      "key": "ui.welcome.choose_turret",
+      "text": "Twoja na wszystkich czterech miejscach, na zawsze. Ulepszaj ją monetami."
+    },
+    {
+      "key": "ui.welcome.choose_price",
+      "text": "Cena wieży ze sklepu, wypłacona do portfela."
+    },
+    {
+      "key": "ui.welcome.coins",
+      "text": "Monety: {0}"
+    },
+    {
+      "key": "ui.welcome.gems",
+      "text": "Klejnoty: {0}"
+    },
+    {
+      "key": "ui.welcome.take",
+      "text": "Weź"
+    },
+    {
+      "key": "ui.welcome.taken",
+      "text": "Odebrano"
+    },
+    {
       "key": "ui.wheel.collect",
       "text": "OBEJRZYJ FILM, BY ODEBRAĆ"
     },
@@ -7552,6 +7636,10 @@
     {
       "key": "rank.req.streak",
       "text": "Zbierz noce serii: {0}"
+    },
+    {
+      "key": "rank.req.task_claims",
+      "text": "Otwórz skrzynie zadań: {0}"
     },
     {
       "key": "rank.req.challenge_plays",

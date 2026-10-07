@@ -4,6 +4,7 @@
     python Tools/render_home.py
     python Tools/render_home.py --no-event      # the row with no event running
     python Tools/render_home.py --quiet         # the event box with nothing to collect
+    python Tools/render_home.py --welcome       # the foot with the welcome door under it
     python Tools/render_home.py --out home.png
 
 **Why this exists.** Nothing in this project can open a PNG on the way to a build, and the
@@ -41,22 +42,59 @@ RES_Y, RES_H = 254.0, 104.0
 TASKS_Y, TASKS_H = 436.0, 240.0
 ROW_TOP, ROW_HEIGHT, ROW_WIDTH, ROW_GAP = 570.0, 300.0, 960.0, 24.0
 
-# HomeScreen's foot, measured up from the nav bar exactly as the screen measures it. The
-# companion that used to stand between the feature row and the key is gone, and so is the
-# `hero` that drew it here.
-FOOT_GAP = 14.0
-CHALLENGE_W, CHALLENGE_H = 960.0, 280.0
-PLAY_W, PLAY_H = 620.0, 178.0
-LINE_W = 960.0
-LINE_CELL, LINE_CELL_GAP, LINE_STAR = 168.0, 20.0, 20.0
-LINE_PAD, LINE_HEAD_H, LINE_HEAD_GAP, LINE_FOOT = 8.0, 34.0, 8.0, 10.0
-LINE_H = LINE_PAD + LINE_HEAD_H + LINE_HEAD_GAP + LINE_CELL + LINE_FOOT
-LINE_CELL_Y = LINE_H / 2 - LINE_PAD - LINE_HEAD_H - LINE_HEAD_GAP - LINE_CELL / 2
+# HomeScreen's foot, measured up from the nav bar exactly as the screen measures it - and in
+# the two shapes it takes (`HubFoot`): with the welcome door under Daily Challenges while the
+# bonus is live and unclaimed (invariant 58), and without it for ever after. The companion that
+# used to stand between the feature row and the key is gone, and so is the `hero` that drew it.
+CHALLENGE_W = LINE_W = 960.0                                              # HubFoot.Width
+LINE_PAD, LINE_HEAD_H, LINE_HEAD_GAP, LINE_FOOT = 8.0, 34.0, 8.0, 10.0    # HubFoot.Line*
 
-CHALLENGE_Y = K.NAV_HEIGHT + FOOT_GAP + CHALLENGE_H / 2
+# HomeScreen.WelcomeArt* / WelcomeCaptionRight - the four turrets on the door's left and the
+# room the caption stops short of, clear of the badge on the top-right corner.
+WELCOME_ART_H, WELCOME_ART_W, WELCOME_ART_LEFT, WELCOME_ART_STEP, WELCOME_ART_LIFT = 120.0, 96.0, 64.0, 80.0, 6.0
+WELCOME_CAPTION_RIGHT = 130.0
 
-LINE_Y = CHALLENGE_Y + CHALLENGE_H / 2 + FOOT_GAP + LINE_H / 2
-PLAY_Y = LINE_Y + LINE_H / 2 + FOOT_GAP + PLAY_H / 2
+
+class Foot:
+    """`HubFoot.For(welcome)`, field for field. Every size and centre the foot draws at."""
+
+    def __init__(self, welcome):
+        self.welcome = welcome
+        if welcome:
+            (self.gap, self.welcome_h, self.challenge_h, self.play_w, self.play_h,
+             self.line_cell, self.line_cell_gap, self.line_star) = 12.0, 136.0, 224.0, 620.0, 160.0, 150.0, 20.0, 20.0
+        else:
+            (self.gap, self.welcome_h, self.challenge_h, self.play_w, self.play_h,
+             self.line_cell, self.line_cell_gap, self.line_star) = 14.0, 0.0, 280.0, 620.0, 178.0, 168.0, 20.0, 20.0
+
+    @property
+    def line_h(self):
+        return LINE_PAD + LINE_HEAD_H + LINE_HEAD_GAP + self.line_cell + LINE_FOOT
+
+    @property
+    def line_cell_y(self):
+        return self.line_h / 2 - LINE_PAD - LINE_HEAD_H - LINE_HEAD_GAP - self.line_cell / 2
+
+    @property
+    def welcome_y(self):
+        return K.NAV_HEIGHT + self.gap + self.welcome_h / 2
+
+    @property
+    def challenge_y(self):
+        under = self.welcome_y + self.welcome_h / 2 + self.gap if self.welcome else K.NAV_HEIGHT + self.gap
+        return under + self.challenge_h / 2
+
+    @property
+    def line_y(self):
+        return self.challenge_y + self.challenge_h / 2 + self.gap + self.line_h / 2
+
+    @property
+    def play_y(self):
+        return self.line_y + self.line_h / 2 + self.gap + self.play_h / 2
+
+    @property
+    def top(self):
+        return self.play_y + self.play_h / 2
 
 # SiegeView.Tints, in the order WardLine.Colours names them: Pal.Poppy, Mint, Azure, Amber.
 SEAT_TINTS = [(0xF2, 0x40, 0x4F), (0x7B, 0xD8, 0x6A), (0x4F, 0xC1, 0xFF), (0xFF, 0x8A, 0x2B)]
@@ -282,10 +320,15 @@ def hub_burst(sheet, bx, by, tint, n, scale=HUB_SCALE, inked=False):
         gift = Image.open(K.UI / "ic_gift.png").convert("RGBA")
         K.paste(sheet, K.fit(gift, (round(66 * scale), round(66 * scale))), bx, by)
     else:
+        # `WaitingBadge.Paint(string)`: a word (the welcome door's NEW) instead of a count.
+        label = n if isinstance(n, str) else f"+{n}"
+        size = round(30 * scale)
+        while size > 18 and K.font(size).getlength(label) > 80 * scale:
+            size -= 1                      # the 80-wide Shrinkable box, floor 18
         if inked:  # `WaitingBadge.WhiteInk`: white over a black outline
-            K.text(sheet, f"+{n}", bx, by - 2 * scale, round(30 * scale), fill=(255, 255, 255), outline=2)
+            K.text(sheet, label, bx, by - 2 * scale, size, fill=(255, 255, 255), outline=2)
         else:
-            K.text(sheet, f"+{n}", bx, by - 2 * scale, round(30 * scale), fill=(43, 28, 5), outline=0)
+            K.text(sheet, label, bx, by - 2 * scale, size, fill=(43, 28, 5), outline=0)
 
 
 def feature(sheet, paired=True, waiting=True):
@@ -425,16 +468,16 @@ def feature(sheet, paired=True, waiting=True):
             hub_burst(sheet, cx + bw / 2 - 46, cy - ROW_HEIGHT / 2 + 44, K.GOLD, None)
 
 
-def loadout(sheet):
+def loadout(sheet, foot):
     """`HomeScreen.BuildLoadout` — the four turrets on the line, with their star rungs.
 
     The stars are read off `WardStarRow`: five always, the earned ones gold and the rest the
     kit's hollow star, because a row that grew would say how far a player has come and never how
     far there is to go.
     """
-    cy = H - LINE_Y
-    K.paste(sheet, K.skin("Hud/panel", LINE_W, LINE_H), W / 2, cy)
-    head_y = cy - LINE_H / 2 + LINE_PAD + LINE_HEAD_H / 2
+    cy = H - foot.line_y
+    K.paste(sheet, K.skin("Hud/panel", LINE_W, foot.line_h), W / 2, cy)
+    head_y = cy - foot.line_h / 2 + LINE_PAD + LINE_HEAD_H / 2
     K.text(sheet, "LOADOUT", W / 2, head_y, 28, fill=K.GOLD)
 
     try:
@@ -444,14 +487,15 @@ def loadout(sheet):
     except FileNotFoundError:
         pass
 
-    step = LINE_CELL + LINE_CELL_GAP
+    cell, star = foot.line_cell, foot.line_star
+    step = cell + foot.line_cell_gap
     starter = _starter_ward()
 
     for i in range(4):
         x = W / 2 + (i - 1.5) * step
-        y = cy - LINE_CELL_Y               # the strip's own stack; Unity's y counts up
-        K.paste(sheet, K.skin("Hud/card", LINE_CELL, LINE_CELL), x, y)
-        K.paste(sheet, K.round_rect(LINE_CELL - 10, LINE_CELL - 10, 26, SEAT_TINTS[i], .85, 5), x, y)
+        y = cy - foot.line_cell_y            # the strip's own stack; Unity's y counts up
+        K.paste(sheet, K.skin("Hud/card", cell, cell), x, y)
+        K.paste(sheet, K.round_rect(cell - 10, cell - 10, 26, SEAT_TINTS[i], .85, 5), x, y)
 
         if starter:
             # AssetManifest.WardArt -> Art/Siege/Wards/{id}_{colour}, which is WardModel.ArtFor.
@@ -459,25 +503,34 @@ def loadout(sheet):
             try:
                 body = Image.open(K.REPO / "Assets" / "Game" / "Art" / "Siege" / "Wards"
                                   / f"{starter}_{colour}.png").convert("RGBA")
-                K.paste(sheet, K.fit(body, (LINE_CELL - 50, LINE_CELL - 50)), x, y - 14)
+                K.paste(sheet, K.fit(body, (cell - 50, cell - 50)), x, y - 14)
             except FileNotFoundError:
                 pass
 
         # WardStarRow, at the size the hub draws it: one star lit, which is what a turret is
         # worth the moment it is bought (`WardStars.Least`).
-        gap = LINE_STAR * .22
-        width = 5 * LINE_STAR + 4 * gap
+        gap = star * .22
+        width = 5 * star + 4 * gap
         for j in range(5):
-            sx = x - width / 2 + LINE_STAR / 2 + j * (LINE_STAR + gap)
+            sx = x - width / 2 + star / 2 + j * (star + gap)
             name = "star_full" if j == 0 else "star_empty"
             try:
-                star = Image.open(K.UI / f"{name}.png").convert("RGBA")
-                K.paste(sheet, K.tint(K.fit(star, (LINE_STAR, LINE_STAR)),
+                im = Image.open(K.UI / f"{name}.png").convert("RGBA")
+                K.paste(sheet, K.tint(K.fit(im, (star, star)),
                                       K.GOLD if j == 0 else (255, 255, 255),
                                       1.0 if j == 0 else .45),
-                        sx, y + LINE_CELL / 2 - 26)
+                        sx, y + cell / 2 - 26)
             except FileNotFoundError:
                 pass
+
+
+def _progression():
+    import json
+    try:
+        return json.loads((K.REPO / "Assets" / "StreamingAssets" / "Content"
+                           / "progression.json").read_text(encoding="utf8"))
+    except (FileNotFoundError, ValueError):
+        return {}
 
 
 def _starter_ward():
@@ -488,27 +541,26 @@ def _starter_ward():
     roster says which turret is free, and the two drift the first time a drop reorders the shelf.
     Both prices are asked, which is invariant 16j.
     """
-    import json
-    try:
-        table = json.loads((K.REPO / "Assets" / "StreamingAssets" / "Content"
-                            / "progression.json").read_text(encoding="utf8"))
-    except (FileNotFoundError, ValueError):
-        return None
-
-    rows = sorted(table.get("wards", {}).get("models", []), key=lambda r: r.get("order", 0))
+    rows = sorted(_progression().get("wards", {}).get("models", []), key=lambda r: r.get("order", 0))
     for row in rows:
         if row.get("coinPrice", 0) <= 0 and row.get("gemPrice", 0) <= 0:
             return row.get("id")
     return rows[0].get("id") if rows else None
 
 
-def challenges(sheet):
+def _welcome_quests():
+    """The shipped `welcome` block's rows, in order - what the door and the page draw."""
+    return list((_progression().get("welcome") or {}).get("quests") or [])
+
+
+def challenges(sheet, foot):
     """`HomeScreen.BuildChallenges` - the keeper ladder's BUY LEVEL key (`Skins.Gem`, violet),
-    `CHALLENGE_KEY_H` tall at the foot of its `CHALLENGE_H` slot, with the owner's turret scene
-    standing on its right and rising out of its top, and `ui.challenges.title` on two lines on
-    its left. The shine is a tween and is not drawn."""
-    slot_bottom = H - (CHALLENGE_Y - CHALLENGE_H / 2)
-    ky, size, room = K.door_key(sheet, W / 2, slot_bottom, CHALLENGE_W, CHALLENGE_H,
+    `CHALLENGE_KEY_H` tall at the foot of its slot, with the owner's turret scene standing on its
+    right and rising out of its top, and `ui.challenges.title` on two lines on its left. The
+    slot is shorter while the welcome door stands under it, so the picture is drawn shorter and
+    rises less. The shine is a tween and is not drawn."""
+    slot_bottom = H - (foot.challenge_y - foot.challenge_h / 2)
+    ky, size, room = K.door_key(sheet, W / 2, slot_bottom, CHALLENGE_W, foot.challenge_h,
                                 txt("ui.challenges.title").upper(), "challenge_door")
     left = W / 2 - CHALLENGE_W / 2
     print("  challenges key: caption settled at %d (floor 26) in %d of room" % (size, room))
@@ -517,12 +569,55 @@ def challenges(sheet):
     hub_burst(sheet, left + 46, ky - K.DOOR_KEY_H / 2 + 44, K.AMBER, 2, inked=True)
 
 
+def welcome_door(sheet, foot):
+    """`HomeScreen.BuildWelcome` - the orange key (`Skins.Buy`) under Daily Challenges, the
+    quests' four turrets standing on its foot in the four seat colours and rising out of its
+    top, WELCOME BONUS on two lines on its right, and the hub's starburst on the top-right corner
+    saying NEW (`WaitingBadge.HubInkedTopRight(card, Pal.Mint)`). Absent when the foot is plain."""
+    if not foot.welcome:
+        return
+    cy = H - foot.welcome_y
+    left = W / 2 - LINE_W / 2
+    foot_y = cy + foot.welcome_h / 2
+    K.paste(sheet, K.skin("btn_orange", LINE_W, foot.welcome_h), W / 2, cy)
+
+    quests = _welcome_quests()[:4]
+    for i, quest in enumerate(quests):
+        colour = "rgby"[i % 4]
+        try:
+            body = Image.open(K.REPO / "Assets" / "Game" / "Art" / "Siege" / "Wards"
+                              / f"{quest.get('ward')}_{colour}.png").convert("RGBA")
+            K.paste(sheet, K.fit(body, (WELCOME_ART_W, WELCOME_ART_H)),
+                    left + WELCOME_ART_LEFT + i * WELCOME_ART_STEP, foot_y - WELCOME_ART_LIFT - WELCOME_ART_H / 2)
+        except FileNotFoundError:
+            pass
+
+    n = len(quests)
+    cap_left = WELCOME_ART_LEFT + (n - 1) * WELCOME_ART_STEP + WELCOME_ART_W / 2 + 20 if n else 40.0
+    cap_right = LINE_W - WELCOME_CAPTION_RIGHT
+    room = cap_right - cap_left
+    lines = K.door_two_lines(txt("ui.welcome.door").upper())
+    size = 44
+    while size > 26 and (max(K.font(size).getlength(ln) for ln in lines) > room
+                         or len(lines) * size * 1.2 > foot.welcome_h * .82):
+        size -= 1
+    tx = left + (cap_left + cap_right) / 2
+    top = cy - foot.welcome_h * K.PILL_FACE_LIFT - (len(lines) - 1) * size * 1.2 / 2
+    for i, ln in enumerate(lines):
+        K.text(sheet, ln, tx, top + i * size * 1.2, size)
+    print("  welcome key: caption settled at %d (floor 26) in %d of room; the turrets' tops sit %d "
+          "under the key's top" % (size, room, foot.welcome_h - WELCOME_ART_LIFT - WELCOME_ART_H))
+
+    hub_burst(sheet, left + LINE_W - 46, cy - foot.welcome_h / 2 + 44, K.MINT,
+              txt("ui.welcome.new").upper(), inked=True)
+
+
 def _np():
     import numpy
     return numpy
 
 
-def play(sheet):
+def play(sheet, foot):
     """`HomeScreen.BuildPlay` — the one control this screen exists to offer.
 
     **`Skins.Battle` and the word BATTLE**, with the kit's own painted glyph beside it at 112
@@ -534,11 +629,11 @@ def play(sheet):
     thing on this screen that read as a light rather than as a control, and a mirror is the
     only place its size could ever be judged against the wall it lit.
     """
-    cy = H - PLAY_Y
-    K.paste(sheet, K.skin("Hud/btn_gold", PLAY_W, PLAY_H), W / 2, cy)
+    cy = H - foot.play_y
+    K.paste(sheet, K.skin("Hud/btn_gold", foot.play_w, foot.play_h), W / 2, cy)
 
     # UIKit.FitLabel: the glyph and the caption are centred as one block, the glyph leading.
-    lift = PLAY_H * .0231
+    lift = foot.play_h * .0231
     gap = 18.0
     try:
         icon = K.fit(Image.open(K.UI / "ic_battle.png").convert("RGBA"), (112, 112))
@@ -554,36 +649,39 @@ def play(sheet):
     K.text(sheet, "BATTLE", left + word / 2, cy - lift, 62, outline=4)
 
 
-def clearance():
-    """What is left between the feature row and the loadout strip on the squarest phone.
+def clearance(foot):
+    """What is left between the feature row and the BATTLE key on the squarest phone.
 
     **The one thing this picture cannot show, because it is drawn at one canvas.** The hub is
     two fixed stacks growing toward each other — the top one hangs off the safe area and the
     foot one stands on the nav bar — and the gap between them is whatever the canvas has left.
     `Layout.CanvasFit` hands anything squarer than 7:4 a widened canvas, so the *shortest* one
-    this game is ever drawn on is exactly 1080 x 1890, and that is the number to print.
+    this game is ever drawn on is exactly 1080 x 1890, and that is the number to print - for
+    both shapes of the foot, because the welcome one is the taller (`HubFoot.Spare`,
+    `HubFootTests`).
 
     A negative reading is the hub overlapping itself, which is CRAFT.md's own recorded iPad
     report (the companion drawn 176 units through the streak box) asked before a device asks it.
     """
     top = ROW_TOP + ROW_HEIGHT
-    foot = K.NAV_HEIGHT + FOOT_GAP + CHALLENGE_H + FOOT_GAP + PLAY_H + FOOT_GAP + LINE_H
     shortest = 1890.0
-    return top, foot, shortest - top - foot
+    return top, foot.top, shortest - top - foot.top
 
 
-def screen(paired=True, verbose=False, waiting=True):
+def screen(paired=True, verbose=False, waiting=True, welcome=False):
     sheet = Image.new("RGBA", (W, H), (*K.GROUND, 255))
     K.room(sheet)
     K.rail(sheet, top=True)
 
+    foot = Foot(welcome)
     top_bar(sheet, waiting)
     resources(sheet)
     tasks(sheet, verbose=verbose)
     feature(sheet, paired, waiting)
-    play(sheet)
-    loadout(sheet)
-    challenges(sheet)
+    play(sheet, foot)
+    loadout(sheet, foot)
+    challenges(sheet, foot)
+    welcome_door(sheet, foot)
     K.navbar(sheet, "home")
     return sheet.convert("RGB")
 
@@ -594,15 +692,18 @@ def main():
                     help="the feature row with nothing running, so the streak takes the width")
     ap.add_argument("--quiet", action="store_true",
                     help="the event box with nothing waiting: no rim, no badge, no COLLECT")
+    ap.add_argument("--welcome", action="store_true",
+                    help="the foot with the welcome door under Daily Challenges (invariant 58)")
     ap.add_argument("--out", type=Path, default=Path("home.png"))
     args = ap.parse_args()
 
-    out = screen(paired=not args.no_event, verbose=True, waiting=not args.quiet)
+    out = screen(paired=not args.no_event, verbose=True, waiting=not args.quiet, welcome=args.welcome)
 
-    top, foot, spare = clearance()
-    print(f"  stack: {top:.0f} from the top, {foot:.0f} from the nav bar, "
-          f"{spare:.0f} spare on the squarest phone (1080x1890)"
-          + ("" if spare >= 0 else "   <-- THE HUB OVERLAPS ITSELF"))
+    for shape in (False, True):
+        top, foot, spare = clearance(Foot(shape))
+        print(f"  stack ({'welcome' if shape else 'plain'}): {top:.0f} from the top, {foot:.0f} from the "
+              f"nav bar, {spare:.0f} spare on the squarest phone (1080x1890)"
+              + ("" if spare >= 0 else "   <-- THE HUB OVERLAPS ITSELF"))
     args.out.parent.mkdir(parents=True, exist_ok=True)
     out.save(args.out)
     print(f"  wrote {args.out}  {out.width}x{out.height}  - look at it")

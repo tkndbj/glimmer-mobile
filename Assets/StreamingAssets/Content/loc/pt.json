@@ -6102,6 +6102,90 @@
       "text": "VIDA"
     },
     {
+      "key": "ui.welcome.door",
+      "text": "Bônus de boas-vindas"
+    },
+    {
+      "key": "ui.welcome.new",
+      "text": "NOVO"
+    },
+    {
+      "key": "ui.welcome.title",
+      "text": "Bônus de boas-vindas"
+    },
+    {
+      "key": "ui.welcome.subtitle",
+      "text": "Quatro torres para sempre. Cada uma é liberada depois de alguns dias diferentes de jogo. Os dias não precisam ser seguidos."
+    },
+    {
+      "key": "ui.welcome.all_done",
+      "text": "Todas as torres são suas. Aproveite!"
+    },
+    {
+      "key": "ui.welcome.days_left",
+      "text": "Faltam {0} dias"
+    },
+    {
+      "key": "ui.welcome.days_left_one",
+      "text": "Falta 1 dia"
+    },
+    {
+      "key": "ui.welcome.goal.runs",
+      "text": "Jogue uma batalha em {0} dias diferentes"
+    },
+    {
+      "key": "ui.welcome.goal.wins",
+      "text": "Vença uma batalha em {0} dias diferentes"
+    },
+    {
+      "key": "ui.welcome.goal.task_claims",
+      "text": "Abra um baú de missão em {0} dias diferentes"
+    },
+    {
+      "key": "ui.welcome.goal.challenge_plays",
+      "text": "Jogue um desafio diário em {0} dias diferentes"
+    },
+    {
+      "key": "ui.welcome.goal.challenge_wins",
+      "text": "Vença um desafio diário em {0} dias diferentes"
+    },
+    {
+      "key": "ui.welcome.goal.streak",
+      "text": "Pegue uma noite de sequência em {0} dias diferentes"
+    },
+    {
+      "key": "ui.welcome.choose_word",
+      "text": "Prêmio"
+    },
+    {
+      "key": "ui.welcome.choose_line",
+      "text": "Pegue a torre em todos os lugares, ou o preço dela no lugar."
+    },
+    {
+      "key": "ui.welcome.choose_turret",
+      "text": "Sua nos quatro lugares, para sempre. Melhore com moedas."
+    },
+    {
+      "key": "ui.welcome.choose_price",
+      "text": "O preço da torre na loja, pago na sua carteira."
+    },
+    {
+      "key": "ui.welcome.coins",
+      "text": "{0} moedas"
+    },
+    {
+      "key": "ui.welcome.gems",
+      "text": "{0} gemas"
+    },
+    {
+      "key": "ui.welcome.take",
+      "text": "Pegar"
+    },
+    {
+      "key": "ui.welcome.taken",
+      "text": "Coletado"
+    },
+    {
       "key": "ui.wheel.collect",
       "text": "ASSISTA A UM VÍDEO PARA PEGAR"
     },
@@ -7552,6 +7636,10 @@
     {
       "key": "rank.req.streak",
       "text": "Junte {0} noites de sequência"
+    },
+    {
+      "key": "rank.req.task_claims",
+      "text": "Abra {0} baús de missão"
     },
     {
       "key": "rank.req.challenge_plays",

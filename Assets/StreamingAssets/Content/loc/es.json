@@ -6102,6 +6102,90 @@
       "text": "SALUD"
     },
     {
+      "key": "ui.welcome.door",
+      "text": "Bono de bienvenida"
+    },
+    {
+      "key": "ui.welcome.new",
+      "text": "NUEVO"
+    },
+    {
+      "key": "ui.welcome.title",
+      "text": "Bono de bienvenida"
+    },
+    {
+      "key": "ui.welcome.subtitle",
+      "text": "Cuatro torres para siempre. Cada una se desbloquea tras jugar varios días distintos. No tienen que ser seguidos."
+    },
+    {
+      "key": "ui.welcome.all_done",
+      "text": "Todas las torres son tuyas. ¡Disfrútalas!"
+    },
+    {
+      "key": "ui.welcome.days_left",
+      "text": "Faltan {0} días"
+    },
+    {
+      "key": "ui.welcome.days_left_one",
+      "text": "Falta 1 día"
+    },
+    {
+      "key": "ui.welcome.goal.runs",
+      "text": "Juega una batalla en {0} días distintos"
+    },
+    {
+      "key": "ui.welcome.goal.wins",
+      "text": "Gana una batalla en {0} días distintos"
+    },
+    {
+      "key": "ui.welcome.goal.task_claims",
+      "text": "Abre un cofre de misión en {0} días distintos"
+    },
+    {
+      "key": "ui.welcome.goal.challenge_plays",
+      "text": "Juega un desafío diario en {0} días distintos"
+    },
+    {
+      "key": "ui.welcome.goal.challenge_wins",
+      "text": "Gana un desafío diario en {0} días distintos"
+    },
+    {
+      "key": "ui.welcome.goal.streak",
+      "text": "Recoge una noche de racha en {0} días distintos"
+    },
+    {
+      "key": "ui.welcome.choose_word",
+      "text": "Premio"
+    },
+    {
+      "key": "ui.welcome.choose_line",
+      "text": "Llévate la torre en todos los puestos, o su precio en su lugar."
+    },
+    {
+      "key": "ui.welcome.choose_turret",
+      "text": "Tuya en los cuatro puestos, para siempre. Mejórala con monedas."
+    },
+    {
+      "key": "ui.welcome.choose_price",
+      "text": "El precio de la torre en la tienda, pagado a tu cartera."
+    },
+    {
+      "key": "ui.welcome.coins",
+      "text": "{0} monedas"
+    },
+    {
+      "key": "ui.welcome.gems",
+      "text": "{0} gemas"
+    },
+    {
+      "key": "ui.welcome.take",
+      "text": "Tomar"
+    },
+    {
+      "key": "ui.welcome.taken",
+      "text": "Recogido"
+    },
+    {
       "key": "ui.wheel.collect",
       "text": "MIRA UN VÍDEO PARA RECOGER"
     },
@@ -7552,6 +7636,10 @@
     {
       "key": "rank.req.streak",
       "text": "Consigue {0} noches de racha"
+    },
+    {
+      "key": "rank.req.task_claims",
+      "text": "Abre {0} cofres de misión"
     },
     {
       "key": "rank.req.challenge_plays",

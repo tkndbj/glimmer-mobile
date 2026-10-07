@@ -58,6 +58,13 @@ namespace GlimmerGrove
         public static Vector2 Corner(Vector2 size, Vector2 anchor, float marginX, float marginY)
             => Corner(size, anchor, new Vector2(marginX, marginY));
 
+        /// <summary>
+        /// <b>A zero anchor means "none given" and draws at centre.</b> So the bottom-left corner
+        /// cannot be asked for through this overload - (0,0) <em>is</em> <c>default</c> - and a
+        /// caller wanting it anchors to (0,.5) and measures its y from the middle, or calls
+        /// <see cref="Box"/> itself. The hub's welcome door shipped four turrets at the key's
+        /// centre for exactly this (2026-10-07).
+        /// </summary>
         public static Image Img(string name, Transform parent, Sprite sprite, Color colour,
                                 Vector2 size = default, Vector2 anchor = default, Vector2 pos = default)
         {

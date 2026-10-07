@@ -79,6 +79,19 @@ namespace GlimmerGrove.Tasks
 
         /// <summary>Daily challenge levels cleared. Counted where the clear is (<c>ChallengeLedger.Win</c>).</summary>
         ChallengeWins,
+
+        /// <summary>
+        /// Task chests claimed on the tasks page. Counted where the claim lands
+        /// (<c>TaskLedger.TryClaim</c>), which is the one moment a task is paid exactly once.
+        ///
+        /// <b>A verb about the tasks page itself</b>, and the first one: a task asking for it
+        /// would be a task about tasks, which no slate authors, but the welcome bonus asks "did
+        /// they come back to the tasks page today" and this is the honest count of that
+        /// (<c>WelcomeLedger</c>). It is in this registry rather than beside it because every
+        /// counted verb in the game is reported through <c>TaskLedger.Note</c> - the welcome
+        /// quests, the lifetime tally and the slates all read one list.
+        /// </summary>
+        TaskClaims,
     }
 
     /// <summary>
@@ -103,6 +116,7 @@ namespace GlimmerGrove.Tasks
         public const string Streak = "streak";
         public const string ChallengePlays = "challenge_plays";
         public const string ChallengeWins = "challenge_wins";
+        public const string TaskClaims = "task_claims";
 
         /// <summary>Every goal that can be counted, in enum order. For the gates and the tests.</summary>
         public static readonly TaskGoal[] All =
@@ -110,7 +124,7 @@ namespace GlimmerGrove.Tasks
             TaskGoal.Runs, TaskGoal.Wins, TaskGoal.Stars, TaskGoal.ThreeStars, TaskGoal.Matches,
             TaskGoal.Raiders, TaskGoal.Bosses, TaskGoal.Charms, TaskGoal.Cogs, TaskGoal.Bombs,
             TaskGoal.Utilities, TaskGoal.Waves, TaskGoal.Streak,
-            TaskGoal.ChallengePlays, TaskGoal.ChallengeWins,
+            TaskGoal.ChallengePlays, TaskGoal.ChallengeWins, TaskGoal.TaskClaims,
         };
 
         public static TaskGoal Parse(string id)
@@ -132,6 +146,7 @@ namespace GlimmerGrove.Tasks
                 case Streak: return TaskGoal.Streak;
                 case ChallengePlays: return TaskGoal.ChallengePlays;
                 case ChallengeWins: return TaskGoal.ChallengeWins;
+                case TaskClaims: return TaskGoal.TaskClaims;
                 default: return TaskGoal.None;
             }
         }
@@ -155,6 +170,7 @@ namespace GlimmerGrove.Tasks
                 case TaskGoal.Streak: return Streak;
                 case TaskGoal.ChallengePlays: return ChallengePlays;
                 case TaskGoal.ChallengeWins: return ChallengeWins;
+                case TaskGoal.TaskClaims: return TaskClaims;
                 default: return string.Empty;
             }
         }
@@ -188,6 +204,10 @@ namespace GlimmerGrove.Tasks
                 // set (`AssetManifest.UiSprites`) for the list's own reason.
                 case TaskGoal.ChallengePlays: return "Ui/challenge_pairs";
                 case TaskGoal.ChallengeWins: return "Ui/challenge_merge";
+
+                // The gift box the hub's badges carry: a claimed chest is a present taken. In the
+                // global preload set for the badges' own reason.
+                case TaskGoal.TaskClaims: return "Ui/ic_gift";
                 default: return string.Empty;
             }
         }

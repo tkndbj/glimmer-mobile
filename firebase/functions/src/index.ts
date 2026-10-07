@@ -97,6 +97,10 @@ import {
 } from "./keeper";
 import type { MilestoneClaim } from "./keeper";
 import {
+  isWelcomeGrantId, judgeWelcomeClaim, parseWelcomeClaim, usableWelcomeConfig, welcomeCoinedOf,
+} from "./welcome";
+import type { WelcomeClaim } from "./welcome";
+import {
   deriveEarned,
   loadProgressionConfig,
   readWallet,
@@ -537,7 +541,8 @@ type CleanAward =
   | (CleanCommon & { kind: "mark"; claim: MarkClaim })
   | (CleanCommon & { kind: "challenge"; claim: ChallengeClaim })
   | (CleanCommon & { kind: "endless"; claim: EndlessClaim })
-  | (CleanCommon & { kind: "milestone"; claim: MilestoneClaim });
+  | (CleanCommon & { kind: "milestone"; claim: MilestoneClaim })
+  | (CleanCommon & { kind: "welcome"; claim: WelcomeClaim });
 
 export const claimAwards = onCall(callOptions, async (request): Promise<{
   wallets: WalletReply[];
@@ -695,6 +700,18 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
       return [{ ...common, kind: "milestone", claim: milestone, currency: milestone.currency as CurrencyId }];
     }
 
+    // A welcome quest taken as its turret's price (invariant 58): re-priced off the published
+    // roster and paid once per quest. No window - a quest, once finished, stays finished - and
+    // nothing refused past the parse, because every other reason can become true.
+    if (isWelcomeGrantId(id)) {
+      const welcome = parseWelcomeClaim(id);
+      if (!welcome) { rejected.push(id); return []; }
+
+      if (!CURRENCIES.includes(welcome.currency as CurrencyId)) { rejected.push(id); return []; }
+
+      return [{ ...common, kind: "welcome", claim: welcome, currency: welcome.currency as CurrencyId }];
+    }
+
     const claim = parseDailyClaim(id);
     if (!claim) { rejected.push(id); return []; }
 
@@ -739,13 +756,17 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
     // ticket, not part of the decision.
     // A milestone claim is judged against the level the save proves, so the same one read is
     // made for either kind and used for both; the common call carries neither and costs nothing.
+    // A welcome claim is judged against the choice the save records, so the same read serves
+    // a third kind.
     const wantsStreak = clean.some((award) => award.kind === "streak");
     const wantsMilestone = clean.some((award) => award.kind === "milestone");
-    const saveDoc = wantsStreak || wantsMilestone
+    const wantsWelcome = clean.some((award) => award.kind === "welcome");
+    const saveDoc = wantsStreak || wantsMilestone || wantsWelcome
       ? ((await transaction.get(db.doc(PATHS.player(uid)))).data() as Record<string, unknown> | undefined)
       : undefined;
     const saved = wantsStreak ? readSavedStreak(saveDoc) : null;
     const provedLevel = wantsMilestone && saveDoc ? earnedKeeperLevel(saveDoc, config) : 1;
+    const coined = wantsWelcome ? welcomeCoinedOf(saveDoc) : null;
 
     // The pass entitlements the batch needs, gathered here because every read has to happen
     // before the first write. One per season rather than one per claim: a batch of forty
@@ -765,6 +786,7 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
     const tasks = usableTaskConfig((config as { tasks?: unknown }).tasks);
     const challenges = usableChallengesConfig((config as { challenges?: unknown }).challenges);
     const milestones = usableKeeperMilestones((config as { keeperMilestones?: unknown }).keeperMilestones, tasks);
+    const welcome = usableWelcomeConfig((config as { welcome?: unknown }).welcome);
 
     // Which task ids this server has paid per period. Threaded through the loop like the
     // streak floor, because a batch pays several and each one narrows the allowance.
@@ -796,6 +818,7 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
                   : award.kind === "task" ? tasks
                   : award.kind === "challenge" ? challenges
                   : award.kind === "milestone" ? milestones
+                  : award.kind === "welcome" ? welcome
                   : daily;
 
       if (!table) {
@@ -987,6 +1010,27 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
 
         amount = milestoneChestValue(verdict.tier.chest, uid, award.claim.level, award.currency);
         detail = { level: award.claim.level, tier: verdict.tier.id };
+      } else if (award.kind === "welcome") {
+        // Re-priced off the published roster and paid only when the save records the choice.
+        // Unconfirmed on every answer that can become true (13a); refused only for a currency the
+        // turret is not priced in, which cannot.
+        const verdict = judgeWelcomeClaim(welcome, award.claim, coined);
+
+        if (verdict.kind === "refuse") {
+          logger.warn("refused a welcome price claim", { uid, id: award.id, why: verdict.why });
+          rejected.push(award.id);
+          continue;
+        }
+
+        if (verdict.kind === "unknown") {
+          logger.info("a welcome price cannot be paid yet; leaving it unconfirmed", {
+            uid, id: award.id, quest: award.claim.questId, why: verdict.why,
+          });
+          continue;
+        }
+
+        amount = verdict.amount;
+        detail = { quest: award.claim.questId, ward: verdict.ward };
       } else if (award.kind === "endless") {
         // **Taken from the client and bounded, which is the one place in this function that
         // happens.** Every other branch above re-prices the claim from a published table; a

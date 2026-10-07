@@ -441,6 +441,24 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
    (`keeperMilestonesClaimed`) plus chests taken above it (`keeperMilestonesTaken`, `KeeperMilestoneSet`):
    **the chest tapped is the chest opened**, any order.
 
+### The welcome bonus
+
+58. **The welcome bonus is four turrets earned on different days; a finished quest is taken as the turret or
+   as its shelf price.** A quest is a counted verb (`TaskGoal`) and a number of days, rows of the `welcome`
+   block. The turret is `WardLedger.Grant` on every seat with no server (a client-held entitlement that buys no
+   currency: 15, 13's fourth clause). The price is currency, so a claim (10a): `welcome:{quest}:{currency}`,
+   re-priced by `welcome.ts` off the roster the seeder publishes, paid once, unconfirmed until the save records
+   the choice, refused only in the wrong currency. **Re-seed after touching the block or the roster's prices.**
+58a. **The save holds days per verb, claims per quest and the choice per claim, never progress per quest**
+   (`WelcomeLedger`, inside the `tasks` map: no rules release). A day counts once; days, claims and choices
+   join by union; a choice about an unclaimed quest is nothing. **A quest is only ever counted through
+   `TaskLedger.Note`**, and `task_claims` is a verb in the registry.
+58b. **The door is `WelcomeLedger.Offered`** (live and something unclaimed), nothing device-local; the hub's
+   foot takes one of two shapes (`HubFoot`, held to the squarest canvas by `HubFootTests`). **Absent block,
+   feature off**: no door, no counting, nothing confiscated. A finished row's boxes give way to COLLECT, which
+   opens `WelcomeChoiceOverlay` (the Deals sheet's frame); the turret ends in `WardRevealOverlay`, the price in
+   a `RewardFlight` to the page's one readout.
+
 ### Consent
 
 55. **The consent form comes before Apple's tracking prompt on every path, and both wait for the hub.** The
@@ -632,7 +650,7 @@ Charms have no offline gate (`SiegeCharmTests` and renders).
 (`--measure` holds `ProductCardBadges` to the sprite), `render_tasks`, `render_season`, `render_streak`,
 `render_keeper`, `render_keeper_ladder`, `render_endless`, `render_loadout`, `render_boards` (`--row`),
 `render_ranks` (`--contact`), `render_rank_ceremony` (`--contact`, `--sky`), `render_referral`,
-`render_checkpoints`. Rank/kit art: `make_rank_art.py`, `make_rank_kit_art.py`, `make_keeper_art.py`.
+`render_checkpoints`, `render_welcome` (`--done`, `--choice`), `render_home --welcome`. Rank/kit art: `make_rank_art.py`, `make_rank_kit_art.py`, `make_keeper_art.py`.
 **`--check` proves reproducibility, not quality.** Art tools pass with licensed packs absent (PNGs committed).
 
 **Server**: `node firebase/seed/seed-release.mjs --check`; `npm --prefix firebase/functions run seed -- --check`;
@@ -740,7 +758,7 @@ gates print the derived totals.
 
 - **Live on the App Store (id `6804516450`) and Google Play.** Ads via LevelPlay (ironSource, AdMob partner
   bidding, Unity Ads); `app-ads.txt` live at `tekoworld.com` (repo root and website `public/` byte-identical).
-- **Save schema v39**; manifest/chapter bodies v2; `ContentSchema.Version` 3.
+- **Save schema v40**; manifest/chapter bodies v2; `ContentSchema.Version` 3.
 - **Cloud**: Firebase project `glimmer-groove-1cd60`, Firestore `eur3`, Node 22, `europe-west1`; anonymous by
   default with Apple/Google linking and per-account local archives. `gcloud functions list` is the authority
   on deployed functions. Firebase Unity SDK 13.15.0 as vendored tarballs under `GooglePackages/` (gitignored;
@@ -750,7 +768,7 @@ gates print the derived totals.
   prism are hidden. Six casts; the cast table and its squares are full (`SiegeMode.MainCasts`) — the next
   chapter wraps or cuts a cast. Details in `MODES.md`.
 - **Systems live**: progression, tasks (45), season (47), streak (48), ranks (52) and the rank ceremony,
-  tutorial (53), keeper levels for sale (57), daily challenges in four genres — Pairs, Glade, Merge, Push
+  tutorial (53), keeper levels for sale (57), the welcome bonus (58), daily challenges in four genres — Pairs, Glade, Merge, Push
   (56), referrals (51), reminders (50), the update wall (49, ships asking nothing), one public board (Endless
   Watch) plus two distributions, five utilities (the bar is full), thirty turrets including the legendary band.
 - **Economy shapes worth knowing**: free play ~953 credits and 12 gems a day; with every advert ~7,160. Content

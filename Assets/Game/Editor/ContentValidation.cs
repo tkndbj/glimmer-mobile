@@ -273,6 +273,7 @@ namespace GlimmerGrove.EditorTools
             ValidateTasks(table.Tasks, table.Utilities, table.Hearts, result, verbose);
             ValidateRanks(table.Ranks, index, result, verbose);
             ValidateWards(table.Wards, result, verbose);
+            ValidateWelcome(table.Welcome, result);
             ValidateStreak(table.Streak, result, verbose);
             ValidateGolden(table.Golden, table, index, result, verbose);
             ValidateWheel(table.Ads, result, verbose);
@@ -1213,6 +1214,33 @@ namespace GlimmerGrove.EditorTools
                               .GetAwaiter().GetResult();
 
             return fetch.Success ? LocTable.Parse(fetch.Text, out _) : null;
+        }
+
+        /// <summary>
+        /// The welcome bonus (invariant 58). <c>WelcomeTable.Resolve</c> has already refused every
+        /// malformed row into <c>load.Problems</c>, and <c>ValidateWards</c> has already asked for
+        /// every turret's picture in every colour; what is left to say here is that the block is
+        /// absent or refused - which is the feature switched off, and worth a line in the Editor
+        /// so nobody ships that by accident.
+        /// </summary>
+        static void ValidateWelcome(Tasks.WelcomeTable welcome, ContentValidationResult result)
+        {
+            if (welcome == null)
+            {
+                result.Errors.Add("progression.json produced no welcome table");
+                return;
+            }
+
+            if (welcome.IsEmpty)
+            {
+                result.Warnings.Add("progression.json has no 'welcome' block (or a refused one): the hub " +
+                                    "draws no welcome door and counts no days");
+                return;
+            }
+
+            foreach (var quest in welcome.Quests)
+                if (quest.Ward == null || string.IsNullOrEmpty(quest.SentenceKey))
+                    result.Errors.Add($"welcome quest '{quest.Id}' resolved without a turret or a sentence");
         }
 
         static void ValidateWards(WardCatalog wards, ContentValidationResult result, bool verbose)

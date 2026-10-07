@@ -6102,6 +6102,90 @@
       "text": "HEALTH"
     },
     {
+      "key": "ui.welcome.door",
+      "text": "Welcome bonus"
+    },
+    {
+      "key": "ui.welcome.new",
+      "text": "NEW"
+    },
+    {
+      "key": "ui.welcome.title",
+      "text": "Welcome bonus"
+    },
+    {
+      "key": "ui.welcome.subtitle",
+      "text": "Four turrets to keep for ever. Each one unlocks after a few different days of play. The days do not need to be in a row."
+    },
+    {
+      "key": "ui.welcome.all_done",
+      "text": "Every turret is yours. Enjoy them!"
+    },
+    {
+      "key": "ui.welcome.days_left",
+      "text": "{0} days to go"
+    },
+    {
+      "key": "ui.welcome.days_left_one",
+      "text": "1 day to go"
+    },
+    {
+      "key": "ui.welcome.goal.runs",
+      "text": "Play a battle on {0} different days"
+    },
+    {
+      "key": "ui.welcome.goal.wins",
+      "text": "Win a battle on {0} different days"
+    },
+    {
+      "key": "ui.welcome.goal.task_claims",
+      "text": "Open a task chest on {0} different days"
+    },
+    {
+      "key": "ui.welcome.goal.challenge_plays",
+      "text": "Play a daily challenge on {0} different days"
+    },
+    {
+      "key": "ui.welcome.goal.challenge_wins",
+      "text": "Win a daily challenge on {0} different days"
+    },
+    {
+      "key": "ui.welcome.goal.streak",
+      "text": "Collect a streak night on {0} different days"
+    },
+    {
+      "key": "ui.welcome.choose_word",
+      "text": "Reward"
+    },
+    {
+      "key": "ui.welcome.choose_line",
+      "text": "Take the turret on every seat, or its price instead."
+    },
+    {
+      "key": "ui.welcome.choose_turret",
+      "text": "Yours on all four seats, for ever. Upgrade it with coins."
+    },
+    {
+      "key": "ui.welcome.choose_price",
+      "text": "The turret’s shelf price, paid into your wallet."
+    },
+    {
+      "key": "ui.welcome.coins",
+      "text": "{0} coins"
+    },
+    {
+      "key": "ui.welcome.gems",
+      "text": "{0} gems"
+    },
+    {
+      "key": "ui.welcome.take",
+      "text": "Take"
+    },
+    {
+      "key": "ui.welcome.taken",
+      "text": "Collected"
+    },
+    {
       "key": "ui.wheel.collect",
       "text": "WATCH A VIDEO TO COLLECT"
     },
@@ -7552,6 +7636,10 @@
     {
       "key": "rank.req.streak",
       "text": "Collect {0} streak nights"
+    },
+    {
+      "key": "rank.req.task_claims",
+      "text": "Open {0} task chests"
     },
     {
       "key": "rank.req.challenge_plays",

@@ -815,7 +815,49 @@ namespace GlimmerGrove.Cloud
                 // and has no deploy ordering. A rank is derived from it, so it has to travel or
                 // a battle played on one phone is a rung the other will not agree to.
                 { "lifetime", Counts(tasks?.lifetime) },
+
+                // The welcome bonus: days per verb and the quests taken (save v40). Inside this
+                // map for the lifetime tally's reason, and it has to travel for the same one: a
+                // day played on one phone is a turret the other will not otherwise hand over.
+                { "welcome", Welcome(tasks?.welcome) },
             };
+
+        /// <summary>Rows of {goal, days[]} and a list of claimed ids. Drops exactly what the reader drops.</summary>
+        static Dictionary<string, object> Welcome(WelcomeStateDto welcome)
+        {
+            var days = new List<object>();
+            var claimed = new List<object>();
+
+            if (welcome?.days != null)
+                foreach (var row in welcome.days)
+                {
+                    if (row == null || string.IsNullOrEmpty(row.goal) || row.days == null || row.days.Length == 0) continue;
+                    var list = new List<object>(row.days.Length);
+                    foreach (int day in row.days) if (day > 0) list.Add((long)day);
+                    if (list.Count == 0) continue;
+                    days.Add(new Dictionary<string, object>
+                    {
+                        { "goal", row.goal },
+                        { "days", list },
+                    });
+                }
+
+            if (welcome?.claimed != null)
+                foreach (var id in welcome.claimed)
+                    if (!string.IsNullOrEmpty(id)) claimed.Add(id);
+
+            var coined = new List<object>();
+            if (welcome?.coined != null)
+                foreach (var id in welcome.coined)
+                    if (!string.IsNullOrEmpty(id)) coined.Add(id);
+
+            return new Dictionary<string, object>
+            {
+                { "days", days },
+                { "claimed", claimed },
+                { "coined", coined },
+            };
+        }
 
         /// <summary>A bare list of per-goal counts, the shape a period's `counts` already takes.</summary>
         static List<object> Counts(TaskCountDto[] rows)
@@ -874,13 +916,59 @@ namespace GlimmerGrove.Cloud
                 daily = ReadPeriod(null),
                 weekly = ReadPeriod(null),
                 lifetime = new TaskCountDto[0],
+                welcome = ReadWelcome(null),
             };
             if (!(Map(doc, "tasks") is IDictionary<string, object> map)) return tasks;
 
             tasks.daily = ReadPeriod(Map(map, "daily") as IDictionary<string, object>);
             tasks.weekly = ReadPeriod(Map(map, "weekly") as IDictionary<string, object>);
             tasks.lifetime = ReadCounts(map, "lifetime");
+            tasks.welcome = ReadWelcome(Map(map, "welcome") as IDictionary<string, object>);
             return tasks;
+        }
+
+        /// <summary>Absent reads as no days and no claims - what the join treats as "knows nothing".</summary>
+        static WelcomeStateDto ReadWelcome(IDictionary<string, object> map)
+        {
+            var welcome = new WelcomeStateDto { days = new WelcomeDaysDto[0], claimed = new string[0], coined = new string[0] };
+            if (map == null) return welcome;
+
+            var days = new List<WelcomeDaysDto>();
+            if (map.TryGetValue("days", out object rawDays) && rawDays is IEnumerable<object> rows)
+            {
+                foreach (object item in rows)
+                {
+                    if (!(item is IDictionary<string, object> row)) continue;
+                    string goal = Str(row, "goal");
+                    if (string.IsNullOrEmpty(goal)) continue;
+
+                    var list = new List<int>();
+                    if (row.TryGetValue("days", out object rawList) && rawList is IEnumerable<object> values)
+                        foreach (object value in values)
+                        {
+                            long day = value is long l ? l : value is int i ? i : value is double d ? (long)d : 0L;
+                            if (day > 0L) list.Add(day > int.MaxValue ? int.MaxValue : (int)day);
+                        }
+
+                    if (list.Count == 0) continue;
+                    days.Add(new WelcomeDaysDto { goal = goal, days = list.ToArray() });
+                }
+            }
+            welcome.days = days.ToArray();
+
+            var claimed = new List<string>();
+            if (map.TryGetValue("claimed", out object rawClaimed) && rawClaimed is IEnumerable<object> ids)
+                foreach (object id in ids)
+                    if (id is string s && !string.IsNullOrEmpty(s)) claimed.Add(s);
+            welcome.claimed = claimed.ToArray();
+
+            var coined = new List<string>();
+            if (map.TryGetValue("coined", out object rawCoined) && rawCoined is IEnumerable<object> priced)
+                foreach (object id in priced)
+                    if (id is string s && !string.IsNullOrEmpty(s)) coined.Add(s);
+            welcome.coined = coined.ToArray();
+
+            return welcome;
         }
 
         /// <summary>Drops exactly what the writer drops, so a round trip is a fixed point.</summary>
