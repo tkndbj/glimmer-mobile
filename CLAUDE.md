@@ -449,6 +449,11 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
    answered one is never asked. `UmpConsentGateway` bounds the two server calls, waits for a shown form
    without a clock, and drops a form the hub is no longer idle for. ATT only when `ConsentSettled`. Held by
    `PrivacyTests`.
+55a. **Native start-up waits for the hub to calm, and ad units load one at a time.** `LaunchCalm` is settled
+   by `ConsentMoment`'s idle beat; `RewardedAds.StartAsync` awaits it after consent (the mediation stack
+   starting plus six rewarded loads on the hub's first frames was a stutter on every connected launch).
+   A rewarded unit is queued through `AdLoadQueue`, never loaded beside another. Held by `PrivacyTests` and
+   `AdLoadQueueTests`.
 
 ### Daily challenges
 

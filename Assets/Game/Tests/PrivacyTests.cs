@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using GlimmerGrove.Ads;
+using GlimmerGrove.Async;
 using GlimmerGrove.Privacy;
 using NUnit.Framework;
 
@@ -27,11 +28,83 @@ namespace GlimmerGrove.Tests
     /// </summary>
     public sealed class PrivacyTests
     {
+        /// <summary>
+        /// Every scenario here plays on a hub that has already calmed, so the one gate the
+        /// mediation start waits on besides consent is open. The single test that holds it
+        /// shut is <see cref="MediationWaitsForTheLaunchToCalm"/>.
+        /// </summary>
         [SetUp]
-        public void Reset() => AdPrivacy.Reset();
+        public void Reset()
+        {
+            AdPrivacy.Reset();
+            LaunchCalm.Reset();
+            LaunchCalm.Settle();
+        }
 
         [TearDown]
-        public void Clear() => AdPrivacy.Reset();
+        public void Clear()
+        {
+            AdPrivacy.Reset();
+            LaunchCalm.Reset();
+        }
+
+        /// <summary>
+        /// Consent answered is not enough: the SDK is not touched until the hub has drawn and
+        /// stood idle for a beat. This is the launch stutter - mediation's native start-up and
+        /// its first loads used to land on the frames the hub was arriving on, on every
+        /// connected launch. Privacy still reaches the provider before init, after the wait.
+        /// </summary>
+        [Test]
+        public async Task MediationWaitsForTheLaunchToCalm()
+        {
+            LaunchCalm.Reset();
+
+            var provider = new RecordingProvider();
+            AdPrivacy.Install(new FakeGateway(Granted));
+            RewardedAds.Install(provider);
+
+            var starting = RewardedAds.StartAsync();
+            await AdPrivacy.PrepareAsync();
+
+            Assert.IsTrue(AdPrivacy.IsResolved, "nothing is owed outside the EEA");
+            Assert.IsEmpty(provider.Calls, "resolved consent alone starts nothing");
+            Assert.IsFalse(starting.IsCompleted);
+
+            LaunchCalm.Settle();
+            await starting;
+
+            CollectionAssert.AreEqual(new[] { "privacy", "init" }, provider.Calls);
+        }
+
+        /// <summary>A launch that calmed before anybody asked costs no wait at all.</summary>
+        [Test]
+        public async Task ALaunchAlreadyCalmHoldsNothingUp()
+        {
+            Assert.IsTrue(LaunchCalm.IsSettled);
+            await LaunchCalm.WhenSettledAsync();
+
+            LaunchCalm.Settle();
+            Assert.IsTrue(LaunchCalm.IsSettled, "settling again changes nothing");
+        }
+
+        /// <summary>
+        /// A caller that gives up stops waiting, and the gate itself is untouched - the next
+        /// caller still gets the real answer.
+        /// </summary>
+        [Test]
+        public void AWaitOnTheLaunchCanBeCancelled()
+        {
+            LaunchCalm.Reset();
+
+            using var cancel = new CancellationTokenSource();
+            var waiting = LaunchCalm.WhenSettledAsync(cancel.Token);
+            Assert.IsFalse(waiting.IsCompleted);
+
+            cancel.Cancel();
+
+            Assert.IsTrue(waiting.IsCanceled);
+            Assert.IsFalse(LaunchCalm.IsSettled, "cancelling a wait does not settle the launch");
+        }
 
         // ------------------------------------------------------------- the rule
         /// <summary>

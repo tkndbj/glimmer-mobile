@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using GlimmerGrove.Analytics;
+using GlimmerGrove.Async;
 using GlimmerGrove.Cloud;
 using GlimmerGrove.Daily;
 using GlimmerGrove.Persistence;
@@ -194,6 +195,14 @@ namespace GlimmerGrove.Ads
             // have decided what it may collect.
             await AdPrivacy.PrepareAsync(cancellation);
             await AdPrivacy.WhenResolvedAsync(cancellation);
+
+            // And then the hub, drawn and idle for a beat, before the SDK is touched. Starting
+            // mediation brings up every adapter - AdMob, and WebKit with it - on the main thread,
+            // and it answered exactly as the hub was arriving: a lurch on every connected launch
+            // that aeroplane mode did not have (see LaunchCalm). The cost is the same wherever it
+            // is paid; this chooses a frame nobody is watching. An offer tapped in the second
+            // before it lands reads "not loaded", which a slow network already shows.
+            await LaunchCalm.WhenSettledAsync(cancellation);
 
             // The signals as they stand *now*, not as the first commit carried them: the hub may
             // already have committed a second answer (Apple's) in the frames before this

@@ -39,6 +39,19 @@ namespace GlimmerGrove.Ads
         /// <summary>Consecutive failed loads per placement, which drives the retry backoff.</summary>
         readonly Dictionary<string, int> _failures = new Dictionary<string, int>(StringComparer.Ordinal);
 
+        /// <summary>
+        /// Which unit is loading and which are waiting - one at a time, see
+        /// <see cref="AdLoadQueue"/> for why six at once lurched the hub.
+        /// </summary>
+        readonly AdLoadQueue _loads = new AdLoadQueue();
+
+        /// <summary>
+        /// The queue's clock: seconds since this provider was made, from a stopwatch rather
+        /// than <c>Time</c> because the stall watch resumes off a <c>Task.Delay</c> and the
+        /// SDK's callbacks are not promised a thread.
+        /// </summary>
+        readonly System.Diagnostics.Stopwatch _clock = System.Diagnostics.Stopwatch.StartNew();
+
         TaskCompletionSource<bool> _ready;
         TaskCompletionSource<AdShowResult> _pending;
         AdImpression _showing;
@@ -157,6 +170,10 @@ namespace GlimmerGrove.Ads
 
             foreach (var pair in _adUnitIds) Create(pair.Key, pair.Value);
 
+            // Every unit is queued by Create; the first load starts here and the rest follow
+            // one at a time, each as the one before it answers.
+            Pump();
+
             _ready?.TrySetResult(true);
             Raise(string.Empty);
         }
@@ -170,11 +187,14 @@ namespace GlimmerGrove.Ads
         }
 
         /// <summary>
-        /// Builds one ad unit and starts it loading.
+        /// Builds one ad unit and queues its first load.
         ///
         /// Every unit reloads the moment it is finished with - shown, closed or failed -
         /// because a rewarded ad that is not preloaded is an offer the player taps and then
-        /// waits ten seconds for, which is indistinguishable from a broken button.
+        /// waits ten seconds for, which is indistinguishable from a broken button. Queued
+        /// rather than loaded here, because a load is an auction and a creative rendered into
+        /// a web view on the main thread, and six of those in one frame is the lurch the hub
+        /// had on every connected launch. See <see cref="AdLoadQueue"/>.
         /// </summary>
         void Create(string placementId, string adUnitId)
         {
@@ -190,6 +210,7 @@ namespace GlimmerGrove.Ads
             {
                 _failures[placementId] = 0;
                 Debug.Log($"[Ads] loaded '{placementId}'");
+                Answered(placementId);
                 Raise(placementId);
             };
 
@@ -205,6 +226,7 @@ namespace GlimmerGrove.Ads
                 if (attempt <= 3)
                     Debug.Log($"[Ads] '{placementId}' did not load: {error?.ErrorMessage} ({error?.ErrorCode})");
 
+                Answered(placementId);
                 Raise(placementId);
                 RetryLater(placementId, attempt);
             };
@@ -226,13 +248,58 @@ namespace GlimmerGrove.Ads
             };
 
             _units[placementId] = unit;
-            unit.LoadAd();
+            _loads.Request(placementId);
         }
 
+        /// <summary>Asks for a placement to be loaded again, in its turn.</summary>
         void Reload(string placementId)
         {
-            if (_units.TryGetValue(placementId, out var unit) && unit != null) unit.LoadAd();
+            if (!_units.ContainsKey(placementId)) return;
+
+            _loads.Request(placementId);
+            Pump();
         }
+
+        /// <summary>The load in flight has answered; whatever is waiting may go next.</summary>
+        void Answered(string placementId)
+        {
+            if (_loads.Settle(placementId)) Pump();
+        }
+
+        /// <summary>
+        /// Starts the next queued load when none is in flight, and sets a watch on it so a load
+        /// the network never answers cannot hold every placement behind it for the session.
+        /// </summary>
+        void Pump()
+        {
+            while (_loads.TryStart(Now, out string placementId))
+            {
+                if (_units.TryGetValue(placementId, out var unit) && unit != null)
+                {
+                    unit.LoadAd();
+                    Fire.AndForget(WatchAsync, "LevelPlay.LoadWatch");
+                    return;
+                }
+
+                // A placement queued and then never built - no ad unit id for this platform.
+                // Settled at once so the next one is not held behind a load that cannot start.
+                _loads.Settle(placementId);
+            }
+        }
+
+        async Task WatchAsync()
+        {
+            await Task.Delay(TimeSpan.FromSeconds(AdLoadQueue.DefaultStallSeconds));
+
+            string stalled = _loads.Expire(Now);
+            if (stalled == null) return;
+
+            Debug.LogWarning($"[Ads] '{stalled}' has not answered its load in " +
+                             $"{AdLoadQueue.DefaultStallSeconds:0}s; moving on");
+            Pump();
+        }
+
+        double Now => _clock.Elapsed.TotalSeconds;
 
         /// <summary>Records a failed load and returns how many have now failed in a row.</summary>
         int Fail(string placementId)

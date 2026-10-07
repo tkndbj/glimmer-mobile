@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using GlimmerGrove.Async;
 using GlimmerGrove.Privacy;
 using GlimmerGrove.Release;
 using UnityEngine;
@@ -36,6 +37,12 @@ namespace GlimmerGrove
     /// immediately before each dialog, because the form takes a network round trip to load and
     /// the player may have tapped into a run while it did.
     /// </para>
+    /// <para>
+    /// <b>The same beat settles <see cref="LaunchCalm"/></b>, which is what the mediation SDK
+    /// waits for before it starts. One definition of "the player has landed and is looking at
+    /// the hub" for both: the dialog that must not be laid over a hub still arriving, and the
+    /// native start-up that must not be paid on the frames the player is watching it arrive.
+    /// </para>
     /// </summary>
     public static class ConsentMoment
     {
@@ -55,7 +62,7 @@ namespace GlimmerGrove
         /// </summary>
         public static void Tick()
         {
-            if (!AdPrivacy.Owed || !HubIsIdle())
+            if (!HubIsIdle())
             {
                 _idleSince = -1f;
                 return;
@@ -65,6 +72,11 @@ namespace GlimmerGrove
 
             if (_idleSince < 0f) _idleSince = now;
             if (now - _idleSince < Beat) return;
+
+            // Idle for a beat: the launch has calmed, whether or not anything is owed.
+            LaunchCalm.Settle();
+
+            if (!AdPrivacy.Owed) return;
 
             _idleSince = -1f;
             Begin();
