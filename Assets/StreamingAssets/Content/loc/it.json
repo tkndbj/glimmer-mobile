@@ -2642,14 +2642,6 @@
       "text": "Smeraldo"
     },
     {
-      "key": "ui.challenges.plays_left",
-      "text": "{0} / {1} partite rimaste"
-    },
-    {
-      "key": "ui.challenges.spent",
-      "text": "Torna domani"
-    },
-    {
       "key": "ui.challenges.no_plays",
       "text": "Nessuna partita rimasta oggi. Nuovi livelli domani."
     },
@@ -2760,14 +2752,6 @@
     {
       "key": "ui.challenges.ad_arrived",
       "text": "Partita bonus pronta! Scegli un rompicapo qualsiasi."
-    },
-    {
-      "key": "ui.challenges.plays_left_bonus",
-      "text": "{0} / {1} partite +{2}"
-    },
-    {
-      "key": "ui.challenges.spent_watch",
-      "text": "Guarda per +1 partita"
     },
     {
       "key": "ui.challenges.no_plays_watch",
@@ -5056,6 +5040,10 @@
     {
       "key": "ui.language.pl",
       "text": "Polski"
+    },
+    {
+      "key": "ui.language.ar",
+      "text": "العربية"
     },
     {
       "key": "ui.shelf.bed",

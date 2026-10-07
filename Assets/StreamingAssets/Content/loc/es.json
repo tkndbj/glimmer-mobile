@@ -2642,14 +2642,6 @@
       "text": "Esmeralda"
     },
     {
-      "key": "ui.challenges.plays_left",
-      "text": "Quedan {0} / {1} partidas"
-    },
-    {
-      "key": "ui.challenges.spent",
-      "text": "Vuelve mañana"
-    },
-    {
       "key": "ui.challenges.no_plays",
       "text": "No quedan partidas hoy. Niveles nuevos mañana."
     },
@@ -2760,14 +2752,6 @@
     {
       "key": "ui.challenges.ad_arrived",
       "text": "¡Partida extra lista! Elige cualquier puzle."
-    },
-    {
-      "key": "ui.challenges.plays_left_bonus",
-      "text": "{0} / {1} partidas +{2}"
-    },
-    {
-      "key": "ui.challenges.spent_watch",
-      "text": "Mira un vídeo: +1 partida"
     },
     {
       "key": "ui.challenges.no_plays_watch",
@@ -5056,6 +5040,10 @@
     {
       "key": "ui.language.pl",
       "text": "Polski"
+    },
+    {
+      "key": "ui.language.ar",
+      "text": "العربية"
     },
     {
       "key": "ui.shelf.bed",

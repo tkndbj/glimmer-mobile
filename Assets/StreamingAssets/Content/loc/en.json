@@ -2642,14 +2642,6 @@
       "text": "Emerald"
     },
     {
-      "key": "ui.challenges.plays_left",
-      "text": "{0} / {1} plays left"
-    },
-    {
-      "key": "ui.challenges.spent",
-      "text": "Back tomorrow"
-    },
-    {
       "key": "ui.challenges.no_plays",
       "text": "No plays left today. New levels tomorrow."
     },
@@ -2760,14 +2752,6 @@
     {
       "key": "ui.challenges.ad_arrived",
       "text": "Bonus play ready! Pick any puzzle."
-    },
-    {
-      "key": "ui.challenges.plays_left_bonus",
-      "text": "{0} / {1} plays +{2}"
-    },
-    {
-      "key": "ui.challenges.spent_watch",
-      "text": "Watch for +1 play"
     },
     {
       "key": "ui.challenges.no_plays_watch",
@@ -5056,6 +5040,10 @@
     {
       "key": "ui.language.pl",
       "text": "Polski"
+    },
+    {
+      "key": "ui.language.ar",
+      "text": "العربية"
     },
     {
       "key": "ui.shelf.bed",

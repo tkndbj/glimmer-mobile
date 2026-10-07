@@ -2642,14 +2642,6 @@
       "text": "Smaragd"
     },
     {
-      "key": "ui.challenges.plays_left",
-      "text": "Noch {0} / {1} Spiele"
-    },
-    {
-      "key": "ui.challenges.spent",
-      "text": "Morgen wieder"
-    },
-    {
       "key": "ui.challenges.no_plays",
       "text": "Heute keine Spiele mehr. Morgen gibt es neue Level."
     },
@@ -2760,14 +2752,6 @@
     {
       "key": "ui.challenges.ad_arrived",
       "text": "Bonusspiel bereit! Wähl ein beliebiges Rätsel."
-    },
-    {
-      "key": "ui.challenges.plays_left_bonus",
-      "text": "{0} / {1} Spiele +{2}"
-    },
-    {
-      "key": "ui.challenges.spent_watch",
-      "text": "Ansehen für +1 Spiel"
     },
     {
       "key": "ui.challenges.no_plays_watch",
@@ -5056,6 +5040,10 @@
     {
       "key": "ui.language.pl",
       "text": "Polski"
+    },
+    {
+      "key": "ui.language.ar",
+      "text": "العربية"
     },
     {
       "key": "ui.shelf.bed",

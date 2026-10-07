@@ -1,0 +1,7837 @@
+{
+  "language": "ar",
+  "entries": [
+    {
+      "key": "challenge.d01_pairs.blurb",
+      "text": "اقلب بطاقتين. نفس الجوهرة مرتين تطلق برجها."
+    },
+    {
+      "key": "challenge.d01_pairs.name",
+      "text": "شرارتان توأمان"
+    },
+    {
+      "key": "challenge.d39_pairs.blurb",
+      "text": "عشرة أزواج بثلاثة ألوان. تذكر أين تختبئ كل جوهرة."
+    },
+    {
+      "key": "challenge.d39_pairs.name",
+      "text": "صف الياقوت"
+    },
+    {
+      "key": "challenge.d40_pairs.blurb",
+      "text": "أخضر وأزرق وكهرماني. تسعة أزواج للعثور عليها."
+    },
+    {
+      "key": "challenge.d40_pairs.name",
+      "text": "الطحلب والبحر"
+    },
+    {
+      "key": "challenge.d41_pairs.blurb",
+      "text": "أربعة ألوان وعشرة أزواج. كل خطأ يقرب المهاجمين."
+    },
+    {
+      "key": "challenge.d41_pairs.name",
+      "text": "بوابة العقيق"
+    },
+    {
+      "key": "challenge.d42_pairs.blurb",
+      "text": "الجوهرتان الزرقاوان زوج فقط إن كانتا من الحجر نفسه."
+    },
+    {
+      "key": "challenge.d42_pairs.name",
+      "text": "درجات الياقوت الأزرق"
+    },
+    {
+      "key": "challenge.d43_pairs.blurb",
+      "text": "هنا يختبئ حجر ملعون واحد. اقلبه فيتقدم المهاجمون خطوة إضافية."
+    },
+    {
+      "key": "challenge.d43_pairs.name",
+      "text": "الحجر الأسود"
+    },
+    {
+      "key": "challenge.d44_pairs.blurb",
+      "text": "أحمر وأزرق فقط. انظر جيدا إلى الأشكال."
+    },
+    {
+      "key": "challenge.d44_pairs.name",
+      "text": "أحمر وأزرق"
+    },
+    {
+      "key": "challenge.d45_pairs.blurb",
+      "text": "كون الأزواج واحدا تلو الآخر لتحصل على سلسلة."
+    },
+    {
+      "key": "challenge.d45_pairs.name",
+      "text": "علبة الجواهر"
+    },
+    {
+      "key": "challenge.d46_pairs.blurb",
+      "text": "ثلاثة ألوان، وبينها حجر ملعون واحد."
+    },
+    {
+      "key": "challenge.d46_pairs.name",
+      "text": "طحلب العسل"
+    },
+    {
+      "key": "challenge.d47_pairs.blurb",
+      "text": "أخضر وكهرماني فقط. فرق بينها بالشكل."
+    },
+    {
+      "key": "challenge.d47_pairs.name",
+      "text": "عسل الزمرد"
+    },
+    {
+      "key": "challenge.d48_pairs.blurb",
+      "text": "ثلاثة أحجار ملعونة على لوح قصير. اكتشفها مرة ثم اتركها."
+    },
+    {
+      "key": "challenge.d48_pairs.name",
+      "text": "ثلاث لعنات"
+    },
+    {
+      "key": "challenge.d49_pairs.blurb",
+      "text": "أحمر وأزرق وكهرماني، وحجر ملعون واحد."
+    },
+    {
+      "key": "challenge.d49_pairs.name",
+      "text": "وادي الجمر"
+    },
+    {
+      "key": "challenge.d50_pairs.blurb",
+      "text": "لوح طويل ومنخفض فيه حجر ملعون."
+    },
+    {
+      "key": "challenge.d50_pairs.name",
+      "text": "ليلة الفوانيس"
+    },
+    {
+      "key": "challenge.d51_pairs.blurb",
+      "text": "كل حجر أحمر وكل حجر أخضر. ستة أشكال من كل لون."
+    },
+    {
+      "key": "challenge.d51_pairs.name",
+      "text": "الآس واللبلاب"
+    },
+    {
+      "key": "challenge.d52_pairs.blurb",
+      "text": "حجران ملعونان. اكتشفهما مرة ولا تلمسهما بعد ذلك أبدا."
+    },
+    {
+      "key": "challenge.d52_pairs.name",
+      "text": "لعنتان توأمان"
+    },
+    {
+      "key": "challenge.d53_pairs.blurb",
+      "text": "خمسة عشر زوجا بأربعة ألوان. حافظ على هدوئك."
+    },
+    {
+      "key": "challenge.d53_pairs.name",
+      "text": "خزنة الكنوز"
+    },
+    {
+      "key": "challenge.d54_pairs.blurb",
+      "text": "أربعة عشر زوجا في قاعة واسعة. اربطها لتحصل على سلاسل."
+    },
+    {
+      "key": "challenge.d54_pairs.name",
+      "text": "القاعة الطويلة"
+    },
+    {
+      "key": "challenge.d55_pairs.blurb",
+      "text": "أربعة عشر زوجا وحجران ملعونان."
+    },
+    {
+      "key": "challenge.d55_pairs.name",
+      "text": "الخزنة الملعونة"
+    },
+    {
+      "key": "challenge.d56_pairs.blurb",
+      "text": "خمسة أشكال حمراء، وحجران ملعونان يختبئان بينها."
+    },
+    {
+      "key": "challenge.d56_pairs.name",
+      "text": "القمر الدامي"
+    },
+    {
+      "key": "challenge.d57_pairs.blurb",
+      "text": "خمسة أشكال من كل لون. انظر بتمعن."
+    },
+    {
+      "key": "challenge.d57_pairs.name",
+      "text": "المياه العميقة"
+    },
+    {
+      "key": "challenge.d58_pairs.blurb",
+      "text": "سبعة عشر زوجا وحجر ملعون. أكبر كنز حتى الآن."
+    },
+    {
+      "key": "challenge.d58_pairs.name",
+      "text": "كنز التنين"
+    },
+    {
+      "key": "challenge.d59_pairs.blurb",
+      "text": "أخضر وأزرق وكهرماني، وحجران ملعونان."
+    },
+    {
+      "key": "challenge.d59_pairs.name",
+      "text": "طاولة الساحرة"
+    },
+    {
+      "key": "challenge.d60_pairs.blurb",
+      "text": "أحمر وأزرق وكهرماني، وخمسة أشكال لمعظمها."
+    },
+    {
+      "key": "challenge.d60_pairs.name",
+      "text": "نار وجليد"
+    },
+    {
+      "key": "challenge.d61_pairs.blurb",
+      "text": "كل حجر أحمر وكل حجر أخضر معا، ولعنة."
+    },
+    {
+      "key": "challenge.d61_pairs.name",
+      "text": "فدية الملك"
+    },
+    {
+      "key": "challenge.d62_pairs.blurb",
+      "text": "أحمر وأخضر وكهرماني، خمسة أشكال من كل لون."
+    },
+    {
+      "key": "challenge.d62_pairs.name",
+      "text": "حجر الشمس"
+    },
+    {
+      "key": "challenge.d63_pairs.blurb",
+      "text": "ثلاثة أحجار ملعونة بين ستة عشر زوجا."
+    },
+    {
+      "key": "challenge.d63_pairs.name",
+      "text": "قاعة السبج"
+    },
+    {
+      "key": "challenge.d64_pairs.blurb",
+      "text": "أربعة ألوان، ولعنتان، ولوح واسع."
+    },
+    {
+      "key": "challenge.d64_pairs.name",
+      "text": "سوق الظلال"
+    },
+    {
+      "key": "challenge.d65_pairs.blurb",
+      "text": "أحمر وأزرق وكهرماني، مع حجرين ملعونين."
+    },
+    {
+      "key": "challenge.d65_pairs.name",
+      "text": "سرداب الجمر"
+    },
+    {
+      "key": "challenge.d66_pairs.blurb",
+      "text": "كل حجر أخضر، وثلاث لعنات في الأعماق."
+    },
+    {
+      "key": "challenge.d66_pairs.name",
+      "text": "المعبد الغارق"
+    },
+    {
+      "key": "challenge.d67_pairs.blurb",
+      "text": "كل شكل أحمر وأخضر، وحجر ملعون."
+    },
+    {
+      "key": "challenge.d67_pairs.name",
+      "text": "الرواق الكبير"
+    },
+    {
+      "key": "challenge.d68_pairs.blurb",
+      "text": "ستة عشر زوجا، وثلاث لعنات، وأربعة ألوان. أصعب تاج."
+    },
+    {
+      "key": "challenge.d68_pairs.name",
+      "text": "تاج Gemfire"
+    },
+    {
+      "key": "challenge.d05_merge.blurb",
+      "text": "حرك جوهرة واحدة في كل مرة. كل جوهرتين متماثلتين تصبحان الجوهرة التالية وتطلقان لونهما."
+    },
+    {
+      "key": "challenge.d05_merge.name",
+      "text": "الحدادة الأولى"
+    },
+    {
+      "key": "challenge.d69_merge.blurb",
+      "text": "ثلاث جواهر 8 تنتظر رابعة. اصنعها من جواهر 2."
+    },
+    {
+      "key": "challenge.d69_merge.name",
+      "text": "درجات الكهرمان"
+    },
+    {
+      "key": "challenge.d70_merge.blurb",
+      "text": "جوهرة 16 وحيدة. اصنع توأمها من الجواهر الصغيرة."
+    },
+    {
+      "key": "challenge.d70_merge.name",
+      "text": "بوابة المحجر"
+    },
+    {
+      "key": "challenge.d71_merge.blurb",
+      "text": "صخرتان تحرسان الوسط. استخدمهما لإيقاف الانزلاق."
+    },
+    {
+      "key": "challenge.d71_merge.name",
+      "text": "قاطع الحجارة"
+    },
+    {
+      "key": "challenge.d72_merge.blurb",
+      "text": "ثلاث جواهر 8 وأربع جواهر 2. الجوهرة 8 الرابعة عليك صنعها."
+    },
+    {
+      "key": "challenge.d72_merge.name",
+      "text": "الثمانيات المتدحرجة"
+    },
+    {
+      "key": "challenge.d73_merge.blurb",
+      "text": "الصخور تقسم اللوح. على كل جوهرة أن تجد طريقا حولها."
+    },
+    {
+      "key": "challenge.d73_merge.name",
+      "text": "الحجر المشقوق"
+    },
+    {
+      "key": "challenge.d74_merge.blurb",
+      "text": "سبع حركات أولى، وواحدة فقط هي الأفضل."
+    },
+    {
+      "key": "challenge.d74_merge.name",
+      "text": "الطريق المنخفض"
+    },
+    {
+      "key": "challenge.d75_merge.blurb",
+      "text": "الانزلاق يتوقف فقط عند شيء ما. استخدم الصخور كجدران."
+    },
+    {
+      "key": "challenge.d75_merge.name",
+      "text": "عمودان"
+    },
+    {
+      "key": "challenge.d76_merge.blurb",
+      "text": "جواهر 8 متناثرة. اجمعها واحدة تلو الأخرى."
+    },
+    {
+      "key": "challenge.d76_merge.name",
+      "text": "ساحة البناء"
+    },
+    {
+      "key": "challenge.d77_merge.blurb",
+      "text": "سبع صخور وسبع جواهر. رتب كل زوج على خط واحد قبل التحريك."
+    },
+    {
+      "key": "challenge.d77_merge.name",
+      "text": "درج القبو"
+    },
+    {
+      "key": "challenge.d78_merge.blurb",
+      "text": "التوأمان يلتقيان على خط مستقيم فقط. ضع أحدهما في مكانه أولا."
+    },
+    {
+      "key": "challenge.d78_merge.name",
+      "text": "صفوف العقيق"
+    },
+    {
+      "key": "challenge.d79_merge.blurb",
+      "text": "ثلاث جواهر 4، والرابعة مخبأة في جوهرتي 2."
+    },
+    {
+      "key": "challenge.d79_merge.name",
+      "text": "الأربعتان التوأمان"
+    },
+    {
+      "key": "challenge.d80_merge.blurb",
+      "text": "جوهرتا 8 وثلاث جواهر 4. أكمل كل حجم قبل الذي يليه."
+    },
+    {
+      "key": "challenge.d80_merge.name",
+      "text": "علية الجمر"
+    },
+    {
+      "key": "challenge.d81_merge.blurb",
+      "text": "أربع جواهر 2، وثلاث جواهر 8، ومساحة ضيقة للانزلاق."
+    },
+    {
+      "key": "challenge.d81_merge.name",
+      "text": "حجر الزاوية"
+    },
+    {
+      "key": "challenge.d82_merge.blurb",
+      "text": "اثنتا عشرة حركة إن خططت جيدا. نصفها حركات تمهيدية."
+    },
+    {
+      "key": "challenge.d82_merge.name",
+      "text": "النور الأخير"
+    },
+    {
+      "key": "challenge.d83_merge.blurb",
+      "text": "أربع جواهر 2، وجوهرة 8، وجوهرة 16، متباعدة. كل انزلاقة لها حسابها."
+    },
+    {
+      "key": "challenge.d83_merge.name",
+      "text": "برج المراقبة"
+    },
+    {
+      "key": "challenge.d84_merge.blurb",
+      "text": "جوهرة من كل حجم حتى 32. اصنع الجوهرة 64."
+    },
+    {
+      "key": "challenge.d84_merge.name",
+      "text": "الصعود الطويل"
+    },
+    {
+      "key": "challenge.d85_merge.blurb",
+      "text": "ثلاث جواهر 16، والرابعة يجب بناؤها من الجواهر الصغيرة."
+    },
+    {
+      "key": "challenge.d85_merge.name",
+      "text": "التيجان الثلاثة"
+    },
+    {
+      "key": "challenge.d86_merge.blurb",
+      "text": "قاعة حجرية واسعة. اجمع جواهر 2 أولا، ثم اصعد."
+    },
+    {
+      "key": "challenge.d86_merge.name",
+      "text": "القاعة الواسعة"
+    },
+    {
+      "key": "challenge.d87_merge.blurb",
+      "text": "جواهر 2 منتشرة على اللوح. اجمعها أولا."
+    },
+    {
+      "key": "challenge.d87_merge.name",
+      "text": "شرارات متناثرة"
+    },
+    {
+      "key": "challenge.d88_merge.blurb",
+      "text": "كل حجم من 2 إلى 32. كل واحدة تنتظر الحجم الذي تحتها."
+    },
+    {
+      "key": "challenge.d88_merge.name",
+      "text": "السلم"
+    },
+    {
+      "key": "challenge.d89_merge.blurb",
+      "text": "ثلاث جواهر 16 متباعدة. الجواهر الصغيرة تقرر أي زوج يلتقي."
+    },
+    {
+      "key": "challenge.d89_merge.name",
+      "text": "جواهر التاج"
+    },
+    {
+      "key": "challenge.d90_merge.blurb",
+      "text": "صخور في كل مكان. ابحث عن الممر الذي تتوقف فيه كل جوهرة."
+    },
+    {
+      "key": "challenge.d90_merge.name",
+      "text": "المحجر العميق"
+    },
+    {
+      "key": "challenge.d91_merge.blurb",
+      "text": "خمس حركات أولى فقط، واثنتان منها تبقيانك على أفضل طريق."
+    },
+    {
+      "key": "challenge.d91_merge.name",
+      "text": "بداية ضيقة"
+    },
+    {
+      "key": "challenge.d92_merge.blurb",
+      "text": "ثلاث جواهر 16 تنتظر. كل جوهرة صغيرة يجب أن تصبح الرابعة."
+    },
+    {
+      "key": "challenge.d92_merge.name",
+      "text": "حديقة الحجارة"
+    },
+    {
+      "key": "challenge.d93_merge.blurb",
+      "text": "لا توجد جواهر 2 إطلاقا. ابدأ من جواهر 4 واصعد إلى 64."
+    },
+    {
+      "key": "challenge.d93_merge.name",
+      "text": "بلا فكة"
+    },
+    {
+      "key": "challenge.d94_merge.blurb",
+      "text": "خمس عشرة حركة في أحسن الأحوال، وعشر منها للترتيب فقط."
+    },
+    {
+      "key": "challenge.d94_merge.name",
+      "text": "درج الجمر"
+    },
+    {
+      "key": "challenge.d95_merge.blurb",
+      "text": "ابن كل حجم بدوره. الجوهرة 32 تنتظر البقية."
+    },
+    {
+      "key": "challenge.d95_merge.name",
+      "text": "البرج الساقط"
+    },
+    {
+      "key": "challenge.d96_merge.blurb",
+      "text": "سبعة خانات عرضا ومليء بالصخور. خطط للصعود كله قبل أن تتحرك."
+    },
+    {
+      "key": "challenge.d96_merge.name",
+      "text": "القاعة الكبرى"
+    },
+    {
+      "key": "challenge.d97_merge.blurb",
+      "text": "ست عشرة حركة في أحسن الأحوال. معظمها تمهيدية."
+    },
+    {
+      "key": "challenge.d97_merge.name",
+      "text": "المتاهة"
+    },
+    {
+      "key": "challenge.d98_merge.blurb",
+      "text": "أطول صعود هنا. سبع عشرة حركة إن رأيت كل شيء."
+    },
+    {
+      "key": "challenge.d98_merge.name",
+      "text": "القمة"
+    },
+    {
+      "key": "challenge.d06_sokoban.blurb",
+      "text": "جوهرتان وغرفة صغيرة. ادفع كل واحدة إلى منصتها."
+    },
+    {
+      "key": "challenge.d06_sokoban.name",
+      "text": "الدفعة الأولى"
+    },
+    {
+      "key": "challenge.d99_sokoban.blurb",
+      "text": "جوهرتان. أحيانا يكون الطريق إلى المنصة من الخلف."
+    },
+    {
+      "key": "challenge.d99_sokoban.name",
+      "text": "خطوة جانبية"
+    },
+    {
+      "key": "challenge.d100_sokoban.blurb",
+      "text": "جوهرتان في غرفة ضيقة. التف حولهما قبل أن تدفع."
+    },
+    {
+      "key": "challenge.d100_sokoban.name",
+      "text": "الباب الخلفي"
+    },
+    {
+      "key": "challenge.d101_sokoban.blurb",
+      "text": "مساحة واسعة وجوهرتان. أبعدهما عن الجدران."
+    },
+    {
+      "key": "challenge.d101_sokoban.name",
+      "text": "الساحة المفتوحة"
+    },
+    {
+      "key": "challenge.d102_sokoban.blurb",
+      "text": "الجوهرة التي تدفع إلى زاوية لا تخرج منها أبدا. ادفع بحذر."
+    },
+    {
+      "key": "challenge.d102_sokoban.name",
+      "text": "احذر الزوايا"
+    },
+    {
+      "key": "challenge.d103_sokoban.blurb",
+      "text": "جوهرتان وبرجان. ضع واحدة مبكرا ودعها تطلق."
+    },
+    {
+      "key": "challenge.d103_sokoban.name",
+      "text": "ممران"
+    },
+    {
+      "key": "challenge.d104_sokoban.blurb",
+      "text": "الطريق القصير يحبس الجوهرة. ابحث عن الطويل."
+    },
+    {
+      "key": "challenge.d104_sokoban.name",
+      "text": "الطريق الطويل"
+    },
+    {
+      "key": "challenge.d105_sokoban.blurb",
+      "text": "ثلاث جواهر الآن. خطط للترتيب قبل الدفعة الأولى."
+    },
+    {
+      "key": "challenge.d105_sokoban.name",
+      "text": "ثلاثة ألوان"
+    },
+    {
+      "key": "challenge.d106_sokoban.blurb",
+      "text": "ثلاث جواهر تتقاطع طرقها. أفسح الطريق أولا."
+    },
+    {
+      "key": "challenge.d106_sokoban.name",
+      "text": "مفترق الطرق"
+    },
+    {
+      "key": "challenge.d107_sokoban.blurb",
+      "text": "مساحة قليلة للالتفاف. كل دفعة لها حسابها."
+    },
+    {
+      "key": "challenge.d107_sokoban.name",
+      "text": "ضيق شديد"
+    },
+    {
+      "key": "challenge.d108_sokoban.blurb",
+      "text": "الحجر يقسم الغرفة. استفد منه ولا تقاومه."
+    },
+    {
+      "key": "challenge.d108_sokoban.name",
+      "text": "قاعة الأعمدة"
+    },
+    {
+      "key": "challenge.d109_sokoban.blurb",
+      "text": "كل جوهرة تبدأ بعيدا عن مكانها. فك تشابكها."
+    },
+    {
+      "key": "challenge.d109_sokoban.name",
+      "text": "تبديل الأماكن"
+    },
+    {
+      "key": "challenge.d110_sokoban.blurb",
+      "text": "ثلاث جواهر وساحة مزدحمة. انتبه للزوايا."
+    },
+    {
+      "key": "challenge.d110_sokoban.name",
+      "text": "ساحة المحجر"
+    },
+    {
+      "key": "challenge.d111_sokoban.blurb",
+      "text": "التف من الطريق الطويل لتدفع من الجهة الصحيحة."
+    },
+    {
+      "key": "challenge.d111_sokoban.name",
+      "text": "حول الكتلة"
+    },
+    {
+      "key": "challenge.d112_sokoban.blurb",
+      "text": "ثلاث جواهر وطرق طويلة. دفعة خاطئة واحدة وستحتاج إلى التراجع."
+    },
+    {
+      "key": "challenge.d112_sokoban.name",
+      "text": "خزنة الجواهر"
+    },
+    {
+      "key": "challenge.d113_sokoban.blurb",
+      "text": "الطريق ينعطف عائدا على نفسه، وكذلك أنت."
+    },
+    {
+      "key": "challenge.d113_sokoban.name",
+      "text": "المنعطفات"
+    },
+    {
+      "key": "challenge.d114_sokoban.blurb",
+      "text": "ثلاث جواهر في قبو مزدحم. فكر بثلاث حركات مسبقا."
+    },
+    {
+      "key": "challenge.d114_sokoban.name",
+      "text": "القبو العميق"
+    },
+    {
+      "key": "challenge.d115_sokoban.blurb",
+      "text": "الصخور تسد الخطوط السهلة. ابحث عن الصعبة."
+    },
+    {
+      "key": "challenge.d115_sokoban.name",
+      "text": "انهيار صخري"
+    },
+    {
+      "key": "challenge.d116_sokoban.blurb",
+      "text": "الألوان الأربعة كلها. كل برج يريد جوهرته."
+    },
+    {
+      "key": "challenge.d116_sokoban.name",
+      "text": "الرياح الأربع"
+    },
+    {
+      "key": "challenge.d117_sokoban.blurb",
+      "text": "أربع جواهر في غرفة عالية. الترتيب هو كل شيء."
+    },
+    {
+      "key": "challenge.d117_sokoban.name",
+      "text": "غرفة التاج"
+    },
+    {
+      "key": "challenge.d118_sokoban.blurb",
+      "text": "أربع جواهر وممرات ضيقة. اترك مساحة للالتفاف."
+    },
+    {
+      "key": "challenge.d118_sokoban.name",
+      "text": "القاعة الحديدية"
+    },
+    {
+      "key": "challenge.d119_sokoban.blurb",
+      "text": "الجواهر تزاحم منصات بعضها. فكها واحدة تلو الأخرى."
+    },
+    {
+      "key": "challenge.d119_sokoban.name",
+      "text": "التشابك"
+    },
+    {
+      "key": "challenge.d120_sokoban.blurb",
+      "text": "غرفة صغيرة تضم أربع جواهر. المساحة هي اللغز."
+    },
+    {
+      "key": "challenge.d120_sokoban.name",
+      "text": "بيت المال"
+    },
+    {
+      "key": "challenge.d121_sokoban.blurb",
+      "text": "أربع جواهر وجدران من كل جانب. أبق طريقا مفتوحا."
+    },
+    {
+      "key": "challenge.d121_sokoban.name",
+      "text": "الانهيار"
+    },
+    {
+      "key": "challenge.d122_sokoban.blurb",
+      "text": "أربع جواهر مربوطة في عقدة. حلها ببطء."
+    },
+    {
+      "key": "challenge.d122_sokoban.name",
+      "text": "العقد"
+    },
+    {
+      "key": "challenge.d123_sokoban.blurb",
+      "text": "أربع جواهر وزوايا كثيرة. ابتعد عنها."
+    },
+    {
+      "key": "challenge.d123_sokoban.name",
+      "text": "الزاوية الأخيرة"
+    },
+    {
+      "key": "challenge.d124_sokoban.blurb",
+      "text": "أربعة ألوان وغرفة ضيقة واحدة. اختبار حقيقي."
+    },
+    {
+      "key": "challenge.d124_sokoban.name",
+      "text": "الخزنة الكبرى"
+    },
+    {
+      "key": "challenge.d125_sokoban.blurb",
+      "text": "ممرات ملتوية وأربع جواهر. انظر قبل أن تتحرك."
+    },
+    {
+      "key": "challenge.d125_sokoban.name",
+      "text": "الجحور"
+    },
+    {
+      "key": "challenge.d126_sokoban.blurb",
+      "text": "أربع جواهر تتزاحم على المكان. أفسح المجال ثم ادفع."
+    },
+    {
+      "key": "challenge.d126_sokoban.name",
+      "text": "الكهف المزدحم"
+    },
+    {
+      "key": "challenge.d127_sokoban.blurb",
+      "text": "أصعب غرفة هنا. كل خطوة مهمة."
+    },
+    {
+      "key": "challenge.d127_sokoban.name",
+      "text": "اختبار الحارس"
+    },
+    {
+      "key": "challenge.d08_glade.blurb",
+      "text": "أدر القنوات حتى يستيقظ كل مخلوق. المخلوق المستيقظ يطلق برجه في كل دور."
+    },
+    {
+      "key": "challenge.d08_glade.name",
+      "text": "العبور"
+    },
+    {
+      "key": "challenge.d09_glade.blurb",
+      "text": "الجسر يرفع ضوءا فوق آخر. أوصل كل لون إلى بيته."
+    },
+    {
+      "key": "challenge.d09_glade.name",
+      "text": "منعطف الطحلب"
+    },
+    {
+      "key": "challenge.d10_glade.blurb",
+      "text": "ثلاث بلورات وثلاثة ألوان. أبق كل ضوء لمخلوقاته."
+    },
+    {
+      "key": "challenge.d10_glade.name",
+      "text": "وادي السرخس"
+    },
+    {
+      "key": "challenge.d11_glade.blurb",
+      "text": "الأخضر يعبر فوق الأحمر على جسر. لا يجوز أن يلمس أحدهما الآخر."
+    },
+    {
+      "key": "challenge.d11_glade.name",
+      "text": "مجرى الندى"
+    },
+    {
+      "key": "challenge.d12_glade.blurb",
+      "text": "كل ذراع تلتقي بذراع، وهناك طريقة واحدة فقط ليلتقوا جميعا."
+    },
+    {
+      "key": "challenge.d12_glade.name",
+      "text": "حلقة الصفصاف"
+    },
+    {
+      "key": "challenge.d13_glade.blurb",
+      "text": "مهاجم المخلوق الأخضر يصل أولا. أيقظه مبكرا."
+    },
+    {
+      "key": "challenge.d13_glade.name",
+      "text": "ضفة الجدول"
+    },
+    {
+      "key": "challenge.d14_glade.blurb",
+      "text": "مرج طويل ومنخفض. مهاجم الأحمر يسير بالفعل، فأيقظ الأحمر أولا."
+    },
+    {
+      "key": "challenge.d14_glade.name",
+      "text": "صف الفوانيس"
+    },
+    {
+      "key": "challenge.d15_glade.blurb",
+      "text": "الطريق الأحمر يعبر الأخضر على جسر. أبقهما منفصلين."
+    },
+    {
+      "key": "challenge.d15_glade.name",
+      "text": "درب الشوك"
+    },
+    {
+      "key": "challenge.d16_glade.blurb",
+      "text": "بلورتان كهرمانيتان تضيئان بركة واحدة. أبعد الأزرق عنها."
+    },
+    {
+      "key": "challenge.d16_glade.name",
+      "text": "بركة الكهرمان"
+    },
+    {
+      "key": "challenge.d17_glade.blurb",
+      "text": "الكهرماني يريد ضوءا كهرمانيا. حيث يلمسه الأزرق، ينطفئ الاثنان."
+    },
+    {
+      "key": "challenge.d17_glade.name",
+      "text": "وادي العسل"
+    },
+    {
+      "key": "challenge.d18_glade.blurb",
+      "text": "مخلوقان كهرمانيان يتشاركان ضوءا كهرمانيا واحدا. ابنه مرة واحدة."
+    },
+    {
+      "key": "challenge.d18_glade.name",
+      "text": "القطيفة"
+    },
+    {
+      "key": "challenge.d19_glade.blurb",
+      "text": "الأحمر والكهرماني يسيران جنبا إلى جنب. حيث يلتقي لونان، ينطفئ الاثنان."
+    },
+    {
+      "key": "challenge.d19_glade.name",
+      "text": "مخاضة الجمر"
+    },
+    {
+      "key": "challenge.d20_glade.blurb",
+      "text": "قناتان تتشاركان جذرا وتدوران معا. ثبتهما دفعة واحدة."
+    },
+    {
+      "key": "challenge.d20_glade.name",
+      "text": "الجذران التوأمان"
+    },
+    {
+      "key": "challenge.d21_glade.blurb",
+      "text": "جذر رئيسي يربط قناتين. نقرة واحدة تديرهما معا."
+    },
+    {
+      "key": "challenge.d21_glade.name",
+      "text": "مقيد بالجذور"
+    },
+    {
+      "key": "challenge.d22_glade.blurb",
+      "text": "تقاطع ملتو يحني ضوءين. الألوان وحدها تحدد الاتجاه."
+    },
+    {
+      "key": "challenge.d22_glade.name",
+      "text": "الخشب المعقود"
+    },
+    {
+      "key": "challenge.d23_glade.blurb",
+      "text": "أربعة ألوان، والتواء واحد، ومخلوقان كهرمانيان. اقرأ المرج كله أولا."
+    },
+    {
+      "key": "challenge.d23_glade.name",
+      "text": "غابة الغسق"
+    },
+    {
+      "key": "challenge.d24_glade.blurb",
+      "text": "كل ذراع يمكن أن تلتقي بذراع بالطريقة الخاطئة. اللون هو الحكم."
+    },
+    {
+      "key": "challenge.d24_glade.name",
+      "text": "وادي البوم"
+    },
+    {
+      "key": "challenge.d25_glade.blurb",
+      "text": "كل الألوان تزحف معا. أيقظ الأحمر أولا، ولا تدع ضوءين يلتقيان أبدا."
+    },
+    {
+      "key": "challenge.d25_glade.name",
+      "text": "أعماق التشابك"
+    },
+    {
+      "key": "challenge.d26_glade.blurb",
+      "text": "تقاطع ملتو يحني الأزرق متجاوزا الأحمر. طريقة واحدة فقط توقظها جميعا."
+    },
+    {
+      "key": "challenge.d26_glade.name",
+      "text": "بئر القمر"
+    },
+    {
+      "key": "challenge.d27_glade.blurb",
+      "text": "جسر والتواء في مرج عال واحد. أربعة أضواء، بلا تسرب."
+    },
+    {
+      "key": "challenge.d27_glade.name",
+      "text": "متاهة النجوم"
+    },
+    {
+      "key": "challenge.d28_glade.blurb",
+      "text": "الأحمر يزحف أولا والكهرماني أخيرا. خطط للترتيب."
+    },
+    {
+      "key": "challenge.d28_glade.name",
+      "text": "نسيج الليل"
+    },
+    {
+      "key": "challenge.d29_glade.blurb",
+      "text": "مخلوقان كهرمانيان، والتواء واحد، وجسر واحد. أبق الأضواء منفصلة."
+    },
+    {
+      "key": "challenge.d29_glade.name",
+      "text": "الريح المعاكسة"
+    },
+    {
+      "key": "challenge.d30_glade.blurb",
+      "text": "جسر والتواء جنبا إلى جنب. قراءة واحدة فقط للألوان تفوز."
+    },
+    {
+      "key": "challenge.d30_glade.name",
+      "text": "عقدة النساج"
+    },
+    {
+      "key": "challenge.d31_glade.blurb",
+      "text": "تقاطعان ملتويان. كل واحد يحني ضوءا تحدده الألوان."
+    },
+    {
+      "key": "challenge.d31_glade.name",
+      "text": "الوادي الملتوي"
+    },
+    {
+      "key": "challenge.d32_glade.blurb",
+      "text": "العليق ينفتح من جهة ويشوك من الأخرى. طريقة واحدة فقط توقظها جميعا."
+    },
+    {
+      "key": "challenge.d32_glade.name",
+      "text": "بوابة العليق"
+    },
+    {
+      "key": "challenge.d33_glade.blurb",
+      "text": "العليق يحدد أي ضوءين يلتقيان. افتحه في الاتجاه الصحيح."
+    },
+    {
+      "key": "challenge.d33_glade.name",
+      "text": "عقدة الشوك"
+    },
+    {
+      "key": "challenge.d34_glade.blurb",
+      "text": "ثماني طرق لتلتقي كل ذراع، وواحدة فقط توقظ المرج."
+    },
+    {
+      "key": "challenge.d34_glade.name",
+      "text": "قلب الأشواك"
+    },
+    {
+      "key": "challenge.d35_glade.blurb",
+      "text": "قناتان زرقاوان تتشاركان جذرا رئيسيا. أدر واحدة فتتبعها الأخرى."
+    },
+    {
+      "key": "challenge.d35_glade.name",
+      "text": "الجذور العميقة"
+    },
+    {
+      "key": "challenge.d36_glade.blurb",
+      "text": "القنوات المتجذرة تدور معا عبر المرج. احسب قبل أن تنقر."
+    },
+    {
+      "key": "challenge.d36_glade.name",
+      "text": "الجذر الحديدي"
+    },
+    {
+      "key": "challenge.d37_glade.blurb",
+      "text": "جسر والتواء وجذر رئيسي، كلها في مرج واحد."
+    },
+    {
+      "key": "challenge.d37_glade.name",
+      "text": "الجذور العتيقة"
+    },
+    {
+      "key": "challenge.d38_glade.blurb",
+      "text": "أكبر مرج: جسران، والتواء، وجذر رئيسي يدير ثلاث قنوات معا."
+    },
+    {
+      "key": "challenge.d38_glade.name",
+      "text": "السنديانة العتيقة"
+    },
+    {
+      "key": "chapter.c01_shallows.name",
+      "text": "المياه الضحلة"
+    },
+    {
+      "key": "chapter.c02_millvale.name",
+      "text": "وادي الطاحونة"
+    },
+    {
+      "key": "chapter.c03_amberwood.name",
+      "text": "غابة الكهرمان"
+    },
+    {
+      "key": "chapter.c04_nightbriar.name",
+      "text": "عليق الليل"
+    },
+    {
+      "key": "chapter.f01_lightfall.name",
+      "text": "البئر العميقة"
+    },
+    {
+      "key": "chapter.f02_glasswater.name",
+      "text": "الماء الزجاجي"
+    },
+    {
+      "key": "chapter.f03_whorlwater.name",
+      "text": "الماء الدوار"
+    },
+    {
+      "key": "chapter.p01_prismvale.name",
+      "text": "وادي المنشور"
+    },
+    {
+      "key": "chapter.s01_thornwatch.name",
+      "text": "حراسة الأشواك"
+    },
+    {
+      "key": "chapter.s02_endlesswatch.name",
+      "text": "الحراسة اللانهائية"
+    },
+    {
+      "key": "chapter.s03_broodmarch.name",
+      "text": "زحف الحشود"
+    },
+    {
+      "key": "chapter.s04_barrowfell.name",
+      "text": "تلال المقابر"
+    },
+    {
+      "key": "chapter.s05_ashenhold.name",
+      "text": "حصن الرماد"
+    },
+    {
+      "key": "chapter.s06_thundercrag.name",
+      "text": "صخرة الرعد"
+    },
+    {
+      "key": "chest.gold.name",
+      "text": "الصندوق الذهبي"
+    },
+    {
+      "key": "chest.royal.name",
+      "text": "الصندوق الملكي"
+    },
+    {
+      "key": "chest.silver.name",
+      "text": "الصندوق الفضي"
+    },
+    {
+      "key": "chest.wood.name",
+      "text": "الصندوق الخشبي"
+    },
+    {
+      "key": "lesson.siege_thief.body",
+      "text": "يحوم فوق الساحة ويسرق الجواهر، تاركا كيسا بلا لون. اقض عليه فتعود الساحة كلها."
+    },
+    {
+      "key": "lesson.siege_thief.title",
+      "text": "اللص"
+    },
+    {
+      "key": "lesson.siege_weaver.body",
+      "text": "يتوقف على التل ويقفل جواهرك. الجوهرة المقفلة لا تتحرك ولا تصطف، فاقض على النساج فتحترق كل الشباك."
+    },
+    {
+      "key": "lesson.siege_weaver.title",
+      "text": "النساج"
+    },
+    {
+      "key": "level.c01_bound_roots.name",
+      "text": "جذور مقيدة"
+    },
+    {
+      "key": "level.c01_bound_roots.tagline",
+      "text": "جدولان، وجذور تمتد تحتهما"
+    },
+    {
+      "key": "level.c01_duskcap_hollow.name",
+      "text": "الماء الساكن"
+    },
+    {
+      "key": "level.c01_duskcap_hollow.tagline",
+      "text": "جدولان، وبركة بينهما"
+    },
+    {
+      "key": "level.c01_first_light.name",
+      "text": "الضوء الأول"
+    },
+    {
+      "key": "level.c01_first_light.tagline",
+      "text": "قلب واحد يوقظ المرج"
+    },
+    {
+      "key": "level.c01_grovekeepers_knot.name",
+      "text": "عقدة حارس الأخدود"
+    },
+    {
+      "key": "level.c01_grovekeepers_knot.tagline",
+      "text": "كل ما علمك إياه الأخدود، دفعة واحدة"
+    },
+    {
+      "key": "level.c01_lantern_ring.name",
+      "text": "حلقة الفوانيس"
+    },
+    {
+      "key": "level.c01_lantern_ring.tagline",
+      "text": "حلقة من الضوء حول ضوء خاص بها"
+    },
+    {
+      "key": "level.c01_prism_heart.name",
+      "text": "قلب المنشور"
+    },
+    {
+      "key": "level.c01_prism_heart.tagline",
+      "text": "امزج الضوء، وأيقظ الأخدود العميق"
+    },
+    {
+      "key": "level.c01_sleeping_thicket.name",
+      "text": "الأجمة النائمة"
+    },
+    {
+      "key": "level.c01_sleeping_thicket.tagline",
+      "text": "جدولان، وثالث بينهما"
+    },
+    {
+      "key": "level.c01_thorn_hollow.name",
+      "text": "الوادي الهش"
+    },
+    {
+      "key": "level.c01_thorn_hollow.tagline",
+      "text": "جدولان، وقنوات لن تدوم"
+    },
+    {
+      "key": "level.c01_three_springs.name",
+      "text": "الينابيع الثلاثة"
+    },
+    {
+      "key": "level.c01_three_springs.tagline",
+      "text": "برتقالي وأخضر، وينبوع أحمر خاص به"
+    },
+    {
+      "key": "level.c01_twin_streams.name",
+      "text": "الجدولان التوأمان"
+    },
+    {
+      "key": "level.c01_twin_streams.tagline",
+      "text": "قلبان ولونان، بلا مزج"
+    },
+    {
+      "key": "level.c02_braided_water.name",
+      "text": "الماء المضفور"
+    },
+    {
+      "key": "level.c02_braided_water.tagline",
+      "text": "تقاطعان وجذر واحد وزاويتان متقابلتان"
+    },
+    {
+      "key": "level.c02_hollow_ford.name",
+      "text": "المخاضة الجوفاء"
+    },
+    {
+      "key": "level.c02_hollow_ford.tagline",
+      "text": "الظلام يعبر الضوء ثلاث مرات"
+    },
+    {
+      "key": "level.c02_stonebridge.name",
+      "text": "الجسر الحجري"
+    },
+    {
+      "key": "level.c02_stonebridge.tagline",
+      "text": "أربعة جسور لا يمكن لأحد أن يديرها"
+    },
+    {
+      "key": "level.c02_the_millers_knot.name",
+      "text": "عقدة الطحان"
+    },
+    {
+      "key": "level.c02_the_millers_knot.tagline",
+      "text": "كل ما علمه الوادي، مربوطا مرة واحدة"
+    },
+    {
+      "key": "level.c02_the_millrace.name",
+      "text": "قناة الطاحونة"
+    },
+    {
+      "key": "level.c02_the_millrace.tagline",
+      "text": "حبل من الضوء، ملتو ثلاث مرات"
+    },
+    {
+      "key": "level.c02_the_old_weir.name",
+      "text": "السد القديم"
+    },
+    {
+      "key": "level.c02_the_old_weir.tagline",
+      "text": "حجر هش عند المدخلين"
+    },
+    {
+      "key": "level.c02_the_wheelhouse.name",
+      "text": "بيت الدولاب"
+    },
+    {
+      "key": "level.c02_the_wheelhouse.tagline",
+      "text": "منفصلان هنا، ممتزجان هناك"
+    },
+    {
+      "key": "level.c02_three_bridges.name",
+      "text": "الجسور الثلاثة"
+    },
+    {
+      "key": "level.c02_three_bridges.tagline",
+      "text": "شلال يسلم عند كل قنطرة"
+    },
+    {
+      "key": "level.c02_two_ways_over.name",
+      "text": "طريقان للعبور"
+    },
+    {
+      "key": "level.c02_two_ways_over.tagline",
+      "text": "خانة واحدة، وجدولان لا يلتقيان أبدا"
+    },
+    {
+      "key": "level.c02_under_the_boughs.name",
+      "text": "تحت الأغصان"
+    },
+    {
+      "key": "level.c02_under_the_boughs.tagline",
+      "text": "الظل يمر مباشرة عبر الأخدود"
+    },
+    {
+      "key": "level.c03_amberlight.name",
+      "text": "ضوء الكهرمان"
+    },
+    {
+      "key": "level.c03_amberlight.tagline",
+      "text": "الكهرماني يحتاج ينبوعين خاصين به"
+    },
+    {
+      "key": "level.c03_foxfire.name",
+      "text": "نار الثعلب"
+    },
+    {
+      "key": "level.c03_foxfire.tagline",
+      "text": "حجر هش عند الوصلة الوحيدة"
+    },
+    {
+      "key": "level.c03_rootbound.name",
+      "text": "كهرمان مقيد بالجذور"
+    },
+    {
+      "key": "level.c03_rootbound.tagline",
+      "text": "نقرة واحدة، والحافة تقرر ثلاث مرات"
+    },
+    {
+      "key": "level.c03_the_amberwood_knot.name",
+      "text": "عقدة غابة الكهرمان"
+    },
+    {
+      "key": "level.c03_the_amberwood_knot.tagline",
+      "text": "كل ما علمته الغابة، مربوطا مرة واحدة"
+    },
+    {
+      "key": "level.c03_the_ashen_path.name",
+      "text": "الدرب الرمادي"
+    },
+    {
+      "key": "level.c03_the_ashen_path.tagline",
+      "text": "الظل يعبر الممرين ويلتقي تحتهما"
+    },
+    {
+      "key": "level.c03_the_quiet_hollow.name",
+      "text": "الوادي الهادئ"
+    },
+    {
+      "key": "level.c03_the_quiet_hollow.tagline",
+      "text": "المزيج لا يصنع إلا تحت الظل"
+    },
+    {
+      "key": "level.c03_the_verdigris.name",
+      "text": "صدأ النحاس"
+    },
+    {
+      "key": "level.c03_the_verdigris.tagline",
+      "text": "أخضر، بين المشط الأزرق والأصفر"
+    },
+    {
+      "key": "level.c03_three_springs.name",
+      "text": "ثلاثة ينابيع ملونة"
+    },
+    {
+      "key": "level.c03_three_springs.tagline",
+      "text": "كل ضوء يستخدم مرتين، وكل زوج يلتقي مرة"
+    },
+    {
+      "key": "level.c03_two_lights.name",
+      "text": "ضوءان وممر واحد"
+    },
+    {
+      "key": "level.c03_two_lights.tagline",
+      "text": "الممران ينعطفان حيث يتقاطعان"
+    },
+    {
+      "key": "level.c03_under_the_lanterns.name",
+      "text": "تحت الفوانيس"
+    },
+    {
+      "key": "level.c03_under_the_lanterns.tagline",
+      "text": "أبيض في الوسط، وحدائق من حوله"
+    },
+    {
+      "key": "level.c04_bramble_and_bridge.name",
+      "text": "العليق والجسر"
+    },
+    {
+      "key": "level.c04_bramble_and_bridge.tagline",
+      "text": "أربع أذرع ومعنيان"
+    },
+    {
+      "key": "level.c04_nightfall.name",
+      "text": "حلول الليل"
+    },
+    {
+      "key": "level.c04_nightfall.tagline",
+      "text": "الحلقة تسامح الدوران، أما الظل فلا"
+    },
+    {
+      "key": "level.c04_rootbriar.name",
+      "text": "عليق الجذور"
+    },
+    {
+      "key": "level.c04_rootbriar.tagline",
+      "text": "رمز واحد، وعليقتان، وزاويتان متقابلتان"
+    },
+    {
+      "key": "level.c04_the_hollow_gate.name",
+      "text": "البوابة الجوفاء"
+    },
+    {
+      "key": "level.c04_the_hollow_gate.tagline",
+      "text": "حجر هش حيث لا تملك إلا التخمين"
+    },
+    {
+      "key": "level.c04_the_long_dark.name",
+      "text": "الظلام الطويل"
+    },
+    {
+      "key": "level.c04_the_long_dark.tagline",
+      "text": "ظل تحت الأخدود، يعبر مرتين"
+    },
+    {
+      "key": "level.c04_the_nightbriar_knot.name",
+      "text": "عقدة عليق الليل"
+    },
+    {
+      "key": "level.c04_the_nightbriar_knot.tagline",
+      "text": "كل ما علمته الغابة، مربوطا مرة واحدة"
+    },
+    {
+      "key": "level.c04_the_shut_way.name",
+      "text": "الطريق المغلق"
+    },
+    {
+      "key": "level.c04_the_shut_way.tagline",
+      "text": "الأرض الوحيدة التي قد يلتقي فيها الأحمر والأزرق"
+    },
+    {
+      "key": "level.c04_thornlight.name",
+      "text": "ضوء الشوك"
+    },
+    {
+      "key": "level.c04_thornlight.tagline",
+      "text": "الأشواك تنغلق في اتجاهين، والنقرة تحركها"
+    },
+    {
+      "key": "level.c04_three_thorns.name",
+      "text": "ثلاث أشواك"
+    },
+    {
+      "key": "level.c04_three_thorns.tagline",
+      "text": "ثلاثة أخاديد، ولكل عليقة لون"
+    },
+    {
+      "key": "level.c04_wick_and_wane.name",
+      "text": "الفتيل والأفول"
+    },
+    {
+      "key": "level.c04_wick_and_wane.tagline",
+      "text": "مزيج تصنعه، وظل تتركه وشأنه"
+    },
+    {
+      "key": "level.f01_brimming.name",
+      "text": "حتى الحافة"
+    },
+    {
+      "key": "level.f01_brimming.tagline",
+      "text": "الخط في الأعلى هو الذي ينهيك."
+    },
+    {
+      "key": "level.f01_deep_cistern.name",
+      "text": "الصهريج"
+    },
+    {
+      "key": "level.f01_deep_cistern.tagline",
+      "text": "ما هو مدفون يبلغ من جانبه."
+    },
+    {
+      "key": "level.f01_first_fall.name",
+      "text": "السقوط الأول"
+    },
+    {
+      "key": "level.f01_first_fall.tagline",
+      "text": "لا تطابق أبدا. أنضج."
+    },
+    {
+      "key": "level.f01_last_ember.name",
+      "text": "الجمرة الأخيرة"
+    },
+    {
+      "key": "level.f01_last_ember.tagline",
+      "text": "احسب ما سيأتي بعد."
+    },
+    {
+      "key": "level.f01_narrow_water.name",
+      "text": "الماء الضيق"
+    },
+    {
+      "key": "level.f01_narrow_water.tagline",
+      "text": "اللون الذي يحمله بالفعل ذرة ضائعة."
+    },
+    {
+      "key": "level.f01_the_deep_well.name",
+      "text": "البئر العميقة"
+    },
+    {
+      "key": "level.f01_the_deep_well.tagline",
+      "text": "كل الذرات، أو لا شيء."
+    },
+    {
+      "key": "level.f01_the_kindling.name",
+      "text": "الإشعال"
+    },
+    {
+      "key": "level.f01_the_kindling.tagline",
+      "text": "قطرة واحدة، ويجري الضوء."
+    },
+    {
+      "key": "level.f01_the_stack.name",
+      "text": "الكومة"
+    },
+    {
+      "key": "level.f01_the_stack.tagline",
+      "text": "الضوء ينتشر جانبا كما ينتشر نزولا."
+    },
+    {
+      "key": "level.f01_the_undertow.name",
+      "text": "التيار الخفي"
+    },
+    {
+      "key": "level.f01_the_undertow.tagline",
+      "text": "نظف القاع فينزل الباقي."
+    },
+    {
+      "key": "level.f01_two_lights.name",
+      "text": "ضوءان"
+    },
+    {
+      "key": "level.f01_two_lights.tagline",
+      "text": "الأزرق هو الشيء الوحيد الذي ينقص البرتقالي."
+    },
+    {
+      "key": "level.f02_far_shore.name",
+      "text": "الشاطئ البعيد"
+    },
+    {
+      "key": "level.f02_far_shore.tagline",
+      "text": "حيث لا يصل أي مد أبدا."
+    },
+    {
+      "key": "level.f02_lantern_row.name",
+      "text": "صف الفوانيس"
+    },
+    {
+      "key": "level.f02_lantern_row.tagline",
+      "text": "الانفجار يغذيه مجانا. القطرة تكلفك."
+    },
+    {
+      "key": "level.f02_low_tide.name",
+      "text": "الجزر"
+    },
+    {
+      "key": "level.f02_low_tide.tagline",
+      "text": "صوبه ما دام الوادي مفتوحا."
+    },
+    {
+      "key": "level.f02_slack_water.name",
+      "text": "الماء الراكد"
+    },
+    {
+      "key": "level.f02_slack_water.tagline",
+      "text": "لوح واحد يبدأ فارغا. خطط لذلك."
+    },
+    {
+      "key": "level.f02_stillwater.name",
+      "text": "الماء الساكن"
+    },
+    {
+      "key": "level.f02_stillwater.tagline",
+      "text": "اللون الذي يحمله بالفعل جدار."
+    },
+    {
+      "key": "level.f02_the_crossing.name",
+      "text": "العبور"
+    },
+    {
+      "key": "level.f02_the_crossing.tagline",
+      "text": "ثلاثة ألوان، وثلاث قطرات، وفرصة واحدة."
+    },
+    {
+      "key": "level.f02_the_glass.name",
+      "text": "الزجاج"
+    },
+    {
+      "key": "level.f02_the_glass.tagline",
+      "text": "املأه فيطلق."
+    },
+    {
+      "key": "level.f02_the_glasswater.name",
+      "text": "الماء الزجاجي"
+    },
+    {
+      "key": "level.f02_the_glasswater.tagline",
+      "text": "كل الذرات، وكل الألواح."
+    },
+    {
+      "key": "level.f02_two_panes.name",
+      "text": "لوحان"
+    },
+    {
+      "key": "level.f02_two_panes.tagline",
+      "text": "عدسة يمكنها أن تملأ أخرى."
+    },
+    {
+      "key": "level.f02_underglass.name",
+      "text": "تحت الزجاج"
+    },
+    {
+      "key": "level.f02_underglass.tagline",
+      "text": "الخط في الأعلى لم يتحرك."
+    },
+    {
+      "key": "level.f03_buried.name",
+      "text": "مدفون"
+    },
+    {
+      "key": "level.f03_buried.tagline",
+      "text": "بعضها عليك أن تصل إليه."
+    },
+    {
+      "key": "level.f03_every_light.name",
+      "text": "كل ضوء"
+    },
+    {
+      "key": "level.f03_every_light.tagline",
+      "text": "زجاج، وفوهات، وموكب واحد."
+    },
+    {
+      "key": "level.f03_first_whorl.name",
+      "text": "الدوامة الأولى"
+    },
+    {
+      "key": "level.f03_first_whorl.tagline",
+      "text": "تأخذ كل ما يقف على جانبيها."
+    },
+    {
+      "key": "level.f03_make_the_pair.name",
+      "text": "كون الزوج"
+    },
+    {
+      "key": "level.f03_make_the_pair.tagline",
+      "text": "أنضج جانبا قبل أن تفتحه."
+    },
+    {
+      "key": "level.f03_the_deep_draw.name",
+      "text": "السحب العميق"
+    },
+    {
+      "key": "level.f03_the_deep_draw.tagline",
+      "text": "مساحة قليلة، وطريق طويل نحو الأسفل."
+    },
+    {
+      "key": "level.f03_the_span.name",
+      "text": "القنطرة"
+    },
+    {
+      "key": "level.f03_the_span.tagline",
+      "text": "المد يتوقف عند الفجوة. هذا لا يتوقف."
+    },
+    {
+      "key": "level.f03_through_the_glass.name",
+      "text": "عبر الزجاج"
+    },
+    {
+      "key": "level.f03_through_the_glass.tagline",
+      "text": "الشعاع هو الطريق الثالث للدخول."
+    },
+    {
+      "key": "level.f03_twin_mouths.name",
+      "text": "الفوهتان التوأمان"
+    },
+    {
+      "key": "level.f03_twin_mouths.tagline",
+      "text": "اثنتان منهما، وتوزيعة واحدة لإطعامهما معا."
+    },
+    {
+      "key": "level.f03_two_shores.name",
+      "text": "شاطئان"
+    },
+    {
+      "key": "level.f03_two_shores.tagline",
+      "text": "لا شيء يعبر إلا ما ترتبه أنت."
+    },
+    {
+      "key": "level.f03_whorlwater.name",
+      "text": "الماء الدوار"
+    },
+    {
+      "key": "level.f03_whorlwater.tagline",
+      "text": "فوهتان، وكل ما تعلمته."
+    },
+    {
+      "key": "level.p01_firstvein.name",
+      "text": "العرق الأول"
+    },
+    {
+      "key": "level.p01_firstvein.tagline",
+      "text": "صفها نحو الضوء"
+    },
+    {
+      "key": "level.p01_twinlight.name",
+      "text": "الضوء التوأم"
+    },
+    {
+      "key": "level.p01_twinlight.tagline",
+      "text": "كل لون مطلوب في مكان ما"
+    },
+    {
+      "key": "level.s01_ashenfield.name",
+      "text": "حقل الرماد"
+    },
+    {
+      "key": "level.s01_ashenfield.tagline",
+      "text": "أنفق التروس حيث يؤلم التل"
+    },
+    {
+      "key": "level.s01_blackmarch.name",
+      "text": "الزحف الأسود"
+    },
+    {
+      "key": "level.s01_blackmarch.tagline",
+      "text": "الدروع تصل والعمالقة ما زالوا يسيرون"
+    },
+    {
+      "key": "level.s01_bramblerun.name",
+      "text": "درب العليق"
+    },
+    {
+      "key": "level.s01_bramblerun.tagline",
+      "text": "كل موجة مدرعة الآن"
+    },
+    {
+      "key": "level.s01_firstwatch.name",
+      "text": "الحراسة الأولى"
+    },
+    {
+      "key": "level.s01_firstwatch.tagline",
+      "text": "غذ اللون القادم"
+    },
+    {
+      "key": "level.s01_ironward.name",
+      "text": "الحصن الحديدي"
+    },
+    {
+      "key": "level.s01_ironward.tagline",
+      "text": "طابق بجانب الترس لتطوير ذلك البرج"
+    },
+    {
+      "key": "level.s01_lastlight.name",
+      "text": "النور الأخير"
+    },
+    {
+      "key": "level.s01_lastlight.tagline",
+      "text": "السيد الأعظم قادم من أجل البستان"
+    },
+    {
+      "key": "level.s01_stonewatch.name",
+      "text": "حراسة الحجر"
+    },
+    {
+      "key": "level.s01_stonewatch.tagline",
+      "text": "العمالقة يحتاجون ضعف الضربات"
+    },
+    {
+      "key": "level.s01_thornhollow.name",
+      "text": "وادي الشوك"
+    },
+    {
+      "key": "level.s01_thornhollow.tagline",
+      "text": "لون واحد في كل مرة، والباقي ينتظر"
+    },
+    {
+      "key": "level.s01_thornsiege.name",
+      "text": "الحصار الطويل"
+    },
+    {
+      "key": "level.s01_thornsiege.tagline",
+      "text": "ستة عشر عملاقا ولا هدوء"
+    },
+    {
+      "key": "level.s01_warlordsgate.name",
+      "text": "بوابة أمير الحرب"
+    },
+    {
+      "key": "level.s01_warlordsgate.tagline",
+      "text": "يتوقف في منتصف الطريق ويرمي من هناك"
+    },
+    {
+      "key": "level.s02_endless.name",
+      "text": "الحراسة اللانهائية"
+    },
+    {
+      "key": "level.s02_endless.tagline",
+      "text": "الموجات لا تتوقف أبدا. اصمد أطول ما تستطيع."
+    },
+    {
+      "key": "level.s03_blightfen.name",
+      "text": "مستنقع الآفة"
+    },
+    {
+      "key": "level.s03_blightfen.tagline",
+      "text": "يطفئ البرج، لا يهدمه"
+    },
+    {
+      "key": "level.s03_broodheart.name",
+      "text": "قلب الحشود"
+    },
+    {
+      "key": "level.s03_broodheart.tagline",
+      "text": "يزأر فيشعر به الخط كله"
+    },
+    {
+      "key": "level.s03_deepmire.name",
+      "text": "الوحل العميق"
+    },
+    {
+      "key": "level.s03_deepmire.tagline",
+      "text": "أربع موجات، ولا يجوز أن ينطفئ أي لون"
+    },
+    {
+      "key": "level.s03_firstbrood.name",
+      "text": "الحشد الأول"
+    },
+    {
+      "key": "level.s03_firstbrood.tagline",
+      "text": "تل أكبر، والأبراج الأربعة نفسها"
+    },
+    {
+      "key": "level.s03_gloamfield.name",
+      "text": "حقل الغسق"
+    },
+    {
+      "key": "level.s03_gloamfield.tagline",
+      "text": "أسقط شحنة حيث توجد الدروع"
+    },
+    {
+      "key": "level.s03_hollowshell.name",
+      "text": "القوقعة الجوفاء"
+    },
+    {
+      "key": "level.s03_hollowshell.tagline",
+      "text": "دروع في كل موجة الآن"
+    },
+    {
+      "key": "level.s03_mirewalk.name",
+      "text": "ممشى الوحل"
+    },
+    {
+      "key": "level.s03_mirewalk.tagline",
+      "text": "احتفظ بشحنة للموجة"
+    },
+    {
+      "key": "level.s03_spinecrest.name",
+      "text": "قمة الأشواك"
+    },
+    {
+      "key": "level.s03_spinecrest.tagline",
+      "text": "القواقع أولا، والعمالقة خلفها مباشرة"
+    },
+    {
+      "key": "level.s03_stillmire.name",
+      "text": "الوحل الساكن"
+    },
+    {
+      "key": "level.s03_stillmire.tagline",
+      "text": "لون واحد في كل مرة، وثلاثة أبراج عاطلة"
+    },
+    {
+      "key": "level.s03_thornbrood.name",
+      "text": "حشد الشوك"
+    },
+    {
+      "key": "level.s03_thornbrood.tagline",
+      "text": "لا شيء لتفكر فيه، وكل شيء لتلحق به"
+    },
+    {
+      "key": "level.s04_barrowheart.name",
+      "text": "قلب المقابر"
+    },
+    {
+      "key": "level.s04_barrowheart.tagline",
+      "text": "اقض عليه قبل أن يقيمهم جميعا"
+    },
+    {
+      "key": "level.s04_boneyard.name",
+      "text": "ساحة العظام"
+    },
+    {
+      "key": "level.s04_boneyard.tagline",
+      "text": "أربع موجات، بلا حيل، وبلا توقف"
+    },
+    {
+      "key": "level.s04_deadmarch.name",
+      "text": "زحف الموتى"
+    },
+    {
+      "key": "level.s04_deadmarch.tagline",
+      "text": "لون واحد في كل مرة، وكل واحد محمي بحاجز"
+    },
+    {
+      "key": "level.s04_firstbone.name",
+      "text": "العظمة الأولى"
+    },
+    {
+      "key": "level.s04_firstbone.tagline",
+      "text": "الموتى يسيرون، ويسيرون أربعة أربعة"
+    },
+    {
+      "key": "level.s04_hollowgrave.name",
+      "text": "القبر الأجوف"
+    },
+    {
+      "key": "level.s04_hollowgrave.tagline",
+      "text": "يلتهم ما تتركه ملقى هناك"
+    },
+    {
+      "key": "level.s04_lichgate.name",
+      "text": "بوابة الأموات"
+    },
+    {
+      "key": "level.s04_lichgate.tagline",
+      "text": "احتفظ بقنبلة للدروع"
+    },
+    {
+      "key": "level.s04_longbarrow.name",
+      "text": "المقبرة الطويلة"
+    },
+    {
+      "key": "level.s04_longbarrow.tagline",
+      "text": "لا يجوز أن ينطفئ أي لون طوال موجة كاملة"
+    },
+    {
+      "key": "level.s04_palerow.name",
+      "text": "الصف الشاحب"
+    },
+    {
+      "key": "level.s04_palerow.tagline",
+      "text": "حاجزان في كل موجة من الآن فصاعدا"
+    },
+    {
+      "key": "level.s04_scytheway.name",
+      "text": "درب المنجل"
+    },
+    {
+      "key": "level.s04_scytheway.tagline",
+      "text": "ثلاث قنابل، والسؤال كله متى"
+    },
+    {
+      "key": "level.s04_shieldwall.name",
+      "text": "جدار الحواجز"
+    },
+    {
+      "key": "level.s04_shieldwall.tagline",
+      "text": "واجه كل حاجز بلونه"
+    },
+    {
+      "key": "level.s05_ashenheart.name",
+      "text": "قلب الرماد"
+    },
+    {
+      "key": "level.s05_ashenheart.tagline",
+      "text": "برج واحد فقط يمكنه أن يطاله. ادخر الباقي"
+    },
+    {
+      "key": "level.s05_chainfall.name",
+      "text": "سقوط السلاسل"
+    },
+    {
+      "key": "level.s05_chainfall.tagline",
+      "text": "يقيد برجا بالسلاسل ولا يأخذ شيئا آخر"
+    },
+    {
+      "key": "level.s05_emberrow.name",
+      "text": "صف الجمر"
+    },
+    {
+      "key": "level.s05_emberrow.tagline",
+      "text": "أمسك القنبلة حتى تدخلها الدروع"
+    },
+    {
+      "key": "level.s05_firstiron.name",
+      "text": "الحديد الأول"
+    },
+    {
+      "key": "level.s05_firstiron.tagline",
+      "text": "هؤلاء جاؤوا مسلحين"
+    },
+    {
+      "key": "level.s05_hollowvigil.name",
+      "text": "السهرة الجوفاء"
+    },
+    {
+      "key": "level.s05_hollowvigil.tagline",
+      "text": "لون واحد في كل مرة، وكل واحد محمي بحاجز"
+    },
+    {
+      "key": "level.s05_ironyard.name",
+      "text": "ساحة الحديد"
+    },
+    {
+      "key": "level.s05_ironyard.tagline",
+      "text": "أربع موجات، بلا حيل، وبلا توقف"
+    },
+    {
+      "key": "level.s05_longmarch.name",
+      "text": "المسيرة الطويلة"
+    },
+    {
+      "key": "level.s05_longmarch.tagline",
+      "text": "لا يجوز أن ينطفئ أي لون طوال موجة كاملة"
+    },
+    {
+      "key": "level.s05_pikewall.name",
+      "text": "جدار الرماح"
+    },
+    {
+      "key": "level.s05_pikewall.tagline",
+      "text": "ثلاثة حواجز وثلاثة ألوان، بهذا الترتيب"
+    },
+    {
+      "key": "level.s05_shieldline.name",
+      "text": "خط الحواجز"
+    },
+    {
+      "key": "level.s05_shieldline.tagline",
+      "text": "حاجزان في كل موجة، ولكل منهما لونه"
+    },
+    {
+      "key": "level.s05_sunderway.name",
+      "text": "درب التمزق"
+    },
+    {
+      "key": "level.s05_sunderway.tagline",
+      "text": "دروع وقنابل على أضيق ساحة حتى الآن"
+    },
+    {
+      "key": "level.s06_boulderrun.name",
+      "text": "ممر الصخور"
+    },
+    {
+      "key": "level.s06_boulderrun.tagline",
+      "text": "أربع موجات. لا شيء يهدأ"
+    },
+    {
+      "key": "level.s06_cragheart.name",
+      "text": "قلب الصخر"
+    },
+    {
+      "key": "level.s06_cragheart.tagline",
+      "text": "يدفن برجا. احفر لإخراجه"
+    },
+    {
+      "key": "level.s06_firstcrag.name",
+      "text": "الصخرة الأولى"
+    },
+    {
+      "key": "level.s06_firstcrag.tagline",
+      "text": "الحجر يمشي. غذ اللون القادم"
+    },
+    {
+      "key": "level.s06_frostline.name",
+      "text": "خط الصقيع"
+    },
+    {
+      "key": "level.s06_frostline.tagline",
+      "text": "عملاقان حجريان في كل موجة"
+    },
+    {
+      "key": "level.s06_glacierwall.name",
+      "text": "جدار الجليد"
+    },
+    {
+      "key": "level.s06_glacierwall.tagline",
+      "text": "ثلاثة عمالقة حجريين وقنبلة"
+    },
+    {
+      "key": "level.s06_highpass.name",
+      "text": "الممر العالي"
+    },
+    {
+      "key": "level.s06_highpass.tagline",
+      "text": "أطول صعود في هذا النمط"
+    },
+    {
+      "key": "level.s06_hollowpeak.name",
+      "text": "القمة الجوفاء"
+    },
+    {
+      "key": "level.s06_hollowpeak.tagline",
+      "text": "قنابل بين الحجارة. احتفظ بها للموجة"
+    },
+    {
+      "key": "level.s06_mudslide.name",
+      "text": "الانهيار الطيني"
+    },
+    {
+      "key": "level.s06_mudslide.tagline",
+      "text": "الكتل الطينية تأتي بأعداد كبيرة"
+    },
+    {
+      "key": "level.s06_stoneward.name",
+      "text": "حصن الحجر"
+    },
+    {
+      "key": "level.s06_stoneward.tagline",
+      "text": "لون واحد في كل مرة، وكله مدرع"
+    },
+    {
+      "key": "level.s06_thunderhead.name",
+      "text": "سحابة الرعد"
+    },
+    {
+      "key": "level.s06_thunderhead.tagline",
+      "text": "يستنزف ما تدخره. اقذفه أولا"
+    },
+    {
+      "key": "mode.cap.asleep",
+      "text": "ما زالت نائمة"
+    },
+    {
+      "key": "mode.cap.best",
+      "text": "أفضل سلسلة"
+    },
+    {
+      "key": "mode.cap.chain",
+      "text": "أفضل سلسلة"
+    },
+    {
+      "key": "mode.cap.critters",
+      "text": "ما زالت محبوسة"
+    },
+    {
+      "key": "mode.cap.height",
+      "text": "الارتفاع"
+    },
+    {
+      "key": "mode.cap.lives",
+      "text": "المحاولات"
+    },
+    {
+      "key": "mode.cap.matches",
+      "text": "التطابقات"
+    },
+    {
+      "key": "mode.cap.motes",
+      "text": "الذرات المتبقية"
+    },
+    {
+      "key": "mode.cap.moves",
+      "text": "الحركات المتبقية"
+    },
+    {
+      "key": "mode.cap.raid",
+      "text": "المتبقي للتطهير"
+    },
+    {
+      "key": "mode.cap.served",
+      "text": "المقدم"
+    },
+    {
+      "key": "mode.cap.stars",
+      "text": "النجوم"
+    },
+    {
+      "key": "mode.cap.supply",
+      "text": "المخزون"
+    },
+    {
+      "key": "mode.cap.taps",
+      "text": "النقرات المتبقية"
+    },
+    {
+      "key": "mode.cap.wave",
+      "text": "الموجة"
+    },
+    {
+      "key": "mode.fall.chain_amazing",
+      "text": "مذهل!"
+    },
+    {
+      "key": "mode.fall.chain_epic",
+      "text": "ملحمي!"
+    },
+    {
+      "key": "mode.fall.chain_legendary",
+      "text": "أسطوري!"
+    },
+    {
+      "key": "mode.fall.chain_unreal",
+      "text": "خيالي!"
+    },
+    {
+      "key": "mode.fall.multiplier",
+      "text": "x{0}"
+    },
+    {
+      "key": "mode.fall.name",
+      "text": "سقوط الضوء"
+    },
+    {
+      "key": "mode.fall.supply",
+      "text": "المتبقي"
+    },
+    {
+      "key": "mode.fall.supply_free",
+      "text": "مجاني"
+    },
+    {
+      "key": "mode.fall.tagline",
+      "text": "أنضج الضوء. أفرغ البئر."
+    },
+    {
+      "key": "mode.glade.name",
+      "text": "المروج"
+    },
+    {
+      "key": "mode.glade.tagline",
+      "text": "أدر القنوات حتى يستيقظ كل مخلوق."
+    },
+    {
+      "key": "mode.prism.name",
+      "text": "وادي المنشور"
+    },
+    {
+      "key": "mode.prism.nodrag",
+      "text": "الفوانيس والمخلوقات النائمة لا تتحرك، أما <b>الجواهر</b> فتتحرك. اسحب جوهرة إلى الجوهرة المجاورة لها فتتبادلان المكان."
+    },
+    {
+      "key": "mode.prism.tagline",
+      "text": "صف الجواهر. دع الضوء يمر."
+    },
+    {
+      "key": "mode.proto.moves_free",
+      "text": "مجاني"
+    },
+    {
+      "key": "mode.siege.blightcaller",
+      "text": "مستدعي الآفة"
+    },
+    {
+      "key": "mode.siege.bonecaller",
+      "text": "مستدعي العظام"
+    },
+    {
+      "key": "mode.siege.shackler",
+      "text": "المقيد"
+    },
+    {
+      "key": "mode.siege.ironclad",
+      "text": "المدرع"
+    },
+    {
+      "key": "mode.siege.thunderer",
+      "text": "الراعد"
+    },
+    {
+      "key": "mode.siege.colossus",
+      "text": "العملاق الأعظم"
+    },
+    {
+      "key": "mode.siege.boss",
+      "text": "أمير الحرب"
+    },
+    {
+      "key": "mode.siege.duel",
+      "text": "زعيمان"
+    },
+    {
+      "key": "mode.siege.chain",
+      "text": "سلسلة x{0}"
+    },
+    {
+      "key": "mode.siege.enraged",
+      "text": "هائج"
+    },
+    {
+      "key": "mode.siege.felled",
+      "text": "سقط {0}"
+    },
+    {
+      "key": "mode.siege.go",
+      "text": "انطلق!"
+    },
+    {
+      "key": "mode.siege.gravemaw",
+      "text": "فم القبور"
+    },
+    {
+      "key": "mode.siege.name",
+      "text": "حراسة الأشواك"
+    },
+    {
+      "key": "mode.siege.next",
+      "text": "الموجة التالية"
+    },
+    {
+      "key": "mode.siege.nodrag",
+      "text": "الجواهر تسحب ولا تنقر، اسحب واحدة إلى الجوهرة المجاورة لها. صف ثلاثا من لون واحد فيفتح ذلك البرج النار."
+    },
+    {
+      "key": "mode.siege.overlord",
+      "text": "السيد الأعظم"
+    },
+    {
+      "key": "mode.siege.tagline",
+      "text": "غذ الأبراج. اصمد في الخط."
+    },
+    {
+      "key": "mode.siege.warbringer",
+      "text": "جالب الحرب"
+    },
+    {
+      "key": "mode.siege.wave",
+      "text": "الموجة {0} من {1}"
+    },
+    {
+      "key": "mode.siege.wave_endless",
+      "text": "الموجة {0}"
+    },
+    {
+      "key": "mode.siege.gorgon",
+      "text": "الغرغون"
+    },
+    {
+      "key": "mode.siege.sunlord",
+      "text": "سيد الشمس"
+    },
+    {
+      "key": "mode.siege.harrower",
+      "text": "الحاصد"
+    },
+    {
+      "key": "mode.siege.hollowking",
+      "text": "الملك الأجوف"
+    },
+    {
+      "key": "mode.siege.unsealed",
+      "text": "انكسر الختم"
+    },
+    {
+      "key": "notify.hearts_full.body",
+      "text": "لديك شريط ممتلئ بانتظارك. تعال وأنفقه!"
+    },
+    {
+      "key": "notify.hearts_full.title",
+      "text": "قلوبك ممتلئة"
+    },
+    {
+      "key": "notify.tasks_daily.body",
+      "text": "مهام جديدة وصناديق جديدة. تعال واستلمها."
+    },
+    {
+      "key": "notify.tasks_daily.title",
+      "text": "مهام اليوم جاهزة"
+    },
+    {
+      "key": "notify.tasks_weekly.body",
+      "text": "المهام الأسبوعية بدأت، وصندوق ملكي بانتظارك."
+    },
+    {
+      "key": "notify.tasks_weekly.title",
+      "text": "أسبوع جديد ومهام جديدة"
+    },
+    {
+      "key": "notify.streak_risk.body",
+      "text": "العب اليوم لتحافظ عليها."
+    },
+    {
+      "key": "notify.streak_risk.title",
+      "text": "لا تقطع سلسلتك!"
+    },
+    {
+      "key": "notify.chest_waiting.body",
+      "text": "سلسلتك أتت بثمارها. تعال وافتح صندوقك."
+    },
+    {
+      "key": "notify.chest_waiting.title",
+      "text": "صندوق بانتظارك"
+    },
+    {
+      "key": "notify.season_rungs.body",
+      "text": "لقد ربحت درجات جديدة. تعال واستلمها."
+    },
+    {
+      "key": "notify.season_rungs.title",
+      "text": "مكافآت الموسم جاهزة"
+    },
+    {
+      "key": "notify.season_ending.body",
+      "text": "السلم يغلق قريبا. أكمل ما بدأته!"
+    },
+    {
+      "key": "notify.season_ending.title",
+      "text": "النداء الأخير للموسم"
+    },
+    {
+      "key": "notify.board_climb.body",
+      "text": "ترتيب الحراسة اللانهائية يحسم الليلة."
+    },
+    {
+      "key": "notify.board_climb.title",
+      "text": "احجز مكانك في اللوحة"
+    },
+    {
+      "key": "notify.endless_call.body",
+      "text": "الموجات لا تتوقف أبدا. تجاوز أفضل نتيجة لك!"
+    },
+    {
+      "key": "notify.endless_call.title",
+      "text": "كم تستطيع أن تصمد؟"
+    },
+    {
+      "key": "notify.grove_idle.body",
+      "text": "الموجات بانتظارك. تعال واصمد في الخط."
+    },
+    {
+      "key": "notify.grove_idle.title",
+      "text": "اشتقنا إليك"
+    },
+    {
+      "key": "store.good.boost_day",
+      "text": "يوم من القلوب السريعة"
+    },
+    {
+      "key": "store.good.boost_three_day",
+      "text": "ثلاثة أيام من القلوب السريعة"
+    },
+    {
+      "key": "store.good.hearts_fifteen",
+      "text": "خمسة عشر قلبا"
+    },
+    {
+      "key": "store.good.hearts_five",
+      "text": "خمسة قلوب"
+    },
+    {
+      "key": "store.good.hearts_forty",
+      "text": "أربعون قلبا"
+    },
+    {
+      "key": "store.product.gg_bundle_grove",
+      "text": "غنيمة الأخدود"
+    },
+    {
+      "key": "store.product.gg_bundle_keeper",
+      "text": "ذخيرة الحارس"
+    },
+    {
+      "key": "store.product.gg_bundle_starter",
+      "text": "ترحيب حارس الأخدود"
+    },
+    {
+      "key": "store.product.gg_coins_1",
+      "text": "محفظة عملات"
+    },
+    {
+      "key": "store.product.gg_coins_2",
+      "text": "كيس عملات"
+    },
+    {
+      "key": "store.product.gg_coins_3",
+      "text": "صندوق عملات"
+    },
+    {
+      "key": "store.product.gg_coins_4",
+      "text": "خزنة عملات"
+    },
+    {
+      "key": "store.product.gg_gems_1",
+      "text": "حفنة"
+    },
+    {
+      "key": "store.product.gg_gems_2",
+      "text": "صرة"
+    },
+    {
+      "key": "store.product.gg_gems_3",
+      "text": "حقيبة"
+    },
+    {
+      "key": "store.product.gg_gems_4",
+      "text": "صندوقة"
+    },
+    {
+      "key": "store.product.gg_gems_5",
+      "text": "كنز"
+    },
+    {
+      "key": "store.product.gg_gems_6",
+      "text": "ثروة"
+    },
+    {
+      "key": "store.product.gg_heart_vessel_1",
+      "text": "قارورة القلب"
+    },
+    {
+      "key": "store.product.gg_heart_vessel_2",
+      "text": "كأس القلب"
+    },
+    {
+      "key": "store.product.gg_heart_vessel_3",
+      "text": "ينبوع القلب"
+    },
+    {
+      "key": "story.who.bolt",
+      "text": "بولت"
+    },
+    {
+      "key": "story.who.collector",
+      "text": "الجامع"
+    },
+    {
+      "key": "story.who.mon1",
+      "text": "بلوب"
+    },
+    {
+      "key": "story.who.mon2",
+      "text": "فيغ"
+    },
+    {
+      "key": "story.who.mon3",
+      "text": "رامبل"
+    },
+    {
+      "key": "task.d_bombs.name",
+      "text": "فجر قنابل: {0}"
+    },
+    {
+      "key": "task.d_bombs.name_one",
+      "text": "فجر قنبلة"
+    },
+    {
+      "key": "task.d_challenges.name",
+      "text": "العب تحديات يومية: {0}"
+    },
+    {
+      "key": "task.d_challenges.name_one",
+      "text": "العب تحديا يوميا"
+    },
+    {
+      "key": "task.d_charms.name",
+      "text": "فعل تعويذات: {0}"
+    },
+    {
+      "key": "task.d_cogs.name",
+      "text": "اجمع تروسا: {0}"
+    },
+    {
+      "key": "task.d_matches.name",
+      "text": "كون تطابقات: {0}"
+    },
+    {
+      "key": "task.d_play.name",
+      "text": "العب معارك: {0}"
+    },
+    {
+      "key": "task.d_raiders.name",
+      "text": "اهزم مهاجمين: {0}"
+    },
+    {
+      "key": "task.d_stars.name",
+      "text": "اكسب نجوما: {0}"
+    },
+    {
+      "key": "task.d_three.name",
+      "text": "اربح معارك بثلاث نجوم: {0}"
+    },
+    {
+      "key": "task.d_three.name_one",
+      "text": "اربح معركة بثلاث نجوم"
+    },
+    {
+      "key": "task.d_utility.name",
+      "text": "استخدم أدوات: {0}"
+    },
+    {
+      "key": "task.d_utility.name_one",
+      "text": "استخدم أداة"
+    },
+    {
+      "key": "task.d_win.name",
+      "text": "اربح معارك: {0}"
+    },
+    {
+      "key": "task.d_win.name_one",
+      "text": "اربح معركة"
+    },
+    {
+      "key": "task.w_bosses.name",
+      "text": "اهزم زعماء: {0}"
+    },
+    {
+      "key": "task.w_challenges.name",
+      "text": "أكمل تحديات يومية: {0}"
+    },
+    {
+      "key": "task.w_challenges.name_one",
+      "text": "أكمل تحديا يوميا"
+    },
+    {
+      "key": "task.w_charms.name",
+      "text": "فعل تعويذات: {0}"
+    },
+    {
+      "key": "task.w_cogs.name",
+      "text": "اجمع تروسا: {0}"
+    },
+    {
+      "key": "task.w_play.name",
+      "text": "العب معارك: {0}"
+    },
+    {
+      "key": "task.w_raiders.name",
+      "text": "اهزم مهاجمين: {0}"
+    },
+    {
+      "key": "task.w_stars.name",
+      "text": "اكسب نجوما: {0}"
+    },
+    {
+      "key": "task.w_streak.name",
+      "text": "اجمع ليالي السلسلة: {0}"
+    },
+    {
+      "key": "task.w_three.name",
+      "text": "اربح معارك بثلاث نجوم: {0}"
+    },
+    {
+      "key": "task.w_waves.name",
+      "text": "اصمد في الخط عبر موجات: {0}"
+    },
+    {
+      "key": "task.w_win.name",
+      "text": "اربح معارك: {0}"
+    },
+    {
+      "key": "track.infinite.name",
+      "text": "مصنف"
+    },
+    {
+      "key": "track.infinite.point1",
+      "text": "القتال لا يتوقف أبدا."
+    },
+    {
+      "key": "track.infinite.point2",
+      "text": "الأعداء يزدادون قوة مع كل موجة."
+    },
+    {
+      "key": "track.infinite.point3",
+      "text": "قلب واحد للدخول. الخسارة لا تكلف شيئا."
+    },
+    {
+      "key": "track.infinite.point4",
+      "text": "اكسب {0} و{1} عن كل موجة تجتازها."
+    },
+    {
+      "key": "challenge.genre.pairs.name",
+      "text": "الأزواج"
+    },
+    {
+      "key": "challenge.genre.pairs.blurb",
+      "text": "اقلب جوهرتين. الزوج يطلق برجه."
+    },
+    {
+      "key": "challenge.genre.glade.name",
+      "text": "المرج"
+    },
+    {
+      "key": "challenge.genre.glade.blurb",
+      "text": "أدر القنوات. المخلوق الذي يستيقظ بلونه يطلق برجه في كل دور."
+    },
+    {
+      "key": "challenge.genre.merge.name",
+      "text": "الدمج"
+    },
+    {
+      "key": "challenge.genre.merge.blurb",
+      "text": "حرك جوهرة نحو توأمها. كل حجم تصنعه يطلق لونه."
+    },
+    {
+      "key": "challenge.genre.sokoban.name",
+      "text": "الدفع"
+    },
+    {
+      "key": "challenge.genre.sokoban.blurb",
+      "text": "ادفع كل جوهرة إلى منصتها. الجوهرة المستقرة تجهز برجها."
+    },
+    {
+      "key": "challenge.tier.bronze.name",
+      "text": "الجمشت"
+    },
+    {
+      "key": "challenge.tier.silver.name",
+      "text": "الياقوت الأزرق"
+    },
+    {
+      "key": "challenge.tier.gold.name",
+      "text": "الزمرد"
+    },
+    {
+      "key": "ui.challenges.no_plays",
+      "text": "لم يتبق لعب اليوم. مراحل جديدة غدا."
+    },
+    {
+      "key": "ui.challenges.today_level",
+      "text": "اليوم: {0}"
+    },
+    {
+      "key": "ui.challenges.free_deal",
+      "text": "مجانا: {0} محاولات لكل لغز يوميا"
+    },
+    {
+      "key": "ui.challenges.held_deal",
+      "text": "عرض {0}: {1} محاولات لكل لغز يوميا، {2}"
+    },
+    {
+      "key": "ui.challenges.days_left",
+      "text": "الأيام المتبقية: {0}"
+    },
+    {
+      "key": "ui.challenges.days_left_one",
+      "text": "اليوم الأخير"
+    },
+    {
+      "key": "ui.challenges.days",
+      "text": "الأيام: {0}"
+    },
+    {
+      "key": "ui.challenges.days_one",
+      "text": "يوم واحد"
+    },
+    {
+      "key": "ui.challenges.deals",
+      "text": "العروض"
+    },
+    {
+      "key": "ui.challenges.deals_title",
+      "text": "العروض"
+    },
+    {
+      "key": "ui.challenges.deal_line",
+      "text": "{0} لكل لغز يوميا، لمدة {1}"
+    },
+    {
+      "key": "ui.challenges.deal_plays",
+      "text": "+{0} محاولات"
+    },
+    {
+      "key": "ui.challenges.buy",
+      "text": "{0}"
+    },
+    {
+      "key": "ui.challenges.deal_held",
+      "text": "مفعل"
+    },
+    {
+      "key": "ui.challenges.deal_running",
+      "text": "هذا العرض مفعل بالفعل."
+    },
+    {
+      "key": "ui.challenges.deal_lower",
+      "text": "عرض أكبر مفعل بالفعل."
+    },
+    {
+      "key": "ui.challenges.deal_too_poor",
+      "text": "تحتاج إلى {0} جوهرة لهذا العرض."
+    },
+    {
+      "key": "ui.challenges.deal_bought",
+      "text": "عرض {0} مفعل!"
+    },
+    {
+      "key": "ui.challenges.hours_left",
+      "text": "المتبقي: {0} س"
+    },
+    {
+      "key": "ui.challenges.upgrade",
+      "text": "{0}"
+    },
+    {
+      "key": "ui.challenges.upgrade_note",
+      "text": "ادفع الفرق فقط. أيام عرضك الحالي تنتقل معك."
+    },
+    {
+      "key": "ui.challenges.done",
+      "text": "تم"
+    },
+    {
+      "key": "ui.challenges.preview_play",
+      "text": "العب"
+    },
+    {
+      "key": "ui.challenges.ad_name",
+      "text": "شاهد والعب"
+    },
+    {
+      "key": "ui.challenges.ad_line",
+      "text": "محاولة إضافية لأي لغز، اليوم"
+    },
+    {
+      "key": "ui.challenges.ad_left",
+      "text": "{0} من {1} فيديو متبق اليوم"
+    },
+    {
+      "key": "ui.challenges.ad_coming",
+      "text": "محاولتك في الطريق!"
+    },
+    {
+      "key": "ui.challenges.ad_arrived",
+      "text": "المحاولة الإضافية جاهزة! اختر أي لغز."
+    },
+    {
+      "key": "ui.challenges.no_plays_watch",
+      "text": "نفدت المحاولات. شاهد فيديو لتحصل على واحدة أخرى!"
+    },
+    {
+      "key": "ui.challenges.empty",
+      "text": "لا يوجد تحد اليوم. عد غدا."
+    },
+    {
+      "key": "ui.challenges.next",
+      "text": "الموجة التالية بعد {0}"
+    },
+    {
+      "key": "ui.challenges.pads",
+      "text": "{0} / {1} في مكانها"
+    },
+    {
+      "key": "ui.challenges.pairs",
+      "text": "{0} / {1} أزواج"
+    },
+    {
+      "key": "ui.challenges.combo",
+      "text": "سلسلة x{0}"
+    },
+    {
+      "key": "ui.challenges.cursed",
+      "text": "ملعون!"
+    },
+    {
+      "key": "ui.challenges.undo",
+      "text": "تراجع"
+    },
+    {
+      "key": "ui.challenges.lit",
+      "text": "{0} / {1} مستيقظ"
+    },
+    {
+      "key": "ui.challenges.rank",
+      "text": "بلغ الرتبة {0}"
+    },
+    {
+      "key": "ui.challenges.today",
+      "text": "اليوم"
+    },
+    {
+      "key": "ui.challenges.turns",
+      "text": "الدور {0}"
+    },
+    {
+      "key": "ui.challenges.victory",
+      "text": "انتصار"
+    },
+    {
+      "key": "ui.challenges.won",
+      "text": "تم حل اللغز!"
+    },
+    {
+      "key": "ui.endless.xp",
+      "text": "الخبرة"
+    },
+    {
+      "key": "ui.endless.coins",
+      "text": "العملات"
+    },
+    {
+      "key": "track.infinite.tagline",
+      "text": "الموجات لا تتوقف أبدا"
+    },
+    {
+      "key": "track.main.name",
+      "text": "عادي"
+    },
+    {
+      "key": "track.main.tagline",
+      "text": "المناطق، مرحلة تلو الأخرى"
+    },
+    {
+      "key": "ui.account.adopt",
+      "text": "العب بذلك الحساب"
+    },
+    {
+      "key": "ui.account.adopt_confirm",
+      "text": "انقر مرة أخرى للتأكيد"
+    },
+    {
+      "key": "ui.account.adopt_cost",
+      "text": "المراحل المكتملة على هذا الهاتف ({0}) لن تنتقل إلى ذلك الحساب"
+    },
+    {
+      "key": "ui.account.adopt_warning",
+      "text": "لا يمكن التراجع عن هذا"
+    },
+    {
+      "key": "ui.account.adopted_found",
+      "text": "مرحبا بعودتك  ·  المراحل المكتملة: {0}"
+    },
+    {
+      "key": "ui.account.apple",
+      "text": "تسجيل الدخول باستخدام Apple"
+    },
+    {
+      "key": "ui.account.cancelled",
+      "text": "لم يتم اختيار حساب  ·  لم يتغير شيء"
+    },
+    {
+      "key": "ui.account.choose",
+      "text": "اختر الحساب الذي تلعب به على هذا الهاتف"
+    },
+    {
+      "key": "ui.account.failed",
+      "text": "حدث خطأ ما  ·  يرجى المحاولة مرة أخرى"
+    },
+    {
+      "key": "ui.account.google",
+      "text": "تسجيل الدخول باستخدام Google"
+    },
+    {
+      "key": "ui.account.guest",
+      "text": "لم تسجل الدخول  ·  تقدمك محفوظ على هذا الهاتف فقط"
+    },
+    {
+      "key": "ui.account.guest_purchase",
+      "text": "سجل الدخول لتحتفظ بمشترياتك"
+    },
+    {
+      "key": "ui.account.later",
+      "text": "ليس الآن"
+    },
+    {
+      "key": "ui.account.linked",
+      "text": "تم تسجيل الدخول  ·  تقدمك محفوظ عبر الإنترنت"
+    },
+    {
+      "key": "ui.account.linked_ok",
+      "text": "تم  ·  تقدمك محفوظ عبر الإنترنت"
+    },
+    {
+      "key": "ui.account.mismatch",
+      "text": "آخر تغيير للحساب لم يكتمل  ·  اختر حسابا"
+    },
+    {
+      "key": "ui.account.not_secured",
+      "text": "تعذر حفظ تقدمك  ·  يرجى المحاولة مرة أخرى"
+    },
+    {
+      "key": "ui.account.offline",
+      "text": "لا يوجد اتصال بالإنترنت"
+    },
+    {
+      "key": "ui.account.protect",
+      "text": "احفظ تقدمك"
+    },
+    {
+      "key": "ui.account.same_account",
+      "text": "أنت تلعب بهذا الحساب بالفعل"
+    },
+    {
+      "key": "ui.account.securing",
+      "text": "جار حفظ تقدمك..."
+    },
+    {
+      "key": "ui.account.switch",
+      "text": "تبديل الحساب"
+    },
+    {
+      "key": "ui.account.switched_new",
+      "text": "تم تسجيل الدخول  ·  لا يوجد تقدم في هذا الحساب بعد"
+    },
+    {
+      "key": "ui.account.switched_pending",
+      "text": "تم تسجيل الدخول  ·  سيتم تحميل تقدمك عند الاتصال بالإنترنت"
+    },
+    {
+      "key": "ui.account.taken",
+      "text": "ذلك الحساب لديه تقدمه الخاص بالفعل"
+    },
+    {
+      "key": "ui.account.title",
+      "text": "الحساب"
+    },
+    {
+      "key": "ui.account.unavailable",
+      "text": "الحفظ عبر الإنترنت غير متاح في هذا الإصدار"
+    },
+    {
+      "key": "ui.account.working",
+      "text": "يرجى الانتظار..."
+    },
+    {
+      "key": "ui.ads.bonus_cta",
+      "text": "شاهد لتحصل على عملات"
+    },
+    {
+      "key": "ui.ads.bonus_cta_n",
+      "text": "شاهد لتحصل على +{0} عملة"
+    },
+    {
+      "key": "ui.ads.bonus_title",
+      "text": "عملات إضافية"
+    },
+    {
+      "key": "ui.ads.btn_cap",
+      "text": "عد غدا"
+    },
+    {
+      "key": "ui.ads.btn_cooling",
+      "text": "جاهز بعد {0}"
+    },
+    {
+      "key": "ui.ads.btn_opening",
+      "text": "جار الفتح..."
+    },
+    {
+      "key": "ui.ads.btn_loading",
+      "text": "جار البحث عن فيديو..."
+    },
+    {
+      "key": "ui.ads.cap_reached",
+      "text": "هذه كل الفيديوهات لليوم  ·  المزيد بعد {0}"
+    },
+    {
+      "key": "ui.ads.coins_title",
+      "text": "عملات إضافية"
+    },
+    {
+      "key": "ui.ads.continue_cta",
+      "text": "تابع اللعب"
+    },
+    {
+      "key": "ui.ads.continue_decline",
+      "text": "أنه الجولة"
+    },
+    {
+      "key": "ui.ads.continue_title",
+      "text": "انتهى الوقت"
+    },
+    {
+      "key": "ui.ads.cooling",
+      "text": "فيديو آخر بعد {0}"
+    },
+    {
+      "key": "ui.ads.dismissed",
+      "text": "يجب أن ينتهي الفيديو لتحصل على المكافأة"
+    },
+    {
+      "key": "ui.ads.failed",
+      "text": "لم يكتمل ذلك الفيديو  ·  لم يخصم شيء"
+    },
+    {
+      "key": "ui.ads.hearts_ceiling",
+      "text": "لديك جميع القلوب بالفعل ({0})"
+    },
+    {
+      "key": "ui.ads.hearts_cta",
+      "text": "شاهد لتحصل على قلوب"
+    },
+    {
+      "key": "ui.ads.hearts_prize",
+      "text": "تمت استعادة القلوب"
+    },
+    {
+      "key": "ui.ads.hearts_title",
+      "text": "إعادة ملء القلوب"
+    },
+    {
+      "key": "ui.ads.hints_cta",
+      "text": "شاهد لتحصل على همسة"
+    },
+    {
+      "key": "ui.ads.hints_empty_title",
+      "text": "نفدت الهمسات"
+    },
+    {
+      "key": "ui.ads.hints_title",
+      "text": "همسة"
+    },
+    {
+      "key": "ui.ads.left_today",
+      "text": "الفيديوهات المتبقية اليوم: {0}"
+    },
+    {
+      "key": "ui.ads.loading",
+      "text": "جار البحث عن فيديو  ·  لحظة واحدة"
+    },
+    {
+      "key": "ui.ads.needs_account",
+      "text": "اتصل بالإنترنت مرة واحدة لتجمع العملات بهذه الطريقة"
+    },
+    {
+      "key": "ui.ads.no_fill",
+      "text": "لا يوجد فيديو لعرضه الآن  ·  حاول مرة أخرى بعد قليل"
+    },
+    {
+      "key": "ui.ads.none_left_today",
+      "text": "لم يتبق فيديوهات اليوم، يعاد العد عند منتصف الليل."
+    },
+    {
+      "key": "ui.ads.opening",
+      "text": "جار فتح الفيديو..."
+    },
+    {
+      "key": "ui.ads.ready",
+      "text": "شاهد فيديو قصيرا وستحصل عليها"
+    },
+    {
+      "key": "ui.ads.thanks",
+      "text": "شكرا لك  ·  إنها لك"
+    },
+    {
+      "key": "ui.ads.to_shop",
+      "text": "أو زر المتجر"
+    },
+    {
+      "key": "ui.ads.unavailable",
+      "text": "الفيديوهات غير متاحة الآن"
+    },
+    {
+      "key": "ui.ads.watch",
+      "text": "شاهد"
+    },
+    {
+      "key": "ui.avatar.boulder",
+      "text": "صخرة"
+    },
+    {
+      "key": "ui.avatar.bramble",
+      "text": "عليقة"
+    },
+    {
+      "key": "ui.avatar.button",
+      "text": "زر"
+    },
+    {
+      "key": "ui.avatar.cinder",
+      "text": "جمرة"
+    },
+    {
+      "key": "ui.avatar.clementine",
+      "text": "يوسفي"
+    },
+    {
+      "key": "ui.avatar.coral",
+      "text": "مرجان"
+    },
+    {
+      "key": "ui.avatar.dewdrop",
+      "text": "قطرة ندى"
+    },
+    {
+      "key": "ui.avatar.fizz",
+      "text": "فقاعة"
+    },
+    {
+      "key": "ui.avatar.flit",
+      "text": "رفرف"
+    },
+    {
+      "key": "ui.avatar.frond",
+      "text": "سعفة"
+    },
+    {
+      "key": "ui.avatar.gourd",
+      "text": "يقطينة"
+    },
+    {
+      "key": "ui.avatar.indigo",
+      "text": "نيلي"
+    },
+    {
+      "key": "ui.avatar.marrow",
+      "text": "كوسا"
+    },
+    {
+      "key": "ui.avatar.monarch",
+      "text": "فراشة"
+    },
+    {
+      "key": "ui.avatar.olive",
+      "text": "زيتونة"
+    },
+    {
+      "key": "ui.avatar.pebble",
+      "text": "حصاة"
+    },
+    {
+      "key": "ui.avatar.peep",
+      "text": "زقزوق"
+    },
+    {
+      "key": "ui.avatar.plum",
+      "text": "برقوقة"
+    },
+    {
+      "key": "ui.avatar.puff",
+      "text": "نفخة"
+    },
+    {
+      "key": "ui.avatar.quill",
+      "text": "ريشة"
+    },
+    {
+      "key": "ui.avatar.rust",
+      "text": "صدأ"
+    },
+    {
+      "key": "ui.avatar.saffron",
+      "text": "زعفران"
+    },
+    {
+      "key": "ui.avatar.shell",
+      "text": "صدفة"
+    },
+    {
+      "key": "ui.avatar.sorrel",
+      "text": "حماض"
+    },
+    {
+      "key": "ui.avatar.sprocket",
+      "text": "مسنن"
+    },
+    {
+      "key": "ui.avatar.tadpole",
+      "text": "شرغوف"
+    },
+    {
+      "key": "ui.avatar.thistle",
+      "text": "خرفيش"
+    },
+    {
+      "key": "ui.avatar.thorn",
+      "text": "شوكة"
+    },
+    {
+      "key": "ui.avatar.timber",
+      "text": "خشبة"
+    },
+    {
+      "key": "ui.avatar.toadstool",
+      "text": "فطر"
+    },
+    {
+      "key": "ui.avatar.wisp",
+      "text": "طيف"
+    },
+    {
+      "key": "ui.board.building",
+      "text": "أنت مصنف. سيصل ترتيبك مع الإحصاء التالي."
+    },
+    {
+      "key": "ui.board.endless",
+      "text": "الحراسة اللانهائية"
+    },
+    {
+      "key": "ui.board.failed",
+      "text": "تعذر الوصول إلى اللوحات. حاول مرة أخرى بعد قليل."
+    },
+    {
+      "key": "ui.board.global",
+      "text": "أفضل الأخاديد"
+    },
+    {
+      "key": "ui.board.info_boards_body",
+      "text": "{0} ترتب الحراس حسب أبعد موجة صمدوا فيها في المسار اللانهائي."
+    },
+    {
+      "key": "ui.board.info_boards_title",
+      "text": "اللوحة"
+    },
+    {
+      "key": "ui.board.info_place_body",
+      "text": "يعرض أول {0} حارس فقط. أينما كنت، يوضح ملفك الشخصي نسبة الحراس الذين تتقدم عليهم."
+    },
+    {
+      "key": "ui.board.info_place_title",
+      "text": "موقعك"
+    },
+    {
+      "key": "ui.board.info_tally_body",
+      "text": "يوضع صفك لحظة حفظ جولتك. تعاد قراءة القائمة كلها كل {0} دقيقة، لذا قد يستغرق التغيير هذه المدة ليستقر."
+    },
+    {
+      "key": "ui.board.info_tally_built",
+      "text": "يوضع صفك لحظة حفظ جولتك. تعاد قراءة القائمة كلها كل {0} دقيقة، وآخر قراءة لهذه كانت منذ {1}."
+    },
+    {
+      "key": "ui.board.info_tally_title",
+      "text": "محدثة باستمرار"
+    },
+    {
+      "key": "ui.board.info_title",
+      "text": "كيف تعمل اللوحة"
+    },
+    {
+      "key": "ui.board.join",
+      "text": "أظهرني في اللوحات"
+    },
+    {
+      "key": "ui.board.leave",
+      "text": "أخفني من اللوحات"
+    },
+    {
+      "key": "ui.board.loading",
+      "text": "جار قراءة اللوحات..."
+    },
+    {
+      "key": "ui.board.no_connection",
+      "text": "لا يوجد اتصال. اللوحات تحتاج إلى اتصال."
+    },
+    {
+      "key": "ui.board.no_rows",
+      "text": "لم يصنف أحد هنا بعد. كن الأول."
+    },
+    {
+      "key": "ui.board.of_keepers",
+      "text": "الأفضل بين {0} حارس"
+    },
+    {
+      "key": "ui.board.offline",
+      "text": "اللوحات غير متاحة هنا."
+    },
+    {
+      "key": "ui.board.open",
+      "text": "اعرض اللوحات"
+    },
+    {
+      "key": "ui.board.opted_out",
+      "text": "أنت مخفي من اللوحات."
+    },
+    {
+      "key": "ui.board.placed",
+      "text": "ترتيبك #{0} في هذه اللوحة."
+    },
+    {
+      "key": "ui.board.row_wave",
+      "text": "الموجة {0}"
+    },
+    {
+      "key": "ui.board.row_worth",
+      "text": "القيمة: {0}"
+    },
+    {
+      "key": "ui.board.title",
+      "text": "اللوحات"
+    },
+    {
+      "key": "ui.board.top_percent",
+      "text": "أنت ضمن أفضل {0}% من الحراس."
+    },
+    {
+      "key": "ui.board.unranked",
+      "text": "اصمد في الخط في المسار اللانهائي وستصنف."
+    },
+    {
+      "key": "ui.bonus.on_top",
+      "text": "تدفع فوق ما ربحه هذا المرج."
+    },
+    {
+      "key": "ui.challenges.title",
+      "text": "التحديات اليومية"
+    },
+    {
+      "key": "ui.chest.always",
+      "text": "دائما"
+    },
+    {
+      "key": "ui.chest.boost_on",
+      "text": "القلوب تعود بضعف السرعة لمدة {0}"
+    },
+    {
+      "key": "ui.chest.collect",
+      "text": "استلام"
+    },
+    {
+      "key": "ui.chest.connect_once",
+      "text": "اتصل بالإنترنت مرة واحدة فتفتح صناديقك. بعد ذلك تفتح دون اتصال، إلى الأبد."
+    },
+    {
+      "key": "ui.chest.hearts_ceiling",
+      "text": "لديك بالفعل {0} قلوب، لذا لم يتسع المكان للقلوب الإضافية"
+    },
+    {
+      "key": "ui.chest.needs_connection",
+      "text": "اتصل مرة واحدة لتفتح صندوقك الأول"
+    },
+    {
+      "key": "ui.chest.odds",
+      "text": "فرص المكافأة:"
+    },
+    {
+      "key": "ui.chest.one_of",
+      "text": "وواحد من"
+    },
+    {
+      "key": "ui.chest.rank",
+      "text": "الصندوق {0} من {1}"
+    },
+    {
+      "key": "ui.coins.from_glades",
+      "text": "كل مرج تجتازه يمنحك عملات."
+    },
+    {
+      "key": "ui.coins.shop_soon",
+      "text": "أنفقها على أصدقاء جدد في ملفك الشخصي."
+    },
+    {
+      "key": "ui.common.back",
+      "text": "رجوع"
+    },
+    {
+      "key": "ui.common.cancel",
+      "text": "ليس الآن"
+    },
+    {
+      "key": "ui.common.coming_soon",
+      "text": "قريبا"
+    },
+    {
+      "key": "ui.common.done",
+      "text": "تم"
+    },
+    {
+      "key": "ui.common.got_it",
+      "text": "فهمت"
+    },
+    {
+      "key": "ui.common.ok",
+      "text": "رائع"
+    },
+    {
+      "key": "ui.companion.already",
+      "text": "هذا الصديق مستيقظ بالفعل."
+    },
+    {
+      "key": "ui.companion.balance",
+      "text": "لديك {0} عملة."
+    },
+    {
+      "key": "ui.companion.by_coins",
+      "text": "و{0} عملة لإيقاظه."
+    },
+    {
+      "key": "ui.companion.by_level",
+      "text": "يتطلب مستوى الحارس {0}."
+    },
+    {
+      "key": "ui.companion.by_level_none",
+      "text": "لك منذ المرج الأول."
+    },
+    {
+      "key": "ui.companion.continue",
+      "text": "رائع"
+    },
+    {
+      "key": "ui.companion.earn_more",
+      "text": "العملات تأتي من اجتياز المروج والصناديق اليومية والفيديوهات."
+    },
+    {
+      "key": "ui.companion.get_coins",
+      "text": "احصل على عملات"
+    },
+    {
+      "key": "ui.companion.joined",
+      "text": "انضم إلى أخدودك"
+    },
+    {
+      "key": "ui.companion.locked_button",
+      "text": "مستوى الحارس {0}"
+    },
+    {
+      "key": "ui.companion.locked_level",
+      "text": "بلغ مستوى الحارس {0} أولا، فمستواك الآن {1}."
+    },
+    {
+      "key": "ui.companion.not_for_sale",
+      "text": "هذا الصديق لا يكسب إلا باللعب."
+    },
+    {
+      "key": "ui.companion.short",
+      "text": "ينقصك {0} عملة، ولديك {1}."
+    },
+    {
+      "key": "ui.companion.title",
+      "text": "صديق جديد"
+    },
+    {
+      "key": "ui.companion.unlock_for",
+      "text": "أيقظه مقابل {0}"
+    },
+    {
+      "key": "ui.continue.defeat",
+      "text": "هزيمة"
+    },
+    {
+      "key": "ui.continue.get_gems",
+      "text": "احصل على جواهر"
+    },
+    {
+      "key": "ui.continue.give_up",
+      "text": "لا شكرا"
+    },
+    {
+      "key": "ui.continue.motes_title",
+      "text": "نفدت الذرات"
+    },
+    {
+      "key": "ui.continue.motes_unit",
+      "text": "ذرات إضافية"
+    },
+    {
+      "key": "ui.continue.moves_title",
+      "text": "نفدت الحركات"
+    },
+    {
+      "key": "ui.continue.moves_unit",
+      "text": "حركات إضافية"
+    },
+    {
+      "key": "ui.continue.offer",
+      "text": "يمكنك الحصول على +{0} {1} والمتابعة من حيث توقفت"
+    },
+    {
+      "key": "ui.continue.short",
+      "text": "تحتاج إلى {0} جوهرة لهذا"
+    },
+    {
+      "key": "ui.continue.taps_title",
+      "text": "نفدت النقرات"
+    },
+    {
+      "key": "ui.continue.taps_unit",
+      "text": "نقرات إضافية"
+    },
+    {
+      "key": "ui.continue.title",
+      "text": "هل تتابع؟"
+    },
+    {
+      "key": "ui.continue.turns_title",
+      "text": "نفدت الأدوار"
+    },
+    {
+      "key": "ui.continue.turns_unit",
+      "text": "أدوار إضافية"
+    },
+    {
+      "key": "ui.continue.full_health",
+      "text": "صحة كاملة"
+    },
+    {
+      "key": "ui.continue.wards_offer",
+      "text": "أعد كل الأبراج إلى {0} وتابع من حيث توقفت!"
+    },
+    {
+      "key": "ui.continue.wards_title",
+      "text": "سقط الخط"
+    },
+    {
+      "key": "ui.continue.wards_unit",
+      "text": "أبراج، بكامل قوتها،"
+    },
+    {
+      "key": "ui.defeat.barren_title",
+      "text": "لم يبق شيء لتنقره"
+    },
+    {
+      "key": "ui.defeat.buy_hearts",
+      "text": "+{0} قلوب مقابل {1} جوهرة"
+    },
+    {
+      "key": "ui.defeat.conduit_title",
+      "text": "لقد انهار"
+    },
+    {
+      "key": "ui.defeat.flood_reason",
+      "text": "استقرت ذرة فوق الخط. اللون الموجود في الكومة لا مكان له إلا الأعلى."
+    },
+    {
+      "key": "ui.defeat.flood_title",
+      "text": "فاضت البئر"
+    },
+    {
+      "key": "ui.defeat.free_glade",
+      "text": "هذه إحدى المراحل المجانية، لم ينفق أي قلب. جربها كلما شئت."
+    },
+    {
+      "key": "ui.defeat.free_replay",
+      "text": "لقد أنهيت هذه المرحلة من قبل، لذا إعادة لعبها مجانية، بلا قلب، مهما كانت النتيجة."
+    },
+    {
+      "key": "ui.defeat.free_watch",
+      "text": "قلب هذه الحراسة أنفق عند بدايتها، لذا خسارتها لا تكلف شيئا إضافيا."
+    },
+    {
+      "key": "ui.defeat.get_gems",
+      "text": "احصل على جواهر"
+    },
+    {
+      "key": "ui.defeat.motes_reason",
+      "text": "لم يبق شيء لإسقاطه، والبئر ليست فارغة. أنفق كل ذرة حيث تكمل شيئا."
+    },
+    {
+      "key": "ui.defeat.motes_title",
+      "text": "نفد الضوء"
+    },
+    {
+      "key": "ui.defeat.moves_title",
+      "text": "نفدت الأدوار"
+    },
+    {
+      "key": "ui.defeat.near_one",
+      "text": "كنت على بعد دور واحد."
+    },
+    {
+      "key": "ui.defeat.near_two",
+      "text": "كنت على بعد دورين."
+    },
+    {
+      "key": "ui.defeat.out_of_hearts",
+      "text": "نفدت قلوبك. ستعود من تلقاء نفسها مع الوقت."
+    },
+    {
+      "key": "ui.defeat.reason",
+      "text": "لمس الضوء حجرا شائكا فأظلم المرج."
+    },
+    {
+      "key": "ui.defeat.stuck_title",
+      "text": "لم يبق شيء لتفعله"
+    },
+    {
+      "key": "ui.defeat.taps_title",
+      "text": "نفدت النقرات"
+    },
+    {
+      "key": "ui.defeat.time_title",
+      "text": "انتهى الوقت"
+    },
+    {
+      "key": "ui.defeat.title",
+      "text": "انطفأ الضوء"
+    },
+    {
+      "key": "ui.defeat.try_again",
+      "text": "حاول مجددا"
+    },
+    {
+      "key": "ui.defeat.wards_reason",
+      "text": "سقطت كل الأبراج، فلم يعد قائما شيء يغذيه التطابق. غذ اللون الأبعد على التل."
+    },
+    {
+      "key": "ui.defeat.wards_title",
+      "text": "سقط الخط"
+    },
+    {
+      "key": "ui.defeat.watch_for_hearts",
+      "text": "نفدت قلوبك. أنفق جواهر أو شاهد فيديو لتحصل على قلوب."
+    },
+    {
+      "key": "ui.delete.armed",
+      "text": "انقر حذف مرة أخرى للتأكيد. لا رجعة في هذا."
+    },
+    {
+      "key": "ui.delete.body",
+      "text": "سيمحى كل شيء في هذا الحساب: مروجك المكتملة، وعملاتك وجواهرك، ورفاقك، وبستانك، واسمك كحارس. لا يمكن التراجع عن هذا، ولا يستطيع الدعم استعادته."
+    },
+    {
+      "key": "ui.delete.busy",
+      "text": "بستانك ما زال يحفظ. حاول مرة أخرى بعد قليل. لم يحذف شيء."
+    },
+    {
+      "key": "ui.delete.cancelled",
+      "text": "لم يحذف شيء."
+    },
+    {
+      "key": "ui.delete.confirm",
+      "text": "احذف كل شيء"
+    },
+    {
+      "key": "ui.delete.done",
+      "text": "تم حذف حسابك."
+    },
+    {
+      "key": "ui.delete.failed",
+      "text": "لم ينجح ذلك. لم يحذف شيء."
+    },
+    {
+      "key": "ui.delete.keep",
+      "text": "احتفظ ببستاني"
+    },
+    {
+      "key": "ui.delete.offline",
+      "text": "لا يوجد اتصال. لم يحذف شيء."
+    },
+    {
+      "key": "ui.delete.purchases",
+      "text": "كل ما دفعت ثمنه يذهب معه. لا يمكن نقل المشتريات إلى حساب جديد، ووحدهما Apple وGoogle تستطيعان رد المبلغ."
+    },
+    {
+      "key": "ui.delete.stakes",
+      "text": "المروج المكتملة في هذا الحساب: {0}."
+    },
+    {
+      "key": "ui.delete.title",
+      "text": "حذف الحساب"
+    },
+    {
+      "key": "ui.delete.verify",
+      "text": "سيطلب منك تسجيل الدخول مرة أخرى أولا، لنتأكد أنك أنت فعلا."
+    },
+    {
+      "key": "ui.delete.verifying",
+      "text": "جار التحقق من هويتك..."
+    },
+    {
+      "key": "ui.delete.working",
+      "text": "جار حذف حسابك..."
+    },
+    {
+      "key": "ui.delete.wrong_account",
+      "text": "هذا حساب مختلف. لم يحذف شيء."
+    },
+    {
+      "key": "ui.endless.battle",
+      "text": "معركة"
+    },
+    {
+      "key": "ui.endless.best",
+      "text": "أفضل موجة: {0}"
+    },
+    {
+      "key": "ui.endless.best_label",
+      "text": "أفضل موجة"
+    },
+    {
+      "key": "ui.endless.reached",
+      "text": "صمدت حتى الموجة {0}."
+    },
+    {
+      "key": "ui.endless.standing",
+      "text": "أفضل {0}%"
+    },
+    {
+      "key": "ui.endless.unplayed",
+      "text": "لا جولات بعد"
+    },
+    {
+      "key": "ui.endless.wave",
+      "text": "الموجة {0}"
+    },
+    {
+      "key": "ui.endless.checkpoint.title",
+      "text": "نقاط البداية"
+    },
+    {
+      "key": "ui.endless.checkpoint.start",
+      "text": "البداية: الموجة {0}"
+    },
+    {
+      "key": "ui.endless.checkpoint.first",
+      "text": "اجتز الموجة {0} لفتح نقاط البداية"
+    },
+    {
+      "key": "ui.endless.checkpoint.note",
+      "text": "ابدأ من مرحلة أبعد. الموجات التي تتخطاها لا تمنح شيئا."
+    },
+    {
+      "key": "ui.endless.checkpoint.beginning",
+      "text": "كل موجة، من الأولى."
+    },
+    {
+      "key": "ui.endless.checkpoint.boost",
+      "text": "الأبراج تبدأ أعلى بمستويات: {0}."
+    },
+    {
+      "key": "ui.endless.checkpoint.boost_one",
+      "text": "الأبراج تبدأ أعلى بمستوى واحد."
+    },
+    {
+      "key": "ui.endless.checkpoint.bare",
+      "text": "الأبراج تبدأ من المستوى 1."
+    },
+    {
+      "key": "ui.endless.checkpoint.locked_line",
+      "text": "اجتز الموجة {0} للفتح. أفضل نتيجة لك: {1}."
+    },
+    {
+      "key": "ui.endless.checkpoint.choose",
+      "text": "ابدأ من هنا"
+    },
+    {
+      "key": "ui.endless.checkpoint.chosen",
+      "text": "مختارة"
+    },
+    {
+      "key": "ui.endless.checkpoint.locked",
+      "text": "مقفلة"
+    },
+    {
+      "key": "ui.endless.checkpoint.locked_hint",
+      "text": "اجتز الموجة {0} لفتح نقطة البداية هذه."
+    },
+    {
+      "key": "ui.endless.checkpoint.close",
+      "text": "إغلاق"
+    },
+    {
+      "key": "ui.event.ended",
+      "text": "انتهى هذا الحدث"
+    },
+    {
+      "key": "ui.event.ends_in",
+      "text": "ينتهي بعد {0}"
+    },
+    {
+      "key": "ui.season.0.name",
+      "text": "الحراسة الأولى"
+    },
+    {
+      "key": "ui.season.1.name",
+      "text": "الحراسة الثانية"
+    },
+    {
+      "key": "ui.season.2.name",
+      "text": "الحراسة الثالثة"
+    },
+    {
+      "key": "ui.season.3.name",
+      "text": "الحراسة الرابعة"
+    },
+    {
+      "key": "ui.season.4.name",
+      "text": "الحراسة الخامسة"
+    },
+    {
+      "key": "ui.season.5.name",
+      "text": "الحراسة السادسة"
+    },
+    {
+      "key": "ui.season.6.name",
+      "text": "الحراسة السابعة"
+    },
+    {
+      "key": "ui.season.7.name",
+      "text": "الحراسة الثامنة"
+    },
+    {
+      "key": "ui.season.8.name",
+      "text": "الحراسة التاسعة"
+    },
+    {
+      "key": "ui.season.9.name",
+      "text": "الحراسة العاشرة"
+    },
+    {
+      "key": "ui.season.10.name",
+      "text": "الحراسة الحادية عشرة"
+    },
+    {
+      "key": "ui.season.11.name",
+      "text": "الحراسة الثانية عشرة"
+    },
+    {
+      "key": "ui.season.blurb",
+      "text": "البستان يبقى حارسا طوال دوران العام. اجمع علاماتك ما دام الموسم قائما."
+    },
+    {
+      "key": "ui.forfeit.leave_body",
+      "text": "لقد بدأت هذه الجولة، لذا مغادرتها تكلف قلبا، تماما كنفاد الأدوار. سيبقى المرج بانتظارك كما وجدته تماما."
+    },
+    {
+      "key": "ui.forfeit.leave_go",
+      "text": "غادر على أي حال"
+    },
+    {
+      "key": "ui.forfeit.leave_title",
+      "text": "تغادر المرج؟"
+    },
+    {
+      "key": "ui.forfeit.play_body",
+      "text": "بدأت اللعبة. المغادرة الآن ستكلفك محاولة واحدة."
+    },
+    {
+      "key": "ui.forfeit.play_title",
+      "text": "تغادر التحدي؟"
+    },
+    {
+      "key": "ui.forfeit.restart_body",
+      "text": "لقد بدأت هذه الجولة، لذا البدء من جديد يكلف قلبا، تماما كنفاد الأدوار. ستحصل على لوح جديد وعد جديد."
+    },
+    {
+      "key": "ui.forfeit.restart_go",
+      "text": "ابدأ من جديد"
+    },
+    {
+      "key": "ui.forfeit.restart_title",
+      "text": "تبدأ من جديد؟"
+    },
+    {
+      "key": "ui.forfeit.restart_watch_body",
+      "text": "قلب هذه الحراسة أنفق بالفعل، والبدء من جديد يكلف قلبا آخر. ستحصل على تل جديد وعد جديد للموجات."
+    },
+    {
+      "key": "ui.forfeit.watch_title",
+      "text": "تغادر الحراسة؟"
+    },
+    {
+      "key": "ui.forfeit.watch_body",
+      "text": "لن تخسر أي قلب، لكن هذه الجولة تنتهي هنا ولن تحتسب موجاتها."
+    },
+    {
+      "key": "ui.forfeit.stay",
+      "text": "تابع اللعب"
+    },
+    {
+      "key": "ui.forfeit.unfinished",
+      "text": "لم تكتمل {0}، لذا كلفت قلبا."
+    },
+    {
+      "key": "ui.gems.note",
+      "text": "اشحن رصيدك دون مغادرة جولتك. لديك {0}."
+    },
+    {
+      "key": "ui.gems.title",
+      "text": "الجواهر"
+    },
+    {
+      "key": "ui.hearts.empty",
+      "text": "نفدت القلوب"
+    },
+    {
+      "key": "ui.hearts.full",
+      "text": "قلوبك ممتلئة."
+    },
+    {
+      "key": "ui.hearts.keep_playing",
+      "text": "تابع اللعب"
+    },
+    {
+      "key": "ui.hearts.next",
+      "text": "القلب التالي بعد {0}"
+    },
+    {
+      "key": "ui.hearts.regen",
+      "text": "يعود قلب كل {0} ساعات."
+    },
+    {
+      "key": "ui.hearts.regen_fast",
+      "text": "القلوب السريعة: قلب كل {0} ساعات، لمدة {1} أخرى."
+    },
+    {
+      "key": "ui.hearts.restart_last",
+      "text": "البدء من جديد ينفق قلب هذه الجولة، ولن يبقى لك قلب للجولة الجديدة."
+    },
+    {
+      "key": "ui.hearts.restart_none",
+      "text": "البدء من جديد ينفق قلبا، ولم يبق لديك أي قلب."
+    },
+    {
+      "key": "ui.hearts.restart_title",
+      "text": "تبدأ من جديد؟"
+    },
+    {
+      "key": "ui.hearts.stack",
+      "text": "الفيديوهات والصناديق وليالي السلسلة تتجاوز {0}، ويمكنك الاحتفاظ بما يصل إلى {1}."
+    },
+    {
+      "key": "ui.hearts.title",
+      "text": "القلوب"
+    },
+    {
+      "key": "ui.hearts.to_shop",
+      "text": "اذهب إلى المتجر"
+    },
+    {
+      "key": "ui.hearts.wait_to_play",
+      "text": "انتظر حتى يعود قلب قبل دخول المرج."
+    },
+    {
+      "key": "ui.hints.full",
+      "text": "لديك جميع الهمسات ({0})."
+    },
+    {
+      "key": "ui.hints.next",
+      "text": "الهمسة التالية بعد {0}"
+    },
+    {
+      "key": "ui.hints.one_conduit",
+      "text": "الهمسة تدير قناة واحدة إلى مكانها الصحيح."
+    },
+    {
+      "key": "ui.hints.regen",
+      "text": "همسة كل {0} س، حتى {1}."
+    },
+    {
+      "key": "ui.home.all_awake",
+      "text": "كل المروج مستيقظة  ·  اسع وراء ثلاث نجوم"
+    },
+    {
+      "key": "ui.home.at_rank",
+      "text": "يفتح عند الرتبة {0}"
+    },
+    {
+      "key": "ui.home.battle",
+      "text": "معركة"
+    },
+    {
+      "key": "ui.home.event_waiting",
+      "text": "انقر للاستلام"
+    },
+    {
+      "key": "ui.home.fraction",
+      "text": "{0}/{1}"
+    },
+    {
+      "key": "ui.home.next_rank",
+      "text": "الرتبة التالية"
+    },
+    {
+      "key": "ui.home.lines_met",
+      "text": "شروط محققة"
+    },
+    {
+      "key": "ui.home.marks",
+      "text": "علامات"
+    },
+    {
+      "key": "ui.home.next_chapter",
+      "text": "{0} / {1} نجوم  ·  تفتح المنطقة التالية"
+    },
+    {
+      "key": "ui.home.next_up",
+      "text": "التالي  ·  {0}"
+    },
+    {
+      "key": "ui.home.rank_left",
+      "text": "رتبة متبقية"
+    },
+    {
+      "key": "ui.home.ranks_left",
+      "text": "رتب متبقية"
+    },
+    {
+      "key": "ui.home.streak",
+      "text": "السلسلة"
+    },
+    {
+      "key": "ui.home.streak_keep",
+      "text": "أنه مرحلة لتحافظ عليها"
+    },
+    {
+      "key": "ui.home.streak_next",
+      "text": "غدا  {0}"
+    },
+    {
+      "key": "ui.home.streak_waiting",
+      "text": "انقر للاستلام"
+    },
+    {
+      "key": "ui.howto.blue",
+      "text": "أزرق"
+    },
+    {
+      "key": "ui.howto.line1",
+      "text": "طابق 3 جواهر لتزود برج ذلك اللون بالوقود."
+    },
+    {
+      "key": "ui.howto.line2",
+      "text": "الأبراج المزودة بالوقود تطلق النار على المهاجمين النازلين من التل."
+    },
+    {
+      "key": "ui.howto.line3",
+      "text": "الطلقة تؤلم أكثر حين تصيب مهاجما من لونها."
+    },
+    {
+      "key": "ui.howto.line4",
+      "text": "إن تركت المهاجمين يعبرون كسروا جدارك. اصمد وستفوز."
+    },
+    {
+      "key": "ui.howto.line5",
+      "text": "أنفق الجواهر على أبراج أقوى وعلى قدور النار والإصلاحات والاندفاعات."
+    },
+    {
+      "key": "ui.howto.line6",
+      "text": "أنفق العملات على بستانك: الأرض والبيوت والزينة والأصدقاء."
+    },
+    {
+      "key": "ui.howto.purple",
+      "text": "بنفسجي"
+    },
+    {
+      "key": "ui.howto.red",
+      "text": "أحمر"
+    },
+    {
+      "key": "ui.howto.title",
+      "text": "طريقة اللعب"
+    },
+    {
+      "key": "ui.keeper.title",
+      "text": "الحارس"
+    },
+    {
+      "key": "ui.levels.chapter_gate",
+      "text": "{0} / {1} نجوم للمتابعة"
+    },
+    {
+      "key": "ui.levels.chapter_locked",
+      "text": "اجتز هذه المنطقة للمتابعة"
+    },
+    {
+      "key": "ui.levels.info_title",
+      "text": "معلومات"
+    },
+    {
+      "key": "ui.levels.keeper_gate",
+      "text": "بلغ مستوى الحارس {0}"
+    },
+    {
+      "key": "ui.levels.locked",
+      "text": "مقفلة"
+    },
+    {
+      "key": "ui.levels.locked_hint",
+      "text": "اجتز المرج الذي قبله لفتح هذا"
+    },
+    {
+      "key": "ui.levels.more_soon",
+      "text": "مروج أخرى قريبا"
+    },
+    {
+      "key": "ui.levels.rewards_again_body",
+      "text": "كل نجمة تدفع مرة واحدة. تجاوز تقييمك وستربح الفرق."
+    },
+    {
+      "key": "ui.levels.rewards_again_title",
+      "text": "اللعب مجددا"
+    },
+    {
+      "key": "ui.levels.rewards_finish_body",
+      "text": "كل جولة تنهيها تقدم صناديقك اليومية وتبقي سلسلتك مشتعلة، سواء فزت أو خسرت."
+    },
+    {
+      "key": "ui.levels.rewards_finish_title",
+      "text": "الإنهاء يحتسب"
+    },
+    {
+      "key": "ui.levels.rewards_free_body",
+      "text": "أول {0} مراحل في هذه المنطقة لا تكلف قلبا، والمرحلة التي أنهيتها مجانية دائما لإعادة اللعب."
+    },
+    {
+      "key": "ui.levels.rewards_free_title",
+      "text": "مجانية للتجربة"
+    },
+    {
+      "key": "ui.levels.rewards_golden_body",
+      "text": "بعض المراحل تمنح عملات أكثر بنسبة تصل إلى {0}%. لوحة الفوز تخبرك متى."
+    },
+    {
+      "key": "ui.levels.rewards_golden_title",
+      "text": "المراحل الذهبية"
+    },
+    {
+      "key": "ui.levels.rewards_open_body",
+      "text": "المنطقة التالية تفتح عند {0} نجوم لكل مرحلة، أي {1} من نجوم هذه المنطقة البالغة {2}. ومن أين تأتي فهذا يعود لك."
+    },
+    {
+      "key": "ui.levels.rewards_open_free",
+      "text": "كل المناطق مفتوحة. العبها بأي ترتيب."
+    },
+    {
+      "key": "ui.levels.rewards_open_rule",
+      "text": "المنطقة التالية تفتح عندما تملك {0} نجوم لكل مرحلة هنا. ومن أين تأتي فهذا يعود لك."
+    },
+    {
+      "key": "ui.levels.rewards_open_title",
+      "text": "فتح المنطقة التالية"
+    },
+    {
+      "key": "ui.levels.rewards_replay_body",
+      "text": "المرحلة التي أنهيتها بالفعل لا تكلف قلبا. فقط المرحلة التي لم تفز بها بعد يمكن أن تأخذ قلبا."
+    },
+    {
+      "key": "ui.levels.rewards_replay_title",
+      "text": "مجانية لإعادة المحاولة"
+    },
+    {
+      "key": "ui.levels.rewards_stars_body",
+      "text": "نجومك تحدد العملات: {0} أو {1} أو {2} في هذه المنطقة."
+    },
+    {
+      "key": "ui.levels.rewards_stars_title",
+      "text": "النجوم تدفع"
+    },
+    {
+      "key": "ui.levels.rewards_title",
+      "text": "كيف تدفع المرحلة"
+    },
+    {
+      "key": "ui.levels.swipe",
+      "text": "اسحب لاستكشاف السلسلة"
+    },
+    {
+      "key": "ui.levels.title",
+      "text": "اختر مرجا"
+    },
+    {
+      "key": "ui.loadout.chest_only",
+      "text": "من الصناديق"
+    },
+    {
+      "key": "ui.loadout.held",
+      "text": "{0} من {1} على هذا اللون"
+    },
+    {
+      "key": "ui.loadout.held_one",
+      "text": "موجود بالفعل على هذا اللون."
+    },
+    {
+      "key": "ui.loadout.items",
+      "text": "الحقيبة"
+    },
+    {
+      "key": "ui.loadout.items_note",
+      "text": "تحمل إلى كل حصار. تسقطها الصناديق، وتشتريها الجواهر."
+    },
+    {
+      "key": "ui.loadout.joined",
+      "text": "انضم إلى خطك"
+    },
+    {
+      "key": "ui.loadout.legendary",
+      "text": "بلا لون. يطلق النار على كل مهاجم، أيا كانت الخانة التي يحرسها."
+    },
+    {
+      "key": "ui.loadout.level",
+      "text": "المستوى {0}"
+    },
+    {
+      "key": "ui.loadout.level_note",
+      "text": "بلغ مستوى الحارس {0} لتشتري هذا."
+    },
+    {
+      "key": "ui.loadout.locked",
+      "text": "غير معروض للبيع"
+    },
+    {
+      "key": "ui.loadout.seat_at",
+      "text": "مقفل"
+    },
+    {
+      "key": "ui.loadout.seat_shut",
+      "text": "اجتز مراحل حراسة الأشواك المتبقية ({0}) لترتيب هذا البرج."
+    },
+    {
+      "key": "ui.loadout.stand",
+      "text": "تجهيز"
+    },
+    {
+      "key": "ui.loadout.standing",
+      "text": "مجهز"
+    },
+    {
+      "key": "ui.loadout.tier1",
+      "text": "الفئة I"
+    },
+    {
+      "key": "ui.loadout.tier2",
+      "text": "الفئة II"
+    },
+    {
+      "key": "ui.loadout.tier3",
+      "text": "الفئة III"
+    },
+    {
+      "key": "ui.loadout.tier4",
+      "text": "أسطوري"
+    },
+    {
+      "key": "ui.loadout.title",
+      "text": "التشكيلة"
+    },
+    {
+      "key": "ui.loadout.upgrade",
+      "text": "تطوير"
+    },
+    {
+      "key": "ui.loadout.upgrade_done",
+      "text": "أقوى!"
+    },
+    {
+      "key": "ui.loadout.upgrade_note",
+      "text": "طوره إلى {0} نجوم"
+    },
+    {
+      "key": "ui.loadout.upgrade_to",
+      "text": "طوره إلى {0} نجوم"
+    },
+    {
+      "key": "ui.loadout.upgrade_top",
+      "text": "مطور بالكامل."
+    },
+    {
+      "key": "ui.loadout.wards",
+      "text": "الأبراج"
+    },
+    {
+      "key": "ui.mark.bought",
+      "text": "التذكرة لك. الصندوقان عند كل درجة."
+    },
+    {
+      "key": "ui.mark.buy",
+      "text": "{0}"
+    },
+    {
+      "key": "ui.mark.closed_hint",
+      "text": "انتهت الحراسة. ما فتحته ما زال لك."
+    },
+    {
+      "key": "ui.mark.complete",
+      "text": "كل الدرجات مفتوحة"
+    },
+    {
+      "key": "ui.mark.connecting",
+      "text": "جار التحقق من تذكرتك…"
+    },
+    {
+      "key": "ui.mark.free",
+      "text": "مجاني"
+    },
+    {
+      "key": "ui.mark.grown",
+      "text": "العلامات: {0}"
+    },
+    {
+      "key": "ui.mark.info_grow_body",
+      "text": "كل صندوق تفتحه في المهام والمكافآت يمنحك علامات، والصندوق الأفضل يمنح أكثر. في السلم {0} درجة، وآخرها عند {1} علامة."
+    },
+    {
+      "key": "ui.mark.info_grow_title",
+      "text": "العلامات تأتي من الصناديق"
+    },
+    {
+      "key": "ui.mark.info_title",
+      "text": "حراسة الحارس"
+    },
+    {
+      "key": "ui.mark.info_tracks_body",
+      "text": "بلغ درجة فيفتح صندوقاها. الأيسر للجميع، والأيمن يتطلب تذكرة الحارس، وهو يحمل دائما صندوقا أفضل من الأيسر. هناك {0} أنواع من الصناديق، انقر واحدا في المهام والمكافآت لترى ما فيه."
+    },
+    {
+      "key": "ui.mark.info_tracks_title",
+      "text": "صندوقان لكل درجة"
+    },
+    {
+      "key": "ui.mark.info_window_body",
+      "text": "العلامات تتوقف عن العد حين تنتهي الحراسة. أما الصناديق فلا، فكل ما بلغته يبقى هنا حتى تفتحه، مهما طال الوقت."
+    },
+    {
+      "key": "ui.mark.info_window_title",
+      "text": "عندما تنتهي الحراسة"
+    },
+    {
+      "key": "ui.mark.needs_more",
+      "text": "ينقصك {0} علامة لفتح هذا"
+    },
+    {
+      "key": "ui.mark.owned_hint",
+      "text": "تذكرتك مفعلة. الصندوقان لك عند كل درجة."
+    },
+    {
+      "key": "ui.mark.pass",
+      "text": "تذكرة الحارس"
+    },
+    {
+      "key": "ui.mark.pass_value",
+      "text": "قيمة {0}%"
+    },
+    {
+      "key": "ui.mark.pass_required",
+      "text": "تذكرة الحارس تفتح هذا الجانب"
+    },
+    {
+      "key": "ui.mark.purchase_hint",
+      "text": "شراء واحد، بلا اشتراك. الدرجات السابقة تأتي معه."
+    },
+    {
+      "key": "ui.mark.rung_goal",
+      "text": "العلامات: {0}"
+    },
+    {
+      "key": "ui.mark.rungs",
+      "text": "درجات مفتوحة"
+    },
+    {
+      "key": "ui.mark.subtitle",
+      "text": "افتح الصناديق لتكسب علامات. كل درجة تمنح صندوقين."
+    },
+    {
+      "key": "ui.mark.to_next",
+      "text": "ينقصك {0} للدرجة التالية"
+    },
+    {
+      "key": "ui.mark.too_poor",
+      "text": "التذكرة تكلف {0} جوهرة"
+    },
+    {
+      "key": "ui.mark.unlocked",
+      "text": "مفتوح"
+    },
+    {
+      "key": "ui.mark.upgrade",
+      "text": "فتح"
+    },
+    {
+      "key": "ui.nav.home",
+      "text": "الرئيسية"
+    },
+    {
+      "key": "ui.nav.profile",
+      "text": "الملف"
+    },
+    {
+      "key": "ui.nav.ranks",
+      "text": "اللوحات"
+    },
+    {
+      "key": "ui.nav.shop",
+      "text": "المتجر"
+    },
+    {
+      "key": "ui.notify.channel",
+      "text": "التذكيرات"
+    },
+    {
+      "key": "ui.notify.channel_note",
+      "text": "تنبيهات لطيفة عن القلوب والمهام وسلسلتك."
+    },
+    {
+      "key": "ui.num.million",
+      "text": "M"
+    },
+    {
+      "key": "ui.num.thousand",
+      "text": "K"
+    },
+    {
+      "key": "ui.ok.done",
+      "text": "تم"
+    },
+    {
+      "key": "ui.pass.unlocked",
+      "text": "تم فتح التذكرة"
+    },
+    {
+      "key": "ui.pause.glades",
+      "text": "المراحل"
+    },
+    {
+      "key": "ui.pause.home",
+      "text": "الرئيسية"
+    },
+    {
+      "key": "ui.pause.restart",
+      "text": "إعادة البدء"
+    },
+    {
+      "key": "ui.pause.resume",
+      "text": "استئناف"
+    },
+    {
+      "key": "ui.pause.title",
+      "text": "متوقف مؤقتا"
+    },
+    {
+      "key": "ui.play.hint_none",
+      "text": "؟"
+    },
+    {
+      "key": "ui.play.hint_nothing",
+      "text": "كل قناة يمكنك إدارتها في مكانها الصحيح بالفعل"
+    },
+    {
+      "key": "ui.play.hint_used",
+      "text": "الهمسة تدير قناة واحدة"
+    },
+    {
+      "key": "ui.play.reset",
+      "text": "إعادة"
+    },
+    {
+      "key": "ui.play.undo",
+      "text": "تراجع"
+    },
+    {
+      "key": "ui.profile.account",
+      "text": "الحساب"
+    },
+    {
+      "key": "ui.profile.cancel",
+      "text": "إلغاء"
+    },
+    {
+      "key": "ui.profile.chapters",
+      "text": "المناطق"
+    },
+    {
+      "key": "ui.profile.coins",
+      "text": "العملات"
+    },
+    {
+      "key": "ui.profile.companions",
+      "text": "الرفاق"
+    },
+    {
+      "key": "ui.profile.cost",
+      "text": "{0} عملة"
+    },
+    {
+      "key": "ui.profile.delete",
+      "text": "حذف الحساب"
+    },
+    {
+      "key": "ui.profile.fix",
+      "text": "اختر حسابا"
+    },
+    {
+      "key": "ui.profile.gems",
+      "text": "الجواهر"
+    },
+    {
+      "key": "ui.profile.glades",
+      "text": "المراحل"
+    },
+    {
+      "key": "ui.profile.guest_hint",
+      "text": "هذا الحساب موجود على هذا الجهاز فقط. سجل الدخول والعب بالحساب نفسه على أي جهاز!"
+    },
+    {
+      "key": "ui.profile.linked_hint",
+      "text": "حسابك محفوظ احتياطيا ويتبعك إلى أي جهاز تسجل الدخول عليه."
+    },
+    {
+      "key": "ui.profile.locked",
+      "text": "مقفل"
+    },
+    {
+      "key": "ui.profile.locked_at",
+      "text": "المستوى {0}"
+    },
+    {
+      "key": "ui.profile.manage",
+      "text": "إدارة الحساب"
+    },
+    {
+      "key": "ui.profile.mismatch_hint",
+      "text": "آخر تغيير للحساب لم يكتمل. لم يضع شيء، انقر لاختيار حساب."
+    },
+    {
+      "key": "ui.profile.name_checking",
+      "text": "جار التحقق…"
+    },
+    {
+      "key": "ui.profile.name_cooldown",
+      "text": "يمكنك تغيير اسمك مرة أخرى بعد {0} ث"
+    },
+    {
+      "key": "ui.profile.name_free",
+      "text": "هذا الاسم متاح"
+    },
+    {
+      "key": "ui.profile.name_hidden",
+      "text": "محفوظ. لن يظهر في اللوحات."
+    },
+    {
+      "key": "ui.profile.name_hint",
+      "text": "حارس الأخدود"
+    },
+    {
+      "key": "ui.profile.name_mine",
+      "text": "هذا اسمك بالفعل"
+    },
+    {
+      "key": "ui.profile.name_rule",
+      "text": "حتى {0} حرفا"
+    },
+    {
+      "key": "ui.profile.name_saving",
+      "text": "جار الحفظ…"
+    },
+    {
+      "key": "ui.profile.name_short",
+      "text": "على الأقل {0} أحرف أو أرقام"
+    },
+    {
+      "key": "ui.profile.name_taken",
+      "text": "حارس آخر يحمل هذا الاسم"
+    },
+    {
+      "key": "ui.profile.next_at",
+      "text": "التالي يفتح عند المستوى {0}"
+    },
+    {
+      "key": "ui.profile.next_title",
+      "text": "{0} عند المستوى {1}"
+    },
+    {
+      "key": "ui.profile.perfect",
+      "text": "مثالي"
+    },
+    {
+      "key": "ui.profile.protect",
+      "text": "تسجيل الدخول"
+    },
+    {
+      "key": "ui.profile.public_loading",
+      "text": "جار البحث عن {0}…"
+    },
+    {
+      "key": "ui.profile.public_looking",
+      "text": "جار البحث…"
+    },
+    {
+      "key": "ui.profile.public_no_companions",
+      "text": "لا رفاق بعد."
+    },
+    {
+      "key": "ui.profile.public_pieces",
+      "text": "{0} موضوعة · {1} مختلفة"
+    },
+    {
+      "key": "ui.profile.public_title",
+      "text": "حارس"
+    },
+    {
+      "key": "ui.profile.public_worth",
+      "text": "قيمة الأخدود: {0}"
+    },
+    {
+      "key": "ui.profile.record",
+      "text": "سجل الحساب"
+    },
+    {
+      "key": "ui.profile.rename",
+      "text": "اسمك"
+    },
+    {
+      "key": "ui.profile.see_all",
+      "text": "عرض الكل"
+    },
+    {
+      "key": "ui.profile.stars",
+      "text": "النجوم"
+    },
+    {
+      "key": "ui.profile.tap_to_wear",
+      "text": "انقر للارتداء"
+    },
+    {
+      "key": "ui.profile.title",
+      "text": "الملف الشخصي"
+    },
+    {
+      "key": "ui.profile.unlocked",
+      "text": "{0} من {1} مستيقظ"
+    },
+    {
+      "key": "ui.profile.wearing",
+      "text": "ترتدي"
+    },
+    {
+      "key": "ui.profile.xp",
+      "text": "{0} / {1} خبرة للمستوى التالي"
+    },
+    {
+      "key": "ui.profile.xp_max",
+      "text": "حصلت على كل مستويات الحارس"
+    },
+    {
+      "key": "ui.referral.title",
+      "text": "ادع أصدقاءك"
+    },
+    {
+      "key": "ui.referral.door",
+      "text": "ادع صديقا"
+    },
+    {
+      "key": "ui.referral.subtitle",
+      "text": "شارك رمزك. حين ينهي صديقك {0}، يفتح كل منكما صناديق."
+    },
+    {
+      "key": "ui.referral.your_code",
+      "text": "رمزك"
+    },
+    {
+      "key": "ui.referral.code_unknown",
+      "text": "اتصل بالإنترنت لتحصل على رمزك"
+    },
+    {
+      "key": "ui.referral.copied",
+      "text": "تم نسخ الرمز"
+    },
+    {
+      "key": "ui.referral.share",
+      "text": "مشاركة"
+    },
+    {
+      "key": "ui.referral.share_title",
+      "text": "ادع صديقا إلى Gemfire"
+    },
+    {
+      "key": "ui.referral.share_text",
+      "text": "العب Gemfire معي! أدخل رمزي {0} عند البدء وسيحصل كل منا على صناديق. {1}"
+    },
+    {
+      "key": "ui.referral.share_text_bare",
+      "text": "العب Gemfire معي! أدخل رمزي {0} عند البدء وسيحصل كل منا على صناديق."
+    },
+    {
+      "key": "ui.referral.tally",
+      "text": "{0} من {1} أصدقاء انضموا · {2} أنهوا {3}"
+    },
+    {
+      "key": "ui.referral.offer_title",
+      "text": "لديك رمز من صديق؟"
+    },
+    {
+      "key": "ui.referral.offer_hint",
+      "text": "أدخله قبل أن تنهي {0} وسيحصل كل منكما على صناديق."
+    },
+    {
+      "key": "ui.referral.enter",
+      "text": "أدخل الرمز"
+    },
+    {
+      "key": "ui.referral.welcome_title",
+      "text": "صناديق الترحيب"
+    },
+    {
+      "key": "ui.referral.welcome_hint",
+      "text": "أنه {0} لتفتحها"
+    },
+    {
+      "key": "ui.referral.welcome_done_hint",
+      "text": "هدية صديقك لإنهائك {0}"
+    },
+    {
+      "key": "ui.referral.settling",
+      "text": "جار المزامنة"
+    },
+    {
+      "key": "ui.referral.heading",
+      "text": "أصدقاء أنهوا {0}"
+    },
+    {
+      "key": "ui.referral.collect",
+      "text": "استلام"
+    },
+    {
+      "key": "ui.referral.progress",
+      "text": "{0}/{1}"
+    },
+    {
+      "key": "ui.referral.not_yet",
+      "text": "ليس بعد. اللعبة ما زالت تلحق بتقدم أصدقائك."
+    },
+    {
+      "key": "ui.referral.unknown_rung",
+      "text": "هذا الصندوق لم يعد معروضا."
+    },
+    {
+      "key": "ui.referral.code_title",
+      "text": "أدخل الرمز"
+    },
+    {
+      "key": "ui.referral.code_hint",
+      "text": "ABCD-EFGH"
+    },
+    {
+      "key": "ui.referral.code_rule",
+      "text": "{0} أحرف وأرقام، من صديق يلعب"
+    },
+    {
+      "key": "ui.referral.redeem",
+      "text": "استبدال"
+    },
+    {
+      "key": "ui.referral.redeeming",
+      "text": "جار التحقق…"
+    },
+    {
+      "key": "ui.referral.redeem_bound",
+      "text": "أنت معنا! أنه {0} وسيحصل كل منكما على صناديق."
+    },
+    {
+      "key": "ui.referral.redeem_bad_code",
+      "text": "هذا ليس رمزا. تحقق منه وحاول مرة أخرى."
+    },
+    {
+      "key": "ui.referral.redeem_unknown",
+      "text": "لا أحد يملك هذا الرمز."
+    },
+    {
+      "key": "ui.referral.redeem_own",
+      "text": "هذا رمزك أنت."
+    },
+    {
+      "key": "ui.referral.redeem_already",
+      "text": "لقد استخدمت رمز صديق بالفعل."
+    },
+    {
+      "key": "ui.referral.redeem_full",
+      "text": "هذا الصديق استنفد كل الدعوات المتاحة له."
+    },
+    {
+      "key": "ui.referral.redeem_too_late",
+      "text": "الرموز للاعبين الجدد، وقد أنهيت {0} بالفعل."
+    },
+    {
+      "key": "ui.referral.redeem_no_save",
+      "text": "العب مرحلة أولا، ثم حاول مرة أخرى."
+    },
+    {
+      "key": "ui.referral.redeem_unavailable",
+      "text": "تعذر الوصول إلى الخادم. حاول مرة أخرى بعد قليل."
+    },
+    {
+      "key": "ui.referral.info_title",
+      "text": "كيف تعمل"
+    },
+    {
+      "key": "ui.referral.info_share_title",
+      "text": "شارك رمزك"
+    },
+    {
+      "key": "ui.referral.info_share_body",
+      "text": "أرسله إلى صديق لم يلعب بعد. يدخله عند البدء."
+    },
+    {
+      "key": "ui.referral.info_finish_title",
+      "text": "ينهي {0}"
+    },
+    {
+      "key": "ui.referral.info_finish_body",
+      "text": "حين يجتاز صديقك كل مراحل {0}، يفتح كل منكما صناديق. صناديقه له، وصناديقك تأتي مع كل صديق ينهيها."
+    },
+    {
+      "key": "ui.referral.friend_n",
+      "text": "الصديق {0}"
+    },
+    {
+      "key": "ui.referral.pays",
+      "text": "{0}× {1}"
+    },
+    {
+      "key": "ui.referral.opened",
+      "text": "{0} من {1} مفتوحة"
+    },
+    {
+      "key": "ui.referral.in_progress",
+      "text": "قيد التقدم"
+    },
+    {
+      "key": "ui.referral.in_progress_hint",
+      "text": "انضم، ويلعب الآن {0}"
+    },
+    {
+      "key": "ui.referral.paste",
+      "text": "لصق"
+    },
+    {
+      "key": "ui.referral.paste_empty",
+      "text": "لا شيء للصق. انسخ رمز صديقك أولا."
+    },
+    {
+      "key": "ui.referral.info_pay_title",
+      "text": "كل صديق يمنحك مكافأة"
+    },
+    {
+      "key": "ui.referral.info_pay_body",
+      "text": "كل صديق ينهي {0} يمنحك {1}. يمكن لما يصل إلى {2} أصدقاء استخدام رمزك، وصناديق هذه الصفحة لا تحتسب أبدا في الموسم."
+    },
+    {
+      "key": "ui.rank.motes",
+      "text": "الذرات: {0}"
+    },
+    {
+      "key": "ui.rank.motes_one",
+      "text": "{0} ذرة"
+    },
+    {
+      "key": "ui.rank.moves",
+      "text": "الحركات: {0}"
+    },
+    {
+      "key": "ui.rank.moves_one",
+      "text": "{0} حركة"
+    },
+    {
+      "key": "ui.rank.points",
+      "text": "النقاط: {0}"
+    },
+    {
+      "key": "ui.rank.points_one",
+      "text": "{0} نقطة"
+    },
+    {
+      "key": "ui.rank.record",
+      "text": "الأدوار: {0}"
+    },
+    {
+      "key": "ui.rank.record_one",
+      "text": "{0} دور"
+    },
+    {
+      "key": "ui.rank.record_unit",
+      "text": "الأدوار"
+    },
+    {
+      "key": "ui.rank.moves_unit",
+      "text": "الحركات"
+    },
+    {
+      "key": "ui.rank.motes_unit",
+      "text": "الذرات"
+    },
+    {
+      "key": "ui.report.body",
+      "text": "أخبرنا إن كان شيء هنا مسيئا. سيراجعه شخص حقيقي، ولن يتغير شيء تجاه هذا الحارس بالنسبة لك."
+    },
+    {
+      "key": "ui.report.grove",
+      "text": "أخدوده"
+    },
+    {
+      "key": "ui.report.name",
+      "text": "اسمه"
+    },
+    {
+      "key": "ui.report.sent",
+      "text": "تم الإبلاغ بالفعل"
+    },
+    {
+      "key": "ui.report.title",
+      "text": "الإبلاغ عن هذا الحارس؟"
+    },
+    {
+      "key": "ui.reward.credits",
+      "text": "عملات"
+    },
+    {
+      "key": "ui.reward.gems",
+      "text": "جواهر"
+    },
+    {
+      "key": "ui.reward.heart_boost",
+      "text": "قلوب سريعة"
+    },
+    {
+      "key": "ui.reward.hearts",
+      "text": "قلوب"
+    },
+    {
+      "key": "ui.reward.hints",
+      "text": "همسات"
+    },
+    {
+      "key": "ui.reward.run_time",
+      "text": "ثوان"
+    },
+    {
+      "key": "ui.route.close",
+      "text": "على بعد {0} أدوار من الطريق المثالي"
+    },
+    {
+      "key": "ui.route.close_one",
+      "text": "على بعد دور واحد من الطريق المثالي"
+    },
+    {
+      "key": "ui.route.perfect",
+      "text": "لم يضع دور واحد"
+    },
+    {
+      "key": "ui.route.under",
+      "text": "أقصر بـ {0} أدوار مما عرفه الأخدود"
+    },
+    {
+      "key": "ui.route.under_one",
+      "text": "أقصر بدور واحد مما عرفه الأخدود"
+    },
+    {
+      "key": "ui.run.level",
+      "text": "المرحلة {0}"
+    },
+    {
+      "key": "ui.settings.buzz",
+      "text": "اهتزاز"
+    },
+    {
+      "key": "ui.settings.music",
+      "text": "موسيقى"
+    },
+    {
+      "key": "ui.settings.privacy",
+      "text": "الخصوصية وخيارات الإعلانات"
+    },
+    {
+      "key": "ui.privacy.tracking_usage",
+      "text": "ستستخدم بياناتك لعرض إعلانات أكثر ملاءمة لك. هذا يساعد على إبقاء Gemfire مجانية."
+    },
+    {
+      "key": "ui.settings.privacy_policy",
+      "text": "الخصوصية"
+    },
+    {
+      "key": "ui.settings.reminders_blocked",
+      "text": "التذكيرات  ·  محظورة"
+    },
+    {
+      "key": "ui.settings.reminders_off",
+      "text": "التذكيرات  ·  متوقفة"
+    },
+    {
+      "key": "ui.settings.reminders_on",
+      "text": "التذكيرات  ·  مفعلة"
+    },
+    {
+      "key": "ui.settings.sound",
+      "text": "صوت"
+    },
+    {
+      "key": "ui.settings.support",
+      "text": "الدعم"
+    },
+    {
+      "key": "ui.settings.terms",
+      "text": "الشروط"
+    },
+    {
+      "key": "ui.settings.title",
+      "text": "الإعدادات"
+    },
+    {
+      "key": "ui.settings.toggle_row",
+      "text": "اهتزاز   صوت   موسيقى"
+    },
+    {
+      "key": "ui.settings.version",
+      "text": "Gemfire  v{0}"
+    },
+    {
+      "key": "ui.settings.language",
+      "text": "اللغة  ·  {0}"
+    },
+    {
+      "key": "ui.language.title",
+      "text": "اللغة"
+    },
+    {
+      "key": "ui.language.en",
+      "text": "English"
+    },
+    {
+      "key": "ui.language.es",
+      "text": "Español"
+    },
+    {
+      "key": "ui.language.pt",
+      "text": "Português"
+    },
+    {
+      "key": "ui.language.fr",
+      "text": "Français"
+    },
+    {
+      "key": "ui.language.de",
+      "text": "Deutsch"
+    },
+    {
+      "key": "ui.language.it",
+      "text": "Italiano"
+    },
+    {
+      "key": "ui.language.tr",
+      "text": "Türkçe"
+    },
+    {
+      "key": "ui.language.pl",
+      "text": "Polski"
+    },
+    {
+      "key": "ui.language.ar",
+      "text": "العربية"
+    },
+    {
+      "key": "ui.shelf.bed",
+      "text": "نباتات"
+    },
+    {
+      "key": "ui.shelf.canopy",
+      "text": "أشجار"
+    },
+    {
+      "key": "ui.shelf.edge",
+      "text": "الحافة"
+    },
+    {
+      "key": "ui.shelf.ground",
+      "text": "أرض"
+    },
+    {
+      "key": "ui.shelf.home",
+      "text": "بيت"
+    },
+    {
+      "key": "ui.shelf.path",
+      "text": "ممرات"
+    },
+    {
+      "key": "ui.shelf.residents",
+      "text": "أصدقاء"
+    },
+    {
+      "key": "ui.shelf.structure",
+      "text": "معالم"
+    },
+    {
+      "key": "ui.shop.ad_free",
+      "text": "مجاني"
+    },
+    {
+      "key": "ui.shop.already_included",
+      "text": "وعاؤك الأكبر يتسع لهذا القدر بالفعل"
+    },
+    {
+      "key": "ui.shop.already_owned",
+      "text": "لديك هذا بالفعل"
+    },
+    {
+      "key": "ui.shop.arriving",
+      "text": "في الطريق"
+    },
+    {
+      "key": "ui.shop.arriving_many",
+      "text": "المشتريات: {0}"
+    },
+    {
+      "key": "ui.shop.arriving_note",
+      "text": "تم الدفع. يجري تسليمه الآن."
+    },
+    {
+      "key": "ui.shop.awaiting",
+      "text": "هناك عملية شراء في الطريق. ستصل فور اتصالك بالإنترنت."
+    },
+    {
+      "key": "ui.shop.awaiting_short",
+      "text": "في الطريق"
+    },
+    {
+      "key": "ui.shop.badge_best",
+      "text": "أفضل قيمة"
+    },
+    {
+      "key": "ui.shop.badge_popular",
+      "text": "الأكثر رواجا"
+    },
+    {
+      "key": "ui.shop.badge_starter",
+      "text": "مرة واحدة فقط"
+    },
+    {
+      "key": "ui.shop.bonus",
+      "text": "+{0}% إضافي"
+    },
+    {
+      "key": "ui.shop.boost_added",
+      "text": "قلوب أسرع لمدة {0} ساعة إضافية"
+    },
+    {
+      "key": "ui.shop.boost_explain",
+      "text": "القلوب تعود كل {0} ساعات بدلا من {1} ما دام هذا مفعلا."
+    },
+    {
+      "key": "ui.shop.boost_full",
+      "text": "تعزيزك قارب حده الأقصى بالفعل"
+    },
+    {
+      "key": "ui.shop.boost_hours",
+      "text": "{0} س"
+    },
+    {
+      "key": "ui.shop.boost_left",
+      "text": "التعزيز مفعل: متبق {0}"
+    },
+    {
+      "key": "ui.shop.boost_note",
+      "text": "قلوب أسرع"
+    },
+    {
+      "key": "ui.shop.capacity",
+      "text": "حد القلوب، للأبد"
+    },
+    {
+      "key": "ui.shop.capacity_held",
+      "text": "قلوبك تمتلئ حتى {0}."
+    },
+    {
+      "key": "ui.shop.capacity_note",
+      "text": "قلوبك ستمتلئ حتى {0} من الآن فصاعدا، على كل جهاز تلعب عليه."
+    },
+    {
+      "key": "ui.shop.capacity_upgrade",
+      "text": "من {0} إلى {1} قلوب"
+    },
+    {
+      "key": "ui.shop.coins",
+      "text": "العملات"
+    },
+    {
+      "key": "ui.shop.connecting",
+      "text": "جار جلب الأسعار..."
+    },
+    {
+      "key": "ui.shop.deferred",
+      "text": "بانتظار الموافقة. سيصل بمجرد الموافقة عليه."
+    },
+    {
+      "key": "ui.shop.failed",
+      "text": "حدث خطأ ما. لم يخصم أي مبلغ."
+    },
+    {
+      "key": "ui.shop.gem_price",
+      "text": "{0}"
+    },
+    {
+      "key": "ui.shop.gems",
+      "text": "الجواهر"
+    },
+    {
+      "key": "ui.shop.guest_notice",
+      "text": "لم تسجل الدخول. كل ما تشتريه يبقى على هذا الهاتف فقط."
+    },
+    {
+      "key": "ui.shop.hearts",
+      "text": "القلوب"
+    },
+    {
+      "key": "ui.shop.hearts_added",
+      "text": "تمت إضافة القلوب: {0}"
+    },
+    {
+      "key": "ui.shop.hearts_count",
+      "text": "القلوب: {0}"
+    },
+    {
+      "key": "ui.shop.hearts_explain",
+      "text": "القلوب تمتلئ من تلقاء نفسها حتى {0}. والقلوب التي تجمعها تتراكم فوقها، حتى {1}."
+    },
+    {
+      "key": "ui.shop.hearts_full",
+      "text": "قلوبك شبه ممتلئة"
+    },
+    {
+      "key": "ui.shop.hearts_held",
+      "text": "لديك {0}"
+    },
+    {
+      "key": "ui.shop.included",
+      "text": "مشمول"
+    },
+    {
+      "key": "ui.shop.need_gems",
+      "text": "الجواهر لا تكفي بعد"
+    },
+    {
+      "key": "ui.shop.no_coins",
+      "text": "العملات لا تكفي"
+    },
+    {
+      "key": "ui.shop.no_connection",
+      "text": "لا يوجد اتصال. المتجر يحتاج إلى اتصال لعرض الأسعار."
+    },
+    {
+      "key": "ui.shop.offline",
+      "text": "لا يمكن الوصول إلى المتجر الآن"
+    },
+    {
+      "key": "ui.shop.owned",
+      "text": "لك"
+    },
+    {
+      "key": "ui.shop.payment_failed",
+      "text": "لم تتم عملية الدفع. لم يخصم أي مبلغ."
+    },
+    {
+      "key": "ui.shop.plus_coins",
+      "text": "+ {0} عملة"
+    },
+    {
+      "key": "ui.shop.price_pending",
+      "text": "..."
+    },
+    {
+      "key": "ui.shop.purchasing",
+      "text": "جار الانتظار..."
+    },
+    {
+      "key": "ui.shop.restore",
+      "text": "استعادة المشتريات"
+    },
+    {
+      "key": "ui.shop.restore_started",
+      "text": "جار البحث عن أي شيء لم يسلم بعد..."
+    },
+    {
+      "key": "ui.shop.shelf_bundles",
+      "text": "كل شيء معا، بأقل من ثمن الأجزاء"
+    },
+    {
+      "key": "ui.shop.shelf_coins",
+      "text": "العملات تشتري الرفاق والأرض وكل ما في أخدودك"
+    },
+    {
+      "key": "ui.shop.shelf_gems",
+      "text": "الجواهر تشتري القلوب والتعزيزات والوقت"
+    },
+    {
+      "key": "ui.shop.shelf_supplies",
+      "text": "قلوب، وقلوب أسرع، وحد أكبر"
+    },
+    {
+      "key": "ui.shop.shelf_utilities",
+      "text": "قدور النار والإصلاحات والاندفاعات للغارة"
+    },
+    {
+      "key": "ui.shop.short_coins",
+      "text": "تحتاج إلى {0} عملة إضافية"
+    },
+    {
+      "key": "ui.shop.short_gems",
+      "text": "تحتاج إلى {0} جوهرة إضافية"
+    },
+    {
+      "key": "ui.shop.tab_bundles",
+      "text": "الحزم"
+    },
+    {
+      "key": "ui.shop.tab_coins",
+      "text": "العملات"
+    },
+    {
+      "key": "ui.shop.tab_gems",
+      "text": "الجواهر"
+    },
+    {
+      "key": "ui.shop.tab_supplies",
+      "text": "المؤن"
+    },
+    {
+      "key": "ui.shop.tab_utilities",
+      "text": "الأدوات"
+    },
+    {
+      "key": "ui.shop.thanks",
+      "text": "شكرا لك"
+    },
+    {
+      "key": "ui.shop.unavailable",
+      "text": "المشتريات غير متاحة في هذا الإصدار"
+    },
+    {
+      "key": "ui.shop.unknown_product",
+      "text": "هذا العرض غير متاح في متجرك"
+    },
+    {
+      "key": "ui.shop.utility_full",
+      "text": "الحقيبة ممتلئة"
+    },
+    {
+      "key": "ui.shop.utility_held",
+      "text": "تحمل {0} من {1}"
+    },
+    {
+      "key": "ui.soon.ranks",
+      "text": "لوحات صدارة أسبوعية لأسرع اللاعبين وأهدئهم في الحل."
+    },
+    {
+      "key": "ui.soon.shop",
+      "text": "الصناديق وأزياء المخلوقات وأنماط القنوات ستكون هنا."
+    },
+    {
+      "key": "ui.streak.at_risk",
+      "text": "متبق اليوم: {0}"
+    },
+    {
+      "key": "ui.streak.day",
+      "text": "سلسلة الأيام"
+    },
+    {
+      "key": "ui.streak.day_n",
+      "text": "الليلة {0}"
+    },
+    {
+      "key": "ui.streak.days",
+      "text": "سلسلة الأيام"
+    },
+    {
+      "key": "ui.streak.done_today",
+      "text": "الليلة محفوظة"
+    },
+    {
+      "key": "ui.streak.explain_none",
+      "text": "لا سلسلة بعد"
+    },
+    {
+      "key": "ui.streak.explain_risk_clock",
+      "text": "الشعلة تنطفئ بعد {0}"
+    },
+    {
+      "key": "ui.streak.info_cycle_body",
+      "text": "لا شيء يتوقف. عدك يستمر في الصعود ولا يصفر أبدا ما دمت تلعب، واللوحة تبدأ ببساطة الليالي الـ {0} نفسها من جديد. الليلة التي تلي الليلة رقم {0} تمنح {1}، تماما كما فعلت الليلة الأولى."
+    },
+    {
+      "key": "ui.streak.info_cycle_nothing",
+      "text": "لا شيء، تماما كالليلة الأولى"
+    },
+    {
+      "key": "ui.streak.info_cycle_title",
+      "text": "بعد الليلة الأخيرة"
+    },
+    {
+      "key": "ui.streak.info_earn_body",
+      "text": "أنه مرحلة في أي يوم وتصبح تلك الليلة لك، الفوز ليس مطلوبا، فقط الإنهاء. الشعلة لا تنطفئ إلا إذا مر يوم كامل دون إنهاء أي شيء. عد إلى هنا وانقر الليلة المضيئة لتأخذ ما تحمله."
+    },
+    {
+      "key": "ui.streak.info_earn_title",
+      "text": "أنه مرحلة"
+    },
+    {
+      "key": "ui.streak.info_title",
+      "text": "كيف تعمل السلسلة"
+    },
+    {
+      "key": "ui.streak.kept",
+      "text": "الأيام المتتالية: {0}"
+    },
+    {
+      "key": "ui.streak.kept_waiting",
+      "text": "الأيام المتتالية: {0}، ومكافأة بانتظارك"
+    },
+    {
+      "key": "ui.streak.needs_connection",
+      "text": "اتصل مرة واحدة"
+    },
+    {
+      "key": "ui.streak.none",
+      "text": "لا سلسلة"
+    },
+    {
+      "key": "ui.streak.rung_none",
+      "text": "الشعلة تشتعل"
+    },
+    {
+      "key": "ui.streak.subtitle",
+      "text": "أنه مرحلة كل يوم. كل ليلة تمنح مكافأة، والسابعة تمنح صندوقا ملكيا."
+    },
+    {
+      "key": "ui.streak.title",
+      "text": "سلسلتك"
+    },
+    {
+      "key": "ui.streak.waiting_many",
+      "text": "الليالي بانتظارك: {0}"
+    },
+    {
+      "key": "ui.streak.waiting_one",
+      "text": "ليلة بانتظارك"
+    },
+    {
+      "key": "ui.streak.nights",
+      "text": "ليال محفوظة"
+    },
+    {
+      "key": "ui.streak.week_one",
+      "text": "هذا الأسبوع"
+    },
+    {
+      "key": "ui.streak.week_n",
+      "text": "الأسبوع {0}"
+    },
+    {
+      "key": "ui.streak.shield",
+      "text": "درع السلسلة"
+    },
+    {
+      "key": "ui.streak.shield_hint",
+      "text": "احم سلسلتك لمدة {0} أيام."
+    },
+    {
+      "key": "ui.streak.shield_on_hint",
+      "text": "{0} أيام من يوم شرائه."
+    },
+    {
+      "key": "ui.streak.shield_none",
+      "text": "أشعل سلسلة أولا، ثم يمكنك حمايتها."
+    },
+    {
+      "key": "ui.streak.shield_days_left",
+      "text": "الأيام: {0}"
+    },
+    {
+      "key": "ui.streak.shield_left_one",
+      "text": "محمية ليوم واحد آخر"
+    },
+    {
+      "key": "ui.streak.shield_left_many",
+      "text": "محمية لأيام أخرى: {0}"
+    },
+    {
+      "key": "ui.streak.shield_bought",
+      "text": "سلسلتك محمية لمدة {0} أيام."
+    },
+    {
+      "key": "ui.streak.shield_held",
+      "text": "سلسلتك محمية بالفعل"
+    },
+    {
+      "key": "ui.streak.shield_too_poor",
+      "text": "الدرع يكلف {0} جوهرة"
+    },
+    {
+      "key": "ui.streak.info_shield_title",
+      "text": "درع السلسلة"
+    },
+    {
+      "key": "ui.streak.info_shield_body",
+      "text": "ستغيب لفترة؟ الدرع يبقي سلسلتك حية لمدة {0} أيام من يوم شرائه، دون الحاجة إلى أي مرحلة، مقابل {1} جوهرة. ينتهي من تلقاء نفسه، واللعب أثناءه لا يطيله."
+    },
+    {
+      "key": "ui.streak.shield_price",
+      "text": "{0}"
+    },
+    {
+      "key": "ui.streak.collect",
+      "text": "استلام"
+    },
+    {
+      "key": "ui.streak.in_many",
+      "text": "بعد {0} ليال"
+    },
+    {
+      "key": "ui.streak.tonight",
+      "text": "الليلة"
+    },
+    {
+      "key": "ui.streak.in_one",
+      "text": "ليلة الغد"
+    },
+    {
+      "key": "ui.tasks.claimed",
+      "text": "فتح الصندوق  ·  إلى المرة القادمة"
+    },
+    {
+      "key": "ui.tasks.daily",
+      "text": "المهام اليومية"
+    },
+    {
+      "key": "ui.tasks.fraction",
+      "text": "{0} / {1}"
+    },
+    {
+      "key": "ui.tasks.info_chest_body",
+      "text": "هناك {0} أنواع من الصناديق، وكلما صعبت المهمة كان الصندوق أفضل. انقر صندوقا على الرف لترى ما يحمله دائما وما قد يحمله. الصناديق تكسب باللعب ولا يمكن شراؤها أبدا."
+    },
+    {
+      "key": "ui.tasks.info_chest_title",
+      "text": "الصناديق"
+    },
+    {
+      "key": "ui.tasks.info_reset_body",
+      "text": "المهام اليومية تتغير كل يوم عند منتصف الليل. والمهام الأسبوعية تتغير كل يوم اثنين. الصندوق الذي لم تفتحه يختفي حين تتغير مهامه، فافتحه ما دام يلمع."
+    },
+    {
+      "key": "ui.tasks.info_reset_title",
+      "text": "مهام جديدة"
+    },
+    {
+      "key": "ui.tasks.info_tasks_body",
+      "text": "تحصل كل يوم على {0} مهام وكل أسبوع على {1}. العب وستمتلئ الأشرطة من تلقاء نفسها. أنه مهمة وانقرها لتفتح صندوقها."
+    },
+    {
+      "key": "ui.tasks.info_tasks_title",
+      "text": "المهام"
+    },
+    {
+      "key": "ui.tasks.info_title",
+      "text": "المهام"
+    },
+    {
+      "key": "ui.tasks.ladder_hint",
+      "text": "انقر صندوقا لترى ما يحمله"
+    },
+    {
+      "key": "ui.tasks.resets_in",
+      "text": "يعاد الضبط بعد {0}"
+    },
+    {
+      "key": "ui.tasks.subtitle",
+      "text": "أنه مهمة وافتح صندوقها. مهام جديدة كل يوم وكل أسبوع."
+    },
+    {
+      "key": "ui.tasks.tap_to_claim",
+      "text": "انقر لتفتح صندوقك"
+    },
+    {
+      "key": "ui.tasks.title",
+      "text": "المهام والمكافآت"
+    },
+    {
+      "key": "ui.tasks.weekly",
+      "text": "المهام الأسبوعية"
+    },
+    {
+      "key": "ui.time.adds",
+      "text": "يضيف {0} ثانية إلى ساعة هذا المرج."
+    },
+    {
+      "key": "ui.time.granted",
+      "text": "+{0} ثانية"
+    },
+    {
+      "key": "ui.time.keeps_heart",
+      "text": "أنه المرج ويبقى القلب لك."
+    },
+    {
+      "key": "ui.time.stars_still_run",
+      "text": "وقتك يستمر في العد، والنجوم ما زالت تعتمد على الساعة."
+    },
+    {
+      "key": "ui.tip.anylight.body",
+      "text": "هذا المخلوق ليس صعب الإرضاء. أي لون من الضوء يوقظه."
+    },
+    {
+      "key": "ui.tip.anylight.title",
+      "text": "أي لون"
+    },
+    {
+      "key": "ui.tip.bound.body",
+      "text": "هذه الخانات تحمل العلامات نفسها. أدر واحدة فتدور كلها معا."
+    },
+    {
+      "key": "ui.tip.bound.title",
+      "text": "خانات مرتبطة"
+    },
+    {
+      "key": "ui.tip.briar.body",
+      "text": "الأشواك تسد طريقين من الطرق الأربعة. الضوء يمر فقط عبر الطرق المفتوحة.\n\nأدر الخانة لتحريك الأشواك."
+    },
+    {
+      "key": "ui.tip.briar.title",
+      "text": "العليق"
+    },
+    {
+      "key": "ui.tip.crossing.body",
+      "text": "طريقان يتقاطعان هنا ولا يتلامسان أبدا. الضوء يبقى على طريقه."
+    },
+    {
+      "key": "ui.tip.crossing.title",
+      "text": "تقاطع"
+    },
+    {
+      "key": "ui.tip.duskcap.body",
+      "text": "هذا ينام في الظل، ويرتدي قمرا ليقول ذلك. أي ضوء يوقظه، ولن يستقر المرج حتى يعود كل فطر الغسق مظلما."
+    },
+    {
+      "key": "ui.tip.duskcap.title",
+      "text": "فطر الغسق"
+    },
+    {
+      "key": "ui.tip.fall_brim.body",
+      "text": "الذرة التي تتوقف فوق الخط تنهي الجولة.\n\nتتحول الحلقة إلى الأحمر حين تكون القطرة ستصل عاليا جدا."
+    },
+    {
+      "key": "ui.tip.fall_brim.title",
+      "text": "انتبه للخط"
+    },
+    {
+      "key": "ui.tip.fall_cook.body",
+      "text": "أسقط لونا على ذرة لتمزجهما. الأحمر على الأصفر يصنع البرتقالي.\n\nالذرة التي تحمل الألوان الثلاثة تنفجر وتشارك لونها مع جيرانها."
+    },
+    {
+      "key": "ui.tip.fall_cook.title",
+      "text": "امزج، لا تطابق"
+    },
+    {
+      "key": "ui.tip.fall_lens.body",
+      "text": "الزجاج يمتلئ باللون من الانفجارات المجاورة، أو من ذرة تسقط عليه.\n\nاملأ الألوان الثلاثة فيطلق الضوء يمينا ويسارا. اضربه بعدسة أخرى فيطلقه في كل اتجاه!"
+    },
+    {
+      "key": "ui.tip.fall_lens.title",
+      "text": "املأ الزجاج"
+    },
+    {
+      "key": "ui.tip.fall_supply.body",
+      "text": "لديك هذا العدد من الذرات فقط. لا يوجد تراجع.\n\nانظر إلى الحلقة تحت إصبعك قبل أن تفلتها."
+    },
+    {
+      "key": "ui.tip.fall_supply.title",
+      "text": "احسب ذراتك"
+    },
+    {
+      "key": "ui.tip.fall_whorl.body",
+      "text": "أي ضوء يفتح الدوامة. ثم تسحب الذرتين المجاورتين لها وتمزجهما في واحدة.\n\nضع الزوج الصحيح بجانبها أولا، ثم افتحها."
+    },
+    {
+      "key": "ui.tip.fall_whorl.title",
+      "text": "افتح الدوامة"
+    },
+    {
+      "key": "ui.tip.fragile.body",
+      "text": "هذه الخانة تنكسر بعد بضعة أدوار. الرقم يبين كم تبقى.\n\nالتراجع لا يصلحها."
+    },
+    {
+      "key": "ui.tip.fragile.title",
+      "text": "خانة هشة"
+    },
+    {
+      "key": "ui.tip.loadout_kit.body",
+      "text": "انقر هنا لترى حقيبتك.\n\nتساعدك حين تصعب المعركة."
+    },
+    {
+      "key": "ui.tip.loadout_kit.title",
+      "text": "حقيبتك"
+    },
+    {
+      "key": "ui.tip.loadout_seats.body",
+      "text": "انقر لونا، ثم اختر برجه.\n\nتشتري كل لون على حدة."
+    },
+    {
+      "key": "ui.tip.loadout_seats.title",
+      "text": "اختر أبراجك"
+    },
+    {
+      "key": "ui.tip.lucky_spin.body",
+      "text": "هذا الزر يدير عجلة الحظ لتحصل على عملات إضافية فوق ما منحه المرج. الدوران لا يكلف شيئا وكل الأجزاء متساوية الاحتمال، وأفضلها يساوي خمسة أضعاف الباقي. ستجده بعد كل مرج تكسب فيه عملات."
+    },
+    {
+      "key": "ui.tip.lucky_spin.title",
+      "text": "تشعر بالحظ؟"
+    },
+    {
+      "key": "ui.tip.map_gate.body",
+      "text": "اجمع {0} نجمة هنا لتفتح المنطقة التالية."
+    },
+    {
+      "key": "ui.tip.map_gate.title",
+      "text": "افتح المنطقة التالية"
+    },
+    {
+      "key": "ui.tip.map_kit.body",
+      "text": "هذا ما تأخذه معك إلى المرحلة.\n\nانقره لتختار أبراجك وحقيبتك."
+    },
+    {
+      "key": "ui.tip.map_kit.title",
+      "text": "تشكيلتك"
+    },
+    {
+      "key": "ui.tip.map_track.body",
+      "text": "انقر هنا لتلعب {0}.\n\nالموجات لا تتوقف أبدا."
+    },
+    {
+      "key": "ui.tip.map_track.title",
+      "text": "العب بلا نهاية"
+    },
+    {
+      "key": "ui.tip.merge_swipe.body",
+      "text": "اسحب جوهرة. تنزلق حتى يوقفها شيء ما، والتوأمان اللذان يلتقيان يندمجان في جوهرة أكبر بمرتين."
+    },
+    {
+      "key": "ui.tip.merge_swipe.title",
+      "text": "اسحب جوهرة"
+    },
+    {
+      "key": "ui.tip.pairs_flip.body",
+      "text": "انقر بطاقتين لتقلبهما. الحجر نفسه مرتين زوج، ويطلق برج لونه."
+    },
+    {
+      "key": "ui.tip.pairs_flip.title",
+      "text": "اقلب بطاقتين"
+    },
+    {
+      "key": "ui.tip.glade_wake.body",
+      "text": "انقر قناة لتديرها. المخلوق الذي يضيء بلونه يستيقظ ويطلق برجه في كل دور."
+    },
+    {
+      "key": "ui.tip.glade_wake.title",
+      "text": "أيقظ المخلوقات"
+    },
+    {
+      "key": "ui.tip.sokoban_push.body",
+      "text": "اسحب لتمشي. امش نحو جوهرة لتدفعها، والجوهرة التي تستقر على منصة لونها تجهز ذلك البرج."
+    },
+    {
+      "key": "ui.tip.sokoban_push.title",
+      "text": "ادفع الجواهر"
+    },
+    {
+      "key": "ui.tip.mixing.body",
+      "text": "هذا المخلوق يريد لونا ممزوجا. صل قلبين فيمتزج ضوؤهما.\n\nالأحمر والأصفر يصنعان البرتقالي."
+    },
+    {
+      "key": "ui.tip.mixing.title",
+      "text": "امزج الألوان"
+    },
+    {
+      "key": "ui.tip.mode_switch.body",
+      "text": "هناك أكثر من طريقة للعب. انقر هنا للتبديل بينها. لكل منها خريطتها ومراحلها، وكلها مفتوحة لك منذ اليوم الأول."
+    },
+    {
+      "key": "ui.tip.mode_switch.title",
+      "text": "طرق اللعب"
+    },
+    {
+      "key": "ui.tip.moves.body",
+      "text": "هذا عدد الأدوار المتبقية لك. إن نفدت تخسر قلبا."
+    },
+    {
+      "key": "ui.tip.moves.title",
+      "text": "الأدوار"
+    },
+    {
+      "key": "ui.tip.prism_drag.body",
+      "text": "اسحب جوهرة إلى الجوهرة المجاورة لها <b>فتتبادلان المكان</b>.\n\nالفانوس يضيء فقط الجواهر التي من <b>لونه</b> وتلامسه، ثم يسري ذلك اللون عبر كل جوهرة مطابقة بجانبها. صف خطا حتى مخلوق نائم فيستيقظ."
+    },
+    {
+      "key": "ui.tip.prism_drag.title",
+      "text": "اسحب جوهرة"
+    },
+    {
+      "key": "ui.tip.prism_vein.body",
+      "text": "لا شيء يستهلك هنا أبدا. الجواهر لا تنفجر ولا تسقط، واللوح الذي يوزع لك هو اللوح الذي تنهي عليه.\n\nلذا الضوء لا يخزن: إنه حيث توجد الجواهر المطابقة <b>الآن</b>. اسحب جوهرة من خط مضيء فينطفئ ذلك الخط مجددا."
+    },
+    {
+      "key": "ui.tip.prism_vein.title",
+      "text": "الضوء يتبع الجواهر"
+    },
+    {
+      "key": "ui.tip.proto_moves.body",
+      "text": "هذا اللوح يمنحك عددا محددا من الحركات، ولا شيء هنا يمكن التراجع عنه.\n\nانظر قبل أن تنقر."
+    },
+    {
+      "key": "ui.tip.proto_moves.title",
+      "text": "كل حركة نهائية"
+    },
+    {
+      "key": "ui.tip.rooted.body",
+      "text": "هذه الخانة لا تدور. ابن الطريق حولها."
+    },
+    {
+      "key": "ui.tip.rooted.title",
+      "text": "متجذرة"
+    },
+    {
+      "key": "ui.tip.siege_bomber.body",
+      "text": "ترك المفجر هذه عندما مات.\n\nانقرها فينفجر كل ما حولها."
+    },
+    {
+      "key": "ui.tip.siege_bomber.title",
+      "text": "انقر القنبلة"
+    },
+    {
+      "key": "ui.tip.siege_brim.body",
+      "text": "هذا البرج ممتلئ.\n\nانقره لتقذف الشحنة كلها دفعة واحدة. تصيب أي لون."
+    },
+    {
+      "key": "ui.tip.siege_brim.title",
+      "text": "انقر برجا ممتلئا"
+    },
+    {
+      "key": "ui.tip.siege_fuel.body",
+      "text": "حرك جوهرة لتصف ثلاثا من لون واحد.\n\nيفتح برج ذلك اللون النار، ولا يصيب إلا المهاجمين من لونه."
+    },
+    {
+      "key": "ui.tip.siege_fuel.title",
+      "text": "حرك لتطابق ثلاثا"
+    },
+    {
+      "key": "ui.tip.siege_lance.body",
+      "text": "طابق هذه فتأخذ معها صفها كله وعمودها كله.\n\nكل جوهرة تزيلها تغذي برجها، فأطلقها حيث تصطف الألوان التي تريدها."
+    },
+    {
+      "key": "ui.tip.siege_lance.title",
+      "text": "الرمح"
+    },
+    {
+      "key": "ui.tip.siege_prism.body",
+      "text": "جوهرة قوس قزح لا لون لها.\n\nطابقها مع أي ثلاث فتحتسب من ذلك اللون، لذا أنت تختار أي برج يتغذى."
+    },
+    {
+      "key": "ui.tip.siege_prism.title",
+      "text": "المنشور"
+    },
+    {
+      "key": "ui.tip.siege_salvage.body",
+      "text": "أسقط مهاجم هذا.\n\nانقره فيصبح برج ذلك اللون أقوى. أسرع!"
+    },
+    {
+      "key": "ui.tip.siege_salvage.title",
+      "text": "انقر الترس"
+    },
+    {
+      "key": "ui.tip.siege_storm.body",
+      "text": "طابق هذه فيطلق خطك كله النار على كل ما في التل دفعة واحدة، ومرتين على كل ما يحمل لونها.\n\nقيمتها بقدر ما يقف هناك، فانتظر حشدا."
+    },
+    {
+      "key": "ui.tip.siege_storm.title",
+      "text": "زجاجة العاصفة"
+    },
+    {
+      "key": "ui.tip.siege_furnace.body",
+      "text": "طابق هذه فيشحن برج لونها حتى الحافة.\n\nانقر الصاعقة على ذلك البرج لتقذف الشحنة كلها، لذا طابق لون البرج الذي تريد شحنه."
+    },
+    {
+      "key": "ui.tip.siege_furnace.title",
+      "text": "الفرن"
+    },
+    {
+      "key": "ui.tip.siege_hourglass.body",
+      "text": "طابق هذه فيتجمد كل ما في التل للحظة بينما تواصل أبراجك إطلاق النار.\n\nقيمتها بقدر ما يمشي حين تنطلق، فاحتفظ بها لحشد."
+    },
+    {
+      "key": "ui.tip.siege_hourglass.title",
+      "text": "الساعة الرملية"
+    },
+    {
+      "key": "ui.tip.siege_rubble.body",
+      "text": "صخرة دفنت هذا البرج. يحتفظ بكل ما لديه، لكنه لا يستطيع إطلاق النار.\n\nالحجر ينزلق من تلقاء نفسه بعد ثوان. انقره ثلاث مرات لتحرر البرج الآن."
+    },
+    {
+      "key": "ui.tip.siege_rubble.title",
+      "text": "احفر لإخراجه"
+    },
+    {
+      "key": "ui.tip.siege_anvil.body",
+      "text": "طابق هذه فيقذف التل كله إلى أعلى المنحدر.\n\nتمنح أبراجك وقتا أمام ما كاد يصل إليها، فاحتفظ بها لشيء قريب."
+    },
+    {
+      "key": "ui.tip.siege_anvil.title",
+      "text": "السندان"
+    },
+    {
+      "key": "ui.tip.siege_obsidian.title",
+      "text": "الحجر الملعون"
+    },
+    {
+      "key": "ui.tip.siege_obsidian.body",
+      "text": "هذا الحجر لا يغذي أي برج، لذا فهو يعترض الطريق فقط.\n\nصف ثلاثة فتنكسر اللعنة: يتحطم كل حجر ملعون على اللوح، ويذبل كل ما في التل لبضع ثوان ويتلقى ضررا إضافيا ما دامت اللعنة قائمة. أحجار أكثر تعني لعنة أطول، فاكسرها فوق حشد."
+    },
+    {
+      "key": "ui.tip.siege_singularity.title",
+      "text": "حجر الفراغ"
+    },
+    {
+      "key": "ui.tip.siege_singularity.body",
+      "text": "نادر، ولا يغذي أي برج.\n\nصف ثلاثة فيبتلع ثقب أسود اللوح كله، ثم يقذفه على التل: كل برج ما زال قائما يصيب كل مهاجم دفعة واحدة. يوزع اللوح من جديد، فاستخدمه حين يمتلئ التل."
+    },
+    {
+      "key": "ui.siege.hexed",
+      "text": "ملعون!"
+    },
+    {
+      "key": "ui.siege.hex_wasted",
+      "text": "لا شيء لتلعنه"
+    },
+    {
+      "key": "ui.siege.shuffle",
+      "text": "لا حركات، خلط!"
+    },
+    {
+      "key": "ui.title.elder",
+      "text": "حكيم الأخدود"
+    },
+    {
+      "key": "ui.title.keeper",
+      "text": "حارس الأخدود"
+    },
+    {
+      "key": "ui.title.sapling",
+      "text": "شتلة"
+    },
+    {
+      "key": "ui.title.seedling",
+      "text": "بذرة"
+    },
+    {
+      "key": "ui.title.warden",
+      "text": "حامي النور"
+    },
+    {
+      "key": "ui.tutorial.go",
+      "text": "متابعة"
+    },
+    {
+      "key": "ui.tutorial.skip",
+      "text": "تخط"
+    },
+    {
+      "key": "ui.tutorial.title",
+      "text": "مرحبا بك في Gemfire"
+    },
+    {
+      "key": "ui.tutorial.win",
+      "text": "المعركة بانتظارك!"
+    },
+    {
+      "key": "ui.utility.bought",
+      "text": "في حقيبتك."
+    },
+    {
+      "key": "ui.utility.buy",
+      "text": "شراء  {0}"
+    },
+    {
+      "key": "ui.utility.chest_only",
+      "text": "هذه تأتي من الصناديق اليومية."
+    },
+    {
+      "key": "ui.utility.full",
+      "text": "تحمل كل ما تستطيع ({0})."
+    },
+    {
+      "key": "ui.utility.get_gems",
+      "text": "احصل على جواهر"
+    },
+    {
+      "key": "ui.utility.holding",
+      "text": "تحمل {0} من {1}."
+    },
+    {
+      "key": "ui.utility.no_gems",
+      "text": "الجواهر لا تكفي للمزيد."
+    },
+    {
+      "key": "ui.utility.no_room",
+      "text": "لا مكان للمزيد، أقصى ما يمكنك حمله {0}."
+    },
+    {
+      "key": "ui.utility.no_target",
+      "text": "لا شيء هناك لتستخدمها عليه."
+    },
+    {
+      "key": "ui.utility.short",
+      "text": "تحتاج إلى {0} جوهرة إضافية. لديك {1}."
+    },
+    {
+      "key": "ui.utility.tap_to_buy",
+      "text": "انقر للشراء"
+    },
+    {
+      "key": "ui.visit.gone",
+      "text": "هذا الحارس لم يعد في اللوحات."
+    },
+    {
+      "key": "ui.visit.loading",
+      "text": "جار الذهاب إلى أخدوده…"
+    },
+    {
+      "key": "ui.visit.no_connection",
+      "text": "لا يوجد اتصال. ستحمل صفحته حين تعود متصلا."
+    },
+    {
+      "key": "ui.visit.report",
+      "text": "إبلاغ"
+    },
+    {
+      "key": "ui.visit.report_confirm_body",
+      "text": "أبلغ عن اسم هذا الحارس إن كان مسيئا. سيتحقق منه شخص حقيقي، ولن يتغير شيء في أخدوده بالنسبة لك."
+    },
+    {
+      "key": "ui.visit.report_confirm_title",
+      "text": "الإبلاغ عن هذا الاسم؟"
+    },
+    {
+      "key": "ui.visit.report_confirm_yes",
+      "text": "إبلاغ"
+    },
+    {
+      "key": "ui.visit.report_done",
+      "text": "شكرا لك. سنلقي نظرة."
+    },
+    {
+      "key": "ui.visit.report_failed",
+      "text": "تعذر الإرسال الآن."
+    },
+    {
+      "key": "ui.visit.report_limit",
+      "text": "لقد أبلغت عن أسماء كافية اليوم."
+    },
+    {
+      "key": "ui.visit.report_sent",
+      "text": "تم الإبلاغ"
+    },
+    {
+      "key": "ui.visit.updated",
+      "text": "تم تحديث الأخدود {0}"
+    },
+    {
+      "key": "ui.update.title",
+      "text": "حان وقت التحديث"
+    },
+    {
+      "key": "ui.update.body",
+      "text": "إصدار أحدث جاهز. حدث لتواصل اللعب."
+    },
+    {
+      "key": "ui.update.cta",
+      "text": "احصل على التحديث"
+    },
+    {
+      "key": "ui.ward.damage",
+      "text": "الضرر"
+    },
+    {
+      "key": "ui.ward.health",
+      "text": "الصحة"
+    },
+    {
+      "key": "ui.welcome.door",
+      "text": "مكافأة الترحيب"
+    },
+    {
+      "key": "ui.welcome.new",
+      "text": "جديد"
+    },
+    {
+      "key": "ui.welcome.title",
+      "text": "مكافأة الترحيب"
+    },
+    {
+      "key": "ui.welcome.subtitle",
+      "text": "أكمل المهام وافتح الأبراج"
+    },
+    {
+      "key": "ui.welcome.all_done",
+      "text": "كل الأبراج لك. استمتع بها!"
+    },
+    {
+      "key": "ui.welcome.days_left",
+      "text": "الأيام المتبقية: {0}"
+    },
+    {
+      "key": "ui.welcome.days_left_one",
+      "text": "يوم واحد متبق"
+    },
+    {
+      "key": "ui.welcome.to_go",
+      "text": "أيام متبقية"
+    },
+    {
+      "key": "ui.welcome.to_go_one",
+      "text": "يوم متبق"
+    },
+    {
+      "key": "ui.welcome.goal.runs",
+      "text": "العب معركة في أيام مختلفة: {0}"
+    },
+    {
+      "key": "ui.welcome.goal.wins",
+      "text": "اربح معركة في أيام مختلفة: {0}"
+    },
+    {
+      "key": "ui.welcome.goal.task_claims",
+      "text": "افتح صندوق مهمة في أيام مختلفة: {0}"
+    },
+    {
+      "key": "ui.welcome.goal.challenge_plays",
+      "text": "العب تحديا يوميا في أيام مختلفة: {0}"
+    },
+    {
+      "key": "ui.welcome.goal.challenge_wins",
+      "text": "اربح تحديا يوميا في أيام مختلفة: {0}"
+    },
+    {
+      "key": "ui.welcome.goal.streak",
+      "text": "اجمع ليلة سلسلة في أيام مختلفة: {0}"
+    },
+    {
+      "key": "ui.welcome.choose_word",
+      "text": "المكافأة"
+    },
+    {
+      "key": "ui.welcome.choose_line",
+      "text": "خذ البرج، أو ثمنه بدلا منه."
+    },
+    {
+      "key": "ui.welcome.choose_turret",
+      "text": "لك إلى الأبد، بهذا اللون. طوره بالعملات."
+    },
+    {
+      "key": "ui.welcome.choose_price",
+      "text": "سعر البرج في المتجر، يدفع إلى محفظتك."
+    },
+    {
+      "key": "ui.welcome.coins",
+      "text": "{0} عملة"
+    },
+    {
+      "key": "ui.welcome.gems",
+      "text": "{0} جوهرة"
+    },
+    {
+      "key": "ui.welcome.take",
+      "text": "خذ"
+    },
+    {
+      "key": "ui.welcome.taken",
+      "text": "تم الاستلام"
+    },
+    {
+      "key": "ui.wheel.collect",
+      "text": "شاهد فيديو للاستلام"
+    },
+    {
+      "key": "ui.wheel.collected",
+      "text": "تم الاستلام"
+    },
+    {
+      "key": "ui.wheel.cta",
+      "text": "أشعر بالحظ!"
+    },
+    {
+      "key": "ui.wheel.mult",
+      "text": "x{0}"
+    },
+    {
+      "key": "ui.wheel.odds",
+      "text": "كل الأجزاء بالحجم نفسه · فرصة 1 من {0}"
+    },
+    {
+      "key": "ui.wheel.prize_title",
+      "text": "لقد ربحت!"
+    },
+    {
+      "key": "ui.wheel.spin",
+      "text": "أدر"
+    },
+    {
+      "key": "ui.wheel.spinning",
+      "text": "جار الدوران..."
+    },
+    {
+      "key": "ui.wheel.title",
+      "text": "عجلة الحظ"
+    },
+    {
+      "key": "ui.wheel.won",
+      "text": "لقد ربحت {0} عملة!"
+    },
+    {
+      "key": "ui.when.days",
+      "text": "منذ {0} ي"
+    },
+    {
+      "key": "ui.when.hours",
+      "text": "منذ {0} س"
+    },
+    {
+      "key": "ui.when.minutes",
+      "text": "منذ {0} د"
+    },
+    {
+      "key": "ui.when.now",
+      "text": "الآن"
+    },
+    {
+      "key": "ui.win.best_stamp",
+      "text": "رقم قياسي جديد"
+    },
+    {
+      "key": "ui.win.chapter_opened",
+      "text": "فتحت {0}"
+    },
+    {
+      "key": "ui.win.coins",
+      "text": "+{0}"
+    },
+    {
+      "key": "ui.win.glades",
+      "text": "المراحل"
+    },
+    {
+      "key": "ui.win.golden",
+      "text": "مرج ذهبي!   عملات {0}%"
+    },
+    {
+      "key": "ui.win.next",
+      "text": "المرحلة التالية"
+    },
+    {
+      "key": "ui.win.opened",
+      "text": "فتحت {0}"
+    },
+    {
+      "key": "ui.win.rank1",
+      "text": "تم الحل"
+    },
+    {
+      "key": "ui.win.rank2",
+      "text": "رائع!"
+    },
+    {
+      "key": "ui.win.rank3",
+      "text": "مثالي!"
+    },
+    {
+      "key": "ui.win.route_grove",
+      "text": "طريق الأخدود"
+    },
+    {
+      "key": "ui.win.route_info",
+      "text": "طريق الأخدود هو عدد الأدوار التي بني هذا المرج حولها. الفوز يتطلب فقط إضاءة كل المصابيح، لذا يمكن أن تبقى القنوات التي لا تلمسها كما هي، ولهذا قد تأتي الجولة أقصر."
+    },
+    {
+      "key": "ui.win.route_you",
+      "text": "جولتك"
+    },
+    {
+      "key": "ui.win.three_stars",
+      "text": "ثلاث نجوم عند {0} أدوار"
+    },
+    {
+      "key": "ui.win.three_stars_timed",
+      "text": "ثلاث نجوم عند {0} أدوار و{1}"
+    },
+    {
+      "key": "ui.win.xp",
+      "text": "+{0} خبرة"
+    },
+    {
+      "key": "utility.aim.hill",
+      "text": "انقر مربعا على التل"
+    },
+    {
+      "key": "utility.aim.ward",
+      "text": "انقر برجا"
+    },
+    {
+      "key": "utility.aim.well",
+      "text": "انقر زاوية من التل"
+    },
+    {
+      "key": "utility.firepot.name",
+      "text": "قدر النار"
+    },
+    {
+      "key": "utility.firepot.note",
+      "text": "ينفجر على التل، فيحرق كل مهاجم قريب من مكان سقوطه."
+    },
+    {
+      "key": "utility.gravityhole.name",
+      "text": "ثقب الجاذبية"
+    },
+    {
+      "key": "utility.gravityhole.note",
+      "text": "يسحب كل مهاجم على التل إلى نقطة واحدة، ويبقيهم هناك، ثم يطلقهم وهم بطيئون. الزعيم لن يتزحزح."
+    },
+    {
+      "key": "utility.mending.name",
+      "text": "الإصلاح"
+    },
+    {
+      "key": "utility.mending.note",
+      "text": "يعالج برجا. لا يستطيع إقامة برج سقط."
+    },
+    {
+      "key": "utility.stormcall.name",
+      "text": "نداء العاصفة"
+    },
+    {
+      "key": "utility.stormcall.note",
+      "text": "البرق يضرب كل مهاجم على التل. لن يسقط زعيما."
+    },
+    {
+      "key": "utility.surge.name",
+      "text": "الاندفاع"
+    },
+    {
+      "key": "utility.surge.note",
+      "text": "يملأ برجا واحدا بالوقود، فيفتح النار أيا كان اللون الذي طابقته."
+    },
+    {
+      "key": "ward.apex.name",
+      "text": "الذروة"
+    },
+    {
+      "key": "ward.apex.note",
+      "text": "يصيب 3 مهاجمين إضافيين بكامل القوة."
+    },
+    {
+      "key": "ward.arcstorm.name",
+      "text": "عاصفة القوس"
+    },
+    {
+      "key": "ward.arcstorm.note",
+      "text": "يصيب 3 مهاجمين إضافيين، بقوة أكبر."
+    },
+    {
+      "key": "ward.beacon.name",
+      "text": "المنارة"
+    },
+    {
+      "key": "ward.beacon.note",
+      "text": "يخزن وقودا أكثر بنسبة 50%."
+    },
+    {
+      "key": "ward.bolt.name",
+      "text": "الصاعقة"
+    },
+    {
+      "key": "ward.bolt.note",
+      "text": "بلا تأثير إضافي. طلقة ثابتة ومتينة."
+    },
+    {
+      "key": "ward.breaker.name",
+      "text": "الكاسر"
+    },
+    {
+      "key": "ward.breaker.note",
+      "text": "يتجاهل الدروع. ضرر مضاعف للمهاجمين المدرعين."
+    },
+    {
+      "key": "ward.cleaver.name",
+      "text": "الساطور"
+    },
+    {
+      "key": "ward.cleaver.note",
+      "text": "يتجاهل الدروع. ضرر +50% للمهاجمين المدرعين."
+    },
+    {
+      "key": "ward.eclipse.name",
+      "text": "الكسوف"
+    },
+    {
+      "key": "ward.eclipse.note",
+      "text": "يتسلسل إلى 6 مهاجمين إضافيين بقوة مدمرة."
+    },
+    {
+      "key": "ward.ember.name",
+      "text": "الجمرة"
+    },
+    {
+      "key": "ward.ember.note",
+      "text": "يشعل النار في الهدف لمدة 3 ث."
+    },
+    {
+      "key": "ward.glacier.name",
+      "text": "النهر الجليدي"
+    },
+    {
+      "key": "ward.glacier.note",
+      "text": "يبطئ الهدف بنسبة 60% لمدة 2.5 ث."
+    },
+    {
+      "key": "ward.harpoon.name",
+      "text": "الحربة"
+    },
+    {
+      "key": "ward.harpoon.note",
+      "text": "كل طلقة رابعة تصيب الممر كله، بكامل القوة."
+    },
+    {
+      "key": "ward.howitzer.name",
+      "text": "المدفع الثقيل"
+    },
+    {
+      "key": "ward.howitzer.note",
+      "text": "يصيب كل ما بجانب الهدف، بقوة أكبر."
+    },
+    {
+      "key": "ward.lance.name",
+      "text": "الرمح"
+    },
+    {
+      "key": "ward.lance.note",
+      "text": "كل طلقة خامسة تصيب الممر كله."
+    },
+    {
+      "key": "ward.leech.name",
+      "text": "العلقة"
+    },
+    {
+      "key": "ward.leech.note",
+      "text": "يسترد ضعف الوقود مع كل قتل."
+    },
+    {
+      "key": "ward.lighthouse.name",
+      "text": "الفنار"
+    },
+    {
+      "key": "ward.lighthouse.note",
+      "text": "يصيب مهاجمين إضافيين اثنين."
+    },
+    {
+      "key": "ward.mortar.name",
+      "text": "الهاون"
+    },
+    {
+      "key": "ward.mortar.note",
+      "text": "يصيب كل ما بجانب الهدف."
+    },
+    {
+      "key": "ward.permafrost.name",
+      "text": "الجليد الدائم"
+    },
+    {
+      "key": "ward.permafrost.note",
+      "text": "يبطئ الهدف بنسبة 80% لمدة 4 ث."
+    },
+    {
+      "key": "ward.prism.name",
+      "text": "المنشور"
+    },
+    {
+      "key": "ward.prism.note",
+      "text": "يشل الهدف لمدة 0.5 ث."
+    },
+    {
+      "key": "ward.pyre.name",
+      "text": "المحرقة"
+    },
+    {
+      "key": "ward.pyre.note",
+      "text": "يشعل النار في الهدف لمدة 4 ث. يحرق بضعف الحرارة."
+    },
+    {
+      "key": "ward.pyroclast.name",
+      "text": "الحمم"
+    },
+    {
+      "key": "ward.pyroclast.note",
+      "text": "يشعل النار في الهدف لمدة 6 ث. سيل من اللهب."
+    },
+    {
+      "key": "ward.railgun.name",
+      "text": "المدفع الكهرومغناطيسي"
+    },
+    {
+      "key": "ward.railgun.note",
+      "text": "كل طلقة ثالثة تخترق الممر كله، بقوة أكبر."
+    },
+    {
+      "key": "ward.ricochet.name",
+      "text": "الارتداد"
+    },
+    {
+      "key": "ward.ricochet.note",
+      "text": "الطلقة ترتد إلى 5 مهاجمين إضافيين."
+    },
+    {
+      "key": "ward.rime.name",
+      "text": "الصقيع"
+    },
+    {
+      "key": "ward.rime.note",
+      "text": "يبطئ الهدف بنسبة 40% لمدة 1.5 ث."
+    },
+    {
+      "key": "ward.siphon.name",
+      "text": "الماصة"
+    },
+    {
+      "key": "ward.siphon.note",
+      "text": "يسترد الوقود مع كل قتل."
+    },
+    {
+      "key": "ward.spark.name",
+      "text": "الشرارة"
+    },
+    {
+      "key": "ward.spark.note",
+      "text": "يخزن ضعف الوقود."
+    },
+    {
+      "key": "ward.spectrum.name",
+      "text": "الطيف"
+    },
+    {
+      "key": "ward.spectrum.note",
+      "text": "يشل الهدف لمدة 1 ث."
+    },
+    {
+      "key": "ward.starfall.name",
+      "text": "سقوط النجوم"
+    },
+    {
+      "key": "ward.starfall.note",
+      "text": "يستدعي نجمة على كل ما حول الهدف."
+    },
+    {
+      "key": "ward.stasis.name",
+      "text": "السكون"
+    },
+    {
+      "key": "ward.stasis.note",
+      "text": "يوقف الهدف تماما لمدة 1.4 ث."
+    },
+    {
+      "key": "ward.sunderer.name",
+      "text": "الممزق"
+    },
+    {
+      "key": "ward.sunderer.note",
+      "text": "يتجاهل الدروع. ضرر ثلاثي للمهاجمين المدرعين."
+    },
+    {
+      "key": "ward.tempest.name",
+      "text": "الإعصار"
+    },
+    {
+      "key": "ward.tempest.note",
+      "text": "يسلسل البرق إلى 4 مهاجمين إضافيين، بقوة أكبر."
+    },
+    {
+      "key": "ward.wellspring.name",
+      "text": "النبع"
+    },
+    {
+      "key": "ward.wellspring.note",
+      "text": "يسترد وقودا كثيرا مع كل قتل."
+    },
+    {
+      "key": "store.good.xp_boost_day",
+      "text": "يوم من الخبرة المضاعفة"
+    },
+    {
+      "key": "store.good.xp_surge_day",
+      "text": "يوم من الخبرة الثلاثية"
+    },
+    {
+      "key": "store.good.xp_surge_two_day",
+      "text": "يومان من الخبرة الثلاثية"
+    },
+    {
+      "key": "ui.shop.xp_boost_note",
+      "text": "خبرة مضاعفة"
+    },
+    {
+      "key": "ui.shop.xp_boost_card",
+      "text": "تعزيز خبرة {0}% لمدة {1} س"
+    },
+    {
+      "key": "ui.shop.xp_boost_explain",
+      "text": "كل مرج وحراسة وموجة تمنح خبرة أكثر بنسبة {0}% ما دام هذا مفعلا. يتراكم مع التعزيز الذي يمكنك مشاهدته مجانا."
+    },
+    {
+      "key": "ui.shop.xp_boost_left",
+      "text": "التعزيز مفعل: متبق {0}"
+    },
+    {
+      "key": "ui.shop.xp_boost_none",
+      "text": "لا يوجد تعزيز خبرة مفعل"
+    },
+    {
+      "key": "ui.shop.xp_boost_added",
+      "text": "خبرة مضاعفة لمدة {0} ساعة إضافية"
+    },
+    {
+      "key": "ui.shop.xp_boost_full",
+      "text": "تعزيز خبرتك قارب حده الأقصى بالفعل"
+    },
+    {
+      "key": "ui.shop.xp_surge_explain",
+      "text": "كل مرج وحراسة وموجة تمنح خبرة أكثر بنسبة {0}% ما دام هذا مفعلا. يتراكم مع كل تعزيز خبرة آخر."
+    },
+    {
+      "key": "ui.shop.xp_surge_added",
+      "text": "+{0}% خبرة لمدة {1} ساعة إضافية"
+    },
+    {
+      "key": "ui.ads.challenge_play_title",
+      "text": "محاولة إضافية"
+    },
+    {
+      "key": "ui.ads.xp_boost_title",
+      "text": "تعزيز خبرة مجاني"
+    },
+    {
+      "key": "ui.ads.xp_boost_offer",
+      "text": "+{0}% خبرة لمدة {1} ساعات"
+    },
+    {
+      "key": "ui.ads.xp_boost_wait",
+      "text": "التالي بعد {0}"
+    },
+    {
+      "key": "ui.reward.xp_boost",
+      "text": "تعزيز الخبرة"
+    },
+    {
+      "key": "ui.win.xp_boosted",
+      "text": "+{0} خبرة من تعزيزك ({1}%)"
+    },
+    {
+      "key": "ui.ads.xp_boost_ready",
+      "text": "جاهز للمشاهدة الآن"
+    },
+    {
+      "key": "ui.ads.xp_boost_stacks",
+      "text": "يتراكم مع التعزيز الذي يمكنك شراؤه"
+    },
+    {
+      "key": "chapter.s07_dustcrown.name",
+      "text": "تاج الغبار"
+    },
+    {
+      "key": "level.s07_bonefield.name",
+      "text": "حقل العظام"
+    },
+    {
+      "key": "level.s07_bonefield.tagline",
+      "text": "رماة بأعداد كبيرة، ودروع خلفهم"
+    },
+    {
+      "key": "level.s07_crownfall.name",
+      "text": "سقوط التاج"
+    },
+    {
+      "key": "level.s07_crownfall.tagline",
+      "text": "يختم برجا. املأه أو تخسره"
+    },
+    {
+      "key": "level.s07_dryreach.name",
+      "text": "الأرض اليابسة"
+    },
+    {
+      "key": "level.s07_dryreach.tagline",
+      "text": "قنابل بين الدروع. احتفظ بواحدة للموجة"
+    },
+    {
+      "key": "level.s07_duststorm.name",
+      "text": "العاصفة الترابية"
+    },
+    {
+      "key": "level.s07_duststorm.tagline",
+      "text": "أربع موجات بلا هدوء فيها"
+    },
+    {
+      "key": "level.s07_firstdune.name",
+      "text": "الكثيب الأول"
+    },
+    {
+      "key": "level.s07_firstdune.tagline",
+      "text": "البلاط يسير. لا شيء هنا بطيء"
+    },
+    {
+      "key": "level.s07_glassridge.name",
+      "text": "حافة الزجاج"
+    },
+    {
+      "key": "level.s07_glassridge.tagline",
+      "text": "ثلاثة حواجز في موجة واحدة"
+    },
+    {
+      "key": "level.s07_gorgongate.name",
+      "text": "بوابة الغرغون"
+    },
+    {
+      "key": "level.s07_gorgongate.tagline",
+      "text": "نظرتها تهدر ما تصبه. غذ مكانا آخر"
+    },
+    {
+      "key": "level.s07_saltpan.name",
+      "text": "سبخة الملح"
+    },
+    {
+      "key": "level.s07_saltpan.tagline",
+      "text": "حاجزان في كل موجة من الآن فصاعدا"
+    },
+    {
+      "key": "level.s07_sunscour.name",
+      "text": "لفح الشمس"
+    },
+    {
+      "key": "level.s07_sunscour.tagline",
+      "text": "لون واحد في كل مرة، وكله مدرع"
+    },
+    {
+      "key": "level.s07_thelongwalk.name",
+      "text": "المسير الطويل"
+    },
+    {
+      "key": "level.s07_thelongwalk.tagline",
+      "text": "أطول صعود في هذا النمط"
+    },
+    {
+      "key": "chapter.s08_bonereach.name",
+      "text": "مدى العظام"
+    },
+    {
+      "key": "level.s08_firstreach.name",
+      "text": "المدى الأول"
+    },
+    {
+      "key": "level.s08_firstreach.tagline",
+      "text": "التل نفسه، يحمل نصف ما كان مرة أخرى"
+    },
+    {
+      "key": "level.s08_bonespur.name",
+      "text": "نتوء العظام"
+    },
+    {
+      "key": "level.s08_bonespur.tagline",
+      "text": "لا شيء مدرع، ومع ذلك يسير"
+    },
+    {
+      "key": "level.s08_ropebridge.name",
+      "text": "جسر الحبال"
+    },
+    {
+      "key": "level.s08_ropebridge.tagline",
+      "text": "حاجزان في كل موجة، وليسا الاثنين نفسيهما أبدا"
+    },
+    {
+      "key": "level.s08_crystalrise.name",
+      "text": "مرتفع البلور"
+    },
+    {
+      "key": "level.s08_crystalrise.tagline",
+      "text": "احتفظ بالقنبلة للدروع التي خلفها"
+    },
+    {
+      "key": "level.s08_harrowgate.name",
+      "text": "بوابة الحاصد"
+    },
+    {
+      "key": "level.s08_harrowgate.tagline",
+      "text": "يأخذ درجة من برج ويتركها على الأرض"
+    },
+    {
+      "key": "level.s08_thinair.name",
+      "text": "الهواء الرقيق"
+    },
+    {
+      "key": "level.s08_thinair.tagline",
+      "text": "لون واحد في كل مرة، وفيه دروع"
+    },
+    {
+      "key": "level.s08_shatterstep.name",
+      "text": "الخطوة المحطمة"
+    },
+    {
+      "key": "level.s08_shatterstep.tagline",
+      "text": "ثلاثة حواجز، وقنبلة واحدة للرد عليها"
+    },
+    {
+      "key": "level.s08_deadfall.name",
+      "text": "الفخ القاتل"
+    },
+    {
+      "key": "level.s08_deadfall.tagline",
+      "text": "أربع موجات، والرد محفوظ حتى النهاية"
+    },
+    {
+      "key": "level.s08_thelastspan.name",
+      "text": "القنطرة الأخيرة"
+    },
+    {
+      "key": "level.s08_thelastspan.tagline",
+      "text": "غذ الأربعة كلها، بالتساوي، لمدة دقيقتين"
+    },
+    {
+      "key": "level.s08_hollowcrown.name",
+      "text": "التاج الأجوف"
+    },
+    {
+      "key": "level.s08_hollowcrown.tagline",
+      "text": "يضرب كل ما صمت"
+    },
+    {
+      "key": "chapter.s09_cloudkeep.name",
+      "text": "حصن السحاب"
+    },
+    {
+      "key": "level.s09_firstcloud.name",
+      "text": "السحابة الأولى"
+    },
+    {
+      "key": "level.s09_firstcloud.tagline",
+      "text": "أعداد أكثر، وكل واحد أضعف قليلا"
+    },
+    {
+      "key": "level.s09_windward.name",
+      "text": "مهب الريح"
+    },
+    {
+      "key": "level.s09_windward.tagline",
+      "text": "أربعة عشر دفعة واحدة، ولا شيء مدرع"
+    },
+    {
+      "key": "level.s09_stepstones.name",
+      "text": "حجارة العبور"
+    },
+    {
+      "key": "level.s09_stepstones.tagline",
+      "text": "حاجزان في كل موجة، داخل الحشد"
+    },
+    {
+      "key": "level.s09_skyferry.name",
+      "text": "عبارة السماء"
+    },
+    {
+      "key": "level.s09_skyferry.tagline",
+      "text": "أمسك القنبلة حتى يدخلها الحشد"
+    },
+    {
+      "key": "level.s09_mawgate.name",
+      "text": "بوابة الفم"
+    },
+    {
+      "key": "level.s09_mawgate.tagline",
+      "text": "واحد يسقط درجة برجك، والآخر يلتهمها"
+    },
+    {
+      "key": "level.s09_tallgrass.name",
+      "text": "العشب الطويل"
+    },
+    {
+      "key": "level.s09_tallgrass.tagline",
+      "text": "لون واحد في كل مرة، كالطوفان"
+    },
+    {
+      "key": "level.s09_towerwatch.name",
+      "text": "حراسة البرج"
+    },
+    {
+      "key": "level.s09_towerwatch.tagline",
+      "text": "أربع موجات تحت البرج القديم"
+    },
+    {
+      "key": "level.s09_hollowpine.name",
+      "text": "الصنوبرة الجوفاء"
+    },
+    {
+      "key": "level.s09_hollowpine.tagline",
+      "text": "العمالقة في المقدمة، والدروع خلفهم"
+    },
+    {
+      "key": "level.s09_longspan.name",
+      "text": "القنطرة الطويلة"
+    },
+    {
+      "key": "level.s09_longspan.tagline",
+      "text": "غذ الأربعة كلها، بالتساوي، لمدة دقيقتين"
+    },
+    {
+      "key": "level.s09_glarecrown.name",
+      "text": "تاج الوهج"
+    },
+    {
+      "key": "level.s09_glarecrown.tagline",
+      "text": "صب في برج واحد، لكن ليس الذي تراقبه"
+    },
+    {
+      "key": "level.s09_highmeadow.name",
+      "text": "المرج العالي"
+    },
+    {
+      "key": "level.s09_highmeadow.tagline",
+      "text": "الحشد يكبر مع كل موجة"
+    },
+    {
+      "key": "level.s09_farmstead.name",
+      "text": "المزرعة"
+    },
+    {
+      "key": "level.s09_farmstead.tagline",
+      "text": "أربعة عشر منذ الموجة الأولى"
+    },
+    {
+      "key": "level.s09_ironrain.name",
+      "text": "المطر الحديدي"
+    },
+    {
+      "key": "level.s09_ironrain.tagline",
+      "text": "ثلاثة حواجز في كل موجة، وقنبلة واحدة"
+    },
+    {
+      "key": "level.s09_cloudbreak.name",
+      "text": "انقشاع السحاب"
+    },
+    {
+      "key": "level.s09_cloudbreak.tagline",
+      "text": "أربع موجات، والقنبلة للأخيرة"
+    },
+    {
+      "key": "level.s09_stormhold.name",
+      "text": "حصن العاصفة"
+    },
+    {
+      "key": "level.s09_stormhold.tagline",
+      "text": "البرج المقيد يمتلئ، والعاصفة تستنزفه"
+    },
+    {
+      "key": "level.s09_thinline.name",
+      "text": "الخط الرفيع"
+    },
+    {
+      "key": "level.s09_thinline.tagline",
+      "text": "ثلاثة عمالقة من لون واحد في كل مرة"
+    },
+    {
+      "key": "level.s09_lanternrise.name",
+      "text": "مرتفع الفوانيس"
+    },
+    {
+      "key": "level.s09_lanternrise.tagline",
+      "text": "دروع وقنابل في الموجة نفسها"
+    },
+    {
+      "key": "level.s09_whitewater.name",
+      "text": "المياه البيضاء"
+    },
+    {
+      "key": "level.s09_whitewater.tagline",
+      "text": "أطول صعود في هذه المنطقة"
+    },
+    {
+      "key": "level.s09_lastferry.name",
+      "text": "العبارة الأخيرة"
+    },
+    {
+      "key": "level.s09_lastferry.tagline",
+      "text": "كل ما علمته هذه المنطقة، دفعة واحدة"
+    },
+    {
+      "key": "level.s09_crownofclouds.name",
+      "text": "تاج السحاب"
+    },
+    {
+      "key": "level.s09_crownofclouds.tagline",
+      "text": "املأ البرج المختوم، وأبق الباقي يعمل"
+    },
+    {
+      "key": "chapter.s10_cogspire.name",
+      "text": "برج التروس"
+    },
+    {
+      "key": "level.s10_brassgate.name",
+      "text": "البوابة النحاسية"
+    },
+    {
+      "key": "level.s10_brassgate.tagline",
+      "text": "اكسر ثلاثة أحجار ملعونة فوق حشد"
+    },
+    {
+      "key": "level.s10_windmill.name",
+      "text": "صف الطواحين"
+    },
+    {
+      "key": "level.s10_windmill.tagline",
+      "text": "أربعة عشر دفعة واحدة، ولا شيء مدرع"
+    },
+    {
+      "key": "level.s10_lampwick.name",
+      "text": "فتيل المصباح"
+    },
+    {
+      "key": "level.s10_lampwick.tagline",
+      "text": "دروع في كل موجة، تحت المصابيح"
+    },
+    {
+      "key": "level.s10_gearhouse.name",
+      "text": "بيت التروس"
+    },
+    {
+      "key": "level.s10_gearhouse.tagline",
+      "text": "المفجرون يدخلون مع الحشد"
+    },
+    {
+      "key": "level.s10_boilerheart.name",
+      "text": "قلب المرجل"
+    },
+    {
+      "key": "level.s10_boilerheart.tagline",
+      "text": "أمير حرب وجالب حرب، معا"
+    },
+    {
+      "key": "level.s10_steamvent.name",
+      "text": "فتحة البخار"
+    },
+    {
+      "key": "level.s10_steamvent.tagline",
+      "text": "لون واحد في كل مرة، كالطوفان"
+    },
+    {
+      "key": "level.s10_airdock.name",
+      "text": "مرسى المنطاد"
+    },
+    {
+      "key": "level.s10_airdock.tagline",
+      "text": "أربع موجات بعد المنطاد"
+    },
+    {
+      "key": "level.s10_chainbridge.name",
+      "text": "جسر السلاسل"
+    },
+    {
+      "key": "level.s10_chainbridge.tagline",
+      "text": "العمالقة يقودون كل موجة"
+    },
+    {
+      "key": "level.s10_plankway.name",
+      "text": "ممر الألواح"
+    },
+    {
+      "key": "level.s10_plankway.tagline",
+      "text": "أبق كل برج متغذيا"
+    },
+    {
+      "key": "level.s10_millwheel.name",
+      "text": "دولاب الطاحونة"
+    },
+    {
+      "key": "level.s10_millwheel.tagline",
+      "text": "سيد أعظم ومستدعي عظام، معا"
+    },
+    {
+      "key": "level.s10_axlegate.name",
+      "text": "بوابة المحور"
+    },
+    {
+      "key": "level.s10_axlegate.tagline",
+      "text": "الحشد يواصل الصعود"
+    },
+    {
+      "key": "level.s10_orecart.name",
+      "text": "عربة الخام"
+    },
+    {
+      "key": "level.s10_orecart.tagline",
+      "text": "ستة عشر منذ الموجة الأولى"
+    },
+    {
+      "key": "level.s10_armillary.name",
+      "text": "الكرة الفلكية"
+    },
+    {
+      "key": "level.s10_armillary.tagline",
+      "text": "ثلاثة حواجز في كل موجة"
+    },
+    {
+      "key": "level.s10_coilyard.name",
+      "text": "ساحة الملفات"
+    },
+    {
+      "key": "level.s10_coilyard.tagline",
+      "text": "حشد طويل تحت الملفات"
+    },
+    {
+      "key": "level.s10_sparkspire.name",
+      "text": "برج الشرر"
+    },
+    {
+      "key": "level.s10_sparkspire.tagline",
+      "text": "مدرع وعملاق أعظم، معا"
+    },
+    {
+      "key": "level.s10_trussway.name",
+      "text": "ممر الدعامات"
+    },
+    {
+      "key": "level.s10_trussway.tagline",
+      "text": "أربعة عمالقة من لون واحد في كل مرة"
+    },
+    {
+      "key": "level.s10_domewatch.name",
+      "text": "حراسة القبة"
+    },
+    {
+      "key": "level.s10_domewatch.tagline",
+      "text": "دروع وقنابل في الموجة نفسها"
+    },
+    {
+      "key": "level.s10_starglass.name",
+      "text": "زجاج النجوم"
+    },
+    {
+      "key": "level.s10_starglass.tagline",
+      "text": "أطول صعود في هذه المنطقة"
+    },
+    {
+      "key": "level.s10_nightrail.name",
+      "text": "قطار الليل"
+    },
+    {
+      "key": "level.s10_nightrail.tagline",
+      "text": "كل ما علمته هذه المنطقة، دفعة واحدة"
+    },
+    {
+      "key": "level.s10_skyclock.name",
+      "text": "ساعة السماء"
+    },
+    {
+      "key": "level.s10_skyclock.tagline",
+      "text": "توقف عن تغذية واحد، وأبق الثلاثة الأخرى تعمل"
+    },
+    {
+      "key": "chapter.s11_windwreck.name",
+      "text": "حطام الريح"
+    },
+    {
+      "key": "level.s11_driftpier.name",
+      "text": "رصيف الانجراف"
+    },
+    {
+      "key": "level.s11_driftpier.tagline",
+      "text": "عملاق من كل لون بحلول الموجة الثالثة"
+    },
+    {
+      "key": "level.s11_barrelrow.name",
+      "text": "صف البراميل"
+    },
+    {
+      "key": "level.s11_barrelrow.tagline",
+      "text": "العمالقة في مؤخرة كل موجة"
+    },
+    {
+      "key": "level.s11_longplank.name",
+      "text": "اللوح الطويل"
+    },
+    {
+      "key": "level.s11_longplank.tagline",
+      "text": "حواجز خلف العمالقة"
+    },
+    {
+      "key": "level.s11_chestrock.name",
+      "text": "صخرة الصندوق"
+    },
+    {
+      "key": "level.s11_chestrock.tagline",
+      "text": "قنابل داخل حشد من العمالقة"
+    },
+    {
+      "key": "level.s11_brokenkeel.name",
+      "text": "العارضة المكسورة"
+    },
+    {
+      "key": "level.s11_brokenkeel.tagline",
+      "text": "زئير والتهام: لا تدخر شيئا"
+    },
+    {
+      "key": "level.s11_lanternpost.name",
+      "text": "عمود الفانوس"
+    },
+    {
+      "key": "level.s11_lanternpost.tagline",
+      "text": "لون واحد في كل مرة، كالطوفان"
+    },
+    {
+      "key": "level.s11_saltdock.name",
+      "text": "مرسى الملح"
+    },
+    {
+      "key": "level.s11_saltdock.tagline",
+      "text": "أربع موجات قبالة الرصيف"
+    },
+    {
+      "key": "level.s11_rigladder.name",
+      "text": "سلم الأشرعة"
+    },
+    {
+      "key": "level.s11_rigladder.tagline",
+      "text": "دروع وقنبلة خلف الحشد"
+    },
+    {
+      "key": "level.s11_cannonreef.name",
+      "text": "شعاب المدافع"
+    },
+    {
+      "key": "level.s11_cannonreef.tagline",
+      "text": "أربع موجات، في كل منها زوج من العمالقة"
+    },
+    {
+      "key": "level.s11_ropeway.name",
+      "text": "ممر الحبال"
+    },
+    {
+      "key": "level.s11_ropeway.tagline",
+      "text": "اكسر اللعنة فوق الحشد المنتصب"
+    },
+    {
+      "key": "level.s11_bowsprit.name",
+      "text": "صاري المقدمة"
+    },
+    {
+      "key": "level.s11_bowsprit.tagline",
+      "text": "الحشد يكبر: سبعة عشر في النهاية"
+    },
+    {
+      "key": "level.s11_tattersail.name",
+      "text": "الشراع الممزق"
+    },
+    {
+      "key": "level.s11_tattersail.tagline",
+      "text": "ستة عشر منذ الموجة الأولى"
+    },
+    {
+      "key": "level.s11_bilgewater.name",
+      "text": "ماء القاع"
+    },
+    {
+      "key": "level.s11_bilgewater.tagline",
+      "text": "ثلاثة حواجز في كل موجة، والعمالقة خلفها"
+    },
+    {
+      "key": "level.s11_helmsway.name",
+      "text": "ممر الدفة"
+    },
+    {
+      "key": "level.s11_helmsway.tagline",
+      "text": "أربع موجات تحت الدفة"
+    },
+    {
+      "key": "level.s11_lighthouse.name",
+      "text": "الفنار"
+    },
+    {
+      "key": "level.s11_lighthouse.tagline",
+      "text": "عاصفة تستنزف، وحاصد يمزق درجة"
+    },
+    {
+      "key": "level.s11_mastbridge.name",
+      "text": "جسر الصاري"
+    },
+    {
+      "key": "level.s11_mastbridge.tagline",
+      "text": "ثلاثة عمالقة من لون واحد في كل مرة"
+    },
+    {
+      "key": "level.s11_goldhold.name",
+      "text": "عنبر الذهب"
+    },
+    {
+      "key": "level.s11_goldhold.tagline",
+      "text": "الرد على الدروع في القنابل"
+    },
+    {
+      "key": "level.s11_swayline.name",
+      "text": "الخط المتمايل"
+    },
+    {
+      "key": "level.s11_swayline.tagline",
+      "text": "أطول صعود في هذه المنطقة"
+    },
+    {
+      "key": "level.s11_wreckdeck.name",
+      "text": "سطح الحطام"
+    },
+    {
+      "key": "level.s11_wreckdeck.tagline",
+      "text": "كل ما علمته هذه المنطقة، دفعة واحدة"
+    },
+    {
+      "key": "level.s11_captainsdeck.name",
+      "text": "سطح القبطان"
+    },
+    {
+      "key": "level.s11_captainsdeck.tagline",
+      "text": "املأ البرج المختوم، عبر الدروع"
+    },
+    {
+      "key": "chapter.s12_neonhaven.name",
+      "text": "ملاذ النيون"
+    },
+    {
+      "key": "level.s12_glasspier.name",
+      "text": "الرصيف الزجاجي"
+    },
+    {
+      "key": "level.s12_glasspier.tagline",
+      "text": "الاندفاع يرتفع عشرا منذ الموجة الأولى"
+    },
+    {
+      "key": "level.s12_serverrow.name",
+      "text": "صف الخوادم"
+    },
+    {
+      "key": "level.s12_serverrow.tagline",
+      "text": "العمالقة في مؤخرة كل موجة"
+    },
+    {
+      "key": "level.s12_neonspan.name",
+      "text": "قنطرة النيون"
+    },
+    {
+      "key": "level.s12_neonspan.tagline",
+      "text": "حاجزان في كل موجة خلف العمالقة"
+    },
+    {
+      "key": "level.s12_noodlestall.name",
+      "text": "كشك النودلز"
+    },
+    {
+      "key": "level.s12_noodlestall.tagline",
+      "text": "مفجرون يختبئون في حشد من العمالقة"
+    },
+    {
+      "key": "level.s12_jetrock.name",
+      "text": "صخرة الكهرمان الأسود"
+    },
+    {
+      "key": "level.s12_jetrock.tagline",
+      "text": "أمير حرب ومستدعي آفة، معا أخيرا"
+    },
+    {
+      "key": "level.s12_lanternlift.name",
+      "text": "مصعد الفوانيس"
+    },
+    {
+      "key": "level.s12_lanternlift.tagline",
+      "text": "لون واحد في كل مرة، كالطوفان"
+    },
+    {
+      "key": "level.s12_escalator.name",
+      "text": "الدرج المتحرك"
+    },
+    {
+      "key": "level.s12_escalator.tagline",
+      "text": "أربع موجات، والثالثة مدرعة ومفخخة"
+    },
+    {
+      "key": "level.s12_pipealley.name",
+      "text": "زقاق الأنابيب"
+    },
+    {
+      "key": "level.s12_pipealley.tagline",
+      "text": "دروع وقنبلة خلف الحشد"
+    },
+    {
+      "key": "level.s12_rackhall.name",
+      "text": "قاعة الرفوف"
+    },
+    {
+      "key": "level.s12_rackhall.tagline",
+      "text": "أربع موجات، في كل منها زوج من العمالقة"
+    },
+    {
+      "key": "level.s12_signalyard.name",
+      "text": "ساحة الإشارات"
+    },
+    {
+      "key": "level.s12_signalyard.tagline",
+      "text": "احفر لإخراج البرج المدفون وسط العاصفة"
+    },
+    {
+      "key": "level.s12_holoplaza.name",
+      "text": "ساحة الهولوغرام"
+    },
+    {
+      "key": "level.s12_holoplaza.tagline",
+      "text": "الحشد يكبر مع كل موجة"
+    },
+    {
+      "key": "level.s12_relaydeck.name",
+      "text": "سطح المرحلات"
+    },
+    {
+      "key": "level.s12_relaydeck.tagline",
+      "text": "ستة عشر منذ الموجة الأولى"
+    },
+    {
+      "key": "level.s12_carbridge.name",
+      "text": "جسر السيارات"
+    },
+    {
+      "key": "level.s12_carbridge.tagline",
+      "text": "ثلاثة حواجز في كل موجة"
+    },
+    {
+      "key": "level.s12_dishhill.name",
+      "text": "تل الأطباق"
+    },
+    {
+      "key": "level.s12_dishhill.tagline",
+      "text": "أربع موجات، والقنبلة محفوظة للأخيرة"
+    },
+    {
+      "key": "level.s12_glowgate.name",
+      "text": "بوابة التوهج"
+    },
+    {
+      "key": "level.s12_glowgate.tagline",
+      "text": "وهج وسلسلة، معا في آن واحد"
+    },
+    {
+      "key": "level.s12_skyladder.name",
+      "text": "سلم السماء"
+    },
+    {
+      "key": "level.s12_skyladder.tagline",
+      "text": "عمالقة من لون واحد، ثم دروع منه"
+    },
+    {
+      "key": "level.s12_fanhouse.name",
+      "text": "بيت المراوح"
+    },
+    {
+      "key": "level.s12_fanhouse.tagline",
+      "text": "دروع وقنابل في الموجة نفسها"
+    },
+    {
+      "key": "level.s12_glassway.name",
+      "text": "الممر الزجاجي"
+    },
+    {
+      "key": "level.s12_glassway.tagline",
+      "text": "أطول صعود في المدينة"
+    },
+    {
+      "key": "level.s12_beaconroof.name",
+      "text": "سطح المنارة"
+    },
+    {
+      "key": "level.s12_beaconroof.tagline",
+      "text": "كل ما علمته هذه المنطقة، دفعة واحدة"
+    },
+    {
+      "key": "level.s12_neoncrown.name",
+      "text": "تاج النيون"
+    },
+    {
+      "key": "level.s12_neoncrown.tagline",
+      "text": "أبق كل برج يطلق النار، عبر الدروع"
+    },
+    {
+      "key": "rank.cinderling.name",
+      "text": "شرارة الجمر"
+    },
+    {
+      "key": "rank.cinderling.blurb",
+      "text": "أولى شرارات الحارس."
+    },
+    {
+      "key": "rank.silverwatch.name",
+      "text": "الحارس الفضي"
+    },
+    {
+      "key": "rank.silverwatch.blurb",
+      "text": "لقد صمدت في مكانك مرة من قبل."
+    },
+    {
+      "key": "rank.goldbrand.name",
+      "text": "الوسم الذهبي"
+    },
+    {
+      "key": "rank.goldbrand.blurb",
+      "text": "الخط صامد لأنك أنت تصمده."
+    },
+    {
+      "key": "rank.duskcrown.name",
+      "text": "تاج الغسق"
+    },
+    {
+      "key": "rank.duskcrown.blurb",
+      "text": "مئة معركة خلفك، وما زال الظلام ينكسر."
+    },
+    {
+      "key": "rank.fireheart.name",
+      "text": "قلب النار"
+    },
+    {
+      "key": "rank.fireheart.blurb",
+      "text": "لا شيء يأتي من وراء التل يحركك الآن."
+    },
+    {
+      "key": "rank.frozencrest.name",
+      "text": "القمة المتجمدة"
+    },
+    {
+      "key": "rank.frozencrest.blurb",
+      "text": "ست مناطق صمدت فيها، والسماء تعرف اسمك."
+    },
+    {
+      "key": "rank.gemfire.name",
+      "text": "Gemfire"
+    },
+    {
+      "key": "rank.gemfire.blurb",
+      "text": "النور الأخير على التل الأخير. لا شيء فوق هذا."
+    },
+    {
+      "key": "rank.req.levels_cleared",
+      "text": "اجتز معارك مختلفة: {0}"
+    },
+    {
+      "key": "rank.req.levels_cleared.in",
+      "text": "اجتز معارك في {1}: {0}"
+    },
+    {
+      "key": "rank.req.stars",
+      "text": "اكسب نجوما: {0}"
+    },
+    {
+      "key": "rank.req.stars.in",
+      "text": "اكسب نجوما في {1}: {0}"
+    },
+    {
+      "key": "rank.req.three_stars",
+      "text": "معارك بثلاث نجوم: {0}"
+    },
+    {
+      "key": "rank.req.three_stars.in",
+      "text": "معارك بثلاث نجوم في {1}: {0}"
+    },
+    {
+      "key": "rank.req.keeper_level",
+      "text": "بلغ مستوى الحارس {0}"
+    },
+    {
+      "key": "rank.req.best_wave",
+      "text": "بلغ الموجة {0}"
+    },
+    {
+      "key": "rank.req.best_wave.in",
+      "text": "بلغ الموجة {0} في {1}"
+    },
+    {
+      "key": "rank.req.runs",
+      "text": "العب معارك: {0}"
+    },
+    {
+      "key": "rank.req.wins",
+      "text": "اربح معارك: {0}"
+    },
+    {
+      "key": "rank.req.matches",
+      "text": "كون تطابقات: {0}"
+    },
+    {
+      "key": "rank.req.raiders",
+      "text": "اهزم مهاجمين: {0}"
+    },
+    {
+      "key": "rank.req.bosses",
+      "text": "اهزم زعماء: {0}"
+    },
+    {
+      "key": "rank.req.charms",
+      "text": "فعل تعويذات: {0}"
+    },
+    {
+      "key": "rank.req.cogs",
+      "text": "اجمع تروسا: {0}"
+    },
+    {
+      "key": "rank.req.bombs",
+      "text": "فجر قنابل: {0}"
+    },
+    {
+      "key": "rank.req.utilities",
+      "text": "استخدم أدوات: {0}"
+    },
+    {
+      "key": "rank.req.waves",
+      "text": "اصمد في الخط عبر موجات: {0}"
+    },
+    {
+      "key": "rank.req.streak",
+      "text": "اجمع ليالي السلسلة: {0}"
+    },
+    {
+      "key": "rank.req.task_claims",
+      "text": "افتح صناديق مهام: {0}"
+    },
+    {
+      "key": "rank.req.challenge_plays",
+      "text": "العب تحديات يومية: {0}"
+    },
+    {
+      "key": "rank.req.challenge_wins",
+      "text": "أكمل تحديات يومية: {0}"
+    },
+    {
+      "key": "ui.ranks.title",
+      "text": "الرتب"
+    },
+    {
+      "key": "ui.ranks.subtitle",
+      "text": "كل شارة تكتسب. إليك ما تطلبه كل واحدة."
+    },
+    {
+      "key": "ui.ranks.mark",
+      "text": "رتبتك"
+    },
+    {
+      "key": "ui.ranks.unranked",
+      "text": "بلا رتبة"
+    },
+    {
+      "key": "ui.ranks.unranked_blurb",
+      "text": "حقق كل شروط الشارة الأولى، وستكون لك."
+    },
+    {
+      "key": "ui.ranks.earned",
+      "text": "مكتسبة"
+    },
+    {
+      "key": "ui.ranks.next",
+      "text": "الرتبة التالية"
+    },
+    {
+      "key": "ui.ranks.fraction",
+      "text": "{0} / {1}"
+    },
+    {
+      "key": "ui.ranks.top",
+      "text": "لديك كل الرتب الموجودة."
+    },
+    {
+      "key": "ui.ranks.held_count",
+      "text": "{0} من {1} رتب مكتسبة"
+    },
+    {
+      "key": "ui.ranks.promoted",
+      "text": "اكتسبت {0}"
+    },
+    {
+      "key": "ui.ranks.ordinal",
+      "text": "الرتبة {0}"
+    },
+    {
+      "key": "ui.ranks.percent",
+      "text": "{0}%"
+    },
+    {
+      "key": "ui.ranks.locked",
+      "text": "مقفلة"
+    },
+    {
+      "key": "ui.ranks.progress",
+      "text": "قطعت {0}% من الطريق"
+    },
+    {
+      "key": "ui.ranks.locked_hint",
+      "text": "اكتسب {0} أولا"
+    },
+    {
+      "key": "ui.ranks.requirements",
+      "text": "ما تطلبه"
+    },
+    {
+      "key": "ui.rankup.title",
+      "text": "اكتسبت رتبة"
+    },
+    {
+      "key": "ui.rankup.onward",
+      "text": "إلى الأمام"
+    },
+    {
+      "key": "ui.keeper.subtitle",
+      "text": "كل مستوى يفتح المزيد من الرف. اكسبه بالخبرة، أو اشتر المستوى التالي مباشرة."
+    },
+    {
+      "key": "ui.keeper.level_heading",
+      "text": "التقدم"
+    },
+    {
+      "key": "ui.keeper.rank_note",
+      "text": "المستويات المشتراة تفتح كل ما يفتحه المستوى. لكنها لا تحتسب أبدا في رتبتك."
+    },
+    {
+      "key": "ui.keeper.ladder_heading",
+      "text": "السلم"
+    },
+    {
+      "key": "ui.keeper.to_top",
+      "text": "حتى المستوى {0}"
+    },
+    {
+      "key": "ui.keeper.level_n",
+      "text": "المستوى {0}"
+    },
+    {
+      "key": "ui.keeper.buy",
+      "text": "اشتر المستوى {0}"
+    },
+    {
+      "key": "ui.keeper.buy_short",
+      "text": "شراء"
+    },
+    {
+      "key": "ui.keeper.at_top",
+      "text": "قمة السلم"
+    },
+    {
+      "key": "ui.keeper.not_sold",
+      "text": "المستويات غير معروضة للبيع الآن"
+    },
+    {
+      "key": "ui.keeper.bought_n",
+      "text": "مشتراة مباشرة: {0}"
+    },
+    {
+      "key": "ui.keeper.bought_none",
+      "text": "كل المستويات مكتسبة"
+    },
+    {
+      "key": "ui.keeper.bought_toast",
+      "text": "المستوى {0} لك!"
+    },
+    {
+      "key": "ui.keeper.too_poor_gems",
+      "text": "تحتاج إلى {0} جوهرة لهذا المستوى"
+    },
+    {
+      "key": "ui.keeper.too_poor_coins",
+      "text": "تحتاج إلى {0} عملة لهذا المستوى"
+    },
+    {
+      "key": "ui.keeper.unlocks_turret",
+      "text": "يفتح {0}"
+    },
+    {
+      "key": "ui.keeper.unlocks_chapter",
+      "text": "يفتح {0}"
+    },
+    {
+      "key": "ui.keeper.title_tier",
+      "text": "تصبح {0}"
+    },
+    {
+      "key": "ui.keeper.reached",
+      "text": "تم بلوغه"
+    },
+    {
+      "key": "ui.keeper.earn_it",
+      "text": "اكسبه بالخبرة"
+    },
+    {
+      "key": "ui.keeper.price_gems",
+      "text": "{0} جوهرة للشراء"
+    },
+    {
+      "key": "ui.keeper.price_coins",
+      "text": "{0} عملة للشراء"
+    },
+    {
+      "key": "ui.keeper.here",
+      "text": "أنت هنا"
+    },
+    {
+      "key": "ui.keeper.bought_chip",
+      "text": "مشترى"
+    },
+    {
+      "key": "ui.keeper.page_title",
+      "text": "مستوى الحارس"
+    },
+    {
+      "key": "ui.keeper.key_top",
+      "text": "في القمة"
+    },
+    {
+      "key": "ui.keeper.key_not_sold",
+      "text": "غير معروض للبيع"
+    },
+    {
+      "key": "ui.keeper.xp_short",
+      "text": "{0} / {1} خبرة"
+    },
+    {
+      "key": "ui.keeper.xp_max",
+      "text": "المستوى الأقصى"
+    },
+    {
+      "key": "ui.keeper.bought_count",
+      "text": "مشتراة: {0}"
+    },
+    {
+      "key": "ui.keeper.chest_locked",
+      "text": "بلغ المستوى {0} لتفتح هذا الصندوق"
+    }
+  ]
+}

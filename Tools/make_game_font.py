@@ -61,8 +61,9 @@ so they are in its hand rather than a second typeface bolted alongside.
 
 **What it cannot draw is stated rather than discovered later** — `--coverage` and the group
 report at the end of a build both say so. Greek and Cyrillic are gone (Segoe had them); no
-face here has ever had Arabic, Hebrew or CJK. The repair, if a keeper name ever needs one, is
-`fallbackFontReferences` in the `.meta`, not another face.
+face here has ever had Hebrew or CJK. The repair, if a keeper name ever needs one, is
+`fallbackFontReferences` in the `.meta`, not another face - which is how Arabic is drawn
+(`GameFontArabic`, cut by `make_arabic_font.py`; `FALLBACKS` below counts it as drawable).
 """
 from __future__ import annotations
 
@@ -76,6 +77,11 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 OUT = REPO / "Assets" / "Game" / "Fonts" / "GameFont.ttf"
+#: The faces `GameFont.ttf.meta` names in `fallbackFontReferences`. Unity draws a code point the
+#: primary lacks from these, so a character one of them has is a character the game can draw.
+#: Arabic is the one script here that comes from a fallback (`make_arabic_font.py` cuts it and
+#: proves the wiring); every other script must still be in this face.
+FALLBACKS = [REPO / "Assets" / "Game" / "Fonts" / "GameFontArabic.ttf"]
 #: Every shipped string table - English and each translation - since a glyph one language
 #: needs and the face lacks is a word with a hole in it, whichever language it is.
 LOC = REPO / "Assets" / "StreamingAssets" / "Content" / "loc"
@@ -140,6 +146,7 @@ GROUPS = {
     "Vietnamese": "\u1ea1\u1eaf\u1ec7\u1ed1\u01b0\u1ee9",
     "Greek": "\u03b1\u03b2\u03b3\u03a3\u03c2",
     "Cyrillic": "\u0430\u0431\u0432\u042f\u0451",
+    "Arabic": "\u0627\u0628\u062a\u0644\u0645\u0646\u064a\u0629\u0621",
 }
 
 
@@ -386,6 +393,15 @@ def cmap_of(data: bytes) -> set[int]:
     return cmap
 
 
+def drawable(data: bytes) -> set[int]:
+    """What the game can draw with this face as primary: its own cmap and its fallbacks'."""
+    cmap = cmap_of(data)
+    for face in FALLBACKS:
+        if face.exists():
+            cmap |= cmap_of(face.read_bytes())
+    return cmap
+
+
 def shipped_strings() -> set[str]:
     used = set(RUNTIME)
     for table in sorted(LOC.glob("*.json")):
@@ -401,7 +417,7 @@ def coverage(data: bytes) -> list[str]:
     no box, no question mark, no warning in the log — so a face swap that drops one character
     takes a word off a screen and every other gate in this repo stays green.
     """
-    cmap = cmap_of(data)
+    cmap = drawable(data)
     missing = []
     for c in sorted(shipped_strings()):
         if ord(c) in cmap:
@@ -418,7 +434,7 @@ def languages(data: bytes) -> None:
     """What this face can spell, printed on every build. A keeper name reaches a public
     board, so a gap here is a person's name drawn with holes in it — a thing to decide about
     rather than an error, but never a thing to be silent about."""
-    cmap = cmap_of(data)
+    cmap = drawable(data)
     for g, chars in GROUPS.items():
         have = sum(1 for c in chars if ord(c) in cmap)
         mark = "" if have == len(chars) else ("  <-- NONE" if have == 0 else "  <-- partial")

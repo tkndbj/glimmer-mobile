@@ -664,6 +664,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Siege/over_cast
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 049f7e2e2499436882f455c6510c3915
+    m_Address: Fonts/OFL-Arabic
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 04a9ce1125380dd45b15950f7e7b01aa
     m_Address: Art/Siege/wildBulwark_b_swing/f04
     m_ReadOnly: 0
@@ -33065,6 +33070,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Siege/wildBulwark_g_swing
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c6e00abb0ed64edbbc034b794128ba61
+    m_Address: Fonts/GameFontArabic
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c6eeeb2a70ceac44590d85028f387958
     m_Address: Art/Fx/Siege/shot_prism_r/f07

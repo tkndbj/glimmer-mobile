@@ -118,6 +118,8 @@ namespace GlimmerGrove.Localization
             new Shipped("it", "ui.language.it"),
             new Shipped("tr", "ui.language.tr"),
             new Shipped("pl", "ui.language.pl"),
+            // Right to left: drawn through `GameText`, which shapes and reorders it (`ArabicText`).
+            new Shipped("ar", "ui.language.ar"),
         };
 
         /// <summary>The key naming <paramref name="code"/> in its own language, or null for one not shipped.</summary>

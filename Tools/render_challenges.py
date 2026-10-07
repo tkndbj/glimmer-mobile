@@ -624,21 +624,6 @@ def render_list(txt, canvas=(1080, 1920), held=None, spent=(), day_wins=None, bo
         own_spent = genre in spent
         left_plays = 0 if own_spent else allowance - (day_wins or {}).get(genre, 0)
         is_spent = own_spent and bonus <= 0
-        pill_w, pill_h = 290, 66
-        pill_cx = px + PLATE_W - 26 - pill_w / 2
-        pill_cy = ccy + 82
-        K.paste(sheet, K.round_rect(pill_w, pill_h, 24, (158, 168, 189) if is_spent else K.GOLD, .95), pill_cx, pill_cy)
-        if is_spent:
-            # A spent card points at the video while the advert is offered (`VideoWouldHelp`);
-            # the mirror draws the morning, when none of the day's videos is watched yet.
-            caption = txt("ui.challenges.spent_watch" if ad_play_offer() else "ui.challenges.spent")
-        elif bonus > 0:
-            caption = (txt("ui.challenges.plays_left_bonus").replace("{0}", str(left_plays))
-                       .replace("{1}", str(allowance)).replace("{2}", str(bonus)))
-        else:
-            caption = txt("ui.challenges.plays_left").replace("{0}", str(left_plays)).replace("{1}", str(allowance))
-        floors.append(("pill %s" % genre, K.shrunk(sheet, caption, pill_cx, pill_cy, pill_w - 24, pill_h - 8, 26, 16,
-                                                   fill=K.INK, outline=0), 16))
 
         left_plays += bonus
         if not is_spent and left_plays > 0:

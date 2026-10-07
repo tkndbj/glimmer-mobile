@@ -250,8 +250,8 @@ namespace GlimmerGrove
         {
             readonly DailyChallengesScreen _screen;
             readonly Btn _button;
-            readonly Text _name, _blurb, _level, _plays;
-            readonly Image _mark, _playsPlate;
+            readonly Text _name, _blurb, _level;
+            readonly Image _mark;
             readonly WaitingBadge _badge;
 
             ChallengeGenre _genre;
@@ -292,17 +292,6 @@ namespace GlimmerGrove
                                  new Vector2(420f, 46f), new Vector2(0f, .5f), new Vector2(TextX + 210f, -82f), 2f, 0f),
                     16);
 
-                // The plays left, on the right, as a pill. Colour says the state as well as the
-                // words do, but the words are what carry it (a pill that only changed colour
-                // would be the tile-board lesson of 48g).
-                var pillSize = new Vector2(290f, 66f);
-                _playsPlate = UIKit.Img("Plays", t, Art.Round(24), Pal.A(Pal.Gold, .95f), pillSize, new Vector2(1f, .5f),
-                                        new Vector2(-(26f + pillSize.x * .5f), -82f));
-                _playsPlate.raycastTarget = false;
-                _plays = UIKit.Shrinkable(
-                    UIKit.Titled("PlaysText", _playsPlate.transform, string.Empty, 26, Pal.Ink,
-                                 TextAnchor.MiddleCenter, pillSize, default, default, 0f, 0f), 16);
-
                 // Built last, so it sits over the plate's own tap area (see WaitingBadge).
                 _badge = WaitingBadge.ListTopRight(t, Pal.Gold);
             }
@@ -324,18 +313,9 @@ namespace GlimmerGrove
                 _level.text = level == null ? string.Empty
                             : Loc.Format("ui.challenges.today_level", Loc.Get(level.NameKey));
 
-                // The genre's own plays over its allowance, and the advert plays any genre may take
-                // beside them - two numbers, because "12 / 10" would read as a fault.
-                int own = ChallengeLedger.OwnPlaysLeft(_genre);
-                int bonus = ChallengeLedger.AdPlaysLeft;
-                int left = own + bonus;
-                int allowance = ChallengeLedger.Allowance;
+                // The badge carries the count: the genre's own plays plus the advert pool any genre may take.
+                int left = ChallengeLedger.OwnPlaysLeft(_genre) + ChallengeLedger.AdPlaysLeft;
                 bool open = left > 0 && level != null;
-
-                _plays.text = !open ? Loc.Get(level != null && VideoWouldHelp() ? "ui.challenges.spent_watch" : "ui.challenges.spent")
-                            : bonus > 0 ? Loc.Format("ui.challenges.plays_left_bonus", own, allowance, bonus)
-                            : Loc.Format("ui.challenges.plays_left", own, allowance);
-                _playsPlate.color = open ? Pal.A(Pal.Gold, .95f) : new Color(.62f, .66f, .74f, .95f);
 
                 _button.Interactable = true;
                 _badge.Paint(open ? left : 0);

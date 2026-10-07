@@ -106,7 +106,9 @@ namespace GlimmerGrove
             RectTransform rt;
             if (boxSize == default && anchorPt == default) rt = Node(name, parent);
             else rt = Box(name, parent, boxSize, anchorPt == default ? new Vector2(.5f, .5f) : anchorPt, pos);
-            var t = rt.gameObject.AddComponent<Text>();
+            // `GameText` is `Text` for every string with no Arabic in it, and lays Arabic out right
+            // to left (it is the one place the game shapes a script the renderer cannot).
+            var t = rt.gameObject.AddComponent<GameText>();
             t.font = Art.Font;
             t.text = text;
             t.fontSize = size;
@@ -192,6 +194,10 @@ namespace GlimmerGrove
             }
 
             if (string.IsNullOrEmpty(text) || Mathf.Abs(radius) < 1f) return;
+
+            // Arabic is shaped and put in visual order first, so the letters are laid along the
+            // arc left to right as they are drawn; any other caption is unchanged by this.
+            text = Localization.ArabicText.Visual(text);
 
             // Measured first, placed second: the word has to be centred about the middle of the
             // arc, and that cannot be known until every character has been measured.

@@ -2642,14 +2642,6 @@
       "text": "Zümrüt"
     },
     {
-      "key": "ui.challenges.plays_left",
-      "text": "{0} / {1} oyun hakkı kaldı"
-    },
-    {
-      "key": "ui.challenges.spent",
-      "text": "Yarın tekrar gel"
-    },
-    {
       "key": "ui.challenges.no_plays",
       "text": "Bugün oyun hakkın kalmadı. Yeni bölümler yarın."
     },
@@ -2760,14 +2752,6 @@
     {
       "key": "ui.challenges.ad_arrived",
       "text": "Bonus oyun hazır! İstediğin bulmacayı seç."
-    },
-    {
-      "key": "ui.challenges.plays_left_bonus",
-      "text": "{0} / {1} oyun +{2}"
-    },
-    {
-      "key": "ui.challenges.spent_watch",
-      "text": "İzle: +1 oyun"
     },
     {
       "key": "ui.challenges.no_plays_watch",
@@ -5056,6 +5040,10 @@
     {
       "key": "ui.language.pl",
       "text": "Polski"
+    },
+    {
+      "key": "ui.language.ar",
+      "text": "العربية"
     },
     {
       "key": "ui.shelf.bed",

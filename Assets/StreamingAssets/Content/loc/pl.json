@@ -2642,14 +2642,6 @@
       "text": "Szmaragd"
     },
     {
-      "key": "ui.challenges.plays_left",
-      "text": "Pozostałe gry: {0} / {1}"
-    },
-    {
-      "key": "ui.challenges.spent",
-      "text": "Wróć jutro"
-    },
-    {
       "key": "ui.challenges.no_plays",
       "text": "Na dziś koniec gier. Nowe poziomy jutro."
     },
@@ -2760,14 +2752,6 @@
     {
       "key": "ui.challenges.ad_arrived",
       "text": "Dodatkowa gra gotowa! Wybierz dowolną łamigłówkę."
-    },
-    {
-      "key": "ui.challenges.plays_left_bonus",
-      "text": "Gry: {0} / {1} +{2}"
-    },
-    {
-      "key": "ui.challenges.spent_watch",
-      "text": "Obejrzyj: +1 gra"
     },
     {
       "key": "ui.challenges.no_plays_watch",
@@ -5056,6 +5040,10 @@
     {
       "key": "ui.language.pl",
       "text": "Polski"
+    },
+    {
+      "key": "ui.language.ar",
+      "text": "العربية"
     },
     {
       "key": "ui.shelf.bed",

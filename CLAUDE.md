@@ -67,6 +67,11 @@ wire or rules mistake reaches live accounts.
    line breaks (`loc.py`, `TranslationTests`); `Loc.Languages` lists exactly the tables in `loc/`. UI
    capitals go through `.Upper()` (`Loc.Upper`: Turkish i → İ); `compile.py` refuses a bare
    `ToUpperInvariant()` in Presentation.
+6d. **Arabic is shaped where the game draws it, never in `Loc`.** `GameText` (every `UIKit.Label`) shapes,
+   wraps and reorders it through `ArabicText`; anything the OS draws (notifications, plist, share sheet)
+   stays logical. The face is `GameFontArabic`, `GameFont`'s fallback, cut with its forms table by
+   `make_arabic_font.py`. The layout does not mirror, so a string naming left/right or laid over controls
+   keeps its visual sense (`ui.mark.info_tracks_body`, `ui.settings.toggle_row`).
 7. **All asset loading goes through `AssetLibrary`.** Never call `Resources.Load` or `Addressables` directly;
    derive paths from `AssetManifest`.
 7a. **Asset registration is an importer hook plus a build-gate audit**, never a menu item.
@@ -534,7 +539,7 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
    check Reserved Font Names per face. Keep the address `Fonts/GameFont`.
 46b. **Choose a face by putting ten in front of the owner.**
 46c. **Coverage is built from the face's own marks and reported every build** (not a gate). Missing scripts
-   (Vietnamese, Romanian ș/ț, Greek, Cyrillic, Arabic, Hebrew, CJK) need `fallbackFontReferences`.
+   (Vietnamese, Romanian ș/ț, Greek, Cyrillic, Hebrew, CJK) need `fallbackFontReferences`, as Arabic has (6d).
 
 ## Spent ids — never reuse any of these
 
@@ -629,7 +634,9 @@ The Editor is often not running and the MCP bridge is down whenever scripts fail
 - **Names:** `artnames.py` (sprites a call site asks for; constants are invisible to it — `SkinsTests` closes
   that), `sfxnames.py`, `fxreels.py` (every reel is a picture, not a sliver), `names.py` (fold on Unity's Mono).
 - **Other:** `rungs.py` (inline rung tables vs chapter bodies), `difficulty.py` (not a gate),
-  `make_map_seats.py --check`/`--contact`, `make_game_font.py --coverage`/`--check`.
+  `make_map_seats.py --check`/`--contact`, `make_game_font.py --coverage`/`--check`,
+  `make_arabic_font.py --check` (font, forms table, fallback wiring), `arabic_text.py --check` (the shaper
+  mirror against `arabic-vectors.json`, which `ArabicTextTests` also runs).
 
 **Shared-rule vectors** (each `--check`; both sides run offline — never let one become Editor-only):
 `make_rank_vectors.py`, `make_keeper_vectors.py` (beside, not inside, `keeperCases`),
@@ -779,11 +786,12 @@ gates print the derived totals.
   pays credits once (80 a level, 40 a star). Stars: gold `par x 1.20`, silver `par x 1.40`, fail at `par x
   1.60`, except a siege, which authors its own. Chapter gate: 16 stars of the chapter behind, flat (cut to
   what it pays). Hearts cap 5, 8 h refill. Continue: 20 gems doubling. Endless credits 30/wave, 10,000/day.
-- **Languages**: English plus Spanish, Portuguese (Brazilian), French, German, Italian, Turkish, Polish
-  (`loc/*.json`); device language by default, chooser in Settings (`LanguageOverlay`), choice saved in
+- **Languages**: English plus Spanish, Portuguese (Brazilian), French, German, Italian, Turkish, Polish,
+  Arabic (`loc/*.json`); device language by default, chooser in Settings (`LanguageOverlay`), choice saved in
   `settings.language`. The translations were drafted by Claude and await native review. In Turkish a level
   is *bölüm* and a chapter *bölge*. Polish has three plural forms and the code knows two, so a Polish count
-  is written label-first ("Gwiazdki: {0}") and never in the gendered past tense. iOS: the tracking
+  is written label-first ("Gwiazdki: {0}") and never in the gendered past tense. Arabic (6d) has six
+  plural forms, so it is label-first too ("النجوم: {0}"), and carries no harakat. iOS: the tracking
   prompt's sentence is `ui.privacy.tracking_usage`; `IosPrivacyPlist` writes it per language as
   `{code}.lproj/InfoPlist.strings` plus `CFBundleLocalizations` from `Loc.Languages` (a new language
   needs nothing more).

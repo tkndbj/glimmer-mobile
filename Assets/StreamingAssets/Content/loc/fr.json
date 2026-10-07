@@ -2642,14 +2642,6 @@
       "text": "Émeraude"
     },
     {
-      "key": "ui.challenges.plays_left",
-      "text": "{0} / {1} parties restantes"
-    },
-    {
-      "key": "ui.challenges.spent",
-      "text": "Reviens demain"
-    },
-    {
       "key": "ui.challenges.no_plays",
       "text": "Plus de parties aujourd'hui. Nouveaux niveaux demain."
     },
@@ -2760,14 +2752,6 @@
     {
       "key": "ui.challenges.ad_arrived",
       "text": "Partie bonus prête ! Choisis un puzzle."
-    },
-    {
-      "key": "ui.challenges.plays_left_bonus",
-      "text": "{0} / {1} parties +{2}"
-    },
-    {
-      "key": "ui.challenges.spent_watch",
-      "text": "Regarde : +1 partie"
     },
     {
       "key": "ui.challenges.no_plays_watch",
@@ -5056,6 +5040,10 @@
     {
       "key": "ui.language.pl",
       "text": "Polski"
+    },
+    {
+      "key": "ui.language.ar",
+      "text": "العربية"
     },
     {
       "key": "ui.shelf.bed",
