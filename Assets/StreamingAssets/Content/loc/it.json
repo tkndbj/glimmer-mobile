@@ -6174,6 +6174,10 @@
       "text": "GUARDA UN VIDEO PER RISCUOTERE"
     },
     {
+      "key": "ui.wheel.cap_cta",
+      "text": "TORNA DOMANI PER LA FORTUNA"
+    },
+    {
       "key": "ui.wheel.collected",
       "text": "RISCOSSO"
     },

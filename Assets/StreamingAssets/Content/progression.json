@@ -312,7 +312,7 @@
         "id": "win_bonus",
         "kind": "credits",
         "amount": 200,
-        "dailyCap": 6
+        "dailyCap": 10
       },
       {
         "id": "hint_refill",

@@ -24,8 +24,15 @@ namespace GlimmerGrove
     /// </summary>
     static class AdOfferButton
     {
-        /// <summary>What the button should say, given the placement's current state.</summary>
-        public static string Caption(AdOfferStatus status, string readyKey)
+        /// <summary>
+        /// What the button should say, given the placement's current state.
+        ///
+        /// <paramref name="capKey"/> lets a surface name its own spent day (the victory panel's
+        /// wheel says when the fortune comes back); null keeps the shared BACK TOMORROW. Only
+        /// the wording moves: the state, and so whether the button can be pressed, is still
+        /// <see cref="RewardedAds.Status"/>'s alone.
+        /// </summary>
+        public static string Caption(AdOfferStatus status, string readyKey, string capKey = null)
         {
             switch (status.State)
             {
@@ -37,7 +44,7 @@ namespace GlimmerGrove
                                          Profile.Countdown(status.SecondsRemaining));
 
                 case AdOfferState.CapReached:
-                    return Loc.Get("ui.ads.btn_cap");
+                    return Loc.Get(capKey ?? "ui.ads.btn_cap");
 
                 default:
                     return Loc.Get("ui.ads.btn_loading");
@@ -48,15 +55,19 @@ namespace GlimmerGrove
         /// Repaints a button in place. Safe to call on a timer - the caption is only assigned
         /// when it actually changed, and the glyph beside it is only re-measured on the ticks
         /// where it really moved.
+        ///
+        /// Called every frame by the panels that hold one, and that is what lifts a spent day:
+        /// <see cref="RewardedAds.Status"/> rolls the count over at the UTC day key, so the first
+        /// paint after midnight finds the offer open again with no timer of its own to go stale.
         /// </summary>
-        public static void Paint(Btn button, string placementId, string readyKey)
+        public static void Paint(Btn button, string placementId, string readyKey, string capKey = null)
         {
             if (button == null) return;
 
             var status = RewardedAds.Status(placementId);
 
             button.Interactable = status.CanShow;
-            button.SetCaption(Caption(status, readyKey));
+            button.SetCaption(Caption(status, readyKey, capKey));
         }
 
         /// <summary>

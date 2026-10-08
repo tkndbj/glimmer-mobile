@@ -2623,7 +2623,7 @@
     },
     {
       "key": "challenge.genre.sokoban.name",
-      "text": "İt"
+      "text": "Kaydır"
     },
     {
       "key": "challenge.genre.sokoban.blurb",
@@ -5419,7 +5419,7 @@
     },
     {
       "key": "ui.streak.title",
-      "text": "serin"
+      "text": "seri"
     },
     {
       "key": "ui.streak.waiting_many",
@@ -6172,6 +6172,10 @@
     {
       "key": "ui.wheel.collect",
       "text": "ALMAK İÇİN VİDEO İZLE"
+    },
+    {
+      "key": "ui.wheel.cap_cta",
+      "text": "ŞANSIN İÇİN YARIN GEL"
     },
     {
       "key": "ui.wheel.collected",

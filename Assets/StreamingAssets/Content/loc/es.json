@@ -6174,6 +6174,10 @@
       "text": "MIRA UN VÍDEO PARA RECOGER"
     },
     {
+      "key": "ui.wheel.cap_cta",
+      "text": "VUELVE MAÑANA POR TU FORTUNA"
+    },
+    {
       "key": "ui.wheel.collected",
       "text": "RECOGIDO"
     },

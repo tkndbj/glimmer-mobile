@@ -817,7 +817,7 @@ namespace GlimmerGrove
             // put "another video in 4:58" on a control that is finished.
             if (_bonusPaid) return;
 
-            AdOfferButton.Paint(_bonus, AdPlacement.WinBonus, BonusCta());
+            AdOfferButton.Paint(_bonus, AdPlacement.WinBonus, BonusCta(), BonusCapKey);
         }
 
         /// <summary>
@@ -837,6 +837,14 @@ namespace GlimmerGrove
         /// </para>
         /// </summary>
         static string BonusCta() => WheelStand.IsOpen ? "ui.wheel.cta" : "ui.ads.bonus_cta";
+
+        /// <summary>
+        /// What the offer says once the day's videos are spent, in place of the shared BACK
+        /// TOMORROW: on this panel the button is the wheel, so it says when the fortune returns.
+        /// The button is disabled by the same state that picks this caption, and opens again on
+        /// the first paint of the next UTC day (see <see cref="AdOfferButton.Paint"/>).
+        /// </summary>
+        const string BonusCapKey = "ui.wheel.cap_cta";
 
         /// <summary>
         /// One green button under the payout: more credits, for a video.
@@ -885,7 +893,7 @@ namespace GlimmerGrove
 
             // Visible from the moment the panel is, exactly as the exits below it are. See the
             // sequence: what waits is the shine, not the control.
-            AdOfferButton.Paint(_bonus, AdPlacement.WinBonus, BonusCta());
+            AdOfferButton.Paint(_bonus, AdPlacement.WinBonus, BonusCta(), BonusCapKey);
         }
 
         /// <summary>

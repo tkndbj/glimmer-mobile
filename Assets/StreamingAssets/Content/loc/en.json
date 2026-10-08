@@ -6174,6 +6174,10 @@
       "text": "WATCH A VIDEO TO COLLECT"
     },
     {
+      "key": "ui.wheel.cap_cta",
+      "text": "COME BACK TOMORROW FOR FORTUNE"
+    },
+    {
       "key": "ui.wheel.collected",
       "text": "COLLECTED"
     },

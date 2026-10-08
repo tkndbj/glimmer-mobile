@@ -6174,6 +6174,10 @@
       "text": "REGARDE UNE VIDÉO POUR RÉCUPÉRER"
     },
     {
+      "key": "ui.wheel.cap_cta",
+      "text": "REVIENS DEMAIN POUR LA FORTUNE"
+    },
+    {
       "key": "ui.wheel.collected",
       "text": "RÉCUPÉRÉ"
     },

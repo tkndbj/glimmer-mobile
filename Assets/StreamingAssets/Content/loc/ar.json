@@ -6174,6 +6174,10 @@
       "text": "شاهد فيديو للاستلام"
     },
     {
+      "key": "ui.wheel.cap_cta",
+      "text": "عد غدا لتجرب حظك"
+    },
+    {
       "key": "ui.wheel.collected",
       "text": "تم الاستلام"
     },
