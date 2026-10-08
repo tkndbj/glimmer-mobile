@@ -21,7 +21,7 @@
   ],
 
   "android": {
-    "minimum": "1.0.6",
+    "minimum": "1.0.7",
     "store": "https://play.google.com/store/apps/details?id=com.tekoworld.glimmergroove"
   },
 
