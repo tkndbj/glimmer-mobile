@@ -245,16 +245,21 @@ namespace GlimmerGrove.EditorTools
                       string.Join(", ", sentences.Keys));
         }
 
+        /// <summary>Unity's iOS test target; its files never reach the app bundle.</summary>
+        const string TestsTargetFolder = "Unity-iPhone Tests";
+
         /// <summary>
         /// Fails the build if anything else in the generated project carries an
         /// <c>InfoPlist.strings</c> that would land at the bundle root beside these.
         ///
         /// <para>
-        /// Unity's project template has none today, but a plugin or a future template that adds
-        /// one would make Xcode refuse the build with "multiple commands produce" - or, worse,
-        /// keep one of the two and silently drop the other's keys. Files inside a
-        /// <c>.bundle</c>, a framework or the CocoaPods tree belong to those packages and are
-        /// copied inside them, so they cannot collide and are not counted.
+        /// A plugin or a future template that adds one to the app would make Xcode refuse the
+        /// build with "multiple commands produce" - or, worse, keep one of the two and silently
+        /// drop the other's keys. Files inside a <c>.bundle</c>, a framework or the CocoaPods
+        /// tree belong to those packages and are copied inside them, so they cannot collide and
+        /// are not counted. Nor is the template's own <c>Unity-iPhone Tests/en.lproj</c> copy:
+        /// it belongs to the separate test target and never reaches the app bundle (it failed
+        /// the 1.0.7 store build, 2026-10-08).
         /// </para>
         /// </summary>
         static void RefuseAnotherInfoPlistStrings(string pathToBuiltProject)
@@ -268,6 +273,7 @@ namespace GlimmerGrove.EditorTools
                 if (full.StartsWith(ours.Replace('\\', '/') + "/")) continue;
                 if (full.Contains(".bundle/") || full.Contains(".framework/") ||
                     full.Contains(".xcframework/") || full.Contains("/Pods/")) continue;
+                if (full.Contains("/" + TestsTargetFolder + "/")) continue;
 
                 throw new BuildFailedException(
                     $"[Privacy] '{file}' is another InfoPlist.strings in the app; it would collide " +
