@@ -44,7 +44,8 @@ import {
 import { grantEntries, readProduct } from "./products";
 import { ReceiptRejected, lookupAppleTransaction, validateReceipt } from "./receipts";
 import {
-  listVoidedPurchases, recordSweep, revokeReceipt, sweepWindow, transactionIdsIn,
+  listVoidedPurchases, readSweepCursor, recordSweep, recordSweepFailure, recordSweepHealthy,
+  recordSweepSetAside, revokeReceipt, sweepSlices, sweepStart, transactionIdsIn,
 } from "./refunds";
 import {
   DEFAULT_KEEPER_CURVE, GROVE_PATHS, GroveCardDoc, KeeperCurve,
@@ -1652,7 +1653,15 @@ export const appleNotification = onRequest(
  * is a different permission from the one receipt validation uses, and a sweep returning
  * nothing for ever is exactly what a missing permission looks like — which is why the
  * count is logged on every run, including zero.</p>
+ *
+ * <p>The window is read in slices (`sweepSlices`) and the cursor recorded after each, with a
+ * time budget inside the timeout, so a catch-up after an outage is bounded work that a later
+ * run resumes. The job's health is written to `ops/refundSweep` itself - `lastError`,
+ * `consecutiveFailures`, `setAside` - because the only record of its first four weeks of
+ * failing was a log line nobody read.</p>
  */
+const SWEEP_BUDGET_MILLIS = 200 * 1000;
+
 export const sweepVoidedPurchases = onSchedule(
   {
     region: REGION,
@@ -1668,27 +1677,67 @@ export const sweepVoidedPurchases = onSchedule(
       return;
     }
 
-    const now = Date.now();
-    const since = await sweepWindow(now);
+    const started = Date.now();
+    const since = sweepStart(started, await readSweepCursor());
+    const slices = sweepSlices(since, started);
 
-    let voided;
-    try {
-      voided = await listVoidedPurchases(serviceAccount, BUNDLE_ID, since);
-    } catch (error) {
-      // Not recorded as progress. The cursor stays where it was, so the next run reads
-      // the same window again rather than skipping over whatever was voided during it.
-      logger.error("could not list voided purchases", { error: String(error) });
-      return;
-    }
-
+    let seen = 0;
     let revoked = 0;
-    for (const entry of voided) {
-      if (await revokeReceipt("google", entry.orderId, `play_voided_${entry.reason}`)) revoked++;
+    let finished = 0;
+
+    for (const [from, to] of slices) {
+      // Stop with room to spare rather than be killed mid-slice: what is finished is
+      // recorded, and the next run resumes from it.
+      if (Date.now() - started > SWEEP_BUDGET_MILLIS) {
+        logger.warn("voided purchase sweep ran out of time; resuming next run", {
+          finished, owed: slices.length, cursorMillis: from,
+        });
+        break;
+      }
+
+      let voided;
+      try {
+        voided = await listVoidedPurchases(serviceAccount, BUNDLE_ID, from, to);
+      } catch (error) {
+        // Not recorded as progress. The cursor stays at this slice's start, so the next
+        // run reads the same slice again rather than skipping over it.
+        logger.error("could not list voided purchases", {
+          error: String(error), fromMillis: from, toMillis: to,
+        });
+        await recordSweepFailure(String(error));
+        return;
+      }
+
+      let sliceRevoked = 0;
+      for (const entry of voided) {
+        try {
+          if (await revokeReceipt("google", entry.orderId, `play_voided_${entry.reason}`)) sliceRevoked++;
+        } catch (error) {
+          // One receipt that cannot be reversed must not hold back every refund behind it,
+          // which is what failing the slice would do once an hour for ever. A contended
+          // transaction is already retried inside `runTransaction`, so a throw here is a
+          // fault in this one entry: set aside by order id for a person, and the sweep
+          // moves on. Re-reading the slice later would not reverse it twice either way.
+          logger.error("could not reverse a voided purchase; set aside", {
+            orderId: entry.orderId, error: String(error),
+          });
+          await recordSweepSetAside(entry.orderId, String(error));
+        }
+      }
+
+      await recordSweep(to, sliceRevoked, voided.length);
+      seen += voided.length;
+      revoked += sliceRevoked;
+      finished++;
     }
 
-    await recordSweep(now, revoked, voided.length);
+    if (finished === slices.length) await recordSweepHealthy();
 
-    logger.info("voided purchase sweep", { seen: voided.length, revoked, sinceMillis: since });
+    // Logged on every run, including a zero: a sweep that returns nothing for ever is what a
+    // missing "View financial data" permission looks like.
+    logger.info("voided purchase sweep", {
+      seen, revoked, sinceMillis: since, slices: slices.length, finished,
+    });
   }
 );
 

@@ -11,7 +11,10 @@
  */
 
 import { grantEntries, readProduct, MAX_GRANT, MAX_CAPACITY } from "../lib/products.js";
-import { revocationUpdate, transactionIdsIn } from "../lib/refunds.js";
+import {
+  MAX_LOOKBACK_MILLIS, SWEEP_OVERLAP_MILLIS, SWEEP_SLICE_MILLIS,
+  revocationUpdate, sweepSlices, sweepStart, transactionIdsIn,
+} from "../lib/refunds.js";
 
 let pass = 0;
 let fail = 0;
@@ -205,6 +208,54 @@ check("a non-numeric transaction id is not picked up",
       transactionIdsIn(
         "x." + Buffer.from('{"transactionId":"../../etc/passwd"}').toString("base64url") + ".y"
       ).length === 0);
+
+// --------------------------------------------------------------- the Play sweep window
+// Every hourly sweep from launch until 2026-10-08 was refused by Google, because the first
+// sweep asked for exactly thirty days and Google answers only *within* thirty. These hold
+// the window arithmetic so that cannot come back.
+
+console.log("\n== the voided-purchase sweep window");
+
+const HOUR = 60 * 60 * 1000;
+const DAY = 24 * HOUR;
+const GOOGLE_LIMIT = 30 * DAY;
+const NOW = Date.UTC(2026, 9, 8, 20, 17, 0);
+
+check("the lookback is inside Google's thirty days with at least an hour to spare",
+      MAX_LOOKBACK_MILLIS <= GOOGLE_LIMIT - HOUR);
+check("and still reaches back more than four weeks", MAX_LOOKBACK_MILLIS >= 28 * DAY);
+
+for (const [name, cursor] of [["a first sweep", 0], ["an unreadable cursor", NaN],
+                              ["a negative cursor", -5], ["a cursor sixty days old", NOW - 60 * DAY]]) {
+  const start = sweepStart(NOW, cursor);
+  check(`${name} starts at the lookback floor`, start === NOW - MAX_LOOKBACK_MILLIS);
+  check(`${name} never asks Google for more than thirty days`, NOW - start < GOOGLE_LIMIT);
+}
+
+check("a recent cursor is re-read from an hour behind it",
+      sweepStart(NOW, NOW - 2 * HOUR) === NOW - 3 * HOUR);
+check("a cursor in the future starts no later than now",
+      sweepStart(NOW, NOW + DAY) <= NOW);
+
+function covers(start, end, slices) {
+  if (slices.length === 0) return start >= end;
+  if (slices[0][0] !== start || slices[slices.length - 1][1] !== end) return false;
+  return slices.every(([from, to], i) =>
+    to > from && to - from <= SWEEP_SLICE_MILLIS && (i === 0 || slices[i - 1][1] === from));
+}
+
+const first = sweepSlices(NOW - MAX_LOOKBACK_MILLIS, NOW);
+check("a first sweep is cut into slices that cover the window with no gap or overlap",
+      covers(NOW - MAX_LOOKBACK_MILLIS, NOW, first));
+check("a first sweep is a handful of requests, far under the API's 30 per 30 seconds",
+      first.length === Math.ceil(MAX_LOOKBACK_MILLIS / SWEEP_SLICE_MILLIS) && first.length <= 5);
+check("every slice starts inside Google's thirty days",
+      first.every(([from]) => NOW - from < GOOGLE_LIMIT));
+check("an hourly sweep is one slice", sweepSlices(NOW - 2 * HOUR, NOW).length === 1);
+check("a window that is already read is no slices", sweepSlices(NOW, NOW).length === 0);
+check("an odd-length window is still covered exactly",
+      covers(NOW - 9 * DAY - 123, NOW, sweepSlices(NOW - 9 * DAY - 123, NOW)));
+check("the overlap is an hour", SWEEP_OVERLAP_MILLIS === HOUR);
 
 console.log("\n" + `${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

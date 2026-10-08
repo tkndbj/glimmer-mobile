@@ -33,15 +33,38 @@ import { CURRENCIES, CurrencyId, PATHS } from "./config";
 /** Where the sweep records how far it has read. Not under `config`: no client may see it. */
 export const SWEEP_PATH = "ops/refundSweep";
 
+const DAY_MILLIS = 24 * 60 * 60 * 1000;
+
 /**
  * How far back a first sweep looks, and the furthest a late one will reach.
  *
- * Google keeps thirty days of voided purchases, so anything longer is asking for
- * something that does not exist. Thirty days is also comfortably longer than any outage
- * this job could survive, which is the point: a sweep that has not run for a week
- * catches up in one pass rather than losing the week.
+ * Google keeps thirty days of voided purchases and **refuses a `startTime` older than
+ * that** ("Start time must be within [30] days of data") - so a lookback of exactly thirty
+ * days is refused by the few hundred milliseconds between computing it and Google reading
+ * it. That is how every sweep from launch until 2026-10-08 failed: 189 hourly runs in the
+ * last week alone, none succeeding, and no Play refund ever reversed. Twenty-nine days
+ * leaves a day of margin for clock skew and still catches up any outage this job could
+ * survive in one pass. Held by `test/store.mjs`.
  */
-const MAX_LOOKBACK_MILLIS = 30 * 24 * 60 * 60 * 1000;
+export const MAX_LOOKBACK_MILLIS = 29 * DAY_MILLIS;
+
+/**
+ * The widest slice of time one list request asks Google for.
+ *
+ * The sweep reads its window in slices and records the cursor after each one, so a long
+ * catch-up is a handful of bounded requests rather than one unbounded one, a run cut short
+ * keeps what it finished, and the API's own rate limit (30 requests per 30 seconds) is never
+ * approached: twenty-nine days is five slices.
+ */
+export const SWEEP_SLICE_MILLIS = 7 * DAY_MILLIS;
+
+/**
+ * Re-read on every sweep, behind the stored cursor. Voided purchases are listed by the time
+ * they were voided, and a boundary read exactly at the last cursor will eventually drop one
+ * to clock skew or to a record landing a moment late. Re-reading an hour costs a handful of
+ * no-op revocations - `revokeReceipt` is idempotent - and losing one costs real money.
+ */
+export const SWEEP_OVERLAP_MILLIS = 60 * 60 * 1000;
 
 /** What a receipt records about the grant it is reversing. */
 export interface RevocableReceipt {
@@ -232,16 +255,22 @@ export interface VoidedPurchase {
 }
 
 /**
- * Everything Google has voided since `sinceMillis`.
+ * Everything Google voided in `[startMillis, endMillis]`, every page of it.
  *
  * `type=1` asks for voided subscriptions as well as one-off purchases. This game sells no
  * subscriptions, so it costs nothing today and means the sweep keeps working on the day
  * one is added — the failure it prevents is silent, which is the worst kind here.
+ *
+ * The end is explicit and the pages are read to the last one. An earlier cut stopped at
+ * 5,000 entries and then recorded the cursor as *now*, which would have skipped everything
+ * past the cap for ever without a word; bounding the slice in time (`SWEEP_SLICE_MILLIS`)
+ * is what bounds the work instead.
  */
 export async function listVoidedPurchases(
   serviceAccountJson: string,
   packageName: string,
-  sinceMillis: number
+  startMillis: number,
+  endMillis: number
 ): Promise<VoidedPurchase[]> {
   const account = JSON.parse(serviceAccountJson) as { client_email: string; private_key: string };
 
@@ -259,7 +288,8 @@ export async function listVoidedPurchases(
       `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/` +
       `${encodeURIComponent(packageName)}/purchases/voidedpurchases`
     );
-    url.searchParams.set("startTime", String(sinceMillis));
+    url.searchParams.set("startTime", String(startMillis));
+    url.searchParams.set("endTime", String(endMillis));
     url.searchParams.set("type", "1");
     url.searchParams.set("maxResults", "1000");
     if (token) url.searchParams.set("token", token);
@@ -286,41 +316,98 @@ export async function listVoidedPurchases(
     }
 
     token = response.data.tokenPagination?.nextPageToken;
-  } while (token && voided.length < 5000);
+  } while (token);
 
   return voided;
 }
 
 /**
- * How far back the next sweep should read.
- *
- * The stored cursor is deliberately rewound by an hour on every read. Voided purchases
- * are listed by the time they were voided, and a boundary read exactly at the last
- * cursor will eventually drop one to clock skew or to a record landing a moment late.
- * Re-reading an hour costs a handful of no-op revocations — `revokeReceipt` is idempotent
- * — and losing one costs real money.
+ * Where the next sweep starts reading, from the stored cursor: an hour behind it
+ * (`SWEEP_OVERLAP_MILLIS`), and never further back than Google will answer
+ * (`MAX_LOOKBACK_MILLIS`). A missing, zero or unreadable cursor is a first sweep, which
+ * reads the whole lookback. Pure, so the one rule that kept this job from ever succeeding
+ * is held by a test rather than by a comment.
  */
-export async function sweepWindow(nowMillis: number): Promise<number> {
-  const snapshot = await getFirestore().doc(SWEEP_PATH).get();
-  const last = snapshot.exists ? Number((snapshot.data() as { lastVoidedMillis?: number })?.lastVoidedMillis ?? 0) : 0;
-
-  const overlap = 60 * 60 * 1000;
+export function sweepStart(nowMillis: number, cursorMillis: number): number {
   const floor = nowMillis - MAX_LOOKBACK_MILLIS;
-
-  if (!Number.isFinite(last) || last <= 0) return floor;
-  return Math.max(floor, last - overlap);
+  if (!Number.isFinite(cursorMillis) || cursorMillis <= 0) return floor;
+  return Math.min(nowMillis, Math.max(floor, cursorMillis - SWEEP_OVERLAP_MILLIS));
 }
 
-export async function recordSweep(nowMillis: number, revoked: number, seen: number): Promise<void> {
+/**
+ * The window `[startMillis, nowMillis]` cut into consecutive slices of at most
+ * `SWEEP_SLICE_MILLIS`, oldest first, each one's end the next one's start. Empty when
+ * there is nothing to read. Pure for `sweepStart`'s reason.
+ */
+export function sweepSlices(startMillis: number, nowMillis: number): Array<[number, number]> {
+  const slices: Array<[number, number]> = [];
+  for (let from = startMillis; from < nowMillis; ) {
+    const to = Math.min(nowMillis, from + SWEEP_SLICE_MILLIS);
+    slices.push([from, to]);
+    from = to;
+  }
+  return slices;
+}
+
+/** The stored cursor; nought when the sweep has never finished a slice. */
+export async function readSweepCursor(): Promise<number> {
+  const snapshot = await getFirestore().doc(SWEEP_PATH).get();
+  if (!snapshot.exists) return 0;
+  return Number((snapshot.data() as { lastVoidedMillis?: number })?.lastVoidedMillis ?? 0);
+}
+
+/**
+ * A finished slice: the cursor moves to its end. Written after every slice rather than
+ * once a run, so a run stopped part-way keeps what it finished and the next one resumes
+ * from there. Clears the failure fields, so the document always says whether the job is
+ * healthy.
+ */
+export async function recordSweep(cursorMillis: number, revoked: number, seen: number): Promise<void> {
   await getFirestore().doc(SWEEP_PATH).set(
     {
-      lastVoidedMillis: nowMillis,
+      lastVoidedMillis: cursorMillis,
       lastRunAt: FieldValue.serverTimestamp(),
       lastRevoked: revoked,
       lastSeen: seen,
+      lastError: FieldValue.delete(),
+      lastFailedAt: FieldValue.delete(),
     },
     { merge: true }
   );
+}
+
+/**
+ * A failed slice: the cursor does not move, so the next run re-reads the same window, and
+ * the failure is written beside it. A job that fails every hour was invisible for weeks
+ * because the only record was a log line nobody was reading; `ops/refundSweep` now says
+ * so itself, and `consecutiveFailures` says for how long.
+ */
+export async function recordSweepFailure(error: string): Promise<void> {
+  await getFirestore().doc(SWEEP_PATH).set(
+    {
+      lastError: error.slice(0, 500),
+      lastFailedAt: FieldValue.serverTimestamp(),
+      consecutiveFailures: FieldValue.increment(1),
+    },
+    { merge: true }
+  );
+}
+
+/**
+ * A voided purchase this sweep could not reverse, kept by order id for a person to look at.
+ * Written as a nested object rather than a dotted update path, because a Play order id is
+ * `GPA.1234-...` and a dot in an update path would be read as nesting.
+ */
+export async function recordSweepSetAside(orderId: string, error: string): Promise<void> {
+  await getFirestore().doc(SWEEP_PATH).set(
+    { setAside: { [orderId]: { error: error.slice(0, 300), at: FieldValue.serverTimestamp() } } },
+    { merge: true }
+  );
+}
+
+/** Resets the failure count once a run has read every slice it owed. */
+export async function recordSweepHealthy(): Promise<void> {
+  await getFirestore().doc(SWEEP_PATH).set({ consecutiveFailures: 0 }, { merge: true });
 }
 
 /** Restated so a caller need not import the currency list to log a reversal. */
