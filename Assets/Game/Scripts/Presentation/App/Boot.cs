@@ -163,6 +163,10 @@ namespace GlimmerGrove
             Social.GroveBoard.Attach();
             Referral.ReferralLedger.Attach();
 
+            // Hears wins from the start, so the first one of the session can answer a deal
+            // (invariant 60c).
+            DealMoment.Hook();
+
             // Rewarded ads, chosen the same way and inert by the same default. Two gates,
             // not one: the SDK has to be compiled in *and* a real app key has to exist.
             // Without the second, LevelPlay would start, fail, and leave the game showing
@@ -340,6 +344,11 @@ namespace GlimmerGrove
                 // the player is standing on it with nothing in front of it (invariant 55). After
                 // the wall, so a frame that raised it is a frame that asks nothing.
                 ConsentMoment.Tick();
+
+                // And the one limited-time deals popup a session may raise, on a calm screen once
+                // the consent questions are behind the player (invariant 60c). After the consent
+                // step, so a frame that asked a question is a frame that offers nothing.
+                DealMoment.Tick();
             }
 
             void OnApplicationPause(bool paused)
@@ -354,10 +363,12 @@ namespace GlimmerGrove
                     // anyway. Nothing is lost: `Resumed` asks once on the way back, which is
                     // what covers the gap no callback could have reported.
                     Referral.ReferralLedger.Paused();
+                    DealMoment.Paused();
                 }
                 else
                 {
                     Referral.ReferralLedger.Resumed();
+                    DealMoment.Resumed();
 
                     // Returning: pick up another device's work, and drop any backoff the
                     // last failure left. A player who reopens the game has quite often

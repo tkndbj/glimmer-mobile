@@ -75,7 +75,10 @@ namespace GlimmerGrove.Store
         /// <summary>Whether a wallet reply has said what this account owns, since the last account change.</summary>
         static bool _known;
 
-        static bool _hooked, _fetching;
+        static bool _hooked;
+
+        /// <summary>The read in flight, or the last one. Never two at once.</summary>
+        static Task<bool> _inflight;
 
         /// <summary>When the list may next be fetched, on the monotonic clock; nought means now.</summary>
         static long _nextFetch;
@@ -120,6 +123,25 @@ namespace GlimmerGrove.Store
         }
 
         /// <summary>
+        /// Every deal on offer at <paramref name="nowUnix"/> - on sale and not held - closing
+        /// soonest first, the id breaking a tie so the order is the same on every call. Empty until
+        /// the server has said what this account owns (<see cref="Offered"/>'s reason). What the
+        /// deals panel lists, however many the server ever allows at once.
+        /// </summary>
+        public static List<ShopDeal> OfferedAllAt(long nowUnix)
+        {
+            var offered = new List<ShopDeal>();
+            if (!_known) return offered;
+
+            foreach (var deal in _deals)
+                if (deal.IsLive(nowUnix) && !IsBought(deal.Id)) offered.Add(deal);
+
+            offered.Sort((a, b) => a.EndUnix != b.EndUnix ? a.EndUnix.CompareTo(b.EndUnix)
+                                                          : string.CompareOrdinal(a.Id, b.Id));
+            return offered;
+        }
+
+        /// <summary>
         /// Whether this account holds the deal: the server says so, or this device bought it and
         /// the server has not answered yet.
         /// </summary>
@@ -145,20 +167,55 @@ namespace GlimmerGrove.Store
         public static void Refresh(bool force = false)
         {
             Hook();
-            if (_fetching) return;
+            if (Fetching) return;
             if (!force && Monotonic() < _nextFetch) return;
 
-            if (!CloudSaveService.IsAvailable) return;
-            var backend = CloudSaveService.Backend;
-            if (!(backend is IDealBackend deals)) return;
-            if (string.IsNullOrEmpty(backend.CurrentIdentity.UserId)) return;
+            var backend = Backend();
+            if (backend == null) return;
 
-            _ = FetchAsync(deals);
+            _inflight = FetchAsync(backend);
         }
 
-        static async Task FetchAsync(IDealBackend backend)
+        /// <summary>
+        /// Reads the published deals now, whatever the cadence says, and answers whether the read
+        /// succeeded. Asked immediately before every purchase: a deal ended from the admin page is
+        /// refused by the server from that second, and this is what lets the panel say so before
+        /// the player is charged and refunded. A read already in flight is joined rather than
+        /// doubled, since it started no earlier than the tap that is waiting on it.
+        /// </summary>
+        public static Task<bool> RefreshNowAsync()
         {
-            _fetching = true;
+            Hook();
+            if (Fetching) return _inflight;
+
+            var backend = Backend();
+            if (backend == null) return Task.FromResult(false);
+
+            _inflight = FetchAsync(backend);
+            return _inflight;
+        }
+
+        /// <summary>The latest copy of a deal the last read listed, or null. A row asks this rather than trust the copy it was handed.</summary>
+        public static ShopDeal Find(string dealId)
+        {
+            if (string.IsNullOrEmpty(dealId)) return null;
+            foreach (var deal in _deals) if (deal.Id == dealId) return deal;
+            return null;
+        }
+
+        static bool Fetching => _inflight != null && !_inflight.IsCompleted;
+
+        /// <summary>The backend to read with, or null when nobody is signed in to read (the rules grant <c>config/*</c> to signed-in clients only).</summary>
+        static IDealBackend Backend()
+        {
+            if (!CloudSaveService.IsAvailable) return null;
+            var backend = CloudSaveService.Backend;
+            if (!(backend is IDealBackend deals)) return null;
+            return string.IsNullOrEmpty(backend.CurrentIdentity.UserId) ? null : deals;
+        }
+
+        static async Task<bool> FetchAsync(IDealBackend backend)
+        {
             try
             {
                 var (result, deals) = await backend.ReadDealsAsync();
@@ -166,20 +223,18 @@ namespace GlimmerGrove.Store
                 if (!result.Ok)
                 {
                     _nextFetch = Monotonic() + RetrySeconds;
-                    return;
+                    return false;
                 }
 
                 _nextFetch = Monotonic() + StaleSeconds;
                 Adopt(deals);
+                return true;
             }
             catch (Exception e)
             {
                 _nextFetch = Monotonic() + RetrySeconds;
                 UnityEngine.Debug.LogException(e);
-            }
-            finally
-            {
-                _fetching = false;
+                return false;
             }
         }
 
@@ -297,7 +352,7 @@ namespace GlimmerGrove.Store
             _deals = new List<ShopDeal>();
             _bought.Clear();
             _known = false;
-            _fetching = false;
+            _inflight = null;
             _nextFetch = 0;
         }
 

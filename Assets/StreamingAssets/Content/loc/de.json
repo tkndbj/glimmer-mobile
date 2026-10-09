@@ -2814,12 +2814,20 @@
       "text": "Angebot gekauft! +{0} Münzen"
     },
     {
+      "key": "ui.deal.bought_row",
+      "text": "Gekauft"
+    },
+    {
       "key": "ui.deal.door",
       "text": "Angebot"
     },
     {
       "key": "ui.deal.ended",
       "text": "Dieses Angebot ist abgelaufen."
+    },
+    {
+      "key": "ui.deal.ended_row",
+      "text": "Beendet"
     },
     {
       "key": "ui.deal.ends_label",

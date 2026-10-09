@@ -117,13 +117,31 @@ const request = { credits: 26000, gems: 900, durationSeconds: 7200 };
 const made = D.createDeal([], request, NOW, ID);
 check(made.ok, "a deal is made");
 equal("it opens now and runs the duration", made.deal, { id: ID, credits: 26000, gems: 900, startUnix: NOW, endUnix: NOW + 7200 });
-check(!D.createDeal(made.deals, request, NOW + 10, "d202610091531aaaa").ok, "a second is refused while one is on sale");
-check(D.createDeal(made.deals, request, NOW + 7200, "d202610091731aaaa").ok, "and allowed once it has ended");
+let several = made.deals;
+for (let i = 1; i < D.DEAL_MAX_LIVE; i++) {
+  const next = D.createDeal(several, request, NOW + i, `d20261009153${i}aaaa`);
+  check(next.ok, `deal ${i + 1} of ${D.DEAL_MAX_LIVE} may be on sale beside the others`);
+  several = next.ok ? next.deals : several;
+}
+equal("all of them are live", D.liveDeals(several, NOW + D.DEAL_MAX_LIVE).length, D.DEAL_MAX_LIVE);
+check(!D.createDeal(several, request, NOW + 10, "d202610091540aaaa").ok, `a ${D.DEAL_MAX_LIVE + 1}th is refused while ${D.DEAL_MAX_LIVE} are on sale`);
+const freed = D.endDeal(several, ID, NOW + 20);
+check(freed.ok && D.createDeal(freed.deals, request, NOW + 21, "d202610091541aaaa").ok, "ending one makes room for another");
+check(D.createDeal(several, request, NOW + 7200, "d202610091731aaaa").ok, "and all may be replaced once they have ended");
 
 const ended = D.endDeal(made.deals, ID, NOW + 100);
 check(ended.ok, "a live deal ends");
-equal("only its end moved", ended.deal, { ...made.deal, endUnix: NOW + 100 });
+equal("only its end moved, and the mark", ended.deal, { ...made.deal, endUnix: NOW + 100, endedEarly: true });
 check(!D.endDeal(ended.deals, ID, NOW + 101).ok, "an ended deal cannot end again");
+equal("it is marked as ended early", ended.deal.endedEarly, true);
+equal("and reads back so", D.readDeal(ended.deal)?.endedEarly, true);
+check(!D.isPayable(ended.deal, NOW + 100), "a deal ended early takes no debit from that second - no grace");
+check(!D.judgeDealSpend(ended.deal, "gems", 900, NOW + 101).ok, "so a debit right after End now is refused");
+equal("and its waiting claim is refused", D.judgeDealClaim(ended.deal, D.parseDealClaim(`deal:${ID}:credits`), NOW + 101).kind, "refuse");
+check(D.isSettled(ended.deal, NOW + 100), "and its buyer count is final at once");
+check(D.isPayable(deal, deal.endUnix + 1), "a deal that ran out keeps its grace");
+check(!("endedEarly" in made.deal), "a new deal carries no endedEarly key (Firestore refuses undefined)");
+check(!("endedEarly" in D.readDeal({ ...made.deal, endedEarly: false })), "and false is never written back");
 check(!D.endDeal([], ID, NOW).ok, "an unknown deal cannot end");
 const instant = D.endDeal(made.deals, ID, NOW);
 check(instant.ok && D.readDeal(instant.deal) !== null, "ending in the second it opened still reads back");

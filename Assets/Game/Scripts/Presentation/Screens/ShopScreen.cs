@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using GlimmerGrove.Ads;
 using GlimmerGrove.Analytics;
 using GlimmerGrove.Cloud;
-using GlimmerGrove.Daily;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
@@ -701,42 +700,20 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Opens the deal's panel - a modal over the shop, this screen's rule for anything that
-        /// answers "I want more of this", and the gem shelf's confirmation rule (a gem purchase has
-        /// no store sheet, so the panel is the only thing between a thumb and the price).
+        /// Opens the deals panel with every deal on offer - the band shows the one closing soonest,
+        /// the panel all of them. A modal over the shop, this screen's rule for anything that answers
+        /// "I want more of this"; it pays the coins out when it closes (<c>DealPayout</c>).
         /// </summary>
         void TapDeal(ShopDeal deal)
         {
+            var offered = DealLedger.OfferedAllAt(GameClock.NowUnix());
+            if (offered.Count == 0 && deal != null) offered.Add(deal);
+
             Flow.Modal<DealOverlay>(v =>
             {
-                v.Deal = deal;
-                v.ShortOfGems = () => { if (this) Show(StoreShelf.Gems); };
-                v.Bought = PlayDealCoins;
+                v.Deals = offered;
+                v.Trigger = DealTrigger.None;
             });
-        }
-
-        /// <summary>
-        /// The coins a deal paid, flying from where its band stood into the coin pill.
-        /// <see cref="RewardFlight.AfterGrant"/>, because the coins are already in the wallet
-        /// (the ledger queued them with the debit), and credits are one of the two things nothing
-        /// clamps, so the rewind is exact.
-        /// </summary>
-        void PlayDealCoins(ShopDeal deal)
-        {
-            if (!this || deal == null) return;
-
-            var flight = RewardFlight.AfterGrant(deal.Credits, 0L);
-            flight.Hold(this);
-
-            var source = UIKit.Node("DealCoins", Safe);
-            source.anchorMin = source.anchorMax = new Vector2(.5f, 1f);
-            source.sizeDelta = new Vector2(DealArtSize, DealArtSize);
-            source.anchoredPosition = new Vector2(-ReferW * .5f + DealArtX, DealCentreY);
-
-            flight.Add(new ChestDrop(ChestDropKind.Credits, (int)Math.Min(deal.Credits, int.MaxValue)), source);
-            Scenery.Toast(Content, Loc.Format("ui.deal.bought", Compact.Number(deal.Credits)), Pal.Gold, 2.4f);
-
-            flight.Play(Content, () => { if (source) Destroy(source.gameObject); });
         }
 
         /// <summary>

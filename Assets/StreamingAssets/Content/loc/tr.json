@@ -2814,12 +2814,20 @@
       "text": "Fırsat alındı! +{0} altın"
     },
     {
+      "key": "ui.deal.bought_row",
+      "text": "Alındı"
+    },
+    {
       "key": "ui.deal.door",
       "text": "Fırsat"
     },
     {
       "key": "ui.deal.ended",
       "text": "Bu fırsat sona erdi."
+    },
+    {
+      "key": "ui.deal.ended_row",
+      "text": "Bitti"
     },
     {
       "key": "ui.deal.ends_label",

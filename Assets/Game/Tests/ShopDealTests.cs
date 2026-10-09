@@ -236,6 +236,128 @@ namespace GlimmerGrove.Tests
             Assert.IsTrue(Wallet.Ledger(Currency.Credits).HasGranted(GrantEntry.ShopDealId(Id)));
         }
 
+        // ------------------------------------------------------------ several at once
+        [Test]
+        public void EveryOfferedDealIsListedClosingSoonestFirst()
+        {
+            DealLedger.ApplyServerState(carried: true, new string[0]);
+            DealLedger.Adopt(ShopDeals.Read(Doc(
+                Row(Other, 9000, 300, Now - 60, Now + 7200),
+                Row(Id, 26000, 900, Now - 60, Now + 3600),
+                Row("d202610091400bbbb", 1000, 10, Now - 60, Now + 3600),
+                Row("d202610091400cccc", 1000, 10, Now - 7200, Now - 60))));
+
+            var offered = DealLedger.OfferedAllAt(Now);
+            CollectionAssert.AreEqual(new[] { "d202610091400bbbb", Id, Other },
+                                      offered.ConvertAll(d => d.Id), "ended ones left out; a tie broken by id");
+
+            DealLedger.ApplyServerState(carried: true, new[] { Id });
+            CollectionAssert.AreEqual(new[] { "d202610091400bbbb", Other },
+                                      DealLedger.OfferedAllAt(Now).ConvertAll(d => d.Id), "a bought one leaves");
+        }
+
+        [Test]
+        public void ARowReadsTheLatestCopyOfItsDeal()
+        {
+            DealLedger.ApplyServerState(carried: true, new string[0]);
+            DealLedger.Adopt(ShopDeals.Read(Doc(Row(Id, 26000, 900, Now - 60, Now + 3600))));
+            var handed = DealLedger.Offered;
+
+            // Ended from the admin page: the next read publishes an end of now.
+            DealLedger.Adopt(ShopDeals.Read(Doc(Row(Id, 26000, 900, Now - 60, Now))));
+            Assert.IsTrue(handed.IsLive(Now), "the copy a panel was handed still thinks it is on sale");
+            Assert.IsFalse(DealLedger.Find(Id).IsLive(Now), "the latest copy knows it ended");
+            Assert.IsNull(DealLedger.Offered, "and it is no longer offered");
+            Assert.AreEqual(DealBuy.Ended, DealLedger.TryBuy(DealLedger.Find(Id)), "a buy of the latest copy is refused here, before any charge");
+            Assert.IsNull(DealLedger.Find("d202601010000zzzz"));
+        }
+
+        [Test]
+        public void TheCheckBeforeABuyAnswersFalseWithNobodyToAsk()
+        {
+            var check = DealLedger.RefreshNowAsync();
+            Assert.IsTrue(check.IsCompleted, "never left waiting");
+            Assert.IsFalse(check.Result, "no backend is a failed read, said as needing a connection");
+        }
+
+        // ------------------------------------------------------------ shown once
+        [Test]
+        public void ADealShownIsRememberedAndTheMergeIsAJoin()
+        {
+            DealSeen.Reset();
+            DealSeen.Mark(new[] { Id, "not an id", null });
+            Assert.IsTrue(DealSeen.Has(Id));
+            Assert.AreEqual(1, DealSeen.Count, "junk is never recorded");
+            CollectionAssert.AreEqual(new[] { Id }, DealSeen.Write());
+
+            var a = new[] { "d202601010000aaaa", Id };
+            var b = new[] { Other };
+            var c = new[] { "d202512310000aaaa" };
+            CollectionAssert.AreEqual(DealSeen.Join(a, b), DealSeen.Join(b, a), "commutative");
+            CollectionAssert.AreEqual(DealSeen.Join(DealSeen.Join(a, b), c), DealSeen.Join(a, DealSeen.Join(b, c)), "associative");
+            CollectionAssert.AreEqual(DealSeen.Join(a, a), DealSeen.Join(a, DealSeen.Join(a, a)), "idempotent");
+            CollectionAssert.AreEqual(new[] { "d202512310000aaaa", "d202601010000aaaa", Id, Other },
+                                      DealSeen.Join(DealSeen.Join(a, b), c), "sorted, so SaveDelta can walk it");
+            DealSeen.Reset();
+        }
+
+        [Test]
+        public void TheRememberedSetKeepsTheNewestAndReadsBackWhatItWrote()
+        {
+            var many = new List<string>();
+            for (int i = 0; i < DealSeen.MaxIds + 10; i++) many.Add($"d2026{(i / 60 + 1):00}01{(i % 24):00}{(i % 60):00}aaaa");
+            var joined = DealSeen.Join(many.ToArray(), null);
+            Assert.AreEqual(DealSeen.MaxIds, joined.Length, "bounded by the rules' cap");
+            many.Sort(System.StringComparer.Ordinal);
+            Assert.AreEqual(many[many.Count - 1], joined[joined.Length - 1], "the newest kept");
+            Assert.AreEqual(many[10], joined[0], "the oldest dropped");
+
+            DealSeen.LoadFrom(joined);
+            CollectionAssert.AreEqual(joined, DealSeen.Write(), "a round trip moves nothing (11f)");
+            DealSeen.Reset();
+        }
+
+        // ------------------------------------------------------------ when
+        static List<ShopDeal> Live(long secondsLeft) => new List<ShopDeal> { new ShopDeal(Id, 1, 1, Now - 60, Now + secondsLeft) };
+
+        [Test]
+        public void ANewPlayerIsNeverPrompted()
+        {
+            Assert.AreEqual(DealTrigger.None, DealPrompt.Choose(2, false, true, true, true, true, Live(60), Now));
+            Assert.AreEqual(DealTrigger.Shortfall, DealPrompt.Choose(3, false, true, true, true, true, Live(60), Now));
+        }
+
+        [Test]
+        public void OnePopupASessionAndOnlyWithSomethingUnseen()
+        {
+            Assert.AreEqual(DealTrigger.None, DealPrompt.Choose(9, true, true, true, true, true, Live(60), Now), "one a session");
+            Assert.AreEqual(DealTrigger.None, DealPrompt.Choose(9, false, true, true, true, true, new List<ShopDeal>(), Now));
+
+            var offered = Live(9999);
+            Assert.AreEqual(0, DealPrompt.Unseen(offered, id => id == Id).Count, "a shown deal is never shown again");
+            Assert.AreEqual(1, DealPrompt.Unseen(offered, id => false).Count);
+        }
+
+        [Test]
+        public void TheTriggersAreAskedInOrderAndWhereTheyBelong()
+        {
+            var day = Live(86400);
+            Assert.AreEqual(DealTrigger.Shortfall, DealPrompt.Choose(9, false, true, true, false, true, day, Now),
+                            "a shortfall is answered on the screen it happened on");
+            Assert.AreEqual(DealTrigger.None, DealPrompt.Choose(9, false, false, true, false, true, day, Now),
+                            "a win waits for the hub");
+            Assert.AreEqual(DealTrigger.Win, DealPrompt.Choose(9, false, false, true, true, true, day, Now));
+            Assert.AreEqual(DealTrigger.None, DealPrompt.Choose(9, false, false, false, true, true, day, Now),
+                            "a calm hub alone is not a moment");
+            Assert.AreEqual(DealTrigger.LastHours, DealPrompt.Choose(9, false, false, false, true, true,
+                                                                     Live(DealPrompt.LastHoursSeconds), Now));
+            Assert.AreEqual(DealTrigger.None, DealPrompt.Choose(9, false, false, false, false, true,
+                                                                Live(60), Now), "the last hours wait for the hub");
+            Assert.AreEqual("shortfall", DealPrompt.Id(DealTrigger.Shortfall));
+            Assert.AreEqual("win", DealPrompt.Id(DealTrigger.Win));
+            Assert.AreEqual("last_hours", DealPrompt.Id(DealTrigger.LastHours));
+        }
+
         [Test]
         public void WithdrawingAGrantRemovesOnlyThatPendingAward()
         {

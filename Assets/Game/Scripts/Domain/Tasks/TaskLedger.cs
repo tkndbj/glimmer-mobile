@@ -463,6 +463,7 @@ namespace GlimmerGrove.Tasks
             Read(_weekly, dto?.tasks?.weekly);
             LifetimeTally.LoadFrom(dto?.tasks?.lifetime);
             WelcomeLedger.LoadFrom(dto?.tasks?.welcome);
+            Store.DealSeen.LoadFrom(dto?.tasks?.dealsSeen);
             Raise();
         }
 
@@ -509,6 +510,7 @@ namespace GlimmerGrove.Tasks
                 weekly = Write(_weekly),
                 lifetime = LifetimeTally.Write(),
                 welcome = WelcomeLedger.Write(),
+                dealsSeen = Store.DealSeen.Write(),
             };
         }
 
@@ -558,6 +560,9 @@ namespace GlimmerGrove.Tasks
 
                 // Days per verb and claims, both by union. See `WelcomeLedger.Join`.
                 welcome = WelcomeLedger.Join(mine?.welcome, other?.welcome),
+
+                // The deals already shown: the newest 64 of the union. See `DealSeen.Join`.
+                dealsSeen = Store.DealSeen.Join(mine?.dealsSeen, other?.dealsSeen),
             };
 
         static TaskPeriodDto JoinPeriod(TaskPeriodDto a, TaskPeriodDto b)
@@ -586,6 +591,7 @@ namespace GlimmerGrove.Tasks
             _weekly.Clear(0);
             LifetimeTally.Reset();
             WelcomeLedger.Reset();
+            Store.DealSeen.Reset();
         }
     }
 }

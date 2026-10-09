@@ -2503,7 +2503,7 @@ export const adminListDeals = onCall(adminCallOptions, async (request): Promise<
   const nowUnix = Math.floor(Date.now() / 1000);
   const snapshot = await getFirestore().doc(DEALS_PATH).get();
   const deals = pruneDeals(usableDeals(snapshot.data()), nowUnix);
-  const live = deals.filter((deal) => deal.endUnix + DEAL_GRACE_SECONDS > nowUnix);
+  const live = deals.filter((deal) => !isSettled(deal, nowUnix));
 
   // Every published deal has a history document, or the history would lose it once the public
   // document forgets it. `adminCreateDeal` writes one with each deal; this repairs any made before

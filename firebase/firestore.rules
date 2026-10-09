@@ -225,7 +225,12 @@ service cloud.firestore {
                                            && (!('claimed' in d.tasks.welcome) || (d.tasks.welcome.claimed is list
                                                                                    && d.tasks.welcome.claimed.size() <= 8))
                                            && (!('coined' in d.tasks.welcome) || (d.tasks.welcome.coined is list
-                                                                                  && d.tasks.welcome.coined.size() <= 8))))))
+                                                                                  && d.tasks.welcome.coined.size() <= 8))))
+                                       // The shop deals already shown as a popup (save v41,
+                                       // `DealSeen.MaxIds`, invariant 60c). Shape only: it pays
+                                       // nothing and decides only whether a popup is raised.
+                                       && (!('dealsSeen' in d.tasks) || (d.tasks.dealsSeen is list
+                                                                         && d.tasks.dealsSeen.size() <= 64))))
 
                // The turrets the player bought and the line they stand in. Client-owned and
                // forgeable, and accounted for the way the companion set is: a forged turret buys

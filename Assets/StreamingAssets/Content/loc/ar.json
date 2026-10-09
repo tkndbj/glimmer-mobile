@@ -2814,12 +2814,20 @@
       "text": "تم شراء العرض! العملات: +{0}"
     },
     {
+      "key": "ui.deal.bought_row",
+      "text": "تم الشراء"
+    },
+    {
       "key": "ui.deal.door",
       "text": "عرض"
     },
     {
       "key": "ui.deal.ended",
       "text": "انتهى هذا العرض."
+    },
+    {
+      "key": "ui.deal.ended_row",
+      "text": "انتهى"
     },
     {
       "key": "ui.deal.ends_label",

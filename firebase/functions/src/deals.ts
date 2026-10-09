@@ -61,10 +61,12 @@ export const DEAL_KEEP_SECONDS = 30 * 86400;
 export const DEAL_MAX_LISTED = 40;
 
 /**
- * How many deals may be open at once. One, because the shop draws one band and the owner should
- * never wonder why a deal they made is not showing.
+ * How many deals may be on sale at once. The deals panel lists every one (the shop band shows the
+ * one closing soonest and opens the panel), so the bound is not the screen's: it keeps the one
+ * public document every client reads small, and a shop of five simultaneous "limited" offers has
+ * already stopped meaning limited. Raised from one at the owner's request, 2026-10-09.
  */
-export const DEAL_MAX_LIVE = 1;
+export const DEAL_MAX_LIVE = 5;
 
 /** What every deal debit and grant records as its cause. Mirrors `SpendEntry.ShopDealReason`. */
 export const DEAL_REASON = "shop_deal";
@@ -92,6 +94,12 @@ export interface ShopDeal {
   gems: number;
   startUnix: number;
   endUnix: number;
+  /**
+   * Ended from the admin page before its time. Such a deal gets no grace: "End now" is how a
+   * mistake is taken off sale, and a debit honoured for a quarter of an hour after it would keep
+   * selling the mistake. Present only when true (Firestore refuses `undefined`).
+   */
+  endedEarly?: true;
 }
 
 export interface DealsDoc {
@@ -123,7 +131,9 @@ export function readDeal(raw: unknown): ShopDeal | null {
   if (!id || credits === null || gems === null || startUnix === null || endUnix === null) return null;
   if (endUnix <= startUnix) return null;
 
-  return { id, credits, gems, startUnix, endUnix };
+  const deal: ShopDeal = { id, credits, gems, startUnix, endUnix };
+  if (row.endedEarly === true) deal.endedEarly = true;
+  return deal;
 }
 
 /**
@@ -156,9 +166,14 @@ export function isLive(deal: ShopDeal, nowUnix: number): boolean {
   return nowUnix >= deal.startUnix && nowUnix < deal.endUnix;
 }
 
-/** A debit for it is still honoured: on sale, or closed less than the grace ago. */
+/** The grace a deal's end carries: none for one ended early, which is a mistake being withdrawn. */
+export function graceOf(deal: ShopDeal): number {
+  return deal.endedEarly ? 0 : DEAL_GRACE_SECONDS;
+}
+
+/** A debit for it is still honoured: on sale, or run out less than the grace ago. */
 export function isPayable(deal: ShopDeal, nowUnix: number): boolean {
-  return nowUnix >= deal.startUnix && nowUnix < deal.endUnix + DEAL_GRACE_SECONDS;
+  return nowUnix >= deal.startUnix && nowUnix < deal.endUnix + graceOf(deal);
 }
 
 // ------------------------------------------------------------------ the ids
@@ -344,7 +359,7 @@ export function endDeal(
 
   // A second past its start at the least: a deal ended in the second it opened would otherwise
   // read back as a window of nought, which `readDeal` refuses as malformed.
-  const ended: ShopDeal = { ...deal, endUnix: Math.max(nowUnix, deal.startUnix + 1) };
+  const ended: ShopDeal = { ...deal, endUnix: Math.max(nowUnix, deal.startUnix + 1), endedEarly: true };
   return {
     ok: true,
     deal: ended,
@@ -370,7 +385,7 @@ export const DEAL_HISTORY_PAGE = 20;
  * never counted again, so an old page costs only its own reads.
  */
 export function isSettled(deal: ShopDeal, nowUnix: number): boolean {
-  return nowUnix >= deal.endUnix + DEAL_GRACE_SECONDS;
+  return nowUnix >= deal.endUnix + graceOf(deal);
 }
 
 /** Where the next history page starts: after the last row of this one, newest first. */

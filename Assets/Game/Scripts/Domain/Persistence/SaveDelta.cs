@@ -468,7 +468,22 @@ namespace GlimmerGrove.Persistence
             => SamePeriod(a?.daily, b?.daily)
             && SamePeriod(a?.weekly, b?.weekly)
             && SameCounts(a?.lifetime, b?.lifetime)
-            && SameWelcome(a?.welcome, b?.welcome);
+            && SameWelcome(a?.welcome, b?.welcome)
+            && SameIds(a?.dealsSeen, b?.dealsSeen);
+
+        /// <summary>
+        /// A sorted id list, walked in order - <c>DealSeen.Write</c> writes it sorted. It has to
+        /// travel: a deal shown on one phone that never reached the document is a popup the other
+        /// phone would raise a second time.
+        /// </summary>
+        static bool SameIds(string[] a, string[] b)
+        {
+            int na = a?.Length ?? 0, nb = b?.Length ?? 0;
+            if (na != nb) return false;
+            for (int i = 0; i < na; i++)
+                if (!Same(a[i], b[i])) return false;
+            return true;
+        }
 
         /// <summary>
         /// The welcome bonus's days and claims, walked in order - both sides are written sorted

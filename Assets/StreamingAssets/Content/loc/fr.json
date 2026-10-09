@@ -2814,12 +2814,20 @@
       "text": "Offre achetée ! +{0} pièces"
     },
     {
+      "key": "ui.deal.bought_row",
+      "text": "Achetée"
+    },
+    {
       "key": "ui.deal.door",
       "text": "Offre"
     },
     {
       "key": "ui.deal.ended",
       "text": "Cette offre est terminée."
+    },
+    {
+      "key": "ui.deal.ended_row",
+      "text": "Terminée"
     },
     {
       "key": "ui.deal.ends_label",

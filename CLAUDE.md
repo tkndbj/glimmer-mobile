@@ -536,12 +536,15 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
 60. **A shop deal is coins sold for gems for a window, once per account, made on the admin page**
    (`tekoworld.com/admin/shop`; `adminCreateDeal`/`adminEndDeal`, only the owner's three Google
    addresses, verified, `google.com` provider). It lives in one public document, `config/deals`,
-   read by the game with a single get at most every 15 minutes, never a listener. One live at a
-   time; immutable once made, only its end moves.
+   read by the game with a single get at most every 15 minutes, never a listener. Up to five on sale at
+   once (`DEAL_MAX_LIVE`); immutable once made, only its end moves.
 60a. **The gems and the coins move in one transaction.** The debit is `deal:{dealId}`, the coins a
    claim `deal:{dealId}:credits` queued beside it; `submitSpends` prices the debit off the document
    and writes the coins' grant record with it, `claimAwards` never pays one (waits while the deal
-   takes debits, refuses after). A refused debit takes the coins back (`DealLedger.OnSpendRejected`).
+   takes debits, refuses after). A deal that runs out keeps a 15-minute grace; one ended from the
+   admin page (`endedEarly`) has none - "End now" withdraws a mistake - and the panel re-reads the
+   deals before every buy (`DealLedger.RefreshNowAsync`). A refused debit takes the coins back
+   (`DealLedger.OnSpendRejected`).
    The wallet's `deals` map is the entitlement (`dealsBought` on every reply); nothing is in the
    save, and nothing is offered until a reply has said what the account owns. Held by
    `deals.mjs`, `ShopDealTests` and the live `shop-deal.mjs`.
@@ -550,6 +553,13 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
    and fail purchases on contention, so `adminDealHistory` pages twenty by `endUnix` and counts
    `spendLog` by `dealId` with `count()` (the one indexed field of the exempt `spendLog`, collection
    group); a settled count is stored and never recounted. `adminListDeals` backfills a missing record.
+60c. **A deal is raised outside the shop by `DealMoment` alone, once per deal, ever** (rules in
+   `DealPrompt`): 3 levels cleared; one popup a session carrying every unshown deal; triggers in order
+   coin shortfall (turret, star, keeper level - answered on the screen it happened on), back on the
+   hub from a win, last 3 hours; only on a calm screen after the consent questions. Shown is marked
+   in the save at open (`tasks.dealsSeen`, v41, the newest 64 ids - a join, never pruned against the
+   network). Short of gems stacks `GemShopOverlay` over `DealOverlay`, which lists any number of
+   deals and pays coins out on close.
 
 ### Art credits
 
@@ -690,7 +700,8 @@ Charms have no offline gate (`SiegeCharmTests` and renders).
 **Server**: `node firebase/seed/seed-release.mjs --check`; `npm --prefix firebase/functions run seed -- --check`;
 `Tools/make_name_blocklist.py --check`. Live e2e (differential on purpose — a stale function answers 200 with
 a valid but wrong document): `smoke-test.mjs`, `delete-account.mjs`, `endless-xp.mjs`, `rank-badge.mjs`,
-`ward-seats.mjs`, `keeper-spend.mjs`, `shop-deal.mjs` (refuses to run while a real deal is on sale).
+`ward-seats.mjs`, `keeper-spend.mjs`, `shop-deal.mjs` (adds its test deals beside the real ones and
+removes only those, preconditioned; players on a deals build can see them for the minute it runs).
 
 **In the Editor:** `Glimmer Grove ▸ Validate Content`, `▸ Validate Art`, Test Runner (EditMode). Reload the
 domain before believing a failure after a play-mode session.

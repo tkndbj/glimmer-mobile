@@ -2814,12 +2814,20 @@
       "text": "Deal bought! +{0} coins"
     },
     {
+      "key": "ui.deal.bought_row",
+      "text": "Bought"
+    },
+    {
       "key": "ui.deal.door",
       "text": "Deal"
     },
     {
       "key": "ui.deal.ended",
       "text": "This deal has ended."
+    },
+    {
+      "key": "ui.deal.ended_row",
+      "text": "Ended"
     },
     {
       "key": "ui.deal.ends_label",

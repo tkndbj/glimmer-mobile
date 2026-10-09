@@ -343,6 +343,7 @@ namespace GlimmerGrove.Tests
                 case "tasks.welcome.days[].goal": return "runs";
                 case "tasks.welcome.claimed[]": return "w1";
                 case "tasks.welcome.coined[]": return "w1";
+                case "tasks.dealsSeen[]": return "d202610091530k3x9";
 
                 // A waiting debit dated before the server's confirmed cut-off is already in the
                 // baseline and is pruned by a merge (CurrencyLedger.PruneConfirmedPending), so a

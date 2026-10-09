@@ -634,7 +634,11 @@ namespace GlimmerGrove.Persistence
         ///      which already joins that way. Inside the existing <c>tasks</c> map, so no rules
         ///      release (12a); absent is empty, so no migration. The version moves for v35's
         ///      reason.
-        public const int Version = 40;
+        /// v41: the shop deals already shown as a popup (<see cref="TaskStateDto.dealsSeen"/>,
+        ///      <c>Store.DealSeen</c>, invariant 60c): the newest 64 deal ids, joined as the newest
+        ///      64 of the union. Inside the existing <c>tasks</c> map, so no rules release (12a);
+        ///      absent is empty, so no migration. The version moves for v35's reason.
+        public const int Version = 41;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -1042,6 +1046,13 @@ namespace GlimmerGrove.Persistence
         /// no rules release.
         /// </summary>
         public WelcomeStateDto welcome;
+
+        /// <summary>
+        /// The shop deals this account has already been shown as a popup, sorted (each is shown
+        /// once, ever). Added in v41; see <c>Store.DealSeen</c>. Inside this map for
+        /// <see cref="lifetime"/>'s reason.
+        /// </summary>
+        public string[] dealsSeen;
     }
 
     /// <summary>The welcome bonus's record. See <c>Tasks.WelcomeLedger</c>.</summary>

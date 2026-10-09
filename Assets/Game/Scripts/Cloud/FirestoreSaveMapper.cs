@@ -820,7 +820,30 @@ namespace GlimmerGrove.Cloud
                 // map for the lifetime tally's reason, and it has to travel for the same one: a
                 // day played on one phone is a turret the other will not otherwise hand over.
                 { "welcome", Welcome(tasks?.welcome) },
+
+                // The shop deals already shown as a popup (save v41). Inside this map for the
+                // lifetime tally's reason, and it has to travel: a deal dismissed on one phone is a
+                // popup the other phone must not raise again.
+                { "dealsSeen", Ids(tasks?.dealsSeen) },
             };
+
+        /// <summary>A list of non-empty ids, as written. Drops exactly what the reader drops.</summary>
+        static List<object> Ids(string[] ids)
+        {
+            var list = new List<object>();
+            if (ids != null) foreach (var id in ids) if (!string.IsNullOrEmpty(id)) list.Add(id);
+            return list;
+        }
+
+        /// <summary>The ids a map holds under <paramref name="key"/>; absent is none.</summary>
+        static string[] ReadIds(IDictionary<string, object> map, string key)
+        {
+            var ids = new List<string>();
+            if (map.TryGetValue(key, out object raw) && raw is IEnumerable<object> values)
+                foreach (object value in values)
+                    if (value is string s && !string.IsNullOrEmpty(s)) ids.Add(s);
+            return ids.ToArray();
+        }
 
         /// <summary>Rows of {goal, days[]} and a list of claimed ids. Drops exactly what the reader drops.</summary>
         static Dictionary<string, object> Welcome(WelcomeStateDto welcome)
@@ -917,6 +940,7 @@ namespace GlimmerGrove.Cloud
                 weekly = ReadPeriod(null),
                 lifetime = new TaskCountDto[0],
                 welcome = ReadWelcome(null),
+                dealsSeen = new string[0],
             };
             if (!(Map(doc, "tasks") is IDictionary<string, object> map)) return tasks;
 
@@ -924,6 +948,7 @@ namespace GlimmerGrove.Cloud
             tasks.weekly = ReadPeriod(Map(map, "weekly") as IDictionary<string, object>);
             tasks.lifetime = ReadCounts(map, "lifetime");
             tasks.welcome = ReadWelcome(Map(map, "welcome") as IDictionary<string, object>);
+            tasks.dealsSeen = ReadIds(map, "dealsSeen");
             return tasks;
         }
 

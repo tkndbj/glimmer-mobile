@@ -16,10 +16,12 @@
 //     coins in the same reply, confirms the claim id, and names the deal in `dealsBought`;
 //   - buying again charges nothing and pays nothing, and the claim then confirms without paying.
 //
-// It needs the owner's gcloud token, because it publishes its own test deal into `config/deals`
-// for the length of the run - the document only the admin callables write - and puts back what
-// was there afterwards. **It refuses to run while a real deal is on sale**, so it can never take
-// one off a live shop. A new anonymous account every run, deleted through `deleteAccount` at the end.
+// It needs the owner's gcloud token, because it adds its own test deals to `config/deals` for the
+// length of the run - the document only the admin callables write - and takes only those away
+// again, with a precondition on every write so a deal the owner makes or ends meanwhile is never
+// overwritten. **Players on a build that sells deals can see the test deals for the minute it
+// runs** (777 coins for 5 gems, priced so a stray purchase costs nothing). A new anonymous account
+// every run, deleted through `deleteAccount` at the end.
 
 import { execSync } from "node:child_process";
 
@@ -46,51 +48,66 @@ const stamp = new Date(now * 1000).toISOString().slice(0, 16).replace(/[-T:]/g, 
 const LIVE = { id: `d${stamp}e2e1`, credits: 777, gems: 5, startUnix: now - 60, endUnix: now + 600 };
 const CLOSED = { id: `d${stamp}e2e2`, credits: 999, gems: 1, startUnix: now - 7200, endUnix: now - 3600 };
 
-const before = await fetch(`${FS}/config/deals`, { headers: ownerHeaders });
-const previous = before.status === 200 ? await before.json() : null;
-if (before.status !== 200 && before.status !== 404) {
-  console.error(`could not read config/deals with the owner token (${before.status}); is gcloud signed in?`);
-  process.exit(1);
-}
-
-const liveRealDeal = (previous?.fields?.deals?.arrayValue?.values ?? []).some((v) => {
-  const f = v.mapValue?.fields ?? {};
-  const start = Number(f.startUnix?.integerValue ?? 0), end = Number(f.endUnix?.integerValue ?? 0);
-  return now >= start && now < end;
-});
-if (liveRealDeal) {
-  console.error("a real deal is on sale; this run would take it off the shop. Run it once the deal has ended.");
-  process.exit(1);
-}
+// A deal ended from the admin page a few seconds ago: still inside the grace a deal that ran out
+// would have, and refused anyway, because "End now" withdraws a mistake (`graceOf`).
+const EARLY = { id: `d${stamp}e2e4`, credits: 555, gems: 1, startUnix: now - 120, endUnix: now - 5, endedEarly: true };
+const OURS = new Set([LIVE.id, CLOSED.id, EARLY.id]);
 
 const asRow = (d) => ({
   mapValue: { fields: {
     id: { stringValue: d.id }, credits: { integerValue: String(d.credits) }, gems: { integerValue: String(d.gems) },
     startUnix: { integerValue: String(d.startUnix) }, endUnix: { integerValue: String(d.endUnix) },
+    ...(d.endedEarly ? { endedEarly: { booleanValue: true } } : {}),
   } },
 });
 
-async function restore() {
-  if (previous) {
-    const r = await fetch(`${FS}/config/deals`, {
-      method: "PATCH", headers: ownerHeaders, body: JSON.stringify({ fields: previous.fields ?? {} }),
-    });
-    console.log(`\nconfig/deals put back as it was (${r.status})`);
-  } else {
-    const r = await fetch(`${FS}/config/deals`, { method: "DELETE", headers: ownerHeaders });
-    console.log(`\nconfig/deals removed again; it did not exist before (${r.status})`);
-  }
+// **Non-destructive.** The test deals are added beside whatever the owner has on sale and only
+// they are taken away again; every write carries the document's last update time as a
+// precondition, so a deal the owner makes or ends while this runs is never overwritten - the write
+// fails, the document is read again, and the change is made over the new one.
+async function readDeals() {
+  const r = await fetch(`${FS}/config/deals`, { headers: ownerHeaders });
+  if (r.status === 404) return { exists: false, updateTime: null, rows: [] };
+  if (r.status !== 200) throw new Error(`could not read config/deals with the owner token (${r.status}); is gcloud signed in?`);
+  const doc = await r.json();
+  return { exists: true, updateTime: doc.updateTime, rows: doc.fields?.deals?.arrayValue?.values ?? [] };
 }
 
-const published = await fetch(`${FS}/config/deals`, {
-  method: "PATCH", headers: ownerHeaders,
-  body: JSON.stringify({ fields: { schema: { integerValue: "1" }, deals: { arrayValue: { values: [asRow(CLOSED), asRow(LIVE)] } } } }),
-});
-if (published.status !== 200) {
-  console.error(`could not publish the test deal (${published.status})`);
+const idOf = (row) => row.mapValue?.fields?.id?.stringValue ?? "";
+
+async function writeDeals(change) {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const current = await readDeals();
+    const rows = change(current.rows);
+    const pre = current.exists ? `currentDocument.updateTime=${encodeURIComponent(current.updateTime)}` : "currentDocument.exists=false";
+
+    const r = rows.length === 0 && current.exists
+      ? await fetch(`${FS}/config/deals?${pre}`, { method: "DELETE", headers: ownerHeaders })
+      // Masked to the two fields this changes, so the admin callables' own fields (`updatedAt`) are
+      // left exactly as they were.
+      : await fetch(`${FS}/config/deals?${pre}&updateMask.fieldPaths=schema&updateMask.fieldPaths=deals`, {
+          method: "PATCH", headers: ownerHeaders,
+          body: JSON.stringify({ fields: { schema: { integerValue: "1" }, deals: { arrayValue: { values: rows } } } }),
+        });
+    if (r.status === 200) return true;
+    if (r.status !== 400 && r.status !== 409 && r.status !== 412) throw new Error(`config/deals write failed (${r.status})`);
+    // The document moved under us: read it again and redo the change over it.
+  }
+  return false;
+}
+
+async function restore() {
+  const ok = await writeDeals((rows) => rows.filter((row) => !OURS.has(idOf(row))));
+  console.log(ok ? "\nthe test deals are gone; everything else in config/deals was left as it was"
+                 : "\nFAIL could not take the test deals out of config/deals - remove them by hand");
+  if (!ok) process.exitCode = 1;
+}
+
+if (!(await writeDeals((rows) => [...rows.filter((row) => !OURS.has(idOf(row))), asRow(CLOSED), asRow(EARLY), asRow(LIVE)]))) {
+  console.error("could not add the test deals to config/deals");
   process.exit(1);
 }
-console.log(`published test deals ${LIVE.id} (live) and ${CLOSED.id} (closed)`);
+console.log(`added test deals ${LIVE.id} (live), ${CLOSED.id} (closed) and ${EARLY.id} (ended early) beside the real ones`);
 
 let headers, uid;
 try {
@@ -159,6 +176,11 @@ try {
 
   const closedClaim = await call("claimAwards", { awards: [claim(CLOSED)] });
   check(rejectedOf(closedClaim.body).includes(grantId(CLOSED)), "a claim for a closed deal with nothing paid is refused");
+
+  const endedNow = await call("submitSpends", { spends: [debit(EARLY, EARLY.gems)] });
+  check(rejectedOf(endedNow.body).includes(spendId(EARLY)), "a debit seconds after End now is refused - no grace for a deal ended early");
+  const earlyClaim = await call("claimAwards", { awards: [claim(EARLY)] });
+  check(rejectedOf(earlyClaim.body).includes(grantId(EARLY)), "and so is its claim");
 
   const malformed = { id: "deal:not-a-deal", currency: "gems", amount: 1, unix: now, reason: "shop_deal" };
   const r4 = await call("submitSpends", { spends: [malformed] });

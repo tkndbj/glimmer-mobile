@@ -133,6 +133,13 @@ namespace GlimmerGrove.Privacy
         public static bool Owed => _prepared && !_asking && (_formOwed || _trackingOwed);
 
         /// <summary>
+        /// The consent form or Apple's prompt is being put in front of the player right now. Read
+        /// by anything else that would raise itself on an idle hub (<c>DealMoment</c>), which
+        /// must wait for the questions rather than land on top of them.
+        /// </summary>
+        public static bool IsAsking => _asking;
+
+        /// <summary>
         /// Raised whenever the signals change - on first resolve, when the hub's question is
         /// answered, and again if the player revisits the form. Anything holding a copy has to
         /// repaint; the settings row and the ad provider both listen rather than polling.

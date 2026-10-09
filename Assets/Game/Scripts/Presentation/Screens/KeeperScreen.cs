@@ -479,6 +479,10 @@ namespace GlimmerGrove
                     else
                     {
                         Scenery.Toast(Content, Loc.Format("ui.keeper.too_poor_coins", offer.Price), Pal.Gold, 2.4f);
+
+                        // A level the player cannot pay for in coins: a limited-time deal may
+                        // answer it on this screen in a moment (invariant 60c).
+                        DealMoment.NoteShortfall();
                     }
                     break;
 

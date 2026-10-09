@@ -182,6 +182,10 @@ namespace GlimmerGrove
                 ? Loc.Format("ui.shop.short_coins", offer.Shortfall)
                 : string.Empty;
 
+            // A star the player cannot pay for: a limited-time deal may answer it once this panel
+            // is closed (invariant 60c).
+            if (offer.Shortfall > 0) DealMoment.NoteShortfall();
+
             _label.text = offer.Cost.ToString("N0");
             _coin.enabled = true;
 
