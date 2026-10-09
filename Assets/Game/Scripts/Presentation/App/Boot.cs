@@ -349,6 +349,10 @@ namespace GlimmerGrove
                 // the consent questions are behind the player (invariant 60c). After the consent
                 // step, so a frame that asked a question is a frame that offers nothing.
                 DealMoment.Tick();
+
+                // And our "remind me" panel, after a chest, on a calm screen (invariant 50p). Last,
+                // so a frame that raised a deals popup is covered and asks nothing.
+                ReminderMoment.Tick();
             }
 
             void OnApplicationPause(bool paused)
@@ -364,6 +368,7 @@ namespace GlimmerGrove
                     // what covers the gap no callback could have reported.
                     Referral.ReferralLedger.Paused();
                     DealMoment.Paused();
+                    ReminderMoment.Paused();
                 }
                 else
                 {

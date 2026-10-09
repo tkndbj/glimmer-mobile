@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using GlimmerGrove.Analytics;
 using UnityEngine;
 #if GLIMMER_NOTIFICATIONS && UNITY_ANDROID
 using Unity.Notifications.Android;
@@ -87,6 +88,13 @@ namespace GlimmerGrove.Notifications
         Runner _runner;
         bool _ready;
 
+        /// <summary>
+        /// An OS request is in flight. Requests are serialised - iOS's provisional request at
+        /// launch and a player's "remind me" can otherwise overlap - and a <see cref="Refresh"/>
+        /// while one is out must not report "never asked" over the dialog the player is looking at.
+        /// </summary>
+        bool _requesting;
+
         // Raised only by the device branch below, so every other compilation of this file -
         // the Editor's, a desktop build's, a clone with no package - warns that nothing raises
         // it. That is the stub doing its job rather than a fault, and the warning is noisy on
@@ -136,6 +144,18 @@ namespace GlimmerGrove.Notifications
 
             _runner.Run(QueryOpened());
             Refresh();
+
+#if UNITY_IOS
+            // **Provisional authorisation (invariant 50h): asked for here, and it draws nothing.**
+            // iOS then delivers our reminders quietly to Notification Center, each with its own
+            // Keep / Turn Off buttons, so a player who leaves after the tutorial - before any chest
+            // has earned the full question - still hears from us, and decides on a real reminder
+            // rather than on a promise. The full dialog stays available: asking without the
+            // provisional option later is what upgrades it (`Ask`). Skipped once the player has
+            // switched reminders off, whose answer it would be overriding.
+            if (NotificationOptIn.Permission == NotificationPermission.Unasked && NotificationOptIn.Wanted)
+                _runner.Run(Provisional());
+#endif
         }
 
         /// <summary>
@@ -154,31 +174,82 @@ namespace GlimmerGrove.Notifications
 
         IEnumerator Ask()
         {
+            // Behind a provisional request still out, if the player answered our panel within
+            // the first frames of a launch. Two native requests at once is a race on iOS's answer.
+            while (_requesting) yield return null;
+
+            // The OS may have answered for good while this waited (a provisional request the
+            // player has since turned off, say); a request now would draw nothing.
+            Refresh();
+            if (!NotificationOptIn.CanAsk) yield break;
+
             NotificationOptIn.SetPermission(NotificationPermission.Pending);
 
-#if UNITY_ANDROID
-            // Before Android 13 there is no runtime permission and this finishes immediately
-            // as Allowed. It also respects a player who has said "do not ask again", which is
-            // why Refresh below is the thing that reads state and this is only ever the ask.
-            var request = new PermissionRequest();
-            while (request.Status == PermissionStatus.RequestPending) yield return null;
-#elif UNITY_IOS
-            // Alert, badge and sound - the three this game actually uses. Not asking for
-            // sound would deliver every reminder silently, which reads as the feature not
-            // working; `registerForRemoteNotifications` is false because nothing here is a
-            // push and asking for one would put this app on APNs for no reason.
-            using (var request = new AuthorizationRequest(
-                       AuthorizationOption.Alert | AuthorizationOption.Badge | AuthorizationOption.Sound,
-                       false))
+            // The latch comes down in a finally, so a request that throws leaves a binding that
+            // can still read and still ask, rather than one that refreshes nothing until relaunch.
+            _requesting = true;
+            try
             {
-                while (!request.IsFinished) yield return null;
-            }
-#else
-            yield break;
+#if UNITY_ANDROID
+                // Before Android 13 there is no runtime permission and this finishes immediately
+                // as Allowed. After two refusals it answers Denied without drawing anything,
+                // which `CanAsk` above has already ruled out.
+                var request = new PermissionRequest();
+                while (request.Status == PermissionStatus.RequestPending) yield return null;
+#elif UNITY_IOS
+                // Alert, badge and sound - the three this game actually uses. Not asking for
+                // sound would deliver every reminder silently, which reads as the feature not
+                // working; `registerForRemoteNotifications` is false because nothing here is a
+                // push and asking for one would put this app on APNs for no reason. Without the
+                // provisional option, so from a provisional state this is the upgrade dialog.
+                using (var request = new AuthorizationRequest(Full, false))
+                {
+                    while (!request.IsFinished) yield return null;
+                }
 #endif
+            }
+            finally
+            {
+                _requesting = false;
+            }
 
             Refresh();
+
+            Telemetry.Track("notification_permission_answered",
+                            "state", NotificationOptIn.Id(NotificationOptIn.Permission));
         }
+
+#if UNITY_IOS
+        const AuthorizationOption Full
+            = AuthorizationOption.Alert | AuthorizationOption.Badge | AuthorizationOption.Sound;
+
+        /// <summary>
+        /// Asks iOS for provisional authorisation, which it grants without drawing anything.
+        /// See <see cref="Initialise"/> for why.
+        /// </summary>
+        IEnumerator Provisional()
+        {
+            while (_requesting) yield return null;
+            if (NotificationOptIn.Permission != NotificationPermission.Unasked) yield break;
+
+            _requesting = true;
+            try
+            {
+                using (var request = new AuthorizationRequest(Full | AuthorizationOption.Provisional, false))
+                {
+                    while (!request.IsFinished) yield return null;
+                }
+            }
+            finally
+            {
+                _requesting = false;
+            }
+
+            Refresh();
+            Telemetry.Track("notification_provisional",
+                            "state", NotificationOptIn.Id(NotificationOptIn.Permission));
+        }
+#endif
 
         /// <summary>
         /// Re-reads what the OS allows, <b>without prompting</b>.
@@ -197,6 +268,11 @@ namespace GlimmerGrove.Notifications
         /// </summary>
         public void Refresh()
         {
+            // A dialog is up (or about to be): the package still reads "not requested" until it
+            // is answered, and saying so would let something offer a second request over it.
+            // `Ask` refreshes itself the moment the answer lands.
+            if (_requesting) return;
+
 #if UNITY_ANDROID
             switch (AndroidNotificationCenter.UserPermissionToPost)
             {
@@ -206,19 +282,27 @@ namespace GlimmerGrove.Notifications
                     NotificationOptIn.SetPermission(NotificationPermission.Unasked); break;
                 case PermissionStatus.RequestPending:
                     NotificationOptIn.SetPermission(NotificationPermission.Pending); break;
+                case PermissionStatus.Denied:
+                case PermissionStatus.DeniedDontAskAgain:
+                    // Nothing will be delivered - but Android 13+ draws its dialog a second time
+                    // after one refusal, and says so through the rationale flag. After the second
+                    // refusal the flag goes false and only the OS settings can change the answer.
+                    NotificationOptIn.SetPermission(NotificationPermission.Denied,
+                        AndroidNotificationCenter.ShouldShowPermissionToPostRationale);
+                    break;
                 default:
-                    // Denied, DeniedDontAskAgain and NotificationsBlockedForApp are one state
-                    // as far as this game is concerned: nothing will be delivered, and the
-                    // only thing that changes it is the player in the OS settings.
+                    // NotificationsBlockedForApp: switched off in the OS settings, which is the
+                    // only place it can be switched back on.
                     NotificationOptIn.SetPermission(NotificationPermission.Denied); break;
             }
 #elif UNITY_IOS
             switch (iOSNotificationCenter.GetNotificationSettings().AuthorizationStatus)
             {
                 case AuthorizationStatus.Authorized:
-                case AuthorizationStatus.Provisional:
                 case AuthorizationStatus.Ephemeral:
                     NotificationOptIn.SetPermission(NotificationPermission.Granted); break;
+                case AuthorizationStatus.Provisional:
+                    NotificationOptIn.SetPermission(NotificationPermission.Provisional); break;
                 case AuthorizationStatus.NotDetermined:
                     NotificationOptIn.SetPermission(NotificationPermission.Unasked); break;
                 default:

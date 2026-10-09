@@ -4430,6 +4430,30 @@
       "text": "Gentle nudges about hearts, tasks and your streak."
     },
     {
+      "key": "ui.reminders.ask_body",
+      "text": "Want a nudge when your next chest is ready, and before your streak runs out?"
+    },
+    {
+      "key": "ui.reminders.ask_title",
+      "text": "REMINDERS"
+    },
+    {
+      "key": "ui.reminders.ask_yes",
+      "text": "REMIND ME"
+    },
+    {
+      "key": "ui.reminders.not_now",
+      "text": "NOT NOW"
+    },
+    {
+      "key": "ui.reminders.open_settings",
+      "text": "OPEN SETTINGS"
+    },
+    {
+      "key": "ui.reminders.settings_body",
+      "text": "Reminders are switched off in your phone's settings. Turn them on there to hear when a chest is ready, and before your streak runs out."
+    },
+    {
       "key": "ui.num.million",
       "text": "M"
     },

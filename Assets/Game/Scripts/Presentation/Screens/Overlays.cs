@@ -1154,14 +1154,24 @@ namespace GlimmerGrove
             {
                 if (NotificationOptIn.Permission == NotificationPermission.Denied)
                 {
+                    // Android's second chance: the OS will still draw its dialog once more, and
+                    // the player has just reached for the control, so ask it rather than send them
+                    // to a settings page. Otherwise the settings page is the only honest answer.
+                    if (NotificationOptIn.CanAsk)
+                    {
+                        NotificationOptIn.SetWanted(true);
+                        Notify.Ask();
+                        return;
+                    }
+
                     Close(Notify.OpenSettings);
                     return;
                 }
 
-                // Unasked is the one state where saying yes has to become a system prompt as
-                // well as a preference - and it is the right moment for one, because the
-                // player has just reached for the control themselves. `Notify.Ask` is a no-op
-                // once the OS has answered, so this cannot become a second dialog.
+                // Never asked (or iOS provisional) is where saying yes has to become a system
+                // prompt as well as a preference - and it is the right moment for one, because
+                // the player has just reached for the control themselves. `Notify.Ask` is a
+                // no-op whenever the OS would draw nothing, so this cannot become a dead tap.
                 NotificationOptIn.SetWanted(!NotificationOptIn.Wanted);
                 if (NotificationOptIn.Wanted) Notify.Ask();
 
@@ -1169,7 +1179,25 @@ namespace GlimmerGrove
             });
 
             UIKit.Shrinkable(button.Label, 24);
+
+            // The OS answers a request a dialog later, with this panel still open, so the row
+            // repaints on the answer rather than going on saying "blocked" over a yes.
+            _remindersRow = button;
+            _remindersWording = Wording;
+            NotificationOptIn.Changed -= RepaintReminders;
+            NotificationOptIn.Changed += RepaintReminders;
         }
+
+        Btn _remindersRow;
+        Func<string> _remindersWording;
+
+        void RepaintReminders()
+        {
+            if (_remindersRow != null && _remindersRow.Label != null && _remindersWording != null)
+                _remindersRow.Label.text = _remindersWording();
+        }
+
+        void OnDestroy() => NotificationOptIn.Changed -= RepaintReminders;
 
         /// <summary>
         /// One link out to the public site.

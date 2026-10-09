@@ -4430,6 +4430,30 @@
       "text": "De petits rappels sur les cœurs, les missions et ta série."
     },
     {
+      "key": "ui.reminders.ask_body",
+      "text": "Tu veux un rappel quand ton prochain coffre est prêt, et avant que ta série ne s'arrête ?"
+    },
+    {
+      "key": "ui.reminders.ask_title",
+      "text": "RAPPELS"
+    },
+    {
+      "key": "ui.reminders.ask_yes",
+      "text": "ME PRÉVENIR"
+    },
+    {
+      "key": "ui.reminders.not_now",
+      "text": "PAS MAINTENANT"
+    },
+    {
+      "key": "ui.reminders.open_settings",
+      "text": "OUVRIR LES RÉGLAGES"
+    },
+    {
+      "key": "ui.reminders.settings_body",
+      "text": "Les rappels sont désactivés dans les réglages de ton téléphone. Active-les là-bas pour savoir quand un coffre est prêt, et avant que ta série ne s'arrête."
+    },
+    {
       "key": "ui.num.million",
       "text": "M"
     },

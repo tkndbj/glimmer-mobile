@@ -368,7 +368,8 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
 50g. **Cadence is an outcome of cooldowns, not a quota**, and it thins the longer a player is away.
 50h. **The permission is asked at a chest, never on the splash**; switch and OS answer are separate
    device-local facts. The package's iOS "request on app launch" stays off (it shipped on, ahead of the
-   splash); `NotificationTests.TheOsIsNeverAskedForNotificationsAtLaunch` reads the settings file.
+   splash); `NotificationTests.TheOsIsNeverAskedForNotificationsAtLaunch` reads the settings file. The
+   one launch request is iOS *provisional* (draws nothing; quiet delivery with Keep / Turn Off).
 50i. **Android status-bar icon is a silhouette in an `.androidlib`.**
 50j. **A 24dp mark is a different picture**, nothing thinner than 1/12 of the canvas.
 50k. **A `versionDefines` flag adds no reference**; `compile.py` runs three passes (no package,
@@ -377,6 +378,11 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
 50m. **No double hyphen in an `.androidlib` manifest comment** — it aborts the Android build; the tool refuses.
 50n. **The horizon is bought with a taper**: three a day for a week, then one a night out to twenty-one days.
 50o. **`USE_EXACT_ALARM` and `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` are deliberately not used** (Play policy).
+50p. **The OS dialog is only raised by a yes to our own panel** (`ReminderAskOverlay`, raised by
+   `ReminderMoment` after a chest) or by the Settings row: iOS draws it once, Android twice, ours costs
+   nothing to refuse. Yes goes to the OS dialog while it will still draw (`NotificationAsk.OsWillPrompt`),
+   else to the OS settings page. Shown at most four times an install, 3/7/14 days apart, never to a player
+   who switched reminders off; the log is device-local (`glimmer.notify.asks`), marked at open.
 
 ### Inviting friends
 
@@ -694,7 +700,8 @@ Charms have no offline gate (`SiegeCharmTests` and renders).
 (`--measure` holds `ProductCardBadges` to the sprite; `--deal` draws a live shop deal), `render_tasks`, `render_season`, `render_streak`,
 `render_keeper`, `render_keeper_ladder`, `render_endless`, `render_loadout`, `render_boards` (`--row`),
 `render_ranks` (`--contact`), `render_rank_ceremony` (`--contact`, `--sky`), `render_referral`,
-`render_checkpoints`, `render_welcome` (`--done`, `--choice`), `render_home --welcome`. Rank/kit art: `make_rank_art.py`, `make_rank_kit_art.py`, `make_keeper_art.py`.
+`render_checkpoints`, `render_welcome` (`--done`, `--choice`), `render_home --welcome`, `render_reminders`
+(`--settings`, `--lang`, `--measure` fails on a caption at its floor). Rank/kit art: `make_rank_art.py`, `make_rank_kit_art.py`, `make_keeper_art.py`.
 **`--check` proves reproducibility, not quality.** Art tools pass with licensed packs absent (PNGs committed).
 
 **Server**: `node firebase/seed/seed-release.mjs --check`; `npm --prefix firebase/functions run seed -- --check`;
@@ -851,7 +858,7 @@ gates print the derived totals.
 
 `ForfeitOverlay` (abandoning a committed run or challenge play), `ReportOverlay` (the chooser *and* the
 confirmation) and `DeleteAccountOverlay` (27, second tap armed only when there is something to lose).
-`ContinueOverlay` is an offer, not a fourth. Everything else costs nothing to undo or is confirmed by the
+`ContinueOverlay` and `ReminderAskOverlay` are offers, not a fourth. Everything else costs nothing to undo or is confirmed by the
 store's sheet.
 
 ## Not done, deliberately

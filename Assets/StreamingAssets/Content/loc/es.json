@@ -4430,6 +4430,30 @@
       "text": "Avisos amables sobre corazones, misiones y tu racha."
     },
     {
+      "key": "ui.reminders.ask_body",
+      "text": "¿Quieres un aviso cuando tu próximo cofre esté listo y antes de que se acabe tu racha?"
+    },
+    {
+      "key": "ui.reminders.ask_title",
+      "text": "RECORDATORIOS"
+    },
+    {
+      "key": "ui.reminders.ask_yes",
+      "text": "AVÍSAME"
+    },
+    {
+      "key": "ui.reminders.not_now",
+      "text": "AHORA NO"
+    },
+    {
+      "key": "ui.reminders.open_settings",
+      "text": "ABRIR AJUSTES"
+    },
+    {
+      "key": "ui.reminders.settings_body",
+      "text": "Los recordatorios están desactivados en los ajustes de tu teléfono. Actívalos allí para saber cuándo hay un cofre listo y antes de que se acabe tu racha."
+    },
+    {
       "key": "ui.num.million",
       "text": "M"
     },

@@ -102,10 +102,10 @@ namespace GlimmerGrove.Notifications
         /// <para>
         /// <b>Deliberately not called on the boot path.</b> A permission dialog on the splash
         /// screen is the highest-refusal moment there is - the player has not seen the game,
-        /// has nothing to be reminded about, and cannot be asked again by us afterwards,
-        /// because both platforms show the system dialog once per install. Asked instead the
-        /// first time the player is holding something that will be waiting for them, which is
-        /// the only honest version of the question.
+        /// has nothing to be reminded about, and can rarely be asked again afterwards, because
+        /// iOS shows the system dialog once per install and Android twice. Called only by a yes:
+        /// to our own "remind me" panel (<c>ReminderMoment</c>, invariant 50p) or to the
+        /// Settings row, a control the player reached for themselves.
         /// </para>
         /// </summary>
         public static void Ask()
@@ -137,11 +137,16 @@ namespace GlimmerGrove.Notifications
         /// </summary>
         public static void OpenSettings() => _scheduler.OpenSettings();
 
-        /// <summary>The player has opened the game; the shade and the badge are stale.</summary>
+        /// <summary>
+        /// The player has opened the game; the shade and the badge are stale, and the OS answer
+        /// may be too - coming back from its settings page, where our panel may just have sent
+        /// them, is the commonest way it changes. Re-read without prompting.
+        /// </summary>
         public static void Resumed()
         {
             if (!_scheduler.Supported) return;
             _scheduler.ClearDelivered();
+            _scheduler.Refresh();
         }
 
         /// <summary>

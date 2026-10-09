@@ -52,12 +52,12 @@ namespace GlimmerGrove.Notifications
         void Refresh();
 
         /// <summary>
-        /// Asks the OS for permission, if it has never been asked.
+        /// Asks the OS for permission, if it would still draw its dialog
+        /// (<c>NotificationOptIn.CanAsk</c>: never asked, iOS provisional, Android's second chance).
         ///
         /// Must not throw and must not block: both platforms answer asynchronously and the
         /// result arrives through <c>NotificationOptIn.SetPermission</c>. Calling it when the
-        /// OS has already answered is a no-op rather than a second dialog, because neither
-        /// platform will show one.
+        /// OS will draw nothing is a no-op, never a silent request that answers "denied".
         /// </summary>
         void RequestPermission();
 
@@ -73,9 +73,9 @@ namespace GlimmerGrove.Notifications
         /// <summary>
         /// Opens the OS's own notification settings for this app.
         ///
-        /// The only honest control to offer a player whose device is blocking us: neither
-        /// platform will show its permission dialog twice, so a second in-game "allow" button
-        /// would do nothing at all - which is the broken button invariant 16o refuses.
+        /// The only honest control to offer a player whose device is blocking us for good: once
+        /// the OS will no longer draw its dialog, an in-game "allow" button that asked it would
+        /// do nothing at all - which is the broken button invariant 16o refuses.
         /// </summary>
         void OpenSettings();
 

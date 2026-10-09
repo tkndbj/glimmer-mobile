@@ -20,6 +20,14 @@ namespace GlimmerGrove.Notifications
 
         /// <summary>This platform has no notifications at all - the Editor, a desktop build.</summary>
         Unsupported,
+
+        /// <summary>
+        /// iOS only: delivered quietly to Notification Center without ever having shown a dialog,
+        /// each one carrying the OS's own Keep / Turn Off buttons. Counts as allowed, and the OS
+        /// will still show its full dialog when asked, so our panel may still offer the upgrade.
+        /// Appended rather than slotted in, so no ordinal above moves.
+        /// </summary>
+        Provisional,
     }
 
     /// <summary>
@@ -37,10 +45,11 @@ namespace GlimmerGrove.Notifications
     /// </para>
     /// <para>
     /// <b>The OS answer and the player's switch are two different facts and both are needed.</b>
-    /// A player who refused the system dialog cannot be asked again by us - both platforms
-    /// show it once per install - so the in-game switch has to be able to say "yes please"
-    /// while the OS still says no, and the settings panel is then obliged to send them to the
-    /// OS rather than lying about what its own toggle did.
+    /// A player who refused the system dialog can only rarely be asked again by us - iOS shows
+    /// it once per install, Android 13+ twice - so the in-game switch has to be able to say "yes
+    /// please" while the OS still says no, and the settings panel is then obliged to send them
+    /// to the OS rather than lying about what its own toggle did. Whether the OS would still
+    /// draw its dialog is <see cref="CanAsk"/>, defined once in <see cref="NotificationAsk"/>.
     /// </para>
     /// </summary>
     public static class NotificationOptIn
@@ -67,15 +76,23 @@ namespace GlimmerGrove.Notifications
         /// <summary>Raised when either half changes, so a panel can redraw and the plan can be re-armed.</summary>
         public static event Action Changed;
 
-        /// <summary>Both halves agree: this device may be spoken to.</summary>
-        public static bool Allowed => Wanted && Permission == NotificationPermission.Granted;
+        /// <summary>
+        /// Android's answer to "would a second request still draw the dialog": true after exactly
+        /// one refusal on Android 13+, false everywhere else. Set by the binding with
+        /// <see cref="Permission"/>; never persisted.
+        /// </summary>
+        public static bool CanPromptAgain { get; private set; }
+
+        /// <summary>Both halves agree: this device may be spoken to. Provisional is spoken to quietly.</summary>
+        public static bool Allowed => Wanted && (Permission == NotificationPermission.Granted
+                                              || Permission == NotificationPermission.Provisional);
 
         /// <summary>
-        /// Whether asking the OS is worth doing. False once it has answered either way -
-        /// a second request is a no-op on both platforms, and treating it as one is how a
-        /// "grant notifications" button comes to do nothing with no explanation.
+        /// Whether asking the OS would draw its dialog: never asked, iOS provisional, or Android's
+        /// second chance. False once it will only answer "denied" without drawing anything, which
+        /// is how a "grant notifications" button comes to do nothing with no explanation.
         /// </summary>
-        public static bool CanAsk => Permission == NotificationPermission.Unasked;
+        public static bool CanAsk => NotificationAsk.OsWillPrompt(Permission, CanPromptAgain);
 
         /// <summary>
         /// Writes the switch and flushes.
@@ -95,11 +112,29 @@ namespace GlimmerGrove.Notifications
         }
 
         /// <summary>Records what the platform answered. Called by the binding and by nothing else.</summary>
-        public static void SetPermission(NotificationPermission permission)
+        public static void SetPermission(NotificationPermission permission, bool canPromptAgain = false)
         {
-            if (Permission == permission) return;
+            canPromptAgain &= permission == NotificationPermission.Denied;
+            if (Permission == permission && CanPromptAgain == canPromptAgain) return;
+
             Permission = permission;
+            CanPromptAgain = canPromptAgain;
             Raise();
+        }
+
+        /// <summary>Analytics spelling of a permission state. Permanent once a dashboard reads it.</summary>
+        public static string Id(NotificationPermission permission)
+        {
+            switch (permission)
+            {
+                case NotificationPermission.Unasked: return "unasked";
+                case NotificationPermission.Pending: return "pending";
+                case NotificationPermission.Granted: return "granted";
+                case NotificationPermission.Denied: return "denied";
+                case NotificationPermission.Unsupported: return "unsupported";
+                case NotificationPermission.Provisional: return "provisional";
+                default: throw new ArgumentOutOfRangeException(nameof(permission), permission, null);
+            }
         }
 
         static void Raise()

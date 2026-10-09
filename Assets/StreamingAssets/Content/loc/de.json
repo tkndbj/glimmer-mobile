@@ -4430,6 +4430,30 @@
       "text": "Sanfte Hinweise zu Herzen, Aufgaben und deiner Serie."
     },
     {
+      "key": "ui.reminders.ask_body",
+      "text": "Möchtest du erinnert werden, wenn deine nächste Truhe bereit ist und bevor deine Serie reißt?"
+    },
+    {
+      "key": "ui.reminders.ask_title",
+      "text": "ERINNERUNGEN"
+    },
+    {
+      "key": "ui.reminders.ask_yes",
+      "text": "ERINNERE MICH"
+    },
+    {
+      "key": "ui.reminders.not_now",
+      "text": "JETZT NICHT"
+    },
+    {
+      "key": "ui.reminders.open_settings",
+      "text": "EINSTELLUNGEN ÖFFNEN"
+    },
+    {
+      "key": "ui.reminders.settings_body",
+      "text": "Erinnerungen sind in den Einstellungen deines Handys ausgeschaltet. Schalte sie dort ein, um zu erfahren, wann eine Truhe bereit ist und bevor deine Serie reißt."
+    },
+    {
       "key": "ui.num.million",
       "text": "M"
     },

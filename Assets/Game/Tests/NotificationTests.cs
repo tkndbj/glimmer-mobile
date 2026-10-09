@@ -444,6 +444,166 @@ namespace GlimmerGrove.Tests
             NotificationTable.Resolve(null, new List<string>());   // leave the static as found
         }
 
+        // ------------------------------------------------------------- asking (50p)
+        /// <summary>
+        /// <b>Our panel's yes goes where the OS can still say yes</b>: its own dialog while it
+        /// will draw one (never asked, iOS provisional, Android's second chance), its settings
+        /// page once it never will, and nowhere at all when there is nothing to ask - granted,
+        /// mid-dialog, unsupported, or switched off by the player in our own row.
+        /// </summary>
+        [Test]
+        public void TheRouteIsWhereTheOsCanStillSayYes()
+        {
+            var P = System.Enum.GetValues(typeof(NotificationPermission));
+            foreach (NotificationPermission permission in P)
+            foreach (bool again in new[] { false, true })
+            {
+                Assert.AreEqual(AskRoute.None, NotificationAsk.Route(permission, again, wanted: false),
+                                $"{permission}/{again}: a player who switched reminders off is never asked");
+
+                AskRoute expected;
+                switch (permission)
+                {
+                    case NotificationPermission.Unasked:
+                    case NotificationPermission.Provisional:
+                        expected = AskRoute.System; break;
+                    case NotificationPermission.Denied:
+                        expected = again ? AskRoute.System : AskRoute.Settings; break;
+                    case NotificationPermission.Granted:
+                    case NotificationPermission.Pending:
+                    case NotificationPermission.Unsupported:
+                        expected = AskRoute.None; break;
+                    default:
+                        Assert.Fail($"{permission} has no expected route; add it here"); return;
+                }
+
+                Assert.AreEqual(expected, NotificationAsk.Route(permission, again, wanted: true),
+                                $"{permission}, second chance {again}");
+                Assert.AreEqual(expected == AskRoute.System, NotificationAsk.OsWillPrompt(permission, again),
+                                $"{permission}/{again}: OsWillPrompt and the System route are one definition");
+            }
+        }
+
+        /// <summary>
+        /// <b>Spaced, growing, and capped for the life of the install.</b> Due at once the first
+        /// time; then 3, 7 and 14 days after each panel, never a second sooner; never after the
+        /// fourth. Walked as a player who says "not now" the moment each one is due.
+        /// </summary>
+        [Test]
+        public void ThePanelIsSpacedAndCapped()
+        {
+            const long Day = DailyRules.SecondsPerDay;
+            var log = default(AskLog);
+            long now = Midnight;
+
+            Assert.IsTrue(NotificationAsk.Due(log, now), "the first panel is due the first time it can be shown");
+
+            int[] gaps = { 3, 7, 14 };
+            for (int shown = 0; shown < NotificationAsk.MaxShown; shown++)
+            {
+                log = log.After(now);
+                Assert.AreEqual(shown + 1, log.Shown);
+
+                if (shown + 1 == NotificationAsk.MaxShown) break;
+
+                long gap = gaps[shown] * Day;
+                Assert.AreEqual(gaps[shown], NotificationAsk.GapAfter(log.Shown));
+                Assert.IsFalse(NotificationAsk.Due(log, now + gap - 1), $"panel {shown + 2} came a second early");
+                Assert.IsTrue(NotificationAsk.Due(log, now + gap), $"panel {shown + 2} did not come on its day");
+                now += gap;
+            }
+
+            Assert.AreEqual(NotificationAsk.MaxShown, log.Shown);
+            Assert.IsFalse(NotificationAsk.Due(log, now + 3650 * Day), "the cap is for the life of the install");
+            Assert.AreEqual(NotificationAsk.MaxShown, log.After(now).Shown, "the count never passes the cap");
+
+            Assert.AreEqual(AskRoute.None,
+                            NotificationAsk.Decide(NotificationPermission.Unasked, false, true, log, now + 3650 * Day),
+                            "Decide honours the cap whatever the route");
+            Assert.AreEqual(AskRoute.Settings,
+                            NotificationAsk.Decide(NotificationPermission.Denied, false, true, default, now),
+                            "Decide passes the route through when due");
+        }
+
+        /// <summary>
+        /// <b>A stamp from a clock that has since been corrected does not silence the feature</b>
+        /// until the calendar catches up with it - a day's tolerance, then treated as old.
+        /// </summary>
+        [Test]
+        public void AStampFromTheFutureIsNotTrusted()
+        {
+            const long Day = DailyRules.SecondsPerDay;
+            var log = new AskLog(1, Midnight + 400 * Day);
+
+            Assert.IsTrue(NotificationAsk.Due(log, Midnight), "a year-ahead stamp would have silenced every panel");
+            Assert.IsFalse(NotificationAsk.Due(new AskLog(1, Midnight + Day / 2), Midnight),
+                           "inside a day is ordinary clock drift and still waits its gap");
+        }
+
+        /// <summary>
+        /// <b>The device record round-trips, and anything it cannot read is the empty log</b> -
+        /// which can cost one panel more than was owed, never one fewer than the cap allows.
+        /// </summary>
+        [Test]
+        public void TheAskLogRoundTripsAndForgivesGarbage()
+        {
+            var log = new AskLog(2, 1_760_000_123L);
+            var back = AskLog.Parse(log.Format());
+            Assert.AreEqual(2, back.Shown);
+            Assert.AreEqual(1_760_000_123L, back.LastUnix);
+            Assert.AreEqual("2:1760000123", log.Format(), "the spelling is a device-stored contract");
+
+            foreach (var junk in new[] { null, "", ":", "2:", ":5", "x:5", "2:y", "-1:5", "2:-5", " 2:5", "2:5:6" })
+            {
+                var read = AskLog.Parse(junk);
+                Assert.AreEqual(0, read.Shown, $"'{junk}'");
+                Assert.AreEqual(0L, read.LastUnix, $"'{junk}'");
+            }
+
+            Assert.AreEqual(NotificationAsk.MaxShown, AskLog.Parse("99:5").Shown, "a count past the cap reads as the cap");
+        }
+
+        /// <summary>
+        /// <b>Android's second chance travels only with a refusal</b>, and <c>CanAsk</c> is the
+        /// same definition the panel's route uses.
+        /// </summary>
+        [Test]
+        public void TheSecondChanceTravelsOnlyWithARefusal()
+        {
+            try
+            {
+                NotificationOptIn.SetPermission(NotificationPermission.Granted, canPromptAgain: true);
+                Assert.IsFalse(NotificationOptIn.CanPromptAgain, "only a refusal carries a second chance");
+                Assert.IsFalse(NotificationOptIn.CanAsk);
+
+                NotificationOptIn.SetPermission(NotificationPermission.Denied, canPromptAgain: true);
+                Assert.IsTrue(NotificationOptIn.CanAsk, "Android draws its dialog once more after one refusal");
+
+                NotificationOptIn.SetPermission(NotificationPermission.Denied);
+                Assert.IsFalse(NotificationOptIn.CanAsk, "after the second refusal only the settings page is left");
+
+                NotificationOptIn.SetPermission(NotificationPermission.Provisional);
+                Assert.IsTrue(NotificationOptIn.CanAsk, "provisional still has the full dialog to give");
+            }
+            finally
+            {
+                NotificationOptIn.SetPermission(NotificationPermission.Unsupported);
+            }
+        }
+
+        /// <summary>Every state and route has an analytics spelling; a new member without one throws here, not on a phone.</summary>
+        [Test]
+        public void EveryStateHasAnAnalyticsSpelling()
+        {
+            var seen = new HashSet<string>();
+            foreach (NotificationPermission p in System.Enum.GetValues(typeof(NotificationPermission)))
+                Assert.IsTrue(seen.Add(NotificationOptIn.Id(p)), $"{p} shares a spelling");
+
+            seen.Clear();
+            foreach (AskRoute r in System.Enum.GetValues(typeof(AskRoute)))
+                Assert.IsTrue(seen.Add(NotificationAsk.Id(r)), $"{r} shares a spelling");
+        }
+
         // ------------------------------------------------------------- the launch
         /// <summary>
         /// <b>The OS is never asked at launch</b> (invariant 50h). The package's iOS setting

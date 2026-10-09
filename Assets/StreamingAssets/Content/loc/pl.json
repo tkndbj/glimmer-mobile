@@ -4430,6 +4430,30 @@
       "text": "Delikatne przypomnienia o sercach, zadaniach i serii."
     },
     {
+      "key": "ui.reminders.ask_body",
+      "text": "Chcesz dostać powiadomienie, gdy następna skrzynia będzie gotowa, i zanim skończy się twoja seria?"
+    },
+    {
+      "key": "ui.reminders.ask_title",
+      "text": "PRZYPOMNIENIA"
+    },
+    {
+      "key": "ui.reminders.ask_yes",
+      "text": "PRZYPOMINAJ MI"
+    },
+    {
+      "key": "ui.reminders.not_now",
+      "text": "NIE TERAZ"
+    },
+    {
+      "key": "ui.reminders.open_settings",
+      "text": "OTWÓRZ USTAWIENIA"
+    },
+    {
+      "key": "ui.reminders.settings_body",
+      "text": "Przypomnienia są wyłączone w ustawieniach telefonu. Włącz je tam, aby wiedzieć, kiedy skrzynia jest gotowa, i zanim skończy się twoja seria."
+    },
+    {
       "key": "ui.num.million",
       "text": "M"
     },

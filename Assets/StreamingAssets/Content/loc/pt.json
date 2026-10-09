@@ -4430,6 +4430,30 @@
       "text": "Avisos gentis sobre corações, missões e sua sequência."
     },
     {
+      "key": "ui.reminders.ask_body",
+      "text": "Quer um aviso quando seu próximo baú estiver pronto e antes que sua sequência acabe?"
+    },
+    {
+      "key": "ui.reminders.ask_title",
+      "text": "LEMBRETES"
+    },
+    {
+      "key": "ui.reminders.ask_yes",
+      "text": "ME AVISE"
+    },
+    {
+      "key": "ui.reminders.not_now",
+      "text": "AGORA NÃO"
+    },
+    {
+      "key": "ui.reminders.open_settings",
+      "text": "ABRIR CONFIGURAÇÕES"
+    },
+    {
+      "key": "ui.reminders.settings_body",
+      "text": "Os lembretes estão desativados nas configurações do seu celular. Ative-os lá para saber quando um baú estiver pronto e antes que sua sequência acabe."
+    },
+    {
       "key": "ui.num.million",
       "text": "M"
     },

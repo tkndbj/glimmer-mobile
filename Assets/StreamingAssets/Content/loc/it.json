@@ -4430,6 +4430,30 @@
       "text": "Piccoli promemoria su cuori, missioni e la tua serie."
     },
     {
+      "key": "ui.reminders.ask_body",
+      "text": "Vuoi un avviso quando il tuo prossimo forziere è pronto e prima che la tua serie finisca?"
+    },
+    {
+      "key": "ui.reminders.ask_title",
+      "text": "PROMEMORIA"
+    },
+    {
+      "key": "ui.reminders.ask_yes",
+      "text": "AVVISAMI"
+    },
+    {
+      "key": "ui.reminders.not_now",
+      "text": "NON ORA"
+    },
+    {
+      "key": "ui.reminders.open_settings",
+      "text": "APRI IMPOSTAZIONI"
+    },
+    {
+      "key": "ui.reminders.settings_body",
+      "text": "I promemoria sono disattivati nelle impostazioni del telefono. Attivali lì per sapere quando un forziere è pronto e prima che la tua serie finisca."
+    },
+    {
       "key": "ui.num.million",
       "text": "M"
     },

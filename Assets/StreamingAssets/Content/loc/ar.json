@@ -4430,6 +4430,30 @@
       "text": "تنبيهات لطيفة عن القلوب والمهام وسلسلتك."
     },
     {
+      "key": "ui.reminders.ask_body",
+      "text": "هل تريد تنبيها عندما يصبح صندوقك التالي جاهزا وقبل أن تنتهي سلسلتك؟"
+    },
+    {
+      "key": "ui.reminders.ask_title",
+      "text": "التذكيرات"
+    },
+    {
+      "key": "ui.reminders.ask_yes",
+      "text": "ذكرني"
+    },
+    {
+      "key": "ui.reminders.not_now",
+      "text": "ليس الآن"
+    },
+    {
+      "key": "ui.reminders.open_settings",
+      "text": "افتح الإعدادات"
+    },
+    {
+      "key": "ui.reminders.settings_body",
+      "text": "التذكيرات متوقفة في إعدادات هاتفك. فعلها من هناك لتعرف متى يصبح صندوق جاهزا وقبل أن تنتهي سلسلتك."
+    },
+    {
       "key": "ui.num.million",
       "text": "M"
     },

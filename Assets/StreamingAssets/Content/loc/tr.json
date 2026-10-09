@@ -4430,6 +4430,30 @@
       "text": "Kalpler, görevler ve serin hakkında nazik hatırlatmalar."
     },
     {
+      "key": "ui.reminders.ask_body",
+      "text": "Bir sonraki sandığın hazır olduğunda ve serin bitmeden önce haber verelim mi?"
+    },
+    {
+      "key": "ui.reminders.ask_title",
+      "text": "HATIRLATICILAR"
+    },
+    {
+      "key": "ui.reminders.ask_yes",
+      "text": "HATIRLAT"
+    },
+    {
+      "key": "ui.reminders.not_now",
+      "text": "ŞİMDİ DEĞİL"
+    },
+    {
+      "key": "ui.reminders.open_settings",
+      "text": "AYARLARI AÇ"
+    },
+    {
+      "key": "ui.reminders.settings_body",
+      "text": "Hatırlatıcılar telefonunun ayarlarında kapalı. Bir sandık hazır olduğunda ve serin bitmeden önce haber alman için onları oradan aç."
+    },
+    {
       "key": "ui.num.million",
       "text": "M"
     },
