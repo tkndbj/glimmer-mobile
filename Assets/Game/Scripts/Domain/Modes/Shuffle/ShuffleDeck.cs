@@ -35,6 +35,24 @@ namespace GlimmerGrove.Shuffle
         /// </summary>
         public static readonly int[] Weights = { 56, 30, 11, 3 };
 
+        /// <summary>
+        /// <b>The deck heats up</b> (the owner, 2026-10-09: "truly crazy and fully random after
+        /// some point"): from hand <see cref="HeatedFrom"/> the tiers are dealt off
+        /// <see cref="Heated"/>, and from hand <see cref="WildFrom"/> off <see cref="Wild"/>, so
+        /// a run that has lived long enough to be strong is offered the cards that make it
+        /// strange. Each sums to a hundred, held by the same test as <see cref="Weights"/>.
+        /// </summary>
+        public static readonly int[] Heated = { 42, 34, 17, 7 };
+
+        public static readonly int[] Wild = { 26, 34, 26, 14 };
+
+        /// <summary>The hands (counting from one) the two hotter tables start at: waves 12 and 20.</summary>
+        public const int HeatedFrom = 6, WildFrom = 10;
+
+        /// <summary>The tier table hand <paramref name="hand"/> is dealt off.</summary>
+        public static int[] WeightsFor(int hand)
+            => hand >= WildFrom ? Wild : hand >= HeatedFrom ? Heated : Weights;
+
         /// <summary>Every <see cref="RarePity"/>-th hand opens with at least a rare; every <see cref="EpicPity"/>-th with at least an epic.</summary>
         public const int RarePity = 3, EpicPity = 5;
 
@@ -50,9 +68,11 @@ namespace GlimmerGrove.Shuffle
             var dealt = new List<ShuffleCard>(HandSize);
             if (build == null || roll == null) return dealt;
 
+            var weights = WeightsFor(hand);
+
             for (int slot = 0; slot < HandSize; slot++)
             {
-                var tier = TierFor(roll());
+                var tier = TierFor(roll(), weights);
 
                 if (slot == 0 && hand > 0)
                 {
@@ -70,15 +90,18 @@ namespace GlimmerGrove.Shuffle
         }
 
         /// <summary>Which tier a roll under a hundred lands on, over <see cref="Weights"/>.</summary>
-        public static ShuffleTier TierFor(int roll)
+        public static ShuffleTier TierFor(int roll) => TierFor(roll, Weights);
+
+        /// <summary>Which tier a roll under a hundred lands on, over <paramref name="weights"/>.</summary>
+        public static ShuffleTier TierFor(int roll, int[] weights)
         {
             if (roll < 0) roll = 0;
             if (roll > 99) roll = 99;
 
             int at = 0;
-            for (int t = 0; t < Weights.Length; t++)
+            for (int t = 0; t < weights.Length; t++)
             {
-                at += Weights[t];
+                at += weights[t];
                 if (roll < at) return (ShuffleTier)t;
             }
 

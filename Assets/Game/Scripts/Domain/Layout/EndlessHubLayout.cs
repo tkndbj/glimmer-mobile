@@ -104,10 +104,48 @@ namespace GlimmerGrove.Layout
         /// <summary>
         /// A lane whose hero is a picture rather than the rank (<c>EndlessHub.HubLane.Crest</c>:
         /// the Shuffle lane's, at the owner's instruction on 2026-10-09 - a rank is nothing a
-        /// dealt hand says anything about). Drawn in the rank's own box, as wide as a 3:2
-        /// picture is at that height, so nothing under it moves.
+        /// dealt hand says anything about). It takes the rank's place in the stack, so nothing
+        /// under it moves, but not the rank's box.
+        ///
+        /// <para>
+        /// <b>Centred in the gap it is seen in, not in the box it was given</b> (the owner,
+        /// 2026-10-09: "vertically centered in between the game mode switch button and info
+        /// box"). That gap is the box <em>plus</em> the air above the column, and the air is the
+        /// band's slack (<see cref="TopIn"/>), so it differs by phone and the screen hands it in:
+        /// <paramref name="air"/> is the distance from the header's foot to the column's top, in
+        /// the column's own units. Centred in the box alone, the picture sat ~100 units low on a
+        /// 9:16 phone.
+        /// </para>
         /// </summary>
-        public static float CrestWidth => HeroHeight * 1.5f;
+        public static float CrestRoom(float air) => air + HeroHeight + HeroGap;
+
+        /// <summary>
+        /// The crest's 3:2 frame at its largest: exactly as wide as the plate of lines under
+        /// it, so the two read as one column.
+        /// </summary>
+        public const float CrestWidest = PanelWidth;
+
+        /// <summary>Air the crest leaves above and below it inside its room.</summary>
+        public const float CrestAir = 10f;
+
+        /// <summary>
+        /// The crest's height: as tall as its room allows, never taller than
+        /// <see cref="CrestWidest"/> makes it. Its width is this times 1.5.
+        /// </summary>
+        public static float CrestHeight(float air)
+        {
+            float room = CrestRoom(air) - CrestAir * 2f;
+            float tallest = CrestWidest / 1.5f;
+            return room < tallest ? room : tallest;
+        }
+
+        /// <summary>
+        /// The crest's centre measured down from the column's top: midway between the header's
+        /// foot (<paramref name="air"/> above the top) and the plate's top. Negative when the
+        /// slack above is larger than the box, which is a picture standing in the air above the
+        /// column, as it should.
+        /// </summary>
+        public static float CrestCentre(float air) => (HeroHeight + HeroGap - air) * .5f;
 
         /// <summary>How far the crest breathes and how long one breath takes: slow and gentle.</summary>
         public const float CrestBreath = .025f, CrestPeriod = 4.6f;

@@ -8062,14 +8062,6 @@
       "text": "Un pillard qui frappe la ligne est blessé en retour."
     },
     {
-      "key": "shuffle.charm_magnet.name",
-      "text": "Aimant à Talismans"
-    },
-    {
-      "key": "shuffle.charm_magnet.note",
-      "text": "Les talismans apparaissent deux fois plus souvent."
-    },
-    {
       "key": "shuffle.rally_cry.name",
       "text": "Cri de Ralliement"
     },
@@ -8204,6 +8196,134 @@
     {
       "key": "shuffle.last_stand.note",
       "text": "Une tourelle sous 30 % de vie tire 60 % plus fort et plus vite."
+    },
+    {
+      "key": "shuffle.scatter_shot.name",
+      "text": "Tir Dispersé"
+    },
+    {
+      "key": "shuffle.scatter_shot.note",
+      "text": "Chaque tir lance 2 plombs sur les pillards suivants à 40 %."
+    },
+    {
+      "key": "shuffle.ricochet.name",
+      "text": "Ricochet"
+    },
+    {
+      "key": "shuffle.ricochet.note",
+      "text": "Un tir qui tue rebondit sur le pillard le plus proche à 80 %."
+    },
+    {
+      "key": "shuffle.missile_pod.name",
+      "text": "Lance-Missiles"
+    },
+    {
+      "key": "shuffle.missile_pod.note",
+      "text": "Un tir sur quatre lance 2 missiles à tête chercheuse."
+    },
+    {
+      "key": "shuffle.quake_rounds.name",
+      "text": "Tirs Sismiques"
+    },
+    {
+      "key": "shuffle.quake_rounds.note",
+      "text": "Un tir sur cinq envoie une onde sur toute sa rangée et repousse les pillards."
+    },
+    {
+      "key": "shuffle.toxic_rounds.name",
+      "text": "Tirs Toxiques"
+    },
+    {
+      "key": "shuffle.toxic_rounds.note",
+      "text": "Les tirs laissent des flaques toxiques qui blessent qui les traverse."
+    },
+    {
+      "key": "shuffle.tesla_coil.name",
+      "text": "Bobine Tesla"
+    },
+    {
+      "key": "shuffle.tesla_coil.note",
+      "text": "Les tourelles foudroient le pillard le plus proche, même sans carburant."
+    },
+    {
+      "key": "shuffle.spin_up.name",
+      "text": "Emballement"
+    },
+    {
+      "key": "shuffle.spin_up.note",
+      "text": "Chaque tir à la suite part 15 % plus vite, jusqu'à 150 %."
+    },
+    {
+      "key": "shuffle.shatter.name",
+      "text": "Éclat de Glace"
+    },
+    {
+      "key": "shuffle.shatter.note",
+      "text": "Les pillards gelés ou étourdis explosent en glace en mourant."
+    },
+    {
+      "key": "shuffle.wildfire.name",
+      "text": "Feu Sauvage"
+    },
+    {
+      "key": "shuffle.wildfire.note",
+      "text": "Les pillards en feu propagent leur feu à leurs voisins en mourant."
+    },
+    {
+      "key": "shuffle.meteor_call.name",
+      "text": "Pluie de Météores"
+    },
+    {
+      "key": "shuffle.meteor_call.note",
+      "text": "Toutes les 6 secondes, un météore s'écrase sur le plus gros groupe."
+    },
+    {
+      "key": "shuffle.vortex.name",
+      "text": "Vortex"
+    },
+    {
+      "key": "shuffle.vortex.note",
+      "text": "Toutes les 9 secondes, un vortex rassemble le plus gros groupe."
+    },
+    {
+      "key": "shuffle.doomsday.name",
+      "text": "Jugement Dernier"
+    },
+    {
+      "key": "shuffle.doomsday.note",
+      "text": "Tous les 15 kills, une bombe retire 30 % de sa vie à chaque pillard."
+    },
+    {
+      "key": "shuffle.death_ray.name",
+      "text": "Rayon de la Mort"
+    },
+    {
+      "key": "shuffle.death_ray.note",
+      "text": "Toutes les 10 secondes, la ligne tire un rayon géant sur la colline."
+    },
+    {
+      "key": "shuffle.hydra.name",
+      "text": "Hydre"
+    },
+    {
+      "key": "shuffle.hydra.note",
+      "text": "Chaque tir se divise en 2 têtes, et chaque tête se divise encore."
+    },
+    {
+      "key": "shuffle.wild_magic.name",
+      "text": "Magie Sauvage"
+    },
+    {
+      "key": "shuffle.wild_magic.note",
+      "text": "Chaque tir devient feu, venin, glace ou foudre au hasard."
+    },
+    {
+      "key": "shuffle.bullet_hell.name",
+      "text": "Déluge de Balles"
+    },
+    {
+      "key": "shuffle.bullet_hell.note",
+      "text": "Les tourelles tirent deux fois plus vite et chaque tir coûte moitié moins de carburant."
     }
   ]
 }

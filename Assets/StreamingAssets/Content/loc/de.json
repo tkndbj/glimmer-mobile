@@ -8062,14 +8062,6 @@
       "text": "Ein Plünderer, der die Linie trifft, wird selbst verletzt."
     },
     {
-      "key": "shuffle.charm_magnet.name",
-      "text": "Talisman-Magnet"
-    },
-    {
-      "key": "shuffle.charm_magnet.note",
-      "text": "Talismane erscheinen doppelt so oft."
-    },
-    {
       "key": "shuffle.rally_cry.name",
       "text": "Schlachtruf"
     },
@@ -8204,6 +8196,134 @@
     {
       "key": "shuffle.last_stand.note",
       "text": "Ein Turm unter 30% Gesundheit feuert 60% härter und schneller."
+    },
+    {
+      "key": "shuffle.scatter_shot.name",
+      "text": "Streuschuss"
+    },
+    {
+      "key": "shuffle.scatter_shot.note",
+      "text": "Jeder Bolzen wirft 2 Schrotkugeln auf die nächsten Plünderer mit 40%."
+    },
+    {
+      "key": "shuffle.ricochet.name",
+      "text": "Querschläger"
+    },
+    {
+      "key": "shuffle.ricochet.note",
+      "text": "Ein tödlicher Bolzen prallt zum nächsten Plünderer ab, mit 80%."
+    },
+    {
+      "key": "shuffle.missile_pod.name",
+      "text": "Raketenwerfer"
+    },
+    {
+      "key": "shuffle.missile_pod.note",
+      "text": "Jeder 4. Bolzen startet 2 Lenkraketen."
+    },
+    {
+      "key": "shuffle.quake_rounds.name",
+      "text": "Bebenbolzen"
+    },
+    {
+      "key": "shuffle.quake_rounds.note",
+      "text": "Jeder 5. Bolzen schickt eine Druckwelle durch seine Reihe und wirft Plünderer zurück."
+    },
+    {
+      "key": "shuffle.toxic_rounds.name",
+      "text": "Giftbolzen"
+    },
+    {
+      "key": "shuffle.toxic_rounds.note",
+      "text": "Bolzen hinterlassen Giftpfützen, die jeden verletzen, der hindurchläuft."
+    },
+    {
+      "key": "shuffle.tesla_coil.name",
+      "text": "Teslaspule"
+    },
+    {
+      "key": "shuffle.tesla_coil.note",
+      "text": "Türme schocken den nächsten Plünderer mit Blitzen, auch ohne Treibstoff."
+    },
+    {
+      "key": "shuffle.spin_up.name",
+      "text": "Hochdrehen"
+    },
+    {
+      "key": "shuffle.spin_up.note",
+      "text": "Jeder Schuss in Folge feuert 15% schneller, bis zu 150%."
+    },
+    {
+      "key": "shuffle.shatter.name",
+      "text": "Zersplittern"
+    },
+    {
+      "key": "shuffle.shatter.note",
+      "text": "Gefrorene oder betäubte Plünderer zerspringen beim Tod in Eissplitter."
+    },
+    {
+      "key": "shuffle.wildfire.name",
+      "text": "Lauffeuer"
+    },
+    {
+      "key": "shuffle.wildfire.note",
+      "text": "Brennende Plünderer geben ihr Feuer beim Tod an ihre Nachbarn weiter."
+    },
+    {
+      "key": "shuffle.meteor_call.name",
+      "text": "Meteorruf"
+    },
+    {
+      "key": "shuffle.meteor_call.note",
+      "text": "Alle 6 Sekunden schlägt ein Meteor in die größte Gruppe ein."
+    },
+    {
+      "key": "shuffle.vortex.name",
+      "text": "Wirbel"
+    },
+    {
+      "key": "shuffle.vortex.note",
+      "text": "Alle 9 Sekunden zieht ein Wirbel die größte Gruppe zusammen."
+    },
+    {
+      "key": "shuffle.doomsday.name",
+      "text": "Jüngster Tag"
+    },
+    {
+      "key": "shuffle.doomsday.note",
+      "text": "Alle 15 Kills nimmt eine Bombe jedem Plünderer 30% seiner Gesundheit."
+    },
+    {
+      "key": "shuffle.death_ray.name",
+      "text": "Todesstrahl"
+    },
+    {
+      "key": "shuffle.death_ray.note",
+      "text": "Alle 10 Sekunden feuert die Linie einen riesigen Strahl über den Hügel."
+    },
+    {
+      "key": "shuffle.hydra.name",
+      "text": "Hydra"
+    },
+    {
+      "key": "shuffle.hydra.note",
+      "text": "Jeder Bolzen teilt sich in 2 Köpfe, und jeder Kopf teilt sich erneut."
+    },
+    {
+      "key": "shuffle.wild_magic.name",
+      "text": "Wilde Magie"
+    },
+    {
+      "key": "shuffle.wild_magic.note",
+      "text": "Jeder Bolzen wird zufällig zu Feuer, Gift, Eis oder Blitz."
+    },
+    {
+      "key": "shuffle.bullet_hell.name",
+      "text": "Kugelhagel"
+    },
+    {
+      "key": "shuffle.bullet_hell.note",
+      "text": "Türme feuern doppelt so schnell und Bolzen kosten nur halb so viel Treibstoff."
     }
   ]
 }

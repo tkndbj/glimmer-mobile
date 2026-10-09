@@ -8062,14 +8062,6 @@
       "text": "O invasor que golpeia a linha sofre dano de volta."
     },
     {
-      "key": "shuffle.charm_magnet.name",
-      "text": "Ímã de Amuletos"
-    },
-    {
-      "key": "shuffle.charm_magnet.note",
-      "text": "Os amuletos aparecem o dobro de vezes."
-    },
-    {
       "key": "shuffle.rally_cry.name",
       "text": "Grito de Guerra"
     },
@@ -8204,6 +8196,134 @@
     {
       "key": "shuffle.last_stand.note",
       "text": "Uma torre com menos de 30% de vida atira 60% mais forte e mais rápido."
+    },
+    {
+      "key": "shuffle.scatter_shot.name",
+      "text": "Tiro Disperso"
+    },
+    {
+      "key": "shuffle.scatter_shot.note",
+      "text": "Cada raio lança 2 estilhaços nos próximos invasores com 40%."
+    },
+    {
+      "key": "shuffle.ricochet.name",
+      "text": "Ricochete"
+    },
+    {
+      "key": "shuffle.ricochet.note",
+      "text": "Um raio que mata ricocheteia no invasor mais próximo com 80%."
+    },
+    {
+      "key": "shuffle.missile_pod.name",
+      "text": "Lança-Mísseis"
+    },
+    {
+      "key": "shuffle.missile_pod.note",
+      "text": "A cada quatro raios, um lança 2 mísseis teleguiados."
+    },
+    {
+      "key": "shuffle.quake_rounds.name",
+      "text": "Raios Sísmicos"
+    },
+    {
+      "key": "shuffle.quake_rounds.note",
+      "text": "A cada cinco raios, um manda uma onda pela fileira e empurra os invasores para trás."
+    },
+    {
+      "key": "shuffle.toxic_rounds.name",
+      "text": "Raios Tóxicos"
+    },
+    {
+      "key": "shuffle.toxic_rounds.note",
+      "text": "Os raios deixam poças tóxicas que ferem quem passa por elas."
+    },
+    {
+      "key": "shuffle.tesla_coil.name",
+      "text": "Bobina Tesla"
+    },
+    {
+      "key": "shuffle.tesla_coil.note",
+      "text": "As torres eletrocutam o invasor mais próximo, mesmo sem combustível."
+    },
+    {
+      "key": "shuffle.spin_up.name",
+      "text": "Aceleração"
+    },
+    {
+      "key": "shuffle.spin_up.note",
+      "text": "Cada tiro seguido sai 15% mais rápido, até 150%."
+    },
+    {
+      "key": "shuffle.shatter.name",
+      "text": "Estilhaço de Gelo"
+    },
+    {
+      "key": "shuffle.shatter.note",
+      "text": "Invasores congelados ou atordoados explodem em gelo ao morrer."
+    },
+    {
+      "key": "shuffle.wildfire.name",
+      "text": "Fogo Selvagem"
+    },
+    {
+      "key": "shuffle.wildfire.note",
+      "text": "Invasores em chamas passam o fogo para os vizinhos ao morrer."
+    },
+    {
+      "key": "shuffle.meteor_call.name",
+      "text": "Chuva de Meteoros"
+    },
+    {
+      "key": "shuffle.meteor_call.note",
+      "text": "A cada 6 segundos um meteoro cai no maior grupo."
+    },
+    {
+      "key": "shuffle.vortex.name",
+      "text": "Vórtice"
+    },
+    {
+      "key": "shuffle.vortex.note",
+      "text": "A cada 9 segundos um vórtice arrasta e junta o maior grupo."
+    },
+    {
+      "key": "shuffle.doomsday.name",
+      "text": "Juízo Final"
+    },
+    {
+      "key": "shuffle.doomsday.note",
+      "text": "A cada 15 abates, uma bomba tira 30% da vida de cada invasor."
+    },
+    {
+      "key": "shuffle.death_ray.name",
+      "text": "Raio da Morte"
+    },
+    {
+      "key": "shuffle.death_ray.note",
+      "text": "A cada 10 segundos a linha dispara um raio gigante pela colina."
+    },
+    {
+      "key": "shuffle.hydra.name",
+      "text": "Hidra"
+    },
+    {
+      "key": "shuffle.hydra.note",
+      "text": "Cada raio se divide em 2 cabeças, e cada cabeça se divide de novo."
+    },
+    {
+      "key": "shuffle.wild_magic.name",
+      "text": "Magia Selvagem"
+    },
+    {
+      "key": "shuffle.wild_magic.note",
+      "text": "Cada raio vira fogo, veneno, gelo ou relâmpago ao acaso."
+    },
+    {
+      "key": "shuffle.bullet_hell.name",
+      "text": "Chuva de Balas"
+    },
+    {
+      "key": "shuffle.bullet_hell.note",
+      "text": "As torres atiram duas vezes mais rápido e cada raio gasta metade do combustível."
     }
   ]
 }

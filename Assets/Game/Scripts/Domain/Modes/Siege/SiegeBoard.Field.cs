@@ -488,7 +488,7 @@ namespace GlimmerGrove.Modes
                 charm = charms[(int)((mixed >> 16) % (uint)charms.Length)];
 
                 _sinceCharm = 0;
-                _charmAt = (int)((mixed & 0xFFFFu) % (uint)_boosts.CharmWindow(SiegeTuning.CharmWithin));
+                _charmAt = (int)((mixed & 0xFFFFu) % (uint)SiegeTuning.CharmWithin);
             }
 
             return Cursing(at, drawn, charm);

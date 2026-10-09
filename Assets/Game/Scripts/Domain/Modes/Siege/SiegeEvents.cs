@@ -20,8 +20,32 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public readonly bool Extra;
 
+        /// <summary>
+        /// What a <em>build</em> drew this hit with (<see cref="SiegeVia"/>), or
+        /// <see cref="SiegeVia.None"/> for a turret's own bolt or ability - which is every hit on
+        /// every board but the Shuffle lane's, so the drawing a chapter shows is the one it always
+        /// showed. A Shuffle card's chain is drawn as lightning and its splash as a ring because
+        /// this says so, not because the view guessed from the numbers.
+        /// </summary>
+        public readonly SiegeVia Via;
+
+        /// <summary>
+        /// The raider this hit travelled from - the one a chain hopped off, a ricochet bounced off,
+        /// a shatter burst out of - or -1 when it left a ward. Only a <see cref="Via"/> other than
+        /// <see cref="SiegeVia.None"/> ever names one.
+        /// </summary>
+        public readonly int From;
+
+        /// <summary>
+        /// The element a build's wild magic rolled onto this primary bolt, as a ward colour
+        /// (0-3: fire, venom, ice, lightning), or -1 for the ward's own. The view draws the bolt in
+        /// that element's reel; every board but the Shuffle lane's reports -1.
+        /// </summary>
+        public readonly int Element;
+
         public SiegeBolt(int ward, int raider, int damage, bool weak, bool killed,
-                         bool extra = false)
+                         bool extra = false, SiegeVia via = SiegeVia.None, int from = -1,
+                         int element = -1)
         {
             Ward = ward;
             Raider = raider;
@@ -29,6 +53,75 @@ namespace GlimmerGrove.Modes
             Weak = weak;
             Killed = killed;
             Extra = extra;
+            Via = via;
+            From = from;
+            Element = element;
+        }
+    }
+
+    /// <summary>
+    /// How a hit a Shuffle build granted is drawn. <b>Drawing only</b>: what a hit takes is
+    /// decided where it is dealt, and this tells the view which picture says so.
+    ///
+    /// <para>
+    /// <b><see cref="None"/> is every chapter's and the Infinite lane's</b>, and the only value a
+    /// board holding <see cref="SiegeBoosts.None"/> can report: nothing but
+    /// <c>SiegeBoard.Augment</c> and <c>SiegeBoard.Arsenal</c> - both shut on the plain line -
+    /// passes anything else. Appended to, never reordered: a value is only ever compared, but a
+    /// reorder is a silent rename for anyone reading a recorded trace.
+    /// </para>
+    /// </summary>
+    public enum SiegeVia
+    {
+        None = 0,
+
+        // A shipped card's ability, drawn as itself rather than as one more bolt from the ward.
+        Splash, Arc, Lance, Twin, Execute, Blast,
+
+        // The attack cards.
+        Pellet, Ricochet, Missile, Quake, Toxic, Tesla, Shatter, Wildfire, Meteor, Vortex, Nuke,
+        Ray, Hydra,
+    }
+
+    /// <summary>
+    /// Something a Shuffle build set off that is a <em>place</em> rather than a hit: a shockwave
+    /// rolling across a row, a meteor's shadow and its landing, a vortex opening, a nuke, a ray
+    /// starting its sweep, a corpse bursting into ice or flame. The hits it dealt are reported as
+    /// <see cref="SiegeBolt"/>s with the same <see cref="SiegeVia"/>, so a number is drawn once
+    /// and by the one path that draws numbers; this is the picture of the event around them.
+    ///
+    /// <para>
+    /// <b>Where it happened is in the hill's own coordinates</b> - a march down the slope and a
+    /// lane across it - so the view places it with the arithmetic it places a raider with.
+    /// </para>
+    /// </summary>
+    public readonly struct SiegeVolley
+    {
+        public readonly SiegeVia Via;
+
+        /// <summary>Where, down the hill (0 the top, 1 the line) and across it (lanes, may be fractional).</summary>
+        public readonly float March, Lane;
+
+        /// <summary>How far it reaches, in boxes (a quake's row band, a meteor's plus, a vortex's pull).</summary>
+        public readonly int Reach;
+
+        /// <summary>The ward it came from, or -1 for none (a meteor, a nuke).</summary>
+        public readonly int Ward;
+
+        /// <summary>
+        /// Seconds until it lands, for an event announced ahead of its impact (a meteor's shadow,
+        /// a nuke's fall), or nought for one happening now.
+        /// </summary>
+        public readonly float In;
+
+        public SiegeVolley(SiegeVia via, float march, float lane, int reach, int ward, float landsIn = 0f)
+        {
+            Via = via;
+            March = march;
+            Lane = lane;
+            Reach = reach;
+            Ward = ward;
+            In = landsIn;
         }
     }
 
@@ -453,12 +546,20 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public readonly List<int> Revived = new List<int>(4);
 
+        /// <summary>
+        /// Places a build set something off this step (<see cref="SiegeVolley"/>): empty on every
+        /// board but the Shuffle lane's, because only <c>SiegeBoard.Arsenal</c> writes it and it
+        /// is shut on the plain line.
+        /// </summary>
+        public readonly List<SiegeVolley> Volleys = new List<SiegeVolley>(4);
+
         /// <summary>The wave that has just stepped out, or -1.</summary>
         public int Wave = -1;
 
         public void Clear()
         {
             Revived.Clear();
+            Volleys.Clear();
             Bolts.Clear();
             Burns.Clear();
             Blows.Clear();
@@ -492,7 +593,7 @@ namespace GlimmerGrove.Modes
                         || Devoured.Count > 0
                         || Brimmed.Count > 0 || Charmed.Count > 0 || Forged.Count > 0
                         || Stoned.Count > 0 || Redeemed.Count > 0 || Withers.Count > 0
-                        || Revived.Count > 0
+                        || Revived.Count > 0 || Volleys.Count > 0
                         || Stilled > 0f || Heaved > 0f || Hex > 0f || Beamed || Wave >= 0;
     }
 

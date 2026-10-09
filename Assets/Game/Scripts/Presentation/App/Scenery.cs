@@ -174,7 +174,7 @@ namespace GlimmerGrove
         public const string WallRanked = "Bg/plain_ranked";
 
         /// <summary>
-        /// The same wall in the Shuffle lane's colour: the ranked wall turned to teal by
+        /// The same wall in the Shuffle lane's colour: the ranked wall turned to a deep teal-blue by
         /// <c>Tools/make_shuffle_art.py</c>, for the ranked wall's reason - a track has a ground
         /// of its own, and two lanes a tap apart on one screen are told apart by it.
         /// </summary>

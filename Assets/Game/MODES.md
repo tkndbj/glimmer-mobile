@@ -1166,18 +1166,19 @@ needs to feel unique*). Chapter `s13_shufflewatch`, level `s13_shuffle`, `track:
    run that never ended. **Both ramps are one abstraction now** (`SiegeLayout.Ramp`); `Endless` is
    kept as a typed read for the readers that only ever meant the Infinite lane, and `Tune` and the
    validator read the ramp.
-59d. **A card is a row of code and never content** (20): thirty-seven of them in four tiers, told
+59d. **A card is a row of code and never content** (20): fifty-two of them in four tiers, told
    apart by *what they take* (37z asked of upgrades) - a common moves a number the player already
-   has, a rare grants an ability the shelf sells, an epic changes a rule, a legendary changes the
-   shape of the run. One damage card and not three (5d). An id, a tier and a picture are permanent;
-   a withdrawn card goes in `ShuffleCards.Retired`. Every string and the picture are derived from
+   has, a rare grants an ability the shelf sells or a new way to attack, an epic changes a rule, a
+   legendary changes the shape of the run. One damage card and not three (5d). An id, a tier and a
+   picture are permanent; a withdrawn card goes in `ShuffleCards.Retired` (`charm_magnet`,
+   2026-10-09, withdrawn with the charm-window figure it moved; picture 15 spent with it). Every string and the picture are derived from
    the id (5a); `make_shuffle_art.py` cuts the picture from the skill-icon pack at the number the
    row names and `ShuffleTests.EveryCardHasItsPictureOnDisk` holds the catalog to the disk.
 59e. **A build is a function of the cards held and never of the order they came in**
    (`ShuffleBuild.Compile` folds from the plain line every take), and **a hand is fair whatever the
    build holds**: the tier is rolled first (`ShuffleDeck.Weights`, 56/30/11/3, held to a hundred),
    the card second among what the build can still take, falling down a tier and then up when one is
-   empty. Every third hand opens on at least a rare and every fifth on at least an epic - a floor on
+   empty. **The deck heats up** (59j). Every third hand opens on at least a rare and every fifth on at least an epic - a floor on
    the first slot's tier, because a deterministic stream turns "rare" into "never" on some run
    (37ci). The deck runs out when every card is at its most, and then nothing is dealt.
 59f. **A hand is owed every two waves, and the board says when** (`ShuffleRun.Owed`): in the
@@ -1196,18 +1197,48 @@ needs to feel unique*). Chapter `s13_shufflewatch`, level `s13_shuffle`, `track:
    the Infinite lane's with a row per lane (`EndlessHub.HubLane`: wall, marks, where the best comes
    from, whether a checkpoint bar, a standing or a shelf is drawn, and a crest), so a third lane is a
    row and not six branches. **The Shuffle hub's hero is its own crest, not the rank** (the owner's
-   picture, `Ui/shuffle_crest`, breathing slowly in the rank's box; a rank is nothing a dealt hand
-   says anything about), **its header carries no plaque** (the switcher stands in the plaque's slot,
-   `LevelsScreen.BuildHeader` on a `Dealt` lane) and **its wall is charcoal** (the ranked wall turned
-   and shaded in the tool). **The hand wears the Deals sheet's frame** (`VictoryFrame`: the wave on
+   picture, `Ui/shuffle_crest`, breathing slowly in the rank's place, centred in the gap between the
+   switcher and the lines and up to the lines' width, `EndlessHubLayout.CrestCentre`; a rank is
+   nothing a dealt hand says anything about), **its header carries no plaque** (the switcher stands in the plaque's slot,
+   `LevelsScreen.BuildHeader` on a `Dealt` lane) and **its wall is a deep teal-blue** (the ranked wall
+   turned and shaded in the tool). **The hand wears the Deals sheet's frame** (`VictoryFrame`: the wave on
    the banner, the sentence under it, three kit cards in the green window; `ShuffleHandLayout.CrestFoot`
    keeps the line under the banner's reach, pinned to the frame by `ShuffleTests`). The two authored waves (gold 24, silver 12) are guesses until the owner plays:
    `ShuffleTests.AModelPlayerTakingRandomCardsIsHeldAndThenFalls` prints where a player taking the
    first card of every hand lands (waves 8-11 at two rhythms; waves 8-9 with no build, the hill bare).
 
+59i. **The attack cards are the arsenal, and the arsenal is shut on the plain line three ways**
+   (2026-10-09, the owner: "truly unique upgrade types ... the mode should get crazy ... and never
+   ever affect the other side of the game"). Sixteen cards change *how* the line attacks rather than
+   how hard - pellets, ricochet, missiles, a quake rolling a row back, toxic pools, tesla coils that
+   fight dry, spin-up to a machine gun, a frozen body shattering, wildfire, meteors, a vortex, a
+   nuke every fifteen kills, the line's fused ray, a hydra's heads, wild magic, bullet hell. **Their
+   rules are one file** (`SiegeBoard.Arsenal`): every entry returns on `SiegeBoosts.IsIdentity`
+   first; every figure is nought on a build without the card; every roll is the build's own stream.
+   **Their drawing is one file** (`SiegeView.Arsenal`), reached only by a hit whose `SiegeBolt.Via`
+   is not `None`, a `SiegeVolley`, or a per-frame tick that returns on the plain line - and the
+   board reports neither on any board holding `SiegeBoosts.None`. The shipped ability cards are
+   drawn through it too (a chain as lightning hopping body to body, a splash as a burst, a lance as
+   a beam), so a Shuffle build *looks* like its cards; a turret's own ability still reports `None`
+   and draws as it always did. A wild element recolours the bolt's reel (`SiegeBolt.Element`), a
+   heavy build swells it, an element leaves a trail, a spun-up turret glows and fires tracers.
+   **Held by** `ShuffleTests.ThePlainLineNeverDrawsTheArsenal` (no via, element, volley, pool, spin,
+   vortex or ray on a shipped rung, every frame), `TheIdentityBoostChangesNothing` (an empty live
+   build plays the plain board), and `EveryAttackCardIsSeenOnTheBoard` (each card at its most, with
+   the card it is built to meet, reports its own via on the lane it ships on). Several cards are
+   built to *meet* - frost and a shatter, a burn and wildfire, a vortex gathering a crowd for a
+   quake or a meteor - which is where the combinations come from. **Clocks and distances are the
+   mode's** (`SiegeArsenal`), never content.
+59j. **The deck heats up and never cools** (`ShuffleDeck.WeightsFor`): hands 1-5 deal off
+   56/30/11/3, hands 6-9 (waves 12+) off 42/34/17/7, hand 10 on (waves 20+) off 26/34/26/14, so a
+   run that has lived long enough to be strong is offered the cards that make it strange. The
+   pity floors (59e) apply to every table; each table sums to a hundred and each climbs in the top
+   two tiers, held by `TheTierWeightsSumToAHundredAndEveryTierHasCards`.
+
 **Adding a card**: a row in `ShuffleCards.All` (id, tier, effect, magnitude, extent, most,
 picture), an arm in `ShuffleBuild.Fold` if the effect is new, a setter on `SiegeBoosts` and the
-site that reads it, `shuffle.<id>.name` and `.note` in all nine tables, and
+site that reads it (an attack card: `SiegeBoard.Arsenal`, a `SiegeVia`, its drawing in
+`SiegeView.Arsenal`, and a row in `EveryAttackCardIsSeenOnTheBoard`), `shuffle.<id>.name` and `.note` in all nine tables, and
 `python Tools/make_shuffle_art.py` (then the Editor's sync). **Retuning the ramp**: the constants on
 `ShuffleRamp` and their mirror in `Tools/verify/siege.py` (`shuffle_*`), and the inline pin in
 `ShuffleTests.TheRampAgreesWithTheOfflineMirror` re-read off `Tools/chapters/s13_shufflewatch.py`.

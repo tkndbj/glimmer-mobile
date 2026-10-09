@@ -532,9 +532,24 @@ namespace GlimmerGrove
 
         void Bolt(SiegeBolt shot)
         {
+            // **A hit a Shuffle build dealt is drawn as itself** (`SiegeView.Arsenal`): a chain
+            // as lightning, a pellet as a pellet, a meteor's victim under the meteor. Nothing
+            // but the Shuffle lane reports one (`SiegeVia.None` everywhere else), so every chapter
+            // goes on down the path below exactly as it always has.
+            if (shot.Via != SiegeVia.None)
+            {
+                Volleyed(shot);
+                return;
+            }
+
             var post = _posts[shot.Ward];
             var ward = _board.Wards[shot.Ward];
-            var tint = TintOf(ward.Colour);
+
+            // What a build changes about this ward's own bolt - the element wild magic struck it
+            // in, a heavy build's size, an element's trail, a spun-up turret's tracers - or the
+            // plain answer on every board that holds no build (`SiegeView.LookOf`).
+            var look = LookOf(shot, ward.Colour);
+            var tint = TintOf(look.Colour);
 
             Vector2 muzzle = new Vector2(PostX(shot.Ward), _lineY + Cell * 1.0f);
 
@@ -584,7 +599,7 @@ namespace GlimmerGrove
             // here rather than inside `Flash` for exactly that reason: two rings a sixth of a cell
             // apart is one ring at twice the brightness, which reads as a brighter turret rather
             // than as a second barrel.
-            Shockwave(muzzle, Pal.Lift(tint, .5f), 2.2f, .22f);
+            if (!look.Tracer) Shockwave(muzzle, Pal.Lift(tint, .5f), 2.2f, .22f);
 
             float flare = BarrelFlare(ward.Model);
 
@@ -611,7 +626,7 @@ namespace GlimmerGrove
                 // bigger thing - it is that a shot has *four* beats a player can see: the barrel
                 // kicks, the muzzle throws light, something with a tail crosses the hill, and it
                 // arrives.
-                var round = Round(ward.Model, ward.Colour, tint, from, lean);
+                var round = Round(ward.Model, look.Colour, tint, from, lean);
                 var node = round.Node;
                 bool lands = b == barrels - 1;
 
@@ -627,15 +642,27 @@ namespace GlimmerGrove
                 reel.fillMethod = Image.FillMethod.Vertical;
                 reel.fillOrigin = (int)Image.OriginVertical.Top;
 
+                float size = look.Scale;
+                var wake = look.Wake;
+                float nextWake = 0f;
+
                 Tween.Run(flight, Ease.Linear, t =>
                 {
                     if (!node) return;
                     node.anchoredPosition = Vector2.Lerp(from, land, t);
 
+                    // An element's trail, only where a build has struck one (`LookOf`).
+                    if (wake.a > 0f && t >= nextWake)
+                    {
+                        nextWake = t + .2f;
+                        Cinder(node.anchoredPosition, wake, Cell * .3f * size, .34f,
+                               (from - land).normalized * Cell * .4f);
+                    }
+
                     // It grows a little on the way in, which is a cheap read of "coming toward
                     // you" on a board with no depth - and it is the only thing about the bolt this
                     // class animates, because the fourteen frames under it are doing the rest.
-                    node.localScale = Vector3.one * Mathf.Lerp(.86f, 1.12f, t);
+                    node.localScale = Vector3.one * (Mathf.Lerp(.86f, 1.12f, t) * size);
 
                     // **The trail unrolls out of the barrel** (`Emerged`). The reel does not
                     // move and is not scaled - only the amount of it that is drawn changes, so
@@ -645,13 +672,13 @@ namespace GlimmerGrove
                 }, node).OnDone(() =>
                 {
                     Give(round);
-                    if (lands) Land(to, tint, ward.Model, ward.Colour, angle, shot);
+                    if (lands) Land(to, tint, ward.Model, look.Colour, angle, shot);
                 });
 
                 // **After the bolt, so it draws over it** - uGUI paints in sibling order. That is
                 // where the crop's straight edge is hidden (`Emerged`), and it is the honest
                 // order anyway: the flash is at the barrel and the bolt is on its way out of it.
-                Flash(from, lean, ward.Model, ward.Colour, tint, flare);
+                if (!look.Tracer) Flash(from, lean, ward.Model, look.Colour, tint, flare);
             }
 
             // **One sound at one pitch for all four wards**, and since `sfx.tsv` moved this

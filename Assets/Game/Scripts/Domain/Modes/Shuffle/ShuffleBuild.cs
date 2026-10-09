@@ -139,10 +139,6 @@ namespace GlimmerGrove.Shuffle
                     if (n == 1) into.AddCharges(card.Extent);
                     break;
 
-                case ShuffleEffect.CharmWindow:
-                    into.SetCharmWindow(n == 1 ? card.Magnitude : card.Magnitude / 2);
-                    break;
-
                 case ShuffleEffect.WaveFuel:
                     into.SetWaveFuel(card.Magnitude * n);
                     break;
@@ -186,6 +182,79 @@ namespace GlimmerGrove.Shuffle
 
                 case ShuffleEffect.Desperate:
                     into.SetDesperate(card.Magnitude, card.Extent);
+                    break;
+
+                // ---------------------------------------------------------- the attack cards
+                // Rules with a strength, read off the copy count like the arms above: a second
+                // copy is the same attack, more of it - another pellet, another bounce, another
+                // missile, a quake more often, a deeper pool, another arc, a faster spin, a wider
+                // burst, a sooner meteor or vortex.
+                case ShuffleEffect.Scatter:
+                    into.SetScatter(card.Magnitude + (n - 1), card.Extent + (n - 1));
+                    break;
+
+                case ShuffleEffect.Ricochet:
+                    into.SetRicochet(card.Magnitude, card.Extent * n);
+                    break;
+
+                case ShuffleEffect.Missiles:
+                    into.SetMissiles(card.Extent, n + 1, card.Magnitude);
+                    break;
+
+                case ShuffleEffect.Quake:
+                    into.SetQuake(card.Extent - (n - 1) > 3 ? card.Extent - (n - 1) : 3,
+                                  card.Magnitude + (n - 1) * 2);
+                    break;
+
+                case ShuffleEffect.Toxic:
+                    into.SetToxic(card.Magnitude * n, card.Extent / 10f);
+                    break;
+
+                case ShuffleEffect.Tesla:
+                    into.SetTesla(card.Magnitude + (n - 1) * 2, card.Extent + (n - 1));
+                    break;
+
+                case ShuffleEffect.SpinUp:
+                    into.SetSpin(card.Magnitude * n, card.Extent);
+                    break;
+
+                case ShuffleEffect.Shatter:
+                    into.SetShatter(card.Magnitude + (n - 1) * 2, card.Extent + (n - 1));
+                    break;
+
+                case ShuffleEffect.Wildfire:
+                    into.SetWildfire(card.Extent + (n - 1), card.Magnitude * n);
+                    break;
+
+                case ShuffleEffect.Meteor:
+                    into.SetMeteor(card.Extent / 10f - (n - 1) * 1.5f, card.Magnitude);
+                    break;
+
+                case ShuffleEffect.Vortex:
+                    into.SetVortex(card.Extent / 10f - (n - 1) * 2f, card.Magnitude + (n - 1) * 2);
+                    break;
+
+                case ShuffleEffect.Nuke:
+                    into.SetNuke(card.Extent, card.Magnitude);
+                    break;
+
+                case ShuffleEffect.Ray:
+                    into.SetRay(card.Extent / 10f, card.Magnitude);
+                    break;
+
+                case ShuffleEffect.Hydra:
+                    into.SetHydra(card.Magnitude, card.Extent);
+                    break;
+
+                case ShuffleEffect.Wild:
+                    into.SetWild(card.Magnitude);
+                    break;
+
+                // Two figures the line already has, moved together as far as no common card may:
+                // a machine gun that does not run dry.
+                case ShuffleEffect.BulletHell:
+                    into.AddFire(card.Magnitude);
+                    into.AddFuelShot(-card.Extent);
                     break;
 
                 default:

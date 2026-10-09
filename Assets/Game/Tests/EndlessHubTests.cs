@@ -162,6 +162,33 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
+        /// <b>A lane's crest stands centred in the gap between the header and the lines, and
+        /// inside it</b>, whatever air the band leaves above the column - from none beyond
+        /// <c>HeadClear</c> on the squarest phone to a tall phone's slack. The owner asked for it
+        /// centred in what is seen (2026-10-09); centred in its box alone it sat low.
+        /// </summary>
+        [Test]
+        public void TheCrestIsCentredInTheGapItIsSeenIn()
+        {
+            float plateTop = EndlessHubLayout.PanelCentre - EndlessHubLayout.PanelHeight * .5f;
+
+            foreach (float air in new[] { EndlessHubLayout.HeadClear, 120f, 200f, 400f })
+            {
+                float tall = EndlessHubLayout.CrestHeight(air);
+                float centre = EndlessHubLayout.CrestCentre(air);
+
+                Assert.AreEqual(centre - (-air), plateTop - centre, .001f,
+                                $"with {air} of air the crest is not midway between header and plate");
+                Assert.LessOrEqual(centre + tall * .5f, plateTop - EndlessHubLayout.CrestAir + .001f,
+                                   $"with {air} of air the crest reaches the plate");
+                Assert.GreaterOrEqual(centre - tall * .5f, -air + EndlessHubLayout.CrestAir - .001f,
+                                      $"with {air} of air the crest reaches the header");
+                Assert.LessOrEqual(tall * 1.5f, EndlessHubLayout.CrestWidest + .001f,
+                                   "the crest is wider than the plate under it");
+            }
+        }
+
+        /// <summary>
         /// <b>Every mark the hub draws is global art the game always holds.</b>
         ///
         /// <para>

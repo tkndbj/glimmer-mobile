@@ -190,9 +190,6 @@ namespace GlimmerGrove.Modes
         /// <summary>The quiet between waves, per cent of the plain one.</summary>
         public int RestPercent { get; private set; } = 100;
 
-        /// <summary>The charm window, per cent of the mode's own. Below a hundred is more charms.</summary>
-        public int CharmWindowPercent { get; private set; } = 100;
-
         /// <summary>Tenths of every standing ward's tube poured in when a wave steps out. Nought is none.</summary>
         public int WaveFuelTenths { get; private set; }
 
@@ -201,6 +198,90 @@ namespace GlimmerGrove.Modes
 
         /// <summary>Charges banked on random standing wards when a wave steps out.</summary>
         public int WaveCharges { get; private set; }
+
+        // ------------------------------------------------------------------ the arsenal
+        // **What changes how the line attacks**, rather than how hard (`SiegeBoard.Arsenal`).
+        // Every figure is nought on the plain line and on a build holding none of the attack
+        // cards, and every reading of one asks it first, so a figure nobody holds is a branch
+        // nobody takes - `ShuffleTests.TheIdentityBoostChangesNothing` holds the empty build to
+        // the plain line frame by frame. "Tenths" are tenths of the hit that set it off; "plain
+        // tenths" are tenths of a plain primary bolt under this build's damage (`PlainShot`).
+
+        /// <summary>Pellets thrown after every primary bolt at the ward's next targets, in tenths of it. Nought is none.</summary>
+        public int ScatterTenths { get; private set; }
+
+        public int ScatterPellets { get; private set; }
+
+        /// <summary>A killing primary bolt bounces on, in tenths of it, up to <see cref="RicochetBounces"/> times.</summary>
+        public int RicochetTenths { get; private set; }
+
+        public int RicochetBounces { get; private set; }
+
+        /// <summary>Every <see cref="MissileEvery"/>-th shot launches <see cref="MissileCount"/> missiles, each plain tenths.</summary>
+        public int MissileEvery { get; private set; }
+
+        public int MissileCount { get; private set; }
+
+        public int MissileTenths { get; private set; }
+
+        /// <summary>Every <see cref="QuakeEvery"/>-th shot rolls a shockwave down its row band, in tenths of the bolt.</summary>
+        public int QuakeEvery { get; private set; }
+
+        public int QuakeTenths { get; private set; }
+
+        /// <summary>Every primary bolt leaves a toxic pool in its box biting plain tenths a tick, for <see cref="ToxicFor"/> seconds.</summary>
+        public int ToxicTenths { get; private set; }
+
+        public float ToxicFor { get; private set; }
+
+        /// <summary>Every standing ward zaps <see cref="TeslaArcs"/> raiders near the line on a cadence, fuel or none, for plain tenths each.</summary>
+        public int TeslaTenths { get; private set; }
+
+        public int TeslaArcs { get; private set; }
+
+        /// <summary>Per cent of fire rate each unbroken shot adds, up to <see cref="SpinMost"/> shots. Nought is none.</summary>
+        public int SpinStep { get; private set; }
+
+        public int SpinMost { get; private set; }
+
+        /// <summary>A chilled or stunned raider that falls shatters, in tenths of its own full health, over <see cref="ShatterReach"/> boxes.</summary>
+        public int ShatterTenths { get; private set; }
+
+        public int ShatterReach { get; private set; } = 1;
+
+        /// <summary>A burning raider that falls sets everything within <see cref="WildfireReach"/> boxes alight. Nought is never.</summary>
+        public int WildfireReach { get; private set; }
+
+        /// <summary>The least a spread fire burns for, in plain tenths a second.</summary>
+        public int WildfireTenths { get; private set; }
+
+        /// <summary>Seconds between meteors on the thickest crowd, each plain tenths. Nought is never.</summary>
+        public float MeteorEvery { get; private set; }
+
+        public int MeteorTenths { get; private set; }
+
+        /// <summary>Seconds between vortices on the thickest crowd, each biting plain tenths a tick. Nought is never.</summary>
+        public float VortexEvery { get; private set; }
+
+        public int VortexTenths { get; private set; }
+
+        /// <summary>Kills between nukes, each taking <see cref="NukePercent"/> of every raider's full health. Nought is never.</summary>
+        public int NukeEvery { get; private set; }
+
+        public int NukePercent { get; private set; }
+
+        /// <summary>Seconds between the line's fused ray sweeping the hill, biting plain tenths a tick. Nought is never.</summary>
+        public float RayEvery { get; private set; }
+
+        public int RayTenths { get; private set; }
+
+        /// <summary>Every primary bolt splits into <see cref="HydraHeads"/> heads at tenths of it, and each head once more at half that.</summary>
+        public int HydraTenths { get; private set; }
+
+        public int HydraHeads { get; private set; }
+
+        /// <summary>The chance a primary bolt rolls a wild element, per hundred. Nought is never.</summary>
+        public int WildChance { get; private set; }
 
         // ------------------------------------------------------------------ writing
         /// <summary>
@@ -223,8 +304,15 @@ namespace GlimmerGrove.Modes
             GuardPercent = 100; CapacityPercent = 100; ExtraCharges = 0; OverchargePercent = 100;
             Armour = 0; ThornsPercent = 0; RepelChance = 0; RegenEvery = 0f;
             SecondWinds = 0; Phoenixes = 0;
-            HillPacePercent = 100; RestPercent = 100; CharmWindowPercent = 100;
+            HillPacePercent = 100; RestPercent = 100;
             WaveFuelTenths = 0; WaveStill = 0f; WaveCharges = 0;
+            ScatterTenths = 0; ScatterPellets = 0; RicochetTenths = 0; RicochetBounces = 0;
+            MissileEvery = 0; MissileCount = 0; MissileTenths = 0; QuakeEvery = 0; QuakeTenths = 0;
+            ToxicTenths = 0; ToxicFor = 0f; TeslaTenths = 0; TeslaArcs = 0; SpinStep = 0; SpinMost = 0;
+            ShatterTenths = 0; ShatterReach = 1; WildfireReach = 0; WildfireTenths = 0;
+            MeteorEvery = 0f; MeteorTenths = 0; VortexEvery = 0f; VortexTenths = 0;
+            NukeEvery = 0; NukePercent = 0; RayEvery = 0f; RayTenths = 0;
+            HydraTenths = 0; HydraHeads = 0; WildChance = 0;
         }
 
         void Guard()
@@ -267,10 +355,24 @@ namespace GlimmerGrove.Modes
         public void AddPhoenix(int lives) { Guard(); Phoenixes += lives; }
         public void AddHillPace(int percent) { Guard(); HillPacePercent += percent; if (HillPacePercent < 40) HillPacePercent = 40; }
         public void AddRest(int percent) { Guard(); RestPercent += percent; }
-        public void SetCharmWindow(int percent) { Guard(); CharmWindowPercent = percent < 10 ? 10 : percent; }
         public void SetWaveFuel(int tenths) { Guard(); WaveFuelTenths = tenths; }
         public void SetWaveStill(float seconds) { Guard(); WaveStill = seconds; }
         public void SetWaveCharges(int charges) { Guard(); WaveCharges = charges; }
+        public void SetScatter(int tenths, int pellets) { Guard(); ScatterTenths = tenths; ScatterPellets = pellets; }
+        public void SetRicochet(int tenths, int bounces) { Guard(); RicochetTenths = tenths; RicochetBounces = bounces; }
+        public void SetMissiles(int every, int count, int tenths) { Guard(); MissileEvery = every < 1 ? 1 : every; MissileCount = count; MissileTenths = tenths; }
+        public void SetQuake(int every, int tenths) { Guard(); QuakeEvery = every < 1 ? 1 : every; QuakeTenths = tenths; }
+        public void SetToxic(int tenths, float seconds) { Guard(); ToxicTenths = tenths; ToxicFor = seconds; }
+        public void SetTesla(int tenths, int arcs) { Guard(); TeslaTenths = tenths; TeslaArcs = arcs; }
+        public void SetSpin(int step, int most) { Guard(); SpinStep = step; SpinMost = most; }
+        public void SetShatter(int tenths, int reach) { Guard(); ShatterTenths = tenths; ShatterReach = reach < 1 ? 1 : reach; }
+        public void SetWildfire(int reach, int tenths) { Guard(); WildfireReach = reach; WildfireTenths = tenths; }
+        public void SetMeteor(float every, int tenths) { Guard(); MeteorEvery = every; MeteorTenths = tenths; }
+        public void SetVortex(float every, int tenths) { Guard(); VortexEvery = every; VortexTenths = tenths; }
+        public void SetNuke(int every, int percent) { Guard(); NukeEvery = every; NukePercent = percent; }
+        public void SetRay(float every, int tenths) { Guard(); RayEvery = every; RayTenths = tenths; }
+        public void SetHydra(int tenths, int heads) { Guard(); HydraTenths = tenths; HydraHeads = heads; }
+        public void SetWild(int chance) { Guard(); WildChance = chance > 100 ? 100 : chance; }
 
         // ------------------------------------------------------------------ reading
         /// <summary>
@@ -340,20 +442,55 @@ namespace GlimmerGrove.Modes
         /// <summary>What a swinger takes for landing a blow, or nought.</summary>
         public int Thorns(int shot) => _frozen || ThornsPercent <= 0 ? 0 : Math.Max(1, shot * ThornsPercent / 100);
 
-        /// <summary>The charm window, from the mode's own. Never below one.</summary>
-        public int CharmWindow(int window)
-        {
-            if (_frozen) return window;
-
-            int scaled = window * CharmWindowPercent / 100;
-            return scaled < 1 ? 1 : scaled;
-        }
-
         /// <summary>The quiet between waves, from the mode's own.</summary>
         public float Rest(float rest) => _frozen ? rest : rest * RestPercent / 100f;
 
         /// <summary>How fast the hill walks, as a multiplier on the march.</summary>
         public float HillPace => _frozen ? 1f : HillPacePercent / 100f;
+
+        /// <summary>
+        /// The quickest a spun-up ward may fire, in seconds. A floor, because what it protects is
+        /// the frame: a ward firing every frame would be a rate decided by the device rather
+        /// than by the build.
+        /// </summary>
+        public const float QuickestShot = .06f;
+
+        /// <summary>
+        /// A cooldown <paramref name="cool"/> after <paramref name="shots"/> unbroken shots of
+        /// spin-up (<see cref="SpinStep"/>), never under <see cref="QuickestShot"/>. The cooldown
+        /// handed in on the plain line and on a build with no spin.
+        /// </summary>
+        public float Spun(float cool, int shots)
+        {
+            if (_frozen || SpinStep <= 0 || shots <= 0) return cool;
+
+            int held = shots < SpinMost ? shots : SpinMost;
+            float spun = cool * 100f / (100 + SpinStep * held);
+            return spun < QuickestShot ? QuickestShot : spun;
+        }
+
+        /// <summary>
+        /// What a hit worth <paramref name="tenths"/> of a plain primary bolt takes off
+        /// <paramref name="kind"/> under this build - the figure every timed attack (a meteor, a
+        /// tesla arc, a ray) is struck at, so a damage card makes those heavier too.
+        /// </summary>
+        public int PlainShot(int tenths, SiegeKind kind)
+        {
+            if (_frozen || tenths <= 0) return 0;
+
+            int plain = SiegeTuning.ShotDamage * SiegeTuning.WeakMultiplier * tenths / 10;
+            return Bolt(plain < 1 ? 1 : plain, kind, out _);
+        }
+
+        /// <summary>
+        /// The element a primary bolt is struck in under wild magic (a ward colour, 0-3), or -1.
+        /// <b>Rolls nothing</b> on the plain line or a build without it, so no stream moves.
+        /// </summary>
+        public int WildElement()
+        {
+            if (_frozen || WildChance <= 0 || !Chance(WildChance)) return -1;
+            return Roll100() % 4;
+        }
 
         /// <summary>Whether this bolt lands a second time.</summary>
         public bool Twins() => !_frozen && TwinChance > 0 && Chance(TwinChance);

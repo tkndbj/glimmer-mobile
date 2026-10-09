@@ -15399,11 +15399,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/hit_cleaver_b
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 5cced4b0464e3b59d08dd042e6e53826
-    m_Address: Art/Ui/Shuffle/charm_magnet
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5cd56910e53dc204ab9dd341857b7e15
     m_Address: Art/Siege/Wards/sunderer_fire/f06
     m_ReadOnly: 0

@@ -17,15 +17,12 @@
   `make_siege_art.HUB_ICONS` cuts the Infinite lane's.
 * `Art/Ui/shuffle_crest.png` - the lane's crest, the owner's own picture (2026-10-09), which
   the hub stands where the Infinite lane stands the rank badge (`EndlessHub.HubLane.Crest`).
-  The picture is painted on a dark glow, not cut out, so it is given an alpha here rather than
-  keyed: the paint's own darkness (black is nothing) under an elliptical feather, so its glow
-  dies into the charcoal wall instead of ending at a rectangle. Cut only when the source is on
-  this machine; the PNG is committed.
-* `Art/Bg/plain_shuffle.png` - the ranked lane's purple brick wall turned to teal and then put
-  nearly out: a hue rotation first (CLAUDE.md 44g: hue-rotate in the tool) and a shade on top,
-  so the wall keeps every brick and its highlights and reads as charcoal with a cold cast - the
-  owner asked for "darker, like black but not fully black" (2026-10-09), because a bright wall
-  fought the crest.
+  The picture is painted on a dark glowing backdrop, so it is cut off it here by its keyline
+  (see `crest`). Cut only when the source is on this machine; the PNG is committed.
+* `Art/Bg/plain_shuffle.png` - the ranked lane's purple brick wall turned to a deep teal-blue:
+  a hue rotation first (CLAUDE.md 44g: hue-rotate in the tool) and a shade on top, so the wall
+  keeps every brick and its highlights. Dark, because a bright wall fought the crest; coloured,
+  because the charcoal it was before read as dull (the owner, 2026-10-09).
 
 **Every `.meta` carries a derived guid** (`make_rank_kit_art.py`'s reason): the tool is
 reproducible, `--check` means something, and a re-cut keeps the address the first cut
@@ -74,23 +71,31 @@ HUB_SIZE, HUB_ROUND = 96, 16
 #: The hub's two marks: a vortex for the deal, shards for the hand.
 HUB_MARKS = (("ic_shuffle", 60), ("ic_deck", 66))
 
-#: How far round the wheel the ranked wall's purple is turned to reach the Shuffle lane's teal,
-#: in Pillow's 0..255 hue. Measured: the wall's dominant hue sits near 200 (purple); 95 lands
-#: it near 105 (teal-green). A rotation rather than a tint, because a tint multiplies and can
+#: How far round the wheel the ranked wall's purple is turned to reach the Shuffle lane's deep
+#: teal-blue, in Pillow's 0..255 hue. Measured: the wall's dominant hue sits near 200 (purple);
+#: 45 lands it near 155 (teal-blue), the complement of the crest's gold and well clear of the
+#: Infinite lane's purple. A rotation rather than a tint, because a tint multiplies and can
 #: only ever darken (CLAUDE.md 37l).
-WALL_TURN = -95
+WALL_TURN = -45
 
-#: After the turn, how much of the wall's colour and light is kept: charcoal, not black.
-WALL_SATURATION, WALL_VALUE = .40, .30
+#: After the turn, how much of the wall's colour and light is kept. The owner asked for the
+#: first (bright teal) wall darker and then for the charcoal it became to be "something nicer"
+#: (both 2026-10-09): so a rich colour at well under half its light, dark enough that the crest
+#: is still the brightest thing on the screen.
+WALL_SATURATION, WALL_VALUE = .85, .42
 
-#: The owner's crest picture, and the size it is cut at: the hub draws it 553 across on a 1080
-#: canvas (`EndlessHubLayout.CrestWidth`), so 768 is drawn down on any phone and under the
-#: folder's cap. Its glow is given an alpha (see `crest`): opaque inside `CREST_INNER` of the
-#: ellipse, feathered to nothing at the edge, and black is nothing everywhere.
-CREST_SOURCE = Path(r"C:\Users\Digikey\Downloads\SHUFFLE_ Neon Gem Upgrade Frenzy.png")
-CREST_W, CREST_H = 768, 512
-CREST_INNER = .78
-CREST_BLACK_FROM, CREST_BLACK_TO = 6, 40
+#: The owner's crest picture (replaced 2026-10-09 by "Shuffle Cards Game Logo"), and the size
+#: it is cut at: the hub draws it up to 840 across on a 1080 canvas
+#: (`EndlessHubLayout.CrestWidest`), so 1020 is drawn down on any phone and under the `/Art/Ui/`
+#: folder's 1024 cap; both sides a multiple of four, as block compression wants.
+CREST_SOURCE = Path(r"C:\Users\Digikey\Downloads\Shuffle Cards Game Logo.png")
+CREST_W, CREST_H = 1020, 680
+
+#: The crest's cut-out (see `crest`): a step between neighbours under `CREST_SMOOTH` (largest
+#: channel, 0..255) is the painted backdrop's gradient; anything steeper is the picture's
+#: keyline. The silhouette is then grown by `CREST_GROW` pixels to take back the keyline where
+#: it met black, and feathered by `CREST_SOFT`.
+CREST_SMOOTH, CREST_GROW, CREST_SOFT = 14, 3, 1.2
 
 ROW = re.compile(r'new ShuffleCard\("([a-z_]+)",\s*ShuffleTier\.(\w+),\s*ShuffleEffect\.\w+,'
                  r'\s*-?\d+,\s*-?\d+,\s*\d+,\s*(\d+)\)')
@@ -128,25 +133,52 @@ def wall():
 
 
 def crest():
-    """The owner's picture with an alpha it never had: the paint's darkness under an elliptical
-    feather. Black is nothing (the wall shows through), the glow fades out before the edge."""
+    """The owner's picture cut off its painted backdrop.
+
+    The backdrop is a dark gradient with coloured glows, as bright as 155 under the lettering,
+    so neither its darkness nor an oval feather separates it: the first cut (an oval) would
+    fade the outer cards, which reach the frame's edge. What *does* separate it is that it is
+    smooth and the picture is keylined. So the backdrop is everything reachable from the
+    frame's edge without crossing a step of `CREST_SMOOTH`; the rest is the picture. A flood
+    stops at the keyline's far side where the backdrop glows and at its near side where it is
+    black, so the silhouette is grown by the keyline's width to keep it whole either way."""
     import numpy as np
+    from PIL import ImageFilter
 
-    im = Image.open(CREST_SOURCE).convert("RGBA").resize((CREST_W, CREST_H), Image.LANCZOS)
-    px = np.asarray(im).astype(np.float32)
-    w, h = im.size
+    im = Image.open(CREST_SOURCE).convert("RGB").resize((CREST_W, CREST_H), Image.LANCZOS)
+    px = np.asarray(im).astype(np.int16)
+    h, w = CREST_H, CREST_W
 
-    ys, xs = np.mgrid[0:h, 0:w]
-    r = np.sqrt(((xs + .5 - w / 2) / (w / 2)) ** 2 + ((ys + .5 - h / 2) / (h / 2)) ** 2)
-    t = np.clip((1.0 - r) / (1.0 - CREST_INNER), 0.0, 1.0)
-    feather = t * t * (3.0 - 2.0 * t)
+    step = np.zeros((h, w), np.int16)
+    dx = np.abs(px[:, 1:] - px[:, :-1]).max(axis=2)
+    dy = np.abs(px[1:] - px[:-1]).max(axis=2)
+    step[:, 1:] = np.maximum(step[:, 1:], dx)
+    step[:, :-1] = np.maximum(step[:, :-1], dx)
+    step[1:] = np.maximum(step[1:], dy)
+    step[:-1] = np.maximum(step[:-1], dy)
+    smooth = step < CREST_SMOOTH
 
-    light = px[:, :, :3].max(axis=2)
-    paint = np.clip((light - CREST_BLACK_FROM) / float(CREST_BLACK_TO - CREST_BLACK_FROM), 0.0, 1.0)
+    ground = np.zeros((h, w), bool)
+    ground[0], ground[-1] = smooth[0], smooth[-1]
+    ground[:, 0], ground[:, -1] = smooth[:, 0], smooth[:, -1]
+    while True:
+        grown = ground.copy()
+        grown[1:] |= ground[:-1]
+        grown[:-1] |= ground[1:]
+        grown[:, 1:] |= ground[:, :-1]
+        grown[:, :-1] |= ground[:, 1:]
+        grown &= smooth
+        if (grown == ground).all():
+            break
+        ground = grown
 
-    alpha = (feather * paint * 255.0).round().astype(np.uint8)
-    out = Image.fromarray(px[:, :, :3].astype(np.uint8), "RGB")
-    out.putalpha(Image.fromarray(alpha, "L"))
+    alpha = Image.fromarray(np.where(ground, 0, 255).astype(np.uint8), "L")
+    for _ in range(CREST_GROW):
+        alpha = alpha.filter(ImageFilter.MaxFilter(3))
+    alpha = alpha.filter(ImageFilter.GaussianBlur(CREST_SOFT))
+
+    out = im.copy()
+    out.putalpha(alpha)
     return out
 
 

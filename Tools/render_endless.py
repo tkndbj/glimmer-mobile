@@ -88,7 +88,20 @@ MIN_SCALE = .72                # `EndlessHubLayout.MinScale`
 LIFT = 0.42
 HEAD_CLEAR = 36.0
 BADGE_DOWN = (RANK_PLATE_DOWN - RIBBON_H / 2 - HEAD_CLEAR) / 2
-CREST_W = HERO_H * 1.5           # `EndlessHubLayout.CrestWidth`: a 3:2 picture in the rank's box
+CREST_WIDEST, CREST_AIR = 840.0, 10.0   # `EndlessHubLayout.CrestWidest` (the plate's width), `.CrestAir`
+
+
+def crest_height(air):
+    """`EndlessHubLayout.CrestHeight`: as tall as the gap between the header and the plate
+    allows, never wider than the plate. `air` is the header's foot to the column's top, in
+    column units."""
+    return min(air + HERO_H + HERO_GAP - CREST_AIR * 2, CREST_WIDEST / 1.5)
+
+
+def crest_centre(air):
+    """`EndlessHubLayout.CrestCentre`: midway between the header's foot and the plate's top,
+    measured down from the column's top."""
+    return (HERO_H + HERO_GAP - air) / 2
 
 HERO_CENTRE = HERO_H / 2
 PANEL_CENTRE = HERO_H + HERO_GAP + PANEL_H / 2
@@ -295,17 +308,28 @@ def rung_of(held):
     return (rungs[held - 1] if earned else rungs[0]), earned
 
 
-def rank_hero(sheet, top, held):
-    """`EndlessHub.Rank`: the badge on two halos, centred over its name on the plate - or
-    `EndlessHub.Crest`, a lane's own picture in the same box, when its row names one."""
+def crest_hero(sheet, foot, top, scale):
+    """`EndlessHub.Crest`: a lane's own picture in the rank's place, centred between the
+    header's foot and the plate's top. Drawn on the sheet, not the column's layer, because on
+    a tall phone it stands in the air above the column."""
     crest = LANES[LANE]["crest"]
-    if crest is not None:
-        art = ART / ("%s.png" % crest)
-        if art.exists():
-            K.paste(sheet, K.fit(Image.open(art).convert("RGBA"), (CREST_W, HERO_H)), W / 2, top + HERO_H / 2)
-            print("  hero crest: %s at %.0fx%.0f" % (crest, CREST_W, HERO_H))
-        else:
-            print("  !! hero crest %s is not on disk" % crest)
+    art = ART / ("%s.png" % crest)
+    if not art.exists():
+        print("  !! hero crest %s is not on disk" % crest)
+        return
+    air = (top - foot) / scale
+    tall = crest_height(air)
+    K.paste(sheet, K.fit(Image.open(art).convert("RGBA"), (tall * 1.5 * scale, tall * scale)),
+            W / 2, top + crest_centre(air) * scale)
+    print("  hero crest: %s at %.0fx%.0f, centred %.0f below the header (gap %.0f)"
+          % (crest, tall * 1.5 * scale, tall * scale, (top - foot) + crest_centre(air) * scale,
+             (air + HERO_H + HERO_GAP) * scale))
+
+
+def rank_hero(sheet, top, held):
+    """`EndlessHub.Rank`: the badge on two halos, centred over its name on the plate. A lane
+    whose row names a crest draws `crest_hero` instead."""
+    if LANES[LANE]["crest"] is not None:
         return
 
     rung, earned = rung_of(held)
@@ -559,6 +583,8 @@ def screen(h, played=True, modes=False, wall=0, standing=0, boost=0, rank=3, sta
     if scale < 1.0:
         layer = layer.resize((int(W * scale), int(layer.height * scale)), Image.LANCZOS)
     sheet.alpha_composite(layer, (int((W - layer.width) / 2), int(top - 100 * scale)))
+    if row["crest"] is not None:
+        crest_hero(sheet, foot, top, scale)
 
     header(sheet, modes, boost, rank)
     if row["shelf"]:

@@ -27,10 +27,15 @@ namespace GlimmerGrove.Shuffle
     public enum ShuffleEffect
     {
         Damage, Fire, FuelShot, FuelGem, Guard, Capacity, Armour, Regen, Crit, Rest,
-        Splash, Chain, Pierce, Frost, Burn, Stun, Siphon, Charges, Thorns, CharmWindow,
+        Splash, Chain, Pierce, Frost, Burn, Stun, Siphon, Charges, Thorns,
         WaveFuel, Leech, HillPace, Heavy,
         SecondWind, WaveStill, Repel, Execute, Twin, OffColour, Blast, Hex, WaveCharges,
         Phoenix, Overdrive, Spill, Desperate,
+
+        // The attack cards (`SiegeBoard.Arsenal`): each changes *how* the line attacks.
+        Scatter, Ricochet, Missiles, Quake, Toxic, Tesla,
+        SpinUp, Shatter, Wildfire, Meteor, Vortex,
+        Nuke, Ray, Hydra, Wild, BulletHell,
     }
 
     /// <summary>
@@ -105,13 +110,25 @@ namespace GlimmerGrove.Shuffle
     /// the board does, and a rule is a build (invariant 20).
     ///
     /// <para>
-    /// <b>Thirty-seven cards in four tiers, and what separates them is <em>what they take</em></b>
+    /// <b>Fifty-two cards in four tiers, and what separates them is <em>what they take</em></b>
     /// (invariant 37z's rule about bosses, asked of upgrades): the common tier moves a number the
     /// player already has - weight, cadence, fuel, health; the rare tier grants the turrets an
-    /// ability the shelf sells; the epic tier changes a <em>rule</em> - a fallen post stands up, a
-    /// wave stops the hill, a ward reaches off its colour; and a legendary changes the shape of a
-    /// run. Two cards that moved the same figure by different amounts would be one card at two
-    /// prices (invariant 5d), which is why there is one damage card and not three.
+    /// ability the shelf sells or a new way to attack; the epic tier changes a <em>rule</em> - a
+    /// fallen post stands up, a wave stops the hill, a ward reaches off its colour, a frozen body
+    /// shatters; and a legendary changes the shape of a run. Two cards that moved the same figure
+    /// by different amounts would be one card at two prices (invariant 5d), which is why there is
+    /// one damage card and not three.
+    /// </para>
+    /// <para>
+    /// <b>The attack cards (2026-10-09, the owner's brief: "truly unique upgrade types ... the
+    /// mode should get crazy")</b> each change <em>how</em> the line attacks rather than how hard,
+    /// and each is drawn as itself (<c>SiegeVia</c>, <c>SiegeView.Arsenal</c>): pellets fanning
+    /// off the barrel, a ricochet, missiles, a quake down a row, toxic pools, tesla coils that
+    /// fight dry, spin-up to a machine gun, a shatter, wildfire, meteors, a vortex, a nuke, a
+    /// fused ray, a hydra's heads, wild magic. Several are built to <em>meet</em> - frost and a
+    /// shatter, a burn and wildfire, a vortex gathering a crowd for a quake or a meteor - which
+    /// is where the combinations come from. Their rules are <c>SiegeBoard.Arsenal</c>'s, shut on
+    /// every board but this lane's.
     /// </para>
     /// <para>
     /// <b>Nothing here touches the hill's ground.</b> The lane deals no cogs and sends no bombers
@@ -152,11 +169,18 @@ namespace GlimmerGrove.Shuffle
             new ShuffleCard("siphon",          ShuffleTier.Rare, ShuffleEffect.Siphon,     10, 0, 3, 42),
             new ShuffleCard("charge_master",   ShuffleTier.Rare, ShuffleEffect.Charges,    50, 1, 2, 71),
             new ShuffleCard("thorns",          ShuffleTier.Rare, ShuffleEffect.Thorns,    100, 0, 3, 36),
-            new ShuffleCard("charm_magnet",    ShuffleTier.Rare, ShuffleEffect.CharmWindow, 50, 0, 2, 15),
             new ShuffleCard("rally_cry",       ShuffleTier.Rare, ShuffleEffect.WaveFuel,    3, 0, 3, 28),
             new ShuffleCard("vampire_posts",   ShuffleTier.Rare, ShuffleEffect.Leech,       1, 0, 2, 83),
             new ShuffleCard("slow_march",      ShuffleTier.Rare, ShuffleEffect.HillPace,   15, 0, 2, 41),
             new ShuffleCard("giant_slayer",    ShuffleTier.Rare, ShuffleEffect.Heavy,      50, 0, 2, 97),
+
+            // ------------------------------------------------------------ rare: a new way to attack
+            new ShuffleCard("scatter_shot",    ShuffleTier.Rare, ShuffleEffect.Scatter,     4, 2, 3, 61),
+            new ShuffleCard("ricochet",        ShuffleTier.Rare, ShuffleEffect.Ricochet,    8, 1, 3, 88),
+            new ShuffleCard("missile_pod",     ShuffleTier.Rare, ShuffleEffect.Missiles,   10, 4, 3, 82),
+            new ShuffleCard("quake_rounds",    ShuffleTier.Rare, ShuffleEffect.Quake,       6, 5, 3, 34),
+            new ShuffleCard("toxic_rounds",    ShuffleTier.Rare, ShuffleEffect.Toxic,       2, 30, 3, 48),
+            new ShuffleCard("tesla_coil",      ShuffleTier.Rare, ShuffleEffect.Tesla,       6, 1, 3, 65),
 
             // ------------------------------------------------------------ epic: a rule changed
             new ShuffleCard("second_wind",     ShuffleTier.Epic, ShuffleEffect.SecondWind,  1, 0, 3, 23),
@@ -168,20 +192,36 @@ namespace GlimmerGrove.Shuffle
             new ShuffleCard("chain_reaction",  ShuffleTier.Epic, ShuffleEffect.Blast,       3, 0, 2, 40),
             new ShuffleCard("cursed_fire",     ShuffleTier.Epic, ShuffleEffect.Hex,         6, 30, 2, 3),
             new ShuffleCard("storm_bank",      ShuffleTier.Epic, ShuffleEffect.WaveCharges, 1, 0, 2, 19),
+            new ShuffleCard("spin_up",         ShuffleTier.Epic, ShuffleEffect.SpinUp,     15, 10, 2, 62),
+            new ShuffleCard("shatter",         ShuffleTier.Epic, ShuffleEffect.Shatter,     4, 1, 2, 60),
+            new ShuffleCard("wildfire",        ShuffleTier.Epic, ShuffleEffect.Wildfire,    3, 1, 2, 32),
+            new ShuffleCard("meteor_call",     ShuffleTier.Epic, ShuffleEffect.Meteor,     30, 60, 2, 35),
+            new ShuffleCard("vortex",          ShuffleTier.Epic, ShuffleEffect.Vortex,      3, 90, 2, 16),
 
             // ------------------------------------------------------------ legendary: a run's shape
             new ShuffleCard("phoenix",      ShuffleTier.Legendary, ShuffleEffect.Phoenix,   1, 0, 1, 90),
             new ShuffleCard("overdrive",    ShuffleTier.Legendary, ShuffleEffect.Overdrive, 40, 25, 1, 94),
             new ShuffleCard("rainbow_fuel", ShuffleTier.Legendary, ShuffleEffect.Spill,     25, 0, 1, 6),
             new ShuffleCard("last_stand",   ShuffleTier.Legendary, ShuffleEffect.Desperate, 60, 30, 1, 79),
+            new ShuffleCard("doomsday",     ShuffleTier.Legendary, ShuffleEffect.Nuke,      30, 15, 1, 98),
+            new ShuffleCard("death_ray",    ShuffleTier.Legendary, ShuffleEffect.Ray,        6, 100, 1, 39),
+            new ShuffleCard("hydra",        ShuffleTier.Legendary, ShuffleEffect.Hydra,      5, 2, 1, 93),
+            new ShuffleCard("wild_magic",   ShuffleTier.Legendary, ShuffleEffect.Wild,     100, 0, 1, 10),
+            new ShuffleCard("bullet_hell",  ShuffleTier.Legendary, ShuffleEffect.BulletHell, 100, 50, 1, 81),
         };
 
         /// <summary>
         /// Ids spent by cards that were withdrawn. Refused by <see cref="Find"/> and held apart
         /// from <see cref="All"/> by <c>ShuffleCardTests</c>, for the lesson ids' reason: a card id
         /// travels in analytics and must never name a second thing.
+        ///
+        /// <para>
+        /// <b><c>charm_magnet</c></b> (2026-10-09, the owner: "I don't like it") - a card about the
+        /// charm window, withdrawn with the figure it moved: <c>SiegeBoosts</c> no longer has a
+        /// charm window, so nothing can reach one. Its picture, 15, is spent with it.
+        /// </para>
         /// </summary>
-        public static readonly string[] Retired = Array.Empty<string>();
+        public static readonly string[] Retired = { "charm_magnet" };
 
         /// <summary>The card with this id, or null for none this build knows.</summary>
         public static ShuffleCard Find(string id)

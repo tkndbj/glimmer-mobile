@@ -137,6 +137,11 @@ namespace GlimmerGrove
             // (`SiegeView.Obsidian`). Beside `Burning` and for its reasons.
             Hexing(Time.unscaledDeltaTime);
 
+            // **And what a Shuffle build leaves standing** - toxic pools, a vortex, the fused
+            // ray, a spun-up turret's heat (`SiegeView.Arsenal`). Read off the board every frame
+            // like the two above; returns on its first line on every board holding no build.
+            Arsenal(Time.unscaledDeltaTime);
+
             // The fight's own beats - the plant, each phase turning, the guard going up and
             // coming down - read off the raiders `Follow` just drew. See `SiegeView.Fight`.
             Fight(Time.unscaledDeltaTime);
@@ -223,6 +228,11 @@ namespace GlimmerGrove
 
             // **A post a build stood back up**, drawn after the fall above (`SiegeView.Boosts`).
             if (report.Revived.Count > 0) Revived();
+
+            // **The places a build set something off** - a quake's row, a meteor's shadow and its
+            // landing, a vortex opening, a nuke, the ray, a corpse bursting (`SiegeView.Arsenal`).
+            // Empty on every board but the Shuffle lane's.
+            for (int i = 0; i < report.Volleys.Count; i++) Volleyed(report.Volleys[i]);
 
             Reap();
             Fuses();

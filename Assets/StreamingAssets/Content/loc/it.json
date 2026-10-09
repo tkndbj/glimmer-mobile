@@ -8062,14 +8062,6 @@
       "text": "Un predone che colpisce la linea viene ferito a sua volta."
     },
     {
-      "key": "shuffle.charm_magnet.name",
-      "text": "Calamita per Amuleti"
-    },
-    {
-      "key": "shuffle.charm_magnet.note",
-      "text": "Gli amuleti compaiono il doppio delle volte."
-    },
-    {
       "key": "shuffle.rally_cry.name",
       "text": "Grido di Battaglia"
     },
@@ -8204,6 +8196,134 @@
     {
       "key": "shuffle.last_stand.note",
       "text": "Una torretta sotto il 30% di vita spara il 60% più forte e più in fretta."
+    },
+    {
+      "key": "shuffle.scatter_shot.name",
+      "text": "Colpo a Rosa"
+    },
+    {
+      "key": "shuffle.scatter_shot.note",
+      "text": "Ogni dardo lancia 2 pallini sui predoni successivi al 40%."
+    },
+    {
+      "key": "shuffle.ricochet.name",
+      "text": "Rimbalzo"
+    },
+    {
+      "key": "shuffle.ricochet.note",
+      "text": "Un dardo che uccide rimbalza sul predone più vicino all'80%."
+    },
+    {
+      "key": "shuffle.missile_pod.name",
+      "text": "Lanciamissili"
+    },
+    {
+      "key": "shuffle.missile_pod.note",
+      "text": "Un dardo su quattro lancia 2 missili a ricerca."
+    },
+    {
+      "key": "shuffle.quake_rounds.name",
+      "text": "Dardi Sismici"
+    },
+    {
+      "key": "shuffle.quake_rounds.note",
+      "text": "Un dardo su cinque manda un'onda lungo la sua fila e respinge i predoni."
+    },
+    {
+      "key": "shuffle.toxic_rounds.name",
+      "text": "Dardi Tossici"
+    },
+    {
+      "key": "shuffle.toxic_rounds.note",
+      "text": "I dardi lasciano pozze tossiche che feriscono chi ci passa."
+    },
+    {
+      "key": "shuffle.tesla_coil.name",
+      "text": "Bobina Tesla"
+    },
+    {
+      "key": "shuffle.tesla_coil.note",
+      "text": "Le torrette folgorano il predone più vicino, anche senza carburante."
+    },
+    {
+      "key": "shuffle.spin_up.name",
+      "text": "Accelerazione"
+    },
+    {
+      "key": "shuffle.spin_up.note",
+      "text": "Ogni colpo di fila spara il 15% più in fretta, fino al 150%."
+    },
+    {
+      "key": "shuffle.shatter.name",
+      "text": "Frantumazione"
+    },
+    {
+      "key": "shuffle.shatter.note",
+      "text": "I predoni congelati o storditi esplodono in schegge di ghiaccio quando muoiono."
+    },
+    {
+      "key": "shuffle.wildfire.name",
+      "text": "Fuoco Selvaggio"
+    },
+    {
+      "key": "shuffle.wildfire.note",
+      "text": "I predoni in fiamme passano il fuoco ai vicini quando muoiono."
+    },
+    {
+      "key": "shuffle.meteor_call.name",
+      "text": "Pioggia di Meteore"
+    },
+    {
+      "key": "shuffle.meteor_call.note",
+      "text": "Ogni 6 secondi una meteora si schianta sul gruppo più grande."
+    },
+    {
+      "key": "shuffle.vortex.name",
+      "text": "Vortice"
+    },
+    {
+      "key": "shuffle.vortex.note",
+      "text": "Ogni 9 secondi un vortice trascina insieme il gruppo più grande."
+    },
+    {
+      "key": "shuffle.doomsday.name",
+      "text": "Giorno del Giudizio"
+    },
+    {
+      "key": "shuffle.doomsday.note",
+      "text": "Ogni 15 uccisioni, una bomba toglie il 30% della vita a ogni predone."
+    },
+    {
+      "key": "shuffle.death_ray.name",
+      "text": "Raggio della Morte"
+    },
+    {
+      "key": "shuffle.death_ray.note",
+      "text": "Ogni 10 secondi la linea spara un raggio gigante sulla collina."
+    },
+    {
+      "key": "shuffle.hydra.name",
+      "text": "Idra"
+    },
+    {
+      "key": "shuffle.hydra.note",
+      "text": "Ogni dardo si divide in 2 teste, e ogni testa si divide ancora."
+    },
+    {
+      "key": "shuffle.wild_magic.name",
+      "text": "Magia Selvaggia"
+    },
+    {
+      "key": "shuffle.wild_magic.note",
+      "text": "Ogni dardo diventa fuoco, veleno, ghiaccio o fulmine a caso."
+    },
+    {
+      "key": "shuffle.bullet_hell.name",
+      "text": "Pioggia di Proiettili"
+    },
+    {
+      "key": "shuffle.bullet_hell.note",
+      "text": "Le torrette sparano il doppio più in fretta e ogni dardo costa metà carburante."
     }
   ]
 }

@@ -8062,14 +8062,6 @@
       "text": "El invasor que golpea la línea recibe daño a cambio."
     },
     {
-      "key": "shuffle.charm_magnet.name",
-      "text": "Imán de Amuletos"
-    },
-    {
-      "key": "shuffle.charm_magnet.note",
-      "text": "Los amuletos aparecen el doble de veces."
-    },
-    {
       "key": "shuffle.rally_cry.name",
       "text": "Grito de Guerra"
     },
@@ -8204,6 +8196,134 @@
     {
       "key": "shuffle.last_stand.note",
       "text": "Una torre con menos del 30% de vida dispara un 60% más fuerte y más rápido."
+    },
+    {
+      "key": "shuffle.scatter_shot.name",
+      "text": "Disparo Disperso"
+    },
+    {
+      "key": "shuffle.scatter_shot.note",
+      "text": "Cada rayo lanza 2 perdigones a los siguientes invasores con un 40%."
+    },
+    {
+      "key": "shuffle.ricochet.name",
+      "text": "Rebote"
+    },
+    {
+      "key": "shuffle.ricochet.note",
+      "text": "Un rayo que mata rebota al invasor más cercano con un 80%."
+    },
+    {
+      "key": "shuffle.missile_pod.name",
+      "text": "Lanzamisiles"
+    },
+    {
+      "key": "shuffle.missile_pod.note",
+      "text": "Cada cuarto rayo lanza 2 misiles teledirigidos."
+    },
+    {
+      "key": "shuffle.quake_rounds.name",
+      "text": "Rayos Sísmicos"
+    },
+    {
+      "key": "shuffle.quake_rounds.note",
+      "text": "Cada quinto rayo lanza una onda por su fila y empuja atrás a los invasores."
+    },
+    {
+      "key": "shuffle.toxic_rounds.name",
+      "text": "Rayos Tóxicos"
+    },
+    {
+      "key": "shuffle.toxic_rounds.note",
+      "text": "Los rayos dejan charcos tóxicos que dañan a quien los pisa."
+    },
+    {
+      "key": "shuffle.tesla_coil.name",
+      "text": "Bobina Tesla"
+    },
+    {
+      "key": "shuffle.tesla_coil.note",
+      "text": "Las torres electrocutan al invasor más cercano, incluso sin combustible."
+    },
+    {
+      "key": "shuffle.spin_up.name",
+      "text": "Aceleración"
+    },
+    {
+      "key": "shuffle.spin_up.note",
+      "text": "Cada disparo seguido es un 15% más rápido, hasta un 150%."
+    },
+    {
+      "key": "shuffle.shatter.name",
+      "text": "Estallido Helado"
+    },
+    {
+      "key": "shuffle.shatter.note",
+      "text": "Los invasores congelados o aturdidos estallan en hielo al morir."
+    },
+    {
+      "key": "shuffle.wildfire.name",
+      "text": "Fuego Salvaje"
+    },
+    {
+      "key": "shuffle.wildfire.note",
+      "text": "Los invasores en llamas pasan su fuego a sus vecinos al morir."
+    },
+    {
+      "key": "shuffle.meteor_call.name",
+      "text": "Lluvia de Meteoros"
+    },
+    {
+      "key": "shuffle.meteor_call.note",
+      "text": "Cada 6 segundos un meteoro cae sobre el grupo más grande."
+    },
+    {
+      "key": "shuffle.vortex.name",
+      "text": "Vórtice"
+    },
+    {
+      "key": "shuffle.vortex.note",
+      "text": "Cada 9 segundos un vórtice arrastra y junta al grupo más grande."
+    },
+    {
+      "key": "shuffle.doomsday.name",
+      "text": "Día del Juicio"
+    },
+    {
+      "key": "shuffle.doomsday.note",
+      "text": "Cada 15 bajas, una bomba quita a cada invasor un 30% de su vida."
+    },
+    {
+      "key": "shuffle.death_ray.name",
+      "text": "Rayo Mortal"
+    },
+    {
+      "key": "shuffle.death_ray.note",
+      "text": "Cada 10 segundos la línea dispara un rayo gigante por la colina."
+    },
+    {
+      "key": "shuffle.hydra.name",
+      "text": "Hidra"
+    },
+    {
+      "key": "shuffle.hydra.note",
+      "text": "Cada rayo se divide en 2 cabezas, y cada cabeza vuelve a dividirse."
+    },
+    {
+      "key": "shuffle.wild_magic.name",
+      "text": "Magia Salvaje"
+    },
+    {
+      "key": "shuffle.wild_magic.note",
+      "text": "Cada rayo se vuelve fuego, veneno, hielo o relámpago al azar."
+    },
+    {
+      "key": "shuffle.bullet_hell.name",
+      "text": "Lluvia de Balas"
+    },
+    {
+      "key": "shuffle.bullet_hell.note",
+      "text": "Las torres disparan el doble de rápido y cada rayo gasta la mitad de combustible."
     }
   ]
 }

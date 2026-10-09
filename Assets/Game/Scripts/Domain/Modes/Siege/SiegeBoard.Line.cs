@@ -107,8 +107,13 @@ namespace GlimmerGrove.Modes
             return share < 1 ? 1 : share;
         }
 
-        /// <summary>Everything standing in the box around what a splash turret hit.</summary>
-        void Spread(SiegeWard ward, int index, SiegeRaider target, int damage, int reach)
+        /// <summary>
+        /// Everything standing in the box around what a splash turret hit.
+        /// <paramref name="via"/> is how a build's splash is drawn (<see cref="SiegeVia"/>);
+        /// a turret's own is <see cref="SiegeVia.None"/>, as it always was.
+        /// </summary>
+        void Spread(SiegeWard ward, int index, SiegeRaider target, int damage, int reach,
+                    SiegeVia via = SiegeVia.None)
         {
             if (reach < 1) reach = 1;
 
@@ -122,7 +127,7 @@ namespace GlimmerGrove.Modes
                 if (Math.Abs(SiegeTuning.RowOf(other.March) - row) > reach) continue;
                 if (Math.Abs(other.Column - target.Column) > reach) continue;
 
-                Splinter(ward, index, other, damage);
+                Splinter(ward, index, other, damage, via, via == SiegeVia.None ? -1 : target.Id);
             }
         }
 
@@ -133,9 +138,15 @@ namespace GlimmerGrove.Modes
         /// arc going somewhere legible - and what makes a chain worth more the more raiders are
         /// bunched, which is the shape that tells it apart from a splash.
         /// </summary>
-        void Arc(SiegeWard ward, int index, SiegeRaider target, int damage, int extra)
+        void Arc(SiegeWard ward, int index, SiegeRaider target, int damage, int extra,
+                 SiegeVia via = SiegeVia.None)
         {
             if (extra < 1) extra = 1;
+
+            // **A build's chain is drawn hop by hop**, each one leaving the raider the last one
+            // reached, which is what lightning travelling through a crowd looks like. A turret's
+            // own keeps the drawing it always had.
+            var from = target;
 
             for (int hop = 0; hop < extra; hop++)
             {
@@ -160,14 +171,16 @@ namespace GlimmerGrove.Modes
                 if (next == null) break;
 
                 _arced.Add(next.Id);
-                Splinter(ward, index, next, damage);
+                Splinter(ward, index, next, damage, via, via == SiegeVia.None ? -1 : from.Id);
+                from = next;
             }
 
             _arced.Clear();
         }
 
         /// <summary>Everything in the lane a pierce turret fired down.</summary>
-        void Lance(SiegeWard ward, int index, SiegeRaider target, int damage)
+        void Lance(SiegeWard ward, int index, SiegeRaider target, int damage,
+                   SiegeVia via = SiegeVia.None)
         {
             for (int i = 0; i < _raiders.Count; i++)
             {
@@ -175,7 +188,7 @@ namespace GlimmerGrove.Modes
                 if (other == target || !other.Alive || !other.OnTheHill) continue;
                 if (other.Column != target.Column) continue;
 
-                Splinter(ward, index, other, damage);
+                Splinter(ward, index, other, damage, via);
             }
         }
 
@@ -183,7 +196,8 @@ namespace GlimmerGrove.Modes
         /// One extra hit: takes the health, reports the bolt, and takes the raider off the hill
         /// through the one door if that killed it.
         /// </summary>
-        void Splinter(SiegeWard ward, int index, SiegeRaider other, int damage)
+        void Splinter(SiegeWard ward, int index, SiegeRaider other, int damage,
+                      SiegeVia via = SiegeVia.None, int from = -1)
         {
             // **Plating blunts everything that is not the colour it answers to**, which is where
             // the bulwark's shield went when the lock made it unreachable on a primary hit. A
@@ -203,7 +217,8 @@ namespace GlimmerGrove.Modes
             if (killed) Fallen(ward, index, other);
 
             _report.Bolts.Add(new SiegeBolt(index, other.Id, damage,
-                                            ward.StrongAgainst(other.Colour), killed, true));
+                                            ward.StrongAgainst(other.Colour), killed, true,
+                                            via, from));
         }
 
         /// <summary>
@@ -231,8 +246,11 @@ namespace GlimmerGrove.Modes
             if (_boosts.BlastTenths > 0 && fallen != null && !fallen.Boss)
             {
                 int blast = fallen.MaxHealth * _boosts.BlastTenths / 10;
-                if (blast > 0) Spread(ward, index, fallen, blast, 1);
+                if (blast > 0) Spread(ward, index, fallen, blast, 1, SiegeVia.Blast);
             }
+
+            // And whatever the attack cards make of a death (`SiegeBoard.Arsenal`).
+            Perished(fallen, index);
         }
 
         /// <summary>
@@ -246,20 +264,27 @@ namespace GlimmerGrove.Modes
         /// Nothing on the plain line (<see cref="SiegeBoosts.IsIdentity"/>).
         /// </para>
         /// </summary>
-        void Augment(SiegeWard ward, int index, SiegeRaider target, int damage)
+        void Augment(SiegeWard ward, int index, SiegeRaider target, int damage, int element)
         {
             if (_boosts.IsIdentity || target == null) return;
 
             var boosts = _boosts;
 
+            // **The attack cards first** (`SiegeBoard.Arsenal`): a ricochet off this kill, the
+            // pellets, the missiles, the quake, the pool, the hydra, the wild element. Before the
+            // execute below, which may end this method early.
+            Volley(ward, index, target, damage, element);
+
             if (boosts.SplashTenths > 0)
-                Spread(ward, index, target, Share(damage, boosts.SplashTenths), boosts.SplashReach);
+                Spread(ward, index, target, Share(damage, boosts.SplashTenths), boosts.SplashReach,
+                       SiegeVia.Splash);
 
             if (boosts.ChainTenths > 0 && boosts.ChainHops > 0)
-                Arc(ward, index, target, Share(damage, boosts.ChainTenths), boosts.ChainHops);
+                Arc(ward, index, target, Share(damage, boosts.ChainTenths), boosts.ChainHops,
+                    SiegeVia.Arc);
 
             if (boosts.PierceEvery > 0 && ward.Shots % boosts.PierceEvery == 0)
-                Lance(ward, index, target, Share(damage, boosts.PierceTenths));
+                Lance(ward, index, target, Share(damage, boosts.PierceTenths), SiegeVia.Lance);
 
             if (boosts.FrostTenths > 0) target.Freeze(boosts.FrostTenths, boosts.FrostFor);
 
@@ -272,7 +297,7 @@ namespace GlimmerGrove.Modes
 
             // A second landing of the same bolt, at a share, as a partner shot on the target.
             if (boosts.Twins() && target.Alive)
-                Splinter(ward, index, target, Share(damage, boosts.TwinTenths));
+                Splinter(ward, index, target, Share(damage, boosts.TwinTenths), SiegeVia.Twin);
 
             // **The finish**: a body at or under the build's share of its full health is taken
             // outright. Never a boss - a boss is a fight, not a bar to race (37fe) - and through
@@ -287,7 +312,8 @@ namespace GlimmerGrove.Modes
                 if (killed) Fallen(ward, index, target);
 
                 _report.Bolts.Add(new SiegeBolt(index, target.Id, took,
-                                                ward.StrongAgainst(target.Colour), killed, true));
+                                                ward.StrongAgainst(target.Colour), killed, true,
+                                                SiegeVia.Execute));
             }
         }
 
@@ -392,6 +418,10 @@ namespace GlimmerGrove.Modes
                 if (killed && !_boosts.IsIdentity
                     && raider.BurnFrom >= 0 && raider.BurnFrom < _wards.Length)
                     Fallen(_wards[raider.BurnFrom], raider.BurnFrom, raider);
+
+                // A fire no ward lit (a meteor's, `SiegeBoard.Arsenal`) still counts as a death
+                // to the attack cards. Nothing on the plain line, where no such fire is lit.
+                else if (killed) Perished(raider, -1);
 
                 _report.Burns.Add(new SiegeBurn(raider.BurnFrom, raider.Id, took, killed));
             }

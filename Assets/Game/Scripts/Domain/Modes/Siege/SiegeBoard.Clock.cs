@@ -51,6 +51,11 @@ namespace GlimmerGrove.Modes
             Wither(dt);
             Swing(dt);
             Regen(dt);
+
+            // **What the attack cards do on their own clocks** (`SiegeBoard.Arsenal`): tesla
+            // arcs, meteors, vortices, toxic pools, the ray, a falling nuke. Shut on the plain
+            // line, so a chapter and the Infinite lane never reach past its first line.
+            Arsenal(dt);
             Age(dt);
 
             for (int i = _raiders.Count - 1; i >= 0; i--)
@@ -797,15 +802,19 @@ namespace GlimmerGrove.Modes
                     }
                 }
 
-                if (!ward.Fuelled) { ward.Cool = 0f; continue; }
+                // A ward that stops firing loses its spin (`SiegeBoosts.SpinStep`): dry, or with
+                // nothing to aim at. Nothing to lose on the plain line.
+                if (!ward.Fuelled) { ward.Cool = 0f; Unspin(w); continue; }
 
                 ward.Cool -= dt;
                 if (ward.Cool > 0f) continue;
 
                 var target = Aim(ward);
-                if (target == null) { ward.Cool = 0f; continue; }
+                if (target == null) { ward.Cool = 0f; Unspin(w); continue; }
 
-                ward.Cool = _boosts.FireEvery(SiegeTuning.FireEvery, Percent(ward));
+                ward.Cool = _boosts.Spun(_boosts.FireEvery(SiegeTuning.FireEvery, Percent(ward)),
+                                         SpinOf(w));
+                SpinUp(w);
 
                 // **A stone-struck ward pays for a shot it does not take** (`SiegeSpell.Glare`),
                 // and it pays only when there was something to shoot at - the target is found
@@ -862,6 +871,11 @@ namespace GlimmerGrove.Modes
                 ward.Fuel = Math.Max(0f, ward.Fuel - _boosts.FuelShot(SiegeTuning.FuelShot(ward.Rank, share)));
                 ward.Shots++;
 
+                // **The element wild magic struck this bolt in**, or -1: rolled before the bolt is
+                // reported, so the record the view draws and the effect the build adds are one
+                // roll. Rolls nothing on the plain line (`SiegeBoosts.WildElement`).
+                int element = _boosts.WildElement();
+
                 // Through the one door (`SiegeBoard.Fight.cs`). `Aim` never picks an untouchable
                 // boss, so what comes back differs from `damage` only at a phase's floor - and
                 // what is reported is what landed.
@@ -870,7 +884,8 @@ namespace GlimmerGrove.Modes
                 bool killed = Fell(target);
                 if (killed) Fallen(ward, w, target);
 
-                _report.Bolts.Add(new SiegeBolt(w, target.Id, damage, weak, killed));
+                _report.Bolts.Add(new SiegeBolt(w, target.Id, damage, weak, killed,
+                                                element: element));
 
                 // **The one place a wane's reading is written** (`SiegeBoard._worked`). Beside
                 // the booking rather than beside the fuel, because what the verb asks is whether
@@ -884,7 +899,7 @@ namespace GlimmerGrove.Modes
 
                 // **And what the build grants on top**, by the same rule and through the same
                 // doors (`SiegeBoard.Line.cs`). Nothing on the plain line.
-                Augment(ward, w, target, damage);
+                Augment(ward, w, target, damage, element);
             }
         }
 

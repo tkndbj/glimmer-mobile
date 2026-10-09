@@ -413,7 +413,12 @@ namespace GlimmerGrove
             column.anchoredPosition = new Vector2(0f, -top);
             column.localScale = Vector3.one * EndlessHubLayout.ScaleIn(band);
 
-            if (hub.Crest != null) Crest(column, hub, arriving);
+            // The air between the header's foot and the column's top, in the column's own
+            // units, which is what the crest is centred across (`EndlessHubLayout.CrestRoom`).
+            float air = (EndlessHubLayout.HeadClear + EndlessHubLayout.TopIn(band))
+                      / EndlessHubLayout.ScaleIn(band);
+
+            if (hub.Crest != null) Crest(column, hub, air, arriving);
             else Rank(column, arriving);
             Lines(column, hub, 0f, arriving);
             Record(column, owner, hub, level, arriving);
@@ -519,18 +524,20 @@ namespace GlimmerGrove
 
         // ------------------------------------------------------------------ the crest
         /// <summary>
-        /// A lane's own picture as the hero, in the rank's box (<see cref="HubLane.Crest"/>),
-        /// breathing slowly (<see cref="EndlessHubLayout.CrestBreath"/>) - the owner asked for a
+        /// A lane's own picture as the hero, in the rank's place (<see cref="HubLane.Crest"/>)
+        /// and centred in the gap between the header and the lines
+        /// (<see cref="EndlessHubLayout.CrestCentre"/>), breathing slowly (<see cref="EndlessHubLayout.CrestBreath"/>) - the owner asked for a
         /// pulse that is slow and gentle, and a breath is the one the kit already has. It opens
         /// nothing: there is no page behind a picture. One that has not arrived draws no
         /// picture rather than a white rectangle (invariant 7b).
         /// </summary>
-        static void Crest(RectTransform column, HubLane hub, bool arriving)
+        static void Crest(RectTransform column, HubLane hub, float air, bool arriving)
         {
-            var size = new Vector2(EndlessHubLayout.CrestWidth, EndlessHubLayout.HeroHeight);
+            float tall = EndlessHubLayout.CrestHeight(air);
+            var size = new Vector2(tall * 1.5f, tall);
 
             var seat = UIKit.Box("Crest", column, size, new Vector2(.5f, 1f),
-                                 new Vector2(0f, -EndlessHubLayout.HeroCentre));
+                                 new Vector2(0f, -EndlessHubLayout.CrestCentre(air)));
 
             var picture = Art.S(hub.Crest);
             var mark = UIKit.Img("Picture", seat, picture, Color.white, size,

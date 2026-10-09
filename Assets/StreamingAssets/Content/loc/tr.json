@@ -8062,14 +8062,6 @@
       "text": "Hatta vuran akıncı karşılığında yaralanır."
     },
     {
-      "key": "shuffle.charm_magnet.name",
-      "text": "Tılsım Mıknatısı"
-    },
-    {
-      "key": "shuffle.charm_magnet.note",
-      "text": "Tılsımlar iki kat sık gelir."
-    },
-    {
       "key": "shuffle.rally_cry.name",
       "text": "Savaş Çığlığı"
     },
@@ -8204,6 +8196,134 @@
     {
       "key": "shuffle.last_stand.note",
       "text": "Canı %30 altındaki kule %60 daha sert ve hızlı ateş eder."
+    },
+    {
+      "key": "shuffle.scatter_shot.name",
+      "text": "Saçma Atış"
+    },
+    {
+      "key": "shuffle.scatter_shot.note",
+      "text": "Her ok sıradaki akıncılara %40 ile 2 saçma fırlatır."
+    },
+    {
+      "key": "shuffle.ricochet.name",
+      "text": "Seken Ok"
+    },
+    {
+      "key": "shuffle.ricochet.note",
+      "text": "Öldüren ok en yakın akıncıya %80 ile seker."
+    },
+    {
+      "key": "shuffle.missile_pod.name",
+      "text": "Füze Rampası"
+    },
+    {
+      "key": "shuffle.missile_pod.note",
+      "text": "Her dördüncü ok 2 güdümlü füze fırlatır."
+    },
+    {
+      "key": "shuffle.quake_rounds.name",
+      "text": "Deprem Okları"
+    },
+    {
+      "key": "shuffle.quake_rounds.note",
+      "text": "Her beşinci ok sırası boyunca şok dalgası yollar ve akıncıları geri iter."
+    },
+    {
+      "key": "shuffle.toxic_rounds.name",
+      "text": "Zehirli Oklar"
+    },
+    {
+      "key": "shuffle.toxic_rounds.note",
+      "text": "Oklar, üstünden geçenleri yakan zehir birikintileri bırakır."
+    },
+    {
+      "key": "shuffle.tesla_coil.name",
+      "text": "Tesla Bobini"
+    },
+    {
+      "key": "shuffle.tesla_coil.note",
+      "text": "Kuleler yakıt olmasa bile en yakın akıncıyı yıldırımla çarpar."
+    },
+    {
+      "key": "shuffle.spin_up.name",
+      "text": "Hızlanma"
+    },
+    {
+      "key": "shuffle.spin_up.note",
+      "text": "Art arda her atış %15 daha hızlıdır, en fazla %150."
+    },
+    {
+      "key": "shuffle.shatter.name",
+      "text": "Paramparça"
+    },
+    {
+      "key": "shuffle.shatter.note",
+      "text": "Donmuş ya da sersemlemiş akıncılar ölünce buz parçalarına ayrılır."
+    },
+    {
+      "key": "shuffle.wildfire.name",
+      "text": "Orman Yangını"
+    },
+    {
+      "key": "shuffle.wildfire.note",
+      "text": "Yanan akıncılar ölünce ateşlerini komşularına bulaştırır."
+    },
+    {
+      "key": "shuffle.meteor_call.name",
+      "text": "Meteor Çağrısı"
+    },
+    {
+      "key": "shuffle.meteor_call.note",
+      "text": "Her 6 saniyede bir meteor en kalabalık gruba çakılır."
+    },
+    {
+      "key": "shuffle.vortex.name",
+      "text": "Girdap"
+    },
+    {
+      "key": "shuffle.vortex.note",
+      "text": "Her 9 saniyede bir girdap en kalabalık grubu bir araya çeker."
+    },
+    {
+      "key": "shuffle.doomsday.name",
+      "text": "Kıyamet"
+    },
+    {
+      "key": "shuffle.doomsday.note",
+      "text": "Her 15 öldürmede bir bomba her akıncının canının %30'unu alır."
+    },
+    {
+      "key": "shuffle.death_ray.name",
+      "text": "Ölüm Işını"
+    },
+    {
+      "key": "shuffle.death_ray.note",
+      "text": "Her 10 saniyede hat tepeye dev bir ışın gönderir."
+    },
+    {
+      "key": "shuffle.hydra.name",
+      "text": "Hidra"
+    },
+    {
+      "key": "shuffle.hydra.note",
+      "text": "Her ok 2 başa ayrılır ve her baş yeniden ayrılır."
+    },
+    {
+      "key": "shuffle.wild_magic.name",
+      "text": "Vahşi Büyü"
+    },
+    {
+      "key": "shuffle.wild_magic.note",
+      "text": "Her ok rastgele ateş, zehir, buz ya da yıldırıma dönüşür."
+    },
+    {
+      "key": "shuffle.bullet_hell.name",
+      "text": "Mermi Yağmuru"
+    },
+    {
+      "key": "shuffle.bullet_hell.note",
+      "text": "Kuleler iki kat hızlı ateş eder, oklar yarı yakıt harcar."
     }
   ]
 }

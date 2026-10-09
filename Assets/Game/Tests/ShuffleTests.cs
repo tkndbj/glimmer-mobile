@@ -220,15 +220,50 @@ namespace GlimmerGrove.Tests
         [Test]
         public void TheTierWeightsSumToAHundredAndEveryTierHasCards()
         {
-            int sum = 0;
-            foreach (int w in ShuffleDeck.Weights) sum += w;
-            Assert.AreEqual(100, sum);
+            foreach (var table in new[] { ShuffleDeck.Weights, ShuffleDeck.Heated, ShuffleDeck.Wild })
+            {
+                int sum = 0;
+                foreach (int w in table) sum += w;
+                Assert.AreEqual(100, sum);
+                Assert.AreEqual(4, table.Length, "a table that does not name every tier");
+            }
 
             foreach (ShuffleTier tier in Enum.GetValues(typeof(ShuffleTier)))
                 Assert.Greater(ShuffleCards.Of(tier).Count, 0, $"no {tier} card");
 
             Assert.AreEqual(ShuffleTier.Common, ShuffleDeck.TierFor(0));
             Assert.AreEqual(ShuffleTier.Legendary, ShuffleDeck.TierFor(99));
+
+            // **The deck heats up and never cools**: each later table deals the top two tiers
+            // more often than the one before it, and a hand is dealt off the table its number
+            // has reached.
+            Assert.Less(ShuffleDeck.Weights[3], ShuffleDeck.Heated[3]);
+            Assert.Less(ShuffleDeck.Heated[3], ShuffleDeck.Wild[3]);
+            Assert.Less(ShuffleDeck.Weights[2], ShuffleDeck.Heated[2]);
+            Assert.Less(ShuffleDeck.Heated[2], ShuffleDeck.Wild[2]);
+            Assert.Less(ShuffleDeck.HeatedFrom, ShuffleDeck.WildFrom);
+            Assert.AreSame(ShuffleDeck.Weights, ShuffleDeck.WeightsFor(ShuffleDeck.HeatedFrom - 1));
+            Assert.AreSame(ShuffleDeck.Heated, ShuffleDeck.WeightsFor(ShuffleDeck.HeatedFrom));
+            Assert.AreSame(ShuffleDeck.Wild, ShuffleDeck.WeightsFor(ShuffleDeck.WildFrom + 20));
+        }
+
+        /// <summary>
+        /// A withdrawn card is gone from the deck and its id finds nothing, and its picture is not
+        /// worn by anything new - Charm Magnet, withdrawn 2026-10-09.
+        /// </summary>
+        [Test]
+        public void AWithdrawnCardIsNeverDealt()
+        {
+            CollectionAssert.Contains(ShuffleCards.Retired, "charm_magnet");
+            Assert.IsNull(ShuffleCards.Find("charm_magnet"));
+
+            foreach (var card in ShuffleCards.All)
+                Assert.AreNotEqual(15, card.Picture, $"'{card.Id}' wears the withdrawn card's picture");
+
+            var run = new ShuffleRun(7u);
+            for (int hand = 1; hand <= 40; hand++)
+                foreach (var card in ShuffleDeck.Deal(run.Build, hand, run.Build.Boosts.Roll100))
+                    Assert.AreNotEqual("charm_magnet", card.Id);
         }
 
         [Test]
@@ -432,8 +467,15 @@ namespace GlimmerGrove.Tests
                 b.OffColourTenths, b.SiphonTenths, b.LeechHealth, b.GuardPercent,
                 b.CapacityPercent, b.ExtraCharges, b.OverchargePercent, b.Armour,
                 b.ThornsPercent, b.RepelChance, b.RegenEvery, b.SecondWinds, b.Phoenixes,
-                b.HillPacePercent, b.RestPercent, b.CharmWindowPercent, b.WaveFuelTenths, b.WaveStill,
+                b.HillPacePercent, b.RestPercent, b.WaveFuelTenths, b.WaveStill,
                 b.WaveCharges,
+                b.ScatterTenths, b.ScatterPellets, b.RicochetTenths, b.RicochetBounces,
+                b.MissileEvery, b.MissileCount, b.MissileTenths, b.QuakeEvery, b.QuakeTenths,
+                b.ToxicTenths, b.ToxicFor, b.TeslaTenths, b.TeslaArcs, b.SpinStep, b.SpinMost,
+                b.ShatterTenths, b.ShatterReach, b.WildfireReach, b.WildfireTenths,
+                b.MeteorEvery, b.MeteorTenths, b.VortexEvery, b.VortexTenths,
+                b.NukeEvery, b.NukePercent, b.RayEvery, b.RayTenths, b.HydraTenths, b.HydraHeads,
+                b.WildChance,
             });
 
         // ------------------------------------------------------------------ the seam
@@ -448,7 +490,9 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(2f, none.FuelShot(2f), 1e-6f);
             Assert.AreEqual(3, none.Blow(3));
             Assert.AreEqual(0, none.Thorns(20));
-            Assert.AreEqual(112, none.CharmWindow(112));
+            Assert.AreEqual(.44f, none.Spun(.44f, 10), 1e-6f);
+            Assert.AreEqual(0, none.PlainShot(10, SiegeKind.Creeper));
+            Assert.AreEqual(-1, none.WildElement());
             Assert.AreEqual(1f, none.HillPace, 1e-6f);
             Assert.IsFalse(none.Twins());
             Assert.IsFalse(none.TakeSecondWind());
@@ -486,8 +530,13 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(1, live.Blow(2));
             Assert.AreEqual(1, live.Blow(1), "armour took a blow under one");
 
-            live.SetCharmWindow(50);
-            Assert.AreEqual(56, live.CharmWindow(112));
+            // Spin-up: each unbroken shot quickens the next, to its most and never under the floor.
+            Assert.AreEqual(.40f, live.Spun(.40f, 3), 1e-6f, "spin moved a build without it");
+            live.SetSpin(25, 4);
+            Assert.AreEqual(.20f, live.Spun(.40f, 4), 1e-5f);
+            Assert.AreEqual(.20f, live.Spun(.40f, 9), 1e-5f, "spin climbed past its most");
+            live.SetSpin(1000, 10);
+            Assert.AreEqual(SiegeBoosts.QuickestShot, live.Spun(.40f, 10), 1e-6f);
 
             live.AddHillPace(-15);
             Assert.AreEqual(.85f, live.HillPace, 1e-6f);
@@ -528,6 +577,233 @@ namespace GlimmerGrove.Tests
             heavy.Take(ShuffleCards.Find("heavy_bolts"));
             Assert.AreNotEqual(plain, Trace(SiegeBoard.Build(Rung()), heavy.Boosts),
                                "a card changed nothing the trace can see");
+        }
+
+        /// <summary>
+        /// <b>The plain line never reaches the arsenal</b>: a shipped rung played through with
+        /// <see cref="SiegeBoosts.None"/> reports no hit drawn by a build, no wild element, no
+        /// volley, no pool, no spin, no vortex and no ray, on any frame. The other half of
+        /// <see cref="TheIdentityBoostChangesNothing"/>: that one holds the numbers, this one the
+        /// drawing a chapter is shown.
+        /// </summary>
+        [Test]
+        public void ThePlainLineNeverDrawsTheArsenal()
+        {
+            var board = SiegeBoard.Build(Rung());
+            float since = 0f;
+
+            for (int i = 0; i < 60 * 150 && !board.IsFinished; i++)
+            {
+                var report = board.Advance(1f / 60f);
+
+                foreach (var bolt in report.Bolts)
+                {
+                    Assert.AreEqual(SiegeVia.None, bolt.Via, "a chapter drew a hit as a build's");
+                    Assert.AreEqual(-1, bolt.Element, "a chapter rolled a wild element");
+                    Assert.AreEqual(-1, bolt.From);
+                }
+
+                Assert.AreEqual(0, report.Volleys.Count, "a chapter set off a volley");
+                Assert.AreEqual(0, board.Pools.Count);
+                Assert.IsFalse(board.VortexOpen);
+                Assert.IsFalse(board.RayLive);
+                for (int w = 0; w < board.Wards.Count; w++) Assert.AreEqual(0, board.SpinOf(w));
+
+                since += 1f / 60f;
+                if (since >= 2.4f && Aimed(board, out int a, out int b)) { board.Swap(a, b); since = 0f; }
+            }
+        }
+
+        /// <summary>
+        /// <b>Every attack card is seen doing what it says, on the lane it ships on.</b> Each is
+        /// taken to its most (with the one card it is built to meet, where it needs one - a
+        /// shatter needs something frozen, wildfire something burning) and played by the model
+        /// player; what the board reports has to carry the card's own drawing. A card whose rule
+        /// never fires is decoration (5d), and this is where that would show.
+        /// </summary>
+        [Test]
+        public void EveryAttackCardIsSeenOnTheBoard()
+        {
+            var cases = new (string card, string partner, SiegeVia via)[]
+            {
+                ("scatter_shot", null, SiegeVia.Pellet),
+                ("ricochet", null, SiegeVia.Ricochet),
+                ("missile_pod", null, SiegeVia.Missile),
+                ("quake_rounds", null, SiegeVia.Quake),
+                ("toxic_rounds", null, SiegeVia.Toxic),
+                ("tesla_coil", null, SiegeVia.Tesla),
+                ("shatter", "frostbite", SiegeVia.Shatter),
+                ("wildfire", "kindling", SiegeVia.Wildfire),
+                ("meteor_call", null, SiegeVia.Meteor),
+                ("vortex", null, SiegeVia.Vortex),
+                ("doomsday", null, SiegeVia.Nuke),
+                ("death_ray", null, SiegeVia.Ray),
+                ("hydra", null, SiegeVia.Hydra),
+                ("splash_shot", null, SiegeVia.Splash),
+                ("chain_arc", null, SiegeVia.Arc),
+                ("pierce_rounds", null, SiegeVia.Lance),
+                ("execution", null, SiegeVia.Execute),
+                ("chain_reaction", null, SiegeVia.Blast),
+            };
+
+            var silent = new List<string>();
+
+            foreach (var c in cases)
+            {
+                var run = new ShuffleRun(5u);
+                Load(run, c.card);
+                if (c.partner != null) Load(run, c.partner);
+
+                var board = SiegeBoard.Build(Lane(), ShuffleLine.Of(null));
+                board.Boosts = run.Build.Boosts;
+                board.Refit();
+
+                bool seen = false;
+                Play(board, 90f, report =>
+                {
+                    foreach (var bolt in report.Bolts) if (bolt.Via == c.via) seen = true;
+                    foreach (var volley in report.Volleys) if (volley.Via == c.via) seen = true;
+                });
+
+                if (!seen) silent.Add($"{c.card} never drew {c.via}");
+            }
+
+            Assert.IsEmpty(silent, string.Join("\n", silent));
+        }
+
+        /// <summary>Spin-up climbs with every unbroken shot to its most, and the cadence quickens with it.</summary>
+        [Test]
+        public void SpinUpQuickensAWardThatKeepsFiring()
+        {
+            var run = new ShuffleRun(5u);
+            Load(run, "spin_up");
+
+            var board = SiegeBoard.Build(Lane(), ShuffleLine.Of(null));
+            board.Boosts = run.Build.Boosts;
+            board.Refit();
+
+            float most = 0f;
+            Play(board, 90f, _ =>
+            {
+                for (int w = 0; w < board.Wards.Count; w++) most = Math.Max(most, board.SpinShare(w));
+            });
+
+            Assert.AreEqual(1f, most, 1e-6f, "no ward ever spun all the way up");
+        }
+
+        /// <summary>
+        /// Wild magic strikes every primary bolt in an element, and over a run all four come up -
+        /// the roll is off the build's stream, so this is a fact about a seed and holds.
+        /// </summary>
+        [Test]
+        public void WildMagicRollsEveryElement()
+        {
+            var run = new ShuffleRun(5u);
+            Load(run, "wild_magic");
+
+            var board = SiegeBoard.Build(Lane(), ShuffleLine.Of(null));
+            board.Boosts = run.Build.Boosts;
+            board.Refit();
+
+            var elements = new HashSet<int>();
+            int primaries = 0;
+            Play(board, 60f, report =>
+            {
+                foreach (var bolt in report.Bolts)
+                {
+                    if (bolt.Extra) continue;
+                    primaries++;
+                    Assert.GreaterOrEqual(bolt.Element, 0, "wild magic at a certainty left a bolt plain");
+                    elements.Add(bolt.Element);
+                }
+            });
+
+            Assert.Greater(primaries, 0);
+            CollectionAssert.AreEquivalent(new[] { 0, 1, 2, 3 }, elements);
+        }
+
+        /// <summary>A tesla coil fights with an empty tube: a line never fed still hurts the hill.</summary>
+        [Test]
+        public void ATeslaCoilFightsDry()
+        {
+            var run = new ShuffleRun(5u);
+            Load(run, "tesla_coil");
+
+            var board = SiegeBoard.Build(Lane(), ShuffleLine.Of(null));
+            board.Boosts = run.Build.Boosts;
+            board.Refit();
+            foreach (var ward in board.Wards) ward.Fuel = 0f;
+
+            int zaps = 0;
+            for (int i = 0; i < 60 * 40 && !board.IsFinished; i++)
+            {
+                var report = board.Advance(1f / 60f);
+                foreach (var bolt in report.Bolts)
+                {
+                    if (bolt.Via == SiegeVia.Tesla) zaps++;
+                    else Assert.AreNotEqual(SiegeVia.None, bolt.Via, "a dry, unfed line fired a bolt");
+                }
+            }
+
+            Assert.Greater(zaps, 0, "a coil never fired from a dry line");
+        }
+
+        /// <summary>
+        /// <b>Everything at once is playable.</b> Every card in the deck held to its most - a
+        /// hundred-odd takes, which no run reaches (a hand comes every two waves) - played by the
+        /// model player for the fixture's whole budget: the arsenal's recursions (a shatter
+        /// bursting a frozen neighbour, a hydra's heads, a ricochet off a kill, a nuke's own kills)
+        /// all terminate on every frame, and the whole deck reaches further than no deck. Prints
+        /// how far it gets; whether a <em>real</em> run ends is
+        /// <see cref="AModelPlayerTakingRandomCardsIsHeldAndThenFalls"/>'s question.
+        /// </summary>
+        [Test]
+        public void EveryCardAtOnceIsPlayable()
+        {
+            var run = new ShuffleRun(5u);
+            foreach (var card in ShuffleCards.All) Load(run, card.Id);
+
+            var board = SiegeBoard.Build(Lane(), ShuffleLine.Of(null));
+            board.Boosts = run.Build.Boosts;
+            board.Refit();
+
+            int reached = Hold(board, null, 2.4f, out int seconds, out _);
+            Console.WriteLine($"Every card at its most: wave {reached} after {seconds}s"
+                              + (board.IsFinished ? "" : " and still standing"));
+
+            var bare = SiegeBoard.Build(Lane(), ShuffleLine.Of(null));
+            int plain = Hold(bare, null, 2.4f, out _, out _);
+
+            Assert.Greater(reached, plain, "the whole deck reached no further than none");
+        }
+
+        /// <summary>Takes <paramref name="id"/> to its most.</summary>
+        static void Load(ShuffleRun run, string id)
+        {
+            var card = ShuffleCards.Find(id);
+            Assert.IsNotNull(card, id);
+            while (run.Build.Takeable(card)) run.Build.Take(card);
+        }
+
+        /// <summary>The model player for <paramref name="seconds"/>, handing every report to <paramref name="look"/>.</summary>
+        static void Play(SiegeBoard board, float seconds, Action<SiegeReport> look)
+        {
+            const float Frame = 1f / 60f;
+            float since = 0f;
+
+            for (int i = 0; i < seconds * 60f && !board.IsFinished; i++)
+            {
+                look(board.Advance(Frame));
+
+                for (int w = 0; w < board.Wards.Count; w++)
+                    if (board.Wards[w].Armed) board.Overcharge(w, null);
+
+                since += Frame;
+                if (since < 1.2f || !Aimed(board, out int a, out int b)) continue;
+
+                board.Swap(a, b);
+                since = 0f;
+            }
         }
 
         static string Trace(SiegeBoard board, SiegeBoosts boosts)

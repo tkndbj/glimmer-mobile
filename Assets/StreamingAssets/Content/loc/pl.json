@@ -8062,14 +8062,6 @@
       "text": "Najeźdźca uderzający w linię sam odnosi obrażenia."
     },
     {
-      "key": "shuffle.charm_magnet.name",
-      "text": "Magnes na Amulety"
-    },
-    {
-      "key": "shuffle.charm_magnet.note",
-      "text": "Amulety pojawiają się dwa razy częściej."
-    },
-    {
       "key": "shuffle.rally_cry.name",
       "text": "Okrzyk Bojowy"
     },
@@ -8204,6 +8196,134 @@
     {
       "key": "shuffle.last_stand.note",
       "text": "Wieża poniżej 30% zdrowia strzela o 60% mocniej i szybciej."
+    },
+    {
+      "key": "shuffle.scatter_shot.name",
+      "text": "Strzał Rozproszony"
+    },
+    {
+      "key": "shuffle.scatter_shot.note",
+      "text": "Każdy pocisk rzuca 2 śruciny w kolejnych najeźdźców za 40%."
+    },
+    {
+      "key": "shuffle.ricochet.name",
+      "text": "Rykoszet"
+    },
+    {
+      "key": "shuffle.ricochet.note",
+      "text": "Zabójczy pocisk odbija się do najbliższego najeźdźcy za 80%."
+    },
+    {
+      "key": "shuffle.missile_pod.name",
+      "text": "Wyrzutnia Rakiet"
+    },
+    {
+      "key": "shuffle.missile_pod.note",
+      "text": "Co czwarty pocisk wystrzeliwuje 2 rakiety samonaprowadzające."
+    },
+    {
+      "key": "shuffle.quake_rounds.name",
+      "text": "Pociski Wstrząsowe"
+    },
+    {
+      "key": "shuffle.quake_rounds.note",
+      "text": "Co piąty pocisk posyła falę uderzeniową przez swój rząd i odrzuca najeźdźców."
+    },
+    {
+      "key": "shuffle.toxic_rounds.name",
+      "text": "Pociski Toksyczne"
+    },
+    {
+      "key": "shuffle.toxic_rounds.note",
+      "text": "Pociski zostawiają trujące kałuże, które ranią każdego, kto przez nie idzie."
+    },
+    {
+      "key": "shuffle.tesla_coil.name",
+      "text": "Cewka Tesli"
+    },
+    {
+      "key": "shuffle.tesla_coil.note",
+      "text": "Wieże razią najbliższego najeźdźcę piorunem, nawet bez paliwa."
+    },
+    {
+      "key": "shuffle.spin_up.name",
+      "text": "Rozkręcenie"
+    },
+    {
+      "key": "shuffle.spin_up.note",
+      "text": "Każdy kolejny strzał z rzędu jest o 15% szybszy, do 150%."
+    },
+    {
+      "key": "shuffle.shatter.name",
+      "text": "Roztrzaskanie"
+    },
+    {
+      "key": "shuffle.shatter.note",
+      "text": "Zamrożeni lub ogłuszeni najeźdźcy rozpadają się w lodowe odłamki po śmierci."
+    },
+    {
+      "key": "shuffle.wildfire.name",
+      "text": "Pożoga"
+    },
+    {
+      "key": "shuffle.wildfire.note",
+      "text": "Płonący najeźdźcy po śmierci przenoszą ogień na sąsiadów."
+    },
+    {
+      "key": "shuffle.meteor_call.name",
+      "text": "Deszcz Meteorów"
+    },
+    {
+      "key": "shuffle.meteor_call.note",
+      "text": "Co 6 sekund meteor spada na największą grupę."
+    },
+    {
+      "key": "shuffle.vortex.name",
+      "text": "Wir"
+    },
+    {
+      "key": "shuffle.vortex.note",
+      "text": "Co 9 sekund wir ściąga największą grupę w jedno miejsce."
+    },
+    {
+      "key": "shuffle.doomsday.name",
+      "text": "Sąd Ostateczny"
+    },
+    {
+      "key": "shuffle.doomsday.note",
+      "text": "Co 15 zabójstw bomba odbiera każdemu najeźdźcy 30% zdrowia."
+    },
+    {
+      "key": "shuffle.death_ray.name",
+      "text": "Promień Śmierci"
+    },
+    {
+      "key": "shuffle.death_ray.note",
+      "text": "Co 10 sekund linia strzela olbrzymim promieniem przez wzgórze."
+    },
+    {
+      "key": "shuffle.hydra.name",
+      "text": "Hydra"
+    },
+    {
+      "key": "shuffle.hydra.note",
+      "text": "Każdy pocisk dzieli się na 2 głowy, a każda głowa dzieli się ponownie."
+    },
+    {
+      "key": "shuffle.wild_magic.name",
+      "text": "Dzika Magia"
+    },
+    {
+      "key": "shuffle.wild_magic.note",
+      "text": "Każdy pocisk losowo staje się ogniem, jadem, lodem lub piorunem."
+    },
+    {
+      "key": "shuffle.bullet_hell.name",
+      "text": "Grad Kul"
+    },
+    {
+      "key": "shuffle.bullet_hell.note",
+      "text": "Wieże strzelają dwa razy szybciej, a pociski zużywają połowę paliwa."
     }
   ]
 }

@@ -8062,14 +8062,6 @@
       "text": "المهاجم الذي يضرب الخط يصاب بدوره."
     },
     {
-      "key": "shuffle.charm_magnet.name",
-      "text": "مغناطيس التعويذات"
-    },
-    {
-      "key": "shuffle.charm_magnet.note",
-      "text": "التعويذات تظهر ضعف المرات."
-    },
-    {
       "key": "shuffle.rally_cry.name",
       "text": "صيحة الحشد"
     },
@@ -8204,6 +8196,134 @@
     {
       "key": "shuffle.last_stand.note",
       "text": "البرج تحت 30% من الصحة يطلق أقوى وأسرع بنسبة 60%."
+    },
+    {
+      "key": "shuffle.scatter_shot.name",
+      "text": "طلقة متناثرة"
+    },
+    {
+      "key": "shuffle.scatter_shot.note",
+      "text": "كل سهم يرمي شظيتين على المهاجمين التاليين بنسبة 40%."
+    },
+    {
+      "key": "shuffle.ricochet.name",
+      "text": "ارتداد"
+    },
+    {
+      "key": "shuffle.ricochet.note",
+      "text": "السهم القاتل يرتد إلى أقرب مهاجم بنسبة 80%."
+    },
+    {
+      "key": "shuffle.missile_pod.name",
+      "text": "منصة صواريخ"
+    },
+    {
+      "key": "shuffle.missile_pod.note",
+      "text": "كل سهم رابع يطلق صاروخين موجهين."
+    },
+    {
+      "key": "shuffle.quake_rounds.name",
+      "text": "سهام الزلزال"
+    },
+    {
+      "key": "shuffle.quake_rounds.note",
+      "text": "كل سهم خامس يرسل موجة صادمة عبر صفه ويدفع المهاجمين إلى الخلف."
+    },
+    {
+      "key": "shuffle.toxic_rounds.name",
+      "text": "سهام سامة"
+    },
+    {
+      "key": "shuffle.toxic_rounds.note",
+      "text": "السهام تترك بركا سامة تؤذي من يمر بها."
+    },
+    {
+      "key": "shuffle.tesla_coil.name",
+      "text": "ملف تسلا"
+    },
+    {
+      "key": "shuffle.tesla_coil.note",
+      "text": "الأبراج تصعق أقرب مهاجم بالبرق حتى بلا وقود."
+    },
+    {
+      "key": "shuffle.spin_up.name",
+      "text": "تسارع"
+    },
+    {
+      "key": "shuffle.spin_up.note",
+      "text": "كل طلقة متتالية أسرع بنسبة 15%، حتى 150%."
+    },
+    {
+      "key": "shuffle.shatter.name",
+      "text": "تحطم"
+    },
+    {
+      "key": "shuffle.shatter.note",
+      "text": "المهاجمون المجمدون أو المصعوقون ينفجرون شظايا جليد عند موتهم."
+    },
+    {
+      "key": "shuffle.wildfire.name",
+      "text": "نار هائجة"
+    },
+    {
+      "key": "shuffle.wildfire.note",
+      "text": "المهاجمون المشتعلون ينقلون نارهم إلى جيرانهم عند موتهم."
+    },
+    {
+      "key": "shuffle.meteor_call.name",
+      "text": "نداء النيزك"
+    },
+    {
+      "key": "shuffle.meteor_call.note",
+      "text": "كل 6 ثوان يسقط نيزك على أكبر حشد."
+    },
+    {
+      "key": "shuffle.vortex.name",
+      "text": "دوامة"
+    },
+    {
+      "key": "shuffle.vortex.note",
+      "text": "كل 9 ثوان تسحب دوامة أكبر حشد إلى نقطة واحدة."
+    },
+    {
+      "key": "shuffle.doomsday.name",
+      "text": "يوم القيامة"
+    },
+    {
+      "key": "shuffle.doomsday.note",
+      "text": "كل 15 قتلة، قنبلة تأخذ 30% من صحة كل مهاجم."
+    },
+    {
+      "key": "shuffle.death_ray.name",
+      "text": "شعاع الموت"
+    },
+    {
+      "key": "shuffle.death_ray.note",
+      "text": "كل 10 ثوان يطلق الخط شعاعا عملاقا عبر التل."
+    },
+    {
+      "key": "shuffle.hydra.name",
+      "text": "هيدرا"
+    },
+    {
+      "key": "shuffle.hydra.note",
+      "text": "كل سهم ينقسم إلى رأسين، وكل رأس ينقسم من جديد."
+    },
+    {
+      "key": "shuffle.wild_magic.name",
+      "text": "سحر جامح"
+    },
+    {
+      "key": "shuffle.wild_magic.note",
+      "text": "كل سهم يصبح نارا أو سما أو جليدا أو برقا عشوائيا."
+    },
+    {
+      "key": "shuffle.bullet_hell.name",
+      "text": "جحيم الرصاص"
+    },
+    {
+      "key": "shuffle.bullet_hell.note",
+      "text": "الأبراج تطلق بسرعة مضاعفة والسهام تستهلك نصف الوقود."
     }
   ]
 }

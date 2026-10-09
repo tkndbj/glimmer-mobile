@@ -8062,14 +8062,6 @@
       "text": "A raider that strikes the line is hurt back."
     },
     {
-      "key": "shuffle.charm_magnet.name",
-      "text": "Charm Magnet"
-    },
-    {
-      "key": "shuffle.charm_magnet.note",
-      "text": "Charms are dealt twice as often."
-    },
-    {
       "key": "shuffle.rally_cry.name",
       "text": "Rally Cry"
     },
@@ -8204,6 +8196,134 @@
     {
       "key": "shuffle.last_stand.note",
       "text": "A turret under 30% health fires 60% harder and faster."
+    },
+    {
+      "key": "shuffle.scatter_shot.name",
+      "text": "Scatter Shot"
+    },
+    {
+      "key": "shuffle.scatter_shot.note",
+      "text": "Every bolt throws 2 pellets at the next raiders for 40%."
+    },
+    {
+      "key": "shuffle.ricochet.name",
+      "text": "Ricochet"
+    },
+    {
+      "key": "shuffle.ricochet.note",
+      "text": "A bolt that kills bounces to the nearest raider for 80%."
+    },
+    {
+      "key": "shuffle.missile_pod.name",
+      "text": "Missile Pod"
+    },
+    {
+      "key": "shuffle.missile_pod.note",
+      "text": "Every 4th bolt launches 2 homing missiles."
+    },
+    {
+      "key": "shuffle.quake_rounds.name",
+      "text": "Quake Rounds"
+    },
+    {
+      "key": "shuffle.quake_rounds.note",
+      "text": "Every 5th bolt sends a shockwave across its row and knocks raiders back."
+    },
+    {
+      "key": "shuffle.toxic_rounds.name",
+      "text": "Toxic Rounds"
+    },
+    {
+      "key": "shuffle.toxic_rounds.note",
+      "text": "Bolts leave toxic pools that hurt raiders walking through."
+    },
+    {
+      "key": "shuffle.tesla_coil.name",
+      "text": "Tesla Coil"
+    },
+    {
+      "key": "shuffle.tesla_coil.note",
+      "text": "Turrets zap the nearest raider with lightning, even with no fuel."
+    },
+    {
+      "key": "shuffle.spin_up.name",
+      "text": "Spin-Up"
+    },
+    {
+      "key": "shuffle.spin_up.note",
+      "text": "Each shot in a row fires 15% faster, up to 150%."
+    },
+    {
+      "key": "shuffle.shatter.name",
+      "text": "Shatter"
+    },
+    {
+      "key": "shuffle.shatter.note",
+      "text": "Frozen or stunned raiders burst into ice shards when killed."
+    },
+    {
+      "key": "shuffle.wildfire.name",
+      "text": "Wildfire"
+    },
+    {
+      "key": "shuffle.wildfire.note",
+      "text": "Burning raiders spread their fire to their neighbours when killed."
+    },
+    {
+      "key": "shuffle.meteor_call.name",
+      "text": "Meteor Call"
+    },
+    {
+      "key": "shuffle.meteor_call.note",
+      "text": "Every 6 seconds a meteor crashes into the biggest crowd."
+    },
+    {
+      "key": "shuffle.vortex.name",
+      "text": "Vortex"
+    },
+    {
+      "key": "shuffle.vortex.note",
+      "text": "Every 9 seconds a vortex drags the biggest crowd together."
+    },
+    {
+      "key": "shuffle.doomsday.name",
+      "text": "Doomsday"
+    },
+    {
+      "key": "shuffle.doomsday.note",
+      "text": "Every 15 kills, a nuke takes 30% of every raider's health."
+    },
+    {
+      "key": "shuffle.death_ray.name",
+      "text": "Death Ray"
+    },
+    {
+      "key": "shuffle.death_ray.note",
+      "text": "Every 10 seconds the line fires a giant ray across the hill."
+    },
+    {
+      "key": "shuffle.hydra.name",
+      "text": "Hydra"
+    },
+    {
+      "key": "shuffle.hydra.note",
+      "text": "Every bolt splits into 2 heads, and each head splits again."
+    },
+    {
+      "key": "shuffle.wild_magic.name",
+      "text": "Wild Magic"
+    },
+    {
+      "key": "shuffle.wild_magic.note",
+      "text": "Every bolt turns into fire, venom, ice or lightning at random."
+    },
+    {
+      "key": "shuffle.bullet_hell.name",
+      "text": "Bullet Hell"
+    },
+    {
+      "key": "shuffle.bullet_hell.note",
+      "text": "Turrets fire twice as fast and bolts cost half the fuel."
     }
   ]
 }
