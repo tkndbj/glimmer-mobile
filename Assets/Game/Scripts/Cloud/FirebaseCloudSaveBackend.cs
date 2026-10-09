@@ -37,7 +37,7 @@ namespace GlimmerGrove.Cloud
     /// </para>
     /// </summary>
     public sealed class FirebaseCloudSaveBackend : ICloudSaveBackend, Social.IGroveBoardBackend,
-                                                   Referral.IReferralBackend, IWalletFeed
+                                                   Referral.IReferralBackend, IWalletFeed, Store.IDealBackend
     {
         /// <summary>Must match <c>REGION</c> in the functions' config.ts.</summary>
         public const string FunctionsRegion = "europe-west1";
@@ -579,6 +579,34 @@ namespace GlimmerGrove.Cloud
             catch (Exception e)
             {
                 return (Classify(e, "read release"), Release.ReleaseRequirement.None);
+            }
+        }
+
+        // ------------------------------------------------------------ shop deals
+        /// <summary>
+        /// The published shop deals (invariant 60): one get of <c>config/deals</c>, never a
+        /// listener. Readable by any signed-in account under the rules' <c>config/{document}</c>
+        /// grant; written only by the admin callables. An absent document is "nothing on sale".
+        /// </summary>
+        public async Task<(CloudResult result, List<Store.ShopDeal> deals)> ReadDealsAsync(
+            CancellationToken cancellation = default)
+        {
+            var none = new List<Store.ShopDeal>();
+
+            if (!await EnsureReadyAsync())
+                return (CloudResult.Failed(CloudFailure.Offline, "Firebase unavailable"), none);
+
+            try
+            {
+                var snapshot = await CloudCancel.Within(
+                    _db.Collection("config").Document("deals").GetSnapshotAsync(), ReadSeconds, cancellation);
+
+                if (!snapshot.Exists) return (CloudResult.Success, none);
+                return (CloudResult.Success, Store.ShopDeals.Read(snapshot.ToDictionary()));
+            }
+            catch (Exception e)
+            {
+                return (Classify(e, "read deals"), none);
             }
         }
 
@@ -1898,6 +1926,14 @@ namespace GlimmerGrove.Cloud
                     state.CarriesChallengeAds = true;
                     state.ChallengeAdPlays = (int)ReadLong(entry, "challengeAdPlays");
                     state.ChallengeAdDay = (int)ReadLong(entry, "challengeAdDay");
+                }
+
+                // The shop deals bought (invariant 60), presence first for the same reason.
+                if (entry.TryGetValue("dealsBought", out object deals) && deals is IEnumerable<object> dealList)
+                {
+                    state.CarriesDeals = true;
+                    foreach (var id in dealList)
+                        if (id is string s && s.Length > 0) state.DealsBought.Add(s);
                 }
 
                 states.Add(state);

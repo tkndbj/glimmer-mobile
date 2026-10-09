@@ -13,7 +13,7 @@
  */
 
 import { initializeApp } from "firebase-admin/app";
-import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
+import { getFirestore, FieldPath, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { onCall, onRequest, HttpsError, CallableRequest } from "firebase-functions/v2/https";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { defineSecret } from "firebase-functions/params";
@@ -100,6 +100,14 @@ import {
   isWelcomeGrantId, judgeWelcomeClaim, parseWelcomeClaim, usableWelcomeConfig, welcomeCoinedOf,
 } from "./welcome";
 import type { WelcomeClaim } from "./welcome";
+import {
+  DEAL_GRACE_SECONDS, DEAL_HISTORY, DEAL_HISTORY_PAGE, DEAL_MAX_CREDITS, DEAL_MAX_GEMS, DEAL_MAX_LIVE, DEAL_MAX_SECONDS,
+  DEAL_MIN_SECONDS, DEAL_REASON, DEALS_PATH, DEALS_SCHEMA, createDeal, dealGrantId, endDeal,
+  findDeal, isDealAdmin, isDealGrantId, isDealSpendId, judgeDealClaim, judgeDealSpend,
+  isSettled, parseDealClaim, parseDealSpendId, pruneDeals, readDeal, readDealRequest,
+  readHistoryCursor, usableDeals,
+} from "./deals";
+import type { DealClaim, ShopDeal } from "./deals";
 import {
   deriveEarned,
   loadProgressionConfig,
@@ -280,6 +288,7 @@ export const submitSpends = onCall(callOptions, async (request): Promise<{
   });
 
   const confirmed: Record<string, string[]> = {};
+  const confirmedGrants: Record<string, string[]> = {};
   const rejected: string[] = [];
 
   const wallet = await db.runTransaction(async (transaction) => {
@@ -306,6 +315,26 @@ export const submitSpends = onCall(callOptions, async (request): Promise<{
       ? ((await transaction.get(db.doc(PATHS.player(uid)))).data() as Record<string, unknown> | undefined)
       : undefined;
 
+    // A shop deal is priced off the one public document the admin page writes (invariant 60), so
+    // it is read - before any write, with everything else - only when a spend in this call is
+    // one. So is each deal's grant record, which this transaction writes beside the debit and
+    // must therefore know is not already there.
+    const wantsDeals = clean.some((spend) => isDealSpendId(spend.id));
+    const deals: ShopDeal[] = wantsDeals
+      ? usableDeals((await transaction.get(db.doc(DEALS_PATH))).data())
+      : [];
+    const dealGrants = new Map<string, boolean>();
+    for (const spend of clean) {
+      const dealId = parseDealSpendId(spend.id);
+      if (!dealId || dealGrants.has(dealId)) continue;
+      dealGrants.set(dealId, (await transaction.get(db.doc(PATHS.grant(uid, dealGrantId(dealId))))).exists);
+    }
+    const nowUnix = Math.floor(Date.now() / 1000);
+
+    // One charge per id per call. A list carrying the same debit twice was read once above, so
+    // without this the second copy would be charged as new.
+    const seen = new Set<string>();
+
     const balances: Partial<Record<CurrencyId, number>> = {};
     for (const currency of CURRENCIES) {
       balances[currency] = spendableBalance(currency, state, earned);
@@ -316,6 +345,9 @@ export const submitSpends = onCall(callOptions, async (request): Promise<{
       const already = existing[i];
 
       (confirmed[spend.currency] ??= []);
+
+      if (seen.has(spend.id)) continue;
+      seen.add(spend.id);
 
       if (already.exists) {
         // Seen before. The debit is already inside `spent`; confirming it again tells
@@ -335,6 +367,11 @@ export const submitSpends = onCall(callOptions, async (request): Promise<{
           });
           state.keeperBought = charged.ordinal;
         }
+
+        // A deal debit seen before was paid its coins in the same transaction, so the claim
+        // that mirrors it is confirmed too: the client stops counting it on its own.
+        const paidDeal = parseDealSpendId(spend.id);
+        if (paidDeal) (confirmedGrants.credits ??= []).push(dealGrantId(paidDeal));
 
         confirmed[spend.currency].push(spend.id);
         continue;
@@ -479,13 +516,68 @@ export const submitSpends = onCall(callOptions, async (request): Promise<{
         state.keeperBought = keeper.ordinal;
       }
 
+      // A shop deal is the fourth debit this server turns into something (invariant 60), and the
+      // one that turns into currency: refused unless the published document sells the deal, it
+      // is on sale, the currency is gems and the amount is at least the deal's price. The coins
+      // are granted here, in the transaction that takes the gems, under the id the client's own
+      // claim carries - so the purchase and the coins cannot come apart, and `claimAwards` only
+      // ever confirms that claim. Every refusal is permanent; the client drops the debit and the
+      // coins together (47o).
+      const dealId = parseDealSpendId(spend.id);
+
+      if (isDealSpendId(spend.id) && !dealId) {
+        logger.warn("refused a deal debit this server cannot read", { uid, spendId: spend.id });
+        rejected.push(spend.id);
+        continue;
+      }
+
+      let boughtDeal: ShopDeal | null = null;
+
+      if (dealId) {
+        const verdict = judgeDealSpend(findDeal(deals, dealId), spend.currency, spend.amount, nowUnix);
+
+        if (!verdict.ok) {
+          logger.warn("refused a shop deal debit", {
+            uid, spendId: spend.id, reason: verdict.reason, currency: spend.currency, paid: spend.amount,
+          });
+          rejected.push(spend.id);
+          continue;
+        }
+
+        boughtDeal = verdict.deal;
+      }
+
       transaction.set(db.doc(PATHS.spend(uid, spend.id)), {
         currency: spend.currency,
         amount: spend.amount,
         reason: spend.reason,
         clientUnix: spend.unix,
         appliedAt: FieldValue.serverTimestamp(),
+        ...(boughtDeal ? { dealId: boughtDeal.id, dealCredits: boughtDeal.credits } : {}),
       });
+
+      if (boughtDeal) {
+        const grantId = dealGrantId(boughtDeal.id);
+
+        if (!dealGrants.get(boughtDeal.id)) {
+          transaction.set(db.doc(PATHS.grant(uid, grantId)), {
+            currency: "credits",
+            amount: boughtDeal.credits,
+            claimedAmount: boughtDeal.credits,
+            reason: DEAL_REASON,
+            dayKey: todayKey(Date.now()),
+            clientUnix: spend.unix,
+            grantedAt: FieldValue.serverTimestamp(),
+            dealId: boughtDeal.id,
+            gems: spend.amount,
+          });
+          state.credits.granted += boughtDeal.credits;
+          dealGrants.set(boughtDeal.id, true);
+        }
+
+        state.deals = { ...(state.deals ?? {}), [boughtDeal.id]: boughtDeal.endUnix };
+        (confirmedGrants.credits ??= []).push(grantId);
+      }
 
       state[spend.currency].spent += spend.amount;
       balances[spend.currency] = available - spend.amount;
@@ -501,7 +593,7 @@ export const submitSpends = onCall(callOptions, async (request): Promise<{
     return state;
   });
 
-  return { wallets: toReply(wallet, confirmed), rejected };
+  return { wallets: toReply(wallet, confirmed, confirmedGrants), rejected };
 });
 
 // --------------------------------------------------------------- claim awards
@@ -542,7 +634,8 @@ type CleanAward =
   | (CleanCommon & { kind: "challenge"; claim: ChallengeClaim })
   | (CleanCommon & { kind: "endless"; claim: EndlessClaim })
   | (CleanCommon & { kind: "milestone"; claim: MilestoneClaim })
-  | (CleanCommon & { kind: "welcome"; claim: WelcomeClaim });
+  | (CleanCommon & { kind: "welcome"; claim: WelcomeClaim })
+  | (CleanCommon & { kind: "deal"; claim: DealClaim });
 
 export const claimAwards = onCall(callOptions, async (request): Promise<{
   wallets: WalletReply[];
@@ -591,6 +684,17 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
       logger.warn("refused a referral award submitted as a claim", { uid, id });
       rejected.push(id);
       return [];
+    }
+
+    // A shop deal's coins (invariant 60). Paid by `submitSpends` with the debit, never here; the
+    // claim only waits for that record to exist. Unreadable is refused, as for every kind.
+    if (isDealGrantId(id)) {
+      const deal = parseDealClaim(id);
+      if (!deal) { rejected.push(id); return []; }
+
+      if (!CURRENCIES.includes(deal.currency as CurrencyId)) { rejected.push(id); return []; }
+
+      return [{ ...common, kind: "deal", claim: deal, currency: deal.currency as CurrencyId }];
     }
 
     if (isStreakGrantId(id)) {
@@ -768,6 +872,13 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
     const provedLevel = wantsMilestone && saveDoc ? earnedKeeperLevel(saveDoc, config) : 1;
     const coined = wantsWelcome ? welcomeCoinedOf(saveDoc) : null;
 
+    // The published deals, read only when a deal claim in this batch has no grant record yet -
+    // the one case that has to ask whether its debit can still arrive.
+    const wantsDeals = clean.some((award, i) => award.kind === "deal" && !existing[i].exists);
+    const shopDeals: ShopDeal[] = wantsDeals
+      ? usableDeals((await transaction.get(db.doc(DEALS_PATH))).data())
+      : [];
+
     // The pass entitlements the batch needs, gathered here because every read has to happen
     // before the first write. One per season rather than one per claim: a batch of forty
     // rungs on one season is one document, and the entitlement cannot change inside a
@@ -813,6 +924,20 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
       // would be worse than doing nothing — it throws away a reward the player earned.
       // A season claim prices itself out of `config.events` and the tier table together, so
       // it is judged below rather than gated on one table here.
+      // A deal claim is never paid here: its coins were granted with its debit, and a claim with
+      // a grant record was confirmed above. What is left is whether to keep waiting for that
+      // debit - it may be later in this very sync - or to refuse a claim no debit can now pay.
+      if (award.kind === "deal") {
+        const deal = award.claim as DealClaim;
+        const verdict = judgeDealClaim(findDeal(shopDeals, deal.dealId), deal, Math.floor(Date.now() / 1000));
+
+        if (verdict.kind === "refuse") {
+          logger.warn("refused a shop deal claim", { uid, id: award.id, why: verdict.why });
+          rejected.push(award.id);
+        }
+        continue;
+      }
+
       const table = award.kind === "mark" ? tasks
                   : award.kind === "streak" ? ladder
                   : award.kind === "task" ? tasks
@@ -2274,3 +2399,241 @@ export const publishGroveRanks = onSchedule(
     logger.info("grove ranks rebuilt", { ranked, boards });
   }
 );
+
+// ------------------------------------------------------------- shop deals (admin)
+/**
+ * Where the admin page may call from. A callable's CORS answer is the browser's half of the
+ * gate only - the token check in {@link requireDealAdmin} is the whole of the security - but a
+ * page on any other origin has no business reaching these, so it is refused before it starts.
+ */
+const ADMIN_ORIGINS = [/^https:\/\/(www\.)?tekoworld\.com$/, /^http:\/\/localhost:3000$/];
+
+const adminCallOptions = { region: REGION, cors: ADMIN_ORIGINS, enforceAppCheck: false } as const;
+
+/** Audit trail of every deal made or ended, and by whom. Server-only: the rules deny it to every client. */
+const DEAL_LOG = "dealLog";
+
+/** The caller's address, after proving it is one of the owner's (`isDealAdmin`). */
+function requireDealAdmin(request: CallableRequest): string {
+  if (!request.auth) throw new HttpsError("unauthenticated", "sign in with Google first");
+  const token = request.auth.token as unknown as Record<string, unknown>;
+  if (!isDealAdmin(token)) {
+    logger.warn("refused a shop deal admin call", { uid: request.auth.uid, email: token.email ?? null });
+    throw new HttpsError("permission-denied", "this account may not manage shop deals");
+  }
+  return String(token.email).toLowerCase();
+}
+
+interface DealsReply {
+  nowUnix: number;
+  deals: ShopDeal[];
+  limits: {
+    minSeconds: number; maxSeconds: number; maxCredits: number; maxGems: number;
+    maxLive: number; graceSeconds: number;
+  };
+}
+
+function dealsReply(deals: ShopDeal[], nowUnix: number): DealsReply {
+  return {
+    nowUnix,
+    deals,
+    limits: {
+      minSeconds: DEAL_MIN_SECONDS, maxSeconds: DEAL_MAX_SECONDS,
+      maxCredits: DEAL_MAX_CREDITS, maxGems: DEAL_MAX_GEMS,
+      maxLive: DEAL_MAX_LIVE, graceSeconds: DEAL_GRACE_SECONDS,
+    },
+  };
+}
+
+/**
+ * How many accounts bought a deal: the spend records naming it, counted by the index rather than
+ * read (`count()` bills one read per thousand entries). One account can hold one record per deal
+ * (the spend id is derived from it), so records are buyers.
+ *
+ * <p>
+ * <b>Why counted here rather than tallied at purchase.</b> A counter raised inside `submitSpends`
+ * would put every buyer of a popular deal on one document, which Firestore sustains at about one
+ * write a second - so the cost of a busy deal would be player purchases failing on contention.
+ * Counting at read costs the admin page a read per thousand buyers and the purchase path nothing.
+ * The index it reads is the one `firestore.indexes.json` keeps on `spendLog.dealId`, and only deal
+ * debits carry that field, so no other spend pays for it.
+ * </p>
+ */
+async function buyersOf(dealId: string): Promise<number> {
+  const counted = await getFirestore().collectionGroup("spendLog").where("dealId", "==", dealId).count().get();
+  return counted.data().count;
+}
+
+/** A deal as the admin page draws it: the deal, how many bought it, and whether that number is final. */
+interface DealRow extends ShopDeal {
+  buyers: number;
+  settled: boolean;
+}
+
+/**
+ * Buyer counts for a page of deals. A settled deal's count is read from its history document when
+ * one was written there, and written there the first time it is counted, so a deal is counted at
+ * most once after it closes; an open one is counted every time it is shown.
+ */
+async function withBuyers(
+  deals: ShopDeal[], stored: Map<string, number>, nowUnix: number
+): Promise<DealRow[]> {
+  const db = getFirestore();
+  const rows = await Promise.all(deals.map(async (deal): Promise<DealRow> => {
+    const settled = isSettled(deal, nowUnix);
+    const known = stored.get(deal.id);
+    if (settled && known !== undefined) return { ...deal, buyers: known, settled };
+
+    const buyers = await buyersOf(deal.id);
+    if (settled) {
+      // Merged rather than set: a deal made before the history existed gets a document here, and
+      // one that has one keeps everything else on it.
+      await db.collection(DEAL_HISTORY).doc(deal.id).set({
+        ...deal, buyers, buyersFinal: true, buyersCountedAt: FieldValue.serverTimestamp(),
+      }, { merge: true });
+    }
+    return { ...deal, buyers, settled };
+  }));
+  return rows;
+}
+
+/** Every deal the public document lists, newest last, with how many bought each and the server's clock. */
+export const adminListDeals = onCall(adminCallOptions, async (request): Promise<DealsReply & { rows: DealRow[] }> => {
+  requireDealAdmin(request);
+  const nowUnix = Math.floor(Date.now() / 1000);
+  const snapshot = await getFirestore().doc(DEALS_PATH).get();
+  const deals = pruneDeals(usableDeals(snapshot.data()), nowUnix);
+  const live = deals.filter((deal) => deal.endUnix + DEAL_GRACE_SECONDS > nowUnix);
+
+  // Every published deal has a history document, or the history would lose it once the public
+  // document forgets it. `adminCreateDeal` writes one with each deal; this repairs any made before
+  // the history existed, or by hand. One batched get of at most `DEAL_MAX_LISTED` documents, on a
+  // page only the owner opens.
+  if (deals.length > 0) {
+    const db = getFirestore();
+    const refs = deals.map((deal) => db.collection(DEAL_HISTORY).doc(deal.id));
+    const held = await db.getAll(...refs);
+    const missing = deals.filter((_, i) => !held[i].exists);
+    if (missing.length > 0) {
+      const batch = db.batch();
+      for (const deal of missing) {
+        batch.set(db.collection(DEAL_HISTORY).doc(deal.id), { ...deal, backfilledAt: FieldValue.serverTimestamp() }, { merge: true });
+      }
+      await batch.commit();
+      logger.info("shop deal history backfilled", { deals: missing.map((deal) => deal.id) });
+    }
+  }
+  return { ...dealsReply(deals, nowUnix), rows: await withBuyers(live, new Map(), nowUnix) };
+});
+
+/**
+ * One page of every deal that has ended, newest end first: `{ after?: { endUnix, id } }` answers
+ * up to {@link DEAL_HISTORY_PAGE} rows with buyer counts and the cursor of the next page, or null.
+ *
+ * One range query on `endUnix` with the document id as the tie-break, served by the automatic
+ * single-field index, reading the page plus one document to know whether another follows. A page
+ * of settled deals costs those reads alone, because their counts are stored.
+ */
+export const adminDealHistory = onCall(adminCallOptions, async (request): Promise<{
+  nowUnix: number; rows: DealRow[]; next: { endUnix: number; id: string } | null;
+}> => {
+  requireDealAdmin(request);
+  const nowUnix = Math.floor(Date.now() / 1000);
+  const after = readHistoryCursor(request.data?.after);
+
+  let query = getFirestore().collection(DEAL_HISTORY)
+    .where("endUnix", "<=", nowUnix)
+    .orderBy("endUnix", "desc")
+    .orderBy(FieldPath.documentId(), "desc")
+    .limit(DEAL_HISTORY_PAGE + 1);
+  if (after) query = query.startAfter(after.endUnix, after.id);
+
+  const snapshot = await query.get();
+  const docs = snapshot.docs.slice(0, DEAL_HISTORY_PAGE);
+
+  const deals: ShopDeal[] = [];
+  const stored = new Map<string, number>();
+  for (const doc of docs) {
+    const data = doc.data();
+    const deal = readDeal(data);
+    if (!deal) continue;
+    deals.push(deal);
+    if (data.buyersFinal === true && typeof data.buyers === "number") stored.set(deal.id, data.buyers);
+  }
+
+  const last = docs[docs.length - 1];
+  const next = snapshot.docs.length > DEAL_HISTORY_PAGE && last
+    ? { endUnix: Number(last.get("endUnix")), id: last.id }
+    : null;
+
+  return { nowUnix, rows: await withBuyers(deals, stored, nowUnix), next };
+});
+
+/**
+ * Makes a deal that opens now: `{ credits, gems, durationSeconds }`. Refused while another deal
+ * is on sale (`DEAL_MAX_LIVE`). Written in a transaction so two tabs cannot both make one.
+ */
+export const adminCreateDeal = onCall(adminCallOptions, async (request): Promise<DealsReply & { deal: ShopDeal }> => {
+  const email = requireDealAdmin(request);
+
+  const parsed = readDealRequest(request.data);
+  if (!parsed.ok) throw new HttpsError("invalid-argument", parsed.why);
+
+  const db = getFirestore();
+  const nowUnix = Math.floor(Date.now() / 1000);
+
+  const made = await db.runTransaction(async (transaction) => {
+    const ref = db.doc(DEALS_PATH);
+    const current = usableDeals((await transaction.get(ref)).data());
+
+    const result = createDeal(current, parsed.request, nowUnix);
+    if (!result.ok) throw new HttpsError("failed-precondition", result.why);
+
+    transaction.set(ref, { schema: DEALS_SCHEMA, deals: result.deals, updatedAt: FieldValue.serverTimestamp() });
+    transaction.set(db.collection(DEAL_LOG).doc(), {
+      action: "create", by: email, uid: request.auth!.uid, deal: result.deal,
+      at: FieldValue.serverTimestamp(),
+    });
+    // The permanent record the history pages through; the public document forgets a deal after
+    // thirty days, this never does.
+    transaction.set(db.collection(DEAL_HISTORY).doc(result.deal.id), {
+      ...result.deal, createdBy: email, createdAt: FieldValue.serverTimestamp(),
+    });
+    return result;
+  });
+
+  logger.info("a shop deal was made", { by: email, deal: made.deal });
+  return { ...dealsReply(made.deals, nowUnix), deal: made.deal };
+});
+
+/** Ends a live deal now: `{ id }`. Only the end moves; anybody who bought it keeps it. */
+export const adminEndDeal = onCall(adminCallOptions, async (request): Promise<DealsReply & { deal: ShopDeal }> => {
+  const email = requireDealAdmin(request);
+
+  const id = typeof request.data?.id === "string" ? request.data.id : "";
+  if (!id) throw new HttpsError("invalid-argument", "name the deal to end");
+
+  const db = getFirestore();
+  const nowUnix = Math.floor(Date.now() / 1000);
+
+  const ended = await db.runTransaction(async (transaction) => {
+    const ref = db.doc(DEALS_PATH);
+    const current = usableDeals((await transaction.get(ref)).data());
+
+    const result = endDeal(current, id, nowUnix);
+    if (!result.ok) throw new HttpsError("failed-precondition", result.why);
+
+    transaction.set(ref, { schema: DEALS_SCHEMA, deals: result.deals, updatedAt: FieldValue.serverTimestamp() });
+    transaction.set(db.collection(DEAL_LOG).doc(), {
+      action: "end", by: email, uid: request.auth!.uid, deal: result.deal,
+      at: FieldValue.serverTimestamp(),
+    });
+    transaction.set(db.collection(DEAL_HISTORY).doc(result.deal.id), {
+      ...result.deal, endedBy: email, endedAt: FieldValue.serverTimestamp(),
+    }, { merge: true });
+    return result;
+  });
+
+  logger.info("a shop deal was ended", { by: email, deal: ended.deal });
+  return { ...dealsReply(ended.deals, nowUnix), deal: ended.deal };
+});

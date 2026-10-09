@@ -195,6 +195,31 @@ namespace GlimmerGrove.Persistence
         /// <summary>What a support reader sees against a keeper level debit.</summary>
         public const string KeeperLevelReason = "keeper_level";
 
+        /// <summary>
+        /// A shop deal's debit: <c>deal:{dealId}</c> (invariant 60).
+        ///
+        /// <para>
+        /// Derived for <em>both</em> of the pass's reasons. The server has to recognise it:
+        /// <c>submitSpends</c> prices it against the published deal (<c>config/deals</c>) and pays
+        /// the coins in the same transaction that takes the gems, under
+        /// <see cref="GrantEntry.ShopDealId"/>. And a deal is sold once per account, so two devices
+        /// buying it offline write byte-identical entries, the union keeps one, and the player is
+        /// charged once (48e). Parsed back by <c>parseDealSpendId</c>; the format is a wire contract.
+        /// </para>
+        /// </summary>
+        public static string ShopDealId(string dealId) => "deal:" + dealId;
+
+        /// <summary>The deal a debit names, or null for any other id. The inverse of <see cref="ShopDealId"/>.</summary>
+        public static string DealOfShopDealId(string id)
+        {
+            if (string.IsNullOrEmpty(id) || !id.StartsWith("deal:", StringComparison.Ordinal)) return null;
+            string dealId = id.Substring(5);
+            return Store.ShopDeals.IsId(dealId) ? dealId : null;
+        }
+
+        /// <summary>What a support reader sees against a deal debit, and against its coins.</summary>
+        public const string ShopDealReason = "shop_deal";
+
         public SpendEntryDto ToDto()
             => new SpendEntryDto { id = Id, amount = Amount, unix = Unix, reason = Reason };
 
@@ -413,6 +438,14 @@ namespace GlimmerGrove.Persistence
         /// <summary>What every challenge grant records as its cause.</summary>
         public const string ChallengeClearReason = "challenge_clear";
 
+        /// <summary>
+        /// A shop deal's coins: <c>deal:{dealId}:credits</c> (invariant 60). Queued beside the
+        /// debit <see cref="SpendEntry.ShopDealId"/> so the coins are spendable at once; the server
+        /// pays them <em>with the debit</em> and only ever confirms this claim (<c>deals.ts</c>).
+        /// The format is a wire contract.
+        /// </summary>
+        public static string ShopDealId(string dealId) => "deal:" + dealId + ":" + Currency.Credits;
+
         public GrantEntryDto ToDto()
             => new GrantEntryDto { id = Id, amount = Amount, unix = Unix, reason = Reason };
 
@@ -620,6 +653,28 @@ namespace GlimmerGrove.Persistence
             entry = new GrantEntry(id, amount, unix, reason);
             _pendingGrants.Add(entry);
             return true;
+        }
+
+        /// <summary>
+        /// Takes back an award that has not been confirmed, and the balance it was counting.
+        ///
+        /// <para>
+        /// For one case: an award queued beside a debit that paid for it, whose debit the server
+        /// has just refused (a shop deal, invariant 60). The gems come back by the refusal; the
+        /// coins they bought must go with them, and waiting for the server to refuse the claim
+        /// too would show coins nobody paid for until the deal closed. Returns false when no such
+        /// award is pending - already confirmed, or never queued.
+        /// </para>
+        /// </summary>
+        public bool WithdrawGrant(string id)
+        {
+            for (int i = 0; i < _pendingGrants.Count; i++)
+            {
+                if (!string.Equals(_pendingGrants[i].Id, id, StringComparison.Ordinal)) continue;
+                _pendingGrants.RemoveAt(i);
+                return true;
+            }
+            return false;
         }
 
         public bool HasGranted(string id)

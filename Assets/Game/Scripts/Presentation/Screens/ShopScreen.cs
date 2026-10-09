@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using GlimmerGrove.Ads;
 using GlimmerGrove.Analytics;
 using GlimmerGrove.Cloud;
+using GlimmerGrove.Daily;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
@@ -176,12 +177,35 @@ namespace GlimmerGrove
         static float ReferRow => ReferralLedger.IsAvailable ? ReferGap + ReferH + ReferGap : 0f;
 
         /// <summary>
-        /// The top of everything under the chrome: the header, the tabs, and the invite band if
-        /// there is one. <b>Written once</b>, because the summary line, the guest notice, the
-        /// grid and the empty plate all hang off it and four copies of a sum is four places for
-        /// a band to be forgotten.
+        /// The deal band's slot (invariant 60): the invite band's height, so the two keys stack as a
+        /// pair and the coffer rises out of its key as the hoard does out of the invite's. Cut to
+        /// 168 the coffer stood inside the key at half the hoard's size and read as an icon.
         /// </summary>
-        static float ShelfTop => HeaderHeight + TabRow + ReferRow;
+        const float DealH = ReferH;
+
+        /// <summary>
+        /// The air above the deal band: the invite band's trailing gap when there is one, its own
+        /// when there is not, so the band never touches the tabs.
+        /// </summary>
+        static float DealLead => ReferralLedger.IsAvailable ? 0f : ReferGap;
+
+        /// <summary>The deal band's whole row, or nought while no deal is offered.</summary>
+        float DealRow => _deal != null ? DealLead + DealH + ReferGap : 0f;
+
+        /// <summary>
+        /// Where the deal band's slot is centred. Not conditional on a deal being shown, so the
+        /// coins a purchase pays can still leave from where the band stood after it has gone.
+        /// </summary>
+        static float DealCentreY => -(HeaderHeight + TabRow + ReferRow + DealLead + DealH * .5f);
+
+        /// <summary>
+        /// The top of everything under the chrome: the header, the tabs, the invite band and the
+        /// deal band, each if there is one. <b>Written once</b>, because the summary line, the
+        /// guest notice, the grid and the empty plate all hang off it and four copies of a sum is
+        /// four places for a band to be forgotten. An instance property since the deal band came
+        /// and went on its own clock.
+        /// </summary>
+        float ShelfTop => HeaderHeight + TabRow + ReferRow + DealRow;
 
         RectTransform _viewport, _tabs;
         GridView _grid;
@@ -189,6 +213,12 @@ namespace GlimmerGrove
 
         /// <summary>The count on the invite band's corner. Null while the band is not drawn.</summary>
         WaitingBadge _inviteBadge;
+
+        /// <summary>The deal the band is showing, or null (<see cref="DealLedger.Offered"/>).</summary>
+        ShopDeal _deal;
+
+        /// <summary>The deal band itself - halo and frame. Null while no deal is offered.</summary>
+        RectTransform _dealBand;
 
         /// <summary>
         /// The centred sentence an empty shelf carries. Built once and left blank, because a
@@ -288,6 +318,10 @@ namespace GlimmerGrove
             // </para>
             Scenery.Plain(Content);
 
+            // Decided before the grid, because whether a deal band stands under the invite band
+            // decides where the shelf starts (`ShelfTop`).
+            _deal = DealLedger.Offered;
+
             BuildGrid();
             BuildHeader();
             NavBar.Build(Content, NavBar.Tab.Shop);
@@ -339,10 +373,17 @@ namespace GlimmerGrove
             // people's play (invariant 51), which no local event announces. `BuildInvite`
             // attaches the watch that asks; this is where its answers land.
             ReferralLedger.Changed += PaintInvite;
+
+            // A deal made on the admin page, bought here or on another phone, or ended: the band
+            // comes or goes and the shelf moves with it (invariant 60). Its own clock says when it
+            // runs out, which no event announces (`DealClock`).
+            DealLedger.Changed += OnDealsChanged;
+            DealLedger.Refresh();
         }
 
         void OnDestroy()
         {
+            DealLedger.Changed -= OnDealsChanged;
             ReferralLedger.Changed -= PaintInvite;
             StoreService.Changed -= OnStoreChanged;
             StoreService.Granted -= OnGranted;
@@ -515,7 +556,187 @@ namespace GlimmerGrove
             BuildBalances();
             BuildTabs();
             BuildInvite();
+            BuildDeal();
             BuildNotice();
+        }
+
+        /// <summary>
+        /// The limited-time deal (invariant 60), directly under the invite band, built to be the
+        /// loudest thing on the page while it runs (the owner, 2026-10-09): a gold-rimmed navy window
+        /// (<c>Skins.PlateGold</c> round <c>Skins.Card</c>, the kit's own pieces) under a breathing
+        /// gold halo; the coin coffer on a turning gold burst at its left, rising out of the frame;
+        /// the amount beside it in full; a red DEAL tag on the top edge; and on the right ENDS IN over
+        /// a timer that ticks to the second and turns red and pulses in the last hour
+        /// (<see cref="DealClock"/>). The whole frame is the tap; it opens the panel that says the
+        /// price, and nothing is ever charged from here.
+        /// <para>
+        /// Mirrored by <c>render_shop.py --deal</c>, whose constants these are.
+        /// </para>
+        /// </summary>
+        void BuildDeal()
+        {
+            _dealBand = null;
+            var deal = _deal;
+            if (deal == null) return;
+
+            // A holder for the halo and the frame, so the halo can stand behind the frame and the
+            // two come and go as one.
+            var band = UIKit.Box("Deal", Safe, new Vector2(ReferW, DealFrameH), new Vector2(.5f, 1f),
+                                 new Vector2(0f, DealCentreY - (DealH - DealFrameH) * .5f));
+
+            var halo = UIKit.Img("Halo", band, Art.Glow(128, 2.1f), Pal.A(Pal.Gold, .30f),
+                                 new Vector2(ReferW * 1.12f, DealFrameH * 1.9f), new Vector2(.5f, .5f), Vector2.zero);
+            Tween.Breathe(halo.transform, .05f, 1.6f);
+
+            var frame = UIKit.Button("Frame", band, Art.S("Ui/" + Skins.PlateGold), new Vector2(ReferW, DealFrameH),
+                                     new Vector2(.5f, .5f), Vector2.zero, () => TapDeal(deal));
+            frame.PressScale = .985f;
+
+            UIKit.Img("Window", frame.transform, Art.S("Ui/" + Skins.Card), Color.white,
+                      new Vector2(ReferW - 2f * DealRim, DealFrameH - 2f * DealRim), new Vector2(.5f, .5f), Vector2.zero);
+
+            // The coffer stands on the frame's foot and rises out of its top; the burst turns behind it.
+            var artAt = new Vector2(DealArtX, -DealFrameH * .5f + 8f + DealArtSize * .5f);
+            // Over the window rather than `UIKit.Halo`, which sends itself behind every sibling.
+            UIKit.Img("Glow", frame.transform, Art.Glow(128, 2.1f), Pal.A(Pal.Sun, .55f),
+                      new Vector2(DealBurst * 1.3f, DealBurst * 1.3f), new Vector2(0f, .5f), artAt);
+            var rays = UIKit.Img("Rays", frame.transform, Art.S("Ui/" + Skins.Badge), Pal.A(Pal.Gold, DealBurstAlpha),
+                                 new Vector2(DealBurst, DealBurst), new Vector2(0f, .5f), artAt);
+            var art = UIKit.Img("Art", frame.transform, Art.S("Ui/" + DealArt), Color.white,
+                                new Vector2(DealArtSize, DealArtSize), new Vector2(0f, .5f), artAt);
+            art.preserveAspect = true;
+            art.enabled = art.sprite != null;
+
+            // The amount, in full: every digit is the point.
+            UIKit.Shrinkable(
+                UIKit.Titled("Amount", frame.transform, deal.Credits.ToString("N0"), 70, Pal.Sun,
+                             TextAnchor.MiddleLeft, new Vector2(400f, 84f), new Vector2(0f, .5f),
+                             new Vector2(DealAmountX + 200f, 2f), 4f, 3f), 40);
+            UIKit.Shrinkable(
+                UIKit.Titled("Unit", frame.transform, Loc.Get("ui.endless.coins").Upper(), 30, Pal.Cream,
+                             TextAnchor.MiddleLeft, new Vector2(300f, 40f), new Vector2(0f, .5f),
+                             new Vector2(DealAmountX + 150f, -52f), 3f, 2f), 20);
+
+            // The time left, to the second.
+            UIKit.Shrinkable(
+                UIKit.Titled("Ends", frame.transform, Loc.Get("ui.deal.ends_label").Upper(), 30, Pal.Cream,
+                             TextAnchor.MiddleCenter, new Vector2(DealTimerW, 40f), new Vector2(1f, .5f),
+                             new Vector2(-DealTimerX, 40f), 3f, 2f), 20);
+            UIKit.Img("Trough", frame.transform, Art.S("Ui/" + Skins.Trough), Color.white,
+                      new Vector2(DealTimerW, DealTimerH), new Vector2(1f, .5f), new Vector2(-DealTimerX, -20f));
+            var timer = UIKit.Shrinkable(
+                UIKit.Titled("Timer", frame.transform, DealClock.Timer(deal.SecondsLeft(GameClock.NowUnix())), 46,
+                             Color.white, TextAnchor.MiddleCenter, new Vector2(DealTimerW - 30f, DealTimerH),
+                             new Vector2(1f, .5f), new Vector2(-DealTimerX, -20f), 3f, 2f), 28);
+
+            // The tag, hanging on the top edge over the amount; built last so it draws over the rim.
+            var tag = UIKit.Img("Tag", frame.transform, Art.S("Ui/ribbon_red"), Color.white,
+                                new Vector2(128f, 106f), new Vector2(0f, 1f), new Vector2(DealTagX, 14f));
+            tag.preserveAspect = true;
+            tag.transform.localRotation = Quaternion.Euler(0f, 0f, -4f);
+            UIKit.Shrinkable(
+                UIKit.Titled("Word", tag.transform, Loc.Get("ui.deal.door").Upper(), 30, Pal.Cream,
+                             TextAnchor.MiddleCenter, new Vector2(112f, 44f), new Vector2(.5f, .5f),
+                             new Vector2(-2f, 4f), 3f, 2f), 18);
+
+            Sheen.Attach((RectTransform)frame.transform, 3.1f);
+            DealClock.Attach(band.gameObject, timer, (RectTransform)rays.transform, deal, OnDealsChanged);
+
+            band.localScale = Vector3.zero;
+            Tween.Pop(band, 0f, .55f, .24f);
+            _dealBand = band;
+        }
+
+        /// <summary>The coin coffer: the 26,000-coin card's picture (`ShopArt`'s third coin rung).</summary>
+        const string DealArt = "Shop/coins_3";
+
+        /// <summary>The frame inside its slot, and its gold rim round the navy window.</summary>
+        const float DealFrameH = 176f, DealRim = 10f;
+
+        /// <summary>The coffer's size and where its centre stands from the frame's left.</summary>
+        const float DealArtSize = 196f, DealArtX = 132f;
+
+        /// <summary>The burst behind it, and how strongly it is drawn.</summary>
+        const float DealBurst = 236f, DealBurstAlpha = .55f;
+
+        /// <summary>Where the amount starts, and the tag's centre, from the frame's left.</summary>
+        const float DealAmountX = 258f, DealTagX = 330f;
+
+        /// <summary>The timer's trough, and its centre from the frame's right.</summary>
+        const float DealTimerW = 344f, DealTimerH = 82f, DealTimerX = 196f;
+
+        /// <summary>
+        /// The deal on offer changed, or the one shown ran out. Rebuilds the band only - the one
+        /// part whose shape moved (44mb) - and moves everything hung off <see cref="ShelfTop"/>.
+        /// </summary>
+        void OnDealsChanged()
+        {
+            if (!this || _grid == null) return;
+
+            var next = DealLedger.Offered;
+            if (_dealBand && next != null && next.SameAs(_deal)) return;
+
+            if (_dealBand)
+            {
+                // Hidden before it is destroyed: `Destroy` lands at the end of the frame, and a
+                // band left drawn for that frame sits over the shelf that has just moved up.
+                _dealBand.gameObject.SetActive(false);
+                Destroy(_dealBand.gameObject);
+                _dealBand = null;
+            }
+
+            _deal = next;
+            BuildDeal();
+            Relayout();
+        }
+
+        /// <summary>
+        /// Moves everything measured from <see cref="ShelfTop"/> after a band came or went: the
+        /// store's line, the guest bar, the empty plate and the grid's window.
+        /// </summary>
+        void Relayout()
+        {
+            PaintNews();
+            if (PaintNotice()) _grid.Show(ShelfRows(), animate: false);
+        }
+
+        /// <summary>
+        /// Opens the deal's panel - a modal over the shop, this screen's rule for anything that
+        /// answers "I want more of this", and the gem shelf's confirmation rule (a gem purchase has
+        /// no store sheet, so the panel is the only thing between a thumb and the price).
+        /// </summary>
+        void TapDeal(ShopDeal deal)
+        {
+            Flow.Modal<DealOverlay>(v =>
+            {
+                v.Deal = deal;
+                v.ShortOfGems = () => { if (this) Show(StoreShelf.Gems); };
+                v.Bought = PlayDealCoins;
+            });
+        }
+
+        /// <summary>
+        /// The coins a deal paid, flying from where its band stood into the coin pill.
+        /// <see cref="RewardFlight.AfterGrant"/>, because the coins are already in the wallet
+        /// (the ledger queued them with the debit), and credits are one of the two things nothing
+        /// clamps, so the rewind is exact.
+        /// </summary>
+        void PlayDealCoins(ShopDeal deal)
+        {
+            if (!this || deal == null) return;
+
+            var flight = RewardFlight.AfterGrant(deal.Credits, 0L);
+            flight.Hold(this);
+
+            var source = UIKit.Node("DealCoins", Safe);
+            source.anchorMin = source.anchorMax = new Vector2(.5f, 1f);
+            source.sizeDelta = new Vector2(DealArtSize, DealArtSize);
+            source.anchoredPosition = new Vector2(-ReferW * .5f + DealArtX, DealCentreY);
+
+            flight.Add(new ChestDrop(ChestDropKind.Credits, (int)Math.Min(deal.Credits, int.MaxValue)), source);
+            Scenery.Toast(Content, Loc.Format("ui.deal.bought", Compact.Number(deal.Credits)), Pal.Gold, 2.4f);
+
+            flight.Play(Content, () => { if (source) Destroy(source.gameObject); });
         }
 
         /// <summary>
@@ -702,6 +923,10 @@ namespace GlimmerGrove
             // always been for.
             if (_emptyPlate)
                 _emptyPlate.rectTransform.anchoredPosition = new Vector2(0f, EmptyY(top));
+
+            // The store's line rides on the bands too, for the guest bar's reason one paragraph up.
+            if (_summary)
+                _summary.rectTransform.anchoredPosition = new Vector2(0f, -(ShelfTop + SummaryGap + SummaryH * .5f));
 
             if (Mathf.Approximately(_viewport.offsetMax.y, top)) return false;
 

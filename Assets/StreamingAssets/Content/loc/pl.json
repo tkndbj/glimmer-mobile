@@ -2810,6 +2810,38 @@
       "text": "Łamigłówka rozwiązana!"
     },
     {
+      "key": "ui.deal.bought",
+      "text": "Oferta kupiona! Monety: +{0}"
+    },
+    {
+      "key": "ui.deal.door",
+      "text": "Oferta"
+    },
+    {
+      "key": "ui.deal.ended",
+      "text": "Ta oferta już się skończyła."
+    },
+    {
+      "key": "ui.deal.ends_label",
+      "text": "Koniec za"
+    },
+    {
+      "key": "ui.deal.needs_connection",
+      "text": "Połącz się z internetem, aby kupić tę ofertę."
+    },
+    {
+      "key": "ui.deal.note",
+      "text": "Jedna na gracza, tylko póki trwa odliczanie."
+    },
+    {
+      "key": "ui.deal.owned",
+      "text": "Masz już tę ofertę."
+    },
+    {
+      "key": "ui.deal.title",
+      "text": "Oferta limitowana"
+    },
+    {
       "key": "ui.endless.xp",
       "text": "XP"
     },

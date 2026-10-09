@@ -2810,6 +2810,38 @@
       "text": "Rompicapo risolto!"
     },
     {
+      "key": "ui.deal.bought",
+      "text": "Offerta acquistata! +{0} monete"
+    },
+    {
+      "key": "ui.deal.door",
+      "text": "Offerta"
+    },
+    {
+      "key": "ui.deal.ended",
+      "text": "Questa offerta è terminata."
+    },
+    {
+      "key": "ui.deal.ends_label",
+      "text": "Termina tra"
+    },
+    {
+      "key": "ui.deal.needs_connection",
+      "text": "Connettiti a Internet per acquistare questa offerta."
+    },
+    {
+      "key": "ui.deal.note",
+      "text": "Una per giocatore, solo finché scorre il tempo."
+    },
+    {
+      "key": "ui.deal.owned",
+      "text": "Hai già questa offerta."
+    },
+    {
+      "key": "ui.deal.title",
+      "text": "Offerta limitata"
+    },
+    {
       "key": "ui.endless.xp",
       "text": "XP"
     },

@@ -2810,6 +2810,38 @@
       "text": "¡Puzle resuelto!"
     },
     {
+      "key": "ui.deal.bought",
+      "text": "¡Oferta comprada! +{0} monedas"
+    },
+    {
+      "key": "ui.deal.door",
+      "text": "Oferta"
+    },
+    {
+      "key": "ui.deal.ended",
+      "text": "Esta oferta ha terminado."
+    },
+    {
+      "key": "ui.deal.ends_label",
+      "text": "Termina en"
+    },
+    {
+      "key": "ui.deal.needs_connection",
+      "text": "Conéctate a internet para comprar esta oferta."
+    },
+    {
+      "key": "ui.deal.note",
+      "text": "Una por jugador, solo mientras corre el reloj."
+    },
+    {
+      "key": "ui.deal.owned",
+      "text": "Ya tienes esta oferta."
+    },
+    {
+      "key": "ui.deal.title",
+      "text": "Oferta limitada"
+    },
+    {
       "key": "ui.endless.xp",
       "text": "XP"
     },

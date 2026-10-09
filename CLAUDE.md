@@ -531,6 +531,26 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
 56s. **A genre is taught by one looping preview** (`ChallengePreviewOverlay`, `ChallengeDemos`), gated on the
    genre's verb lesson; the event lessons are spent.
 
+### Shop deals
+
+60. **A shop deal is coins sold for gems for a window, once per account, made on the admin page**
+   (`tekoworld.com/admin/shop`; `adminCreateDeal`/`adminEndDeal`, only the owner's three Google
+   addresses, verified, `google.com` provider). It lives in one public document, `config/deals`,
+   read by the game with a single get at most every 15 minutes, never a listener. One live at a
+   time; immutable once made, only its end moves.
+60a. **The gems and the coins move in one transaction.** The debit is `deal:{dealId}`, the coins a
+   claim `deal:{dealId}:credits` queued beside it; `submitSpends` prices the debit off the document
+   and writes the coins' grant record with it, `claimAwards` never pays one (waits while the deal
+   takes debits, refuses after). A refused debit takes the coins back (`DealLedger.OnSpendRejected`).
+   The wallet's `deals` map is the entitlement (`dealsBought` on every reply); nothing is in the
+   save, and nothing is offered until a reply has said what the account owns. Held by
+   `deals.mjs`, `ShopDealTests` and the live `shop-deal.mjs`.
+60b. **History is `dealHistory/{dealId}` (server-only, written with each create and end); buyers are
+   counted, never tallied.** A counter in `submitSpends` would make a popular deal one hot document
+   and fail purchases on contention, so `adminDealHistory` pages twenty by `endUnix` and counts
+   `spendLog` by `dealId` with `count()` (the one indexed field of the exempt `spendLog`, collection
+   group); a settled count is stored and never recounted. `adminListDeals` backfills a missing record.
+
 ### Art credits
 
 46. **An art credit lives on the publisher's site, nowhere in the app.** No shipped vendor compels one.
@@ -661,7 +681,7 @@ gate for a caption too wide; `--storm`, `--unleash`, `--stilled`, `--heaved`, `-
 Charms have no offline gate (`SiegeCharmTests` and renders).
 
 **Renders** (the gate for anything judged by eye; share `Tools/hudkit.py`): `render_home`, `render_shop`
-(`--measure` holds `ProductCardBadges` to the sprite), `render_tasks`, `render_season`, `render_streak`,
+(`--measure` holds `ProductCardBadges` to the sprite; `--deal` draws a live shop deal), `render_tasks`, `render_season`, `render_streak`,
 `render_keeper`, `render_keeper_ladder`, `render_endless`, `render_loadout`, `render_boards` (`--row`),
 `render_ranks` (`--contact`), `render_rank_ceremony` (`--contact`, `--sky`), `render_referral`,
 `render_checkpoints`, `render_welcome` (`--done`, `--choice`), `render_home --welcome`. Rank/kit art: `make_rank_art.py`, `make_rank_kit_art.py`, `make_keeper_art.py`.
@@ -670,7 +690,7 @@ Charms have no offline gate (`SiegeCharmTests` and renders).
 **Server**: `node firebase/seed/seed-release.mjs --check`; `npm --prefix firebase/functions run seed -- --check`;
 `Tools/make_name_blocklist.py --check`. Live e2e (differential on purpose — a stale function answers 200 with
 a valid but wrong document): `smoke-test.mjs`, `delete-account.mjs`, `endless-xp.mjs`, `rank-badge.mjs`,
-`ward-seats.mjs`, `keeper-spend.mjs`.
+`ward-seats.mjs`, `keeper-spend.mjs`, `shop-deal.mjs` (refuses to run while a real deal is on sale).
 
 **In the Editor:** `Glimmer Grove ▸ Validate Content`, `▸ Validate Art`, Test Runner (EditMode). Reload the
 domain before believing a failure after a play-mode session.

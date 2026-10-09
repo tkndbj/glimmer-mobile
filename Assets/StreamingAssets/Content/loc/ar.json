@@ -2810,6 +2810,38 @@
       "text": "تم حل اللغز!"
     },
     {
+      "key": "ui.deal.bought",
+      "text": "تم شراء العرض! العملات: +{0}"
+    },
+    {
+      "key": "ui.deal.door",
+      "text": "عرض"
+    },
+    {
+      "key": "ui.deal.ended",
+      "text": "انتهى هذا العرض."
+    },
+    {
+      "key": "ui.deal.ends_label",
+      "text": "ينتهي بعد"
+    },
+    {
+      "key": "ui.deal.needs_connection",
+      "text": "اتصل بالإنترنت لشراء هذا العرض."
+    },
+    {
+      "key": "ui.deal.note",
+      "text": "مرة واحدة لكل لاعب، فقط قبل انتهاء الوقت."
+    },
+    {
+      "key": "ui.deal.owned",
+      "text": "لديك هذا العرض بالفعل."
+    },
+    {
+      "key": "ui.deal.title",
+      "text": "عرض محدود"
+    },
+    {
       "key": "ui.endless.xp",
       "text": "الخبرة"
     },

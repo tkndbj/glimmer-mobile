@@ -2810,6 +2810,38 @@
       "text": "Puzzle solved!"
     },
     {
+      "key": "ui.deal.bought",
+      "text": "Deal bought! +{0} coins"
+    },
+    {
+      "key": "ui.deal.door",
+      "text": "Deal"
+    },
+    {
+      "key": "ui.deal.ended",
+      "text": "This deal has ended."
+    },
+    {
+      "key": "ui.deal.ends_label",
+      "text": "Ends in"
+    },
+    {
+      "key": "ui.deal.needs_connection",
+      "text": "Connect to the internet to buy this deal."
+    },
+    {
+      "key": "ui.deal.note",
+      "text": "One per player, only while the clock runs."
+    },
+    {
+      "key": "ui.deal.owned",
+      "text": "You already have this deal."
+    },
+    {
+      "key": "ui.deal.title",
+      "text": "Limited Deal"
+    },
+    {
       "key": "ui.endless.xp",
       "text": "XP"
     },

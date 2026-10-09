@@ -1446,6 +1446,10 @@ namespace GlimmerGrove.Cloud
                 // callbacks land, and the device offers exactly that many.
                 Challenges.ChallengeAdPlays.ApplyServerState(
                     state.CarriesChallengeAds, state.ChallengeAdDay, state.ChallengeAdPlays);
+
+                // The shop deals bought (invariant 60): the wallet document is the entitlement,
+                // and until a reply has said what this account holds the shop offers no deal.
+                Store.DealLedger.ApplyServerState(state.CarriesDeals, state.DealsBought);
             }
 
             SaveService.MarkDirty();

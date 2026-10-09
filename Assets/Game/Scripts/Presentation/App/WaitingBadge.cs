@@ -151,6 +151,27 @@ namespace GlimmerGrove
         public static WaitingBadge HubInkedTopRight(Transform card, Color tint)
             => HubTopRight(card, tint).WhiteInk();
 
+        /// <summary>
+        /// The purple a live shop deal wears (invariant 60): the shop tab's alert on the bottom
+        /// bar, at the owner's instruction on 2026-10-09 - purple, with white <c>!!!</c> over a
+        /// black outline. Multiplied onto the white-cut burst, so it is the burst's own purple
+        /// rather than a recoloured warm piece (44g).
+        /// </summary>
+        public static readonly Color DealPurple = new Color(.56f, .25f, 1f);
+
+        /// <summary>
+        /// What the deal alert says. Three marks rather than a word, so no language has to fit
+        /// one into a burst the size of a thumbnail; punctuation is the same in every table.
+        /// </summary>
+        public const string AlertMarks = "!!!";
+
+        /// <summary>
+        /// The starburst carrying a word in white over a black outline, hidden until
+        /// <see cref="Paint(string)"/> gives it one - the shop tab's deal alert.
+        /// </summary>
+        public static WaitingBadge Alert(Transform card, Vector2 anchor, Vector2 pos, Color tint, float scale)
+            => Burst(card, anchor, pos, tint, scale).WhiteInk();
+
         /// <summary>Re-inks the count white over a black outline.</summary>
         WaitingBadge WhiteInk()
         {

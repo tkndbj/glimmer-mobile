@@ -74,6 +74,123 @@ REFER_W, REFER_H, REFER_GAP = CELLW * COLUMNS, 200.0, 16.0
 REFER_ROW = REFER_GAP + REFER_H + REFER_GAP
 SHELF_TOP = HEADER + TABROW + REFER_ROW
 
+# `ShopScreen.DealH` / `DealLead` / `DealRow` - the limited-time deal's band (invariant 60),
+# directly under the invite band, in the storefront's orange (`Skins.Buy`), with the 26,000-coin
+# card's coffer (`Shop/coins_3`). `--deal` draws it and moves the shelf down by its row, exactly
+# as `ShopScreen.ShelfTop` does; without it the screen is pixel-identical to what shipped.
+DEAL_H = REFER_H
+DEAL_ROW = DEAL_H + REFER_GAP          # the invite band's trailing gap is the deal band's lead
+DEAL = None                            # (credits, gems, seconds left) when drawn
+
+
+def shelf_top():
+    """`ShopScreen.ShelfTop`: the header, the tabs, the invite band and the deal band."""
+    return SHELF_TOP + (DEAL_ROW if DEAL else 0.0)
+
+
+def countdown(seconds):
+    """`Profile.LongCountdown`: days and hours, then hours and minutes, then m:ss."""
+    s = max(0, int(seconds))
+    if s >= 86400:
+        return "%dd %dh" % (s // 86400, s % 86400 // 3600)
+    if s >= 3600:
+        return "%dh %02dm" % (s // 3600, s % 3600 // 60)
+    return "%d:%02d" % (s // 60, s % 60)
+
+
+def compact(n):
+    """`Compact.Number` as the shop's cards print it: 26000 -> 26K."""
+    if n >= 1_000_000:
+        return ("%.1fM" % (n / 1e6)).replace(".0M", "M")
+    if n >= 10_000:
+        return "%dK" % (n // 1000)
+    return f"{n:,}"
+
+
+def timer(seconds):
+    """`DealClock.Timer`: always to the second - `1d 04:12:33`, then `04:12:33`."""
+    s = max(0, int(seconds))
+    d, h, m, sec = s // 86400, s % 86400 // 3600, s % 3600 // 60, s % 60
+    return ("%dd " % d if d else "") + "%02d:%02d:%02d" % (h, m, sec)
+
+
+# `ShopScreen.DealFrame*`: the frame's height inside the slot, its gold rim, the coffer's size and
+# where it stands, and the timer's trough.
+DEAL_FRAME_H, DEAL_RIM = 176.0, 10.0
+DEAL_ART, DEAL_ART_X = 196.0, 132.0
+DEAL_BURST = 236.0
+DEAL_BURST_ALPHA = .55
+DEAL_TAG_X = 330.0               # the tag's centre from the frame's left, over the amount
+DEAL_AMOUNT_X = 258.0
+DEAL_TIMER_W, DEAL_TIMER_H, DEAL_TIMER_X = 344.0, 82.0, 196.0
+DEAL_URGENT = 3600
+
+
+def deal_band(sheet):
+    """`ShopScreen.BuildDeal`: a gold-rimmed navy window (`Hud/plate_gold` round `Hud/card`); the
+    coffer on a turning gold burst at the left, rising out of the frame; the amount in full beside
+    it; a red DEAL tag on the corner; ENDS IN over a ticking timer in a trough on the right, red in
+    the last hour."""
+    credits, _gems, left = DEAL
+    slot_bottom = HEADER + TABROW + REFER_ROW + DEAL_H
+    cy = slot_bottom - DEAL_FRAME_H / 2
+    lx, rx = W / 2 - REFER_W / 2, W / 2 + REFER_W / 2
+
+    K.paste(sheet, K.glow(round(REFER_W * .55), 2.0, K.GOLD, .30), W / 2, cy)
+    K.paste(sheet, K.skin("Hud/plate_gold", REFER_W, DEAL_FRAME_H), W / 2, cy)
+    K.paste(sheet, K.skin("Hud/card", REFER_W - 2 * DEAL_RIM, DEAL_FRAME_H - 2 * DEAL_RIM), W / 2, cy)
+
+    ax = lx + DEAL_ART_X
+    ay = slot_bottom - 8 - DEAL_ART / 2
+    K.paste(sheet, K.glow(round(DEAL_BURST * 1.3), 2.0, K.SUN, .55), ax, ay)
+    K.paste(sheet, K.tint(K.skin("Hud/burst", round(DEAL_BURST), round(DEAL_BURST)), K.GOLD, DEAL_BURST_ALPHA)
+            .rotate(14, Image.BICUBIC), ax, ay)
+    pic = Image.open(UI / "Shop" / "coins_3.png").convert("RGBA")
+    K.paste(sheet, K.fit(pic, (DEAL_ART, DEAL_ART)), ax, ay)
+
+    amount = f"{credits:,}"
+    K.text(sheet, amount, lx + DEAL_AMOUNT_X, cy - 2, 70, fill=K.SUN, outline=4, anchor="l")
+    K.text(sheet, txt("ui.endless.coins").upper(), lx + DEAL_AMOUNT_X, cy + 52, 30, fill=K.CREAM, outline=3, anchor="l")
+
+    tx = rx - DEAL_TIMER_X
+    urgent = left < DEAL_URGENT
+    K.text(sheet, txt("ui.deal.ends_label").upper(), tx, cy - 40, 30, fill=K.CREAM, outline=3)
+    K.paste(sheet, K.skin("Hud/trough", DEAL_TIMER_W, DEAL_TIMER_H), tx, cy + 20)
+    K.text(sheet, timer(left), tx, cy + 20, 46, fill=(255, 92, 72) if urgent else (255, 255, 255), outline=3)
+
+    tag = K.fit(Image.open(UI / "ribbon_red.png").convert("RGBA"), (128, 106)).rotate(-4, Image.BICUBIC, expand=True)
+    tagx, tagy = lx + DEAL_TAG_X, slot_bottom - DEAL_FRAME_H - 14
+    K.paste(sheet, tag, tagx, tagy)
+    K.text(sheet, txt("ui.deal.door").upper(), tagx - 2, tagy - 4, 30, fill=K.CREAM, outline=3)
+
+    print("  deal band: slot %d..%d, %s coins, timer %r%s"
+          % (slot_bottom - DEAL_H, slot_bottom, amount, timer(left), " (urgent)" if urgent else ""))
+
+
+def shop_nav(sheet):
+    """The bottom bar with the shop tab live, and the deal alert on it when a deal is drawn."""
+    K.navbar(sheet, "shop")
+    if DEAL:
+        deal_alert(sheet)
+
+
+def deal_alert(sheet):
+    """`DealAlert.Attach` - the purple burst with a white `!!!` over a black outline on the shop
+    tab's top-right corner (`WaitingBadge.Alert`, `WaitingBadge.DealPurple`, scale 1)."""
+    base = H - K.NAV_HEIGHT / 2 - 4
+    slot = W / float(len(K.NAV_TABS))
+    btn_w, btn_h = K.nav_button(slot)
+    i = [tab for tab, _icon in K.NAV_TABS].index("shop")
+    x = W / 2 + (i - (len(K.NAV_TABS) - 1) * .5) * slot
+    grow = 1.06                                      # the shop tab is the live one here
+    bx, by = x + btn_w * grow / 2 - 16, base - btn_h * grow / 2 + 12
+    purple = (143, 64, 255)
+    sc = 1.0
+    K.paste(sheet, K.glow(round(190 * sc), 2.0, purple, .40), bx, by)
+    K.paste(sheet, K.tint(K.skin("Hud/burst", round(104 * sc), round(104 * sc)), purple)
+            .rotate(8, Image.BICUBIC), bx, by)
+    K.text(sheet, "!!!", bx, by + 2, round(30 * sc), fill=(255, 255, 255), outline=3)
+
 # ProductCard / ProductCardBadges
 #: `ProductCardBadges.Face`, `.FaceShift`, `.FaceRise`, `.FaceTextWidth`, `.FaceTextHeight`,
 #: `.TextSize` and `.TextFloor`. The caption is `UIKit.Shrinkable` and **wraps**, so it is
@@ -764,6 +881,10 @@ def screen(shelf, offline=False, waiting=0):
     # ---- the invite banner, directly under the tabs
     invite_banner(sheet, waiting)
 
+    # ---- the deal band, directly under that (invariant 60)
+    if DEAL:
+        deal_band(sheet)
+
     # ---- the grid
     rows = [] if offline else products(shelf)
     rungs = LADDER.get(shelf, 3)
@@ -781,7 +902,7 @@ def screen(shelf, offline=False, waiting=0):
     news = store_news(shelf, offline)
     centre = bool(news) and (shift + len(rows)) == 0 and shelf != 'supplies'
     saying = bool(news) and not centre
-    top = SHELF_TOP + summary_row(saying)
+    top = shelf_top() + summary_row(saying)
 
     # The same grid every other cell is placed on, because the free spots *are* cells:
     # `ShopCell.Bind` indexes one flat list and the first `len(ads)` of them are videos, so
@@ -798,13 +919,13 @@ def screen(shelf, offline=False, waiting=0):
     if saying:
         # Centred in the band, exactly as `ShopScreen` places it: the tab row's lower edge,
         # then the gap, then half the line. Written at 22 below the tabs it sat *inside* them.
-        px = K.shrunk(sheet, news, W / 2, SHELF_TOP + SUMMARY_GAP + SUMMARY_H / 2,
+        px = K.shrunk(sheet, news, W / 2, shelf_top() + SUMMARY_GAP + SUMMARY_H / 2,
                       880, SUMMARY_H, 30, 20, fill=K.SUN, outline=2)
         print("  store line: settled at %dpx against a floor of 20, in a band from %d to %d"
-              % (px, SHELF_TOP, top))
+              % (px, shelf_top(), top))
     else:
         print("  no store line: the band collapses to %d, so the shelf starts at %d "
-              "instead of %d" % (QUIET_ROW, top, SHELF_TOP + SUMMARY_LINE))
+              "instead of %d" % (QUIET_ROW, top, shelf_top() + SUMMARY_LINE))
 
     if centre:
         # On a plate, because this screen is a place rather than a list: amber text laid
@@ -826,12 +947,12 @@ def screen(shelf, offline=False, waiting=0):
 
     if shelf == "supplies":
         supplies(sheet, top, shift)
-        K.navbar(sheet, "shop")
+        shop_nav(sheet)
         return sheet.convert("RGB")
 
     if shelf == "utilities":
         utilities(sheet, top, shift)
-        K.navbar(sheet, "shop")
+        shop_nav(sheet)
         return sheet.convert("RGB")
 
     for n, p in enumerate(rows):
@@ -872,7 +993,7 @@ def screen(shelf, offline=False, waiting=0):
     K.paste(sheet, K.skin("sq_dark", 420, 72), W / 2, ry)
     K.text(sheet, "RESTORE PURCHASES", W / 2, ry, 26, fill=(205, 215, 232), outline=2)
 
-    K.navbar(sheet, "shop")
+    shop_nav(sheet)
     return sheet.convert("RGB")
 
 
@@ -945,6 +1066,9 @@ def main():
                     help="the store never answered - what an unreachable shelf says")
     ap.add_argument("--waiting", type=int, default=0,
                     help="referral chests waiting behind the invite band; draws its badge")
+    ap.add_argument("--deal", nargs=3, type=int, metavar=("COINS", "GEMS", "SECONDS"),
+                    help="a live shop deal (invariant 60): its band under the invite band and the "
+                         "purple alert on the shop tab, e.g. --deal 26000 900 93784")
     ap.add_argument("--measure", action="store_true",
                     help="measure Hud/burst and hold the badge constants to it; draws nothing")
     ap.add_argument("--out", type=Path, default=Path("shop.png"))
@@ -953,8 +1077,9 @@ def main():
     if args.measure:
         sys.exit(0 if measure_seal() else 1)
 
-    global SOLD
+    global SOLD, DEAL
     SOLD = args.sold
+    DEAL = tuple(args.deal) if args.deal else None
 
     if args.all:
         shelves = [s for s in SHELVES if s in LADDER or s == "supplies"]

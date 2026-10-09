@@ -2810,6 +2810,38 @@
       "text": "Rätsel gelöst!"
     },
     {
+      "key": "ui.deal.bought",
+      "text": "Angebot gekauft! +{0} Münzen"
+    },
+    {
+      "key": "ui.deal.door",
+      "text": "Angebot"
+    },
+    {
+      "key": "ui.deal.ended",
+      "text": "Dieses Angebot ist abgelaufen."
+    },
+    {
+      "key": "ui.deal.ends_label",
+      "text": "Endet in"
+    },
+    {
+      "key": "ui.deal.needs_connection",
+      "text": "Verbinde dich mit dem Internet, um dieses Angebot zu kaufen."
+    },
+    {
+      "key": "ui.deal.note",
+      "text": "Einmal pro Spieler, nur solange die Zeit läuft."
+    },
+    {
+      "key": "ui.deal.owned",
+      "text": "Du hast dieses Angebot bereits."
+    },
+    {
+      "key": "ui.deal.title",
+      "text": "Begrenztes Angebot"
+    },
+    {
       "key": "ui.endless.xp",
       "text": "EP"
     },

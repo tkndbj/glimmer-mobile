@@ -95,6 +95,10 @@ namespace GlimmerGrove.Progression
             // own constructor, so a refusal heard before any screen asks is still heard.
             KeeperLedger.Hook();
             KeeperLedger.Changed += Invalidate;
+
+            // A refused shop deal takes its coins back (invariant 60); hooked here for the keeper
+            // ledger's reason, so a refusal heard before any screen has asked is still heard.
+            Store.DealLedger.Hook();
         }
 
         /// <summary>Forces the next read to recompute. Cheap; safe to call often.</summary>

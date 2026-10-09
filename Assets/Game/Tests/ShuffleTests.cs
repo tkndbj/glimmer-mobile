@@ -878,7 +878,10 @@ namespace GlimmerGrove.Tests
         {
             var L = Layout.ShuffleHandLayout.Default;
             Assert.AreEqual(-VictoryFrame.BannerY + VictoryFrame.BannerSize.y * .5f, L.CrestFoot, 1e-3f);
-            Assert.AreEqual(1000f, L.PanelWidth, "the hand's window is the Deals sheet's width");
+            // Wider than the Deals sheet (1000) since the owner asked for a bigger hand, and
+            // still inside the canvas with a margin each side.
+            Assert.AreEqual(1050f, L.PanelWidth, "the hand's window moved without the render being looked at");
+            Assert.LessOrEqual(L.PanelWidth + 30f, Content.ChapterMap.Width, "the hand's window touches the screen edge");
         }
 
         // ------------------------------------------------------------------ the instrument

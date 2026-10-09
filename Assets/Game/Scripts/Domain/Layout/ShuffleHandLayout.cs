@@ -20,8 +20,13 @@ namespace GlimmerGrove.Layout
     {
         public static readonly ShuffleHandLayout Default = new ShuffleHandLayout();
 
-        /// <summary>The Deals sheet's width (<c>ChallengeTierOverlay.PanelW</c>), because the hand wears its frame.</summary>
-        public float PanelWidth = 1000f;
+        /// <summary>
+        /// The hand's window. It wears the Deals sheet's frame but no longer its width (1000): the
+        /// owner asked for the panel, the cards and the text bigger (2026-10-09, "it's hard to read
+        /// the upgrades"), so it is as wide as the canvas allows with a margin, and the cards, the
+        /// picture and every type size grew with it.
+        /// </summary>
+        public float PanelWidth = 1050f;
 
         /// <summary>
         /// How far the frame's banner reaches down into the panel: <c>VictoryFrame.BannerY</c>
@@ -34,31 +39,31 @@ namespace GlimmerGrove.Layout
         /// <summary>Under the banner: the wave line's centre, down from the panel's top.</summary>
         public float NoteY = 150f, NoteHeightLine = 44f;
 
-        public float CardWidth = 300f, CardGap = 18f;
+        public float CardWidth = 322f, CardGap = 14f;
 
-        public float CardHeight = 520f;
+        public float CardHeight = 620f;
 
         /// <summary>The cards' top edge, down from the panel's top.</summary>
         public float CardsTop = 196f;
 
         public float Inset = 18f;
 
-        public float SeatSize = 176f, IconSize = 150f;
+        public float SeatSize = 190f, IconSize = 164f;
 
         /// <summary>The seat's centre, down from a card's top.</summary>
-        public float SeatDown = 116f;
+        public float SeatDown = 118f;
 
-        public int NameSize = 34, NameFloor = 22;
+        public int NameSize = 40, NameFloor = 26;
 
-        public float NameHeight = 84f, NameDown = 252f;
+        public float NameHeight = 92f, NameDown = 266f;
 
-        public int NoteSize = 24, NoteFloor = 16;
+        public int NoteSize = 31, NoteFloor = 20;
 
-        public float NoteHeight = 120f, NoteDown = 362f;
+        public float NoteHeight = 180f, NoteDown = 408f;
 
-        public float TierHeight = 56f, TierDown = 468f;
+        public float TierHeight = 60f, TierDown = 546f;
 
-        public int TierSize = 26, TierFloor = 16;
+        public int TierSize = 30, TierFloor = 18;
 
         /// <summary>Air under the cards to the panel's foot.</summary>
         public float Foot = 34f;

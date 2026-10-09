@@ -18,6 +18,7 @@ import { readTaskPaid, TaskPaid } from "./tasks";
 import { EndlessDay, readEndlessDay } from "./endless";
 import { keeperBoughtOf } from "./keeper";
 import { ChallengeAdDays, ChallengeTiersHeld, adPlaysOn, readChallengeAds, readChallengeTiers } from "./challenges";
+import { DealsBought, readDealsBought } from "./deals";
 
 export interface CurrencyState {
   granted: number;
@@ -146,6 +147,14 @@ export type WalletDoc = Record<CurrencyId, CurrencyState> & {
    * `readWallet` because every writer writes this document whole.
    */
   challengeAds?: ChallengeAdDays;
+
+  /**
+   * The shop deals this account bought, deal id to the deal's end (`deals.ts`, invariant 60).
+   * Server-owned for the streak floor's reason: it is how every device draws a bought deal as
+   * bought. Written by `submitSpends` in the transaction that takes the gems; pruned once no
+   * debit or claim can name the deal any more.
+   */
+  deals?: DealsBought;
 };
 
 /** What the client's `CloudWalletState` expects back. */
@@ -227,12 +236,18 @@ export interface WalletReply {
    */
   challengeAdDay: number;
   challengeAdPlays: number;
+
+  /**
+   * The shop deals this account has bought (invariant 60). Always present, including empty, so
+   * the client reads the field's presence as "this deployment sells deals" - the wheel's trick.
+   */
+  dealsBought: string[];
 }
 
 /** The keys `readWallet` models itself, so `carryUnknownFields` knows which to leave to it. */
 const MODELLED_WALLET_KEYS = new Set<string>([
   ...CURRENCIES, "name", "containersRevoked", "wheel", "tasks", "endless", "challengeTiers",
-  "keeperBought", "challengeAds", "streak", "updatedAt",
+  "keeperBought", "challengeAds", "deals", "streak", "updatedAt",
 ]);
 
 /**
@@ -346,6 +361,11 @@ export function readWallet(
   const adDays = readChallengeAds((raw as { challengeAds?: unknown } | undefined)?.challengeAds, todayKey(Date.now()));
   if (Object.keys(adDays).length > 0) wallet.challengeAds = adDays;
 
+  // The shop deals bought, carried through for exactly the reason every field above it is, and
+  // pruned once no debit or claim can name the deal, so the document does not grow for ever.
+  const deals = readDealsBought((raw as { deals?: unknown } | undefined)?.deals, Math.floor(Date.now() / 1000));
+  if (Object.keys(deals).length > 0) wallet.deals = deals;
+
   // **Everything else the document holds, carried through untouched - and this is the rule
   // the eight paragraphs above were each one instance of.** Every writer of this document
   // writes it whole, so a field this function does not copy is a field the next write deletes.
@@ -442,6 +462,7 @@ export function toReply(
     keeperBought: wallet.keeperBought ?? 0,
     challengeAdDay: today,
     challengeAdPlays: adPlaysOn(wallet.challengeAds ?? {}, today),
+    dealsBought: Object.keys(wallet.deals ?? {}).sort(),
   }));
 }
 

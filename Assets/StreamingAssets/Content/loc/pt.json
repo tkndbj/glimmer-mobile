@@ -2810,6 +2810,38 @@
       "text": "Quebra-cabeça resolvido!"
     },
     {
+      "key": "ui.deal.bought",
+      "text": "Oferta comprada! +{0} moedas"
+    },
+    {
+      "key": "ui.deal.door",
+      "text": "Oferta"
+    },
+    {
+      "key": "ui.deal.ended",
+      "text": "Esta oferta terminou."
+    },
+    {
+      "key": "ui.deal.ends_label",
+      "text": "Termina em"
+    },
+    {
+      "key": "ui.deal.needs_connection",
+      "text": "Conecte-se à internet para comprar esta oferta."
+    },
+    {
+      "key": "ui.deal.note",
+      "text": "Uma por jogador, só enquanto o tempo corre."
+    },
+    {
+      "key": "ui.deal.owned",
+      "text": "Você já tem esta oferta."
+    },
+    {
+      "key": "ui.deal.title",
+      "text": "Oferta limitada"
+    },
+    {
       "key": "ui.endless.xp",
       "text": "XP"
     },

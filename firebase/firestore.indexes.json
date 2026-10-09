@@ -7,6 +7,16 @@
       "indexes": []
     },
     {
+      "collectionGroup": "spendLog",
+      "fieldPath": "dealId",
+      "indexes": [
+        {
+          "order": "ASCENDING",
+          "queryScope": "COLLECTION_GROUP"
+        }
+      ]
+    },
+    {
       "collectionGroup": "grantLog",
       "fieldPath": "*",
       "indexes": []

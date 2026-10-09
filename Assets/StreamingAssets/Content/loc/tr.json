@@ -2810,6 +2810,38 @@
       "text": "Bulmaca çözüldü!"
     },
     {
+      "key": "ui.deal.bought",
+      "text": "Fırsat alındı! +{0} altın"
+    },
+    {
+      "key": "ui.deal.door",
+      "text": "Fırsat"
+    },
+    {
+      "key": "ui.deal.ended",
+      "text": "Bu fırsat sona erdi."
+    },
+    {
+      "key": "ui.deal.ends_label",
+      "text": "Bitmesine"
+    },
+    {
+      "key": "ui.deal.needs_connection",
+      "text": "Bu fırsatı almak için internete bağlan."
+    },
+    {
+      "key": "ui.deal.note",
+      "text": "Oyuncu başına bir kez, yalnızca süre dolmadan."
+    },
+    {
+      "key": "ui.deal.owned",
+      "text": "Bu fırsata zaten sahipsin."
+    },
+    {
+      "key": "ui.deal.title",
+      "text": "Sınırlı Fırsat"
+    },
+    {
       "key": "ui.endless.xp",
       "text": "XP"
     },

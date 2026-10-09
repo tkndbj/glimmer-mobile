@@ -348,6 +348,20 @@ namespace GlimmerGrove.Cloud
         public bool CarriesChallengeAds;
 
         /// <summary>
+        /// The shop deals the server has recorded this account buying (<c>dealsBought</c>,
+        /// invariant 60). An account fact repeated on every row, for
+        /// <see cref="RevokedContainers"/>' reason. Folded in by <c>DealLedger.ApplyServerState</c>.
+        /// </summary>
+        public List<string> DealsBought = new List<string>();
+
+        /// <summary>
+        /// Whether the reply carried the list at all, for <see cref="CarriesEndless"/>'s reason: an
+        /// account that bought nothing answers an empty list, a deployment that predates deals
+        /// answers nothing, and only the first may open the shop's deal band.
+        /// </summary>
+        public bool CarriesDeals;
+
+        /// <summary>
         /// Whether the reply carried the lane's figure at all.
         ///
         /// <b>Asked separately for <c>CarriesWheel</c>'s reason</b>: a fresh account's honest
