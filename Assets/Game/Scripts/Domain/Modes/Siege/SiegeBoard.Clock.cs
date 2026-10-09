@@ -50,6 +50,7 @@ namespace GlimmerGrove.Modes
             Smoulder(dt);
             Wither(dt);
             Swing(dt);
+            Regen(dt);
             Age(dt);
 
             for (int i = _raiders.Count - 1; i >= 0; i--)
@@ -516,6 +517,10 @@ namespace GlimmerGrove.Modes
             _report.Wave = _wave;
             _wave++;
 
+            // **What a build does when a wave steps out** (`SiegeBoosts`): nothing on the
+            // plain line, which is every board but the Shuffle lane's.
+            Mustered();
+
             // A boss gets its own quiet in front of it - long for a warlord, short for a
             // warbringer, and `SiegeTuning.RestBefore` says why each. The shortcut above is
             // unaffected, so a player who has cleared the hill still gets the boss at once.
@@ -524,7 +529,75 @@ namespace GlimmerGrove.Modes
             // it and a warbringer wants a short one (`SiegeTuning.RestBefore`).
             _rest = Layout.BossesIn(_wave) > 0
                   ? SiegeTuning.RestBefore(Layout.KindAt(_wave, 0))
-                  : SiegeTuning.BetweenWaves;
+                  : _boosts.Rest(SiegeTuning.BetweenWaves);
+        }
+
+        /// <summary>
+        /// A wave has just stepped out: pour, stop and bank whatever the build says
+        /// (<see cref="SiegeBoosts.WaveFuelTenths"/>, <see cref="SiegeBoosts.WaveStill"/>,
+        /// <see cref="SiegeBoosts.WaveCharges"/>). Every door here is one the mode already has -
+        /// <c>SiegeWard.Fill</c>, the hourglass's own stop, a banked charge - so the view draws
+        /// each of them the way it already does.
+        /// </summary>
+        void Mustered()
+        {
+            if (_boosts.IsIdentity) return;
+
+            if (_boosts.WaveFuelTenths > 0)
+                for (int w = 0; w < _wards.Length; w++)
+                {
+                    var ward = _wards[w];
+                    if (!ward.Alive) continue;
+
+                    if (ward.Fill(ward.Capacity * _boosts.WaveFuelTenths / 10f, out bool redeemed))
+                        _report.Brimmed.Add(w);
+                    if (redeemed) _report.Redeemed.Add(w);
+                }
+
+            if (_boosts.WaveStill > 0f && _boosts.WaveStill > _still)
+            {
+                _still = _boosts.WaveStill;
+                _report.Stilled = _boosts.WaveStill;
+            }
+
+            for (int n = 0; n < _boosts.WaveCharges; n++)
+            {
+                // The standing ward holding the fewest, so the charges spread rather than pile.
+                int at = -1;
+                for (int w = 0; w < _wards.Length; w++)
+                {
+                    var ward = _wards[w];
+                    if (!ward.Alive || ward.Charges >= ward.ChargeCap) continue;
+                    if (at < 0 || ward.Charges < _wards[at].Charges) at = w;
+                }
+
+                if (at < 0) break;
+
+                _wards[at].Charges++;
+                _report.Brimmed.Add(at);
+            }
+        }
+
+        /// <summary>
+        /// A point of health back on every standing ward every <see cref="SiegeBoosts.RegenEvery"/>
+        /// seconds. Nothing on the plain line. The remainder is carried, for the burn's reason.
+        /// </summary>
+        void Regen(float dt)
+        {
+            if (_boosts.RegenEvery <= 0f) { _regen = 0f; return; }
+
+            _regen += dt;
+
+            while (_regen >= _boosts.RegenEvery)
+            {
+                _regen -= _boosts.RegenEvery;
+
+                for (int w = 0; w < _wards.Length; w++)
+                {
+                    var ward = _wards[w];
+                    if (ward.Alive && ward.Health < ward.Full) ward.Health++;
+                }
+            }
         }
 
         /// <summary>
@@ -631,7 +704,7 @@ namespace GlimmerGrove.Modes
                 // place would shorten the entrance the roar exists to make frightening, and a
                 // warlord hastened by somebody else's roar could reach its ground before the level
                 // meant it to - so the charge is the hill's, and the hill is what walks.
-                raider.March += dt * raider.Pace * (raider.Boss ? 1f : charge)
+                raider.March += dt * raider.Pace * (raider.Boss ? 1f : charge) * _boosts.HillPace
                               / SiegeTuning.MarchOf(raider.Kind);
 
                 if (raider.March < raider.Hold) continue;
@@ -658,6 +731,12 @@ namespace GlimmerGrove.Modes
 
                 raider.Blow = SiegeTuning.BlowEvery;
                 _report.Arrived.Add(raider.Id);
+
+                // **A build may throw a body back up the slope the moment it arrives**
+                // (`SiegeBoosts.RepelChance`): the anvil's shove, paid off by `Heave` above,
+                // so the drawing follows for free and the body puts its weapon down for as long
+                // as the walk back takes. Nothing on the plain line.
+                if (_boosts.Repels()) raider.Shove(SiegeTuning.AnvilHeave);
             }
         }
 
@@ -726,7 +805,7 @@ namespace GlimmerGrove.Modes
                 var target = Aim(ward);
                 if (target == null) { ward.Cool = 0f; continue; }
 
-                ward.Cool = SiegeTuning.FireEvery;
+                ward.Cool = _boosts.FireEvery(SiegeTuning.FireEvery, Percent(ward));
 
                 // **A stone-struck ward pays for a shot it does not take** (`SiegeSpell.Glare`),
                 // and it pays only when there was something to shoot at - the target is found
@@ -763,6 +842,13 @@ namespace GlimmerGrove.Modes
                 int damage = SiegeTuning.DamageTo(target.Kind, ward.Rank, true, ward.Build);
                 if (!weak) damage = Math.Max(1, damage * share / 10);
 
+                // **What the build makes of it** (`SiegeBoosts`): the number handed in on every
+                // board but the Shuffle lane's, where a card may have made the bolt heavier, a
+                // crit, or a desperate ward's. Before the fuel is spent, so a crit never costs
+                // more, and before `Wound`, so the figure reported is the figure that landed.
+                damage = _boosts.Desperate(_boosts.Bolt(damage, target.Kind, out bool crit),
+                                           Percent(ward));
+
                 // **Both halves of a rank are spent here**, and they are the reason a cog is worth
                 // more than the sum of its parts: an upgraded ward hits harder *and* gets more
                 // bolts out of the same match, so a rank-four turret turns one match into 2.33
@@ -773,7 +859,7 @@ namespace GlimmerGrove.Modes
                 // fuel converted at half rate on their behalf - see `SiegeTuning.FuelShot`. It is
                 // spent after the share is known and before anything is reported, so the two can
                 // never be read from different answers.
-                ward.Fuel = Math.Max(0f, ward.Fuel - SiegeTuning.FuelShot(ward.Rank, share));
+                ward.Fuel = Math.Max(0f, ward.Fuel - _boosts.FuelShot(SiegeTuning.FuelShot(ward.Rank, share)));
                 ward.Shots++;
 
                 // Through the one door (`SiegeBoard.Fight.cs`). `Aim` never picks an untouchable
@@ -782,7 +868,7 @@ namespace GlimmerGrove.Modes
                 damage = Wound(target, damage);
 
                 bool killed = Fell(target);
-                if (killed) Refund(ward);
+                if (killed) Fallen(ward, w, target);
 
                 _report.Bolts.Add(new SiegeBolt(w, target.Id, damage, weak, killed));
 
@@ -795,8 +881,16 @@ namespace GlimmerGrove.Modes
                 // **After the bolt has landed at full strength, never instead of it.** See
                 // `SiegeBoard.Line.cs` for why nothing in an ability may reduce the primary hit.
                 Ability(ward, w, target, damage);
+
+                // **And what the build grants on top**, by the same rule and through the same
+                // doors (`SiegeBoard.Line.cs`). Nothing on the plain line.
+                Augment(ward, w, target, damage);
             }
         }
+
+        /// <summary>A ward's health as a share of its full figure, per cent. Nought for a fallen one.</summary>
+        static int Percent(SiegeWard ward)
+            => !ward.Alive || ward.Full <= 0 ? 0 : ward.Health * 100 / ward.Full;
 
         /// <summary>
         /// What a ward will shoot at: the furthest raider of its own colour, and then a boss, only
@@ -845,7 +939,7 @@ namespace GlimmerGrove.Modes
         /// </summary>
         SiegeRaider Aim(SiegeWard ward)
         {
-            SiegeRaider own = null, boss = null;
+            SiegeRaider own = null, other = null, boss = null;
 
             for (int i = 0; i < _raiders.Count; i++)
             {
@@ -879,11 +973,21 @@ namespace GlimmerGrove.Modes
                     continue;
                 }
 
+                // **A build may open a ward's reach off its own colour**
+                // (`SiegeWard.OffColourTenths`, nought on every line a player stands): a part
+                // weight bolt at a part cost, and only when nothing of its own is standing -
+                // after its own colour and before a boss, for `own`'s reason.
+                if (!raider.Boss && ward.ReachTenths(raider.Colour) > 0)
+                {
+                    if (other == null || raider.March > other.March) other = raider;
+                    continue;
+                }
+
                 if (!SiegeTuning.EveryWardReaches(raider.Kind)) continue;
                 if (boss == null || raider.March > boss.March) boss = raider;
             }
 
-            return own ?? boss;
+            return own ?? other ?? boss;
         }
 
         void Conjure(float dt)
@@ -1213,7 +1317,37 @@ namespace GlimmerGrove.Modes
             ward.Health = 0;
             ward.Alive = false;
             ward.Fuel = 0f;
+
+            // **A build may stand a fallen post back up, and the fall still happened**
+            // (`SiegeBoosts.SecondWinds`, `Phoenixes`): the blow is reported felled, so the
+            // view draws the post coming down, and the rise is reported beside it
+            // (`SiegeReport.Revived`), so it draws the post standing again. Nothing on the plain
+            // line, where neither count is ever above nought.
+            Revive(ward);
+
             return true;
+        }
+
+        void Revive(SiegeWard ward)
+        {
+            if (_boosts.IsIdentity) return;
+
+            int at = Array.IndexOf(_wards, ward);
+            if (at < 0) return;
+
+            if (_boosts.TakeSecondWind())
+            {
+                int half = ward.Full / 2;
+                Mend(at, half < 1 ? 1 : half);
+                _report.Revived.Add(at);
+                return;
+            }
+
+            if (WardsStanding > 0 || !_boosts.TakePhoenix()) return;
+
+            // The whole line, at full, exactly as a continue raises it (`Rally`).
+            Rally(_wards.Length);
+            for (int w = 0; w < _wards.Length; w++) _report.Revived.Add(w);
         }
 
         void Swing(float dt)
@@ -1244,10 +1378,24 @@ namespace GlimmerGrove.Modes
                 if (w < 0) continue;
 
                 var ward = _wards[w];
-                int damage = raider.Surge.Blow(SiegeTuning.BlowOf(raider.Kind));
+                int damage = _boosts.Blow(raider.Surge.Blow(SiegeTuning.BlowOf(raider.Kind)));
                 bool felled = Bear(ward, damage);
 
                 _report.Blows.Add(new SiegeBlow(w, raider.Id, damage, felled));
+
+                // **What a swinger pays for landing it** (`SiegeBoosts.ThornsPercent`): a bolt's
+                // worth back off the post it hit, reported as an extra bolt from that post so
+                // the view draws the sting from the ward it came off. Nothing on the plain line.
+                int sting = _boosts.Thorns(SiegeTuning.ShotDamage);
+                if (sting <= 0) continue;
+
+                int took = Wound(raider, sting);
+                if (took <= 0) continue;
+
+                bool killed = Fell(raider);
+                if (killed) Fallen(ward, w, raider);
+
+                _report.Bolts.Add(new SiegeBolt(w, raider.Id, took, false, killed, true));
             }
         }
 

@@ -422,6 +422,19 @@
       "levels": [
         "s02_endless"
       ]
+    },
+    {
+      "id": "s13_shufflewatch",
+      "version": 1,
+      "order": 160,
+      "disabled": false,
+      "minAppVersion": 0,
+      "mode": "siege",
+      "track": "shuffle",
+      "minKeeperLevel": 5,
+      "levels": [
+        "s13_shuffle"
+      ]
     }
   ],
   "events": [

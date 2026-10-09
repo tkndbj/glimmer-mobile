@@ -7836,6 +7836,374 @@
     {
       "key": "ui.keeper.chest_locked",
       "text": "Alcance o nível {0} para abrir este baú"
+    },
+    {
+      "key": "chapter.s13_shufflewatch.name",
+      "text": "A Vigília Embaralhada"
+    },
+    {
+      "key": "level.s13_shuffle.name",
+      "text": "A Vigília Embaralhada"
+    },
+    {
+      "key": "level.s13_shuffle.tagline",
+      "text": "Quatro Quebradores e uma mão de melhorias nova a cada partida. Resista o máximo que puder."
+    },
+    {
+      "key": "track.shuffle.name",
+      "text": "Embaralhado"
+    },
+    {
+      "key": "track.shuffle.tagline",
+      "text": "uma partida diferente a cada vez"
+    },
+    {
+      "key": "track.shuffle.point1",
+      "text": "Cada partida distribui uma mão diferente."
+    },
+    {
+      "key": "track.shuffle.point2",
+      "text": "Escolha 1 de 3 cartas a cada 2 ondas."
+    },
+    {
+      "key": "track.shuffle.point3",
+      "text": "Quatro Quebradores para todos. Sem equipamento."
+    },
+    {
+      "key": "track.shuffle.point4",
+      "text": "Entrar custa um coração. Perder não custa nenhum."
+    },
+    {
+      "key": "ui.shuffle.choose",
+      "text": "Escolha uma melhoria"
+    },
+    {
+      "key": "ui.shuffle.wave",
+      "text": "Onda {0}"
+    },
+    {
+      "key": "ui.shuffle.tier.common",
+      "text": "Comum"
+    },
+    {
+      "key": "ui.shuffle.tier.rare",
+      "text": "Rara"
+    },
+    {
+      "key": "ui.shuffle.tier.epic",
+      "text": "Épica"
+    },
+    {
+      "key": "ui.shuffle.tier.legendary",
+      "text": "Lendária"
+    },
+    {
+      "key": "ui.shuffle.held",
+      "text": "{0} x{1}"
+    },
+    {
+      "key": "ui.shuffle.taken",
+      "text": "{0} escolhida"
+    },
+    {
+      "key": "ui.shuffle.taken_again",
+      "text": "{0} x{1}"
+    },
+    {
+      "key": "shuffle.heavy_bolts.name",
+      "text": "Raios Pesados"
+    },
+    {
+      "key": "shuffle.heavy_bolts.note",
+      "text": "Cada raio acerta 15% mais forte."
+    },
+    {
+      "key": "shuffle.quick_barrels.name",
+      "text": "Canos Rápidos"
+    },
+    {
+      "key": "shuffle.quick_barrels.note",
+      "text": "As torres atiram 12% mais rápido."
+    },
+    {
+      "key": "shuffle.lean_burn.name",
+      "text": "Queima Limpa"
+    },
+    {
+      "key": "shuffle.lean_burn.note",
+      "text": "Cada raio gasta 12% menos combustível."
+    },
+    {
+      "key": "shuffle.rich_gems.name",
+      "text": "Gemas Ricas"
+    },
+    {
+      "key": "shuffle.rich_gems.note",
+      "text": "Cada gema vale 20% mais combustível."
+    },
+    {
+      "key": "shuffle.iron_posts.name",
+      "text": "Postes de Ferro"
+    },
+    {
+      "key": "shuffle.iron_posts.note",
+      "text": "As torres aguentam 30% mais dano antes de cair."
+    },
+    {
+      "key": "shuffle.wide_tubes.name",
+      "text": "Tubos Largos"
+    },
+    {
+      "key": "shuffle.wide_tubes.note",
+      "text": "As torres guardam 25% mais combustível."
+    },
+    {
+      "key": "shuffle.brace.name",
+      "text": "Reforço"
+    },
+    {
+      "key": "shuffle.brace.note",
+      "text": "Cada golpe na linha tira 1 a menos."
+    },
+    {
+      "key": "shuffle.field_medic.name",
+      "text": "Médico de Campo"
+    },
+    {
+      "key": "shuffle.field_medic.note",
+      "text": "As torres recuperam vida aos poucos."
+    },
+    {
+      "key": "shuffle.keen_eyes.name",
+      "text": "Olhos Aguçados"
+    },
+    {
+      "key": "shuffle.keen_eyes.note",
+      "text": "10% dos raios causam o dobro de dano."
+    },
+    {
+      "key": "shuffle.long_rest.name",
+      "text": "Descanso Longo"
+    },
+    {
+      "key": "shuffle.long_rest.note",
+      "text": "A calmaria entre ondas dura 20% mais."
+    },
+    {
+      "key": "shuffle.splash_shot.name",
+      "text": "Tiro Explosivo"
+    },
+    {
+      "key": "shuffle.splash_shot.note",
+      "text": "Os raios atingem invasores próximos com 40%."
+    },
+    {
+      "key": "shuffle.chain_arc.name",
+      "text": "Arco em Cadeia"
+    },
+    {
+      "key": "shuffle.chain_arc.note",
+      "text": "Os raios saltam para mais um invasor com 50%."
+    },
+    {
+      "key": "shuffle.pierce_rounds.name",
+      "text": "Tiros Perfurantes"
+    },
+    {
+      "key": "shuffle.pierce_rounds.note",
+      "text": "A cada três raios, um atravessa toda a faixa."
+    },
+    {
+      "key": "shuffle.frostbite.name",
+      "text": "Congelamento"
+    },
+    {
+      "key": "shuffle.frostbite.note",
+      "text": "Os raios gelam os invasores, deixando-os 30% mais lentos."
+    },
+    {
+      "key": "shuffle.kindling.name",
+      "text": "Gravetos"
+    },
+    {
+      "key": "shuffle.kindling.note",
+      "text": "Os raios incendeiam os invasores por 3 segundos."
+    },
+    {
+      "key": "shuffle.stunning_blows.name",
+      "text": "Golpes Atordoantes"
+    },
+    {
+      "key": "shuffle.stunning_blows.note",
+      "text": "12% dos raios param o invasor no lugar."
+    },
+    {
+      "key": "shuffle.siphon.name",
+      "text": "Sifão"
+    },
+    {
+      "key": "shuffle.siphon.note",
+      "text": "Cada abate devolve um pouco de combustível à torre."
+    },
+    {
+      "key": "shuffle.charge_master.name",
+      "text": "Mestre da Carga"
+    },
+    {
+      "key": "shuffle.charge_master.note",
+      "text": "As sobrecargas acertam 50% mais forte e as torres guardam mais uma."
+    },
+    {
+      "key": "shuffle.thorns.name",
+      "text": "Espinhos"
+    },
+    {
+      "key": "shuffle.thorns.note",
+      "text": "O invasor que golpeia a linha sofre dano de volta."
+    },
+    {
+      "key": "shuffle.charm_magnet.name",
+      "text": "Ímã de Amuletos"
+    },
+    {
+      "key": "shuffle.charm_magnet.note",
+      "text": "Os amuletos aparecem o dobro de vezes."
+    },
+    {
+      "key": "shuffle.rally_cry.name",
+      "text": "Grito de Guerra"
+    },
+    {
+      "key": "shuffle.rally_cry.note",
+      "text": "Cada onda enche cada torre em 30% ao surgir."
+    },
+    {
+      "key": "shuffle.vampire_posts.name",
+      "text": "Postes Vampíricos"
+    },
+    {
+      "key": "shuffle.vampire_posts.note",
+      "text": "Cada abate cura um pouco a torre."
+    },
+    {
+      "key": "shuffle.slow_march.name",
+      "text": "Marcha Lenta"
+    },
+    {
+      "key": "shuffle.slow_march.note",
+      "text": "A colina inteira avança 15% mais devagar."
+    },
+    {
+      "key": "shuffle.giant_slayer.name",
+      "text": "Mata-Gigantes"
+    },
+    {
+      "key": "shuffle.giant_slayer.note",
+      "text": "Os raios acertam brutos e armaduras 50% mais forte."
+    },
+    {
+      "key": "shuffle.second_wind.name",
+      "text": "Segundo Fôlego"
+    },
+    {
+      "key": "shuffle.second_wind.note",
+      "text": "Uma torre caída se levanta uma vez com metade da vida."
+    },
+    {
+      "key": "shuffle.hourglass_heart.name",
+      "text": "Coração de Ampulheta"
+    },
+    {
+      "key": "shuffle.hourglass_heart.note",
+      "text": "Cada onda congela a colina por 2 segundos ao surgir."
+    },
+    {
+      "key": "shuffle.repelling_wards.name",
+      "text": "Torres Repelentes"
+    },
+    {
+      "key": "shuffle.repelling_wards.note",
+      "text": "35% dos invasores que chegam à linha são lançados colina acima."
+    },
+    {
+      "key": "shuffle.execution.name",
+      "text": "Execução"
+    },
+    {
+      "key": "shuffle.execution.note",
+      "text": "Os raios eliminam de vez invasores com menos de 15% de vida."
+    },
+    {
+      "key": "shuffle.twin_barrels.name",
+      "text": "Canos Gêmeos"
+    },
+    {
+      "key": "shuffle.twin_barrels.note",
+      "text": "25% dos raios acertam duas vezes."
+    },
+    {
+      "key": "shuffle.sure_sight.name",
+      "text": "Mira Certeira"
+    },
+    {
+      "key": "shuffle.sure_sight.note",
+      "text": "Uma torre ociosa atira em qualquer cor com metade da força."
+    },
+    {
+      "key": "shuffle.chain_reaction.name",
+      "text": "Reação em Cadeia"
+    },
+    {
+      "key": "shuffle.chain_reaction.note",
+      "text": "Um invasor abatido atinge os vizinhos com 30% da sua vida."
+    },
+    {
+      "key": "shuffle.cursed_fire.name",
+      "text": "Fogo Amaldiçoado"
+    },
+    {
+      "key": "shuffle.cursed_fire.note",
+      "text": "6% dos raios amaldiçoam o alvo por 3 segundos."
+    },
+    {
+      "key": "shuffle.storm_bank.name",
+      "text": "Reserva de Tempestade"
+    },
+    {
+      "key": "shuffle.storm_bank.note",
+      "text": "Cada onda guarda uma sobrecarga em uma torre."
+    },
+    {
+      "key": "shuffle.phoenix.name",
+      "text": "Fênix"
+    },
+    {
+      "key": "shuffle.phoenix.note",
+      "text": "Quando a última torre cai, a linha inteira se levanta uma vez com vida cheia."
+    },
+    {
+      "key": "shuffle.overdrive.name",
+      "text": "Sobremarcha"
+    },
+    {
+      "key": "shuffle.overdrive.note",
+      "text": "Os raios acertam 40% mais forte e as torres atiram 25% mais rápido."
+    },
+    {
+      "key": "shuffle.rainbow_fuel.name",
+      "text": "Combustível Arco-Íris"
+    },
+    {
+      "key": "shuffle.rainbow_fuel.note",
+      "text": "Um quarto de cada combinação também abastece as outras três torres."
+    },
+    {
+      "key": "shuffle.last_stand.name",
+      "text": "Última Resistência"
+    },
+    {
+      "key": "shuffle.last_stand.note",
+      "text": "Uma torre com menos de 30% de vida atira 60% mais forte e mais rápido."
     }
   ]
 }

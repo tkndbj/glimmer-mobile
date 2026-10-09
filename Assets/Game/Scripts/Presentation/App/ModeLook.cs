@@ -54,6 +54,16 @@ namespace GlimmerGrove
         /// </para>
         /// </summary>
         public abstract Color Accent { get; }
+
+        /// <summary>
+        /// The screen a level on <paramref name="track"/> of this mode opens on: <see cref="Screen"/>
+        /// unless a lane plays by rules of its own. The Shuffle lane is the one that does.
+        ///
+        /// <b>Asked by <c>PlayRoute</c> and by nothing else</b>, so a lane is routed by being
+        /// declared here rather than by a branch at a door - which is the rule that put the
+        /// routing in <c>PlayRoute</c> in the first place.
+        /// </summary>
+        public virtual Type ScreenFor(GameTrack track) => Screen;
     }
 
     /// <summary>
@@ -143,5 +153,9 @@ namespace GlimmerGrove
         public override GameMode Mode => GameMode.Siege;
         public override Type Screen => typeof(SiegeScreen);
         public override Color Accent => Pal.Rose;
+
+        /// <summary>The Shuffle lane plays on its own screen (MODES.md 59); every other lane on the siege's.</summary>
+        public override Type ScreenFor(GameTrack track)
+            => track.Dealt ? typeof(ShuffleScreen) : Screen;
     }
 }

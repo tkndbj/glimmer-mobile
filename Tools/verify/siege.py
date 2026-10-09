@@ -1219,6 +1219,55 @@ def endless_wave(colours, seed, wave):
     return made
 
 
+# ----------------------------------------------------------------------------- the Shuffle lane
+#: `ShuffleRamp`: pure raiders, a body more every wave, every wave tougher. The figures are the
+#: C# constants by name; `ShuffleRampTests` and `check_shuffle` hold the two sides together by
+#: walking the same forty waves.
+SHUFFLE_FIRST_WAVE, SHUFFLE_MOST_RAIDERS = 4, 24
+SHUFFLE_HEALTH_STEP_TWENTIETHS = 3
+SHUFFLE_BLOW_EVERY_WAVES = 2
+SHUFFLE_BRUTES_FROM, SHUFFLE_BULWARKS_FROM = 2, 4          # no bombers: nothing drops on the hill
+SHUFFLE_CURSED_FROM, SHUFFLE_VOID_FROM = 10, 16
+SHUFFLE_WALKED = 40
+
+
+def shuffle_surge(wave):
+    """`ShuffleRamp.SurgeAt` - (health tenths, blow tenths)."""
+    wave = max(1, wave)
+    return ((20 + (wave - 1) * SHUFFLE_HEALTH_STEP_TWENTIETHS) // 2,
+            10 + (wave - 1) // SHUFFLE_BLOW_EVERY_WAVES)
+
+
+def shuffle_size(wave):
+    """`ShuffleRamp.SizeAt`."""
+    wave = max(1, wave)
+    return min(SHUFFLE_MOST_RAIDERS, MAX_RAIDERS, SHUFFLE_FIRST_WAVE + (wave - 1))
+
+
+def shuffle_wave(colours, seed, wave):
+    """`ShuffleRamp.WaveAt` - what wave `wave` (1-based) sends, as (colour, kind) pairs."""
+    wave = max(1, wave)
+    return [(colours[_roll(seed, (wave * 1009 + i * 73) & 0xFFFFFFFF) % len(colours)],
+             shuffle_kind_at(wave, i, seed))
+            for i in range(shuffle_size(wave))]
+
+
+def shuffle_kind_at(wave, i, seed):
+    """`ShuffleRamp.KindAt`."""
+    roll = _roll(seed, (wave * 1543 + i * 37) & 0xFFFFFFFF)
+
+    if wave >= SHUFFLE_BULWARKS_FROM and roll % 100 < _shuffle_share(wave, SHUFFLE_BULWARKS_FROM, 35):
+        return "bulwark"
+    if wave >= SHUFFLE_BRUTES_FROM and roll % 100 < _shuffle_share(wave, SHUFFLE_BRUTES_FROM, 55):
+        return "brute"
+    return "creeper"
+
+
+def _shuffle_share(wave, frm, ceiling):
+    grown = (wave - frm) * 5
+    return ceiling if grown > ceiling else grown
+
+
 def _kind_at(wave, i, seed):
     """`SiegeEndless.KindAt`."""
     roll = _roll(seed, (wave * 131 + i * 17) & 0xFFFFFFFF)

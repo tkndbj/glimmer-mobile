@@ -762,11 +762,42 @@ namespace GlimmerGrove.Content
         public SiegeEndlessDto endless;
 
         /// <summary>
+        /// The Shuffle lane's ramp, or absent for every other siege (MODES.md 59).
+        ///
+        /// <b>Exclusive with <see cref="endless"/>, <see cref="waves"/> and <see cref="boss"/></b>,
+        /// for the endless block's reason: a lane whose waves are a rule has no list of them, and
+        /// a file naming two ramps has two answers to what its second wave is. The reader refuses
+        /// any of those rather than picking one.
+        /// </summary>
+        public SiegeShuffleDto shuffle;
+
+        /// <summary>
         /// Whether this block was authored. <b>Never test the block itself for null</b> -
         /// JsonUtility instantiates a [Serializable] class field on every level in the game, so
         /// absence has to be a value a real block cannot hold.
         /// </summary>
         public bool IsAuthored => width > 0 || height > 0;
+    }
+
+    /// <summary>
+    /// The ramp of the Shuffle lane: the two star waves and nothing else.
+    ///
+    /// <b>Two numbers, for <see cref="SiegeEndlessDto"/>'s reason.</b> What arrives - how many
+    /// raiders, which kinds, how much tougher each wave is, that no boss ever comes - is a rule
+    /// in <c>ShuffleRamp</c>; what a file authors is how far a three-star run reaches, which is
+    /// the one number nothing can derive.
+    /// </summary>
+    [Serializable]
+    public sealed class SiegeShuffleDto
+    {
+        /// <summary>The wave a three-star run reaches. See <see cref="SiegeEndlessDto.goldWave"/>.</summary>
+        public int goldWave;
+
+        /// <summary>The fraction of <see cref="goldWave"/> a two-star run reaches. Between 0 and 1.</summary>
+        public float silverFactor;
+
+        /// <summary>Whether this block was authored - never the block itself for null.</summary>
+        public bool IsAuthored => goldWave > 0;
     }
 
     /// <summary>

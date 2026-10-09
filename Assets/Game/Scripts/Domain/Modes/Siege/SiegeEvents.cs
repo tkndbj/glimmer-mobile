@@ -443,11 +443,22 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public readonly List<SiegeStrike> Withers = new List<SiegeStrike>(16);
 
+        /// <summary>
+        /// Wards a build stood back up this step, by post (<see cref="SiegeBoosts.SecondWinds"/>,
+        /// <see cref="SiegeBoosts.Phoenixes"/>). Empty on every board but the Shuffle lane's.
+        ///
+        /// <b>Reported beside the fall rather than instead of it</b>: the blow that felled the
+        /// post is still in <see cref="Blows"/> or <see cref="Spells"/> with <c>Felled</c> true,
+        /// so the view draws the fall and then the rise, which is the picture a second wind is.
+        /// </summary>
+        public readonly List<int> Revived = new List<int>(4);
+
         /// <summary>The wave that has just stepped out, or -1.</summary>
         public int Wave = -1;
 
         public void Clear()
         {
+            Revived.Clear();
             Bolts.Clear();
             Burns.Clear();
             Blows.Clear();
@@ -481,6 +492,7 @@ namespace GlimmerGrove.Modes
                         || Devoured.Count > 0
                         || Brimmed.Count > 0 || Charmed.Count > 0 || Forged.Count > 0
                         || Stoned.Count > 0 || Redeemed.Count > 0 || Withers.Count > 0
+                        || Revived.Count > 0
                         || Stilled > 0f || Heaved > 0f || Hex > 0f || Beamed || Wave >= 0;
     }
 

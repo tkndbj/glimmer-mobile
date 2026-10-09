@@ -7836,6 +7836,374 @@
     {
       "key": "ui.keeper.chest_locked",
       "text": "Bu sandığı açmak için seviye {0} ol"
+    },
+    {
+      "key": "chapter.s13_shufflewatch.name",
+      "text": "Karışık Nöbet"
+    },
+    {
+      "key": "level.s13_shuffle.name",
+      "text": "Karışık Nöbet"
+    },
+    {
+      "key": "level.s13_shuffle.tagline",
+      "text": "Dört Kırıcı ve her oyunda yeni bir geliştirme eli. Dayanabildiğin kadar dayan."
+    },
+    {
+      "key": "track.shuffle.name",
+      "text": "Karışık"
+    },
+    {
+      "key": "track.shuffle.tagline",
+      "text": "her oyun yeni bir kurgu"
+    },
+    {
+      "key": "track.shuffle.point1",
+      "text": "Her oyun farklı bir el dağıtır."
+    },
+    {
+      "key": "track.shuffle.point2",
+      "text": "Her 2 aşamada 3 karttan 1 seç."
+    },
+    {
+      "key": "track.shuffle.point3",
+      "text": "Herkese dört Kırıcı. Teçhizat yok."
+    },
+    {
+      "key": "track.shuffle.point4",
+      "text": "Girmek bir kalp ister. Kaybetmek hiç kalp götürmez."
+    },
+    {
+      "key": "ui.shuffle.choose",
+      "text": "Bir geliştirme seç"
+    },
+    {
+      "key": "ui.shuffle.wave",
+      "text": "Aşama {0}"
+    },
+    {
+      "key": "ui.shuffle.tier.common",
+      "text": "Sıradan"
+    },
+    {
+      "key": "ui.shuffle.tier.rare",
+      "text": "Nadir"
+    },
+    {
+      "key": "ui.shuffle.tier.epic",
+      "text": "Destansı"
+    },
+    {
+      "key": "ui.shuffle.tier.legendary",
+      "text": "Efsanevi"
+    },
+    {
+      "key": "ui.shuffle.held",
+      "text": "{0} x{1}"
+    },
+    {
+      "key": "ui.shuffle.taken",
+      "text": "{0} seçildi"
+    },
+    {
+      "key": "ui.shuffle.taken_again",
+      "text": "{0} x{1}"
+    },
+    {
+      "key": "shuffle.heavy_bolts.name",
+      "text": "Ağır Oklar"
+    },
+    {
+      "key": "shuffle.heavy_bolts.note",
+      "text": "Her ok %15 daha sert vurur."
+    },
+    {
+      "key": "shuffle.quick_barrels.name",
+      "text": "Hızlı Namlular"
+    },
+    {
+      "key": "shuffle.quick_barrels.note",
+      "text": "Kuleler %12 daha hızlı ateş eder."
+    },
+    {
+      "key": "shuffle.lean_burn.name",
+      "text": "Tasarruflu Yanma"
+    },
+    {
+      "key": "shuffle.lean_burn.note",
+      "text": "Her ok %12 daha az yakıt harcar."
+    },
+    {
+      "key": "shuffle.rich_gems.name",
+      "text": "Zengin Mücevherler"
+    },
+    {
+      "key": "shuffle.rich_gems.note",
+      "text": "Her mücevher %20 daha fazla yakıt verir."
+    },
+    {
+      "key": "shuffle.iron_posts.name",
+      "text": "Demir Direkler"
+    },
+    {
+      "key": "shuffle.iron_posts.note",
+      "text": "Kuleler düşmeden önce %30 daha fazla hasar alır."
+    },
+    {
+      "key": "shuffle.wide_tubes.name",
+      "text": "Geniş Tüpler"
+    },
+    {
+      "key": "shuffle.wide_tubes.note",
+      "text": "Kuleler %25 daha fazla yakıt tutar."
+    },
+    {
+      "key": "shuffle.brace.name",
+      "text": "Takviye"
+    },
+    {
+      "key": "shuffle.brace.note",
+      "text": "Hatta inen her darbe 1 eksik alır."
+    },
+    {
+      "key": "shuffle.field_medic.name",
+      "text": "Sahra Hekimi"
+    },
+    {
+      "key": "shuffle.field_medic.note",
+      "text": "Kuleler yavaşça can kazanır."
+    },
+    {
+      "key": "shuffle.keen_eyes.name",
+      "text": "Keskin Gözler"
+    },
+    {
+      "key": "shuffle.keen_eyes.note",
+      "text": "Okların %10 çift hasar vurur."
+    },
+    {
+      "key": "shuffle.long_rest.name",
+      "text": "Uzun Mola"
+    },
+    {
+      "key": "shuffle.long_rest.note",
+      "text": "Aşamalar arası sessizlik %20 daha uzun sürer."
+    },
+    {
+      "key": "shuffle.splash_shot.name",
+      "text": "Patlayıcı Atış"
+    },
+    {
+      "key": "shuffle.splash_shot.note",
+      "text": "Oklar yakındaki akıncılara %40 sıçrar."
+    },
+    {
+      "key": "shuffle.chain_arc.name",
+      "text": "Zincir Ark"
+    },
+    {
+      "key": "shuffle.chain_arc.note",
+      "text": "Oklar bir akıncıya daha %50 ile sıçrar."
+    },
+    {
+      "key": "shuffle.pierce_rounds.name",
+      "text": "Delici Mermiler"
+    },
+    {
+      "key": "shuffle.pierce_rounds.note",
+      "text": "Her üçüncü ok tüm şeridi deler."
+    },
+    {
+      "key": "shuffle.frostbite.name",
+      "text": "Soğuk Isırığı"
+    },
+    {
+      "key": "shuffle.frostbite.note",
+      "text": "Oklar akıncıları dondurup %30 yavaşlatır."
+    },
+    {
+      "key": "shuffle.kindling.name",
+      "text": "Çıra"
+    },
+    {
+      "key": "shuffle.kindling.note",
+      "text": "Oklar akıncıları 3 saniye yakar."
+    },
+    {
+      "key": "shuffle.stunning_blows.name",
+      "text": "Sersemletici Vuruşlar"
+    },
+    {
+      "key": "shuffle.stunning_blows.note",
+      "text": "Okların %12 akıncıyı olduğu yerde durdurur."
+    },
+    {
+      "key": "shuffle.siphon.name",
+      "text": "Sifon"
+    },
+    {
+      "key": "shuffle.siphon.note",
+      "text": "Her öldürme kuleye biraz yakıt geri verir."
+    },
+    {
+      "key": "shuffle.charge_master.name",
+      "text": "Şarj Ustası"
+    },
+    {
+      "key": "shuffle.charge_master.note",
+      "text": "Aşırı şarjlar %50 daha sert vurur ve kuleler bir fazla biriktirir."
+    },
+    {
+      "key": "shuffle.thorns.name",
+      "text": "Dikenler"
+    },
+    {
+      "key": "shuffle.thorns.note",
+      "text": "Hatta vuran akıncı karşılığında yaralanır."
+    },
+    {
+      "key": "shuffle.charm_magnet.name",
+      "text": "Tılsım Mıknatısı"
+    },
+    {
+      "key": "shuffle.charm_magnet.note",
+      "text": "Tılsımlar iki kat sık gelir."
+    },
+    {
+      "key": "shuffle.rally_cry.name",
+      "text": "Savaş Çığlığı"
+    },
+    {
+      "key": "shuffle.rally_cry.note",
+      "text": "Her aşama başlarken her kuleyi %30 doldurur."
+    },
+    {
+      "key": "shuffle.vampire_posts.name",
+      "text": "Vampir Direkler"
+    },
+    {
+      "key": "shuffle.vampire_posts.note",
+      "text": "Her öldürme kuleyi biraz iyileştirir."
+    },
+    {
+      "key": "shuffle.slow_march.name",
+      "text": "Ağır Yürüyüş"
+    },
+    {
+      "key": "shuffle.slow_march.note",
+      "text": "Tüm tepe %15 daha yavaş ilerler."
+    },
+    {
+      "key": "shuffle.giant_slayer.name",
+      "text": "Dev Avcısı"
+    },
+    {
+      "key": "shuffle.giant_slayer.note",
+      "text": "Oklar devlere ve zırhlara %50 daha sert vurur."
+    },
+    {
+      "key": "shuffle.second_wind.name",
+      "text": "İkinci Nefes"
+    },
+    {
+      "key": "shuffle.second_wind.note",
+      "text": "Düşen bir kule yarım canla bir kez ayağa kalkar."
+    },
+    {
+      "key": "shuffle.hourglass_heart.name",
+      "text": "Kum Saati Kalbi"
+    },
+    {
+      "key": "shuffle.hourglass_heart.note",
+      "text": "Her aşama başlarken tepeyi 2 saniye dondurur."
+    },
+    {
+      "key": "shuffle.repelling_wards.name",
+      "text": "İtici Kuleler"
+    },
+    {
+      "key": "shuffle.repelling_wards.note",
+      "text": "Hatta ulaşan akıncıların %35 tepeye geri fırlatılır."
+    },
+    {
+      "key": "shuffle.execution.name",
+      "text": "İnfaz"
+    },
+    {
+      "key": "shuffle.execution.note",
+      "text": "Oklar canı %15 altındaki akıncıları anında bitirir."
+    },
+    {
+      "key": "shuffle.twin_barrels.name",
+      "text": "İkiz Namlular"
+    },
+    {
+      "key": "shuffle.twin_barrels.note",
+      "text": "Okların %25 iki kez vurur."
+    },
+    {
+      "key": "shuffle.sure_sight.name",
+      "text": "Keskin Nişan"
+    },
+    {
+      "key": "shuffle.sure_sight.note",
+      "text": "Boşta kalan kule her renge yarım güçle ateş eder."
+    },
+    {
+      "key": "shuffle.chain_reaction.name",
+      "text": "Zincirleme Tepki"
+    },
+    {
+      "key": "shuffle.chain_reaction.note",
+      "text": "Düşen akıncı canının %30 ile komşularına patlar."
+    },
+    {
+      "key": "shuffle.cursed_fire.name",
+      "text": "Lanetli Ateş"
+    },
+    {
+      "key": "shuffle.cursed_fire.note",
+      "text": "Okların %6 hedefini 3 saniye lanetler."
+    },
+    {
+      "key": "shuffle.storm_bank.name",
+      "text": "Fırtına Deposu"
+    },
+    {
+      "key": "shuffle.storm_bank.note",
+      "text": "Her aşama bir kuleye aşırı şarj biriktirir."
+    },
+    {
+      "key": "shuffle.phoenix.name",
+      "text": "Anka"
+    },
+    {
+      "key": "shuffle.phoenix.note",
+      "text": "Son kule düşünce tüm hat bir kez tam canla ayağa kalkar."
+    },
+    {
+      "key": "shuffle.overdrive.name",
+      "text": "Aşırı Güç"
+    },
+    {
+      "key": "shuffle.overdrive.note",
+      "text": "Oklar %40 daha sert vurur, kuleler %25 daha hızlı ateş eder."
+    },
+    {
+      "key": "shuffle.rainbow_fuel.name",
+      "text": "Gökkuşağı Yakıtı"
+    },
+    {
+      "key": "shuffle.rainbow_fuel.note",
+      "text": "Her eşleşmenin dörtte biri diğer üç kuleyi de besler."
+    },
+    {
+      "key": "shuffle.last_stand.name",
+      "text": "Son Direniş"
+    },
+    {
+      "key": "shuffle.last_stand.note",
+      "text": "Canı %30 altındaki kule %60 daha sert ve hızlı ateş eder."
     }
   ]
 }

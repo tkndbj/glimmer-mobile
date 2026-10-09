@@ -7836,6 +7836,374 @@
     {
       "key": "ui.keeper.chest_locked",
       "text": "Raggiungi il livello {0} per aprire questo forziere"
+    },
+    {
+      "key": "chapter.s13_shufflewatch.name",
+      "text": "La Veglia Mescolata"
+    },
+    {
+      "key": "level.s13_shuffle.name",
+      "text": "La Veglia Mescolata"
+    },
+    {
+      "key": "level.s13_shuffle.tagline",
+      "text": "Quattro Spaccatori e una mano di potenziamenti nuova a ogni partita. Resisti più che puoi."
+    },
+    {
+      "key": "track.shuffle.name",
+      "text": "Mescolato"
+    },
+    {
+      "key": "track.shuffle.tagline",
+      "text": "una partita diversa ogni volta"
+    },
+    {
+      "key": "track.shuffle.point1",
+      "text": "Ogni partita distribuisce una mano diversa."
+    },
+    {
+      "key": "track.shuffle.point2",
+      "text": "Scegli 1 carta su 3 ogni 2 ondate."
+    },
+    {
+      "key": "track.shuffle.point3",
+      "text": "Quattro Spaccatori per tutti. Niente schieramento."
+    },
+    {
+      "key": "track.shuffle.point4",
+      "text": "Entrare costa un cuore. Perdere non ne costa nessuno."
+    },
+    {
+      "key": "ui.shuffle.choose",
+      "text": "Scegli un potenziamento"
+    },
+    {
+      "key": "ui.shuffle.wave",
+      "text": "Ondata {0}"
+    },
+    {
+      "key": "ui.shuffle.tier.common",
+      "text": "Comune"
+    },
+    {
+      "key": "ui.shuffle.tier.rare",
+      "text": "Rara"
+    },
+    {
+      "key": "ui.shuffle.tier.epic",
+      "text": "Epica"
+    },
+    {
+      "key": "ui.shuffle.tier.legendary",
+      "text": "Leggendaria"
+    },
+    {
+      "key": "ui.shuffle.held",
+      "text": "{0} x{1}"
+    },
+    {
+      "key": "ui.shuffle.taken",
+      "text": "{0} scelta"
+    },
+    {
+      "key": "ui.shuffle.taken_again",
+      "text": "{0} x{1}"
+    },
+    {
+      "key": "shuffle.heavy_bolts.name",
+      "text": "Dardi Pesanti"
+    },
+    {
+      "key": "shuffle.heavy_bolts.note",
+      "text": "Ogni dardo colpisce il 15% più forte."
+    },
+    {
+      "key": "shuffle.quick_barrels.name",
+      "text": "Canne Rapide"
+    },
+    {
+      "key": "shuffle.quick_barrels.note",
+      "text": "Le torrette sparano il 12% più in fretta."
+    },
+    {
+      "key": "shuffle.lean_burn.name",
+      "text": "Combustione Pulita"
+    },
+    {
+      "key": "shuffle.lean_burn.note",
+      "text": "Ogni dardo brucia il 12% di carburante in meno."
+    },
+    {
+      "key": "shuffle.rich_gems.name",
+      "text": "Gemme Ricche"
+    },
+    {
+      "key": "shuffle.rich_gems.note",
+      "text": "Ogni gemma vale il 20% di carburante in più."
+    },
+    {
+      "key": "shuffle.iron_posts.name",
+      "text": "Pali di Ferro"
+    },
+    {
+      "key": "shuffle.iron_posts.note",
+      "text": "Le torrette reggono il 30% di danni in più prima di cadere."
+    },
+    {
+      "key": "shuffle.wide_tubes.name",
+      "text": "Tubi Larghi"
+    },
+    {
+      "key": "shuffle.wide_tubes.note",
+      "text": "Le torrette contengono il 25% di carburante in più."
+    },
+    {
+      "key": "shuffle.brace.name",
+      "text": "Rinforzo"
+    },
+    {
+      "key": "shuffle.brace.note",
+      "text": "Ogni colpo alla linea toglie 1 in meno."
+    },
+    {
+      "key": "shuffle.field_medic.name",
+      "text": "Medico da Campo"
+    },
+    {
+      "key": "shuffle.field_medic.note",
+      "text": "Le torrette recuperano vita lentamente."
+    },
+    {
+      "key": "shuffle.keen_eyes.name",
+      "text": "Occhi Acuti"
+    },
+    {
+      "key": "shuffle.keen_eyes.note",
+      "text": "Il 10% dei dardi fa il doppio dei danni."
+    },
+    {
+      "key": "shuffle.long_rest.name",
+      "text": "Lunga Pausa"
+    },
+    {
+      "key": "shuffle.long_rest.note",
+      "text": "La calma tra le ondate dura il 20% in più."
+    },
+    {
+      "key": "shuffle.splash_shot.name",
+      "text": "Colpo Esplosivo"
+    },
+    {
+      "key": "shuffle.splash_shot.note",
+      "text": "I dardi colpiscono i predoni vicini al 40%."
+    },
+    {
+      "key": "shuffle.chain_arc.name",
+      "text": "Arco a Catena"
+    },
+    {
+      "key": "shuffle.chain_arc.note",
+      "text": "I dardi saltano su un altro predone al 50%."
+    },
+    {
+      "key": "shuffle.pierce_rounds.name",
+      "text": "Colpi Perforanti"
+    },
+    {
+      "key": "shuffle.pierce_rounds.note",
+      "text": "Un dardo su tre trapassa tutta la corsia."
+    },
+    {
+      "key": "shuffle.frostbite.name",
+      "text": "Congelamento"
+    },
+    {
+      "key": "shuffle.frostbite.note",
+      "text": "I dardi gelano i predoni rallentandoli del 30%."
+    },
+    {
+      "key": "shuffle.kindling.name",
+      "text": "Esca"
+    },
+    {
+      "key": "shuffle.kindling.note",
+      "text": "I dardi incendiano i predoni per 3 secondi."
+    },
+    {
+      "key": "shuffle.stunning_blows.name",
+      "text": "Colpi Stordenti"
+    },
+    {
+      "key": "shuffle.stunning_blows.note",
+      "text": "Il 12% dei dardi blocca un predone sul posto."
+    },
+    {
+      "key": "shuffle.siphon.name",
+      "text": "Sifone"
+    },
+    {
+      "key": "shuffle.siphon.note",
+      "text": "Ogni predone abbattuto restituisce un po' di carburante alla torretta."
+    },
+    {
+      "key": "shuffle.charge_master.name",
+      "text": "Maestro di Carica"
+    },
+    {
+      "key": "shuffle.charge_master.note",
+      "text": "Le sovraccariche colpiscono il 50% più forte e le torrette ne tengono una in più."
+    },
+    {
+      "key": "shuffle.thorns.name",
+      "text": "Spine"
+    },
+    {
+      "key": "shuffle.thorns.note",
+      "text": "Un predone che colpisce la linea viene ferito a sua volta."
+    },
+    {
+      "key": "shuffle.charm_magnet.name",
+      "text": "Calamita per Amuleti"
+    },
+    {
+      "key": "shuffle.charm_magnet.note",
+      "text": "Gli amuleti compaiono il doppio delle volte."
+    },
+    {
+      "key": "shuffle.rally_cry.name",
+      "text": "Grido di Battaglia"
+    },
+    {
+      "key": "shuffle.rally_cry.note",
+      "text": "Ogni ondata riempie ogni torretta al 30% quando arriva."
+    },
+    {
+      "key": "shuffle.vampire_posts.name",
+      "text": "Pali Vampiri"
+    },
+    {
+      "key": "shuffle.vampire_posts.note",
+      "text": "Ogni predone abbattuto cura un po' la torretta."
+    },
+    {
+      "key": "shuffle.slow_march.name",
+      "text": "Marcia Lenta"
+    },
+    {
+      "key": "shuffle.slow_march.note",
+      "text": "Tutta la collina avanza il 15% più lentamente."
+    },
+    {
+      "key": "shuffle.giant_slayer.name",
+      "text": "Ammazzagiganti"
+    },
+    {
+      "key": "shuffle.giant_slayer.note",
+      "text": "I dardi colpiscono bruti e armature il 50% più forte."
+    },
+    {
+      "key": "shuffle.second_wind.name",
+      "text": "Secondo Respiro"
+    },
+    {
+      "key": "shuffle.second_wind.note",
+      "text": "Una torretta caduta si rialza una volta con metà vita."
+    },
+    {
+      "key": "shuffle.hourglass_heart.name",
+      "text": "Cuore di Clessidra"
+    },
+    {
+      "key": "shuffle.hourglass_heart.note",
+      "text": "Ogni ondata blocca la collina per 2 secondi quando arriva."
+    },
+    {
+      "key": "shuffle.repelling_wards.name",
+      "text": "Torrette Repellenti"
+    },
+    {
+      "key": "shuffle.repelling_wards.note",
+      "text": "Il 35% dei predoni che raggiungono la linea viene respinto su per la collina."
+    },
+    {
+      "key": "shuffle.execution.name",
+      "text": "Esecuzione"
+    },
+    {
+      "key": "shuffle.execution.note",
+      "text": "I dardi finiscono subito i predoni sotto il 15% di vita."
+    },
+    {
+      "key": "shuffle.twin_barrels.name",
+      "text": "Canne Gemelle"
+    },
+    {
+      "key": "shuffle.twin_barrels.note",
+      "text": "Il 25% dei dardi colpisce due volte."
+    },
+    {
+      "key": "shuffle.sure_sight.name",
+      "text": "Mira Sicura"
+    },
+    {
+      "key": "shuffle.sure_sight.note",
+      "text": "Una torretta inattiva spara a qualsiasi colore a metà potenza."
+    },
+    {
+      "key": "shuffle.chain_reaction.name",
+      "text": "Reazione a Catena"
+    },
+    {
+      "key": "shuffle.chain_reaction.note",
+      "text": "Un predone abbattuto colpisce i vicini con il 30% della sua vita."
+    },
+    {
+      "key": "shuffle.cursed_fire.name",
+      "text": "Fuoco Maledetto"
+    },
+    {
+      "key": "shuffle.cursed_fire.note",
+      "text": "Il 6% dei dardi maledice il bersaglio per 3 secondi."
+    },
+    {
+      "key": "shuffle.storm_bank.name",
+      "text": "Riserva di Tempesta"
+    },
+    {
+      "key": "shuffle.storm_bank.note",
+      "text": "Ogni ondata carica una sovraccarica su una torretta."
+    },
+    {
+      "key": "shuffle.phoenix.name",
+      "text": "Fenice"
+    },
+    {
+      "key": "shuffle.phoenix.note",
+      "text": "Quando cade l'ultima torretta, tutta la linea si rialza una volta a vita piena."
+    },
+    {
+      "key": "shuffle.overdrive.name",
+      "text": "Fuorigiri"
+    },
+    {
+      "key": "shuffle.overdrive.note",
+      "text": "I dardi colpiscono il 40% più forte e le torrette sparano il 25% più in fretta."
+    },
+    {
+      "key": "shuffle.rainbow_fuel.name",
+      "text": "Carburante Arcobaleno"
+    },
+    {
+      "key": "shuffle.rainbow_fuel.note",
+      "text": "Un quarto di ogni abbinamento alimenta anche le altre tre torrette."
+    },
+    {
+      "key": "shuffle.last_stand.name",
+      "text": "Ultima Resistenza"
+    },
+    {
+      "key": "shuffle.last_stand.note",
+      "text": "Una torretta sotto il 30% di vita spara il 60% più forte e più in fretta."
     }
   ]
 }

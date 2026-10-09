@@ -7836,6 +7836,374 @@
     {
       "key": "ui.keeper.chest_locked",
       "text": "Atteins le niveau {0} pour ouvrir ce coffre"
+    },
+    {
+      "key": "chapter.s13_shufflewatch.name",
+      "text": "La Garde Mêlée"
+    },
+    {
+      "key": "level.s13_shuffle.name",
+      "text": "La Garde Mêlée"
+    },
+    {
+      "key": "level.s13_shuffle.tagline",
+      "text": "Quatre Briseurs et une nouvelle main d'améliorations à chaque partie. Tiens aussi longtemps que possible."
+    },
+    {
+      "key": "track.shuffle.name",
+      "text": "Mêlée"
+    },
+    {
+      "key": "track.shuffle.tagline",
+      "text": "une partie différente à chaque fois"
+    },
+    {
+      "key": "track.shuffle.point1",
+      "text": "Chaque partie distribue une main différente."
+    },
+    {
+      "key": "track.shuffle.point2",
+      "text": "Choisis 1 carte sur 3 toutes les 2 vagues."
+    },
+    {
+      "key": "track.shuffle.point3",
+      "text": "Quatre Briseurs pour tous. Pas d'équipement."
+    },
+    {
+      "key": "track.shuffle.point4",
+      "text": "Entrer coûte un cœur. Perdre n'en coûte aucun."
+    },
+    {
+      "key": "ui.shuffle.choose",
+      "text": "Choisis une amélioration"
+    },
+    {
+      "key": "ui.shuffle.wave",
+      "text": "Vague {0}"
+    },
+    {
+      "key": "ui.shuffle.tier.common",
+      "text": "Commune"
+    },
+    {
+      "key": "ui.shuffle.tier.rare",
+      "text": "Rare"
+    },
+    {
+      "key": "ui.shuffle.tier.epic",
+      "text": "Épique"
+    },
+    {
+      "key": "ui.shuffle.tier.legendary",
+      "text": "Légendaire"
+    },
+    {
+      "key": "ui.shuffle.held",
+      "text": "{0} x{1}"
+    },
+    {
+      "key": "ui.shuffle.taken",
+      "text": "{0} choisie"
+    },
+    {
+      "key": "ui.shuffle.taken_again",
+      "text": "{0} x{1}"
+    },
+    {
+      "key": "shuffle.heavy_bolts.name",
+      "text": "Tirs Lourds"
+    },
+    {
+      "key": "shuffle.heavy_bolts.note",
+      "text": "Chaque tir frappe 15 % plus fort."
+    },
+    {
+      "key": "shuffle.quick_barrels.name",
+      "text": "Canons Rapides"
+    },
+    {
+      "key": "shuffle.quick_barrels.note",
+      "text": "Les tourelles tirent 12 % plus vite."
+    },
+    {
+      "key": "shuffle.lean_burn.name",
+      "text": "Combustion Sobre"
+    },
+    {
+      "key": "shuffle.lean_burn.note",
+      "text": "Chaque tir brûle 12 % de carburant en moins."
+    },
+    {
+      "key": "shuffle.rich_gems.name",
+      "text": "Gemmes Riches"
+    },
+    {
+      "key": "shuffle.rich_gems.note",
+      "text": "Chaque gemme vaut 20 % de carburant en plus."
+    },
+    {
+      "key": "shuffle.iron_posts.name",
+      "text": "Piliers de Fer"
+    },
+    {
+      "key": "shuffle.iron_posts.note",
+      "text": "Les tourelles encaissent 30 % de dégâts en plus avant de tomber."
+    },
+    {
+      "key": "shuffle.wide_tubes.name",
+      "text": "Tubes Larges"
+    },
+    {
+      "key": "shuffle.wide_tubes.note",
+      "text": "Les tourelles stockent 25 % de carburant en plus."
+    },
+    {
+      "key": "shuffle.brace.name",
+      "text": "Renfort"
+    },
+    {
+      "key": "shuffle.brace.note",
+      "text": "Chaque coup sur la ligne retire 1 de moins."
+    },
+    {
+      "key": "shuffle.field_medic.name",
+      "text": "Médecin de Campagne"
+    },
+    {
+      "key": "shuffle.field_medic.note",
+      "text": "Les tourelles regagnent lentement de la vie."
+    },
+    {
+      "key": "shuffle.keen_eyes.name",
+      "text": "Œil Vif"
+    },
+    {
+      "key": "shuffle.keen_eyes.note",
+      "text": "10 % des tirs font le double de dégâts."
+    },
+    {
+      "key": "shuffle.long_rest.name",
+      "text": "Longue Pause"
+    },
+    {
+      "key": "shuffle.long_rest.note",
+      "text": "Le calme entre deux vagues dure 20 % plus longtemps."
+    },
+    {
+      "key": "shuffle.splash_shot.name",
+      "text": "Tir Explosif"
+    },
+    {
+      "key": "shuffle.splash_shot.note",
+      "text": "Les tirs éclaboussent les pillards voisins à 40 %."
+    },
+    {
+      "key": "shuffle.chain_arc.name",
+      "text": "Arc en Chaîne"
+    },
+    {
+      "key": "shuffle.chain_arc.note",
+      "text": "Les tirs rebondissent sur un pillard de plus à 50 %."
+    },
+    {
+      "key": "shuffle.pierce_rounds.name",
+      "text": "Tirs Perforants"
+    },
+    {
+      "key": "shuffle.pierce_rounds.note",
+      "text": "Un tir sur trois transperce toute sa voie."
+    },
+    {
+      "key": "shuffle.frostbite.name",
+      "text": "Gelure"
+    },
+    {
+      "key": "shuffle.frostbite.note",
+      "text": "Les tirs gèlent les pillards et les ralentissent de 30 %."
+    },
+    {
+      "key": "shuffle.kindling.name",
+      "text": "Allume-feu"
+    },
+    {
+      "key": "shuffle.kindling.note",
+      "text": "Les tirs enflamment les pillards pendant 3 secondes."
+    },
+    {
+      "key": "shuffle.stunning_blows.name",
+      "text": "Coups Étourdissants"
+    },
+    {
+      "key": "shuffle.stunning_blows.note",
+      "text": "12 % des tirs stoppent net un pillard."
+    },
+    {
+      "key": "shuffle.siphon.name",
+      "text": "Siphon"
+    },
+    {
+      "key": "shuffle.siphon.note",
+      "text": "Chaque pillard abattu rend un peu de carburant à la tourelle."
+    },
+    {
+      "key": "shuffle.charge_master.name",
+      "text": "Maître des Charges"
+    },
+    {
+      "key": "shuffle.charge_master.note",
+      "text": "Les surcharges frappent 50 % plus fort et les tourelles en gardent une de plus."
+    },
+    {
+      "key": "shuffle.thorns.name",
+      "text": "Épines"
+    },
+    {
+      "key": "shuffle.thorns.note",
+      "text": "Un pillard qui frappe la ligne est blessé en retour."
+    },
+    {
+      "key": "shuffle.charm_magnet.name",
+      "text": "Aimant à Talismans"
+    },
+    {
+      "key": "shuffle.charm_magnet.note",
+      "text": "Les talismans apparaissent deux fois plus souvent."
+    },
+    {
+      "key": "shuffle.rally_cry.name",
+      "text": "Cri de Ralliement"
+    },
+    {
+      "key": "shuffle.rally_cry.note",
+      "text": "Chaque vague remplit chaque tourelle à 30 % en arrivant."
+    },
+    {
+      "key": "shuffle.vampire_posts.name",
+      "text": "Piliers Vampires"
+    },
+    {
+      "key": "shuffle.vampire_posts.note",
+      "text": "Chaque pillard abattu soigne un peu la tourelle."
+    },
+    {
+      "key": "shuffle.slow_march.name",
+      "text": "Marche Lente"
+    },
+    {
+      "key": "shuffle.slow_march.note",
+      "text": "Toute la colline avance 15 % plus lentement."
+    },
+    {
+      "key": "shuffle.giant_slayer.name",
+      "text": "Tueur de Géants"
+    },
+    {
+      "key": "shuffle.giant_slayer.note",
+      "text": "Les tirs frappent les brutes et les armures 50 % plus fort."
+    },
+    {
+      "key": "shuffle.second_wind.name",
+      "text": "Second Souffle"
+    },
+    {
+      "key": "shuffle.second_wind.note",
+      "text": "Une tourelle tombée se relève une fois, à moitié de vie."
+    },
+    {
+      "key": "shuffle.hourglass_heart.name",
+      "text": "Cœur de Sablier"
+    },
+    {
+      "key": "shuffle.hourglass_heart.note",
+      "text": "Chaque vague fige la colline 2 secondes en arrivant."
+    },
+    {
+      "key": "shuffle.repelling_wards.name",
+      "text": "Tourelles Répulsives"
+    },
+    {
+      "key": "shuffle.repelling_wards.note",
+      "text": "35 % des pillards qui atteignent la ligne sont rejetés vers le haut de la colline."
+    },
+    {
+      "key": "shuffle.execution.name",
+      "text": "Exécution"
+    },
+    {
+      "key": "shuffle.execution.note",
+      "text": "Les tirs achèvent net les pillards sous 15 % de vie."
+    },
+    {
+      "key": "shuffle.twin_barrels.name",
+      "text": "Canons Jumeaux"
+    },
+    {
+      "key": "shuffle.twin_barrels.note",
+      "text": "25 % des tirs touchent deux fois."
+    },
+    {
+      "key": "shuffle.sure_sight.name",
+      "text": "Visée Sûre"
+    },
+    {
+      "key": "shuffle.sure_sight.note",
+      "text": "Une tourelle inactive tire sur n'importe quelle couleur, à moitié de puissance."
+    },
+    {
+      "key": "shuffle.chain_reaction.name",
+      "text": "Réaction en Chaîne"
+    },
+    {
+      "key": "shuffle.chain_reaction.note",
+      "text": "Un pillard abattu frappe ses voisins à 30 % de sa vie."
+    },
+    {
+      "key": "shuffle.cursed_fire.name",
+      "text": "Feu Maudit"
+    },
+    {
+      "key": "shuffle.cursed_fire.note",
+      "text": "6 % des tirs maudissent leur cible pendant 3 secondes."
+    },
+    {
+      "key": "shuffle.storm_bank.name",
+      "text": "Réserve d'Orage"
+    },
+    {
+      "key": "shuffle.storm_bank.note",
+      "text": "Chaque vague stocke une surcharge sur une tourelle."
+    },
+    {
+      "key": "shuffle.phoenix.name",
+      "text": "Phénix"
+    },
+    {
+      "key": "shuffle.phoenix.note",
+      "text": "Quand la dernière tourelle tombe, toute la ligne se relève une fois à pleine vie."
+    },
+    {
+      "key": "shuffle.overdrive.name",
+      "text": "Surrégime"
+    },
+    {
+      "key": "shuffle.overdrive.note",
+      "text": "Les tirs frappent 40 % plus fort et les tourelles tirent 25 % plus vite."
+    },
+    {
+      "key": "shuffle.rainbow_fuel.name",
+      "text": "Carburant Arc-en-Ciel"
+    },
+    {
+      "key": "shuffle.rainbow_fuel.note",
+      "text": "Un quart de chaque alignement alimente aussi les trois autres tourelles."
+    },
+    {
+      "key": "shuffle.last_stand.name",
+      "text": "Dernier Rempart"
+    },
+    {
+      "key": "shuffle.last_stand.note",
+      "text": "Une tourelle sous 30 % de vie tire 60 % plus fort et plus vite."
     }
   ]
 }

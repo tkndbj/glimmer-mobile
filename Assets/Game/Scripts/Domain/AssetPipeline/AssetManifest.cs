@@ -448,6 +448,11 @@ namespace GlimmerGrove.AssetPipeline
             // no sprite is a white rectangle rather than a blank (invariant 7b). Three 96-pixel
             // tiles are not worth a scope's two failure modes.
             "ic_endless", "ic_surge", "ic_rank",
+
+            // And the Shuffle lane's two, for the same reason (`EndlessHub.ShuffleMarks`,
+            // `Tools/make_shuffle_art.py`), with the crest its hub stands as its hero
+            // (`EndlessHub.HubLane.Crest`).
+            "ic_shuffle", "ic_deck", "shuffle_crest",
             "potion1", "potion2", "potion3", "potion4", "potion5", "potion6",
 
             // The action bar's three utilities. Global rather than scoped to the one mode that
@@ -606,6 +611,9 @@ namespace GlimmerGrove.AssetPipeline
             // switcher moves both ways on a screen that is already standing, so a scope would
             // spend a frame loading on a tap a player makes to look at two things at once.
             "plain_ranked",
+
+            // And in the Shuffle lane's, for the same reason and on the same screen.
+            "plain_shuffle",
         };
 
         static readonly string[] Sfxs =

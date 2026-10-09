@@ -531,7 +531,7 @@ namespace GlimmerGrove
 
             _hub = EndlessHub.Build(Safe, Content, this, Mode, Lane, level, _headerFoot, unlocked,
                                     wall, () => Open(id, unlocked));
-            _hubDrawn = EndlessHub.Reading.Of(level, unlocked, wall);
+            _hubDrawn = EndlessHub.Reading.Of(Lane, level, unlocked, wall);
         }
 
         /// <summary>What the hub's column was last drawn from. See <see cref="RedrawHub"/>.</summary>
@@ -561,7 +561,7 @@ namespace GlimmerGrove
             bool unlocked = LevelUnlock.IsUnlocked(_index, id);
             string wall = HubWall(id, unlocked);
 
-            var reading = EndlessHub.Reading.Of(level, unlocked, wall);
+            var reading = EndlessHub.Reading.Of(Lane, level, unlocked, wall);
             if (!EndlessHub.Redraws(_hub, _hubDrawn, reading)) return;
 
             Retire(_hub);
@@ -1078,19 +1078,26 @@ namespace GlimmerGrove
                          && (LevelUnlock.ChapterBefore(_index, _entry.Id) != null
                           || LevelUnlock.ChapterAfter(_index, _entry.Id) != null);
 
-            _banner = Scenery.TitleRibbon(Safe, title.Upper(),
-                                          new Vector2(BannerWidth, BannerHeight),
-                                          new Vector2(.5f, 1f), new Vector2(0f, BannerY), 40,
-                                          26f, chevrons ? NameWidth : OpenNameWidth);
+            // **No plaque on a lane that deals its line** (the Shuffle lane, at the owner's
+            // instruction on 2026-10-09): its hub says its own name in the crest it stands as
+            // its hero, so a ribbon over it said the same thing twice - and the switcher takes
+            // the plaque's slot (see `head` below), which is what the owner asked for.
+            if (!Lane.Dealt)
+            {
+                _banner = Scenery.TitleRibbon(Safe, title.Upper(),
+                                              new Vector2(BannerWidth, BannerHeight),
+                                              new Vector2(.5f, 1f), new Vector2(0f, BannerY), 40,
+                                              26f, chevrons ? NameWidth : OpenNameWidth);
 
-            // Narrowed to `NameWidth` rather than to the ribbon's own width, because the two
-            // chapter chevrons sit inside it. The hand-rolled shrink loop that used to be here
-            // went with the ribbon: `Scenery.TitleRibbon` makes the caption `Shrinkable`, which
-            // is uGUI's own best fit, and setting `fontSize` under best fit does nothing.
-            _name = _banner.transform.Find("Title").GetComponent<Text>();
+                // Narrowed to `NameWidth` rather than to the ribbon's own width, because the two
+                // chapter chevrons sit inside it. The hand-rolled shrink loop that used to be here
+                // went with the ribbon: `Scenery.TitleRibbon` makes the caption `Shrinkable`, which
+                // is uGUI's own best fit, and setting `fontSize` under best fit does nothing.
+                _name = _banner.transform.Find("Title").GetComponent<Text>();
 
-            _banner.transform.localScale = Vector3.zero;
-            Tween.Pop(_banner.transform, 0f, .6f, .1f);
+                _banner.transform.localScale = Vector3.zero;
+                Tween.Pop(_banner.transform, 0f, .6f, .1f);
+            }
 
             if (_entry == null) return;
 
@@ -1121,7 +1128,8 @@ namespace GlimmerGrove
                                           36, new Vector2(StarsWidth, StarsHeight), new Vector2(1f, 1f),
                                           new Vector2(StarsX, StarsY), null, "ic_star");
 
-            BuildChapterArrows();
+            // The chevrons are carved into the plaque, so a header without one carries none.
+            if (_banner != null) BuildChapterArrows();
 
             // In the safe layer with the rest of the chrome, and drawn last so it sits over the
             // map. It builds nothing at all while the catalog holds one mode, which is what
@@ -1131,14 +1139,18 @@ namespace GlimmerGrove
             // plaque and the switcher are one column measured downwards from BannerY, so a
             // switcher holding its own offset would be a second copy of the same arithmetic and
             // would stop agreeing with the plaque the first time it was resized.
-            _modes = ModeSwitch.Build(Safe, _index, Mode, SwitchTo, ModesY);
+            // **The head of the switcher column is the plaque's own slot when there is no
+            // plaque** (a dealt lane, above), and the slot under it otherwise.
+            float head = _banner != null ? ModesY : BannerY;
+
+            _modes = ModeSwitch.Build(Safe, _index, Mode, SwitchTo, head);
 
             // **Under the mode switcher, and it takes that slot when the switcher drew nothing.**
             // Both controls fold away when their own question has one answer
             // (`HeaderMenu.Build`), so the header never carries a dead pill and never leaves a
             // gap where one would have been - which is why the offset is asked of what was
             // actually drawn rather than assumed.
-            float laneY = _modes != null ? ModesY - ModeSwitch.PillHeight - ModesGap : ModesY;
+            float laneY = _modes != null ? head - ModeSwitch.PillHeight - ModesGap : head;
 
             _tracks = TrackSwitch.Build(Safe, _index, Mode, Lane, SwitchLane, laneY);
 
@@ -1161,7 +1173,11 @@ namespace GlimmerGrove
             // where somebody is about to choose a level told them nothing about what they were
             // choosing it with. The bar shows the four turrets and the five kits, and opens the
             // shelf when it is tapped - so the button came out rather than sitting beside it.
-            if (Mode == GameMode.Siege)
+            //
+            // **And never on a lane that deals its line** (`GameTrack.Dealt`): the Shuffle lane
+            // stands four of one turret for everybody, so a shelf saying what you are taking in
+            // would be a readout of something the lane does not read.
+            if (Mode == GameMode.Siege && !Lane.Dealt)
             {
                 _kit = LoadoutBar.Build(Content, () => Flow.Go<LoadoutScreen>());
                 _kit.Load();
@@ -1644,7 +1660,7 @@ namespace GlimmerGrove
             {
                 var gate = LevelUnlock.GateAfter(_index, _entry.Id);
 
-                if (gate.Exists)
+                if (gate.Exists && _banner != null)
                     ScreenLessons.Offer(queue, Mechanic.MapChapterGate,
                                         (RectTransform)_banner.transform, gate.Required);
             }

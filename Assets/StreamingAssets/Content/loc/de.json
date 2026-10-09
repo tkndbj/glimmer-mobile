@@ -7836,6 +7836,374 @@
     {
       "key": "ui.keeper.chest_locked",
       "text": "Erreiche Stufe {0}, um diese Truhe zu öffnen"
+    },
+    {
+      "key": "chapter.s13_shufflewatch.name",
+      "text": "Die Gemischte Wacht"
+    },
+    {
+      "key": "level.s13_shuffle.name",
+      "text": "Die Gemischte Wacht"
+    },
+    {
+      "key": "level.s13_shuffle.tagline",
+      "text": "Vier Brecher und bei jedem Lauf eine neue Hand an Verbesserungen. Halte so lange du kannst."
+    },
+    {
+      "key": "track.shuffle.name",
+      "text": "Gemischt"
+    },
+    {
+      "key": "track.shuffle.tagline",
+      "text": "jeder Lauf ein neuer Aufbau"
+    },
+    {
+      "key": "track.shuffle.point1",
+      "text": "Jeder Lauf teilt eine andere Hand aus."
+    },
+    {
+      "key": "track.shuffle.point2",
+      "text": "Alle 2 Wellen 1 von 3 Karten wählen."
+    },
+    {
+      "key": "track.shuffle.point3",
+      "text": "Vier Brecher für alle. Keine Aufstellung."
+    },
+    {
+      "key": "track.shuffle.point4",
+      "text": "Der Einstieg kostet ein Herz. Verlieren kostet keins."
+    },
+    {
+      "key": "ui.shuffle.choose",
+      "text": "Wähle eine Verbesserung"
+    },
+    {
+      "key": "ui.shuffle.wave",
+      "text": "Welle {0}"
+    },
+    {
+      "key": "ui.shuffle.tier.common",
+      "text": "Gewöhnlich"
+    },
+    {
+      "key": "ui.shuffle.tier.rare",
+      "text": "Selten"
+    },
+    {
+      "key": "ui.shuffle.tier.epic",
+      "text": "Episch"
+    },
+    {
+      "key": "ui.shuffle.tier.legendary",
+      "text": "Legendär"
+    },
+    {
+      "key": "ui.shuffle.held",
+      "text": "{0} x{1}"
+    },
+    {
+      "key": "ui.shuffle.taken",
+      "text": "{0} gewählt"
+    },
+    {
+      "key": "ui.shuffle.taken_again",
+      "text": "{0} x{1}"
+    },
+    {
+      "key": "shuffle.heavy_bolts.name",
+      "text": "Schwere Bolzen"
+    },
+    {
+      "key": "shuffle.heavy_bolts.note",
+      "text": "Jeder Bolzen trifft 15% härter."
+    },
+    {
+      "key": "shuffle.quick_barrels.name",
+      "text": "Schnelle Läufe"
+    },
+    {
+      "key": "shuffle.quick_barrels.note",
+      "text": "Türme feuern 12% schneller."
+    },
+    {
+      "key": "shuffle.lean_burn.name",
+      "text": "Sparsamer Brand"
+    },
+    {
+      "key": "shuffle.lean_burn.note",
+      "text": "Jeder Bolzen verbrennt 12% weniger Treibstoff."
+    },
+    {
+      "key": "shuffle.rich_gems.name",
+      "text": "Reiche Juwelen"
+    },
+    {
+      "key": "shuffle.rich_gems.note",
+      "text": "Jedes Juwel ist 20% mehr Treibstoff wert."
+    },
+    {
+      "key": "shuffle.iron_posts.name",
+      "text": "Eiserne Pfosten"
+    },
+    {
+      "key": "shuffle.iron_posts.note",
+      "text": "Türme halten 30% mehr Schaden aus, bevor sie fallen."
+    },
+    {
+      "key": "shuffle.wide_tubes.name",
+      "text": "Weite Röhren"
+    },
+    {
+      "key": "shuffle.wide_tubes.note",
+      "text": "Türme fassen 25% mehr Treibstoff."
+    },
+    {
+      "key": "shuffle.brace.name",
+      "text": "Verstrebung"
+    },
+    {
+      "key": "shuffle.brace.note",
+      "text": "Jeder Schlag auf die Linie nimmt 1 weniger."
+    },
+    {
+      "key": "shuffle.field_medic.name",
+      "text": "Feldsanitäter"
+    },
+    {
+      "key": "shuffle.field_medic.note",
+      "text": "Türme erholen sich langsam."
+    },
+    {
+      "key": "shuffle.keen_eyes.name",
+      "text": "Scharfe Augen"
+    },
+    {
+      "key": "shuffle.keen_eyes.note",
+      "text": "10% der Bolzen treffen doppelt."
+    },
+    {
+      "key": "shuffle.long_rest.name",
+      "text": "Lange Pause"
+    },
+    {
+      "key": "shuffle.long_rest.note",
+      "text": "Die Ruhe zwischen den Wellen dauert 20% länger."
+    },
+    {
+      "key": "shuffle.splash_shot.name",
+      "text": "Splitterschuss"
+    },
+    {
+      "key": "shuffle.splash_shot.note",
+      "text": "Bolzen treffen nahe Plünderer mit 40%."
+    },
+    {
+      "key": "shuffle.chain_arc.name",
+      "text": "Kettenbogen"
+    },
+    {
+      "key": "shuffle.chain_arc.note",
+      "text": "Bolzen springen auf einen weiteren Plünderer mit 50% über."
+    },
+    {
+      "key": "shuffle.pierce_rounds.name",
+      "text": "Durchschlagsmunition"
+    },
+    {
+      "key": "shuffle.pierce_rounds.note",
+      "text": "Jeder dritte Bolzen durchschlägt die ganze Bahn."
+    },
+    {
+      "key": "shuffle.frostbite.name",
+      "text": "Frostbiss"
+    },
+    {
+      "key": "shuffle.frostbite.note",
+      "text": "Bolzen kühlen Plünderer und bremsen sie um 30%."
+    },
+    {
+      "key": "shuffle.kindling.name",
+      "text": "Zunder"
+    },
+    {
+      "key": "shuffle.kindling.note",
+      "text": "Bolzen setzen Plünderer 3 Sekunden in Brand."
+    },
+    {
+      "key": "shuffle.stunning_blows.name",
+      "text": "Betäubende Treffer"
+    },
+    {
+      "key": "shuffle.stunning_blows.note",
+      "text": "12% der Bolzen stoppen einen Plünderer auf der Stelle."
+    },
+    {
+      "key": "shuffle.siphon.name",
+      "text": "Siphon"
+    },
+    {
+      "key": "shuffle.siphon.note",
+      "text": "Jeder Abschuss gibt dem Turm etwas Treibstoff zurück."
+    },
+    {
+      "key": "shuffle.charge_master.name",
+      "text": "Lademeister"
+    },
+    {
+      "key": "shuffle.charge_master.note",
+      "text": "Überladungen treffen 50% härter und Türme speichern eine mehr."
+    },
+    {
+      "key": "shuffle.thorns.name",
+      "text": "Dornen"
+    },
+    {
+      "key": "shuffle.thorns.note",
+      "text": "Ein Plünderer, der die Linie trifft, wird selbst verletzt."
+    },
+    {
+      "key": "shuffle.charm_magnet.name",
+      "text": "Talisman-Magnet"
+    },
+    {
+      "key": "shuffle.charm_magnet.note",
+      "text": "Talismane erscheinen doppelt so oft."
+    },
+    {
+      "key": "shuffle.rally_cry.name",
+      "text": "Schlachtruf"
+    },
+    {
+      "key": "shuffle.rally_cry.note",
+      "text": "Jede Welle füllt jeden Turm beim Erscheinen zu 30%."
+    },
+    {
+      "key": "shuffle.vampire_posts.name",
+      "text": "Vampirpfosten"
+    },
+    {
+      "key": "shuffle.vampire_posts.note",
+      "text": "Jeder Abschuss heilt den Turm ein wenig."
+    },
+    {
+      "key": "shuffle.slow_march.name",
+      "text": "Langsamer Marsch"
+    },
+    {
+      "key": "shuffle.slow_march.note",
+      "text": "Der ganze Hügel marschiert 15% langsamer."
+    },
+    {
+      "key": "shuffle.giant_slayer.name",
+      "text": "Riesentöter"
+    },
+    {
+      "key": "shuffle.giant_slayer.note",
+      "text": "Bolzen treffen Schläger und Panzer 50% härter."
+    },
+    {
+      "key": "shuffle.second_wind.name",
+      "text": "Zweiter Atem"
+    },
+    {
+      "key": "shuffle.second_wind.note",
+      "text": "Ein gefallener Turm steht einmal mit halber Gesundheit wieder auf."
+    },
+    {
+      "key": "shuffle.hourglass_heart.name",
+      "text": "Sanduhrherz"
+    },
+    {
+      "key": "shuffle.hourglass_heart.note",
+      "text": "Jede Welle friert den Hügel beim Erscheinen 2 Sekunden ein."
+    },
+    {
+      "key": "shuffle.repelling_wards.name",
+      "text": "Abstoßende Türme"
+    },
+    {
+      "key": "shuffle.repelling_wards.note",
+      "text": "35% der Plünderer, die die Linie erreichen, werden den Hügel hinaufgeschleudert."
+    },
+    {
+      "key": "shuffle.execution.name",
+      "text": "Hinrichtung"
+    },
+    {
+      "key": "shuffle.execution.note",
+      "text": "Bolzen erledigen Plünderer unter 15% Gesundheit sofort."
+    },
+    {
+      "key": "shuffle.twin_barrels.name",
+      "text": "Doppelläufe"
+    },
+    {
+      "key": "shuffle.twin_barrels.note",
+      "text": "25% der Bolzen treffen zweimal."
+    },
+    {
+      "key": "shuffle.sure_sight.name",
+      "text": "Sicherer Blick"
+    },
+    {
+      "key": "shuffle.sure_sight.note",
+      "text": "Ein untätiger Turm feuert auf jede Farbe, mit halber Kraft."
+    },
+    {
+      "key": "shuffle.chain_reaction.name",
+      "text": "Kettenreaktion"
+    },
+    {
+      "key": "shuffle.chain_reaction.note",
+      "text": "Ein gefallener Plünderer trifft seine Nachbarn mit 30% seiner Gesundheit."
+    },
+    {
+      "key": "shuffle.cursed_fire.name",
+      "text": "Verfluchtes Feuer"
+    },
+    {
+      "key": "shuffle.cursed_fire.note",
+      "text": "6% der Bolzen verfluchen ihr Ziel 3 Sekunden lang."
+    },
+    {
+      "key": "shuffle.storm_bank.name",
+      "text": "Sturmspeicher"
+    },
+    {
+      "key": "shuffle.storm_bank.note",
+      "text": "Jede Welle speichert eine Überladung auf einem Turm."
+    },
+    {
+      "key": "shuffle.phoenix.name",
+      "text": "Phönix"
+    },
+    {
+      "key": "shuffle.phoenix.note",
+      "text": "Fällt der letzte Turm, steht die ganze Linie einmal mit voller Gesundheit wieder auf."
+    },
+    {
+      "key": "shuffle.overdrive.name",
+      "text": "Überlast"
+    },
+    {
+      "key": "shuffle.overdrive.note",
+      "text": "Bolzen treffen 40% härter und Türme feuern 25% schneller."
+    },
+    {
+      "key": "shuffle.rainbow_fuel.name",
+      "text": "Regenbogentreibstoff"
+    },
+    {
+      "key": "shuffle.rainbow_fuel.note",
+      "text": "Ein Viertel jeder Kombination füllt auch die anderen drei Türme."
+    },
+    {
+      "key": "shuffle.last_stand.name",
+      "text": "Letztes Gefecht"
+    },
+    {
+      "key": "shuffle.last_stand.note",
+      "text": "Ein Turm unter 30% Gesundheit feuert 60% härter und schneller."
     }
   ]
 }

@@ -229,7 +229,7 @@ wire or rules mistake reaches live accounts.
 
 ### Modes — in `Assets/Game/MODES.md`
 
-**Invariants 20–26h, 28–36i and 37–43f live in `Assets/Game/MODES.md`** — entry tests, grading, fail
+**Invariants 20–26h, 28–36i, 37–43f and 59–59h live in `Assets/Game/MODES.md`** — entry tests, grading, fail
 states, the withdrawn and hidden modes, and all of Thornwatch (charms, bosses, turrets, utilities, the
 Infinite lane). **Read it before touching a mode, a board, difficulty or the siege.**
 
@@ -598,7 +598,7 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
 
 ```
 Assets/Game/Scripts/Domain/        GlimmerGrove.Domain       (no UnityEngine.UI)
-  Board/ Content/ Modes/ Wards/ Utilities/ Persistence/ Progression/ Cloud/
+  Board/ Content/ Modes/ (Siege/, Shuffle/) Wards/ Utilities/ Persistence/ Progression/ Cloud/
   Localization/ Analytics/ AssetPipeline/ Store/ Ads/ Daily/ Events/ Social/
   Notifications/ Release/ Ranks/ Tasks/ Challenges/
 Assets/Game/Scripts/Notifications/  GlimmerGrove.Notifications (Domain; mobile-notifications binding)
@@ -649,6 +649,9 @@ The Editor is often not running and the MCP bridge is down whenever scripts fail
 `make_push_challenges.py --check`, `make_pairs_challenges.py`; `ChallengeTests` is the authority;
 `render_challenges.py` (`--id`, `--list`, `--contact`, `--phone`).
 
+**Shuffle lane** (59): `ShuffleTests` (the identity trace, the ramp's inline pin, the deck, the build, the
+model-player sweep), `Tools/make_shuffle_art.py --check`/`--contact`, `render_shuffle.py` (the hand,
+`--lang`, `--held`), `render_endless.py --shuffle` (the hub), `Tools/chapters/s13_shufflewatch.py`.
 **Siege**: `SiegeRuleTests` (prints the boss-rung table; `EveryShippedBossRungIsAFight` needs each new chapter
 in `ShippedChapters`), `TutorialTests`, `EndlessCheckpointTests`, `render_siege.py` (`--captions` is the only
 gate for a caption too wide; `--storm`, `--unleash`, `--stilled`, `--heaved`, `--alight`, `--cursed`, …),
@@ -774,7 +777,9 @@ gates print the derived totals.
   default with Apple/Google linking and per-account local archives. `gcloud functions list` is the authority
   on deployed functions. Firebase Unity SDK 13.15.0 as vendored tarballs under `GooglePackages/` (gitignored;
   `pwsh GooglePackages/fetch.ps1`).
-- **One live mode, Thornwatch (siege)**: chapters `s01`, `s03`–`s08` (ten rungs each), `s09`–`s12` (twenty,
+- **One live mode, Thornwatch (siege)** on three tracks: the ladder, the Infinite lane and the Shuffle lane
+  (`s13_shufflewatch`, keeper 5, MODES.md 59 - a dealt Breaker line, no bosses, three upgrade cards every two
+  waves; the two authored star waves are guesses until the owner plays). Chapters `s01`, `s03`–`s08` (ten rungs each), `s09`–`s12` (twenty,
   boss duels every fifth), and `s02_endlesswatch` on the Infinite track (opens at keeper 10). Glade, fall and
   prism are hidden. Six casts; the cast table and its squares are full (`SiegeMode.MainCasts`) — the next
   chapter wraps or cuts a cast. Details in `MODES.md`.

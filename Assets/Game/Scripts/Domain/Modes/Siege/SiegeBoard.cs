@@ -198,6 +198,46 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public readonly WardLine Line;
 
+        SiegeBoosts _boosts = SiegeBoosts.None;
+
+        /// <summary>
+        /// What this run's build does to the line (<see cref="SiegeBoosts"/>): the plain line on
+        /// every board but the Shuffle lane's, which hands its board a live one and refills it
+        /// each time a card is taken.
+        ///
+        /// <b>Never null</b> - a null is read as the plain line - and <b>read live</b> at every
+        /// seam, so a card taken between two bolts reaches the second. The ward figures a build
+        /// changes are pushed in by <see cref="Refit"/>, because a ward's health and capacity are
+        /// state rather than readings.
+        /// </summary>
+        public SiegeBoosts Boosts
+        {
+            get => _boosts;
+            set => _boosts = value ?? SiegeBoosts.None;
+        }
+
+        /// <summary>Seconds of regeneration banked and not yet paid. See <c>Regen</c>.</summary>
+        float _regen;
+
+        /// <summary>
+        /// Re-reads every ward's figures under the build it holds. Called by the Shuffle lane
+        /// each time a card is taken and by nothing else; on the plain line it reads every ward
+        /// back to exactly what it was built with.
+        /// </summary>
+        public void Refit()
+        {
+            for (int i = 0; i < _wards.Length; i++)
+            {
+                var ward = _wards[i];
+
+                int full = SiegeTuning.HealthOf(ward.Build) * _boosts.GuardPercent / 100;
+                float capacity = SiegeTuning.CapacityOf(ward.Model) * _boosts.CapacityPercent / 100f;
+
+                ward.Fortify(full, capacity, SiegeTuning.MostCharges + _boosts.ExtraCharges,
+                             _boosts.OffColourTenths);
+            }
+        }
+
         SiegeBoard(SiegeLayout layout, WardLine line, SiegeStart start)
         {
             Layout = layout;

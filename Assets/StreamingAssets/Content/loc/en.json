@@ -7836,6 +7836,374 @@
     {
       "key": "ui.keeper.chest_locked",
       "text": "Reach level {0} to open this chest"
+    },
+    {
+      "key": "chapter.s13_shufflewatch.name",
+      "text": "The Shuffle Watch"
+    },
+    {
+      "key": "level.s13_shuffle.name",
+      "text": "The Shuffle Watch"
+    },
+    {
+      "key": "level.s13_shuffle.tagline",
+      "text": "Four Breakers, a new hand of upgrades every run. Hold as long as you can."
+    },
+    {
+      "key": "track.shuffle.name",
+      "text": "Shuffle"
+    },
+    {
+      "key": "track.shuffle.tagline",
+      "text": "a new build every run"
+    },
+    {
+      "key": "track.shuffle.point1",
+      "text": "Every run deals a different hand."
+    },
+    {
+      "key": "track.shuffle.point2",
+      "text": "Pick 1 of 3 cards every 2 waves."
+    },
+    {
+      "key": "track.shuffle.point3",
+      "text": "Four Breakers each. No loadout."
+    },
+    {
+      "key": "track.shuffle.point4",
+      "text": "A heart to enter. Losing costs none."
+    },
+    {
+      "key": "ui.shuffle.choose",
+      "text": "Choose an upgrade"
+    },
+    {
+      "key": "ui.shuffle.wave",
+      "text": "Wave {0}"
+    },
+    {
+      "key": "ui.shuffle.tier.common",
+      "text": "Common"
+    },
+    {
+      "key": "ui.shuffle.tier.rare",
+      "text": "Rare"
+    },
+    {
+      "key": "ui.shuffle.tier.epic",
+      "text": "Epic"
+    },
+    {
+      "key": "ui.shuffle.tier.legendary",
+      "text": "Legendary"
+    },
+    {
+      "key": "ui.shuffle.held",
+      "text": "{0} x{1}"
+    },
+    {
+      "key": "ui.shuffle.taken",
+      "text": "{0} taken"
+    },
+    {
+      "key": "ui.shuffle.taken_again",
+      "text": "{0} x{1}"
+    },
+    {
+      "key": "shuffle.heavy_bolts.name",
+      "text": "Heavy Bolts"
+    },
+    {
+      "key": "shuffle.heavy_bolts.note",
+      "text": "Every bolt hits 15% harder."
+    },
+    {
+      "key": "shuffle.quick_barrels.name",
+      "text": "Quick Barrels"
+    },
+    {
+      "key": "shuffle.quick_barrels.note",
+      "text": "Turrets fire 12% faster."
+    },
+    {
+      "key": "shuffle.lean_burn.name",
+      "text": "Lean Burn"
+    },
+    {
+      "key": "shuffle.lean_burn.note",
+      "text": "Each bolt burns 12% less fuel."
+    },
+    {
+      "key": "shuffle.rich_gems.name",
+      "text": "Rich Gems"
+    },
+    {
+      "key": "shuffle.rich_gems.note",
+      "text": "Every gem is worth 20% more fuel."
+    },
+    {
+      "key": "shuffle.iron_posts.name",
+      "text": "Iron Posts"
+    },
+    {
+      "key": "shuffle.iron_posts.note",
+      "text": "Turrets have 30% more health."
+    },
+    {
+      "key": "shuffle.wide_tubes.name",
+      "text": "Wide Tubes"
+    },
+    {
+      "key": "shuffle.wide_tubes.note",
+      "text": "Turrets hold 25% more fuel."
+    },
+    {
+      "key": "shuffle.brace.name",
+      "text": "Brace"
+    },
+    {
+      "key": "shuffle.brace.note",
+      "text": "Every blow at the line takes 1 less."
+    },
+    {
+      "key": "shuffle.field_medic.name",
+      "text": "Field Medic"
+    },
+    {
+      "key": "shuffle.field_medic.note",
+      "text": "Turrets slowly regain health."
+    },
+    {
+      "key": "shuffle.keen_eyes.name",
+      "text": "Keen Eyes"
+    },
+    {
+      "key": "shuffle.keen_eyes.note",
+      "text": "10% of bolts hit for double."
+    },
+    {
+      "key": "shuffle.long_rest.name",
+      "text": "Long Rest"
+    },
+    {
+      "key": "shuffle.long_rest.note",
+      "text": "The quiet between waves lasts 20% longer."
+    },
+    {
+      "key": "shuffle.splash_shot.name",
+      "text": "Splash Shot"
+    },
+    {
+      "key": "shuffle.splash_shot.note",
+      "text": "Bolts splash nearby raiders for 40%."
+    },
+    {
+      "key": "shuffle.chain_arc.name",
+      "text": "Chain Arc"
+    },
+    {
+      "key": "shuffle.chain_arc.note",
+      "text": "Bolts arc to one more raider for 50%."
+    },
+    {
+      "key": "shuffle.pierce_rounds.name",
+      "text": "Pierce Rounds"
+    },
+    {
+      "key": "shuffle.pierce_rounds.note",
+      "text": "Every third bolt lances its whole lane."
+    },
+    {
+      "key": "shuffle.frostbite.name",
+      "text": "Frostbite"
+    },
+    {
+      "key": "shuffle.frostbite.note",
+      "text": "Bolts chill raiders, slowing them 30%."
+    },
+    {
+      "key": "shuffle.kindling.name",
+      "text": "Kindling"
+    },
+    {
+      "key": "shuffle.kindling.note",
+      "text": "Bolts set raiders burning for 3 seconds."
+    },
+    {
+      "key": "shuffle.stunning_blows.name",
+      "text": "Stunning Blows"
+    },
+    {
+      "key": "shuffle.stunning_blows.note",
+      "text": "12% of bolts stop a raider in its tracks."
+    },
+    {
+      "key": "shuffle.siphon.name",
+      "text": "Siphon"
+    },
+    {
+      "key": "shuffle.siphon.note",
+      "text": "Every kill gives the turret a little fuel back."
+    },
+    {
+      "key": "shuffle.charge_master.name",
+      "text": "Charge Master"
+    },
+    {
+      "key": "shuffle.charge_master.note",
+      "text": "Overcharges hit 50% harder and turrets bank one more."
+    },
+    {
+      "key": "shuffle.thorns.name",
+      "text": "Thorns"
+    },
+    {
+      "key": "shuffle.thorns.note",
+      "text": "A raider that strikes the line is hurt back."
+    },
+    {
+      "key": "shuffle.charm_magnet.name",
+      "text": "Charm Magnet"
+    },
+    {
+      "key": "shuffle.charm_magnet.note",
+      "text": "Charms are dealt twice as often."
+    },
+    {
+      "key": "shuffle.rally_cry.name",
+      "text": "Rally Cry"
+    },
+    {
+      "key": "shuffle.rally_cry.note",
+      "text": "Each new wave gives every turret 30% fuel."
+    },
+    {
+      "key": "shuffle.vampire_posts.name",
+      "text": "Vampire Posts"
+    },
+    {
+      "key": "shuffle.vampire_posts.note",
+      "text": "Every kill heals the turret a little."
+    },
+    {
+      "key": "shuffle.slow_march.name",
+      "text": "Slow March"
+    },
+    {
+      "key": "shuffle.slow_march.note",
+      "text": "The whole hill walks 15% slower."
+    },
+    {
+      "key": "shuffle.giant_slayer.name",
+      "text": "Giant Slayer"
+    },
+    {
+      "key": "shuffle.giant_slayer.note",
+      "text": "Bolts hit brutes and armour 50% harder."
+    },
+    {
+      "key": "shuffle.second_wind.name",
+      "text": "Second Wind"
+    },
+    {
+      "key": "shuffle.second_wind.note",
+      "text": "A fallen turret stands back up once, at half health."
+    },
+    {
+      "key": "shuffle.hourglass_heart.name",
+      "text": "Hourglass Heart"
+    },
+    {
+      "key": "shuffle.hourglass_heart.note",
+      "text": "Every wave freezes the hill for 2 seconds as it steps out."
+    },
+    {
+      "key": "shuffle.repelling_wards.name",
+      "text": "Repelling Turrets"
+    },
+    {
+      "key": "shuffle.repelling_wards.note",
+      "text": "35% of raiders reaching the line are thrown back up the hill."
+    },
+    {
+      "key": "shuffle.execution.name",
+      "text": "Execution"
+    },
+    {
+      "key": "shuffle.execution.note",
+      "text": "Bolts finish raiders under 15% health outright."
+    },
+    {
+      "key": "shuffle.twin_barrels.name",
+      "text": "Twin Barrels"
+    },
+    {
+      "key": "shuffle.twin_barrels.note",
+      "text": "25% of bolts land twice."
+    },
+    {
+      "key": "shuffle.sure_sight.name",
+      "text": "Sure Sight"
+    },
+    {
+      "key": "shuffle.sure_sight.note",
+      "text": "An idle turret fires at any colour, at half power."
+    },
+    {
+      "key": "shuffle.chain_reaction.name",
+      "text": "Chain Reaction"
+    },
+    {
+      "key": "shuffle.chain_reaction.note",
+      "text": "A felled raider blasts its neighbours for 30% of its health."
+    },
+    {
+      "key": "shuffle.cursed_fire.name",
+      "text": "Cursed Fire"
+    },
+    {
+      "key": "shuffle.cursed_fire.note",
+      "text": "6% of bolts curse their target for 3 seconds."
+    },
+    {
+      "key": "shuffle.storm_bank.name",
+      "text": "Storm Bank"
+    },
+    {
+      "key": "shuffle.storm_bank.note",
+      "text": "Each new wave banks an overcharge on a turret."
+    },
+    {
+      "key": "shuffle.phoenix.name",
+      "text": "Phoenix"
+    },
+    {
+      "key": "shuffle.phoenix.note",
+      "text": "When the last turret falls, the whole line rises once at full health."
+    },
+    {
+      "key": "shuffle.overdrive.name",
+      "text": "Overdrive"
+    },
+    {
+      "key": "shuffle.overdrive.note",
+      "text": "Bolts hit 40% harder and turrets fire 25% faster."
+    },
+    {
+      "key": "shuffle.rainbow_fuel.name",
+      "text": "Rainbow Fuel"
+    },
+    {
+      "key": "shuffle.rainbow_fuel.note",
+      "text": "A quarter of every match also feeds the other three turrets."
+    },
+    {
+      "key": "shuffle.last_stand.name",
+      "text": "Last Stand"
+    },
+    {
+      "key": "shuffle.last_stand.note",
+      "text": "A turret under 30% health fires 60% harder and faster."
     }
   ]
 }

@@ -1237,7 +1237,12 @@ namespace GlimmerGrove.Content
         /// </summary>
         public static int CastFor(GameTrack track, int ordinal)
         {
-            if (track == GameTrack.Infinite) return Medley;
+            // **Both lanes that never end draw the medley.** The Shuffle lane sends the same
+            // bodies the Infinite lane does - everything the player has already fought, as a
+            // crowd rather than a chapter - and the two are told apart by what the player holds
+            // rather than by who walks down the hill, which is the one place 37cz's rule gives
+            // way: a lane one tap away is the same place with different rules.
+            if (!track.Laddered) return Medley;
             if (ordinal < 0) return Insects;
 
             return MainCasts[ordinal % MainCasts.Length];
@@ -1422,6 +1427,26 @@ namespace GlimmerGrove.Content
             AssetRequest.Sprite(AssetManifest.SiegeArt("gem_void")),
         };
 
+        /// <summary>
+        /// The Shuffle lane's card pictures, one per card in the catalog (<c>ShuffleCard.Icon</c>).
+        ///
+        /// <b>Scoped to the lane's chapter rather than global</b> (invariant 7b): forty tiles are
+        /// wanted exactly while that lane is open and never on a chapter, so they travel with
+        /// the chapter's own scope - loaded when the hub is entered, resident for the run, gone
+        /// when the lane is left. Named in <see cref="Art"/> as well, because that is the
+        /// question about what <em>exists</em> and the audit walks it.
+        /// </summary>
+        public static IReadOnlyList<AssetRequest> ShuffleArt()
+        {
+            var cards = GlimmerGrove.Shuffle.ShuffleCards.All;
+            var list = new List<AssetRequest>(cards.Length);
+
+            for (int i = 0; i < cards.Length; i++)
+                list.Add(AssetRequest.Sprite(AssetManifest.Ui(cards[i].Icon.Substring(3))));
+
+            return list;
+        }
+
         public override IReadOnlyList<AssetRequest> Art
         {
             get
@@ -1432,6 +1457,9 @@ namespace GlimmerGrove.Content
                 // The curse's two, because this is the question about what *exists* (see below).
                 list.AddRange(CurseArt);
                 list.AddRange(VoidArt);
+
+                // And the Shuffle lane's cards, for the same reason.
+                list.AddRange(ShuffleArt());
 
                 // **Every cast, because this is the question about what *exists*.** It is what
                 // `AddressableAddresses.FrameFolders` walks to label frames, and a reel that is
@@ -1494,12 +1522,22 @@ namespace GlimmerGrove.Content
 
             // One cast, chosen by where this chapter sits and which lane it is in - and by the same
             // function the view asks when it draws a body, so the two cannot disagree.
-            int cast = CastFor(GameContent.Index.TrackOf(chapter.Id),
-                               GameContent.Index.ChapterOrderOf(chapter.Id));
+            var track = GameContent.Index.TrackOf(chapter.Id);
+
+            int cast = CastFor(track, GameContent.Index.ChapterOrderOf(chapter.Id));
 
             list.AddRange(CastArt(cast));
 
             Reels(list, CastSwingArt(cast));
+
+            // **The Shuffle lane's cards and its dealt line travel with its chapter**
+            // (`ShuffleArt`, `ShuffleLine`): the hand is drawn over this lane's board and the
+            // four Breakers stand on it, and neither is asked for by any other chapter.
+            if (track.Dealt)
+            {
+                list.AddRange(ShuffleArt());
+                list.AddRange(GlimmerGrove.Shuffle.ShuffleLine.Line.Art());
+            }
 
             var seen = new HashSet<SiegeKind>();
             bool cursed = false, voided = false;
@@ -1598,23 +1636,39 @@ namespace GlimmerGrove.Content
             // **The ramp, for a lane whose waves never stop.** A level authors one or the other:
             // an endless lane's muster is a rule (`SiegeEndless`) rather than a list, so a file
             // carrying both would have two answers to what its second wave is.
-            SiegeEndless endless = null;
+            SiegeRamp endless = null;
 
-            if (block.endless != null && block.endless.IsAuthored)
+            bool infinite = block.endless != null && block.endless.IsAuthored;
+            bool shuffle = block.shuffle != null && block.shuffle.IsAuthored;
+
+            // **Two ramps is two answers to what the second wave is**, refused like a ramp
+            // beside an authored list (MODES.md 59).
+            if (infinite && shuffle)
+            {
+                problems.Add($"{id}: this siege authors both an 'endless' ramp and a 'shuffle' "
+                           + "ramp. A lane climbs one ladder - drop one of the two blocks");
+                return false;
+            }
+
+            if (infinite || shuffle)
             {
                 bool authored = (block.waves != null && block.waves.Length > 0)
                              || !string.IsNullOrEmpty(block.boss);
 
                 if (authored)
                 {
-                    problems.Add($"{id}: this siege authors both an endless ramp and its own "
-                               + "waves. A lane whose waves never stop has no list of them - "
-                               + "drop the 'waves' and 'boss' fields, or drop 'endless'");
+                    problems.Add($"{id}: this siege authors both a ramp and its own waves. A "
+                               + "lane whose waves never stop has no list of them - drop the "
+                               + "'waves' and 'boss' fields, or drop the ramp block");
                     return false;
                 }
 
-                endless = new SiegeEndless(block.gems, block.cogs,
-                                           block.endless.goldWave, block.endless.silverFactor);
+                endless = infinite
+                        ? new SiegeEndless(block.gems, block.cogs,
+                                           block.endless.goldWave, block.endless.silverFactor)
+                        : (SiegeRamp)new GlimmerGrove.Shuffle.ShuffleRamp(
+                                           block.gems, block.shuffle.goldWave,
+                                           block.shuffle.silverFactor);
             }
 
             // **Refused here rather than clamped**, for the retired cog cell's reason: a body
@@ -1679,7 +1733,7 @@ namespace GlimmerGrove.Content
             var sends = siege.Layout;
 
             if (sends.IsEndless)
-                return LevelTuning.Climbing(sends.Endless.GoldWave, sends.Endless.SilverFactor);
+                return LevelTuning.Climbing(sends.Ramp.GoldWave, sends.Ramp.SilverFactor);
 
             return new LevelTuning(SiegeTuning.Par(sends),
                                    dto.goldFactor, dto.silverFactor,

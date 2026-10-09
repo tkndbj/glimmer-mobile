@@ -103,7 +103,7 @@ namespace GlimmerGrove.Modes
     /// numbers.
     /// </para>
     /// </summary>
-    public sealed class SiegeEndless
+    public sealed class SiegeEndless : SiegeRamp
     {
         /// <summary>
         /// A boss every fourth wave, while they still come one at a time.
@@ -285,9 +285,9 @@ namespace GlimmerGrove.Modes
         /// so how far is far is the one number a designer has to decide - and it is decided by
         /// playing, which is what <c>SiegeRuleTests</c> and a device are for.
         /// </summary>
-        public readonly int GoldWave;
+        public override int GoldWave { get; }
 
-        public readonly float SilverFactor;
+        public override float SilverFactor { get; }
 
         public SiegeEndless(string colours, int cogs, int goldWave, float silverFactor)
         {
@@ -296,6 +296,24 @@ namespace GlimmerGrove.Modes
             GoldWave = goldWave < 1 ? 1 : goldWave;
             SilverFactor = silverFactor > 0f && silverFactor < 1f ? silverFactor : .55f;
         }
+
+        // ------------------------------------------------------------------ the ramp
+        /// <summary><see cref="SurgeAt"/>, answered through the seam every lane shares.</summary>
+        public override SiegeSurge SurgeFor(int wave) => SurgeAt(wave);
+
+        /// <summary>The curse from wave fifteen and the void from wave twenty. See <see cref="CursedFrom"/>.</summary>
+        public override int CursesFrom => CursedFrom;
+
+        public override int VoidsFrom => VoidFrom;
+
+        /// <summary>
+        /// As far as the second time every boss has been met, which is where the schedule starts
+        /// repeating (<see cref="PairsAfter"/>).
+        /// </summary>
+        public override int Proves => PairsAfter * 3;
+
+        /// <summary>This lane is the one that sends bosses: four alone, then every pair.</summary>
+        public override bool SendsBosses => true;
 
         // ------------------------------------------------------------------ the schedule
         /// <summary>Whether wave <paramref name="wave"/> (1-based) is a boss wave.</summary>
@@ -360,7 +378,7 @@ namespace GlimmerGrove.Modes
         /// never lets up, it is the difference between a fight and a pile-up.
         /// </para>
         /// </summary>
-        public SiegeSpec[] WaveAt(int wave, uint seed)
+        public override SiegeSpec[] WaveAt(int wave, uint seed)
         {
             if (wave < 1) wave = 1;
 
@@ -478,25 +496,7 @@ namespace GlimmerGrove.Modes
             => Colours[(int)(Roll(seed, unchecked((uint)wave * 977u + (uint)index * 61u))
                          % (uint)Colours.Length)];
 
-        /// <summary>
-        /// One number out of the level's seed and a coordinate.
-        ///
-        /// <b>A hash rather than a stream</b>, deliberately: a stream would make wave forty depend
-        /// on how many rolls waves one to thirty-nine happened to take, so a rule change anywhere
-        /// would move a hill somebody had already learned. Hashing the coordinate means each wave
-        /// is dealt on its own.
-        /// </summary>
-        static uint Roll(uint seed, uint at)
-        {
-            uint h = seed ^ 2166136261u;
-
-            h ^= at;
-            h = unchecked(h * 16777619u);
-            h ^= h >> 15;
-            h = unchecked(h * 2246822519u);
-            h ^= h >> 13;
-
-            return h;
-        }
+        // `Roll` is `SiegeRamp.Roll`: one hash for every lane, so the two cannot disagree about
+        // what a roll is. What tells the lanes apart is the coordinates they hash.
     }
 }

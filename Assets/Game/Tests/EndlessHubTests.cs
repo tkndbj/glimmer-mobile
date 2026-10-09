@@ -186,13 +186,28 @@ namespace GlimmerGrove.Tests
             foreach (var request in AssetPipeline.AssetManifest.GlobalAssets())
                 global.Add(request.Address);
 
-            Assert.AreEqual(EndlessHubLayout.Points, EndlessHub.Marks.Length,
-                            "the hub draws a line it has no mark for, or a mark it never reads");
+            foreach (var marks in new[] { EndlessHub.Marks, EndlessHub.ShuffleMarks })
+            {
+                Assert.AreEqual(EndlessHubLayout.Points, marks.Length,
+                                "the hub draws a line it has no mark for, or a mark it never reads");
 
-            foreach (string mark in EndlessHub.Marks)
-                Assert.IsTrue(global.Contains(AssetPipeline.AssetManifest.ArtRoot + mark),
-                              $"the hub asks for '{mark}', which nothing loads - an Image with no "
-                              + "sprite is a white rectangle rather than a blank");
+                foreach (string mark in marks)
+                    Assert.IsTrue(global.Contains(AssetPipeline.AssetManifest.ArtRoot + mark),
+                                  $"the hub asks for '{mark}', which nothing loads - an Image with no "
+                                  + "sprite is a white rectangle rather than a blank");
+            }
+
+            // Each lane's row names its own wall, and both walls are global for the same reason;
+            // so is a crest a lane stands as its hero.
+            foreach (var lane in new[] { EndlessHub.HubLane.Infinite, EndlessHub.HubLane.Shuffle })
+            {
+                Assert.IsTrue(global.Contains(AssetPipeline.AssetManifest.ArtRoot + lane.Wall),
+                              $"the {lane.Track} hub stands on '{lane.Wall}', which nothing loads");
+
+                if (lane.Crest != null)
+                    Assert.IsTrue(global.Contains(AssetPipeline.AssetManifest.ArtRoot + lane.Crest),
+                                  $"the {lane.Track} hub draws '{lane.Crest}' as its hero, which nothing loads");
+            }
         }
 
         // ----------------------------------------------------------------- the lane
@@ -214,9 +229,11 @@ namespace GlimmerGrove.Tests
             foreach (var track in GameTrack.Shipped)
                 if (!track.Laddered) hubs++;
 
-            Assert.AreEqual(1, hubs,
-                            "a second lane draws a hub - which is fine, and its own three lines "
-                            + "have to be authored before it ships (GameTrack.PointKey)");
+            // The Infinite lane and the Shuffle lane (MODES.md 59). A third draws a hub too -
+            // which is fine, and its own lines have to be authored before it ships
+            // (GameTrack.PointKey), which both content gates hold.
+            Assert.AreEqual(2, hubs, "a lane that draws a hub was added or lost");
+            Assert.IsFalse(GameTrack.Shuffle.Laddered, "the Shuffle lane reads as a ladder");
         }
 
         /// <summary>

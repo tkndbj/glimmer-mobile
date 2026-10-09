@@ -103,6 +103,31 @@ namespace GlimmerGrove.Wards
         }
 
         /// <summary>
+        /// Four of one turret at one star, on every seat.
+        ///
+        /// <b>The Shuffle lane's line</b> (<c>ShuffleLine</c>), and the one place a line is built
+        /// from a model rather than from a save or the roster's starter: everybody opens that
+        /// lane on the same four posts, so neither ownership nor the star ledger is asked. A null
+        /// model is the starter, for <see cref="Starter"/>'s reason.
+        /// </summary>
+        public static WardLine Uniform(WardCatalog catalog, WardModel model, int stars)
+        {
+            catalog = catalog ?? WardCatalog.Default;
+            model = model ?? catalog.Starter;
+
+            var line = new WardModel[Colours.Length];
+            var ladder = new int[Colours.Length];
+
+            for (int i = 0; i < line.Length; i++)
+            {
+                line[i] = model;
+                ladder[i] = WardStars.Sane(stars);
+            }
+
+            return new WardLine(line, ladder);
+        }
+
+        /// <summary>
         /// The line a stored choice resolves to, with every gap and every refusal filled by the
         /// starter.
         ///

@@ -221,6 +221,9 @@ namespace GlimmerGrove
 
             for (int i = 0; i < report.Blows.Count; i++) Blow(report.Blows[i]);
 
+            // **A post a build stood back up**, drawn after the fall above (`SiegeView.Boosts`).
+            if (report.Revived.Count > 0) Revived();
+
             Reap();
             Fuses();
             Gears();

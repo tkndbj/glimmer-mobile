@@ -158,6 +158,10 @@ namespace GlimmerGrove.Modes
             int heavy = bolts * SiegeTuning.DamageTo(SiegeKind.Creeper, post.Rank, true,
                                                      post.Build);
 
+            // What the build makes of a thrown tube (`SiegeBoosts.OverchargePercent`): the
+            // tube's own figure on every board but the Shuffle lane's.
+            heavy = _boosts.Overcharge(heavy);
+
             // **The rank is read at the moment it is thrown rather than the moment it was banked**,
             // so a cog spent in between makes a charge in hand worth more. Generous, which is the
             // direction par is safe to err in (invariant 22) - and the alternative is a stored

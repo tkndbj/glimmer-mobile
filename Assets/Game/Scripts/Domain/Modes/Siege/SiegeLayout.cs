@@ -539,16 +539,27 @@ namespace GlimmerGrove.Modes
         /// <summary>
         /// The ramp, for a lane whose waves never stop, or null for an authored muster.
         ///
+        /// <para>
         /// <b>The one field that changes what every question below means.</b> With it set,
         /// <see cref="SizeOf"/>, <see cref="At"/> and <see cref="WaveCount"/> stop reading
-        /// <see cref="Coming"/> and start asking <see cref="SiegeEndless"/> - which is a pure
-        /// function of the wave number, so an endless level parses, validates, indexes and merges
-        /// exactly like the ten-wave one beside it.
+        /// <see cref="Coming"/> and start asking the ramp - which is a pure function of the wave
+        /// number, so an endless level parses, validates, indexes and merges exactly like the
+        /// ten-wave one beside it.
+        /// </para>
+        /// <para>
+        /// <b>A <see cref="SiegeRamp"/> rather than a <see cref="SiegeEndless"/></b> since the
+        /// Shuffle lane: two lanes never end and they climb differently, and a second named field
+        /// would have been a second branch in every reading below. <see cref="Endless"/> is kept
+        /// for the readers that only ever meant the Infinite lane.
+        /// </para>
         /// </summary>
-        public readonly SiegeEndless Endless;
+        public readonly SiegeRamp Ramp;
+
+        /// <summary>The Infinite lane's ramp, or null on an authored ladder and on every other lane.</summary>
+        public SiegeEndless Endless => Ramp as SiegeEndless;
 
         /// <summary>Whether this lane's waves never stop.</summary>
-        public bool IsEndless => Endless != null;
+        public bool IsEndless => Ramp != null;
 
         /// <summary>
         /// How many waves are coming, or <see cref="int.MaxValue"/> on an endless lane.
@@ -561,7 +572,7 @@ namespace GlimmerGrove.Modes
 
         /// <summary>How much tougher this wave is than the first. Nothing at all, unless endless.</summary>
         public SiegeSurge SurgeOf(int wave)
-            => IsEndless ? SiegeEndless.SurgeAt(wave + 1) : Tough;
+            => IsEndless ? Ramp.SurgeFor(wave + 1) : Tough;
 
         /// <summary>
         /// The raiders of one endless wave, dealt on demand.
@@ -575,7 +586,7 @@ namespace GlimmerGrove.Modes
         {
             if (_dealt == null || _dealtWave != wave)
             {
-                _dealt = Endless.WaveAt(wave + 1, Seed);
+                _dealt = Ramp.WaveAt(wave + 1, Seed);
                 _dealtWave = wave;
             }
 
@@ -738,21 +749,21 @@ namespace GlimmerGrove.Modes
         /// </para>
         /// </summary>
         public bool CursesOn(int wave)
-            => Cursed && (Endless == null || wave >= SiegeEndless.CursedFrom);
+            => Cursed && (Ramp == null || wave >= Ramp.CursesFrom);
 
         /// <summary>
         /// Whether a refill dealt while wave <paramref name="wave"/> is on the hill may deal a
         /// void stone. <see cref="CursesOn"/>'s rule, from <see cref="SiegeEndless.VoidFrom"/>.
         /// </summary>
         public bool VoidsOn(int wave)
-            => Singular && (Endless == null || wave >= SiegeEndless.VoidFrom);
+            => Singular && (Ramp == null || wave >= Ramp.VoidsFrom);
 
         public SiegeLayout(ProtoGrid grid, string deal, string wards, string[] waves, string boss,
-                           int cogs = 0, SiegeEndless endless = null, int tough = 0,
+                           int cogs = 0, SiegeRamp endless = null, int tough = 0,
                            string charms = null, bool obsidian = false, bool singularity = false)
         {
             Grid = grid;
-            Endless = endless;
+            Ramp = endless;
             Cursed = obsidian;
             Singular = singularity;
 

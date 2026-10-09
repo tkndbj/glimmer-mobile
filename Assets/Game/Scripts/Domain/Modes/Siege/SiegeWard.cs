@@ -21,7 +21,7 @@ namespace GlimmerGrove.Modes
         /// the same number while every turret was; with a roster that trades toughness for weight
         /// it would cap a tough turret's repairs at the baseline and draw its bar as overfull.
         /// </summary>
-        public readonly int Full;
+        public int Full { get; private set; }
 
         /// <summary>Seconds until its next bolt.</summary>
         public float Cool;
@@ -82,7 +82,53 @@ namespace GlimmerGrove.Modes
         /// <b>Per ward rather than a constant</b>, because it is the one thing an ability changes
         /// that is not a hit: a beacon banks a cascade a plain ward would have spilled.
         /// </summary>
-        public readonly float Capacity;
+        public float Capacity { get; private set; }
+
+        /// <summary>
+        /// The most charges this ward may bank: the mode's own cap, unless a build raised it
+        /// (<see cref="SiegeBoosts.ExtraCharges"/>, through <see cref="Fortify"/>).
+        /// </summary>
+        public int ChargeCap { get; private set; } = SiegeTuning.MostCharges;
+
+        /// <summary>
+        /// What a bolt from this ward is worth against a colour that is not its own, in tenths.
+        /// Nought on every line a player stands (the lock, invariant 37bl); a Shuffle build may
+        /// open it (<see cref="SiegeBoosts.OffColourTenths"/>).
+        /// </summary>
+        public int OffColourTenths { get; private set; }
+
+        /// <summary>
+        /// Re-reads what this ward holds and takes under a build (<see cref="SiegeBoosts"/>).
+        ///
+        /// <para>
+        /// <b>The one door through which a ward's figures move after it is built.</b> Everything
+        /// a card changes about a seat - how much it can take, how much it holds, how many
+        /// charges it banks, whether it reaches off its colour - lands here, so a card taken on
+        /// wave six reaches a ward standing since wave one. Health keeps its <em>loss</em> rather
+        /// than its share: a ward two points down stays two points down under a bigger figure,
+        /// which is what a player watching the bar expects to see grow.
+        /// </para>
+        /// </summary>
+        public void Fortify(int full, float capacity, int chargeCap, int offColourTenths)
+        {
+            if (full < 1) full = 1;
+
+            int delta = full - Full;
+            Full = full;
+
+            if (Alive)
+            {
+                Health += delta;
+                if (Health > Full) Health = Full;
+                if (Health < 1) Health = 1;
+            }
+
+            Capacity = capacity < 1f ? 1f : capacity;
+            if (Fuel > Capacity) Fuel = Capacity;
+
+            ChargeCap = chargeCap < 1 ? 1 : chargeCap;
+            OffColourTenths = offColourTenths < 0 ? 0 : offColourTenths > 10 ? 10 : offColourTenths;
+        }
 
         /// <summary>
         /// Bolts this turret has fired, ever.
@@ -194,7 +240,7 @@ namespace GlimmerGrove.Modes
         /// </para>
         /// </summary>
         public int ReachTenths(int colour)
-            => Model.Legendary || colour == Colour ? 10 : 0;
+            => Model.Legendary || colour == Colour ? 10 : OffColourTenths;
 
         /// <summary>
         /// What a bolt from this ward is worth against <paramref name="at"/>, in tenths. Nought
@@ -343,7 +389,7 @@ namespace GlimmerGrove.Modes
 
             bool banked = false;
 
-            while (Fuel >= Capacity && Charges < SiegeTuning.MostCharges)
+            while (Fuel >= Capacity && Charges < ChargeCap)
             {
                 Fuel -= Capacity;
                 Charges++;

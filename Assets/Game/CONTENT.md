@@ -857,6 +857,38 @@ One fault came out of it that no numeric gate could see - a lantern drawn as a h
 at cell size reads as a **crosshair** on the one object nothing may be aimed at (invariant 36g) -
 and it was past every green check in the repository.
 
+## The Shuffle lane
+
+`"track": "shuffle"` on a siege chapter's manifest entry says its one level is the Shuffle lane
+(MODES.md 59): the same board, hill and verb as Thornwatch, played by a dealt hand. The level
+carries a `siege` block exactly as the Infinite lane does - a field authored settled, a deal, a
+line, `cogs`, `charms`, the two stone flags - and **a `shuffle` block in place of `endless`**:
+
+```json
+"siege": {
+  "width": 8, "height": 5, "rows": ["..."], "gems": "rgby", "wards": "rgby",
+  "waves": [], "boss": "", "cogs": 0, "charms": "plsfha",
+  "obsidian": true, "singularity": true,
+  "shuffle": { "goldWave": 24, "silverFactor": 0.5 }
+}
+```
+
+**Two numbers and nothing else.** What arrives - how many raiders, which kinds, how much tougher
+each wave is, that no boss and no bomber ever comes and no cog is dropped (`cogs` is authored
+nought: nothing lands on this lane's hill), which turrets the line stands, which cards a hand offers - is
+code (`ShuffleRamp`, `ShuffleLine`, `ShuffleCards`), for invariant 20d's reason. What a file authors
+is how far a three-star run reaches and the fraction of it a two-star run does, because nothing can
+derive those; both are guesses until somebody plays, and `ShuffleTests` prints where a model player
+lands. Both gates refuse a `waves` list or a `boss` beside the block, a `tough` surge (the ramp has
+its own), a `shuffle` block beside an `endless` one, and a ramp that ever sends a boss.
+
+**Nothing else is authored.** The lane's strings are derived from the track id (`track.shuffle.name`,
+`.tagline`, `.point1`-`.point4`) and the level's from its id, like every lane's; a card's name and
+line are `shuffle.<id>.name` / `.note`, nine tables each; the card pictures and the hub's two marks
+are cut by `Tools/make_shuffle_art.py` and the lane's wall is the ranked wall turned to the lane's
+own hue. `Tools/chapters/s13_shufflewatch.py` writes the body and proves it reproduces, exactly as
+`s02_endlesswatch.py` does for the Infinite lane.
+
 ## What makes a glade hard
 
 `Tools/verify/difficulty.py` answers this in numbers rather than in opinions, and it is

@@ -65,13 +65,25 @@ namespace GlimmerGrove.Content
         public static readonly GameTrack Infinite = new GameTrack("infinite");
 
         /// <summary>
+        /// A lane whose waves never stop and whose line is dealt: one level, the same four
+        /// turrets for everybody, no bosses, and a hand of three upgrade cards every two waves -
+        /// every run a different build (MODES.md 59).
+        ///
+        /// <b>A track rather than a mode, for the Infinite lane's reason</b>: the board, the
+        /// wards, the raiders and the verb are Thornwatch's, and what differs is the ladder it
+        /// sits on and the rules its line plays under. Filing it as a mode would have put it in
+        /// the switcher as a stranger with its own art, validator and registry row.
+        /// </summary>
+        public static readonly GameTrack Shuffle = new GameTrack("shuffle");
+
+        /// <summary>
         /// Every track this build can honour, in the order a switcher offers them.
         ///
         /// <b>A written list rather than a sort</b>, which is invariant 38a's rule for the mode
         /// switcher and for its reason: a control that reorders itself moves the entry somebody
         /// reaches for without looking.
         /// </summary>
-        public static readonly GameTrack[] Shipped = { Main, Infinite };
+        public static readonly GameTrack[] Shipped = { Main, Infinite, Shuffle };
 
         public string Value => _value ?? Main.Value;
 
@@ -96,7 +108,18 @@ namespace GlimmerGrove.Content
         /// what the lane <em>is</em>, so the lane says so.
         /// </para>
         /// </summary>
-        public bool Laddered => !Equals(Infinite);
+        public bool Laddered => !Equals(Infinite) && !Equals(Shuffle);
+
+        /// <summary>
+        /// Whether this lane deals the line and the build rather than reading the player's
+        /// loadout: the Shuffle lane, and nothing else.
+        ///
+        /// <b>Declared rather than derived</b>, for <see cref="Laddered"/>'s reason: what decides
+        /// it is what the lane <em>is</em>, so the lane says so, and every reader that would
+        /// otherwise name <see cref="Shuffle"/> by id asks this instead - the loadout shelf on the
+        /// map, the line a run stands, and the screen a level opens on.
+        /// </summary>
+        public bool Dealt => Equals(Shuffle);
 
         /// <summary>
         /// The loc key for one of the short lines a hub says about this lane, counting from one.

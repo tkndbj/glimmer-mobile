@@ -82,6 +82,86 @@ namespace GlimmerGrove
         public static readonly string[] Marks =
             { "Ui/ic_endless", "Ui/ic_surge", "Ui/ic_heart", "Ui/ad_coin" };
 
+        /// <summary>
+        /// The Shuffle lane's four, in the order its lines are read: the deal, the hand, the
+        /// line and the heart. The first two are cut by <c>Tools/make_shuffle_art.py</c> and are
+        /// global for <see cref="Marks"/>' reason; the other two are marks the game already draws.
+        /// </summary>
+        public static readonly string[] ShuffleMarks =
+            { "Ui/ic_shuffle", "Ui/ic_deck", "Ui/ic_battle", "Ui/ic_heart" };
+
+        /// <summary>
+        /// What a hub says and reads for one lane: its wall, its marks, where its best comes
+        /// from, and which of the Infinite lane's furniture it carries.
+        ///
+        /// <para>
+        /// <b>A descriptor rather than a branch per piece</b>, because the hub was written for one
+        /// lane and the second one differs in five places - and five <c>if (lane == ...)</c>
+        /// clauses are five places a third lane would be forgotten in. A lane is a row here, and
+        /// the hub asks the row.
+        /// </para>
+        /// <para>
+        /// <b>Where the best comes from is the whole difference between the two.</b> The Infinite
+        /// lane's is the public board's number and lives in its own ledger; the Shuffle lane's is
+        /// the level's own record, exactly as a glade's best is (<c>LevelRecord.WithRun</c> keeps
+        /// the larger on a climbing level), so it reaches no board and no ledger of its own.
+        /// </para>
+        /// </summary>
+        public sealed class HubLane
+        {
+            public readonly GameTrack Track;
+            public readonly string Wall;
+            public readonly string[] Marks;
+
+            /// <summary>Whether the checkpoint bar is drawn (the Infinite lane's, MODES.md 43f).</summary>
+            public readonly bool Checkpoints;
+
+            /// <summary>Whether the nameplate becomes a standing once a distribution exists.</summary>
+            public readonly bool Standing;
+
+            /// <summary>Whether the loadout shelf stands under this hub.</summary>
+            public readonly bool Shelf;
+
+            /// <summary>
+            /// The picture standing where the rank badge stands, or null for the rank itself.
+            /// The Shuffle lane's hero is its own crest (the owner's call, 2026-10-09): a rank
+            /// is nothing a dealt hand says anything about, and the badge was inherited
+            /// furniture. Global art, for <c>EndlessHub.Marks</c>' reason; held by
+            /// <c>EndlessHubTests.TheHubsMarksAreGlobalArt</c>.
+            /// </summary>
+            public readonly string Crest;
+
+            readonly Func<LevelDefinition, int> _best;
+
+            HubLane(GameTrack track, string wall, string[] marks, bool checkpoints, bool standing,
+                    bool shelf, string crest, Func<LevelDefinition, int> best)
+            {
+                Track = track;
+                Wall = wall;
+                Marks = marks;
+                Checkpoints = checkpoints;
+                Standing = standing;
+                Shelf = shelf;
+                Crest = crest;
+                _best = best;
+            }
+
+            /// <summary>The record this hub is about, or nought for a lane never run.</summary>
+            public int BestOf(LevelDefinition level) => level != null ? _best(level) : 0;
+
+            public static readonly HubLane Infinite = new HubLane(
+                GameTrack.Infinite, Scenery.WallRanked, EndlessHub.Marks, true, true, true, null,
+                level => EndlessLedger.BestFor(level.Id));
+
+            public static readonly HubLane Shuffle = new HubLane(
+                GameTrack.Shuffle, Scenery.WallShuffle, ShuffleMarks, false, false, false,
+                "Ui/shuffle_crest",
+                level => Persistence.PlayerProgress.BestMoves(level.Id));
+
+            /// <summary>The row for a lane. A lane this file has no row for draws as the Infinite one.</summary>
+            public static HubLane Of(GameTrack lane) => lane.Dealt ? Shuffle : Infinite;
+        }
+
         /// <summary>Seconds the starburst takes to turn once. Slow enough to be motion, not spin.</summary>
         const float BurstTurn = 26f;
 
@@ -126,7 +206,7 @@ namespace GlimmerGrove
                 : Loc.Get("ui.endless.best_label").Upper();
         }
 
-        /// <summary>The record this hub is about, or nought for a lane never run.</summary>
+        /// <summary>The Infinite lane's record, or nought for a lane never run. See <see cref="HubLane.BestOf"/>.</summary>
         public static int BestOf(LevelDefinition level)
             => level != null ? EndlessLedger.BestFor(level.Id) : 0;
 
@@ -159,9 +239,9 @@ namespace GlimmerGrove
                 Wall = wall ?? string.Empty;
             }
 
-            /// <summary>What the column would draw for this level right now.</summary>
-            public static Reading Of(LevelDefinition level, bool unlocked, string wall)
-                => new Reading(BestOf(level), unlocked, wall);
+            /// <summary>What the column would draw for this level right now, on this lane.</summary>
+            public static Reading Of(GameTrack lane, LevelDefinition level, bool unlocked, string wall)
+                => new Reading(HubLane.Of(lane).BestOf(level), unlocked, wall);
 
             public bool Equals(Reading other)
                 => Best == other.Best && Unlocked == other.Unlocked
@@ -291,8 +371,7 @@ namespace GlimmerGrove
             // which of the two you are standing in - and it has to be read off `lane` rather
             // than assumed, because this screen is reached through a switcher that moves both
             // ways and nothing here would notice if it were ever built for the ladder.
-            Scenery.Plain(art, lane == GameTrack.Infinite ? Scenery.WallRanked
-                                                          : Scenery.WallPlain);
+            Scenery.Plain(art, HubLane.Of(lane).Wall);
 
             return Column(safe, owner, lane, level, headerFoot, unlocked, wall, open);
         }
@@ -316,7 +395,9 @@ namespace GlimmerGrove
         {
             if (safe == null) return null;
 
-            float band = Band(headerFoot);
+            var hub = HubLane.Of(lane);
+
+            float band = Band(headerFoot, hub.Shelf);
             float top = headerFoot + EndlessHubLayout.HeadClear + EndlessHubLayout.TopIn(band);
 
             var host = UIKit.Node("Hub", safe);
@@ -332,10 +413,11 @@ namespace GlimmerGrove
             column.anchoredPosition = new Vector2(0f, -top);
             column.localScale = Vector3.one * EndlessHubLayout.ScaleIn(band);
 
-            Rank(column, arriving);
-            Lines(column, lane, 0f, arriving);
-            Record(column, owner, level, arriving);
-            Checkpoint(column, level, arriving);
+            if (hub.Crest != null) Crest(column, hub, arriving);
+            else Rank(column, arriving);
+            Lines(column, hub, 0f, arriving);
+            Record(column, owner, hub, level, arriving);
+            if (hub.Checkpoints) Checkpoint(column, level, arriving);
             Battle(column, unlocked, wall, open, 0f, arriving);
 
             return host;
@@ -360,10 +442,16 @@ namespace GlimmerGrove
         /// outside it, so a key measured against the rect alone is a key the tab can reach.
         /// </para>
         /// </summary>
-        static float Band(float headerFoot)
+        static float Band(float headerFoot, bool shelved)
         {
             float safe = Boot.CanvasHeight - SafeArea.Top - SafeArea.Bottom;
-            float shelf = Mathf.Max(0f, LoadoutBar.Height + LoadoutBar.Overhang - SafeArea.Bottom);
+
+            // A lane that deals its line stands no shelf (`HubLane.Shelf`), so the column has
+            // the foot as well - and is still drawn to its own height, because a column that
+            // grew to fill a band would be a different column on every phone.
+            float shelf = shelved
+                        ? Mathf.Max(0f, LoadoutBar.Height + LoadoutBar.Overhang - SafeArea.Bottom)
+                        : 0f;
 
             return safe - headerFoot - EndlessHubLayout.HeadClear - shelf;
         }
@@ -422,6 +510,36 @@ namespace GlimmerGrove
             tap.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0f);
 
             seat.gameObject.AddComponent<HeroRank>().Watch(mark, plate, name);
+
+            if (!arriving) return;
+
+            seat.localScale = Vector3.zero;
+            Tween.Pop(seat, 0f, .62f, .08f);
+        }
+
+        // ------------------------------------------------------------------ the crest
+        /// <summary>
+        /// A lane's own picture as the hero, in the rank's box (<see cref="HubLane.Crest"/>),
+        /// breathing slowly (<see cref="EndlessHubLayout.CrestBreath"/>) - the owner asked for a
+        /// pulse that is slow and gentle, and a breath is the one the kit already has. It opens
+        /// nothing: there is no page behind a picture. One that has not arrived draws no
+        /// picture rather than a white rectangle (invariant 7b).
+        /// </summary>
+        static void Crest(RectTransform column, HubLane hub, bool arriving)
+        {
+            var size = new Vector2(EndlessHubLayout.CrestWidth, EndlessHubLayout.HeroHeight);
+
+            var seat = UIKit.Box("Crest", column, size, new Vector2(.5f, 1f),
+                                 new Vector2(0f, -EndlessHubLayout.HeroCentre));
+
+            var picture = Art.S(hub.Crest);
+            var mark = UIKit.Img("Picture", seat, picture, Color.white, size,
+                                 new Vector2(.5f, .5f), Vector2.zero);
+            mark.preserveAspect = true;
+            mark.raycastTarget = false;
+            mark.enabled = picture != null;
+
+            Tween.Breathe(mark.transform, EndlessHubLayout.CrestBreath, EndlessHubLayout.CrestPeriod);
 
             if (!arriving) return;
 
@@ -489,15 +607,15 @@ namespace GlimmerGrove
         /// <see cref="EndlessHubLayout.RecordScale"/> by a node that holds the scale, so the medal
         /// itself is built at the size every constant describes and pops to one as it always did.
         /// </summary>
-        static void Record(RectTransform column, MonoBehaviour owner, LevelDefinition level,
-                           bool arriving)
+        static void Record(RectTransform column, MonoBehaviour owner, HubLane hub,
+                           LevelDefinition level, bool arriving)
         {
             var holder = UIKit.Box("Record", column,
                                    new Vector2(EndlessHubLayout.BurstSize, EndlessHubLayout.MedalHeight),
                                    new Vector2(.5f, 1f), new Vector2(0f, -EndlessHubLayout.RecordCentre));
             holder.localScale = Vector3.one * EndlessHubLayout.RecordScale;
 
-            Medal(holder, owner, level, arriving);
+            Medal(holder, owner, hub, level, arriving);
         }
 
         // ------------------------------------------------------------------ the medal
@@ -517,10 +635,10 @@ namespace GlimmerGrove
         /// plate are global, so nothing here can arrive as a white rectangle.
         /// </para>
         /// </summary>
-        static void Medal(RectTransform holder, MonoBehaviour owner, LevelDefinition level,
-                          bool arriving)
+        static void Medal(RectTransform holder, MonoBehaviour owner, HubLane hub,
+                          LevelDefinition level, bool arriving)
         {
-            int best = BestOf(level);
+            int best = hub.BestOf(level);
             bool held = best > 0;
 
             var seat = UIKit.Box("Medal", holder,
@@ -584,8 +702,12 @@ namespace GlimmerGrove
                                                 - EndlessHubLayout.PlateDown));
             if (plate != null) plate.type = Image.Type.Sliced;
 
+            // A lane with no distribution says the number's name and never a standing.
+            string says = hub.Standing ? CaptionFor(best)
+                        : Loc.Get(best > 0 ? "ui.endless.best_label" : "ui.endless.unplayed").Upper();
+
             var caption = UIKit.Titled("Says", plate != null ? plate.transform : seat.transform,
-                                       CaptionFor(best),
+                                       says,
                                        34, Pal.Cream, TextAnchor.MiddleCenter,
                                        new Vector2(EndlessHubLayout.PlateWidth - 40f,
                                                    EndlessHubLayout.PlateHeight), default, default,
@@ -598,8 +720,10 @@ namespace GlimmerGrove
             UIKit.Shrinkable(caption, 22);
 
             // Only where there is a record to stand anywhere with. A lane never run says so and
-            // has nothing to wait for, so it neither subscribes nor pays for the read.
-            if (held && caption) caption.gameObject.AddComponent<Standing>().Watch(caption, best);
+            // has nothing to wait for, so it neither subscribes nor pays for the read - and a
+            // lane with no distribution never asks for one (`HubLane.Standing`).
+            if (held && hub.Standing && caption)
+                caption.gameObject.AddComponent<Standing>().Watch(caption, best);
 
             if (!arriving) return;
 
@@ -616,8 +740,11 @@ namespace GlimmerGrove
         /// <b>A row whose mark is missing still draws its sentence</b>, because a row is a sentence
         /// with a mark in front of it and not a mark with a caption.
         /// </summary>
-        static void Lines(RectTransform host, GameTrack lane, float top, bool arriving)
+        static void Lines(RectTransform host, HubLane hub, float top, bool arriving)
         {
+            var lane = hub.Track;
+            var marks = hub.Marks;
+
             var panel = UIKit.Img("Lines", host, Art.S("Ui/Hud/panel"), Color.white,
                                   new Vector2(EndlessHubLayout.PanelWidth,
                                               EndlessHubLayout.PanelHeight),
@@ -644,7 +771,7 @@ namespace GlimmerGrove
                 if (seat != null) seat.type = Image.Type.Sliced;
 
                 var mark = UIKit.Img("Mark" + i, seat != null ? seat.transform : plate,
-                                     Art.S(Marks[i]), Color.white,
+                                     Art.S(marks[i]), Color.white,
                                      Vector2.one * EndlessHubLayout.IconSize,
                                      new Vector2(.5f, .5f),
                                      seat != null ? Vector2.zero : new Vector2(seatX, y));

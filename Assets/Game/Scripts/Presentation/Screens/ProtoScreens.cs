@@ -219,7 +219,7 @@ namespace GlimmerGrove
     /// change this one line and author a `story` block, because nothing else here would move.
     /// </para>
     /// </summary>
-    public sealed class SiegeScreen : ProtoScreen
+    public class SiegeScreen : ProtoScreen
     {
         /// <summary>
         /// A siege is fought in silence, and the bed does not merely change - it stops.
@@ -295,15 +295,30 @@ namespace GlimmerGrove
                 if (Level == null) return null;
                 if (_rules != null && ReferenceEquals(_ruled, Level)) return _rules;
 
-                var rules = base.Rules;
-                if (rules is SiegeRules siege && siege.Layout != null && siege.Layout.IsEndless)
-                    rules = siege.From(EndlessCheckpoints.StartFor(Level.Id));
+                var rules = Ruled(base.Rules);
 
                 _rules = rules;
                 _ruled = Level;
                 return rules;
             }
         }
+
+        /// <summary>
+        /// What this screen makes of a level's own rules before a board is dealt from them: the
+        /// Infinite lane's checkpoint, and nothing on a chapter. <b>The one seam a lane of this
+        /// mode that plays by rules of its own overrides</b> (<see cref="ShuffleScreen"/>), so the
+        /// line a board stands and where it opens are decided in one place per screen.
+        /// </summary>
+        protected virtual ProtoLevelRules Ruled(ProtoLevelRules rules)
+        {
+            if (rules is SiegeRules siege && siege.Layout != null && siege.Layout.IsEndless)
+                return siege.From(EndlessCheckpoints.StartFor(Level.Id));
+
+            return rules;
+        }
+
+        /// <summary>The board this screen is drawing, for a lane that reads it every frame.</summary>
+        protected SiegeView Siege => _siege;
 
         /// <summary>
         /// The four turrets this run draws, held for the length of the run.
@@ -356,10 +371,17 @@ namespace GlimmerGrove
         void Line() => Run(async token =>
         {
             _line = _line ?? AssetLibrary.Hold("siege_line");
-            await _line.LoadAsync(WardLoadout.Line.Art(), null, token);
+            await _line.LoadAsync(LineToLoad.Art(), null, token);
 
             if (_siege != null) _siege.Redress();
         });
+
+        /// <summary>
+        /// The line whose art this screen holds for the run: the player's own, unless a lane
+        /// deals one (<see cref="ShuffleScreen"/>). Read beside <see cref="Ruled"/> so the line
+        /// that is loaded is the line that is stood.
+        /// </summary>
+        protected virtual Wards.WardLine LineToLoad => WardLoadout.Line;
 
         /// <summary>
         /// Records what this run can say about whether the hill was ever looked at.

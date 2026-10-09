@@ -6,6 +6,7 @@
     python Tools/render_endless.py --locked 10       # behind its keeper wall, which is a whole screen
     python Tools/render_endless.py --short           # the squarest canvas this game supports
     python Tools/render_endless.py --out out/hub.png
+    python Tools/render_endless.py --shuffle         # the Shuffle lane's hub, off its own row (MODES.md 59)
 
 **Why this exists.** The hub replaced a map, and everything that was wrong with the map was
 wrong by eye: a painted island chain with one node loose on it and a sealed teaser promising a
@@ -87,6 +88,7 @@ MIN_SCALE = .72                # `EndlessHubLayout.MinScale`
 LIFT = 0.42
 HEAD_CLEAR = 36.0
 BADGE_DOWN = (RANK_PLATE_DOWN - RIBBON_H / 2 - HEAD_CLEAR) / 2
+CREST_W = HERO_H * 1.5           # `EndlessHubLayout.CrestWidth`: a 3:2 picture in the rank's box
 
 HERO_CENTRE = HERO_H / 2
 PANEL_CENTRE = HERO_H + HERO_GAP + PANEL_H / 2
@@ -115,6 +117,22 @@ def row_centre(i):
 #: mark is a sprite this game already draws everywhere else and re-cutting it from a pack would
 #: be the mirror drawing a picture the screen does not.
 ICONS = ["Ui/ic_endless", "Ui/ic_surge", "Ui/ic_heart", "Ui/ad_coin"]   # `EndlessHub.Marks`
+
+#: `EndlessHub.HubLane`: what each lane's hub reads. The Shuffle lane's row names its own wall
+#: and marks, draws no checkpoint bar, stands no shelf and never says a standing - so a mirror
+#: drawing it off the Infinite row would be drawing a screen the game does not build.
+LANES = {
+    "infinite": dict(wall="plain_ranked", marks=ICONS, checkpoints=True, standing=True, shelf=True,
+                     banner="ENDLESS WATCH", crest=None),
+    # No banner and a crest for a hero (the owner's call, 2026-10-09): `LevelsScreen.BuildHeader`
+    # builds no plaque on a dealt lane and the switcher takes its slot; `EndlessHub.HubLane.Crest`.
+    "shuffle": dict(wall="plain_shuffle",
+                    marks=["Ui/ic_shuffle", "Ui/ic_deck", "Ui/ic_battle", "Ui/ic_heart"],   # `EndlessHub.ShuffleMarks`
+                    checkpoints=False, standing=False, shelf=False, banner=None, crest="Ui/shuffle_crest"),
+}
+
+#: Which lane this run of the mirror draws. `--shuffle` sets it.
+LANE = "infinite"
 ART = REPO / "Assets" / "Game" / "Art"
 ICON_PACK = Path(r"C:\Users\Digikey\Downloads\craftpix-net-629015-100-skill-icons-pack-for-rpg")
 
@@ -150,7 +168,10 @@ def header_foot(modes):
     slot (`HeaderMenu.Build` draws nothing for a question with one answer). `--modeswitch` draws
     the other case.
     """
-    return -(LANE_Y if modes else MODES_Y) + PILL_H / 2
+    # `LevelsScreen.BuildHeader`'s `head`: the plaque's own slot on a lane drawn without one.
+    head = MODES_Y if LANES[LANE]["banner"] is not None else BANNER_Y
+    lane = head - PILL_H - MODES_GAP if modes else head
+    return -lane + PILL_H / 2
 
 #: `LoadoutBar.Bare` - the shelf before the display's own foot, which is what a squarish phone
 #: pays. Pad + TurretCell + Gap + KitCell + Pad.
@@ -275,7 +296,18 @@ def rung_of(held):
 
 
 def rank_hero(sheet, top, held):
-    """`EndlessHub.Rank`: the badge on two halos, centred over its name on the plate."""
+    """`EndlessHub.Rank`: the badge on two halos, centred over its name on the plate - or
+    `EndlessHub.Crest`, a lane's own picture in the same box, when its row names one."""
+    crest = LANES[LANE]["crest"]
+    if crest is not None:
+        art = ART / ("%s.png" % crest)
+        if art.exists():
+            K.paste(sheet, K.fit(Image.open(art).convert("RGBA"), (CREST_W, HERO_H)), W / 2, top + HERO_H / 2)
+            print("  hero crest: %s at %.0fx%.0f" % (crest, CREST_W, HERO_H))
+        else:
+            print("  !! hero crest %s is not on disk" % crest)
+        return
+
     rung, earned = rung_of(held)
     if rung is None:
         return
@@ -329,7 +361,7 @@ def hero(sheet, top, played, wave, standing=0):
     # the trough and the trough is what has to change.
     if not played:
         caption = loc("ui.endless.unplayed", "NO RUN YET")
-    elif standing > 0:
+    elif standing > 0 and LANES[LANE]["standing"]:
         caption = loc("ui.endless.standing", "TOP {0}% OF WATCHERS").format(standing)
     else:
         caption = loc("ui.endless.best_label", "BEST WAVE")
@@ -340,7 +372,8 @@ def hero(sheet, top, played, wave, standing=0):
 
 
 def points(sheet, top):
-    """Three rows on one plate: a framed mark and a sentence."""
+    """Four rows on one plate: a framed mark and a sentence."""
+    row = LANES[LANE]
     ptop = top + HERO_H + HERO_GAP
     K.paste(sheet, K.skin("Hud/panel", PANEL_W, PANEL_H), W / 2, ptop + PANEL_H / 2)
 
@@ -352,11 +385,11 @@ def points(sheet, top):
         K.paste(sheet, K.skin("Hud/slot", SLOT_SIZE, SLOT_SIZE),
                 left + PANEL_PAD + 12 + SLOT_SIZE / 2, cy)
 
-        tile = icon(ICONS[i])
+        tile = icon(row["marks"][i])
         if tile is not None:
             K.paste(sheet, tile, left + PANEL_PAD + 12 + SLOT_SIZE / 2, cy)
 
-        say = (loc("track.infinite.point%d" % (i + 1), "...")
+        say = (loc("track.%s.point%d" % (LANE, i + 1), "...")
                .replace("{0}", loc("ui.endless.xp", "XP")).replace("{1}", loc("ui.endless.coins", "Coins")))
         x = left + PANEL_PAD + 12 + SLOT_SIZE + 26
         room = PANEL_W - (x - left) - PANEL_PAD - 12
@@ -463,16 +496,19 @@ def header(sheet, modes, boost=0, rank=3):
     if boost:
         boost_readout(sheet, boost)
 
-    K.paste(sheet, K.fit(K.load("Hud/title")[0], (BANNER_W, BANNER_H)), W / 2, -BANNER_Y)
-    K.text(sheet, "ENDLESS WATCH", W / 2, -BANNER_Y - 4, 40, fill=(92, 61, 41), outline=0)
+    banner = LANES[LANE]["banner"]
+    if banner is not None:
+        K.paste(sheet, K.fit(K.load("Hud/title")[0], (BANNER_W, BANNER_H)), W / 2, -BANNER_Y)
+        K.text(sheet, banner, W / 2, -BANNER_Y - 4, 40, fill=(92, 61, 41), outline=0)
 
+    head = MODES_Y if banner is not None else BANNER_Y
     if modes:
-        K.paste(sheet, K.skin("btn_violet", PILL_W, PILL_H), W / 2, -MODES_Y)
-        K.text(sheet, "THORNWATCH", W / 2, -MODES_Y, 34, outline=3)
+        K.paste(sheet, K.skin("btn_violet", PILL_W, PILL_H), W / 2, -head)
+        K.text(sheet, "THORNWATCH", W / 2, -head, 34, outline=3)
 
-    lane_y = -(LANE_Y if modes else MODES_Y)
+    lane_y = -((head - PILL_H - MODES_GAP) if modes else head)
     K.paste(sheet, K.skin("btn_orange", PILL_W, PILL_H), W / 2, lane_y)
-    K.text(sheet, loc("track.infinite.name", "Infinite").upper(), W / 2, lane_y, 34, outline=3)
+    K.text(sheet, loc("track.%s.name" % LANE, LANE).upper(), W / 2, lane_y, 34, outline=3)
 
 
 def shelf(sheet, h):
@@ -497,10 +533,13 @@ def shelf(sheet, h):
 def screen(h, played=True, modes=False, wall=0, standing=0, boost=0, rank=3, start=1, first=0):
     sheet = Image.new("RGBA", (W, h), (*K.GROUND, 255))
 
-    plain(sheet, h)
+    row = LANES[LANE]
+    plain(sheet, h, row["wall"])
 
     foot = header_foot(modes)
-    band = h - foot - HEAD_CLEAR - SHELF
+
+    # `EndlessHub.Band`: a lane standing no shelf has the foot as well (`HubLane.Shelf`).
+    band = h - foot - HEAD_CLEAR - (SHELF if row["shelf"] else 0)
     scale = scale_in(band)
     top = foot + HEAD_CLEAR + max(0.0, (band - COLUMN_H * scale) * LIFT)
 
@@ -514,14 +553,16 @@ def screen(h, played=True, modes=False, wall=0, standing=0, boost=0, rank=3, sta
     record = record.resize((int(W * RECORD_SCALE), int(record.height * RECORD_SCALE)), Image.LANCZOS)
     layer.alpha_composite(record, (int((W - record.width) / 2),
                                    int(100 + RECORD_CENTRE - RECORD_H / 2 - 100 * RECORD_SCALE)))
-    checkpoint(layer, 100, start, first)
+    if row["checkpoints"]:
+        checkpoint(layer, 100, start, first)
     battle(layer, 100, wall)
     if scale < 1.0:
         layer = layer.resize((int(W * scale), int(layer.height * scale)), Image.LANCZOS)
     sheet.alpha_composite(layer, (int((W - layer.width) / 2), int(top - 100 * scale)))
 
     header(sheet, modes, boost, rank)
-    shelf(sheet, h)
+    if row["shelf"]:
+        shelf(sheet, h)
 
     print("  column drawn at x%.3f (floor %.2f)" % (scale, MIN_SCALE))
     print("  canvas %dx%d   band %.0f   column %.0f   air %.0f above, %.0f below"
@@ -539,6 +580,8 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--unplayed", action="store_true",
                     help="before anybody has held a wave")
+    ap.add_argument("--shuffle", action="store_true",
+                    help="draw the Shuffle lane's hub rather than the Infinite lane's")
     ap.add_argument("--modeswitch", action="store_true",
                     help="draw the mode pill too, as a catalog with a second mode would")
     ap.add_argument("--locked", type=int, default=0, metavar="LEVEL",
@@ -561,6 +604,10 @@ def main():
                          "opening at this best")
     ap.add_argument("--out", type=Path, default=Path("endless.png"))
     args = ap.parse_args()
+
+    global LANE
+    if args.shuffle:
+        LANE = "shuffle"
 
     # A wall is met by an account that has not run the lane, so the two states arrive together
     # unless the caller says otherwise - drawing a gold medal behind a padlock would be a

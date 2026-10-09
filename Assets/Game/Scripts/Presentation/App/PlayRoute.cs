@@ -76,7 +76,10 @@ namespace GlimmerGrove
             if (!CanOpen(level)) { Flow.Modal<OutOfHeartsOverlay>(); return false; }
 
             var look = ModeLooks.Of(RunWording.ModeOf(level));
-            Flow.Go(look.Screen, screen =>
+
+            // The lane as well as the mode, because one lane plays on a screen of its own
+            // (`ModeLook.ScreenFor`). A level the index cannot place is on the main ladder.
+            Flow.Go(look.ScreenFor(GameContent.Index.TrackOf(level)), screen =>
             {
                 if (screen is IPlaysLevel plays) plays.LevelId = level;
             });

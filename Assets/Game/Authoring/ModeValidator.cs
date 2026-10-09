@@ -556,7 +556,7 @@ namespace GlimmerGrove.Content
         /// </summary>
         static void Endless(LevelDefinition level, SiegeLayout layout, List<LevelIssue> issues)
         {
-            var ramp = layout.Endless;
+            var ramp = layout.Ramp;
 
             if (level.Tuning.HasBudget)
                 issues.Add(new LevelIssue(LevelIssueSeverity.Error,
@@ -582,13 +582,25 @@ namespace GlimmerGrove.Content
 
             var kinds = new HashSet<SiegeKind>();
 
-            for (int wave = 1; wave <= SiegeEndless.PairsAfter * 3; wave++)
+            for (int wave = 1; wave <= ramp.Proves; wave++)
             {
                 var coming = ramp.WaveAt(wave, layout.Seed);
 
                 for (int i = 0; i < coming.Length; i++)
                 {
                     kinds.Add(coming[i].Kind);
+
+                    // **A lane that promises pure raiders is held to it.** The Shuffle lane's
+                    // whole sentence is that no boss ever comes; a ramp edited into sending one
+                    // would ship a fight nobody authored, with every other gate green.
+                    if (!ramp.SendsBosses && SiegeTuning.IsBoss(coming[i].Kind))
+                    {
+                        issues.Add(new LevelIssue(LevelIssueSeverity.Error,
+                            $"wave {wave} of this lane sends a {SiegeTuning.NameOf(coming[i].Kind)}, "
+                            + "and this lane's ramp promises no boss ever walks on"));
+                        return;
+                    }
+
                     if (wards.Contains(coming[i].Colour)) continue;
 
                     issues.Add(new LevelIssue(LevelIssueSeverity.Error,

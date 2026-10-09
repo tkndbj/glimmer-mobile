@@ -305,6 +305,10 @@ namespace GlimmerGrove.Tests
 
             Assert.AreEqual(SiegeMode.Medley, SiegeMode.CastFor(GameTrack.Infinite, 0),
                             "the Infinite lane does not draw the medley");
+
+            // And the Shuffle lane, for the Infinite lane's reason (MODES.md 59).
+            Assert.AreEqual(SiegeMode.Medley, SiegeMode.CastFor(GameTrack.Shuffle, 0),
+                            "the Shuffle lane does not draw the medley");
         }
 
         /// <summary>

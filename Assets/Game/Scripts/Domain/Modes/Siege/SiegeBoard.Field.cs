@@ -198,13 +198,29 @@ namespace GlimmerGrove.Modes
                     beat.Paid.Add(SiegeLayout.FaceOf(worth));
 
                     int ward = Layout.WardOf(worth);
-                    if (ward >= 0) beat.Fuel[ward] += SiegeTuning.FuelPerGem;
+                    if (ward >= 0) beat.Fuel[ward] += _boosts.FuelGem(SiegeTuning.FuelPerGem);
 
                     _cells[cell] = Hole;
                     _charms[cell] = SiegeCharm.None;
                 }
 
                 turn.Worth += beat.Cleared.Count;
+
+                // **A build may spill a share of every ward's fuel into every other**
+                // (`SiegeBoosts.SpillPercent`), worked out over the beat's own figures before
+                // any of it is booked, so a spill never compounds. Nothing on the plain line.
+                if (_boosts.SpillPercent > 0)
+                {
+                    var spilt = new float[_wards.Length];
+                    for (int from = 0; from < _wards.Length; from++)
+                    {
+                        if (beat.Fuel[from] <= 0f) continue;
+                        float share = beat.Fuel[from] * _boosts.SpillPercent / 100f;
+                        for (int to = 0; to < _wards.Length; to++)
+                            if (to != from) spilt[to] += share;
+                    }
+                    for (int w = 0; w < _wards.Length; w++) beat.Fuel[w] += spilt[w];
+                }
 
                 for (int w = 0; w < _wards.Length; w++)
                 {
@@ -472,7 +488,7 @@ namespace GlimmerGrove.Modes
                 charm = charms[(int)((mixed >> 16) % (uint)charms.Length)];
 
                 _sinceCharm = 0;
-                _charmAt = (int)((mixed & 0xFFFFu) % SiegeTuning.CharmWithin);
+                _charmAt = (int)((mixed & 0xFFFFu) % (uint)_boosts.CharmWindow(SiegeTuning.CharmWithin));
             }
 
             return Cursing(at, drawn, charm);

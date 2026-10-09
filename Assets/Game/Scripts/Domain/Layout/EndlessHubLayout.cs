@@ -100,6 +100,18 @@ namespace GlimmerGrove.Layout
         /// </summary>
         public static float BadgeDown => (RankPlateDown - PlateHeight * .5f - HeadClear) * .5f;
 
+        // ------------------------------------------------------------------ the crest
+        /// <summary>
+        /// A lane whose hero is a picture rather than the rank (<c>EndlessHub.HubLane.Crest</c>:
+        /// the Shuffle lane's, at the owner's instruction on 2026-10-09 - a rank is nothing a
+        /// dealt hand says anything about). Drawn in the rank's own box, as wide as a 3:2
+        /// picture is at that height, so nothing under it moves.
+        /// </summary>
+        public static float CrestWidth => HeroHeight * 1.5f;
+
+        /// <summary>How far the crest breathes and how long one breath takes: slow and gentle.</summary>
+        public const float CrestBreath = .025f, CrestPeriod = 4.6f;
+
         // ------------------------------------------------------------------ the record
         /// <summary>
         /// The best-wave medal under the lines: the same composition the hero used to be - burst,

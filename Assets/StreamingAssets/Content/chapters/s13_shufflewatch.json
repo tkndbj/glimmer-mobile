@@ -1,0 +1,49 @@
+{
+ "schemaVersion": 2,
+ "id": "s13_shufflewatch",
+ "accent": "#E8615A",
+ "slate": "#1A0F14",
+ "backdrop": "sky_20",
+ "mapStrips": [
+  "map3_strip0",
+  "map3_strip1",
+  "map3_strip2",
+  "map3_strip3",
+  "map3_strip4"
+ ],
+ "teaserX": 0.826,
+ "teaserAfloat": false,
+ "levels": [
+  {
+   "id": "s13_shuffle",
+   "mapX": 0.7,
+   "mapY": 0.069,
+   "afloat": false,
+   "budgetFactor": -1.0,
+   "backdrop": "sky_20",
+   "siege": {
+    "width": 8,
+    "height": 5,
+    "rows": [
+     "gbryrrgb",
+     "ggyrbgry",
+     "rybbgbyy",
+     "brgbyygg",
+     "bryrbrgr"
+    ],
+    "gems": "rgby",
+    "wards": "rgby",
+    "waves": [],
+    "boss": "",
+    "cogs": 0,
+    "charms": "plsfha",
+    "obsidian": true,
+    "singularity": true,
+    "shuffle": {
+     "goldWave": 24,
+     "silverFactor": 0.5
+    }
+   }
+  }
+ ]
+}

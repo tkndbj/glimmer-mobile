@@ -1125,6 +1125,93 @@ marked *(art)* are one-line pointers - the working detail is in `CRAFT.md`.
    146 pulled back off the painted car by hand (`NUDGE[11]`); twenty rungs reach over 31 marks,
    accepted as `map10`'s 33.
 
+## The Shuffle lane - the third track
+
+The siege played by a dealt hand: four Breakers for everybody, pure raiders, and every two waves a
+hand of three upgrade cards (2026-10-09, the owner's brief: *a shuffle mode, so every game really
+needs to feel unique*). Chapter `s13_shufflewatch`, level `s13_shuffle`, `track: "shuffle"`.
+
+59. **A lane may deal its line and its build, and it is a track** (`GameTrack.Shuffle`,
+   `GameTrack.Dealt`), for the Infinite lane's reason (43): the board, the hill and the verb are
+   Thornwatch's, and a second `GameMode` would have been a stranger in the switcher with its own
+   art, validator and registry row. What it owns is one screen (`ShuffleScreen : SiegeScreen`, the
+   siege screen unsealed and given two seams - `Ruled` and `LineToLoad` - rather than copied, 20b),
+   one panel (`ShuffleChoiceOverlay`), one ramp and one deck. **It pays nothing the Infinite lane
+   pays**: the best wave is the level's own record (`LevelRecord.WithRun` keeps the larger on a
+   climbing level), the stars pay once through the star ledger, and nothing reaches `EndlessLedger`,
+   the public board or the server. A heart is bought at the gate and every ending is free (43e, by
+   `Laddered`); the loadout shelf is not drawn on this lane (`HubLane.Shelf`).
+59a. **The build reaches the board through one seam, and the seam is an identity everywhere
+   else.** `SiegeBoosts` is read live at every site a card can change - the bolt, the cadence, the
+   fuel a shot costs and a gem is worth, a blow at the line, a kill, the charm window, the
+   quiet between waves, what a wave stepping out does, where a ward may aim - and `SiegeBoosts.None`
+   is frozen with every figure the plain one, so a chapter and the Infinite lane play the board they
+   played before the seam existed. **Held by a trace, not an argument**:
+   `ShuffleTests.TheIdentityBoostChangesNothing` plays a shipped rung step for step with the plain
+   line and with a live, empty build and compares every raider's health and every ward's fuel on
+   every frame. Anything a card changes about a *seat* is pushed by `SiegeBoard.Refit` through
+   `SiegeWard.Fortify`, because health and capacity are state; everything else is a reading.
+59b. **A granted ability goes through the doors the shelf's turrets already use** (`Augment`:
+   `Spread`, `Arc`, `Lance`, `Freeze`, `Kindle`, `Stagger`, `Hex`), so it is drawn as the thing it
+   is and can never reduce the primary hit (42). A revival is the one thing no turret does, and it
+   is reported beside the fall (`SiegeReport.Revived`) so the view draws the post coming down and
+   then standing up (`SiegeView.Boosts`, `Rallied` a beat later).
+59c. **The ramp is pure raiders, and the validator holds it to that** (`ShuffleRamp : SiegeRamp`,
+   `SendsBosses` false): a body more every wave to twenty-four, three twentieths more health a wave,
+   a tenth more blow every other wave, brutes from two, bulwarks from four, **never a bomber and
+   never a cog** (the body authors `cogs: 0`; nothing drops on this lane's hill, so the hand is the
+   whole ladder and no card is about the ground), the curse from ten and the void from sixteen - its own coordinates under the hash every ramp shares
+   (`SiegeRamp.Roll`), so it is never the Infinite lane's hill in a different order. Steeper than
+   the Infinite lane on purpose: a build of forty cards compounds and a ramp that did not would be a
+   run that never ended. **Both ramps are one abstraction now** (`SiegeLayout.Ramp`); `Endless` is
+   kept as a typed read for the readers that only ever meant the Infinite lane, and `Tune` and the
+   validator read the ramp.
+59d. **A card is a row of code and never content** (20): thirty-seven of them in four tiers, told
+   apart by *what they take* (37z asked of upgrades) - a common moves a number the player already
+   has, a rare grants an ability the shelf sells, an epic changes a rule, a legendary changes the
+   shape of the run. One damage card and not three (5d). An id, a tier and a picture are permanent;
+   a withdrawn card goes in `ShuffleCards.Retired`. Every string and the picture are derived from
+   the id (5a); `make_shuffle_art.py` cuts the picture from the skill-icon pack at the number the
+   row names and `ShuffleTests.EveryCardHasItsPictureOnDisk` holds the catalog to the disk.
+59e. **A build is a function of the cards held and never of the order they came in**
+   (`ShuffleBuild.Compile` folds from the plain line every take), and **a hand is fair whatever the
+   build holds**: the tier is rolled first (`ShuffleDeck.Weights`, 56/30/11/3, held to a hundred),
+   the card second among what the build can still take, falling down a tier and then up when one is
+   empty. Every third hand opens on at least a rare and every fifth on at least an epic - a floor on
+   the first slot's tier, because a deterministic stream turns "rare" into "never" on some run
+   (37ci). The deck runs out when every card is at its most, and then nothing is dealt.
+59f. **A hand is owed every two waves, and the board says when** (`ShuffleRun.Owed`): in the
+   breather once the hill has been cleared of wave `2n`, or the frame wave `2n+1` steps out if the
+   clock sent it first. The panel holds the run (`RunHold.Covered`), swallows the back key and
+   closes on nothing but a card: a hand walked away from is a build nobody chose. Asked from
+   `Running`, so a hand is never dealt over a pause, a lesson or a board still arriving, and never
+   dealt twice (an open hand is one `Owed` answers false for).
+59g. **The seed is the run's and is stored nowhere.** A build is a thing that happens to one run
+   (`ShuffleRun.SeedNow`, the clock); a fixture hands in a constant and deals the same hands twice.
+   The run's own stream is the build's (`SiegeBoosts.Roll100`), never the field's and never the
+   hill's: a crit roll per bolt would otherwise move which gem the next refill deals (41).
+59h. **Where things sit is Domain** (`ShuffleHandLayout`, held clear by
+   `ShuffleTests.TheHandFitsItsPanelAndTheShortestCanvas`) **and what it looks like is a render**
+   (`Tools/render_shuffle.py` for the hand, `render_endless.py --shuffle` for the hub). The hub is
+   the Infinite lane's with a row per lane (`EndlessHub.HubLane`: wall, marks, where the best comes
+   from, whether a checkpoint bar, a standing or a shelf is drawn, and a crest), so a third lane is a
+   row and not six branches. **The Shuffle hub's hero is its own crest, not the rank** (the owner's
+   picture, `Ui/shuffle_crest`, breathing slowly in the rank's box; a rank is nothing a dealt hand
+   says anything about), **its header carries no plaque** (the switcher stands in the plaque's slot,
+   `LevelsScreen.BuildHeader` on a `Dealt` lane) and **its wall is charcoal** (the ranked wall turned
+   and shaded in the tool). **The hand wears the Deals sheet's frame** (`VictoryFrame`: the wave on
+   the banner, the sentence under it, three kit cards in the green window; `ShuffleHandLayout.CrestFoot`
+   keeps the line under the banner's reach, pinned to the frame by `ShuffleTests`). The two authored waves (gold 24, silver 12) are guesses until the owner plays:
+   `ShuffleTests.AModelPlayerTakingRandomCardsIsHeldAndThenFalls` prints where a player taking the
+   first card of every hand lands (waves 8-11 at two rhythms; waves 8-9 with no build, the hill bare).
+
+**Adding a card**: a row in `ShuffleCards.All` (id, tier, effect, magnitude, extent, most,
+picture), an arm in `ShuffleBuild.Fold` if the effect is new, a setter on `SiegeBoosts` and the
+site that reads it, `shuffle.<id>.name` and `.note` in all nine tables, and
+`python Tools/make_shuffle_art.py` (then the Editor's sync). **Retuning the ramp**: the constants on
+`ShuffleRamp` and their mirror in `Tools/verify/siege.py` (`shuffle_*`), and the inline pin in
+`ShuffleTests.TheRampAgreesWithTheOfflineMirror` re-read off `Tools/chapters/s13_shufflewatch.py`.
+
 **Adding a boss rung, or a boss.** A rung: author `boss: "<kind>:<colour>"` - or a duel,
 `"<kind>:<colour>+<kind>:<colour>"` (37er) - on every fifth rung, no
 other number; copy the rung into the chapter's table in `SiegeRuleTests.Chapters.cs` (`rungs.py` holds

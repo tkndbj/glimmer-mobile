@@ -200,10 +200,95 @@ namespace GlimmerGrove.Modes
             if (damage <= 0) return;
 
             bool killed = Fell(other);
-            if (killed) Refund(ward);
+            if (killed) Fallen(ward, index, other);
 
             _report.Bolts.Add(new SiegeBolt(index, other.Id, damage,
                                             ward.StrongAgainst(other.Colour), killed, true));
+        }
+
+        /// <summary>
+        /// Everything a kill by <paramref name="ward"/> pays: the turret's own refund, and what
+        /// the build adds (<see cref="SiegeBoosts.SiphonTenths"/>, <see cref="SiegeBoosts.LeechHealth"/>,
+        /// <see cref="SiegeBoosts.BlastTenths"/>).
+        ///
+        /// <b>One door for the three places a ward's bolt kills</b> - the primary hit, a
+        /// partner shot and a thorn - so a build's kill effects cannot be true at one of them
+        /// and not another. A blast is a splash of the body's own full health thrown at its
+        /// neighbours, through <see cref="Spread"/>, so a chain of kills is a chain of blasts.
+        /// </summary>
+        void Fallen(SiegeWard ward, int index, SiegeRaider fallen)
+        {
+            Refund(ward);
+
+            if (_boosts.IsIdentity) return;
+
+            if (_boosts.LeechHealth > 0 && ward.Alive && ward.Health < ward.Full)
+            {
+                ward.Health += _boosts.LeechHealth;
+                if (ward.Health > ward.Full) ward.Health = ward.Full;
+            }
+
+            if (_boosts.BlastTenths > 0 && fallen != null && !fallen.Boss)
+            {
+                int blast = fallen.MaxHealth * _boosts.BlastTenths / 10;
+                if (blast > 0) Spread(ward, index, fallen, blast, 1);
+            }
+        }
+
+        /// <summary>
+        /// What the build grants on top of a turret's own ability, after the bolt has landed.
+        ///
+        /// <para>
+        /// <b>Through exactly the doors <see cref="Ability"/> uses</b> - <see cref="Spread"/>,
+        /// <see cref="Arc"/>, <see cref="Lance"/>, <c>Freeze</c>, <c>Kindle</c>, <c>Stagger</c>,
+        /// <c>Hex</c> - so a granted splash is drawn as a splash and a granted burn ticks as a
+        /// burn, and the rule that nothing here may reduce the primary hit holds by construction.
+        /// Nothing on the plain line (<see cref="SiegeBoosts.IsIdentity"/>).
+        /// </para>
+        /// </summary>
+        void Augment(SiegeWard ward, int index, SiegeRaider target, int damage)
+        {
+            if (_boosts.IsIdentity || target == null) return;
+
+            var boosts = _boosts;
+
+            if (boosts.SplashTenths > 0)
+                Spread(ward, index, target, Share(damage, boosts.SplashTenths), boosts.SplashReach);
+
+            if (boosts.ChainTenths > 0 && boosts.ChainHops > 0)
+                Arc(ward, index, target, Share(damage, boosts.ChainTenths), boosts.ChainHops);
+
+            if (boosts.PierceEvery > 0 && ward.Shots % boosts.PierceEvery == 0)
+                Lance(ward, index, target, Share(damage, boosts.PierceTenths));
+
+            if (boosts.FrostTenths > 0) target.Freeze(boosts.FrostTenths, boosts.FrostFor);
+
+            if (boosts.BurnTenths > 0)
+                target.Kindle(Share(damage, boosts.BurnTenths), boosts.BurnFor, index);
+
+            if (boosts.Stuns()) target.Stagger(boosts.StunFor);
+
+            if (boosts.Hexes()) target.Hex(boosts.HexFor);
+
+            // A second landing of the same bolt, at a share, as a partner shot on the target.
+            if (boosts.Twins() && target.Alive)
+                Splinter(ward, index, target, Share(damage, boosts.TwinTenths));
+
+            // **The finish**: a body at or under the build's share of its full health is taken
+            // outright. Never a boss - a boss is a fight, not a bar to race (37fe) - and through
+            // the one door, so a hex and a stand's rules still read.
+            if (boosts.ExecutePercent > 0 && target.Alive && !target.Boss
+                && target.Health * 100 <= target.MaxHealth * boosts.ExecutePercent)
+            {
+                int took = Wound(target, target.Health);
+                if (took <= 0) return;
+
+                bool killed = Fell(target);
+                if (killed) Fallen(ward, index, target);
+
+                _report.Bolts.Add(new SiegeBolt(index, target.Id, took,
+                                                ward.StrongAgainst(target.Colour), killed, true));
+            }
         }
 
         /// <summary>
@@ -214,10 +299,19 @@ namespace GlimmerGrove.Modes
         /// </summary>
         void Refund(SiegeWard ward)
         {
-            if (ward.Model.Ability != WardAbility.Siphon || ward.Model.Magnitude <= 0) return;
             if (!ward.Alive) return;
 
-            ward.Fuel = Math.Min(ward.Capacity, ward.Fuel + ward.Model.Magnitude / 10f);
+            float back = 0f;
+
+            if (ward.Model.Ability == WardAbility.Siphon && ward.Model.Magnitude > 0)
+                back += ward.Model.Magnitude / 10f;
+
+            // And the build's own siphon, through the same cap (`SiegeBoosts.SiphonTenths`).
+            if (_boosts.SiphonTenths > 0) back += _boosts.SiphonTenths / 10f;
+
+            if (back <= 0f) return;
+
+            ward.Fuel = Math.Min(ward.Capacity, ward.Fuel + back);
         }
 
         /// <summary>
@@ -292,6 +386,12 @@ namespace GlimmerGrove.Modes
                 if (took <= 0) continue;
 
                 bool killed = Fell(raider);
+
+                // A kill by fire pays the ward that lit it, where it still stands - the build's
+                // half only, because a siphon turret's own refund has always been for a bolt.
+                if (killed && !_boosts.IsIdentity
+                    && raider.BurnFrom >= 0 && raider.BurnFrom < _wards.Length)
+                    Fallen(_wards[raider.BurnFrom], raider.BurnFrom, raider);
 
                 _report.Burns.Add(new SiegeBurn(raider.BurnFrom, raider.Id, took, killed));
             }

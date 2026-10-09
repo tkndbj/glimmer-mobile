@@ -45,14 +45,19 @@ namespace GlimmerGrove.Modes
         /// </summary>
         void Cog(SiegeRaider raider)
         {
-            if (raider == null || Layout.Cogs <= 0) return;
+            // The level's own rate, and nothing a build adds: a cog is a thing on the hill's
+            // ground, and the Shuffle lane deals none (its body authors nought) - so no card
+            // reaches this figure.
+            int rate = Layout.Cogs;
+
+            if (raider == null || rate <= 0) return;
             if (_cogs.Count >= SiegeTuning.MostCogs) return;
 
             // One draw, always, so the hill's stream advances the same number of times however the
             // roll lands. A stream whose length depends on its own answers is one nothing can
             // reproduce from a seed.
             uint roll = Hill() % 100u;
-            if (roll >= (uint)Layout.Cogs) return;
+            if (roll >= (uint)rate) return;
 
             int ward = Layout.WardOf(SiegeLayout.Letters[raider.Colour]);
             if (ward < 0 || !_wards[ward].Upgradable) return;

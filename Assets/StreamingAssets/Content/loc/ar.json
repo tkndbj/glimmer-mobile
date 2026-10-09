@@ -7836,6 +7836,374 @@
     {
       "key": "ui.keeper.chest_locked",
       "text": "بلغ المستوى {0} لتفتح هذا الصندوق"
+    },
+    {
+      "key": "chapter.s13_shufflewatch.name",
+      "text": "حراسة الخلط"
+    },
+    {
+      "key": "level.s13_shuffle.name",
+      "text": "حراسة الخلط"
+    },
+    {
+      "key": "level.s13_shuffle.tagline",
+      "text": "أربعة كاسرين ويد ترقيات جديدة في كل جولة. اصمد ما استطعت."
+    },
+    {
+      "key": "track.shuffle.name",
+      "text": "الخلط"
+    },
+    {
+      "key": "track.shuffle.tagline",
+      "text": "كل جولة بناء جديد"
+    },
+    {
+      "key": "track.shuffle.point1",
+      "text": "كل جولة توزع يدا مختلفة."
+    },
+    {
+      "key": "track.shuffle.point2",
+      "text": "اختر 1 من 3 بطاقات كل موجتين."
+    },
+    {
+      "key": "track.shuffle.point3",
+      "text": "أربعة كاسرين للجميع. بلا تشكيلة."
+    },
+    {
+      "key": "track.shuffle.point4",
+      "text": "الدخول بقلب واحد. الخسارة لا تكلف شيئا."
+    },
+    {
+      "key": "ui.shuffle.choose",
+      "text": "اختر ترقية"
+    },
+    {
+      "key": "ui.shuffle.wave",
+      "text": "الموجة {0}"
+    },
+    {
+      "key": "ui.shuffle.tier.common",
+      "text": "عادية"
+    },
+    {
+      "key": "ui.shuffle.tier.rare",
+      "text": "نادرة"
+    },
+    {
+      "key": "ui.shuffle.tier.epic",
+      "text": "ملحمية"
+    },
+    {
+      "key": "ui.shuffle.tier.legendary",
+      "text": "أسطورية"
+    },
+    {
+      "key": "ui.shuffle.held",
+      "text": "{0} x{1}"
+    },
+    {
+      "key": "ui.shuffle.taken",
+      "text": "تم اختيار: {0}"
+    },
+    {
+      "key": "ui.shuffle.taken_again",
+      "text": "{0} x{1}"
+    },
+    {
+      "key": "shuffle.heavy_bolts.name",
+      "text": "سهام ثقيلة"
+    },
+    {
+      "key": "shuffle.heavy_bolts.note",
+      "text": "كل سهم يضرب أقوى بنسبة 15%."
+    },
+    {
+      "key": "shuffle.quick_barrels.name",
+      "text": "فوهات سريعة"
+    },
+    {
+      "key": "shuffle.quick_barrels.note",
+      "text": "الأبراج تطلق أسرع بنسبة 12%."
+    },
+    {
+      "key": "shuffle.lean_burn.name",
+      "text": "احتراق موفر"
+    },
+    {
+      "key": "shuffle.lean_burn.note",
+      "text": "كل سهم يستهلك وقودا أقل بنسبة 12%."
+    },
+    {
+      "key": "shuffle.rich_gems.name",
+      "text": "جواهر غنية"
+    },
+    {
+      "key": "shuffle.rich_gems.note",
+      "text": "كل جوهرة تعطي وقودا أكثر بنسبة 20%."
+    },
+    {
+      "key": "shuffle.iron_posts.name",
+      "text": "أعمدة حديدية"
+    },
+    {
+      "key": "shuffle.iron_posts.note",
+      "text": "الأبراج تتحمل ضررا أكثر بنسبة 30% قبل أن تسقط."
+    },
+    {
+      "key": "shuffle.wide_tubes.name",
+      "text": "أنابيب واسعة"
+    },
+    {
+      "key": "shuffle.wide_tubes.note",
+      "text": "الأبراج تخزن وقودا أكثر بنسبة 25%."
+    },
+    {
+      "key": "shuffle.brace.name",
+      "text": "تدعيم"
+    },
+    {
+      "key": "shuffle.brace.note",
+      "text": "كل ضربة على الخط تأخذ 1 أقل."
+    },
+    {
+      "key": "shuffle.field_medic.name",
+      "text": "مسعف ميداني"
+    },
+    {
+      "key": "shuffle.field_medic.note",
+      "text": "الأبراج تستعيد صحتها ببطء."
+    },
+    {
+      "key": "shuffle.keen_eyes.name",
+      "text": "عيون حادة"
+    },
+    {
+      "key": "shuffle.keen_eyes.note",
+      "text": "10% من السهام تضرب بضعف الضرر."
+    },
+    {
+      "key": "shuffle.long_rest.name",
+      "text": "استراحة طويلة"
+    },
+    {
+      "key": "shuffle.long_rest.note",
+      "text": "الهدوء بين الموجات يدوم أطول بنسبة 20%."
+    },
+    {
+      "key": "shuffle.splash_shot.name",
+      "text": "طلقة متناثرة"
+    },
+    {
+      "key": "shuffle.splash_shot.note",
+      "text": "السهام تصيب المهاجمين القريبين بنسبة 40%."
+    },
+    {
+      "key": "shuffle.chain_arc.name",
+      "text": "قوس متسلسل"
+    },
+    {
+      "key": "shuffle.chain_arc.note",
+      "text": "السهام تقفز إلى مهاجم آخر بنسبة 50%."
+    },
+    {
+      "key": "shuffle.pierce_rounds.name",
+      "text": "طلقات خارقة"
+    },
+    {
+      "key": "shuffle.pierce_rounds.note",
+      "text": "كل سهم ثالث يخترق مساره كله."
+    },
+    {
+      "key": "shuffle.frostbite.name",
+      "text": "عضة الصقيع"
+    },
+    {
+      "key": "shuffle.frostbite.note",
+      "text": "السهام تجمد المهاجمين وتبطئهم بنسبة 30%."
+    },
+    {
+      "key": "shuffle.kindling.name",
+      "text": "حطب الإشعال"
+    },
+    {
+      "key": "shuffle.kindling.note",
+      "text": "السهام تشعل المهاجمين لمدة 3 ثوان."
+    },
+    {
+      "key": "shuffle.stunning_blows.name",
+      "text": "ضربات صاعقة"
+    },
+    {
+      "key": "shuffle.stunning_blows.note",
+      "text": "12% من السهام توقف المهاجم في مكانه."
+    },
+    {
+      "key": "shuffle.siphon.name",
+      "text": "سيفون"
+    },
+    {
+      "key": "shuffle.siphon.note",
+      "text": "كل قتل يعيد للبرج قليلا من الوقود."
+    },
+    {
+      "key": "shuffle.charge_master.name",
+      "text": "سيد الشحنات"
+    },
+    {
+      "key": "shuffle.charge_master.note",
+      "text": "الشحنات الزائدة تضرب أقوى بنسبة 50% والأبراج تخزن واحدة أكثر."
+    },
+    {
+      "key": "shuffle.thorns.name",
+      "text": "أشواك"
+    },
+    {
+      "key": "shuffle.thorns.note",
+      "text": "المهاجم الذي يضرب الخط يصاب بدوره."
+    },
+    {
+      "key": "shuffle.charm_magnet.name",
+      "text": "مغناطيس التعويذات"
+    },
+    {
+      "key": "shuffle.charm_magnet.note",
+      "text": "التعويذات تظهر ضعف المرات."
+    },
+    {
+      "key": "shuffle.rally_cry.name",
+      "text": "صيحة الحشد"
+    },
+    {
+      "key": "shuffle.rally_cry.note",
+      "text": "كل موجة تملأ كل برج بنسبة 30% عند خروجها."
+    },
+    {
+      "key": "shuffle.vampire_posts.name",
+      "text": "أعمدة مصاصة"
+    },
+    {
+      "key": "shuffle.vampire_posts.note",
+      "text": "كل قتل يشفي البرج قليلا."
+    },
+    {
+      "key": "shuffle.slow_march.name",
+      "text": "زحف بطيء"
+    },
+    {
+      "key": "shuffle.slow_march.note",
+      "text": "التل كله يزحف أبطأ بنسبة 15%."
+    },
+    {
+      "key": "shuffle.giant_slayer.name",
+      "text": "قاتل العمالقة"
+    },
+    {
+      "key": "shuffle.giant_slayer.note",
+      "text": "السهام تضرب العمالقة والدروع أقوى بنسبة 50%."
+    },
+    {
+      "key": "shuffle.second_wind.name",
+      "text": "نفس ثان"
+    },
+    {
+      "key": "shuffle.second_wind.note",
+      "text": "برج ساقط ينهض مرة واحدة بنصف صحته."
+    },
+    {
+      "key": "shuffle.hourglass_heart.name",
+      "text": "قلب الساعة الرملية"
+    },
+    {
+      "key": "shuffle.hourglass_heart.note",
+      "text": "كل موجة تجمد التل لثانيتين عند خروجها."
+    },
+    {
+      "key": "shuffle.repelling_wards.name",
+      "text": "أبراج صادة"
+    },
+    {
+      "key": "shuffle.repelling_wards.note",
+      "text": "35% من المهاجمين الواصلين إلى الخط يرتدون إلى أعلى التل."
+    },
+    {
+      "key": "shuffle.execution.name",
+      "text": "إعدام"
+    },
+    {
+      "key": "shuffle.execution.note",
+      "text": "السهام تجهز فورا على المهاجمين تحت 15% من الصحة."
+    },
+    {
+      "key": "shuffle.twin_barrels.name",
+      "text": "فوهات مزدوجة"
+    },
+    {
+      "key": "shuffle.twin_barrels.note",
+      "text": "25% من السهام تصيب مرتين."
+    },
+    {
+      "key": "shuffle.sure_sight.name",
+      "text": "بصر يقين"
+    },
+    {
+      "key": "shuffle.sure_sight.note",
+      "text": "البرج الخامل يطلق على أي لون بنصف القوة."
+    },
+    {
+      "key": "shuffle.chain_reaction.name",
+      "text": "تفاعل متسلسل"
+    },
+    {
+      "key": "shuffle.chain_reaction.note",
+      "text": "المهاجم الساقط يصيب جيرانه بنسبة 30% من صحته."
+    },
+    {
+      "key": "shuffle.cursed_fire.name",
+      "text": "نار ملعونة"
+    },
+    {
+      "key": "shuffle.cursed_fire.note",
+      "text": "6% من السهام تلعن هدفها لمدة 3 ثوان."
+    },
+    {
+      "key": "shuffle.storm_bank.name",
+      "text": "مخزن العاصفة"
+    },
+    {
+      "key": "shuffle.storm_bank.note",
+      "text": "كل موجة تخزن شحنة زائدة على برج."
+    },
+    {
+      "key": "shuffle.phoenix.name",
+      "text": "العنقاء"
+    },
+    {
+      "key": "shuffle.phoenix.note",
+      "text": "عندما يسقط آخر برج ينهض الخط كله مرة واحدة بصحة كاملة."
+    },
+    {
+      "key": "shuffle.overdrive.name",
+      "text": "تجاوز الحد"
+    },
+    {
+      "key": "shuffle.overdrive.note",
+      "text": "السهام تضرب أقوى بنسبة 40% والأبراج تطلق أسرع بنسبة 25%."
+    },
+    {
+      "key": "shuffle.rainbow_fuel.name",
+      "text": "وقود قوس قزح"
+    },
+    {
+      "key": "shuffle.rainbow_fuel.note",
+      "text": "ربع كل مطابقة يغذي الأبراج الثلاثة الأخرى أيضا."
+    },
+    {
+      "key": "shuffle.last_stand.name",
+      "text": "الصمود الأخير"
+    },
+    {
+      "key": "shuffle.last_stand.note",
+      "text": "البرج تحت 30% من الصحة يطلق أقوى وأسرع بنسبة 60%."
     }
   ]
 }

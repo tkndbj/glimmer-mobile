@@ -7836,6 +7836,374 @@
     {
       "key": "ui.keeper.chest_locked",
       "text": "Zdobądź poziom {0}, by otworzyć tę skrzynię"
+    },
+    {
+      "key": "chapter.s13_shufflewatch.name",
+      "text": "Warta Losowa"
+    },
+    {
+      "key": "level.s13_shuffle.name",
+      "text": "Warta Losowa"
+    },
+    {
+      "key": "level.s13_shuffle.tagline",
+      "text": "Cztery Łamacze i nowa ręka ulepszeń w każdej grze. Wytrzymaj jak najdłużej."
+    },
+    {
+      "key": "track.shuffle.name",
+      "text": "Losowa"
+    },
+    {
+      "key": "track.shuffle.tagline",
+      "text": "każda gra inna"
+    },
+    {
+      "key": "track.shuffle.point1",
+      "text": "Każda gra rozdaje inną rękę."
+    },
+    {
+      "key": "track.shuffle.point2",
+      "text": "Co 2 fale wybierz 1 z 3 kart."
+    },
+    {
+      "key": "track.shuffle.point3",
+      "text": "Cztery Łamacze dla każdego. Bez ekwipunku."
+    },
+    {
+      "key": "track.shuffle.point4",
+      "text": "Wejście kosztuje serce. Przegrana nie kosztuje nic."
+    },
+    {
+      "key": "ui.shuffle.choose",
+      "text": "Wybierz ulepszenie"
+    },
+    {
+      "key": "ui.shuffle.wave",
+      "text": "Fala {0}"
+    },
+    {
+      "key": "ui.shuffle.tier.common",
+      "text": "Zwykła"
+    },
+    {
+      "key": "ui.shuffle.tier.rare",
+      "text": "Rzadka"
+    },
+    {
+      "key": "ui.shuffle.tier.epic",
+      "text": "Epicka"
+    },
+    {
+      "key": "ui.shuffle.tier.legendary",
+      "text": "Legendarna"
+    },
+    {
+      "key": "ui.shuffle.held",
+      "text": "{0} x{1}"
+    },
+    {
+      "key": "ui.shuffle.taken",
+      "text": "Wybrano: {0}"
+    },
+    {
+      "key": "ui.shuffle.taken_again",
+      "text": "{0} x{1}"
+    },
+    {
+      "key": "shuffle.heavy_bolts.name",
+      "text": "Ciężkie Pociski"
+    },
+    {
+      "key": "shuffle.heavy_bolts.note",
+      "text": "Każdy pocisk uderza o 15% mocniej."
+    },
+    {
+      "key": "shuffle.quick_barrels.name",
+      "text": "Szybkie Lufy"
+    },
+    {
+      "key": "shuffle.quick_barrels.note",
+      "text": "Wieże strzelają o 12% szybciej."
+    },
+    {
+      "key": "shuffle.lean_burn.name",
+      "text": "Oszczędne Spalanie"
+    },
+    {
+      "key": "shuffle.lean_burn.note",
+      "text": "Każdy pocisk zużywa o 12% mniej paliwa."
+    },
+    {
+      "key": "shuffle.rich_gems.name",
+      "text": "Bogate Klejnoty"
+    },
+    {
+      "key": "shuffle.rich_gems.note",
+      "text": "Każdy klejnot daje o 20% więcej paliwa."
+    },
+    {
+      "key": "shuffle.iron_posts.name",
+      "text": "Żelazne Słupy"
+    },
+    {
+      "key": "shuffle.iron_posts.note",
+      "text": "Wieże wytrzymują o 30% więcej obrażeń, zanim upadną."
+    },
+    {
+      "key": "shuffle.wide_tubes.name",
+      "text": "Szerokie Rury"
+    },
+    {
+      "key": "shuffle.wide_tubes.note",
+      "text": "Wieże mieszczą o 25% więcej paliwa."
+    },
+    {
+      "key": "shuffle.brace.name",
+      "text": "Wzmocnienie"
+    },
+    {
+      "key": "shuffle.brace.note",
+      "text": "Każdy cios w linię zabiera o 1 mniej."
+    },
+    {
+      "key": "shuffle.field_medic.name",
+      "text": "Medyk Polowy"
+    },
+    {
+      "key": "shuffle.field_medic.note",
+      "text": "Wieże powoli odzyskują zdrowie."
+    },
+    {
+      "key": "shuffle.keen_eyes.name",
+      "text": "Bystre Oczy"
+    },
+    {
+      "key": "shuffle.keen_eyes.note",
+      "text": "10% pocisków zadaje podwójne obrażenia."
+    },
+    {
+      "key": "shuffle.long_rest.name",
+      "text": "Długa Przerwa"
+    },
+    {
+      "key": "shuffle.long_rest.note",
+      "text": "Przerwa między falami trwa o 20% dłużej."
+    },
+    {
+      "key": "shuffle.splash_shot.name",
+      "text": "Strzał Odłamkowy"
+    },
+    {
+      "key": "shuffle.splash_shot.note",
+      "text": "Pociski ranią pobliskich najeźdźców za 40%."
+    },
+    {
+      "key": "shuffle.chain_arc.name",
+      "text": "Łuk Łańcuchowy"
+    },
+    {
+      "key": "shuffle.chain_arc.note",
+      "text": "Pociski przeskakują na kolejnego najeźdźcę za 50%."
+    },
+    {
+      "key": "shuffle.pierce_rounds.name",
+      "text": "Pociski Przebijające"
+    },
+    {
+      "key": "shuffle.pierce_rounds.note",
+      "text": "Co trzeci pocisk przebija cały tor."
+    },
+    {
+      "key": "shuffle.frostbite.name",
+      "text": "Odmrożenie"
+    },
+    {
+      "key": "shuffle.frostbite.note",
+      "text": "Pociski mrożą najeźdźców i spowalniają ich o 30%."
+    },
+    {
+      "key": "shuffle.kindling.name",
+      "text": "Podpałka"
+    },
+    {
+      "key": "shuffle.kindling.note",
+      "text": "Pociski podpalają najeźdźców na 3 sekundy."
+    },
+    {
+      "key": "shuffle.stunning_blows.name",
+      "text": "Ogłuszające Ciosy"
+    },
+    {
+      "key": "shuffle.stunning_blows.note",
+      "text": "12% pocisków zatrzymuje najeźdźcę w miejscu."
+    },
+    {
+      "key": "shuffle.siphon.name",
+      "text": "Syfon"
+    },
+    {
+      "key": "shuffle.siphon.note",
+      "text": "Każde trafienie śmiertelne oddaje wieży trochę paliwa."
+    },
+    {
+      "key": "shuffle.charge_master.name",
+      "text": "Mistrz Ładunku"
+    },
+    {
+      "key": "shuffle.charge_master.note",
+      "text": "Przeładowania uderzają o 50% mocniej, a wieże gromadzą o jedno więcej."
+    },
+    {
+      "key": "shuffle.thorns.name",
+      "text": "Ciernie"
+    },
+    {
+      "key": "shuffle.thorns.note",
+      "text": "Najeźdźca uderzający w linię sam odnosi obrażenia."
+    },
+    {
+      "key": "shuffle.charm_magnet.name",
+      "text": "Magnes na Amulety"
+    },
+    {
+      "key": "shuffle.charm_magnet.note",
+      "text": "Amulety pojawiają się dwa razy częściej."
+    },
+    {
+      "key": "shuffle.rally_cry.name",
+      "text": "Okrzyk Bojowy"
+    },
+    {
+      "key": "shuffle.rally_cry.note",
+      "text": "Każda fala przy nadejściu napełnia wieże w 30%."
+    },
+    {
+      "key": "shuffle.vampire_posts.name",
+      "text": "Wampirze Słupy"
+    },
+    {
+      "key": "shuffle.vampire_posts.note",
+      "text": "Każde trafienie śmiertelne trochę leczy wieżę."
+    },
+    {
+      "key": "shuffle.slow_march.name",
+      "text": "Powolny Marsz"
+    },
+    {
+      "key": "shuffle.slow_march.note",
+      "text": "Całe wzgórze idzie o 15% wolniej."
+    },
+    {
+      "key": "shuffle.giant_slayer.name",
+      "text": "Pogromca Olbrzymów"
+    },
+    {
+      "key": "shuffle.giant_slayer.note",
+      "text": "Pociski uderzają osiłków i pancerze o 50% mocniej."
+    },
+    {
+      "key": "shuffle.second_wind.name",
+      "text": "Drugi Oddech"
+    },
+    {
+      "key": "shuffle.second_wind.note",
+      "text": "Upadła wieża raz wstaje z połową zdrowia."
+    },
+    {
+      "key": "shuffle.hourglass_heart.name",
+      "text": "Serce Klepsydry"
+    },
+    {
+      "key": "shuffle.hourglass_heart.note",
+      "text": "Każda fala przy nadejściu zamraża wzgórze na 2 sekundy."
+    },
+    {
+      "key": "shuffle.repelling_wards.name",
+      "text": "Odpychające Wieże"
+    },
+    {
+      "key": "shuffle.repelling_wards.note",
+      "text": "35% najeźdźców docierających do linii zostaje odrzuconych w górę wzgórza."
+    },
+    {
+      "key": "shuffle.execution.name",
+      "text": "Egzekucja"
+    },
+    {
+      "key": "shuffle.execution.note",
+      "text": "Pociski od razu dobijają najeźdźców poniżej 15% zdrowia."
+    },
+    {
+      "key": "shuffle.twin_barrels.name",
+      "text": "Podwójne Lufy"
+    },
+    {
+      "key": "shuffle.twin_barrels.note",
+      "text": "25% pocisków trafia dwa razy."
+    },
+    {
+      "key": "shuffle.sure_sight.name",
+      "text": "Pewny Cel"
+    },
+    {
+      "key": "shuffle.sure_sight.note",
+      "text": "Bezczynna wieża strzela do każdego koloru z połową siły."
+    },
+    {
+      "key": "shuffle.chain_reaction.name",
+      "text": "Reakcja Łańcuchowa"
+    },
+    {
+      "key": "shuffle.chain_reaction.note",
+      "text": "Pokonany najeźdźca rani sąsiadów za 30% swojego zdrowia."
+    },
+    {
+      "key": "shuffle.cursed_fire.name",
+      "text": "Przeklęty Ogień"
+    },
+    {
+      "key": "shuffle.cursed_fire.note",
+      "text": "6% pocisków przeklina cel na 3 sekundy."
+    },
+    {
+      "key": "shuffle.storm_bank.name",
+      "text": "Zapas Burzy"
+    },
+    {
+      "key": "shuffle.storm_bank.note",
+      "text": "Każda fala gromadzi przeładowanie na wieży."
+    },
+    {
+      "key": "shuffle.phoenix.name",
+      "text": "Feniks"
+    },
+    {
+      "key": "shuffle.phoenix.note",
+      "text": "Gdy upada ostatnia wieża, cała linia raz wstaje z pełnym zdrowiem."
+    },
+    {
+      "key": "shuffle.overdrive.name",
+      "text": "Nadbieg"
+    },
+    {
+      "key": "shuffle.overdrive.note",
+      "text": "Pociski uderzają o 40% mocniej, a wieże strzelają o 25% szybciej."
+    },
+    {
+      "key": "shuffle.rainbow_fuel.name",
+      "text": "Tęczowe Paliwo"
+    },
+    {
+      "key": "shuffle.rainbow_fuel.note",
+      "text": "Jedna czwarta każdego dopasowania zasila też trzy pozostałe wieże."
+    },
+    {
+      "key": "shuffle.last_stand.name",
+      "text": "Ostatni Bastion"
+    },
+    {
+      "key": "shuffle.last_stand.note",
+      "text": "Wieża poniżej 30% zdrowia strzela o 60% mocniej i szybciej."
     }
   ]
 }

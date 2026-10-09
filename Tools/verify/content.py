@@ -729,10 +729,11 @@ def check_siege(lid, chapter_id, level, block):
         return empty
 
     endless_block = block.get('endless') or {}
+    shuffle_block = block.get('shuffle') or {}
 
     layout = rules.Layout(grid, block.get('gems'), block.get('wards'), block.get('waves'),
                           block.get('boss'), block.get('cogs') or 0,
-                          endless=bool(endless_block.get('goldWave')),
+                          endless=bool(endless_block.get('goldWave')) or bool(shuffle_block.get('goldWave')),
                           tough=block.get('tough') or 0,
                           charms=block.get('charms') or '',
                           obsidian=bool(block.get('obsidian')),
@@ -764,8 +765,20 @@ def check_siege(lid, chapter_id, level, block):
     # field, the deal and the line are proved by exactly the code above, and what is left is the
     # ramp. See `check_endless`.
     endless = endless_block
+    if endless.get('goldWave') and shuffle_block.get('goldWave'):
+        errors.append("%s: this siege authors both an 'endless' ramp and a 'shuffle' ramp; a "
+                      "lane climbs one ladder - drop one of the two blocks" % lid)
+        return empty
+
     if endless.get('goldWave'):
         return check_endless(lid, chapter_id, level, block, grid, layout, endless)
+
+    if shuffle_block.get('goldWave'):
+        return check_shuffle(lid, chapter_id, level, block, grid, layout, shuffle_block)
+
+    if block.get('shuffle'):
+        errors.append("%s: this siege authors a 'shuffle' block with no goldWave; the Shuffle "
+                      "lane still has to say how far a three-star run reaches" % lid)
 
     if block.get('endless'):
         errors.append("%s: this siege authors an 'endless' block with no goldWave; a lane whose "
@@ -876,6 +889,120 @@ def check_siege(lid, chapter_id, level, block):
                 ways=0, greedy=-1, nodes=0, goals=layout.raiders,
                 cogs=layout.cogs,
                 deal=layout.deal, siege=read)
+
+
+def check_shuffle(lid, chapter_id, level, block, grid, layout, shuffle):
+    """The Shuffle lane (MODES.md 59): `check_endless`'s shape over `ShuffleRamp`.
+
+    What differs from the Infinite lane is one promise and one walk: the ramp sends **no boss**,
+    ever, and the walk is `SHUFFLE_WALKED` waves rather than the boss schedule's period. Every
+    other clause is the endless one - no authored waves, no budget, two star waves the right way
+    round, nothing sent that the line cannot answer, and something that can bring a ward down.
+    """
+    import siege as rules
+
+    empty = dict(id=lid, chapter=chapter_id, w=grid.w, h=grid.h, par=0, budget=0,
+                 gold=0, silver=0, lamps=0, sources=0, fragile=0, bound=0,
+                 crossings=0, briars=0, mode='siege',
+                 ways=0, greedy=-1, nodes=0, goals=0, cogs=0, deal='',
+                 siege=dict(raiders=0, waves=0, brutes=0, bulwarks=0, colours=0, wards=0,
+                            boss='', kind='', spell='', cogs=0, drops=0, threat=0, swap=0,
+                            charms='', sparks=0))
+
+    if block.get('waves') or block.get('boss'):
+        errors.append("%s: this siege authors both a shuffle ramp and its own waves. A lane whose "
+                      "waves are a rule has no list of them - drop 'waves' and 'boss', or drop "
+                      "'shuffle'" % lid)
+        return empty
+
+    if factor_of(level, 'budgetFactor', 160) > 0:
+        errors.append("%s: this siege authors a move budget. A siege is lost when the last ward "
+                      "falls - author budgetFactor -1" % lid)
+        return empty
+
+    if (block.get('tough') or 0) not in (0, 10):
+        errors.append("%s: this Shuffle lane authors a toughness surge and already ramps one per "
+                      "wave, so the two would multiply - take the 'tough' field off" % lid)
+        return empty
+
+    gold = int(shuffle.get('goldWave') or 0)
+    silver_factor = float(shuffle.get('silverFactor') or 0.0)
+
+    if gold < 1:
+        errors.append("%s: a Shuffle lane needs a goldWave of at least 1" % lid)
+        return empty
+
+    if not (0.0 < silver_factor < 1.0):
+        errors.append("%s: this Shuffle lane's silverFactor is %.2f; it lies between 0 and 1"
+                      % (lid, silver_factor))
+        return empty
+
+    silver = max(1, -(-int(round(gold * silver_factor * 100)) // 100))
+
+    if silver >= gold:
+        errors.append("%s: this Shuffle lane's two-star wave (%d) is not below its three-star "
+                      "wave (%d), so a whole band of the ladder is unreachable"
+                      % (lid, silver, gold))
+        return empty
+
+    colours = list(layout.deal)
+    seen = set()
+    kinds = {}
+    sizes = []
+
+    for wave in range(1, rules.SHUFFLE_WALKED + 1):
+        coming = rules.shuffle_wave(colours, layout.seed, wave)
+        sizes.append(len(coming))
+
+        for colour, kind in coming:
+            seen.add(colour)
+            kinds[kind] = kinds.get(kind, 0) + 1
+
+            if kind in rules.BOSSES:
+                errors.append("%s: wave %d of this Shuffle lane sends a %s, and the lane's ramp "
+                              "promises no boss ever walks on" % (lid, wave, kind))
+                return empty
+
+            if colour in layout.wards:
+                continue
+
+            errors.append("%s: wave %d of this Shuffle lane sends a '%s' %s and no ward on the "
+                          "line carries '%s'" % (lid, wave, colour, kind, colour))
+            return empty
+
+    # **Every wave is a body longer than the last until the ceiling, and every wave is
+    # tougher** - the ramp's two promises, held here as the C# fixture holds them.
+    for wave in range(2, rules.SHUFFLE_WALKED + 1):
+        if rules.shuffle_surge(wave)[0] <= rules.shuffle_surge(wave - 1)[0]:
+            errors.append("%s: wave %d of this Shuffle lane is no tougher than wave %d"
+                          % (lid, wave, wave - 1))
+            return empty
+
+    if len(seen) < 2:
+        warnings.append("%s: everything this Shuffle lane sends wears one colour, so which ward "
+                        "to feed is not a question" % lid)
+
+    if not any(rules.blow_of(k) > 0 for k in kinds):
+        errors.append("%s: nothing this Shuffle lane ever sends can bring a ward down, so the "
+                      "run has no ending at all" % lid)
+        return empty
+
+    read = rules.readings(layout)
+    read['endless'] = gold
+    read['waves'] = 0
+    read['raiders'] = 0
+    read['brutes'] = kinds.get('brute', 0)
+    read['bulwarks'] = kinds.get('bulwark', 0)
+
+    print("  %s: Shuffle lane, 3* wave %d, 2* wave %d, waves 1..%d send %d..%d raiders (%s)"
+          % (lid, gold, silver, rules.SHUFFLE_WALKED, sizes[0], sizes[-1],
+             ", ".join("%d %s" % (n, k) for k, n in sorted(kinds.items()))))
+
+    return dict(id=lid, chapter=chapter_id, w=grid.w, h=grid.h, par=gold, budget=0,
+                gold=gold, silver=silver, lamps=0, sources=0, fragile=0, bound=0,
+                crossings=0, briars=0, mode='siege',
+                ways=0, greedy=-1, nodes=0, goals=0, cogs=layout.cogs, deal=layout.deal,
+                siege=read)
 
 
 def check_endless(lid, chapter_id, level, block, grid, layout, endless):
@@ -2623,7 +2750,7 @@ WARD_TOP_LEVEL = 60
 
 
 #: `EndlessHubLayout.Points` - how many short lines a hub says about the lane it draws.
-HUB_POINTS = 3
+HUB_POINTS = 4
 
 #: `GameTrack.Laddered` - the lanes that are a chain of levels to walk. Everything else is a
 #: single endless run and draws a hub instead of a map (`EndlessHub`), which is what needs the
