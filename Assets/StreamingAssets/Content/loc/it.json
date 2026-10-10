@@ -5778,12 +5778,20 @@
       "text": "IL TUO SCHIERAMENTO"
     },
     {
-      "key": "ui.tip.map_track.body",
+      "key": "ui.tip.lane_infinite.body",
       "text": "Tocca qui per giocare a {0}.\n\nLe ondate non finiscono mai."
     },
     {
-      "key": "ui.tip.map_track.title",
+      "key": "ui.tip.lane_infinite.title",
       "text": "GIOCA ALL'INFINITO"
+    },
+    {
+      "key": "ui.tip.lane_shuffle.body",
+      "text": "Tocca qui per giocare a {0}.\n\nOgni partita distribuisce una mano diversa di potenziamenti."
+    },
+    {
+      "key": "ui.tip.lane_shuffle.title",
+      "text": "OGNI PARTITA È NUOVA"
     },
     {
       "key": "ui.tip.merge_swipe.body",

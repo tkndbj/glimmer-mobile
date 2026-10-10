@@ -5778,12 +5778,20 @@
       "text": "SEU EQUIPAMENTO"
     },
     {
-      "key": "ui.tip.map_track.body",
+      "key": "ui.tip.lane_infinite.body",
       "text": "Toque aqui para jogar {0}.\n\nAs ondas nunca param."
     },
     {
-      "key": "ui.tip.map_track.title",
+      "key": "ui.tip.lane_infinite.title",
       "text": "JOGUE SEM FIM"
+    },
+    {
+      "key": "ui.tip.lane_shuffle.body",
+      "text": "Toque aqui para jogar {0}.\n\nCada partida distribui uma mão diferente de melhorias."
+    },
+    {
+      "key": "ui.tip.lane_shuffle.title",
+      "text": "CADA PARTIDA É NOVA"
     },
     {
       "key": "ui.tip.merge_swipe.body",

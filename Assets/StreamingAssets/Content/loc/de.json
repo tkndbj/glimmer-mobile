@@ -5778,12 +5778,20 @@
       "text": "DEINE AUFSTELLUNG"
     },
     {
-      "key": "ui.tip.map_track.body",
+      "key": "ui.tip.lane_infinite.body",
       "text": "Tippe hier, um {0} zu spielen.\n\nDie Wellen hören nie auf."
     },
     {
-      "key": "ui.tip.map_track.title",
+      "key": "ui.tip.lane_infinite.title",
       "text": "ENDLOS SPIELEN"
+    },
+    {
+      "key": "ui.tip.lane_shuffle.body",
+      "text": "Tippe hier, um {0} zu spielen.\n\nJede Runde teilt eine andere Hand voller Verbesserungen aus."
+    },
+    {
+      "key": "ui.tip.lane_shuffle.title",
+      "text": "JEDE RUNDE NEU"
     },
     {
       "key": "ui.tip.merge_swipe.body",

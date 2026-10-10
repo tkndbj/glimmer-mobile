@@ -5778,12 +5778,20 @@
       "text": "تشكيلتك"
     },
     {
-      "key": "ui.tip.map_track.body",
+      "key": "ui.tip.lane_infinite.body",
       "text": "انقر هنا لتلعب {0}.\n\nالموجات لا تتوقف أبدا."
     },
     {
-      "key": "ui.tip.map_track.title",
+      "key": "ui.tip.lane_infinite.title",
       "text": "العب بلا نهاية"
+    },
+    {
+      "key": "ui.tip.lane_shuffle.body",
+      "text": "انقر هنا لتلعب {0}.\n\nكل جولة توزع يدا مختلفة من التحسينات."
+    },
+    {
+      "key": "ui.tip.lane_shuffle.title",
+      "text": "كل جولة جديدة"
     },
     {
       "key": "ui.tip.merge_swipe.body",

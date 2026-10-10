@@ -5778,12 +5778,20 @@
       "text": "TEÇHİZATIN"
     },
     {
-      "key": "ui.tip.map_track.body",
+      "key": "ui.tip.lane_infinite.body",
       "text": "{0} oynamak için buraya dokun.\n\nAşamalar hiç bitmez."
     },
     {
-      "key": "ui.tip.map_track.title",
+      "key": "ui.tip.lane_infinite.title",
       "text": "SONSUZA DEK OYNA"
+    },
+    {
+      "key": "ui.tip.lane_shuffle.body",
+      "text": "{0} oynamak için buraya dokun.\n\nHer oyun farklı bir güçlendirme eli dağıtır."
+    },
+    {
+      "key": "ui.tip.lane_shuffle.title",
+      "text": "HER OYUN YENİ"
     },
     {
       "key": "ui.tip.merge_swipe.body",

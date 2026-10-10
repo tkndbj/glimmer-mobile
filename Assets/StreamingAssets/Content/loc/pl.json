@@ -5778,12 +5778,20 @@
       "text": "TWÓJ EKWIPUNEK"
     },
     {
-      "key": "ui.tip.map_track.body",
+      "key": "ui.tip.lane_infinite.body",
       "text": "Dotknij tutaj, by zagrać: {0}.\n\nFale nigdy nie ustają."
     },
     {
-      "key": "ui.tip.map_track.title",
+      "key": "ui.tip.lane_infinite.title",
       "text": "GRAJ BEZ KOŃCA"
+    },
+    {
+      "key": "ui.tip.lane_shuffle.body",
+      "text": "Dotknij tutaj, by zagrać: {0}.\n\nKażda gra rozdaje inną rękę ulepszeń."
+    },
+    {
+      "key": "ui.tip.lane_shuffle.title",
+      "text": "KAŻDA GRA INNA"
     },
     {
       "key": "ui.tip.merge_swipe.body",

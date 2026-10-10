@@ -726,26 +726,68 @@ namespace GlimmerGrove.Progression
         public static readonly Mechanic MapChapterGate = new Mechanic("map_gate", 1);
 
         /// <summary>
-        /// That a mode may have a second ladder, and that the pill under the plaque is where it
-        /// is reached.
+        /// <b>Retired 2026-10-10: no screen raises this and its id must never be reused.</b>
+        ///
+        /// <para>
+        /// It was one lesson for "the other ladder", and it named whichever lane the switcher
+        /// listed first - so the day a mode shipped a third lane it could only ever point at one
+        /// of them. The Shuffle lane opens at keeper 5 and the Infinite lane at 10, the lesson
+        /// named Infinite, and between those levels it was withheld (Infinite still walled) while
+        /// Shuffle stood open with nothing pointing at it; past 10 it was spent on Infinite and
+        /// Shuffle was never taught at all. <see cref="LaneDoor"/> replaced it with one lesson per
+        /// lane, offered as each lane opens.
+        /// </para>
+        /// <para>
+        /// <b>Retired rather than kept as the Infinite lesson, on purpose.</b> Players were not
+        /// finding the lane it pointed at, so the new lessons are meant to reach every player
+        /// who has never finished a run there - including one who dismissed this panel once.
+        /// Kept as a member because a lesson id travels in the save (<c>tipsSeen</c>).
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic MapTrack = new Mechanic("map_track", 1);
+
+        /// <summary>
+        /// That the Infinite lane exists and that the track pill under the plaque is its door.
         ///
         /// <para>
         /// <b><see cref="ModeSwitch"/>'s argument, one level finer.</b> <c>TrackSwitch</c> is a
         /// closed drop-down naming only the ladder the player is already on, so nothing about it
-        /// says there is another - and the Infinite lane is reached through it and through
-        /// nothing else. It is a lesson of its own rather than a widened <see cref="ModeSwitch"/>
-        /// because the two controls answer different questions and each draws nothing when its
-        /// own question has one answer: today the map carries the track pill and no mode pill,
-        /// so one lesson wearing both hats would be a lesson that is never right.
+        /// says there is another - and each lane is reached through it and through nothing else.
         /// </para>
         /// <para>
-        /// <b>The other ladder is named by the catalog rather than by the string</b>, for
-        /// <see cref="MapChapterGate"/>'s reason: a track is content, and a sentence that has
-        /// "Infinite" typed into it is a sentence that is wrong the day a mode ships a third
-        /// lane.
+        /// <b>One lesson per lane</b>, because lanes open at different keeper levels and a
+        /// lesson about "the other ladder" can only name one of them (see <see cref="MapTrack"/>,
+        /// which shipped that way). <b>The lane's name is the catalog's</b>, passed as the one
+        /// argument, for <see cref="MapChapterGate"/>'s reason: the switcher row is drawn from
+        /// <c>track.&lt;id&gt;.name</c>, and the sentence has to say the same word the menu does.
+        /// </para>
+        /// <para>
+        /// Offered by <c>LevelsScreen.Lessons</c> once the lane is open, never to a player who
+        /// has already finished a run in it (they found the door), and one lane a visit.
         /// </para>
         /// </summary>
-        public static readonly Mechanic MapTrack = new Mechanic("map_track", 1);
+        public static readonly Mechanic LaneInfinite = new Mechanic("lane_infinite", 1);
+
+        /// <summary>The Shuffle lane's door. <see cref="LaneInfinite"/>'s rules exactly.</summary>
+        public static readonly Mechanic LaneShuffle = new Mechanic("lane_shuffle", 1);
+
+        /// <summary>
+        /// The lesson that points at a lane's door, or an invalid mechanic for the main ladder.
+        ///
+        /// <para>
+        /// <b>A lane with no lesson answers invalid rather than throwing</b>, because the caller
+        /// is the map's first frame and a refusal there costs the whole screen. The refusal lives
+        /// in <c>TipTests.EveryLaneHasADoorLesson</c> instead, which walks
+        /// <see cref="GameTrack.Shipped"/> - so a lane added without one fails offline, which is
+        /// invariant 44e's point made without the crash.
+        /// </para>
+        /// </summary>
+        public static Mechanic LaneDoor(GlimmerGrove.Content.GameTrack track)
+        {
+            if (track == GlimmerGrove.Content.GameTrack.Infinite) return LaneInfinite;
+            if (track == GlimmerGrove.Content.GameTrack.Shuffle) return LaneShuffle;
+            return default;
+        }
 
         // ------------------------------------------------------------------ the loadout
         /// <summary>
@@ -940,7 +982,8 @@ namespace GlimmerGrove.Progression
             SiegeRubble,
             ModeSwitch, LuckySpin,
             // Grove and GroveShop are retired and deliberately absent. See the remarks above.
-            MapLoadout, MapChapterGate, MapTrack,
+            // MapTrack is retired and deliberately absent; LaneDoor replaced it.
+            MapLoadout, MapChapterGate, LaneInfinite, LaneShuffle,
             LoadoutSeats, LoadoutKit,
             // MergeGoal, MergeFeed, PairsCombo, PairsCurse and ChallengeHill are retired and
             // deliberately absent. See the remarks on MergeSwipe.
@@ -973,6 +1016,7 @@ namespace GlimmerGrove.Progression
             SiegeCog,
             Grove, GroveShop,
             MergeGoal, MergeFeed, PairsCombo, PairsCurse, ChallengeHill,
+            MapTrack,
         };
 
         public bool IsValid => !string.IsNullOrEmpty(Id);

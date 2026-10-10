@@ -5778,12 +5778,20 @@
       "text": "YOUR LOADOUT"
     },
     {
-      "key": "ui.tip.map_track.body",
+      "key": "ui.tip.lane_infinite.body",
       "text": "Tap here to play {0}.\n\nThe waves never stop."
     },
     {
-      "key": "ui.tip.map_track.title",
+      "key": "ui.tip.lane_infinite.title",
       "text": "PLAY FOREVER"
+    },
+    {
+      "key": "ui.tip.lane_shuffle.body",
+      "text": "Tap here to play {0}.\n\nEvery run deals a different hand of upgrades."
+    },
+    {
+      "key": "ui.tip.lane_shuffle.title",
+      "text": "NEW EVERY RUN"
     },
     {
       "key": "ui.tip.merge_swipe.body",

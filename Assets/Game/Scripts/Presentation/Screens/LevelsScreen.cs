@@ -1566,8 +1566,9 @@ namespace GlimmerGrove
         /// (<c>Mechanic.MapLoadout</c>). The <b>plaque</b> carries the chapter's name and not the
         /// one rule this screen cannot draw - that stars, not clears, open the next chapter
         /// (<c>Mechanic.MapChapterGate</c>, invariant 21). The <b>track pill</b> is a closed
-        /// drop-down naming only the ladder you are already on, and the Infinite lane is reached
-        /// through it and nothing else (<c>Mechanic.MapTrack</c>); the <b>mode pill</b> above it
+        /// drop-down naming only the ladder you are already on, and every other lane is reached
+        /// through it and nothing else (<c>Mechanic.LaneDoor</c>, one lesson per lane); the
+        /// <b>mode pill</b> above it
         /// is the same argument about the other half of the game
         /// (<c>Mechanic.ModeSwitch</c>).
         /// </para>
@@ -1666,51 +1667,80 @@ namespace GlimmerGrove
             }
 
             // Where else there is to go, narrowest first: another ladder of this mode, then
-            // another mode. Both pills fold away when their own question has one answer, so on
-            // most days exactly one of these is queued.
-            //
-            // **Held over while that lane is still behind its keeper wall**, which is the
-            // chapter-gate tip's rule immediately above: a lesson is offered once in a player's
-            // life, so one pointing at a lane they cannot enter for another nine levels is spent
-            // on the day it means least and gone on the day it means most. The padlocked row is
-            // still there to be found in the meantime; what is withheld is the game pointing at
-            // it (invariant 43d, and 37cl's rule about a tip with nothing to ring).
-            //
-            // **And offered from the ordinary ladder alone.** The lesson's whole sentence is
-            // *there is another lane and this pill is how you reach it*, so a player standing on
-            // the Infinite hub has already been told it by having got there - the pill is the
-            // only door in. Raised there anyway it says "tap here to play Normal" over the
-            // control the player used a second ago, which reads as the game explaining the tap it
-            // just watched. It is **held over rather than spent**, so somebody who arrives by the
-            // padlock lifting still meets it the next time they are on a map (37cl's rule about a
-            // kind with nothing to ring, said about a lesson that has nothing left to say).
-            var other = OtherLane();
-
-            if (Lane.IsMain && !other.Equals(Lane) && TrackSwitch.IsOpen(_index, Mode, other))
-                ScreenLessons.Offer(queue, Mechanic.MapTrack, _tracks, Loc.Get(other.NameKey));
+            // another mode. Both pills fold away when their own question has one answer.
+            OfferLaneDoor(queue);
             ScreenLessons.Offer(queue, Mechanic.ModeSwitch, _modes);
 
             return queue;
         }
 
         /// <summary>
-        /// The ladder this mode has that the player is not on, for the track lesson to name.
+        /// Rings the track pill for the first lane that has opened and that the player has never
+        /// played, naming it - one lane a visit.
         ///
-        /// <b>The first one that is not this one</b>, rather than <c>GameTrack.Infinite</c> by
-        /// name: what the pill offers is whatever the catalog carries, and the lesson has to say
-        /// the same word the menu under it does. Falls back to this lane, which cannot be reached
-        /// - the lesson is only ever queued while the pill is drawn, and the pill is only drawn
-        /// for a mode holding two.
+        /// <para>
+        /// <b>One lesson per lane</b> (<see cref="Mechanic.LaneDoor"/>), because lanes open at
+        /// different keeper levels: the Shuffle lane at 5 and the Infinite lane at 10. The single
+        /// lesson this replaced named whichever lane the switcher listed first, so it was withheld
+        /// while that one was walled and never said a word about the other.
+        /// </para>
+        /// <para>
+        /// <b>Held over while a lane is still behind its keeper wall</b>, which is the
+        /// chapter-gate tip's rule above: a lesson is offered once in a player's life, so one
+        /// pointing at a lane they cannot enter yet is spent on the day it means least
+        /// (invariant 43d, and 37cl's rule about a tip with nothing to ring). The ledger is only
+        /// written by the OK button, so a lesson held over here costs nothing.
+        /// </para>
+        /// <para>
+        /// <b>Never to a player who has already finished a run there</b> (<see cref="Walked"/>):
+        /// they found the door, and a panel about it is a panel about a tap they have made. This
+        /// is derived from the save rather than marked into the ledger, so it stores nothing and
+        /// it is the same answer on every device the player owns. It is what keeps a player who
+        /// has been on the build for weeks from being told about a lane they play every day.
+        /// </para>
+        /// <para>
+        /// <b>Not about the lane the player is standing in</b>: they arrived by the pill. A lane
+        /// lesson may be raised from any other lane's map, since the pill is the door from all of
+        /// them. <b>One a visit</b>, in the switcher's order, so a player for whom two are owed
+        /// meets the second on their next visit rather than two panels over one pill back to back.
+        /// </para>
         /// </summary>
-        GameTrack OtherLane()
+        void OfferLaneDoor(List<ScreenLesson> queue)
         {
-            var tracks = _index?.TracksIn(Mode);
-            if (tracks == null) return Lane;
+            if (_tracks == null || _index == null) return;
+
+            var tracks = _index.TracksIn(Mode);
 
             for (int i = 0; i < tracks.Count; i++)
-                if (!tracks[i].Equals(Lane)) return tracks[i];
+            {
+                var track = tracks[i];
+                if (track.IsMain || track.Equals(Lane)) continue;
 
-            return Lane;
+                var lesson = Mechanic.LaneDoor(track);
+                if (!lesson.IsValid || TipLedger.HasSeen(lesson)) continue;
+                if (!TrackSwitch.IsOpen(_index, Mode, track) || Walked(track)) continue;
+
+                ScreenLessons.Offer(queue, lesson, _tracks, Loc.Get(track.NameKey));
+                return;
+            }
+        }
+
+        /// <summary>
+        /// Whether the player has ever finished a run on any level of this lane - an endless
+        /// lane's best (<see cref="EndlessLedger"/>, floored at one for any finished run) or a
+        /// laddered lane's record. Both are in the save and joined across devices.
+        /// </summary>
+        bool Walked(GameTrack track)
+        {
+            var levels = _index.LevelsIn(Mode, track);
+
+            for (int i = 0; i < levels.Count; i++)
+            {
+                if (EndlessLedger.BestFor(levels[i]) > 0) return true;
+                if (PlayerProgress.Record(levels[i]).Clears > 0) return true;
+            }
+
+            return false;
         }
 
         // -------------------------------------------------------------- focusing

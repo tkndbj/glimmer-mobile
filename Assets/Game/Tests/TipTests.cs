@@ -527,6 +527,45 @@ namespace GlimmerGrove.Tests
         /// twenty minutes into a build.
         /// </para>
         /// </summary>
+        /// <summary>
+        /// Every lane beside the main ladder has its own live door lesson, naming the lane, and
+        /// no two lanes share one.
+        ///
+        /// <para>
+        /// <c>Mechanic.LaneDoor</c> answers invalid for a lane it does not know rather than
+        /// throwing on the map's first frame, so this is where that refusal lives: a lane shipped
+        /// without a lesson is the exact fault the retired <c>map_track</c> had - a lane open on
+        /// the switcher with nothing ever pointing at it.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void EveryLaneHasADoorLesson()
+        {
+            var live = new HashSet<string>(System.StringComparer.Ordinal);
+            foreach (var m in Mechanic.All) live.Add(m.Id);
+
+            var used = new HashSet<string>(System.StringComparer.Ordinal);
+
+            foreach (var track in GameTrack.Shipped)
+            {
+                var door = Mechanic.LaneDoor(track);
+
+                if (track.IsMain)
+                {
+                    Assert.IsFalse(door.IsValid, "the main ladder is where a player starts; it has no door to teach");
+                    continue;
+                }
+
+                Assert.IsTrue(door.IsValid, $"lane '{track}' has no door lesson in Mechanic.LaneDoor");
+                Assert.IsTrue(live.Contains(door.Id), $"lane '{track}''s lesson '{door}' is not in Mechanic.All");
+                Assert.IsTrue(used.Add(door.Id), $"lane '{track}' shares its lesson '{door}' with another lane");
+                Assert.AreEqual(1, door.Args, $"lane '{track}''s lesson must take the lane's name as its one argument");
+            }
+
+            Assert.IsFalse(Mechanic.LaneDoor(GameTrack.Infinite).Equals(Mechanic.MapTrack),
+                           "map_track is retired; re-pointing it would skip every player who dismissed it once");
+        }
+
         [Test]
         public void EveryMechanicIsEitherLiveOrRetired()
         {

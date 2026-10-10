@@ -5778,12 +5778,20 @@
       "text": "TON ÉQUIPEMENT"
     },
     {
-      "key": "ui.tip.map_track.body",
+      "key": "ui.tip.lane_infinite.body",
       "text": "Touche ici pour jouer à {0}.\n\nLes vagues ne s'arrêtent jamais."
     },
     {
-      "key": "ui.tip.map_track.title",
+      "key": "ui.tip.lane_infinite.title",
       "text": "JOUE SANS FIN"
+    },
+    {
+      "key": "ui.tip.lane_shuffle.body",
+      "text": "Touche ici pour jouer à {0}.\n\nChaque partie distribue une main différente d'améliorations."
+    },
+    {
+      "key": "ui.tip.lane_shuffle.title",
+      "text": "CHAQUE PARTIE EST NOUVELLE"
     },
     {
       "key": "ui.tip.merge_swipe.body",

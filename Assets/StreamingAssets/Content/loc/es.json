@@ -5778,12 +5778,20 @@
       "text": "TU EQUIPO"
     },
     {
-      "key": "ui.tip.map_track.body",
+      "key": "ui.tip.lane_infinite.body",
       "text": "Toca aquí para jugar {0}.\n\nLas oleadas nunca paran."
     },
     {
-      "key": "ui.tip.map_track.title",
+      "key": "ui.tip.lane_infinite.title",
       "text": "JUEGA SIN FIN"
+    },
+    {
+      "key": "ui.tip.lane_shuffle.body",
+      "text": "Toca aquí para jugar {0}.\n\nCada partida reparte una mano distinta de mejoras."
+    },
+    {
+      "key": "ui.tip.lane_shuffle.title",
+      "text": "CADA PARTIDA ES NUEVA"
     },
     {
       "key": "ui.tip.merge_swipe.body",
