@@ -1078,7 +1078,7 @@ namespace GlimmerGrove
                          && (LevelUnlock.ChapterBefore(_index, _entry.Id) != null
                           || LevelUnlock.ChapterAfter(_index, _entry.Id) != null);
 
-            // **No plaque on a lane that deals its line** (the Shuffle lane, at the owner's
+            // **No plaque on a lane that deals its build** (the Shuffle lane, at the owner's
             // instruction on 2026-10-09): its hub says its own name in the crest it stands as
             // its hero, so a ribbon over it said the same thing twice - and the switcher takes
             // the plaque's slot (see `head` below), which is what the owner asked for.
@@ -1173,11 +1173,9 @@ namespace GlimmerGrove
             // where somebody is about to choose a level told them nothing about what they were
             // choosing it with. The bar shows the four turrets and the five kits, and opens the
             // shelf when it is tapped - so the button came out rather than sitting beside it.
-            //
-            // **And never on a lane that deals its line** (`GameTrack.Dealt`): the Shuffle lane
-            // stands four of one turret for everybody, so a shelf saying what you are taking in
-            // would be a readout of something the lane does not read.
-            if (Mode == GameMode.Siege && !Lane.Dealt)
+            // Every lane of the siege reads the loadout, the Shuffle lane included, so every
+            // lane carries the bar.
+            if (Mode == GameMode.Siege)
             {
                 _kit = LoadoutBar.Build(Content, () => Flow.Go<LoadoutScreen>());
                 _kit.Load();

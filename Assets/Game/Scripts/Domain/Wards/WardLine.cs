@@ -105,10 +105,10 @@ namespace GlimmerGrove.Wards
         /// <summary>
         /// Four of one turret at one star, on every seat.
         ///
-        /// <b>The Shuffle lane's line</b> (<c>ShuffleLine</c>), and the one place a line is built
-        /// from a model rather than from a save or the roster's starter: everybody opens that
-        /// lane on the same four posts, so neither ownership nor the star ledger is asked. A null
-        /// model is the starter, for <see cref="Starter"/>'s reason.
+        /// <b>A fixed line built from a model</b> rather than from a save or the roster's
+        /// starter, so neither ownership nor the star ledger is asked: what a fixture or a bench
+        /// stands when it needs the same four posts on every machine. A null model is the
+        /// starter, for <see cref="Starter"/>'s reason.
         /// </summary>
         public static WardLine Uniform(WardCatalog catalog, WardModel model, int stars)
         {

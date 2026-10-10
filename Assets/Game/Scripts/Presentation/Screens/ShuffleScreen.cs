@@ -7,28 +7,27 @@ using UnityEngine;
 namespace GlimmerGrove
 {
     /// <summary>
-    /// <b>The Shuffle lane.</b> Thornwatch's board, hill and verb with three things changed: the
-    /// line is dealt rather than chosen, no boss ever walks on, and every two waves a hand of
-    /// three upgrade cards is put on the table and one of them is taken into the build
-    /// (MODES.md 59).
+    /// <b>The Shuffle lane.</b> Thornwatch's board, hill and verb with two things changed: no
+    /// boss ever walks on, and every two waves a hand of three upgrade cards is put on the table
+    /// and one of them is taken into the build (MODES.md 59). The line is the player's own
+    /// loadout, exactly as on a chapter and the Infinite lane.
     ///
     /// <para>
     /// <b>A subclass of the siege screen and not a copy</b>, which is invariant 20b's demand of a
     /// lane: everything about being a run - the heart taken at the gate, the stake, the record,
     /// the chests, the tasks, the lessons, the utilities, the pause and the forfeit - is the
     /// siege screen's and is not restated here. What this screen owns is exactly what the lane
-    /// adds: which rules a board is dealt from (<see cref="Ruled"/>), which line's art is held
-    /// (<see cref="LineToLoad"/>), the run's build (<see cref="ShuffleRun"/>) and when a hand is
-    /// put on the table (<see cref="Running"/>).
+    /// adds: which rules a board is dealt from (<see cref="Ruled"/>), the run's build
+    /// (<see cref="ShuffleRun"/>) and when a hand is put on the table (<see cref="Running"/>).
     /// </para>
     /// <para>
     /// <b>It pays nothing the Infinite lane pays.</b> That lane banks a best wave onto a public
     /// board and a tally that pays XP and credits (<c>EndlessLedger</c>, <c>EndlessCoins</c>);
-    /// this one records its best wave in the level's own record like every other level
-    /// (<c>LevelRecord.WithRun</c> on a climbing level keeps the larger), pays its stars once
-    /// through the star ledger, and reaches no server. A run here is worth exactly what a level
-    /// is worth, which is invariant 20a's bargain collected again - and the reason
-    /// <see cref="Finished"/> overrides the siege screen's banking with nothing.
+    /// this one records the level's own record like every other level, pays its stars once
+    /// through the star ledger, and banks its best wave in <see cref="ShuffleLedger"/>, which
+    /// is the Shuffle board's figure and pays nothing (invariant 19l). A run here is worth
+    /// exactly what a level is worth, which is invariant 20a's bargain collected again - and the
+    /// reason <see cref="Finished"/> replaces the siege screen's banking rather than extending it.
     /// </para>
     /// </summary>
     public sealed class ShuffleScreen : SiegeScreen
@@ -42,20 +41,15 @@ namespace GlimmerGrove
         public uint Seed { get; set; }
 
         /// <summary>
-        /// The line is dealt and the run opens at wave one, whatever the level's own rules say.
+        /// The level's own rules, untouched: the run opens at wave one on the player's loadout.
         ///
-        /// <b>Through the siege screen's one seam</b>, so a checkpoint can never reach this lane
-        /// and the line the board stands is the line whose art <see cref="LineToLoad"/> holds.
+        /// <b>Overridden to refuse the siege screen's checkpoint</b>, which that seam applies to
+        /// any layout with a ramp - and this lane's has one (<c>ShuffleRamp</c>), so without this
+        /// an Infinite-lane start would reach a Shuffle run. The line is the base screen's
+        /// (<c>WardLoadout.Line</c>, read by <see cref="SiegeRules"/> and loaded by
+        /// <c>LineToLoad</c>), so the line stood and the line loaded are one answer.
         /// </summary>
-        protected override ProtoLevelRules Ruled(ProtoLevelRules rules)
-        {
-            if (rules is SiegeRules siege && siege.Layout != null)
-                return new SiegeRules(siege.Layout, ShuffleLine.Line);
-
-            return rules;
-        }
-
-        protected override Wards.WardLine LineToLoad => ShuffleLine.Line;
+        protected override ProtoLevelRules Ruled(ProtoLevelRules rules) => rules;
 
         protected override void Play()
         {
@@ -160,10 +154,24 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Nothing is banked beyond the level's own record. See the class note: the Infinite
-        /// lane's ledger, tally and claim are that lane's, and a Shuffle wave pays no currency.
+        /// Banks the run's best onto the Shuffle board's ledger and nothing else. See the class
+        /// note: the Infinite lane's ledger, tally and claim are that lane's, and a Shuffle wave
+        /// pays no currency.
+        ///
+        /// <para>
+        /// <b>Off the board rather than <paramref name="count"/></b>, for the Infinite lane's
+        /// reason: the count arrives floored at one (a graded nought is not a grade), so a run
+        /// that saw off no wave would publish a wave. A Shuffle run always opens at wave one
+        /// (<see cref="Ruled"/> refuses a checkpoint), so <c>WavesCleared</c> is how far it got.
+        /// </para>
         /// </summary>
-        protected override void Finished(int count) { }
+        protected override void Finished(int count)
+        {
+            var board = Siege != null ? Siege.Siege : null;
+            if (board == null || Level == null) return;
+
+            ShuffleLedger.Record(Level.Id, board.WavesCleared);
+        }
 
         /// <summary>
         /// The run's build, for the analytics the base records beside its own and for a fixture.

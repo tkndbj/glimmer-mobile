@@ -1530,14 +1530,10 @@ namespace GlimmerGrove.Content
 
             Reels(list, CastSwingArt(cast));
 
-            // **The Shuffle lane's cards and its dealt line travel with its chapter**
-            // (`ShuffleArt`, `ShuffleLine`): the hand is drawn over this lane's board and the
-            // four Breakers stand on it, and neither is asked for by any other chapter.
-            if (track.Dealt)
-            {
-                list.AddRange(ShuffleArt());
-                list.AddRange(GlimmerGrove.Shuffle.ShuffleLine.Line.Art());
-            }
+            // **The Shuffle lane's cards travel with its chapter** (`ShuffleArt`): the hand is
+            // drawn over this lane's board and no other chapter asks for it. Its line is the
+            // player's loadout, held by the screen as on every other chapter (`LineToLoad`).
+            if (track.Dealt) list.AddRange(ShuffleArt());
 
             var seen = new HashSet<SiegeKind>();
             bool cursed = false, voided = false;

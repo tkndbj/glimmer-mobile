@@ -638,7 +638,14 @@ namespace GlimmerGrove.Persistence
         ///      <c>Store.DealSeen</c>, invariant 60c): the newest 64 deal ids, joined as the newest
         ///      64 of the union. Inside the existing <c>tasks</c> map, so no rules release (12a);
         ///      absent is empty, so no migration. The version moves for v35's reason.
-        public const int Version = 41;
+        /// v42: the Shuffle lane's best wave per level (<see cref="SaveFileDto.shuffleBest"/>,
+        ///      <c>Shuffle.ShuffleLedger</c>), what the Shuffle board is ordered on. It used to
+        ///      live only in the level record's <c>bestMoves</c>, which <c>SaveMerge</c> joins by
+        ///      the <em>smaller</em> (a glade's rule), so every sync after a better run put the
+        ///      worse one back: a climbing count needs a <c>max</c> join of its own (11b). A new
+        ///      top-level key, so the whole of 12a: the rules release goes out before the client.
+        ///      Absent is empty, so no migration (the lane shipped in no store build before it).
+        public const int Version = 42;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -947,6 +954,24 @@ namespace GlimmerGrove.Persistence
         /// v34. See <see cref="ChallengeStateDto"/> and <c>Challenges.ChallengeLedger</c>.
         /// </summary>
         public ChallengeStateDto challenges;
+
+        /// <summary>
+        /// The furthest wave a Shuffle run has ever reached, per level. Added in v42. See
+        /// <see cref="ShuffleBestDto"/> and <c>Shuffle.ShuffleLedger</c>.
+        ///
+        /// <para>
+        /// <b><see cref="endlessBest"/>'s shape and its own key</b>, because the two lanes share
+        /// nothing a save has to know about (MODES.md 59): rows in that list are read as the
+        /// Infinite lane's by every shipped build, so a Shuffle row there would publish on the
+        /// wrong board and pay Infinite XP on the builds already in players' hands.
+        /// </para>
+        /// <para>
+        /// <b>It pays nothing</b>, which is what makes a client-written figure safe on a public
+        /// board: bounded by <c>ShuffleLedger.MaxWave</c> here and by <c>MAX_WAVE</c> in
+        /// <c>publishGrove</c>, and worth no currency (invariants 13 and 19l).
+        /// </para>
+        /// </summary>
+        public ShuffleBestDto[] shuffleBest;
 
         /// <summary>
         /// Integrity check over the rest of the file. Empty on files written before
@@ -1913,6 +1938,23 @@ namespace GlimmerGrove.Persistence
         /// </para>
         /// </summary>
         public int waves;
+    }
+
+    /// <summary>
+    /// The furthest wave one Shuffle level has ever reached.
+    ///
+    /// Monotonic, so the merge is a per-id <c>max</c> and nothing about it has to be adjudicated
+    /// (invariant 14a). No lifetime tally beside it, unlike <see cref="EndlessBestDto"/>: a
+    /// Shuffle wave pays nothing, so there is nothing to count.
+    /// </summary>
+    [Serializable]
+    public sealed class ShuffleBestDto
+    {
+        /// <summary>The level's permanent id. Invariant 1 reaches it.</summary>
+        public string level;
+
+        /// <summary>The furthest a single run has ever got. Only ever rises. The board's number.</summary>
+        public int wave;
     }
 
     /// <summary>

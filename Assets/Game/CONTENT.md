@@ -875,8 +875,8 @@ line, `cogs`, `charms`, the two stone flags - and **a `shuffle` block in place o
 
 **Two numbers and nothing else.** What arrives - how many raiders, which kinds, how much tougher
 each wave is, that no boss and no bomber ever comes and no cog is dropped (`cogs` is authored
-nought: nothing lands on this lane's hill), which turrets the line stands, which cards a hand offers - is
-code (`ShuffleRamp`, `ShuffleLine`, `ShuffleCards`), for invariant 20d's reason. What a file authors
+nought: nothing lands on this lane's hill), which cards a hand offers - is code (`ShuffleRamp`,
+`ShuffleCards`), for invariant 20d's reason; the line is the player's loadout. What a file authors
 is how far a three-star run reaches and the fraction of it a two-star run does, because nothing can
 derive those; both are guesses until somebody plays, and `ShuffleTests` prints where a model player
 lands. Both gates refuse a `waves` list or a `boss` beside the block, a `tough` surge (the ramp has

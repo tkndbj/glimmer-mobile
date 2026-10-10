@@ -3262,8 +3262,16 @@
       "text": "Sono elencati solo i primi {0} custodi. Ovunque tu sia, il tuo profilo dice quale percentuale di custodi superi."
     },
     {
+      "key": "ui.board.info_place_shuffle",
+      "text": "Sono elencati solo i primi {0} custodi. Raggiungi un'ondata più lontana in modalità Mescolato per entrarci."
+    },
+    {
       "key": "ui.board.info_place_title",
       "text": "La tua posizione"
+    },
+    {
+      "key": "ui.board.info_shuffle_body",
+      "text": "Questa classifica ordina i custodi in base all'ondata più lontana raggiunta in modalità Mescolato."
     },
     {
       "key": "ui.board.info_tally_body",
@@ -7915,7 +7923,7 @@
     },
     {
       "key": "level.s13_shuffle.tagline",
-      "text": "Quattro Spaccatori e una mano di potenziamenti nuova a ogni partita. Resisti più che puoi."
+      "text": "Il tuo schieramento e una mano di potenziamenti nuova a ogni partita. Resisti più che puoi."
     },
     {
       "key": "track.shuffle.name",
@@ -7935,10 +7943,6 @@
     },
     {
       "key": "track.shuffle.point3",
-      "text": "Quattro Spaccatori per tutti. Niente schieramento."
-    },
-    {
-      "key": "track.shuffle.point4",
       "text": "Entrare costa un cuore. Perdere non ne costa nessuno."
     },
     {

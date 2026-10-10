@@ -144,6 +144,10 @@ namespace GlimmerGrove.Cloud
                 // it pays nothing: credits and XP derive from the star ledger alone (invariant 9).
                 { "endlessBest", Endless(dto.endlessBest) },
 
+                // How deep a Shuffle run has ever got: the Shuffle board's figure, a floor that
+                // pays nothing. A top-level key, so `hasOnly` names it (12a).
+                { "shuffleBest", ShuffleRows(dto.shuffleBest) },
+
                 // How far each turret has been upgraded. A count that may be stored only
                 // because it cannot fall, so the merge is a per-key max (invariant 11b).
                 { "wardStars", Stars(dto.wardStars) },
@@ -621,6 +625,10 @@ namespace GlimmerGrove.Cloud
             dto.wardLoadout = ReadLoadout(doc);
             dto.wardLoadoutSetUnix = Long(doc, "wardLoadoutSetUnix", 0L);
             dto.endlessBest = ReadEndless(doc);
+
+            // Absent on every document written before v42, which reads back as no Shuffle run
+            // ever recorded - the same fact as a fresh account.
+            dto.shuffleBest = ReadShuffle(doc);
             dto.wardStars = ReadStars(doc);
 
             if (Map(doc, "progression") is IDictionary<string, object> progression)
@@ -723,6 +731,48 @@ namespace GlimmerGrove.Cloud
                 if (string.IsNullOrEmpty(colour) || string.IsNullOrEmpty(ward)) continue;
 
                 rows.Add(new WardSlotDto { colour = colour, ward = ward });
+            }
+
+            return rows.ToArray();
+        }
+
+        /// <summary>The Shuffle bests, dropping anything unreadable and every nought.</summary>
+        static List<object> ShuffleRows(ShuffleBestDto[] rows)
+        {
+            var list = new List<object>();
+            if (rows == null) return list;
+
+            foreach (var row in rows)
+            {
+                if (row == null || string.IsNullOrEmpty(row.level) || row.wave <= 0) continue;
+
+                list.Add(new Dictionary<string, object>
+                {
+                    { "level", row.level },
+                    { "wave", (long)row.wave },
+                });
+            }
+
+            return list;
+        }
+
+        /// <summary>The Shuffle bests out of a cloud document, dropping anything malformed.</summary>
+        static ShuffleBestDto[] ReadShuffle(IDictionary<string, object> doc)
+        {
+            if (!doc.TryGetValue("shuffleBest", out object raw) || !(raw is IEnumerable<object> items))
+                return new ShuffleBestDto[0];
+
+            var rows = new List<ShuffleBestDto>();
+
+            foreach (object item in items)
+            {
+                if (!(item is IDictionary<string, object> map)) continue;
+
+                string level = Str(map, "level");
+                long wave = Long(map, "wave", 0L);
+                if (string.IsNullOrEmpty(level) || wave <= 0L) continue;
+
+                rows.Add(new ShuffleBestDto { level = level, wave = Cap(wave) });
             }
 
             return rows.ToArray();

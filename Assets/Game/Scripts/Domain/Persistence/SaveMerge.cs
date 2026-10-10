@@ -136,6 +136,10 @@ namespace GlimmerGrove.Persistence
                 // there is nothing here to decide (invariant 14a).
                 endlessBest = Progression.EndlessLedger.Join(mine.endlessBest, other.endlessBest),
 
+                // The Shuffle lane's best, the same per-level max. Its own ledger rather than the
+                // level record's `bestMoves`, which this merge joins by the smaller (`JoinLevels`).
+                shuffleBest = GlimmerGrove.Shuffle.ShuffleLedger.Join(mine.shuffleBest, other.shuffleBest),
+
                 // A star cannot be given back, so the further of the two is the answer
                 // whichever device is asking - invariant 11b's one legal shape for a count.
                 wardStars = Wards.WardStarLedger.Join(mine.wardStars, other.wardStars),

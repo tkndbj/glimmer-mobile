@@ -572,7 +572,27 @@ export function endlessXp(save: Record<string, unknown>, config: ProgressionConf
 }
 
 export function bestWave(save: Record<string, unknown>): number {
-  const rows = save.endlessBest;
+  return bestRowWave(save.endlessBest);
+}
+
+/**
+ * The furthest wave this save has ever reached on the Shuffle lane — what the `shuffle` board is
+ * ordered on. Mirrors `ShuffleLedger.BestIn`.
+ *
+ * `bestWave`'s figure in every respect that matters: a reading no record here implies, so it is
+ * **bounded** to the same `MAX_WAVE` and **buys nothing** (a Shuffle wave pays no currency and
+ * no XP, MODES.md 59). Its own save key (`shuffleBest`, save v42) rather than rows in
+ * `endlessBest`, because every shipped client reads that list as the Infinite lane's and
+ * `endlessXp` pays for it. Read through the one walk `bestWave` uses, so the two lanes cannot
+ * come to bound or refuse a row differently. The day the Shuffle board pays anything, this
+ * stops being defensible (invariant 19l).
+ */
+export function shuffleWave(save: Record<string, unknown>): number {
+  return bestRowWave(save.shuffleBest);
+}
+
+/** The best `wave` in a lane's rows: bounded walk, nameless or over-long ids refused, `MAX_WAVE` ceiling. */
+function bestRowWave(rows: unknown): number {
   if (!Array.isArray(rows)) return 0;
 
   let best = 0;
@@ -1202,6 +1222,13 @@ export interface GroveCardDoc {
   wave?: number;
 
   /**
+   * The furthest wave this keeper has reached on the Shuffle lane — what the `shuffle` board is
+   * ordered on. See `shuffleWave`. **Absent rather than nought** for `wave`'s reason: the index
+   * the board and its count walk then holds the lane's players alone.
+   */
+  shuffle?: number;
+
+  /**
    * The priced companions this keeper owns, as permanent ids — what a public profile draws.
    *
    * <b>Exactly the set `groveWorth` counted</b> (`heldCompanions`), so the portraits and the
@@ -1361,6 +1388,7 @@ export function buildCard(
   // `undefined` and a nought written out would put every card in the game into the endless
   // board's index — see `GroveCardDoc.wave`.
   const wave = bestWave(save);
+  const shuffle = shuffleWave(save);
 
   // Both spread for Firestore's reason and omitted when empty for the document's: a card with
   // no companions and no line is what every card written before this deployment is, and absent
@@ -1390,6 +1418,7 @@ export function buildCard(
     placed,
     ...hallSeat(save),
     ...(wave > 0 ? { wave } : {}),
+    ...(shuffle > 0 ? { shuffle } : {}),
     ...(rung.length > 0 ? { rung } : {}),
     ...(companions.length > 0 ? { companions } : {}),
     ...(line.length > 0 ? { line } : {}),
@@ -1464,6 +1493,16 @@ export interface RankedGrove {
   wave: number;
 
   /**
+   * The furthest Shuffle wave, copied off the card for the `shuffle` board (`LeaderboardBoard.WaveOn`).
+   *
+   * **Omitted when nought**, unlike `wave`: it arrived after every board document already held
+   * rows without it, so absent has to mean nought on every reader anyway — and most keepers on
+   * the other two boards have never run the lane, so writing it would be a key per row buying
+   * nothing. Read through `figureOf`, never as `row.shuffle`.
+   */
+  shuffle?: number;
+
+  /**
    * The badge this keeper wears, copied off their card. Absent for an unranked keeper and for
    * every row written before the server derived one; both read as "no badge" on the client.
    *
@@ -1504,8 +1543,9 @@ export function deciles(sorted: number[]): number[] {
 /**
  * Every board this job writes, and the whole of what `leaderboards` is allowed to hold.
  *
- * Two, and they are the game's two permanent numbers: what a keeper has **built** (the grove's
- * worth) and how far they have **held out** (the Infinite lane's wave count). Mirrored by
+ * Three, and they are the game's permanent numbers: what a keeper has **built** (the grove's
+ * worth), how far they have **held out** (the Infinite lane's wave count) and how far a dealt
+ * build has carried them (the Shuffle lane's, 2026-10-10). Mirrored by
  * `LeaderboardBoard.All`, which is what the client asks for, and a board id is permanent for
  * invariant 1's reason — it names a document, so renaming one orphans whatever the last run
  * wrote and empties the screen until the next.
@@ -1516,7 +1556,7 @@ export function deciles(sorted: number[]): number[] {
  * 19c), and no screen in the game ever named one. Those ids are spent and must never be
  * reused; `pruneRetiredBoards` is what takes the documents away.
  */
-export const BOARD_IDS = ["global", "endless"];
+export const BOARD_IDS = ["global", "endless", "shuffle"];
 
 /** The alphabet a Firebase uid is drawn from, for the sampling cursor. See `randomCursor`. */
 const UID_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -1636,10 +1676,23 @@ async function sampleRanks(db: FirebaseFirestore.Firestore): Promise<RankSample>
  * composite index. That is not an accident — it is why a board is ordered on a figure the card
  * already carries rather than on one derived at query time.
  */
-const BOARD_FIELD: Record<string, "score" | "wave"> = {
+export type BoardField = "score" | "wave" | "shuffle";
+
+const BOARD_FIELD: Record<string, BoardField> = {
   global: "score",
   endless: "wave",
+  shuffle: "shuffle",
 };
+
+/**
+ * The figure a row is ordered on for one board's field. The one reader of a row's figures, so an
+ * optional one (`shuffle`) reads as nought everywhere rather than as `undefined` in a comparison,
+ * where `undefined > 0` is false and `undefined - 3` is `NaN` and a sort silently stops sorting.
+ */
+export function figureOf(row: RankedGrove, field: BoardField): number {
+  const value = row[field];
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
 
 /** The top rows of one board, straight out of the index. */
 async function topOf(db: FirebaseFirestore.Firestore, boardId: string): Promise<RankedGrove[]> {
@@ -1654,24 +1707,16 @@ async function topOf(db: FirebaseFirestore.Firestore, boardId: string): Promise<
   for (const doc of snapshot.docs) {
     const data = doc.data() as Partial<GroveCardDoc>;
 
-    const score = typeof data.score === "number" ? Math.floor(data.score) : 0;
-    const wave = typeof data.wave === "number" ? Math.floor(data.wave) : 0;
+    // The row is the card's own projection (`rowOf`), so the rebuild and the live placement
+    // cannot write two shapes of one keeper.
+    const row = rowOf(doc.id, data as GroveCardDoc);
 
     // Nothing worth ranking. A card carrying a nought sorts to the bottom of its own board
     // rather than being absent from it, which is the one thing an `orderBy` alone cannot say
-    // — and it is unreachable on `endless`, where a nought is never written at all.
-    if ((field === "score" ? score : wave) <= 0) continue;
+    // — and it is unreachable on the two wave boards, where a nought is never written at all.
+    if (figureOf(row, field) <= 0) continue;
 
-    rows.push({
-      uid: doc.id,
-      name: typeof data.name === "string" ? data.name : "",
-      avatar: typeof data.avatar === "string" ? data.avatar : "",
-      level: typeof data.level === "number" ? Math.floor(data.level) : 1,
-      score,
-      stars: typeof data.stars === "number" ? Math.floor(data.stars) : 0,
-      wave,
-      ...(typeof data.rung === "string" && data.rung.length > 0 ? { rung: data.rung } : {}),
-    });
+    rows.push(row);
   }
 
   // The index already handed these back in order; sorting again through the one comparison
@@ -1740,12 +1785,19 @@ export function rowOf(uid: string, card: GroveCardDoc): RankedGrove {
     score: typeof card.score === "number" ? Math.floor(card.score) : 0,
     stars: typeof card.stars === "number" ? Math.floor(card.stars) : 0,
     wave: typeof card.wave === "number" ? Math.floor(card.wave) : 0,
+    ...positive("shuffle", card.shuffle),
 
     // Spread rather than written, for the card's own reason: Firestore refuses `undefined`,
     // and an unranked keeper's row carries no key at all rather than an empty string in every
     // one of a hundred rows.
     ...(typeof card.rung === "string" && card.rung.length > 0 ? { rung: card.rung } : {}),
   };
+}
+
+/** `{ [key]: n }` for a positive whole number, else nothing — an optional figure, spread. */
+function positive<K extends string>(key: K, raw: unknown): { [P in K]?: number } {
+  const value = typeof raw === "number" && Number.isFinite(raw) ? Math.floor(raw) : 0;
+  return (value > 0 ? { [key]: value } : {}) as { [P in K]?: number };
 }
 
 /**
@@ -1758,8 +1810,9 @@ export function rowOf(uid: string, card: GroveCardDoc): RankedGrove {
  * no reason anybody could see — and `topOf` sorts its rows through this comparison as well, so
  * the agreement does not rest on remembering that rule.
  */
-export function compareRows(field: "score" | "wave", a: RankedGrove, b: RankedGrove): number {
-  if (a[field] !== b[field]) return b[field] - a[field];
+export function compareRows(field: BoardField, a: RankedGrove, b: RankedGrove): number {
+  const x = figureOf(a, field), y = figureOf(b, field);
+  if (x !== y) return y - x;
   return a.uid > b.uid ? -1 : a.uid < b.uid ? 1 : 0;
 }
 
@@ -1780,6 +1833,7 @@ export function readRows(raw: unknown): RankedGrove[] {
       score: typeof row.score === "number" ? Math.floor(row.score) : 0,
       stars: typeof row.stars === "number" ? Math.floor(row.stars) : 0,
       wave: typeof row.wave === "number" ? Math.floor(row.wave) : 0,
+      ...positive("shuffle", row.shuffle),
       ...(typeof row.rung === "string" && row.rung.length > 0 ? { rung: row.rung } : {}),
     });
   }
@@ -1805,9 +1859,9 @@ export function populationOf(rows: RankedGrove[], limit = BOARD_ROWS): { populat
  *
  * Read off the rows rather than stored, so it can never drift from the list it describes.
  */
-export function cutoffOf(rows: RankedGrove[], field: "score" | "wave", limit = BOARD_ROWS): number {
+export function cutoffOf(rows: RankedGrove[], field: BoardField, limit = BOARD_ROWS): number {
   if (rows.length < limit) return 0;
-  return rows[rows.length - 1][field];
+  return figureOf(rows[rows.length - 1], field);
 }
 
 /**
@@ -1820,7 +1874,7 @@ export function cutoffOf(rows: RankedGrove[], field: "score" | "wave", limit = B
  * and did not get one until the next rebuild.
  */
 export function qualifies(rows: RankedGrove[], uid: string, value: number,
-                          field: "score" | "wave", limit = BOARD_ROWS): boolean {
+                          field: BoardField, limit = BOARD_ROWS): boolean {
   if (rows.some((row) => row.uid === uid)) return true;
   if (!(value > 0)) return false;
   return value >= cutoffOf(rows, field, limit);
@@ -1836,10 +1890,10 @@ export function qualifies(rows: RankedGrove[], uid: string, value: number,
  * transaction skip its write — a republish that moved nothing a visitor can see costs a read
  * and no write.
  */
-export function mergeRow(rows: RankedGrove[], row: RankedGrove, field: "score" | "wave",
+export function mergeRow(rows: RankedGrove[], row: RankedGrove, field: BoardField,
                          limit = BOARD_ROWS): { rows: RankedGrove[]; changed: boolean } {
   const kept = rows.filter((existing) => existing.uid !== row.uid);
-  if (row[field] > 0) kept.push(row);
+  if (figureOf(row, field) > 0) kept.push(row);
 
   kept.sort((a, b) => compareRows(field, a, b));
   const merged = kept.slice(0, limit);
@@ -1855,7 +1909,8 @@ function sameRow(a: RankedGrove, b: RankedGrove): boolean {
   // for, arriving one layer further down.
   return a.uid === b.uid && a.name === b.name && a.avatar === b.avatar && a.level === b.level
     && (a.rung ?? "") === (b.rung ?? "")
-      && a.score === b.score && a.stars === b.stars && a.wave === b.wave;
+      && a.score === b.score && a.stars === b.stars && a.wave === b.wave
+      && figureOf(a, "shuffle") === figureOf(b, "shuffle");
 }
 
 /**
@@ -1921,7 +1976,7 @@ export async function placeOnBoards(db: FirebaseFirestore.Firestore, uid: string
 
     const cached = boardCache.get(boardId);
     if (cached && nowMs - cached.at < CUTOFF_TTL_MS
-        && !qualifies(cached.rows, uid, row[field], field)) {
+        && !qualifies(cached.rows, uid, figureOf(row, field), field)) {
       continue;
     }
 
@@ -2001,8 +2056,8 @@ export async function scrubBoards(db: FirebaseFirestore.Firestore, uid: string):
  * else.
  *
  * **This is the safety net under `placeOnBoards`, and it is cheap enough to run every fifteen
- * minutes for ever.** Two queries at a hundred rows and a prune that lists two document names:
- * about two hundred reads a run, twenty thousand a day, at any population — nothing here grows
+ * minutes for ever.** Three queries at a hundred rows and a prune that lists three document
+ * names: about three hundred reads a run, under thirty thousand a day, at any population — nothing here grows
  * with the player count, because a board is ordered on a field the card already carries and
  * Firestore indexes it. What it repairs is everything the live path can miss: a placement
  * that lost its transaction, a cutoff the cache read as higher than it was, a row whose figure

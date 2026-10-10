@@ -3262,8 +3262,16 @@
       "text": "Solo aparecen los primeros {0} guardianes. Estés donde estés, tu perfil indica a qué porcentaje de guardianes superas."
     },
     {
+      "key": "ui.board.info_place_shuffle",
+      "text": "Solo aparecen los primeros {0} guardianes. Llega a una oleada más lejana en Barajado para entrar."
+    },
+    {
       "key": "ui.board.info_place_title",
       "text": "Tu posición"
+    },
+    {
+      "key": "ui.board.info_shuffle_body",
+      "text": "Este ranking clasifica a los guardianes por la oleada más lejana que han alcanzado en Barajado."
     },
     {
       "key": "ui.board.info_tally_body",
@@ -7915,7 +7923,7 @@
     },
     {
       "key": "level.s13_shuffle.tagline",
-      "text": "Cuatro Rompedores y una mano de mejoras nueva en cada partida. Resiste todo lo que puedas."
+      "text": "Tu propio equipo y una mano de mejoras nueva en cada partida. Resiste todo lo que puedas."
     },
     {
       "key": "track.shuffle.name",
@@ -7935,10 +7943,6 @@
     },
     {
       "key": "track.shuffle.point3",
-      "text": "Cuatro Rompedores para todos. Sin equipo."
-    },
-    {
-      "key": "track.shuffle.point4",
       "text": "Entrar cuesta un corazón. Perder no cuesta ninguno."
     },
     {

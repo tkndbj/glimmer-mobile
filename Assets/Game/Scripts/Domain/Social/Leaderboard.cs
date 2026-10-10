@@ -47,9 +47,16 @@ namespace GlimmerGrove.Social
         /// </summary>
         public readonly int Wave;
 
+        /// <summary>
+        /// The furthest wave this keeper has reached on the Shuffle lane, or nought - what the
+        /// <see cref="LeaderboardBoard.Shuffle"/> board is ordered on. Carried on every row for
+        /// <see cref="Wave"/>'s reason; absent on the wire reads as nought.
+        /// </summary>
+        public readonly int ShuffleWave;
+
         public LeaderboardEntry(int rank, string ownerId, string name, string avatarId,
                                 int keeperLevel, long score, int stars, int wave = 0,
-                                string rungId = null)
+                                string rungId = null, int shuffleWave = 0)
         {
             RungId = rungId ?? string.Empty;
             Rank = rank < 1 ? 1 : rank;
@@ -60,6 +67,7 @@ namespace GlimmerGrove.Social
             Score = score < 0L ? 0L : score;
             Stars = stars < 0 ? 0 : stars;
             Wave = wave < 0 ? 0 : wave;
+            ShuffleWave = shuffleWave < 0 ? 0 : shuffleWave;
         }
 
         public bool IsValid => OwnerId.Length > 0;
@@ -78,11 +86,13 @@ namespace GlimmerGrove.Social
     /// reason a scheduled job writes it.
     /// </para>
     /// <para>
-    /// <b>There are exactly two boards and they are the game's two ladders.</b>
-    /// <see cref="Global"/> is the finest groves anywhere - what a keeper has built - and
+    /// <b>There are exactly three boards and each is one of the game's ladders.</b>
+    /// <see cref="Global"/> is the finest groves anywhere (what a keeper has built),
     /// <see cref="Endless"/> is the Infinite lane's own board: how far anybody has held the
-    /// line (invariant 43). Both are one document a day, both are exact at any player count,
-    /// and neither costs a read that grows with the game.
+    /// line (invariant 43), and <see cref="Shuffle"/> is the Shuffle lane's (MODES.md 59). Each
+    /// is one document ordered on one card field, each is exact at any player count, and none
+    /// costs a read that grows with the game - a board is a row in <c>BOARD_FIELD</c>, never a
+    /// code path of its own.
     /// </para>
     /// <para>
     /// <b>What was here and is gone is the league board.</b> Nine boards, nine queries and nine
@@ -122,6 +132,13 @@ namespace GlimmerGrove.Social
         public const string Endless = "endless";
 
         /// <summary>
+        /// The Shuffle lane's board: the furthest wave anybody has reached with a dealt build.
+        /// A permanent id for <see cref="Endless"/>'s reasons, and the lane's rather than a
+        /// level's for the same one.
+        /// </summary>
+        public const string Shuffle = "shuffle";
+
+        /// <summary>
         /// Every board this build knows how to ask for, in the order the screen offers them.
         ///
         /// Written out rather than composed: these key documents a server writes, and invariant
@@ -129,7 +146,7 @@ namespace GlimmerGrove.Social
         /// one no search can find and no gate can check. Mirrored by <c>BOARD_IDS</c> in
         /// <c>functions/src/grove.ts</c>, which is what decides the boards that actually exist.
         /// </summary>
-        public static readonly IReadOnlyList<string> All = new[] { Global, Endless };
+        public static readonly IReadOnlyList<string> All = new[] { Global, Endless, Shuffle };
 
         /// <summary>
         /// How many rows a board carries.
@@ -210,7 +227,8 @@ namespace GlimmerGrove.Social
         /// </summary>
         public static bool IsKnown(string boardId)
             => string.Equals(boardId, Global, StringComparison.Ordinal)
-            || string.Equals(boardId, Endless, StringComparison.Ordinal);
+            || string.Equals(boardId, Endless, StringComparison.Ordinal)
+            || string.Equals(boardId, Shuffle, StringComparison.Ordinal);
 
         /// <summary>
         /// Whether this board is ordered on waves rather than on grove worth.
@@ -224,6 +242,20 @@ namespace GlimmerGrove.Social
         /// </summary>
         public static bool IsEndless(string boardId)
             => string.Equals(boardId, Endless, StringComparison.Ordinal);
+
+        /// <summary>Whether this board is the Shuffle lane's. See <see cref="IsEndless"/>.</summary>
+        public static bool IsShuffle(string boardId)
+            => string.Equals(boardId, Shuffle, StringComparison.Ordinal);
+
+        /// <summary>Whether this board is ordered on a wave count of either lane.</summary>
+        public static bool IsWaves(string boardId) => IsEndless(boardId) || IsShuffle(boardId);
+
+        /// <summary>
+        /// The wave a row prints on this board: the figure the board is ordered on, and no
+        /// other, or the list would read as shuffled. Nought on a board not ordered on waves.
+        /// </summary>
+        public static int WaveOn(string boardId, LeaderboardEntry entry)
+            => IsShuffle(boardId) ? entry.ShuffleWave : IsEndless(boardId) ? entry.Wave : 0;
 
         /// <summary>
         /// Where this account sits on this board, or 0 when it is not on it.

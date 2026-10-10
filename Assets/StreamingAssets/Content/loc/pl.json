@@ -3262,8 +3262,16 @@
       "text": "Lista pokazuje tylko czołówkę strażników ({0}). Gdziekolwiek jesteś, profil pokazuje, jaki procent strażników wyprzedzasz."
     },
     {
+      "key": "ui.board.info_place_shuffle",
+      "text": "Lista pokazuje tylko czołówkę strażników ({0}). Dotrzyj do dalszej fali w trybie „Losowa”, aby się na nią dostać."
+    },
+    {
       "key": "ui.board.info_place_title",
       "text": "Twoje miejsce"
+    },
+    {
+      "key": "ui.board.info_shuffle_body",
+      "text": "Ten ranking układa strażników według najdalszej fali osiągniętej w trybie „Losowa”."
     },
     {
       "key": "ui.board.info_tally_body",
@@ -7915,7 +7923,7 @@
     },
     {
       "key": "level.s13_shuffle.tagline",
-      "text": "Cztery Łamacze i nowa ręka ulepszeń w każdej grze. Wytrzymaj jak najdłużej."
+      "text": "Twój własny ekwipunek i nowa ręka ulepszeń w każdej grze. Wytrzymaj jak najdłużej."
     },
     {
       "key": "track.shuffle.name",
@@ -7935,10 +7943,6 @@
     },
     {
       "key": "track.shuffle.point3",
-      "text": "Cztery Łamacze dla każdego. Bez ekwipunku."
-    },
-    {
-      "key": "track.shuffle.point4",
       "text": "Wejście kosztuje serce. Przegrana nie kosztuje nic."
     },
     {

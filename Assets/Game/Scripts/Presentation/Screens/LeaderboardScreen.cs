@@ -1,3 +1,4 @@
+using System;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Social;
@@ -17,8 +18,10 @@ namespace GlimmerGrove
     /// a header the player scrolls past to reach the thing they came for.
     /// </para>
     /// <para>
-    /// <b>One board, and the tabs went with the other one.</b> The Endless Watch is how far
-    /// anybody has held the line on the Infinite lane (invariant 43). The finest groves - what
+    /// <b>Two tabs, one per lane (2026-10-10).</b> The Endless Watch is how far anybody has held
+    /// the line on the Infinite lane (invariant 43), and the Shuffle board how far anybody has got
+    /// with a dealt build (MODES.md 59). Each tab wears its lane's own name (<c>track.*.name</c>),
+    /// so a tab and the hub that leads to it cannot disagree. The finest groves - what
     /// a keeper has <em>built</em> - is <b>held</b> while the Grovement is rebuilt, and a hold
     /// is drawn by taking the board away rather than by greying a tab: a tab that cannot be
     /// tapped is the broken button invariant 16o refuses, and a lone tab is a caption wearing a
@@ -53,12 +56,15 @@ namespace GlimmerGrove
         public override string Track => "mus_menu";
 
         /// <summary>
-        /// Everything above the list: the banner, and nothing else now. It was 470 while a
-        /// standing box stood under the banner and 312 while two board tabs did; each removal
-        /// moves everything below it up by its own height, so this moves with them or the list
-        /// begins in a strip of empty sky.
+        /// Everything above the list: the banner and the two lane tabs under it. It was 470
+        /// while a standing box stood under the banner, 312 while the first pair of tabs did and
+        /// 208 with the banner alone; the tabs are back at their old height, so the list starts
+        /// where it started then.
         /// </summary>
-        const float HeaderHeight = 208f;
+        const float HeaderHeight = 312f;
+
+        /// <summary>The lane tabs: their size, the gap between them, and where their centres sit.</summary>
+        const float TabWidth = 300f, TabHeight = 88f, TabGap = 16f, TabY = -230f;
 
         /// <summary>
         /// How tall a row is, and the badge is what decides it.
@@ -91,10 +97,24 @@ namespace GlimmerGrove
         const float BottomPad = 24f;
 
         /// <summary>
-        /// Which board is being drawn. One of <see cref="LeaderboardBoard.All"/>, and while the
-        /// finest groves are held it is always <see cref="LeaderboardBoard.Endless"/>.
+        /// Which board is being drawn: one of the <see cref="Tabs"/>, never the held finest groves.
         /// </summary>
         string _boardId;
+
+        /// <summary>
+        /// The tab last looked at, for the life of the process, so stepping into a profile and back
+        /// lands on the list the player was reading. Device-local and only a hint (8b's rule for
+        /// the map's chapter): an id this screen does not offer is ignored.
+        /// </summary>
+        static string s_lastBoard;
+
+        /// <summary>
+        /// The boards this screen offers, left to right. The Infinite lane first, because it is
+        /// the board every earlier build opened on.
+        /// </summary>
+        static readonly string[] Tabs = { LeaderboardBoard.Endless, LeaderboardBoard.Shuffle };
+
+        readonly Btn[] _tabs = new Btn[Tabs.Length];
 
         RectTransform _viewport;
         GridView _grid;
@@ -109,12 +129,11 @@ namespace GlimmerGrove
             Scenery.Plain(Content);
             Fireflies.Spawn(Content, 14, new Color(1f, .93f, .70f), 6f, 20f);
 
-            // The Endless Watch, because it is the only board on offer while the finest
-            // groves are held. It is a board a player has to have gone and played a lane to be
-            // on, which is the one thing holding the other cost: an account that has never run
-            // the Infinite lane opens on a list it cannot be in, and `PaintEmpty` is what keeps
-            // that honest rather than blank.
-            if (!Offered(_boardId)) _boardId = LeaderboardBoard.Endless;
+            // The tab last looked at, else the Endless Watch. Either is a board a player has to
+            // have played a lane to be on, so an account that never has opens on a list it cannot
+            // be in, and `PaintEmpty` is what keeps that honest rather than blank.
+            if (!Offered(_boardId))
+                _boardId = Offered(s_lastBoard) ? s_lastBoard : LeaderboardBoard.Endless;
 
             BuildList();
             BuildHeader();
@@ -158,7 +177,7 @@ namespace GlimmerGrove
         /// carrying it lands on the board this screen does draw rather than on a list with no
         /// way off it.
         /// </summary>
-        static bool Offered(string boardId) => LeaderboardBoard.IsEndless(boardId);
+        static bool Offered(string boardId) => Array.IndexOf(Tabs, boardId) >= 0;
 
         // ------------------------------------------------------------------ header
         void BuildHeader()
@@ -198,16 +217,99 @@ namespace GlimmerGrove
             // one, so it can name when *this* tally was taken without spending a read.
             UIKit.IconButton("Info", chrome, Skins.Aside, "ic_info", new Vector2(112f, 112f),
                              new Vector2(1f, 1f), new Vector2(-92f, -104f),
-                             () => { if (!Flow.HasModal) Flow.Modal<RanksInfoOverlay>(panel => panel.Board = _board); });
+                             () =>
+                             {
+                                 if (Flow.HasModal) return;
+                                 Flow.Modal<RanksInfoOverlay>(panel =>
+                                 {
+                                     panel.BoardId = _boardId;
+                                     panel.Board = _board;
+                                 });
+                             });
 
-            // **The board caption and the two tabs are both gone, and for two different
-            // reasons.** The caption said how many keepers the board holds, which is a fact
-            // about the population rather than about the player's standing. The tabs chose
-            // between two boards and there is one, so what they would draw now is a pair of
-            // plates of which one refuses and one re-enters the screen you are standing on -
-            // and a lone tab is a caption that looks like a control. The board this screen
-            // draws is named by the rows themselves (`Row.Bind` prints the figure it is
-            // ordered on) and by the info panel in the corner.
+            // **The board caption stays gone**: it said how many keepers the board holds, which
+            // is a fact about the population rather than about the player's standing. The tabs
+            // name the board instead, and the rows print the figure it is ordered on.
+            BuildTabs(chrome);
+        }
+
+        /// <summary>
+        /// One tab per lane, side by side under the banner. The live one wears
+        /// <see cref="Skins.Settled"/> and the other <see cref="Skins.Alternate"/>, the pair the
+        /// language chooser already uses for "the one you have" and "another choice".
+        /// </summary>
+        void BuildTabs(Transform chrome)
+        {
+            var size = new Vector2(TabWidth, TabHeight);
+            float pitch = TabWidth + TabGap;
+            float first = -pitch * (Tabs.Length - 1) / 2f;
+
+            for (int i = 0; i < Tabs.Length; i++)
+            {
+                string boardId = Tabs[i];
+
+                _tabs[i] = UIKit.TextButton("Tab_" + boardId, chrome, Skins.Alternate,
+                                            TabLabel(boardId).Upper(), 30, size,
+                                            new Vector2(.5f, 1f), new Vector2(first + pitch * i, TabY),
+                                            () => Select(boardId));
+                UIKit.Shrinkable(_tabs[i].Label, 18);
+                UIKit.FitLabel(_tabs[i]);
+            }
+
+            StyleTabs();
+        }
+
+        /// <summary>
+        /// The name a tab wears: its lane's own name, each a literal key handed straight to
+        /// <c>Loc.Get</c> so the loc gate sees it (invariant 6). A board with no tab here is a
+        /// fault the default makes loud (44e).
+        /// </summary>
+        internal static string TabLabel(string boardId)
+        {
+            switch (boardId)
+            {
+                case LeaderboardBoard.Endless: return Loc.Get("track.infinite.name");
+                case LeaderboardBoard.Shuffle: return Loc.Get("track.shuffle.name");
+                default: throw new ArgumentOutOfRangeException(nameof(boardId), boardId, "no tab for this board");
+            }
+        }
+
+        /// <summary>The boards the tabs offer, left to right. For the fixture that holds each to a name.</summary>
+        internal static System.Collections.Generic.IReadOnlyList<string> Offers => Tabs;
+
+        void StyleTabs()
+        {
+            for (int i = 0; i < Tabs.Length; i++)
+            {
+                var tab = _tabs[i];
+                if (!tab) continue;
+
+                // "Ui/" because a skin name is a name and not an address - `StreakScreen.Skin`'s
+                // note: without the folder the key resolves to nothing and the plate draws as a
+                // white rectangle (invariant 7b).
+                var plate = tab.GetComponent<Image>();
+                if (plate) plate.sprite = Art.S("Ui/" + (Tabs[i] == _boardId ? Skins.Settled : Skins.Alternate));
+            }
+        }
+
+        void Select(string boardId)
+        {
+            if (!Offered(boardId) || boardId == _boardId) return;
+
+            _boardId = boardId;
+            s_lastBoard = boardId;
+            StyleTabs();
+
+            // The other board's rows go at once: a row prints the figure of the board this screen
+            // is on (`Row.Bind`), so a list left standing would print one lane's keepers with the
+            // other lane's numbers until the read landed. A board read this session is cached
+            // (`GroveBoard.FetchBoardAsync`), so flipping back and forth costs no reads.
+            _board = LeaderboardBoard.None;
+            _failed = false;
+            _grid?.Show(0);
+
+            // No sound of its own: the tab is a Btn and has already spoken (Btn.ClickSfx).
+            Fetch();
         }
 
         // -------------------------------------------------------------------- list
@@ -235,10 +337,15 @@ namespace GlimmerGrove
             _failed = false;
             PaintEmpty();
 
-            var (result, board) = await GroveBoard.FetchBoardAsync(_boardId, token);
+            string asked = _boardId;
+            var (result, board) = await GroveBoard.FetchBoardAsync(asked, token);
 
             _fetching = false;
             if (!Living) return;                     // the screen went away while we waited
+
+            // A tab tapped while this read was in flight: the answer is the other board's, so it
+            // is dropped and the board now on screen is asked for instead.
+            if (asked != _boardId) { Fetch(); return; }
 
             _failed = !result.Ok;
             _board = board ?? LeaderboardBoard.None;
@@ -398,8 +505,8 @@ namespace GlimmerGrove
                 // **The keeper level is not printed**, at the owner's instruction (2026-09-22):
                 // a board is about the lane, and a second number beside the one it is ordered
                 // on is a number to misread it by. The entry still carries it for the profile.
-                _worth.text = LeaderboardBoard.IsEndless(_screen._boardId)
-                    ? Loc.Format("ui.board.row_wave", _entry.Wave)
+                _worth.text = LeaderboardBoard.IsWaves(_screen._boardId)
+                    ? Loc.Format("ui.board.row_wave", LeaderboardBoard.WaveOn(_screen._boardId, _entry))
                     : Loc.Format("ui.board.row_worth", Compact.Number(_entry.Score));
 
                 // **The badge is the server's answer, and an absent one draws nothing.** Below

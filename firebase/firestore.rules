@@ -72,6 +72,7 @@ service cloud.firestore {
                  'utilityStock',
                  'wardsOwned', 'wardLoadout', 'wardLoadoutSetUnix',
                  'endlessBest',
+                 'shuffleBest',
                  'wardStars',
                  'tasks',
                  'challenges',
@@ -273,6 +274,14 @@ service cloud.firestore {
                // refuse loses *every* save write (invariant 12a).
                && (!('endlessBest' in d) || (d.endlessBest is list
                                              && d.endlessBest.size() <= 64))
+               // The Shuffle lane's best wave per level (save v42, `ShuffleLedger`): what the
+               // Shuffle board is ordered on. `endlessBest`'s shape and its bargain - it pays
+               // nothing, and the published figure is bounded by `publishGrove` (19l). The bound
+               // matches `ShuffleLedger.MaxRows` for the reason above it. **This line ships
+               // before the v42 client**: a client writing a key `hasOnly` does not name loses
+               // every save write (12a).
+               && (!('shuffleBest' in d) || (d.shuffleBest is list
+                                             && d.shuffleBest.size() <= 64))
                // How far each turret has been upgraded: twenty turrets on four seats is eighty,
                // and the bound matches `WardStarLedger.MaxRows` for the reason above it.
                && (!('wardStars' in d) || (d.wardStars is list

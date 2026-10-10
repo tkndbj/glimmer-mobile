@@ -3262,8 +3262,16 @@
       "text": "Nur die ersten {0} Hüter werden aufgelistet. Egal wo du stehst, dein Profil zeigt, wie viel Prozent der Hüter du übertriffst."
     },
     {
+      "key": "ui.board.info_place_shuffle",
+      "text": "Nur die ersten {0} Hüter werden aufgelistet. Erreiche im Modus Gemischt eine weitere Welle, um aufzusteigen."
+    },
+    {
       "key": "ui.board.info_place_title",
       "text": "Wo du stehst"
+    },
+    {
+      "key": "ui.board.info_shuffle_body",
+      "text": "Diese Rangliste ordnet die Hüter nach der weitesten Welle, die sie im Modus Gemischt erreicht haben."
     },
     {
       "key": "ui.board.info_tally_body",
@@ -7915,7 +7923,7 @@
     },
     {
       "key": "level.s13_shuffle.tagline",
-      "text": "Vier Brecher und bei jedem Lauf eine neue Hand an Verbesserungen. Halte so lange du kannst."
+      "text": "Deine eigene Aufstellung und bei jedem Lauf eine neue Hand an Verbesserungen. Halte so lange du kannst."
     },
     {
       "key": "track.shuffle.name",
@@ -7935,10 +7943,6 @@
     },
     {
       "key": "track.shuffle.point3",
-      "text": "Vier Brecher für alle. Keine Aufstellung."
-    },
-    {
-      "key": "track.shuffle.point4",
       "text": "Der Einstieg kostet ein Herz. Verlieren kostet keins."
     },
     {

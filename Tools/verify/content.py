@@ -2749,8 +2749,11 @@ WARD_TIER_GATES = (1, 20, 30, 45)
 WARD_TOP_LEVEL = 60
 
 
-#: `EndlessHubLayout.Points` - how many short lines a hub says about the lane it draws.
+#: `EndlessHubLayout.Points` - how many short lines a hub's plate holds.
 HUB_POINTS = 4
+
+#: `GameTrack.Points` - a lane that says fewer lines than the plate holds.
+HUB_POINTS_BY_TRACK = {"shuffle": 3}
 
 #: `GameTrack.Laddered` - the lanes that are a chain of levels to walk. Everything else is a
 #: single endless run and draws a hub instead of a map (`EndlessHub`), which is what needs the
@@ -3388,11 +3391,12 @@ def check_tracks(manifest, keys):
             continue
 
         # A lane with no ladder draws a hub, and a hub says exactly this many lines.
-        for i in range(1, HUB_POINTS + 1):
+        points = HUB_POINTS_BY_TRACK.get(track, HUB_POINTS)
+        for i in range(1, points + 1):
             key = f"track.{track}.point{i}"
             if key not in keys:
                 errors.append(f"track '{track}' draws a hub rather than a map, so it needs loc "
-                              f"key '{key}' - a hub says {HUB_POINTS} lines and an absent one "
+                              f"key '{key}' - its hub says {points} lines and an absent one "
                               "is a blank row")
 
     return errors

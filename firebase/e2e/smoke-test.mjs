@@ -274,6 +274,16 @@ const save = {
       { mapValue: { fields: { level: { stringValue: "s02_lower" },
                               wave: { integerValue: "4" } } } },
     ] } },
+
+    // The Shuffle lane's best per level (save v42): its own top-level key, so the rules must
+    // name it in `hasOnly` or this whole write is refused (12a) - which is exactly what this
+    // run proves against the deployed ruleset. The high row is the card's `shuffle`.
+    shuffleBest: { arrayValue: { values: [
+      { mapValue: { fields: { level: { stringValue: "s13_shuffle" },
+                              wave: { integerValue: "17" } } } },
+      { mapValue: { fields: { level: { stringValue: "s13_lower" },
+                              wave: { integerValue: "6" } } } },
+    ] } },
     progression: { mapValue: { fields: { xpHighWater: { integerValue: "100" },
                                          levelHighWater: { integerValue: "2" } } } },
     cloud: { mapValue: { fields: { userId: { stringValue: uid }, revision: { integerValue: "1" },
@@ -985,6 +995,13 @@ check(Number(card?.fields?.wave?.integerValue ?? 0) === 23,
 check(card?.fields?.league === undefined,
       "and no longer carries a league", JSON.stringify(card?.fields?.league));
 
+// The Shuffle board's input, read the same way and kept apart: the 17 rather than the 6, and
+// never the Infinite lane's 23. A `publishGrove` from before the Shuffle board writes no
+// `shuffle` at all, which is what makes this check differential.
+check(Number(card?.fields?.shuffle?.integerValue ?? 0) === 17,
+      "the card carries the best Shuffle wave, apart from the endless one",
+      JSON.stringify(card?.fields?.shuffle));
+
 // **The boards are live, and this is the only place that can prove the deployed one is.** The
 // same call that wrote the card merges its row into `leaderboards/endless` — no rebuild, no
 // wait. A `publishGrove` from before the live path answers 200 and writes an identical card,
@@ -1003,6 +1020,20 @@ check(Number(liveMine?.mapValue?.fields?.wave?.integerValue ?? 0) === 23,
 check(liveRows.every((row, i) => i === 0
         || Number(row.mapValue.fields.wave.integerValue) <= Number(liveRows[i - 1].mapValue.fields.wave.integerValue)),
       "and the board is still best first");
+
+// The same live placement on the Shuffle board, ordered on its own figure.
+const liveShuffle = await (await fetch(`${FS}/leaderboards/shuffle`, { headers: bearer })).json();
+const shuffleRows = liveShuffle?.fields?.entries?.arrayValue?.values ?? [];
+const shuffleMine = shuffleRows.find((row) => row?.mapValue?.fields?.uid?.stringValue === uid);
+check(shuffleMine !== undefined,
+      "**the row is on the Shuffle board the moment the card is published**",
+      `${shuffleRows.length} rows, none for ${uid}`);
+check(Number(shuffleMine?.mapValue?.fields?.shuffle?.integerValue ?? 0) === 17,
+      "and it carries the card's Shuffle wave", JSON.stringify(shuffleMine?.mapValue?.fields?.shuffle));
+check(shuffleRows.every((row, i) => i === 0
+        || Number(row.mapValue.fields.shuffle?.integerValue ?? 0)
+           <= Number(shuffleRows[i - 1].mapValue.fields.shuffle?.integerValue ?? 0)),
+      "and the Shuffle board is best first");
 
 // ------------------------------------------------------- what a public profile reads
 //
@@ -1181,6 +1212,11 @@ const forgeEndless = await fetch(`${FS}/leaderboards/endless?updateMask.fieldPat
   method: "PATCH", headers: json, body: JSON.stringify({ fields: { population: { integerValue: "1" } } }) });
 check(forgeEndless.status === 403,
       "and no client may write it either", String(forgeEndless.status));
+
+const forgeShuffle = await fetch(`${FS}/leaderboards/shuffle?updateMask.fieldPaths=population`, {
+  method: "PATCH", headers: json, body: JSON.stringify({ fields: { population: { integerValue: "1" } } }) });
+check(forgeShuffle.status === 403,
+      "nor the Shuffle board", String(forgeShuffle.status));
 
 const ranksRead = await fetch(`${FS}/config/groveRanks`, { headers: bearer });
 check(ranksRead.ok, "and the published distribution", String(ranksRead.status));
@@ -1510,6 +1546,11 @@ const scrubbedEndless = await (await fetch(`${FS}/leaderboards/endless`, { heade
 check(!(scrubbedEndless?.fields?.entries?.arrayValue?.values ?? [])
         .some((row) => row?.mapValue?.fields?.uid?.stringValue === uid),
       "and the row is off the endless board with it");
+
+const scrubbedShuffle = await (await fetch(`${FS}/leaderboards/shuffle`, { headers: bearer })).json();
+check(!(scrubbedShuffle?.fields?.entries?.arrayValue?.values ?? [])
+        .some((row) => row?.mapValue?.fields?.uid?.stringValue === uid),
+      "and off the Shuffle board");
 
 // Twice is a success, not an error. A withdrawal that could fail permanently is a device
 // retrying it for the life of the account — invariant 13a.

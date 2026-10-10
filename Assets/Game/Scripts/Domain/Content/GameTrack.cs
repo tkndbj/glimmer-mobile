@@ -65,9 +65,9 @@ namespace GlimmerGrove.Content
         public static readonly GameTrack Infinite = new GameTrack("infinite");
 
         /// <summary>
-        /// A lane whose waves never stop and whose line is dealt: one level, the same four
-        /// turrets for everybody, no bosses, and a hand of three upgrade cards every two waves -
-        /// every run a different build (MODES.md 59).
+        /// A lane whose waves never stop and whose build is dealt: one level, the player's own
+        /// loadout, no bosses, and a hand of three upgrade cards every two waves - every run a
+        /// different build (MODES.md 59).
         ///
         /// <b>A track rather than a mode, for the Infinite lane's reason</b>: the board, the
         /// wards, the raiders and the verb are Thornwatch's, and what differs is the ladder it
@@ -111,13 +111,13 @@ namespace GlimmerGrove.Content
         public bool Laddered => !Equals(Infinite) && !Equals(Shuffle);
 
         /// <summary>
-        /// Whether this lane deals the line and the build rather than reading the player's
-        /// loadout: the Shuffle lane, and nothing else.
+        /// Whether this lane deals a build - a hand of upgrade cards every two waves - over the
+        /// player's own loadout: the Shuffle lane, and nothing else.
         ///
         /// <b>Declared rather than derived</b>, for <see cref="Laddered"/>'s reason: what decides
         /// it is what the lane <em>is</em>, so the lane says so, and every reader that would
-        /// otherwise name <see cref="Shuffle"/> by id asks this instead - the loadout shelf on the
-        /// map, the line a run stands, and the screen a level opens on.
+        /// otherwise name <see cref="Shuffle"/> by id asks this instead - the cards' art a
+        /// chapter holds, the hub's row, the header, and the screen a level opens on.
         /// </summary>
         public bool Dealt => Equals(Shuffle);
 
@@ -132,6 +132,15 @@ namespace GlimmerGrove.Content
         /// </summary>
         public string PointKey(int index)
             => "track." + Value + ".point" + (index < 1 ? 1 : index);
+
+        /// <summary>
+        /// How many lines a hub says about this lane (<see cref="PointKey"/> 1 to this).
+        ///
+        /// <b>Declared per lane</b>, for <see cref="Laddered"/>'s reason, and never above the
+        /// plate's <c>EndlessHubLayout.Points</c> (<c>EndlessHubTests</c> holds it): the Shuffle
+        /// lane says three, every other lane the plate's full four.
+        /// </summary>
+        public int Points => Equals(Shuffle) ? 3 : Layout.EndlessHubLayout.Points;
 
         /// <summary>
         /// Reads an authored track name.

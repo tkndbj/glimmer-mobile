@@ -62,6 +62,13 @@ namespace GlimmerGrove
         /// </summary>
         public LeaderboardBoard Board = LeaderboardBoard.None;
 
+        /// <summary>
+        /// Which board the screen is on, which decides what the first and last answers say.
+        /// Handed over beside <see cref="Board"/> because that one is <see cref="LeaderboardBoard.None"/>
+        /// while its read is in flight, and the panel still has to explain the right ladder.
+        /// </summary>
+        public string BoardId = LeaderboardBoard.Endless;
+
         /// <summary>One answer, before it is placed: a glyph, a heading and a paragraph.</summary>
         readonly struct Answer
         {
@@ -106,9 +113,18 @@ namespace GlimmerGrove
             // The keys are kept and their text changed rather than minted afresh, which is what
             // invariant 5f allows for a string and refuses for an id: a loc key names a
             // sentence, so when the Grovement comes back the sentence comes back with it.
+            //
+            // **The Shuffle board has its own pair of sentences** (2026-10-10). Its ladder is a
+            // different lane, and the Endless Watch's last answer sends the reader to a profile
+            // percentile that is drawn from Infinite waves alone - true of one board and a false
+            // promise on the other.
+            bool shuffle = LeaderboardBoard.IsShuffle(BoardId);
+
             answers.Add(new Answer("ic_trophy", "ui.board.info_boards_title",
-                                   Loc.Format("ui.board.info_boards_body",
-                                              Loc.Get("ui.board.endless"))));
+                                   shuffle
+                                       ? Loc.Get("ui.board.info_shuffle_body")
+                                       : Loc.Format("ui.board.info_boards_body",
+                                                    Loc.Get("ui.board.endless"))));
 
             answers.Add(new Answer("ic_restart", "ui.board.info_tally_title", TallyBody()));
 
@@ -117,7 +133,8 @@ namespace GlimmerGrove
             // coloured emblem that fights the two flat white glyphs above it - a column of
             // three marks that is one mark's worth of decoration is not a column.
             answers.Add(new Answer("ic_profile", "ui.board.info_place_title",
-                                   Loc.Format("ui.board.info_place_body",
+                                   Loc.Format(shuffle ? "ui.board.info_place_shuffle"
+                                                      : "ui.board.info_place_body",
                                               LeaderboardBoard.MaxRows)));
 
             return answers;

@@ -117,6 +117,12 @@ namespace GlimmerGrove.Social
         /// a test nothing can pass. The lane is the only route onto a board.
         /// </para>
         /// <para>
+        /// <b>Two lanes since the Shuffle board (2026-10-10)</b>: a wave on either one. The
+        /// Shuffle lane opens five keeper levels before the Infinite one, so a keeper can be on
+        /// the Shuffle board having never seen the Infinite lane, and a bar that asked for an
+        /// Infinite wave alone would keep every one of them off the board they earned.
+        /// </para>
+        /// <para>
         /// It stays a <em>bar</em> rather than being dropped: most accounts have never opened
         /// the lane, and a card for each of them is a document, a write and a row in a sample
         /// for a keeper with nothing to show.
@@ -128,7 +134,7 @@ namespace GlimmerGrove.Social
         /// </para>
         /// </summary>
         public static bool WorthPublishing(GroveCard card)
-            => card != null && card.BestWave > 0;
+            => card != null && (card.BestWave > 0 || card.ShuffleWave > 0);
 
         string _publishedFingerprint = string.Empty;
         string _wantedFingerprint = string.Empty;

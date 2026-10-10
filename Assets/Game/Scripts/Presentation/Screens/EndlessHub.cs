@@ -83,12 +83,12 @@ namespace GlimmerGrove
             { "Ui/ic_endless", "Ui/ic_surge", "Ui/ic_heart", "Ui/ad_coin" };
 
         /// <summary>
-        /// The Shuffle lane's four, in the order its lines are read: the deal, the hand, the
-        /// line and the heart. The first two are cut by <c>Tools/make_shuffle_art.py</c> and are
-        /// global for <see cref="Marks"/>' reason; the other two are marks the game already draws.
+        /// The Shuffle lane's three, in the order its lines are read: the deal, the hand and the
+        /// heart. The first two are cut by <c>Tools/make_shuffle_art.py</c> and are global for
+        /// <see cref="Marks"/>' reason; the heart is the wallet's own.
         /// </summary>
         public static readonly string[] ShuffleMarks =
-            { "Ui/ic_shuffle", "Ui/ic_deck", "Ui/ic_battle", "Ui/ic_heart" };
+            { "Ui/ic_shuffle", "Ui/ic_deck", "Ui/ic_heart" };
 
         /// <summary>
         /// What a hub says and reads for one lane: its wall, its marks, where its best comes
@@ -101,10 +101,10 @@ namespace GlimmerGrove
         /// the hub asks the row.
         /// </para>
         /// <para>
-        /// <b>Where the best comes from is the whole difference between the two.</b> The Infinite
-        /// lane's is the public board's number and lives in its own ledger; the Shuffle lane's is
-        /// the level's own record, exactly as a glade's best is (<c>LevelRecord.WithRun</c> keeps
-        /// the larger on a climbing level), so it reaches no board and no ledger of its own.
+        /// <b>Each lane's best lives in its own ledger</b>, and each is its own public board's
+        /// number: <c>EndlessLedger</c> for the Infinite lane, <c>ShuffleLedger</c> for the Shuffle
+        /// lane. The Shuffle best used to be read off the level's own record, whose
+        /// <c>bestMoves</c> the cloud merge joins by the smaller, so a sync put a worse run back.
         /// </para>
         /// </summary>
         public sealed class HubLane
@@ -154,9 +154,9 @@ namespace GlimmerGrove
                 level => EndlessLedger.BestFor(level.Id));
 
             public static readonly HubLane Shuffle = new HubLane(
-                GameTrack.Shuffle, Scenery.WallShuffle, ShuffleMarks, false, false, false,
+                GameTrack.Shuffle, Scenery.WallShuffle, ShuffleMarks, false, false, true,
                 "Ui/shuffle_crest",
-                level => Persistence.PlayerProgress.BestMoves(level.Id));
+                level => GlimmerGrove.Shuffle.ShuffleLedger.BestFor(level.Id));
 
             /// <summary>The row for a lane. A lane this file has no row for draws as the Infinite one.</summary>
             public static HubLane Of(GameTrack lane) => lane.Dealt ? Shuffle : Infinite;
@@ -451,9 +451,9 @@ namespace GlimmerGrove
         {
             float safe = Boot.CanvasHeight - SafeArea.Top - SafeArea.Bottom;
 
-            // A lane that deals its line stands no shelf (`HubLane.Shelf`), so the column has
-            // the foot as well - and is still drawn to its own height, because a column that
-            // grew to fill a band would be a different column on every phone.
+            // A lane that stands no shelf (`HubLane.Shelf`) gives the column the foot as well -
+            // and it is still drawn to its own height, because a column that grew to fill a band
+            // would be a different column on every phone.
             float shelf = shelved
                         ? Mathf.Max(0f, LoadoutBar.Height + LoadoutBar.Overhang - SafeArea.Bottom)
                         : 0f;
@@ -741,8 +741,8 @@ namespace GlimmerGrove
 
         // ------------------------------------------------------------------ the lines
         /// <summary>
-        /// The three short lines saying what this lane is, on one plate, each opened by a mark in
-        /// the kit's own seat.
+        /// The short lines saying what this lane is (<c>GameTrack.Points</c> of them), on one
+        /// plate, each opened by a mark in the kit's own seat.
         ///
         /// <b>A row whose mark is missing still draws its sentence</b>, because a row is a sentence
         /// with a mark in front of it and not a mark with a caption.
@@ -764,10 +764,12 @@ namespace GlimmerGrove
 
             var plate = (RectTransform)panel.transform;
 
-            for (int i = 0; i < EndlessHubLayout.Points; i++)
+            int count = lane.Points;
+
+            for (int i = 0; i < count; i++)
             {
                 // Measured down from the plate's own top edge, which is what the layout counts in.
-                float y = EndlessHubLayout.PanelHeight * .5f - EndlessHubLayout.RowCentre(i);
+                float y = EndlessHubLayout.PanelHeight * .5f - EndlessHubLayout.RowCentre(i, count);
 
                 float seatX = -EndlessHubLayout.PanelWidth * .5f + EndlessHubLayout.PanelPad
                             + 12f + EndlessHubLayout.SlotSize * .5f;

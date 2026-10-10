@@ -3262,8 +3262,16 @@
       "text": "Only the first {0} keepers are listed. Wherever you are, your profile says what share of keepers you are ahead of."
     },
     {
+      "key": "ui.board.info_place_shuffle",
+      "text": "Only the first {0} keepers are listed. Reach a further wave in Shuffle to climb onto it."
+    },
+    {
       "key": "ui.board.info_place_title",
       "text": "Where you stand"
+    },
+    {
+      "key": "ui.board.info_shuffle_body",
+      "text": "This board ranks keepers by the furthest wave they have reached in Shuffle."
     },
     {
       "key": "ui.board.info_tally_body",
@@ -7915,7 +7923,7 @@
     },
     {
       "key": "level.s13_shuffle.tagline",
-      "text": "Four Breakers, a new hand of upgrades every run. Hold as long as you can."
+      "text": "Your own loadout, a new hand of upgrades every run. Hold as long as you can."
     },
     {
       "key": "track.shuffle.name",
@@ -7935,10 +7943,6 @@
     },
     {
       "key": "track.shuffle.point3",
-      "text": "Four Breakers each. No loadout."
-    },
-    {
-      "key": "track.shuffle.point4",
       "text": "A heart to enter. Losing costs none."
     },
     {

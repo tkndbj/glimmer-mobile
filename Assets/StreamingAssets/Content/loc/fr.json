@@ -3262,8 +3262,16 @@
       "text": "Seuls les {0} premiers gardiens sont affichés. Où que tu sois, ton profil indique quelle part des gardiens tu dépasses."
     },
     {
+      "key": "ui.board.info_place_shuffle",
+      "text": "Seuls les {0} premiers gardiens sont affichés. Atteins une vague plus lointaine en Mêlée pour y entrer."
+    },
+    {
       "key": "ui.board.info_place_title",
       "text": "Ta position"
+    },
+    {
+      "key": "ui.board.info_shuffle_body",
+      "text": "Ce classement range les gardiens selon la vague la plus lointaine qu'ils ont atteinte en Mêlée."
     },
     {
       "key": "ui.board.info_tally_body",
@@ -7915,7 +7923,7 @@
     },
     {
       "key": "level.s13_shuffle.tagline",
-      "text": "Quatre Briseurs et une nouvelle main d'améliorations à chaque partie. Tiens aussi longtemps que possible."
+      "text": "Ton propre équipement et une nouvelle main d'améliorations à chaque partie. Tiens aussi longtemps que possible."
     },
     {
       "key": "track.shuffle.name",
@@ -7935,10 +7943,6 @@
     },
     {
       "key": "track.shuffle.point3",
-      "text": "Quatre Briseurs pour tous. Pas d'équipement."
-    },
-    {
-      "key": "track.shuffle.point4",
       "text": "Entrer coûte un cœur. Perdre n'en coûte aucun."
     },
     {

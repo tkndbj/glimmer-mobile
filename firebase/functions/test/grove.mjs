@@ -33,7 +33,7 @@ if (!existsSync(compiled)) {
 }
 
 const {
-  groveWorth, keeperLevel, starsFor, bestWave, MAX_WAVE,
+  groveWorth, keeperLevel, starsFor, bestWave, shuffleWave, figureOf, MAX_WAVE,
   sanitiseName, isNameAllowed, publicName, boardName, fallbackName,
   BOARD_IDS, deciles, optedIn, saveRevision,
   BOARD_ROWS, rowOf, compareRows, readRows, cutoffOf, qualifies, mergeRow,
@@ -281,6 +281,31 @@ console.log("\nendless best");
   // that cap existed must not be able to cost this an unbounded walk.
   const long = Array.from({ length: 200 }, (_, i) => ({ level: `a${i}`, wave: i }));
   equal("no more rows are read than the rules allow", bestWave({ endlessBest: long }), 63);
+}
+
+// ------------------------------------------------------------------ shuffle best
+//
+// The Shuffle board's figure, read through the one walk the endless best uses. Its own key, so
+// the two lanes never read each other's rows: a Shuffle row read as the Infinite lane's would
+// publish on the wrong board and pay Infinite XP (`endlessXp`).
+console.log("\nshuffle best");
+{
+  equal("a save with no rows has no shuffle wave", shuffleWave({}), 0);
+  equal("a non-array is not a wave", shuffleWave({ shuffleBest: "x" }), 0);
+  equal("the best of every row wins",
+        shuffleWave({ shuffleBest: [{ level: "s13_shuffle", wave: 12 }, { level: "b", wave: 31 }] }), 31);
+  equal("a level id no catalog could have shipped is refused",
+        shuffleWave({ shuffleBest: [{ level: "x".repeat(49), wave: 900 }, { level: "a", wave: 3 }] }), 3);
+  equal("the ceiling is the endless one", shuffleWave({ shuffleBest: [{ level: "a", wave: 10 ** 9 }] }), MAX_WAVE);
+  const long = Array.from({ length: 200 }, (_, i) => ({ level: `a${i}`, wave: i }));
+  equal("no more rows are read than the rules allow", shuffleWave({ shuffleBest: long }), 63);
+
+  equal("a Shuffle row is not an Infinite wave",
+        bestWave({ shuffleBest: [{ level: "s13_shuffle", wave: 40 }] }), 0);
+  equal("and an Infinite row is not a Shuffle wave",
+        shuffleWave({ endlessBest: [{ level: "s02_endlesswatch", wave: 40 }] }), 0);
+  equal("a Shuffle row pays no Infinite XP",
+        endlessXp({ shuffleBest: [{ level: "s13_shuffle", wave: 40 }] }, {}), 0);
 }
 
 // ------------------------------------------------------------------ endless XP
@@ -613,9 +638,10 @@ console.log("\nranking");
   // documents away. The deletion scrub deliberately no longer reads this list — it walks the
   // collection instead, because a board that has been retired but not yet pruned is exactly
   // where a deleted keeper's name would otherwise survive (invariant 27).
-  equal("two boards, and no more", BOARD_IDS.length, 2);
+  equal("three boards, and no more", BOARD_IDS.length, 3);
   equal("the global board is named first", BOARD_IDS[0], "global");
   equal("the endless board is named second", BOARD_IDS[1], "endless");
+  equal("the shuffle board is named third", BOARD_IDS[2], "shuffle");
 
   check("no retired league id has come back",
         BOARD_IDS.every((id) => !/^l[0-8]$/.test(id)));
@@ -623,7 +649,7 @@ console.log("\nranking");
   // Mirrored by `LeaderboardBoard.All`, and the client refuses a board id outside its own
   // list before it spends a read on it — so an id here that the client does not know is a
   // board nobody can ever open.
-  equal("the list the client mirrors", BOARD_IDS.join(","), "global,endless");
+  equal("the list the client mirrors", BOARD_IDS.join(","), "global,endless,shuffle");
 }
 
 /** True when nothing in this value is undefined — what Firestore actually demands. */
@@ -865,6 +891,16 @@ console.log("\nthe card a public profile reads");
   check("a keeper who has bought nothing carries no companions", !("companions" in bare));
   check("and one who has arranged no line carries none", !("line" in bare));
 
+  // The two lane figures, each absent on a nought: absent is what keeps each board's index to
+  // the lane's own players, so a written nought would put every card in the game into both.
+  check("a keeper who has run neither lane carries no wave", !("wave" in bare));
+  check("and no shuffle wave", !("shuffle" in bare));
+  const shuffler = buildCard("uid-3", { shuffleBest: [{ level: "s13_shuffle", wave: 21 }] },
+                             config, NO_RANKS, worth, 6, 1_700_000_000, null);
+  equal("a Shuffle best reaches the card", shuffler.shuffle, 21);
+  check("and not the Infinite figure", !("wave" in shuffler));
+  check("a Shuffle card is writable", writable(shuffler));
+
   // The whole of what a grove takedown does. `publishableName`'s fall-through wearing different
   // clothes: read here rather than at the call site, so the report path and `publishGrove`
   // cannot come to disagree about what a denial means.
@@ -1077,6 +1113,42 @@ console.log("\nplacing a card on a board as it is published");
 
   // Every row the merge writes is something Firestore will take.
   check("a merged board is writable", writable(over.rows));
+
+  // The Shuffle board, ordered on a figure a row carries only when it has one. Absent has to
+  // read as nought through every comparison, or `undefined - 3` is NaN and the sort stops.
+  const sh = (uid, shuffle) => row(uid, 0, 0, shuffle > 0 ? { shuffle } : {});
+  equal("an absent shuffle figure reads as nought", figureOf(row("a", 9), "shuffle"), 0);
+  equal("a present one reads as itself", figureOf(sh("a", 7), "shuffle"), 7);
+
+  const ordered = [sh("a", 4), row("n", 30), sh("z", 9), sh("b", 4)]
+    .sort((x, y) => compareRows("shuffle", x, y));
+  equal("the shuffle board is ordered on its own figure, ties by uid descending",
+        ordered.map((r) => r.uid).join(""), "zban");
+
+  const placed = mergeRow([], sh("p", 5), "shuffle");
+  check("a Shuffle keeper is placed on the shuffle board", placed.changed && placed.rows.length === 1);
+  const absent = mergeRow([], row("p", 40), "shuffle");
+  check("an Infinite-only keeper is not", !absent.changed && absent.rows.length === 0);
+  check("and a shuffle wave does not reach the endless board", !mergeRow([], sh("p", 5), "wave").changed);
+
+  const climbed = mergeRow([sh("p", 5)], sh("p", 8), "shuffle");
+  check("a better shuffle best rewrites the row", climbed.changed && climbed.rows[0].shuffle === 8);
+  check("an unchanged one writes nothing", !mergeRow([sh("p", 5)], sh("p", 5), "shuffle").changed);
+  check("a shuffle best moving on a keeper listed on the endless board rewrites that row too",
+        mergeRow([row("p", 3)], { ...row("p", 3), shuffle: 4 }, "wave").changed);
+
+  const shFull = Array.from({ length: BOARD_ROWS }, (_, i) => sh("s" + String(i).padStart(3, "0"), 300 - i));
+  equal("a full shuffle board's cutoff is its last row", cutoffOf(shFull, "shuffle"), 300 - (BOARD_ROWS - 1));
+  check("a stranger under it does not qualify", !qualifies(shFull, "z", 10, "shuffle"));
+
+  const shRow = rowOf("u", { name: "Fern", avatar: "", level: 6, score: 0, stars: 0, shuffle: 23 });
+  equal("the row carries the card's shuffle best", shRow.shuffle, 23);
+  check("a card with none contributes a row with no shuffle key",
+        !("shuffle" in rowOf("u", { name: "F", level: 1, score: 1, stars: 0, wave: 4 })));
+  const shRead = readRows([sh("a", 6), { uid: "b", wave: 2, shuffle: "7" }, { uid: "c", shuffle: -1 }]);
+  equal("a read row keeps its shuffle best", shRead[0].shuffle, 6);
+  check("and drops one that is not a positive number", !("shuffle" in shRead[1]) && !("shuffle" in shRead[2]));
+  check("a merged shuffle board is writable", writable(climbed.rows));
 }
 
 // The rank a save holds, which is the newest thing on a card a stranger can see.

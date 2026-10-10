@@ -3262,8 +3262,16 @@
       "text": "Só os primeiros {0} guardiões aparecem na lista. Onde quer que você esteja, seu perfil mostra quantos por cento dos guardiões você supera."
     },
     {
+      "key": "ui.board.info_place_shuffle",
+      "text": "Só os primeiros {0} guardiões aparecem na lista. Alcance uma onda mais distante no Embaralhado para entrar."
+    },
+    {
       "key": "ui.board.info_place_title",
       "text": "Sua posição"
+    },
+    {
+      "key": "ui.board.info_shuffle_body",
+      "text": "Este ranking classifica os guardiões pela onda mais distante que alcançaram no Embaralhado."
     },
     {
       "key": "ui.board.info_tally_body",
@@ -7915,7 +7923,7 @@
     },
     {
       "key": "level.s13_shuffle.tagline",
-      "text": "Quatro Quebradores e uma mão de melhorias nova a cada partida. Resista o máximo que puder."
+      "text": "Seu próprio equipamento e uma mão de melhorias nova a cada partida. Resista o máximo que puder."
     },
     {
       "key": "track.shuffle.name",
@@ -7935,10 +7943,6 @@
     },
     {
       "key": "track.shuffle.point3",
-      "text": "Quatro Quebradores para todos. Sem equipamento."
-    },
-    {
-      "key": "track.shuffle.point4",
       "text": "Entrar custa um coração. Perder não custa nenhum."
     },
     {

@@ -40,7 +40,9 @@ namespace GlimmerGrove.Layout
     public static class EndlessHubLayout
     {
         /// <summary>
-        /// How many lines the hub's plate says.
+        /// How many lines the hub's plate holds: the most any lane says. A lane says its own
+        /// number (<c>GameTrack.Points</c>), never more than this, and fewer are centred on the
+        /// plate (<see cref="RowCentre(int, int)"/>), so the column is one height on every lane.
         ///
         /// <b>A constant rather than a count of whatever resolves</b>, because the keys are
         /// derived (<c>GameTrack.PointKey</c>) and a missing string resolves to something: a hub
@@ -270,6 +272,14 @@ namespace GlimmerGrove.Layout
         /// <summary>Where row <paramref name="index"/> is read, measured down from the plate's top.</summary>
         public static float RowCentre(int index)
             => PanelPad + RowHeight * .5f + index * (RowHeight + RowGap);
+
+        /// <summary>
+        /// Where row <paramref name="index"/> of <paramref name="count"/> is read: the rows keep
+        /// their rhythm and the block is centred on the plate, so a lane saying fewer lines than
+        /// <see cref="Points"/> leaves even air above and below rather than a blank row.
+        /// </summary>
+        public static float RowCentre(int index, int count)
+            => RowCentre(index) + (Points - count) * (RowHeight + RowGap) * .5f;
 
         public static float CheckpointCentre
             => HeroHeight + HeroGap + PanelHeight + RecordGap + RecordHeight + CheckpointGap

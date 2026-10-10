@@ -1127,20 +1127,21 @@ marked *(art)* are one-line pointers - the working detail is in `CRAFT.md`.
 
 ## The Shuffle lane - the third track
 
-The siege played by a dealt hand: four Breakers for everybody, pure raiders, and every two waves a
+The siege played by a dealt hand: the player's own loadout, pure raiders, and every two waves a
 hand of three upgrade cards (2026-10-09, the owner's brief: *a shuffle mode, so every game really
 needs to feel unique*). Chapter `s13_shufflewatch`, level `s13_shuffle`, `track: "shuffle"`.
 
-59. **A lane may deal its line and its build, and it is a track** (`GameTrack.Shuffle`,
+59. **A lane may deal its build, and it is a track** (`GameTrack.Shuffle`,
    `GameTrack.Dealt`), for the Infinite lane's reason (43): the board, the hill and the verb are
    Thornwatch's, and a second `GameMode` would have been a stranger in the switcher with its own
    art, validator and registry row. What it owns is one screen (`ShuffleScreen : SiegeScreen`, the
-   siege screen unsealed and given two seams - `Ruled` and `LineToLoad` - rather than copied, 20b),
+   siege screen unsealed and given two seams - `Ruled` and `LineToLoad` - rather than copied, 20b;
+   it overrides `Ruled` only, to refuse the Infinite lane's checkpoint, and stands the player's
+   loadout like every other lane, 2026-10-10),
    one panel (`ShuffleChoiceOverlay`), one ramp and one deck. **It pays nothing the Infinite lane
-   pays**: the best wave is the level's own record (`LevelRecord.WithRun` keeps the larger on a
-   climbing level), the stars pay once through the star ledger, and nothing reaches `EndlessLedger`,
-   the public board or the server. A heart is bought at the gate and every ending is free (43e, by
-   `Laddered`); the loadout shelf is not drawn on this lane (`HubLane.Shelf`).
+   pays**: the stars pay once through the star ledger, nothing reaches `EndlessLedger`, and the
+   best wave is banked in its own ledger (59k). A heart is bought at the gate and every ending is free (43e, by
+   `Laddered`); the loadout shelf stands on this lane's hub as on the Infinite lane's.
 59a. **The build reaches the board through one seam, and the seam is an identity everywhere
    else.** `SiegeBoosts` is read live at every site a card can change - the bolt, the cadence, the
    fuel a shot costs and a gem is worth, a blow at the line, a kill, the charm window, the
@@ -1234,6 +1235,13 @@ needs to feel unique*). Chapter `s13_shufflewatch`, level `s13_shuffle`, `track:
    run that has lived long enough to be strong is offered the cards that make it strange. The
    pity floors (59e) apply to every table; each table sums to a hundred and each climbs in the top
    two tiers, held by `TheTierWeightsSumToAHundredAndEveryTierHasCards`.
+59k. **The best wave is its own save key and its own public board** (2026-10-10): `ShuffleLedger`
+   (`shuffleBest`, save v42, a per-level `max`), published as the card's `shuffle` and ordered on by
+   `leaderboards/shuffle`, the Boards screen's second tab. Never the level record's `bestMoves`,
+   which the merge joins by the smaller (a sync put a worse run back), and never rows in
+   `endlessBest`, which every shipped client reads as the Infinite lane's and `endlessXp` pays for.
+   It pays nothing (19l), bounded by the one `MAX_WAVE`; held by `ShuffleBoardTests` and the
+   `shuffle best` cases in `functions/test/grove.mjs`.
 
 **Adding a card**: a row in `ShuffleCards.All` (id, tier, effect, magnitude, extent, most,
 picture), an arm in `ShuffleBuild.Fold` if the effect is new, a setter on `SiegeBoosts` and the

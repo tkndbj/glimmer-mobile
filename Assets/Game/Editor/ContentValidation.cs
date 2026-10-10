@@ -8,7 +8,6 @@ using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Content;
 using GlimmerGrove.Content.Sources;
 using GlimmerGrove.Daily;
-using GlimmerGrove.Layout;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Modes;
 using GlimmerGrove.Persistence;
@@ -2951,7 +2950,7 @@ namespace GlimmerGrove.EditorTools
 
                 if (track.Laddered) continue;
 
-                for (int i = 1; i <= EndlessHubLayout.Points; i++)
+                for (int i = 1; i <= track.Points; i++)
                     Require(table, track.PointKey(i),
                             $"track '{track}', which draws a hub rather than a map", result);
             }

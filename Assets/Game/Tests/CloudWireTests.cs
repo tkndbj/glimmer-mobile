@@ -181,6 +181,11 @@ namespace GlimmerGrove.Tests
                     new EndlessBestDto { level = "s02_endless", wave = 23 },
                 },
 
+                shuffleBest = new[]
+                {
+                    new ShuffleBestDto { level = "s13_shuffle", wave = 17 },
+                },
+
                 // Two seats of one turret at different stars, which is the shape that would catch
                 // a mapper keyed on the turret rather than on the holding.
                 wardStars = new[]
@@ -405,6 +410,7 @@ namespace GlimmerGrove.Tests
                 ("wardsOwned",    "d.wardsOwned",    Wards.WardCatalog.MaxModels * Wards.WardLine.Colours.Length),
                 ("wardLoadout",   "d.wardLoadout",   Wards.WardLine.Colours.Length),
                 ("endlessBest",   "d.endlessBest",   Progression.EndlessLedger.MaxRows),
+                ("shuffleBest",   "d.shuffleBest",   GlimmerGrove.Shuffle.ShuffleLedger.MaxRows),
                 ("wardStars",     "d.wardStars",     Wards.WardStarLedger.MaxRows),
                 ("events",        "d.events",        Events.SeasonLedger.MaxSeasons),
                 ("levels",        "d.levels",        FirestoreSaveMapper.MaxLevelsPerDocument),

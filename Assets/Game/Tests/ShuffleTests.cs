@@ -48,6 +48,18 @@ namespace GlimmerGrove.Tests
             return layout;
         }
 
+        /// <summary>
+        /// A fixed line for the board fixtures: four Breakers at one star. The lane stands the
+        /// player's loadout; the fixtures stand one constant line so a trace, a sweep and a seed
+        /// measure the same board on every machine whatever its save holds.
+        /// </summary>
+        static WardLine Breakers()
+        {
+            var breaker = WardCatalog.Default.Find(WardModel.Elemental);
+            Assert.IsNotNull(breaker, "the shipped roster has no Breaker");
+            return WardLine.Uniform(WardCatalog.Default, breaker, WardStars.Least);
+        }
+
         /// <summary>A plain chapter rung, for the identity proof: `s01_ironward`.</summary>
         static SiegeLayout Rung()
         {
@@ -62,13 +74,13 @@ namespace GlimmerGrove.Tests
 
         // ------------------------------------------------------------------ the track
         [Test]
-        public void TheShuffleLaneIsATrackWithNoLadderThatDealsItsLine()
+        public void TheShuffleLaneIsATrackWithNoLadderThatDealsItsBuild()
         {
             Assert.IsTrue(GameTrack.TryParse("shuffle", out var track, out string error), error);
             Assert.AreEqual(GameTrack.Shuffle, track);
             Assert.IsFalse(GameTrack.Shuffle.Laddered, "the Shuffle lane reads as a ladder");
-            Assert.IsTrue(GameTrack.Shuffle.Dealt, "the Shuffle lane does not deal its line");
-            Assert.IsFalse(GameTrack.Infinite.Dealt, "the Infinite lane deals its line");
+            Assert.IsTrue(GameTrack.Shuffle.Dealt, "the Shuffle lane does not deal its build");
+            Assert.IsFalse(GameTrack.Infinite.Dealt, "the Infinite lane deals a build");
             Assert.IsFalse(GameTrack.Main.Dealt);
             Assert.AreEqual("track.shuffle.point2", GameTrack.Shuffle.PointKey(2));
 
@@ -398,7 +410,7 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(1, ShuffleRun.Earned(3));
             Assert.AreEqual(2, ShuffleRun.Earned(4));
 
-            var board = SiegeBoard.Build(Lane(), ShuffleLine.Of(null));
+            var board = SiegeBoard.Build(Lane(), Breakers());
             var run = new ShuffleRun(3u);
 
             // Nobody matches on this board, so the line is sheltered for the walk: what is
@@ -654,7 +666,7 @@ namespace GlimmerGrove.Tests
                 Load(run, c.card);
                 if (c.partner != null) Load(run, c.partner);
 
-                var board = SiegeBoard.Build(Lane(), ShuffleLine.Of(null));
+                var board = SiegeBoard.Build(Lane(), Breakers());
                 board.Boosts = run.Build.Boosts;
                 board.Refit();
 
@@ -678,7 +690,7 @@ namespace GlimmerGrove.Tests
             var run = new ShuffleRun(5u);
             Load(run, "spin_up");
 
-            var board = SiegeBoard.Build(Lane(), ShuffleLine.Of(null));
+            var board = SiegeBoard.Build(Lane(), Breakers());
             board.Boosts = run.Build.Boosts;
             board.Refit();
 
@@ -701,7 +713,7 @@ namespace GlimmerGrove.Tests
             var run = new ShuffleRun(5u);
             Load(run, "wild_magic");
 
-            var board = SiegeBoard.Build(Lane(), ShuffleLine.Of(null));
+            var board = SiegeBoard.Build(Lane(), Breakers());
             board.Boosts = run.Build.Boosts;
             board.Refit();
 
@@ -729,7 +741,7 @@ namespace GlimmerGrove.Tests
             var run = new ShuffleRun(5u);
             Load(run, "tesla_coil");
 
-            var board = SiegeBoard.Build(Lane(), ShuffleLine.Of(null));
+            var board = SiegeBoard.Build(Lane(), Breakers());
             board.Boosts = run.Build.Boosts;
             board.Refit();
             foreach (var ward in board.Wards) ward.Fuel = 0f;
@@ -763,7 +775,7 @@ namespace GlimmerGrove.Tests
             var run = new ShuffleRun(5u);
             foreach (var card in ShuffleCards.All) Load(run, card.Id);
 
-            var board = SiegeBoard.Build(Lane(), ShuffleLine.Of(null));
+            var board = SiegeBoard.Build(Lane(), Breakers());
             board.Boosts = run.Build.Boosts;
             board.Refit();
 
@@ -771,7 +783,7 @@ namespace GlimmerGrove.Tests
             Console.WriteLine($"Every card at its most: wave {reached} after {seconds}s"
                               + (board.IsFinished ? "" : " and still standing"));
 
-            var bare = SiegeBoard.Build(Lane(), ShuffleLine.Of(null));
+            var bare = SiegeBoard.Build(Lane(), Breakers());
             int plain = Hold(bare, null, 2.4f, out _, out _);
 
             Assert.Greater(reached, plain, "the whole deck reached no further than none");
@@ -832,20 +844,16 @@ namespace GlimmerGrove.Tests
 
         // ------------------------------------------------------------------ the line
         [Test]
-        public void TheDealtLineIsFourBreakersAtOneStar()
+        public void TheShuffleLaneStandsThePlayersLoadout()
         {
-            var line = ShuffleLine.Of(null);
+            // The lane's rules carry no line of their own, so a board is dealt on the loadout,
+            // exactly as a chapter rung's is (`SiegeRules.Fresh`).
+            var board = (SiegeBoard)new SiegeRules(Lane(), null).Fresh();
+            var loadout = WardLoadout.Line;
 
-            foreach (char colour in WardLine.Colours)
-            {
-                Assert.AreEqual(WardModel.Elemental, line[colour].Id);
-                Assert.AreEqual(WardStars.Least, line.BuildAt(WardLine.Colours.IndexOf(colour)).Stars);
-            }
-
-            Assert.IsNotNull(WardCatalog.Default.Find(ShuffleLine.TurretId), "the shipped roster has no Breaker");
-
-            var board = SiegeBoard.Build(Lane(), line);
-            foreach (var ward in board.Wards) Assert.AreEqual(WardModel.Elemental, ward.Model.Id);
+            Assert.AreEqual(WardLine.Colours.Length, board.Wards.Count);
+            for (int i = 0; i < board.Wards.Count; i++)
+                Assert.AreEqual(loadout.At(board.Wards[i].Colour).Id, board.Wards[i].Model.Id, $"seat {i}");
         }
 
         [Test]
@@ -906,7 +914,7 @@ namespace GlimmerGrove.Tests
                 foreach (uint seed in seeds)
                 {
                     var run = new ShuffleRun(seed);
-                    var board = SiegeBoard.Build(Lane(), ShuffleLine.Of(null));
+                    var board = SiegeBoard.Build(Lane(), Breakers());
                     board.Boosts = run.Build.Boosts;
                     board.Refit();
 
@@ -918,7 +926,7 @@ namespace GlimmerGrove.Tests
                                  + $"{run.Build.Taken.Count} card(s), {revived} revival(s)\n");
                 }
 
-                var plain = SiegeBoard.Build(Lane(), ShuffleLine.Of(null));
+                var plain = SiegeBoard.Build(Lane(), Breakers());
                 bare += Hold(plain, null, rhythm, out int plainSeconds, out _);
                 table.Append($"  no build, rhythm {rhythm:0.00}: wave {plain.WavesCleared} after {plainSeconds}s\n");
             }

@@ -116,9 +116,10 @@ def scale_in(band):
     return 1.0 if band >= COLUMN_H else max(MIN_SCALE, band / COLUMN_H)
 
 
-def row_centre(i):
-    """A row's centre, measured down from the panel's top edge."""
-    return PANEL_PAD + ROW_H / 2 + i * (ROW_H + ROW_GAP)
+def row_centre(i, count=POINTS):
+    """A row's centre, measured down from the panel's top edge (`EndlessHubLayout.RowCentre`):
+    fewer rows than the plate holds keep their rhythm and are centred on it."""
+    return PANEL_PAD + ROW_H / 2 + i * (ROW_H + ROW_GAP) + (POINTS - count) * (ROW_H + ROW_GAP) / 2
 
 
 # --------------------------------------------------------------- EndlessHub
@@ -132,7 +133,8 @@ def row_centre(i):
 ICONS = ["Ui/ic_endless", "Ui/ic_surge", "Ui/ic_heart", "Ui/ad_coin"]   # `EndlessHub.Marks`
 
 #: `EndlessHub.HubLane`: what each lane's hub reads. The Shuffle lane's row names its own wall
-#: and marks, draws no checkpoint bar, stands no shelf and never says a standing - so a mirror
+#: and marks, draws no checkpoint bar and never says a standing, and stands the loadout shelf like
+#: the Infinite row (every siege lane reads the loadout) - so a mirror
 #: drawing it off the Infinite row would be drawing a screen the game does not build.
 LANES = {
     "infinite": dict(wall="plain_ranked", marks=ICONS, checkpoints=True, standing=True, shelf=True,
@@ -140,8 +142,8 @@ LANES = {
     # No banner and a crest for a hero (the owner's call, 2026-10-09): `LevelsScreen.BuildHeader`
     # builds no plaque on a dealt lane and the switcher takes its slot; `EndlessHub.HubLane.Crest`.
     "shuffle": dict(wall="plain_shuffle",
-                    marks=["Ui/ic_shuffle", "Ui/ic_deck", "Ui/ic_battle", "Ui/ic_heart"],   # `EndlessHub.ShuffleMarks`
-                    checkpoints=False, standing=False, shelf=False, banner=None, crest="Ui/shuffle_crest"),
+                    marks=["Ui/ic_shuffle", "Ui/ic_deck", "Ui/ic_heart"],   # `EndlessHub.ShuffleMarks`
+                    checkpoints=False, standing=False, shelf=True, banner=None, crest="Ui/shuffle_crest"),
 }
 
 #: Which lane this run of the mirror draws. `--shuffle` sets it.
@@ -396,15 +398,16 @@ def hero(sheet, top, played, wave, standing=0):
 
 
 def points(sheet, top):
-    """Four rows on one plate: a framed mark and a sentence."""
+    """The lane's rows on one plate (`GameTrack.Points`, one per mark): a framed mark and a sentence."""
     row = LANES[LANE]
     ptop = top + HERO_H + HERO_GAP
     K.paste(sheet, K.skin("Hud/panel", PANEL_W, PANEL_H), W / 2, ptop + PANEL_H / 2)
 
     left = W / 2 - PANEL_W / 2
 
-    for i in range(POINTS):
-        cy = ptop + row_centre(i)
+    count = len(row["marks"])
+    for i in range(count):
+        cy = ptop + row_centre(i, count)
 
         K.paste(sheet, K.skin("Hud/slot", SLOT_SIZE, SLOT_SIZE),
                 left + PANEL_PAD + 12 + SLOT_SIZE / 2, cy)

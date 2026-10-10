@@ -2,6 +2,7 @@
 """Draws `LeaderboardScreen` offline, at the canvas a phone lays it out against.
 
     python Tools/render_boards.py                # the Endless Watch, a full board
+    python Tools/render_boards.py --shuffle      # the Shuffle tab live instead
     python Tools/render_boards.py --unranked     # every row's badge absent, which is the
                                                  # state every board is in until a deploy
     python Tools/render_boards.py --mixed        # some ranked, some not — the real first week
@@ -45,7 +46,13 @@ LOC = REPO / "Assets" / "StreamingAssets" / "Content" / "loc" / "en.json"
 # Every one of these is named after the field it mirrors. A typed copy that drifted would be a
 # mirror telling a comfortable lie about the screen, which is worse than no mirror at all
 # (invariant 44d).
-HEADER_H = 208.0
+HEADER_H = 312.0
+
+# The lane tabs (`TabWidth`, `TabHeight`, `TabGap`, `TabY`). A `UIKit.TextButton` anchored at the
+# top centre pivots at its own centre (44d), so `TAB_Y` is the centre's depth below the top.
+TAB_W, TAB_H, TAB_GAP, TAB_Y = 300.0, 88.0, 16.0, 230.0
+TAB_PT, TAB_FLOOR = 30, 18
+TABS = [("endless", "track.infinite.name"), ("shuffle", "track.shuffle.name")]
 ROW_H = 176.0
 PLATE_W, PLATE_H = 940.0, 160.0
 BADGE = 132.0
@@ -112,13 +119,29 @@ def draw_row(sheet, top, entry, mine=False):
                   WORTH_BOX[0], WORTH_BOX[1], WORTH_PT, SHRINK_FLOOR_WORTH, k.GOLD)
 
 
-def board(entries, title="BOARDS"):
+def tabs(sheet, live, loc):
+    """The lane tabs, as `LeaderboardScreen.BuildTabs` lays them: the live one `Skins.Settled`
+    (btn_green), the other `Skins.Alternate` (btn_blue), each named by its lane's own string."""
+    pitch = TAB_W + TAB_GAP
+    first = -pitch * (len(TABS) - 1) / 2
+    for i, (board_id, key) in enumerate(TABS):
+        cx = k.W / 2 + first + pitch * i
+        k.paste(sheet, k.skin("btn_green" if board_id == live else "btn_blue", TAB_W, TAB_H), cx, TAB_Y)
+        k.shrunk(sheet, loc.get(key, key).upper(), cx, TAB_Y - 4, TAB_W - 48, TAB_H - 24,
+                 TAB_PT, TAB_FLOOR, k.CREAM)
+
+
+def board(entries, title="BOARDS", live="endless", loc=None):
     sheet = Image.new("RGBA", (k.W, k.H), k.GROUND)
     k.plain(sheet)
 
-    # The banner, and the two keys beside it.
-    k.paste(sheet, k.skin("Hud/title", 470, 128), k.W / 2, 106 + 64)
-    k.text(sheet, title, k.W / 2, 106 + 64, 38, k.CREAM)
+    # The banner. `Scenery.TitleRibbon` is a `UIKit.Img` at (0, -106) under a top anchor, and
+    # `UIKit.Box` pivots at centre (44d), so 106 is the ribbon's *centre* - level with the back
+    # and info keys at -104. This was drawn at 106 + 64 (as if pivoted at its top edge) until the
+    # tabs came back and the mirror put them on the cloth.
+    k.paste(sheet, k.skin("Hud/title", 470, 128), k.W / 2, 106)
+    k.text(sheet, title, k.W / 2, 106, 38, k.CREAM)
+    tabs(sheet, live, loc if loc is not None else strings())
 
     top = HEADER_H
     for entry in entries:
@@ -136,7 +159,7 @@ NAMES = ["Fern Willow", "Thornbite", "Ash", "Marigold Quickstep", "Bram",
          "Silverleaf Wanderer", "Pip", "Hollyhock"]
 
 
-def entries(ladder, ranked="all"):
+def entries(ladder, ranked="all", top=120):
     out = []
     for i, name in enumerate(NAMES):
         if ranked == "all":
@@ -150,7 +173,7 @@ def entries(ladder, ranked="all"):
             "place": i + 1,
             "name": name,
             "rung": rung,
-            "figure": "Wave %d" % (120 - i * 9),
+            "figure": "Wave %d" % (top - i * 9),
             "mine": i == 3,
         })
     return out
@@ -201,6 +224,7 @@ def main():
     ap.add_argument("--mixed", action="store_true", help="some ranked, some not")
     ap.add_argument("--empty", action="store_true", help="the six refusals")
     ap.add_argument("--row", action="store_true", help="three rows at 1:1")
+    ap.add_argument("--shuffle", action="store_true", help="the Shuffle tab live")
     ap.add_argument("--contact", action="store_true", help="all of it on one sheet")
     args = ap.parse_args()
 
@@ -209,14 +233,14 @@ def main():
     out = REPO / "boards.png"
 
     if args.contact:
-        full = board(entries(ladder, "all"))
-        mixed = board(entries(ladder, "mixed"))
-        bare = board(entries(ladder, "none"))
+        full = board(entries(ladder, "all"), loc=loc)
+        shuffled = board(entries(ladder, "mixed", top=64), live="shuffle", loc=loc)
+        bare = board(entries(ladder, "none"), loc=loc)
         rows = one_row(ladder)
 
         scale = 0.42
         small = [im.resize((int(im.width * scale), int(im.height * scale)), Image.LANCZOS)
-                 for im in (full, mixed, bare)]
+                 for im in (full, shuffled, bare)]
 
         gap = 24
         width = sum(im.width for im in small) + gap * 4
@@ -238,11 +262,13 @@ def main():
     elif args.empty:
         sheet = empties(loc)
     elif args.unranked:
-        sheet = board(entries(ladder, "none"))
+        sheet = board(entries(ladder, "none"), loc=loc)
     elif args.mixed:
-        sheet = board(entries(ladder, "mixed"))
+        sheet = board(entries(ladder, "mixed"), loc=loc)
+    elif args.shuffle:
+        sheet = board(entries(ladder, "all", top=64), live="shuffle", loc=loc)
     else:
-        sheet = board(entries(ladder, "all"))
+        sheet = board(entries(ladder, "all"), loc=loc)
 
     sheet.save(out)
     print(f"wrote {out}  {sheet.size[0]}x{sheet.size[1]}  - look at it")

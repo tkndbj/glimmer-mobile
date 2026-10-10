@@ -3262,8 +3262,16 @@
       "text": "Sadece ilk {0} bekçi listelenir. Nerede olursan ol, profilin bekçilerin yüzde kaçını geçtiğini gösterir."
     },
     {
+      "key": "ui.board.info_place_shuffle",
+      "text": "Sadece ilk {0} bekçi listelenir. Listeye girmek için Karışık modunda daha uzak bir aşamaya ulaş."
+    },
+    {
       "key": "ui.board.info_place_title",
       "text": "Nerede duruyorsun"
+    },
+    {
+      "key": "ui.board.info_shuffle_body",
+      "text": "Bu sıralama bekçileri Karışık modunda ulaştıkları en uzak aşamaya göre sıralar."
     },
     {
       "key": "ui.board.info_tally_body",
@@ -7915,7 +7923,7 @@
     },
     {
       "key": "level.s13_shuffle.tagline",
-      "text": "Dört Kırıcı ve her oyunda yeni bir geliştirme eli. Dayanabildiğin kadar dayan."
+      "text": "Kendi teçhizatın ve her oyunda yeni bir geliştirme eli. Dayanabildiğin kadar dayan."
     },
     {
       "key": "track.shuffle.name",
@@ -7935,10 +7943,6 @@
     },
     {
       "key": "track.shuffle.point3",
-      "text": "Herkese dört Kırıcı. Teçhizat yok."
-    },
-    {
-      "key": "track.shuffle.point4",
       "text": "Girmek bir kalp ister. Kaybetmek hiç kalp götürmez."
     },
     {

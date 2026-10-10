@@ -6,9 +6,9 @@
 
 **One level, never won, and a different build every time** (MODES.md 59). The Shuffle lane is a
 siege whose waves are a rule (`ShuffleRamp`): pure raiders, a body more every wave, every wave
-tougher, and no boss ever. What makes it the Shuffle lane is not the hill but the line - four
-Breakers for everybody, no loadout - and the hand of three upgrade cards dealt every two waves,
-one of which goes into the run's build. The run ends when the last ward falls.
+tougher, and no boss ever. What makes it the Shuffle lane is not the hill but the build - the
+player's own loadout, and the hand of three upgrade cards dealt every two waves, one of which goes
+into the run's build. The run ends when the last ward falls.
 
 **It is a track, not a mode** (`GameTrack.Shuffle`), for the Infinite lane's reason: the board,
 the wards, the raiders and the verb are Thornwatch's, and what differs is the ladder it sits on and

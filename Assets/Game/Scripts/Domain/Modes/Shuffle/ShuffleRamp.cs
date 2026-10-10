@@ -9,7 +9,7 @@ namespace GlimmerGrove.Shuffle
     ///
     /// <para>
     /// <b>No bosses, and the validator holds it to that</b> (<see cref="SendsBosses"/>). A boss
-    /// is a fight the player answers with the line they chose; on this lane the line is dealt
+    /// is a fight the player answers with the line they chose; on this lane the build is dealt
     /// and the fight is the ramp itself, so what climbs is the crowd. The lane leans on its
     /// build the way the Infinite lane leans on its cogs: a run that picks well goes further,
     /// and a run that picks badly meets the wall sooner.

@@ -158,6 +158,7 @@ namespace GlimmerGrove.Persistence
             // How deep an endless run got. A floor, so a device that has just beaten its best has
             // something the server does not.
             if (!SameEndless(remote.endlessBest, merged.endlessBest)) return true;
+            if (!SameShuffle(remote.shuffleBest, merged.shuffleBest)) return true;
             if (!SameStars(remote.wardStars, merged.wardStars)) return true;
 
             // The daily challenges. Today's rows travel for the ad allowance's reason - the cap
@@ -387,6 +388,21 @@ namespace GlimmerGrove.Persistence
                 var x = a[i]; var y = b[i];
                 if (x == null || y == null) return x == y;
                 if (!Same(x.level, y.level) || x.wave != y.wave || x.waves != y.waves) return false;
+            }
+
+            return true;
+        }
+
+        static bool SameShuffle(ShuffleBestDto[] a, ShuffleBestDto[] b)
+        {
+            int an = a?.Length ?? 0, bn = b?.Length ?? 0;
+            if (an != bn) return false;
+
+            for (int i = 0; i < an; i++)
+            {
+                var x = a[i]; var y = b[i];
+                if (x == null || y == null) return x == y;
+                if (!Same(x.level, y.level) || x.wave != y.wave) return false;
             }
 
             return true;

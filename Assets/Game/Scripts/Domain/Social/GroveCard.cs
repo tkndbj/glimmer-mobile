@@ -104,6 +104,19 @@ namespace GlimmerGrove.Social
         /// </summary>
         public readonly int BestWave;
 
+        /// <summary>
+        /// The furthest wave this keeper has reached on the Shuffle lane, or nought - what the
+        /// <c>shuffle</c> board is ordered on (<see cref="Shuffle.ShuffleLedger"/>).
+        ///
+        /// <para>
+        /// <b><see cref="BestWave"/>'s twin in every respect</b>: a figure the server cannot
+        /// recompute and can only bound, worth no currency, and absent on the wire for a keeper
+        /// who has never run the lane, so the index the board is built from holds the lane's
+        /// players alone.
+        /// </para>
+        /// </summary>
+        public readonly int ShuffleWave;
+
         /// <summary>When the server last rebuilt this card, as a Unix timestamp.</summary>
         public readonly long PublishedUnix;
 
@@ -114,7 +127,8 @@ namespace GlimmerGrove.Social
                          int bestWave, long publishedUnix,
                          IReadOnlyList<Wards.WardSlot> line = null,
                          IReadOnlyList<int> rungs = null,
-                         string rungId = null)
+                         string rungId = null,
+                         int shuffleWave = 0)
         {
             OwnerId = ownerId ?? string.Empty;
             Name = name ?? string.Empty;
@@ -123,6 +137,9 @@ namespace GlimmerGrove.Social
             BestWave = bestWave < 0 ? 0
                      : bestWave > Progression.EndlessLedger.MaxWave ? Progression.EndlessLedger.MaxWave
                      : bestWave;
+            ShuffleWave = shuffleWave < 0 ? 0
+                        : shuffleWave > Shuffle.ShuffleLedger.MaxWave ? Shuffle.ShuffleLedger.MaxWave
+                        : shuffleWave;
             PublishedUnix = publishedUnix < 0L ? 0L : publishedUnix;
 
             // The seats, in colour order, with a rung beside each. Two lists rather than a pair
@@ -218,7 +235,7 @@ namespace GlimmerGrove.Social
             // rung off the file instead, and the two answer identically for a settled save -
             // which is what stops a publish being asked for on every sync.
             return Build(ownerId, name, keeperLevel, EndlessLedger.Best, nowUnix,
-                         line, rungs, Ranks.RankLedger.Held?.Id);
+                         line, rungs, Ranks.RankLedger.Held?.Id, Shuffle.ShuffleLedger.Best);
         }
 
         /// <summary>
@@ -297,14 +314,14 @@ namespace GlimmerGrove.Social
                 new Ranks.SaveRankSource(save, Content.GameContent.Index, earnedLevel));
 
             return Build(ownerId, name, keeperLevel, EndlessLedger.BestIn(save), nowUnix,
-                         line, rungs, rung?.Id);
+                         line, rungs, rung?.Id, Shuffle.ShuffleLedger.BestIn(save));
         }
 
         /// <summary>The one builder both readings go through, so they cannot drift.</summary>
         static GroveCard Build(string ownerId, string name, int keeperLevel, int bestWave,
                                long nowUnix,
                                IReadOnlyList<Wards.WardSlot> line, IReadOnlyList<int> rungs,
-                               string rungId)
+                               string rungId, int shuffleWave)
             => new GroveCard(ownerId,
                              GroveNames.Public(name),
                              keeperLevel,
@@ -312,7 +329,8 @@ namespace GlimmerGrove.Social
                              nowUnix,
                              line,
                              rungs,
-                             rungId);
+                             rungId,
+                             shuffleWave);
 
         /// <summary>
         /// The seats a stored loadout names, and how far each has been taken.
@@ -388,6 +406,13 @@ namespace GlimmerGrove.Social
                 // ever. Same fault as the endless wave, arriving through a second field.
                 "r:" + RungId,
             };
+
+            // The Shuffle best, for the wave's reason. **Only once there is one**: an absent part
+            // leaves every card that has never run the lane with the fingerprint it already had,
+            // so shipping the Shuffle board costs no republish for the keepers it does not touch
+            // (a part written as nought would have called every card in the game changed at once).
+            if (ShuffleWave > 0)
+                parts.Add("s:" + ShuffleWave.ToString(System.Globalization.CultureInfo.InvariantCulture));
 
             foreach (var seat in _line)
                 parts.Add("t:" + seat.Colour + "=" + seat.Ward + "/" + StarsOn(seat.Colour));

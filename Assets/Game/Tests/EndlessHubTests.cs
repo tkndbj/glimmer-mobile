@@ -213,10 +213,14 @@ namespace GlimmerGrove.Tests
             foreach (var request in AssetPipeline.AssetManifest.GlobalAssets())
                 global.Add(request.Address);
 
-            foreach (var marks in new[] { EndlessHub.Marks, EndlessHub.ShuffleMarks })
+            foreach (var hub in new[] { EndlessHub.HubLane.Infinite, EndlessHub.HubLane.Shuffle })
             {
-                Assert.AreEqual(EndlessHubLayout.Points, marks.Length,
+                var marks = hub.Marks;
+
+                Assert.AreEqual(hub.Track.Points, marks.Length,
                                 "the hub draws a line it has no mark for, or a mark it never reads");
+                Assert.LessOrEqual(hub.Track.Points, EndlessHubLayout.Points,
+                                   $"'{hub.Track}' says more lines than the plate holds");
 
                 foreach (string mark in marks)
                     Assert.IsTrue(global.Contains(AssetPipeline.AssetManifest.ArtRoot + mark),
