@@ -412,14 +412,14 @@
         "id": "gg_coins_1",
         "kind": "consumable",
         "shelf": "coins",
-        "credits": 2500,
+        "credits": 7500,
         "referenceUsdCents": 199
       },
       {
         "id": "gg_coins_2",
         "kind": "consumable",
         "shelf": "coins",
-        "credits": 9000,
+        "credits": 27000,
         "referenceUsdCents": 599,
         "badge": "popular"
       },
@@ -427,14 +427,14 @@
         "id": "gg_coins_3",
         "kind": "consumable",
         "shelf": "coins",
-        "credits": 26000,
+        "credits": 78000,
         "referenceUsdCents": 1499
       },
       {
         "id": "gg_coins_4",
         "kind": "consumable",
         "shelf": "coins",
-        "credits": 75000,
+        "credits": 225000,
         "referenceUsdCents": 3999,
         "badge": "best_value"
       },
@@ -442,7 +442,7 @@
         "id": "gg_bundle_starter",
         "kind": "nonconsumable",
         "shelf": "bundles",
-        "credits": 7500,
+        "credits": 22500,
         "gems": 500,
         "referenceUsdCents": 299,
         "badge": "starter"
@@ -451,7 +451,7 @@
         "id": "gg_bundle_keeper",
         "kind": "consumable",
         "shelf": "bundles",
-        "credits": 12000,
+        "credits": 36000,
         "gems": 700,
         "referenceUsdCents": 999
       },
@@ -459,7 +459,7 @@
         "id": "gg_bundle_grove",
         "kind": "consumable",
         "shelf": "bundles",
-        "credits": 42000,
+        "credits": 126000,
         "gems": 2200,
         "referenceUsdCents": 2999,
         "badge": "best_value"

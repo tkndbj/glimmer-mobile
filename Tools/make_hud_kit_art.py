@@ -317,6 +317,14 @@ KIT = [
     Piece("cartoon", "Artboard 32 copy 2", "plate_violet", 1.0, slice_x=True, slice_y=True,
           trim=True, hue=0.782, pull=1.0, sat=1.10),
 
+    # **A green plate from the mould the kit paints green itself** (`btn_green`'s artboard), sliced
+    # both ways like the three above - the shop's limited-time deal card stands on it (the owner,
+    # 2026-10-09: "make its background fully green"). Not a hue rotation of the blue: the pack
+    # already draws this green, keyline and two-tone face included, so taking it as drawn is the
+    # least distortion there is.
+    Piece("cartoon", "Artboard 32 copy 4", "plate_green", 1.0, slice_x=True, slice_y=True,
+          trim=True),
+
     # **The fifth is the blue one taken down, and it is a *card* rather than a fourth hue.**
     # Every reward row in this game - the tasks page, the streak board, the season ladder -
     # used to draw on `card`, the kit's sunk navy, which is a container and nothing else. What

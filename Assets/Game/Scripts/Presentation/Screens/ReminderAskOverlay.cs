@@ -33,6 +33,12 @@ namespace GlimmerGrove
         /// <summary>What yes does. Set by <see cref="ReminderMoment"/>.</summary>
         public AskRoute Route = AskRoute.System;
 
+        /// <summary>
+        /// What earned the panel. Picks the sentence on the system route only: the settings
+        /// route's sentence is about where the switch is, which is the same whatever earned it.
+        /// </summary>
+        public ReminderTrigger Trigger = ReminderTrigger.Chest;
+
         const float PanelW = 880f, PanelH = 880f;
 
         /// <summary>
@@ -40,6 +46,9 @@ namespace GlimmerGrove
         /// lid room - sits on the seat: (244/2 - (82+238)/2) rows at 280/244 a row is about 44.
         /// </summary>
         const float ChestBox = 280f, ChestLift = 44f;
+
+        /// <summary>The streak mark's box: a full-bleed 193x209 sprite, drawn the chest's visible size.</summary>
+        const float FlameBox = 180f;
 
         static readonly Color Ink = new Color(.36f, .25f, .18f);
 
@@ -55,7 +64,7 @@ namespace GlimmerGrove
             // lid's room when it opens), so it is drawn in a box sized for that and lifted by
             // ChestLift, which puts the visible chest - about 170 across - on the seat's centre.
             // Seat -225 from the top; the chest spans about -135..-315 and the glow -75..-375,
-            // clearing the ribbon above and the sentence below, which begins at -345 (the glow is
+            // clearing the ribbon above and the sentence below, which begins at -340 (the glow is
             // light, and fades out well before it reaches the type).
             var seat = UIKit.Box("Chest", Panel, new Vector2(200f, 200f), new Vector2(.5f, 1f),
                                  new Vector2(0f, -225f));
@@ -63,19 +72,25 @@ namespace GlimmerGrove
             UIKit.Img("Glow", seat, Art.Glow(96, 2.2f), new Color(1f, .82f, .36f, .5f),
                       Vector2.one * 300f, new Vector2(.5f, .5f), Vector2.zero);
 
-            var chest = UIKit.Img("Icon", seat, Art.S(ChestIcon()), Color.white,
-                                  Vector2.one * ChestBox, new Vector2(.5f, .5f), new Vector2(0f, ChestLift));
-            chest.preserveAspect = true;
-            Tween.Breathe(chest.transform, .04f, 2.2f);
+            // A streak shows the streak's own mark instead (the calendar the hub's streak card wears):
+            // the picture names what the reminder protects. It fills its own sprite, so no lift.
+            bool flame = Trigger == ReminderTrigger.Streak && !settings;
+            var picture = UIKit.Img("Icon", seat, Art.S(flame ? "Ui/ic_streak" : ChestIcon()), Color.white,
+                                    Vector2.one * (flame ? FlameBox : ChestBox), new Vector2(.5f, .5f),
+                                    new Vector2(0f, flame ? 0f : ChestLift));
+            picture.preserveAspect = true;
+            Tween.Breathe(picture.transform, .04f, 2.2f);
 
-            // The sentence, centred in a band sized to three lines at 32: a translation that runs
-            // to two or four stays centred, and Shrinkable takes a longer one down before it can
-            // reach the key. Band -345..-525; the yes key's top edge is at -(880 - 301) = -579.
+            // The sentence, at 40 (the owner asked for it bigger; it was 32), centred in a band
+            // sized to four lines at 40: a translation that runs shorter stays centred, and
+            // Shrinkable takes a longer one down before it can reach the key. Band -340..-560,
+            // clear of the drawn chest (bottom near -315) and 19 above the yes key's top edge at
+            // -(880 - 301) = -579. Measured in every Latin table by render_reminders.py --measure:
+            // the question settles at 40 (Polish streak 38), the settings sentence at 33-36.
             UIKit.Shrinkable(
-                UIKit.Titled("Why", Panel,
-                             Loc.Get(settings ? "ui.reminders.settings_body" : "ui.reminders.ask_body"), 32,
-                             Ink, TextAnchor.MiddleCenter, new Vector2(700f, 180f),
-                             new Vector2(.5f, 1f), new Vector2(0f, -435f),
+                UIKit.Titled("Why", Panel, Loc.Get(BodyKey(Route, Trigger)), 40,
+                             Ink, TextAnchor.MiddleCenter, new Vector2(700f, 220f),
+                             new Vector2(.5f, 1f), new Vector2(0f, -450f),
                              outline: 0f, shadow: 0f, wrap: true), 22);
 
             // The two answers, anchored to the foot where ForfeitOverlay puts its own, so every
@@ -89,6 +104,16 @@ namespace GlimmerGrove
             UIKit.Shrinkable(UIKit.TextButton("Later", Panel, "btn_blue", Loc.Get("ui.reminders.not_now"),
                                               42, new Vector2(620f, 126f), new Vector2(.5f, 0f),
                                               new Vector2(0f, 92f), Later).Label, 24);
+        }
+
+        /// <summary>
+        /// Written out rather than assembled, so the build's string checker sees every key -
+        /// <c>ForfeitOverlay.TitleKey</c>'s reason.
+        /// </summary>
+        static string BodyKey(AskRoute route, ReminderTrigger trigger)
+        {
+            if (route == AskRoute.Settings) return "ui.reminders.settings_body";
+            return trigger == ReminderTrigger.Streak ? "ui.reminders.streak_body" : "ui.reminders.ask_body";
         }
 
         /// <summary>
@@ -106,7 +131,8 @@ namespace GlimmerGrove
             if (_answered) return;
             _answered = true;
 
-            Telemetry.Track("notification_ask_answered", "route", NotificationAsk.Id(Route), "answer", "yes");
+            Telemetry.Track("notification_ask_answered", "route", NotificationAsk.Id(Route),
+                            "trigger", ReminderMoment.Id(Trigger), "answer", "yes");
 
             if (Route == AskRoute.Settings)
             {
@@ -128,7 +154,8 @@ namespace GlimmerGrove
             if (_answered) return;
             _answered = true;
 
-            Telemetry.Track("notification_ask_answered", "route", NotificationAsk.Id(Route), "answer", "later");
+            Telemetry.Track("notification_ask_answered", "route", NotificationAsk.Id(Route),
+                            "trigger", ReminderMoment.Id(Trigger), "answer", "later");
             Close();
         }
 

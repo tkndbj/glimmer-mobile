@@ -2818,10 +2818,6 @@
       "text": "Comprada"
     },
     {
-      "key": "ui.deal.door",
-      "text": "Oferta"
-    },
-    {
       "key": "ui.deal.ended",
       "text": "Esta oferta terminou."
     },
@@ -2836,10 +2832,6 @@
     {
       "key": "ui.deal.needs_connection",
       "text": "Conecte-se à internet para comprar esta oferta."
-    },
-    {
-      "key": "ui.deal.note",
-      "text": "Uma por jogador, só enquanto o tempo corre."
     },
     {
       "key": "ui.deal.owned",
@@ -3910,10 +3902,6 @@
       "text": "{0} ficou sem terminar, então custou um coração."
     },
     {
-      "key": "ui.gems.note",
-      "text": "Recarregue sem sair da partida. Você tem {0}."
-    },
-    {
       "key": "ui.gems.title",
       "text": "Gemas"
     },
@@ -4452,6 +4440,10 @@
     {
       "key": "ui.reminders.settings_body",
       "text": "Os lembretes estão desativados nas configurações do seu celular. Ative-os lá para saber quando um baú estiver pronto e antes que sua sequência acabe."
+    },
+    {
+      "key": "ui.reminders.streak_body",
+      "text": "Mantenha sua sequência viva! Quer um aviso antes que ela acabe e quando seu próximo baú estiver pronto?"
     },
     {
       "key": "ui.num.million",

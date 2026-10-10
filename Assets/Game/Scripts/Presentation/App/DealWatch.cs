@@ -90,6 +90,15 @@ namespace GlimmerGrove
         bool _left;
 
         /// <summary>
+        /// How far to lift a line of digits so the <em>digits</em>, not the line, sit on the middle of
+        /// their box, at <paramref name="size"/>. Measured off <c>GameFont.ttf</c>: Unity centres a line
+        /// on its glyph-bound line box (956 up and 161 down per 1000 units, the font's
+        /// <c>ascentCalculationMode</c>), while a digit stands from the baseline to 707 - so a number
+        /// drawn "middle" sits .044 of its size low. Three units at the deal cards' sizes.
+        /// </summary>
+        public static float DigitLift(int size) => Mathf.Round(size * .044f);
+
+        /// <summary>
         /// A wait to the second: <c>1d 04:12:33</c>, then <c>04:12:33</c>. Seconds always, because
         /// a clock that visibly moves is the point of the band.
         /// </summary>

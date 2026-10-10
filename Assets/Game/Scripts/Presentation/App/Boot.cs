@@ -167,6 +167,10 @@ namespace GlimmerGrove
             // (invariant 60c).
             DealMoment.Hook();
 
+            // And hears the streak extended, the second moment the "remind me" panel may follow
+            // (invariant 50p).
+            ReminderMoment.Hook();
+
             // Rewarded ads, chosen the same way and inert by the same default. Two gates,
             // not one: the SDK has to be compiled in *and* a real app key has to exist.
             // Without the second, LevelPlay would start, fail, and leave the game showing

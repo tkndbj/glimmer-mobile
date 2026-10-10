@@ -2818,10 +2818,6 @@
       "text": "Comprada"
     },
     {
-      "key": "ui.deal.door",
-      "text": "Oferta"
-    },
-    {
       "key": "ui.deal.ended",
       "text": "Esta oferta ha terminado."
     },
@@ -2836,10 +2832,6 @@
     {
       "key": "ui.deal.needs_connection",
       "text": "Conéctate a internet para comprar esta oferta."
-    },
-    {
-      "key": "ui.deal.note",
-      "text": "Una por jugador, solo mientras corre el reloj."
     },
     {
       "key": "ui.deal.owned",
@@ -3910,10 +3902,6 @@
       "text": "{0} quedó sin terminar, así que costó un corazón."
     },
     {
-      "key": "ui.gems.note",
-      "text": "Recarga sin salir de tu partida. Tienes {0}."
-    },
-    {
       "key": "ui.gems.title",
       "text": "Gemas"
     },
@@ -4452,6 +4440,10 @@
     {
       "key": "ui.reminders.settings_body",
       "text": "Los recordatorios están desactivados en los ajustes de tu teléfono. Actívalos allí para saber cuándo hay un cofre listo y antes de que se acabe tu racha."
+    },
+    {
+      "key": "ui.reminders.streak_body",
+      "text": "¡Mantén viva tu racha! ¿Quieres un aviso antes de que se acabe y cuando tu próximo cofre esté listo?"
     },
     {
       "key": "ui.num.million",

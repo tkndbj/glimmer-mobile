@@ -99,12 +99,14 @@ def countdown(seconds):
 
 
 def compact(n):
-    """`Compact.Number` as the shop's cards print it: 26000 -> 26K."""
-    if n >= 1_000_000:
-        return ("%.1fM" % (n / 1e6)).replace(".0M", "M")
-    if n >= 10_000:
-        return "%dK" % (n // 1000)
-    return f"{n:,}"
+    """`Compact.Number`, exactly: digits unchanged up to 9,999 (no separator), then one tenth
+    digit truncated, dropped when nought - 22500 -> 22.5K, 36000 -> 36K, 1250000 -> 1.2M."""
+    if -9_999 <= n <= 9_999:
+        return str(n)
+    scale, suffix = (1_000_000, "M") if abs(n) >= 1_000_000 else (1_000, "K")
+    whole = int(n / scale)
+    tenth = abs(int((n % scale if n >= 0 else -(-n % scale)) * 10 / scale))
+    return "%d%s" % (whole, suffix) if tenth == 0 else "%d.%d%s" % (whole, tenth, suffix)
 
 
 def timer(seconds):
@@ -119,49 +121,40 @@ def timer(seconds):
 DEAL_FRAME_H, DEAL_RIM = 176.0, 10.0
 DEAL_ART, DEAL_ART_X = 196.0, 132.0
 DEAL_BURST = 236.0
-DEAL_BURST_ALPHA = .55
-DEAL_TAG_X = 330.0               # the tag's centre from the frame's left, over the amount
 DEAL_AMOUNT_X = 258.0
-DEAL_TIMER_W, DEAL_TIMER_H, DEAL_TIMER_X = 344.0, 82.0, 196.0
+DEAL_TIMER_W, DEAL_TIMER_H, DEAL_TIMER_X = 344.0, 76.0, 196.0
 DEAL_URGENT = 3600
 
 
 def deal_band(sheet):
-    """`ShopScreen.BuildDeal`: a gold-rimmed navy window (`Hud/plate_gold` round `Hud/card`); the
-    coffer on a turning gold burst at the left, rising out of the frame; the amount in full beside
-    it; a red DEAL tag on the corner; ENDS IN over a ticking timer in a trough on the right, red in
-    the last hour."""
+    """`ShopScreen.BuildDeal`: the Refer a Friend key in pure green - `btn_green` at the door's
+    height at the foot of the slot - with the coffer on a turning solid orange burst rising out of it
+    at the left, the amount in full beside it, and ENDS IN over a ticking timer in a trough on the
+    right, red in the last hour."""
     credits, _gems, left = DEAL
     slot_bottom = HEADER + TABROW + REFER_ROW + DEAL_H
-    cy = slot_bottom - DEAL_FRAME_H / 2
+    ky = slot_bottom - K.DOOR_KEY_H / 2
+    cy = ky - K.DOOR_KEY_H * K.PILL_FACE_LIFT        # the pill's face, which the text rides
     lx, rx = W / 2 - REFER_W / 2, W / 2 + REFER_W / 2
 
-    K.paste(sheet, K.glow(round(REFER_W * .55), 2.0, K.GOLD, .30), W / 2, cy)
-    K.paste(sheet, K.skin("Hud/plate_gold", REFER_W, DEAL_FRAME_H), W / 2, cy)
-    K.paste(sheet, K.skin("Hud/card", REFER_W - 2 * DEAL_RIM, DEAL_FRAME_H - 2 * DEAL_RIM), W / 2, cy)
+    K.paste(sheet, K.skin("btn_green", REFER_W, K.DOOR_KEY_H), W / 2, ky)
 
     ax = lx + DEAL_ART_X
-    ay = slot_bottom - 8 - DEAL_ART / 2
-    K.paste(sheet, K.glow(round(DEAL_BURST * 1.3), 2.0, K.SUN, .55), ax, ay)
-    K.paste(sheet, K.tint(K.skin("Hud/burst", round(DEAL_BURST), round(DEAL_BURST)), K.GOLD, DEAL_BURST_ALPHA)
+    ay = slot_bottom - 4 - DEAL_ART / 2
+    K.paste(sheet, K.tint(K.skin("Hud/burst", round(DEAL_BURST), round(DEAL_BURST)), K.AMBER)
             .rotate(14, Image.BICUBIC), ax, ay)
     pic = Image.open(UI / "Shop" / "coins_3.png").convert("RGBA")
     K.paste(sheet, K.fit(pic, (DEAL_ART, DEAL_ART)), ax, ay)
 
     amount = f"{credits:,}"
-    K.text(sheet, amount, lx + DEAL_AMOUNT_X, cy - 2, 70, fill=K.SUN, outline=4, anchor="l")
-    K.text(sheet, txt("ui.endless.coins").upper(), lx + DEAL_AMOUNT_X, cy + 52, 30, fill=K.CREAM, outline=3, anchor="l")
+    K.text(sheet, amount, lx + DEAL_AMOUNT_X, cy - round(70 * .044), 70, fill=K.SUN, outline=4, anchor="l")   # DealClock.DigitLift
+    K.text(sheet, txt("ui.endless.coins").upper(), lx + DEAL_AMOUNT_X, cy + 46, 30, fill=K.CREAM, outline=3, anchor="l")
 
     tx = rx - DEAL_TIMER_X
     urgent = left < DEAL_URGENT
     K.text(sheet, txt("ui.deal.ends_label").upper(), tx, cy - 40, 30, fill=K.CREAM, outline=3)
     K.paste(sheet, K.skin("Hud/trough", DEAL_TIMER_W, DEAL_TIMER_H), tx, cy + 20)
     K.text(sheet, timer(left), tx, cy + 20, 46, fill=(255, 92, 72) if urgent else (255, 255, 255), outline=3)
-
-    tag = K.fit(Image.open(UI / "ribbon_red.png").convert("RGBA"), (128, 106)).rotate(-4, Image.BICUBIC, expand=True)
-    tagx, tagy = lx + DEAL_TAG_X, slot_bottom - DEAL_FRAME_H - 14
-    K.paste(sheet, tag, tagx, tagy)
-    K.text(sheet, txt("ui.deal.door").upper(), tagx - 2, tagy - 4, 30, fill=K.CREAM, outline=3)
 
     print("  deal band: slot %d..%d, %s coins, timer %r%s"
           % (slot_bottom - DEAL_H, slot_bottom, amount, timer(left), " (urgent)" if urgent else ""))
@@ -214,6 +207,8 @@ PLATEW, PLATEH = CELLW - PLATE_X, CELLH - PLATE_Y
 SETTLED = []
 ART, ART_DROP = 300.0, 168.0
 AMOUNT_RISE, SUB_RISE, FACE_RISE = 196.0, 150.0, 74.0
+# `ProductCard.SubLine`: a bundle's coins are a second amount, drawn large and a little lower.
+BUNDLE_SUB_SIZE, BUNDLE_SUB_RISE, BUNDLE_SUB_BOX = 36, 146.0, 50.0
 FACEW, FACEH = CELLW - 110.0, 96.0
 # `SEAL_TILT` carries `ProductCardBadges.SealTilt`'s **own sign**, and is rotated by without
 # negation: PIL turns a picture anticlockwise for a positive angle and so does
@@ -314,7 +309,7 @@ def pile(total, token):
 
 
 # --------------------------------------------------------------------------- the card
-def card(sheet, x, top, shelf, picture, amount, sub, price, badge, bonus=None, live=True):
+def card(sheet, x, top, shelf, picture, amount, sub, price, badge, bonus=None, live=True, bundle=False):
     """One product card, laid out the way `ProductCard`'s constructor lays one out."""
     plate_cx, plate_cy = x, top + CELLH / 2
     K.paste(sheet, K.skin("Hud/card", PLATEW, PLATEH), plate_cx, plate_cy)
@@ -330,7 +325,13 @@ def card(sheet, x, top, shelf, picture, amount, sub, price, badge, bonus=None, l
     K.paste(sheet, K.fit(art, (ART, ART)), plate_cx, ptop + ART_DROP)
 
     K.text(sheet, amount, plate_cx, pbot - AMOUNT_RISE, 46, outline=4)
-    K.text(sheet, sub, plate_cx, pbot - SUB_RISE, 26, fill=(255, 245, 225), outline=2)
+    if bundle:
+        # Gold, as `ProductCard` draws a bundle's coins, and fitted to its box as Best Fit would.
+        got = K.shrunk(sheet, sub, plate_cx, pbot - BUNDLE_SUB_RISE, CELLW - 76.0, BUNDLE_SUB_BOX,
+                       BUNDLE_SUB_SIZE, 16, fill=K.GOLD, outline=2)
+        SETTLED.append(("bundle coins", sub, got, 16))
+    else:
+        K.text(sheet, sub, plate_cx, pbot - SUB_RISE, 26, fill=(255, 245, 225), outline=2)
 
     face = K.skin("btn_orange", FACEW, FACEH)               # Skins.Buy
     if not live:
@@ -976,6 +977,10 @@ def screen(shelf, offline=False, waiting=0):
         # — so a mirror that did made every card here disagree with the phone by a letter case,
         # which is exactly the sort of difference somebody then "fixes" on the screen.
         unit = "Gems" if p.get("gems") else "Coins" if p.get("credits") else "Hearts"
+        # A bundle's line is its coins, not a unit: `ui.shop.plus_coins` over `Compact.Number`.
+        bundle = bool(p.get("gems")) and bool(p.get("credits"))
+        if bundle:
+            unit = "+ %s coins" % compact(p["credits"])
         badge = seal_words(p.get("badge"))
 
         # `ProductCard.PaintRibbon` shows one at 5% or better; the figure is arithmetic over
@@ -983,7 +988,7 @@ def screen(shelf, offline=False, waiting=0):
         bonus = f"+{12 + n * 14}% EXTRA" if n else None
 
         card(sheet, x, y, shelf, picture, f"{grant:,}", unit,
-             f"${p['referenceUsdCents'] / 100:.2f}", badge, bonus)
+             f"${p['referenceUsdCents'] / 100:.2f}", badge, bonus, bundle=bundle)
 
     # `ShopScreen.BuildRestore` builds a 420x72 `TextButton` in `Skins.Resting`, not a bare
     # caption. Drawn as text alone this read as a loose line floating on the world — which is

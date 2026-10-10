@@ -65,6 +65,20 @@ namespace GlimmerGrove
 
         /// <summary>A deal row's description: the box's top edge (row-centred) and its height.</summary>
         const float LineTop = 22f, LineH = 124f;
+
+        /// <summary>
+        /// An upgrade row's note: its box height, and the height the row grows by to hold it.
+        ///
+        /// <para>
+        /// The note used to sit at -88 inside an ordinary row, inside the sentence's own box
+        /// (+22 down to -102), so a three-line sentence ran through it. Now the row that carries
+        /// one is <see cref="NoteRoom"/> taller, its name and sentence keep their distance from
+        /// the row's top, and the note starts 4 under the sentence's box: in a row 294 tall the
+        /// sentence spans +54..-70, the note -74..-130, and the row's edge is at -147. Only that
+        /// row grows, and the panel is the sum of its rows, so no other row moves.
+        /// </para>
+        /// </summary>
+        const float NoteH = 56f, NoteRoom = 64f, NoteGap = 4f;
         static readonly Vector2 KeySize = new Vector2(280f, 116f);
         const float KeyInset = 16f;
 
@@ -95,7 +109,8 @@ namespace GlimmerGrove
             // account for the server to count the play against, or no challenge to spend it on).
             bool adRow = RewardedAds.ShouldOffer(AdPlacement.ChallengePlay);
             int rowCount = tiers.Count + (adRow ? 1 : 0);
-            float rows = rowCount * (RowH + RowGap) - (rowCount > 0 ? RowGap : 0f);
+            float rows = (adRow ? RowH : 0f) - (rowCount > 0 ? RowGap : 0f) + rowCount * RowGap;
+            for (int i = 0; i < tiers.Count; i++) rows += RowHeight(tiers[i]);
             float panelH = RowsTop + rows + Tail + FootH;
 
             Scrim = UIKit.Scrim(Content, .72f, () => Close());
@@ -112,14 +127,16 @@ namespace GlimmerGrove
                              new Vector2(.5f, 1f), new Vector2(0f, -FreeY), 2f, 2f, wrap: true),
                 20);
 
-            float y = -(RowsTop + RowH * .5f);
+            // Rows are laid down from the top by their own heights, so a taller upgrade row
+            // pushes the rows under it rather than drawing into them.
+            float top = RowsTop;
 
             _adKey = null;
             _adLeft = null;
             if (adRow)
             {
-                BuildAdRow(y);
-                y -= RowH + RowGap;
+                BuildAdRow(-(top + RowH * .5f));
+                top += RowH + RowGap;
             }
 
             // Listened to once, however many times a purchase rebuilds the sheet: a play the
@@ -133,8 +150,9 @@ namespace GlimmerGrove
 
             for (int i = 0; i < tiers.Count; i++)
             {
-                BuildRow(tiers[i], i + 1, y);
-                y -= RowH + RowGap;
+                float h = RowHeight(tiers[i]);
+                BuildRow(tiers[i], i + 1, -(top + h * .5f), h);
+                top += h + RowGap;
             }
 
             UIKit.TextButton("Close", Panel, Skins.Alternate, Loc.Get("ui.challenges.done").Upper(), 36,
@@ -166,8 +184,19 @@ namespace GlimmerGrove
         /// One deal. <paramref name="rung"/> is its place in the authored order from one, which
         /// is what picks its stone.
         /// </summary>
-        void BuildRow(ChallengeTier tier, int rung, float y)
+        /// <summary>Whether a deal's row carries the upgrade note: not running, and bought over a smaller one.</summary>
+        static bool CarriesNote(ChallengeTier tier)
+            => !ChallengeLedger.Holds(tier) && ChallengeLedger.Upgrades(tier) != null;
+
+        /// <summary>A deal row's height: <see cref="RowH"/>, and <see cref="NoteRoom"/> more when it carries the note.</summary>
+        static float RowHeight(ChallengeTier tier) => RowH + (CarriesNote(tier) ? NoteRoom : 0f);
+
+        void BuildRow(ChallengeTier tier, int rung, float y, float height)
         {
+            // How far the row's top has moved up from where a plain row's would be: the name and
+            // the sentence are measured from the top, so they move with it.
+            float lift = (height - RowH) * .5f;
+
             bool held = ChallengeLedger.Holds(tier);
             var governing = ChallengeLedger.HeldTier;
             bool under = governing != null && governing.Plays >= tier.Plays && !held;
@@ -177,7 +206,7 @@ namespace GlimmerGrove
             // treatment, widened to a row. A running deal wears a gold rim, so the state is said
             // by the row's edge as well as by the tag on its right.
             var plate = UIKit.Img("Row_" + tier.Id, Panel, Art.Round(28), new Color(0f, 0f, 0f, .32f),
-                                  new Vector2(RowW, RowH), new Vector2(.5f, 1f), new Vector2(0f, y));
+                                  new Vector2(RowW, height), new Vector2(.5f, 1f), new Vector2(0f, y));
             var edge = UIKit.Img("Edge", plate.transform, Art.RoundOutline(28, 3f),
                                  held ? Pal.A(Pal.Gold, .62f) : new Color(1f, .96f, .86f, .14f));
             UIKit.StretchTo((RectTransform)edge.transform, 0f, 0f, 0f, 0f);
@@ -194,7 +223,7 @@ namespace GlimmerGrove
 
             UIKit.Shrinkable(
                 UIKit.Titled("Name", t, Loc.Get(tier.NameKey), 52, held ? Pal.Gold : Pal.Cream, TextAnchor.MiddleLeft,
-                             new Vector2(TextW, 66f), new Vector2(0f, .5f), new Vector2(TextX + TextW * .5f, 60f), 3f, 3f),
+                             new Vector2(TextW, 66f), new Vector2(0f, .5f), new Vector2(TextX + TextW * .5f, 60f + lift), 3f, 3f),
                 28);
 
             // What the deal adds - "+6 plays" - is its own loc piece, drawn in Amber inside the
@@ -216,7 +245,7 @@ namespace GlimmerGrove
             UIKit.Shrinkable(
                 UIKit.Titled("Line", t, Loc.Format("ui.challenges.deal_line", plays, days), 36,
                              new Color(1f, .96f, .88f, .88f), TextAnchor.UpperLeft, new Vector2(TextW, LineH),
-                             new Vector2(0f, .5f), new Vector2(TextX + TextW * .5f, LineTop - LineH * .5f),
+                             new Vector2(0f, .5f), new Vector2(TextX + TextW * .5f, LineTop + lift - LineH * .5f),
                              2f, 0f, wrap: true, rich: true),
                 20);
 
@@ -248,11 +277,13 @@ namespace GlimmerGrove
                              new Vector2(1f, .5f), keyPos, () => Buy(tier),
                              Art.S("Ui/ic_gem"), iconTrails: true);
 
+            // Under the sentence's box, in the room this row was given for it (NoteRoom).
             if (upgrades != null)
                 UIKit.Shrinkable(
                     UIKit.Titled("Note", t, Loc.Get("ui.challenges.upgrade_note"), 22, Pal.A(Pal.Gold, .95f),
-                                 TextAnchor.UpperLeft, new Vector2(TextW, 48f), new Vector2(0f, .5f),
-                                 new Vector2(TextX + TextW * .5f, -88f), 2f, 0f, wrap: true), 14);
+                                 TextAnchor.UpperLeft, new Vector2(TextW, NoteH), new Vector2(0f, .5f),
+                                 new Vector2(TextX + TextW * .5f, LineTop + lift - LineH - NoteGap - NoteH * .5f),
+                                 2f, 0f, wrap: true), 14);
         }
 
         // ------------------------------------------------------------ the advert row

@@ -2818,10 +2818,6 @@
       "text": "Achetée"
     },
     {
-      "key": "ui.deal.door",
-      "text": "Offre"
-    },
-    {
       "key": "ui.deal.ended",
       "text": "Cette offre est terminée."
     },
@@ -2836,10 +2832,6 @@
     {
       "key": "ui.deal.needs_connection",
       "text": "Connecte-toi à Internet pour acheter cette offre."
-    },
-    {
-      "key": "ui.deal.note",
-      "text": "Une par joueur, tant que le temps tourne."
     },
     {
       "key": "ui.deal.owned",
@@ -3910,10 +3902,6 @@
       "text": "{0} n'a pas été terminé, donc ça a coûté un cœur."
     },
     {
-      "key": "ui.gems.note",
-      "text": "Recharge sans quitter ta partie. Tu en as {0}."
-    },
-    {
       "key": "ui.gems.title",
       "text": "Gemmes"
     },
@@ -4452,6 +4440,10 @@
     {
       "key": "ui.reminders.settings_body",
       "text": "Les rappels sont désactivés dans les réglages de ton téléphone. Active-les là-bas pour savoir quand un coffre est prêt, et avant que ta série ne s'arrête."
+    },
+    {
+      "key": "ui.reminders.streak_body",
+      "text": "Garde ta série en vie ! Tu veux un rappel avant qu'elle ne s'arrête, et quand ton prochain coffre est prêt ?"
     },
     {
       "key": "ui.num.million",

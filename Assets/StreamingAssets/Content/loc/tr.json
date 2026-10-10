@@ -2818,10 +2818,6 @@
       "text": "Alındı"
     },
     {
-      "key": "ui.deal.door",
-      "text": "Fırsat"
-    },
-    {
       "key": "ui.deal.ended",
       "text": "Bu fırsat sona erdi."
     },
@@ -2836,10 +2832,6 @@
     {
       "key": "ui.deal.needs_connection",
       "text": "Bu fırsatı almak için internete bağlan."
-    },
-    {
-      "key": "ui.deal.note",
-      "text": "Oyuncu başına bir kez, yalnızca süre dolmadan."
     },
     {
       "key": "ui.deal.owned",
@@ -3910,10 +3902,6 @@
       "text": "{0} yarım kaldı, bu yüzden bir kalbe mal oldu."
     },
     {
-      "key": "ui.gems.note",
-      "text": "Oyunundan çıkmadan yükle. {0} mücevherin var."
-    },
-    {
       "key": "ui.gems.title",
       "text": "Mücevherler"
     },
@@ -4452,6 +4440,10 @@
     {
       "key": "ui.reminders.settings_body",
       "text": "Hatırlatıcılar telefonunun ayarlarında kapalı. Bir sandık hazır olduğunda ve serin bitmeden önce haber alman için onları oradan aç."
+    },
+    {
+      "key": "ui.reminders.streak_body",
+      "text": "Serini canlı tut! Serin bitmeden önce ve bir sonraki sandığın hazır olduğunda haber verelim mi?"
     },
     {
       "key": "ui.num.million",

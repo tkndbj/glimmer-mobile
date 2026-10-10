@@ -204,6 +204,12 @@ namespace GlimmerGrove
         public const string PlateViolet = "Hud/plate_violet";
 
         /// <summary>
+        /// The kit's own green, sliced both ways: the face of a limited-time deal (invariant 60),
+        /// inside its gold rim. Cut from <c>btn_green</c>'s artboard by <c>make_hud_kit_art.py</c>.
+        /// </summary>
+        public const string PlateGreen = "Hud/plate_green";
+
+        /// <summary>
         /// <see cref="PlateBlue"/> taken down in value: the same mould, the same blue, dark
         /// enough to be a row in a list rather than a plate on a hub.
         ///

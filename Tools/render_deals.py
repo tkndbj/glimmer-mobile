@@ -23,18 +23,18 @@ W, H = K.W, K.H
 UI = K.UI
 
 # DealOverlay
-PANEL_W, HEAD_ROOM, NOTE_H = 940.0, 150.0, 58.0
+PANEL_W = 1030.0
 MOST_ROWS = 3
-CELL_W, CELL_H = 860.0, 214.0
-PAD_TOP, PAD_BOTTOM = 6.0, 10.0
-FOOT_H, FOOT_ROOM = 92.0, 44.0
-INK = (92, 64, 46)
+CELL_W, CELL_H = 950.0, 250.0
+PAD_TOP, PAD_BOTTOM = 6.0, 6.0
+FOOT_GAP, FOOT_H, FOOT_ROOM = 34.0, 100.0, 48.0
+EDGE_ROOM = FOOT_GAP + FOOT_H + FOOT_ROOM     # the room above the list equals the room below it
 
 # DealOverlay.DealRow
-FRAME_W, FRAME_H, RIM = 840.0, 186.0, 10.0
-ART, ART_X, BURST = 160.0, 112.0, 200.0
-AMOUNT_X = 214.0
-RIGHT_X, TIMER_W, TIMER_H, KEY_W, KEY_H = 168.0, 292.0, 62.0, 292.0, 92.0
+FRAME_W, FRAME_H, RIM = 930.0, 226.0, 11.0
+ART, ART_X, BURST = 196.0, 130.0, 244.0
+AMOUNT_X = 254.0
+RIGHT_X, TIMER_W, TIMER_H, KEY_W, KEY_H = 186.0, 330.0, 72.0, 330.0, 104.0
 URGENT = (255, 92, 72)
 
 LOCS = {e["key"]: e["text"] for e in json.loads(
@@ -54,31 +54,31 @@ def timer(seconds):
 
 def row(sheet, cx, cy, credits, gems, left, state):
     K.paste(sheet, K.skin("Hud/plate_gold", FRAME_W, FRAME_H), cx, cy)
-    K.paste(sheet, K.skin("Hud/card", FRAME_W - 2 * RIM, FRAME_H - 2 * RIM), cx, cy)
+    K.paste(sheet, K.skin("Hud/plate_green", FRAME_W - 2 * RIM, FRAME_H - 2 * RIM), cx, cy)
     lx, rx = cx - FRAME_W / 2, cx + FRAME_W / 2
 
     ax = lx + ART_X
     K.paste(sheet, K.glow(round(BURST * 1.3), 2.0, K.SUN, .55), ax, cy)
-    K.paste(sheet, K.tint(K.skin("Hud/burst", round(BURST), round(BURST)), K.GOLD, .55).rotate(14, Image.BICUBIC), ax, cy)
+    K.paste(sheet, K.tint(K.skin("Hud/burst", round(BURST), round(BURST)), K.AMBER).rotate(14, Image.BICUBIC), ax, cy)
     K.paste(sheet, K.fit(Image.open(UI / "Shop" / "coins_3.png").convert("RGBA"), (ART, ART)), ax, cy)
 
-    K.text(sheet, f"{credits:,}", lx + AMOUNT_X, cy - 18, 60, fill=K.SUN, outline=4, anchor="l")
-    K.text(sheet, txt("ui.endless.coins").upper(), lx + AMOUNT_X, cy + 38, 28, fill=K.CREAM, outline=3, anchor="l")
+    K.text(sheet, f"{credits:,}", lx + AMOUNT_X, cy - round(74 * .044), 74, fill=K.SUN, outline=4, anchor="l")   # DealClock.DigitLift
+    K.text(sheet, txt("ui.endless.coins").upper(), lx + AMOUNT_X, cy + 50, 34, fill=K.CREAM, outline=3, anchor="l")
 
     tx = rx - RIGHT_X
-    K.paste(sheet, K.skin("Hud/trough", TIMER_W, TIMER_H), tx, cy - 44)
+    K.paste(sheet, K.skin("Hud/trough", TIMER_W, TIMER_H), tx, cy - 54)
     label = timer(0 if state == "ended" else left)
     fill = (158, 168, 184) if state == "ended" else URGENT if state == "ready" and left < 3600 else (255, 255, 255)
-    K.text(sheet, label, tx, cy - 44, 36, fill=fill, outline=3)
+    K.text(sheet, label, tx, cy - 54, 42, fill=fill, outline=3)
 
     pill = {"ready": "btn_violet", "bought": "btn_green", "ended": "btn_gray"}[state]
-    K.paste(sheet, K.skin(pill, KEY_W, KEY_H), tx, cy + 40)
+    K.paste(sheet, K.skin(pill, KEY_W, KEY_H), tx, cy + 48)
     if state == "ready":
-        K.paste(sheet, K.fit(Image.open(UI / "ic_gem.png").convert("RGBA"), (46, 46)), tx - 52, cy + 38)
-        K.text(sheet, f"{gems:,}", tx + 20, cy + 38, 36, fill=K.CREAM, outline=3)
+        K.paste(sheet, K.fit(Image.open(UI / "ic_gem.png").convert("RGBA"), (54, 54)), tx - 58, cy + 46)
+        K.text(sheet, f"{gems:,}", tx + 22, cy + 46, 42, fill=K.CREAM, outline=3)
     else:
         word = txt("ui.deal.bought_row" if state == "bought" else "ui.deal.ended_row").upper()
-        K.text(sheet, word, tx, cy + 38, 34, fill=K.CREAM, outline=3)
+        K.text(sheet, word, tx, cy + 46, 40, fill=K.CREAM, outline=3)
 
 
 def panel(deals):
@@ -89,9 +89,8 @@ def panel(deals):
 
     visible = min(len(deals), MOST_ROWS)
     list_h = PAD_TOP + visible * CELL_H + PAD_BOTTOM
-    y = HEAD_ROOM
-    note_y = y; y += NOTE_H
-    list_y = y; y += list_h + 10
+    y = EDGE_ROOM
+    list_y = y; y += list_h + FOOT_GAP
     foot_y = y + FOOT_H / 2; y += FOOT_H + FOOT_ROOM
     ph = y
 
@@ -101,7 +100,6 @@ def panel(deals):
     K.paste(sheet, rib, W / 2, top - 22 + 65 - 65)
     K.text(sheet, txt("ui.deal.title").upper(), W / 2, top - 22 + 65 - 65 - 6, 54, outline=4)
 
-    K.text(sheet, txt("ui.deal.note"), W / 2, top + note_y + NOTE_H / 2, 28, fill=INK, outline=0)
 
     clip = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     for i, (credits, gems, left, state) in enumerate(deals):
@@ -111,8 +109,8 @@ def panel(deals):
     ImageDraw.Draw(mask).rectangle([0, top + list_y, W, top + list_y + list_h], fill=255)
     sheet.paste(clip, (0, 0), Image.composite(clip, Image.new("RGBA", (W, H)), mask).split()[3])
 
-    K.paste(sheet, K.skin("btn_red", 380, FOOT_H), W / 2, top + foot_y)
-    K.text(sheet, txt("ui.common.cancel").upper(), W / 2, top + foot_y - 2, 32, outline=3)
+    K.paste(sheet, K.skin("btn_red", 420, FOOT_H), W / 2, top + foot_y)
+    K.text(sheet, txt("ui.common.cancel").upper(), W / 2, top + foot_y - 2, 36, outline=3)
 
     print(f"  panel {PANEL_W:.0f}x{ph:.0f}, {len(deals)} deal(s), {visible} visible")
     return sheet.convert("RGB")

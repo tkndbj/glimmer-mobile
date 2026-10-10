@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -75,6 +76,18 @@ namespace GlimmerGrove
         static readonly Slot[] Slots = new Slot[3];
 
         /// <summary>
+        /// Readouts a panel raised over a screen draws for as long as it is up - the gem shelf's
+        /// own purse - stacked above the screen's row, newest on top. See <see cref="RegisterOver"/>.
+        /// </summary>
+        static readonly List<Layer>[] Over = { new List<Layer>(), new List<Layer>(), new List<Layer>() };
+
+        sealed class Layer
+        {
+            public UnityEngine.Object Owner;
+            public Slot Slot;
+        }
+
+        /// <summary>
         /// Which readouts a payout currently owns. See <see cref="Claim"/>.
         /// </summary>
         static readonly bool[] Claimed = new bool[3];
@@ -147,8 +160,78 @@ namespace GlimmerGrove
             Show(kind, value);
         }
 
+        /// <summary>
+        /// A readout drawn by a panel over the screen, which payouts land in while the panel is
+        /// up, and which hands the currency back to the screen's own row the moment the panel goes.
+        ///
+        /// <para>
+        /// <b>A stack rather than <see cref="Register"/>'s overwrite</b>, because <see cref="Register"/>
+        /// is right for a screen and wrong for a panel: a screen's row is rebuilt on every
+        /// navigation, so overwriting the last one loses nothing, but a panel closes back onto a
+        /// screen that will not rebuild - and an overwritten slot would leave that screen's pill
+        /// unreachable (no flight lands in it) and unpainted (its watch writes to the panel's) for
+        /// the rest of the visit. Here the screen's slot is never touched; this one only sits above
+        /// it, and a screen rebuilt while the panel is up still loses to the panel.
+        /// </para>
+        /// <para>
+        /// <b>Taken down by the owner's own destruction</b> (a lease component), however the panel
+        /// ends - closed, dismissed, or swept away by a screen change - and the row underneath is
+        /// repainted with the live balance then, unless a payout owns it (<see cref="Claim"/>).
+        /// </para>
+        /// </summary>
+        public static void RegisterOver(Component owner, Kind kind, RectTransform icon, Text number, Image glow,
+                                        Color tint, Func<long, string> format)
+        {
+            if (!owner) return;
+
+            var slot = new Slot
+            {
+                Icon = icon, Number = number, Glow = glow, Tint = tint, Format = format,
+                Rest = glow ? glow.color : Pal.A(tint, .30f)
+            };
+            Over[(int)kind].Add(new Layer { Owner = owner, Slot = slot });
+
+            var lease = owner.gameObject.AddComponent<SlotLease>();
+            lease.Kind = kind;
+            lease.Slot = slot;
+        }
+
+        /// <summary>Takes a panel's readout down and repaints the one it was covering.</summary>
+        static void Drop(Kind kind, Slot slot)
+        {
+            var layers = Over[(int)kind];
+            for (int i = layers.Count - 1; i >= 0; i--)
+                if (ReferenceEquals(layers[i].Slot, slot)) layers.RemoveAt(i);
+
+            if (!Claimed[(int)kind]) Show(kind, Balance(kind));
+        }
+
+        /// <summary>Dies with the panel that drew the readout - see <see cref="RegisterOver"/>.</summary>
+        sealed class SlotLease : MonoBehaviour
+        {
+            public Kind Kind;
+            public Slot Slot;
+
+            void OnDestroy()
+            {
+                var slot = Slot;
+                Slot = null;
+                if (slot != null) Drop(Kind, slot);
+            }
+        }
+
         public static bool TryGet(Kind kind, out Slot slot)
         {
+            // A panel's readout first, newest first; a layer whose panel has gone without its
+            // lease running (edit mode sends no OnDestroy) is skipped and swept.
+            var layers = Over[(int)kind];
+            for (int i = layers.Count - 1; i >= 0; i--)
+            {
+                var layer = layers[i];
+                if (layer.Owner && layer.Slot.Alive) { slot = layer.Slot; return true; }
+                if (!layer.Owner) layers.RemoveAt(i);
+            }
+
             slot = Slots[(int)kind];
             if (slot != null && slot.Alive) return true;
             slot = null;

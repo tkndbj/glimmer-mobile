@@ -49,16 +49,20 @@ namespace GlimmerGrove
         public DealTrigger Trigger { get; set; }
 
         // ------------------------------------------------------------------ geometry
-        const float PanelW = 940f;
-        const float HeadRoom = 150f;
-        const float NoteH = 58f;
+        const float PanelW = 1030f;
         const int MostRows = 3;
-        const float CellW = 860f, CellH = 214f;
-        const float ListPadTop = 6f, ListPadBottom = 10f;
-        const float FootH = 92f, FootRoom = 44f;
+        const float CellW = 950f, CellH = 250f;
+        const float ListPadTop = 6f, ListPadBottom = 6f;
 
-        /// <summary>Ink for the light parchment panel, <c>ShopSupplyOverlay.Ink</c>'s reason.</summary>
-        static readonly Color Ink = new Color(.36f, .25f, .18f);
+        /// <summary>The key's band at the foot: the air above it, the key, and the panel's own lip below.</summary>
+        const float FootGap = 34f, FootH = 100f, FootRoom = 48f;
+
+        /// <summary>
+        /// The room above the list, equal to the room below it - so the cards sit in the panel's
+        /// vertical middle whatever their number (the owner, 2026-10-09). It also clears the title
+        /// ribbon, which hangs about 110 units into the panel.
+        /// </summary>
+        const float EdgeRoom = FootGap + FootH + FootRoom;
 
         readonly List<ShopDeal> _deals = new List<ShopDeal>();
         readonly List<DealRow> _rows = new List<DealRow>();
@@ -82,19 +86,13 @@ namespace GlimmerGrove
             int visible = Mathf.Min(_deals.Count, MostRows);
             float listH = ListPadTop + visible * CellH + ListPadBottom;
 
-            float y = HeadRoom;
-            float noteY = y;                y += NoteH;
-            float listY = y;                y += listH + 10f;
+            float y = EdgeRoom;
+            float listY = y;                y += listH + FootGap;
             float footY = y + FootH * .5f;  y += FootH + FootRoom;
 
             // Not dismissed by the scrim: a stray tap beside a purchase must not throw the offer
             // away, and the way out is a key with a word on it (and the back key).
             MakePanel(new Vector2(PanelW, y), Loc.Get("ui.deal.title"), dismissOnScrim: false);
-
-            UIKit.Shrinkable(
-                UIKit.Titled("Note", Panel, Loc.Get("ui.deal.note"), 28, Ink, TextAnchor.MiddleCenter,
-                             new Vector2(CellW, NoteH), new Vector2(.5f, 1f), new Vector2(0f, -(noteY + NoteH * .5f)),
-                             outline: 0f, shadow: 0f, wrap: true), 18);
 
             var viewport = UIKit.Node("Viewport", Panel);
             viewport.anchorMin = viewport.anchorMax = new Vector2(.5f, 1f);
@@ -110,8 +108,8 @@ namespace GlimmerGrove
             }, padTop: ListPadTop, padBottom: ListPadBottom);
             _grid.Show(_deals.Count);
 
-            UIKit.TextButton("NotNow", Panel, "btn_red", Loc.Get("ui.common.cancel"), 32,
-                             new Vector2(380f, FootH), new Vector2(.5f, 1f), new Vector2(0f, -footY),
+            UIKit.TextButton("NotNow", Panel, "btn_red", Loc.Get("ui.common.cancel"), 36,
+                             new Vector2(420f, FootH), new Vector2(.5f, 1f), new Vector2(0f, -footY),
                              () => Leave());
 
             DealLedger.Changed += Repaint;
@@ -296,10 +294,13 @@ namespace GlimmerGrove
         /// </summary>
         sealed class DealRow : IGridCell
         {
-            const float FrameW = 840f, FrameH = 186f, Rim = 10f;
-            const float ArtSize = 160f, ArtX = 112f, Burst = 200f;
-            const float AmountX = 214f;
-            const float RightX = 168f, TimerW = 292f, TimerH = 62f, KeyW = 292f, KeyH = 92f;
+            const float FrameW = 930f, FrameH = 226f, Rim = 11f;
+            const float ArtSize = 196f, ArtX = 130f, Burst = 244f;
+            const float AmountX = 254f;
+            const float RightX = 186f, TimerW = 330f, TimerH = 72f, KeyW = 330f, KeyH = 104f;
+
+            /// <summary>The burst behind the coffer: solid orange (the owner, 2026-10-09). <c>Hud/burst</c> is cut white, so this is its colour exactly.</summary>
+            static readonly Color BurstInk = Pal.Amber;
             const float Pulse = .12f, PulseTime = .25f;
 
             static readonly Color Calm = Color.white;
@@ -326,14 +327,14 @@ namespace GlimmerGrove
 
                 var frame = UIKit.Img("Frame", _root, Art.S("Ui/" + Skins.PlateGold), Color.white,
                                       new Vector2(FrameW, FrameH), new Vector2(.5f, .5f), Vector2.zero);
-                UIKit.Img("Window", frame.transform, Art.S("Ui/" + Skins.Card), Color.white,
+                UIKit.Img("Window", frame.transform, Art.S("Ui/" + Skins.PlateGreen), Color.white,
                           new Vector2(FrameW - 2f * Rim, FrameH - 2f * Rim), new Vector2(.5f, .5f), Vector2.zero);
 
                 var artAt = new Vector2(ArtX, 0f);
                 UIKit.Img("Glow", frame.transform, Art.Glow(128, 2.1f), Pal.A(Pal.Sun, .55f),
                           new Vector2(Burst * 1.3f, Burst * 1.3f), new Vector2(0f, .5f), artAt);
                 _rays = (RectTransform)UIKit.Img("Rays", frame.transform, Art.S("Ui/" + Skins.Badge),
-                                                 Pal.A(Pal.Gold, .55f), new Vector2(Burst, Burst),
+                                                 BurstInk, new Vector2(Burst, Burst),
                                                  new Vector2(0f, .5f), artAt).transform;
                 var art = UIKit.Img("Art", frame.transform, Art.S("Ui/Shop/coins_3"), Color.white,
                                     new Vector2(ArtSize, ArtSize), new Vector2(0f, .5f), artAt);
@@ -341,23 +342,25 @@ namespace GlimmerGrove
                 art.enabled = art.sprite != null;
 
                 _amount = UIKit.Shrinkable(
-                    UIKit.Titled("Amount", frame.transform, string.Empty, 60, Pal.Sun, TextAnchor.MiddleLeft,
-                                 new Vector2(300f, 74f), new Vector2(0f, .5f), new Vector2(AmountX + 150f, 18f),
-                                 4f, 3f), 34);
+                    UIKit.Titled("Amount", frame.transform, string.Empty, 74, Pal.Sun, TextAnchor.MiddleLeft,
+                                 new Vector2(330f, 90f), new Vector2(0f, .5f),
+                                 // On the card's vertical middle, COINS tucked under it (the owner, 2026-10-09).
+                                 new Vector2(AmountX + 165f, DealClock.DigitLift(74)),
+                                 4f, 3f), 40);
                 UIKit.Shrinkable(
-                    UIKit.Titled("Unit", frame.transform, Loc.Get("ui.endless.coins").Upper(), 28, Pal.Cream,
-                                 TextAnchor.MiddleLeft, new Vector2(260f, 36f), new Vector2(0f, .5f),
-                                 new Vector2(AmountX + 130f, -38f), 3f, 2f), 18);
+                    UIKit.Titled("Unit", frame.transform, Loc.Get("ui.endless.coins").Upper(), 34, Pal.Cream,
+                                 TextAnchor.MiddleLeft, new Vector2(300f, 44f), new Vector2(0f, .5f),
+                                 new Vector2(AmountX + 150f, -50f), 3f, 2f), 20);
 
                 _timerBox = (RectTransform)UIKit.Img("Trough", frame.transform, Art.S("Ui/" + Skins.Trough), Color.white,
                                                      new Vector2(TimerW, TimerH), new Vector2(1f, .5f),
-                                                     new Vector2(-RightX, 44f)).transform;
+                                                     new Vector2(-RightX, 54f)).transform;
                 _timer = UIKit.Shrinkable(
-                    UIKit.Titled("Timer", _timerBox, string.Empty, 36, Calm, TextAnchor.MiddleCenter,
+                    UIKit.Titled("Timer", _timerBox, string.Empty, 42, Calm, TextAnchor.MiddleCenter,
                                  new Vector2(TimerW - 24f, TimerH), new Vector2(.5f, .5f), Vector2.zero, 3f, 2f), 22);
 
-                _key = UIKit.TextButton("Buy", frame.transform, Skins.Gem, string.Empty, 36,
-                                        new Vector2(KeyW, KeyH), new Vector2(1f, .5f), new Vector2(-RightX, -40f),
+                _key = UIKit.TextButton("Buy", frame.transform, Skins.Gem, string.Empty, 42,
+                                        new Vector2(KeyW, KeyH), new Vector2(1f, .5f), new Vector2(-RightX, -48f),
                                         () => _panel.Buy(_deal), "ic_gem");
                 _keyPlate = _key.GetComponent<Image>();
             }

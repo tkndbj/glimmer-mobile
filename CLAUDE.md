@@ -379,7 +379,7 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
 50n. **The horizon is bought with a taper**: three a day for a week, then one a night out to twenty-one days.
 50o. **`USE_EXACT_ALARM` and `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` are deliberately not used** (Play policy).
 50p. **The OS dialog is only raised by a yes to our own panel** (`ReminderAskOverlay`, raised by
-   `ReminderMoment` after a chest) or by the Settings row: iOS draws it once, Android twice, ours costs
+   `ReminderMoment` after a chest or a streak extended to two days or more) or by the Settings row: iOS draws it once, Android twice, ours costs
    nothing to refuse. Yes goes to the OS dialog while it will still draw (`NotificationAsk.OsWillPrompt`),
    else to the OS settings page. Shown at most four times an install, 3/7/14 days apart, never to a player
    who switched reminders off; the log is device-local (`glimmer.notify.asks`), marked at open.

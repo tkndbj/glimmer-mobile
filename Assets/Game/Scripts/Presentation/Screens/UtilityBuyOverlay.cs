@@ -127,16 +127,22 @@ namespace GlimmerGrove
             // What it does, authored per utility rather than written here: the sentence differs
             // across the catalog, and one that is true of a firepot and false of a mending is
             // how a player stops believing the panel.
+            //
+            // 33 in a 660x140 box (the owner asked for it bigger; it was 27 in 620x96). The centre
+            // stays put: the box spans +32..-108 around the panel's centre, clear of the picture
+            // (drawn to about +41) and 12 above the status line, which moved down 10 to make the
+            // room. Measured in every Latin table: every note settles at 33 except the gravity
+            // hole's, the longest, at 29-32 (it was 26).
             _note = UIKit.Shrinkable(
-                UIKit.Titled("Note", Panel, Loc.Get(Item.NoteKey), 27, Ink,
-                             TextAnchor.MiddleCenter, new Vector2(620f, 96f),
+                UIKit.Titled("Note", Panel, Loc.Get(Item.NoteKey), 33, Ink,
+                             TextAnchor.MiddleCenter, new Vector2(660f, 140f),
                              new Vector2(.5f, .5f), new Vector2(0f, -108f + Lift),
                              outline: 0f, shadow: 0f, wrap: true), 19);
 
             _status = UIKit.Shrinkable(
                 UIKit.Titled("Status", Panel, string.Empty, 29, Ink, TextAnchor.MiddleCenter,
                              new Vector2(640f, 52f), new Vector2(.5f, .5f),
-                             new Vector2(0f, -206f + Lift), outline: 0f, shadow: 0f, wrap: true), 20);
+                             new Vector2(0f, -216f + Lift), outline: 0f, shadow: 0f, wrap: true), 20);
 
             BuildStepper();
             BuildAction();

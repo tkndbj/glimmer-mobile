@@ -591,6 +591,19 @@ namespace GlimmerGrove.Tests
             }
         }
 
+        /// <summary>
+        /// <b>A streak is a moment from its second day</b>: a first day is not yet something to
+        /// protect, and asking then spends one of the four panels on a weaker reason.
+        /// </summary>
+        [Test]
+        public void AStreakIsAMomentFromItsSecondDay()
+        {
+            Assert.IsFalse(NotificationAsk.StreakMoment(0));
+            Assert.IsFalse(NotificationAsk.StreakMoment(1));
+            Assert.IsTrue(NotificationAsk.StreakMoment(2));
+            Assert.IsTrue(NotificationAsk.StreakMoment(365));
+        }
+
         /// <summary>Every state and route has an analytics spelling; a new member without one throws here, not on a phone.</summary>
         [Test]
         public void EveryStateHasAnAnalyticsSpelling()

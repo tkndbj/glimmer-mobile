@@ -92,6 +92,19 @@ namespace GlimmerGrove
         /// </summary>
         public static System.Action WhenSettled;
 
+        /// <summary>
+        /// A receipt is on screen or waiting for its turn. Asked by a panel that must not close
+        /// under its own receipt - the gem shelf, whose purse the receipt pays into.
+        /// </summary>
+        public static bool Pending => _showing || _waiting.Count > 0;
+
+        /// <summary>
+        /// Raised once the last receipt has been dismissed, at the moment <see cref="WhenSettled"/>
+        /// runs. An event rather than a second slot on that delegate, because any number of panels
+        /// may wait on it and each takes itself off when it hears it (or is destroyed first).
+        /// </summary>
+        public static event System.Action Drained;
+
         /// <summary>Takes a grant. Shows it now if nothing is up, and otherwise in turn.</summary>
         public static void Show(StoreGrant grant)
         {
@@ -149,7 +162,12 @@ namespace GlimmerGrove
                         bool more = _waiting.Count > 0;
 
                         Next();
-                        if (!more) WhenSettled?.Invoke();
+                        if (more) return;
+
+                        WhenSettled?.Invoke();
+
+                        try { Drained?.Invoke(); }
+                        catch (System.Exception e) { Debug.LogException(e); }
                     });
                 };
             });

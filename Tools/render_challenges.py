@@ -542,6 +542,8 @@ CROWN_Y, BANNER_Y, BANNER_W, BANNER_H_WIN = 114.0, -30.0, 566.0, 157.0
 WORD_LIFT, WORD_W, WORD_H = 34.0, 356.0, 74.0
 #: `ChallengeTierOverlay.FreeY` / `.RowsTop` / `.RowH` / `.RowGap` / `.Tail` / `.FootH`.
 FREE_Y, ROWS_TOP, ROW_H, ROW_GAP, TAIL, FOOT_H = 150.0, 200.0, 230.0, 14.0, 30.0, 170.0
+#: `ChallengeTierOverlay.NoteH` / `.NoteRoom` / `.NoteGap`: an upgrade row grows to hold its note.
+NOTE_H, NOTE_ROOM, NOTE_GAP = 56.0, 64.0, 4.0
 #: `ChallengeTierOverlay.RowW` / `.StoneSize` / `.StoneX` / `.TextX` / `.TextW` / `.KeySize` / `.KeyInset`.
 ROW_W, STONE_SIZE, STONE_X, ROW_TEXT_X, ROW_TEXT_W = 880.0, 160.0, 104.0, 204.0, 370.0
 KEY_W, KEY_H, KEY_INSET = 280.0, 116.0, 16.0
@@ -727,7 +729,14 @@ def render_deals(txt, canvas=(1080, 1920), held=None, ad_left=None):
     # The advert row (`ChallengeTierOverlay.BuildAdRow`) stands first when the table offers it.
     ad = ad_play_offer()
     row_count = len(tiers) + (1 if ad else 0)
-    rows_h = row_count * (ROW_H + ROW_GAP) - (ROW_GAP if row_count else 0)
+    # `ChallengeTierOverlay.RowHeight`: a row carrying the upgrade note is NOTE_ROOM taller.
+    def carries_note(tier):
+        return deal is not None and tier["id"] != deal["id"] and tier["plays"] > deal["plays"]
+
+    def row_h(tier):
+        return ROW_H + (NOTE_ROOM if carries_note(tier) else 0)
+
+    rows_h = (ROW_H if ad else 0) + sum(row_h(x) for x in tiers) + ROW_GAP * (row_count - 1 if row_count else 0)
     panel_h = ROWS_TOP + rows_h + TAIL + FOOT_H
 
     # `VictoryFrame.MakeFit`: the block is scaled to the screen, crest included.
@@ -808,22 +817,27 @@ def render_deals(txt, canvas=(1080, 1920), held=None, ad_left=None):
         is_held = deal is not None and tier["id"] == deal["id"]
         under = deal is not None and deal["plays"] >= tier["plays"] and not is_held
         upgrades = deal is not None and tier["plays"] > deal["plays"]
+        # Laid from the row's top: a row carrying the note is taller, and its name and
+        # sentence keep their distance from the top (`ChallengeTierOverlay.BuildRow`'s lift).
+        h = row_h(tier)
+        cy = y - ROW_H / 2 + h / 2
+        lift = (h - ROW_H) / 2
 
-        K.paste(block, K.round_rect(ROW_W, ROW_H, 28, (0, 0, 0), .32), bcx, y)
+        K.paste(block, K.round_rect(ROW_W, h, 28, (0, 0, 0), .32), bcx, cy)
         edge = (K.GOLD, .62) if is_held else ((255, 245, 219), .14)
-        K.paste(block, K.round_rect(ROW_W, ROW_H, 28, edge[0], edge[1], width=3), bcx, y)
+        K.paste(block, K.round_rect(ROW_W, h, 28, edge[0], edge[1], width=3), bcx, cy)
         left = bcx - ROW_W / 2
 
         # The stone off the rung (`ChallengeArt.DealMark`), with its halo.
         K.paste(block, K.glow(int(STONE_SIZE * 1.9), 2.2, K.GOLD if is_held else (255, 116, 212), .34 if is_held else .18),
-                left + STONE_X, y)
+                left + STONE_X, cy)
         stone_path = K.UI / ("challenge_deal_%d.png" % rung)
         if stone_path.exists():
-            K.paste(block, K.fit(K.load("challenge_deal_%d" % rung)[0], (STONE_SIZE, STONE_SIZE)), left + STONE_X, y)
+            K.paste(block, K.fit(K.load("challenge_deal_%d" % rung)[0], (STONE_SIZE, STONE_SIZE)), left + STONE_X, cy)
 
         name = txt("challenge.tier.%s.name" % tier["id"])
         floors.append(("name %s" % tier["id"],
-                       K.shrunk_left(block, name, left + ROW_TEXT_X, y - 60 - 33, ROW_TEXT_W, 66, 52, 28,
+                       K.shrunk_left(block, name, left + ROW_TEXT_X, cy - (60 + lift) - 33, ROW_TEXT_W, 66, 52, 28,
                                      fill=K.GOLD if is_held else K.CREAM, outline=3), 28))
         days = txt("ui.challenges.days_one") if tier["days"] == 1 else txt("ui.challenges.days").replace("{0}", str(tier["days"]))
         # `ChallengeTierOverlay` slots ui.challenges.deal_plays ("+6 plays") into the line and
@@ -832,27 +846,27 @@ def render_deals(txt, canvas=(1080, 1920), held=None, ad_left=None):
         plays = txt("ui.challenges.deal_plays").replace("{0}", str(tier["plays"]))
         line = txt("ui.challenges.deal_line").replace("{0}", plays).replace("{1}", days)
         floors.append(("line %s" % tier["id"],
-                       K.shrunk_left(block, line, left + ROW_TEXT_X, y - 22, ROW_TEXT_W, 124, 36, 20,
+                       K.shrunk_left(block, line, left + ROW_TEXT_X, cy - (22 + lift), ROW_TEXT_W, 124, 36, 20,
                                      fill=(255, 245, 224), outline=2), 20))
 
         key_cx = bcx + ROW_W / 2 - KEY_INSET - KEY_W / 2
         if is_held:
             days_left = txt("ui.challenges.days_left").replace("{0}", str(tier["days"]))
-            K.paste(block, K.round_rect(KEY_W, KEY_H, 24, K.GOLD, .95), key_cx, y)
-            floors.append(("held tag", K.shrunk(block, txt("ui.challenges.deal_held") + " " + days_left, key_cx, y,
+            K.paste(block, K.round_rect(KEY_W, KEY_H, 24, K.GOLD, .95), key_cx, cy)
+            floors.append(("held tag", K.shrunk(block, txt("ui.challenges.deal_held") + " " + days_left, key_cx, cy,
                                                 KEY_W, KEY_H, 30, 18, fill=K.INK, outline=0), 18))
-            y += ROW_H + ROW_GAP
+            y += h + ROW_GAP
             continue
 
         price = tier["gems"] - deal["gems"] if upgrades else tier["gems"]
         caption = (txt("ui.challenges.upgrade") if upgrades else txt("ui.challenges.buy")).replace("{0}", str(price))
-        K.paste(block, K.skin("btn_gray" if under else "btn_violet", KEY_W, KEY_H), key_cx, y)
-        floors.append(("key %s" % tier["id"], price_key(block, caption, key_cx, y - 4, KEY_W, KEY_H, 36), 18))
+        K.paste(block, K.skin("btn_gray" if under else "btn_violet", KEY_W, KEY_H), key_cx, cy)
+        floors.append(("key %s" % tier["id"], price_key(block, caption, key_cx, cy - 4, KEY_W, KEY_H, 36), 18))
         if upgrades:
             floors.append(("note %s" % tier["id"],
-                           K.shrunk_left(block, txt("ui.challenges.upgrade_note"), left + ROW_TEXT_X, y + 88 - 24,
-                                         ROW_TEXT_W, 48, 22, 14, fill=K.GOLD, outline=2), 14))
-        y += ROW_H + ROW_GAP
+                           K.shrunk_left(block, txt("ui.challenges.upgrade_note"), left + ROW_TEXT_X, cy - (22 + lift) + 124 + NOTE_GAP,
+                                         ROW_TEXT_W, NOTE_H, 22, 14, fill=K.GOLD, outline=2), 14))
+        y += h + ROW_GAP
 
     done_cy = panel_top + panel_h - (30 + 55)
     K.paste(block, K.skin("btn_blue", 400, 110), bcx, done_cy)

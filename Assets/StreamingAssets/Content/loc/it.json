@@ -2818,10 +2818,6 @@
       "text": "Acquistata"
     },
     {
-      "key": "ui.deal.door",
-      "text": "Offerta"
-    },
-    {
       "key": "ui.deal.ended",
       "text": "Questa offerta è terminata."
     },
@@ -2836,10 +2832,6 @@
     {
       "key": "ui.deal.needs_connection",
       "text": "Connettiti a Internet per acquistare questa offerta."
-    },
-    {
-      "key": "ui.deal.note",
-      "text": "Una per giocatore, solo finché scorre il tempo."
     },
     {
       "key": "ui.deal.owned",
@@ -3910,10 +3902,6 @@
       "text": "{0} è rimasto incompiuto, quindi è costato un cuore."
     },
     {
-      "key": "ui.gems.note",
-      "text": "Ricarica senza lasciare la partita. Ne hai {0}."
-    },
-    {
       "key": "ui.gems.title",
       "text": "Gemme"
     },
@@ -4452,6 +4440,10 @@
     {
       "key": "ui.reminders.settings_body",
       "text": "I promemoria sono disattivati nelle impostazioni del telefono. Attivali lì per sapere quando un forziere è pronto e prima che la tua serie finisca."
+    },
+    {
+      "key": "ui.reminders.streak_body",
+      "text": "Tieni viva la tua serie! Vuoi un avviso prima che finisca e quando il tuo prossimo forziere è pronto?"
     },
     {
       "key": "ui.num.million",

@@ -2818,10 +2818,6 @@
       "text": "Gekauft"
     },
     {
-      "key": "ui.deal.door",
-      "text": "Angebot"
-    },
-    {
       "key": "ui.deal.ended",
       "text": "Dieses Angebot ist abgelaufen."
     },
@@ -2836,10 +2832,6 @@
     {
       "key": "ui.deal.needs_connection",
       "text": "Verbinde dich mit dem Internet, um dieses Angebot zu kaufen."
-    },
-    {
-      "key": "ui.deal.note",
-      "text": "Einmal pro Spieler, nur solange die Zeit läuft."
     },
     {
       "key": "ui.deal.owned",
@@ -3910,10 +3902,6 @@
       "text": "{0} wurde nicht abgeschlossen und hat deshalb ein Herz gekostet."
     },
     {
-      "key": "ui.gems.note",
-      "text": "Lade auf, ohne deine Runde zu verlassen. Du hast {0}."
-    },
-    {
       "key": "ui.gems.title",
       "text": "Juwelen"
     },
@@ -4452,6 +4440,10 @@
     {
       "key": "ui.reminders.settings_body",
       "text": "Erinnerungen sind in den Einstellungen deines Handys ausgeschaltet. Schalte sie dort ein, um zu erfahren, wann eine Truhe bereit ist und bevor deine Serie reißt."
+    },
+    {
+      "key": "ui.reminders.streak_body",
+      "text": "Halte deine Serie am Leben! Möchtest du erinnert werden, bevor sie reißt und wenn deine nächste Truhe bereit ist?"
     },
     {
       "key": "ui.num.million",

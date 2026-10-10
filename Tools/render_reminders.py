@@ -2,8 +2,9 @@
 
     python Tools/render_reminders.py                     # the system route, English
     python Tools/render_reminders.py --settings          # the route that opens the OS settings
+    python Tools/render_reminders.py --streak            # earned by a streak: the streak mark and its sentence
     python Tools/render_reminders.py --lang de           # any Latin-script table
-    python Tools/render_reminders.py --measure           # every Latin table, both routes; exit 1 on a tight fit
+    python Tools/render_reminders.py --measure           # every Latin table, every sentence; exit 1 on a tight fit
 
 A mirror, not a gate for anything but `--measure`: every number here is `ReminderAskOverlay`'s and
 the two are kept in step by hand (44d). The panel is `ModalView.MakePanel`'s: `panel_main` with the
@@ -26,8 +27,8 @@ LOC = K.REPO / "Assets/StreamingAssets/Content/loc"
 
 # ReminderAskOverlay
 PANEL_W, PANEL_H = 880.0, 880.0
-SEAT_Y, GLOW, CHEST, CHEST_LIFT = 225.0, 300.0, 280.0, 44.0
-BODY_Y, BODY_W, BODY_H, BODY_SIZE, BODY_FLOOR = 435.0, 700.0, 180.0, 32, 22
+SEAT_Y, GLOW, CHEST, CHEST_LIFT, FLAME = 225.0, 300.0, 280.0, 44.0, 180.0
+BODY_Y, BODY_W, BODY_H, BODY_SIZE, BODY_FLOOR = 450.0, 700.0, 220.0, 40, 22
 YES_Y, YES_W, YES_H, YES_SIZE, YES_FLOOR = 232.0, 620.0, 138.0, 46, 26
 LATER_Y, LATER_W, LATER_H, LATER_SIZE, LATER_FLOOR = 92.0, 620.0, 126.0, 42, 24
 KEY_PAD = 60.0                      # a TextButton's label room is its width less the skin's caps
@@ -48,7 +49,7 @@ def top_chest():
     return "Chest/" + tiers[-1]["id"] if tiers else "ic_chest"
 
 
-def panel(lang, settings, draw=True):
+def panel(lang, settings, streak=False, draw=True):
     s = table(lang)
     sheet = Image.new("RGBA", (W, H), (*K.GROUND, 255))
     if draw:
@@ -63,10 +64,16 @@ def panel(lang, settings, draw=True):
     K.text(sheet, s["ui.reminders.ask_title"], W / 2, top - 28, 54, outline=4)
 
     K.paste(sheet, K.glow(GLOW, 2.2, (255, 209, 92), .5), W / 2, top + SEAT_Y)
-    chest, _ = K.load(top_chest())
-    K.paste(sheet, K.fit(chest, (CHEST, CHEST)), W / 2, top + SEAT_Y - CHEST_LIFT)
+    if streak and not settings:
+        flame, _ = K.load("ic_streak")
+        K.paste(sheet, K.fit(flame, (FLAME, FLAME)), W / 2, top + SEAT_Y)
+    else:
+        chest, _ = K.load(top_chest())
+        K.paste(sheet, K.fit(chest, (CHEST, CHEST)), W / 2, top + SEAT_Y - CHEST_LIFT)
 
-    body = s["ui.reminders.settings_body" if settings else "ui.reminders.ask_body"]
+    # ReminderAskOverlay.BodyKey
+    body = s["ui.reminders.settings_body" if settings else
+             "ui.reminders.streak_body" if streak else "ui.reminders.ask_body"]
     sizes = {"body": (K.shrunk(sheet, body, W / 2, top + BODY_Y, BODY_W, BODY_H, BODY_SIZE, BODY_FLOOR,
                                fill=INK, outline=0), BODY_FLOOR)}
 
@@ -87,13 +94,13 @@ def panel(lang, settings, draw=True):
 def measure():
     tight = 0
     for lang in LATIN:
-        for settings in (False, True):
-            _, sizes = panel(lang, settings, draw=False)
-            line = "  %-2s %-8s" % (lang, "settings" if settings else "system")
-            for name, (got, floor) in sizes.items():
+        for name, settings, streak in (("chest", False, False), ("streak", False, True), ("settings", True, False)):
+            _, sizes = panel(lang, settings, streak, draw=False)
+            line = "  %-2s %-8s" % (lang, name)
+            for part, (got, floor) in sizes.items():
                 flag = "  TIGHT" if got <= floor else ""
                 tight += bool(flag)
-                line += "  %s %d/%d%s" % (name, got, floor, flag)
+                line += "  %s %d/%d%s" % (part, got, floor, flag)
             print(line)
     print("  ar       not drawn here (shaped at runtime; see ArabicTextTests)")
     return tight
@@ -102,6 +109,7 @@ def measure():
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--settings", action="store_true", help="the route that opens the OS settings")
+    ap.add_argument("--streak", action="store_true", help="earned by a streak: the streak mark and its sentence")
     ap.add_argument("--lang", default="en", choices=LATIN)
     ap.add_argument("--measure", action="store_true", help="every Latin table, both routes")
     ap.add_argument("--out", type=Path, default=Path("reminders.png"))
@@ -112,7 +120,7 @@ def main():
         print("  %d caption(s) at their floor" % tight)
         sys.exit(1 if tight else 0)
 
-    out, sizes = panel(args.lang, args.settings)
+    out, sizes = panel(args.lang, args.settings, args.streak)
     for name, (got, floor) in sizes.items():
         print("  %-6s %d (floor %d)" % (name, got, floor))
     args.out.parent.mkdir(parents=True, exist_ok=True)

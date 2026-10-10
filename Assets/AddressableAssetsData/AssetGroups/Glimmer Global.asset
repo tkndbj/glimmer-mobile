@@ -40917,6 +40917,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/burn_g
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f37b3e7f9c527678645a376eb778b14b
+    m_Address: Art/Ui/Hud/plate_green
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f391c6a76340fc74887ce3c5c12af0af
     m_Address: Art/Siege/beam/f01
     m_ReadOnly: 0

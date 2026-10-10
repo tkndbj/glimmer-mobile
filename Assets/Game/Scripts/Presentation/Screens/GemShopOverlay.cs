@@ -66,7 +66,10 @@ namespace GlimmerGrove
         const float PanelW = 900f;
         const float ContentW = 720f;
         const float HeadRoom = 150f;
-        const float NoteH = 92f;
+
+        /// <summary>The band the purse stands in, under the title: the hub's gem pill, drawn here.</summary>
+        const float PurseH = 112f;
+        const float PurseW = 304f, PillH = 96f;
         const float ListH = 780f;
         const float BackH = 104f;
         const float FootRoom = 40f;
@@ -78,12 +81,26 @@ namespace GlimmerGrove
         readonly List<StoreProduct> _products = new List<StoreProduct>();
 
         GridView _grid;
+
+        /// <summary>
+        /// The one sentence this panel can say about the store, and only when the list is empty -
+        /// still connecting, offline, or unavailable. Centred where the cards would be.
+        /// </summary>
         Text _note;
+
+        /// <summary>
+        /// A gem purchase has landed and this panel is on its way out: it waits for the receipt to
+        /// pay into the purse and go, then closes. Latched, so a second grant cannot start a second exit.
+        /// </summary>
+        bool _finishing;
+
+        /// <summary>Subscribed to <see cref="ReceiptQueue.Drained"/>, so <see cref="OnDestroy"/> knows to let go.</summary>
+        bool _awaitingReceipts;
 
         protected override void Build()
         {
             float y = HeadRoom;
-            float noteY = y;                y += NoteH + 6f;
+            float purseY = y;               y += PurseH + 6f;
             float listY = y;                y += ListH + 14f;
             float backY = y + BackH * .5f;  y += BackH + FootRoom;
 
@@ -92,13 +109,15 @@ namespace GlimmerGrove
             // exactly what a stray tap should do here.
             MakePanel(new Vector2(PanelW, y), Loc.Get("ui.gems.title"));
 
-            _note = UIKit.Shrinkable(
-                UIKit.Titled("Note", Panel, string.Empty, 28, new Color(.36f, .25f, .18f),
-                             TextAnchor.UpperCenter, new Vector2(ContentW, NoteH),
-                             new Vector2(.5f, 1f), new Vector2(0f, -noteY),
-                             outline: 0f, shadow: 0f, wrap: true), 18);
-
+            BuildPurse(purseY + PurseH * .5f);
             BuildList(listY);
+
+            // After the list, so it draws over the empty viewport rather than under it.
+            _note = UIKit.Shrinkable(
+                UIKit.Titled("Note", Panel, string.Empty, 30, new Color(.36f, .25f, .18f),
+                             TextAnchor.MiddleCenter, new Vector2(ContentW, 180f),
+                             new Vector2(.5f, 1f), new Vector2(0f, -(listY + ListH * .4f)),
+                             outline: 0f, shadow: 0f, wrap: true), 18);
 
             // Skins.Alternate rather than Skins.Resting: grey means "not a control right
             // now", and the way out of a shop is very much a control. Same correction the
@@ -111,12 +130,8 @@ namespace GlimmerGrove
             StoreService.Changed += Repaint;
             StoreService.Failed += OnFailed;
 
-            // And on the wallet, because the one line this panel says about itself is how many
-            // gems the player is holding. The store's own event covers a purchase landing and
-            // nothing else: an ad's grant confirmed by the server, a sync applying another
-            // device's chest and a run that just spent a continue all move that number with the
-            // panel open, and every one of them used to leave it reading the figure from
-            // whenever it was raised.
+            // And on the wallet, because a balance landing can change which cards a shop of gem
+            // packs is worth drawing. The purse's own number is `WalletWatch`'s (44j).
             PlayerProgression.Changed += Repaint;
 
             // The store may not have connected yet - the splash starts it, and a player can
@@ -128,10 +143,45 @@ namespace GlimmerGrove
 
         void OnDestroy()
         {
+            if (_awaitingReceipts) ReceiptQueue.Drained -= OnReceiptsDrained;
             StoreService.Granted -= OnGranted;
             StoreService.Changed -= Repaint;
             StoreService.Failed -= OnFailed;
             PlayerProgression.Changed -= Repaint;
+        }
+
+        /// <summary>
+        /// The player's gems, in the hub's own pill (the owner, 2026-10-09): the kit's trough, the
+        /// gem, the number - and no <c>+</c>, because this panel <em>is</em> where the <c>+</c> leads.
+        ///
+        /// <para>
+        /// <b>Registered over the screen's own row</b> (<see cref="ResourceSlots.RegisterOver"/>), so
+        /// the receipt of a purchase made here pays its gems into <em>this</em> pill - the one the
+        /// player is looking at - and the screen underneath gets its pill back, repainted, when this
+        /// panel goes, however it goes. Watched for its number (<see cref="WalletWatch"/>, 44j).
+        /// </para>
+        /// </summary>
+        void BuildPurse(float centreY)
+        {
+            var bg = UIKit.Img("Purse", Panel, Art.S("Ui/" + Skins.Trough), Color.white,
+                               new Vector2(PurseW, PillH), new Vector2(.5f, 1f), new Vector2(0f, -centreY));
+
+            // The hub's measurements (`HomeScreen.ResourcePill`): 66 in from the edge clears the
+            // trough's end clip, which is 43 units wide however wide the plate is drawn.
+            var glow = UIKit.Img("Glow", bg.transform, Art.Glow(96, 2f), Pal.A(Pal.Bloom, .30f),
+                                 new Vector2(120f, 120f), new Vector2(0f, .5f), new Vector2(66f, 0f));
+            var ic = UIKit.Img("Icon", bg.transform, Art.S("Ui/ic_gem"), Color.white,
+                               new Vector2(62f, 62f), new Vector2(0f, .5f), new Vector2(66f, 0f));
+            ic.preserveAspect = true;
+            Tween.Breathe(ic.transform, .06f, 2.2f);
+
+            var number = UIKit.Shrinkable(
+                UIKit.Titled("V", bg.transform, Compact.Number(Profile.Gems), 37, Pal.Cream, TextAnchor.MiddleCenter,
+                             new Vector2(160f, 52f), new Vector2(.5f, .5f), new Vector2(34f, 0f), 3f, 3f), 22);
+
+            ResourceSlots.RegisterOver(this, ResourceSlots.Kind.Gems, (RectTransform)ic.transform, number, glow,
+                                       Pal.Bloom, Compact.Number);
+            WalletWatch.Attach(this, ResourceSlots.Kind.Gems);
         }
 
         void BuildList(float top)
@@ -231,10 +281,10 @@ namespace GlimmerGrove
         {
             if (!_note) return;
 
+            // A shelf with cards says nothing: the purse above already says what the player holds.
             if (_products.Count > 0)
             {
-                _note.text = Loc.Format("ui.gems.note", Compact.Number(Profile.Gems));
-                _note.color = new Color(.36f, .25f, .18f);
+                _note.text = string.Empty;
                 return;
             }
 
@@ -277,7 +327,62 @@ namespace GlimmerGrove
         void OnGranted(StoreGrant grant)
         {
             if (!grant.IsValid || grant.Gems <= 0L) { Repaint(); return; }
+            if (_finishing) return;
 
+            _finishing = true;
+            Repaint();
+
+            // A frame later, so the receipt has certainly been raised or queued whatever order the
+            // grant's listeners were added in - `Boot`'s is first today, and nothing here may depend
+            // on that staying true.
+            Tween.After(0f, AfterGrant, this);
+        }
+
+        /// <summary>
+        /// Waits for the receipt, then steps out.
+        ///
+        /// <para>
+        /// <b>The order is the point</b> (the owner, 2026-10-09): the receipt is drawn over this
+        /// panel, its COLLECT flies the gems into <em>this</em> panel's purse, the receipt goes, and
+        /// only then does this panel close and hand back to whoever opened it - the deal, the
+        /// continue, the heart - with the price now affordable. Closing at the grant, as this used
+        /// to, took the purse away before the gems could land in it.
+        /// </para>
+        /// <para>
+        /// <b>Nothing can leave it open for ever.</b> <see cref="ReceiptQueue.Drained"/> is raised
+        /// however the last receipt ends (it rides the receipt's <c>OnDestroy</c>), and if no receipt
+        /// is pending at all - a duplicate transaction the queue drops, a grant with nothing to thank
+        /// for - this closes at once. A screen change destroys this panel first, and
+        /// <see cref="OnDestroy"/> lets go of the event.
+        /// </para>
+        /// </summary>
+        void AfterGrant()
+        {
+            if (!this) return;
+
+            if (ReceiptQueue.Pending)
+            {
+                _awaitingReceipts = true;
+                ReceiptQueue.Drained += OnReceiptsDrained;
+                return;
+            }
+
+            Finish();
+        }
+
+        void OnReceiptsDrained()
+        {
+            ReceiptQueue.Drained -= OnReceiptsDrained;
+            _awaitingReceipts = false;
+            if (this) Finish();
+        }
+
+        /// <summary>
+        /// Closes quietly - the receipt's chime has just played - and tells whoever opened this,
+        /// once the panel has gone.
+        /// </summary>
+        void Finish()
+        {
             var bought = Bought;
             Bought = null;
 
@@ -326,6 +431,11 @@ namespace GlimmerGrove
         /// </summary>
         public override bool OnBack()
         {
+            // Gems already landed: the back key takes the same exit the receipt would have, so
+            // whoever opened this still hears about it (Finish is safe to reach twice - Close is
+            // latched and the callback is taken once).
+            if (_finishing) { Finish(); return true; }
+
             Close();
             return true;
         }

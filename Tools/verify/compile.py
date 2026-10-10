@@ -665,6 +665,10 @@ def check_wallet_watch(files):
         if name.endswith("/WalletWatch.cs") or name.endswith("/ResourceSlots.cs"):
             continue
 
+        # A fixture registers a readout to test the registry, not to draw one on a screen.
+        if "/Assets/Game/Tests/" in name:
+            continue
+
         text = without_comments(io.open(path, encoding="utf-8", errors="replace").read())
 
         hit = REGISTERS.search(text)

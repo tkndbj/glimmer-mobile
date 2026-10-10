@@ -2818,10 +2818,6 @@
       "text": "Bought"
     },
     {
-      "key": "ui.deal.door",
-      "text": "Deal"
-    },
-    {
       "key": "ui.deal.ended",
       "text": "This deal has ended."
     },
@@ -2836,10 +2832,6 @@
     {
       "key": "ui.deal.needs_connection",
       "text": "Connect to the internet to buy this deal."
-    },
-    {
-      "key": "ui.deal.note",
-      "text": "One per player, only while the clock runs."
     },
     {
       "key": "ui.deal.owned",
@@ -3910,10 +3902,6 @@
       "text": "{0} was left unfinished, so it cost a heart."
     },
     {
-      "key": "ui.gems.note",
-      "text": "Top up without leaving your run. You have {0}."
-    },
-    {
       "key": "ui.gems.title",
       "text": "Gems"
     },
@@ -4452,6 +4440,10 @@
     {
       "key": "ui.reminders.settings_body",
       "text": "Reminders are switched off in your phone's settings. Turn them on there to hear when a chest is ready, and before your streak runs out."
+    },
+    {
+      "key": "ui.reminders.streak_body",
+      "text": "Keep your streak alive! Want a nudge before it runs out, and when your next chest is ready?"
     },
     {
       "key": "ui.num.million",

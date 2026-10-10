@@ -106,6 +106,15 @@ namespace GlimmerGrove.Notifications
 
         const long Day = 86400L;
 
+        /// <summary>
+        /// The shortest streak that earns the panel when today's run extends it. A first day is
+        /// not yet something a player would mind losing; a second is a streak they have kept.
+        /// </summary>
+        public const int StreakWorthAsking = 2;
+
+        /// <summary>Whether a streak just extended to <paramref name="length"/> days is a moment to ask.</summary>
+        public static bool StreakMoment(int length) => length >= StreakWorthAsking;
+
         /// <summary>The wait after <paramref name="shown"/> panels, in days. Public for the fixture.</summary>
         public static int GapAfter(int shown)
             => shown <= 0 ? 0 : GapDays[Math.Min(shown, GapDays.Length) - 1];

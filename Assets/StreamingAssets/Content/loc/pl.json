@@ -2818,10 +2818,6 @@
       "text": "Kupiona"
     },
     {
-      "key": "ui.deal.door",
-      "text": "Oferta"
-    },
-    {
       "key": "ui.deal.ended",
       "text": "Ta oferta już się skończyła."
     },
@@ -2836,10 +2832,6 @@
     {
       "key": "ui.deal.needs_connection",
       "text": "Połącz się z internetem, aby kupić tę ofertę."
-    },
-    {
-      "key": "ui.deal.note",
-      "text": "Jedna na gracza, tylko póki trwa odliczanie."
     },
     {
       "key": "ui.deal.owned",
@@ -3910,10 +3902,6 @@
       "text": "{0}: nieukończone, więc kosztowało serce."
     },
     {
-      "key": "ui.gems.note",
-      "text": "Doładuj bez wychodzenia z gry. Masz: {0}."
-    },
-    {
       "key": "ui.gems.title",
       "text": "Klejnoty"
     },
@@ -4452,6 +4440,10 @@
     {
       "key": "ui.reminders.settings_body",
       "text": "Przypomnienia są wyłączone w ustawieniach telefonu. Włącz je tam, aby wiedzieć, kiedy skrzynia jest gotowa, i zanim skończy się twoja seria."
+    },
+    {
+      "key": "ui.reminders.streak_body",
+      "text": "Nie przerywaj swojej serii! Chcesz dostać powiadomienie, zanim się skończy, i gdy następna skrzynia będzie gotowa?"
     },
     {
       "key": "ui.num.million",

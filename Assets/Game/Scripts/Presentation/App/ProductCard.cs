@@ -170,6 +170,11 @@ namespace GlimmerGrove
                              new Vector2(.5f, 0f), new Vector2(0f, 150f * kv), 3f, 0f),
                 Font(16, kh));
 
+            // The two sizes of that line (see SubLine): a unit label, and a bundle's coins.
+            _subRest = new SubLook(Font(26, kh), _sub.rectTransform.sizeDelta, _sub.rectTransform.anchoredPosition);
+            _subBundle = new SubLook(Font(BundleSubSize, kh), new Vector2(look.Width - 76f * kh, 50f * kv),
+                                     new Vector2(0f, 146f * kv));
+
             float faceH = 96f * kv;
             _priceFace = UIKit.Img("PriceFace", _plate.transform,
                                    Art.S("Ui/" + Skins.Buy), Color.white,
@@ -286,6 +291,43 @@ namespace GlimmerGrove
         /// <summary>A point size scaled with the card, never below something readable.</summary>
         static int Font(int reference, float k) => Mathf.Max(10, Mathf.RoundToInt(reference * k));
 
+        /// <summary>A bundle's "+36K Coins" line, at the reference size. The unit label under every other figure is 26.</summary>
+        internal const int BundleSubSize = 36;
+
+        /// <summary>One size of the line under the figure: its type and its box.</summary>
+        readonly struct SubLook
+        {
+            public readonly int Size;
+            public readonly Vector2 Box, At;
+
+            public SubLook(int size, Vector2 box, Vector2 at) { Size = size; Box = box; At = at; }
+        }
+
+        readonly SubLook _subRest, _subBundle;
+
+        /// <summary>
+        /// Sizes the line under the figure: large for a bundle's coins, the unit label's size otherwise.
+        ///
+        /// <para>
+        /// <b>A bundle's coins are a second amount, not a label</b> (the owner's call, 2026-10-09), so
+        /// they are drawn nearly as large as a price: 36 in a box 50 tall, centred 4 units lower
+        /// than the label so the taller line still clears the price face (top at 122) and the
+        /// figure (bottom at 167).
+        /// </para>
+        /// <para>
+        /// <b>Called by every <c>Draw</c></b>, because a card is a recycled cell (44mc): a gem card
+        /// bound into the slot a bundle had would otherwise keep the bundle's large line.
+        /// </para>
+        /// </summary>
+        void SubLine(bool bundle)
+        {
+            var look = bundle ? _subBundle : _subRest;
+            _sub.fontSize = look.Size;
+            _sub.resizeTextMaxSize = look.Size;
+            _sub.rectTransform.sizeDelta = look.Box;
+            _sub.rectTransform.anchoredPosition = look.At;
+        }
+
         // ------------------------------------------------------------------ drawing
         /// <summary>
         /// Leaves the slot empty.
@@ -313,6 +355,7 @@ namespace GlimmerGrove
             if (product == null) { Hide(); return; }
 
             _plate.gameObject.SetActive(true);
+            SubLine(false);
 
             Shelf(product.Shelf);
 
@@ -355,6 +398,7 @@ namespace GlimmerGrove
                 // label, which is the one reading that makes an extra 42,000 credits look like
                 // small print. Gold, because that is what coins are everywhere else in the game.
                 _sub.color = bundle ? Pal.A(Pal.Gold, .95f) : Unit;
+                SubLine(bundle);
             }
 
             PaintPrice(offer);
@@ -377,6 +421,7 @@ namespace GlimmerGrove
             if (good == null) { Hide(); return; }
 
             _plate.gameObject.SetActive(true);
+            SubLine(false);
 
             bool ready = state == GoodOfferState.Ready;
 
@@ -512,6 +557,7 @@ namespace GlimmerGrove
             if (!offer.IsValid) { Hide(); return; }
 
             _plate.gameObject.SetActive(true);
+            SubLine(false);
 
             Shelf(shelf);
 
@@ -607,6 +653,7 @@ namespace GlimmerGrove
             if (item == null) { Hide(); return; }
 
             _plate.gameObject.SetActive(true);
+            SubLine(false);
 
             bool ready = refusal == UtilityRefusal.None;
             bool priced = ready || refusal == UtilityRefusal.Poor;

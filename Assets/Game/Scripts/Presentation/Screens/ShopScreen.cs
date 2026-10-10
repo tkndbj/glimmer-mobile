@@ -560,14 +560,12 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The limited-time deal (invariant 60), directly under the invite band, built to be the
-        /// loudest thing on the page while it runs (the owner, 2026-10-09): a gold-rimmed navy window
-        /// (<c>Skins.PlateGold</c> round <c>Skins.Card</c>, the kit's own pieces) under a breathing
-        /// gold halo; the coin coffer on a turning gold burst at its left, rising out of the frame;
-        /// the amount beside it in full; a red DEAL tag on the top edge; and on the right ENDS IN over
-        /// a timer that ticks to the second and turns red and pulses in the last hour
-        /// (<see cref="DealClock"/>). The whole frame is the tap; it opens the panel that says the
-        /// price, and nothing is ever charged from here.
+        /// The limited-time deal (invariant 60), directly under the invite band: the Refer a Friend
+        /// key in pure green (the owner, 2026-10-09) - the kit's green pill (<c>Skins.Affirm</c>) at
+        /// the door's height, the coin coffer on a turning orange burst rising out of it at the left,
+        /// the amount beside it in full, and on the right ENDS IN over a timer that ticks to the
+        /// second and turns red and pulses in the last hour (<see cref="DealClock"/>). The whole key
+        /// is the tap; it opens the panel that says the price, and nothing is ever charged from here.
         /// <para>
         /// Mirrored by <c>render_shop.py --deal</c>, whose constants these are.
         /// </para>
@@ -578,65 +576,53 @@ namespace GlimmerGrove
             var deal = _deal;
             if (deal == null) return;
 
-            // A holder for the halo and the frame, so the halo can stand behind the frame and the
-            // two come and go as one.
-            var band = UIKit.Box("Deal", Safe, new Vector2(ReferW, DealFrameH), new Vector2(.5f, 1f),
-                                 new Vector2(0f, DealCentreY - (DealH - DealFrameH) * .5f));
+            // A holder for the key, so the band comes and goes as one and the clock has somewhere to live.
+            var band = UIKit.Box("Deal", Safe, new Vector2(ReferW, DoorKey.KeyH), new Vector2(.5f, 1f),
+                                 new Vector2(0f, DealCentreY - (DealH - DoorKey.KeyH) * .5f));
 
-            var halo = UIKit.Img("Halo", band, Art.Glow(128, 2.1f), Pal.A(Pal.Gold, .30f),
-                                 new Vector2(ReferW * 1.12f, DealFrameH * 1.9f), new Vector2(.5f, .5f), Vector2.zero);
-            Tween.Breathe(halo.transform, .05f, 1.6f);
-
-            var frame = UIKit.Button("Frame", band, Art.S("Ui/" + Skins.PlateGold), new Vector2(ReferW, DealFrameH),
+            // The kit's green pill at the invite door's height, at the foot of the slot - the Refer a
+            // Friend key in green (the owner, 2026-10-09: no border, "like refer a friend", "pure
+            // green"). Drawn at `DoorKey.KeyH` because the pill is sliced across its width only and
+            // smears its moulded face if drawn much taller (44a).
+            var frame = UIKit.Button("Key", band, Art.S("Ui/" + Skins.Affirm), new Vector2(ReferW, DoorKey.KeyH),
                                      new Vector2(.5f, .5f), Vector2.zero, () => TapDeal(deal));
             frame.PressScale = .985f;
 
-            UIKit.Img("Window", frame.transform, Art.S("Ui/" + Skins.Card), Color.white,
-                      new Vector2(ReferW - 2f * DealRim, DealFrameH - 2f * DealRim), new Vector2(.5f, .5f), Vector2.zero);
+            // The pill's face sits a little above its middle (the moulded lip below it); text rides it.
+            float lift = DoorKey.KeyH * UIKit.PillFaceLift;
 
-            // The coffer stands on the frame's foot and rises out of its top; the burst turns behind it.
-            var artAt = new Vector2(DealArtX, -DealFrameH * .5f + 8f + DealArtSize * .5f);
-            // Over the window rather than `UIKit.Halo`, which sends itself behind every sibling.
-            UIKit.Img("Glow", frame.transform, Art.Glow(128, 2.1f), Pal.A(Pal.Sun, .55f),
-                      new Vector2(DealBurst * 1.3f, DealBurst * 1.3f), new Vector2(0f, .5f), artAt);
-            var rays = UIKit.Img("Rays", frame.transform, Art.S("Ui/" + Skins.Badge), Pal.A(Pal.Gold, DealBurstAlpha),
+            // The coffer stands on the key's foot and rises out of its top, as the invite's hoard
+            // does; the orange burst turns behind it.
+            var artAt = new Vector2(DealArtX, -DoorKey.KeyH * .5f + 4f + DealArtSize * .5f);
+            var rays = UIKit.Img("Rays", frame.transform, Art.S("Ui/" + Skins.Badge), DealBurstInk,
                                  new Vector2(DealBurst, DealBurst), new Vector2(0f, .5f), artAt);
             var art = UIKit.Img("Art", frame.transform, Art.S("Ui/" + DealArt), Color.white,
                                 new Vector2(DealArtSize, DealArtSize), new Vector2(0f, .5f), artAt);
             art.preserveAspect = true;
             art.enabled = art.sprite != null;
 
-            // The amount, in full: every digit is the point.
+            // The amount, in full: every digit is the point - and on the card's vertical middle, with
+            // COINS tucked under it (the owner, 2026-10-09).
             UIKit.Shrinkable(
                 UIKit.Titled("Amount", frame.transform, deal.Credits.ToString("N0"), 70, Pal.Sun,
                              TextAnchor.MiddleLeft, new Vector2(400f, 84f), new Vector2(0f, .5f),
-                             new Vector2(DealAmountX + 200f, 2f), 4f, 3f), 40);
+                             new Vector2(DealAmountX + 200f, lift + DealClock.DigitLift(70)), 4f, 3f), 40);
             UIKit.Shrinkable(
                 UIKit.Titled("Unit", frame.transform, Loc.Get("ui.endless.coins").Upper(), 30, Pal.Cream,
                              TextAnchor.MiddleLeft, new Vector2(300f, 40f), new Vector2(0f, .5f),
-                             new Vector2(DealAmountX + 150f, -52f), 3f, 2f), 20);
+                             new Vector2(DealAmountX + 150f, lift - 46f), 3f, 2f), 20);
 
             // The time left, to the second.
             UIKit.Shrinkable(
                 UIKit.Titled("Ends", frame.transform, Loc.Get("ui.deal.ends_label").Upper(), 30, Pal.Cream,
                              TextAnchor.MiddleCenter, new Vector2(DealTimerW, 40f), new Vector2(1f, .5f),
-                             new Vector2(-DealTimerX, 40f), 3f, 2f), 20);
+                             new Vector2(-DealTimerX, lift + 40f), 3f, 2f), 20);
             UIKit.Img("Trough", frame.transform, Art.S("Ui/" + Skins.Trough), Color.white,
-                      new Vector2(DealTimerW, DealTimerH), new Vector2(1f, .5f), new Vector2(-DealTimerX, -20f));
+                      new Vector2(DealTimerW, DealTimerH), new Vector2(1f, .5f), new Vector2(-DealTimerX, lift - 20f));
             var timer = UIKit.Shrinkable(
                 UIKit.Titled("Timer", frame.transform, DealClock.Timer(deal.SecondsLeft(GameClock.NowUnix())), 46,
                              Color.white, TextAnchor.MiddleCenter, new Vector2(DealTimerW - 30f, DealTimerH),
-                             new Vector2(1f, .5f), new Vector2(-DealTimerX, -20f), 3f, 2f), 28);
-
-            // The tag, hanging on the top edge over the amount; built last so it draws over the rim.
-            var tag = UIKit.Img("Tag", frame.transform, Art.S("Ui/ribbon_red"), Color.white,
-                                new Vector2(128f, 106f), new Vector2(0f, 1f), new Vector2(DealTagX, 14f));
-            tag.preserveAspect = true;
-            tag.transform.localRotation = Quaternion.Euler(0f, 0f, -4f);
-            UIKit.Shrinkable(
-                UIKit.Titled("Word", tag.transform, Loc.Get("ui.deal.door").Upper(), 30, Pal.Cream,
-                             TextAnchor.MiddleCenter, new Vector2(112f, 44f), new Vector2(.5f, .5f),
-                             new Vector2(-2f, 4f), 3f, 2f), 18);
+                             new Vector2(1f, .5f), new Vector2(-DealTimerX, lift - 20f), 3f, 2f), 28);
 
             Sheen.Attach((RectTransform)frame.transform, 3.1f);
             DealClock.Attach(band.gameObject, timer, (RectTransform)rays.transform, deal, OnDealsChanged);
@@ -649,20 +635,20 @@ namespace GlimmerGrove
         /// <summary>The coin coffer: the 26,000-coin card's picture (`ShopArt`'s third coin rung).</summary>
         const string DealArt = "Shop/coins_3";
 
-        /// <summary>The frame inside its slot, and its gold rim round the navy window.</summary>
-        const float DealFrameH = 176f, DealRim = 10f;
-
         /// <summary>The coffer's size and where its centre stands from the frame's left.</summary>
         const float DealArtSize = 196f, DealArtX = 132f;
 
         /// <summary>The burst behind it, and how strongly it is drawn.</summary>
-        const float DealBurst = 236f, DealBurstAlpha = .55f;
+        const float DealBurst = 236f;
+
+        /// <summary>The burst's colour: solid orange (the owner, 2026-10-09). `Hud/burst` is cut white, so this is its colour exactly.</summary>
+        static readonly Color DealBurstInk = Pal.Amber;
 
         /// <summary>Where the amount starts, and the tag's centre, from the frame's left.</summary>
-        const float DealAmountX = 258f, DealTagX = 330f;
+        const float DealAmountX = 258f;
 
         /// <summary>The timer's trough, and its centre from the frame's right.</summary>
-        const float DealTimerW = 344f, DealTimerH = 82f, DealTimerX = 196f;
+        const float DealTimerW = 344f, DealTimerH = 76f, DealTimerX = 196f;
 
         /// <summary>
         /// The deal on offer changed, or the one shown ran out. Rebuilds the band only - the one
