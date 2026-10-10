@@ -48,9 +48,9 @@ SEAT, SEAT_X, BODY_TALL = 148.0, 96.0, 120.0
 TEXT_X, TEXT_W = 190.0, 560.0
 BOX, BOX_GAP, TICK, MOST_BOXES = 48.0, 8.0, 30.0, 10
 BAR_W, BAR_H = 360.0, 26.0
-COLLECT_W, COLLECT_H = 280.0, 88.0
-PILL_W, PILL_H, PILL_X = 232.0, 76.0, -136.0
-TO_GO_W, TO_GO_NUMBER_Y, TO_GO_WORDS_Y, TO_GO_NUMBER, TO_GO_WORDS = 232.0, 24.0, -34.0, 72, 32
+COLLECT_W, COLLECT_H, COLLECT_Y = 280.0, 88.0, -54.0
+PILL_W, PILL_H, PILL_X = 212.0, 76.0, -128.0
+TO_GO_W, TO_GO_NUMBER_Y, TO_GO_WORDS_Y, TO_GO_NUMBER, TO_GO_WORDS = 212.0, 24.0, -34.0, 72, 32
 MINT = (0x7B, 0xD8, 0x6A)  # Pal.Mint
 WALLET_W, WALLET_H, WALLET_X = 160.0, 72.0, 444.0
 CARD_ROUND = 30
@@ -242,8 +242,8 @@ def row(sheet, y, quest, index, state, done):
     if ready:
         # `CollectSize`, left-anchored where the boxes stood.
         kx = text_x + COLLECT_W / 2
-        K.paste(sheet, K.skin("btn_green", COLLECT_W, COLLECT_H), kx, cy + 30)
-        K.one_line(sheet, txt("ui.chest.collect"), kx, cy + 30 - COLLECT_H * K.PILL_FACE_LIFT, COLLECT_W - 40, 34, 18,
+        K.paste(sheet, K.skin("btn_green", COLLECT_W, COLLECT_H), kx, cy - COLLECT_Y)
+        K.one_line(sheet, txt("ui.chest.collect"), kx, cy - COLLECT_Y - COLLECT_H * K.PILL_FACE_LIFT, COLLECT_W - 40, 34, 18,
                    outline=3)
     elif days <= MOST_BOXES:
         boxes(sheet, text_x, cy + 30, days, done)

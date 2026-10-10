@@ -75,12 +75,19 @@ namespace GlimmerGrove
         const int MostBoxes = 10;
         const float BarW = 360f, BarH = 26f;
 
-        /// <summary>The COLLECT key that stands where the boxes were once every day is in.</summary>
+        /// <summary>
+        /// The COLLECT key that stands where the boxes were once every day is in. Taller than the
+        /// boxes, so it sits lower than their line: 18 under the sentence, 27 over the card's foot.
+        /// </summary>
         static readonly Vector2 CollectSize = new Vector2(280f, 88f);
+        const float CollectY = -54f;
 
-        /// <summary>The pill at the right end once the quest is taken: COLLECTED.</summary>
-        static readonly Vector2 PillSize = new Vector2(232f, 76f);
-        const float PillX = -136f;
+        /// <summary>
+        /// The pill at the right end once the quest is taken: COLLECTED. Its left edge (766) stands
+        /// clear of the text column's right end (<see cref="TextX"/> + <see cref="TextW"/> = 750).
+        /// </summary>
+        static readonly Vector2 PillSize = new Vector2(212f, 76f);
+        const float PillX = -128f;
 
         /// <summary>
         /// The days still to go, at the same right end while a quest is counting: the number
@@ -88,7 +95,7 @@ namespace GlimmerGrove
         /// number stands on its own line, so no language has to agree a noun with it in one
         /// string - the words are their own key, in the singular and the plural.
         /// </summary>
-        const float ToGoW = 232f, ToGoNumberY = 24f, ToGoWordsY = -34f;
+        const float ToGoW = 212f, ToGoNumberY = 24f, ToGoWordsY = -34f;
         const int ToGoNumberSize = 72, ToGoWordsSize = 32;
 
         /// <summary>
@@ -342,7 +349,7 @@ namespace GlimmerGrove
             // The COLLECT key, where the boxes stood, once every day is in. Fitted to one line
             // so no translation can leave the pill (19n).
             row.Collect = UIKit.TextButton("Collect", row.Root, Skins.Affirm, Loc.Get("ui.chest.collect"), 34,
-                                           CollectSize, Left, new Vector2(TextX + CollectSize.x * .5f, -30f),
+                                           CollectSize, Left, new Vector2(TextX + CollectSize.x * .5f, CollectY),
                                            () => Collect(row));
             UIKit.OneLine(row.Collect, 18);
             row.Collect.gameObject.SetActive(false);
