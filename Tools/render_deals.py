@@ -25,16 +25,20 @@ UI = K.UI
 # DealOverlay
 PANEL_W = 1030.0
 MOST_ROWS = 3
-CELL_W, CELL_H = 950.0, 250.0
+CELL_W, CELL_H = 950.0, 190.0 + (K.DEAL_SEAL_SIZE / 2 - K.DEAL_SEAL_DROP) + 18.0
 PAD_TOP, PAD_BOTTOM = 6.0, 6.0
-FOOT_GAP, FOOT_H, FOOT_ROOM = 34.0, 100.0, 48.0
-EDGE_ROOM = FOOT_GAP + FOOT_H + FOOT_ROOM     # the room above the list equals the room below it
+ROWS_TOP, TAIL, FOOT_H = 196.0, 30.0, 170.0  # the Daily Challenges deals sheet's layout
+KEY_W, KEY_H, KEY_Y = 400.0, 110.0, 85.0
 
-# DealOverlay.DealRow
-FRAME_W, FRAME_H, RIM = 930.0, 226.0, 11.0
-ART, ART_X, BURST = 196.0, 130.0, 244.0
-AMOUNT_X = 254.0
-RIGHT_X, TIMER_W, TIMER_H, KEY_W, KEY_H = 186.0, 330.0, 72.0, 330.0, 104.0
+# VictoryFrame - the same constants `render_challenges.py` mirrors.
+CREST_REACH = 202.0
+PANEL_INK = (150, 184, 176)
+CROWN_Y, BANNER_Y, BANNER_W, BANNER_H = 114.0, -30.0, 566.0, 157.0
+WORD_LIFT, WORD_W, WORD_H = 34.0, 356.0, 74.0
+
+# DealOverlay.DealRow - a `DealCard` at the foot of the row; the clock over the price key on its right.
+CARD_W, CARD_H, AMOUNT_W = 940.0, 190.0, 380.0
+RIGHT_X, TIMER_W, TIMER_H, KEY_W, KEY_H = 172.0, 300.0, 58.0, 300.0, 82.0
 URGENT = (255, 92, 72)
 
 LOCS = {e["key"]: e["text"] for e in json.loads(
@@ -53,35 +57,30 @@ def timer(seconds):
 
 
 def row(sheet, cx, cy, credits, gems, left, state):
-    K.paste(sheet, K.skin("Hud/plate_gold", FRAME_W, FRAME_H), cx, cy)
-    K.paste(sheet, K.skin("Hud/plate_green", FRAME_W - 2 * RIM, FRAME_H - 2 * RIM), cx, cy)
-    lx, rx = cx - FRAME_W / 2, cx + FRAME_W / 2
-
-    ax = lx + ART_X
-    K.paste(sheet, K.glow(round(BURST * 1.3), 2.0, K.SUN, .55), ax, cy)
-    K.paste(sheet, K.tint(K.skin("Hud/burst", round(BURST), round(BURST)), K.AMBER).rotate(14, Image.BICUBIC), ax, cy)
-    K.paste(sheet, K.fit(Image.open(UI / "Shop" / "coins_3.png").convert("RGBA"), (ART, ART)), ax, cy)
-
-    K.text(sheet, f"{credits:,}", lx + AMOUNT_X, cy - round(74 * .044), 74, fill=K.SUN, outline=4, anchor="l")   # DealClock.DigitLift
-    K.text(sheet, txt("ui.endless.coins").upper(), lx + AMOUNT_X, cy + 50, 34, fill=K.CREAM, outline=3, anchor="l")
+    """One row, centred on (cx, cy) - `CellH` tall, the card at its foot."""
+    ccy = cy + CELL_H / 2 - CARD_H / 2 - 4
+    _lx, rx = K.deal_card(sheet, cx, ccy, CARD_W, CARD_H, credits, gems,
+                          txt("ui.deal.value"), txt("ui.endless.coins").upper(), AMOUNT_W)
 
     tx = rx - RIGHT_X
-    K.paste(sheet, K.skin("Hud/trough", TIMER_W, TIMER_H), tx, cy - 54)
-    label = timer(0 if state == "ended" else left)
+    K.paste(sheet, K.skin("Hud/trough", TIMER_W, TIMER_H), tx, ccy - 40)
     fill = (158, 168, 184) if state == "ended" else URGENT if state == "ready" and left < 3600 else (255, 255, 255)
-    K.text(sheet, label, tx, cy - 54, 42, fill=fill, outline=3)
+    K.text(sheet, timer(0 if state == "ended" else left), tx, ccy - 40, 36, fill=fill, outline=3)
 
-    pill = {"ready": "btn_violet", "bought": "btn_green", "ended": "btn_gray"}[state]
-    K.paste(sheet, K.skin(pill, KEY_W, KEY_H), tx, cy + 48)
+    pill = {"ready": "btn_violet", "bought": "btn_blue", "ended": "btn_gray"}[state]
+    K.paste(sheet, K.skin(pill, KEY_W, KEY_H), tx, ccy + 36)
     if state == "ready":
-        K.paste(sheet, K.fit(Image.open(UI / "ic_gem.png").convert("RGBA"), (54, 54)), tx - 58, cy + 46)
-        K.text(sheet, f"{gems:,}", tx + 22, cy + 46, 42, fill=K.CREAM, outline=3)
+        K.paste(sheet, K.fit(Image.open(UI / "ic_gem.png").convert("RGBA"), (48, 48)), tx - 50, ccy + 34)
+        K.text(sheet, f"{gems:,}", tx + 20, ccy + 34, 38, fill=K.CREAM, outline=3)
     else:
         word = txt("ui.deal.bought_row" if state == "bought" else "ui.deal.ended_row").upper()
-        K.text(sheet, word, tx, cy + 46, 40, fill=K.CREAM, outline=3)
+        K.text(sheet, word, tx, ccy + 34, 36, fill=K.CREAM, outline=3)
 
 
 def panel(deals):
+    """`DealOverlay` on `VictoryFrame`: the scrim, the fan and bloom, the green window with the
+    crown and banner carrying the title, the deal rows, and the blue key at the foot. The fit is
+    mirrored, so a tall list is drawn scaled as the device draws it."""
     sheet = Image.new("RGBA", (W, H), (*K.GROUND, 255))
     K.room(sheet)
     K.navbar(sheet, "home")
@@ -89,30 +88,43 @@ def panel(deals):
 
     visible = min(len(deals), MOST_ROWS)
     list_h = PAD_TOP + visible * CELL_H + PAD_BOTTOM
-    y = EDGE_ROOM
-    list_y = y; y += list_h + FOOT_GAP
-    foot_y = y + FOOT_H / 2; y += FOOT_H + FOOT_ROOM
-    ph = y
+    ph = ROWS_TOP + list_h + TAIL + FOOT_H
 
-    top = H / 2 - ph / 2
-    K.paste(sheet, K.skin("panel_main", PANEL_W, ph), W / 2, H / 2)
-    rib = K.skin("ribbon_orange", PANEL_W * .78, 130).rotate(1.6, Image.BICUBIC, expand=True)
-    K.paste(sheet, rib, W / 2, top - 22 + 65 - 65)
-    K.text(sheet, txt("ui.deal.title").upper(), W / 2, top - 22 + 65 - 65 - 6, 54, outline=4)
+    reach = ph + CREST_REACH
+    fit = min(1.0, (H - 40) / reach)
 
+    block = Image.new("RGBA", (1680, int(reach + 500)), (0, 0, 0, 0))
+    bw, bh = block.size
+    bcx = bw / 2
+    top = bh / 2 - CREST_REACH / 2 - ph / 2
+    crest = top - CREST_REACH / 2
 
-    clip = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    for i, (credits, gems, left, state) in enumerate(deals):
-        cy = top + list_y + PAD_TOP + i * CELL_H + CELL_H / 2
-        row(clip, W / 2, cy, credits, gems, left, state)
-    mask = Image.new("L", (W, H), 0)
-    ImageDraw.Draw(mask).rectangle([0, top + list_y, W, top + list_y + list_h], fill=255)
-    sheet.paste(clip, (0, 0), Image.composite(clip, Image.new("RGBA", (W, H)), mask).split()[3])
+    fan = K.rays(1680, 14)
+    fan_rgba = Image.new("RGBA", fan.size, (255, 204, 77, 0))
+    fan_rgba.putalpha(fan.point(lambda v: int(v * .20)))
+    K.paste(block, fan_rgba, bcx, crest + 240)
+    K.paste(block, K.glow(1240, 2.4, (255, 209, 97), .22), bcx, crest + 200)
 
-    K.paste(sheet, K.skin("btn_red", 420, FOOT_H), W / 2, top + foot_y)
-    K.text(sheet, txt("ui.common.cancel").upper(), W / 2, top + foot_y - 2, 36, outline=3)
+    K.paste(block, K.tint(K.skin("Win/window", PANEL_W, ph), PANEL_INK), bcx, top + ph / 2)
+    K.paste(block, K.glow(int(PANEL_W - 60), 1.9, (255, 245, 209), .11), bcx, top + 70)
 
-    print(f"  panel {PANEL_W:.0f}x{ph:.0f}, {len(deals)} deal(s), {visible} visible")
+    K.paste(block, K.fit(K.load("Win/crown")[0], (180, 162)), bcx, top - CROWN_Y)
+    K.paste(block, K.fit(K.load("Win/banner")[0], (BANNER_W, BANNER_H)), bcx, top - BANNER_Y)
+    K.shrunk(block, txt("ui.deal.title"), bcx, top - BANNER_Y - WORD_LIFT, WORD_W, WORD_H, 58, 32, outline=5)
+
+    for i, (credits, gems, left, state) in enumerate(deals[:visible]):
+        cy = top + ROWS_TOP + PAD_TOP + i * CELL_H + CELL_H / 2
+        row(block, bcx, cy, credits, gems, left, state)
+
+    ky = top + ph - KEY_Y
+    K.paste(block, K.skin("btn_blue", KEY_W, KEY_H), bcx, ky)
+    K.text(block, txt("ui.common.cancel").upper(), bcx, ky - 2, 36, outline=3)
+
+    if fit < 1.0:
+        block = block.resize((int(bw * fit), int(bh * fit)), Image.LANCZOS)
+    K.paste(sheet, block, W / 2, H / 2)
+
+    print(f"  panel {PANEL_W:.0f}x{ph:.0f} (fit {fit:.2f}), {len(deals)} deal(s), {visible} visible")
     return sheet.convert("RGB")
 
 

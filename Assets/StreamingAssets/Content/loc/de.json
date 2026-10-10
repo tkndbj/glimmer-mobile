@@ -2842,6 +2842,10 @@
       "text": "Begrenztes Angebot"
     },
     {
+      "key": "ui.deal.value",
+      "text": "{0} % Wert"
+    },
+    {
       "key": "ui.endless.xp",
       "text": "EP"
     },

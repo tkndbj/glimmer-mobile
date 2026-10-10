@@ -78,7 +78,10 @@ SHELF_TOP = HEADER + TABROW + REFER_ROW
 # directly under the invite band, in the storefront's orange (`Skins.Buy`), with the 26,000-coin
 # card's coffer (`Shop/coins_3`). `--deal` draws it and moves the shelf down by its row, exactly
 # as `ShopScreen.ShelfTop` does; without it the screen is pixel-identical to what shipped.
-DEAL_H = REFER_H
+DEAL_CARD_H = 204.0
+DEAL_SEAL_RISE = K.DEAL_SEAL_SIZE / 2 - K.DEAL_SEAL_DROP      # DealCard.SealRise
+DEAL_H = DEAL_CARD_H + DEAL_SEAL_RISE + 4.0
+DEAL_AMOUNT_W = 420.0
 DEAL_ROW = DEAL_H + REFER_GAP          # the invite band's trailing gap is the deal band's lead
 DEAL = None                            # (credits, gems, seconds left) when drawn
 
@@ -122,42 +125,28 @@ DEAL_FRAME_H, DEAL_RIM = 176.0, 10.0
 DEAL_ART, DEAL_ART_X = 196.0, 132.0
 DEAL_BURST = 236.0
 DEAL_AMOUNT_X = 258.0
-DEAL_TIMER_W, DEAL_TIMER_H, DEAL_TIMER_X = 344.0, 76.0, 196.0
+DEAL_TIMER_W, DEAL_TIMER_H, DEAL_TIMER_X = 344.0, 80.0, 200.0
 DEAL_URGENT = 3600
 
 
 def deal_band(sheet):
-    """`ShopScreen.BuildDeal`: the Refer a Friend key in pure green - `btn_green` at the door's
-    height at the foot of the slot - with the coffer on a turning solid orange burst rising out of it
-    at the left, the amount in full beside it, and ENDS IN over a ticking timer in a trough on the
-    right, red in the last hour."""
-    credits, _gems, left = DEAL
+    """`ShopScreen.BuildDeal`: a `DealCard` at the foot of its slot, with ENDS IN over a ticking
+    timer in a trough on its right, red in the last hour."""
+    credits, gems, left = DEAL
     slot_bottom = HEADER + TABROW + REFER_ROW + DEAL_H
-    ky = slot_bottom - K.DOOR_KEY_H / 2
-    cy = ky - K.DOOR_KEY_H * K.PILL_FACE_LIFT        # the pill's face, which the text rides
-    lx, rx = W / 2 - REFER_W / 2, W / 2 + REFER_W / 2
-
-    K.paste(sheet, K.skin("btn_green", REFER_W, K.DOOR_KEY_H), W / 2, ky)
-
-    ax = lx + DEAL_ART_X
-    ay = slot_bottom - 4 - DEAL_ART / 2
-    K.paste(sheet, K.tint(K.skin("Hud/burst", round(DEAL_BURST), round(DEAL_BURST)), K.AMBER)
-            .rotate(14, Image.BICUBIC), ax, ay)
-    pic = Image.open(UI / "Shop" / "coins_3.png").convert("RGBA")
-    K.paste(sheet, K.fit(pic, (DEAL_ART, DEAL_ART)), ax, ay)
-
-    amount = f"{credits:,}"
-    K.text(sheet, amount, lx + DEAL_AMOUNT_X, cy - round(70 * .044), 70, fill=K.SUN, outline=4, anchor="l")   # DealClock.DigitLift
-    K.text(sheet, txt("ui.endless.coins").upper(), lx + DEAL_AMOUNT_X, cy + 46, 30, fill=K.CREAM, outline=3, anchor="l")
+    cy = slot_bottom - DEAL_CARD_H / 2
+    _lx, rx = K.deal_card(sheet, W / 2, cy, REFER_W, DEAL_CARD_H, credits, gems,
+                          txt("ui.deal.value"), txt("ui.endless.coins").upper(), DEAL_AMOUNT_W)
 
     tx = rx - DEAL_TIMER_X
     urgent = left < DEAL_URGENT
-    K.text(sheet, txt("ui.deal.ends_label").upper(), tx, cy - 40, 30, fill=K.CREAM, outline=3)
-    K.paste(sheet, K.skin("Hud/trough", DEAL_TIMER_W, DEAL_TIMER_H), tx, cy + 20)
-    K.text(sheet, timer(left), tx, cy + 20, 46, fill=(255, 92, 72) if urgent else (255, 255, 255), outline=3)
+    K.text(sheet, txt("ui.deal.ends_label").upper(), tx, cy - 44, 32, fill=K.CREAM, outline=3)
+    K.paste(sheet, K.skin("Hud/trough", DEAL_TIMER_W, DEAL_TIMER_H), tx, cy + 18)
+    K.text(sheet, timer(left), tx, cy + 18, 48, fill=(255, 92, 72) if urgent else (255, 255, 255), outline=3)
 
-    print("  deal band: slot %d..%d, %s coins, timer %r%s"
-          % (slot_bottom - DEAL_H, slot_bottom, amount, timer(left), " (urgent)" if urgent else ""))
+    print("  deal band: slot %d..%d, %s coins for %s gems, value %s%%, timer %r%s"
+          % (slot_bottom - DEAL_H, slot_bottom, f"{credits:,}", gems, K.deal_value(credits, gems),
+             timer(left), " (urgent)" if urgent else ""))
 
 
 def shop_nav(sheet):

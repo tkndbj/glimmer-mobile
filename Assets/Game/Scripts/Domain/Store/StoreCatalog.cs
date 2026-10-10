@@ -141,8 +141,17 @@ namespace GlimmerGrove.Store
             foreach (var good in _goods) _goodsById[good.Id] = good;
 
             CreditsPerGem = DeriveCreditsPerGem(_products);
+            HasExchangeRate = BasesOf(_products, out _, out _);
             RankShelves(_products, CreditsPerGem);
         }
+
+        /// <summary>
+        /// Whether <see cref="CreditsPerGem"/> was measured off the two money shelves, rather than
+        /// being the flat 1 it falls back to when either is absent. A claim made with the rate - a
+        /// deal's value badge - is only made when this is true; the fallback is fine for ranking a
+        /// shelf and meaningless as a figure printed for a player.
+        /// </summary>
+        public bool HasExchangeRate { get; }
 
         public IReadOnlyList<StoreProduct> Products => _products;
 
@@ -685,7 +694,26 @@ namespace GlimmerGrove.Store
         /// </summary>
         static long DeriveCreditsPerGem(StoreProduct[] products)
         {
-            StoreProduct gemBase = null, coinBase = null;
+            if (!BasesOf(products, out var gemBase, out var coinBase)) return 1L;
+
+            // (credits per cent) / (gems per cent), integral, floored at 1.
+            long numerator = coinBase.Credits * gemBase.ReferenceUsdCents;
+            long denominator = (long)gemBase.Gems * coinBase.ReferenceUsdCents;
+            if (denominator <= 0) return 1L;
+
+            long rate = numerator / denominator;
+            return rate < 1 ? 1L : rate;
+        }
+
+        /// <summary>
+        /// The cheapest product on each money shelf - the two the exchange rate is measured off. One
+        /// reading, shared by the rate and by <see cref="HasExchangeRate"/>, so the two cannot
+        /// disagree about whether there is a rate at all.
+        /// </summary>
+        static bool BasesOf(StoreProduct[] products, out StoreProduct gemBase, out StoreProduct coinBase)
+        {
+            gemBase = null;
+            coinBase = null;
 
             foreach (var product in products)
             {
@@ -698,15 +726,7 @@ namespace GlimmerGrove.Store
                     coinBase = product;
             }
 
-            if (gemBase == null || coinBase == null) return 1L;
-
-            // (credits per cent) / (gems per cent), integral, floored at 1.
-            long numerator = coinBase.Credits * gemBase.ReferenceUsdCents;
-            long denominator = (long)gemBase.Gems * coinBase.ReferenceUsdCents;
-            if (denominator <= 0) return 1L;
-
-            long rate = numerator / denominator;
-            return rate < 1 ? 1L : rate;
+            return gemBase != null && coinBase != null;
         }
 
         /// <summary>

@@ -176,11 +176,10 @@ namespace GlimmerGrove
         static float ReferRow => ReferralLedger.IsAvailable ? ReferGap + ReferH + ReferGap : 0f;
 
         /// <summary>
-        /// The deal band's slot (invariant 60): the invite band's height, so the two keys stack as a
-        /// pair and the coffer rises out of its key as the hoard does out of the invite's. Cut to
-        /// 168 the coffer stood inside the key at half the hoard's size and read as an icon.
+        /// The deal band's slot (invariant 60): the card and the room above it the value seal rises
+        /// into (<see cref="DealCard.SealRise"/>), so the seal never reaches the invite band.
         /// </summary>
-        const float DealH = ReferH;
+        const float DealH = DealCardH + DealCard.SealRise + 4f;
 
         /// <summary>
         /// The air above the deal band: the invite band's trailing gap when there is one, its own
@@ -560,12 +559,11 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The limited-time deal (invariant 60), directly under the invite band: the Refer a Friend
-        /// key in pure green (the owner, 2026-10-09) - the kit's green pill (<c>Skins.Affirm</c>) at
-        /// the door's height, the coin coffer on a turning orange burst rising out of it at the left,
-        /// the amount beside it in full, and on the right ENDS IN over a timer that ticks to the
-        /// second and turns red and pulses in the last hour (<see cref="DealClock"/>). The whole key
-        /// is the tap; it opens the panel that says the price, and nothing is ever charged from here.
+        /// The limited-time deal (invariant 60), directly under the invite band: a <see cref="DealCard"/>
+        /// - the flat emerald box with the breathing coffer, the amount and the value seal, the same
+        /// card every row of the deals panel wears - with ENDS IN over a timer on its right that ticks
+        /// to the second and turns red and pulses in the last hour (<see cref="DealClock"/>). The whole
+        /// card is the tap; it opens the panel that says the price, and nothing is ever charged here.
         /// <para>
         /// Mirrored by <c>render_shop.py --deal</c>, whose constants these are.
         /// </para>
@@ -576,79 +574,43 @@ namespace GlimmerGrove
             var deal = _deal;
             if (deal == null) return;
 
-            // A holder for the key, so the band comes and goes as one and the clock has somewhere to live.
-            var band = UIKit.Box("Deal", Safe, new Vector2(ReferW, DoorKey.KeyH), new Vector2(.5f, 1f),
-                                 new Vector2(0f, DealCentreY - (DealH - DoorKey.KeyH) * .5f));
+            // A holder the size of the slot, so the band comes and goes as one and the clock has
+            // somewhere to live; the card stands at its foot, the seal rising into the room above.
+            var band = UIKit.Box("Deal", Safe, new Vector2(ReferW, DealH), new Vector2(.5f, 1f),
+                                 new Vector2(0f, DealCentreY));
 
-            // The kit's green pill at the invite door's height, at the foot of the slot - the Refer a
-            // Friend key in green (the owner, 2026-10-09: no border, "like refer a friend", "pure
-            // green"). Drawn at `DoorKey.KeyH` because the pill is sliced across its width only and
-            // smears its moulded face if drawn much taller (44a).
-            var frame = UIKit.Button("Key", band, Art.S("Ui/" + Skins.Affirm), new Vector2(ReferW, DoorKey.KeyH),
-                                     new Vector2(.5f, .5f), Vector2.zero, () => TapDeal(deal));
-            frame.PressScale = .985f;
-
-            // The pill's face sits a little above its middle (the moulded lip below it); text rides it.
-            float lift = DoorKey.KeyH * UIKit.PillFaceLift;
-
-            // The coffer stands on the key's foot and rises out of its top, as the invite's hoard
-            // does; the orange burst turns behind it.
-            var artAt = new Vector2(DealArtX, -DoorKey.KeyH * .5f + 4f + DealArtSize * .5f);
-            var rays = UIKit.Img("Rays", frame.transform, Art.S("Ui/" + Skins.Badge), DealBurstInk,
-                                 new Vector2(DealBurst, DealBurst), new Vector2(0f, .5f), artAt);
-            var art = UIKit.Img("Art", frame.transform, Art.S("Ui/" + DealArt), Color.white,
-                                new Vector2(DealArtSize, DealArtSize), new Vector2(0f, .5f), artAt);
-            art.preserveAspect = true;
-            art.enabled = art.sprite != null;
-
-            // The amount, in full: every digit is the point - and on the card's vertical middle, with
-            // COINS tucked under it (the owner, 2026-10-09).
-            UIKit.Shrinkable(
-                UIKit.Titled("Amount", frame.transform, deal.Credits.ToString("N0"), 70, Pal.Sun,
-                             TextAnchor.MiddleLeft, new Vector2(400f, 84f), new Vector2(0f, .5f),
-                             new Vector2(DealAmountX + 200f, lift + DealClock.DigitLift(70)), 4f, 3f), 40);
-            UIKit.Shrinkable(
-                UIKit.Titled("Unit", frame.transform, Loc.Get("ui.endless.coins").Upper(), 30, Pal.Cream,
-                             TextAnchor.MiddleLeft, new Vector2(300f, 40f), new Vector2(0f, .5f),
-                             new Vector2(DealAmountX + 150f, lift - 46f), 3f, 2f), 20);
+            var card = DealCard.Build("Card", band, new Vector2(ReferW, DealCardH), new Vector2(.5f, 0f),
+                                      new Vector2(0f, DealCardH * .5f), DealAmountW, () => TapDeal(deal));
+            DealCard.Paint(card, deal);
 
             // The time left, to the second.
             UIKit.Shrinkable(
-                UIKit.Titled("Ends", frame.transform, Loc.Get("ui.deal.ends_label").Upper(), 30, Pal.Cream,
-                             TextAnchor.MiddleCenter, new Vector2(DealTimerW, 40f), new Vector2(1f, .5f),
-                             new Vector2(-DealTimerX, lift + 40f), 3f, 2f), 20);
-            UIKit.Img("Trough", frame.transform, Art.S("Ui/" + Skins.Trough), Color.white,
-                      new Vector2(DealTimerW, DealTimerH), new Vector2(1f, .5f), new Vector2(-DealTimerX, lift - 20f));
+                UIKit.Titled("Ends", card.Root, Loc.Get("ui.deal.ends_label").Upper(), 32, Pal.Cream,
+                             TextAnchor.MiddleCenter, new Vector2(DealTimerW, 42f), new Vector2(1f, .5f),
+                             new Vector2(-DealTimerX, 44f), 3f, 2f), 20);
+            UIKit.Img("Trough", card.Root, Art.S("Ui/" + Skins.Trough), Color.white,
+                      new Vector2(DealTimerW, DealTimerH), new Vector2(1f, .5f), new Vector2(-DealTimerX, -18f));
             var timer = UIKit.Shrinkable(
-                UIKit.Titled("Timer", frame.transform, DealClock.Timer(deal.SecondsLeft(GameClock.NowUnix())), 46,
+                UIKit.Titled("Timer", card.Root, DealClock.Timer(deal.SecondsLeft(GameClock.NowUnix())), 48,
                              Color.white, TextAnchor.MiddleCenter, new Vector2(DealTimerW - 30f, DealTimerH),
-                             new Vector2(1f, .5f), new Vector2(-DealTimerX, lift - 20f), 3f, 2f), 28);
+                             new Vector2(1f, .5f), new Vector2(-DealTimerX, -18f), 3f, 2f), 28);
 
-            Sheen.Attach((RectTransform)frame.transform, 3.1f);
-            DealClock.Attach(band.gameObject, timer, (RectTransform)rays.transform, deal, OnDealsChanged);
+            Sheen.Attach(card.Root, 3.1f);
+            DealClock.Attach(band.gameObject, timer, null, deal, OnDealsChanged);
 
             band.localScale = Vector3.zero;
             Tween.Pop(band, 0f, .55f, .24f);
             _dealBand = band;
         }
 
-        /// <summary>The coin coffer: the 26,000-coin card's picture (`ShopArt`'s third coin rung).</summary>
-        const string DealArt = "Shop/coins_3";
+        /// <summary>The card's height inside its slot - a big box, taller than the invite key above it.</summary>
+        const float DealCardH = 204f;
 
-        /// <summary>The coffer's size and where its centre stands from the frame's left.</summary>
-        const float DealArtSize = 196f, DealArtX = 132f;
+        /// <summary>The amount column's width, between the coffer and the clock.</summary>
+        const float DealAmountW = 420f;
 
-        /// <summary>The burst behind it, and how strongly it is drawn.</summary>
-        const float DealBurst = 236f;
-
-        /// <summary>The burst's colour: solid orange (the owner, 2026-10-09). `Hud/burst` is cut white, so this is its colour exactly.</summary>
-        static readonly Color DealBurstInk = Pal.Amber;
-
-        /// <summary>Where the amount starts, and the tag's centre, from the frame's left.</summary>
-        const float DealAmountX = 258f;
-
-        /// <summary>The timer's trough, and its centre from the frame's right.</summary>
-        const float DealTimerW = 344f, DealTimerH = 76f, DealTimerX = 196f;
+        /// <summary>The timer's trough, and its centre from the card's right.</summary>
+        const float DealTimerW = 344f, DealTimerH = 80f, DealTimerX = 200f;
 
         /// <summary>
         /// The deal on offer changed, or the one shown ran out. Rebuilds the band only - the one

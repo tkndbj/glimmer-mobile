@@ -358,6 +358,29 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual("last_hours", DealPrompt.Id(DealTrigger.LastHours));
         }
 
+        // ------------------------------------------------------------ the value seal
+        [Test]
+        public void TheValueIsTheDealsCoinsOverWhatItsGemsBuyAtTheShopsRate()
+        {
+            Assert.AreEqual(330, DealValue.Percent(50000, 400, 37), "50,000 against the 14,800 that 400 gems buy");
+            Assert.AreEqual(280, DealValue.Percent(26000, 250, 37));
+            Assert.AreEqual(110, DealValue.Percent(1198, 1, 1000), "floored to ten - never overstated (119.8% -> 110)");
+            Assert.AreEqual(0, DealValue.Percent(3700, 100, 37), "no better than the shop is no seal");
+            Assert.AreEqual(0, DealValue.Percent(3000, 100, 37), "and worse than the shop certainly is not");
+            Assert.AreEqual(DealValue.Most, DealValue.Percent(ShopDeals.MaxCredits, 1, 37), "a slip on the admin page prints the ceiling, not six digits");
+            Assert.AreEqual(0, DealValue.Percent(50000, 0, 37));
+            Assert.AreEqual(0, DealValue.Percent(50000, 400, 0));
+        }
+
+        [Test]
+        public void NoSealWithoutARateToMeasureBy()
+        {
+            var deal = new ShopDeal(Id, 50000, 400, Now - 60, Now + 60);
+            Assert.IsFalse(StoreCatalog.Empty.HasExchangeRate, "an empty shop has no rate");
+            Assert.AreEqual(0, DealValue.Percent(deal, StoreCatalog.Empty), "the fallback of one coin a gem is never printed");
+            Assert.AreEqual(0, DealValue.Percent(null, StoreCatalog.Empty));
+        }
+
         [Test]
         public void WithdrawingAGrantRemovesOnlyThatPendingAward()
         {

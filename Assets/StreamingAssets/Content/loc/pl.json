@@ -2842,6 +2842,10 @@
       "text": "Oferta limitowana"
     },
     {
+      "key": "ui.deal.value",
+      "text": "Wartość {0}%"
+    },
+    {
       "key": "ui.endless.xp",
       "text": "XP"
     },

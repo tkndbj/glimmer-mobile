@@ -51,18 +51,20 @@ namespace GlimmerGrove
         // ------------------------------------------------------------------ geometry
         const float PanelW = 1030f;
         const int MostRows = 3;
-        const float CellW = 950f, CellH = 250f;
+        /// <summary>
+        /// A row: the deal card and the room above it its value seal rises into
+        /// (<see cref="DealCard.SealRise"/>), with air so a seal clears the card of the row above.
+        /// </summary>
+        const float CellW = 950f, CellH = 190f + DealCard.SealRise + 18f;
         const float ListPadTop = 6f, ListPadBottom = 6f;
 
-        /// <summary>The key's band at the foot: the air above it, the key, and the panel's own lip below.</summary>
-        const float FootGap = 34f, FootH = 100f, FootRoom = 48f;
-
         /// <summary>
-        /// The room above the list, equal to the room below it - so the cards sit in the panel's
-        /// vertical middle whatever their number (the owner, 2026-10-09). It also clears the title
-        /// ribbon, which hangs about 110 units into the panel.
+        /// The Daily Challenges deals sheet's layout on <see cref="VictoryFrame"/>
+        /// (<c>ChallengeTierOverlay</c>): the rows start under the crest and banner, then the air
+        /// under the last row, then the band the closing key stands in at the foot.
         /// </summary>
-        const float EdgeRoom = FootGap + FootH + FootRoom;
+        const float RowsTop = 196f, Tail = 30f, FootH = 170f;
+        const float KeyW = 400f, KeyH = 110f, KeyY = 85f;
 
         readonly List<ShopDeal> _deals = new List<ShopDeal>();
         readonly List<DealRow> _rows = new List<DealRow>();
@@ -86,13 +88,19 @@ namespace GlimmerGrove
             int visible = Mathf.Min(_deals.Count, MostRows);
             float listH = ListPadTop + visible * CellH + ListPadBottom;
 
-            float y = EdgeRoom;
-            float listY = y;                y += listH + FootGap;
-            float footY = y + FootH * .5f;  y += FootH + FootRoom;
+            float panelH = RowsTop + listH + Tail + FootH;
 
-            // Not dismissed by the scrim: a stray tap beside a purchase must not throw the offer
-            // away, and the way out is a key with a word on it (and the back key).
-            MakePanel(new Vector2(PanelW, y), Loc.Get("ui.deal.title"), dismissOnScrim: false);
+            // The Daily Challenges deals sheet's frame (the owner, 2026-10-09): the green window,
+            // the fan behind it and the crown over a banner carrying the title, built by
+            // `VictoryFrame` so the two sheets of deals cannot drift. Not dismissed by the scrim -
+            // the one way this differs from that sheet - because a stray tap beside a purchase must
+            // not throw the offer away; the way out is the key at the foot (and the back key).
+            Scrim = UIKit.Scrim(Content, .72f, null);
+            var frame = VictoryFrame.Build(Content, panelH, Loc.Get("ui.deal.title"), PanelW);
+            Backing = frame.Backing;
+            Panel = frame.Panel;
+
+            float listY = RowsTop;
 
             var viewport = UIKit.Node("Viewport", Panel);
             viewport.anchorMin = viewport.anchorMax = new Vector2(.5f, 1f);
@@ -108,9 +116,22 @@ namespace GlimmerGrove
             }, padTop: ListPadTop, padBottom: ListPadBottom);
             _grid.Show(_deals.Count);
 
-            UIKit.TextButton("NotNow", Panel, "btn_red", Loc.Get("ui.common.cancel"), 36,
-                             new Vector2(420f, FootH), new Vector2(.5f, 1f), new Vector2(0f, -footY),
+            // The deals sheet's closing key: the kit's blue, at its foot.
+            UIKit.TextButton("NotNow", Panel, Skins.Alternate, Loc.Get("ui.common.cancel").Upper(), 36,
+                             new Vector2(KeyW, KeyH), new Vector2(.5f, 0f), new Vector2(0f, KeyY),
                              () => Leave());
+
+            // The entrance, in the deals sheet's order (`ChallengeTierOverlay`): the crown first,
+            // the window under a crown still settling so the two read as one movement, then the
+            // banner and its word. One sound for one tap - see `ModalView.MakePanel`.
+            Audio.Hush("click");
+            Audio.Sfx("menu", .55f);
+
+            var cue = new Cue(this);
+            cue.With(() => { if (frame.Crown) Tween.Pop(frame.Crown.transform, 0f, .5f); });
+            cue.Then(.30f, () => { if (Panel) Tween.Scale(Panel, 1f, .5f, Ease.OutBack); });
+            cue.Then(.18f, () => { if (frame.Banner) Tween.Pop(frame.Banner.transform, 0f, .5f); });
+            cue.Then(.16f, () => { if (frame.Word) Tween.Pop(frame.Word.transform, 0f, .55f); });
 
             DealLedger.Changed += Repaint;
             PlayerProgression.Changed += Repaint;
@@ -294,13 +315,11 @@ namespace GlimmerGrove
         /// </summary>
         sealed class DealRow : IGridCell
         {
-            const float FrameW = 930f, FrameH = 226f, Rim = 11f;
-            const float ArtSize = 196f, ArtX = 130f, Burst = 244f;
-            const float AmountX = 254f;
-            const float RightX = 186f, TimerW = 330f, TimerH = 72f, KeyW = 330f, KeyH = 104f;
-
-            /// <summary>The burst behind the coffer: solid orange (the owner, 2026-10-09). <c>Hud/burst</c> is cut white, so this is its colour exactly.</summary>
-            static readonly Color BurstInk = Pal.Amber;
+            // The shop's card exactly (`DealCard`, one builder for both - the owner, 2026-10-09:
+            // "identical on the panel and on shop"). The right side carries the clock over the price
+            // key, where the shop's carries ENDS IN over the clock: the panel is where it is bought.
+            const float CardW = 940f, CardH = 190f, AmountW = 380f;
+            const float RightX = 172f, TimerW = 300f, TimerH = 58f, KeyW = 300f, KeyH = 82f;
             const float Pulse = .12f, PulseTime = .25f;
 
             static readonly Color Calm = Color.white;
@@ -308,8 +327,9 @@ namespace GlimmerGrove
             static readonly Color Spent = new Color(.62f, .66f, .72f);
 
             readonly DealOverlay _panel;
-            readonly RectTransform _root, _rays, _timerBox;
-            readonly Text _amount, _timer;
+            readonly RectTransform _root, _timerBox;
+            readonly DealCard.Parts _card;
+            readonly Text _timer;
             readonly Btn _key;
             readonly Image _keyPlate;
 
@@ -325,42 +345,19 @@ namespace GlimmerGrove
                 _panel = panel;
                 _root = UIKit.Box("Deal", parent, new Vector2(CellW, CellH), new Vector2(.5f, 1f), Vector2.zero);
 
-                var frame = UIKit.Img("Frame", _root, Art.S("Ui/" + Skins.PlateGold), Color.white,
-                                      new Vector2(FrameW, FrameH), new Vector2(.5f, .5f), Vector2.zero);
-                UIKit.Img("Window", frame.transform, Art.S("Ui/" + Skins.PlateGreen), Color.white,
-                          new Vector2(FrameW - 2f * Rim, FrameH - 2f * Rim), new Vector2(.5f, .5f), Vector2.zero);
+                // The card stands at the foot of the row; the seal rises into the room above it.
+                _card = DealCard.Build("Card", _root, new Vector2(CardW, CardH), new Vector2(.5f, .5f),
+                                       new Vector2(0f, -CellH * .5f + CardH * .5f + 4f), AmountW, null);
 
-                var artAt = new Vector2(ArtX, 0f);
-                UIKit.Img("Glow", frame.transform, Art.Glow(128, 2.1f), Pal.A(Pal.Sun, .55f),
-                          new Vector2(Burst * 1.3f, Burst * 1.3f), new Vector2(0f, .5f), artAt);
-                _rays = (RectTransform)UIKit.Img("Rays", frame.transform, Art.S("Ui/" + Skins.Badge),
-                                                 BurstInk, new Vector2(Burst, Burst),
-                                                 new Vector2(0f, .5f), artAt).transform;
-                var art = UIKit.Img("Art", frame.transform, Art.S("Ui/Shop/coins_3"), Color.white,
-                                    new Vector2(ArtSize, ArtSize), new Vector2(0f, .5f), artAt);
-                art.preserveAspect = true;
-                art.enabled = art.sprite != null;
-
-                _amount = UIKit.Shrinkable(
-                    UIKit.Titled("Amount", frame.transform, string.Empty, 74, Pal.Sun, TextAnchor.MiddleLeft,
-                                 new Vector2(330f, 90f), new Vector2(0f, .5f),
-                                 // On the card's vertical middle, COINS tucked under it (the owner, 2026-10-09).
-                                 new Vector2(AmountX + 165f, DealClock.DigitLift(74)),
-                                 4f, 3f), 40);
-                UIKit.Shrinkable(
-                    UIKit.Titled("Unit", frame.transform, Loc.Get("ui.endless.coins").Upper(), 34, Pal.Cream,
-                                 TextAnchor.MiddleLeft, new Vector2(300f, 44f), new Vector2(0f, .5f),
-                                 new Vector2(AmountX + 150f, -50f), 3f, 2f), 20);
-
-                _timerBox = (RectTransform)UIKit.Img("Trough", frame.transform, Art.S("Ui/" + Skins.Trough), Color.white,
+                _timerBox = (RectTransform)UIKit.Img("Trough", _card.Root, Art.S("Ui/" + Skins.Trough), Color.white,
                                                      new Vector2(TimerW, TimerH), new Vector2(1f, .5f),
-                                                     new Vector2(-RightX, 54f)).transform;
+                                                     new Vector2(-RightX, 40f)).transform;
                 _timer = UIKit.Shrinkable(
-                    UIKit.Titled("Timer", _timerBox, string.Empty, 42, Calm, TextAnchor.MiddleCenter,
+                    UIKit.Titled("Timer", _timerBox, string.Empty, 36, Calm, TextAnchor.MiddleCenter,
                                  new Vector2(TimerW - 24f, TimerH), new Vector2(.5f, .5f), Vector2.zero, 3f, 2f), 22);
 
-                _key = UIKit.TextButton("Buy", frame.transform, Skins.Gem, string.Empty, 42,
-                                        new Vector2(KeyW, KeyH), new Vector2(1f, .5f), new Vector2(-RightX, -48f),
+                _key = UIKit.TextButton("Buy", _card.Root, Skins.Gem, string.Empty, 38,
+                                        new Vector2(KeyW, KeyH), new Vector2(1f, .5f), new Vector2(-RightX, -36f),
                                         () => _panel.Buy(_deal), "ic_gem");
                 _keyPlate = _key.GetComponent<Image>();
             }
@@ -371,7 +368,7 @@ namespace GlimmerGrove
                 _root.gameObject.SetActive(_deal != null);
                 if (_deal == null) return;
 
-                _amount.text = _deal.Credits.ToString("N0");
+                DealCard.Paint(_card, _deal);
                 _shownSeconds = -1;
                 _key.transform.localScale = Vector3.one;
                 Paint(GameClock.NowUnix(), force: true);
@@ -409,7 +406,9 @@ namespace GlimmerGrove
                 {
                     case RowState.Bought:
                         _key.SetCaption(Loc.Get("ui.deal.bought_row").Upper());
-                        _keyPlate.sprite = Art.S("Ui/" + Skins.Settled);
+                        // Blue rather than `Skins.Settled`'s green: the row is a green key, and a
+                        // green key on it would read as no key at all.
+                        _keyPlate.sprite = Art.S("Ui/" + Skins.Alternate);
                         _key.Interactable = false;
                         break;
 
@@ -433,8 +432,6 @@ namespace GlimmerGrove
             public void Animate(float now)
             {
                 if (_deal == null) return;
-
-                _rays.localRotation = Quaternion.Euler(0f, 0f, -now * 14f);
 
                 float k = _state == RowState.Ready && _shownSeconds >= 0 && _shownSeconds < DealClock.UrgentSeconds
                     ? Mathf.Clamp01(1f - (now - _tickAt) / PulseTime) : 0f;

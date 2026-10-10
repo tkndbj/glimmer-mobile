@@ -33843,6 +33843,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Siege/hit_harpoon_g
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c97339281dbe3059397bc5a47a8e03a5
+    m_Address: Art/Ui/Hud/plate_flat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c98177ea6ab7da84c9fbe1f2ece4a07b
     m_Address: Art/Fx/Siege/hit_lighthouse_r/f05
     m_ReadOnly: 0

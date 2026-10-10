@@ -512,3 +512,67 @@ def door_key(sheet, cx, slot_bottom, width, slot_h, caption, art, pill="btn_viol
     for i, ln in enumerate(lines):
         text(sheet, ln, tx, top + i * size * 1.2, size, fill=ink)
     return ky, size, room
+
+
+# DealCard - the limited-time deal's card, drawn the one way both mirrors draw it.
+DEAL_FACE = (31, 184, 107)                 # DealCard.Face (.12, .72, .42)
+DEAL_SEAL = (242, 64, 79)                  # Pal.Poppy
+DEAL_SEAL_SIZE, DEAL_SEAL_IN, DEAL_SEAL_DROP = 140.0, 44.0, 8.0
+DEAL_ART_PAD, DEAL_ART_LEFT, DEAL_AMOUNT_GAP = 14.0, 40.0, 16.0
+
+
+def credits_per_gem():
+    """`StoreCatalog.CreditsPerGem` (and `HasExchangeRate`): off the cheapest product on each money
+    shelf of the shipped `progression.json`, or None when either shelf is empty."""
+    import json
+    store = json.loads((REPO / "Assets/StreamingAssets/Content/progression.json").read_text(encoding="utf-8"))["store"]
+    products = store.get("products", [])
+    gems = [p for p in products if p.get("shelf") == "gems" and p.get("gems")]
+    coins = [p for p in products if p.get("shelf") == "coins" and p.get("credits")]
+    if not gems or not coins:
+        return None
+    g = min(gems, key=lambda p: p["referenceUsdCents"])
+    c = min(coins, key=lambda p: p["referenceUsdCents"])
+    rate = (c["credits"] * g["referenceUsdCents"]) // (g["gems"] * c["referenceUsdCents"])
+    return max(1, rate)
+
+
+def deal_value(credits, gems):
+    """`DealValue.Percent`: floored to ten, nought at or under 100, capped at 9990."""
+    rate = credits_per_gem()
+    if not rate or credits <= 0 or gems <= 0:
+        return 0
+    pct = credits * 100 // (gems * rate)
+    if pct <= 100:
+        return 0
+    return min(9990, pct - pct % 10)
+
+
+def deal_card(sheet, cx, cy, w, h, credits, gems, value_word, unit_word, amount_w):
+    """`DealCard.Build` + `Paint`: the flat emerald box (`Hud/plate_flat` tinted), the coffer inside
+    at the left, the amount in full with the unit under it, and the red value seal over the top-left
+    corner. Returns the box's left and right edges."""
+    paste(sheet, tint(skin("Hud/plate_flat", w, h), DEAL_FACE), cx, cy)
+    lx, rx, top = cx - w / 2, cx + w / 2, cy - h / 2
+
+    art = h - 2 * DEAL_ART_PAD
+    paste(sheet, fit(Image.open(UI / "Shop" / "coins_3.png").convert("RGBA"), (art, art)), lx + DEAL_ART_LEFT + art / 2, cy)
+
+    left = lx + DEAL_ART_LEFT + art + DEAL_AMOUNT_GAP
+    text(sheet, f"{credits:,}", left, cy - 14 - round(76 * .044), 76, fill=SUN, outline=4, anchor="l")
+    text(sheet, unit_word, left, cy + 46, 32, fill=CREAM, outline=3, anchor="l")
+
+    pct = deal_value(credits, gems)
+    if pct:
+        sx, sy = lx + DEAL_SEAL_IN, top + DEAL_SEAL_DROP
+        paste(sheet, tint(skin("Hud/burst", round(DEAL_SEAL_SIZE), round(DEAL_SEAL_SIZE)), DEAL_SEAL)
+              .rotate(8, Image.BICUBIC), sx, sy)
+        word = value_word.replace("{0}", str(pct)).upper()
+        parts = word.split(" ", 1)
+        size = 30
+        if len(parts) == 2:
+            text(sheet, parts[0], sx, sy - 14, size, fill=(255, 255, 255), outline=3)
+            text(sheet, parts[1], sx, sy + 18, 24, fill=(255, 255, 255), outline=3)
+        else:
+            text(sheet, word, sx, sy, size, fill=(255, 255, 255), outline=3)
+    return lx, rx

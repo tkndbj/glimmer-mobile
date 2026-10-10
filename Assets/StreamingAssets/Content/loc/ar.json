@@ -2842,6 +2842,10 @@
       "text": "عرض محدود"
     },
     {
+      "key": "ui.deal.value",
+      "text": "قيمة {0}%"
+    },
+    {
       "key": "ui.endless.xp",
       "text": "الخبرة"
     },

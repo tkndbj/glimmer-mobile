@@ -959,6 +959,31 @@ def beam():
     return Image.fromarray(a.astype(np.uint8), "RGBA")
 
 
+def flat_face(im):
+    """A plate with one flat face, white, so a call site tints it to exactly one colour.
+
+    The shop's limited-time deal card asked for a box of a single colour with "no shade at bottom
+    half" (the owner, 2026-10-09), and every plate this kit cuts carries the mould's two-tone face -
+    a lighter upper half and a darker lip. A tint multiplies, so it keeps that shading; the only way
+    to one colour is a face that is one colour before it is tinted.
+
+    **The keyline stays the kit's**, which is what keeps it in the family: a pixel at or under the
+    keyline's luma is kept exactly, a pixel at the darkest face luma or over becomes white, and the
+    antialiased join between them is blended across that band rather than cut, so the edge stays
+    smooth. `DARK_FLOOR`'s measurement (keyline 8%, darkest face 13%) is what places the band.
+    """
+    a = np.asarray(im.convert("RGBA")).astype(np.float32) / 255.0
+    rgb, alpha = a[..., :3], a[..., 3:]
+    luma = (rgb * np.array([.2126, .7152, .0722], np.float32)).sum(-1, keepdims=True)
+
+    lo, hi = 0.09, DARK_FLOOR
+    t = np.clip((luma - lo) / (hi - lo), 0.0, 1.0)
+    t = t * t * (3.0 - 2.0 * t)                      # smoothstep, so the join has no step in it
+
+    out = rgb * (1.0 - t) + t
+    return Image.fromarray((np.concatenate([out, alpha], -1) * 255.0 + .5).astype(np.uint8), "RGBA")
+
+
 def burst():
     """The starburst a card wears when it is the one worth pointing at.
 
@@ -1270,6 +1295,11 @@ def main():
     made = build(packs, KIT)
     made["beam"] = (beam(), (0, 0, 0, 0))
     made["burst"] = (burst(), (0, 0, 0, 0))
+
+    # One flat white face inside the kit's keyline, tinted by the caller - see `flat_face`. Cut from
+    # the green plate because any plate of this mould would do: the face is replaced, the outline
+    # and the slicing are what is kept.
+    made["plate_flat"] = (flat_face(made["plate_green"][0]), made["plate_green"][1])
     made["lander"] = (lander(), (0, 0, 0, 0))
 
     recut = build(packs, RECUT)

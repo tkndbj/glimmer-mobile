@@ -566,6 +566,9 @@ Infinite lane). **Read it before touching a mode, a board, difficulty or the sie
    in the save at open (`tasks.dealsSeen`, v41, the newest 64 ids - a join, never pruned against the
    network). Short of gems stacks `GemShopOverlay` over `DealOverlay`, which lists any number of
    deals and pays coins out on close.
+60d. **A deal's value seal is derived, never authored**: its coins over what its gems buy at the
+   shop's own rate (`StoreCatalog.CreditsPerGem`), floored to ten, hidden at 100% or under or without
+   a rate (`DealValue`). Shop band and panel rows are one `DealCard` (`Hud/plate_flat`, tinted).
 
 ### Art credits
 

@@ -2842,6 +2842,10 @@
       "text": "Sınırlı Fırsat"
     },
     {
+      "key": "ui.deal.value",
+      "text": "%{0} değer"
+    },
+    {
       "key": "ui.endless.xp",
       "text": "XP"
     },
