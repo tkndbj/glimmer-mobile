@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using GlimmerGrove.Ads;
 using GlimmerGrove.Analytics;
+using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Content;
 using GlimmerGrove.Daily;
 using GlimmerGrove.Layout;
@@ -1286,6 +1287,14 @@ namespace GlimmerGrove
             try
             {
                 await Loc.SetLanguageAsync(ContentBootstrap.LocalSource, code);
+
+                // The one global picture with words painted in it (the Shuffle hub's crest):
+                // the splash loaded the old language's, so the new one is loaded before any
+                // screen redraws, or the hub would stand with no crest (invariant 7b).
+                await AssetLibrary.PreloadAsync(new[]
+                {
+                    AssetRequest.Sprite(AssetManifest.ArtRoot + AssetManifest.ShuffleCrest(Loc.Language)),
+                });
             }
             catch (Exception e)
             {

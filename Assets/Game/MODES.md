@@ -1198,7 +1198,7 @@ needs to feel unique*). Chapter `s13_shufflewatch`, level `s13_shuffle`, `track:
    the Infinite lane's with a row per lane (`EndlessHub.HubLane`: wall, marks, where the best comes
    from, whether a checkpoint bar, a standing or a shelf is drawn, and a crest), so a third lane is a
    row and not six branches. **The Shuffle hub's hero is its own crest, not the rank** (the owner's
-   picture, `Ui/shuffle_crest`, breathing slowly in the rank's place, centred in the gap between the
+   picture, one per language because the word is painted in, `AssetManifest.ShuffleCrest`, breathing slowly in the rank's place, centred in the gap between the
    switcher and the lines and up to the lines' width, `EndlessHubLayout.CrestCentre`; a rank is
    nothing a dealt hand says anything about), **its header carries no plaque** (the switcher stands in the plaque's slot,
    `LevelsScreen.BuildHeader` on a `Dealt` lane) and **its wall is a deep teal-blue** (the ranked wall

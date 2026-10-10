@@ -106,6 +106,7 @@ namespace GlimmerGrove.EditorTools
 
             var expected = AssetManifest.GlobalAssets();
             expected.AddRange(AssetManifest.AllChapterAssets(content.Bodies));
+            expected.AddRange(AssetManifest.AllShuffleCrests());
             expected.AddRange(AssetManifest.CompanionAssets(content.Index.Companions));
             expected.AddRange(AssetManifest.ChestAssets(ProgressionRules.Table.Tasks));
 

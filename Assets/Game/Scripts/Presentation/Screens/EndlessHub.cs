@@ -127,14 +127,17 @@ namespace GlimmerGrove
             /// The Shuffle lane's hero is its own crest (the owner's call, 2026-10-09): a rank
             /// is nothing a dealt hand says anything about, and the badge was inherited
             /// furniture. Global art, for <c>EndlessHub.Marks</c>' reason; held by
-            /// <c>EndlessHubTests.TheHubsMarksAreGlobalArt</c>.
+            /// <c>EndlessHubTests.TheHubsMarksAreGlobalArt</c>. **Read in the active language**,
+            /// because the word is painted into the picture (<c>AssetManifest.ShuffleCrest</c>).
             /// </summary>
-            public readonly string Crest;
+            public string Crest => _crest?.Invoke(Loc.Language);
+
+            readonly Func<string, string> _crest;
 
             readonly Func<LevelDefinition, int> _best;
 
             HubLane(GameTrack track, string wall, string[] marks, bool checkpoints, bool standing,
-                    bool shelf, string crest, Func<LevelDefinition, int> best)
+                    bool shelf, Func<string, string> crest, Func<LevelDefinition, int> best)
             {
                 Track = track;
                 Wall = wall;
@@ -142,7 +145,7 @@ namespace GlimmerGrove
                 Checkpoints = checkpoints;
                 Standing = standing;
                 Shelf = shelf;
-                Crest = crest;
+                _crest = crest;
                 _best = best;
             }
 
@@ -155,7 +158,7 @@ namespace GlimmerGrove
 
             public static readonly HubLane Shuffle = new HubLane(
                 GameTrack.Shuffle, Scenery.WallShuffle, ShuffleMarks, false, false, true,
-                "Ui/shuffle_crest",
+                AssetPipeline.AssetManifest.ShuffleCrest,
                 level => GlimmerGrove.Shuffle.ShuffleLedger.BestFor(level.Id));
 
             /// <summary>The row for a lane. A lane this file has no row for draws as the Infinite one.</summary>

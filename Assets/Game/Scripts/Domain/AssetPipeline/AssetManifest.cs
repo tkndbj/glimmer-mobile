@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using GlimmerGrove.Content;
+using GlimmerGrove.Localization;
 using GlimmerGrove.Progression;
 
 namespace GlimmerGrove.AssetPipeline
@@ -450,9 +451,9 @@ namespace GlimmerGrove.AssetPipeline
             "ic_endless", "ic_surge", "ic_rank",
 
             // And the Shuffle lane's two, for the same reason (`EndlessHub.ShuffleMarks`,
-            // `Tools/make_shuffle_art.py`), with the crest its hub stands as its hero
-            // (`EndlessHub.HubLane.Crest`).
-            "ic_shuffle", "ic_deck", "shuffle_crest",
+            // `Tools/make_shuffle_art.py`). The crest its hub stands as its hero is global too,
+            // but one per language, so it is added by `GlobalAssets` (`ShuffleCrest`).
+            "ic_shuffle", "ic_deck",
             "potion1", "potion2", "potion3", "potion4", "potion5", "potion6",
 
             // The action bar's three utilities. Global rather than scoped to the one mode that
@@ -630,10 +631,52 @@ namespace GlimmerGrove.AssetPipeline
             "voidblast",
         };
 
-        /// <summary>Everything the game needs before the menu appears.</summary>
-        public static List<AssetRequest> GlobalAssets()
+        // ------------------------------------------------------------ shuffle crest
+        /// <summary>
+        /// The Shuffle hub's crest in <paramref name="language"/>, ArtRoot-relative as the hub
+        /// asks for it (<c>EndlessHub.HubLane.Crest</c>).
+        ///
+        /// <para>
+        /// <b>One picture per language, because the word is painted into it</b> (the owner's
+        /// nine, cut by <c>Tools/make_shuffle_art.py</c>). English keeps the address it shipped
+        /// with; every other shipped language is <c>shuffle_crest_{code}</c>; a code
+        /// <c>Loc.Languages</c> does not list falls back to English, as <c>Loc</c> does.
+        /// Derived, never a table, so a new language needs its picture and nothing here.
+        /// </para>
+        /// </summary>
+        public static string ShuffleCrest(string language) =>
+            language == Loc.FallbackLanguage || Loc.NameKeyOf(language) == null
+                ? "Ui/shuffle_crest"
+                : "Ui/shuffle_crest_" + language;
+
+        /// <summary>
+        /// The crest of every shipped language, for the audits: the game loads only the
+        /// player's (<see cref="GlobalAssets(string)"/>), so a list built from what it loads
+        /// would call the other eight dead weight and say nothing when one went missing.
+        /// </summary>
+        public static List<AssetRequest> AllShuffleCrests()
+        {
+            var list = new List<AssetRequest>(Loc.Languages.Length);
+            foreach (var l in Loc.Languages) list.Add(AssetRequest.Sprite(ArtRoot + ShuffleCrest(l.Code)));
+            return list;
+        }
+
+        /// <summary>Everything the game needs before the menu appears, in the active language.</summary>
+        public static List<AssetRequest> GlobalAssets() => GlobalAssets(Loc.Language);
+
+        /// <summary>
+        /// Everything the game needs before the menu appears in <paramref name="language"/>:
+        /// the one input is which crest the Shuffle hub stands (<see cref="ShuffleCrest"/>).
+        /// A language chosen later loads its own before the screens redraw
+        /// (<c>LanguageOverlay.Choose</c>).
+        /// </summary>
+        public static List<AssetRequest> GlobalAssets(string language)
         {
             var list = new List<AssetRequest>(256);
+
+            // Global for the reason the hub's marks are (see `UiSprites`), and only the
+            // player's language, because nine 1020-pixel pictures held for one is eight wasted.
+            list.Add(AssetRequest.Sprite(ArtRoot + ShuffleCrest(language)));
 
             for (int i = 1; i <= LevelGridParser.CritterVariants; i++)
                 list.Add(AssetRequest.SpriteSet($"{ArtRoot}Critters/c{i}"));

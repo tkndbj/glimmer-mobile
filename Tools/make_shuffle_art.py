@@ -15,10 +15,14 @@
   card the catalog does not name.
 * `Art/Ui/ic_shuffle.png`, `Art/Ui/ic_deck.png` - the hub's two marks, cut exactly as
   `make_siege_art.HUB_ICONS` cuts the Infinite lane's.
-* `Art/Ui/shuffle_crest.png` - the lane's crest, the owner's own picture (2026-10-09), which
-  the hub stands where the Infinite lane stands the rank badge (`EndlessHub.HubLane.Crest`).
-  The picture is painted on a dark glowing backdrop, so it is cut off it here by its keyline
-  (see `crest`). Cut only when the source is on this machine; the PNG is committed.
+* `Art/Ui/shuffle_crest.png` and `Art/Ui/shuffle_crest_<code>.png` - the lane's crest, the
+  owner's own picture (2026-10-09), which the hub stands where the Infinite lane stands the
+  rank badge (`EndlessHub.HubLane.Crest`). **The word is painted into it**, so there is one
+  picture per shipped language (the owner's other eight, 2026-10-10), English keeping the name
+  it shipped with; `AssetManifest.ShuffleCrest` derives the address from the language and the
+  game loads only the player's. The picture is painted on a dark glowing backdrop, so it is
+  cut off it here by its keyline (see `crest`). Each is cut only when its source is on this
+  machine; the PNGs are committed.
 * `Art/Bg/plain_shuffle.png` - the ranked lane's purple brick wall turned to a deep teal-blue:
   a hue rotation first (CLAUDE.md 44g: hue-rotate in the tool) and a shade on top, so the wall
   keeps every brick and its highlights. Dark, because a bright wall fought the crest; coloured,
@@ -84,12 +88,30 @@ WALL_TURN = -45
 #: is still the brightest thing on the screen.
 WALL_SATURATION, WALL_VALUE = .85, .42
 
-#: The owner's crest picture (replaced 2026-10-09 by "Shuffle Cards Game Logo"), and the size
-#: it is cut at: the hub draws it up to 840 across on a 1080 canvas
-#: (`EndlessHubLayout.CrestWidest`), so 1020 is drawn down on any phone and under the `/Art/Ui/`
-#: folder's 1024 cap; both sides a multiple of four, as block compression wants.
-CREST_SOURCE = Path(r"C:\Users\Digikey\Downloads\Shuffle Cards Game Logo.png")
+#: The owner's crest pictures, one per language in `Loc.Languages` (English replaced 2026-10-09
+#: by "Shuffle Cards Game Logo", the other eight 2026-10-10), and the size they are cut at: the
+#: hub draws it up to 840 across on a 1080 canvas (`EndlessHubLayout.CrestWidest`), so 1020 is
+#: drawn down on any phone and under the `/Art/Ui/` folder's 1024 cap; both sides a multiple of
+#: four, as block compression wants. `EndlessHubTests.EveryLanguageHasItsOwnCrest` holds the
+#: files this writes to `Loc.Languages`.
+DOWNLOADS = Path(r"C:\Users\Digikey\Downloads")
+CREST_SOURCES = {
+    "en": DOWNLOADS / "Shuffle Cards Game Logo.png",
+    "es": DOWNLOADS / "BARAJAR_ Turbo Card Royale.png",
+    "pt": DOWNLOADS / "Embaralhar_ Cartas e Torretes.png",
+    "fr": DOWNLOADS / "MÉLANGE Tower Card Game Logo.png",
+    "de": DOWNLOADS / "Mischen Card Game Logo.png",
+    "it": DOWNLOADS / "MESCOLA_ Turret Card Shuffle Logo.png",
+    "tr": DOWNLOADS / "Glossy KARIŞTIR Turret Card Logo.png",
+    "pl": DOWNLOADS / "SZUFLA_ Neonowa Talia Wieżyczek.png",
+    "ar": DOWNLOADS / "Glossy Arabic Shuffle Game Emblem.png",
+}
 CREST_W, CREST_H = 1020, 680
+
+
+def crest_name(code):
+    """`AssetManifest.ShuffleCrest`'s file name: English keeps the name it shipped with."""
+    return "shuffle_crest" if code == "en" else "shuffle_crest_" + code
 
 #: The crest's cut-out (see `crest`): a step between neighbours under `CREST_SMOOTH` (largest
 #: channel, 0..255) is the painted backdrop's gradient; anything steeper is the picture's
@@ -132,7 +154,7 @@ def wall():
     return turned
 
 
-def crest():
+def crest(source):
     """The owner's picture cut off its painted backdrop.
 
     The backdrop is a dark gradient with coloured glows, as bright as 155 under the lettering,
@@ -145,7 +167,7 @@ def crest():
     import numpy as np
     from PIL import ImageFilter
 
-    im = Image.open(CREST_SOURCE).convert("RGB").resize((CREST_W, CREST_H), Image.LANCZOS)
+    im = Image.open(source).convert("RGB").resize((CREST_W, CREST_H), Image.LANCZOS)
     px = np.asarray(im).astype(np.int16)
     h, w = CREST_H, CREST_W
 
@@ -206,8 +228,10 @@ def cut():
 
     made[BG / "plain_shuffle.png"] = (raw(wall()), meta_for(WALL_TEMPLATE, "plain_shuffle", "glimmer.bg."))
 
-    if CREST_SOURCE.exists():
-        made[UI / "shuffle_crest.png"] = (raw(crest()), meta_for(ICON_TEMPLATE, "shuffle_crest", "glimmer.ui.shuffle."))
+    for code, source in CREST_SOURCES.items():
+        if source.exists():
+            name = crest_name(code)
+            made[UI / (name + ".png")] = (raw(crest(source)), meta_for(ICON_TEMPLATE, name, "glimmer.ui.shuffle."))
 
     return made
 
@@ -244,9 +268,12 @@ def main():
     if args.check:
         if ICONS.exists() is False:
             print("shuffle art: the skill-icon pack is absent, so only the wall is checked")
-        if not CREST_SOURCE.exists():
-            print("shuffle art: the crest's source is absent, so the crest is not checked")
         bad = []
+        for code, source in CREST_SOURCES.items():
+            if not source.exists():
+                print("shuffle art: the '%s' crest's source is absent, so it is not checked" % code)
+            if not (UI / (crest_name(code) + ".png")).exists():
+                bad.append("the '%s' crest is not on disk" % code)
         for p, (png, meta) in made.items():
             if not p.exists():
                 bad.append("%s is missing" % p.relative_to(REPO))

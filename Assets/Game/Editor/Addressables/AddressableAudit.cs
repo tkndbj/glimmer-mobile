@@ -102,6 +102,10 @@ namespace GlimmerGrove.EditorTools
             expected.AddRange(AssetManifest.SplashAssets());
             expected.AddRange(AssetManifest.AllChapterAssets(bodies));
 
+            // The Shuffle hub's crest, one per language: the global list holds only the active
+            // language's, so the other eight would read as unused and go missing unremarked.
+            expected.AddRange(AssetManifest.AllShuffleCrests());
+
             // Companion portraits are requested by a scope rather than at boot, which
             // makes them exactly the kind of asset an audit built only from the global
             // and chapter sets would call unused - and then fail to notice when one went

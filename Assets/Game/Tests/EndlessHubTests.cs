@@ -241,6 +241,40 @@ namespace GlimmerGrove.Tests
             }
         }
 
+        /// <summary>
+        /// <b>The Shuffle crest has the word painted into it, so each shipped language has its
+        /// own picture, and the game loads the one it is in.</b> Asked of every language in
+        /// <c>Loc.Languages</c>: the launch in that language preloads its crest, the file is on
+        /// disk with its <c>.meta</c> (cut by <c>Tools/make_shuffle_art.py</c>), and no two
+        /// languages share a picture - a language falling back to English would be a word the
+        /// player cannot read standing as the hub's hero.
+        /// </summary>
+        [Test]
+        public void EveryLanguageHasItsOwnCrest()
+        {
+            var seen = new System.Collections.Generic.HashSet<string>();
+            string root = System.IO.Path.Combine(TestJson.RepoRoot(), "Assets", "Game");
+
+            foreach (var language in Localization.Loc.Languages)
+            {
+                string crest = AssetPipeline.AssetManifest.ShuffleCrest(language.Code);
+                Assert.IsTrue(seen.Add(crest), $"'{language.Code}' stands another language's crest, '{crest}'");
+
+                bool loaded = false;
+                foreach (var request in AssetPipeline.AssetManifest.GlobalAssets(language.Code))
+                    loaded |= request.Address == AssetPipeline.AssetManifest.ArtRoot + crest;
+                Assert.IsTrue(loaded, $"a launch in '{language.Code}' does not load its crest '{crest}'");
+
+                string png = System.IO.Path.Combine(root, "Art", crest + ".png");
+                Assert.IsTrue(System.IO.File.Exists(png),
+                              $"'{crest}.png' is not on disk; cut it with Tools/make_shuffle_art.py");
+                Assert.IsTrue(System.IO.File.Exists(png + ".meta"), $"'{crest}.png' has no .meta");
+            }
+
+            Assert.AreEqual("Ui/shuffle_crest", AssetPipeline.AssetManifest.ShuffleCrest("xx"),
+                            "a language the game does not ship draws the English crest, as Loc falls back");
+        }
+
         // ----------------------------------------------------------------- the lane
         /// <summary>
         /// <b>Exactly one shipped lane is not a ladder, and it is the endless one.</b>
